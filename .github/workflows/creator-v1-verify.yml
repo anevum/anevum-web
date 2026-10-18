@@ -50,6 +50,10 @@ jobs:
           npm run check:creator-v1-web
           npm run build:creator-v1-web
           npm run build:creator-v1-web:staging
+          npm run build:iren-apex-staff
+          node --check creator-v1/staff-portal/worker.mjs
+          test -s creator-v1/dist/staff/index.html
+          grep -q '/staff/assets/' creator-v1/dist/staff/index.html
           node --test creator-v1/test/react-staging-route.test.mjs
       - name: Validate cinematic V005 public site contract
         shell: bash

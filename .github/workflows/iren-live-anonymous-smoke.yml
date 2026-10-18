@@ -1,0 +1,36 @@
+name: IREN Live Anonymous Smoke
+
+# Read-only production route verification. Does NOT authenticate, send OTPs,
+# mutate D1, change Worker routes, deploy code, or handle private credentials.
+on:
+  push:
+    branches:
+      - integrate/iren-apex-staff-v002-20261017
+    paths:
+      - .github/workflows/iren-live-anonymous-smoke.yml
+      - creator-v1/test/iren-live-anonymous-smoke.mjs
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: iren-live-anonymous-smoke
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify live apex and private staff boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          node creator-v1/test/iren-live-anonymous-smoke.mjs

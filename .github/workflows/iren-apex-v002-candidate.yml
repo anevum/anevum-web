@@ -1,0 +1,145 @@
+name: IREN Staff V004 Guarded Maintenance
+
+# Manual maintenance of the isolated IREN Worker only. Never change public
+# routes, D1 records, account permissions, session secrets or signup settings.
+on:
+  workflow_dispatch:
+    inputs:
+      approval:
+        description: "Type DEPLOY_IREN_STAFF to authorize a guarded release"
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: anevum-iren-apex-v004-guarded
+  cancel-in-progress: false
+jobs:
+  candidate:
+    if: github.repository == 'anevum/anevum-web' && inputs.approval == 'DEPLOY_IREN_STAFF' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/integrate/iren-apex-staff-v002-20261017')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Assert isolated release scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test "$CLOUDFLARE_ACCOUNT_ID" = "2f7ee83107240152097efd956a4e8335"
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import fs from 'node:fs';
+          const c=JSON.parse(fs.readFileSync('creator-v1/wrangler.iren-apex-staff.jsonc','utf8'));
+          assert.equal(c.name,'anevum-iren-apex-staff-v002');
+          assert.equal(c.main,'./staff-portal/worker.mjs');
+          assert.deepEqual(c.routes,[]);
+          assert.equal(c.workers_dev,false);
+          assert.equal(c.preview_urls,false);
+          assert.equal(c.vars.CANONICAL_STAFF_OPS_ENABLED,'true');
+          assert.equal(c.vars.CANONICAL_FORUM_ENABLED,'true');
+          assert.equal(c.services.length,1);
+          assert.equal(c.services[0].binding,'APEX_AUTH');
+          assert.equal(c.services[0].service,'anevum-apex-prelaunch-gateway');
+          assert.deepEqual(c.d1_databases.map(x=>[x.binding,x.database_id]),[
+            ['MEMBER_DB','e1d29049-c83b-4534-8355-dc1fa36ba6d8']]);
+          assert.equal(c.assets.directory,'./dist/staff');
+          assert.equal(c.assets.binding,'ASSETS');
+          assert.equal(c.assets.run_worker_first,true);
+          assert.equal(c.vars.ANEVUM_LAUNCH_APPROVED,undefined);
+          assert.equal(c.vars.CANONICAL_PUBLIC_SIGNUP_ENABLED,undefined);
+          assert.equal(c.r2_buckets,undefined);
+          assert.equal(c.triggers,undefined);
+          NODE
+      - name: Build and verify staff Worker
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          test -s creator-v1/web/vite.staff.config.ts
+          npm run build:iren-apex-staff
+          test -d creator-v1/dist/staff/assets
+          node --check creator-v1/staff-portal/worker.mjs
+          node --check creator-v1/canonical-auth/staff-ops.mjs
+          (cd creator-v1 && npm run test:staff-command)
+          test -s creator-v1/dist/staff/index.html
+          grep -q '/staff/assets/' creator-v1/dist/staff/index.html
+      - name: Inspect IREN terminal in isolated Chromium on desktop and mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+          test -n "$chrome"
+          mkdir -p evidence/iren-v002
+          node creator-v1/test/capture-iren-staff-v002.mjs --chrome "$chrome" --output evidence/iren-v002
+          test -s evidence/iren-v002/iren-v002-1440.png
+          test -s evidence/iren-v002/iren-v002-390.png
+          test -s evidence/iren-v002/iren-v002-320.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: iren-v002-mobile-desktop-${{ github.run_id }}
+          path: evidence/iren-v002/*.png
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Verify production founder grant and immutable audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          api="https://api.cloudflare.com/client/v4"
+          curl --fail --silent --show-error --max-time 35 -X POST \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" \
+            --data '{"sql":"SELECT (SELECT COUNT(*) FROM staff_access_grants WHERE role=\u0027owner\u0027 AND revoked_at IS NULL) AS owners,(SELECT COUNT(*) FROM staff_access_audit WHERE action=\u0027bootstrap-owner\u0027) AS audits,(SELECT COUNT(*) FROM sqlite_master WHERE name IN (\u0027staff_single_active_owner\u0027,\u0027staff_owner_insert_guard\u0027,\u0027staff_owner_bootstrap_audit\u0027,\u0027staff_owner_update_guard\u0027)) AS guards,(SELECT COUNT(*) FROM staff_access_grants g JOIN \"user\" u ON u.id=g.member_id WHERE g.role=\u0027owner\u0027 AND g.revoked_at IS NULL AND u.emailVerified=1) AS verified_owners"}' \
+            "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/d1/database/e1d29049-c83b-4534-8355-dc1fa36ba6d8/query" > "$RUNNER_TEMP/iren-founder-preflight.json"
+          jq -e '.success and .result[0].results[0].owners==1 and .result[0].results[0].audits==1 and .result[0].results[0].guards==4 and .result[0].results[0].verified_owners==1' \
+            "$RUNNER_TEMP/iren-founder-preflight.json" >/dev/null
+      - name: Pin existing public routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          api="https://api.cloudflare.com/client/v4"
+          curl --fail --silent --show-error --max-time 35 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/iren-routes-before.json"
+          jq -e '.success and
+            ([.result[]|select(.pattern=="anevum.com/*" and .script=="anevum-apex-prelaunch-gateway")]|length)==1 and
+            ([.result[]|select(.pattern=="a.anevum.com/*" and .script=="anevum-a-community-retirement")]|length)==1 and
+            ([.result[]|select(.pattern=="anevum.com/staff*" and .script=="anevum-iren-apex-staff-v002")]|length)==1 and
+            ([.result[]|select(.pattern=="anevum.com/api/v1/member/staff-ops*" and .script=="anevum-iren-apex-staff-v002")]|length)==1 and
+            ([.result[]|select(.pattern=="anevum.com/api/v1/member/forum-review*" and .script=="anevum-iren-apex-staff-v002")]|length)==1
+           ' "$RUNNER_TEMP/iren-routes-before.json" >/dev/null
+      - name: Deploy isolated Worker without modifying routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler deploy --config creator-v1/wrangler.iren-apex-staff.jsonc --keep-vars
+      - name: Prove bindings and no route mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          api="https://api.cloudflare.com/client/v4"
+          curl --fail --silent --show-error --max-time 35 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-iren-apex-staff-v002/settings" > "$RUNNER_TEMP/iren-worker-settings.json"
+          jq -e '.success and
+            ([.result.bindings[]|select(.name=="MEMBER_DB" and .type=="d1")]|length)==1 and
+            ([.result.bindings[]|select(.name=="APEX_AUTH" and .type=="service")]|length)==1 and
+            ([.result.bindings[]|select(.name=="ASSETS" and .type=="assets")]|length)==1 and
+            ([.result.bindings[]|select(.name=="CANONICAL_STAFF_OPS_ENABLED" and .type=="plain_text" and .text=="true")]|length)==1
+           ' "$RUNNER_TEMP/iren-worker-settings.json" >/dev/null
+          curl --fail --silent --show-error --max-time 35 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/iren-routes-after.json"
+          jq -S '[.result[]|{pattern,script}]|sort_by(.pattern)' "$RUNNER_TEMP/iren-routes-before.json" > "$RUNNER_TEMP/iren-routes.before.sorted"
+          jq -S '[.result[]|{pattern,script}]|sort_by(.pattern)' "$RUNNER_TEMP/iren-routes-after.json" > "$RUNNER_TEMP/iren-routes.after.sorted"
+          diff -u "$RUNNER_TEMP/iren-routes.before.sorted" "$RUNNER_TEMP/iren-routes.after.sorted"
+          echo IREN_GUARDED_MAINTENANCE=PASS
+          echo "Maintained independent active IREN staff Worker; public site/routes and member data untouched." >> "$GITHUB_STEP_SUMMARY"

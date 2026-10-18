@@ -8,6 +8,7 @@ import {canonicalCreatorSchemaReady,canonicalCreatorMember,canonicalPublicCreato
 import {permitCanonicalUserCreation} from "./policy.mjs";
 import {canonicalCommunity} from "./community.mjs";
 import {canonicalForums} from "./forums.mjs";
+import {canonicalStaffOps,STAFF_OPS_PATH} from "./staff-ops.mjs";
 import {canonicalProgression,progressionReady} from './progression.mjs';
 import {canonicalSpace} from "./space.mjs";
 import {boundedText} from "./request-body.mjs";
@@ -107,6 +108,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const publicHandle=path.match(PUBLIC_MEMBER);
     const publicCommunity=/^\/api\/v1\/community\/(?:members|activity)$/.test(path);
     const forumRoute=/^\/api\/v1\/community\/(?:threads(?:\/[a-f0-9-]{36}(?:\/(?:replies|reaction))?|\/?)?|reports)$/.test(path)||(/^\/api\/v1\/member\/forum-submissions(?:\/[a-f0-9-]{36})?$/.test(path)||path==="/api/v1/member/forum-review");
+    const staffRoute=path===STAFF_OPS_PATH;
     const publicMetrics=path===PUBLIC_TELEMETRY_PATH;
     const ownSpace=OWN_SPACE.test(path),publicSpace=path.match(PUBLIC_SPACE);
     const ownProgression=/^\/api\/v1\/member\/(?:progression|notifications(?:\/ack)?|xp-test)$/.test(path);
@@ -124,7 +126,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     // This is a proposed, source-only pilot. Do not expose even a GET
     // endpoint without a deliberate rollout flag and an approved D1 schema.
     if(ownProjectSave&&env?.CANONICAL_PROJECT_SAVES_ENABLED!=="true")return fail(request,404);
-    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport && !ownClosure && !ownSpace && !publicSpace && !publicCommunity && !forumRoute && !publicMetrics && !ownProgression && !ownSupporter && !ownProjectSave && !ownStudio && !ownStudioReview &&
+    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport && !ownClosure && !ownSpace && !publicSpace && !publicCommunity && !forumRoute && !staffRoute && !publicMetrics && !ownProgression && !ownSupporter && !ownProjectSave && !ownStudio && !ownStudioReview &&
       !(path.startsWith(CANONICAL_AUTH_PATH+"/") &&
         (AUTH_ALLOWLIST[request.method]?.has(path)??false)))
       return fail(request,404);
@@ -189,6 +191,18 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
         const clean=withoutForeignCookies(request,env);
         const session=await auth.api.getSession({headers:clean.headers});
         return safeResponse(await canonicalForums(clean,env,session?.user));
+      }catch{return fail(request,503)}
+    }
+    if(staffRoute){
+      if(env?.CANONICAL_STAFF_OPS_ENABLED!=="true")return fail(request,404);
+      if(!["GET","POST"].includes(request.method))return fail(request,405);
+      if(request.method==="POST"&&!sameOriginMutation(request,env))
+        return safeJson(request,{error:"Same-origin request required"},403);
+      try{
+        const auth=authFactory(env);
+        const clean=withoutForeignCookies(request,env);
+        const session=await auth.api.getSession({headers:clean.headers});
+        return safeResponse(await canonicalStaffOps(clean,env,session?.user));
       }catch{return fail(request,503)}
     }
     if(publicSpace){
