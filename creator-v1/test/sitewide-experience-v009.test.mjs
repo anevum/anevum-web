@@ -19,7 +19,8 @@ test("V009 unifies site navigation and retains native route boundaries",()=>{
  for(const path of ["/discover","/community","/creators","/levels","/create","/library","/member","/join","/status"]){
    assert.ok(shell.includes(path),"missing genuine destination "+path);
  }
- assert.match(app,/<MemberGate\/>/);
+ assert.match(app,/path="library" element={<Navigate to="\/saved" replace\/>}/);
+ assert.doesNotMatch(app,/<MemberGate\/>/);
  assert.match(app,/path="account" element={<Navigate to="\/member" replace\/>}/);
  assert.match(app,/path="community\/write"/);
 });
