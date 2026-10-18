@@ -53,6 +53,7 @@ jobs:
           node --test creator-v1/test/community-entry-v066.test.mjs creator-v1/test/continuance-entry-v052.test.mjs creator-v1/test/community-hub-v007.test.mjs
           node --test creator-v1/test/canonical-forums-v041.test.mjs creator-v1/test/apex-prelaunch-gateway.test.mjs
           node --test creator-v1/test/canonical-open-signup-gate-v020.test.mjs creator-v1/test/canonical-otp-resend-v023.test.mjs
+          node --test creator-v1/test/canonical-saved-works-v009.test.mjs creator-v1/test/canonical-profile-save-error-v027.test.mjs
 
       - name: Verify new four-door homepage stays in source
         run: node --test creator-v1/test/interactive-arrival-v065.test.mjs
