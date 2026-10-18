@@ -27,8 +27,8 @@ const portalCategories = [
 ] as const;
 const directory = [
   {to:"/boards",label:"Public boards",detail:"Reviewed releases and first looks"},
-  {to:"/levels",label:"Artifacts & levels",detail:"Thirty permanent evolution levels"},
-  {to:"/recognition",label:"Badge and medal archive",detail:"All defined achievements, ribbons and medals"},
+  {to:"/levels",label:"My evolution",detail:"Inspect only the levels you have earned"},
+  {to:"/recognition",label:"My earned rewards",detail:"Verified badges, ribbons and medals"},
   {to:"/support",label:"Support ANEVUM",detail:"Supporter benefits, infrastructure and open transparency"},
   {to:"/create",label:"Creator Studio",detail:"Invited member publishing"},
   {to:"/library",label:"My library",detail:"Your saved work, when signed in"},
