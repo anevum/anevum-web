@@ -67,11 +67,16 @@ jobs:
             "queues","analytics_engine_datasets","ai","hyperdrive"]){
             if(Object.hasOwn(c,key))throw Error("Disallowed binding: "+key);
           }
-          if(Object.keys(c.vars||{}).some(k=>k!=="FS_SYNTH_REVIEW_AUD"))
-            throw Error("Unexpected environment variables");
+          const allowedVars=["FS_SYNTH_REVIEW_AUD","FS_SYNTH_TEAM_ISSUER"];
+          if(Object.keys(c.vars||{}).some(k=>!allowedVars.includes(k))||
+             c.vars?.FS_SYNTH_REVIEW_AUD?.length!==64||
+             !/^https:\/\/[a-z0-9-]+\.cloudflareaccess\.com$/.test(c.vars?.FS_SYNTH_TEAM_ISSUER||""))
+            throw Error("Unexpected or missing authentication config");
           const w=fs.readFileSync("prototypes/family-safety-synthetic-preview/worker.mjs","utf8");
-          if(!w.includes("getIdentity")||!w.includes("FS_SYNTH_REVIEW_AUD"))
-            throw Error("Missing mandatory Access auth gate");
+          if(!w.includes("getIdentity")||!w.includes("FS_SYNTH_REVIEW_AUD")||
+             !w.includes("FS_SYNTH_TEAM_ISSUER")||!w.includes("jwtVerify")||
+             !w.includes("CF_Authorization"))
+            throw Error("Missing mandatory signed Access token verification");
           const pdir="prototypes/family-safety-synthetic-preview/public";
           if(fs.readdirSync(pdir).some(x=>!["index.html","styles.css","app.mjs","synthetic-engine.mjs","synthetic-scene.mjs","vendor"].includes(x)))
             throw Error("Unexpected public artifact");
@@ -134,7 +139,8 @@ jobs:
             if(c.name!=="anevum-family-field-synthetic-review-20261018" ||
                c.workers_dev!==true || c.preview_urls!==false ||
                c.main!=="./worker.mjs" || c.assets?.run_worker_first!==true ||
-               c.vars?.FS_SYNTH_REVIEW_AUD!=="8b4f7da26f249d7c59e73ec7f84b2b7d605dc65253091c134947359602094a32")
+               c.vars?.FS_SYNTH_REVIEW_AUD!=="8b4f7da26f249d7c59e73ec7f84b2b7d605dc65253091c134947359602094a32" ||
+               c.vars?.FS_SYNTH_TEAM_ISSUER!=="https://wispy-tooth-095a.cloudflareaccess.com")
               throw Error("Owner-only review binding/audience mismatch");
             for(const forbidden of ["routes","route","d1_databases","r2_buckets",
               "durable_objects","kv_namespaces","services","queues","unsafe",
