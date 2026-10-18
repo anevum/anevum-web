@@ -312,3 +312,31 @@
     border-color:Highlight;color:Highlight;
   }
 }
+
+/* List mode is a genuine compact reading layout, not one stretched card. */
+@media(min-width:701px){
+  .av9-shell .av73-discover .portal-discover-compact .av73-project-card{
+    min-height:0;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(160px,210px);
+    grid-template-areas:"metadata actions" "title actions" "summary actions";
+    align-content:center;align-items:start;column-gap:24px;
+    padding:17px 22px;
+  }
+  .av9-shell .av73-discover .portal-discover-compact .av73-project-card-top{
+    grid-area:metadata;margin:0 0 7px;
+    justify-content:flex-start;gap:10px 20px;
+  }
+  .av9-shell .av73-discover .portal-discover-compact .av73-project-card h3{
+    grid-area:title;margin:0 0 7px;font-size:23px!important;
+  }
+  .av9-shell .av73-discover .portal-discover-compact .av73-project-card>p{
+    grid-area:summary;margin:0;max-width:75ch;-webkit-line-clamp:2;line-clamp:2;
+  }
+  .av9-shell .av73-discover .portal-discover-compact .av73-project-card-bottom{
+    grid-area:actions;
+    display:flex;flex-direction:column;align-items:flex-end;justify-content:center;
+    align-self:stretch;gap:7px;
+    padding:0 0 0 20px;border:0;border-left:1px solid #48536c;
+  }
+}
