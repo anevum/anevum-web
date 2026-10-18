@@ -13,13 +13,19 @@ function fakeEnvironment(payload) {
  };
 }
 test('IREN V003 denies mismatched identities and invalid session responses',async()=>{
+ const inFuture=new Date(Date.now()+3600*1000).toISOString();
+ const inPast=new Date(Date.now()-3600*1000).toISOString();
  const cases=[
   null,
   {session:null,user:null},
-  {session:{userId:'one'},user:{id:'two',emailVerified:true}},
-  {session:{userId:'one'},user:{id:'one',emailVerified:false}},
-  {session:{userId:'one'},user:{id:12,emailVerified:true}},
-  {session:'invalid',user:{id:'one',emailVerified:true}}
+  {session:{id:'s',userId:'one',expiresAt:inFuture},user:{id:'two',emailVerified:true}},
+  {session:{id:'s',userId:'one',expiresAt:inFuture},user:{id:'one',emailVerified:false}},
+  {session:{id:'s',userId:'one',expiresAt:inFuture},user:{id:12,emailVerified:true}},
+  {session:'invalid',user:{id:'one',emailVerified:true}},
+  {session:{userId:'one',expiresAt:inFuture},user:{id:'one',emailVerified:true}},
+  {session:{id:'s',userId:'one'},user:{id:'one',emailVerified:true}},
+  {session:{id:'s',userId:'one',expiresAt:'not-a-date'},user:{id:'one',emailVerified:true}},
+  {session:{id:'s',userId:'one',expiresAt:inPast},user:{id:'one',emailVerified:true}}
  ];
  for(const payload of cases){
   const response=await worker.fetch(new Request(url,{headers:{cookie:'synthetic'}}),fakeEnvironment(payload));
