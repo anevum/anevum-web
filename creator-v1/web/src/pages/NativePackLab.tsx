@@ -101,6 +101,8 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
  onImportDocument:(value:StudioBlockDocument)=>void;disabled:boolean;
 }){
  const [kind,setKind]=useState<PackKind>('game');
+ const [nativeTitle,setNativeTitle]=useState<string|null>(null);
+ const [creditedCreator,setCreditedCreator]=useState<string|null>(null);
  const [scenes,setScenes]=useState<Scene[]>(DEMO_SCENES);
  const [selected,setSelected]=useState('arrival');
  const [startScene,setStartScene]=useState('arrival');
@@ -110,6 +112,9 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
   startScene:scenes.some(s=>s.id===startScene)?startScene:scenes[0].id,scenes}),[scenes,startScene]);
  const [media,setMedia]=useState<LocalMedia[]>([]);
  const [mediaUrls,setMediaUrls]=useState<Record<string,string>>({});
+ const [cover,setCover]=useState<{path:string;file:File}|null>(null);
+ const [coverUrl,setCoverUrl]=useState<string|null>(null);
+ const previewUrls=useMemo(()=>cover&&coverUrl?{...mediaUrls,[cover.path]:coverUrl}:mediaUrls,[cover,coverUrl,mediaUrls]);
  const [opened,setOpened]=useState<Opened|null>(null);
  const [messageText,setMessageText]=useState('');
  const [busy,setBusy]=useState(false);
@@ -123,6 +128,12 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
   return()=>Object.values(urls).forEach(url=>URL.revokeObjectURL(url));
  },[media]);
  useEffect(()=>{
+  if(!cover){setCoverUrl(null);return;}
+  const url=URL.createObjectURL(cover.file);
+  setCoverUrl(url);
+  return()=>URL.revokeObjectURL(url);
+ },[cover]);
+ useEffect(()=>{
   const urls:Record<string,string>={};
   gameImages.forEach(entry=>{urls[entry.path]=URL.createObjectURL(entry.file);});
   setGameImageUrls(urls);
@@ -134,9 +145,10 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
  },[]);
  function switchKind(next:PackKind){
   if(busy)return;
-  if(media.length&&kind!==next&&!window.confirm('Switching formats discards your local media list unless exported. Continue?'))return;
+  if((media.length||cover)&&kind!==next&&!window.confirm('Switching formats discards your local media list and artwork unless exported. Continue?'))return;
   ownedUrls.current.forEach(url=>URL.revokeObjectURL(url));ownedUrls.current=[];
-  setKind(next);setMedia([]);setOpened(null);setMessageText('');setExperienceKey(n=>n+1);
+  setKind(next);setMedia([]);setCover(null);setOpened(null);setMessageText('');
+  setNativeTitle(null);setCreditedCreator(null);setExperienceKey(n=>n+1);
  }
  function updateScene(change:Partial<Scene>){
   setScenes(previous=>previous.map(s=>s.id===selected?{...s,...change}:s));
@@ -193,6 +205,15 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
    return withoutBackground;
   }));
  }
+ function setCoverFromFile(file:File|undefined){
+  if(!file||!(kind==='album'||kind==='series'))return;
+  if(!['png','jpg','jpeg','webp','gif'].includes(ext(file))||!file.size)
+   return setMessageText('Choose PNG, JPG, WebP or GIF cover artwork.');
+  if(media.reduce((sum,m)=>sum+m.file.size,0)+file.size>MAX_PACK_BYTES-65536||media.length>=31)
+   return setMessageText('Your cover and media must fit the 20 MiB and 31-asset local limits.');
+  setCover({path:'assets/cover-'+crypto.randomUUID().slice(0,8)+'.'+ext(file),file});
+  setMessageText('');
+ }
  function pickMedia(list:FileList|null){
   if(!list||kind==='game'||kind==='project')return;
   const allowed=EXTENSIONS[kind];
@@ -200,8 +221,9 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
   if(incoming.some(entry=>!allowed.includes(ext(entry.file))||!entry.file.size))
    return setMessageText('Choose supported local media: '+allowed.join(', ')+'.');
   const all=[...media,...incoming];
-  if(all.length>31||all.reduce((sum,entry)=>sum+entry.file.size,0)>MAX_PACK_BYTES-65536)
-   return setMessageText('Local packages support at most 31 media items and 20 MiB total.');
+  if(all.length+(cover?1:0)>31||
+    all.reduce((sum,entry)=>sum+entry.file.size,cover?.file.size||0)>MAX_PACK_BYTES-65536)
+   return setMessageText('Local packages support at most 31 assets and 20 MiB total, including artwork.');
   setMedia(all);setMessageText('');
  }
  function currentDocument():PackDocument{
@@ -210,10 +232,12 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
    if(!document)throw Error('Convert your notes to Workbench blocks before exporting a .anvp document.');
    return document;
   }
-  if(kind==='album')return {schema:'anevum.album.v1',tracks:media.map((m,i)=>({
-   id:'track-'+(i+1),title:m.title,file:mediaPath(i,m.file)}))};
-  if(kind==='series')return {schema:'anevum.series.v1',episodes:media.map((m,i)=>({
-   id:'episode-'+(i+1),title:m.title,file:mediaPath(i,m.file)}))};
+  if(kind==='album')return {schema:'anevum.album.v1',
+   ...(cover?{cover:cover.path}:{}),
+   tracks:media.map((m,i)=>({id:'track-'+(i+1),title:m.title,file:mediaPath(i,m.file)}))};
+  if(kind==='series')return {schema:'anevum.series.v1',
+   ...(cover?{poster:cover.path}:{}),
+   episodes:media.map((m,i)=>({id:'episode-'+(i+1),title:m.title,file:mediaPath(i,m.file)}))};
   return {schema:'anevum.visual.v1',pages:media.map((m,i)=>({
    image:mediaPath(i,m.file),caption:m.title}))};
  }
@@ -227,8 +251,11 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
     assets[mediaPath(i,media[i].file)]=new Uint8Array(await media[i].file.arrayBuffer());
    if(kind==='game')for(const image of gameImages)
     assets[image.path]=new Uint8Array(await image.file.arrayBuffer());
-   const pkg=await createNativePack({kind,title:title.trim()||'Untitled creation',
-    creator:creator.trim()||'Creator',version:'0.1.0',document:currentDocument(),assets});
+   if(cover&&(kind==='album'||kind==='series'))
+    assets[cover.path]=new Uint8Array(await cover.file.arrayBuffer());
+   const pkg=await createNativePack({kind,title:(nativeTitle??title).trim()||'Untitled creation',
+    creator:(creditedCreator??creator).trim()||'Creator',
+    version:'0.1.0',document:currentDocument(),assets});
    download(pkg.filename,pkg.bytes);
    setMessageText('Exported '+pkg.filename+' to your device. This did not save or publish a Studio revision.');
   }catch(error){setMessageText(message(error));}
@@ -267,9 +294,43 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
   }
   setScenes(game.scenes.map(scene=>({...scene,choices:scene.choices.map(c=>({...c}))})));
   setStartScene(game.startScene);setSelected(game.startScene);
-  setGameImages(images);setKind('game');setMedia([]);
+  setGameImages(images);setKind('game');setMedia([]);setCover(null);
+  setNativeTitle(opened.manifest.title);setCreditedCreator(opened.manifest.creator);
   ownedUrls.current.forEach(url=>URL.revokeObjectURL(url));ownedUrls.current=[];
   setOpened(null);setMessageText('Loaded .anvg into the game editor. Export a new file to keep your changes.');
+ }
+ function resumeMedia(){
+  if(!opened||!['album','series','visual'].includes(opened.manifest.kind)||busy)return;
+  if(!window.confirm('Replace the local media editor with this import? Export existing work first. Check editing rights and retain creator credit.'))return;
+  const source=opened;
+  const asset=(path:string):File=>{
+   const bytes=source.assets.get(path);
+   const mime=source.manifest.files.find(f=>f.path===path)?.mime;
+   if(!bytes||!mime)throw Error('An imported media asset is missing.');
+   return new File([Uint8Array.from(bytes)],path.split('/').at(-1)||'imported-media',{type:mime});
+  };
+  try{
+   let nextMedia:LocalMedia[]=[];
+   let nextCover:{path:string;file:File}|null=null;
+   if(source.manifest.kind==='album'){
+    const d=source.document as AlbumDoc;
+    nextMedia=d.tracks.map(t=>({title:t.title,file:asset(t.file)}));
+    if(d.cover)nextCover={path:d.cover,file:asset(d.cover)};
+   }else if(source.manifest.kind==='series'){
+    const d=source.document as SeriesDoc;
+    nextMedia=d.episodes.map(e=>({title:e.title,file:asset(e.file)}));
+    if(d.poster)nextCover={path:d.poster,file:asset(d.poster)};
+   }else{
+    const d=source.document as VisualDoc;
+    nextMedia=d.pages.map(p=>({title:p.caption,file:asset(p.image)}));
+   }
+   setKind(source.manifest.kind);
+   setMedia(nextMedia);setCover(nextCover);
+   setNativeTitle(source.manifest.title);setCreditedCreator(source.manifest.creator);
+   ownedUrls.current.forEach(url=>URL.revokeObjectURL(url));ownedUrls.current=[];
+   setOpened(null);
+   setMessageText('Opened the '+source.manifest.kind+' in the editor. Export again to retain edits; original credit was preserved.');
+  }catch(error){setMessageText(message(error));}
  }
  function restoreDocument(){
   if(!opened||opened.manifest.kind!=='project'||disabled)return;
