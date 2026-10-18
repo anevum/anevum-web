@@ -11,7 +11,10 @@ import {
   sanitizePosition,
   admitLocationWrite,
   mayPublishCommunityLocation,
-  buildViewerGrant
+  buildViewerGrant,
+  buildAdultCircleInvitation,
+  canAcceptAdultCircleInvitation,
+  MAX_INVITATION_MS
 } from "./presence-policy.mjs";
 
 const T = Date.parse("2026-10-17T21:00:00Z");
@@ -221,6 +224,53 @@ test("grant factory requires current session, verified adults and explicit opt-i
     { memberships: [adult("alice")] },
     { memberships: [adult("alice"), { ...adult("bob"), ageBand: "minor" }] }
   ]) assert.equal(buildViewerGrant({ ...options, ...mutation }), null, JSON.stringify(mutation));
+});
+
+
+test("adult circle invitation does not imply permission to view location", () => {
+  const a=context();
+  const options={
+    circle:a.circle, circleId:a.circleId, memberships:[adult("alice")],
+    actorId:"alice",inviteeId:"bob",invitationId:"invite-1",
+    tokenDigest:"a".repeat(64),now:T,expiresAt:T+MAX_INVITATION_MS
+  };
+  const invite=buildAdultCircleInvitation(options);
+  assert.ok(invite);
+  assert.equal(invite.state,"pending");
+  assert.equal(invite.role,"adult");
+  assert.equal("location" in invite,false);
+  assert.equal("grant" in invite,false);
+  assert.equal(mayReadPresence({ ...a, grant:null }),false);
+  assert.equal(canAcceptAdultCircleInvitation({
+    actorId:"bob",verifiedAdult:true,circleId:a.circleId,
+    circle:a.circle,invite,digestMatches:true,now:T+5000
+  }),true);
+  for(const mutation of [
+    {actorId:"charlie"},
+    {verifiedAdult:false},
+    {digestMatches:false},
+    {now:T+MAX_INVITATION_MS},
+    {invite:{...invite,state:"accepted"}},
+    {invite:{...invite,acceptedAt:T+10}},
+    {circle:{...circle,state:"closed"}},
+    {invite:{...invite,role:"child"}},
+    {circleId:"other-circle"}
+  ]) {
+    assert.equal(canAcceptAdultCircleInvitation({
+      actorId:"bob",verifiedAdult:true,circleId:a.circleId,circle:a.circle,
+      invite,digestMatches:true,now:T+5000,...mutation
+    }),false);
+  }
+  for(const mutation of [
+    {actorId:"bob"},
+    {inviteeId:"alice"},
+    {tokenDigest:"raw-token"},
+    {expiresAt:T+MAX_INVITATION_MS+1},
+    {expiresAt:T},
+    {memberships:[adult("alice"),adult("bob")]},
+    {memberships:[{...adult("alice"),identityVerified:false}]},
+    {circle:{...circle,state:"closed"}}
+  ]) assert.equal(buildAdultCircleInvitation({...options,...mutation}),null);
 });
 
 test("must never expose internal coordinates from the permission kernel through logging", () => {
