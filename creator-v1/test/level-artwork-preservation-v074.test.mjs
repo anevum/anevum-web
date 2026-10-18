@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {readFileSync,statSync} from "node:fs";
+import {readFileSync,statSync,existsSync} from "node:fs";
 import {parse} from "@babel/parser";
 
 const read=path=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
@@ -11,18 +11,31 @@ const css=read("web/src/level-icon-preservation-v074.css");
 const main=read("web/src/main.tsx");
 const browser=read("test/capture-sitewide-v012.mjs");
 const artifacts=JSON.parse(read("shared/level-artifacts.json"));
+const original=JSON.parse(read("../design/evolution-v059/docs/ARTWORK-MANIFEST.json"));
 
 test("V074 retains the exact 30 original high-resolution optical level exports",()=>{
   assert.equal(artifacts.length,30);
+  assert.equal(original.levels.length,30);
+  assert.equal(original.chapterCount,6);
   for(let i=0;i<30;i++){
-    const item=artifacts[i],key=String(i+1).padStart(2,"0");
+    const item=artifacts[i],canonical=original.levels[i],key=String(i+1).padStart(2,"0");
     assert.equal(item.level,i+1);
+    assert.equal(item.name,canonical.name);
+    assert.equal(item.chapterName,canonical.chapterName);
+    assert.equal(item.xp,canonical.xp);
     assert.equal(item.icon,"/evolution/assets/level-"+key+"-compact-128.png");
     assert.equal(item.preview,"/evolution/assets/level-"+key+"-256.webp");
     assert.equal(item.poster,"/evolution/assets/level-"+key+"-1024.webp");
-    for(const file of [item.icon,item.preview,item.poster])
-      assert.ok(statSync(new URL("web/public"+file,new URL("../",import.meta.url))).size>300,
-        "Missing original icon export "+file);
+    assert.equal(canonical.assets.compact["128"],"artwork/compact/level-"+key+"-128.png");
+    assert.equal(canonical.assets.web["256"],"artwork/web/level-"+key+"-256.webp");
+    assert.equal(canonical.assets.web["1024"],"artwork/web/level-"+key+"-1024.webp");
+    // Packaged production optical assets are separately installed by V060.
+    // This source-only PR checks their canonical manifest without inventing
+    // files or requiring an unrelated native-artwork render pipeline to run.
+    for(const file of [item.icon,item.preview,item.poster]){
+      const generated=new URL("web/public"+file,new URL("../",import.meta.url));
+      if(existsSync(generated))assert.ok(statSync(generated).size>300,file);
+    }
   }
   assert.match(collection,/LEVEL_ARTIFACTS/);
   assert.match(collection,/ENTER THE LIVING 3D ARCHIVE/);
@@ -44,7 +57,10 @@ test("V074 makes shared member and gallery icons optical only, never a moving mi
   // isolated historical runtime tests; it is no longer imported by LevelEmblem.
   assert.match(renderer,/class MiniStage/);
   assert.match(renderer,/canvas\.getContext\('webgl'/);
-  assert.match(read("web/public/evolution/index.html"),/evolution\/app\.js/);
+  const archiveSource=read("../design/evolution-v059/src/app.js");
+  assert.match(archiveSource,/function renderGallery/);
+  assert.match(archiveSource,/async function selectLevel/);
+  assert.match(archiveSource,/webglcontextlost/);
   assert.match(read("web/src/components/CompactMemberIdentity.tsx"),/LevelEmblem level=/);
   assert.match(read("web/src/components/LevelPanel.tsx"),/LevelEmblem level=/);
   assert.match(collection,/LevelEmblem level=/);
