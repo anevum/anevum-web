@@ -86,6 +86,32 @@ export function permitCanonicalUserCreation(env,email){
   return status.open || list(env.CANONICAL_INVITE_EMAILS).has(normalized);
 }
 
+/**
+ * Preserve existing live protected-mailbox OTP recovery. The protected address
+ * remains denied by default, even in public sign-up mode; only an explicit,
+ * unrevoked approval from a verified owner permits it. This is required to
+ * retain the V069 live mail-sign-in fix across frontend releases.
+ */
+export async function permitCanonicalUserCreationApproved(env,email){
+  if(permitCanonicalUserCreation(env,email))return true;
+  const state=canonicalConfigState(env);
+  const normalized=typeof email==="string"?email.trim().toLowerCase():"";
+  if(!(state.open||state.invited)||!EMAIL.test(normalized)||normalized.length>254||
+    !list(env?.CANONICAL_PROTECTED_EMAILS).has(normalized)||
+    !(state.open||list(env?.CANONICAL_INVITE_EMAILS).has(normalized))||
+    !configured(env?.MEMBER_DB))return false;
+  try{
+    const row=await env.MEMBER_DB.prepare(
+      `SELECT a.email FROM canonical_protected_email_login_allowance a
+       JOIN staff_access_grants g ON g.member_id=a.approved_by
+        AND g.role='owner' AND g.revoked_at IS NULL
+       JOIN "user" u ON u.id=g.member_id AND u.emailVerified=1
+       WHERE a.email=? AND a.revoked_at IS NULL LIMIT 1`
+    ).bind(normalized).first();
+    return row?.email===normalized;
+  }catch{return false}
+}
+
 /** Must be independently verified against an isolated D1, not a source flag. */
 export async function canonicalSchemaReady(env){
   if(!configured(env?.MEMBER_DB))return false;
