@@ -44,3 +44,27 @@ export function previewDistinctions(data:RecognitionSettings,medalId:string|null
   ribbons:ribbonIds.filter(id=>data.earnedRibbons.some(x=>x.id===id)).slice(0,2)
  };
 }
+
+export type RecognitionCatalog={
+ version:1;
+ activeBadgeIds:string[];
+ activeRibbonIds:string[];
+ activeMedalIds:string[];
+};
+export async function readRecognitionCatalog(signal?:AbortSignal):Promise<RecognitionCatalog>{
+ const response=await fetch('/api/v1/public/recognition/catalog',{
+  method:'GET',credentials:'omit',mode:'same-origin',cache:'no-store',
+  referrerPolicy:'same-origin',redirect:'error',
+  headers:{Accept:'application/json'},signal
+ });
+ if(!response.ok||!response.headers.get('content-type')?.includes('application/json'))
+  throw new Error('Public recognition status unavailable');
+ const value=await response.json() as Partial<RecognitionCatalog>;
+ const valid=(items:unknown,max:number)=>Array.isArray(items)&&items.length<=max&&
+  items.every(item=>typeof item==='string'&&/^[a-z][a-z0-9_]{1,47}$/.test(item))&&
+  new Set(items).size===items.length;
+ if(value?.version!==1||!valid(value.activeBadgeIds,26)||
+   !valid(value.activeRibbonIds,6)||!valid(value.activeMedalIds,6))
+  throw new Error('Invalid public recognition status');
+ return value as RecognitionCatalog;
+}
