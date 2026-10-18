@@ -125,6 +125,15 @@ test("room rejects corrupt GPS input and caps entries",()=>{
   assert.equal(room.write("over",point(),T,"over-session"),"capacity");
 });
 
+test("revocation fence saturation fails closed instead of allowing replay",()=>{
+  const room=new EphemeralPresenceRoom();
+  for(let i=0;i<2048;i++)
+    assert.equal(room.purge("alice","old-session-"+i,T),true);
+  assert.equal(room.purge("alice","old-session-overflow",T),false);
+  assert.equal(room.write("alice",point(),T,"new-session"),"revoked");
+  assert.equal(room.size,0);
+});
+
 test("HTTP boundary never uses caller's claimed actor from JSON",async()=>{
   const app=fixture();
   const bogus=app.requestFor("PUT","/v1/circles/family-1/presence/me",{
