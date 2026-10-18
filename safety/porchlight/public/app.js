@@ -90,10 +90,12 @@ $("host-form").addEventListener("submit",async event=>{
  $("host-submit").disabled=true;setMessage("host-feedback","Submitting privately…");
  try{
   const res=await json("/events/"+encodeURIComponent(state.event.slug)+"/hosts",{method:"POST",body:JSON.stringify(body)});
+  // Reset only the application form fields BEFORE placing the one-time receipt.
+  // Receipt inputs are inside the form; resetting afterward destroys the only removal code.
+  form.reset();$("exact-consent-row").hidden=true;
   $("receipt-id").value=res.id;$("receipt-code").value=res.receipt;$("receipt-panel").hidden=false;
   $("remove-id").value=res.id;$("remove-code").value=res.receipt;
   setMessage("host-feedback","Received for review. Your address is not publicly displayed.");
-  form.reset();$("exact-consent-row").hidden=true;
   $("receipt-panel").scrollIntoView({behavior:"auto",block:"nearest"});
  }catch(error){setMessage("host-feedback",error.message,true)}finally{$("host-submit").disabled=false}
 });
