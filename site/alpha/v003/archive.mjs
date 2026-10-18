@@ -3,9 +3,9 @@
  * Explicit alpha ceilings protect the 128 MiB Worker memory limit.
  */
 export const ZIP_LIMITS = Object.freeze({
-  archive: 30 * 1048576,
-  inflated: 120 * 1048576,
-  singleFile: 24 * 1048576,
+  archive: 20 * 1048576,
+  inflated: 48 * 1048576,
+  singleFile: 12 * 1048576,
   files: 180,
   path: 240,
   ratio: 400
@@ -74,7 +74,7 @@ function rejectZip64(extra) {
 }
 export function inspectZip(data) {
   const buf = data instanceof Uint8Array ? data : new Uint8Array(data);
-  if (buf.length < 22 || buf.length > ZIP_LIMITS.archive) invalid("ZIP exceeds 30 MiB alpha limit or is empty");
+  if (buf.length < 22 || buf.length > ZIP_LIMITS.archive) invalid("ZIP exceeds 20 MiB alpha limit or is empty");
   const v = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
   let end = -1;
   for (let p = buf.length - 22; p >= Math.max(0, buf.length - 65557); p--) {
@@ -128,7 +128,7 @@ export function inspectZip(data) {
           || unpacked > Math.max(1, packed) * ZIP_LIMITS.ratio)
         invalid("ZIP entry is too large or excessively compressed: " + name.slice(0, 90));
       total += unpacked;
-      if (total > ZIP_LIMITS.inflated) invalid("Expanded project exceeds 120 MiB alpha limit");
+      if (total > ZIP_LIMITS.inflated) invalid("Expanded project exceeds 48 MiB alpha limit");
       entries.push({ path: name, mime: assetMime(name), packed, unpacked, method, crc, dataAt, dataEnd });
     }
     ranges.push({ start: localAt, end: dataEnd });
