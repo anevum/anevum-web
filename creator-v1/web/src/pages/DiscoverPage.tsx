@@ -121,14 +121,14 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
               <strong>{resource.data.projects.items.length} VERIFIED PUBLISHED {resource.data.projects.items.length===1?"RELEASE":"RELEASES"} ON THIS PAGE</strong>
             </div>
             <div className="portal-result-actions" role="group" aria-label="Choose project layout">
-              <button type="button" className={view==="covers"?"active":""} aria-pressed={view==="covers"} onClick={()=>setView("covers")}>▦ COVERS</button>
+              <button type="button" className={view==="covers"?"active":""} aria-pressed={view==="covers"} onClick={()=>setView("covers")}>▦ GRID</button>
               <button type="button" className={view==="compact"?"active":""} aria-pressed={view==="compact"} onClick={()=>setView("compact")}>☷ LIST</button>
               {(q||category||cursor||freeOnly)&&<Link to="/discover">RESET</Link>}
             </div>
           </div>
           {resource.data.projects.items.length?
             <section aria-label="Published project results" className={view==="covers"?"portal-discover-results":"portal-discover-results portal-discover-compact"}>
-              {resource.data.projects.items.map(p=><ProjectCard key={p.id} project={p} returnTo={current}/>)}
+              {resource.data.projects.items.map(p=><ProjectCard key={p.id} project={p} returnTo={current} presentation="editorial"/>)}
             </section>:
             <div className="portal-true-empty">
               <div><span className="kicker">NOTHING HIDDEN / NOTHING FABRICATED</span>
