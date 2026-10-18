@@ -4,7 +4,8 @@
  * This does NOT import, expose, call or configure the private family-location
  * service. No DB, DO, member API, cookies, GPS, WebSocket or writable routes.
  * Authenticated Cloudflare Access is required for every asset. In its absence
- * the Worker fails closed.
+ * the Worker fails closed. Wrangler must set assets.run_worker_first=true so
+ * no static asset bypasses the Access gate.
  */
 const FILES=new Set(["/","/index.html","/styles.css","/app.mjs","/synthetic-engine.mjs"]);
 const CTYPE={
