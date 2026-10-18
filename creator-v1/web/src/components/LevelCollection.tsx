@@ -1,5 +1,6 @@
 import {useState} from 'react';
-import {LEVEL_ARTIFACTS,LevelEmblem} from './LevelEmblem';
+import {LevelEmblem} from './LevelEmblem';
+import LEVEL_ARTIFACTS from '../../../shared/level-artifacts.json';
 import {useMemberProgression} from './AnevumNotifications';
 const CHAPTERS=[
  {name:'Before Form',description:'From Pre-Grain through the opening of expansion.'},
