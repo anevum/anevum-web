@@ -72,9 +72,10 @@ function mockR2(){
       const x=data.get(key);
       return x?{size:x.size,customMetadata:x.customMetadata}:null;
     },
-    async get(key){
+    async get(key,options={}){
       const x=data.get(key);
-      return x?{size:x.size,customMetadata:x.customMetadata,body:new Blob([x.data]).stream()}:null;
+      const slice=options.range?x.data.slice(options.range.offset,options.range.offset+options.range.length):x?.data;
+      return x?{size:x.size,customMetadata:x.customMetadata,body:new Blob([slice]).stream()}:null;
     },
     async delete(keys){
       for(const k of Array.isArray(keys)?keys:[keys]) data.delete(k);
@@ -169,6 +170,12 @@ test("real multi-file workflow: private preview -> submit -> staff approve -> pu
     const js=await runtime.fetch(new Request(rel+"game.js"),env);
     assert.equal(js.status,200);
     assert.match(await js.text(),/READY/);
+    const ranged=await runtime.fetch(new Request(rel+"game.js",{headers:{range:"bytes=0-7"}}),env);
+    assert.equal(ranged.status,206);
+    assert.match(ranged.headers.get("content-range"),/^bytes 0-7\//);
+    assert.equal((await ranged.text()).length,8);
+    assert.equal((await runtime.fetch(new Request(rel+"game.js",{headers:{range:"bytes=99999-"}}),env)).status,416);
+    assert.equal((await runtime.fetch(new Request(rel+"game.js?v=cachebuster"),env)).status,200);
     const publicBefore=await runtime.fetch(new Request("https://run-tests.example/r/"+created.release_id+"/index.html"),env);
     assert.equal(publicBefore.status,404);
     assert.equal((await post(env,"/api/v1/packages/projects/"+created.id+"/submit",{})).status,200);
