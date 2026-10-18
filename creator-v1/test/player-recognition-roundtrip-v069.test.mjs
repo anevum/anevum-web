@@ -120,3 +120,16 @@ test('recognition owner API remains verified-email-only and write path remains g
  assert.equal((await canonicalRecognition(patch({}),env(db,'false'),owner('alpha'))).status,404);
  assert.equal(db.calls.length,writes);
 });
+
+test('public route is exact and bypasses private authentication only for read-only catalog',()=>{
+ const platform=readFileSync(new URL('../apex-prelaunch/platform.mjs',import.meta.url),'utf8');
+ const worker=readFileSync(new URL('../canonical-auth/worker.mjs',import.meta.url),'utf8');
+ assert.match(platform,/PUBLIC_RECOGNITION_CATALOG="\/api\/v1\/public\/recognition\/catalog"/);
+ assert.match(platform,/url\.pathname===PUBLIC_RECOGNITION_CATALOG/);
+ assert.match(platform,/if\(url\.origin!==ORIGIN\|\|url\.protocol!=="https:"/);
+ assert.match(worker,/const publicRecognitionCatalog=path==='\/api\/v1\/public\/recognition\/catalog'/);
+ assert.match(worker,/publicRecognitionCatalog&&!READ_METHODS\.has\(request\.method\)/);
+ assert.match(worker,/if\(publicRecognitionCatalog\)return safeResponse\(await canonicalRecognitionCatalog\(request,env\)\)/);
+ assert.match(worker,/if\(!stageReady\)return fail\(request,503\)/);
+ assert.match(worker,/sameOriginMutation/);
+});
