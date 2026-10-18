@@ -44,11 +44,13 @@ function mockD1(){
   sqlite.exec(readFileSync(resolve(ROOT,"site/alpha/v003/schema.sql"),"utf8"));
   const db={
     prepare(sql){
-      return {bind(...args){
-        return {first:async()=>sqlite.prepare(sql).get(...args)||null,
-          all:async()=>({results:sqlite.prepare(sql).all(...args)}),
-          run:async()=>{const r=sqlite.prepare(sql).run(...args);return {meta:{changes:r.changes}}}};
-      }};
+      const statement=(args=[])=>({
+        bind(...values){return statement(values);},
+        first:async()=>sqlite.prepare(sql).get(...args)||null,
+        all:async()=>({results:sqlite.prepare(sql).all(...args)}),
+        run:async()=>{const r=sqlite.prepare(sql).run(...args);return {meta:{changes:r.changes}}}
+      });
+      return statement();
     },
     async batch(statements) {
       sqlite.exec("BEGIN IMMEDIATE");
@@ -143,14 +145,6 @@ test("tokens expire and cannot be forged for another release",async()=>{
   assert.equal(await verifyPreview(secret,other,minted,2000000001),false);
   assert.equal(await verifyPreview(secret,release,minted,2000001000),false);
   assert.equal(await verifyPreview(secret,release,minted.replace(/.$/,"0"),2000000001),false);
-});
-test("complete creator journey keeps drafts private and serves reviewed game assets",async()=>{
-  const env=setup();
-  try{
-    const first=await post(env,"/api/v1/packages/upload",uploadForm(sample()));
-    assert.equal(first.status,201,await first.text().catch(()=>"?"));
-    // Response body is single-use; first JSON is taken on a fresh upload in later tests.
-  }finally{env.DB.close();}
 });
 test("real multi-file workflow: private preview -> submit -> staff approve -> public play -> draft update",async()=>{
   const env=setup();
