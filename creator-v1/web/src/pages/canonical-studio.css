@@ -409,3 +409,17 @@
  .st-compact-chrome>span{font-size:.54rem}
  .st-compact-chrome>div{gap:5px}
 }
+
+/* V003 / audited read-only package summary: never render creator HTML. */
+.st-native-summary{display:grid;gap:9px;min-width:0;padding:10px 0}
+.st-native-summary>.st-link{justify-self:start}
+.st-native-summary-result{min-width:0;padding:16px;border-radius:7px;
+ background:linear-gradient(135deg,rgba(24,54,68,.38),rgba(33,23,55,.24));
+ border:1px solid rgba(143,188,205,.3)}
+.st-native-summary-result>strong{display:block;font-size:.95rem;color:#f2e7f2;overflow-wrap:anywhere}
+.st-native-summary-result>small{display:block;line-height:1.6;color:#adc4d0}
+.st-native-summary-item{padding:10px 0;border-top:1px solid rgba(167,197,215,.16);overflow-wrap:anywhere}
+.st-native-summary-item>strong{display:block;color:#dfeaf0;font-size:.8rem}
+.st-native-summary-item p{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6;font-size:.79rem;margin:5px 0;color:#bed0df}
+.st-native-summary-item small{color:#acd4d0}
+@media(prefers-reduced-motion:reduce){.st-native-summary *{animation:none!important;transition:none!important}}
