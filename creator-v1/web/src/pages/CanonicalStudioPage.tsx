@@ -268,7 +268,7 @@ function StudioEditor({create,uploadsReady,creator}:{create:boolean;uploadsReady
      </div>
     </div>
     <StudioWorkbench value={draft.description} disabled={locked}
-     title={draft.title||'Untitled creation'} creator={creator}
+     title={draft.title||'Untitled creation'} creator={creator} category={draft.category}
      onChange={value=>assign('description',value)}/>
     <div className="st-creation-underbar">
      <span>PRIVATE WORKSPACE. NOTHING YOU CREATE IS PUBLIC UNTIL A SEPARATE REVIEWED RELEASE.</span>
