@@ -1,0 +1,11 @@
+{
+  "name": "anevum-porchlight-prototype-v002",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "engines": {"node": ">=22.0.0"},
+  "scripts": {
+    "test": "node --experimental-sqlite --test test/service.test.mjs",
+    "check": "node --check service.mjs && node --check test/service.test.mjs"
+  }
+}
