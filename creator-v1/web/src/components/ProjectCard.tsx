@@ -22,8 +22,22 @@ const scenes: Record<Project["category"], CosmicScene> = {
   creative:"creative", learning:"learning", libraries:"libraries", other:"other"
 };
 
-export function ProjectCard({ project, returnTo = "/discover" }: { project: Project; returnTo?: string }) {
+export function ProjectCard({ project, returnTo = "/discover", presentation = "visual" }: {
+  project: Project; returnTo?: string; presentation?: "visual" | "editorial";
+}) {
   const href=projectDetailPath(project.id,returnTo);
+  if(presentation==="editorial")return <article className="project-card av73-project-card">
+    <div className="av73-project-card-top">
+      <span className="av73-project-card-category">{labels[project.category] || "Project"}</span>
+      <span>{project.freeToUse?"Creator marks free":"Published project"}</span>
+    </div>
+    <h3><Link to={href}>{project.title}</Link></h3>
+    <p>{project.summary}</p>
+    <div className="av73-project-card-bottom">
+      <Link className="av73-project-card-author" to={`/creators/${encodeURIComponent(project.creatorHandle)}`}>@{project.creatorHandle}</Link>
+      <Link className="av73-project-card-action" to={href}>View project <Icon name="arrow" size={16}/></Link>
+    </div>
+  </article>;
   return (
     <article className="project-card depth-hover-card" onPointerMove={e=>applyPointerDepth(e,8)} onPointerLeave={clearPointerDepth}>
       <Link className="project-art" to={href} aria-label={`Open ${project.title}`}>
