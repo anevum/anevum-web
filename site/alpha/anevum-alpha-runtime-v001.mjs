@@ -21,7 +21,7 @@ async function user(req,env){
 }
 function page(title,inside){
  const html='<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#090f1a"><title>'+escape(title)+' · ANEVUM</title><style>'+CSS+'</style></head><body><header><strong>ANEVUM /</strong><nav><a href="/">Home</a><a href="/discover">Discover</a><a href="/alpha">Alpha releases</a><a href="/upload">Upload</a></nav></header><main>'+inside+'</main><footer>ANEVUM ALPHA / Real uploads only · Reviewed publication · Creator Studio independent</footer><script>'+CLIENT+'</script></body></html>';
- return new Response(html,{headers:{...H,"content-type":"text/html; charset=utf-8","content-security-policy":"default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; media-src 'self'; frame-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'"}});
+ return new Response(html,{headers:{...H,"content-type":"text/html; charset=utf-8","content-security-policy":"default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' data:; media-src 'self'; frame-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'"}});
 }
 const link=(url,text)=>'<a class="button" href="'+url+'">'+escape(text)+'</a>';
 function cards(xs,role){
