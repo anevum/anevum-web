@@ -36,7 +36,10 @@ test("V008 homepage preserves the source-backed public release and creator index
   assert.doesNotMatch(hero,/12\.4K|3\.1K|8,921|fakeProject/);
 });
 test("V012 preserves member boundaries while retiring duplicate Atlas navigation",()=>{
-  assert.match(routes,/<MemberGate\s*\/>/);
+  assert.match(routes,/path="member" element={<Phase1MemberPage\/>}/);
+  assert.match(routes,/path="saved" element={<CanonicalSavedWorksPage\/>}/);
+  assert.match(routes,/path="library" element={<Navigate to="\/saved" replace\/>}/);
+  assert.doesNotMatch(routes,/<MemberGate\s*\/>|<MemberLibraryPage\s*\/>/);
   assert.match(routes,/path="atlas\/\*" element={<LegacyAtlasRedirect\/>}/);
   assert.doesNotMatch(routes,/<AtlasMorphLayout\/>|<AtlasPage\/>/);
   assert.match(routes,/path="community\/write"/);
@@ -73,7 +76,10 @@ test("V006 visual controls are rounded, tactile, and editorial without changing 
   assert.match(tactile,/--av6-control-shadow/);
   assert.match(tactile,/prefers-reduced-motion:reduce/);
   assert.match(tactile,/forced-colors:active/);
-  assert.match(routes,/<MemberGate\s*\/>/);
+  assert.match(routes,/path="member" element={<Phase1MemberPage\/>}/);
+  assert.match(routes,/path="saved" element={<CanonicalSavedWorksPage\/>}/);
+  assert.match(routes,/path="library" element={<Navigate to="\/saved" replace\/>}/);
+  assert.doesNotMatch(routes,/<MemberGate\s*\/>|<MemberLibraryPage\s*\/>/);
 });
 
 test("V006 second pass keeps bounded field selection and mobile-first content",()=>{
@@ -118,5 +124,8 @@ test("V008 typography, controls and mobile motion respect public UX boundaries",
   assert.match(signalCss,/\.site-shell--home \.header-create/);
   assert.match(signalCss,/av8-release-title strong\{/);
   assert.doesNotMatch(signalCss,/clip-path:inset\(0 100%/);
-  assert.match(routes,/<MemberGate\s*\/>/);
+  assert.match(routes,/path="member" element={<Phase1MemberPage\/>}/);
+  assert.match(routes,/path="saved" element={<CanonicalSavedWorksPage\/>}/);
+  assert.match(routes,/path="library" element={<Navigate to="\/saved" replace\/>}/);
+  assert.doesNotMatch(routes,/<MemberGate\s*\/>|<MemberLibraryPage\s*\/>/);
 });
