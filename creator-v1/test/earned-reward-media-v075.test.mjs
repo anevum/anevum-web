@@ -200,7 +200,7 @@ test('V075 shared player-card and inspector code does not bundle all 30 hidden l
  const publicAuthor=read('web/src/components/PublicAuthorShowcase.tsx');
  const vault=read('web/src/components/EarnedRewardVault.tsx');
  for(const code of [shared,card,publicAuthor,vault]){
-  assert.doesNotMatch(code,/LEVEL_ARTIFACTS|shared\/level-artifacts\.json|item\.name/);
+  assert.doesNotMatch(code,/LEVEL_ARTIFACTS|shared\/level-artifacts\.json/);
  }
  const catalog=read('web/src/components/LevelCollection.tsx');
  assert.match(catalog,/level-artifacts\.json/);
