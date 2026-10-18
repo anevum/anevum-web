@@ -284,34 +284,73 @@ jobs:
           fi
           echo "V079_EXACT_HOMEPAGE_CSS=PASS"
           for page in / /discover /recognition /join /community /@devon /creators; do
-            curl -fsSL --max-time 30 "https://anevum.com$page" -o "$RUNNER_TEMP/v078-live-page.html"
-            grep -Fq 'id="root"' "$RUNNER_TEMP/v078-live-page.html"
+            echo "V079 checking real public route $page"
+            curl -fsSL --max-time 30 "https://anevum.com$page" -o "$RUNNER_TEMP/v079-live-page.html"
+            grep -Fq 'id="root"' "$RUNNER_TEMP/v079-live-page.html"
           done
+          echo "V079 checking public availability of email authentication"
           curl -fsS --max-time 30 https://anevum.com/api/v1/member/auth-methods | jq -e '.methods.email.available==true' >/dev/null
-          curl -fsS --max-time 30 -D "$RUNNER_TEMP/v078-level04.headers" -o "$RUNNER_TEMP/v078-level04.svg" https://anevum.com/api/v1/members/devon/rewards/levels/4/card
-          grep -qi '^content-type: image/svg+xml' "$RUNNER_TEMP/v078-level04.headers"
-          grep -Fq 'Symmetry Field' "$RUNNER_TEMP/v078-level04.svg"
-          test "$(curl -sS --max-time 25 -o /dev/null -w '%{http_code}' https://anevum.com/api/v1/members/devon/rewards/levels/1/card)" = "404"
-          curl -fsS --max-time 35 -o "$RUNNER_TEMP/v078-original-scene.gz" https://anevum.com/api/v1/members/devon/rewards/levels/4/scene
-          test "$(wc -c < "$RUNNER_TEMP/v078-original-scene.gz")" -gt 1000
-          test "$(curl -sS --max-time 25 -o /dev/null -w '%{http_code}' https://anevum.com/api/v1/member/rewards/inventory)" = "401"
-          test "$(curl -sS --max-time 20 -o /dev/null -w '%{http_code}' https://anevum.com/evolution/assets/level-04-1024.webp)" = "404"
-          echo "V079_PRESERVED_V078_EARNED_SVG_PRIVATE_LOCK_AND_NATIVE_3D=PASS"
+          # Never require public access to one specific person's earned rewards.
+          # The same profile can legitimately switch from public to private.
+          # A private profile MUST NOT leak its earned card SVG or 3D scene.
+          echo "V079 checking visibility-sensitive public reward routes"
+          card_status="$(curl --silent --show-error --max-time 30 -w '%{http_code}' \
+            -D "$RUNNER_TEMP/v079-level04.headers" -o "$RUNNER_TEMP/v079-level04.svg" \
+            https://anevum.com/api/v1/members/devon/rewards/levels/4/card)"
+          case "$card_status" in
+            200)
+              grep -qi '^content-type:.*image/svg+xml' "$RUNNER_TEMP/v079-level04.headers"
+              grep -Fq 'Symmetry Field' "$RUNNER_TEMP/v079-level04.svg"
+              curl -fsS --max-time 35 -o "$RUNNER_TEMP/v079-original-scene.gz" \
+                https://anevum.com/api/v1/members/devon/rewards/levels/4/scene
+              test "$(wc -c < "$RUNNER_TEMP/v079-original-scene.gz")" -gt 1000
+              echo "V079_PUBLIC_EARNED_SVG_AND_NATIVE_3D=PASS"
+              ;;
+            404)
+              test "$(curl --silent --show-error --max-time 25 -o /dev/null -w '%{http_code}' \
+                https://anevum.com/api/v1/members/devon/rewards/levels/4/scene)" = "404"
+              echo "V079_PRIVATE_PROFILE_REWARD_MEDIA_HIDDEN=PASS"
+              ;;
+            *)
+              echo "::error::Unexpected public Level 4 response: $card_status"
+              exit 1
+              ;;
+          esac
+          test "$(curl --silent --show-error --max-time 25 -o /dev/null -w '%{http_code}' \
+            https://anevum.com/api/v1/members/devon/rewards/levels/1/card)" = "404"
+          test "$(curl --silent --show-error --max-time 25 -o /dev/null -w '%{http_code}' \
+            https://anevum.com/api/v1/member/rewards/inventory)" = "401"
+          test "$(curl --silent --show-error --max-time 20 -o /dev/null -w '%{http_code}' \
+            https://anevum.com/evolution/assets/level-04-1024.webp)" = "404"
           chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
           test -n "$chrome"
-          rendered=0
+          # Render the real member page. Visible earned media requires visible
+          # canonical public rewards; a private page is a successful privacy guard.
+          member_page_valid=0
           for attempt in 1 2 3; do
-            mkdir -p "$RUNNER_TEMP/v078-chrome-$attempt"
-            if timeout 65 "$chrome" --headless=new --no-sandbox --no-first-run --disable-dev-shm-usage --disable-gpu --disable-background-networking --user-data-dir="$RUNNER_TEMP/v078-chrome-$attempt" --virtual-time-budget=12000 --dump-dom https://anevum.com/@devon > "$RUNNER_TEMP/v078-live-member.html" 2> "$RUNNER_TEMP/v078-live-chrome.log"; then
-              if grep -Fq 'data-player-card="v078"' "$RUNNER_TEMP/v078-live-member.html" &&
-                 grep -Fq 'Symmetry Field' "$RUNNER_TEMP/v078-live-member.html"; then
-                rendered=1
-                break
+            mkdir -p "$RUNNER_TEMP/v079-member-chrome-$attempt"
+            if timeout 65 "$chrome" --headless=new --no-sandbox --no-first-run --disable-dev-shm-usage --disable-gpu --disable-background-networking \
+                --user-data-dir="$RUNNER_TEMP/v079-member-chrome-$attempt" --virtual-time-budget=12000 \
+                --dump-dom https://anevum.com/@devon > "$RUNNER_TEMP/v079-live-member.html" \
+                2> "$RUNNER_TEMP/v079-live-chrome.log"; then
+              if test "$card_status" = 200; then
+                if grep -Fq 'data-player-card="v078"' "$RUNNER_TEMP/v079-live-member.html" &&
+                   grep -Fq 'Symmetry Field' "$RUNNER_TEMP/v079-live-member.html"; then
+                  member_page_valid=1
+                  break
+                fi
+              else
+                if grep -Fq 'This profile is not published, does not exist, or cannot be viewed right now.' "$RUNNER_TEMP/v079-live-member.html" &&
+                   ! grep -Fq 'data-player-card="v078"' "$RUNNER_TEMP/v079-live-member.html"; then
+                  member_page_valid=1
+                  break
+                fi
               fi
             fi
             sleep 3
           done
-          test "$rendered" = 1 || { echo "::error::Live Chromium did not display earned V078 player cards"; tail -n 35 "$RUNNER_TEMP/v078-live-chrome.log" || true; exit 1; }
+          test "$member_page_valid" = 1 || { echo "::error::V079 member privacy/public player-card contract failed"; tail -n 35 "$RUNNER_TEMP/v079-live-chrome.log" || true; exit 1; }
+          echo "V079_V078_PUBLIC_CARD_OR_PRIVATE_WORLD_SAFETY=PASS"
           # Render public React in a real Chromium session, without account privileges.
           homepage_ok=0
           for attempt in 1 2 3; do
