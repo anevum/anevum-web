@@ -18,12 +18,20 @@ No live child tracking, live attendance/presence, surveillance feeds, strangers'
 
 **Production is not authorized by this source PR.** Do not change anevum.com/* or any Creator V1 / RHEN Worker, D1, routes, staff identities or payments. Never repurpose the existing member database. All variables default OFF and the included Wrangler config uses a deliberately invalid placeholder separate D1 ID. Organizer and rate secrets must be provisioned through secure Cloudflare bindings and never committed.
 
-## Local run
-The self-contained worker API can be tested without Cloudflare infrastructure by Node 22+:
+## Local review and synthetic browser QA
+The isolated Worker API can be tested without Cloudflare infrastructure by Node 22+:
 ```sh
 node --test safety/porchlight/test/pilot.test.mjs
 ```
-Test fixtures use in-memory SQLite and synthetic addresses and do not generate public participation claims.
+The checked-in CI workflow also exercises Chromium at 320px, 390px and 1440px and captures the organizer screen, using a localhost-only synthetic event:
+```sh
+node safety/porchlight/test/browser-capture.mjs --chrome /usr/bin/chromium --output evidence/porchlight-v001
+```
+The captured synthetic data are **not** enrollment, hosted testing or production acceptance. Review-only workflow: `.github/workflows/porchlight-v001-review.yml`.
+
+Public UI entry: `public/index.html`. Private organizer UI entry: `public/organizer.html`, with a bearer token held in memory only and no localStorage. The isolated Worker checks every staff API request server-side.
+
+**Area-only locations never appear as plotted map points.** Their public location label is derived by the server from the event's general neighborhood; an organizer cannot publish an arbitrary address label for an area-only host. Event emergency closure cannot be reopened by pressing activate.
 
 ## Configuration before a separately authorized pilot
 1. Create an isolated D1 database and replace the placeholder ID only in a private release configuration. Apply `migrations/0001.sql` **to that database alone**.
