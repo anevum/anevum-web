@@ -5,7 +5,6 @@ import { useResource } from "../lib/useResource";
 import { ProjectCard } from "../components/ProjectCard";
 import { PageNav } from "../components/PageNav";
 import { PortalHeading } from "../components/PortalHeading";
-import { LevelPanel } from "../components/LevelPanel";
 import { EmptyState, ErrorState, LoadingState } from "../components/States";
 
 const channels: ReadonlyArray<{id:Category;label:string;description:string;mark:string}> = [
@@ -78,36 +77,42 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
   }
   const categories=resource.state==="ready"?resource.data.categories.categories:[];
   const countByCategory=new Map(categories.map(x=>[x.category,x.count]));
-  return <div className="portal-discover">
-    <PortalHeading
+  return <div className="portal-discover av73-discover">
+    {immersive?<PortalHeading
       eyebrow={world?.eyebrow||"THE PORTALS / EVERYTHING WORTH TRYING"}
       title={world?.title||"EXPLORE THE"} accent={world?.accent||"UNIVERSE."}
       description={world?.description||"Games, apps, interactive experiments and independent work. Search actual published projects, not paid placement or invented activity."}
-      index={world?.index||"DISCOVER / 001"} scene={world?.scene||"portal"}/>
+      index={world?.index||"DISCOVER / 001"} scene={world?.scene||"portal"}/>:
+      <header className="av73-discover-intro">
+        <span className="av73-discover-eyebrow">ANEVUM / DISCOVER</span>
+        <h1>{active?"Explore "+active.label:"Find something worth opening."}</h1>
+        <p>Search genuine, approved games, apps, art and shared tools. See what's actually published before deciding what to explore.</p>
+      </header>}
     <div className="portal-browse-layout">
       <div className="portal-browse-main">
         <section className="portal-box portal-search-hall" aria-label="Search and browse published projects">
           <div className="portal-box-header">
-            <div><span className="kicker">THE CATALOGUE / PUBLISHED WORK</span><h2>{world?.searchTitle||"FIND YOUR NEXT FAVORITE"}</h2></div>
-            <span className="portal-hall-stamp">{world?.stamp||"GAMES / APPS / MORE"}</span>
+            <div><span className="kicker">PUBLIC CATALOGUE</span><h2>{world?.searchTitle||"Browse published work"}</h2></div>
+            <span className="portal-hall-stamp">{world?.stamp||"Approved releases only"}</span>
           </div>
           <form className="portal-wide-search" role="search" onSubmit={search}>
             <label htmlFor="portal-project-query" className="visually-hidden">Search published projects</label>
-            <input id="portal-project-query" type="search" maxLength={100} value={draft} onChange={e=>setDraft(e.target.value)} placeholder="SEARCH THE ENTIRE PORTAL..." />
-            <button type="submit">SEARCH ↗</button>
+            <input id="portal-project-query" type="search" maxLength={100} value={draft} onChange={e=>setDraft(e.target.value)} placeholder="Search projects" />
+            <button type="submit">Search <span aria-hidden="true">↗</span></button>
           </form>
+          <div className="av73-discover-filter-heading"><strong>Filter by type</strong><span>Scroll to see all categories →</span></div>
           <nav className="portal-channel-filters" aria-label="Filter by project type">
-            <button type="button" onClick={()=>selectCategory("")} className={!category?"active":""} aria-pressed={!category}>ALL PROJECTS</button>
+            <button type="button" onClick={()=>selectCategory("")} className={!category?"active":""} aria-pressed={!category}>All work</button>
             {channels.map(x=><button key={x.id} type="button" aria-pressed={category===x.id} className={category===x.id?"active":""} onClick={()=>selectCategory(x.id)}>
-              <span aria-hidden="true">{x.mark}</span> {x.label}
+              <span aria-hidden="true">{x.mark}</span><span>{x.label}</span>{resource.state==="ready"&&<span className="av73-filter-count">{countByCategory.get(x.id)||0}</span>}
             </button>)}
           </nav>
+          <div className="portal-availability-filter" role="group" aria-label="Filter by access cost">
+            <span className="kicker">ACCESS</span>
+            <button type="button" onClick={toggleFreeOnly} aria-pressed={freeOnly} aria-describedby="av73-free-note" className={freeOnly?"active":""}>Only marked free {freeOnly?"✓":"+"}</button>
+            <small id="av73-free-note">Based on each creator's published free-to-use declaration, not independently verified cost information.</small>
+          </div>
         </section>
-        <div className="portal-availability-filter" role="group" aria-label="Filter by access cost">
-          <span className="kicker">ACCESS / AVAILABILITY</span>
-          <button type="button" onClick={toggleFreeOnly} aria-pressed={freeOnly} className={freeOnly?"active":""}>ONLY PROJECTS MARKED FREE {freeOnly?"✓":"+"}</button>
-          <small>Based on each creator's published free-to-use declaration, not independently verified cost information.</small>
-        </div>
         {resource.state==="loading"&&<LoadingState label="Reading the live project catalogue"/>}
         {resource.state==="error"&&<ErrorState title="THE PORTAL COULD NOT LOAD" detail="Published project data is currently unavailable. No sample projects were substituted."/>}
         {resource.state==="ready"&&<>
@@ -116,44 +121,26 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
               <strong>{resource.data.projects.items.length} VERIFIED PUBLISHED {resource.data.projects.items.length===1?"RELEASE":"RELEASES"} ON THIS PAGE</strong>
             </div>
             <div className="portal-result-actions" role="group" aria-label="Choose project layout">
-              <button type="button" className={view==="covers"?"active":""} aria-pressed={view==="covers"} onClick={()=>setView("covers")}>▦ COVERS</button>
+              <button type="button" className={view==="covers"?"active":""} aria-pressed={view==="covers"} onClick={()=>setView("covers")}>▦ GRID</button>
               <button type="button" className={view==="compact"?"active":""} aria-pressed={view==="compact"} onClick={()=>setView("compact")}>☷ LIST</button>
               {(q||category||cursor||freeOnly)&&<Link to="/discover">RESET</Link>}
             </div>
           </div>
           {resource.data.projects.items.length?
             <section aria-label="Published project results" className={view==="covers"?"portal-discover-results":"portal-discover-results portal-discover-compact"}>
-              {resource.data.projects.items.map(p=><ProjectCard key={p.id} project={p} returnTo={current}/>)}
+              {resource.data.projects.items.map(p=><ProjectCard key={p.id} project={p} returnTo={current} presentation="editorial"/>)}
             </section>:
             <div className="portal-true-empty">
-              <div className="portal-empty-symbol" aria-hidden="true">✳</div>
               <div><span className="kicker">NOTHING HIDDEN / NOTHING FABRICATED</span>
-                <h2>{cursor?"END OF CURRENT RELEASES":q||category||freeOnly?"NO MATCHING PROJECTS YET":"THE FIRST RELEASES ARE ON THEIR WAY."}</h2>
-                <p>ANEVUM only shows approved work. Try another portal or follow the development of the first real submissions.</p>
+                <h2>{cursor?"END OF CURRENT RELEASES":q||category||freeOnly?"NO MATCHING PROJECTS YET":"NO APPROVED PROJECTS YET"}</h2>
+                <p>Only approved work appears here. Clear your filters, try another category or read how releases are reviewed.</p>
                 <div className="portal-empty-actions"><Link to="/discover" className="button secondary">EXPLORE ALL</Link><Link to="/guide" className="button secondary">FREE FIELD GUIDE</Link><Link to="/status" className="button secondary">RELEASE STATUS</Link></div>
               </div>
             </div>}
           <PageNav route="/discover" search={params} nextCursor={resource.data.projects.nextCursor} label="Project catalogue"/>
         </>}
       </div>
-      <aside className="portal-sidebar portal-discover-side" aria-label="Discovery guide">
-        <section className="portal-sidebox">
-          <header><span className="kicker">FIND YOUR CORNER</span><h2>PORTAL DIRECTORY</h2></header>
-          <nav className="portal-directory" aria-label="Project categories">
-            {channels.map(x=><button type="button" key={x.id} onClick={()=>selectCategory(x.id)} className={x.id===category?"active":""} aria-pressed={x.id===category}>
-              <span className="portal-directory-mark">{x.mark}</span>
-              <span className="portal-directory-name"><strong>{x.label}</strong><small>{x.description}</small></span>
-              <span className="portal-directory-count">{countByCategory.get(x.id)||0}</span>
-            </button>)}
-          </nav>
-        </section>
-        <LevelPanel compact/>
-        <section className="portal-sidebox">
-          <span className="kicker">THE RULE OF THE PORTAL</span><h2>TRY IT FIRST.</h2>
-          <p>Play or try projects on the creator's own hosting. Open source code separately. A submission is not a safety endorsement, and every published project goes through review.</p>
-          <Link className="portal-sidebox-link" to="/create">SUBMIT ORIGINAL WORK →</Link>
-        </section>
-      </aside>
+
     </div>
   </div>;
 }

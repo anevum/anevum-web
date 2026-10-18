@@ -16,7 +16,7 @@ const tactile=get("creator-v1/web/src/tactile-editorial-v006.css");
 const stylesheet=get("creator-v1/web/src/cinematic-world-v005.css");
 test("V005 source TSX parses and shares actual navigation",()=>{
   for(const src of [shell,landing,rail,hero])assert.doesNotThrow(()=>parse(src,{sourceType:"module",plugins:["typescript","jsx"]}));
-  assert.match(landing,/<WorldGatewayDeck\s*\/>/);
+  assert.match(landing,/<WorldGatewayDeck\s+projects=\{projects\}/);
   assert.match(shell,/className="site-main av9-main"/);
   assert.match(shell,/<dialog ref=\{menuDialog\}/);
   assert.match(shell,/aria-haspopup="dialog"/);
@@ -28,7 +28,8 @@ test("V008 homepage preserves the source-backed public release and creator index
   assert.match(landing,/readProjects/);
   assert.match(landing,/readStatus/);
   assert.match(landing,/readCreators/);
-  assert.match(landing,/<LiveSignalHero/);
+  assert.doesNotMatch(landing,/<LiveSignalHero\s/);
+  assert.match(landing,/<WorldGatewayDeck\s+projects=\{projects\}/);
   assert.match(landing,/lastVerified/);
   assert.match(hero,/projectDetailPath/);
   assert.match(hero,/sortByPublication/);
@@ -81,11 +82,11 @@ test("V006 second pass keeps bounded field selection and mobile-first content",(
   assert.match(feed,/id="av6-field-filter"/);
   assert.match(feed,/field==="all"/);
   assert.match(feed,/Latest approved|LATEST APPROVED FIRST/);
-  // V011 puts illustrated discovery before the public telemetry grid on all screens.
+  // V073 puts interactive module navigation before the verified public index.
   assert.match(hero,/href="#world-gateways"/);
-  assert.match(landing,/<WorldGatewayDeck\/>/);
+  assert.match(landing,/<WorldGatewayDeck\s+projects=\{projects\}/);
   assert.match(landing,/<LiveSignalModules/);
-  assert.ok(landing.indexOf("<WorldGatewayDeck/>")<landing.indexOf("<LiveSignalModules"));
+  assert.ok(landing.indexOf("<WorldGatewayDeck ")<landing.indexOf("<LiveSignalModules"));
   assert.match(feed,/id="community-index"/);
   assert.match(tactile,/\.cinema-feature\{display:none\}/);
   assert.match(tactile,/\.av6-feed-fields select:focus-visible/);

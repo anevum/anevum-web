@@ -66,7 +66,7 @@ try{
   writeFileSync(join(output,label+".png"),bytes);
  };
  const pages=[
-  ["home","/",".av8-live-signal"],["discover","/discover",".portal-discover"],
+  ["home","/",".av73-world-deck"],["discover","/discover",".portal-discover"],
   ["project","/projects/00000000000000000000000000000001",".portal-project"],
   ["creators","/creators",".portal-creators"],["creator-channel","/creators/nova_demo",".portal-creator-channel"],
   ["community","/community",".ch7-hub"],["boards","/boards",".cnb-hub"],
@@ -135,6 +135,43 @@ try{
       throw Error("SITEWIDE_V012_LEVELS_TEXT_SQUEEZED_"+width+":"+JSON.stringify(metrics));
    }
    await screenshot(name+"-"+width);
+   if(name==="levels"){
+     // V074: source-only fixture may lack separately packaged V060 artwork.
+     // Verify all 30 slots stay within the gallery and no inline WebGL stage
+     // ever replaces the approved image; observe original image OR safe fallback.
+     await evaluate('document.querySelector(".an-series-grid .an-artifact-card")?.scrollIntoView({block:"center",behavior:"instant"})');
+     await delay(300);
+     const artwork=await evaluate('(()=>{const cards=[...document.querySelectorAll(".an-series-grid .an-artifact-card")],first=cards[0]?.querySelector(".av73-static-level-icon,.level-emblem-beyond"),c=cards[0]?.getBoundingClientRect(),r=first?.getBoundingClientRect(),hosts=[...document.querySelectorAll(".an-series-grid .av73-static-level-icon")],images=hosts.map(h=>h.querySelector("img")).filter(Boolean),loaded=images.filter(img=>img.naturalWidth>0);return {cards:cards.length,icons:hosts.length,fallbacks:document.querySelectorAll(".an-series-grid .level-emblem-beyond").length,meshes:document.querySelectorAll("canvas.av62-native-stage").length,decoded:loaded.length,validSources:images.every(img=>String(img.getAttribute("src")).includes("/evolution/assets/level-")),visibleLoaded:loaded.every(img=>getComputedStyle(img).visibility==="visible"&&getComputedStyle(img).objectFit==="contain"),staticHosts:hosts.every(h=>h.dataset.artwork==="v073-preserved-optical-icon"&&getComputedStyle(h).animationName==="none"),contained:!!c&&!!r&&r.left>=c.left-1&&r.right<=c.right+1&&r.top>=c.top-1&&r.bottom<=c.bottom+1,overflow:document.documentElement.scrollWidth>innerWidth+1}})()');
+     if(artwork.cards!==30||artwork.icons+artwork.fallbacks!==30||artwork.meshes!==0||
+       !artwork.validSources||!artwork.visibleLoaded||!artwork.staticHosts||
+       !artwork.contained||artwork.overflow)
+       throw Error("V074_LEVEL_ICON_ARTWORK_"+width+":"+JSON.stringify(artwork));
+     console.log("V074_LEVEL_ICON_ASSET_REVIEW_"+width+"="+JSON.stringify({decoded:artwork.decoded,offlineFallbacks:artwork.fallbacks}));
+     await screenshot("levels-icon-gallery-"+width);
+     await evaluate('window.scrollTo({top:0,behavior:"instant"})');
+   }
+   if(name==="discover"){
+     // V073: the catalogue must be a usable search/filter surface on phone
+     // and desktop, not a tall, decorative hero or duplicate sidebar.
+     await until(()=>evaluate('!!document.querySelector(".portal-result-toolbar,.portal-true-empty")'));
+     const browse=await evaluate('(()=>{const root=document.querySelector(".av73-discover"),form=root?.querySelector(".portal-wide-search"),field=form?.querySelector("input"),submit=form?.querySelector("button"),fr=field?.getBoundingClientRect(),sr=submit?.getBoundingClientRect();return {headline:root?.querySelector(".av73-discover-intro h1")?.textContent,hero:!!root?.querySelector(".portal-page-heading"),directory:root?.querySelectorAll(".portal-directory").length||0,filters:root?.querySelectorAll(".portal-channel-filters button").length||0,searchWidth:fr?.width||0,submitWidth:sr?.width||0,searchVisible:fr?.left>=-1&&fr?.right<=innerWidth+1,submitVisible:sr?.left>=-1&&sr?.right<=innerWidth+1,subHeight:sr?.height||0,projectCards:root?.querySelectorAll(".av73-project-card").length||0,firstResultTop:root?.querySelector(".av73-project-card")?.getBoundingClientRect().top??null,decorativeCovers:root?.querySelectorAll(".portal-discover-results .project-art,.portal-discover-results img").length||0,overflow:document.documentElement.scrollWidth>innerWidth+1}})()');
+     if(!browse.headline?.includes("Find something")||browse.hero||browse.directory||
+       browse.filters!==9||browse.projectCards<1||(width<=390&&(browse.firstResultTop===null||browse.firstResultTop>height-25))||browse.searchWidth<170||browse.submitWidth<80||
+       !browse.searchVisible||!browse.submitVisible||browse.subHeight<40||
+       browse.decorativeCovers||browse.overflow)
+       throw Error("V073_DISCOVER_FIRST_FOLD_"+width+":"+JSON.stringify(browse));
+     await evaluate('document.querySelector(".portal-channel-filters button:nth-child(2)").click()');
+     await until(()=>evaluate('new URLSearchParams(location.search).get("category")==="games"'));
+     const selected=await evaluate('(()=>({pressed:document.querySelector(".portal-channel-filters button:nth-child(2)")?.getAttribute("aria-pressed"),overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
+     if(selected.pressed!=="true"||selected.overflow)
+       throw Error("V073_DISCOVER_FILTER_"+width+":"+JSON.stringify(selected));
+     await evaluate('(()=>{const input=document.getElementById("portal-project-query");const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set;setter.call(input,"experiment");input.dispatchEvent(new Event("input",{bubbles:true}));})()');
+     await evaluate('document.querySelector(".portal-wide-search button").click()');
+     await until(()=>evaluate('new URLSearchParams(location.search).get("q")==="experiment"'));
+     const term=await evaluate('(()=>({q:new URLSearchParams(location.search).get("q"),category:new URLSearchParams(location.search).get("category"),overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
+     if(term.q!=="experiment"||term.category!=="games"||term.overflow)
+       throw Error("V073_DISCOVER_SEARCH_"+width+":"+JSON.stringify(term));
+   }
 
    // V002 compiled browser acceptance: synthetic player cases only.
    if(name==="project"){
@@ -287,33 +324,35 @@ try{
      if(!reset.ok)throw Error("PLAYER_V005_MEMBER_RESET_FAILED");
    }
    if(name==="home"){
-    await evaluate('document.getElementById("world-gateways").scrollIntoView({block:"start"})');
-    if(width<541){
-     // Native lazy loading deliberately defers offscreen horizontal cards.
-     // Exercise each card before requiring all four decoded originals.
-     for(let index=0;index<4;index++){
-      await evaluate('document.querySelectorAll(".av9-world-gateway")['+index+'].scrollIntoView({block:"nearest",inline:"nearest",behavior:"instant"})');
-      await until(()=>evaluate('(()=>{const image=document.querySelectorAll(".av9-world-gateway-art>img")['+index+'];return image?.complete&&image.naturalWidth>0;})()'));
-     }
-     await evaluate('document.getElementById("community-portal-cards").scrollTo({left:0,behavior:"instant"});document.getElementById("world-gateways").scrollIntoView({block:"start"})');
-     await until(()=>evaluate('document.getElementById("community-portal-cards").scrollLeft<5'));
+     await evaluate('document.getElementById("world-gateways").scrollIntoView({block:"start"})');
+     await until(()=>evaluate('document.querySelectorAll(".av73-world-tab").length===4&&!!document.querySelector(".av11-live-index")'));
+     const initial=await evaluate('(()=>({choices:[...document.querySelectorAll(".av73-world-tab")].map(el=>el.textContent?.trim()),selected:document.querySelector(".av73-world-tab[aria-selected=true]")?.id,art:document.querySelectorAll(".av73-world-deck img,.av73-world-deck canvas").length,panels:document.querySelectorAll("#av73-module-content").length,readable:!!document.querySelector(".av73-stage-description h2"),overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
+     if(initial.choices.length!==4||initial.selected!=="av73-module-tab-discover"||initial.art!==0||initial.panels!==1||!initial.readable||initial.overflow)
+      throw Error("V073_MODULE_ENTRY_"+width+":"+JSON.stringify(initial));
+     await evaluate('document.getElementById("av73-module-tab-play").click()');
+     await until(()=>evaluate('document.querySelector("#av73-module-content .av73-action-main")?.getAttribute("href")?.includes("/discover?category=games")'));
+     await evaluate('document.getElementById("av73-module-tab-connect").click()');
+     await until(()=>evaluate('document.querySelector("#av73-module-content .av73-action-main")?.getAttribute("href")?.endsWith("/community")'));
+     await evaluate('document.getElementById("av73-module-tab-create").click()');
+     await until(()=>evaluate('document.querySelector("#av73-module-content .av73-action-main")?.getAttribute("href")?.endsWith("/studio")'));
+     await evaluate('document.getElementById("av73-module-tab-discover").click()');
+     await until(()=>evaluate('document.querySelector("#av73-module-content .av73-action-main")?.getAttribute("href")?.endsWith("/discover")'));
+     await evaluate('(()=>{const tab=document.getElementById("av73-module-tab-discover");tab.focus();tab.dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowRight",bubbles:true,cancelable:true}));})()');
+     await until(()=>evaluate('document.querySelector(".av73-world-tab[aria-selected=true]")?.id==="av73-module-tab-connect"'));
+     await evaluate('document.getElementById("av73-module-tab-discover").click()');
+     await until(()=>evaluate('document.querySelector(".av73-world-tab[aria-selected=true]")?.id==="av73-module-tab-discover"'));
+     const access=await evaluate('(()=>({tabs:document.querySelectorAll(".av73-world-tab[role=tab]").length,active:document.querySelector(".av73-world-tab[aria-selected=true]")?.id,stage:document.getElementById("av73-module-content")?.getAttribute("role"),overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
+     if(access.tabs!==4||access.active!=="av73-module-tab-discover"||access.stage!=="tabpanel"||access.overflow)
+      throw Error("V073_MODULE_ACCESS_"+width+":"+JSON.stringify(access));
+     await screenshot("home-collections-"+width);
+     await evaluate('document.querySelector(".av11-live-index").scrollIntoView({block:"start"})');
+     await evaluate('document.getElementById("av11-tab-creators").click()');
+     await until(()=>evaluate('document.querySelector("#av11-current-module .av8-module--makers")!==null'));
+     const activity=await evaluate('(()=>({tabs:document.querySelectorAll(".av11-module-tab[role=tab]").length,visible:document.querySelectorAll(".av11-module-stage>.av8-module").length,active:document.querySelector(".av11-module-tab[aria-selected=true]")?.id,overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
+     if(activity.tabs!==4||activity.visible!==1||activity.active!=="av11-tab-creators"||activity.overflow)
+      throw Error("V073_ACTIVITY_WORKBENCH_"+width+":"+JSON.stringify(activity));
+     await screenshot("home-community-modules-"+width);
     }
-    await until(()=>evaluate('document.querySelectorAll(".av9-world-gateway-art>img").length===4&&Array.from(document.querySelectorAll(".av9-world-gateway-art>img")).every(image=>image.complete&&image.naturalWidth>0)'));
-    // naturalWidth is density-corrected with width-descriptor srcsets. Decode
-    // the selected file itself to verify physical source pixels instead.
-    const portals=await evaluate('(async()=>({images:document.querySelectorAll(".av9-world-gateway-art>img[srcset]").length,resolutions:await Promise.all([...document.querySelectorAll(".av9-world-gateway-art>img")].map(async image=>{const bitmap=await createImageBitmap(await(await fetch(image.currentSrc)).blob());const width=bitmap.width;bitmap.close();return width;})),links:[...document.querySelectorAll(".av9-world-gateway")].map(a=>a.getAttribute("href")),readingSurface:[...document.querySelectorAll(".av9-world-gateway-content")].every(el=>getComputedStyle(el).position!=="absolute"),overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
-    if(portals.images!==4||portals.resolutions.some(width=>width<768)||!portals.readingSurface||portals.overflow||portals.links.some(href=>!href.includes("/discover?category=")))
-     throw Error("COMMUNITY_PORTAL_ART_OR_LAYOUT_"+width+":"+JSON.stringify(portals));
-    if(width<541){
-     await evaluate("document.querySelector("+JSON.stringify('button[aria-label="Next collection"]')+").click()");
-     await until(()=>evaluate('document.getElementById("community-portal-cards").scrollLeft>100'));
-     await evaluate("document.querySelector("+JSON.stringify('button[aria-label="Previous collection"]')+").click()");
-     await until(()=>evaluate('document.getElementById("community-portal-cards").scrollLeft<5'));
-    }
-    await screenshot("home-collections-"+width);
-    await evaluate('document.querySelector(".av11-live-index").scrollIntoView({block:"start"})');
-    await screenshot("home-community-modules-"+width);
-   }
    results.push({page:name,width,...state});
    console.log("SITEWIDE_V012_"+name.toUpperCase()+"_"+width+"=PASS");
   }

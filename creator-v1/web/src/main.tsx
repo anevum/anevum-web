@@ -54,3 +54,6 @@ import "./supporter-transparency-v037.css";
 import "./supporter-compact-v045.css";
 import "./continuance-sitewide-v063.css";
 import "./continuance-worldstage-v064.css";
+import "./module-experience-v073.css";
+import "./discover-experience-v073.css";
+import "./level-icon-preservation-v074.css";

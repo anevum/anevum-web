@@ -40,6 +40,6 @@ test('alerts and awards share the canonical 30-level progression',()=>{
   assert.doesNotMatch(instrument,/EXPLORE ALL 60 LEVEL ICONS/);
   assert.match(instrument,/EXPLORE ALL 30 LIVING LEVELS/);
   assert.match(collection,/Thirty permanent levels/);
-  assert.match(specimen,/registerAnimatedSpecimen/);
-  assert.match(specimen,/v062-native-mesh/);
+  assert.doesNotMatch(specimen,/registerAnimatedSpecimen/);
+  assert.match(specimen,/v073-preserved-optical-icon/);
 });
