@@ -10,6 +10,8 @@ on:
       - creator-v1/canonical-auth/staff-ops.mjs
       - creator-v1/test/iren-auth-boundary-v003.test.mjs
       - creator-v1/test/iren-better-auth-service-v003.test.mjs
+      - creator-v1/test/iren-founder-bootstrap-v004.test.mjs
+      - creator-v1/canonical-auth/migrations/0012_staff_founder_guard.sql
       - creator-v1/test/iren-apex-staff-gateway.test.mjs
       - creator-v1/test/capture-iren-staff-v002.mjs
       - creator-v1/web/src/staff-main.tsx
