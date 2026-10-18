@@ -63,7 +63,7 @@ async function request<T>(path:string,method:"GET"|"POST"|"PATCH"="GET",body?:un
      "Account service unavailable. No changes were saved.";
    if(response.status===400)message="Check your handle (3–30 lowercase letters, numbers or underscores) and display name.";
    if(response.status===403){const reason=await response.json().catch(()=>null);
-     if(reason?.error==="Same-origin request required")message="This browser could not verify the request. Open a.anevum.com directly, sign in and try again.";
+     if(reason?.error==="Same-origin request required")message="This browser could not verify the request. Open anevum.com directly, reload, sign in and retry without switching domains.";
      if(reason?.error==="Verified member email required")message="Your email verification could not be confirmed. Sign in again to continue.";
    }
    if(method!=="GET")notify({kind:"error",title:"Change not saved",detail:message},owner);
