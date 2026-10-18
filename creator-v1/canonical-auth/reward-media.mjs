@@ -71,7 +71,10 @@ export async function earnedRewardMedia(req,env,user=null,match=matchRewardMedia
   const original=sourceFile(match.level,match.kind);
   const upstream=new URL(original.path,url.origin);
   const raw=await env.ASSETS.fetch(new Request(upstream,{
-   method:req.method,headers:{Accept:original.type},redirect:'error'
+   // Runtime metadata requires reading its JSON even for HEAD. The response
+   // to the caller still has no body and no content length disclosure.
+   method:match.kind==='runtime'?'GET':req.method,
+   headers:{Accept:original.type},redirect:'error'
   }));
   if(!raw||raw.status!==200)return missing(req);
   const mime=raw.headers.get('content-type')||'';
