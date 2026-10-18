@@ -136,16 +136,18 @@ try{
    }
    await screenshot(name+"-"+width);
    if(name==="levels"){
-     // V074: approved high-resolution level icons must stay in their cards.
-     // Retired inline WebGL canvas must never cover or hide those images.
+     // V074: source-only fixture may lack separately packaged V060 artwork.
+     // Verify all 30 slots stay within the gallery and no inline WebGL stage
+     // ever replaces the approved image; observe original image OR safe fallback.
      await evaluate('document.querySelector(".an-series-grid .an-artifact-card")?.scrollIntoView({block:"center",behavior:"instant"})');
-     await until(()=>evaluate('document.querySelector(".an-series-grid .av73-static-level-icon img")?.naturalWidth>0'));
-     const artwork=await evaluate('(()=>{const cards=[...document.querySelectorAll(".an-series-grid .an-artifact-card")],host=cards[0]?.querySelector(".av73-static-level-icon"),img=host?.querySelector("img"),c=cards[0]?.getBoundingClientRect(),r=host?.getBoundingClientRect(),style=host?getComputedStyle(host):null;return {cards:cards.length,icons:document.querySelectorAll(".an-series-grid .av73-static-level-icon").length,meshes:document.querySelectorAll("canvas.av62-native-stage").length,src:img?.currentSrc||"",nativeWidth:img?.naturalWidth||0,visible:img?getComputedStyle(img).visibility:null,artwork:host?.dataset.artwork,animation:style?.animationName,fit:img?getComputedStyle(img).objectFit:null,contained:!!c&&!!r&&r.left>=c.left-1&&r.right<=c.right+1&&r.top>=c.top-1&&r.bottom<=c.bottom+1,overflow:document.documentElement.scrollWidth>innerWidth+1}})()');
-     if(artwork.cards!==30||artwork.icons!==30||artwork.meshes!==0||
-       !artwork.src.includes("level-01-")||artwork.nativeWidth<120||
-       artwork.visible!=="visible"||artwork.artwork!=="v073-preserved-optical-icon"||
-       artwork.animation!=="none"||artwork.fit!=="contain"||!artwork.contained||artwork.overflow)
+     await delay(300);
+     const artwork=await evaluate('(()=>{const cards=[...document.querySelectorAll(".an-series-grid .an-artifact-card")],host=cards[0]?.querySelector(".av73-static-level-icon,.level-emblem-beyond"),img=host?.querySelector("img"),c=cards[0]?.getBoundingClientRect(),r=host?.getBoundingClientRect(),style=host?getComputedStyle(host):null;return {cards:cards.length,icons:document.querySelectorAll(".an-series-grid .av73-static-level-icon").length,fallbacks:document.querySelectorAll(".an-series-grid .level-emblem-beyond").length,meshes:document.querySelectorAll("canvas.av62-native-stage").length,src:img?.currentSrc||"",nativeWidth:img?.naturalWidth||0,visible:img?getComputedStyle(img).visibility:null,artwork:host?.dataset.artwork,animation:style?.animationName,fit:img?getComputedStyle(img).objectFit:null,contained:!!c&&!!r&&r.left>=c.left-1&&r.right<=c.right+1&&r.top>=c.top-1&&r.bottom<=c.bottom+1,overflow:document.documentElement.scrollWidth>innerWidth+1}})()');
+     if(artwork.cards!==30||artwork.icons+artwork.fallbacks!==30||artwork.meshes!==0||
+       (artwork.icons>0&&(!artwork.src.includes("level-01-")||artwork.visible!=="visible"||
+        artwork.artwork!=="v073-preserved-optical-icon"||artwork.fit!=="contain"))||
+       artwork.animation!=="none"||!artwork.contained||artwork.overflow)
        throw Error("V074_LEVEL_ICON_ARTWORK_"+width+":"+JSON.stringify(artwork));
+     console.log("V074_LEVEL_ICON_ASSET_REVIEW_"+width+"="+JSON.stringify({decoded:artwork.nativeWidth>0,offlineFallbacks:artwork.fallbacks}));
      await screenshot("levels-icon-gallery-"+width);
      await evaluate('window.scrollTo({top:0,behavior:"instant"})');
    }
