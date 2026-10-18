@@ -91,6 +91,7 @@ A policy engine must guard each presence request using **subject, intended viewe
 - City-center starting point, not any family's residence.
 - 3D building extrusions, optional global DEM elevation/terrain relief (AWS Terrarium), pan/pitch/rotate/zoom, map tabs, demonstration waypoints.
 - Manual, foreground-only on-device GPS after explicit permission; browser state only.
+- Two explicitly fictional, static circle markers available through a preview-only toggle; no actual family location feeds.
 - No other peoples' positions, no real location server, no uploads.
 
 ### R1 — Family circle privacy foundation
