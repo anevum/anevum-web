@@ -10,7 +10,8 @@ const routes=readFileSync(new URL('../apex-prelaunch/platform.mjs',import.meta.u
 test('legacy community composer uses canonical moderated forum rather than stale member gate',()=>{
  assert.match(app, /path="community\/write" element=\{<Navigate to="\/community\?compose=1" replace\/>\}/);
  assert.doesNotMatch(app, /path="community\/write" element=\{<CommunityPostEditorPage/);
- assert.match(app, /path="library" element=\{<MemberLibraryPage\/>\}/);
+ assert.match(app, /path="library" element=\{<Navigate to="\/saved" replace\/>\}/);
+ assert.doesNotMatch(app, /<MemberGate\/>|<MemberLibraryPage\/>/);
 });
 
 test('canonical discussion entry opens the existing form from a deep link',()=>{
