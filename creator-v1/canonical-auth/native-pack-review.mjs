@@ -113,6 +113,34 @@ export async function inspectFrozenNativeSummary(db,store,projectId,assetId,revi
     row.live_type!==row.content_type||Number(row.live_size)!==Number(row.size_bytes)||
     !DIGEST.test(String(row.sha256))||row.live_sha!==row.sha256)
   throw error(409,'Frozen private attachment no longer matches review receipt');
+ // Atomically reserve and audit an attempt BEFORE any potentially expensive
+ // R2 read. Failed checksum/format reads still consume quota and leave an audit.
+ // The database query rechecks the immutable snapshot and prevents cap races.
+ const auditId=crypto.randomUUID();
+ const attempt=await db.prepare(
+  'INSERT INTO member_studio_native_inspections '+
+  '(id,submission_id,project_id,reviewer_id,asset_id,sha256,action,created_at) '+
+  "SELECT ?,s.id,p.id,?,a.id,?,'attempt_text_summary',? "+
+  'FROM member_studio_submissions s '+
+  'JOIN member_studio_projects p ON p.id=s.project_id AND p.user_id=s.user_id '+
+  "AND p.revision=s.project_revision AND p.status='pending_review' "+
+  'JOIN member_studio_submission_assets snap ON snap.submission_id=s.id '+
+  'JOIN member_studio_assets a ON a.id=snap.asset_id AND a.project_id=p.id AND a.user_id=s.user_id '+
+  "WHERE s.id=? AND s.project_id=? AND snap.asset_id=? AND s.status='pending_review' "+
+  "AND s.user_id<>? AND a.status='quarantined' AND a.sha256=? AND snap.sha256=? "+
+  'AND a.size_bytes=snap.size_bytes AND a.filename=snap.filename '+
+  'AND a.content_type=snap.content_type '+
+  'AND (SELECT COUNT(*) FROM member_studio_native_inspections WHERE reviewer_id=? AND created_at>=?)<30 RETURNING id'
+ ).bind(auditId,reviewerId,row.sha256,now,
+  row.submission_id,projectId,assetId,reviewerId,row.sha256,row.sha256,
+  reviewerId,now-3600).first();
+ if(!attempt?.id){
+  const after=await db.prepare(
+   'SELECT COUNT(*) AS n FROM member_studio_native_inspections WHERE reviewer_id=? AND created_at>=?'
+  ).bind(reviewerId,now-3600).first();
+  throw Number(after?.n||0)>=30?error(429,'Private inspection rate limit reached'):
+   error(409,'Private submission changed before inspection');
+ }
  let object;
  try{object=await store.get(row.storage_key);}
  catch{throw error(503,'Private package storage is unavailable');}
@@ -125,25 +153,23 @@ export async function inspectFrozenNativeSummary(db,store,projectId,assetId,revi
  try{opened=await readValidatedNativePack(row.filename,bytes,row.category);}
  catch{throw error(409,'Private native package no longer validates');}
  const summary=summarizeNativeDocument(opened.manifest,opened.document,opened.assets.size);
- // Exact immutable snapshot must still be pending before the response is sent.
- // The action is recorded without copying user-authored content or R2 locations.
- const audit=await db.prepare(
-  'INSERT INTO member_studio_native_inspections '+
-  '(id,submission_id,project_id,reviewer_id,asset_id,sha256,action,created_at) '+
-  "SELECT ?,s.id,p.id,?,a.id,?,'view_text_summary',? "+
-  'FROM member_studio_submissions s '+
+ // Transition the recorded attempt to success ONLY if the exact frozen
+ // submission remains current. A concurrent withdrawal preserves the attempt.
+ const completed=await db.prepare(
+  "UPDATE member_studio_native_inspections SET action='view_text_summary' "+
+  "WHERE id=? AND reviewer_id=? AND action='attempt_text_summary' AND EXISTS ("+
+  'SELECT 1 FROM member_studio_submissions s '+
   'JOIN member_studio_projects p ON p.id=s.project_id AND p.user_id=s.user_id '+
-  'AND p.revision=s.project_revision AND p.status=\'pending_review\' '+
+  "AND p.revision=s.project_revision AND p.status='pending_review' "+
   'JOIN member_studio_submission_assets snap ON snap.submission_id=s.id '+
   'JOIN member_studio_assets a ON a.id=snap.asset_id AND a.project_id=p.id AND a.user_id=s.user_id '+
   "WHERE s.id=? AND s.project_id=? AND snap.asset_id=? AND s.status='pending_review' "+
   "AND s.user_id<>? AND a.status='quarantined' AND a.sha256=? AND snap.sha256=? "+
   'AND a.size_bytes=snap.size_bytes AND a.filename=snap.filename '+
-  'AND a.content_type=snap.content_type '+
-  'AND (SELECT COUNT(*) FROM member_studio_native_inspections WHERE reviewer_id=? AND created_at>=?)<30 RETURNING id'
- ).bind(crypto.randomUUID(),reviewerId,digest,now,
-  row.submission_id,projectId,assetId,reviewerId,digest,digest,reviewerId,now-3600).first();
- if(!audit?.id)throw error(409,'Private review changed or inspection quota was reached');
+  'AND a.content_type=snap.content_type) RETURNING id'
+ ).bind(auditId,reviewerId,row.submission_id,projectId,assetId,
+  reviewerId,digest,digest).first();
+ if(!completed?.id)throw error(409,'Private review changed before successful inspection');
  return {projectId,revision:Number(row.project_revision),assetId,
   summary,note:summary.note};
 }
