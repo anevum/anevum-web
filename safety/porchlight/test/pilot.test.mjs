@@ -286,6 +286,10 @@ test('public UI never requests browser GPS, child identity, unreviewed host feed
  assert.match(html,/exact-consent-row/);
  assert.match(html,/host-adult/);
  assert.match(html,/Remove your listing/);
+ assert.match(html,/HOST CONSENT NOTICE \/ V001\.1/);
+ assert.match(html,/seven days after the event ends/);
+ assert.match(html,/Nothing is published automatically/);
+ assert.match(html,/Do not submit children's names/);
  assert.match(html,/Schemat(ic|ic)/i);
  assert.doesNotMatch(script,/navigator\.geolocation|watchPosition|getCurrentPosition/);
  assert.doesNotMatch(script,/localStorage|sessionStorage|postMessage\(/);
