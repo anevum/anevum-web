@@ -278,3 +278,27 @@ test("runtime permits ordinary asset cache-busting queries but restricts arbitra
     assert.equal((await runtime.fetch(new Request(dir+"../../other-project/game.js"),env)).status,404);
   }finally{env.DB.close();}
 });
+
+
+test("simultaneous creator updates publish at most one new draft", async()=>{
+  const env=setup();
+  try{
+    const created=await (await post(env,"/api/v1/packages/upload",uploadForm(sample()))).json();
+    assert.equal((await post(env,"/api/v1/packages/projects/"+created.id+"/submit",{})).status,200);
+    assert.equal((await post(env,"/api/v1/packages/projects/"+created.id+"/review",{action:"publish"},"staff")).status,200);
+    const [first,second]=await Promise.all([
+      post(env,"/api/v1/packages/upload",uploadForm(sample(),"Cosmic Racer Update A",created.id)),
+      post(env,"/api/v1/packages/upload",uploadForm(sample(),"Cosmic Racer Update B",created.id))
+    ]);
+    const statuses=[first.status,second.status].sort((a,b)=>a-b);
+    assert.deepEqual(statuses,[201,409]);
+    const releases=await env.DB.prepare("SELECT COUNT(*) AS n FROM anevum_package_releases WHERE project_id=?").bind(created.id).first();
+    assert.equal(releases.n,2,"only one update release is retained");
+    const p=await env.DB.prepare("SELECT draft_release_id,live_release_id FROM anevum_package_projects WHERE id=?").bind(created.id).first();
+    assert.ok(p.draft_release_id);
+    assert.notEqual(p.draft_release_id,p.live_release_id);
+    const publicPage=await getPage(env,"/play/v3/"+created.id,"visitor");
+    const src=iframeSrc(await publicPage.text());
+    assert.match(src,new RegExp(p.live_release_id));
+  }finally{env.DB.close();}
+});
