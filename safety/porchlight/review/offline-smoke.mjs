@@ -72,7 +72,7 @@ try {
  assert.equal(await evaluate("document.querySelector('#host-email').value"),"household@example.test");
  assert.equal(await evaluate("document.querySelector('#host-adult').checked"),true);
  await evaluate("document.getElementById('host-form').requestSubmit()");
- await until(()=>evaluate("window.__porchlightReview.snapshot().pending==='pending'"));
+ await until(()=>evaluate("window.__porchlightReview.snapshot().pending==='pending' && document.getElementById('receipt-code').value.length===64 && !document.getElementById('receipt-panel').hidden"));
  const pending=await evaluate("({receiptShown:!document.getElementById('receipt-panel').hidden, codeLength:document.getElementById('receipt-code').value.length, visible:document.querySelectorAll('.host-item').length})");
  assert.deepEqual(pending,{receiptShown:true,codeLength:64,visible:2});
  await evaluate("document.getElementById('demo-approve').click()");
