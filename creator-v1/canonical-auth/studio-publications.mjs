@@ -3,7 +3,8 @@
 // treated as approved. A submitted draft, consent alone, and reviewer role
 // cannot mint achievement badges. No monetary or XP reward is generated.
 import {boundedText} from './request-body.mjs';
-import {recognitionReady} from './recognition.mjs';
+import {recognitionReady,publicRecognitionMap} from './recognition.mjs';
+import {levelProgress} from './progression.mjs';
 
 const UUID=/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/;
 const headers={'content-type':'application/json; charset=utf-8',
@@ -38,7 +39,9 @@ async function publicationEditAllowed(db,userId,now){
  return row.length===1;
 }
 const flag=env=>env?.CANONICAL_STUDIO_PUBLICATION_ENABLED==='true'
- &&env?.CANONICAL_CREATOR_STUDIO_ENABLED==='true';
+ &&env?.CANONICAL_CREATOR_STUDIO_ENABLED==='true'
+ &&env?.CANONICAL_STUDIO_SAFETY_ENABLED==='true'
+ &&(env?.CANONICAL_STUDIO_SAFETY_REVIEWER_IDS||'').split(',').some(x=>x.trim().length>0);
 const safeExternal=value=>{
  if(typeof value!=='string'||value.length>1500)return false;
  try{
@@ -63,8 +66,9 @@ export async function studioPublicationReady(db){
  try{
   if(!db?.prepare)return false;
   const names=await read(db,"SELECT name FROM sqlite_master WHERE type='table' AND name IN "+
-   "('member_studio_publication_consents','member_studio_publication_reviews','member_studio_publications','member_studio_publication_links')");
-  return new Set(names.map(x=>x.name)).size===4;
+   "('member_studio_publication_consents','member_studio_publication_reviews','member_studio_publications','member_studio_publication_links',"+
+   "'member_studio_publication_takedowns','member_studio_recognition_revocations','member_studio_safety_limits')");
+  return new Set(names.map(x=>x.name)).size===7;
  }catch{return false;}
 }
 const eligibleSnapshot=async(db,projectId,userId,revision)=>{
@@ -167,6 +171,7 @@ export async function canonicalStudioPublicationConsent(req,env,user,projectId,n
 
 const qualifiedPublication=
  "p.status='published' AND c.revoked_at IS NULL "+
+ "AND NOT EXISTS(SELECT 1 FROM member_studio_publication_takedowns td WHERE td.project_id=p.project_id) "+
  "AND EXISTS(SELECT 1 FROM member_studio_publication_links l "+
  "WHERE l.project_id=p.project_id AND l.user_id=p.user_id) "+
  "AND r.action='publish_metadata' AND r.rights_checked=1 AND r.content_checked=1 "+
@@ -189,7 +194,9 @@ export async function canonicalPublicStudioCreations(req,env){
  if(!await studioPublicationReady(db))return fail(503,'Creation registry unavailable');
  try{
   const cols="p.project_id AS id,s.title,s.summary,s.category,s.free_to_use,"+
-   "s.license_name,s.source_url,s.demo_url,pr.handle,p.published_at";
+   "s.license_name,s.source_url,s.demo_url,pr.handle,pr.display_name,p.published_at,p.user_id AS internal_owner_id,"+
+  "(SELECT COUNT(*) FROM member_space_media m WHERE m.user_id=p.user_id AND m.slot='avatar') AS has_avatar,"+
+  "COALESCE((SELECT show_stats FROM member_space_settings ms WHERE ms.user_id=p.user_id),1) AS show_stats";
   const from=" FROM member_studio_publications p "+
    "JOIN member_studio_publication_consents c ON c.submission_id=p.submission_id "+
    "JOIN member_studio_publication_reviews r ON r.id=p.review_id AND r.submission_id=p.submission_id "+
@@ -201,12 +208,35 @@ export async function canonicalPublicStudioCreations(req,env){
    (detail?' AND p.project_id=? LIMIT 1':' ORDER BY p.published_at DESC,p.project_id DESC LIMIT 24'),
    ...(detail?[detail[1]]:[]));
   if(detail&&!rows.length)return fail(404,'Not found');
-  const project=r=>({id:r.id,handle:r.handle,title:r.title,summary:r.summary,
-   category:r.category,freeToUse:Number(r.free_to_use)===1,license:r.license_name,
-   sourceUrl:safeExternal(r.source_url)?r.source_url:null,
-   demoUrl:safeExternal(r.demo_url)?r.demo_url:null,publishedAt:Number(r.published_at),
-   delivery:'external-link-only'});
   if(req.method==='HEAD')return new Response(null,{status:200,headers});
+  const owners=[...new Set(rows.map(r=>r.internal_owner_id))].slice(0,24);
+  const [recognitions,milestoneRows,xpRows]=await Promise.all([
+   publicRecognitionMap(db,owners),
+   owners.length?read(db,'SELECT user_id,SUM(CASE milestone WHEN \'first_signal\' THEN 10 '+
+    'WHEN \'world_shaper\' THEN 25 ELSE 0 END) AS xp FROM member_space_milestones '+
+    'WHERE user_id IN ('+owners.map(()=>'?').join(',')+') GROUP BY user_id',...owners):[],
+   owners.length?read(db,'SELECT user_id,SUM(amount) AS xp FROM member_xp_events '+
+    'WHERE user_id IN ('+owners.map(()=>'?').join(',')+') GROUP BY user_id',...owners):[]
+  ]);
+  const byMember=(arr)=>new Map(arr.map(r=>[r.user_id,Number(r.xp)||0]));
+  const milestoneXp=byMember(milestoneRows),testXp=byMember(xpRows);
+  const project=r=>{
+   const recognition=recognitions.get(r.internal_owner_id);
+   const publicXp=(milestoneXp.get(r.internal_owner_id)||0)+(testXp.get(r.internal_owner_id)||0);
+   return {id:r.id,handle:r.handle,title:r.title,summary:r.summary,
+    category:r.category,freeToUse:Number(r.free_to_use)===1,license:r.license_name,
+    sourceUrl:safeExternal(r.source_url)?r.source_url:null,
+    demoUrl:safeExternal(r.demo_url)?r.demo_url:null,publishedAt:Number(r.published_at),
+    delivery:'external-link-only',
+    creator:{handle:r.handle,displayName:r.display_name,avatar:Number(r.has_avatar)>0,
+     level:Number(r.show_stats)===1?levelProgress(publicXp).level:null,
+     featuredAwards:recognition?.featuredAwards||[],
+     earnedBadges:recognition?.earnedBadges||[],
+     badgeDisplay:recognition?.badgeDisplay,
+     distinctions:recognition?.distinctions,
+     aura:recognition?.aura||'none'}
+   };
+  };
   return json(detail?{creation:project(rows[0])}:{creations:rows.map(project),nextCursor:null});
  }catch{return fail(503,'Creation registry unavailable');}
 }
@@ -232,17 +262,22 @@ export async function publishedCreationBadgeStatements(db,{projectId,reviewId,no
    " JOIN member_studio_publication_consents qc ON qc.submission_id=q.submission_id "+
    " JOIN member_studio_publication_reviews qr ON qr.id=q.review_id "+
    " JOIN member_studio_submissions qs ON qs.id=q.submission_id "+
-   " WHERE q.user_id=p.user_id AND q.status='published' AND qc.revoked_at IS NULL "+
+   " WHERE q.user_id=p.user_id "+
+   " AND NOT EXISTS(SELECT 1 FROM member_studio_publication_takedowns tk WHERE tk.project_id=q.project_id) "+
    " AND qr.reviewer_id<>q.user_id AND qr.owner_id=q.user_id AND qr.rights_checked=1 "+
    " AND qr.content_checked=1 AND qr.external_link_checked=1 "+
    " AND EXISTS(SELECT 1 FROM member_studio_publication_links ql "+
    "WHERE ql.project_id=q.project_id AND ql.user_id=q.user_id) "+
    " AND NOT EXISTS(SELECT 1 FROM member_studio_submission_assets ax WHERE ax.submission_id=q.submission_id))>=?";
   out.push(db.prepare(
-   "INSERT OR IGNORE INTO member_recognition_grants"+
+   "INSERT INTO member_recognition_grants"+
    "(user_id,kind,recognition_id,earned_at,granted_by,evidence_ref,reviewed_by) "+
    "SELECT p.user_id,'badge',?,?,'canonical-studio-publication',"+
-   "'public-creation:'||p.project_id,r.reviewer_id"+proof
+   "'public-creation:'||p.project_id,r.reviewer_id"+proof+
+   " ON CONFLICT(user_id,kind,recognition_id) DO UPDATE SET "+
+   "revoked_at=NULL,earned_at=excluded.earned_at,evidence_ref=excluded.evidence_ref,"+
+   "reviewed_by=excluded.reviewed_by WHERE member_recognition_grants.revoked_at IS NOT NULL "+
+   "AND member_recognition_grants.granted_by='canonical-studio-publication'"
   ).bind(award,now,projectId,reviewId,minimum));
   out.push(db.prepare(
    "INSERT OR IGNORE INTO member_reward_notifications(user_id,kind,reference,created_at) "+
