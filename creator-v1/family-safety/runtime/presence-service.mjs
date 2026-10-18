@@ -126,7 +126,8 @@ export function createPresenceService({
         // Repeat authoritative policy lookup after any async room read.
         const checkAt=now();
         const fresh=await loadPolicy({...ids,now:checkAt});
-        if(!matchesPolicy(fresh,actorId,route.subjectId,route.circleId,checkAt))
+        if(!matchesPolicy(fresh,actorId,route.subjectId,route.circleId,checkAt) ||
+            fresh.session?.id!==ctx.session?.id)
           return body(noPosition());
         return body(visiblePresence({...fresh,location,now:checkAt}));
       }
