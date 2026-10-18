@@ -80,7 +80,7 @@ export function RewardInspector({reward,onClose,handle}:{
   aria-label={reward.name+' · earned reward inspection'}
   onCancel={onClose} onClose={onClose}
   onClick={event=>{if(event.target===dialog.current)onClose()}}>
-  <div className="av75-reward-inspector">
+  <div className={'av75-reward-inspector'+(isModel?' av78-reward-inspector--model':'')}>
    <header className="av75-reward-header">
     <div><span className="av75-reward-eyebrow">CONTINUANCE INSTITUTE / EARNED REWARD</span>
      <h2>{reward.name}</h2>
