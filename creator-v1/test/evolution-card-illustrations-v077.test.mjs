@@ -59,7 +59,10 @@ test('V077 original earn-only high-detail collectible 3D inspector remains intac
  const vault=read('web/src/components/EarnedRewardVault.tsx');
  const inspector=read('web/src/components/RewardInspector.tsx');
  const model=read('web/src/lib/reward-model-renderer.ts');
- assert.match(media,/renderEvolutionCardArt\(match\.level\)/);
+ assert.match(media,/renderEvolutionCardArt\\(match\\.level\\)/);
+ const publicGateway=read('apex-prelaunch/platform.mjs');
+ assert.match(publicGateway,/rewards\\\\\\/(?:inventory\\|levels)/);
+ assert.match(publicGateway,/card\\|icon\\|preview\\|poster/);
  assert.match(media,/match\.kind==='card'/);
  assert.match(media,/const state=await readProgression/);
  assert.match(media,/match\.handle\?state\.level!==match\.level:state\.level<match\.level/);
