@@ -41,6 +41,25 @@ jobs:
         run: |
           npm run check:creator-v1-web
           npm run build:creator-v1-web
+      - name: Render earned Level 4 in actual desktop and phone Chromium viewports
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome" || { echo "::error::Chromium not available"; exit 1; }
+          mkdir -p "$RUNNER_TEMP/v077-card-visual"
+          node creator-v1/test/evolution-card-v077-browser.mjs "$chrome" "$RUNNER_TEMP/v077-card-visual"
+          test -s "$RUNNER_TEMP/v077-card-visual/v077-level4-player-card-desktop.png"
+          test -s "$RUNNER_TEMP/v077-card-visual/v077-level4-player-card-mobile.png"
+          echo 'V077_LEVEL4_STATIC_CARD_DESKTOP_MOBILE_CHROME=PASS' >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve earned Level 4 visual QA (no locked art)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v077-level4-optical-card-qa
+          path: ${{ runner.temp }}/v077-card-visual/
+          if-no-files-found: warn
+          retention-days: 14
       - name: Ensure card plates are never published as static assets
         shell: bash
         run: |

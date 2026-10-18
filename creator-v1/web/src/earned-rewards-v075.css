@@ -306,3 +306,168 @@
  }
  .av75-reward-dialog::backdrop{background:Canvas}
 }
+
+/* V078 / premium earned collectible stage.
+ * The viewer remains the exact original V059 native WebGL scene with the
+ * existing verified media loading, rotation, zoom and animation controls.
+ */
+.av75-reward-dialog:has(.av78-reward-inspector--model){
+ width:min(96vw,990px);
+ max-width:990px;
+ border:1px solid rgba(157,200,245,.58);
+ border-radius:18px;
+ background:linear-gradient(130deg,#0b1424,#131e34 62%,#0b1527);
+ box-shadow:0 35px 110px #000e,0 0 40px #87aeef1d;
+}
+.av78-reward-inspector--model{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) 126px;
+ gap:0 15px;
+ padding:clamp(14px,2.4vw,25px);
+}
+.av78-reward-inspector--model .av75-reward-header{
+ grid-column:1/-1;
+ padding-bottom:12px;
+ border-bottom:1px solid #607d985d;
+}
+.av78-reward-inspector--model .av75-reward-eyebrow{
+ color:#a8d7ff;letter-spacing:.16em;
+}
+.av78-reward-inspector--model .av75-reward-header h2{
+ font-family:Georgia,serif;
+ font-size:clamp(28px,3.4vw,42px);
+ color:#f7f9fc;
+}
+.av78-reward-inspector--model .av75-reward-stage{
+ grid-column:1;
+ grid-row:2;
+ min-height:min(52dvh,530px);
+ align-self:stretch;
+ border:1px solid #779bc569;
+ border-radius:14px;
+ background:
+  radial-gradient(ellipse at 48% 50%,#31476b 0%,#1a2841 38%,#080f20 79%);
+ box-shadow:inset 0 0 70px #020714a6;
+}
+.av78-reward-inspector--model .av75-model-stage{
+ height:min(56dvh,545px);
+ min-height:240px;
+}
+.av78-reward-inspector--model .av75-model-canvas{
+ width:min(100%,56dvh,545px);
+ max-height:100%;
+}
+.av78-reward-inspector--model .av75-reward-controls{
+ grid-column:2;
+ grid-row:2;
+ display:flex;
+ flex-direction:column;
+ justify-content:center;
+ align-items:stretch;
+ align-self:stretch;
+ gap:9px;
+ padding:12px 0 12px 12px;
+ border-top:0;
+ border-left:1px solid #68839e69;
+}
+.av78-reward-inspector--model .av75-reward-controls button{
+ width:100%;
+ min-height:44px;
+ padding:9px 8px;
+ font-size:11px;
+ text-align:center;
+ border:1px solid #7c9fc4a8;
+ border-radius:9px;
+ background:linear-gradient(155deg,#233651,#17253e);
+ color:#e9f2ff;
+}
+.av78-reward-inspector--model .av75-reward-controls button:not(:disabled):hover{
+ border-color:#b9defb;
+ background:#2c4366;
+}
+.av78-reward-inspector--model .av75-reward-controls label{
+ display:grid;
+ gap:10px;
+ text-align:center;
+ justify-items:stretch;
+ padding:10px 2px;
+ font-size:11px;
+}
+.av78-reward-inspector--model .av75-reward-controls input[type="range"]{
+ width:100%;
+ min-width:0;
+ accent-color:#9dbefa;
+}
+.av78-reward-inspector--model .av75-reward-description{
+ grid-column:1/-1;
+ grid-row:3;
+ margin:10px 0 0;
+ padding:12px 2px;
+ border-bottom:1px solid #687f9a40;
+ color:#d5deed;
+}
+.av78-reward-inspector--model .av75-reward-footer{
+ grid-column:1/-1;
+ grid-row:4;
+ margin:9px 0 0;
+ color:#9fb0c8;
+}
+@media(max-width:690px){
+ .av75-reward-dialog:has(.av78-reward-inspector--model){
+  max-height:calc(100dvh - 18px);
+  width:calc(100vw - 12px);
+ }
+ .av78-reward-inspector--model{
+  grid-template-columns:minmax(0,1fr);
+  gap:0;
+  padding:12px;
+ }
+ .av78-reward-inspector--model .av75-reward-header{
+  grid-column:1;grid-row:1;
+ }
+ .av78-reward-inspector--model .av75-reward-stage{
+  grid-column:1;grid-row:2;
+  min-height:220px;
+ }
+ .av78-reward-inspector--model .av75-model-stage{
+  height:min(46dvh,410px);min-height:220px;
+ }
+ .av78-reward-inspector--model .av75-model-canvas{
+  width:min(100%,46dvh,410px);
+ }
+ .av78-reward-inspector--model .av75-reward-description{
+  grid-column:1;grid-row:3;
+ }
+ .av78-reward-inspector--model .av75-reward-controls{
+  grid-column:1;grid-row:4;
+  flex-direction:row;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:7px;
+  padding:12px 0;
+  border-left:0;
+  border-top:1px solid #68839e69;
+ }
+ .av78-reward-inspector--model .av75-reward-controls button{
+  flex:1 1 106px;
+  width:auto;
+ }
+ .av78-reward-inspector--model .av75-reward-controls label{
+  flex:1 1 125px;
+ }
+ .av78-reward-inspector--model .av75-reward-footer{
+  grid-column:1;grid-row:5;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ .av75-reward-dialog:has(.av78-reward-inspector--model){
+  backdrop-filter:none;
+  animation:none;
+ }
+}
+@media(forced-colors:active){
+ .av75-reward-dialog:has(.av78-reward-inspector--model),
+ .av78-reward-inspector--model .av75-reward-controls{
+  background:Canvas;border-color:CanvasText;
+ }
+}

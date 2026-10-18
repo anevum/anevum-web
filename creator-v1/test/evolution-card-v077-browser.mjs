@@ -5,6 +5,7 @@
  * No production calls, secrets, sign-in, WebGL changes or XP writes.
  */
 import {spawn} from 'node:child_process';
+import {createServer} from 'node:http';
 import {mkdirSync,mkdtempSync,readFileSync,writeFileSync,existsSync,rmSync} from 'node:fs';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
@@ -28,6 +29,7 @@ const child=spawn(chrome,[
  '--user-data-dir='+profile,'about:blank'
 ],{stdio:'ignore'});
 let socket=null;
+let server=null;
 mkdirSync(output,{recursive:true});
 const outcomes=[];
 try{
@@ -64,8 +66,32 @@ try{
  await send('Page.enable');await send('Runtime.enable');
  const sizes=[30,38,44,60,128];
  const svg=renderEvolutionCardArt(4);
- const uri='data:image/svg+xml;base64,'+Buffer.from(svg).toString('base64');
- const html=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>V077 Level 4 visual gate</title><style>
+ // Test same-origin media and strict response CSP, as in production.
+ // No unlocked/restricted artwork or live account state is fetched.
+ let html='';
+ const requests=[];
+ const cardPath='/api/v1/members/example/rewards/levels/4/card';
+ server=createServer((req,res)=>{
+  requests.push(req.url);
+  if(req.url==='/preview'){
+   res.writeHead(200,{'content-type':'text/html; charset=utf-8'});
+   res.end(html);return;
+  }
+  if(req.url===cardPath){
+   res.writeHead(200,{
+    'content-type':'image/svg+xml; charset=utf-8',
+    'cache-control':'private, no-store',
+    'x-content-type-options':'nosniff',
+    'content-security-policy':"default-src 'none'; script-src 'none'; object-src 'none'; base-uri 'none'"
+   });
+   res.end(svg);return;
+  }
+  res.writeHead(404,{'cache-control':'no-store'});res.end('Not found');
+ });
+ await new Promise((resolve,reject)=>server.listen(0,'127.0.0.1',error=>error?reject(error):resolve()));
+ const origin='http://127.0.0.1:'+server.address().port;
+ const uri=origin+cardPath;
+ html=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>V077 Level 4 visual gate</title><style>
  *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0b1323;color:#e8e5df;font:14px/1.5 system-ui,sans-serif}
  body{padding:clamp(12px,4vw,44px)}h1{margin:0;font-size:24px;letter-spacing:.06em}p{color:#a8b8cb}
  main{display:flex;gap:28px;align-items:center;flex-wrap:wrap;margin-top:36px}
@@ -83,7 +109,7 @@ try{
   await send('Emulation.setDeviceMetricsOverride',{
    width,height,deviceScaleFactor:1,mobile:width<700
   });
-  const dest='data:text/html;base64,'+Buffer.from(html).toString('base64');
+  const dest=origin+'/preview';
   const page=await send('Page.navigate',{url:dest});
   if(page.errorText)throw Error('V077_BROWSER_NAVIGATION '+page.errorText);
   const state=await wait(async()=>{
@@ -95,7 +121,7 @@ try{
     }:null})()`);
    return r;
   });
-  if(state.broken||state.mobileOverflow||state.srcCount!==6||
+  if(!requests.includes(cardPath)||state.broken||state.mobileOverflow||state.srcCount!==6||
     JSON.stringify(state.renderedSizes)!==JSON.stringify(sizes)){
    throw Error('V077_VISUAL_LAYOUT_'+label+' '+JSON.stringify(state));
   }
@@ -109,6 +135,7 @@ try{
  console.log('ANEVUM_V077_LEVEL4_DESKTOP_MOBILE_OPTICAL_VISUAL=PASS '+JSON.stringify(outcomes));
 }finally{
  try{socket?.close()}catch{}
+ server?.close();
  child.kill('SIGTERM');
  try{rmSync(profile,{recursive:true,force:true,maxRetries:18,retryDelay:125})}catch(e){
   if(!['ENOTEMPTY','EBUSY'].includes(e?.code))throw e;
