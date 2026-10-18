@@ -38,12 +38,13 @@ const fakeEnv=(overrides={})=>{
   accents:Array.from({length:30},(_,i)=>i===2?'#123456':'#abcdef'),
   height:'/evolution/assets/height.png',albedo:'/evolution/assets/albedo.webp'};
  const staticAssets={async fetch(request){
-  assets.push(new URL(request.url).pathname);
-  const suffix=new URL(request.url).pathname;
+  const assetUrl=new URL(request instanceof URL?request:request.url||request);
+  assets.push(assetUrl.pathname);
+  const suffix=assetUrl.pathname;
   const type=suffix.endsWith('.json')?'application/json':
    suffix.endsWith('.gz')?'application/gzip':
    suffix.endsWith('.webp')?'image/webp':'image/png';
-  return new Response(request.method==='HEAD'?null:
+  return new Response(request instanceof Request&&request.method==='HEAD'?null:
    type==='application/json'?JSON.stringify(jsonRuntime):
    type==='application/gzip'?new Uint8Array([31,139,8,0,0,0,0,0,0,3]):'original optical bytes',
    {status:200,headers:{'content-type':type}});
@@ -207,4 +208,32 @@ test('V075 shared player-card and inspector code does not bundle all 30 hidden l
  assert.match(catalog,/level-artifacts\.json/);
  assert.doesNotMatch(read('web/src/pages/LevelsPage.tsx'),/LevelCollection/);
  assert.match(read('canonical-auth/reward-media.mjs'),/ARTIFACTS\.slice\(0,state\.level\)/);
+});
+
+
+test('V076 original Evolution media uses URL-based private assets and never substitutes OrbitalMark',async()=>{
+ const server=read('canonical-auth/reward-media.mjs');
+ const emblem=read('web/src/components/LevelEmblem.tsx');
+ assert.match(server,/ASSETS\.fetch\(upstream\)/);
+ assert.match(server,/https:\/\/assets\.local/);
+ assert.doesNotMatch(server,/redirect:'error'/);
+ assert.match(emblem,/ARTWORK UNAVAILABLE/);
+ assert.doesNotMatch(emblem,/OrbitalMark/);
+ const {env,assets}=fakeEnv();
+ const accepted=await earnedRewardMedia(new Request(levelUrl(3,'icon','example')),env);
+ assert.equal(accepted.status,200);
+ assert.equal(accepted.headers.get('content-type'),'image/png');
+ assert.deepEqual(assets,['/evolution/assets/level-03-compact-128.png']);
+ const unearned=await earnedRewardMedia(new Request(levelUrl(4,'scene','example')),env);
+ assert.equal(unearned.status,404);
+ assert.equal(assets.length,1);
+});
+test('V076 identifies transport failure distinctly without relaxing canonical level gating',async()=>{
+ const {env}=fakeEnv();
+ env.ASSETS={async fetch(){throw Error('asset transport unavailable')}};
+ const response=await earnedRewardMedia(new Request(levelUrl(3,'poster','example')),env);
+ assert.equal(response.status,502);
+ assert.equal(response.headers.get('cache-control'),'private, no-store');
+ const denied=await earnedRewardMedia(new Request(levelUrl(30,'poster','example')),env);
+ assert.equal(denied.status,404);
 });
