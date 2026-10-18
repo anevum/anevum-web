@@ -1,0 +1,60 @@
+name: ANEVUM Emergency Public Home Regression
+on:
+  push:
+    branches:
+      - incident/null-creator-public-home-20261018
+    paths:
+      - creator-v1/web/**
+      - creator-v1/test/null-creator-alpha-release.test.mjs
+      - creator-v1/test/portal-offline-preview.mjs
+      - .github/workflows/anevum-null-creator-recovery-20261018.yml
+permissions:
+  contents: read
+concurrency:
+  group: anevum-null-creator-recovery-20261018
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Verify and compile both frontend variants
+        run: |
+          set -euo pipefail
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+          node --experimental-strip-types --test creator-v1/test/null-creator-alpha-release.test.mjs
+      - name: Browser regression using a local synthetic unlinked creator
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium)"
+          test -n "$chrome"
+          ANEVUM_UNLINKED_ALPHA_VISUAL_TEST=1 node creator-v1/test/portal-offline-preview.mjs > /tmp/anevum-incident-fixture.log 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 50); do
+            if curl --fail --silent http://127.0.0.1:4178/__ready >/dev/null; then break; fi
+            sleep 0.25
+          done
+          curl --fail --silent http://127.0.0.1:4178/__ready > /dev/null
+          timeout 50 "$chrome" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-background-networking --virtual-time-budget=8000 --dump-dom http://127.0.0.1:4178/creator/ > /tmp/anevum-unlinked-home.html 2>/tmp/anevum-chrome-errors.log
+          grep -Fq 'UNLINKED ALPHA RELEASE' /tmp/anevum-unlinked-home.html
+          grep -Fq 'Public creator channel not linked.' /tmp/anevum-unlinked-home.html
+          if grep -Fq '/creators/null' /tmp/anevum-unlinked-home.html; then
+            echo "ERROR: An invented creator channel leaked to the DOM"
+            exit 1
+          fi
+          echo "PASS: compiled frontend remains mounted and renders the project with an unlinked creator"
