@@ -44,6 +44,7 @@ jobs:
           set -euo pipefail
           node --check prototypes/family-safety-synthetic-preview/public/synthetic-engine.mjs
           node --check prototypes/family-safety-synthetic-preview/public/app.mjs
+          node --check prototypes/family-safety-synthetic-preview/public/synthetic-scene.mjs
           node --check prototypes/family-safety-synthetic-preview/worker.mjs
           node --check prototypes/family-safety-synthetic-preview/stage-vendor.mjs
           node --test prototypes/family-safety-synthetic-preview/test.mjs
@@ -72,7 +73,7 @@ jobs:
           if(!w.includes("getIdentity")||!w.includes("FS_SYNTH_REVIEW_AUD"))
             throw Error("Missing mandatory Access auth gate");
           const pdir="prototypes/family-safety-synthetic-preview/public";
-          if(fs.readdirSync(pdir).some(x=>!["index.html","styles.css","app.mjs","synthetic-engine.mjs","vendor"].includes(x)))
+          if(fs.readdirSync(pdir).some(x=>!["index.html","styles.css","app.mjs","synthetic-engine.mjs","synthetic-scene.mjs","vendor"].includes(x)))
             throw Error("Unexpected public artifact");
           const vendor=fs.readdirSync(pdir+"/vendor");
           if(vendor.some(x=>!["maplibre-gl.mjs","maplibre-gl-worker.mjs","maplibre-gl.css"].includes(x))||vendor.length!==3)
@@ -109,6 +110,16 @@ jobs:
             > evidence/family-field/chromium-mobile.log 2>&1
           test -s evidence/family-field/desktop.png
           test -s evidence/family-field/mobile.png
+          python3 - <<'PY'
+          from PIL import Image
+          for f in ("desktop.png","mobile.png"):
+              im=Image.open("evidence/family-field/"+f).convert("RGB")
+              w,h=im.size
+              colors=im.crop((int(w*.55),int(h*.2),int(w*.8),int(h*.65))).getcolors(w*h)
+              if colors is not None and len(colors)<35:
+                  raise SystemExit("Insufficient map detail: "+f)
+          print("SYNTHETIC_VISUAL_VARIANCE=PASS")
+          PY
       - name: Retain screenshots without publishing site or GPS
         if: always()
         uses: actions/upload-artifact@v4
