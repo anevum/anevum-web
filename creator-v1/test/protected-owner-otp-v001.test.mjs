@@ -17,8 +17,17 @@ const post=(path,body,cookie)=>new Request(ORIGIN+path,{
 });
 function setup(){
  const f=fixture();
- for(const name of ['0010_staff_command.sql','0011_staff_roles.sql','0013_protected_email_login.sql'])
-  f.db.exec(read(name));
+ // V069's release source predates IREN schema 0011, but canonical production
+ // already has the actual table. Model ONLY that existing dependency locally.
+ f.db.exec(`CREATE TABLE staff_access_grants(
+   member_id TEXT PRIMARY KEY REFERENCES "user"(id),
+   role TEXT NOT NULL CHECK(role IN ('owner','reviewer')),
+   granted_by TEXT REFERENCES "user"(id),
+   created_at INTEGER NOT NULL,
+   updated_at INTEGER NOT NULL,
+   revoked_at INTEGER
+  )`);
+ f.db.exec(read('0013_protected_email_login.sql'));
  f.env.ANEVUM_CANONICAL_APEX_ENABLED='true';
  f.env.CANONICAL_PUBLIC_SIGNUP_ENABLED='true';
  f.env.CANONICAL_INVITED_SIGNUP_ENABLED='false';
