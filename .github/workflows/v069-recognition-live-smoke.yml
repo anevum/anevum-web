@@ -1,4 +1,4 @@
-name: ANEVUM V069 Live Recognition First-Fold Smoke
+name: ANEVUM V069 Public Recognition and WebGL Live Smoke
 # Read-only production QA; never publishes, changes D1, modifies bindings, or issues awards.
 on:
   push:
@@ -23,7 +23,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p qa-v069-live
+          mkdir -p qa-v069-live-catalog
           curl -fLsS --retry 2 --connect-timeout 12 --max-time 35             https://anevum.com/recognition -o qa-v069-live-catalog/recognition.html
           grep -q 'id="root"' qa-v069-live-catalog/recognition.html
           curl -fLsS --retry 2 --connect-timeout 12 --max-time 35             https://anevum.com/api/v1/member/auth-methods -o qa-v069-live-catalog/auth-methods.json
@@ -50,7 +50,7 @@ jobs:
           node creator-v1/test/recognition-public-catalog-v069-browser.mjs
           test -s qa-v069-live-catalog/registry-1440.png
           test -s qa-v069-live-catalog/registry-390.png
-          echo V069_REAL_LIVE_FIRST_FOLD_GEOMETRY=PASS
+          echo V069_REAL_LIVE_PUBLIC_CATALOG_AND_FIRST_FOLD=PASS
       - name: Confirm V064 WebGL native Evolution miniatures survive V069
         shell: bash
         run: |
