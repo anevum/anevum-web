@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import {Script} from "node:vm";
 import {renderStaffOperations} from "../operations/staff-project-ui-v080.mjs";
 import {staffInventory,staffOwnerAction,staffReviewAction,controlSchemaReady} from "../operations/staff-project-control-v080.mjs";
 const id="11111111-1111-4111-8111-111111111111";
@@ -53,4 +54,20 @@ test("review submission controls appear only on pending projects",()=>{
  assert.ok(html.includes('data-review="publish"'));
  assert.ok(html.includes('data-review="reject"'));
  assert.ok(!html.includes('data-action="delete"'));
+});
+
+test("embedded mobile review and preview client parses as JavaScript",()=>{
+ const html=renderStaffOperations({projects:[{...sample,status:"pending_review"}],role:"owner",controlsReady:true});
+ const script=html.match(/<script>([\s\S]*?)<\/script>/);
+ assert.ok(script,"staff HTML must contain an inline client");
+ assert.doesNotThrow(()=>new Script(script[1]));
+ assert.match(html,/id="preview-dialog"/);
+ assert.match(html,/sandbox="allow-scripts"/);
+ assert.doesNotMatch(html,/sandbox="allow-scripts allow-same-origin"/);
+ assert.match(html,/data-preview=/);
+});
+test("no controls on owner view when lifecycle schema not ready",()=>{
+ const html=renderStaffOperations({projects:[sample],role:"owner",controlsReady:false});
+ assert.doesNotMatch(html,/data-action="delete"/);
+ assert.doesNotMatch(html,/data-action="unpublish"/);
 });
