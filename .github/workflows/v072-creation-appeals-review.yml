@@ -1,0 +1,54 @@
+name: V072 Creator Appeals and Independent Second Review
+on:
+  push:
+    branches: [build/creation-appeals-v072-20261018-021]
+    paths:
+      - "creator-v1/canonical-auth/studio-appeals.mjs"
+      - "creator-v1/canonical-auth/studio.mjs"
+      - "creator-v1/canonical-auth/worker.mjs"
+      - "creator-v1/canonical-auth/migrations/0013_studio_creation_appeals.sql"
+      - "creator-v1/test/studio-publication-evidence-v070.test.mjs"
+      - "creator-v1/test/studio-appeals-v072.test.mjs"
+      - "creator-v1/web/src/**"
+      - ".github/workflows/v072-creation-appeals-review.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and additive schema checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          for source in creator-v1/canonical-auth/*.mjs creator-v1/apex-prelaunch/*.mjs; do
+            node --check "$source"
+          done
+          node --check creator-v1/test/studio-appeals-v072.test.mjs
+      - name: Run local real SQLite safety and appeal regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-sqlite --test             creator-v1/test/studio-appeals-v072.test.mjs             creator-v1/test/studio-safety-v071.test.mjs             creator-v1/test/player-recognition-roundtrip-v069.test.mjs             creator-v1/test/player-recognition-issuance-v066.test.mjs
+      - name: Typecheck and production-build creator frontend without publishing
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+      - name: Preserve source-only safety boundary
+        run: |
+          echo "V072_APPEALS_SOURCE_REVIEW=PASS" >> "$GITHUB_STEP_SUMMARY"
+          echo "V072_NO_AUTO_REINSTATEMENT_OR_XP=TRUE" >> "$GITHUB_STEP_SUMMARY"
+          echo "V072_DATABASE_MIGRATION_NOT_APPLIED_TO_PRODUCTION=TRUE" >> "$GITHUB_STEP_SUMMARY"
+          echo "V072_APPEAL_ROLES_NOT_CONFIGURED_IN_PRODUCTION=TRUE" >> "$GITHUB_STEP_SUMMARY"
+          echo "SHA=$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
