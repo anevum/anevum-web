@@ -43,8 +43,16 @@ function dateLabel(raw:string|null|undefined){
   const value=dateOrder(raw);
   return value?new Intl.DateTimeFormat("en-US",{month:"short",day:"numeric",year:"numeric",timeZone:"UTC"}).format(value):"Date unavailable";
 }
+/** Alpha releases may be approved before their author links a public creator channel.
+ * Never invent a handle or link to /creators/null for such releases. */
+function publicCreatorHandle(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const handle=value.trim().toLowerCase();
+  return /^[a-z][a-z0-9_]{2,29}$/.test(handle)?handle:null;
+}
 function ProjectEntry({project,creators,showcases,priority=false}:{project:Project;creators:readonly Creator[];showcases:Record<string,PublicCreatorShowcase>;priority?:boolean}){
-  const author=creators.find(c=>c.handle===project.creatorHandle);
+  const linkedHandle=publicCreatorHandle(project.creatorHandle);
+  const author=linkedHandle?creators.find(c=>c.handle===linkedHandle):undefined;
   const title=project.title;
   const href=projectDetailPath(project.id,"/");
   const cat=categories.find(c=>c.id===project.category);
@@ -64,7 +72,13 @@ function ProjectEntry({project,creators,showcases,priority=false}:{project:Proje
           <Link to={"/discover?category="+project.category} className="av6-feed-inline">{cat?.name||"Browse category"}</Link>
         </div>
       </div>
-      <PublicAuthorShowcase handle={project.creatorHandle} name={project.creatorName||project.creatorHandle} known={author} showcase={showcases[project.creatorHandle.toLowerCase()]}/>
+      {linkedHandle?
+        <PublicAuthorShowcase handle={linkedHandle} name={project.creatorName||linkedHandle} known={author} showcase={showcases[linkedHandle]}/>:
+        <aside className="av6-author av7-author av7-author--feed" aria-label="Creator account without a public channel">
+          <span className="av6-author-label av7-register">ANEVUM / CREATOR</span>
+          <strong>{project.creatorName||"ANEVUM member"}</strong>
+          <p>Public creator channel not linked.</p>
+        </aside>}
     </div>
   </article>;
 }
@@ -117,8 +131,9 @@ export function CommunityHomeFeed({projects,creators,state,communityEnabled}:Pro
   ].filter(item=>(view==="all"||(view==="projects"&&item.kind==="project")||(view==="discussions"&&item.kind==="discussion"))&&(field==="all"||(item.kind==="project"?item.value.category===field:item.value.topic===field))).sort((a,b)=>b.date-a.date).slice(0,10);
   // One bounded, cache-disabled public read for visible authors. Missing or
   // opted-out public showcases fall back to plain, truthful creator identity.
-  const authorHandles=[...new Set(entries.map(item=>(item.kind==="project"?item.value.creatorHandle:item.value.authorHandle).toLowerCase()))]
-    .filter(handle=>/^[a-z][a-z0-9_]{2,29}$/.test(handle)).slice(0,10);
+  const authorHandles=[...new Set(entries.map(item=>publicCreatorHandle(
+    item.kind==="project"?item.value.creatorHandle:item.value.authorHandle
+  )).filter((handle):handle is string=>handle!==null))].slice(0,10);
   const authorSignature=authorHandles.join(",");
   const dossiers=useResource(async signal=>authorHandles.length
     ?readPublicShowcases(authorHandles,signal)
