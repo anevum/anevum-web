@@ -92,7 +92,7 @@ jobs:
           test "$pre_version" = "8bda78cc-b3e3-4de0-91de-d10d5d2656fc"
           echo "Deployed version matches expected baseline. Checking routes..."
           cf "$cf_api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/pre-routes.json"
-          jq -e '.success and any(.result[]; .pattern=="anevum.com/*" and .script=="anevum-apex-prelaunch-gateway") and ([.result[]|select(.pattern=="anevum.com/assets/index-*")]|length)==0' "$RUNNER_TEMP/pre-routes.json" > /dev/null
+          jq -e '.success and any(.result[]; .pattern=="anevum.com/*" and .script=="anevum-apex-prelaunch-gateway") and ([.result[]|select(.pattern=="anevum.com/assets/index-*")|.script]==["anevum-native-project-player-v005"])' "$RUNNER_TEMP/pre-routes.json" > /dev/null
           echo "Routes verified. Preparing config from current production settings..."
           node --input-type=module <<'NODE'
           import {readFileSync,writeFileSync} from "node:fs";
@@ -130,7 +130,14 @@ jobs:
           ready=0
           for attempt in $(seq 1 16); do
             if curl --fail --silent --show-error --max-time 20 -o "$RUNNER_TEMP/live-asset.js" "https://anevum.com$bundle"; then
-              if cmp -s "$RUNNER_TEMP/live-asset.js" "creator-v1/dist/web$bundle"; then
+              # A separately authorized native-player Worker appends scoped enhancements.
+              # Verify the entire compiled application as an unchanged prefix.
+              if node --input-type=module - "$RUNNER_TEMP/live-asset.js" "creator-v1/dist/web$bundle" <<'NODE'
+          import {readFileSync} from "node:fs";
+          const live=readFileSync(process.argv[2]),candidate=readFileSync(process.argv[3]);
+          process.exit(live.length>=candidate.length&&live.subarray(0,candidate.length).equals(candidate)?0:1);
+          NODE
+              then
                 ready=1
                 break
               fi
