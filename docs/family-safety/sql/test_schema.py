@@ -46,7 +46,7 @@ class PrivateCircleSchemaTests(unittest.TestCase):
         }
         self.assertEqual(tables, {
             "fs_private_circles","fs_memberships","fs_share_sessions",
-            "fs_viewer_grants","fs_access_audit"
+            "fs_viewer_grants","fs_circle_invitations","fs_access_audit"
         })
         all_names = []
         for table in tables:
@@ -116,6 +116,39 @@ class PrivateCircleSchemaTests(unittest.TestCase):
             "SELECT COUNT(*) FROM fs_share_sessions").fetchone()[0],0)
         self.assertEqual(self.db.execute(
             "SELECT COUNT(*) FROM fs_viewer_grants").fetchone()[0],0)
+
+    def test_single_use_private_adult_invitation_with_atomic_consumption(self):
+        insert = (
+            "INSERT INTO fs_circle_invitations "
+            "VALUES (?,?,?,?,?,?,?,?,?,?)"
+        )
+        invite = ("invite-1","circle-1","alice","carol","a"*64,
+                  "adult","pending",T,T+60000,None)
+        self.db.execute(insert,invite)
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute(insert,("invite-2","circle-1","alice","dave","a"*64,
+                                    "adult","pending",T,T+60000,None))
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute(insert,("invite-3","circle-1","alice","dave","b"*64,
+                                    "child","pending",T,T+60000,None))
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute(insert,("invite-4","circle-1","alice","dave","c"*64,
+                                    "adult","pending",T,T+86400001,None))
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.db.execute(insert,("invite-5","circle-1","outsider","dave","d"*64,
+                                    "adult","pending",T,T+60000,None))
+        self.assertEqual(self.db.execute("SELECT COUNT(*) FROM fs_memberships").fetchone()[0],2)
+        self.assertEqual(self.db.execute("SELECT COUNT(*) FROM fs_viewer_grants").fetchone()[0],0)
+        query = (
+            "UPDATE fs_circle_invitations SET state='accepted', accepted_at_ms=? "
+            "WHERE invitation_id=? AND invitee_subject_id=? "
+            "AND state='pending' AND issued_at_ms<=? AND expires_at_ms>?"
+        )
+        self.assertEqual(self.db.execute(query,(T+5000,"invite-1","wrong",T+5000,T+5000)).rowcount,0)
+        self.assertEqual(self.db.execute(query,(T+5000,"invite-1","carol",T+5000,T+5000)).rowcount,1)
+        self.assertEqual(self.db.execute(query,(T+6000,"invite-1","carol",T+6000,T+6000)).rowcount,0)
+        # Accepting an invitation is NOT permission to locate a family member.
+        self.assertEqual(self.db.execute("SELECT COUNT(*) FROM fs_viewer_grants").fetchone()[0],0)
 
     def test_audit_contains_no_precise_location_values(self):
         self.db.execute(
