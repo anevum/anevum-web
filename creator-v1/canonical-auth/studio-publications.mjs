@@ -26,6 +26,17 @@ const read=async(db,sql,...args)=>{
 };
 const first=async(db,sql,...args)=>db.prepare(sql).bind(...args).first();
 const changes=result=>Number(result?.meta?.changes??result?.results?.length??0);
+async function publicationEditAllowed(db,userId,now){
+ const reset=now-3600;
+ const row=await read(db,
+  "INSERT INTO member_studio_rate_limits(user_id,action,window_start,requests) "+
+  "VALUES(?,'project',?,1) ON CONFLICT(user_id,action) DO UPDATE SET "+
+  "window_start=CASE WHEN window_start<? THEN excluded.window_start ELSE window_start END,"+
+  "requests=CASE WHEN window_start<? THEN 1 ELSE requests+1 END "+
+  "WHERE window_start<? OR requests<30 RETURNING requests",
+  userId,now,reset,reset,reset);
+ return row.length===1;
+}
 const flag=env=>env?.CANONICAL_STUDIO_PUBLICATION_ENABLED==='true'
  &&env?.CANONICAL_CREATOR_STUDIO_ENABLED==='true';
 const safeExternal=value=>{
@@ -107,6 +118,8 @@ export async function canonicalStudioPublicationConsent(req,env,user,projectId,n
    !UUID.test(body.submissionId)||!Number.isSafeInteger(body.revision)||
    body.scope!=='external_metadata_only'||body.accepted!==true)
    return fail(400,'Exact public-metadata consent is required');
+  if(!await publicationEditAllowed(db,user.id,now))
+   return fail(429,'Too many publication permission changes');
   if(req.method==='POST'){
    if(owner.revision!==body.revision)return fail(409,'Submission revision changed');
    const snapshot=await eligibleSnapshot(db,projectId,user.id,body.revision);
