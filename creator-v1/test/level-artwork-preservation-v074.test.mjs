@@ -21,7 +21,7 @@ test("V074 retains the exact 30 original high-resolution optical level exports",
     assert.equal(item.preview,"/evolution/assets/level-"+key+"-256.webp");
     assert.equal(item.poster,"/evolution/assets/level-"+key+"-1024.webp");
     for(const file of [item.icon,item.preview,item.poster])
-      assert.ok(statSync(new URL("web/public"+file.slice(1),new URL("../",import.meta.url))).size>300,
+      assert.ok(statSync(new URL("web/public"+file,new URL("../",import.meta.url))).size>300,
         "Missing original icon export "+file);
   }
   assert.match(collection,/LEVEL_ARTIFACTS/);
