@@ -154,7 +154,7 @@ export function createPorchlightHandler({resolveActor, authorizeWriteQuota, now 
         if (!event || !eventVisible(event, at)) return json(200, {status: 'inactive', pins: []});
         const rows = await dbAll(db, `SELECT id, public_label, public_exact_address, public_block, display_mode, public_lat, public_lng, tags_json
           FROM porchlight_host_submissions WHERE event_id = ? AND status = 'approved' ORDER BY created_at ASC LIMIT 200`, event.id);
-        return json(200, {status: 'active', event: {title: event.title, startsAt: event.starts_at, endsAt: event.ends_at}, pins: rows.map(publicRecord)});
+        return json(200, {status: 'active', reportingAvailable: env.PORCHLIGHT_REPORTS_ENABLED === 'true', event: {title: event.title, startsAt: event.starts_at, endsAt: event.ends_at}, pins: rows.map(publicRecord)});
       }
       // Public organizer-controlled area choices. Never accept household-created public blocks.
       if (method === 'GET' && segments.length === 4 && segments[1] === 'events' && segments[3] === 'blocks') {
