@@ -41,7 +41,7 @@ jobs:
           test -f creator-v1/canonical-auth/reward-media.mjs
           test -f creator-v1/wrangler.evolution-v076-canary.jsonc
           node -e '
-           const c=require("./creator-v1/wrangler.evolution-v076-canary.jsonc");
+           const fs=require("node:fs");const c=JSON.parse(fs.readFileSync("creator-v1/wrangler.evolution-v076-canary.jsonc","utf8"));
            if(c.name!=="anevum-evolution-v076-canary"||!c.workers_dev||
             c.routes.length!==0||c.assets.run_worker_first!==true||
             c.assets.not_found_handling!=="none"||
