@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#070d19">
+  <meta name="description" content="ANEVUM Porchlight: fictional, private-by-design Halloween neighborhood pilot experience. This prototype contains no real household information.">
+  <title>Porchlight | ANEVUM Neighborhood Safety Pilot</title>
+  <style>
+    :root{color-scheme:dark;--bg:#070d19;--glass:rgba(12,22,39,.87);--line:rgba(203,220,255,.14);--ink:#f4f5fa;--muted:#b4c2d3;--a:#f4a38b;--violet:#aa9aff;--teal:#9bddcd;--focus:#ffca9b}
+    *{box-sizing:border-box}html{background:var(--bg)}body{margin:0;min-height:100vh;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:radial-gradient(ellipse 1000px 650px at 81% -12%,rgba(126,93,197,.18),transparent 65%),radial-gradient(ellipse 850px 650px at -10% 110%,rgba(228,132,102,.11),transparent 60%),var(--bg)}
+    button{cursor:pointer;font:inherit}button:disabled{cursor:not-allowed;opacity:.45}button:focus-visible,a:focus-visible{outline:3px solid var(--focus);outline-offset:3px}a{color:#d9cfff}
+    .skip{position:absolute;z-index:30;left:12px;top:-80px;background:#fff;color:#101827;padding:8px 12px}.skip:focus{top:12px}
+    .shell{max-width:1620px;margin:auto;padding:0 28px 34px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:23px 0 18px;border-bottom:1px solid var(--line)}
+    .brand{display:flex;align-items:center;gap:13px;min-width:0}.mark{height:39px;width:39px;display:grid;place-items:center;flex:none;border:2px solid var(--violet);border-left-color:transparent;border-radius:50%;transform:rotate(-28deg);box-shadow:0 0 25px rgba(172,158,255,.19)}.mark:before{content:'';height:15px;width:15px;background:linear-gradient(145deg,#ffc1aa,#db7b74);border-radius:50%;box-shadow:0 0 18px #ff9877}
+    .brand strong{display:block;letter-spacing:.18em;font-size:16px;font-weight:850}.brand small{display:block;margin-top:3px;color:var(--muted);letter-spacing:.12em;font-size:10px;text-transform:uppercase}
+    .header-tags{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.tag{font-size:10px;font-weight:750;letter-spacing:.11em;padding:10px 12px;border-radius:30px;border:1px solid var(--line);color:var(--muted);background:rgba(12,22,39,.75)}.tag.danger{color:#ffdbbd;border-color:rgba(244,163,139,.38);background:rgba(122,52,52,.22)}
+    .intro{display:flex;align-items:end;justify-content:space-between;gap:25px;padding:29px 0 23px}.eyebrow{font-size:10px;color:var(--a);text-transform:uppercase;letter-spacing:.25em;font-weight:850}.intro h1{font-size:clamp(32px,4vw,59px);line-height:1.04;font-weight:670;letter-spacing:-.058em;margin:11px 0 11px;max-width:750px}.intro h1 span{color:var(--a)}.intro p{font-size:13px;line-height:1.6;color:var(--muted);max-width:650px;margin:0}.intro-aside{text-align:right;max-width:290px;flex:none}.intro-aside strong{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase}.intro-aside p{margin-top:7px;font-size:11px}
+    .workspace{display:grid;grid-template-columns:minmax(0,1fr) 368px;gap:18px;align-items:stretch}.panel{border:1px solid var(--line);border-radius:23px;background:linear-gradient(140deg,rgba(23,35,58,.81),rgba(9,17,32,.94));box-shadow:0 24px 70px rgba(0,0,0,.26);overflow:hidden}
+    .map-top{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 19px;border-bottom:1px solid var(--line);background:rgba(6,14,27,.6)}.map-top h2,.sidebar h2{font-size:13px;letter-spacing:.07em;text-transform:uppercase;margin:0}.micro{display:block;font-size:10px;color:var(--muted);margin-top:6px;letter-spacing:.06em}.map-status{font-size:10px;color:var(--teal);letter-spacing:.12em;text-transform:uppercase;font-weight:850}.map-status:before{content:'';display:inline-block;height:7px;width:7px;border-radius:50%;background:var(--teal);margin-right:8px;box-shadow:0 0 11px var(--teal)}
+    .map-frame{min-height:440px;position:relative;overflow:hidden;background:radial-gradient(circle at 50% 45%,rgba(96,91,155,.14),transparent 60%),linear-gradient(165deg,#111e35,#08111e)}.map-frame:after{content:'';position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 85px #070d19b3}
+    .starfield{position:absolute;inset:0;pointer-events:none;opacity:.36;background-image:radial-gradient(#fff 0.8px,transparent 1px);background-size:31px 31px;mask-image:linear-gradient(to bottom,transparent,#000)}
+    .map-surface{position:absolute;inset:0;display:grid;place-items:center;overflow:hidden}.map-surface svg{width:min(100%,1100px);height:100%;max-height:680px;overflow:visible;transform-origin:center;transition:transform .65s cubic-bezier(.2,.8,.3,1);filter:drop-shadow(0 25px 25px rgba(0,0,0,.3))}.map-surface svg.is-3d{transform:perspective(1100px) rotateX(17deg) rotateZ(-5deg) scale(1.1)}
+    .map-surface .home-pin{cursor:pointer;transition:opacity .2s}.map-surface .home-pin:focus-visible{outline:none}.home-pin circle{stroke:#f4f5ff;stroke-width:2.4px;filter:drop-shadow(0 0 11px rgba(242,159,138,.7))}.home-pin text{font-weight:850;text-anchor:middle;dominant-baseline:central;fill:#091525;font-size:14px}.home-pin[aria-pressed="true"] circle{stroke:#fbd3a4;stroke-width:4;filter:drop-shadow(0 0 20px rgba(252,197,112,.95))}.home-pin:focus-visible circle{stroke-width:5;stroke:#fff}
+    .map-hud{position:absolute;z-index:2;left:17px;bottom:16px;right:80px;max-width:425px;padding:12px 14px;background:rgba(7,14,26,.89);border:1px solid rgba(230,224,252,.15);border-radius:12px;backdrop-filter:blur(16px)}.map-hud strong{font-size:10px;letter-spacing:.12em;text-transform:uppercase}.map-hud p{font-size:11px;line-height:1.5;color:var(--muted);margin:5px 0 0}
+    .map-tools{position:absolute;z-index:3;right:14px;top:16px;display:grid;gap:7px}.map-tools button{width:43px;height:43px;border:1px solid var(--line);border-radius:13px;background:rgba(9,19,35,.94);color:var(--ink);font-weight:750;font-size:15px}.map-tools button[aria-pressed="true"]{border-color:var(--a);color:var(--a);background:rgba(244,163,139,.13)}
+    .legend{display:flex;gap:15px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--line);padding:12px 18px;font-size:11px;color:var(--muted)}.legend i{display:inline-block;height:9px;width:9px;border-radius:50%;margin-right:6px;background:var(--a)}.legend .purple i{background:var(--violet)}.legend .mint i{background:var(--teal)}
+    .sidebar{display:flex;flex-direction:column;max-height:635px}.sidebar-head{padding:19px 18px 13px;border-bottom:1px solid var(--line)}.sidebar-head p{color:var(--muted);font-size:11px;line-height:1.5;margin:8px 0 0}.filters{display:flex;gap:6px;flex-wrap:wrap;margin-top:15px}.filter{font-size:10px;color:var(--muted);padding:8px 10px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.02)}.filter[aria-pressed="true"]{color:#fff;border-color:#de9a9b;background:linear-gradient(120deg,rgba(233,130,108,.19),rgba(159,139,248,.15))}
+    .house-list{overflow-y:auto;min-height:100px;flex:1;padding:8px 12px 12px;scrollbar-color:#556178 transparent}.house-card{padding:13px 9px 14px;border-bottom:1px solid var(--line)}.house-card:last-child{border-bottom:0}.house-head{display:flex;gap:11px;align-items:center}.home-symbol{width:38px;height:38px;border:1px solid rgba(245,173,142,.22);background:radial-gradient(circle at 50% 35%,rgba(247,149,112,.25),rgba(111,87,147,.2));display:grid;place-items:center;border-radius:12px;color:#ffc2a8;font-size:16px;flex:none}.house-copy{min-width:0;flex:1}.house-copy strong{font-size:12px;font-weight:760}.house-copy small{display:block;color:var(--muted);font-size:10px;margin-top:5px}.house-tags{display:flex;gap:5px;flex-wrap:wrap;margin:10px 0}.house-tags span{border:1px solid var(--line);border-radius:5px;color:#bbc9d8;padding:4px 6px;font-size:9px}.add-btn{width:100%;text-align:center;background:rgba(255,255,255,.035);color:var(--ink);border:1px solid rgba(203,220,255,.22);border-radius:9px;padding:9px 12px;font-size:11px;font-weight:730}.add-btn.selected{background:rgba(155,221,205,.13);border-color:rgba(155,221,205,.58);color:var(--teal)}
+    .route-bar{margin-top:18px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:start;padding:20px 23px;border:1px solid var(--line);background:rgba(12,23,41,.72);border-radius:18px}.route-title{font-size:12px;text-transform:uppercase;letter-spacing:.10em;font-weight:820}.route-copy{color:var(--muted);font-size:11px;line-height:1.5;margin-top:8px}.route-stops{display:flex;gap:6px;flex-wrap:wrap;margin-top:13px}.stop{font-size:10px;border-radius:30px;padding:7px 10px;color:#ffe9db;border:1px solid rgba(244,163,139,.32);background:rgba(244,163,139,.09)}.secondary{border:1px solid var(--line);background:rgba(255,255,255,.02);color:var(--ink);font-size:11px;font-weight:700;border-radius:10px;padding:10px 13px}
+    .safety-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:17px}.safety-item{border:1px solid var(--line);background:rgba(9,21,39,.65);border-radius:14px;padding:17px}.safety-item strong{font-size:12px}.safety-item p{font-size:11px;color:var(--muted);line-height:1.5;margin:7px 0 0}.safety-item .num{display:inline-block;color:var(--a);font-size:10px;letter-spacing:.12em;margin-bottom:10px}
+    footer{color:#93a6b8;max-width:1050px;font-size:11px;line-height:1.6;padding:20px 0 0}.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+    @media(max-width:1060px){.workspace{grid-template-columns:minmax(0,1fr) 325px}.shell{padding:0 17px 24px}.intro-aside{display:none}.sidebar{max-height:625px}}
+    @media(max-width:760px){.shell{padding:0 12px 26px}.brand strong{font-size:13px}.brand small{font-size:8px}.mark{height:33px;width:33px}.header-tags .tag{padding:7px 9px;font-size:8px}.header-tags .tag:not(.danger){display:none}.intro{padding:23px 4px 17px}.intro h1{font-size:36px}.intro p{font-size:12px}.workspace{grid-template-columns:1fr;gap:12px}.map-frame{min-height:390px;height:54vh;max-height:520px}.map-surface svg{min-width:560px}.map-top{padding:13px 15px}.sidebar{max-height:none}.house-list{max-height:410px}.route-bar{padding:16px}.safety-strip{grid-template-columns:1fr}.safety-item{padding:14px}.map-hud{left:10px;bottom:10px;right:65px;padding:9px}.map-hud p{font-size:10px}.map-tools{right:10px;top:10px}.map-tools button{width:41px;height:41px}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+  </style>
+</head>
+<body>
+  <a href="#content" class="skip">Skip to neighborhood demo</a>
+  <div class="shell">
+    <header>
+      <div class="brand"><span class="mark" aria-hidden="true"></span><div><strong>ANEVUM / PORCHLIGHT</strong><small>Continuance Institute | Neighborhood Field System</small></div></div>
+      <div class="header-tags"><span class="tag">OCT 31, 2026 / PILOT CONCEPT</span><span class="tag danger">FICTIONAL DEMONSTRATION</span></div>
+    </header>
+    <main id="content">
+      <section class="intro" aria-labelledby="page-title">
+        <div><div class="eyebrow">Field system 001 / seasonal coordination</div><h1>Every porch has a light.<br><span>Every family has a way.</span></h1><p>Explore how a voluntary neighborhood Halloween directory could work. All houses, names, streets and availability shown here are fictional. This is not a live safety service.</p></div>
+        <div class="intro-aside"><strong>Safety by consent</strong><p>Adults approve their own listings. No child accounts, family tracking, public crime reports or emergency dispatch.</p></div>
+      </section>
+      <section class="workspace" aria-label="Interactive fictional neighborhood">
+        <div class="panel">
+          <div class="map-top"><div><h2>Neighborhood view / illustration</h2><span class="micro">Synthetic coordinates. Not a geographic map or walking directions.</span></div><span class="map-status">DEMO MAP</span></div>
+          <div class="map-frame">
+            <div class="starfield" aria-hidden="true"></div>
+            <div class="map-surface">
+              <svg id="diagram" class="is-3d" viewBox="0 0 800 540" role="img" aria-label="Fictional neighborhood diagram. Homes can be selected using the accessible listing alongside the diagram.">
+                <defs>
+                  <linearGradient id="land" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#1a2c41"/><stop offset="1" stop-color="#15202f"/></linearGradient>
+                  <linearGradient id="home" x1="0" x2="0.8" y1="0" y2="1"><stop stop-color="#4c5b72"/><stop offset="1" stop-color="#2b3850"/></linearGradient>
+                  <pattern id="grain" width="26" height="26" patternUnits="userSpaceOnUse"><path d="M0 26V0H26" fill="none" stroke="#fff" stroke-opacity=".027" stroke-width="1"/></pattern>
+                  <filter id="shimmer" x="-75%" y="-75%" width="250%" height="250%"><feGaussianBlur stdDeviation="8"/></filter>
+                </defs>
+                <rect width="800" height="540" rx="12" fill="url(#land)"/><rect width="800" height="540" fill="url(#grain)"/>
+                <g fill="#182b3c" stroke="#34516a" stroke-width="2" opacity=".85"><rect x="21" y="25" width="178" height="123" rx="7"/><rect x="244" y="30" width="229" height="116" rx="7"/><rect x="544" y="19" width="220" height="159" rx="7"/><rect x="30" y="217" width="195" height="139" rx="7"/><rect x="280" y="218" width="247" height="142" rx="7"/><rect x="596" y="221" width="182" height="170" rx="7"/><rect x="25" y="420" width="345" height="95" rx="7"/><rect x="432" y="430" width="331" height="91" rx="7"/></g>
+                <g fill="none" stroke-linecap="round"><path d="M14 194H795 M259 0V539 M548 0V539 M16 405H785" stroke="#091523" stroke-width="49"/><path d="M14 194H795 M259 0V539 M548 0V539 M16 405H785" stroke="#40536b" stroke-width="36"/><path d="M14 194H795 M259 0V539 M548 0V539 M16 405H785" stroke="#7790ab" stroke-dasharray="12 18" stroke-width="1.6" opacity=".68"/></g>
+                <g fill="url(#home)" stroke="#8e9cad" stroke-opacity=".3"><rect x="65" y="59" width="55" height="47" rx="4"/><rect x="147" y="48" width="39" height="55" rx="4"/><rect x="300" y="51" width="69" height="51" rx="4"/><rect x="396" y="49" width="51" height="69" rx="4"/><rect x="600" y="50" width="60" height="49" rx="4"/><rect x="689" y="75" width="49" height="68" rx="4"/><rect x="57" y="249" width="54" height="67" rx="4"/><rect x="153" y="249" width="54" height="67" rx="4"/><rect x="329" y="255" width="65" height="67" rx="4"/><rect x="438" y="247" width="63" height="68" rx="4"/><rect x="620" y="258" width="60" height="57" rx="4"/><rect x="707" y="274" width="43" height="77" rx="4"/><rect x="64" y="446" width="72" height="42" rx="4"/><rect x="167" y="447" width="65" height="37" rx="4"/><rect x="299" y="446" width="48" height="48" rx="4"/><rect x="474" y="455" width="70" height="42" rx="4"/><rect x="585" y="455" width="70" height="42" rx="4"/></g>
+                <g font-family="system-ui" font-size="10" fill="#8db0c6" letter-spacing="2" opacity=".8"><text x="30" y="184">LANTERN WALK</text><text x="287" y="397">ORBIT LANE</text><text x="560" y="22">HOLLOW CRESCENT</text><text x="26" y="534">COMET COURT</text></g>
+                <polyline id="route-line" fill="none" stroke="#f9bba8" stroke-width="4" stroke-dasharray="8 7" stroke-linecap="round" stroke-linejoin="round" opacity=".95"></polyline>
+                <g id="pins"></g>
+              </svg>
+            </div>
+            <div class="map-tools" role="group" aria-label="Diagram controls"><button id="zoom-in" aria-label="Zoom diagram in" type="button">+</button><button id="zoom-out" aria-label="Zoom diagram out" type="button">-</button><button id="view-3d" aria-label="Switch between dimensional and overhead views" aria-pressed="true" type="button">3D</button><button id="reset-map" aria-label="Reset diagram zoom" type="button">R</button></div>
+            <div class="map-hud"><strong>Fictional field view</strong><p>Tap a glowing home marker or use the house list. Pins are not real properties. Never use this map for navigation or emergencies.</p></div>
+          </div>
+          <div class="legend"><span><i></i>Treat listing</span><span class="purple"><i></i>Non-food option</span><span class="mint"><i></i>Step-free option</span></div>
+        </div>
+        <aside class="panel sidebar" aria-labelledby="hosts-title">
+          <div class="sidebar-head"><h2 id="hosts-title">Participating houses <span id="host-count">(6 sample)</span></h2><p>Browse illustrative home offerings. Actual pilot hosts will require individual consent, review and an instant removal process.</p><div class="filters" role="group" aria-label="Filter sample houses"><button class="filter" data-filter="all" aria-pressed="true" type="button">All</button><button class="filter" data-filter="candy" aria-pressed="false" type="button">Treats</button><button class="filter" data-filter="nonfood" aria-pressed="false" type="button">Non-food</button><button class="filter" data-filter="decor" aria-pressed="false" type="button">Decorations</button><button class="filter" data-filter="stepfree" aria-pressed="false" type="button">Step-free</button></div></div>
+          <div id="house-list" class="house-list" aria-live="polite"></div>
+        </aside>
+      </section>
+      <section class="route-bar" aria-labelledby="route-title"><div><div id="route-title" class="route-title">Your sample route <span id="route-count">(0 of 8)</span></div><div id="route-copy" class="route-copy" role="status" aria-live="polite">Select fictional houses to preview a stop sequence. No family location is captured or stored.</div><div id="route-stops" class="route-stops"></div></div><button id="clear-route" type="button" class="secondary" disabled>Clear route</button></section>
+      <section class="safety-strip" aria-label="Family Halloween safety principles"><div class="safety-item"><span class="num">01 / WITH YOUR PEOPLE</span><br><strong>Plan a meeting point</strong><p>Agree where to reunite before heading out. Young children should remain with responsible adults.</p></div><div class="safety-item"><span class="num">02 / STREET AWARENESS</span><br><strong>Use designated crossings</strong><p>Prefer sidewalks and pedestrian crossings. A listed house is never certified safe by ANEVUM.</p></div><div class="safety-item"><span class="num">03 / REAL EMERGENCY</span><br><strong>Call emergency services</strong><p>This app is not an emergency responder or neighborhood patrol. Call 911 for emergencies.</p></div></section>
+    </main>
+    <footer><strong>ANEVUM Porchlight / V001 source preview.</strong> Entirely synthetic demonstration. This version offers no live event, GPS, registrations, paid services, safety certifications, public incident reports, emergency dispatch, or navigable directions. Hosts must explicitly opt in before any real property is listed. Your sample route only exists in this browser tab's memory and disappears when the page closes.</footer>
+  </div>
+  <script>
+/**
+ * ANEVUM Porchlight V001: entirely fictional display fixtures and pure functions.
+ * Never interpret this data as real households, reports, safety status, or event hours.
+ */
+const MAX_STOPS = 8;
+
+const houses = Object.freeze([
+  Object.freeze({ id: 'pl-01', name: 'Lantern House', block: 'Lantern Walk (fictional)', x: 166, y: 152, tags: ['candy', 'decor'], status: 'Sample stop' }),
+  Object.freeze({ id: 'pl-02', name: 'Moonlit Porch', block: 'Hollow Crescent (fictional)', x: 332, y: 142, tags: ['candy', 'nonfood'], status: 'Sample stop' }),
+  Object.freeze({ id: 'pl-03', name: 'Starlight Station', block: 'Orbit Lane (fictional)', x: 575, y: 177, tags: ['decor', 'nonfood'], status: 'Sample stop' }),
+  Object.freeze({ id: 'pl-04', name: 'The Pumpkin Gate', block: 'Lantern Walk (fictional)', x: 642, y: 330, tags: ['candy', 'decor'], status: 'Sample stop' }),
+  Object.freeze({ id: 'pl-05', name: 'Little Comet', block: 'Comet Court (fictional)', x: 467, y: 389, tags: ['candy', 'nonfood', 'stepfree'], status: 'Sample stop' }),
+  Object.freeze({ id: 'pl-06', name: 'The Glow Garden', block: 'Orbit Lane (fictional)', x: 245, y: 365, tags: ['decor', 'stepfree'], status: 'Sample stop' })
+]);
+
+const labels = Object.freeze({ candy: 'Treats', nonfood: 'Non-food options', decor: 'Decorations', stepfree: 'Step-free entry (self-reported)' });
+const filters = Object.freeze(['all', 'candy', 'nonfood', 'decor', 'stepfree']);
+
+function visibleHouses(list, filter = 'all') {
+  if (!Array.isArray(list)) return [];
+  const value = filters.includes(filter) ? filter : 'all';
+  return list.filter((house) => value === 'all' || house.tags.includes(value));
+}
+
+function toggleStop(route, id, list = houses) {
+  const current = Array.isArray(route) ? route : [];
+  if (!list.some((house) => house.id === id)) return current.slice();
+  if (current.includes(id)) return current.filter((item) => item !== id);
+  if (current.length >= MAX_STOPS) return current.slice();
+  return [...current, id];
+}
+
+function routeHouses(route, list = houses) {
+  const byId = new Map(list.map((house) => [house.id, house]));
+  return (Array.isArray(route) ? route : []).map((id) => byId.get(id)).filter(Boolean);
+}
+
+function boundedZoom(value) {
+  if (!Number.isFinite(value)) return 1;
+  return Math.min(1.6, Math.max(0.8, value));
+}
+
+
+const $ = (id) => document.getElementById(id);
+const ns = 'http://www.w3.org/2000/svg';
+const state = { filter: 'all', route: [], zoom: 1, dimensional: true };
+const title = $('host-count');
+const list = $('house-list');
+const pins = $('pins');
+
+function makeSvg(name, attributes) {
+  const el = document.createElementNS(ns, name);
+  for (const [key, value] of Object.entries(attributes)) el.setAttribute(key, String(value));
+  return el;
+}
+
+function renderPins() {
+  pins.replaceChildren();
+  const visible = new Set(visibleHouses(houses, state.filter).map((home) => home.id));
+  for (const house of houses) {
+    const chosen = state.route.includes(house.id);
+    const wrapper = makeSvg('g', { class: 'home-pin', role: 'button', tabindex: visible.has(house.id) ? 0 : -1, 'aria-label': `${house.name}: ${chosen ? 'remove from' : 'add to'} sample route`, 'aria-pressed': chosen, transform: `translate(${house.x} ${house.y})` });
+    wrapper.style.opacity = visible.has(house.id) ? '1' : '0.18';
+    wrapper.style.pointerEvents = visible.has(house.id) ? 'auto' : 'none';
+    const color = house.tags.includes('stepfree') ? '#9bddcd' : house.tags.includes('nonfood') ? '#aa9aff' : '#f4a38b';
+    wrapper.append(makeSvg('circle', { r: chosen ? 18 : 15, fill: color }));
+    const number = makeSvg('text', { x: 0, y: 1, 'aria-hidden': 'true' });
+    number.textContent = String(Number(house.id.slice(-2)));
+    wrapper.append(number);
+    wrapper.addEventListener('click', () => updateStop(house.id));
+    wrapper.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); updateStop(house.id); }
+    });
+    pins.append(wrapper);
+  }
+}
+
+function createTag(text) { const badge = document.createElement('span'); badge.textContent = text; return badge; }
+
+function renderCards() {
+  const visible = visibleHouses(houses, state.filter);
+  title.textContent = `(${visible.length} sample)`;
+  list.replaceChildren();
+  if (visible.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'house-card'; empty.textContent = 'No fictional houses match this filter.';
+    list.append(empty);
+  }
+  for (const house of visible) {
+    const card = document.createElement('article'); card.className = 'house-card';
+    const row = document.createElement('div'); row.className = 'house-head';
+    const symbol = document.createElement('div'); symbol.className = 'home-symbol'; symbol.setAttribute('aria-hidden', 'true'); symbol.textContent = '\u2726';
+    const copy = document.createElement('div'); copy.className = 'house-copy';
+    const strong = document.createElement('strong'); strong.textContent = house.name;
+    const small = document.createElement('small'); small.textContent = house.block;
+    copy.append(strong, small); row.append(symbol, copy);
+    const tags = document.createElement('div'); tags.className = 'house-tags';
+    for (const key of house.tags) tags.append(createTag(labels[key]));
+    const selected = state.route.includes(house.id);
+    const button = document.createElement('button'); button.type = 'button'; button.className = `add-btn${selected ? ' selected' : ''}`;
+    button.textContent = selected ? 'In sample route / remove' : 'Add to sample route';
+    button.setAttribute('aria-pressed', String(selected));
+    button.addEventListener('click', () => updateStop(house.id));
+    card.append(row, tags, button); list.append(card);
+  }
+}
+
+function renderRoute() {
+  const stops = routeHouses(state.route);
+  $('route-count').textContent = `(${stops.length} of ${MAX_STOPS})`;
+  $('route-copy').textContent = stops.length === 0
+    ? 'Select fictional houses to preview a stop sequence. No family location is captured or stored.'
+    : `${stops.length} fictional stop${stops.length === 1 ? '' : 's'} selected. This is an illustration, not walking directions.`;
+  $('clear-route').disabled = stops.length === 0;
+  $('route-line').setAttribute('points', stops.map((home) => `${home.x},${home.y}`).join(' '));
+  const container = $('route-stops'); container.replaceChildren();
+  for (const [index, stop] of stops.entries()) {
+    const label = document.createElement('span'); label.className = 'stop';
+    label.textContent = `${index + 1}. ${stop.name}`; container.append(label);
+  }
+}
+
+function renderAll() { renderPins(); renderCards(); renderRoute(); }
+
+function updateStop(id) {
+  const exists = state.route.includes(id);
+  if (!exists && state.route.length >= MAX_STOPS) {
+    $('route-copy').textContent = `Maximum ${MAX_STOPS} sample stops. Remove another first.`;
+    return;
+  }
+  state.route = toggleStop(state.route, id);
+  renderAll();
+}
+
+function updateView() {
+  const svg = $('diagram');
+  svg.classList.toggle('is-3d', state.dimensional);
+  // Apply the zoom through the SVG viewBox so the perspective transform remains stable.
+  const width = 800 / state.zoom, height = 540 / state.zoom;
+  svg.setAttribute('viewBox', `${(800 - width) / 2} ${(540 - height) / 2} ${width} ${height}`);
+  $('view-3d').textContent = state.dimensional ? '3D' : '2D';
+  $('view-3d').setAttribute('aria-pressed', String(state.dimensional));
+}
+
+for (const button of document.querySelectorAll('[data-filter]')) {
+  button.addEventListener('click', () => {
+    state.filter = button.dataset.filter;
+    for (const b of document.querySelectorAll('[data-filter]')) b.setAttribute('aria-pressed', String(b === button));
+    renderAll();
+  });
+}
+$('clear-route').addEventListener('click', () => { state.route = []; renderAll(); });
+$('zoom-in').addEventListener('click', () => { state.zoom = boundedZoom(state.zoom + 0.2); updateView(); });
+$('zoom-out').addEventListener('click', () => { state.zoom = boundedZoom(state.zoom - 0.2); updateView(); });
+$('view-3d').addEventListener('click', () => { state.dimensional = !state.dimensional; updateView(); });
+$('reset-map').addEventListener('click', () => { state.zoom = 1; state.dimensional = true; updateView(); });
+renderAll();
+updateView();
+</script>
+</body>
+</html>
