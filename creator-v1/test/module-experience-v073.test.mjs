@@ -75,3 +75,35 @@ test("V073 offline browser review exercises four working modules without relying
   assert.ok(browser.includes('".av73-world-deck"'));
   assert.doesNotMatch(browser,/COMMUNITY_PORTAL_ART_OR_LAYOUT/);
 });
+
+test("V073 Discover is search-led with verified counts and real metadata cards",()=>{
+  const discover=read("web/src/pages/DiscoverPage.tsx");
+  const project=read("web/src/components/ProjectCard.tsx");
+  const browseCss=read("web/src/discover-experience-v073.css");
+  for(const text of [discover,project])
+    assert.doesNotThrow(()=>parse(text,{sourceType:"module",plugins:["typescript","jsx"]}));
+  assert.match(main,/discover-experience-v073\.css/);
+  assert.match(discover,/av73-discover-intro/);
+  assert.match(discover,/immersive\?<PortalHeading/);
+  assert.match(discover,/readProjects/);
+  assert.match(discover,/readCategories/);
+  assert.match(discover,/presentation="editorial"/);
+  assert.match(discover,/av73-filter-count/);
+  assert.match(discover,/category:category\|\|undefined/);
+  assert.match(discover,/free:freeOnly\?"1":undefined/);
+  assert.match(discover,/next\.delete\("cursor"\)/);
+  assert.doesNotMatch(discover,/portal-discover-side|portal-directory|THE FIRST RELEASES ARE ON THEIR WAY/);
+  assert.match(project,/presentation\?: "visual" \| "editorial"/);
+  assert.match(project,/projectDetailPath/);
+  assert.match(project,/av73-project-card-author/);
+  assert.match(project,/av73-project-card-action/);
+  const editorial=project.slice(project.indexOf('if(presentation==="editorial")'),project.indexOf('  return ('));
+  assert.doesNotMatch(editorial,/CosmicArtwork|project-art|<img|<canvas|Math\.random/);
+  for(const token of [".av73-discover-intro",".av73-discover .portal-wide-search",".av73-discover .portal-channel-filters",
+    ".av73-discover .av73-project-card",".av73-discover .portal-true-empty","max-width:365px",
+    "max-width:700px","prefers-reduced-motion:reduce","forced-colors:active"])
+    assert.ok(browseCss.includes(token),"Missing Discover surface "+token);
+  for(const check of ["V073_DISCOVER_FIRST_FOLD","V073_DISCOVER_FILTER","V073_DISCOVER_SEARCH"])
+    assert.ok(browser.includes(check),"Missing visual QA "+check);
+  assert.doesNotMatch(discover+project+browseCss,/fakeProject|fakeCreator|fakeUser|dangerouslySetInnerHTML/);
+});
