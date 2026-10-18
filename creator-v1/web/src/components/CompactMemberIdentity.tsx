@@ -36,7 +36,7 @@ export type PublicIdentity={
  constellation?:ConstellationIdentity;
  supporterAppearance?:SupporterAppearance;
  /** The canonical server may supply a current, visible earned level label and XP. */
- progress?:Pick<SpaceStats,'xp'|'levelStart'|'nextLevel'|'artifact'>;
+ progress?:Pick<SpaceStats,'level'|'xp'|'levelStart'|'nextLevel'|'artifact'>;
 };
 export type PlayerCardSize='inline'|'compact'|'standard'|'featured';
 const cleanName=(id:string)=>id.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
@@ -62,10 +62,13 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
  // A featured card can show real progress only when the caller explicitly
  // provides the visibility-approved canonical member stats. No sample XP.
  const progress=specimen&&size==='featured'&&member.progress&&
+  member.progress.level===level&&
   Number.isSafeInteger(member.progress.xp)&&member.progress.xp>=0&&
   Number.isSafeInteger(member.progress.levelStart)&&member.progress.levelStart>=0&&
-  (member.progress.nextLevel===null||
-   (Number.isSafeInteger(member.progress.nextLevel)&&member.progress.nextLevel>member.progress.levelStart))?
+  member.progress.xp>=member.progress.levelStart&&
+  ((level===30&&member.progress.nextLevel===null)||
+   (level!==30&&Number.isSafeInteger(member.progress.nextLevel)&&
+    member.progress.nextLevel>member.progress.xp))?
   member.progress:null;
  const maximum=progress?.nextLevel===null?1:progress?progress.nextLevel!-progress.levelStart:1;
  const amount=progress?.nextLevel===null?1:progress?Math.max(0,Math.min(maximum,progress.xp-progress.levelStart)):0;
@@ -99,7 +102,7 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
    <small className="av61-member-handle">@{member.handle}</small>
    {progress&&<span className="av78-player-progress">
     <span className="av78-progress-caption"><strong>{progress.xp.toLocaleString()} XP</strong>
-     <small>{progress.nextLevel===null?'MAX LEVEL REACHED':(progress.nextLevel-progress.xp).toLocaleString()+' XP TO NEXT LEVEL'}</small></span>
+     <small>{progress.nextLevel===null?'MAX LEVEL REACHED':Math.max(0,progress.nextLevel-progress.xp).toLocaleString()+' XP TO NEXT LEVEL'}</small></span>
     <progress value={amount} max={maximum} aria-label="Verified XP toward next earned Evolution level"/>
    </span>}
    <span className="av61-member-rewards">
