@@ -7,13 +7,19 @@
  * the Worker fails closed. Wrangler must set assets.run_worker_first=true so
  * no static asset bypasses the Access gate.
  */
-const FILES=new Set(["/","/index.html","/styles.css","/app.mjs","/synthetic-engine.mjs"]);
+const FILES=new Set([
+  "/","/index.html","/styles.css","/app.mjs","/synthetic-engine.mjs",
+  "/vendor/maplibre-gl.mjs","/vendor/maplibre-gl-worker.mjs","/vendor/maplibre-gl.css"
+]);
 const CTYPE={
   "/":"text/html; charset=utf-8",
   "/index.html":"text/html; charset=utf-8",
   "/styles.css":"text/css; charset=utf-8",
   "/app.mjs":"application/javascript; charset=utf-8",
-  "/synthetic-engine.mjs":"application/javascript; charset=utf-8"
+  "/synthetic-engine.mjs":"application/javascript; charset=utf-8",
+  "/vendor/maplibre-gl.mjs":"application/javascript; charset=utf-8",
+  "/vendor/maplibre-gl-worker.mjs":"application/javascript; charset=utf-8",
+  "/vendor/maplibre-gl.css":"text/css; charset=utf-8"
 };
 const CSP=[
   "default-src 'none'",
@@ -21,12 +27,13 @@ const CSP=[
   "form-action 'none'",
   "object-src 'none'",
   "frame-ancestors 'none'",
-  "script-src 'self' https://unpkg.com",
-  "style-src 'self' https://unpkg.com https://fonts.googleapis.com",
+  "script-src 'self'",
+  "style-src 'self' https://fonts.googleapis.com",
   "font-src https://fonts.gstatic.com",
   "img-src 'self' data: blob: https://tiles.openfreemap.org https://s3.amazonaws.com",
   "connect-src 'self' https://tiles.openfreemap.org https://s3.amazonaws.com",
-  "worker-src blob:"
+  "worker-src 'self' blob:",
+  "child-src blob:"
 ].join("; ");
 const HEADERS={
   "Cache-Control":"private, no-store, max-age=0",
