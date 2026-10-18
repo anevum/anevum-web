@@ -1,5 +1,4 @@
 import {useEffect,useState} from 'react';
-import {OrbitalMark} from './OrbitalMark';
 import {BadgeInsignia} from './BadgeInsignia';
 import {BADGE_CATALOG} from '../lib/player-recognition';
 
@@ -17,8 +16,8 @@ export function LevelEmblem({level,size=64,handle=null}:{level:number;size?:numb
 
  // Originals stay unchanged. The owner/public route checks XP and public
  // consent on every request before exposing even a compact specimen image.
- const kinds=size>104?['preview','poster','icon']:['icon','preview','poster'];
- if(assetIndex>=kinds.length)return <span className="level-emblem level-emblem-beyond av73-static-level-fallback" style={{width:size,height:size}} role="img" aria-label={'Evolution level '+safe+' artwork unavailable'}><OrbitalMark/><small>{safe}</small></span>;
+ const kinds=size>=68?['preview','poster','icon']:['icon','preview','poster'];
+ if(assetIndex>=kinds.length)return <span className="level-emblem level-emblem-beyond av73-static-level-fallback av76-asset-error" style={{width:size,height:size}} role="img" aria-label={'Original Evolution of Everything artwork temporarily unavailable for earned level '+safe}><small>LVL {String(safe).padStart(2,'0')}<span className="av76-artwork-unavailable">ARTWORK UNAVAILABLE</span></small></span>;
  const validHandle=handle&&/^[a-z][a-z0-9_]{2,29}$/.test(handle)?handle:null;
  const base=validHandle?'/api/v1/members/'+validHandle+'/rewards/levels/'+safe:
    '/api/v1/member/rewards/levels/'+safe;
