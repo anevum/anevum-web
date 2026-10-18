@@ -16,3 +16,11 @@ test("profile API remains cookie-only and same-origin with no extra identity aut
  assert.match(api,/status===409\?"This handle/);
  assert.match(api,/status===429\?"Too many changes/);
 });
+
+test("origin validation errors direct members to the canonical apex without weakening CSRF",()=>{
+ assert.match(api,/if\(reason\?\.error==="Same-origin request required"\)/);
+ assert.match(api,/Open anevum\.com directly, reload, sign in and retry/);
+ assert.doesNotMatch(api,/Open a\.anevum\.com directly/);
+ assert.match(api,/mode:"same-origin"/);
+ assert.match(api,/referrerPolicy:"same-origin"/);
+});

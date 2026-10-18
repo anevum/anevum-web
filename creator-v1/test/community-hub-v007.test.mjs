@@ -50,8 +50,9 @@ test("V007 keeps moderation and member privileges entirely on existing backend r
   assert.match(hub, /enabled = status\.state === "ready"/);
   assert.match(hub, /Only independently approved public records/);
   assert.doesNotMatch(hub, /fetch\(|credentials\s*:|authorization|memberCreate|memberVote|memberReact|set-cookie/i);
-  assert.match(routes, /<MemberGate\/>/);
-  assert.match(routes, /path="community\/write" element={<CommunityPostEditorPage\/>}/);
+  assert.doesNotMatch(routes, /<MemberGate\/>/);
+  assert.match(routes, /path="library" element={<Navigate to="\/saved" replace\/>}/);
+  assert.match(routes, /path="community\/write" element={<Navigate to="\/community\?compose=1" replace\/>}/);
 });
 
 test("V007 is full-width on phones with readable type and reduced-motion/accessibility support", () => {

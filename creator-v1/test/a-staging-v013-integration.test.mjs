@@ -29,10 +29,18 @@ test("V013 read-only public staging cannot activate canonical auth or private up
     assert.equal(res.status,405,path);
   }
 });
-test("Private uploader exists only inside the legacy member-gated project editor",()=>{
-  const app=read("web/src/App.tsx"),project=read("web/src/pages/ProjectEditorPage.tsx");
-  assert.match(app,/<Route element={<MemberGate\/>}>/);
-  assert.match(project,/project&&<CreatorAssetUploader/);
+test("legacy uploader stays unmounted; canonical Studio gates edits by verified member session and capability",()=>{
+  const app=read("web/src/App.tsx");
+  const legacy=read("web/src/pages/ProjectEditorPage.tsx");
+  const studio=read("web/src/pages/CanonicalStudioPage.tsx");
+  assert.doesNotMatch(app,/<Route element={<MemberGate\/>}>|<MemberLibraryPage\/>/);
+  assert.match(app,/path="library" element={<Navigate to="\/saved" replace\/>}/);
+  assert.match(app,/path="studio" element={<CanonicalStudioPage\/>}/);
+  assert.match(studio,/canonicalAuthClient\.useSession\(\)/);
+  assert.match(studio,/session\?\.user\?\.emailVerified!==true/);
+  assert.match(studio,/!health\.studioReady/);
+  assert.match(studio,/memberStudio\.uploadsReady===true/);
+  assert.match(legacy,/project&&<CreatorAssetUploader/);
   assert.match(read("web/src/components/CreatorAssetUploader.tsx"),/!available/);
   assert.match(read("web/src/main.tsx"),/staging-integration-v013\.css/);
 });

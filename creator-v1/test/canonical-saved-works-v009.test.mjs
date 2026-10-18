@@ -80,7 +80,8 @@ test("canonical collection is a separate public route with an authenticated, cap
  const shell=read("web/src/components/Shell.tsx");
  const panel=read("web/src/components/CanonicalProjectSavePanel.tsx");
  assert.match(app,/path="saved" element=\{<CanonicalSavedWorksPage\/>\}/);
- assert.match(app,/path="library" element=\{<MemberLibraryPage\/>\}/);
+ assert.match(app,/path="library" element=\{<Navigate to="\/saved" replace\/>\}/);
+ assert.doesNotMatch(app, /<MemberLibraryPage\/>|<MemberGate\/>/);
  assert.match(view,/canonicalAuthClient\.useSession\(\)/);
  assert.match(view,/capability\.data\.kind==="canonical-saves"/);
  assert.match(view,/!verified/);

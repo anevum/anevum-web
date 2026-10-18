@@ -14,10 +14,7 @@ import { CommunityPage } from "./pages/CommunityPage";
 import {CommunityThread} from "./pages/CanonicalForums";
 import {ForumReviewPage} from "./pages/ForumReviewPage";
 import {CommunityPostPage} from "./pages/CommunityPostPage";
-import {CommunityPostEditorPage} from "./pages/CommunityPostEditorPage";
-import { MemberGate } from "./components/MemberGate";
 import { LoadingState } from "./components/States";
-import { MemberLibraryPage } from "./pages/MemberLibraryPage";
 import {CanonicalSavedWorksPage} from "./pages/CanonicalSavedWorksPage";
 import { CanonicalStudioPage } from "./pages/CanonicalStudioPage";
 import {Phase1JoinPage} from "./pages/Phase1JoinPage";
@@ -92,11 +89,9 @@ export default function App(){
     <Route path="studio/new" element={<CanonicalStudioPage mode="new"/>}/>
     <Route path="studio/review" element={<CanonicalStudioPage mode="review"/>}/>
     <Route path="studio/:projectId" element={<CanonicalStudioPage mode="edit"/>}/>
-    <Route element={<MemberGate/>}>
-      <Route path="community/write" element={<CommunityPostEditorPage/>}/>
-      <Route path="library" element={<MemberLibraryPage/>}/>
-
-    </Route>
+    {/* Retired legacy member routes point to authoritative canonical experiences. */}
+    <Route path="community/write" element={<Navigate to="/community?compose=1" replace/>}/>
+    <Route path="library" element={<Navigate to="/saved" replace/>}/>
     <Route path="thebutton" element={<TheButtonPage/>}/>
     <Route path="levels" element={<LevelsPage/>}/>
     <Route path="recognition" element={<RecognitionRegistryPage/>}/>
