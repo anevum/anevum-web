@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useState} from 'react';
 import {Link} from 'react-router-dom';
 import {BADGE_CATALOG,DISTINCTION_CATALOG,type BadgeDefinition,type BadgeFamily,type DistinctionDefinition} from '../lib/player-recognition';
-import {readRecognition,type RecognitionSettings} from '../lib/player-recognition-api';
+import {readRecognition,readRecognitionCatalog,type RecognitionCatalog,type RecognitionSettings} from '../lib/player-recognition-api';
 import {canonicalAuthClient} from '../lib/canonical-beta';
 import {BadgeInsignia} from '../components/BadgeInsignia';
 import {HonorInsignia} from '../components/HonorInsignia';
@@ -21,23 +21,23 @@ const FAMILIES:({id:'all';label:string}|{id:BadgeFamily;label:string})[]=[
  {id:'collaboration',label:'Collaboration'},{id:'stewardship',label:'Stewardship'},
  {id:'continuance',label:'Continuance'}
 ];
-const ISSUABLE_WHEN_ENABLED=new Set(['first_orbit','first_thread','first_reply','conversationalist']);
+type Issuability='available'|'planned'|'checking'|'unavailable';
 const badges=Object.values(BADGE_CATALOG);
 const distinctions=Object.values(DISTINCTION_CATALOG);
 const total=badges.length+distinctions.length;
-function BadgeItem({entry,earnedAt,available=false}:{entry:BadgeDefinition;earnedAt?:number;available?:boolean}){
+function BadgeItem({entry,earnedAt,issuability}:{entry:BadgeDefinition;earnedAt?:number;issuability:Issuability}){
  const issued=typeof earnedAt==='number'&&earnedAt>0;
- const active=entry.status==='active'||available;
+ const active=issuability==='available';
  return <article className={'av66-catalog-item av66-catalog-badge'+(issued?' is-earned':'')} tabIndex={0}>
   <div className="av66-visual-frame"><BadgeInsignia badge={entry.id} size="medium" state={issued?'earned':'preview'}/></div>
-  <div className="av66-item-copy"><span className="av66-catalog-meta">{entry.family.toUpperCase()} / {active?'ISSUABLE':'FUTURE'}</span>
+  <div className="av66-item-copy"><span className="av66-catalog-meta">{entry.family.toUpperCase()} / {active?'ISSUABLE':issuability==='planned'?'FUTURE':'STATUS UNVERIFIED'}</span>
    <h3>{entry.name}</h3><p>{entry.description}</p>
    <div className="av66-criterion"><strong>RECOGNITION CRITERION</strong><span>{entry.criterion}</span></div>
   </div>
-  <span className={'av66-state'+(issued?' is-earned':'')}>{issued?'EARNED':active?'AVAILABLE':'PLANNED'}</span>
+  <span className={'av66-state'+(issued?' is-earned':'')}>{issued?'EARNED':active?'AVAILABLE':issuability==='planned'?'PLANNED':issuability==='checking'?'VERIFYING':'STATUS UNAVAILABLE'}</span>
  </article>;
 }
-function DistinctionItem({entry,earnedAt}:{entry:DistinctionDefinition;earnedAt?:number}){
+function DistinctionItem({entry,earnedAt,issuability}:{entry:DistinctionDefinition;earnedAt?:number;issuability:Issuability}){
  const issued=typeof earnedAt==='number'&&earnedAt>0;
  return <article className={'av66-catalog-item av66-catalog-distinction'+(issued?' is-earned':'')} tabIndex={0}>
   <div className="av66-visual-frame"><HonorInsignia distinction={entry}/></div>
@@ -45,7 +45,7 @@ function DistinctionItem({entry,earnedAt}:{entry:DistinctionDefinition;earnedAt?
    <h3>{entry.name}</h3><p>{entry.description}</p>
    <div className="av66-criterion"><strong>AWARD STANDARD</strong><span>{entry.criterion}</span></div>
   </div>
-  <span className={'av66-state'+(issued?' is-earned':'')}>{issued?'AWARDED':'NOT YET ISSUED'}</span>
+  <span className={'av66-state'+(issued?' is-earned':'')}>{issued?'AWARDED':issuability==='available'?'NOMINATIONS OPEN':issuability==='planned'?'PLANNED':issuability==='checking'?'VERIFYING':'STATUS UNAVAILABLE'}</span>
  </article>;
 }
 
@@ -55,6 +55,8 @@ export function RecognitionRegistryPage(){
  const [search,setSearch]=useState(''),[mine,setMine]=useState(false);
  const [ledger,setLedger]=useState<RecognitionSettings|null>(null);
  const [retrievable,setRetrievable]=useState(false);
+ const [catalog,setCatalog]=useState<RecognitionCatalog|null>(null);
+ const [catalogProblem,setCatalogProblem]=useState(false);
  useEffect(()=>{
   if(!session?.user?.id){setLedger(null);setRetrievable(false);return;}
   let alive=true;const c=new AbortController();
@@ -63,6 +65,20 @@ export function RecognitionRegistryPage(){
   });
   return ()=>{alive=false;c.abort()};
  },[session?.user?.id]);
+ useEffect(()=>{
+  let alive=true;const abort=new AbortController();
+  readRecognitionCatalog(abort.signal).then(value=>{
+   if(alive){setCatalog(value);setCatalogProblem(false);}
+  }).catch(()=>{
+   if(alive){setCatalog(null);setCatalogProblem(true);}
+  });
+  return()=>{alive=false;abort.abort();};
+ },[]);
+ const statusOf=(id:string,kind:'badge'|'ribbon'|'medal'):Issuability=>{
+  if(!catalog)return catalogProblem?'unavailable':'checking';
+  const field=kind==='badge'?'activeBadgeIds':kind==='ribbon'?'activeRibbonIds':'activeMedalIds';
+  return catalog[field].includes(id)?'available':'planned';
+ };
  const held=useMemo(()=>new Map(ledger?.earnedBadges.map(x=>[x.id,x.earnedAt] as const)||[]),[ledger]);
  const honors=useMemo(()=>new Map([...(ledger?.earnedRibbons||[]),...(ledger?.earnedMedals||[])].map(x=>[x.id,x.earnedAt] as const)),[ledger]);
  const items=useMemo(()=>{
@@ -84,6 +100,7 @@ export function RecognitionRegistryPage(){
   <div className="av66-catalog-shell">
    <div className="av66-catalog-intro"><div><span>IDENTITY / RECOGNITION / HONORS</span><h2>The Archive of Deeds</h2></div>
     <p>A collectible catalog designed to expand with the community. Definitions labeled <strong>Planned</strong> are not yet earnable. Nothing here is a fabricated award.</p></div>
+   {catalogProblem&&<p className="av69-status-note" role="status">Current award availability could not be verified. Earned badges still come from your secure account ledger; the catalog will not guess which future awards are active.</p>}
    <nav className="av66-catalog-tabs" aria-label="Recognition collections">{CABINETS.map(entry=>
     <button key={entry.id} type="button" aria-label={entry.name} aria-current={cabinet===entry.id?'page':undefined}
      onClick={()=>{setCabinet(entry.id);setMine(false)}}><strong className="av66-tab-full">{entry.name}</strong><strong className="av68-tab-short">{entry.shortName}</strong><small>{entry.description}</small></button>
@@ -96,8 +113,8 @@ export function RecognitionRegistryPage(){
     <button type="button" key={entry.id} aria-pressed={family===entry.id} onClick={()=>setFamily(entry.id)}>{entry.label}</button>)}
    </div>}
    <section className={'av66-catalog-grid av66-catalog-grid--'+cabinet} aria-label={CABINETS.find(x=>x.id===cabinet)?.name}>
-    {cabinet==='badges'?(items as BadgeDefinition[]).map(entry=><BadgeItem key={entry.id} entry={entry} earnedAt={held.get(entry.id)} available={retrievable&&ISSUABLE_WHEN_ENABLED.has(entry.id)}/>):
-     (items as DistinctionDefinition[]).map(entry=><DistinctionItem key={entry.id} entry={entry} earnedAt={honors.get(entry.id)}/>)}
+    {cabinet==='badges'?(items as BadgeDefinition[]).map(entry=><BadgeItem key={entry.id} entry={entry} earnedAt={held.get(entry.id)} issuability={statusOf(entry.id,'badge')}/>):
+     (items as DistinctionDefinition[]).map(entry=><DistinctionItem key={entry.id} entry={entry} earnedAt={honors.get(entry.id)} issuability={statusOf(entry.id,entry.kind)}/>)}
    </section>
    {!items.length&&<div className="av66-no-results"><strong>No matching marks.</strong><p>Try a different discipline, keyword or collection.</p><button type="button" onClick={()=>{setSearch('');setFamily('all');setMine(false)}}>RESET ARCHIVE FILTERS</button></div>}
    <footer className="av66-catalog-footer">

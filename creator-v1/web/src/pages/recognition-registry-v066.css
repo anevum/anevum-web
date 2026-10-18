@@ -150,3 +150,6 @@
  }
  .av66-filters button{flex:0 0 auto;scroll-snap-align:start}
 }
+
+/* V069: explain temporary catalog verification failure without mislabeling planned awards. */
+.av69-status-note{margin:0 0 12px;padding:11px 13px;border:1px solid #c7a4b266;border-radius:8px;background:#291c2d;color:#f0d4db;font:500 11px/1.55 ui-sans-serif,system-ui}

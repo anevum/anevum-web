@@ -228,6 +228,16 @@ createServer((req,res)=>{
     contextFixtureEnabled=u.searchParams.get('enabled')==='1';
     return json(res,{syntheticOnly:true,enabled:contextFixtureEnabled});
   }
+  // Synthetic local-only issuer status. No real D1, XP, users or credentials.
+  if(u.pathname==="/api/v1/public/recognition/catalog"){
+    if(req.method!=="GET"&&req.method!=="HEAD")return json(res,{error:"Read-only"},405);
+    if(u.search)return json(res,{error:"Unexpected query"},400);
+    res.writeHead(200,{"content-type":"application/json; charset=utf-8","cache-control":"no-store"});
+    return res.end(req.method==="HEAD"?"":JSON.stringify({
+      version:1,activeBadgeIds:["first_signal","world_shaper","first_orbit","first_thread","first_reply","conversationalist"],
+      activeRibbonIds:[],activeMedalIds:[]
+    }));
+  }
   if(u.pathname==="/__ready")return json(res,{ready:existsSync(resolve(dist,"index.html"))});
   if(u.pathname.startsWith("/creator/api/v1/"))return api(res,u);
   if(u.pathname.startsWith("/api/v1/member/"))return offlineMember(req,res,u);
