@@ -195,3 +195,16 @@
 @media(prefers-reduced-motion:reduce){
  .st-project,.st-drop{transition:none}
 }
+
+/* V070 / EXTERNAL METADATA RELEASE — gated creator/reviewer instrumentation. */
+.st-publication,.st-release-review{position:relative;overflow:hidden;border-color:#cba9c64a;background:linear-gradient(155deg,#22152a 0%,#111827 63%,#0a1220 100%)}
+.st-publication:before,.st-release-review:before{content:'';position:absolute;inset:0 0 auto;height:2px;background:linear-gradient(90deg,#f08c7e,#b39cf8,#93d4d8);opacity:.78;pointer-events:none}
+.st-publication-state{display:grid;gap:5px;border:1px solid #b79fce55;background:#1c1930;padding:12px 13px;margin:14px 0;border-radius:5px}
+.st-publication-state strong{font-size:.76rem;letter-spacing:.12em;color:#f3d9e8}
+.st-publication-state small{font-size:.7rem;color:#afbed1;line-height:1.45}
+.st-publication .st-check,.st-release-review .st-check{display:flex;align-items:flex-start;gap:11px;font-size:.83rem;line-height:1.55;margin:11px 0;color:#dbe1ee}
+.st-publication .st-check input,.st-release-review .st-check input{width:18px;height:18px;flex:0 0 18px;margin:2px 0 0;accent-color:#eab3c9}
+.st-release-review{padding:17px;margin:14px 0;border:1px solid #e8adca52;border-radius:4px}
+.st-release-review .st-button{width:100%;margin:8px 0 0}
+.st-release-review .st-muted{margin:6px 0 14px}
+@media(max-width:640px){.st-release-review{padding:13px}.st-publication .st-actions{display:flex;flex-direction:column;align-items:stretch}.st-publication .st-actions>*{max-width:100%}}
