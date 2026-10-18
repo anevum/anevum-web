@@ -35,3 +35,18 @@ Do not deploy by merging into stale `main`, deploying legacy `V076` scripts with
 6. Record the release SHA/version id, timings and live probes in a release note. Only then mark **deployed**.
 
 **This release gate is a protection of existing public traffic, not a request for new creative approval.** The founder has already approved the new UX.
+
+
+## Production release completion — 2026-10-18 20:52 UTC
+
+**Status: DEPLOYED / guarded rollback version retained.** The original STOP gate above was applicable before release reconciliation and is kept as historical preflight evidence, not as a current blocker.
+
+- Reconciled production source `release/player-cards-v078-reconciled-20261018` combines the previously deployed null-creator homepage incident fix with the V077 private front-facing art and V078 premium player-card UX.
+- Exact production release SHA: `993965085a72b7a42a705b3ea5f3e7453fdb72d4`. The subsequent document/workflow housekeeping commits are not new deployment builds.
+- Production Worker version 26: `50d33296-cee0-4565-93c6-a81777f23c85` at 100% traffic.
+- Previous 100% Worker version 25: `a5277bda-9389-4d28-8de5-25f67afbe04a` retained for rollback.
+- GitHub Actions release run: https://github.com/anevum/anevum-web/actions/runs/39165180412 — **success**, including rebuild of all 152 native asset files across the 30 canonical levels, exact frontend bundle hash under active asset overlay, production Level 4 earned SVG, original 3D scene, authenticated/unauthenticated access checks, live browser-rendered member card, and preservation of every existing zone Worker route, canonical D1 binding, 24 apex bindings and protected secrets.
+- The release did not change creator upload, native player, staff, or frame policy routes.
+- The conceptual mockups remain art-direction references. The present deployed V077 level illustrations use detailed SVG, not the photorealistic painted example imagery. Any future artwork change is a separate release.
+
+No further release replay is authorized or required for V078.
