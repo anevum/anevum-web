@@ -43,6 +43,28 @@ jobs:
       - name: Verify consent, moderation, isolation, expiry and revocation in memory
         run: node --test safety/porchlight/test/pilot.test.mjs
 
+      - name: Verify synthetic desktop and mobile browser experience
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium || true)"
+          test -n "$chrome"
+          mkdir -p evidence/porchlight-v001
+          node safety/porchlight/test/browser-capture.mjs --chrome "$chrome" --output evidence/porchlight-v001
+          test -s evidence/porchlight-v001/acceptance.json
+          test -s evidence/porchlight-v001/public-320.png
+          test -s evidence/porchlight-v001/public-390.png
+          test -s evidence/porchlight-v001/public-1440.png
+          test -s evidence/porchlight-v001/organizer-390.png
+
+      - name: Preserve synthetic design screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: porchlight-v001-synthetic-browser
+          path: evidence/porchlight-v001/
+          retention-days: 14
+          if-no-files-found: warn
+
       - name: Enforce no-public-release boundary
         run: |
           set -euo pipefail
