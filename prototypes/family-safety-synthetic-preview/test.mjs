@@ -25,7 +25,7 @@ const access=(email="devon@anevum.com")=>({
 const fixture=({
   method="GET",path="/",reviewAccess=access(),envAud=AUD,
   envIssuer=ISSUER, requestHeaders={},
-  assets=async request=>new Response("fixture for "+new URL(request.url).pathname,{status:200})
+  assets=async request=>new Response("fixture for "+new URL(typeof request==="string"?request:(request.url||request.href)).pathname,{status:200})
 }={})=>{
   return worker.fetch(new Request(origin+path,{method,headers:requestHeaders}),{
     FS_SYNTH_REVIEW_AUD:envAud,FS_SYNTH_TEAM_ISSUER:envIssuer,ASSETS:{fetch:assets}
@@ -205,6 +205,47 @@ test("authorized preview serves only approved read-only static assets with restr
   assert.equal(await head.text(),"");
 });
 
+test("authenticated owner lands on canonical homepage after Cloudflare Access callback",async()=>{
+  const visited=[];
+  const assets=async input=>{
+    const assetUrl=new URL(typeof input==="string"?input:(input.url||input.href));
+    visited.push(assetUrl.pathname+assetUrl.search);
+    if(assetUrl.pathname==="/index.html")
+      return new Response(site,{status:200,headers:{"Content-Type":"text/html"}});
+    return new Response("File not found",{status:404});
+  };
+  for(const path of ["/","/index.html"]) {
+    const response=await fixture({path,assets});
+    assert.equal(response.status,200,path);
+    assert.match(response.headers.get("Content-Type"),/text\/html/);
+    assert.match(await response.text(),/ANEVUM \/\/ Family Field/);
+    assert.equal(visited.at(-1),"/index.html");
+  }
+  // Access may redirect with a query string appended to the original page.
+  for(const path of [
+    "/?CF_Authorization=placeholder",
+    "/?return_url=%2F",
+    "/index.html?browser-callback=1"
+  ]){
+    const response=await fixture({path,assets});
+    assert.equal(response.status,302,path);
+    assert.equal(response.headers.get("Location"),origin+"/");
+    assert.match(response.headers.get("Cache-Control"),/no-store/);
+  }
+  const navigate=await fixture({
+    path:"/review-return?from=access",
+    requestHeaders:{Accept:"text/html"},assets
+  });
+  assert.equal(navigate.status,302);
+  assert.equal(navigate.headers.get("Location"),origin+"/");
+  // Root canonicalization must never send a private callback value onward.
+  assert.equal(visited.some(x=>x.includes("?")),false);
+  const notFound=await fixture({path:"/random-script.mjs",assets});
+  assert.equal(notFound.status,404);
+  const missing=await fixture({path:"/styles.css",assets});
+  assert.equal(missing.status,503); // missing a required public asset is a server failure, not a real 404 page
+});
+
 test("no POST, GPS API, accidental static leak, route bypass, or query-based discovery",async()=>{
   for(const {method,path,expected} of [
     {method:"POST",path:"/",expected:405},
@@ -213,7 +254,7 @@ test("no POST, GPS API, accidental static leak, route bypass, or query-based dis
     {method:"GET",path:"/api/v1/member/me",expected:404},
     {method:"GET",path:"/v1/circles/family-1/presence/alice",expected:404},
     {method:"GET",path:"/private",expected:404},
-    {method:"GET",path:"/index.html?debug=true",expected:404},
+    {method:"GET",path:"/index.html?debug=true",expected:302},
     {method:"GET",path:"/vendor/maplibre-gl-worker.mjs?other=1",expected:404},
     {method:"GET",path:"/worker.mjs",expected:404},
     {method:"GET",path:"/.env",expected:404}
