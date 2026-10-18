@@ -1,0 +1,50 @@
+name: ANEVUM Native Pack V001 — isolated verification
+on:
+  push:
+    branches: [build/native-creation-packs-v001-20261017]
+    paths:
+      - "creator-v1/web/src/lib/anevum-native-pack.ts"
+      - "creator-v1/web/src/pages/NativePackLab.tsx"
+      - "creator-v1/web/src/pages/native-pack-lab.css"
+      - "creator-v1/web/src/pages/StudioWorkbench.tsx"
+      - "creator-v1/web/src/pages/CanonicalStudioPage.tsx"
+      - "creator-v1/test/native-pack-v001.test.mjs"
+      - "creator-v1/package.json"
+      - ".github/workflows/native-pack-v001-verify.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: anevum-native-pack-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  native-pack:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install frontend dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Verify native pack format and editor contract
+        run: node --experimental-strip-types --test creator-v1/test/native-pack-v001.test.mjs
+      - name: Verify existing Studio data and ownership invariants
+        run: |
+          node --experimental-strip-types --test creator-v1/test/studio-workbench-v054.test.mjs creator-v1/test/studio-launchpad-v053.test.mjs
+          node --test creator-v1/test/canonical-studio-v043.test.mjs
+      - name: Typecheck Creator V1 frontend
+        run: npm run check:creator-v1-web
+      - name: Compile desktop and staging-path builds (no deploy)
+        run: |
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+      - name: Confirm release boundaries
+        run: |
+          node -e "const fs=require('node:fs'); const lab=fs.readFileSync('creator-v1/web/src/pages/NativePackLab.tsx','utf8'); const p=fs.readFileSync('creator-v1/web/src/lib/anevum-native-pack.ts','utf8'); if(/dangerouslySetInnerHTML|\\beval\\s*\\(|new Function|<iframe|\\bfetch\\s*\\(/.test(lab+'\n'+p))process.exit(1);"
+          git diff --exit-code
