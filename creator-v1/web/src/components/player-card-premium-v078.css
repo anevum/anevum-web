@@ -1,0 +1,301 @@
+/* ANEVUM V078 / premium identity composition
+ * Screenshot-inspired hierarchy and depth, rebuilt with actual verified
+ * recognition rather than fictitious avatars, statuses or unlocked galleries.
+ * This is an additive skin for the existing universal V065 identity.
+ * Compact/inline contexts remain predictable and inexpensive.
+ */
+.av78-player-card{
+ --av78-ice:#8fd9fc;
+ --av78-violet:#c7a2ed;
+ --av78-ink:#0c1526;
+ min-width:0;
+ background:linear-gradient(112deg,rgba(12,22,39,.9),rgba(14,24,43,.85) 65%,rgba(12,19,34,.92));
+ border:1px solid rgba(128,166,207,.31);
+ box-shadow:inset 0 1px 0 rgba(229,242,255,.08),0 5px 18px rgba(1,6,18,.2);
+}
+.av78-player-card:where(:hover,:focus-visible){
+ background:linear-gradient(112deg,rgba(18,31,53,.97),rgba(16,26,48,.95) 67%,rgba(15,25,43,.97));
+ border-color:rgba(158,203,245,.62);
+ box-shadow:inset 0 1px 0 rgba(239,248,255,.14),0 10px 28px rgba(1,6,19,.4);
+}
+.av78-player-card .av61-member-name{
+ color:#f5f9ff!important;
+ letter-spacing:-.012em!important;
+}
+.av78-player-card .av61-member-handle{color:#b9d1eb!important}
+.av78-player-card .av61-photo .ms-portrait{
+ border:1px solid rgba(157,189,235,.42);
+ box-shadow:inset 0 0 0 1px #b5dcf32a,0 0 0 2px #15263c,0 5px 13px #02081799!important;
+}
+.av78-player-card .av61-specimen{
+ filter:none!important;
+ perspective:none!important;
+}
+.av78-player-card .av61-specimen::after{display:none!important}
+.av78-player-card .av65-badge-rack .av66-badge-insignia{
+ filter:drop-shadow(0 2px 4px #0009);
+}
+.av78-player-card .av61-level-label{
+ border:1px solid rgba(168,182,241,.54)!important;
+ background:linear-gradient(118deg,rgba(36,47,87,.9),rgba(51,36,76,.7))!important;
+ color:#e9d9ff!important;
+ padding:4px 8px;
+ letter-spacing:.035em;
+}
+.av78-player-card .av61-specimen-name{
+ color:#d7c7f1!important;
+ font-weight:650!important;
+}
+.av78-player-card.av65-player-card--featured{
+ position:relative;
+ display:grid!important;
+ grid-template-columns:96px minmax(0,1fr);
+ gap:18px;
+ align-items:center;
+ width:min(100%,720px);
+ max-width:100%;
+ min-height:196px;
+ padding:20px 23px;
+ border:1px solid rgba(130,184,238,.57);
+ border-radius:18px;
+ overflow:hidden;
+ background:
+  radial-gradient(ellipse 58% 110% at 93% 20%,rgba(83,112,180,.32),transparent 85%),
+  radial-gradient(ellipse 58% 80% at 6% 65%,var(--av65-glow),transparent 90%),
+  linear-gradient(115deg,#0f1a2d 0%,#17243d 51%,#0c1426 100%);
+ box-shadow:inset 0 1px rgba(237,248,255,.17),0 2px 7px #01071490,0 15px 36px #0107135c;
+}
+.av78-player-card.av65-player-card--featured:where(:hover,:focus-visible){
+ border-color:#b7dcfb;
+ box-shadow:inset 0 1px #ffffff26,0 0 0 1px #9fc2ee40,0 15px 38px #020614a6;
+}
+.av78-player-card.av65-player-card--featured .av65-aura-field{
+ inset:0;
+ filter:none;
+ background:radial-gradient(ellipse at 15% 50%,var(--av65-glow),transparent 62%);
+ z-index:0;
+ border-radius:inherit;
+}
+.av78-featured-art{
+ position:absolute;
+ width:40%;
+ height:100%;
+ inset:0 0 0 auto;
+ display:grid;
+ place-items:center;
+ z-index:0;
+ opacity:.82;
+ pointer-events:none;
+ overflow:hidden;
+ -webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 26%,#000 94%);
+ mask-image:linear-gradient(90deg,transparent 0%,#000 26%,#000 94%);
+}
+.av78-featured-art::before{
+ content:'';
+ position:absolute;
+ width:85%;
+ aspect-ratio:1;
+ border:1px solid #9ec5ff26;
+ border-radius:50%;
+ box-shadow:0 0 50px #809bff17,inset 0 0 45px #9c83fc12;
+}
+.av78-featured-art .level-emblem{
+ width:min(230px,100%)!important;
+ height:min(230px,100%)!important;
+ max-width:100%;
+ max-height:100%;
+ border:0!important;
+ background:transparent!important;
+ box-shadow:none!important;
+}
+.av78-featured-art .av62-native-poster{
+ width:100%!important;
+ height:100%!important;
+ object-fit:contain;
+ padding:0!important;
+ border:0;
+ filter:drop-shadow(0 14px 19px #02071dbb)!important;
+}
+.av78-player-card.av65-player-card--featured .av61-portrait-zone{
+ align-self:start;
+ margin-top:10px;
+ width:88px;
+ height:91px;
+ z-index:2;
+}
+.av78-player-card.av65-player-card--featured .av61-photo .ms-portrait{
+ width:82px!important;height:82px!important;
+ border-radius:50%!important;
+ border:2px solid rgba(160,202,249,.72);
+ box-shadow:0 0 0 3px rgba(97,119,197,.3),0 0 18px var(--av65-glow),0 8px 19px #010612b2!important;
+}
+.av78-player-card.av65-player-card--featured .av61-specimen{
+ position:absolute;
+ width:42px;height:42px;
+ right:-4px;bottom:-8px;
+ margin:0;
+ z-index:4;
+}
+.av78-player-card.av65-player-card--featured .av61-specimen .level-emblem{
+ width:42px!important;height:42px!important;
+ border-color:#bed3fd66;
+ border-radius:10px;
+}
+.av78-player-card.av65-player-card--featured .av61-member-copy{
+ z-index:2;
+ gap:5px;
+ padding:4px min(30%,205px) 4px 0;
+ width:100%;
+}
+.av78-player-card.av65-player-card--featured .av61-member-name{
+ font-size:clamp(21px,2.1vw,29px)!important;
+ line-height:1.15!important;
+}
+.av78-player-card.av65-player-card--featured .av61-member-handle{
+ font-size:12px!important;
+}
+.av78-member-kicker{
+ display:block;
+ font:700 9px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;
+ letter-spacing:.14em;
+ color:#9ecff5;
+ margin:0 0 3px;
+}
+.av78-player-card.av65-player-card--featured .av61-member-rewards{
+ align-items:center;
+ flex-wrap:wrap;
+ column-gap:7px!important;
+ row-gap:6px!important;
+ margin-top:6px!important;
+}
+.av78-player-card.av65-player-card--featured .av61-level-label{
+ max-width:100%;
+ white-space:normal;
+ line-height:1.5;
+ font-size:10px!important;
+}
+.av78-player-card.av65-player-card--featured .av61-award{
+ width:27px;height:27px;
+}
+.av78-player-card.av65-player-card--featured .av65-badge .av66-badge-insignia{
+ width:27px!important;height:27px!important;
+ max-width:27px!important;max-height:27px!important;
+}
+.av78-player-progress{
+ display:grid;
+ gap:5px;
+ margin-top:8px;
+ min-width:0;
+ width:min(100%,260px);
+}
+.av78-progress-caption{
+ display:flex;
+ flex-wrap:wrap;
+ justify-content:space-between;
+ gap:4px 10px;
+ align-items:baseline;
+ min-width:0;
+}
+.av78-progress-caption strong{
+ font:750 11px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;
+ color:#e5f2ff;
+}
+.av78-progress-caption small{
+ font:650 9px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace!important;
+ letter-spacing:.04em;
+ color:#b3c9e5!important;
+}
+.av78-player-progress progress{
+ display:block;
+ width:100%;
+ height:6px;
+ border:0;
+ border-radius:10px;
+ overflow:hidden;
+ appearance:none;
+ background:#253650;
+}
+.av78-player-progress progress::-webkit-progress-bar{background:#253650;border-radius:10px}
+.av78-player-progress progress::-webkit-progress-value{
+ background:linear-gradient(90deg,#7ca5f9,#d8a0f0);
+ border-radius:10px;
+}
+.av78-player-progress progress::-moz-progress-bar{
+ background:linear-gradient(90deg,#7ca5f9,#d8a0f0);
+ border-radius:10px;
+}
+.av78-player-card.av65-player-card--compact{
+ background:linear-gradient(112deg,#101d32ed,#19263eeb);
+ border-color:#9ebfe353;
+ border-radius:12px;
+}
+.av78-player-card.av65-player-card--inline{
+ background:transparent;
+ border-color:transparent;
+ box-shadow:none;
+}
+.av78-player-card.av65-player-card--inline:where(:hover,:focus-visible){
+ background:rgba(32,47,72,.6);
+ border-color:#6689b66b;
+}
+@media(max-width:740px){
+ .av78-player-card.av65-player-card--featured{
+  grid-template-columns:72px minmax(0,1fr);
+  min-height:164px;
+  gap:13px;
+  padding:16px;
+ }
+ .av78-player-card.av65-player-card--featured .av61-portrait-zone{width:70px;height:72px}
+ .av78-player-card.av65-player-card--featured .av61-photo .ms-portrait{
+  width:66px!important;height:66px!important;
+ }
+ .av78-player-card.av65-player-card--featured .av61-specimen{
+  width:32px;height:32px;right:0;bottom:-3px;
+ }
+ .av78-player-card.av65-player-card--featured .av61-specimen .level-emblem{
+  width:32px!important;height:32px!important;
+ }
+ .av78-player-card.av65-player-card--featured .av61-member-copy{
+  padding-right:min(22%,110px);
+ }
+ .av78-player-card.av65-player-card--featured .av61-member-name{
+  font-size:21px!important;
+ }
+ .av78-featured-art{width:36%;opacity:.59}
+ .av78-member-kicker{font-size:8px}
+ .av78-player-card.av65-player-card--featured .av61-award{
+  width:22px;height:22px;
+ }
+ .av78-player-card.av65-player-card--featured .av65-badge .av66-badge-insignia{
+  width:22px!important;height:22px!important;
+ }
+}
+@media(max-width:430px){
+ .av78-player-card.av65-player-card--featured{
+  grid-template-columns:66px minmax(0,1fr);
+  min-height:156px;
+  gap:10px;
+  padding:13px 12px;
+ }
+ .av78-player-card.av65-player-card--featured .av61-member-copy{
+  padding-right:0;
+ }
+ .av78-featured-art{width:42%;opacity:.17}
+ .av78-player-card.av65-player-card--featured .av61-member-name{
+  font-size:20px!important;
+ }
+ .av78-player-card.av65-player-card--featured .av61-specimen-name{
+  max-width:160px;
+ }
+ .av78-progress-caption{gap:2px 8px}
+ .av78-progress-caption small{font-size:8px!important}
+ .av78-player-card.av65-player-card--featured .av61-member-rewards{gap:4px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .av78-player-card,.av78-player-card *{animation:none!important;transition:none!important}
+}
+@media(forced-colors:active){
+ .av78-player-card{background:Canvas;border-color:CanvasText;box-shadow:none}
+ .av78-featured-art{opacity:1}
+ .av78-player-progress progress{border:1px solid CanvasText}
+}
