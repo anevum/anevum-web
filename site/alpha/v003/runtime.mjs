@@ -30,7 +30,7 @@ export default {
     if (request.method !== "GET" && request.method !== "HEAD") return missing();
     // /r/<release-uuid>/index.html, /p/<release-uuid>/<signed-token>/index.html
     const publicMatch = url.pathname.match(/^\/r\/([0-9a-f-]{36})\/(.+)$/);
-    const previewMatch = url.pathname.match(/^\/p\/([0-9a-f-]{36})\/([0-9]{10}\.[a-f0-9]{64})\/(.+)$/);
+    const previewMatch = url.pathname.match(/^\/p\/([0-9a-f-]{36})\/([a-f0-9]{64})\/(.+)$/);
     if (!publicMatch && !previewMatch) return missing();
     const releaseId = (publicMatch || previewMatch)[1];
     if (!UUID.test(releaseId)) return missing();
@@ -50,7 +50,7 @@ export default {
       if (publicMatch && !isLive) return missing();
       if (previewMatch) {
         if (!["ready", "pending_review", "published"].includes(release.release_status)) return missing();
-        if (!await verifyPreview(env.PACKAGE_PREVIEW_KEY, releaseId, previewMatch[2])) return missing();
+        if (!await verifyPreview(env.DB, releaseId, previewMatch[2])) return missing();
       }
       const asset = await env.DB.prepare(
         "SELECT object_key,mime,bytes,sha256 FROM anevum_package_files WHERE release_id=? AND path=?"
