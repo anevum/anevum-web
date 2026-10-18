@@ -117,6 +117,7 @@
       <section class="section">
         <div class="section-title">Map controls <span class="kicker">INTERACTIVE 3D</span></div>
         <label class="check"><input id="buildings-checkbox" type="checkbox" checked> 3D building volumes</label>
+        <label class="check"><input id="terrain-checkbox" type="checkbox"> Real elevation terrain (optional)</label>
         <div class="note">Drag to move. Pinch or scroll to zoom. Use two fingers or right-click-drag to tilt and rotate. Select the map to place a local planning pin.</div>
       </section>
     </div>
@@ -140,7 +141,7 @@
     const center = [-81.2873, 28.2483]; // Approximate St. Cloud city center, NOT a user's home
     const el = id => document.getElementById(id);
     let map, watchId = null, me = null, lastLocation = null, planMarker = null, buildingReady = false;
-    let view3d = true, toastTimer = null;
+    let view3d = true, toastTimer = null, terrainReady = false;
     const sampleWaypoints = [
       {coordinates:[-81.2911,28.2495],name:"Illustrative waypoint A"},
       {coordinates:[-81.2832,28.2466],name:"Illustrative waypoint B"}
@@ -187,6 +188,14 @@
           },firstLabel&&firstLabel.id);
           buildingReady=true;
         }catch(error){notice("Map opened, but building volumes were not available.");}
+        try {
+          map.addSource("anevum-terrain",{
+            type:"raster-dem",encoding:"terrarium",tileSize:256,maxzoom:15,
+            tiles:["https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"],
+            attribution:"Elevation tiles: Mapzen/Amazon Open Data"
+          });
+          terrainReady=true;
+        }catch(error){terrainReady=false;}
       });
       map.on("click",event=>{
         if(event.originalEvent.target.closest && event.originalEvent.target.closest(".maplibregl-marker"))return;
@@ -263,6 +272,11 @@
     el("buildings-checkbox").addEventListener("change",e=>{
       if(map&&buildingReady)map.setLayoutProperty("anevum-3d-buildings","visibility",e.target.checked?"visible":"none");
       else if(e.target.checked)notice("3D building layer is not ready.");
+    });
+    el("terrain-checkbox").addEventListener("change",e=>{
+      if(!map||!terrainReady){e.target.checked=false;notice("Terrain data is not available yet.");return;}
+      try {map.setTerrain(e.target.checked?{source:"anevum-terrain",exaggeration:1}:null);}
+      catch(error){e.target.checked=false;notice("Terrain rendering is unavailable on this device.");}
     });
     el("tilt").addEventListener("click",()=>setView3d(!view3d));
     el("zoom-in").addEventListener("click",()=>map&&map.zoomIn());
