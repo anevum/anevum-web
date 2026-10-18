@@ -182,17 +182,17 @@ test('subscription cancellation and invalid client-reference events cannot grant
   assert.equal(await publicSupporterForMember(env,a.id,NOW+1000),false);
  }finally{db.close()}
 });
-test('canonical router blocks forged browser POST and no-origin webhook cannot bypass signature',async()=>{
+test('retired canonical router blocks all browser checkout and inbound payment webhooks',async()=>{
  const {db,env}=setup();
  try{
   const csrf=new Request(ORIGIN+'/api/v1/member/supporter/checkout',{
    method:'POST',headers:{'content-type':'application/json'},body:'{"interval":"month"}'
   });
-  assert.equal((await canonicalWorker.fetch(csrf,env)).status,403);
+  assert.equal((await canonicalWorker.fetch(csrf,env)).status,404);
   const forged=new Request(ORIGIN+'/api/v1/member/supporter/webhook',{
    method:'POST',headers:{'content-type':'application/json','stripe-signature':'t=1234567890,v1=wrong'},body:'{"id":"evt_wrong"}'
   });
-  assert.equal((await canonicalWorker.fetch(forged,env)).status,400);
+  assert.equal((await canonicalWorker.fetch(forged,env)).status,404);
  }finally{db.close()}
 });
 

@@ -20,24 +20,22 @@ test('short invitation does not inline technical dashboards or large collection 
  assert.match(home,/to="\/support\/transparency"/);
  assert.match(home,/to="\/support\/collection"/);
 });
-test('payment status and prices remain honest and fail-closed',()=>{
- assert.match(home,/billing\?\.available/);
- assert.match(home,/!id\|\|!billing\?\.available\|\|checking\|\|busy/);
- assert.match(home,/checkout\.stripe\.com/);
- assert.match(home,/billing\.stripe\.com/);
- assert.match(home,/ENROLLMENT NOT OPEN/);
- assert.match(home,/Memberships and live payments are not open/);
+test('proposed prices remain visible without checkout or a processor redirect',()=>{
  assert.match(home,/interval==='year'\?'\$36':'\$5'/);
- assert.match(home,/updateDisplay\(show:boolean\)/);
- assert.match(home,/supporter\?'portal':'checkout'/);
+ assert.match(home,/PAYMENTS PAUSED/);
+ assert.match(home,/PROVIDER TRANSITION/);
+ assert.match(home,/to="\/join"/);
+ assert.doesNotMatch(home,/checkout\.stripe\.com|billing\.stripe\.com|window\.location\.assign/);
+ assert.doesNotMatch(home,/\/api\/v1\/member\/supporter|action\('checkout'\)/);
 });
-test('three route surfaces preserve real transparency and private cosmetics',()=>{
+test('all supporter routes preserve transparency and static collection previews',()=>{
  assert.match(app,/path="support" element=\{<SupporterPage\/>\}/);
  assert.match(app,/path="support\/transparency" element=\{<SupporterTransparencyPage\/>\}/);
  assert.match(app,/path="support\/collection" element=\{<SupporterCollectionPage\/>\}/);
  assert.match(transparency,/<SupporterTransparency\/>/);
- assert.match(collection,/<SupporterRewardsStudio memberId=\{memberId\}\/>/);
- assert.match(collection,/session\?\.user\?\.emailVerified === true/);
+ assert.match(collection,/<SupporterRewardsStudio memberId=\{null\}\/>/);
+ assert.match(collection,/payment providers/);
+ assert.doesNotMatch(collection,/canonicalAuthClient|useSession\(/);
 });
 test('styles are imported, responsive, keyboard friendly and motion aware',()=>{
  assert.match(main,/supporter-compact-v045\.css/);
