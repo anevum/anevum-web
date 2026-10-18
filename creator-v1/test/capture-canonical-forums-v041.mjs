@@ -152,7 +152,7 @@ try{
  await client.send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
  await evaluate("document.querySelector('.av79-gateways').scrollIntoView({block:'start'})");
  await delay(350);
- const homePosition=await evaluate("(()=>{const r=document.querySelector('.av79-gateways').getBoundingClientRect();return {top:r.top,bottom:r.bottom,community:!!document.querySelector('.av79-gateway[href*="community"]'),overflow:document.documentElement.scrollWidth>innerWidth+1}})()");
+ const homePosition=await evaluate("(()=>{const r=document.querySelector('.av79-gateways').getBoundingClientRect();return {top:r.top,bottom:r.bottom,community:!!document.querySelector('.av79-gateway[href*=community]'),overflow:document.documentElement.scrollWidth>innerWidth+1}})()");
  assert.ok(homePosition.top<844&&homePosition.bottom>75&&!homePosition.overflow&&homePosition.community,JSON.stringify(homePosition));
  result.homeCaptureVisible=true;
  const homeShot=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
