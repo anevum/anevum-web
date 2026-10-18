@@ -64,7 +64,7 @@ No precise public "find everyone" map. "Everyone" means only members of the spec
 
 Current repository uses React + TypeScript + Vite and Cloudflare Workers/D1 for Creator V1; do not silently couple creator profiles to family location records.
 
-**Frontend:** MapLibre GL JS; 3D fill extrusions using building vector tiles, GPS via browser `navigator.geolocation.watchPosition` when foreground and consented. Map style/tile vendor must be configurable. The isolated HTML source proves the interaction without new production routes or secrets.
+**Frontend:** MapLibre GL JS; 3D fill extrusions using building vector tiles, GPS via browser `navigator.geolocation.watchPosition` when foreground and consented. Map style/tile vendor must be configurable. Optional DEM relief comes from Amazon-hosted Mapzen Terrarium tiles and its coverage/accuracy must be evaluated independently; low-relief Florida terrain may appear nearly flat. The isolated HTML source proves the interaction without new production routes or secrets.
 
 **Identity:** separate opt-in family-circle membership from the public creator/social identity; verified guardian roles and single-purpose invitations with expiration.
 
@@ -89,7 +89,7 @@ A policy engine must guard each presence request using **subject, intended viewe
 ### R0 — Isolated 3D map interaction (this branch)
 - Standalone 3D HTML prototype, no production routing.
 - City-center starting point, not any family's residence.
-- 3D building extrusions, pan/pitch/rotate/zoom, map tabs, demonstration waypoints.
+- 3D building extrusions, optional global DEM elevation/terrain relief (AWS Terrarium), pan/pitch/rotate/zoom, map tabs, demonstration waypoints.
 - Manual, foreground-only on-device GPS after explicit permission; browser state only.
 - No other peoples' positions, no real location server, no uploads.
 
