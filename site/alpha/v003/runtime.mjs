@@ -59,7 +59,7 @@ export default {
       const requestedRange = request.method === "GET" ? request.headers.get("range") : null;
       let range = null;
       if (requestedRange) {
-        const m = requestedRange.match(/^bytes=(\\d*)-(\\d*)$/);
+        const m = requestedRange.match(/^bytes=(\d*)-(\d*)$/);
         if (!m || (!m[1] && !m[2])) return new Response(null, {
           status: 416, headers: { ...common, "content-range": "bytes */" + asset.bytes, "accept-ranges": "bytes" }
         });
