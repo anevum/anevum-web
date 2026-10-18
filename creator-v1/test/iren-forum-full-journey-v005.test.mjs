@@ -119,6 +119,15 @@ test('IREN V005 two real OTP sessions cross independent public and staff Workers
   const pending=await json(await staffCall(reviewer));
   assert.equal(pending.threads.length,1,'Reviewer sees private queue');
   assert.equal(pending.threads[0].id,thread.id);
+  assert.equal(pending.threads[0].selfAuthored,false);
+  assert.equal(pending.threads[0].canPublish,true);
+  assert.equal(pending.threads[0].author.handle,'forum_owner');
+  assert.equal(pending.totals.threads,1);
+  assert.ok(Array.isArray(pending.recent));
+  assert.doesNotMatch(JSON.stringify(pending),/fixture\\.invalid|session_token|emailVerified/);
+  const ownQueue=await json(await staffCall(owner));
+  assert.equal(ownQueue.threads[0].selfAuthored,true);
+  assert.equal(ownQueue.threads[0].canPublish,false,'UI must not offer owner self-approval');
   assert.equal((await staffCall(peer)).status,403,'Ordinary user cannot inspect queue');
   assert.equal((await staffCall(owner,REVIEW,'POST',{targetKind:'thread',targetId:thread.id,action:'publish'})).status,403,'Author cannot self-approve');
   assert.equal((await staffCall(reviewer,REVIEW,'POST',{targetKind:'thread',targetId:thread.id,action:'publish'},'https://foreign.invalid')).status,403,'Cross-origin review rejected');
@@ -136,6 +145,11 @@ test('IREN V005 two real OTP sessions cross independent public and staff Workers
   assert.equal(replyResponse.status,201,'Independent member can reply');
   const reply=await json(replyResponse);
   assert.equal((await json(await apex.fetch(req(THREADS+'/'+thread.id+'/replies'),publicEnv))).items.length,0,'Pending reply remains private');
+  const pendingReply=await json(await staffCall(reviewer));
+  assert.equal(pendingReply.replies[0].id,reply.id);
+  assert.equal(pendingReply.replies[0].selfAuthored,false);
+  assert.equal(pendingReply.replies[0].canPublish,true);
+  assert.equal(pendingReply.replies[0].threadTitle,body.title);
   assert.equal((await staffCall(reviewer,REVIEW,'POST',{targetKind:'reply',targetId:reply.id,action:'publish'})).status,200);
   assert.equal((await json(await apex.fetch(req(THREADS+'/'+thread.id+'/replies'),publicEnv))).items.length,1);
 
@@ -150,6 +164,11 @@ test('IREN V005 two real OTP sessions cross independent public and staff Workers
   assert.equal(reportResponse.status,201,'Member report enters private staff review');
   const reported=await json(await staffCall(reviewer));
   assert.equal(reported.reports.length,1);
+  assert.equal(reported.reports[0].canHide,true,'Published reported item must offer server-authorized hide');
+  assert.equal(reported.reports[0].threadTitle,body.title);
+  assert.equal(reported.reports[0].targetKind,'thread');
+  assert.equal(reported.recent.length,2);
+  assert.ok(reported.recent.every(x=>x.reviewerHandle===null||typeof x.reviewerHandle==='string'));
   const reportId=reported.reports[0].id;
   assert.equal((await staffCall(reviewer,REVIEW,'POST',{targetKind:'report',targetId:reportId,action:'dismiss_report'})).status,200);
   assert.equal((await staffCall(reviewer,REVIEW,'POST',{targetKind:'thread',targetId:thread.id,action:'hide'})).status,200);
