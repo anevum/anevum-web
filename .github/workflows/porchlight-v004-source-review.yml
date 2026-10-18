@@ -1,0 +1,39 @@
+name: Porchlight V004 private incident and retention source review
+
+on:
+  push:
+    branches:
+      - build/porchlight-incident-retention-v004-20261018-001
+    paths:
+      - "prototypes/porchlight-v002/**"
+      - "prototypes/porchlight-v003/**"
+      - ".github/workflows/porchlight-v004-source-review.yml"
+  pull_request:
+    paths:
+      - "prototypes/porchlight-v002/**"
+      - "prototypes/porchlight-v003/**"
+      - ".github/workflows/porchlight-v004-source-review.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-security-and-privacy:
+    name: Report / tenant / retention contract and regression tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Source checks
+        run: |
+          node --check prototypes/porchlight-v002/service.mjs
+          node --check prototypes/porchlight-v002/retention-v004.mjs
+          node --check prototypes/porchlight-v003/app.mjs
+      - name: Isolated report and authorization tests
+        run: node --experimental-sqlite --test prototypes/porchlight-v002/test/service.test.mjs prototypes/porchlight-v002/test/v003.test.mjs prototypes/porchlight-v002/test/v004.test.mjs
+      - name: Review client static tests
+        run: node --test prototypes/porchlight-v003/test/ui-contract.test.mjs
