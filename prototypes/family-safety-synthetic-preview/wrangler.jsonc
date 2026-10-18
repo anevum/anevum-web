@@ -15,6 +15,7 @@
     "run_worker_first": true
   },
   "vars": {
-    "FS_SYNTH_REVIEW_AUD": "8b4f7da26f249d7c59e73ec7f84b2b7d605dc65253091c134947359602094a32"
+    "FS_SYNTH_REVIEW_AUD": "8b4f7da26f249d7c59e73ec7f84b2b7d605dc65253091c134947359602094a32",
+    "FS_SYNTH_TEAM_ISSUER": "https://wispy-tooth-095a.cloudflareaccess.com"
   }
 }
