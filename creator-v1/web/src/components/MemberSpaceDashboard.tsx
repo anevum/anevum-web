@@ -57,7 +57,7 @@ export function MemberSpaceDashboard({profile,editor,newMember=false,onSetupComp
         </div>
       </section>
       <section className="ir80-action-grid" aria-label="Your next actions">
-        <button type="button" onClick={()=>setTab("wall")}><span>01 / YOUR WALL</span><strong>Share a signal.</strong><small>${posts.length} ${posts.length===1?"entry":"entries" saved · Open your wall</small></button>
+        <button type="button" onClick={()=>setTab("wall")}><span>01 / YOUR WALL</span><strong>Share a signal.</strong><small>{posts.length} {posts.length===1?"entry":"entries"} saved · Open your wall</small></button>
         <Link to="/discover"><span>02 / DISCOVER</span><strong>Find something new.</strong><small>Browse genuine games, apps and creative work</small></Link>
         <Link to="/community"><span>03 / COMMUNITY</span><strong>Meet the makers.</strong><small>Explore approved discussions and people</small></Link>
         <button type="button" onClick={()=>setTab("appearance")}><span>04 / PERSONALIZE</span><strong>Shape your presence.</strong><small>Portrait, banner and profile atmosphere</small></button>
