@@ -52,6 +52,10 @@ function NotificationSession({id,children}:{id?:string;children:ReactNode}){
   {active&&<aside key={active.key} className={'an-toast an-toast-'+phase+' an-toast-'+active.kind} data-notification-kind={active.kind} aria-label="ANEVUM notification"><div className="an-toast-mark" aria-hidden="true"><OrbitalMark/></div><div className="an-toast-body"><div className="an-toast-symbol" aria-hidden="true">{active.kind==='level'?<LevelEmblem level={active.level!} size={56}/>:active.kind==='award'?<AwardEmblem award={active.award}/>:<span>{active.kind==='error'?'!':active.kind==='xp'?'+':'✦'}</span>}</div><div className="an-toast-copy"><small>{active.preview?'ANIMATION PREVIEW':active.kind==='level'?'CONTINUANCE / LEVEL UP':active.kind==='award'?'BADGE / RECOGNITION':'ANEVUM / SIGNAL'}</small><strong>{active.title}</strong>{active.detail&&<p>{active.detail}</p>}</div><button onClick={()=>void finish(active)} aria-label="Dismiss notification">×</button></div></aside>}
  </Context.Provider>;
 }
+/** Interface motion preview only — never simulate an unearned level, badge
+ * model, name, or award. Real unlock effects require a verified server notice. */
 export function previewNotification(kind:'level'|'award'|'info'){
- notify(kind==='level'?{kind,level:30,title:'Level 30 reached',detail:'ANEVUM',preview:true}:kind==='award'?{kind,award:'world_shaper',title:'World Shaper',detail:'Badge animation preview · no XP awarded',preview:true}:{kind,title:'Transmission received',detail:'Your next chapter is ready.',preview:true});
+ const title=kind==='level'?'Progress notification':
+  kind==='award'?'Earned recognition notification':'Transmission received';
+ notify({kind:'info',title,detail:'Visual notification sample. No award, XP or specimen revealed.',preview:true});
 }
