@@ -29,6 +29,7 @@ jobs:
       - run: node --check experiments/porchlight/model.mjs
       - run: node --check experiments/porchlight/app.js
       - run: node --check experiments/porchlight/browser-smoke.mjs
+      - run: node --check experiments/porchlight/build-standalone.mjs
       - run: node --test experiments/porchlight/model.test.mjs experiments/porchlight/static.test.mjs
 
   synthetic-browser:
@@ -46,6 +47,7 @@ jobs:
           node-version: "22"
       - run: npm install --no-audit --no-fund --package-lock=false
       - run: npx playwright install --with-deps chromium
+      - run: node build-standalone.mjs
       - run: node browser-smoke.mjs
       - name: Retain synthetic-only screenshot evidence
         if: always()
@@ -55,3 +57,11 @@ jobs:
           path: experiments/porchlight/porchlight-*.png
           retention-days: 7
           if-no-files-found: ignore
+
+      - name: Portable offline HTML for owner review
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: porchlight-portable-offline-demo
+          path: experiments/porchlight/porchlight-offline.html
+          retention-days: 7
