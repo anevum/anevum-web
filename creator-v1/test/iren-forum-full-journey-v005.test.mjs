@@ -17,14 +17,22 @@ const REVIEW='/api/v1/member/forum-review';
 const STAFF='/api/v1/member/staff-ops';
 const migration=name=>readFileSync(new URL('../canonical-auth/migrations/'+name,import.meta.url),'utf8');
 
-const req=(path,method='GET',body,cookie,origin=HOST)=>new Request(HOST+path,{
- method,
- headers:{...(method==='GET'?{}:{origin,'sec-fetch-site':'same-origin'}),
-  ...(body===undefined?{}:{'content-type':'application/json'}),
-  ...(cookie?{cookie}:{})},
- body:body===undefined?undefined:JSON.stringify(body),
- redirect:'error'
-});
+// Synthetic Cloudflare edge metadata distinguishes authenticated test clients.
+// The real runtime injects these headers; the browser does not control them.
+const testIpByCookie=new Map();
+const req=(path,method='GET',body,cookie,origin=HOST)=>{
+ const ip=cookie?testIpByCookie.get(cookie):null;
+ const request=new Request(HOST+path,{
+  method,
+  headers:{...(method==='GET'?{}:{origin,'sec-fetch-site':'same-origin'}),
+   ...(body===undefined?{}:{'content-type':'application/json'}),
+   ...(cookie?{cookie}:{}),...(ip?{'cf-connecting-ip':ip}:{})},
+  body:body===undefined?undefined:JSON.stringify(body),
+  redirect:'error'
+ });
+ if(ip)Object.defineProperty(request,'cf',{value:{colo:'MCO'}});
+ return request;
+};
 const cookieFrom=response=>(response.headers.get('set-cookie')||'').split(';')[0];
 const json=async response=>response.json();
 
@@ -64,6 +72,13 @@ test('IREN V005 two real OTP sessions cross independent public and staff Workers
   assert.equal(signin.status,200,'Valid separate Better Auth session');
   const cookie=cookieFrom(signin);
   assert.match(cookie,/anevum_can_apex\.session_token=/);
+  const ip={
+   'forum_owner@fixture.invalid':'198.51.100.11',
+   'forum_reviewer@fixture.invalid':'198.51.100.22',
+   'forum_peer@fixture.invalid':'198.51.100.33'
+  }[email];
+  assert.ok(ip,'Only isolated test accounts may authenticate');
+  testIpByCookie.set(cookie,ip);
   const response=await apex.fetch(req(AUTH+'/get-session','GET',undefined,cookie),publicEnv);
   assert.equal(response.status,200);
   const data=await json(response);
