@@ -223,7 +223,7 @@ async function decideHost(request, env, id, now) {
   const b = p.value || {};
   if (!["approve", "reject", "withdraw"].includes(b.action)) return fail("INVALID_DECISION", 422);
   const host = await env.PORCHLIGHT_DB.prepare(
-    "SELECT h.*, e.status AS event_status, e.ends_at, e.center_lat, e.center_lng, e.radius_m " +
+    "SELECT h.*, e.status AS event_status, e.ends_at, e.center_lat, e.center_lng, e.radius_m, e.neighborhood AS event_neighborhood " +
     "FROM host_submissions h JOIN events e ON e.id=h.event_id WHERE h.id=?"
   ).bind(id).first();
   if (!host) return fail("HOST_NOT_FOUND", 404);
@@ -247,7 +247,7 @@ async function decideHost(request, env, id, now) {
       await env.PORCHLIGHT_DB.prepare(
         "UPDATE host_submissions SET status='published', public_name=?, public_label=?, " +
         "approved_lat=?, approved_lng=?, reviewed_at=?, verification_method=? WHERE id=? AND status='pending'"
-      ).bind(host.host_name, label, host.visibility === "exact" ? b.lat : null,
+      ).bind(host.host_name, host.visibility === "exact" ? label : host.event_neighborhood, host.visibility === "exact" ? b.lat : null,
         host.visibility === "exact" ? b.lng : null, now, b.verificationMethod, id).run();
     } else {
       await env.PORCHLIGHT_DB.prepare(
@@ -269,9 +269,14 @@ async function adminRoutes(request, env, path, now) {
     const event = await eventBySlug(env.PORCHLIGHT_DB, toggle[1]);
     if (!event) return fail("EVENT_NOT_FOUND", 404);
     if (toggle[2] === "activate" && event.ends_at <= now) return fail("EVENT_EXPIRED", 409);
+    if (toggle[2] === "activate" && event.status !== "draft") return fail("EVENT_ACTIVATION_NOT_PERMITTED", 409);
+    const nextStatus = toggle[2] === "activate" ? "active" : "closed";
     await env.PORCHLIGHT_DB.prepare("UPDATE events SET status=? WHERE id=?")
-      .bind(toggle[2] === "activate" ? "active" : "closed", event.id).run();
-    return response({ ok: true, status: toggle[2] === "activate" ? "active" : "closed" });
+      .bind(nextStatus, event.id).run();
+    await env.PORCHLIGHT_DB.prepare(
+      "INSERT INTO audit_events (id, action, record_id, created_at) VALUES (?, ?, ?, ?)"
+    ).bind(crypto.randomUUID(), "event_" + nextStatus, event.id, now).run();
+    return response({ ok: true, status: nextStatus });
   }
   const pending = new RegExp("^" + ADMIN + "/events/([a-z][a-z0-9-]{2,47})/queue$").exec(path);
   if (pending && request.method === "GET") {
