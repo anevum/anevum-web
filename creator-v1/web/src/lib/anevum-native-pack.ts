@@ -58,6 +58,23 @@ function mediaType(filePath:string):string{
  const ext=filePath.slice(filePath.lastIndexOf('.')+1);
  return MIME[ext]||fail('unsupported asset extension');
 }
+/** Minimal binary-signature gate; not a substitute for transcoding or scanning. */
+function hasMediaSignature(filePath:string,bytes:Uint8Array):boolean{
+ const e=filePath.slice(filePath.lastIndexOf('.')+1);
+ const ascii=(offset:number,s:string)=>offset+s.length<=bytes.length&&
+  Array.from(s).every((c,i)=>bytes[offset+i]===c.charCodeAt(0));
+ if(e==='png')return bytes.length>=8&&[137,80,78,71,13,10,26,10].every((b,i)=>bytes[i]===b);
+ if(e==='jpg'||e==='jpeg')return bytes.length>=3&&bytes[0]===255&&bytes[1]===216&&bytes[2]===255;
+ if(e==='gif')return ascii(0,'GIF87a')||ascii(0,'GIF89a');
+ if(e==='webp')return ascii(0,'RIFF')&&ascii(8,'WEBP');
+ if(e==='wav')return ascii(0,'RIFF')&&ascii(8,'WAVE');
+ if(e==='ogg')return ascii(0,'OggS');
+ if(e==='mp3')return ascii(0,'ID3')||
+  (bytes.length>=4&&bytes[0]===255&&(bytes[1]&224)===224&&(bytes[1]&6)!==0);
+ if(e==='mp4')return bytes.length>=12&&ascii(4,'ftyp');
+ if(e==='webm')return bytes.length>=4&&[26,69,223,163].every((b,i)=>bytes[i]===b);
+ return false;
+}
 function integer(n:unknown,max:number,min=0):number{
  if(typeof n!=='number'||!Number.isSafeInteger(n)||n<min||n>max)return fail('invalid number');
  return n;
@@ -243,6 +260,7 @@ export async function createNativePack(input:NativePackInput):Promise<{filename:
  for(const [name,bytes] of Object.entries(input.assets||{})){
   path(name);mediaType(name);
   if(!(bytes instanceof Uint8Array)||!bytes.length)return fail('empty or invalid asset');
+  if(!hasMediaSignature(name,bytes))return fail('asset signature mismatch');
   fileEntries.push([name,bytes]);
  }
  fileEntries.sort(([a],[b])=>a.localeCompare(b,'en'));
@@ -273,6 +291,7 @@ export async function openNativePack(filename:string,bytes:Uint8Array):Promise<{
  for(const f of manifest.files){
   const data=zip.get(f.path);
   if(!data||data.byteLength!==f.size||await sha256(data)!==f.sha256)return fail('file integrity mismatch');
+  if(f.path!==manifest.entry&&!hasMediaSignature(f.path,data))return fail('asset signature mismatch');
  }
  let document:unknown;
  try{document=JSON.parse(DECODER.decode(zip.get(manifest.entry)!));}catch{return fail('bad content JSON');}
