@@ -27,7 +27,7 @@ export function CreatorsPage(){
     setParams(next);
   }
   return <div className="portal-creators">
-    <PortalHeading eyebrow="CREATOR CHANNELS / ORIGINAL WORK" title="MEET THE" accent="MAKERS." description="Discover the people behind the games, apps, creative experiments and useful software. Real work comes first. No fabricated followers or channels." index="CREATORS / 002" action={{to:"/create",label:"MAKE YOUR FIRST PROJECT"}}/>
+    <PortalHeading compact eyebrow="CREATOR CHANNELS / ORIGINAL WORK" title="Meet the" accent="makers." description="Find the people behind the games, apps and creative experiments." index="CREATORS / 002" action={{to:"/create",label:"OPEN YOUR STUDIO"}}/>
     <div className="portal-browse-layout">
       <div className="portal-browse-main">
         <section className="portal-box portal-search-hall">
@@ -84,6 +84,11 @@ export function CreatorPage(){
     try{return await memberCreatorProfile(handle,signal);}catch{return null;}
   },[handle]);
   if(data.state==="loading")return <LoadingState label="Opening a real creator channel"/>;
+  if(data.state==="error"&&data.error.message==="not-found")return <section className="state-card av79-channel-unavailable" role="status">
+    <span className="state-code">PUBLIC CHANNEL UNAVAILABLE</span><h1>This creator channel is not public.</h1>
+    <p>A published creation may carry a creator credit before a public channel is linked.</p>
+    <div><Link className="button secondary" to="/discover">Explore published work</Link><Link className="button secondary" to="/creators">Find creators</Link></div>
+  </section>;
   if(data.state==="error")return <ErrorState title="CREATOR NOT AVAILABLE" detail="This creator has no available public profile, or the public catalogue cannot be reached."/>;
   const {profile,projects}=data.data;
   const path="/creators/"+encodeURIComponent(handle);
@@ -92,8 +97,8 @@ export function CreatorPage(){
   const earned=detailed?.achievements?.filter(a=>a.earned)||[];
   return <div className="portal-creator-channel">
     <Link to="/creators" className="project-return">← ALL PUBLIC CREATORS</Link>
-    <section className="portal-channel-banner"><div className="cw-channel-scene" aria-hidden="true"><CosmicArtwork scene="portal"/></div>
-      <div className="portal-channel-avatar" aria-hidden="true"><span className="cw-letter-avatar">{profile.displayName.slice(0,1).toUpperCase()}</span></div>
+    <section className="portal-channel-banner av79-channel-banner">
+      <CompactMemberIdentity size="compact" className="av79-channel-card" href={path} member={{handle:profile.handle,displayName:profile.displayName,avatar:false,level:null,featuredAwards:[],source:"creator-channel"}}/>
       <div className="portal-channel-identity">
         <span className="kicker">ANEVUM / PUBLIC CREATOR CHANNEL</span>
         <h1>{profile.displayName}</h1><p className="portal-channel-handle">@{profile.handle}</p>
@@ -109,7 +114,7 @@ export function CreatorPage(){
         <section className="portal-box">
           <header className="portal-box-header"><div><span className="kicker">ORIGINAL WORK / PUBLIC RELEASES</span><h2>FROM THIS MAKER</h2></div><span className="portal-hall-stamp">{profile.publishedProjects} RELEASES</span></header>
           {projects.items.length?
-            <div className="portal-discover-results">{projects.items.map(p=><ProjectCard key={p.id} project={p} returnTo={current}/>)}</div>:
+            <div className="portal-discover-results">{projects.items.map(p=><ProjectCard key={p.id} project={p} returnTo={current} presentation="editorial"/>)}</div>:
             <EmptyState title={cursor?"NO MORE PUBLIC RELEASES":"NO PUBLIC RELEASES AVAILABLE"} detail="Only currently approved published projects appear here. Private drafts cannot be browsed."/>}
           <PageNav route={path} search={params} nextCursor={projects.nextCursor} label="Creator project releases"/>
         </section>

@@ -1,3 +1,4 @@
+import {isHostedAlphaRelease} from "../lib/hosted-release";
 import {Link,useParams,useSearchParams} from "react-router-dom";
 import {readProject,safeExternal} from "../lib/api";
 import {useResource} from "../lib/useResource";
@@ -17,11 +18,12 @@ export function ProjectPage(){
   const {id=""}=useParams();
   const [params]=useSearchParams();
   const from=safeReturnPath(params.get("from"));
-  const backLabel=from==="/"?"BACK TO PORTAL":from==="/saved"?"BACK TO SAVED WORKS":from.startsWith("/creators/")?"BACK TO CREATOR":"BACK TO RESULTS";
+  const backLabel=from==="/"?"BACK TO PORTAL":from==="/saved"?"BACK TO SAVED WORKS":from.startsWith("/boards")?"BACK TO BOARDS":from.startsWith("/creators/")?"BACK TO CREATOR":"BACK TO RESULTS";
   const project=useResource(signal=>readProject(id,signal),[id]);
   if(project.state==="loading")return <LoadingState label="Preparing the published project page"/>;
   if(project.state==="error")return <ErrorState title="PROJECT NOT AVAILABLE" detail="This work may be unpublished, withdrawn, or the public catalogue is temporarily unavailable."/>;
   const p=project.data.item,demo=safeExternal(p.demoUrl),source=safeExternal(p.sourceUrl);
+  const hosted=isHostedAlphaRelease(p,window.location.origin);
   const date=p.publishedAt?new Date(p.publishedAt):null;
   const published=date&&Number.isFinite(date.getTime())?new Intl.DateTimeFormat("en-US",{month:"short",day:"numeric",year:"numeric",timeZone:"UTC"}).format(date):"DATE NOT LISTED";
   return <div className="portal-project avp-project">
@@ -32,7 +34,7 @@ export function ProjectPage(){
         <section className="portal-sidebox portal-project-passport"><span className="kicker">THE PASSPORT / PUBLIC FACTS</span><h2>PROJECT DETAILS</h2>
           <div className="portal-facts-row"><span>ACCESS</span><strong>{p.freeToUse?"LISTED AS FREE":"CHECK CREATOR TERMS"}</strong></div>
           <div className="portal-facts-row"><span>CATEGORY</span><strong>{types[p.category]||p.category.toUpperCase()}</strong></div>
-          <div className="portal-facts-row"><span>EXPERIENCE</span><strong>{demo?"EXTERNAL DEMO":source?"SOURCE ONLY":"NO LINKED DEMO"}</strong></div>
+          <div className="portal-facts-row"><span>EXPERIENCE</span><strong>{hosted?"ANEVUM HOSTED":demo?"EXTERNAL DEMO":source?"SOURCE ONLY":"NO LINKED DEMO"}</strong></div>
           <div className="portal-facts-row"><span>DEVICE SUPPORT</span><strong>NOT SPECIFIED</strong></div>
           <div className="portal-facts-row"><span>PUBLISHED</span><strong>{published.toUpperCase()}</strong></div>
           <div className="portal-facts-row"><span>LICENSE AS LISTED</span><strong>{p.license||"NOT SPECIFIED"}</strong></div>
@@ -43,7 +45,7 @@ export function ProjectPage(){
           <div className="portal-project-disclosure"><strong>AI INVOLVEMENT</strong><p>{p.aiDisclosure||"The creator did not provide an AI-use disclosure."}</p></div>
           <div className="portal-project-disclosure"><strong>HUMAN CONTRIBUTION</strong><p>{p.humanContribution||"The creator did not provide details of human contributions."}</p></div>
         </section>
-        <section className="portal-sidebox portal-external-warning"><span className="kicker">READ BEFORE YOU LEAVE</span><h2>INDEPENDENT HOSTING</h2><p>External demos and code are hosted by their creators. ANEVUM does not certify security, ownership, licensing or payment practices. Check costs and account requirements before sharing data.</p></section>
+        <section className="portal-sidebox portal-external-warning"><span className="kicker">READ BEFORE YOU LEAVE</span><h2>{hosted?"ANEVUM PLAYER":"INDEPENDENT HOSTING"}</h2><p>{hosted?"This approved release opens in ANEVUM’s isolated player. Use the player controls to expand the experience and return to this page.":"External demos and code are hosted by their creators. ANEVUM does not certify security, ownership, licensing or payment practices. Check costs and account requirements before sharing data."}</p></section>
       </aside>
     </div>
     <nav className="avp-subnav" aria-label="Project sections">

@@ -42,6 +42,7 @@ const playerCases=new Map([
 const categories=[...new Set(work.map(p=>p.category))].map(category=>({category,count:work.filter(p=>p.category===category).length}));
 // Browser-only scenario switch. Disabled by default; never used by a Worker.
 let contextFixtureEnabled=false;
+let boardsFixtureMode="ready";
 // Separate project participation health simulation; never shipped or persisted.
 let playerMemberHealthMode="legacy";
 let syntheticProjectSaved=false;
@@ -183,6 +184,9 @@ function api(res,url){
  }
  if(path==="/categories")return json(res,{categories});
  if(path==="/boards"){
+  if(boardsFixtureMode==="error")return json(res,{error:"SYNTHETIC outage"},503);
+  if(boardsFixtureMode==="empty")return json(res,{source:"approved-public-projects",latestReleases:[],firstLooks:[],publishingCreators:[],qualityRankingAvailable:false});
+  if(boardsFixtureMode==="render-error")return json(res,{source:"approved-public-projects",latestReleases:[],firstLooks:[],publishingCreators:null,qualityRankingAvailable:false});
   // SYNTHETIC OFFLINE visual fixtures only. Production boards use canonical SQL.
   // This script cannot publish content and is never shipped as a Worker.
   const sorted=[...work].sort((a,b)=>b.publishedAt.localeCompare(a.publishedAt)||b.id.localeCompare(a.id));
@@ -232,6 +236,12 @@ createServer((req,res)=>{
   if(u.pathname==='/__context-fixture'&&req.headers.host==='127.0.0.1:4178'&&req.method==='GET'){
     contextFixtureEnabled=u.searchParams.get('enabled')==='1';
     return json(res,{syntheticOnly:true,enabled:contextFixtureEnabled});
+  }
+  if(u.pathname==="/__boards-fixture"&&req.headers.host==="127.0.0.1:4178"&&req.method==="GET"){
+    const mode=u.searchParams.get("mode");
+    if(!["ready","empty","error","render-error"].includes(mode))return json(res,{error:"invalid-mode"},400);
+    boardsFixtureMode=mode;
+    return json(res,{syntheticOnly:true,mode});
   }
   // Synthetic local-only issuer status. No real D1, XP, users or credentials.
   if(u.pathname==="/api/v1/public/recognition/catalog"){

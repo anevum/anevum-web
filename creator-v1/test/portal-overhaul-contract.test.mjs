@@ -75,7 +75,7 @@ test("member account shows server-verified achievements and unlimited XP without
  assert.match(page,/a\.earned/);
  assert.match(page,/NO FIXED/i);
  assert.match(shell,/to:"\/levels",label:"Evolution"/);
- assert.match(shell,/to:"\/library",label:"My library"/);
+ assert.match(shell,/to:"\/saved",label:"Saved works"/);
  assert.match(shell,/<CompactMemberIdentity member={ownCard} href="\/member"/);
  assert.match(read("web/src/App.tsx"),/path="account" element={<Navigate to="\/member" replace\/>}/);
  assert.match(shell,/<dialog ref=\{menuDialog\}/);

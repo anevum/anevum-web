@@ -9,6 +9,9 @@ import { isEditableTarget } from "../lib/portal-destinations";
 import { canonicalAuthClient } from "../lib/canonical-beta";
 import { CompactMemberIdentity } from "./CompactMemberIdentity";
 import { useOwnPlayerCard } from "../lib/useOwnPlayerCard";
+import {useModalScrollLock} from "../lib/useModalScrollLock";
+import {RouteRecovery} from "./RouteRecovery";
+import {IrenGuidedContinuance} from "./IrenGuidedContinuance";
 
 /** ANEVUM V009 — one public navigation system across every Creator V1 page.
  * This component is presentation only. Private routes remain MemberGate-owned;
@@ -37,7 +40,7 @@ const menuUtilities = [
   {to:"/boards",label:"Boards"},
   {to:"/levels",label:"Evolution"},
   {to:"/recognition",label:"Rewards"},
-  {to:"/library",label:"My library"},
+  {to:"/saved",label:"Saved works"},
   {to:"/status",label:"Status"}
 ] as const;
 
@@ -51,9 +54,10 @@ export function Shell(){
   const [menuOpen,setMenuOpen]=useState(false);
   const ownCard=useOwnPlayerCard(menuOpen);
   const [launcherOpen,setLauncherOpen]=useState(false);
+  useModalScrollLock(menuOpen||launcherOpen);
   const menuButton=useRef<HTMLButtonElement>(null);
   const menuDialog=useRef<HTMLDialogElement>(null);
-  const previousPage=useRef(location.pathname+location.search);
+  const previousPage=useRef(location.pathname);
 
   useEffect(()=>{setMenuOpen(false);setLauncherOpen(false);},[location.pathname,location.search]);
   useEffect(()=>{
@@ -63,7 +67,7 @@ export function Shell(){
     if(!menuOpen&&dialog.open)dialog.close();
   },[menuOpen]);
   useEffect(()=>{
-    const page=location.pathname+location.search;
+    const page=location.pathname;
     if(previousPage.current===page)return;
     previousPage.current=page;
     if(!location.hash)window.scrollTo({top:0,behavior:"instant"});
@@ -86,7 +90,7 @@ export function Shell(){
     event.preventDefault();
     const trimmed=query.trim();
     setMenuOpen(false);
-    navigate(trimmed?"/discover?q="+encodeURIComponent(trimmed):"/discover");
+    if(trimmed){setLauncherOpen(true);}else{navigate("/discover");}
   }
   const home=location.pathname==="/";
   return <div className={"site-shell site-shell--cinematic av9-shell"+(home?" site-shell--home":"")}>
@@ -103,7 +107,7 @@ export function Shell(){
         <form className="header-search av9-header-search" role="search" onSubmit={search}>
           <Icon name="search" size={18}/>
           <input type="search" maxLength={100} value={query} onChange={event=>setQuery(event.target.value)}
-            aria-label="Search published projects" placeholder="Find worlds, projects, people"/>
+            aria-label="Search ANEVUM projects and creators" placeholder="Find projects and creators"/>
           <kbd aria-hidden="true">↵</kbd>
         </form>
         <div className="av9-header-actions">
@@ -111,7 +115,7 @@ export function Shell(){
             aria-label="Open quick navigation" aria-keyshortcuts="Control+K Meta+K"><Icon name="search" size={20}/></button>
           <Link to={memberDestination} className="header-create av9-create"><Icon name={canonicalMember?"people":"create"} size={17}/><span>{canonicalMember?"My space":"Join"}</span></Link>
           <Link to={memberDestination} className="cw-account-link av9-account" aria-label={canonicalMember?"Open my verified member account":"Join ANEVUM or sign in"}><Icon name="people" size={20}/></Link>
-          <button ref={menuButton} className="menu-button av9-menu-trigger" type="button"
+          <button data-iren-anchor="navigation" ref={menuButton} className="menu-button av9-menu-trigger" type="button"
             aria-label={menuOpen ? "Close site navigation" : "Open site navigation"}
             aria-haspopup="dialog" aria-expanded={menuOpen} aria-controls="av79-navigation"
             onClick={()=>setMenuOpen(value=>!value)}>
@@ -123,7 +127,7 @@ export function Shell(){
     </header>
     <dialog ref={menuDialog} id="av79-navigation" className="av79-navigation"
       aria-label="ANEVUM navigation"
-      onClose={()=>{setMenuOpen(false);menuButton.current?.focus();}}
+      onClose={()=>{setMenuOpen(false);if(!launcherOpen)menuButton.current?.focus();}}
       onCancel={()=>setMenuOpen(false)}
       onClick={event=>{if(event.target===menuDialog.current)setMenuOpen(false);}}>
       <div className="av79-navigation-shell">
@@ -153,6 +157,12 @@ export function Shell(){
             <span><strong>{item.label}</strong><small>{item.detail}</small></span>
             <Icon name="arrow" size={16}/>
           </Link>)}
+          <button type="button" className="ir80-wayfinder-entry"
+            onClick={()=>{setMenuOpen(false);window.dispatchEvent(new Event("anevum:iren-open"));}}>
+            <span className="av79-destination-icon"><Icon name="star" size={21}/></span>
+            <span><strong>IREN / Field assistant</strong><small>Get help or take a guided tour at any time</small></span>
+            <span className="ir80-wayfinder-action">OPEN IREN HELP</span>
+          </button>
         </nav>
         <div className="av79-navigation-lower">
           <section aria-label="Browse by interest"><span className="av79-lower-label">EXPLORE BY INTEREST</span>
@@ -161,16 +171,17 @@ export function Shell(){
           </section>
           <section aria-label="More destinations"><span className="av79-lower-label">ALSO IN ANEVUM</span>
             <div className="av79-utility-links">{menuUtilities.map(item=>
-              <Link to={item.to==="/library"&&canonicalMember?"/saved":item.to} key={item.to} onClick={()=>setMenuOpen(false)}>{item.label}</Link>)}</div>
+              <Link to={item.to} key={item.to} onClick={()=>setMenuOpen(false)}>{item.label}</Link>)}</div>
           </section>
         </div>
         <footer className="av79-navigation-foot"><span aria-hidden="true" className="av79-footer-star"/> THE CONTINUANCE INSTITUTE <span>EXPLORE / MAKE / BELONG</span></footer>
       </div>
     </dialog>
-    <PortalLauncher open={launcherOpen} onClose={()=>setLauncherOpen(false)}/>
+    <IrenGuidedContinuance memberId={canonicalMember?canonicalSession?.user?.id||null:null}/>
+    <PortalLauncher open={launcherOpen} onClose={()=>setLauncherOpen(false)} initialQuery={query}/>
     <main id="main" tabIndex={-1} className="site-main av9-main">
       <VisualKitAtmosphere room={publicVisualRoom(location.pathname)}/>
-      {home?<Outlet/>:<div className="av5-site-frame av9-unified-frame"><div className="av5-site-content"><Outlet/></div></div>}
+      <RouteRecovery>{home?<Outlet/>:<div className="av5-site-frame av9-unified-frame"><div className="av5-site-content"><Outlet/></div></div>}</RouteRecovery>
     </main>
     <footer className="site-footer av9-footer">
       <span>ANEVUM / A WORLD OF THINGS PEOPLE MAKE</span>

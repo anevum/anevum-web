@@ -1,3 +1,5 @@
+import {publicCreatorHandle} from "../lib/public-creator-handle";
+import {CompactMemberIdentity} from "../components/CompactMemberIdentity";
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -55,6 +57,7 @@ const asDate = (value: string | null | undefined) => {
 const creatorPath = (handle: string) => "/creators/" + encodeURIComponent(handle);
 
 function ProjectEntry({ item }: { item: Project }) {
+  const handle=publicCreatorHandle(item.creatorHandle);
   const destination = projectDetailPath(item.id, "/community");
   const field = fields.find(field => field.id === item.category);
   return <article className="ch7-entry ch7-project">
@@ -66,8 +69,7 @@ function ProjectEntry({ item }: { item: Project }) {
       <div className="ch7-meta"><span>PROJECT / {item.category.toUpperCase()}</span><time dateTime={item.publishedAt || undefined}>{asDate(item.publishedAt)}</time></div>
       <h3><Link to={destination}>{item.title}</Link></h3>
       <p>{item.summary}</p>
-      <div className="ch7-byline"><span className="ch7-avatar" aria-hidden="true">{(item.creatorName || item.creatorHandle).charAt(0).toUpperCase()}</span>
-        <span>BY <Link to={creatorPath(item.creatorHandle)}>{item.creatorName || "@" + item.creatorHandle}</Link></span>
+      <div className="ch7-byline"><span>BY</span> {handle?<CompactMemberIdentity size="inline" href={creatorPath(handle)} member={{handle,displayName:item.creatorName||handle,avatar:false,level:null,featuredAwards:[],source:"creator-channel"}}/>:<span className="av79-unlinked-project">Public creator channel not linked. <strong>{item.creatorName||"ANEVUM member"}</strong></span>}
         {item.freeToUse && <span className="ch7-pill">FREE TO EXPLORE</span>}
       </div>
       <div className="ch7-entry-actions"><Link className="ch7-button ch7-button-primary" to={destination}>OPEN PROJECT <Icon name="arrow" size={14}/></Link>
@@ -159,7 +161,7 @@ export function CommunityPage() {
     setCreatorQuery(creatorInput.trim().slice(0, 72));
   }
   return <div className="ch7-hub">
-    <section className="ch7-hero" aria-labelledby="ch7-hero-title">
+    <section data-iren-anchor="community" className="ch7-hero" aria-labelledby="ch7-hero-title">
       <div className="ch7-hero-art" aria-hidden="true"><CosmicArtwork scene="creative"/></div>
       <div className="ch7-hero-copy"><span className="ch7-kicker">ANEVUM / COMMUNITY / PUBLIC DISCUSSIONS</span>
         <h1 id="ch7-hero-title">Made by people.<br/><em>Better together.</em></h1>

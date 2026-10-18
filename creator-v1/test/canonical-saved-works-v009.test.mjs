@@ -80,7 +80,7 @@ test("canonical collection is a separate public route with an authenticated, cap
  const shell=read("web/src/components/Shell.tsx");
  const panel=read("web/src/components/CanonicalProjectSavePanel.tsx");
  assert.match(app,/path="saved" element=\{<CanonicalSavedWorksPage\/>\}/);
- assert.match(app,/path="library" element=\{<MemberLibraryPage\/>\}/);
+ assert.match(app,/path="library" element=\{<Navigate to="\/saved" replace\/>\}/);
  assert.match(view,/canonicalAuthClient\.useSession\(\)/);
  assert.match(view,/capability\.data\.kind==="canonical-saves"/);
  assert.match(view,/!verified/);
@@ -92,7 +92,7 @@ test("canonical collection is a separate public route with an authenticated, cap
  assert.match(view,/SAVED WORKS ARE NOT YET ACTIVE/);
  assert.match(view,/Only projects that remain published and approved appear here/);
  assert.doesNotMatch(view,/memberLibrary|memberMe|memberSetSaved|memberVote|localStorage|awardXp|grantXp/);
- assert.match(shell,/item\.to==="\/library"&&canonicalMember\?"\/saved":item\.to/);
+ assert.match(shell,/to:"\/saved",label:"Saved works"/);
  assert.match(panel,/to="\/saved">MY SAVED WORKS/);
  assert.match(read("web/src/pages/ProjectPage.tsx"),/from==="\/saved"\?"BACK TO SAVED WORKS"/);
  assert.equal(safeReturnPath("/saved"),"/saved");

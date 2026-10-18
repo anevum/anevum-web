@@ -74,6 +74,7 @@ export default function App(){
     <Route path="discover" element={<DiscoverPage/>}/>
     <Route path="projects/:id" element={<ProjectPage/>}/>
     <Route path="saved" element={<CanonicalSavedWorksPage/>}/>
+    <Route path="library" element={<Navigate to="/saved" replace/>}/>
     <Route path="creators" element={<CreatorsPage/>}/>
     <Route path="creators/:handle" element={<CreatorPage/>}/>
     <Route path="community" element={<CommunityPage/>}/>
@@ -94,7 +95,6 @@ export default function App(){
     <Route path="studio/:projectId" element={<CanonicalStudioPage mode="edit"/>}/>
     <Route element={<MemberGate/>}>
       <Route path="community/write" element={<CommunityPostEditorPage/>}/>
-      <Route path="library" element={<MemberLibraryPage/>}/>
 
     </Route>
     <Route path="thebutton" element={<TheButtonPage/>}/>

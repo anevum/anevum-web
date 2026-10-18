@@ -20,7 +20,7 @@ test("active board, post, editor and scoped discussion link within canonical rou
   assert.doesNotMatch(read(path),/\/atlas(?:\/|")/,path);
  }
  const boards=read("web/src/pages/PublicBoardsPage.tsx");
- assert.match(boards,/\/projects\//);
+ assert.match(boards,/<ProjectCard key={item.id} project={item} presentation="editorial" returnTo={returnTo}/);
  assert.doesNotMatch(boards,/\/experience\//);
 });
 test("public navigation omits unselected experimental and owner material",()=>{

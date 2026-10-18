@@ -1,0 +1,43 @@
+name: ANEVUM IREN V080 Candidate QA
+on:
+  push:
+    branches:
+      - build/iren-guided-continuance-v080-20261018
+    paths:
+      - creator-v1/**
+      - .github/workflows/iren-guided-v080-qa.yml
+permissions:
+  contents: read
+concurrency:
+  group: anevum-iren-v080-qa
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Typecheck and build both public variants
+        run: |
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+      - name: IREN, Wayfinder, member security, and creator regression
+        run: |
+          node --experimental-strip-types --test \
+            creator-v1/test/iren-guided-v080.test.mjs \
+            creator-v1/test/home-navigation-v079.test.mjs \
+            creator-v1/test/member-experience-v017.test.mjs \
+            creator-v1/test/member-world-v018.test.mjs \
+            creator-v1/test/sitewide-polish-v079.test.mjs \
+            creator-v1/test/player-card-premium-v078.test.mjs \
+            creator-v1/test/earned-reward-media-v075.test.mjs
+      - name: Exact scoped CI source
+        run: git rev-parse HEAD
+# QA only; no credentials, D1 writes, routing changes, or production deploy.
