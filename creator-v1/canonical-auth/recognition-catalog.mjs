@@ -3,6 +3,7 @@
 import {recognitionReady} from './recognition.mjs';
 import {progressionReady} from './progression.mjs';
 import {studioPublicationReady} from './studio-publications.mjs';
+import {studioAppealsReady} from './studio-appeals.mjs';
 const headers={
  'content-type':'application/json; charset=utf-8',
  'cache-control':'private, no-store',
@@ -29,8 +30,11 @@ export async function canonicalRecognitionCatalog(request,env){
     env?.CANONICAL_STUDIO_PUBLICATION_ENABLED==='true'&&
     env?.CANONICAL_STUDIO_SAFETY_ENABLED==='true'&&
     (env?.CANONICAL_STUDIO_SAFETY_REVIEWER_IDS||'').trim()&&
+    env?.CANONICAL_STUDIO_APPEALS_ENABLED==='true'&&
+    String(env?.CANONICAL_STUDIO_APPEAL_REVIEWER_IDS||'').trim()&&
     env?.CANONICAL_RECOGNITION_ENABLED==='true'&&env.MEMBER_DB&&
-    await recognitionReady(env.MEMBER_DB)&&await studioPublicationReady(env.MEMBER_DB))
+    await recognitionReady(env.MEMBER_DB)&&await studioPublicationReady(env.MEMBER_DB)&&
+    await studioAppealsReady(env.MEMBER_DB))
     active=[...active,'first_creation','maker_five','maker_twenty'];
  }catch{
   return Response.json({error:'Catalog verification unavailable'},{status:503,headers});
