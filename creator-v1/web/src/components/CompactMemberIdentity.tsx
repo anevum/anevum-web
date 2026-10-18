@@ -17,7 +17,8 @@ import './player-card-v065.css';
  * Use in forums, threads, replies, creator/project credits, directory and walls.
  * No award, level, aura, flag or medal is inferred from public writing or account
  * age. Members receive only the verified/visible records passed by the API.
- * The existing V062 LevelEmblem runs on ONE shared native canvas.
+ * The shared LevelEmblem displays verified high-resolution Evolution artwork;
+ * the moving miniature WebGL overlay is retired from every player card.
  */
 export type PublicIdentity={
  handle:string;
