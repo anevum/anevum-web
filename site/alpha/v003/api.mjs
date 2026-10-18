@@ -65,6 +65,14 @@ async function reviewList(db) {
     "WHERE r.status='pending_review' AND p.status NOT IN ('suspended','deleted') ORDER BY r.submitted_at ASC LIMIT 100"
   ).all()).results;
 }
+async function moderationList(db) {
+  return (await db.prepare(
+    "SELECT p.id,p.title,p.summary,p.category,p.status,p.updated_at,p.published_at,p.live_release_id,p.draft_release_id,p.review_reason," +
+    "r.version AS release_version FROM anevum_package_projects p " +
+    "JOIN anevum_package_releases r ON r.id=p.live_release_id " +
+    "WHERE p.status IN ('published','suspended') ORDER BY p.updated_at DESC LIMIT 75"
+  ).all()).results;
+}
 async function getProject(db,id) {
   return query(db,"SELECT * FROM anevum_package_projects WHERE id=? AND status!='deleted'",id);
 }
@@ -261,6 +269,23 @@ async function review(req,env,u,id) {
   return changes[0]?.meta?.changes===1&&changes[1]?.meta?.changes===1
     ?json({status:publish?"published":"rejected"}):fail(409,"Review state changed");
 }
+async function moderate(req,env,u,id) {
+  if(!staff(env,u.id)) return fail(403,"Staff moderation permission required");
+  const p=await getProject(env.DB,id);
+  if(!p || !p.live_release_id) return fail(404,"Published project not found");
+  const body=await req.json().catch(()=>null);
+  const action=body?.action;
+  if(action!=="suspend" && action!=="restore") return fail(422,"Choose suspend or restore");
+  if(action==="suspend" && p.status!=="published") return fail(409,"Project is not published");
+  if(action==="restore" && p.status!=="suspended") return fail(409,"Project is not suspended");
+  const reason=action==="suspend"?body.reason?.trim():null;
+  if(action==="suspend" && (typeof reason!=="string" || reason.length<10 || reason.length>1000))
+    return fail(422,"Explain the moderation action in 10–1000 characters");
+  const updated=await run(env.DB,
+    "UPDATE anevum_package_projects SET status=?,review_reason=?,updated_at=? WHERE id=? AND status=?",
+    action==="suspend"?"suspended":"published",reason,Math.floor(Date.now()/1000),id,p.status);
+  return updated.meta?.changes===1?json({status:action==="suspend"?"suspended":"published"}):fail(409,"Project status changed");
+}
 async function deleteUnpublished(env,u,id) {
   const p=await getProject(env.DB,id);
   if(!p||p.owner_id!==u.id||!pilot(env,u.id)) return fail(404,"Project unavailable");
@@ -291,10 +316,11 @@ async function api(req,env,path) {
   const u=await member(req,env);
   if(!u)return fail(401,"A verified ANEVUM session is required");
   if(path==="/api/v1/packages/upload")return upload(req,env,u);
-  const m=path.match(/^\/api\/v1\/packages\/projects\/([0-9a-f-]{36})\/(submit|review|delete)$/);
+  const m=path.match(/^\/api\/v1\/packages\/projects\/([0-9a-f-]{36})\/(submit|review|delete|moderate)$/);
   if(!m||!UUID.test(m[1]))return fail(404,"Unknown API route");
   if(m[2]==="submit")return submit(env,u,m[1]);
   if(m[2]==="review")return review(req,env,u,m[1]);
+  if(m[2]==="moderate")return moderate(req,env,u,m[1]);
   return deleteUnpublished(env,u,m[1]);
 }
 async function player(req,env,id) {
