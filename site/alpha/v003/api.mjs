@@ -321,7 +321,8 @@ async function player(req,env,id) {
 export default {
   async fetch(req,env) {
     const url=new URL(req.url),path=url.pathname;
-    if(url.origin!==A)return fail(404,"Unknown host");
+    const stagingRead = req.method==="GET" && url.protocol==="https:" && url.hostname===env.STAGING_CONTROL_HOST && env.STAGING_CONTROL_HOST?.endsWith(".devonakins.workers.dev");
+    if(url.origin!==A && !stagingRead)return fail(404,"Unknown host");
     try {
       if(path.startsWith("/api/v1/packages/"))return await api(req,env,path);
       if(req.method!=="GET")return fail(405,"Method not allowed");
