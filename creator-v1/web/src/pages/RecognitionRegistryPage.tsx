@@ -9,10 +9,10 @@ import {OrbitalMark} from '../components/OrbitalMark';
 import './recognition-registry-v066.css';
 
 type Cabinet='badges'|'ribbons'|'medals';
-const CABINETS:{id:Cabinet;name:string;description:string}[]=[
- {id:'badges',name:'Achievement badges',description:'Milestones that mark what you make, explore and contribute.'},
- {id:'ribbons',name:'Service ribbons',description:'A woven record of exceptional, sustained contribution.'},
- {id:'medals',name:'Prestige medals',description:'The rarest recognitions: independent review and lasting significance.'}
+const CABINETS:{id:Cabinet;name:string;shortName:string;description:string}[]=[
+ {id:'badges',name:'Achievement badges',shortName:'Badges',description:'Milestones that mark what you make, explore and contribute.'},
+ {id:'ribbons',name:'Service ribbons',shortName:'Ribbons',description:'A woven record of exceptional, sustained contribution.'},
+ {id:'medals',name:'Prestige medals',shortName:'Medals',description:'The rarest recognitions: independent review and lasting significance.'}
 ];
 const FAMILIES:({id:'all';label:string}|{id:BadgeFamily;label:string})[]=[
  {id:'all',label:'All disciplines'},{id:'origin',label:'Origins'},
@@ -77,16 +77,16 @@ export function RecognitionRegistryPage(){
   <header className="av66-registry-header">
    <div className="av66-registry-eyebrow"><OrbitalMark className="av66-registry-mark"/><span>ANEVUM / THE CONTINUANCE INSTITUTE</span><span>RECOGNITION ARCHIVE / VOL. 01</span></div>
    <h1>THE MARKS<br/><em>WE LEAVE.</em></h1>
-   <p>Some marks measure progress. Others record what we have made, who we have helped, and what endures. This is ANEVUM's growing archive of achievements and distinctions.</p>
-   <div className="av66-registry-nav"><Link to="/levels">EXPLORE THE 30 EVOLUTION LEVELS ↗</Link><Link to="/member?tab=awards">CUSTOMIZE YOUR PLAYER CARD ↗</Link></div>
-   <div className="av66-registry-metrics"><div><b>30</b><span>EVOLUTION LEVELS</span></div><div><b>{badges.length}</b><span>BADGE DEFINITIONS</span></div><div><b>{distinctions.filter(x=>x.kind==='ribbon').length}</b><span>SERVICE RIBBONS</span></div><div><b>{distinctions.filter(x=>x.kind==='medal').length}</b><span>PRESTIGE MEDALS</span></div></div>
+   <p>Explore the marks of what we make, who we help, and what endures. Every distinction in this archive has its own purpose and path to earning it.</p>
+   <div className="av66-registry-nav"><Link to="/levels">EXPLORE 30 LEVELS ↗</Link><Link to="/member?tab=awards">EDIT MY PLAYER CARD ↗</Link></div>
+   <div className="av66-registry-metrics"><div><b>30</b><span>LEVELS</span></div><div><b>{badges.length}</b><span>BADGES</span></div><div><b>{distinctions.filter(x=>x.kind==='ribbon').length}</b><span>RIBBONS</span></div><div><b>{distinctions.filter(x=>x.kind==='medal').length}</b><span>MEDALS</span></div></div>
   </header>
   <div className="av66-catalog-shell">
    <div className="av66-catalog-intro"><div><span>IDENTITY / RECOGNITION / HONORS</span><h2>The Archive of Deeds</h2></div>
     <p>A collectible catalog designed to expand with the community. Definitions labeled <strong>Planned</strong> are not yet earnable. Nothing here is a fabricated award.</p></div>
    <nav className="av66-catalog-tabs" aria-label="Recognition collections">{CABINETS.map(entry=>
-    <button key={entry.id} type="button" aria-current={cabinet===entry.id?'page':undefined}
-     onClick={()=>{setCabinet(entry.id);setMine(false)}}><strong>{entry.name}</strong><small>{entry.description}</small></button>
+    <button key={entry.id} type="button" aria-label={entry.name} aria-current={cabinet===entry.id?'page':undefined}
+     onClick={()=>{setCabinet(entry.id);setMine(false)}}><strong className="av66-tab-full">{entry.name}</strong><strong className="av68-tab-short">{entry.shortName}</strong><small>{entry.description}</small></button>
    )}</nav>
    <div className="av66-toolbar"><label className="av66-search"><span>SEARCH THE ARCHIVE</span><input type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Find a mark or criterion…" maxLength={80}/></label>
     {retrievable&&<label className="av66-my-only"><input type="checkbox" checked={mine} onChange={e=>setMine(e.target.checked)}/><span>MY EARNED COLLECTION</span></label>}
