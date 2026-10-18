@@ -44,6 +44,7 @@ function harness() {
     zoomOut() { this.events.push(['zoomOut']); }
     easeTo(options) { this.events.push(['easeTo', options]); }
     flyTo(options) { this.events.push(['flyTo', options]); }
+    setTerrain(options) { this.events.push(['terrain', options]); }
   }
   class FakeMarker {
     constructor({ element }) { this.element=element; this.removed=false; markerInstances.push(this); }
@@ -78,13 +79,16 @@ test('map uses real 3D vector extrusion and map navigation controls', () => {
   assert.equal(map.options.zoom > 15,true);
   assert.equal(map.options.pitch > 0,true);
   map.handlers.load();
-  assert.deepEqual(map.sources,['anevum-buildings']);
+  assert.deepEqual(map.sources,['anevum-buildings','anevum-terrain']);
   assert.deepEqual(map.layers,['anevum-3d-buildings']);
   click('zoom-in'); click('zoom-out'); click('tilt'); click('reset');
   assert.deepEqual(map.events.map(event => event[0]),['zoomIn','zoomOut','easeTo','flyTo']);
   assert.equal(node('tilt').getAttribute('aria-pressed'),'false');
   node('buildings-checkbox').handlers.change({ target: { checked:false }});
   assert.deepEqual(map.events.at(-1),['layer','anevum-3d-buildings','visibility','none']);
+  node('terrain-checkbox').handlers.change({ target: { checked:true }});
+  assert.equal(map.events.at(-1)[0], 'terrain');
+  assert.equal(map.events.at(-1)[1].source, 'anevum-terrain');
 });
 
 test('GPS is opt-in and stopped on backgrounding without server writes', () => {
