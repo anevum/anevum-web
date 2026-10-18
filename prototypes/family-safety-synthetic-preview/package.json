@@ -9,6 +9,7 @@
     "test": "node --test test.mjs"
   },
   "devDependencies": {
-    "maplibre-gl": "6.14.0"
+    "maplibre-gl": "6.14.0",
+    "playwright-core": "1.55.1"
   }
 }
