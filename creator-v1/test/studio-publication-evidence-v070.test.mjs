@@ -347,3 +347,6 @@ test('reviewer queue exposes only scoped consent and excludes published decision
  const stale=await canonicalStudioReview(new Request(base+'/api/v1/member/studio/review/'+p.id+'/manifest'),env(db),owner('reviewer'));
  assert.equal(stale.status,409);
 });
+
+// Reused by the V071 safety regression. The fixture runs against local SQLite only.
+export {database,project,consent,publish,now,base,env,owner,api,scalar};
