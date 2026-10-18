@@ -58,3 +58,79 @@ jobs:
             exit 1
           fi
           echo "PASS: compiled frontend remains mounted and renders the project with an unlinked creator"
+      - name: Deploy browser-verified fix without changing owner access or live release flags
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "anevum/anevum-web"
+          test "$GITHUB_REF" = "refs/heads/incident/null-creator-public-home-20261018"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$CLOUDFLARE_ACCOUNT_ID" = "2f7ee83107240152097efd956a4e8335"
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -s creator-v1/dist/web/index.html
+          cf_api="https://api.cloudflare.com/client/v4"
+          cf() { curl --fail --silent --show-error --retry 2 --max-time 25 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$1"; }
+          cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/settings" > "$RUNNER_TEMP/pre-settings.json"
+          jq -e '
+            .success and
+            any(.result.bindings[]; .type=="assets" and .name=="ASSETS") and
+            any(.result.bindings[]; .type=="d1" and .name=="MEMBER_DB" and .database_id=="e1d29049-c83b-4534-8355-dc1fa36ba6d8") and
+            any(.result.bindings[]; .type=="plain_text" and .name=="ANEVUM_PRELAUNCH_MODE" and .text=="public") and
+            any(.result.bindings[]; .type=="plain_text" and .name=="ANEVUM_LAUNCH_APPROVED" and .text=="true") and
+            any(.result.bindings[]; .type=="plain_text" and .name=="CANONICAL_EMAIL_ENABLED" and .text=="true") and
+            any(.result.bindings[]; .type=="secret_text" and .name=="CANONICAL_BETTER_AUTH_SECRET")
+          ' "$RUNNER_TEMP/pre-settings.json" > /dev/null
+          cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" > "$RUNNER_TEMP/pre-deployments.json"
+          pre_version="$(jq -r '(.result.deployments // .result)[0].versions[0].version_id' "$RUNNER_TEMP/pre-deployments.json")"
+          test "$pre_version" = "8bda78cc-b3e3-4de0-91de-d10d5d2656fc"
+          cf "$cf_api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/pre-routes.json"
+          jq -e '.success and any(.result[]; .pattern=="anevum.com/*" and .script=="anevum-apex-prelaunch-gateway") and ([.result[]|select(.pattern=="anevum.com/assets/index-*")]|length)==0' "$RUNNER_TEMP/pre-routes.json" > /dev/null
+          node --input-type=module <<'NODE'
+          import {readFileSync,writeFileSync} from "node:fs";
+          const config=JSON.parse(readFileSync("creator-v1/wrangler.apex-prelaunch.jsonc","utf8"));
+          const live=JSON.parse(readFileSync(process.env.RUNNER_TEMP+"/pre-settings.json","utf8"));
+          if(config.name!=="anevum-apex-prelaunch-gateway"||config.routes.length!==0||config.assets?.binding!=="ASSETS"||config.assets?.run_worker_first!==true)throw Error("Unexpected candidate deployment scope");
+          const vars=Object.fromEntries(live.result.bindings.filter(x=>x.type==="plain_text").map(x=>[x.name,x.text]));
+          if(vars.ANEVUM_PRELAUNCH_MODE!=="public"||vars.ANEVUM_LAUNCH_APPROVED!=="true"||vars.ANEVUM_CANONICAL_APEX_ENABLED!=="true"||vars.CANONICAL_SCHEMA_APPROVED!=="true")throw Error("Live launch flags did not match the authorized public state");
+          config.vars=vars;
+          writeFileSync("creator-v1/wrangler.incident.generated.json",JSON.stringify(config,null,2));
+          console.log("Preserving all live plain-text Worker variables and existing secret bindings.");
+          NODE
+          jq -S '[.result.bindings[]|select(.type=="plain_text")|{name,text}]|sort_by(.name)' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/pre-vars.json"
+          jq -S '[.result.bindings[]|select(.type=="secret_text")|.name]|sort' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/pre-secrets.json"
+          deployed=0
+          revert() {
+            if test "$deployed" = "1"; then
+              echo "Post-deploy verification failed; restoring recorded previous Worker version."
+              printf '{"strategy":"percentage","versions":[{"percentage":100,"version_id":"%s"}]}' "$pre_version" > "$RUNNER_TEMP/revert.json"
+              curl --fail --silent --show-error --max-time 35 -X POST -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" -d @"$RUNNER_TEMP/revert.json" "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments"
+            fi
+          }
+          trap revert ERR
+          npx wrangler deploy --config creator-v1/wrangler.incident.generated.json --keep-vars
+          deployed=1
+          cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/settings" > "$RUNNER_TEMP/post-settings.json"
+          jq -S '[.result.bindings[]|select(.type=="plain_text")|{name,text}]|sort_by(.name)' "$RUNNER_TEMP/post-settings.json" > "$RUNNER_TEMP/post-vars.json"
+          jq -S '[.result.bindings[]|select(.type=="secret_text")|.name]|sort' "$RUNNER_TEMP/post-settings.json" > "$RUNNER_TEMP/post-secrets.json"
+          diff -u "$RUNNER_TEMP/pre-vars.json" "$RUNNER_TEMP/post-vars.json"
+          diff -u "$RUNNER_TEMP/pre-secrets.json" "$RUNNER_TEMP/post-secrets.json"
+          jq -e '.success and any(.result.bindings[]; .type=="assets" and .name=="ASSETS") and any(.result.bindings[]; .type=="d1" and .name=="MEMBER_DB" and .database_id=="e1d29049-c83b-4534-8355-dc1fa36ba6d8")' "$RUNNER_TEMP/post-settings.json" >/dev/null
+          echo "All live flags, secrets, account/database bindings remain unchanged."
+          bundle="$(node --input-type=module -e 'import{readFileSync}from"node:fs";let s=readFileSync("creator-v1/dist/web/index.html","utf8");console.log(s.match(/src="(\/assets\/index-[^"]+\.js)"/)?.[1]||"")')"
+          test -n "$bundle"
+          ready=0
+          for attempt in $(seq 1 16); do
+            if curl --fail --silent --show-error --max-time 20 -o "$RUNNER_TEMP/live-asset.js" "https://anevum.com$bundle"; then
+              if cmp -s "$RUNNER_TEMP/live-asset.js" "creator-v1/dist/web$bundle"; then
+                ready=1
+                break
+              fi
+            fi
+            sleep 4
+          done
+          test "$ready" = 1
+          echo "PASS: production serves the exact patched JavaScript asset."
+          trap - ERR
