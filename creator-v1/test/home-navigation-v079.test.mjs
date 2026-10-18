@@ -49,7 +49,7 @@ test("V079 owner identity comes solely from verified account-space records",()=>
   "source:\"canonical-member\""
  ])assert.ok(own.includes(token),"Missing owner boundary: "+token);
  assert.doesNotMatch(own,/Math\.random|localStorage|sessionStorage|\/admin|\/moderation|fetch\(/);
- assert.match(identity,/channel\?\\[\\]:selectFeaturedBadges/);
+ assert.match(identity,/channel\?\[\]:selectFeaturedBadges/);
  assert.match(identity,/data-player-card="v078"/);
  assert.match(identity,/artwork="card"/);
 });
