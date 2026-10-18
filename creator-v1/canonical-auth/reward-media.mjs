@@ -44,7 +44,11 @@ export async function earnedRewardInventory(req,env,user=null,match=matchRewardI
   }
   const state=await readProgression(env.MEMBER_DB,ownerId);
   if(!Number.isSafeInteger(state.level)||state.level<1||state.level>30)return deny(503);
-  const levels=ARTIFACTS.slice(0,state.level).map(item=>({
+  // A private member can inspect their accumulated earned collection.
+  // A public profile exposes only the person's CURRENT earned specimen, not
+  // an equivalent public gallery of every level they have passed.
+  const publicLevels=match.handle?[ARTIFACTS[state.level-1]]:ARTIFACTS.slice(0,state.level);
+  const levels=publicLevels.map(item=>({
    level:item.level,name:item.name,subtitle:item.subtitle,motion:item.motion
   }));
   return new Response(req.method==='HEAD'?null:JSON.stringify({levels,currentLevel:state.level}),{
@@ -116,7 +120,8 @@ export async function earnedRewardMedia(req,env,user=null,match=matchRewardMedia
   // The same progression calculation that the member service uses for UI
   // state is run on each request. No client-awarded XP or localStorage.
   const state=await readProgression(env.MEMBER_DB,ownerId);
-  if(!Number.isSafeInteger(state.level)||state.level<match.level)return missing(req);
+  if(!Number.isSafeInteger(state.level)||
+   (match.handle?state.level!==match.level:state.level<match.level))return missing(req);
   const original=sourceFile(match.level,match.kind);
   const upstream=new URL(original.path,url.origin);
   const raw=await env.ASSETS.fetch(new Request(upstream,{
