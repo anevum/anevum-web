@@ -7,7 +7,7 @@ permissions:
   contents: read
 concurrency:
   group: anevum-apex-earned-v075-live
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   release:
@@ -91,6 +91,7 @@ jobs:
           npm ci --ignore-scripts --no-audit --no-fund
           npm run check:creator-v1-web
           npm run build:creator-v1-web
+          node --test creator-v1/test/protected-email-approval-v075.test.mjs
           node --test creator-v1/test/earned-reward-media-v075.test.mjs creator-v1/test/level-artwork-preservation-v074.test.mjs creator-v1/test/evolution-v060-contract.test.mjs creator-v1/test/progression-v031.test.mjs creator-v1/test/apex-prelaunch-gateway.test.mjs creator-v1/test/canonical-otp-resend-v023.test.mjs
           test "$(find creator-v1/dist/web/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
           test -s creator-v1/dist/web/evolution/mini-runtime.json
