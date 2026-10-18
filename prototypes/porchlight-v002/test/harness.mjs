@@ -72,7 +72,7 @@ export function createHarness({today='2026-10-29T12:00:00.000Z', quota=true, fla
       method, headers:{ ...(method==='POST'?{'Origin':ORIGIN,'content-type':'application/json'}:{}),...headers},
       ...(body!==undefined?{body:typeof body==='string'?body:JSON.stringify(body)}:{}),
     });
-    if(actor) actors.set(req, typeof actor==='object'?actor:{id:actor,verified:true});
+    if(actor) actors.set(req, typeof actor==='object'?actor:{id:actor,verified:true,emailVerified:true,adultEligible:true});
     const res=await handler(req,{...env,...overrideEnv});
     const value=await res.json();
     return {status:res.status, body:value, headers:res.headers};

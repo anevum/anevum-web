@@ -70,7 +70,7 @@ function assertOrigin(request, env) {
   if (!origin.startsWith('https://') || env.PORCHLIGHT_ORIGIN !== origin || request.headers.get('Origin') !== origin) fail(403, 'origin_denied');
 }
 function readActor(actor) {
-  if (!actor || actor.verified !== true || !validId(actor.id)) fail(401, 'sign_in_required');
+  if (!actor || actor.verified !== true || actor.emailVerified !== true || actor.adultEligible !== true || !validId(actor.id)) fail(401, 'sign_in_required');
   return actor.id;
 }
 function getParam(path, index) {return path[index] || '';}
@@ -155,10 +155,27 @@ export function createPorchlightHandler({resolveActor, authorizeWriteQuota, now 
           FROM porchlight_host_submissions WHERE event_id = ? AND status = 'approved' ORDER BY created_at ASC LIMIT 200`, event.id);
         return json(200, {status: 'active', event: {title: event.title, startsAt: event.starts_at, endsAt: event.ends_at}, pins: rows.map(publicRecord)});
       }
+      // Public organizer-controlled area choices. Never accept household-created public blocks.
+      if (method === 'GET' && segments.length === 4 && segments[1] === 'events' && segments[3] === 'blocks') {
+        const slug = getParam(segments, 2); if (!validSlug(slug)) fail(404, 'not_found');
+        const event = await eventBySlug(db, slug);
+        if (!event || !eventMayAccept(event, at)) return json(200, {status:'inactive', blocks:[]});
+        const rows = await dbAll(db, 'SELECT code, public_label AS label FROM porchlight_event_blocks WHERE event_id = ? ORDER BY public_label ASC LIMIT 30', event.id);
+        return json(200, {status:'active', consentVersion:VERSION, event:{title:event.title, endsAt:event.ends_at}, blocks:rows});
+      }
       // All non-public routes require identity provided by a previously verified, approved adapter.
       let actor;
       try {actor = readActor(await resolveActor(request, env));}
       catch (error) {if (error instanceof HttpError) throw error; fail(503, 'identity_unavailable');}
+      // Verified provider principal and server-granted event role; never accept self-selected roles.
+      if (method === 'GET' && segments.length === 2 && segments[1] === 'session') {
+        const eventSlug = new URL(request.url).searchParams.get('event');
+        if (!validSlug(eventSlug)) fail(404, 'not_found');
+        const event = await eventBySlug(db, eventSlug);
+        if (!event) fail(404, 'not_found');
+        const grant = await dbFirst(db, 'SELECT role FROM porchlight_organizer_grants WHERE event_id=? AND principal_id=? AND revoked_at IS NULL', event.id, actor);
+        return json(200, {authenticated:true, event:eventSlug, role:grant?.role || null, canSubmit:eventMayAccept(event, at)});
+      }
       if (method === 'POST' && segments.length === 4 && segments[1] === 'events' && segments[3] === 'submissions') {
         const slug = getParam(segments, 2); if (!validSlug(slug)) fail(404, 'not_found');
         const event = await eventBySlug(db, slug);
@@ -196,7 +213,10 @@ export function createPorchlightHandler({resolveActor, authorizeWriteQuota, now 
         if (row.status === 'withdrawn') return json(200, {status:'withdrawn'});
         const mutation = createId();
         const [updated] = await transaction(db, [
-          [`UPDATE porchlight_host_submissions SET status='withdrawn', revision=revision+1, mutation_id=?, updated_at=?
+          [`UPDATE porchlight_host_submissions SET status='withdrawn', revision=revision+1, mutation_id=?, updated_at=?,
+            private_address='[deleted]', public_exact_address=NULL, public_lat=NULL, public_lng=NULL,
+            public_label='Withdrawn household', public_block='Withheld', display_mode='block', tags_json='[]',
+            review_reason=NULL, review_method=NULL
             WHERE id=? AND host_principal_id=? AND status != 'withdrawn'`, [mutation, at, id, actor]],
           auditInsert({id:createId(), eventId:row.event_id, actor, targetKind:'submission', targetId:id,
             action:'host_withdraw', from:row.status, to:'withdrawn', reason:'Host revoked participation consent', at, mutation}),
@@ -253,10 +273,18 @@ export function createPorchlightHandler({resolveActor, authorizeWriteQuota, now 
         const eventGuard = action === 'approve' ? " AND EXISTS (SELECT 1 FROM porchlight_events e WHERE e.id=porchlight_host_submissions.event_id AND e.status='open' AND e.ends_at>?)" : '';
         const [updated] = await transaction(db, [
           [`UPDATE porchlight_host_submissions SET status=?, revision=revision+1, reviewed_by=?, reviewed_at=?,
-            review_method=?, review_reason=?, mutation_id=?, updated_at=?
+            review_method=?, review_reason=?, mutation_id=?, updated_at=?,
+            private_address=CASE WHEN ? IN ('rejected','removed') THEN '[deleted]' ELSE private_address END,
+            public_exact_address=CASE WHEN ? IN ('rejected','removed') THEN NULL ELSE public_exact_address END,
+            public_lat=CASE WHEN ? IN ('rejected','removed') THEN NULL ELSE public_lat END,
+            public_lng=CASE WHEN ? IN ('rejected','removed') THEN NULL ELSE public_lng END,
+            display_mode=CASE WHEN ? IN ('rejected','removed') THEN 'block' ELSE display_mode END,
+            public_label=CASE WHEN ? IN ('rejected','removed') THEN 'Rejected household' ELSE public_label END,
+            public_block=CASE WHEN ? IN ('rejected','removed') THEN 'Withheld' ELSE public_block END,
+            tags_json=CASE WHEN ? IN ('rejected','removed') THEN '[]' ELSE tags_json END
             WHERE id=? AND status=? AND revision=?
               AND EXISTS (SELECT 1 FROM porchlight_organizer_grants g WHERE g.event_id=porchlight_host_submissions.event_id AND g.principal_id=? AND g.revoked_at IS NULL)${eventGuard}`,
-            [to, actor, at, method, reason, mutation, at, id, from, payload.expectedRevision, actor, ...(action === 'approve' ? [at] : [])]],
+            [to, actor, at, method, reason, mutation, at, ...Array(8).fill(to), id, from, payload.expectedRevision, actor, ...(action === 'approve' ? [at] : [])]],
           auditInsert({id:createId(), eventId:row.event_id, actor, targetKind:'submission', targetId:id,
             action:`organizer_${action}`, from, to, reason, at, mutation}),
         ]);
