@@ -2,7 +2,7 @@
 
 Session: `ANEVUM.WEB.RELEASE.2026-10-18.002.PREMIUM-PLAYER-CARD-CUTOVER-GATE`  
 Owner-approved intent: deploy V078 premium player-card UX to anevum.com, 2026-10-18.  
-Status: **STOP / not deployed**; user authorization exists, but live source and routing are not reconciled.
+Status: **RESOLVED / deployed 2026-10-18T20:52 UTC** from the reconciled incident-based branch. The pre-release STOP and risks below remain archived as the required safety conditions that were subsequently satisfied. See `docs/ANEVUM.WEB.RELEASE.2026-10-18.003.PREMIUM-PLAYER-CARDS-LIVE.md` for the production acceptance, active Worker version and rollback.
 
 ## Validation completed
 
