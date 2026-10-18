@@ -190,15 +190,17 @@ test('checksum tampering and deletion prevent inspection and leave no success au
   const bad=new Uint8Array(s.objects.get(key));bad[bad.length-1]^=1;
   s.objects.set(key,bad);
   assert.equal((await s.call(w.url,'GET','bob')).status,409);
-  assert.equal(logs(s).length,0);
+  assert.equal(logs(s).length,1,'Failed checksum still leaves an audited attempt');
+  assert.equal(logs(s)[0].action,'attempt_text_summary');
   s.objects.set(key,new Uint8Array(w.pkg.bytes));
   const good=await s.call(w.url,'GET','bob');
   assert.equal(good.status,200);
-  assert.equal(logs(s).length,1);
+  assert.equal(logs(s).length,2);
+  assert.equal(logs(s).filter(x=>x.action==='view_text_summary').length,1);
   const removed=await s.call(ROOT+'/'+w.project.id+'/assets/'+w.assetId,'DELETE','alice');
   assert.equal(removed.status,200);
   assert.equal((await s.call(w.url,'GET','bob')).status,404);
-  assert.equal(logs(s).length,1);
+  assert.equal(logs(s).length,2);
  }finally{s.close();}
 });
 test('at most 30 successful private summaries per reviewer per hour',async()=>{
@@ -210,6 +212,23 @@ test('at most 30 successful private summaries per reviewer per hour',async()=>{
    assert.equal(x.status,200,'visit '+i);
   }
   assert.equal(logs(s).length,30);
+  assert.equal((await s.call(w.url,'GET','bob')).status,429);
+  assert.equal(logs(s).length,30);
+ }finally{s.close();}
+});
+test('repeated failed checksum requests count toward reviewer read quota',async()=>{
+ const s=setup({enabled:true});
+ try{
+  const w=await submitted(s,'art');
+  const key=[...s.objects.keys()][0];
+  const changed=new Uint8Array(s.objects.get(key));changed[changed.length-1]^=1;
+  s.objects.set(key,changed);
+  for(let i=0;i<30;i++){
+   const response=await s.call(w.url,'GET','bob');
+   assert.equal(response.status,409,'Attempt '+i+' should fail checksum');
+  }
+  assert.equal(logs(s).length,30);
+  assert.ok(logs(s).every(x=>x.action==='attempt_text_summary'));
   assert.equal((await s.call(w.url,'GET','bob')).status,429);
   assert.equal(logs(s).length,30);
  }finally{s.close();}
