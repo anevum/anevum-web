@@ -7,7 +7,10 @@ const BADGE_NAMES=Object.freeze({
  first_orbit:'First Orbit',
  first_thread:'First Transmission',
  first_reply:'First Response',
- conversationalist:'Open Channel'
+ conversationalist:'Open Channel',
+ first_creation:'First Creation',
+ maker_five:'Five Worlds',
+ maker_twenty:'Architect of Worlds'
 });
 export function recognitionBadgeName(id){return BADGE_NAMES[id]||null;}
 
