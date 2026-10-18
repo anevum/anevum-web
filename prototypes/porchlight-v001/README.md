@@ -6,7 +6,7 @@ Status: **isolated, demonstration-only source**. Not live, not verified home par
 
 ## Current working deliverable
 
-Open `standalone.html` in a browser. It is fully self-contained and does not request network resources, device location, or personal information. Six **fictional** house labels live on a synthetic diagram with nongeographic coordinates and fictional street names. No real households, invitations, routes, safety reports, or emergency contact requests are recorded.
+Open `index.html` in a browser (download the file or use a static web host). A downloadable handoff bundle also includes an equivalent `standalone.html`. It is fully self-contained and does not request network resources, device location, or personal information. Six **fictional** house labels live on a synthetic diagram with nongeographic coordinates and fictional street names. No real households, invitations, routes, safety reports, or emergency contact requests are recorded.
 
 Implemented in the prototype:
 
