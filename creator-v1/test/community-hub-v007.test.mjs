@@ -50,7 +50,8 @@ test("V007 keeps moderation and member privileges entirely on existing backend r
   assert.match(hub, /enabled = status\.state === "ready"/);
   assert.match(hub, /Only independently approved public records/);
   assert.doesNotMatch(hub, /fetch\(|credentials\s*:|authorization|memberCreate|memberVote|memberReact|set-cookie/i);
-  assert.match(routes, /<MemberGate\/>/);
+  assert.doesNotMatch(routes, /<MemberGate\/>/);
+  assert.match(routes, /path="library" element={<Navigate to="\/saved" replace\/>}/);
   // V067: legacy composer deep links must reach canonical staff-reviewed threads.
   assert.match(routes, /path="community\/write" element={<Navigate to="\/community\?compose=1" replace\/>}/);
   assert.doesNotMatch(routes, /path="community\/write" element={<CommunityPostEditorPage\/>}/);
