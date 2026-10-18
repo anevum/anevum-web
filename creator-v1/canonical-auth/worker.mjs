@@ -5,7 +5,7 @@ import {
 } from "./policy.mjs";
 import {createCanonicalAuth} from "./auth.mjs";
 import {canonicalCreatorSchemaReady,canonicalCreatorMember,canonicalPublicCreator,canonicalExportMember} from "./profile.mjs";
-import {permitCanonicalUserCreation} from "./policy.mjs";
+import {permitCanonicalUserCreationApproved} from "./policy.mjs";
 import {canonicalCommunity} from "./community.mjs";
 import {canonicalForums} from "./forums.mjs";
 import {canonicalProgression,progressionReady} from './progression.mjs';
@@ -255,7 +255,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
         // Do not reveal which email addresses have been invited to a visitor.
         // A non-invited send returns the same generic response without sending mail;
         // verification fails with the same non-specific error as a wrong code.
-        if(!permitCanonicalUserCreation(env,parsed.email))
+        if(!await permitCanonicalUserCreationApproved(env,parsed.email))
           return verifying
             ? safeJson(request,{error:"Code unavailable"},400)
             : safeJson(request,{ok:true},200);
