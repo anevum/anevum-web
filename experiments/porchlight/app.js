@@ -423,9 +423,18 @@ area.addEventListener("keydown",function(e){
     "]":function(){setCamera("yaw",target.yaw+.2);}};
   if(commands[e.key]){e.preventDefault();commands[e.key]();}
 });
-let lastDraw=0;
+let lastDraw=0, lastPolicyRefresh=0, lastClosedState=isClosed();
 function tick(t){
-  if(!document.hidden && (reducedMotion || t-lastDraw>30)){
+  // A long-open page must obey expiry and withdrawal policy without needing a refresh.
+  if(t-lastPolicyRefresh>3000){
+    lastPolicyRefresh=t;
+    const closed=isClosed(), next=currentHosts();
+    if(closed!==lastClosedState || next.map(h=>h.id).join("|")!==viewHosts.map(h=>h.id).join("|")){
+      lastClosedState=closed;
+      renderDirectory();
+    }
+  }
+  if(!document.hidden && t-lastDraw>(reducedMotion?900:30)){
     renderFrame(t);lastDraw=t;
   }
   requestAnimationFrame(tick);
