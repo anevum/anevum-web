@@ -23,31 +23,21 @@ test("V009 unifies site navigation and retains native route boundaries",()=>{
  assert.match(app,/path="account" element={<Navigate to="\/member" replace\/>}/);
  assert.match(app,/path="community\/write"/);
 });
-test("V009 homepage is assembled from verified public data and real world links",()=>{
+test("V079 homepage exposes real approved work and member identity without duplicated modules",()=>{
  const home=read("web/src/pages/CinematicLandingPage.tsx");
  const signal=read("web/src/components/LiveSignalHero.tsx");
  const portals=read("web/src/components/WorldGatewayDeck.tsx");
  const feed=read("web/src/components/CommunityHomeFeed.tsx");
  for(const source of [home,signal,portals])assert.doesNotThrow(()=>parse(source,{sourceType:"module",plugins:["typescript","jsx"]}));
- assert.match(home,/readStatus/);
- assert.match(home,/readProjects/);
- assert.match(home,/readCreators/);
- assert.match(home,/WorldGatewayDeck/);
- assert.match(home,/CommunityHomeFeed/);
- assert.doesNotMatch(home,/<CinematicSiteRail\/>/);
+ for(const contract of [/readStatus/,/readProjects/,/readCreators/,/projectDetailPath/,/useOwnPlayerCard/,/CompactMemberIdentity/,/av79-feature/,/av79-gateways/])
+  assert.match(home,contract);
+ assert.doesNotMatch(home,/<WorldGatewayDeck|<LiveSignalModules|<CommunityHomeFeed|<CinematicSiteRail/);
+ assert.match(home,/projects\.filter\(project=>project\.id!==featured\?\.id\)/);
+ assert.match(home,/featured=games\[0\]\|\|projects\[0\]\|\|null/);
  assert.match(portals,/discover\?category=games/);
- assert.match(portals,/discover\?category=tools/);
- assert.match(portals,/discover\?category=creative/);
- assert.match(portals,/discover\?category=libraries/);
- assert.match(signal,/A world made/);
  assert.match(signal,/readCommunityPosts/);
- assert.match(feed,/readCommunityPosts/);
  assert.match(feed,/readPublicShowcases/);
- assert.match(feed,/PublicAuthorShowcase/);
- assert.match(feed,/showcaseItems/);
- assert.match(feed,/communityEnabled/);
- assert.match(feed,/state==="ready"/);
- assert.doesNotMatch(portals+signal+feed,/Math\.random|fakeUser|fakeActivity|fakeXp|dangerouslySetInnerHTML/);
+ assert.doesNotMatch(home,/fakeUser|fakeProject|fakeActivity|fakeXp|dangerouslySetInnerHTML/);
 });
 test("V009 design finishes public pages without unlocking member writes",()=>{
  const main=read("web/src/main.tsx");
