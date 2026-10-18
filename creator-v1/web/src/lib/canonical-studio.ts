@@ -171,6 +171,7 @@ export const studioReviewExternalRelease=(projectId:string,revision:number,reaso
 export type StudioSafetyReason='rights'|'unsafe_content'|'malicious_link'|'impersonation'|'fraud'|'other';
 export type StudioSafetyRecord={
  id:string;title:string;summary:string;category:string;handle:string;publishedAt:number;
+ publicationStatus:'published'|'withdrawn';
 };
 export type StudioSafetyResult={
  ok:true;projectId:string;publicationStatus:'withdrawn';reasonCode:StudioSafetyReason;
