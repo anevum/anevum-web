@@ -147,7 +147,7 @@ try{
        throw Error("V073_DISCOVER_FIRST_FOLD_"+width+":"+JSON.stringify(browse));
      await evaluate('document.querySelector(".portal-channel-filters button:nth-child(2)").click()');
      await until(()=>evaluate('new URLSearchParams(location.search).get("category")==="games"'));
-     const selected=await evaluate('(()=>({pressed:document.querySelector(".portal-channel-filters button:nth-child(2)")?.getAttribute("aria-pressed"),reset:!!document.querySelector(".portal-result-actions a[href$=\"/discover\"]"),overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
+     const selected=await evaluate('(()=>({pressed:document.querySelector(".portal-channel-filters button:nth-child(2)")?.getAttribute("aria-pressed"),overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
      if(selected.pressed!=="true"||selected.overflow)
        throw Error("V073_DISCOVER_FILTER_"+width+":"+JSON.stringify(selected));
      await evaluate('(()=>{const input=document.getElementById("portal-project-query");const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set;setter.call(input,"experiment");input.dispatchEvent(new Event("input",{bubbles:true}));})()');
