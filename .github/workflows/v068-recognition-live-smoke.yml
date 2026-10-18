@@ -1,0 +1,61 @@
+name: ANEVUM V068 Live Recognition First-Fold Smoke
+# Read-only production QA; never publishes, changes D1, modifies bindings, or issues awards.
+on:
+  push:
+    branches: [patch/recognition-registry-first-contact-v068-20261017-017]
+    paths:
+      - ".github/workflows/v068-recognition-live-smoke.yml"
+permissions:
+  contents: read
+jobs:
+  smoke:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check actual open signup and anonymous recognition privacy
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p qa-v068-live
+          curl -fLsS --retry 2 --connect-timeout 12 --max-time 35             https://anevum.com/recognition -o qa-v068-live/recognition.html
+          grep -q 'id="root"' qa-v068-live/recognition.html
+          curl -fLsS --retry 2 --connect-timeout 12 --max-time 35             https://anevum.com/api/v1/member/auth-methods -o qa-v068-live/auth-methods.json
+          jq -e '.registration=="open" and .methods.email.available==true' qa-v068-live/auth-methods.json >/dev/null
+          code="$(curl -sS --connect-timeout 12 --max-time 25 -o /dev/null -w '%{http_code}'             https://anevum.com/api/v1/member/recognition)"
+          test "$code" = 401
+          code="$(curl -sS --connect-timeout 12 --max-time 25 -o /dev/null -w '%{http_code}'             https://anevum.com/api/v1/member/progression)"
+          test "$code" = 401
+          echo V068_LIVE_SIGNUP_AND_PRIVATE_RECOGNITION=PASS
+      - name: Verify first viewport across desktop, tablet, and phones
+        shell: bash
+        env:
+          ANEVUM_REGISTRY_LIVE_QA: '1'
+        run: |
+          set -euo pipefail
+          node --check creator-v1/test/recognition-first-contact-v068-browser.mjs
+          node creator-v1/test/recognition-first-contact-v068-browser.mjs
+          test -s qa-v068-live/registry-1440.png
+          test -s qa-v068-live/registry-390.png
+          echo V068_REAL_LIVE_FIRST_FOLD_GEOMETRY=PASS
+      - name: Confirm V064 WebGL native Evolution miniatures survive V068
+        shell: bash
+        run: |
+          set -euo pipefail
+          node creator-v1/test/evolution-mini-live-browser-v062.mjs
+      - name: Retain live production evidence without user data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v068-real-live-recognition-and-native-smoke
+          path: |
+            qa-v068-live/
+            qa-v062-live-member/
+          if-no-files-found: warn
+          retention-days: 14
