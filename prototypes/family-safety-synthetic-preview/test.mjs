@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
+import {generateKeyPair, SignJWT} from "jose";
 import {
   createSyntheticWorld,positionAlongPath,freshness,
   DEFAULT_CENTER, FICTIONAL_PLACES, FICTIONAL_ROUTE,
@@ -15,17 +16,19 @@ const engine=source("./public/synthetic-engine.mjs");
 const css=source("./public/styles.css");
 const scene=source("./public/synthetic-scene.mjs");
 const workerSource=source("./worker.mjs");
-const AUD="staged-synthetic-preview-audience-do-not-use-in-production";
+const AUD="a".repeat(64);
+const ISSUER="https://wispy-tooth-095a.cloudflareaccess.com";
 const origin="https://anevum-family-field-synthetic-review-20261018.devonakins.workers.dev";
-const access=(email="review@example.invalid")=>({
+const access=(email="devon@anevum.com")=>({
   aud:AUD,getIdentity:async()=>({email})
 });
 const fixture=({
   method="GET",path="/",reviewAccess=access(),envAud=AUD,
+  envIssuer=ISSUER, requestHeaders={},
   assets=async request=>new Response("fixture for "+new URL(request.url).pathname,{status:200})
 }={})=>{
-  return worker.fetch(new Request(origin+path,{method}),{
-    FS_SYNTH_REVIEW_AUD:envAud,ASSETS:{fetch:assets}
+  return worker.fetch(new Request(origin+path,{method,headers:requestHeaders}),{
+    FS_SYNTH_REVIEW_AUD:envAud,FS_SYNTH_TEAM_ISSUER:envIssuer,ASSETS:{fetch:assets}
   },{access:reviewAccess});
 };
 
@@ -126,6 +129,8 @@ test("Cloudflare Access identity and exact audience are always required for ever
   assert.equal(await authorized({aud:AUD,getIdentity:async()=>({email:""})},AUD),false);
   assert.equal(await authorized({aud:AUD,getIdentity:async()=>{throw Error("login expired")}},AUD),false);
   assert.equal(await authorized(access(),AUD),true);
+  assert.equal(await authorized(access("unknown@example.test"),AUD),false);
+  assert.equal(await authorized({...access(),aud:"wrong-audience"},AUD),false);
   for(const path of ["/","/index.html","/app.mjs","/styles.css","/synthetic-scene.mjs","/__review"]){
     for(const options of [{reviewAccess:null},{envAud:""},{reviewAccess:{...access(),aud:"different"}}]){
       let called=false;
@@ -136,6 +141,42 @@ test("Cloudflare Access identity and exact audience are always required for ever
       assert.match(res.headers.get("X-Robots-Tag"),/noindex/);
     }
   }
+});
+
+test("signed Access JWT allows exact owner from forwarded header or cookie when ctx.access is missing",async()=>{
+  const {publicKey,privateKey}=await generateKeyPair("RS256");
+  const sign=async({email="devon@anevum.com",aud=AUD,iss=ISSUER,expires="5m"}={})=>
+    new SignJWT({email}).setProtectedHeader({alg:"RS256",kid:"test-key"})
+      .setIssuedAt().setIssuer(iss).setAudience(aud).setExpirationTime(expires)
+      .sign(privateKey);
+  const make=(jwt,mode="cookie")=>new Request(origin,{
+    headers:mode==="cookie"?{cookie:"CF_Authorization="+jwt}:
+      {"cf-access-jwt-assertion":jwt}
+  });
+  const verify=(request,issuer=ISSUER,aud=AUD)=>authorized(
+    null,aud,request,issuer,()=>publicKey
+  );
+  const valid=await sign();
+  assert.equal(await verify(make(valid)),true);
+  assert.equal(await verify(make(valid,"header")),true);
+  assert.equal(await verify(make(await sign({email:"other@example.test"}))),false);
+  assert.equal(await verify(make(await sign({aud:"b".repeat(64)}))),false);
+  assert.equal(await verify(make(await sign({iss:"https://another-team.cloudflareaccess.com"}))),false);
+  assert.equal(await verify(make(await sign({expires:"-30s"}))),false);
+  assert.equal(await verify(make(valid),"https://attacker.example"),false);
+  assert.equal(await verify(make(valid),ISSUER,"unconfigured-aud"),false);
+  assert.equal(await verify(make("not-a-jwt")),false);
+  assert.equal(await verify(new Request(origin)),false);
+  assert.equal(await verify(make(valid+"corrupted")),false);
+  assert.equal(await authorized(null,AUD,make(valid),ISSUER,()=>{throw Error("offline keys");}),false);
+  // Access context does not convey arbitrary email permission by itself.
+  assert.equal(await authorized(access("guest@example.test"),AUD),false);
+  // Header takes precedence over cookie. A malformed header does not fall
+  // back to another source; this blocks ambiguous multiple token sources.
+  const conflict=new Request(origin,{
+    headers:{"cf-access-jwt-assertion":"not-a-jwt",cookie:"CF_Authorization="+valid}
+  });
+  assert.equal(await verify(conflict),false);
 });
 
 test("authorized preview serves only approved read-only static assets with restrictive headers",async()=>{
