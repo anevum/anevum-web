@@ -3,6 +3,11 @@ import {
   RUN_LENGTH_SECONDS
 } from "./synthetic-engine.mjs";
 
+// MapLibre v6 is browser ESM, not the old maplibre-gl.js global script.
+// The build copies the pinned distribution into /vendor (same-origin).
+let maplibregl=null;
+try{maplibregl=await import("./vendor/maplibre-gl.mjs");}catch{}
+
 const el = id => document.getElementById(id);
 const world = createSyntheticWorld();
 let map=null, mapReady=false, tilt3d=true, buildingsReady=false, terrainReady=false;
@@ -169,7 +174,7 @@ function addMarker(coord,css,label,text){
   const node=document.createElement("button");
   node.type="button";node.className=css;node.textContent=text;
   node.setAttribute("aria-label",label);
-  const result=new window.maplibregl.Marker({element:node,anchor:"center"}).setLngLat(coord).addTo(map);
+  const result=new maplibregl.Marker({element:node,anchor:"center"}).setLngLat(coord).addTo(map);
   node.addEventListener("click",event=>event.stopPropagation());
   return result;
 }
@@ -191,18 +196,18 @@ function setupMarkerLayers(){
 }
 
 function initMap(){
-  if(!window.maplibregl){
+  if(!maplibregl){
     el("map-error").hidden=false;
-    toast("MapLibre failed to load. Check the network; the synthetic controls still function.");
+    toast("Map engine assets failed to load. Review build artifacts; the fictional simulation remains available.");
     return;
   }
   try{
-    map=new window.maplibregl.Map({
+    map=new maplibregl.Map({
       container:"map",style:"https://tiles.openfreemap.org/styles/dark",
       center:DEFAULT_CENTER,zoom:15.4,pitch:64,bearing:-22,
       minZoom:3,maxZoom:20,antialias:true,attributionControl:true
     });
-    map.addControl(new window.maplibregl.NavigationControl({showZoom:false,visualizePitch:true}),"top-right");
+    map.addControl(new maplibregl.NavigationControl({showZoom:false,visualizePitch:true}),"top-right");
     map.on("load",()=>{
       mapReady=true;
       try{
