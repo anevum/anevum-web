@@ -20,6 +20,7 @@ import { LoadingState } from "./components/States";
 import { MemberLibraryPage } from "./pages/MemberLibraryPage";
 import {CanonicalSavedWorksPage} from "./pages/CanonicalSavedWorksPage";
 import { CanonicalStudioPage } from "./pages/CanonicalStudioPage";
+import {CanonicalCreationsPage,CanonicalCreationDetailPage} from "./pages/CanonicalCreationsPage";
 import {Phase1JoinPage} from "./pages/Phase1JoinPage";
 import {Phase1MemberPage} from "./pages/Phase1MemberPage";
 import {Phase1PublicMemberPage} from "./pages/Phase1PublicMemberPage";
@@ -72,6 +73,8 @@ export default function App(){
     <Route path="start" element={<StartPage/>}/>
     <Route path="guide" element={<FieldGuidePage/>}/>
     <Route path="discover" element={<DiscoverPage/>}/>
+    <Route path="creations" element={<CanonicalCreationsPage/>}/>
+    <Route path="creations/:creationId" element={<CanonicalCreationDetailPage/>}/>
     <Route path="projects/:id" element={<ProjectPage/>}/>
     <Route path="saved" element={<CanonicalSavedWorksPage/>}/>
     <Route path="creators" element={<CreatorsPage/>}/>
@@ -91,6 +94,7 @@ export default function App(){
     <Route path="studio" element={<CanonicalStudioPage/>}/>
     <Route path="studio/new" element={<CanonicalStudioPage mode="new"/>}/>
     <Route path="studio/review" element={<CanonicalStudioPage mode="review"/>}/>
+    <Route path="studio/safety" element={<CanonicalStudioPage mode="safety"/>}/>
     <Route path="studio/:projectId" element={<CanonicalStudioPage mode="edit"/>}/>
     <Route element={<MemberGate/>}>
       <Route path="community/write" element={<CommunityPostEditorPage/>}/>
