@@ -85,7 +85,7 @@ function setStoredHidden(key:string,hidden:boolean){
 function clamp(value:number,min:number,max:number){return Math.max(min,Math.min(max,value));}
 
 export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
-  const {pathname}=useLocation();
+  const {pathname,search}=useLocation();
   const navigate=useNavigate();
   const storageKey=storagePrefix+(memberId||"visitor");
   const steps=memberId?memberSteps:visitorSteps;
@@ -155,11 +155,19 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
 
   const step=tourIndex===null?null:steps[tourIndex]||null;
   useEffect(()=>{
-    if(step&&pathname!==step.route)navigate(step.route);
-  },[navigate,pathname,step?.id,step?.route]);
+    if(!step)return;
+    // Member steps always need overview controls in view, even if a previous
+    // visit left a wall/profile/appearance tab in the URL.
+    const wrongTab=step.route==="/member"&&new URLSearchParams(search).get("tab")!=="overview";
+    if(pathname!==step.route||wrongTab)
+      navigate(step.route+(step.route==="/member"?"?tab=overview":""),{replace:true});
+  },[navigate,pathname,search,step?.id,step?.route]);
 
   useEffect(()=>{
-    if(!step||pathname!==step.route){setSpotlight(null);return;}
+    if(!step||pathname!==step.route||
+       (step.route==="/member"&&new URLSearchParams(search).get("tab")!=="overview")){
+      setSpotlight(null);return;
+    }
     let frame=0,scrolled=false;
     const reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const findTarget=()=>document.querySelector<HTMLElement>(step.anchor)
@@ -194,7 +202,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
       window.removeEventListener("resize",schedule);
       window.removeEventListener("scroll",schedule,true);
     };
-  },[step?.id,step?.route,pathname]);
+  },[step?.id,step?.route,pathname,search]);
 
   useEffect(()=>{
     if(tourIndex!==null)dialogRef.current?.querySelector<HTMLButtonElement>("[data-iren-next]")?.focus({preventScroll:true});
@@ -204,6 +212,18 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     if(tourIndex===null)return;
     const onKey=(event:KeyboardEvent)=>{
       if(event.key==="Escape"){event.preventDefault();event.stopPropagation();pause();}
+      if(event.key==="Tab"){
+        // The spotlight is a modal teaching moment, but highlighted page
+        // controls remain available via an explicit pointer click to pause.
+        const buttons=[...(dialogRef.current?.querySelectorAll<HTMLButtonElement>("button:not([disabled])")||[])];
+        const first=buttons[0],last=buttons[buttons.length-1];
+        if(!first||!last)return;
+        if(event.shiftKey&&(document.activeElement===first||!dialogRef.current?.contains(document.activeElement))){
+          event.preventDefault();last.focus();
+        }else if(!event.shiftKey&&(document.activeElement===last||!dialogRef.current?.contains(document.activeElement))){
+          event.preventDefault();first.focus();
+        }
+      }
       if(event.key==="ArrowRight"&&event.altKey){event.preventDefault();setTourIndex(index=>index===null?null:Math.min(index+1,steps.length-1));}
       if(event.key==="ArrowLeft"&&event.altKey){event.preventDefault();setTourIndex(index=>index===null?null:Math.max(0,index-1));}
     };
@@ -284,7 +304,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
         <div className="ir80-shade" style={{left:spotlight.left+spotlight.width,top:spotlight.top,right:0,height:spotlight.height}}/>
         <div className="ir80-spotlight" style={spotlight} aria-hidden="true"/></>:
         <div className="ir80-shade ir80-shade-full"/>}
-      <div ref={dialogRef} className="ir80-guide-card" style={panelStyle} role="dialog"
+      <div ref={dialogRef} className="ir80-guide-card" style={panelStyle} role="dialog" aria-modal="true"
         aria-labelledby="ir80-guide-title" aria-describedby="ir80-guide-description">
         <div className="ir80-guide-top">
           <span className="ir80-guide-avatar" aria-hidden="true"><OrbitalMark/></span>
