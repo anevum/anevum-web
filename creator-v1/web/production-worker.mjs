@@ -37,6 +37,7 @@ export default {
     if(url.protocol!=="https:"||url.hostname!==SITE||(url.port&&url.port!=="443"))return reject(404);
     if(!["GET","HEAD"].includes(request.method))return reject(405);
     const path=url.pathname;
+    if(/^\/(?:evolution(?:\/|$)|assets\/levels(?:\/|$))/i.test(path))return reject(404);
     if(path==="/health"||PUBLIC_API.test(path)){
       // Caller cookies, Authorization and account headers MUST NOT cross the
       // trust boundary into the public, read-only catalogue handler.
