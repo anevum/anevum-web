@@ -1,0 +1,32 @@
+name: Package Alpha v003 verification
+on:
+  pull_request:
+    paths:
+      - "site/alpha/v003/**"
+      - "tests/alpha-package-v003.test.mjs"
+      - ".github/workflows/package-v003-verify.yml"
+  push:
+    branches:
+      - "build/alpha-universal-package-v003-20261018"
+    paths:
+      - "site/alpha/v003/**"
+      - "tests/alpha-package-v003.test.mjs"
+      - ".github/workflows/package-v003-verify.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: |
+          node --check site/alpha/v003/archive.mjs
+          node --check site/alpha/v003/tokens.mjs
+          node --check site/alpha/v003/runtime.mjs
+          node --check site/alpha/v003/api.mjs
+          node --check site/alpha/v003/ui.mjs
+      - run: node --experimental-sqlite --test tests/alpha-package-v003.test.mjs
