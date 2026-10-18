@@ -65,6 +65,8 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
+          trap 'echo "SECURE DEPLOY PREFLIGHT stopped at shell line $LINENO before altering production" >&2' ERR
+          echo "Checking repository/ref, Cloudflare account, and the exact reviewed source..."
           test "$GITHUB_REPOSITORY" = "anevum/anevum-web"
           test "$GITHUB_REF" = "refs/heads/incident/null-creator-public-home-20261018"
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
@@ -73,6 +75,7 @@ jobs:
           test -s creator-v1/dist/web/index.html
           cf_api="https://api.cloudflare.com/client/v4"
           cf() { curl --fail --silent --show-error --retry 2 --max-time 25 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$1"; }
+          echo "Reading live gateway settings..."
           cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/settings" > "$RUNNER_TEMP/pre-settings.json"
           jq -e '
             .success and
@@ -83,11 +86,14 @@ jobs:
             any(.result.bindings[]; .type=="plain_text" and .name=="CANONICAL_EMAIL_ENABLED" and .text=="true") and
             any(.result.bindings[]; .type=="secret_text" and .name=="CANONICAL_BETTER_AUTH_SECRET")
           ' "$RUNNER_TEMP/pre-settings.json" > /dev/null
+          echo "Production flags and binding checks passed. Checking deployed Worker version..."
           cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" > "$RUNNER_TEMP/pre-deployments.json"
           pre_version="$(jq -r '(.result.deployments // .result)[0].versions[0].version_id' "$RUNNER_TEMP/pre-deployments.json")"
           test "$pre_version" = "8bda78cc-b3e3-4de0-91de-d10d5d2656fc"
+          echo "Deployed version matches expected baseline. Checking routes..."
           cf "$cf_api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/pre-routes.json"
           jq -e '.success and any(.result[]; .pattern=="anevum.com/*" and .script=="anevum-apex-prelaunch-gateway") and ([.result[]|select(.pattern=="anevum.com/assets/index-*")]|length)==0' "$RUNNER_TEMP/pre-routes.json" > /dev/null
+          echo "Routes verified. Preparing config from current production settings..."
           node --input-type=module <<'NODE'
           import {readFileSync,writeFileSync} from "node:fs";
           const config=JSON.parse(readFileSync("creator-v1/wrangler.apex-prelaunch.jsonc","utf8"));
