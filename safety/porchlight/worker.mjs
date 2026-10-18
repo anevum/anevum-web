@@ -36,6 +36,17 @@ const constantEqual = (a, b) => {
   return delta === 0;
 };
 const fail = (code, status = 400) => response({ ok: false, code }, status);
+// D1 batch executes prepared statements as one transaction or rolls back together.
+// Fail closed on adapters that cannot guarantee this for review-sensitive writes.
+async function atomic(db, statements) {
+  if (typeof db?.batch !== "function") throw new Error("ATOMIC_DATABASE_REQUIRED");
+  const results = await db.batch(statements);
+  if (!Array.isArray(results) || results.length !== statements.length ||
+      results.some(result => result?.success === false))
+    throw new Error("ATOMIC_DATABASE_FAILURE");
+  return results;
+}
+const rowsChanged = result => Number(result?.meta?.changes ?? result?.changes ?? 0);
 function response(data, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: securityHeaders });
 }
@@ -177,20 +188,20 @@ async function revokeSubmission(request, env, id, now) {
   ).bind(id).first();
   if (!host || !host.receipt_hash || !constantEqual(await hashHex(receipt), host.receipt_hash))
     return fail("REMOVAL_CODE_NOT_RECOGNIZED", 404);
-  const removed = await env.PORCHLIGHT_DB.prepare(
-    "UPDATE host_submissions SET status='withdrawn', withdrawn_at=?, " +
-    "public_name=NULL, public_label=NULL, approved_lat=NULL, approved_lng=NULL, " +
-    "contact_email=NULL, private_address=NULL, note=NULL, host_name='Withdrawn host', options_json='[]', receipt_hash=NULL " +
-    "WHERE id=? AND status IN ('pending','published','rejected')"
-  ).bind(now, id).run();
-  if ((removed?.meta?.changes ?? removed?.changes ?? 0) !== 1)
-    return fail("REMOVAL_ALREADY_APPLIED", 409);
-  await env.PORCHLIGHT_DB.prepare(
-    "DELETE FROM reports WHERE host_id=?"
-  ).bind(id).run(); // Discard free-text reports that may still name the withdrawn household.
-  await env.PORCHLIGHT_DB.prepare(
-    "INSERT INTO audit_events (id, event_id, action, record_id, created_at) VALUES (?, ?, 'host_self_withdrawn', ?, ?)"
-  ).bind(crypto.randomUUID(), host.event_id, id, now).run();
+  const results = await atomic(env.PORCHLIGHT_DB, [
+    env.PORCHLIGHT_DB.prepare(
+      "UPDATE host_submissions SET status='withdrawn', withdrawn_at=?, " +
+      "public_name=NULL, public_label=NULL, approved_lat=NULL, approved_lng=NULL, " +
+      "contact_email=NULL, private_address=NULL, note=NULL, host_name='Withdrawn host', options_json='[]', receipt_hash=NULL " +
+      "WHERE id=? AND status IN ('pending','published','rejected')"
+    ).bind(now, id),
+    // Reports may contain a home address in free text, so delete atomically.
+    env.PORCHLIGHT_DB.prepare("DELETE FROM reports WHERE host_id=?").bind(id),
+    env.PORCHLIGHT_DB.prepare(
+      "INSERT INTO audit_events (id, event_id, action, record_id, created_at) VALUES (?, ?, 'host_self_withdrawn', ?, ?)"
+    ).bind(crypto.randomUUID(), host.event_id, id, now)
+  ]);
+  if (rowsChanged(results[0]) !== 1) return fail("REMOVAL_ALREADY_APPLIED", 409);
   return response({ ok: true, status: "withdrawn", notice: "Listing removed. Private contact and address cleared." });
 }
 async function submitReport(request, env, slug, now) {
@@ -245,14 +256,15 @@ async function createEvent(request, env, now) {
       !Number.isInteger(b.radiusMeters) || b.radiusMeters < 100 || b.radiusMeters > 5000)
     return fail("INVALID_EVENT", 422);
   const id = crypto.randomUUID();
-  await env.PORCHLIGHT_DB.prepare(
-    "INSERT INTO events (id, slug, title, neighborhood, starts_at, ends_at, status, center_lat, center_lng, radius_m, created_at) " +
-    "VALUES (?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?, ?)"
-  ).bind(id, b.slug, title, neighborhood, start, end, b.centerLat, b.centerLng,
-    b.radiusMeters, now).run();
-  await env.PORCHLIGHT_DB.prepare(
-    "INSERT INTO audit_events (id, event_id, action, record_id, created_at) VALUES (?, ?, 'event_drafted', ?, ?)"
-  ).bind(crypto.randomUUID(), id, id, now).run();
+  await atomic(env.PORCHLIGHT_DB, [
+    env.PORCHLIGHT_DB.prepare(
+      "INSERT INTO events (id, slug, title, neighborhood, starts_at, ends_at, status, center_lat, center_lng, radius_m, created_at) " +
+      "VALUES (?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?, ?)"
+    ).bind(id, b.slug, title, neighborhood, start, end, b.centerLat, b.centerLng, b.radiusMeters, now),
+    env.PORCHLIGHT_DB.prepare(
+      "INSERT INTO audit_events (id, event_id, action, record_id, created_at) VALUES (?, ?, 'event_drafted', ?, ?)"
+    ).bind(crypto.randomUUID(), id, id, now)
+  ]);
   return response({ ok: true, slug: b.slug, status: "draft" }, 201);
 }
 async function decideHost(request, env, id, now) {
@@ -265,13 +277,16 @@ async function decideHost(request, env, id, now) {
     "FROM host_submissions h JOIN events e ON e.id=h.event_id WHERE h.id=?"
   ).bind(id).first();
   if (!host) return fail("HOST_NOT_FOUND", 404);
+  const operations = [];
   if (b.action === "withdraw") {
     if (host.status === "withdrawn") return fail("HOST_ALREADY_WITHDRAWN", 409);
-    await env.PORCHLIGHT_DB.prepare(
-      "UPDATE host_submissions SET status='withdrawn', withdrawn_at=?, public_name=NULL, public_label=NULL, " +
-      "approved_lat=NULL, approved_lng=NULL, private_address=NULL, contact_email=NULL, note=NULL, host_name='Withdrawn host', options_json='[]', receipt_hash=NULL WHERE id=? AND status!='withdrawn'"
-    ).bind(now, id).run();
-    await env.PORCHLIGHT_DB.prepare("DELETE FROM reports WHERE host_id=?").bind(id).run();
+    operations.push(
+      env.PORCHLIGHT_DB.prepare(
+        "UPDATE host_submissions SET status='withdrawn', withdrawn_at=?, public_name=NULL, public_label=NULL, " +
+        "approved_lat=NULL, approved_lng=NULL, private_address=NULL, contact_email=NULL, note=NULL, host_name='Withdrawn host', options_json='[]', receipt_hash=NULL WHERE id=? AND status!='withdrawn'"
+      ).bind(now, id),
+      env.PORCHLIGHT_DB.prepare("DELETE FROM reports WHERE host_id=?").bind(id)
+    );
   } else {
     if (host.status !== "pending") return fail("HOST_NOT_PENDING", 409);
     if (b.action === "approve") {
@@ -284,22 +299,25 @@ async function decideHost(request, env, id, now) {
           distanceMeters(host.center_lat, host.center_lng, b.lat, b.lng) <= host.radius_m;
       if (!label || !verified || !positionOK || host.event_status !== "active" || host.ends_at <= now)
         return fail("APPROVAL_GATES_NOT_MET", 422);
-      await env.PORCHLIGHT_DB.prepare(
+      operations.push(env.PORCHLIGHT_DB.prepare(
         "UPDATE host_submissions SET status='published', public_name=?, public_label=?, " +
         "approved_lat=?, approved_lng=?, reviewed_at=?, verification_method=? WHERE id=? AND status='pending'"
-      ).bind(host.visibility === "exact" ? host.host_name : "Participating household", label, host.visibility === "exact" ? b.lat : null,
-        host.visibility === "exact" ? b.lng : null, now, b.verificationMethod, id).run();
+      ).bind(host.visibility === "exact" ? host.host_name : "Participating household", label,
+        host.visibility === "exact" ? b.lat : null, host.visibility === "exact" ? b.lng : null,
+        now, b.verificationMethod, id));
     } else {
-      await env.PORCHLIGHT_DB.prepare(
+      operations.push(env.PORCHLIGHT_DB.prepare(
         "UPDATE host_submissions SET status='rejected', reviewed_at=?, verification_method='not_verified', " +
         "private_address=NULL, contact_email=NULL, note=NULL, host_name='Rejected submission', options_json='[]' " +
         "WHERE id=? AND status='pending'"
-      ).bind(now, id).run();
+      ).bind(now, id));
     }
   }
-  await env.PORCHLIGHT_DB.prepare(
+  operations.push(env.PORCHLIGHT_DB.prepare(
     "INSERT INTO audit_events (id, event_id, action, record_id, created_at) VALUES (?, ?, ?, ?, ?)"
-  ).bind(crypto.randomUUID(), host.event_id, "host_" + b.action, id, now).run();
+  ).bind(crypto.randomUUID(), host.event_id, "host_" + b.action, id, now));
+  const committed = await atomic(env.PORCHLIGHT_DB, operations);
+  if (rowsChanged(committed[0]) !== 1) return fail("HOST_STATE_CHANGED", 409);
   return response({ ok: true, status: b.action === "approve" ? "published" : b.action === "reject" ? "rejected" : "withdrawn" });
 }
 async function adminRoutes(request, env, path, now) {
@@ -312,11 +330,15 @@ async function adminRoutes(request, env, path, now) {
     if (toggle[2] === "activate" && event.ends_at <= now) return fail("EVENT_EXPIRED", 409);
     if (toggle[2] === "activate" && event.status !== "draft") return fail("EVENT_ACTIVATION_NOT_PERMITTED", 409);
     const nextStatus = toggle[2] === "activate" ? "active" : "closed";
-    await env.PORCHLIGHT_DB.prepare("UPDATE events SET status=? WHERE id=?")
-      .bind(nextStatus, event.id).run();
-    await env.PORCHLIGHT_DB.prepare(
-      "INSERT INTO audit_events (id, event_id, action, record_id, created_at) VALUES (?, ?, ?, ?, ?)"
-    ).bind(crypto.randomUUID(), event.id, "event_" + nextStatus, event.id, now).run();
+    if (event.status === nextStatus) return response({ ok: true, status: nextStatus });
+    const committed = await atomic(env.PORCHLIGHT_DB, [
+      env.PORCHLIGHT_DB.prepare("UPDATE events SET status=? WHERE id=? AND status=?")
+        .bind(nextStatus, event.id, event.status),
+      env.PORCHLIGHT_DB.prepare(
+        "INSERT INTO audit_events (id, event_id, action, record_id, created_at) VALUES (?, ?, ?, ?, ?)"
+      ).bind(crypto.randomUUID(), event.id, "event_" + nextStatus, event.id, now)
+    ]);
+    if (rowsChanged(committed[0]) !== 1) return fail("EVENT_STATE_CHANGED", 409);
     return response({ ok: true, status: nextStatus });
   }
   const pending = new RegExp("^" + ADMIN + "/events/([a-z][a-z0-9-]{2,47})/queue$").exec(path);
@@ -338,12 +360,15 @@ async function adminRoutes(request, env, path, now) {
     ).bind(resolution[1]).first();
     if (!existing) return fail("REPORT_NOT_FOUND", 404);
     if (existing.status !== "open") return fail("REPORT_ALREADY_RESOLVED", 409);
-    await env.PORCHLIGHT_DB.prepare(
-      "UPDATE reports SET status='resolved', resolved_at=? WHERE id=? AND status='open'"
-    ).bind(now, existing.id).run();
-    await env.PORCHLIGHT_DB.prepare(
-      "INSERT INTO audit_events (id, event_id, action, record_id, created_at) VALUES (?, ?, 'report_resolved', ?, ?)"
-    ).bind(crypto.randomUUID(), existing.event_id, existing.id, now).run();
+    const committed = await atomic(env.PORCHLIGHT_DB, [
+      env.PORCHLIGHT_DB.prepare(
+        "UPDATE reports SET status='resolved', resolved_at=? WHERE id=? AND status='open'"
+      ).bind(now, existing.id),
+      env.PORCHLIGHT_DB.prepare(
+        "INSERT INTO audit_events (id, event_id, action, record_id, created_at) VALUES (?, ?, 'report_resolved', ?, ?)"
+      ).bind(crypto.randomUUID(), existing.event_id, existing.id, now)
+    ]);
+    if (rowsChanged(committed[0]) !== 1) return fail("REPORT_STATE_CHANGED", 409);
     return response({ ok: true, status: "resolved" });
   }
   return fail("NOT_FOUND", 404);
