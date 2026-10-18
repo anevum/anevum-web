@@ -1,0 +1,55 @@
+name: ANEVUM IREN V005 Forum End-to-End Acceptance
+
+# Review-only, synthetic local databases and stubbed email provider.
+# No live account creation, reviewer grant, feature activation or deployment.
+on:
+  pull_request:
+    branches:
+      - integrate/iren-apex-staff-v002-20261017
+    paths:
+      - creator-v1/test/iren-forum-full-journey-v005.test.mjs
+      - creator-v1/canonical-auth/**
+      - creator-v1/staff-portal/**
+      - docs/creator-platform/ANEVUM-IREN-FORUM-ACCEPTANCE-V005-2026-10-18.md
+      - .github/workflows/iren-forum-acceptance-v005-review.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  canonical-journey:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact proposed code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Check exact source identity
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - name: Node 22 for native SQLite and Better Auth
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install deterministic dependencies without scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Validate code syntax and browser bundle
+        run: |
+          node --check creator-v1/test/iren-forum-full-journey-v005.test.mjs
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+      - name: Exercise actual canonical auth plus both isolated Worker routers
+        run: |
+          node --test creator-v1/test/iren-forum-full-journey-v005.test.mjs
+          node --test creator-v1/test/iren-better-auth-service-v003.test.mjs creator-v1/test/iren-auth-boundary-v003.test.mjs
+          node --test creator-v1/test/iren-apex-staff-gateway.test.mjs creator-v1/test/staff-owner-bootstrap-v004.test.mjs
+          node --test creator-v1/test/canonical-forums-v041.test.mjs
+      - name: Confirm no live deployment
+        run: |
+          echo "SYNTHETIC_IREN_FORUM_JOURNEY=PASS"
+          echo "This is not production-member acceptance and does not approve a public feature flag."
