@@ -4,13 +4,14 @@ import {BadgeInsignia} from './BadgeInsignia';
 import {HonorInsignia} from './HonorInsignia';
 import {MemberPortrait} from './MemberPortrait';
 import {SupporterIdentity} from './SupporterSeal';
-import type {SupporterAppearance} from '../lib/canonical-beta';
+import type {SupporterAppearance,SpaceStats} from '../lib/canonical-beta';
 import {
  BADGE_CATALOG,selectFeaturedBadges,selectedDistinctions,safePlayerAura,safeConstellation,
  type EarnedBadge,type BadgeDisplay,type PublicDistinctions,type PlayerAura,type ConstellationIdentity
 } from '../lib/player-recognition';
 import './member-identity-v061.css';
 import './player-card-v065.css';
+import './player-card-premium-v078.css';
 
 /**
  * Universal player identity, v065.
@@ -34,6 +35,8 @@ export type PublicIdentity={
  aura?:PlayerAura;
  constellation?:ConstellationIdentity;
  supporterAppearance?:SupporterAppearance;
+ /** The canonical server may supply a current, visible earned level label and XP. */
+ progress?:Pick<SpaceStats,'xp'|'levelStart'|'nextLevel'|'artifact'>;
 };
 export type PlayerCardSize='inline'|'compact'|'standard'|'featured';
 const cleanName=(id:string)=>id.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
@@ -56,18 +59,34 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
   ribbons.length?'Ribbons: '+ribbons.map(r=>r.name).join(', '):'',
   constellation?'Constellation: '+constellation.name:''
  ].filter(Boolean).join(' · ');
- const classNames='av61-identity av61-identity--'+size+' av65-player-card av65-player-card--'+size+' av65-aura--'+aura+(channel?' av65-player-card--channel':'')+(className?' '+className:'');
+ // A featured card can show real progress only when the caller explicitly
+ // provides the visibility-approved canonical member stats. No sample XP.
+ const progress=specimen&&size==='featured'&&member.progress&&
+  Number.isSafeInteger(member.progress.xp)&&member.progress.xp>=0&&
+  Number.isSafeInteger(member.progress.levelStart)&&member.progress.levelStart>=0&&
+  (member.progress.nextLevel===null||
+   (Number.isSafeInteger(member.progress.nextLevel)&&member.progress.nextLevel>member.progress.levelStart))?
+  member.progress:null;
+ const maximum=progress?.nextLevel===null?1:progress?progress.nextLevel!-progress.levelStart:1;
+ const amount=progress?.nextLevel===null?1:progress?Math.max(0,Math.min(maximum,progress.xp-progress.levelStart)):0;
+ const levelTitle=progress&&typeof progress.artifact==='string'&&progress.artifact.length<=96&&progress.artifact.trim()?progress.artifact:null;
+ const artworkHandle=href==='/member'?null:member.handle;
+ const classNames='av61-identity av61-identity--'+size+' av65-player-card av65-player-card--'+size+' av78-player-card av65-aura--'+aura+(channel?' av65-player-card--channel':'')+(className?' '+className:'');
  const face=<>
   {aura!=='none'&&<span className="av65-aura-field" aria-hidden="true"/>}
+  {size==='featured'&&specimen&&<span className="av78-featured-art" aria-hidden="true">
+   <LevelEmblem level={level!} artwork="card" size={184} handle={artworkHandle}/>
+  </span>}
   <span className="av61-portrait-zone">
    <span className="av61-photo"><MemberPortrait name={member.displayName}
     src={!channel&&member.avatar?(href==='/member'?'/api/v1/member/media/avatar':'/api/v1/members/'+encodeURIComponent(member.handle)+'/media/avatar'):undefined}
     supporterFrame={member.supporterAppearance?.frame}/></span>
    {specimen&&<span className="av61-specimen" title={'Earned Evolution Level '+level}>
-    <LevelEmblem level={level!} artwork="card" size={size==='inline'?30:size==='compact'?38:size==='featured'?60:44} handle={href==='/member'?null:member.handle}/>
+    <LevelEmblem level={level!} artwork="card" size={size==='inline'?30:size==='compact'?38:size==='featured'?60:44} handle={artworkHandle}/>
    </span>}
   </span>
   <span className="av61-member-copy">
+   {size==='featured'&&<span className="av78-member-kicker">{channel?'CREATOR CHANNEL':'CONTINUANCE INSTITUTE / PLAYER IDENTITY'}</span>}
    <span className="av65-name-line"><strong className="av61-member-name">{member.displayName}</strong>
     {constellation&&<span className="av65-constellation-flag" title={'Constellation · '+constellation.name} aria-label={'Constellation · '+constellation.name}>
       <svg viewBox="0 0 26 26" aria-hidden="true" focusable="false">
@@ -78,9 +97,14 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
     </span>}
    </span>
    <small className="av61-member-handle">@{member.handle}</small>
+   {progress&&<span className="av78-player-progress">
+    <span className="av78-progress-caption"><strong>{progress.xp.toLocaleString()} XP</strong>
+     <small>{progress.nextLevel===null?'MAX LEVEL REACHED':(progress.nextLevel-progress.xp).toLocaleString()+' XP TO NEXT LEVEL'}</small></span>
+    <progress value={amount} max={maximum} aria-label="Verified XP toward next earned Evolution level"/>
+   </span>}
    <span className="av61-member-rewards">
     {channel&&<span className="av65-channel-label">CREATOR CHANNEL</span>}
-    {specimen&&<span className="av61-level-label" title={'Earned evolution level '+level}>LVL {String(level).padStart(2,'0')} <span className="av61-specimen-name">· EARNED</span></span>}
+    {specimen&&<span className="av61-level-label" title={'Earned evolution level '+level}>LVL {String(level).padStart(2,'0')} <span className="av61-specimen-name">{levelTitle?' · '+levelTitle:' · EARNED'}</span></span>}
     {badges.length>0&&<span className="av61-award-list av65-badge-rack" aria-label="Three selected or latest earned badges">
      {badges.map(id=>{
       const entry=BADGE_CATALOG[id];
@@ -98,7 +122,7 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
    </span>
   </span>
  </>;
- return interactive?<Link to={url} className={classNames} data-player-card="v065" aria-label={label}>{face}</Link>:
-  <span className={classNames} data-player-card="v065" role="group" aria-label={label}>{face}</span>;
+ return interactive?<Link to={url} className={classNames} data-player-card="v078" aria-label={label}>{face}</Link>:
+  <span className={classNames} data-player-card="v078" role="group" aria-label={label}>{face}</span>;
 }
 export const PlayerCard=CompactMemberIdentity;
