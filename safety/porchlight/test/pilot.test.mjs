@@ -26,6 +26,18 @@ function fakeD1(){
     async run(){return stmt.run(...this.values)}
    };
   },
+  async batch(statements){
+   sqlite.exec('BEGIN IMMEDIATE');
+   try {
+    const results=[];
+    for(const stmt of statements)results.push(await stmt.run());
+    sqlite.exec('COMMIT');
+    return results;
+   }catch(error){
+    sqlite.exec('ROLLBACK');
+    throw error;
+   }
+  },
   close(){sqlite.close()}
  };
 }
