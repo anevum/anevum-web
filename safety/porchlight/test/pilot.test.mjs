@@ -200,6 +200,7 @@ test('public host publication is impossible until adult consent and organizer ve
    const published=list.result.hosts.find(x=>x.id===area.id);
    assert.equal(published.lat,null);assert.equal(published.lng,null);
    assert.equal(published.visibility,'area');
+   assert.equal(published.location,eventData.neighborhood,'area labels must be server-derived neighborhood, never a host address');
   });
   await t.test('event close hides every public pin without touching Creator V1',async()=>{
    const r=await api(settings,admin+'/events/'+eventData.slug+'/close','POST',{},auth);
@@ -208,6 +209,10 @@ test('public host publication is impossible until adult consent and organizer ve
    assert.deepEqual(publicEvents.result.events,[]);
    const hosts=await api(settings,publicApi+'/events/'+eventData.slug+'/hosts');
    assert.equal(hosts.response.status,404);
+   const reopening=await api(settings,admin+'/events/'+eventData.slug+'/activate','POST',{},auth);
+   assert.equal(reopening.response.status,409,'closed events cannot be silently reactivated');
+   const audit=db.sqlite.prepare("SELECT action FROM audit_events WHERE action='event_closed'").all();
+   assert.equal(audit.length,1);
   });
  }finally{db.close()}
 });
