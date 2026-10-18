@@ -90,6 +90,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/evolution-v076"
+          curl -fsS --max-time 20 "$CANARY/__canary/v076/asset-status" | jq .
           curl -fsS --retry 4 --retry-delay 3 --max-time 25 -D "$RUNNER_TEMP/evolution-v076/icon.headers" -o "$RUNNER_TEMP/evolution-v076/icon.png" "$CANARY/api/v1/members/devon/rewards/levels/4/icon"
           grep -qi '^content-type: image/png' "$RUNNER_TEMP/evolution-v076/icon.headers"
           test "$(wc -c < "$RUNNER_TEMP/evolution-v076/icon.png")" -gt 1000
