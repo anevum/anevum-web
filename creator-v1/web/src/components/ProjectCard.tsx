@@ -35,7 +35,7 @@ export function ProjectCard({ project, returnTo = "/discover", presentation = "v
     <h3><Link to={href}>{project.title}</Link></h3>
     <p>{project.summary}</p>
     <div className="av73-project-card-bottom">
-      <CompactMemberIdentity size="inline" className="av79-public-project-author"
+      <CompactMemberIdentity size="inline" className="av73-project-card-author av79-public-project-author"
         href={`/creators/${encodeURIComponent(project.creatorHandle)}`}
         member={{handle:project.creatorHandle,displayName:project.creatorName||project.creatorHandle,
           source:"creator-channel",avatar:false,level:null,featuredAwards:[]}}/>
