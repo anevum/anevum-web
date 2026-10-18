@@ -5,9 +5,10 @@ import {
  studioHealth,studioList,studioGet,studioCreate,studioUpdate,studioSubmit,studioAssets,
  studioUpload,studioCheckFile,studioDeleteAsset,studioDownloadUrl,studioWithdraw,studioDeleteProject,studioReviewQueue,
  studioEligibleUpload,studioReviewManifest,studioReviewReceipts,
- studioReviewDecision,type StudioDraft,type StudioProject,type StudioAsset,type StudioCategory,
+ studioReviewDecision,studioReviewExternalRelease,type StudioDraft,type StudioProject,type StudioAsset,type StudioCategory,
  type StudioReviewProject,type StudioReviewHistory,type StudioReviewManifest,type StudioReviewReceipt
 } from '../lib/canonical-studio';
+import {StudioPublicationPanel} from '../components/StudioPublicationPanel';
 import './canonical-studio.css';
 
 const CATEGORY_GUIDE:Record<StudioCategory,string>={
@@ -50,6 +51,7 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
  const [message,setMessage]=useState('');
  const [uploads,setUploads]=useState(false);
  const [canReview,setCanReview]=useState(false);
+ const [publicationReady,setPublicationReady]=useState(false);
  useEffect(()=>{
   if(!id||session?.user?.emailVerified!==true)return;
   let live=true;const controller=new AbortController();
@@ -64,7 +66,7 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
    const memberStudio=await studioList(controller.signal);
    if(!live)return;
    setIdentity(profile.profile);setUploads(memberStudio.uploadsReady===true);
-   setCanReview(memberStudio.canReview===true);setPhase('ready');
+   setCanReview(memberStudio.canReview===true);setPublicationReady(health.studioPublicationReady===true);setPhase('ready');
   }).catch(e=>{if(live){setMessage(showError(e));setPhase('unavailable')}});
   return()=>{live=false;controller.abort();};
  },[id,session?.user?.emailVerified]);
@@ -100,11 +102,11 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
    {canReview&&<Link to="/studio/review" aria-current={mode==='review'?'page':undefined}>REVIEW DESK</Link>}
    <Link to="/discover">DISCOVER ↗</Link>
   </nav>
-  {mode==='list'?<StudioLibrary/>:mode==='review'?<StudioReview/>:<StudioEditor create={mode==='new'} uploadsReady={uploads}/>}
+  {mode==='list'?<StudioLibrary publicationReady={publicationReady}/>:mode==='review'?<StudioReview publicationReady={publicationReady}/>:<StudioEditor create={mode==='new'} uploadsReady={uploads} publicationReady={publicationReady}/>}
  </main>;
 }
 
-function StudioLibrary(){
+function StudioLibrary({publicationReady}:{publicationReady:boolean}){
  const [items,setItems]=useState<StudioProject[]>([]),[error,setError]=useState(''),[loading,setLoading]=useState(true);
  const [search,setSearch]=useState('');
  const [statusFilter,setStatusFilter]=useState<'all'|'draft'|'pending_review'|'changes_requested'|'rejected'>('all');
@@ -124,7 +126,7 @@ function StudioLibrary(){
    <div><span>TOTAL WORKS</span><strong>{loading?'—':items.length}</strong></div>
    <div><span>IN PROGRESS</span><strong>{loading?'—':drafts}</strong></div>
    <div><span>AWAITING REVIEW</span><strong>{loading?'—':pending}</strong></div>
-   <div><span>PUBLIC RELEASES</span><strong>NOT YET ACTIVE</strong></div>
+   <div><span>PUBLIC RELEASES</span><strong>{publicationReady?'EXTERNAL LINKS':'NOT YET ACTIVE'}</strong></div>
   </section>
   <section className="st-panel">
    <div className="st-section-head"><div><p className="st-kicker">01 / PERSONAL WORKSPACE</p><h2>PROJECT RECORDS</h2></div>
@@ -162,7 +164,7 @@ function StudioLibrary(){
  </>;
 }
 
-function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean}){
+function StudioEditor({create,uploadsReady,publicationReady}:{create:boolean;uploadsReady:boolean;publicationReady:boolean}){
  const {projectId}=useParams();
  const navigate=useNavigate();
  const id=create?null:projectId||null;
@@ -174,6 +176,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
  const [loading,setLoading]=useState(!create),[busy,setBusy]=useState(false);
  const [error,setError]=useState(''),[notice,setNotice]=useState('');
  const [mustReload,setMustReload]=useState(false);
+ const [publicationStatus,setPublicationStatus]=useState<string|null>(null);
  const createId=useRef(crypto.randomUUID());
  useEffect(()=>{
   if(create||!id)return;
@@ -219,7 +222,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
   }catch(e){setError(showError(e));setMustReload(true)}finally{setBusy(false);}
  }
  async function withdraw(){
-  if(!project||busy||project.status!=='pending_review')return;
+  if(!project||busy||project.status!=='pending_review'||publicationStatus)return;
   if(!window.confirm('Withdraw this project from staff review and return it to a private editable draft?'))return;
   setBusy(true);setError('');setNotice('');
   try{const result=await studioWithdraw(project.id,project.revision);setProject(result.project);
@@ -299,6 +302,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
      </div>)}
     </section>}
     {project&&<StudioReceipts projectId={project.id} revision={project.revision}/>}
+    {publicationReady&&project?.status==='pending_review'&&<StudioPublicationPanel project={project} onStatusChange={setPublicationStatus}/>}
     {project&&<StudioUploader project={project} uploadsReady={uploadsReady}
      onAssetsChanged={setAssetSummary} onProjectChanged={setProject}/>}
     <section className="st-panel">
@@ -313,7 +317,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
      <p className="st-muted">A submitted project enters a private queue. There is no automated publication, game execution, or XP reward.</p>
      {project&&<button className="st-button" disabled={!ready||dirty||locked||!editable(project)}
       onClick={()=>void submit()}>SUBMIT SAVED REVISION FOR REVIEW ↗</button>}
-     {project?.status==='pending_review'&&<button className="st-button" disabled={busy||mustReload}
+     {project?.status==='pending_review'&&!publicationStatus&&<button className="st-button" disabled={busy||mustReload}
       onClick={()=>void withdraw()}>WITHDRAW FROM REVIEW</button>}
      {project&&project.status!=='pending_review'&&<button className="st-link" disabled={busy||mustReload}
       onClick={()=>void deleteDraft()}>DELETE PRIVATE PROJECT</button>}
@@ -481,11 +485,12 @@ function StudioUploader({project,uploadsReady,onAssetsChanged,onProjectChanged}:
  </section>;
 }
 
-function StudioReview(){
+function StudioReview({publicationReady}:{publicationReady:boolean}){
  const [projects,setProjects]=useState<StudioReviewProject[]>([]),[error,setError]=useState(''),[loading,setLoading]=useState(true);
  const [reason,setReason]=useState<Record<string,string>>({}),[busy,setBusy]=useState('');
  const [manifests,setManifests]=useState<Record<string,StudioReviewManifest>>({});
  const [inspection,setInspection]=useState('');
+ const [attestations,setAttestations]=useState<Record<string,{rightsChecked:boolean;contentChecked:boolean;externalLinkChecked:boolean}>>({});
  async function refresh(){const r=await studioReviewQueue();setProjects(r.projects);}
  useEffect(()=>{const ac=new AbortController();studioReviewQueue(ac.signal).then(r=>setProjects(r.projects))
   .catch(e=>{if(!ac.signal.aborted)setError(showError(e))})
@@ -507,7 +512,7 @@ function StudioReview(){
  }
  return <section className="st-panel">
   <div className="st-section-head"><div><p className="st-kicker">STAFF-ONLY / CANONICAL REVIEW</p><h2>AWAITING A DECISION.</h2></div></div>
-  <p className="st-muted">This desk can request changes or reject a private submission. Publication and approval remain intentionally disabled until file scanning and the public release pipeline exist.</p>
+  <p className="st-muted">{publicationReady?'Staff may release creator-consented EXTERNAL metadata only, after independent rights and link review. Uploaded files remain quarantined and cannot run here.':'This desk can request changes or reject a private submission. Publication and approval remain intentionally disabled until file scanning and the public release pipeline exist.'}</p>
   {loading&&<p role="status">Checking staff permission and review queue…</p>}
   {error&&<p role="alert" className="st-error">{error}</p>}
   {!loading&&!error&&projects.length===0&&<p>No pending private project records.</p>}
