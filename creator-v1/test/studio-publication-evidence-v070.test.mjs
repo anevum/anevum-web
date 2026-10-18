@@ -296,3 +296,31 @@ test('Studio staff cannot bypass disabled publication gate or issue release evid
  })).ok,false);
  assert.equal(scalar(db,'SELECT COUNT(*) c FROM member_recognition_grants').c,0);
 });
+
+test('publication cannot list private IP or reserved-domain destinations',async t=>{
+ const db=database();t.after(()=>db.raw.close());
+ for(const [i,link] of [
+  [1,'https://192.168.1.1/private'],
+  [2,'https://127.0.0.1/work'],
+  [3,'https://localhost/internal'],
+  [4,'https://media.local/file'],
+  [5,'https://private.example/demo']
+ ]){
+  const p=project(db,i,{link});
+  const consented=await consent(db,p,now+i);
+  assert.equal(consented.status,409,'internal/non-public URL must not be approved: '+link);
+ }
+ assert.equal(scalar(db,'SELECT COUNT(*) c FROM member_studio_publication_consents').c,0);
+});
+test('public metadata permission mutations are rate limited independently of grant issuance',async t=>{
+ const db=database();t.after(()=>db.raw.close());
+ const p=project(db,1);
+ for(let i=0;i<30;i++){
+  const response=await consent(db,p,now+i);
+  assert.equal(response.status,200,'first 30 scoped permissions are allowed');
+ }
+ const blocked=await consent(db,p,now+31);
+ assert.equal(blocked.status,429,'31st consent mutation is throttled');
+ assert.equal(scalar(db,'SELECT requests FROM member_studio_rate_limits WHERE user_id=? AND action=?','owner','project').requests,30);
+ assert.equal(scalar(db,'SELECT COUNT(*) c FROM member_recognition_grants').c,0);
+});
