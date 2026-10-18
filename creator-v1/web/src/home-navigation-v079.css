@@ -152,6 +152,8 @@
 .av79-home .av79-button--soft:hover{border-color:#d7c2ec;background:#303452}
 .av79-hero-orbit{position:absolute;right:-2%;top:-34%;width:410px;height:410px;
   opacity:.65;transform:rotate(-18deg);pointer-events:none;z-index:0}
+@keyframes av79-orbit-turn{from{transform:rotate(-18deg)}to{transform:rotate(342deg)}}
+.av79-hero-orbit{animation:av79-orbit-turn 58s linear infinite}
 .av79-hero-orbit span{position:absolute;border:1px solid #d3b1e35a;border-radius:50%;
   inset:0;box-shadow:0 0 35px #e1b0e610,inset 0 0 24px #d2a0fa0b}
 .av79-hero-orbit span:nth-child(2){inset:61px;border-color:#c2c8fa82}
@@ -185,7 +187,7 @@
   border-right:1px solid #9f9ec155;background:
   radial-gradient(ellipse 60% 85% at 80% 50%,rgba(165,131,195,.23),transparent 92%),
   linear-gradient(140deg,#29314f,#131c32 75%,#101c32)}
-.av79-feature-art:hover .av79-feature-rings{transform:rotate(-12deg) scale(1.04)}
+.av79-feature-art:hover .av79-feature-rings{transform:translate(-36%,-50%) rotate(-12deg) scale(1.04)}
 .av79-feature-rings{position:absolute;top:50%;left:55%;width:250px;height:250px;z-index:-1;
   transform:translate(-36%,-50%) rotate(-18deg);
   transition:transform .7s cubic-bezier(.18,.64,.24,1)}
