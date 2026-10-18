@@ -103,6 +103,7 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled,
  const [kind,setKind]=useState<PackKind>(()=>category==='music'?'album':category==='video'?'series':
   category==='art'?'visual':category==='games'?'game':'project');
  const [nativeTitle,setNativeTitle]=useState<string|null>(null);
+ const [nativeVersion,setNativeVersion]=useState('0.1.0');
  const [creditedCreator,setCreditedCreator]=useState<string|null>(null);
  const [scenes,setScenes]=useState<Scene[]>(DEMO_SCENES);
  const [selected,setSelected]=useState('arrival');
@@ -149,7 +150,7 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled,
   if((media.length||cover)&&kind!==next&&!window.confirm('Switching formats discards your local media list and artwork unless exported. Continue?'))return;
   ownedUrls.current.forEach(url=>URL.revokeObjectURL(url));ownedUrls.current=[];
   setKind(next);setMedia([]);setCover(null);setOpened(null);setMessageText('');
-  setNativeTitle(null);setCreditedCreator(null);setExperienceKey(n=>n+1);
+  setNativeTitle(null);setNativeVersion('0.1.0');setCreditedCreator(null);setExperienceKey(n=>n+1);
  }
  function updateScene(change:Partial<Scene>){
   setScenes(previous=>previous.map(s=>s.id===selected?{...s,...change}:s));
@@ -256,7 +257,7 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled,
     assets[cover.path]=new Uint8Array(await cover.file.arrayBuffer());
    const pkg=await createNativePack({kind,title:(nativeTitle??title).trim()||'Untitled creation',
     creator:(creditedCreator??creator).trim()||'Creator',
-    version:'0.1.0',document:currentDocument(),assets});
+    version:nativeVersion,document:currentDocument(),assets});
    download(pkg.filename,pkg.bytes);
    setMessageText('Exported '+pkg.filename+' to your device. This did not save or publish a Studio revision.');
   }catch(error){setMessageText(message(error));}
@@ -296,7 +297,8 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled,
   setScenes(game.scenes.map(scene=>({...scene,choices:scene.choices.map(c=>({...c}))})));
   setStartScene(game.startScene);setSelected(game.startScene);
   setGameImages(images);setKind('game');setMedia([]);setCover(null);
-  setNativeTitle(opened.manifest.title);setCreditedCreator(opened.manifest.creator);
+  setNativeTitle(opened.manifest.title);setNativeVersion(opened.manifest.version);
+  setCreditedCreator(opened.manifest.creator);
   ownedUrls.current.forEach(url=>URL.revokeObjectURL(url));ownedUrls.current=[];
   setOpened(null);setMessageText('Loaded .anvg into the game editor. Export a new file to keep your changes.');
  }
@@ -327,7 +329,8 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled,
    }
    setKind(source.manifest.kind);
    setMedia(nextMedia);setCover(nextCover);
-   setNativeTitle(source.manifest.title);setCreditedCreator(source.manifest.creator);
+   setNativeTitle(source.manifest.title);setNativeVersion(source.manifest.version);
+   setCreditedCreator(source.manifest.creator);
    ownedUrls.current.forEach(url=>URL.revokeObjectURL(url));ownedUrls.current=[];
    setOpened(null);
    setMessageText('Opened the '+source.manifest.kind+' in the editor. Export again to retain edits; original credit was preserved.');
@@ -360,6 +363,10 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled,
      <label className="np-label">NATIVE FILE TITLE
       <input value={nativeTitle??title} onChange={e=>setNativeTitle(e.target.value)} maxLength={120}
        aria-label="Title stored in the exported ANEVUM file" placeholder="Untitled creation"/>
+     </label>
+     <label className="np-label">PACKAGE VERSION
+      <input value={nativeVersion} onChange={e=>setNativeVersion(e.target.value)}
+       maxLength={14} placeholder="0.1.0" aria-label="Package semantic version"/>
      </label>
      <p className="np-small">CREDITED CREATOR / {creditedCreator??creator} <span>(local metadata, not verified authorship)</span></p>
      {kind==='game'&&<div className="np-composer">
