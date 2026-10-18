@@ -52,7 +52,8 @@ export async function freezeStudioReview(db,selected,ownerId,now,kinds,external,
  if(!UUID.test(id)||!Number.isSafeInteger(next)||next<2)throw Error('Invalid snapshot');
  const proof=(kinds.length||nativeExtension)?(
   "EXISTS (SELECT 1 FROM member_studio_assets WHERE project_id=? AND user_id=? "+
-  "AND status='quarantined' AND sha256 IS NOT NULL AND (kind IN ("+kinds.map(()=>'?').join(',')+")"+
+  "AND status='quarantined' AND sha256 IS NOT NULL AND ((kind IN ("+kinds.map(()=>'?').join(',')+") "+
+  "AND extension NOT IN ('anvg','anva','anvs','anvw','anvp'))"+
   (nativeExtension?" OR (kind='package' AND extension=?)":'')+"))"
  ):'0=1';
  const proofArgs=[selected.id,ownerId,...kinds,...(nativeExtension?[nativeExtension]:[])];
