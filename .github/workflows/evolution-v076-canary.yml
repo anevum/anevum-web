@@ -1,0 +1,123 @@
+name: ANEVUM V076 Evolution Media Canary
+on:
+  push:
+    branches:
+      - fix/evolution-of-everything-media-v076
+    paths:
+      - .github/workflows/evolution-v076-canary.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: anevum-v076-evolution-canary
+  cancel-in-progress: false
+jobs:
+  canary:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CANARY: https://anevum-evolution-v076-canary.devonakins.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Protect account and branch boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = refs/heads/fix/evolution-of-everything-media-v076
+          test "$CLOUDFLARE_ACCOUNT_ID" = "2f7ee83107240152097efd956a4e8335"
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -f creator-v1/canonical-auth/evolution-media-canary-v076.mjs
+          test -f creator-v1/canonical-auth/reward-media.mjs
+          test -f creator-v1/wrangler.evolution-v076-canary.jsonc
+          node -e '
+           const c=require("./creator-v1/wrangler.evolution-v076-canary.jsonc");
+           if(c.name!=="anevum-evolution-v076-canary"||!c.workers_dev||
+            c.routes.length!==0||c.assets.run_worker_first!==true||
+            c.assets.not_found_handling!=="none"||
+            c.d1_databases.length!==1||c.d1_databases[0].binding!=="MEMBER_DB"||
+            c.d1_databases[0].database_id!=="e1d29049-c83b-4534-8355-dc1fa36ba6d8"||
+            c.vars||c.triggers||c.kv_namespaces)throw Error("Unsafe V076 canary scope")
+          '
+      - name: Regenerate all 30 original Evolution of Everything models
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install numpy==2.2.6 scipy==1.15.3 Pillow==11.2.1
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libgl1-mesa-dri
+          cd design/evolution-v059
+          mkdir -p artwork/{native,textures,vector,masters,web,compact} docs dist previews
+          python src/export_native.py
+          python src/render_web.py
+          python src/build.py
+          cd ../..
+          python creator-v1/ops/install-evolution-v060.py
+          test "$(find creator-v1/web/public/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+          test -s creator-v1/web/public/evolution/assets/level-04-scene.gz
+          test -s creator-v1/web/public/evolution/assets/level-04-1024.webp
+      - name: Typecheck, build, and run security regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          node --test creator-v1/test/earned-reward-media-v075.test.mjs creator-v1/test/level-artwork-preservation-v074.test.mjs creator-v1/test/evolution-v060-contract.test.mjs creator-v1/test/protected-email-approval-v075.test.mjs
+          test "$(find creator-v1/dist/web/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+          test -s creator-v1/dist/web/evolution/assets/level-04-scene.gz
+          test -s creator-v1/dist/web/evolution/assets/level-04-256.webp
+          test -s creator-v1/dist/web/evolution/mini-runtime.json
+      - name: Deploy isolated public-earned-media canary only
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd creator-v1
+          npx wrangler deploy --config wrangler.evolution-v076-canary.jsonc
+      - name: Verify original Level 4 media and no unauthorized asset leakage
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/evolution-v076"
+          curl -fsS --retry 4 --retry-delay 3 --max-time 25 -D "$RUNNER_TEMP/evolution-v076/icon.headers" -o "$RUNNER_TEMP/evolution-v076/icon.png" "$CANARY/api/v1/members/devon/rewards/levels/4/icon"
+          grep -qi '^content-type: image/png' "$RUNNER_TEMP/evolution-v076/icon.headers"
+          test "$(wc -c < "$RUNNER_TEMP/evolution-v076/icon.png")" -gt 1000
+          curl -fsS --max-time 25 -D "$RUNNER_TEMP/evolution-v076/preview.headers" -o "$RUNNER_TEMP/evolution-v076/preview.webp" "$CANARY/api/v1/members/devon/rewards/levels/4/preview"
+          grep -qi '^content-type: image/webp' "$RUNNER_TEMP/evolution-v076/preview.headers"
+          test "$(wc -c < "$RUNNER_TEMP/evolution-v076/preview.webp")" -gt 1000
+          curl -fsS --max-time 25 -D "$RUNNER_TEMP/evolution-v076/poster.headers" -o "$RUNNER_TEMP/evolution-v076/poster.webp" "$CANARY/api/v1/members/devon/rewards/levels/4/poster"
+          grep -qi '^content-type: image/webp' "$RUNNER_TEMP/evolution-v076/poster.headers"
+          test "$(wc -c < "$RUNNER_TEMP/evolution-v076/poster.webp")" -gt 1000
+          curl -fsS --max-time 25 -D "$RUNNER_TEMP/evolution-v076/scene.headers" -o "$RUNNER_TEMP/evolution-v076/scene.gz" "$CANARY/api/v1/members/devon/rewards/levels/4/scene"
+          grep -qi '^content-type: application/gzip' "$RUNNER_TEMP/evolution-v076/scene.headers"
+          python -c 'import gzip,json,sys;data=json.loads(gzip.open(sys.argv[1],"rb").read());assert data["level"]==4 and len(data["parts"])>0' "$RUNNER_TEMP/evolution-v076/scene.gz"
+          curl -fsS --max-time 25 -o "$RUNNER_TEMP/evolution-v076/runtime.json" "$CANARY/api/v1/members/devon/rewards/levels/4/runtime"
+          jq -e '.version=="anevum.mini-native.v062" and (.accents|length)==1 and (.height|endswith("/4/height")) and (.albedo|endswith("/4/albedo"))' "$RUNNER_TEMP/evolution-v076/runtime.json"
+          for kind in height albedo; do
+            curl -fsS --max-time 25 -o "$RUNNER_TEMP/evolution-v076/$kind.bin" "$CANARY/api/v1/members/devon/rewards/levels/4/$kind"
+            test "$(wc -c < "$RUNNER_TEMP/evolution-v076/$kind.bin")" -gt 1000
+          done
+          for path in /evolution/ /evolution/assets/level-04-1024.webp /api/v1/member/rewards/levels/4/icon /api/v1/members/devon/rewards/levels/1/poster; do
+            status="$(curl -sS --max-time 20 -o /dev/null -w '%{http_code}' "$CANARY$path")"
+            test "$status" = 404 || { echo "::error::Unexpected access $path HTTP $status"; exit 1; }
+          done
+          echo 'V076 ORIGINAL_LEVEL_04_ASSET_CANARY=PASS' >> "$GITHUB_STEP_SUMMARY"
+          echo 'V076 EARNED_PRIVACY_AND_PUBLIC_ARCHIVE_DENIAL=PASS' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v076-canary-asset-and-verification-log
+          path: |
+            design/evolution-v059/docs/ARTWORK-MANIFEST.json
+            creator-v1/shared/level-artifacts.json
+          retention-days: 14
