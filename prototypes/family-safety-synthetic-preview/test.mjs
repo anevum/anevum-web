@@ -13,6 +13,7 @@ const site=source("./public/index.html");
 const app=source("./public/app.mjs");
 const engine=source("./public/synthetic-engine.mjs");
 const css=source("./public/styles.css");
+const scene=source("./public/synthetic-scene.mjs");
 const workerSource=source("./worker.mjs");
 const AUD="staged-synthetic-preview-audience-do-not-use-in-production";
 const origin="https://anevum-family-field-synthetic-review-20261018.devonakins.workers.dev";
@@ -105,7 +106,7 @@ test("pausing and hiding the page cannot silently advance synthetic simulated po
 });
 
 test("browser assets cannot request GPS, use personal data or post to family backend",()=>{
-  for(const [name,text] of [["index",site],["app",app],["engine",engine],["styles",css]]){
+  for(const [name,text] of [["index",site],["app",app],["engine",engine],["scene",scene],["styles",css]]){
     assert.doesNotMatch(text,/\bnavigator\.geolocation\b|\bwatchPosition\s*\(|\bgetCurrentPosition\s*\(/i,name);
     assert.doesNotMatch(text,/\bfetch\s*\(|\bXMLHttpRequest\b|\bWebSocket\b|\bnavigator\.sendBeacon\b/i,name);
     assert.doesNotMatch(text,/\blocalStorage\b|\bsessionStorage\b|\bindexedDB\b|\bdocument\.cookie\b/i,name);
@@ -114,7 +115,9 @@ test("browser assets cannot request GPS, use personal data or post to family bac
   assert.doesNotMatch(site,/<form\b/i);
   assert.match(site,/referrer" content="no-referrer/);
   assert.match(site,/robots" content="noindex,nofollow,noarchive/);
-  assert.match(app,/https:\/\/tiles\.openfreemap\.org/);
+  assert.match(app,/style:SYNTHETIC_STYLE/);
+  assert.match(scene,/createIllustrativeNeighborhood/);
+  assert.doesNotMatch(scene,/navigator\.geolocation|fetch\s*\(/);
 });
 
 test("Cloudflare Access identity and exact audience are always required for every asset",async()=>{
@@ -123,7 +126,7 @@ test("Cloudflare Access identity and exact audience are always required for ever
   assert.equal(await authorized({aud:AUD,getIdentity:async()=>({email:""})},AUD),false);
   assert.equal(await authorized({aud:AUD,getIdentity:async()=>{throw Error("login expired")}},AUD),false);
   assert.equal(await authorized(access(),AUD),true);
-  for(const path of ["/","/index.html","/app.mjs","/styles.css","/__review"]){
+  for(const path of ["/","/index.html","/app.mjs","/styles.css","/synthetic-scene.mjs","/__review"]){
     for(const options of [{reviewAccess:null},{envAud:""},{reviewAccess:{...access(),aud:"different"}}]){
       let called=false;
       const res=await fixture({path,...options,assets:async()=>{called=true;return new Response("secret")}});
@@ -136,7 +139,7 @@ test("Cloudflare Access identity and exact audience are always required for ever
 });
 
 test("authorized preview serves only approved read-only static assets with restrictive headers",async()=>{
-  for(const path of ["/","/index.html","/styles.css","/app.mjs","/synthetic-engine.mjs"]){
+  for(const path of ["/","/index.html","/styles.css","/app.mjs","/synthetic-engine.mjs","/synthetic-scene.mjs","/vendor/maplibre-gl-worker.mjs?v=6.14.0"]){
     const res=await fixture({path});
     assert.equal(res.status,200,path);
     assert.match(res.headers.get("Cache-Control"),/no-store/);
@@ -170,6 +173,7 @@ test("no POST, GPS API, accidental static leak, route bypass, or query-based dis
     {method:"GET",path:"/v1/circles/family-1/presence/alice",expected:404},
     {method:"GET",path:"/private",expected:404},
     {method:"GET",path:"/index.html?debug=true",expected:404},
+    {method:"GET",path:"/vendor/maplibre-gl-worker.mjs?other=1",expected:404},
     {method:"GET",path:"/worker.mjs",expected:404},
     {method:"GET",path:"/.env",expected:404}
   ]){
