@@ -282,6 +282,8 @@ export function createPorchlightHandler({resolveActor, authorizeWriteQuota, now 
             public_label='Withdrawn household', public_block='Withheld', display_mode='block', tags_json='[]',
             review_reason=NULL, review_method=NULL
             WHERE id=? AND host_principal_id=? AND status != 'withdrawn'`, [mutation, at, id, actor]],
+          ...(env.PORCHLIGHT_REPORTS_ENABLED === 'true' ?
+            [['DELETE FROM porchlight_reports WHERE submission_id=?', [id]]] : []),
           auditInsert({id:createId(), eventId:row.event_id, actor, targetKind:'submission', targetId:id,
             action:'host_withdraw', from:row.status, to:'withdrawn', reason:'Host revoked participation consent', at, mutation}),
         ]);
@@ -349,6 +351,8 @@ export function createPorchlightHandler({resolveActor, authorizeWriteQuota, now 
             WHERE id=? AND status=? AND revision=?
               AND EXISTS (SELECT 1 FROM porchlight_organizer_grants g WHERE g.event_id=porchlight_host_submissions.event_id AND g.principal_id=? AND g.revoked_at IS NULL)${eventGuard}`,
             [to, actor, at, method, reason, mutation, at, ...Array(8).fill(to), id, from, payload.expectedRevision, actor, ...(action === 'approve' ? [at] : [])]],
+          ...(env.PORCHLIGHT_REPORTS_ENABLED === 'true' && action !== 'approve' ?
+            [['DELETE FROM porchlight_reports WHERE submission_id=?', [id]]] : []),
           auditInsert({id:createId(), eventId:row.event_id, actor, targetKind:'submission', targetId:id,
             action:`organizer_${action}`, from, to, reason, at, mutation}),
         ]);
