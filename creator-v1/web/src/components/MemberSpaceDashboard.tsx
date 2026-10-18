@@ -29,25 +29,50 @@ export function MemberSpaceDashboard({profile,editor,newMember=false,onSetupComp
  async function refresh(){const [next,wall]=await Promise.all([canonicalSpace(),canonicalWall()]);setSpace(next);setFeatured(next.featuredAwards);setShowStats(next.showStats);setPosts(wall.posts)}
  useEffect(()=>{document.getElementById("ms-title")?.focus({preventScroll:true})},[]);
  useEffect(()=>{let active=true;setLoading(true);Promise.all([canonicalSpace(),canonicalWall()]).then(([next,wall])=>{if(active){setSpace(next);setFeatured(next.featuredAwards);setShowStats(next.showStats);setPosts(wall.posts)}}).catch(e=>{if(active)setError(e instanceof Error?e.message:'Your space could not be loaded.')}).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[profile.handle,profile.revision]);
- const complete=[true,Boolean(space?.media.avatar&&space?.media.banner),Boolean(profile.bio),posts.length>0];
+ 
  async function saveDisplay(){if(!space||busy)return;setBusy(true);setError('');setNotice('');try{const next=await spaceRequest<MemberSpace>('/api/v1/member/space','PATCH',{featuredAwards:recognitionAvailable?featured.filter(id=>space.awards.some(a=>a.id===id&&a.earnedAt)):featured,showStats,revision:space.revision});setSpace(next);setNotice(recognitionAvailable?'Stats visibility saved.':'Your award display and stats visibility were saved.')}catch(e){setError(e instanceof Error?e.message:'Could not save display.')}finally{setBusy(false)}}
  const avatar=space?.media.avatar?'/api/v1/member/media/avatar':undefined;
  const banner=space?.media.banner?'/api/v1/member/media/banner':undefined;
  return <section className={'ms-dashboard av18-world-'+profile.worldTheme} aria-labelledby="ms-title">
-  <header className={'ms-cover'+(space?.supporterAppearance?' av34-aura av34-aura-'+space.supporterAppearance.aura:'')}>{banner&&<img className="ms-cover-art" src={banner} key={space?.media.banner} alt="Your wall banner"/>}<div className="ms-cover-shade"/>
+  <header data-iren-anchor="identity" className={'ms-cover'+(space?.supporterAppearance?' av34-aura av34-aura-'+space.supporterAppearance.aura:'')}>{banner&&<img className="ms-cover-art" src={banner} key={space?.media.banner} alt="Your wall banner"/>}<div className="ms-cover-shade"/>
    <div className="ms-cover-meta"><span className="kicker">ANEVUM / PERSONAL CONTINUANCE</span><span className="ms-visibility">{profile.visibility==='public'?'PUBLIC WORLD':'PRIVATE WORLD'}</span></div>
    <button className="ms-cover-edit" onClick={()=>setTab('appearance')}>EDIT BANNER ↗</button>
    <div className="ms-identity"><button className="ms-avatar-button" onClick={()=>setTab('appearance')} aria-label="Change profile picture"><MemberPortrait src={avatar} key={space?.media.avatar} name={profile.displayName} supporterFrame={space?.supporterAppearance?.frame}/><span>EDIT</span></button><div><p className="ms-handle">@{profile.handle}</p>{space?.supporterAppearance&&<SupporterIdentity appearance={space.supporterAppearance} compact/>}<h1 id="ms-title" tabIndex={-1}>{profile.displayName}</h1><p>{profile.headline||'Your place in the continuance.'}</p></div></div>
   </header>
-  <div className="ms-toolbar"><nav aria-label="My space sections">{([['overview','Dashboard'],['wall','My wall'],['profile','Edit profile'],['appearance','Appearance'],['awards','Awards & stats']] as [Tab,string][]).map(([key,label])=><button key={key} aria-current={tab===key?'page':undefined} onClick={()=>{setTab(key);setNotice('')}}>{label}</button>)}</nav><div className="ms-toolbar-links"><Link to="/thebutton">XP TEST ↗</Link><Link to="/community">COMMUNITY ↗</Link> <Link to="/studio">CREATOR STUDIO ↗</Link> <Link to="/support">SUPPORT ANEVUM ↗</Link> {profile.visibility==='public'?<Link to={'/@'+profile.handle}>VIEW PUBLIC WALL ↗</Link>:<button onClick={()=>setTab('profile')}>VISIBILITY SETTINGS</button>}</div></div>
+  <div className="ms-toolbar"><nav aria-label="My space sections">{([['overview','Dashboard'],['wall','My wall'],['profile','Edit profile'],['appearance','Appearance'],['awards','Awards & stats']] as [Tab,string][]).map(([key,label])=><button key={key} aria-current={tab===key?'page':undefined} onClick={()=>{setTab(key);setNotice('')}}>{label}</button>)}</nav><div className="ms-toolbar-links"><Link to="/thebutton">XP TEST ↗</Link><Link to="/community">COMMUNITY ↗</Link> <Link data-iren-anchor="studio" to="/studio">CREATOR STUDIO ↗</Link> <Link to="/support">SUPPORT ANEVUM ↗</Link> {profile.visibility==='public'?<Link to={'/@'+profile.handle}>VIEW PUBLIC WALL ↗</Link>:<button onClick={()=>setTab('profile')}>VISIBILITY SETTINGS</button>}</div></div>
   {newMember&&<section className="ms-welcome" aria-label="Finish setting up your space"><div><span className="kicker">IDENTITY SAVED / MAKE YOURSELF AT HOME</span><h2>Welcome to your own corner of ANEVUM.</h2><p>Add a portrait and a banner, then look around. You can change these anytime.</p></div><div className="ms-actions"><button className="ms-primary" onClick={()=>{onSetupComplete();setTab('wall')}}>CONTINUE TO MY WALL →</button><button onClick={()=>{onSetupComplete();setTab('overview')}}>SKIP FOR NOW</button></div></section>}
   <div className="ms-body">
    {loading&&<p role="status">Opening your space…</p>}
    {error&&<div className="ms-error" role="alert"><p>{error}</p><button onClick={()=>{setError('');void refresh().catch(e=>setError(e.message))}}>TRY AGAIN</button> <Link to="/join">SIGN IN AGAIN</Link></div>}
    {notice&&<p role="status" className="ms-notice">{notice}</p>}
-   {tab==='overview'&&<div className="ms-overview-grid"><div><section className="ms-card"><div className="ms-section-head"><div><span className="kicker">YOUR NEXT CHAPTER</span><h2>Make this space yours.</h2></div><span>{complete.filter(Boolean).length}/4</span></div><ol className="ms-checklist">{[['Your identity','Your unique handle is saved.','profile'],['Picture & banner','Give your wall its own atmosphere.','appearance'],['Introduce yourself','A few words about you and what you make.','profile'],['Send your first signal','Write an entry on your wall.','wall']].map(([label,detail,key],i)=><li key={label}><span aria-label={complete[i]?'Complete':'Optional'}>{complete[i]?'✓':String(i+1).padStart(2,'0')}</span><div><strong>{label}</strong><p>{detail}</p></div><button onClick={()=>setTab(key as Tab)}>{complete[i]?'EDIT':'START'} ↗</button></li>)}</ol></section>
-    <section className="ms-card ms-network"><span className="kicker">BEYOND YOUR WALL</span><h2>Find your next world.</h2><p>Discover what the community is creating and find a conversation worth joining.</p><div className="ms-actions"><Link to="/discover">EXPLORE CREATIONS ↗</Link><Link to="/community">OPEN COMMUNITY ↗</Link></div></section></div>
-    <aside>{space&&<SpaceProgress space={space}/>}<section className="ms-card"><span className="kicker">YOUR PUBLIC PRESENCE</span><h3>{profile.visibility==='public'?'Your wall is open.':'A private beginning.'}</h3><p>{profile.visibility==='public'?'Your profile, selected awards, images and wall entries are visible to visitors.':'Only you can see your wall, pictures and profile. Publish it whenever you are ready.'}</p><button onClick={()=>setTab('profile')}>EDIT PROFILE & VISIBILITY ↗</button></section></aside></div>}
+   {tab==='overview'&&<div className="ir80-member-overview">
+    <div className="ir80-member-main">
+      <section className="ir80-member-intro">
+        <span className="kicker">YOUR SPACE / YOUR CONTINUANCE</span>
+        <h2>What will you make of it?</h2>
+        <p>Your wall, player identity, work and earned recognition belong together. Start somewhere useful, or ask IREN to show you around.</p>
+        <div className="ir80-member-actions">
+          <button type="button" className="ms-primary" onClick={()=>window.dispatchEvent(new Event("anevum:iren-tour"))}>TAKE THE GUIDED TOUR ↗</button>
+          <button type="button" onClick={()=>window.dispatchEvent(new Event("anevum:iren-open"))}>ASK IREN ↗</button>
+        </div>
+      </section>
+      <section className="ir80-action-grid" aria-label="Your next actions">
+        <button type="button" onClick={()=>setTab("wall")}><span>01 / YOUR WALL</span><strong>Share a signal.</strong><small>${posts.length} ${posts.length===1?"entry":"entries" saved · Open your wall</small></button>
+        <Link to="/discover"><span>02 / DISCOVER</span><strong>Find something new.</strong><small>Browse genuine games, apps and creative work</small></Link>
+        <Link to="/community"><span>03 / COMMUNITY</span><strong>Meet the makers.</strong><small>Explore approved discussions and people</small></Link>
+        <button type="button" onClick={()=>setTab("appearance")}><span>04 / PERSONALIZE</span><strong>Shape your presence.</strong><small>Portrait, banner and profile atmosphere</small></button>
+      </section>
+    </div>
+    <aside className="ir80-member-aside">
+      <div data-iren-anchor="progress">{space&&<SpaceProgress space={space}/>}</div>
+      <section data-iren-anchor="privacy" className="ms-card ir80-privacy-card">
+        <span className="kicker">YOUR VISIBILITY</span>
+        <h3>{profile.visibility==='public'?'Public by choice.':'Private by default.'}</h3>
+        <p>{profile.visibility==='public'?'Your public wall is available to visitors. You control the details and stats that appear.':'Only you can see your personal wall until you choose to publish it.'}</p>
+        <button type="button" onClick={()=>setTab("profile")}>REVIEW VISIBILITY ↗</button>
+      </section>
+    </aside>
+   </div>}
    {tab==='profile'&&<div className="ms-profile-editor">{editor}</div>}
    {tab==='appearance'&&<><div className="ms-section-head"><div><span className="kicker">PROFILE STUDIO</span><h2>Frame your world.</h2><p>Crop, preview and save each image. Your wall updates after saving.</p></div><button onClick={()=>setTab('profile')}>CHANGE ATMOSPHERE ↗</button></div><div className="ms-appearance-grid"><ProfileImageEditor slot="avatar" version={space?.media.avatar} onSaved={refresh}/><ProfileImageEditor slot="banner" version={space?.media.banner} onSaved={refresh}/></div><p className="av34-support-note">Supporter frames and banner atmospheres are managed in the <Link to="/support">Supporter Studio ↗</Link>. Your original uploaded images stay yours, and your earned awards remain separate.</p></>}
    {tab==='wall'&&<MemberWall posts={posts} owner onChanged={refresh} identity={{handle:profile.handle,displayName:profile.displayName,avatar:Boolean(space?.media.avatar),level:space?.stats?.level??null,featuredAwards:space?.featuredAwards??[],earnedBadges:space?.earnedBadges,badgeDisplay:space?.badgeDisplay,distinctions:space?.distinctions,aura:space?.aura,constellation:space?.constellation,supporterAppearance:space?.supporterAppearance}}/>}
