@@ -67,6 +67,19 @@ CREATE INDEX IF NOT EXISTS idx_studio_publications_visible
 CREATE INDEX IF NOT EXISTS idx_studio_publications_author
  ON member_studio_publications(user_id,status,published_at DESC);
 
+-- Claim a normalized external work URL once per owner, so changing
+-- a project slug or adding tracking parameters cannot farm publication badges.
+-- Stored internal normalization keys are NEVER projected to public callers.
+CREATE TABLE IF NOT EXISTS member_studio_publication_links(
+ user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+ canonical_link TEXT NOT NULL CHECK(length(canonical_link) BETWEEN 8 AND 1500),
+ project_id TEXT NOT NULL UNIQUE
+  REFERENCES member_studio_projects(id) ON DELETE CASCADE,
+ PRIMARY KEY(user_id,canonical_link)
+);
+CREATE INDEX IF NOT EXISTS idx_studio_publication_links_project
+ ON member_studio_publication_links(project_id);
+
 -- Deliberately NO trigger granting XP or marks for a submission, quarantine
 -- upload, staff role or review click. Grants require one verified published
 -- ledger row, author consent and an independent audit, all in the same batch.
