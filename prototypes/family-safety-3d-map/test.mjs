@@ -119,6 +119,23 @@ test('denial fails closed without leaving a live watch', () => {
   assert.equal(node('location-status').textContent,'Location unavailable');
 });
 
+test('fictional circle markers preview identity without live member feeds', () => {
+  const { click, node, markerInstances } = harness();
+  assert.match(html,/id="sample-family-members" hidden/);
+  assert.equal(markerInstances.length,0);
+  click('preview-family');
+  assert.equal(markerInstances.length,2);
+  assert.equal(node('family-count').textContent,'FICTIONAL SAMPLE · 2');
+  assert.equal(node('sample-family-members').hidden,false);
+  click('community-tab');
+  assert.equal(markerInstances.every(pin => pin.getElement().style.display === 'none'),true);
+  click('family-tab');
+  assert.equal(markerInstances.every(pin => pin.getElement().style.display === ''),true);
+  click('preview-family');
+  assert.equal(node('sample-family-members').hidden,true);
+  assert.equal(node('family-count').textContent,'NO MEMBERS CONNECTED');
+});
+
 test('community pins are clearly fictional and not shown by default', () => {
   const { click, node, markerInstances } = harness();
   assert.match(html,/id="community-content"[^>]* hidden/);
