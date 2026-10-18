@@ -158,11 +158,11 @@ export function Shell(){
         <div className="av79-navigation-lower">
           <section aria-label="Browse by interest"><span className="av79-lower-label">EXPLORE BY INTEREST</span>
             <div className="av79-category-links">{menuCategories.map(item=>
-              <Link to={item.to==="/library"&&canonicalMember?"/saved":item.to} key={item.to} onClick={()=>setMenuOpen(false)}>{item.label}</Link>)}</div>
+              <Link to={item.to} key={item.to} onClick={()=>setMenuOpen(false)}>{item.label}</Link>)}</div>
           </section>
           <section aria-label="More destinations"><span className="av79-lower-label">ALSO IN ANEVUM</span>
             <div className="av79-utility-links">{menuUtilities.map(item=>
-              <Link to={item.to} key={item.to} onClick={()=>setMenuOpen(false)}>{item.label}</Link>)}</div>
+              <Link to={item.to==="/library"&&canonicalMember?"/saved":item.to} key={item.to} onClick={()=>setMenuOpen(false)}>{item.label}</Link>)}</div>
           </section>
         </div>
         <footer className="av79-navigation-foot"><span aria-hidden="true" className="av79-footer-star"/> THE CONTINUANCE INSTITUTE <span>EXPLORE / MAKE / BELONG</span></footer>
