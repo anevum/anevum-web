@@ -189,10 +189,15 @@ async function upload(req,env,u) {
     statements.push(env.DB.prepare(
       "INSERT INTO anevum_package_releases(id,project_id,version,status,source_name,proposed_title,proposed_summary,proposed_category," +
       "archive_sha256,archive_bytes,expanded_bytes,file_count,source_key,created_at) " +
-      "VALUES(?,?,?,'ready',?,?,?,?,?,?,?,?,?,?)"
-    ).bind(releaseId,id,version,file.name,details.title,details.summary,details.category,
-      archiveSHA,plan.bytes.byteLength,plan.expandedBytes,plan.entries.length,sourceKey,now));
-    await env.DB.batch([...statements,...fileStatements]);
+      "SELECT ?,p.id,?,'ready',?,?,?,?,?,?,?,?,?,? FROM anevum_package_projects p " +
+      "WHERE p.id=? AND p.owner_id=? AND p.draft_release_id=?"
+    ).bind(releaseId,version,file.name,details.title,details.summary,details.category,
+      archiveSHA,plan.bytes.byteLength,plan.expandedBytes,plan.entries.length,sourceKey,now,id,u.id,releaseId));
+    // Atomic D1 batch: a lost optimistic-update race inserts no release.
+    // Dependent asset inserts then fail foreign-key validation and roll back.
+    const results=await env.DB.batch([...statements,...fileStatements]);
+    if(results[0]?.meta?.changes!==1 || results[1]?.meta?.changes!==1)
+      throw new PackageError("Another upload updated this project. Refresh and try again",409);
     return json({id,release_id:releaseId,version,status:"ready",play_url:"/play/v3/"+id+"?preview=1"},201);
   } catch(e) {
     await env.MEDIA.delete(touched).catch(()=>{});
