@@ -16,7 +16,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: family-field-synthetic-review
+  group: family-field-synthetic-review-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
