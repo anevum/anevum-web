@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#06101f">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="no-referrer">
+  <meta name="description" content="ANEVUM Family Field fictional-only 3D navigation review. No GPS, family accounts, saved locations, or real-world safety data.">
+  <title>ANEVUM // Family Field — Synthetic 3D Review</title>
+  <link rel="stylesheet" href="./vendor/maplibre-gl.css">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main id="map" role="region" aria-label="Interactive 3D map with fictional locations; tilt, pan, rotate and zoom controls"></main>
+  <div class="overlay-shade" aria-hidden="true"></div>
+  <header class="topbar">
+    <div class="brand" aria-label="ANEVUM Family Field synthetic review">
+      <span class="mark" aria-hidden="true"></span>
+      <div>
+        <div class="brand-name">ANEVUM</div>
+        <div class="brand-sub">Continuance / Family Field</div>
+      </div>
+    </div>
+    <div class="top-right">
+      <div class="top-readout" aria-label="Development preview">FIELD SYSTEM / 003</div>
+      <div class="demo-stamp">SYNTHETIC REVIEW · NO LIVE DATA</div>
+    </div>
+  </header>
+  <aside class="panel" aria-label="Family Field map and scenario controls">
+    <div class="panel-content">
+      <div class="kicker">CIRCLE NETWORK / SPATIAL PREVIEW</div>
+      <h1>See your world.<br><em>Keep your circle.</em></h1>
+      <p class="deck">Explore a dimensional neighborhood with a fully fictional 3D neighborhood, a family circle, sample waypoints and a completely simulated position-sharing session.</p>
+
+      <div class="tabs" role="tablist" aria-label="Map layers">
+        <button id="tab-circle" class="tab" role="tab" aria-selected="true" aria-controls="circle-pane">Family circle</button>
+        <button id="tab-neighborhood" class="tab" role="tab" aria-selected="false" aria-controls="neighborhood-pane">Neighborhood</button>
+      </div>
+      <section id="circle-pane" role="tabpanel" aria-labelledby="tab-circle">
+        <div class="metrics">
+          <div class="metric">
+            <span class="metric-label">Scenario clock</span>
+            <strong id="sim-clock">00:00</strong>
+            <small id="sim-phase">Idle / nothing shared</small>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Visible examples</span>
+            <strong id="sim-visible">0 / 2</strong>
+            <small id="sim-expiry">No sharing sessions</small>
+          </div>
+        </div>
+        <div class="section-head">
+          <h2>Private circle</h2>
+          <span>Fictional devices only</span>
+        </div>
+        <div id="devices">
+          <button id="focus-a" class="device" type="button" data-state="unavailable" aria-label="Focus sample device A" disabled>
+            <span class="device-avatar">A</span>
+            <span class="device-main"><span class="device-name">Sample Device A</span><span class="device-desc" id="device-a-desc">Not sharing · example only</span></span>
+            <span id="device-a-state" class="signal" data-state="unavailable">Offline</span>
+          </button>
+          <button id="focus-b" class="device" type="button" data-state="unavailable" aria-label="Focus sample device B" disabled>
+            <span class="device-avatar">B</span>
+            <span class="device-main"><span class="device-name">Sample Device B</span><span class="device-desc" id="device-b-desc">Not sharing · example only</span></span>
+            <span id="device-b-state" class="signal" data-state="unavailable">Offline</span>
+          </button>
+        </div>
+        <div class="section-head"><h2>Simulation</h2><span>Deterministic · on this page</span></div>
+        <div class="actions">
+          <button id="sim-start" type="button" class="btn primary wide">Begin fictional family scenario</button>
+          <button id="sim-pause" type="button" class="btn" disabled>Pause</button>
+          <button id="sim-signal" type="button" class="btn" aria-pressed="false" disabled>Simulate B signal loss</button>
+          <button id="sim-revoke-a" type="button" class="btn warning" disabled>Revoke sample A</button>
+          <button id="sim-revoke-b" type="button" class="btn warning" disabled>Revoke sample B</button>
+          <button id="sim-fit" type="button" class="btn wide" disabled>Frame approved sample markers</button>
+          <button id="sim-reset" type="button" class="btn wide">Reset scenario</button>
+        </div>
+        <div class="readout" id="scenario-note" role="status" aria-live="polite">No position or account data is loaded. Select <strong>Begin fictional family scenario</strong> to animate two invented device paths.</div>
+      </section>
+
+      <section id="neighborhood-pane" role="tabpanel" aria-labelledby="tab-neighborhood" hidden>
+        <div class="section-head"><h2>Neighborhood illustration</h2><span>Unverified sample overlays</span></div>
+        <p class="deck">Two invented local map markers and one drawn sample route illustrate the future community layer. They are not participating homes, reported hazards, verified crossings, or recommended paths.</p>
+        <div class="divider"></div>
+        <div class="layerline"><label for="places-toggle">Fictional community waypoints</label><input type="checkbox" id="places-toggle" checked></div>
+        <div class="layerline"><label for="route-toggle">Illustrative route line</label><input type="checkbox" id="route-toggle" checked></div>
+        <div class="readout"><strong>Neighborhood privacy rule:</strong> public events and voluntarily listed venues are separate from private people. A community layer will never display exact child or family locations.</div>
+      </section>
+
+      <div class="divider"></div>
+      <div class="section-head"><h2>Map depth</h2><span>3D vector / elevation</span></div>
+      <div class="layerline"><label for="buildings-toggle">Fictional 3D building volumes</label><input type="checkbox" id="buildings-toggle" checked></div>
+      <div class="layerline"><label for="terrain-toggle">Elevation relief (optional)</label><input type="checkbox" id="terrain-toggle"></div>
+      <div class="readout">Pan, pitch, rotate, pinch and zoom. Buildings and roads are invented 3D geometry, not real parcel data or navigable directions.</div>
+    </div>
+    <footer class="private-note">
+      <div class="private-glyph" aria-hidden="true">◇</div>
+      <div>
+        <strong>No personal tracking</strong>
+        <p>All device paths, labels and places are invented. The page never requests GPS or saves personal positions. External font and optional elevation providers receive network requests. No GPS is collected or sent to ANEVUM.</p>
+      </div>
+    </footer>
+  </aside>
+  <div class="map-controls" aria-label="3D map navigation controls">
+    <button type="button" id="map-in" aria-label="Zoom in" title="Zoom in">+</button>
+    <button type="button" id="map-out" aria-label="Zoom out" title="Zoom out">−</button>
+    <button type="button" id="map-tilt" class="small" aria-pressed="true" aria-label="Toggle 3D camera perspective" title="Toggle 3D perspective">3D</button>
+    <button type="button" id="map-home" class="small" aria-label="Return to sample neighborhood view" title="Reset viewpoint">HOME</button>
+  </div>
+  <div class="route-note">FICTIONAL ROUTES · NOT SAFETY-VERIFIED</div>
+  <div id="map-error" role="alert" hidden>3D map tiles or WebGL are unavailable in this browser. The fictional simulation controls remain usable.</div>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>

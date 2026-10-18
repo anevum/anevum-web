@@ -1,0 +1,19 @@
+{
+  "name": "anevum-family-field-synthetic-review",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Fictional-only map preview. No live location tracking.",
+  "scripts": {
+    "stage:vendor": "node stage-vendor.mjs",
+    "test": "node --test test.mjs"
+  },
+  "devDependencies": {
+    "maplibre-gl": "6.14.0",
+    "playwright-core": "1.55.1",
+    "wrangler": "4.135.0"
+  },
+  "dependencies": {
+    "jose": "6.1.0"
+  }
+}

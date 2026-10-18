@@ -1,0 +1,188 @@
+name: ANEVUM Family Field Synthetic 3D Preview
+
+on:
+  push:
+    branches: [build/family-safety-synthetic-preview-v001-20261018]
+    paths:
+      - 'prototypes/family-safety-synthetic-preview/**'
+      - '.github/workflows/family-safety-synthetic-preview.yml'
+  pull_request:
+    paths:
+      - 'prototypes/family-safety-synthetic-preview/**'
+      - '.github/workflows/family-safety-synthetic-preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: family-field-synthetic-review-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-synthetic-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Stage same-origin pinned MapLibre v6 assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd prototypes/family-safety-synthetic-preview
+          npm install --ignore-scripts --no-audit --no-fund --no-save
+          npm run stage:vendor
+          test "$(node -p "require('./node_modules/maplibre-gl/package.json').version")" = "6.14.0"
+      - name: Static and functional safety checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check prototypes/family-safety-synthetic-preview/public/synthetic-engine.mjs
+          node --check prototypes/family-safety-synthetic-preview/public/app.mjs
+          node --check prototypes/family-safety-synthetic-preview/public/synthetic-scene.mjs
+          node --check prototypes/family-safety-synthetic-preview/worker.mjs
+          node --check prototypes/family-safety-synthetic-preview/stage-vendor.mjs
+          node --test prototypes/family-safety-synthetic-preview/test.mjs
+      - name: Reject unsafe runtime bindings and public asset bypass
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module -e '
+          import fs from "node:fs";
+          const p="prototypes/family-safety-synthetic-preview/wrangler.jsonc";
+          const c=JSON.parse(fs.readFileSync(p,"utf8"));
+          if(c.name!=="anevum-family-field-synthetic-review-20261018"||
+             c.main!=="./worker.mjs" || c.workers_dev!==true ||
+             c.preview_urls!==false || c.assets?.directory!=="./public" ||
+             c.assets?.binding!=="ASSETS" || c.assets?.run_worker_first!==true ||
+             c.assets?.html_handling!=="none" || c.assets?.not_found_handling!=="none" ||
+             c.observability?.enabled!==false || c.upload_source_maps!==false)
+             throw Error("Preview not isolated or worker-first gated");
+          for(const key of ["routes","route","d1_databases","durable_objects",
+            "r2_buckets","kv_namespaces","services","send_email","unsafe",
+            "queues","analytics_engine_datasets","ai","hyperdrive"]){
+            if(Object.hasOwn(c,key))throw Error("Disallowed binding: "+key);
+          }
+          const allowedVars=["FS_SYNTH_REVIEW_AUD","FS_SYNTH_TEAM_ISSUER"];
+          if(Object.keys(c.vars||{}).some(k=>!allowedVars.includes(k))||
+             c.vars?.FS_SYNTH_REVIEW_AUD?.length!==64||
+             !/^https:\/\/[a-z0-9-]+\.cloudflareaccess\.com$/.test(c.vars?.FS_SYNTH_TEAM_ISSUER||""))
+            throw Error("Unexpected or missing authentication config");
+          const w=fs.readFileSync("prototypes/family-safety-synthetic-preview/worker.mjs","utf8");
+          if(!w.includes("getIdentity")||!w.includes("FS_SYNTH_REVIEW_AUD")||
+             !w.includes("FS_SYNTH_TEAM_ISSUER")||!w.includes("jwtVerify")||
+             !w.includes("CF_Authorization"))
+            throw Error("Missing mandatory signed Access token verification");
+          const pdir="prototypes/family-safety-synthetic-preview/public";
+          if(fs.readdirSync(pdir).some(x=>!["index.html","styles.css","app.mjs","synthetic-engine.mjs","synthetic-scene.mjs","vendor"].includes(x)))
+            throw Error("Unexpected public artifact");
+          const vendor=fs.readdirSync(pdir+"/vendor");
+          if(vendor.some(x=>!["maplibre-gl.mjs","maplibre-gl-worker.mjs","maplibre-gl.css"].includes(x))||vendor.length!==3)
+            throw Error("Missing or unexpected pinned MapLibre browser assets");
+          '
+      - name: Verify real 3D map rendering and fictional interactions on desktop and phone viewport
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome"
+          mkdir -p evidence/family-field
+          python3 -m http.server 8899 --bind 127.0.0.1 \
+            --directory prototypes/family-safety-synthetic-preview/public \
+            > evidence/family-field/fixture.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8899/ >/dev/null 2>&1; then ready=1; break; fi
+            sleep 0.25
+          done
+          test "$ready" = 1
+          CHROME_BIN="$chrome" node prototypes/family-safety-synthetic-preview/capture-browser.mjs
+          test -s evidence/family-field/desktop.png
+          test -s evidence/family-field/mobile.png
+          test -s evidence/family-field/browser-assertions.json
+      - name: Retain screenshots without publishing site or GPS
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: family-field-fictional-3d-visual-evidence
+          path: evidence/family-field
+          if-no-files-found: ignore
+          retention-days: 7
+
+  deploy-protected-review:
+    name: Deploy owner-only synthetic 3D review
+    if: github.event_name == 'push' && github.ref == 'refs/heads/build/family-safety-synthetic-preview-v001-20261018'
+    needs: verify-synthetic-review
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm Access audience and zero sensitive runtime bindings
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const p="prototypes/family-safety-synthetic-preview/wrangler.jsonc";
+            const c=JSON.parse(fs.readFileSync(p,"utf8"));
+            if(c.name!=="anevum-family-field-synthetic-review-20261018" ||
+               c.workers_dev!==true || c.preview_urls!==false ||
+               c.main!=="./worker.mjs" || c.assets?.run_worker_first!==true ||
+               c.assets?.html_handling!=="none" || c.assets?.not_found_handling!=="none" ||
+               c.vars?.FS_SYNTH_REVIEW_AUD!=="8b4f7da26f249d7c59e73ec7f84b2b7d605dc65253091c134947359602094a32" ||
+               c.vars?.FS_SYNTH_TEAM_ISSUER!=="https://wispy-tooth-095a.cloudflareaccess.com")
+              throw Error("Owner-only review binding/audience mismatch");
+            for(const forbidden of ["routes","route","d1_databases","r2_buckets",
+              "durable_objects","kv_namespaces","services","queues","unsafe",
+              "analytics_engine_datasets","send_email"]){
+              if(Object.hasOwn(c,forbidden))throw Error("Private binding not permitted");
+            }
+          '
+      - name: Stage pinned local MapLibre and deploy isolated review Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          cd prototypes/family-safety-synthetic-preview
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run stage:vendor
+          npx wrangler deploy --config wrangler.jsonc
+      - name: Confirm unauthenticated users cannot read a single preview asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://anevum-family-field-synthetic-review-20261018.devonakins.workers.dev"
+          for path in "/" "/styles.css" "/app.mjs" "/synthetic-scene.mjs" "/__review"; do
+            allowed=0
+            for attempt in $(seq 1 20); do
+              result="$(curl --silent --show-error --max-time 12 -o /dev/null -w '%{http_code}' "$base$path" || true)"
+              case "$result" in
+                301|302|303|307|308|401|403) allowed=1; break ;;
+                000|404|503) sleep 4 ;;
+                200) echo "PUBLIC_ASSET_LEAK path=$path status=$result"; exit 1 ;;
+                *) echo "UNEXPECTED_ACCESS_GATE path=$path status=$result"; exit 1 ;;
+              esac
+            done
+            if [ "$allowed" != 1 ]; then
+              echo "ACCESS_GATE_UNAVAILABLE path=$path last_status=$result"
+              exit 1
+            fi
+            echo "ASSET_ACCESS_RESTRICTED path=$path status=$result"
+          done
+          echo "FAMILY_FIELD_OWNER_ONLY_ACCESS_GATE=PASS"
