@@ -2,7 +2,7 @@ import {useEffect,useState} from "react";
 import {readCreators,readProjects,readStatus,type Creator,type Project,type Status} from "../lib/api";
 import {useResource} from "../lib/useResource";
 import {WorldGatewayDeck} from "../components/WorldGatewayDeck";
-import {LiveSignalHero,LiveSignalModules} from "../components/LiveSignalHero";
+import {LiveSignalModules} from "../components/LiveSignalHero";
 import {CommunityHomeFeed} from "../components/CommunityHomeFeed";
 import {MemberForumHighlights} from "../components/MemberForumHighlights";
 
@@ -45,8 +45,7 @@ export function CinematicLandingPage(){
 
   return <div className="anevum-cinema av9-home">
     <div className="cinema-content">
-      <LiveSignalHero state={signalState} projects={projects}/>
-      <WorldGatewayDeck/>
+      <WorldGatewayDeck projects={projects} creators={creators} status={status} state={signalState}/>
       <LiveSignalModules
         status={status}
         projects={projects}
