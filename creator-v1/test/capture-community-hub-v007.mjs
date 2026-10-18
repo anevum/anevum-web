@@ -122,40 +122,24 @@ try {
     if (await evaluate('document.documentElement.scrollWidth>innerWidth+1')) throw Error("V007_PEOPLE_OVERFLOW_" + width);
     await screenshot("community-v007-people", width);
 
-    // V009 HOME + CREATOR DOSSIER — compiled React, synthetic published fixture.
+    // V079 HOME + SHARED CREATOR IDENTITY — compiled React, synthetic public fixture.
+    // The previous V009 dossier panel is no longer on the homepage. V078
+    // tests separately verify server-earned level art and private award gating.
     await client.send("Page.navigate", {url:base+"/creator/"});
-    await until(()=>evaluate('document.readyState==="complete"&&!!document.querySelector(".av73-world-deck")&&!!document.querySelector(".av6-feed-project .av7-author")'));
-    await until(()=>evaluate('!!document.querySelector(".av6-feed-project .av7-author .av7-artifact-panel")&&!!document.querySelector(".av6-feed-project .av7-author .av7-award-panel")'));
-    await delay(600);
-    const dossier=await evaluate('(()=>{const card=document.querySelector(".av6-feed-project"),a=card?.querySelector(".av7-author");return {width:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth+1,dossiers:document.querySelectorAll(".av7-author").length,level:!!a?.querySelector(".av7-level-panel"),artifact:!!a?.querySelector(".av7-artifact-panel"),awards:a?.querySelectorAll(".av7-award").length,watermark:getComputedStyle(document.body,"::after").content.includes("SYNTHETIC OFFLINE REVIEW")};})()');
-    if(dossier.overflow||dossier.dossiers<1||!dossier.level||!dossier.artifact||!dossier.awards||!dossier.watermark)
-      throw Error("V009_DOSSIER_LAYOUT_"+width+":"+JSON.stringify(dossier));
-    // V074: verify the dossier level icon occupies its protected crest.
-    // Source-only QA may have a safe fallback when V060 optical assets are
-    // absent; this is not a live-image decode certification.
-    const levelIcon=await evaluate('(()=>{const frame=document.querySelector(".av7-author .av7-level-crest"),icon=frame?.querySelector(".av73-static-level-icon,.level-emblem-beyond"),img=icon?.querySelector("img"),a=frame?.getBoundingClientRect(),b=icon?.getBoundingClientRect();return {present:!!icon,visible:img?getComputedStyle(img).visibility:null,width:img?.naturalWidth||0,source:img?.currentSrc||"",type:icon?.dataset.artwork,canvas:document.querySelectorAll("canvas.av62-native-stage").length,contained:!!a&&!!b&&b.left>=a.left-1&&b.right<=a.right+1&&b.top>=a.top-1&&b.bottom<=a.bottom+1}})()');
-    if(!levelIcon.present||levelIcon.canvas!==0||!levelIcon.contained||
-      (levelIcon.type&&(!levelIcon.source.includes("/evolution/assets/level-")||
-       levelIcon.type!=="v073-preserved-optical-icon"||levelIcon.visible!=="visible")))
-      throw Error("V074_PLAYER_LEVEL_ICON_"+width+":"+JSON.stringify(levelIcon));
-    // V073 final visual-flow acceptance: useful modules lead the page.
-    const flow=await evaluate('(()=>{const selectors=["#world-gateways",".av11-live-index","#community-index"];const y=selectors.map(selector=>{const el=document.querySelector(selector);return el?Math.round(el.getBoundingClientRect().top+window.scrollY):null});const tabs=document.querySelectorAll(".av73-world-tab");const activity=document.querySelectorAll(".av11-module-tab");return {y,tabs:tabs.length,activity:activity.length,activeTab:document.querySelector(".av73-world-tab[aria-selected=true]")?.id,overflow:document.documentElement.scrollWidth>innerWidth+1,portalTarget:!!document.querySelector("#world-gateways .av73-action-main")};})()');
-    if(flow.overflow||flow.tabs!==4||flow.activity!==4||flow.activeTab!=="av73-module-tab-discover"||!flow.portalTarget||
-      flow.y.some(value=>value===null)||
-      !(flow.y[0]<flow.y[1]&&flow.y[1]<flow.y[2]))
-      throw Error("V073_HOMEPAGE_ORDER_"+width+":"+JSON.stringify(flow));
-    console.log("V073_HOMEPAGE_ORDER_"+width+"="+JSON.stringify(flow));
-    await screenshot("v009-home-top",width);
-    await evaluate('document.querySelector("#world-gateways").scrollIntoView({block:"start"})');
-    await delay(250);
-    await screenshot("v011-world-gateways",width);
-    await evaluate('document.querySelector(".av11-live-index").scrollIntoView({block:"start"})');
-    await delay(250);
-    await screenshot("v011-public-index",width);
-    await evaluate('document.querySelector(".av6-feed-project").scrollIntoView({block:"start"})');
-    await delay(500);
-    await screenshot("v009-creator-dossier",width);
-    console.log("V009_DOSSIER_"+width+"="+JSON.stringify(dossier));
+    await until(()=>evaluate('document.readyState==="complete"&&!!document.querySelector(".av79-home .av79-feature")&&!!document.querySelector(".av79-feature [data-player-card=v078]")'));
+    const signature=await evaluate('(()=>{const feature=document.querySelector(".av79-feature"),card=feature?.querySelector("[data-player-card=v078]");return {width:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth+1,headline:document.querySelector(".av79-hero h1")?.textContent,featured:feature?.querySelector("h3")?.textContent,creator:card?.querySelector(".av61-member-name")?.textContent,channel:!!card?.classList.contains("av65-player-card--channel"),unearnedLevel:!!card?.querySelector(".av61-specimen,.av61-level-label"),oldModules:document.querySelectorAll(".av73-world-deck,.av11-live-index,.av6-community-index").length,watermark:getComputedStyle(document.body,"::after").content.includes("SYNTHETIC OFFLINE REVIEW")};})()');
+    if(signature.overflow||!signature.headline?.includes("Find your next")||
+      !signature.featured||!signature.creator||!signature.channel||
+      signature.unearnedLevel||signature.oldModules||!signature.watermark)
+      throw Error("V079_HOME_CREATOR_CARD_"+width+":"+JSON.stringify(signature));
+    await screenshot("v079-home-creator",width);
+    await evaluate('document.querySelector(".av9-menu-trigger").click()');
+    await until(()=>evaluate('document.querySelector(".av79-navigation[open]")?.querySelectorAll(".av79-destination").length===4'));
+    const navigation=await evaluate('(()=>{const dialog=document.querySelector(".av79-navigation[open]");return {open:!!dialog,links:dialog?.querySelectorAll(".av79-destination").length,categoryArtwork:dialog?.querySelectorAll("img,.cw-artwork,canvas").length,overflow:dialog?.scrollWidth>dialog?.clientWidth+1}})()');
+    if(!navigation.open||navigation.links!==4||navigation.categoryArtwork||navigation.overflow)
+      throw Error("V079_WAYFINDER_COMMUNITY_"+width+":"+JSON.stringify(navigation));
+    await screenshot("v079-wayfinder-community",width);
+    console.log("V079_HOME_CREATOR_CARD_"+width+"="+JSON.stringify(signature));
     console.log("COMMUNITY_V007_BROWSER_" + width + "=" + JSON.stringify(state));
   }
   writeFileSync(join(output, "capture-status.txt"),
