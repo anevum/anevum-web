@@ -84,7 +84,7 @@ async function request<T>(path:string,method:'GET'|'POST'|'PATCH'|'PUT'|'DELETE'
 }
 export const studioHealth=async(signal?:AbortSignal):Promise<StudioHealth>=>
  read<StudioHealth>(await fetch('/api/v1/member/health',{credentials:'same-origin',mode:'same-origin',cache:'no-store',redirect:'error',signal}));
-export const studioList=(signal?:AbortSignal)=>request<{projects:StudioProject[];uploadsReady:boolean;canReview:boolean}>(projectPath(), 'GET',undefined,signal);
+export const studioList=(signal?:AbortSignal)=>request<{projects:StudioProject[];uploadsReady:boolean;canReview:boolean;canSafetyReview:boolean}>(projectPath(), 'GET',undefined,signal);
 export const studioGet=(id:string,signal?:AbortSignal)=>request<{project:StudioProject;uploadsReady:boolean;reviewHistory:StudioReviewHistory[]}>(projectPath(id),'GET',undefined,signal);
 export const studioCreate=(draft:StudioDraft,clientRequestId:string)=>request<{project:StudioProject;replayed:boolean}>(projectPath(),'POST',{draft,clientRequestId:validId(clientRequestId)});
 export const studioUpdate=(id:string,revision:number,draft:StudioDraft)=>request<{project:StudioProject}>(projectPath(id),'PATCH',{revision,draft});
@@ -166,3 +166,19 @@ export const studioReviewExternalRelease=(projectId:string,revision:number,reaso
  request<{ok:true;status:'published';delivery:'external-link-only'}>(
  ROOT+'/review','POST',{projectId:validId(projectId),revision,action:'publish_external_metadata',reason,...attestations});
 
+
+/** V071 safety authority is distinct from Studio publication and forum moderator. */
+export type StudioSafetyReason='rights'|'unsafe_content'|'malicious_link'|'impersonation'|'fraud'|'other';
+export type StudioSafetyRecord={
+ id:string;title:string;summary:string;category:string;handle:string;publishedAt:number;
+};
+export type StudioSafetyResult={
+ ok:true;projectId:string;publicationStatus:'withdrawn';reasonCode:StudioSafetyReason;
+ revokedBadges:string[];keptHistoricalEvidence:true;
+};
+export const studioSafetyQueue=(signal?:AbortSignal)=>
+ request<{creations:StudioSafetyRecord[]}>(ROOT+'/safety','GET',undefined,signal);
+export const studioSafetyTakedown=(projectId:string,expectedPublishedAt:number,reasonCode:StudioSafetyReason,reason:string)=>
+ request<StudioSafetyResult>(ROOT+'/safety','POST',{
+ action:'takedown',projectId:validId(projectId),expectedPublishedAt,reasonCode,reason
+});
