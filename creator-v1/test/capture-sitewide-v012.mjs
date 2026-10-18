@@ -72,7 +72,7 @@ try{
   ["community","/community",".ch7-hub"],["boards","/boards",".cnb-hub"],
   ["levels","/levels",".levels-page"],["recognition","/recognition",".av66-registry"],["start","/start",".start-page"],
   ["guide","/guide",".field-guide-page"],["status","/status",".status-list"],
-  ["guest-library","/library",".member-gate"],
+  ["guest-library","/library",".avsaved-inactive"],
   ["member-account","/account",".av12-account-await"],
   ["member-profile-editor","/account/edit",".av12-account-await"],
   // Legacy /create routes now lead into the canonical Better Auth Studio.
@@ -98,7 +98,7 @@ try{
    if(result.errorText)throw Error("SITEWIDE_V012_NAVIGATION_"+name+"_"+width+":"+result.errorText);
    try{
     await until(()=>evaluate("document.readyState==='complete'&&location.pathname==="+JSON.stringify("/creator"+(path==="/account"||path==="/account/edit"?"/member":
-      name==="member-studio"?"/studio":name==="member-draft"?"/studio/new":path))+"&&!!document.querySelector("+JSON.stringify(selector)+")"));
+      name==="member-studio"?"/studio":name==="member-draft"?"/studio/new":name==="guest-library"?"/saved":path))+"&&!!document.querySelector("+JSON.stringify(selector)+")"));
    }catch(error){throw Error("SITEWIDE_V012_PAGE_MISSING_"+name+"_"+width+":"+String(error));}
    await delay(240);
    const state=await evaluate('(()=>({path:location.pathname,header:document.querySelectorAll(".site-header.av9-header").length,main:document.querySelectorAll("#main").length,cinematic:!!document.querySelector(".site-shell--cinematic.av9-shell"),overflow:document.documentElement.scrollWidth>innerWidth+1,width:innerWidth,atlas:!!document.querySelector(".atm-header,.atlas-universe-viewport"),fixture:getComputedStyle(document.body,"::after").content.includes("SYNTHETIC OFFLINE REVIEW")}))()');
@@ -128,6 +128,12 @@ try{
      throw Error("SITEWIDE_V012_VISUAL_OR_ROUTE_DRIFT_"+name+"_"+width+":"+JSON.stringify(presentation));
    if(!state.cinematic||state.header!==1||state.main!==1||state.overflow||state.atlas||!state.fixture)
     throw Error("SITEWIDE_V012_INCONSISTENT_"+name+"_"+width+":"+JSON.stringify(state));
+   if(name==="guest-library"){
+    const guest=await evaluate('(()=>({legacy:!!document.querySelector(".member-gate,.member-library-grid"),canonical:!!document.querySelector(".avsaved-shell"),cards:document.querySelectorAll(".avsaved-card").length,notice:document.querySelector(".avsaved-inactive")?.textContent||""}))()');
+    if(guest.legacy||!guest.canonical||guest.cards!==0||!guest.notice)
+     throw Error("V071_LEGACY_LIBRARY_REDIRECT_"+width+":"+JSON.stringify(guest));
+    console.log("V071_LEGACY_LIBRARY_REDIRECT_"+width+"=PASS");
+   }
    if(name==="levels"){
     const metrics=await evaluate('(()=>{const hero=document.querySelector(".levels-masthead"),paragraph=hero?.querySelector("p"),emblem=hero?.querySelector(".levels-emblem");return {heroWidth:hero?.getBoundingClientRect().width,textWidth:paragraph?.getBoundingClientRect().width,emblemPosition:emblem?getComputedStyle(emblem).position:null}})()');
     if(!metrics.textWidth||(width<=700&&metrics.textWidth<Math.min(240,width*.67))||
