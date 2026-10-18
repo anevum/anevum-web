@@ -19,7 +19,8 @@ const migration=name=>readFileSync(new URL('../canonical-auth/migrations/'+name,
 
 const req=(path,method='GET',body,cookie,origin=HOST)=>new Request(HOST+path,{
  method,
- headers:{...(body===undefined?{}:{'content-type':'application/json',origin,'sec-fetch-site':'same-origin'}),
+ headers:{...(method==='GET'?{}:{origin,'sec-fetch-site':'same-origin'}),
+  ...(body===undefined?{}:{'content-type':'application/json'}),
   ...(cookie?{cookie}:{})},
  body:body===undefined?undefined:JSON.stringify(body),
  redirect:'error'
@@ -138,6 +139,11 @@ test('IREN V005 two real OTP sessions cross independent public and staff Workers
   assert.equal((await staffCall(reviewer,REVIEW,'POST',{targetKind:'reply',targetId:reply.id,action:'publish'})).status,200);
   assert.equal((await json(await apex.fetch(req(THREADS+'/'+thread.id+'/replies'),publicEnv))).items.length,1);
 
+  // Empty-body mutation still MUST supply an exact Origin: browser fetch sends it.
+  const forgedNoOrigin=new Request(HOST+THREADS+'/'+thread.id+'/reaction',{
+   method:'POST',headers:{cookie:peer.cookie}
+  });
+  assert.equal((await apex.fetch(forgedNoOrigin,publicEnv)).status,403,'Origin-less cookie mutation fails closed');
   assert.equal((await apex.fetch(req(THREADS+'/'+thread.id+'/reaction','POST',undefined,peer.cookie),publicEnv)).status,200);
   const reportResponse=await apex.fetch(req('/api/v1/community/reports','POST',{
    targetKind:'thread',targetId:thread.id,reason:'other'},peer.cookie),publicEnv);
