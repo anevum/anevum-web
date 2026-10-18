@@ -75,6 +75,16 @@ A dedicated `.github/workflows/native-pack-v001-verify.yml` runs focused native-
 
 The `/open` route is **source-only** until an independent staging promotion is approved and verified on deployed worker assets. A route's existence in React source is not evidence that it is currently live.
 
+## V001.1 editing parity and browser verification
+
+The isolated Native Pack Lab now opens with the creation type matching the private Studio category: games -> .anvg, music -> .anva, video -> .anvs, art -> .anvw; other Studio work defaults to .anvp. This selects an initial local tool only, not an entitlement, upload switch, release gate or database migration.
+
+Imported .anvg, .anva, .anvs and .anvw files can be opened back into their respective local editors after explicit confirmation. Game scenes, branches, starting scene and image backgrounds are editable. Album track lists, series episode lists and galleries are editable. The package's title and original **credited creator string** are preserved when local edits are exported. Metadata is self-declared, not proof of authorship, ownership, licensing or editorial approval.
+
+Albums can include optional embedded cover artwork and series optional poster artwork, with local image previews. All assets remain in memory in the browser; re-exporting produces a new file. No editing operation writes to R2, creates a production project or stores media in ANEVUM. The local archive still has the 20 MiB / 32-entry total pilot caps, including cover art.
+
+A real Chromium loopback test now exercises actual file selection, CRC/SHA and format acceptance, branching game navigation, bundled scene artwork, all five formats (game/album/series/gallery/Workbench), 1440/390/320px layouts, malformed archive rejection, native audio/video/image controls, close/cleanup and the absence of upload requests. This runs from the compiled production-candidate frontend against a synthetic localhost server. Browser screenshots and an acceptance JSON are uploaded as short-lived CI evidence. This is **not** an iPhone Safari or staging/production test, and no real creator rights are inferred from synthetic files.
+
 ## Non-goals and release gates
 
 This branch does not add any public upload endpoint, R2 binding, D1 migration, new member permission, automatic approval, signed release, billing, XP award, executable HTML5 game hosting, or production deployment.
