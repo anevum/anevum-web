@@ -338,7 +338,7 @@ export default {
       }
       if(path==="/packages"||path==="/packages/")return catalogScreen(await publicList(env.DB));
       if(path==="/help/packages"||path==="/help/packages/")return helpScreen();
-      if(path==="/review/packages") {
+      if(path==="/staff/packages"||path==="/staff/packages/"||path==="/review/packages") {
         const u=await member(req,env);
         return u&&staff(env,u.id)?queueScreen(await reviewList(env.DB)):a404();
       }
