@@ -11,8 +11,9 @@ type Inventory={currentLevel:number;levels:EarnedLevelRecord[]};
 function validInventory(value:unknown):value is Inventory{
  if(!value||typeof value!=='object')return false;
  const data=value as Partial<Inventory>;
- return Number.isSafeInteger(data.currentLevel)&&data.currentLevel!>=1&&
-  data.currentLevel!<=30&&Array.isArray(data.levels)&&
+ return typeof data.currentLevel==='number'&&
+  Number.isSafeInteger(data.currentLevel)&&data.currentLevel>=1&&
+  data.currentLevel<=30&&Array.isArray(data.levels)&&
   data.levels.length===data.currentLevel&&data.levels.every((item,index)=>
    item&&item.level===index+1&&
    typeof item.name==='string'&&item.name.length>0&&item.name.length<100&&
