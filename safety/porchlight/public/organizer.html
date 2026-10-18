@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#07131e"><meta name="robots" content="noindex,nofollow"><title>Porchlight | Organizer Console</title>
+<link rel="stylesheet" href="/app.css"><link rel="stylesheet" href="/organizer.css"><script type="module" src="/organizer.js"></script></head>
+<body><a href="#staff-main" class="skip">Skip to organizer controls</a>
+<header class="nav"><a href="/" class="brand"><span class="brand-logo" aria-hidden="true"><span></span></span><span><b>ANEVUM</b><small>PORCHLIGHT / ORGANIZER OPERATIONS</small></span></a><span class="build-state">PRIVATE STAFF ACCESS</span><nav aria-label="Navigation"><a href="/">Public directory</a></nav></header>
+<main id="staff-main" class="admin-wrap">
+ <section class="admin-head"><p class="eyebrow">PORCHLIGHT / FIELD OPERATIONS</p><h1>Organizer command.</h1><p>This application is an independent pilot. Never approve a household without verifying the submitting adult's authority to list it. Event closure immediately hides public pins.</p></section>
+ <section class="admin-auth form-card" aria-label="Organizer authentication"><h2>Private access</h2><form id="auth-form"><label for="token">Organizer access token</label><input id="token" type="password" autocomplete="off" placeholder="Not your ANEVUM member password" required><button class="btn primary submit" type="submit">Unlock operational controls</button></form><p id="auth-feedback" role="status" class="form-feedback"></p><button class="btn secondary" type="button" id="sign-out" hidden>Clear access and private information</button><p>Token lives in this page's memory only. Never paste it into a public link or share it with another household.</p></section>
+ <section id="admin-shell" hidden>
+ <div class="admin-grid">
+ <form id="event-form" class="form-card"><h2>Create a draft event</h2><p>New events are private until independently activated. Use a neighborhood-level center, not a private household coordinate.</p>
+  <label for="event-slug">Event slug</label><input id="event-slug" required pattern="[a-z][a-z0-9-]{2,47}" placeholder="halloween-2026-neighborhood">
+  <label for="event-title">Event title</label><input id="event-title" required minlength="5" maxlength="120" placeholder="Neighborhood Halloween">
+  <label for="event-neighborhood">General neighborhood name</label><input id="event-neighborhood" required minlength="3" maxlength="90">
+  <div class="split"><div><label for="event-start">Starts (local time)</label><input type="datetime-local" id="event-start" required></div><div><label for="event-end">Ends (local time)</label><input type="datetime-local" id="event-end" required></div></div>
+  <div class="split"><div><label for="center-lat">General center latitude</label><input id="center-lat" type="number" step="any" min="-90" max="90" required></div><div><label for="center-lng">General center longitude</label><input id="center-lng" type="number" step="any" min="-180" max="180" required></div></div>
+  <label for="radius">Maximum neighborhood boundary (meters, 100–5000)</label><input id="radius" type="number" min="100" max="5000" value="1200" required>
+  <button class="btn primary submit" type="submit">Create draft</button><p id="event-create-feedback" role="status" class="form-feedback"></p>
+ </form>
+ <section class="form-card"><h2>Manage current event</h2><p>Enter its slug to view the private host queue. You may close a visible event to remove all its public pins immediately.</p>
+  <label for="manage-slug">Event slug</label><input id="manage-slug" required placeholder="e.g. halloween-2026-neighborhood">
+  <button class="btn secondary submit" type="button" id="load-queue">Load private queue</button>
+  <div class="split"><button class="btn ghost" type="button" id="activate-event">Activate event</button><button class="btn danger" type="button" id="close-event">Emergency close</button></div>
+  <p id="admin-feedback" class="form-feedback" role="status"></p>
+  <p class="admin-note">Never represent an event as an official road closure or government-certified safety program. Confirm host requests directly before approval.</p>
+ </section>
+ </div>
+ <section class="admin-queue"><div class="section-heading"><div><p class="eyebrow">PRIVATE VERIFICATION</p><h2>Host submissions</h2><p>Private address and contact details are shown only to the token holder. They must not be posted into public chat.</p></div></div><div id="pending-hosts" class="admin-list"><p class="notice">Load an event to inspect submissions.</p></div></section>
+ <section class="admin-queue"><div class="section-heading"><div><p class="eyebrow">REPORTS</p><h2>Community concerns</h2><p>Reports are private. For emergencies, call 911 instead of relying on this queue.</p></div></div><div id="pending-reports" class="admin-list"><p class="notice">No reports loaded.</p></div></section>
+ </section>
+ <footer><div><b>ANEVUM / STAFF SECURITY BOUNDARY</b><p>Single-organizer pilot, not production staff SSO. No recorded media, live tracking, or emergency dispatch.</p></div><a href="/">RETURN TO DIRECTORY ↗</a></footer>
+</main></body></html>
