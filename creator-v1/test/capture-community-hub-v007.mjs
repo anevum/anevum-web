@@ -124,19 +124,19 @@ try {
 
     // V009 HOME + CREATOR DOSSIER — compiled React, synthetic published fixture.
     await client.send("Page.navigate", {url:base+"/creator/"});
-    await until(()=>evaluate('document.readyState==="complete"&&!!document.querySelector(".av8-live-signal")&&!!document.querySelector(".av6-feed-project .av7-author")'));
+    await until(()=>evaluate('document.readyState==="complete"&&!!document.querySelector(".av73-world-deck")&&!!document.querySelector(".av6-feed-project .av7-author")'));
     await until(()=>evaluate('!!document.querySelector(".av6-feed-project .av7-author .av7-artifact-panel")&&!!document.querySelector(".av6-feed-project .av7-author .av7-award-panel")'));
     await delay(600);
     const dossier=await evaluate('(()=>{const card=document.querySelector(".av6-feed-project"),a=card?.querySelector(".av7-author");return {width:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth+1,dossiers:document.querySelectorAll(".av7-author").length,level:!!a?.querySelector(".av7-level-panel"),artifact:!!a?.querySelector(".av7-artifact-panel"),awards:a?.querySelectorAll(".av7-award").length,watermark:getComputedStyle(document.body,"::after").content.includes("SYNTHETIC OFFLINE REVIEW")};})()');
     if(dossier.overflow||dossier.dossiers<1||!dossier.level||!dossier.artifact||!dossier.awards||!dossier.watermark)
       throw Error("V009_DOSSIER_LAYOUT_"+width+":"+JSON.stringify(dossier));
-    // V011 final visual-flow acceptance — assert the actual rendered positions.
-    const flow=await evaluate('(()=>{const selectors=[".av8-live-signal","#world-gateways",".av11-live-index","#community-index"];const y=selectors.map(selector=>{const el=document.querySelector(selector);return el?Math.round(el.getBoundingClientRect().top+window.scrollY):null});const modules=document.querySelector(".av11-live-index .av8-module-grid");return {y,modules:modules?.children.length||0,overflow:document.documentElement.scrollWidth>innerWidth+1,portalTarget:!!document.querySelector("#world-gateways .av9-world-gateway")};})()');
-    if(flow.overflow||flow.modules!==4||!flow.portalTarget||
+    // V073 final visual-flow acceptance: useful modules lead the page.
+    const flow=await evaluate('(()=>{const selectors=["#world-gateways",".av11-live-index","#community-index"];const y=selectors.map(selector=>{const el=document.querySelector(selector);return el?Math.round(el.getBoundingClientRect().top+window.scrollY):null});const tabs=document.querySelectorAll(".av73-world-tab");const activity=document.querySelectorAll(".av11-module-tab");return {y,tabs:tabs.length,activity:activity.length,activeTab:document.querySelector(".av73-world-tab[aria-selected=true]")?.id,overflow:document.documentElement.scrollWidth>innerWidth+1,portalTarget:!!document.querySelector("#world-gateways .av73-action-main")};})()');
+    if(flow.overflow||flow.tabs!==4||flow.activity!==4||flow.activeTab!=="av73-module-tab-discover"||!flow.portalTarget||
       flow.y.some(value=>value===null)||
-      !(flow.y[0]<flow.y[1]&&flow.y[1]<flow.y[2]&&flow.y[2]<flow.y[3]))
-      throw Error("V011_HOMEPAGE_ORDER_"+width+":"+JSON.stringify(flow));
-    console.log("V011_HOMEPAGE_ORDER_"+width+"="+JSON.stringify(flow));
+      !(flow.y[0]<flow.y[1]&&flow.y[1]<flow.y[2]))
+      throw Error("V073_HOMEPAGE_ORDER_"+width+":"+JSON.stringify(flow));
+    console.log("V073_HOMEPAGE_ORDER_"+width+"="+JSON.stringify(flow));
     await screenshot("v009-home-top",width);
     await evaluate('document.querySelector("#world-gateways").scrollIntoView({block:"start"})');
     await delay(250);
