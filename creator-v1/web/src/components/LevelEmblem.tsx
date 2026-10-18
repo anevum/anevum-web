@@ -23,7 +23,7 @@ export function LevelEmblem({level,size=64}:{level:number;size?:number}){
  const sources=item?(size>104
   ?[item.preview,item.poster,item.icon]
   :[item.icon,item.preview,item.poster]):[];
- if(!item||assetIndex>=sources.length)return <span className="level-emblem level-emblem-beyond" style={{width:size,height:size}} aria-label={'Evolution level '+safe}><OrbitalMark/><small>{safe}</small></span>;
+ if(!item||assetIndex>=sources.length)return <span className="level-emblem level-emblem-beyond av73-static-level-fallback" style={{width:size,height:size}} aria-label={'Evolution level '+safe}><OrbitalMark/><small>{safe}</small></span>;
  const src=import.meta.env.BASE_URL+sources[assetIndex].slice(1);
  return <span className="level-emblem is-illustrated av62-native-host av73-static-level-icon"
   style={{width:size,height:size}} role="img" aria-label={'Level '+safe+' · '+item.name}
