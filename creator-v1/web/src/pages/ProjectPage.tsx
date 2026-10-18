@@ -62,7 +62,7 @@ export function ProjectPage(){
         <div id="avp-source"><RepositoryPanel projectId={p.id} sourceUrl={p.sourceUrl}/>
           {source&&<a className="avp-inline-source" href={source.href} target="_blank" rel="noopener noreferrer" aria-label={"View source on "+source.hostname+" in a new tab"}>VIEW SOURCE ON {source.hostname.toUpperCase()} ↗</a>}
         </div>
-        <section className="portal-box portal-project-discovery"><span className="kicker">KEEP THE PORTAL OPEN</span><h2>DISCOVER MORE IN {p.category.toUpperCase()}</h2><p>Explore other approved independent creations or visit the maker's channel. Only published, moderated work belongs in the catalogue.</p><div><Link className="button secondary" to={"/discover?category="+encodeURIComponent(p.category)}>MORE IN THIS CATEGORY →</Link><Link className="button secondary" to={"/creators/"+encodeURIComponent(p.creatorHandle)}>CREATOR CHANNEL →</Link></div></section>
+        <section className="portal-box portal-project-discovery"><span className="kicker">KEEP THE PORTAL OPEN</span><h2>DISCOVER MORE IN {p.category.toUpperCase()}</h2><p>Explore other approved independent creations or visit the maker's channel. Only published, moderated work belongs in the catalogue.</p><div><Link className="button secondary" to={"/discover?category="+encodeURIComponent(p.category)}>MORE IN THIS CATEGORY →</Link>{typeof p.creatorHandle==="string"&&/^[a-z][a-z0-9_]{2,29}$/.test(p.creatorHandle)?<Link className="button secondary" to={"/creators/"+encodeURIComponent(p.creatorHandle)}>CREATOR CHANNEL →</Link>:<span className="button secondary" aria-label="Creator channel not linked">CREATOR CHANNEL NOT LINKED</span>}</div></section>
       </div>
     </div>
   </div>;
