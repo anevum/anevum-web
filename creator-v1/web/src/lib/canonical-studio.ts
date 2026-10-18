@@ -39,7 +39,7 @@ export interface StudioAsset {
 }
 export interface StudioHealth {
  service:string;status:string;studioReady?:boolean;studioUploadsReady?:boolean;
- studioPublicationReady?:boolean;
+ studioPublicationReady?:boolean;studioAppealsReady?:boolean;
 }
 export class StudioError extends Error{
  constructor(readonly status:number,message:string){super(message);this.name='StudioError';}
@@ -84,7 +84,7 @@ async function request<T>(path:string,method:'GET'|'POST'|'PATCH'|'PUT'|'DELETE'
 }
 export const studioHealth=async(signal?:AbortSignal):Promise<StudioHealth>=>
  read<StudioHealth>(await fetch('/api/v1/member/health',{credentials:'same-origin',mode:'same-origin',cache:'no-store',redirect:'error',signal}));
-export const studioList=(signal?:AbortSignal)=>request<{projects:StudioProject[];uploadsReady:boolean;canReview:boolean;canSafetyReview:boolean}>(projectPath(), 'GET',undefined,signal);
+export const studioList=(signal?:AbortSignal)=>request<{projects:StudioProject[];uploadsReady:boolean;canReview:boolean;canSafetyReview:boolean;canAppealReview:boolean}>(projectPath(), 'GET',undefined,signal);
 export const studioGet=(id:string,signal?:AbortSignal)=>request<{project:StudioProject;uploadsReady:boolean;reviewHistory:StudioReviewHistory[]}>(projectPath(id),'GET',undefined,signal);
 export const studioCreate=(draft:StudioDraft,clientRequestId:string)=>request<{project:StudioProject;replayed:boolean}>(projectPath(),'POST',{draft,clientRequestId:validId(clientRequestId)});
 export const studioUpdate=(id:string,revision:number,draft:StudioDraft)=>request<{project:StudioProject}>(projectPath(id),'PATCH',{revision,draft});
@@ -183,3 +183,30 @@ export const studioSafetyTakedown=(projectId:string,expectedPublishedAt:number,r
  request<StudioSafetyResult>(ROOT+'/safety','POST',{
  action:'takedown',projectId:validId(projectId),expectedPublishedAt,reasonCode,reason
 });
+
+/** V072: owner-only challenges and completely independent second review.
+ * No endpoint in this client can reinstate publications or grant XP/awards. */
+export type StudioAppealReason='ownership'|'false_positive'|'missing_context'|'other';
+export type StudioAppealDecision='upheld'|'eligible_for_re_review';
+export type StudioOwnerAppeal={
+ projectId:string;title:string;takedownReason:string;takenDownAt:number;
+ appealId:string|null;reasonCode:StudioAppealReason|null;statement:string|null;
+ filedAt:number|null;decision:StudioAppealDecision|null;
+ reviewExplanation:string|null;decidedAt:number|null;
+};
+export type StudioReviewAppeal={
+ id:string;projectId:string;title:string;handle:string;
+ takedownReason:string;takenDownAt:number;reasonCode:StudioAppealReason;
+ statement:string;filedAt:number;
+};
+const APPEALS=ROOT+'/appeals';
+export const studioOwnerAppeals=(signal?:AbortSignal)=>
+ request<{cases:StudioOwnerAppeal[]}>(APPEALS,'GET',undefined,signal);
+export const studioFileAppeal=(projectId:string,expectedTakenDownAt:number,reasonCode:StudioAppealReason,statement:string)=>
+ request<{appealId:string;status:'pending_independent_review'}>(APPEALS,'POST',{
+ projectId:validId(projectId),expectedTakenDownAt,reasonCode,statement});
+export const studioAppealReviewQueue=(signal?:AbortSignal)=>
+ request<{cases:StudioReviewAppeal[]}>(APPEALS+'/review','GET',undefined,signal);
+export const studioDecideAppeal=(appealId:string,expectedFiledAt:number,decision:StudioAppealDecision,explanation:string)=>
+ request<{appealId:string;decision:StudioAppealDecision;recordedAt:number;publicationRestored:false;awardsRestored:false;note:string}>(
+ APPEALS+'/review','POST',{appealId:validId(appealId),expectedFiledAt,decision,explanation});
