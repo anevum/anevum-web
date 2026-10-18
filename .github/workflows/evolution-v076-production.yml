@@ -1,0 +1,218 @@
+name: ANEVUM V076 Original Evolution Media Production Repair
+# Release activation is deliberately gated on successful V076 canary results.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: anevum-apex-original-evolution-v076-live
+  cancel-in-progress: true
+
+jobs:
+  release:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      CF_ACCOUNT: "2f7ee83107240152097efd956a4e8335"
+      CF_ZONE: "8abe27259b5436af5966d3b40d9a3760"
+      CF_WORKER: "anevum-apex-prelaunch-gateway"
+      EXPECTED_WORKER_VERSION: "f8c895cf-10d1-4357-b9ec-ea67eb351dec"
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Assert exact live target and reversible routing
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/fix/evolution-of-everything-media-v076"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$CLOUDFLARE_ACCOUNT_ID" = "$CF_ACCOUNT"
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -f creator-v1/canonical-auth/reward-media.mjs
+          test -f creator-v1/web/src/components/RewardInspector.tsx
+          test -f design/evolution-v059/src/export_native.py
+          auth="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+          api="https://api.cloudflare.com/client/v4"
+          curl -fsS --max-time 30 -H "$auth" "$api/accounts/$CF_ACCOUNT/workers/scripts/$CF_WORKER/settings" > "$RUNNER_TEMP/settings.before.json"
+          jq -e '.success and
+            ([.result.bindings[]|select(.type=="d1" and .name=="MEMBER_DB" and ((.id//.database_id)=="e1d29049-c83b-4534-8355-dc1fa36ba6d8"))]|length)==1 and
+            ([.result.bindings[]|select(.type=="d1" and .name=="COMMUNITY_DB" and ((.id//.database_id)=="fa96e36d-6257-4883-bf15-074947e11a13"))]|length)==1 and
+            ([.result.bindings[]|select(.type=="secret_text" and .name=="CANONICAL_RESEND_API_KEY")]|length)==1 and
+            ([.result.bindings[]|select(.type=="secret_text" and .name=="CANONICAL_BETTER_AUTH_SECRET")]|length)==1 and
+            ([.result.bindings[]|select(.type=="assets" and .name=="ASSETS")]|length)==1 and
+            ([.result.bindings[]|select(.type=="plain_text" and .name=="ANEVUM_PRELAUNCH_MODE" and .text=="public")]|length)==1 and
+            ([.result.bindings[]|select(.type=="plain_text" and .name=="ANEVUM_LAUNCH_APPROVED" and .text=="true")]|length)==1 and
+            ([.result.bindings[]|select(.type=="plain_text" and .name=="CANONICAL_RECOGNITION_ENABLED" and .text=="true")]|length)==1' "$RUNNER_TEMP/settings.before.json" >/dev/null
+          curl -fsS --max-time 30 -H "$auth" "$api/accounts/$CF_ACCOUNT/workers/scripts/$CF_WORKER/deployments?per_page=1" > "$RUNNER_TEMP/deploy.before.json"
+          jq -er '.result.deployments[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/deploy.before.json" > "$RUNNER_TEMP/version.before"
+          test "$(cat "$RUNNER_TEMP/version.before")" = "$EXPECTED_WORKER_VERSION" || { echo "::error::Production Worker version drift. Nothing changed."; exit 1; }
+          curl -fsS --max-time 30 -H "$auth" "$api/zones/$CF_ZONE/workers/routes" > "$RUNNER_TEMP/routes.before.json"
+          jq -e '([.result[]|select(.pattern=="anevum.com/*" and .script=="anevum-apex-prelaunch-gateway")]|length)==1 and
+           ([.result[]|select(.pattern=="anevum.com/assets/index-*" and .script=="anevum-apex-prelaunch-gateway")]|length)==1 and
+           ([.result[]|select(.pattern=="anevum.com/evolution/vectors/*" and .script=="anevum-apex-prelaunch-gateway")]|length)==1' "$RUNNER_TEMP/routes.before.json" >/dev/null
+
+      - name: Rebuild approved optical and full native Evolution artwork
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install numpy==2.2.6 scipy==1.15.3 Pillow==11.2.1
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libgl1-mesa-dri
+          cd design/evolution-v059
+          mkdir -p artwork/{native,textures,vector,masters,web,compact} docs dist previews
+          python src/export_native.py
+          python src/render_web.py
+          python src/build.py
+          cd ../..
+          python creator-v1/ops/install-evolution-v060.py
+          test "$(find creator-v1/web/public/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+          test -s creator-v1/web/public/evolution/assets/level-01-scene.gz
+          test -s creator-v1/web/public/evolution/assets/level-30-scene.gz
+          test -s creator-v1/web/public/evolution/mini-runtime.json
+
+      - name: Reconfirm original-model canary and restricted URLs
+        shell: bash
+        run: |
+          set -euo pipefail
+          canary=https://anevum-evolution-v076-canary.devonakins.workers.dev
+          curl -fsS --max-time 20 "$canary/__canary/v076/asset-status" |
+            jq -e '.currentLevel==4 and (.records|length)==6 and all(.records[]; .status==200)'
+          for kind in icon preview poster scene runtime height albedo; do
+            test "$(curl -sS --max-time 20 -o /dev/null -w '%{http_code}' "$canary/api/v1/members/devon/rewards/levels/4/$kind")" = 200
+          done
+          test "$(curl -sS --max-time 20 -o /dev/null -w '%{http_code}' "$canary/api/v1/members/devon/rewards/levels/1/scene")" = 404
+          test "$(curl -sS --max-time 20 -o /dev/null -w '%{http_code}' "$canary/evolution/assets/level-04-1024.webp")" = 404
+
+      - name: Build and verify exactly the earned-only UI
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          node --test creator-v1/test/protected-email-approval-v075.test.mjs
+          node --test creator-v1/test/earned-reward-media-v075.test.mjs creator-v1/test/level-artwork-preservation-v074.test.mjs creator-v1/test/evolution-v060-contract.test.mjs creator-v1/test/progression-v031.test.mjs creator-v1/test/apex-prelaunch-gateway.test.mjs creator-v1/test/canonical-otp-resend-v023.test.mjs
+          test "$(find creator-v1/dist/web/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+          test -s creator-v1/dist/web/evolution/mini-runtime.json
+          test -s creator-v1/dist/web/evolution/assets/level-30-scene.gz
+          node -e 'const fs=require("node:fs");const html=fs.readFileSync("creator-v1/dist/web/index.html","utf8");if(!/id="root"/.test(html))throw Error("Missing React root");'
+          echo V076_ASSET_AND_TYPECHECK_GATES=PASS
+
+      - name: Publish original-model repair with reversible production gates
+        shell: bash
+        run: |
+          set -euo pipefail
+          auth="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+          api="https://api.cloudflare.com/client/v4"
+          old="$EXPECTED_WORKER_VERSION"
+          deployment_url="$api/accounts/$CF_ACCOUNT/workers/scripts/$CF_WORKER/deployments"
+          curl -fsS --max-time 30 -H "$auth" "$deployment_url?per_page=1" > "$RUNNER_TEMP/deploy.recheck.json"
+          test "$(jq -er '.result.deployments[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/deploy.recheck.json")" = "$old"
+          curl -fsS --max-time 30 -H "$auth" "$api/zones/$CF_ZONE/workers/routes" > "$RUNNER_TEMP/routes.recheck.json"
+          jq -e '([.result[]|select(.pattern=="anevum.com/*" and .script=="anevum-apex-prelaunch-gateway")]|length)==1 and
+           ([.result[]|select(.pattern=="anevum.com/assets/index-*" and .script=="anevum-apex-prelaunch-gateway")]|length)==1 and
+           ([.result[]|select(.pattern=="anevum.com/evolution/vectors/*" and .script=="anevum-apex-prelaunch-gateway")]|length)==1' "$RUNNER_TEMP/routes.recheck.json" >/dev/null
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const p='creator-v1/wrangler.apex-prelaunch.jsonc';
+          const config=JSON.parse(fs.readFileSync(p,'utf8'));
+          if(config.name!=='anevum-apex-prelaunch-gateway'||
+             config.routes.length!==0||config.assets?.binding!=='ASSETS'||
+             config.assets.run_worker_first!==true||
+             config.d1_databases?.length!==2)
+            throw Error('Unexpected production Worker configuration');
+          config.vars.ANEVUM_PRELAUNCH_MODE='public';
+          config.vars.ANEVUM_LAUNCH_APPROVED='true';
+          config.vars.CANONICAL_PUBLIC_SIGNUP_ENABLED='true';
+          config.vars.CANONICAL_RECOGNITION_ENABLED='true';
+          // Unchanged from V075; integrity follow-up is separate.
+          config.vars.CANONICAL_XP_TEST_ENABLED='true';
+          fs.writeFileSync('creator-v1/wrangler.apex-evolution-v076.jsonc',JSON.stringify(config,null,2));
+          NODE
+          deployed=0
+          accepted=0
+          rollback(){
+            if [ "$accepted" = 1 ] || [ "$deployed" != 1 ]; then return; fi
+            echo "::error::V076 live smoke failed; rolling back to original V075 Worker version."
+            jq -nc --arg id "$old" '{strategy:"percentage",versions:[{version_id:$id,percentage:100}],annotations:{"workers/message":"ANEVUM V076 earned-model rollback after failed smoke"}}' > "$RUNNER_TEMP/v076-rollback.json"
+            curl -fsS --max-time 30 -X POST -H "$auth" -H 'Content-Type: application/json' --data-binary @"$RUNNER_TEMP/v076-rollback.json" "$deployment_url" > "$RUNNER_TEMP/v076-rollback-result.json" || true
+          }
+          trap rollback EXIT
+          npx wrangler deploy --config creator-v1/wrangler.apex-evolution-v076.jsonc --keep-vars
+          deployed=1
+          for attempt in $(seq 1 15); do
+            status="$(curl -sS --max-time 20 -o "$RUNNER_TEMP/v076-live-runtime.json" -w '%{http_code}' https://anevum.com/api/v1/members/devon/rewards/levels/4/runtime)"
+            if [ "$status" = 200 ] &&
+              jq -e '.version=="anevum.mini-native.v062" and (.accents|length)==1 and (.height|endswith("/4/height"))' "$RUNNER_TEMP/v076-live-runtime.json" >/dev/null 2>&1; then break; fi
+            echo "Production edge pending original runtime: HTTP $status / attempt $attempt"
+            sleep 2
+          done
+          test "$status" = 200
+          jq -e '.version=="anevum.mini-native.v062" and (.accents|length)==1' "$RUNNER_TEMP/v076-live-runtime.json" > /dev/null
+          mkdir -p "$RUNNER_TEMP/v076-live"
+          for kind in icon preview poster scene height albedo; do
+            curl -fsS --max-time 30 -D "$RUNNER_TEMP/v076-live/$kind.headers" -o "$RUNNER_TEMP/v076-live/$kind.bin" "https://anevum.com/api/v1/members/devon/rewards/levels/4/$kind"
+            test "$(wc -c < "$RUNNER_TEMP/v076-live/$kind.bin")" -gt 1000
+          done
+          grep -qi '^content-type: image/png' "$RUNNER_TEMP/v076-live/icon.headers"
+          grep -qi '^content-type: image/webp' "$RUNNER_TEMP/v076-live/preview.headers"
+          grep -qi '^content-type: image/webp' "$RUNNER_TEMP/v076-live/poster.headers"
+          grep -qi '^content-type: application/gzip' "$RUNNER_TEMP/v076-live/scene.headers"
+          python - <<'PY'
+          import gzip,json,os,pathlib
+          from PIL import Image
+          p=pathlib.Path(os.environ['RUNNER_TEMP'])/'v076-live'
+          assert Image.open(p/'icon.bin').size==(128,128)
+          assert Image.open(p/'preview.bin').size==(256,256)
+          assert Image.open(p/'poster.bin').size==(1024,1024)
+          scene=json.loads(gzip.decompress((p/'scene.bin').read_bytes()))
+          assert scene['level']==4 and len(scene['parts'])>0
+          PY
+          curl -fsS --max-time 25 https://anevum.com/api/v1/members/devon/rewards/inventory | jq -e '.currentLevel==4 and (.levels|length)==1 and .levels[0].name=="Symmetry Field"' >/dev/null
+          curl -fsS --max-time 25 https://anevum.com/api/v1/member/auth-methods | jq -e '.methods.email.available==true' >/dev/null
+          for item in /api/v1/member/rewards/levels/1/icon /api/v1/member/rewards/inventory; do
+            test "$(curl -sS --max-time 20 -o /dev/null -w '%{http_code}' "https://anevum.com$item")" = 401
+          done
+          for item in /evolution/ /evolution/assets/level-04-1024.webp /evolution/vectors/level-04.svg /api/v1/members/devon/rewards/levels/1/poster; do
+            test "$(curl -sS --max-time 20 -o /dev/null -w '%{http_code}' "https://anevum.com$item")" = 404
+          done
+          for page in /levels /recognition /join /community; do
+            curl -fsS --max-time 25 "https://anevum.com$page" -o "$RUNNER_TEMP/v076-live/page.html"
+            grep -q 'id="root"' "$RUNNER_TEMP/v076-live/page.html"
+          done
+          filename="$(find creator-v1/dist/web/assets -maxdepth 1 -type f -name 'index-*.js' | head -n 1)"
+          test -s "$filename"
+          curl -fsS --max-time 30 "https://anevum.com/assets/$(basename "$filename")" -o "$RUNNER_TEMP/v076-live/live-index.js"
+          cmp -s "$filename" "$RUNNER_TEMP/v076-live/live-index.js" || { echo "::error::Production frontend differs from approved V076 build"; exit 1; }
+          curl -fsS --max-time 30 -H "$auth" "$api/accounts/$CF_ACCOUNT/workers/scripts/$CF_WORKER/settings" > "$RUNNER_TEMP/settings.after.json"
+          jq -e '.success and
+           ([.result.bindings[]|select(.type=="secret_text" and .name=="CANONICAL_BETTER_AUTH_SECRET")]|length)==1 and
+           ([.result.bindings[]|select(.type=="secret_text" and .name=="CANONICAL_RESEND_API_KEY")]|length)==1 and
+           ([.result.bindings[]|select(.type=="d1")]|length)==2 and
+           ([.result.bindings[]|select(.type=="assets" and .name=="ASSETS")]|length)==1 and
+           ([.result.bindings[]|select(.type=="plain_text" and .name=="CANONICAL_RECOGNITION_ENABLED" and .text=="true")]|length)==1' "$RUNNER_TEMP/settings.after.json" >/dev/null
+          accepted=1
+          echo "V076_ORIGINAL_EVOLUTION_MEDIA_LIVE=PASS" >> "$GITHUB_STEP_SUMMARY"
+          echo "LEVEL_04_NATIVE_3D_AND_ORIGINAL_ART=PASS" >> "$GITHUB_STEP_SUMMARY"
+          echo "RELEASE_SHA=$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evolution-v076-release-evidence
+          path: |
+            creator-v1/shared/level-artifacts.json
+            creator-v1/dist/web/index.html
+          if-no-files-found: warn
+          retention-days: 14
