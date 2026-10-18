@@ -182,7 +182,7 @@ test("real multi-file workflow: private preview -> submit -> staff approve -> pu
     assert.equal(publicAsset.status,200);
     assert.match((await (await getPage(env,"/packages","visitor")).text()),/Cosmic Racer/);
     const badStaff=await post(env,"/api/v1/packages/projects/"+created.id+"/review",{action:"reject",reason:"invalid"},"visitor");
-    assert.equal(badStaff.status,403);
+    assert.equal(badStaff.status,401);
     // A fresh version is private; the public URL stays on v1 until approved.
     const update=await post(env,"/api/v1/packages/upload",uploadForm(sample(),"Cosmic Racer II",created.id));
     assert.equal(update.status,201);
