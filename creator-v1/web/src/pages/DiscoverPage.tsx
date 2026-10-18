@@ -77,7 +77,7 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
   }
   const categories=resource.state==="ready"?resource.data.categories.categories:[];
   const countByCategory=new Map(categories.map(x=>[x.category,x.count]));
-  return <div className="portal-discover av73-discover">
+  return <div data-iren-anchor="discover" className="portal-discover av73-discover">
     {immersive?<PortalHeading
       eyebrow={world?.eyebrow||"THE PORTALS / EVERYTHING WORTH TRYING"}
       title={world?.title||"EXPLORE THE"} accent={world?.accent||"UNIVERSE."}
