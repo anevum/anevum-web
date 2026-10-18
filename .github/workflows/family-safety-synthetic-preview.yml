@@ -161,10 +161,20 @@ jobs:
           set -euo pipefail
           base="https://anevum-family-field-synthetic-review-20261018.devonakins.workers.dev"
           for path in "/" "/styles.css" "/app.mjs" "/synthetic-scene.mjs" "/__review"; do
-            result="$(curl --silent --show-error --max-time 30 -o /dev/null -w '%{http_code}' "$base$path" || true)"
-            case "$result" in
-              301|302|303|307|308|401|403) ;;
-              *) echo "ACCESS_GATE_FAILED path=$path status=$result"; exit 1;;
-            esac
+            allowed=0
+            for attempt in $(seq 1 20); do
+              result="$(curl --silent --show-error --max-time 12 -o /dev/null -w '%{http_code}' "$base$path" || true)"
+              case "$result" in
+                301|302|303|307|308|401|403) allowed=1; break ;;
+                000|404|503) sleep 4 ;;
+                200) echo "PUBLIC_ASSET_LEAK path=$path status=$result"; exit 1 ;;
+                *) echo "UNEXPECTED_ACCESS_GATE path=$path status=$result"; exit 1 ;;
+              esac
+            done
+            if [ "$allowed" != 1 ]; then
+              echo "ACCESS_GATE_UNAVAILABLE path=$path last_status=$result"
+              exit 1
+            fi
+            echo "ASSET_ACCESS_RESTRICTED path=$path status=$result"
           done
           echo "FAMILY_FIELD_OWNER_ONLY_ACCESS_GATE=PASS"
