@@ -20,7 +20,7 @@ export function isNativePackForCategory(name,category){
  return extension!==null&&NATIVE_PACK_CATEGORY[extension]===category;
 }
 /** No network, browser DOM, file writes or dynamic code execution. */
-export async function inspectNativePackForQuarantine(filename,bytes,category){
+export async function readValidatedNativePack(filename,bytes,category){
  if(!(bytes instanceof Uint8Array)||!bytes.length||bytes.length>MAX_PACK_BYTES)
   throw Error('Invalid native package size');
  if(!isNativePackForCategory(filename,category))
@@ -48,6 +48,11 @@ export async function inspectNativePackForQuarantine(filename,bytes,category){
  if(assets.size!==referenced.size||
     [...assets.keys()].some(path=>!referenced.has(path)))
   throw Error('Native package has unexpected or unused assets');
+ return opened;
+}
+/** Uploads still receive only immutable scalar inspection metadata. */
+export async function inspectNativePackForQuarantine(filename,bytes,category){
+ const {manifest,assets}=await readValidatedNativePack(filename,bytes,category);
  return Object.freeze({
   kind:manifest.kind,version:manifest.version,
   assetCount:assets.size,byteLength:bytes.byteLength

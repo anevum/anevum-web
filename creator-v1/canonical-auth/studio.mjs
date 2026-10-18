@@ -4,6 +4,7 @@
 import {boundedText} from './request-body.mjs';
 import {canonicalStudioAssets,studioUploadReady,studioNativePackReady} from './studio-assets.mjs';
 import {NATIVE_PACK_EXTENSION} from './native-pack-quarantine.mjs';
+import {inspectFrozenNativeSummary,nativeInspectionSchemaReady} from './native-pack-review.mjs';
 import {studioReviewSchemaReady,freezeStudioReview,withdrawStudioReview,decideStudioReview,getStudioReviewReceipt,listStudioReviewReceipts} from './studio-submissions.mjs';
 
 const PREFIX='/api/v1/member/studio';
@@ -254,11 +255,22 @@ export async function canonicalStudioReview(req,env,user,now=Math.floor(Date.now
  const url=new URL(req.url),path=url.pathname;
  if(url.search)return fail(400,'Unexpected query');
  const manifest=path.match(/^\/api\/v1\/member\/studio\/review\/([0-9a-f-]{36})\/manifest$/);
- if(manifest&&!UUID.test(manifest[1]))return fail(404,'Not found');
- if(!manifest&&path!==PREFIX+'/review')return fail(404,'Not found');
+ const nativeSummary=path.match(/^\/api\/v1\/member\/studio\/review\/([0-9a-f-]{36})\/native\/([a-f0-9]{32})\/summary$/);
+ if((manifest&&!UUID.test(manifest[1]))||
+    (nativeSummary&&!UUID.test(nativeSummary[1])))return fail(404,'Not found');
+ if(!manifest&&!nativeSummary&&path!==PREFIX+'/review')return fail(404,'Not found');
  const db=env.MEMBER_DB;
  try{
   if(req.method==='GET'){
+   if(nativeSummary){
+    // This is an independent, absent-by-default, audit-only staff privilege.
+    // The canonical reviewer allowlist and verified session were checked above.
+    if(env.CANONICAL_CREATOR_NATIVE_INSPECTION_ENABLED!=='true')
+     return fail(404,'Native text inspection is not activated');
+    const summary=await inspectFrozenNativeSummary(db,env.CREATOR_ASSETS,
+     nativeSummary[1],nativeSummary[2],user.id,now);
+    return json(summary);
+   }
    if(manifest){
     // Only vetted metadata, NEVER object keys, download credentials, file
     // bodies or executable previews on the site origin. No self-review.
@@ -271,7 +283,9 @@ export async function canonicalStudioReview(req,env,user,now=Math.floor(Date.now
     return json({projectId:receipt.projectId,revision:receipt.revision,
      submissionId:receipt.id,submittedAt:receipt.submittedAt,
      title:receipt.title,summary:receipt.summary,category:receipt.category,
-     note:'Frozen private review receipt. Quarantined assets have NOT passed malware scanning; no rendering or download is authorized.',
+     nativeTextInspectionReady:env.CANONICAL_CREATOR_NATIVE_INSPECTION_ENABLED==='true'&&
+      Boolean(env.CREATOR_ASSETS?.get)&&await nativeInspectionSchemaReady(db),
+     note:'Frozen private review receipt. Quarantined assets have NOT passed malware scanning; no executable rendering or download is authorized.',
      assets:receipt.assets.map(a=>({...a,status:'quarantined',uploadedAt:null}))});
    }
    const projects=await rows(db,
@@ -285,7 +299,7 @@ export async function canonicalStudioReview(req,env,user,now=Math.floor(Date.now
     "WHERE s.status='pending_review' AND s.user_id<>? ORDER BY s.submitted_at ASC LIMIT 50",[user.id]);
    return json({projects});
   }
-  if(manifest)return fail(405,'Manifest is read-only');
+  if(manifest||nativeSummary)return fail(405,'Review inspection is read-only');
   if(req.method!=='POST')return fail(405,'Method not allowed');
   const raw=await body(req,1800);
   if(!raw||!exactly(raw,['projectId','action','reason','revision'])||!UUID.test(raw.projectId)||
@@ -300,7 +314,11 @@ export async function canonicalStudioReview(req,env,user,now=Math.floor(Date.now
   // snapshot. Any creator withdrawal makes the old receipt non-actionable.
   const changed=await decideStudioReview(db,{...target,id:raw.projectId},user.id,raw.action,reason,now);
   return changed?json({ok:true,status:raw.action}):fail(409,'Submission changed during review');
- }catch{return fail(503,'Studio review unavailable');}
+ }catch(e){
+  if(nativeSummary&&[403,404,409,422,429,503].includes(e?.status))
+   return fail(e.status,e.message);
+  return fail(503,'Studio review unavailable');
+ }
 }
 
 /**

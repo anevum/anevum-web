@@ -4,10 +4,10 @@ import {canonicalAuthClient,canonicalMe,type CanonicalProfile} from '../lib/cano
 import {
  studioHealth,studioList,studioGet,studioCreate,studioUpdate,studioSubmit,studioAssets,
  studioUpload,studioCheckFile,studioDeleteAsset,studioDownloadUrl,studioWithdraw,studioDeleteProject,studioReviewQueue,
- isNativeStudioFile,
+ isNativeStudioFile,studioReviewNativeText,
  studioEligibleUpload,studioReviewManifest,studioReviewReceipts,
  studioReviewDecision,type StudioDraft,type StudioProject,type StudioAsset,type StudioCategory,
- type StudioReviewProject,type StudioReviewHistory,type StudioReviewManifest,type StudioReviewReceipt
+ type StudioReviewProject,type StudioReviewHistory,type StudioReviewManifest,type StudioReviewReceipt,type StudioNativeTextReceipt
 } from '../lib/canonical-studio';
 import {StudioGuestDiscovery,StudioLaunchpad} from './StudioLaunchpad';
 import {StudioWorkbench} from './StudioWorkbench';
@@ -534,6 +534,8 @@ function StudioReview(){
  const [reason,setReason]=useState<Record<string,string>>({}),[busy,setBusy]=useState('');
  const [manifests,setManifests]=useState<Record<string,StudioReviewManifest>>({});
  const [inspection,setInspection]=useState('');
+ const [textSummaries,setTextSummaries]=useState<Record<string,StudioNativeTextReceipt>>({});
+ const [summaryBusy,setSummaryBusy]=useState('');
  async function refresh(){const r=await studioReviewQueue();setProjects(r.projects);}
  useEffect(()=>{const ac=new AbortController();studioReviewQueue(ac.signal).then(r=>setProjects(r.projects))
   .catch(e=>{if(!ac.signal.aborted)setError(showError(e))})
@@ -545,12 +547,25 @@ function StudioReview(){
   try{const manifest=await studioReviewManifest(p.id);setManifests(v=>({...v,[p.id]:manifest}));}
   catch(e){setError(showError(e));}finally{setInspection('');}
  }
+ async function inspectNative(p:StudioReviewProject,asset:StudioAsset){
+  const key=p.id+'/'+asset.id;
+  if(summaryBusy||!manifests[p.id]?.nativeTextInspectionReady||!isNativeStudioFile(asset.name))return;
+  setSummaryBusy(key);setError('');
+  try{
+   const summary=await studioReviewNativeText(p.id,asset.id);
+   if(summary.projectId!==p.id||summary.assetId!==asset.id||summary.revision!==p.revision)
+    throw Error('The review snapshot changed. Reload the review queue.');
+   setTextSummaries(v=>({...v,[key]:summary}));
+  }catch(e){setError(showError(e));}finally{setSummaryBusy('');}
+ }
  async function decide(p:StudioReviewProject,action:'changes_requested'|'rejected'){
   const explanation=reason[p.id]?.trim()||'';
   if(explanation.length<12){setError('Give the creator a specific explanation of at least 12 characters.');return;}
   if(!window.confirm('Record this audited '+pretty(action)+' decision for '+p.title+'?'))return;
   setBusy(p.id);setError('');
-  try{await studioReviewDecision(p.id,p.revision,action,explanation);await refresh();}
+  try{await studioReviewDecision(p.id,p.revision,action,explanation);await refresh();
+   setManifests(v=>{const next={...v};delete next[p.id];return next;});
+   setTextSummaries(v=>Object.fromEntries(Object.entries(v).filter(([key])=>!key.startsWith(p.id+'/'))));}
   catch(e){setError(showError(e))}finally{setBusy('');}
  }
  return <section className="st-panel">
@@ -575,6 +590,31 @@ function StudioReview(){
      {manifests[p.id].assets.map(a=><div className="st-manifest-file" key={a.id}>
       <strong>{a.name}</strong><small>{a.kind.toUpperCase()} / {size(a.sizeBytes)} / {a.status.toUpperCase()}</small>
       <code>{a.sha256||'Hash pending'}</code>
+      {isNativeStudioFile(a.name)&&<div className="st-native-summary">
+       {manifests[p.id].nativeTextInspectionReady?
+        <button type="button" className="st-link"
+         disabled={Boolean(summaryBusy)||Boolean(busy)}
+         onClick={()=>void inspectNative(p,a)}>
+         {summaryBusy===p.id+'/'+a.id?'VERIFYING PRIVATE PACKAGE…':'INSPECT TEXT SUMMARY ↗'}
+        </button>:
+        <small>Native inspection disabled or audit/storage unavailable.</small>}
+       {textSummaries[p.id+'/'+a.id]&&
+        textSummaries[p.id+'/'+a.id].revision===manifests[p.id].revision&&
+        <div className="st-native-summary-result">
+         <p className="st-kicker">AUDITED / TEXT ONLY / NO FILE DOWNLOAD</p>
+         <strong>{textSummaries[p.id+'/'+a.id].summary.title}</strong>
+         <p className="st-muted">Credited to {textSummaries[p.id+'/'+a.id].summary.creditedCreator}
+          {' · v'+textSummaries[p.id+'/'+a.id].summary.version}
+          {' · '+textSummaries[p.id+'/'+a.id].summary.itemCount+' sections'}</p>
+         {textSummaries[p.id+'/'+a.id].summary.items.map((item,index)=>
+          <div className="st-native-summary-item" key={index}>
+           <strong>{item.label}</strong>
+           {item.detail&&<p>{item.detail}</p>}
+           {typeof item.choices==='number'&&<small>{item.choices} choices</small>}
+          </div>)}
+         <small>{textSummaries[p.id+'/'+a.id].note}</small>
+        </div>}
+      </div>}
      </div>)}
     </div>}
    </div>}
