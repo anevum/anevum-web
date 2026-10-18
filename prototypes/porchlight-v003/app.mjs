@@ -238,7 +238,7 @@ function privateReportCard(report) {
       await api(API+'/organizer/reports/'+encodeURIComponent(report.id)+'/resolve',
         {method:'POST',body:{expectedRevision:report.revision,reason:field.value.trim()}});
       await loadReports();
-      notice('reports-state','Report resolution was recorded. Review any remaining reports.','good');
+      notice('reports-feedback','Report resolution was recorded. Review any remaining reports.','good');
     } catch(error) {
       result.textContent=friendly(error);
       result.className='form-result error';
