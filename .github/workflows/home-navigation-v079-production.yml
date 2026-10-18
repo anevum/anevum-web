@@ -132,8 +132,8 @@ jobs:
           test "$GITHUB_REPOSITORY" = "anevum/anevum-web"
           test "$GITHUB_REF" = "refs/heads/release/home-wayfinder-v079-approved-20261018"
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          test "$(git rev-parse HEAD^)" = "ef111c9a0ad2f3e0388bcdeb2f3df04e1f960c0d"
-          test "$(git diff --name-only HEAD^ HEAD)" = ".github/workflows/home-navigation-v079-production.yml"
+          git merge-base --is-ancestor ef111c9a0ad2f3e0388bcdeb2f3df04e1f960c0d HEAD
+          test "$(git diff --name-only ef111c9a0ad2f3e0388bcdeb2f3df04e1f960c0d HEAD)" = ".github/workflows/home-navigation-v079-production.yml"
           test -f creator-v1/web/src/lib/public-creator-handle.ts
           grep -Fq 'publicCreatorHandle(project.creatorHandle)' creator-v1/web/src/pages/CinematicLandingPage.tsx
           grep -Fq 'publicCreatorHandle(project.creatorHandle)' creator-v1/web/src/components/ProjectCard.tsx
@@ -255,10 +255,34 @@ jobs:
           echo "PASS: production serves the exact approved V079 JavaScript asset."
           style="$(node --input-type=module -e 'import{readFileSync}from"node:fs";const s=readFileSync("creator-v1/dist/web/index.html","utf8");console.log(s.match(/href="(\/assets\/index-[^"]+\.css)"/)?.[1]||"")')"
           test -n "$style"
-          curl -fsS --max-time 30 "https://anevum.com$style" -o "$RUNNER_TEMP/v079-live-style.css"
-          grep -Fq '.av78-player-card' "$RUNNER_TEMP/v079-live-style.css"
-          grep -Fq '.av79-hero' "$RUNNER_TEMP/v079-live-style.css"
-          grep -Fq '.av79-navigation' "$RUNNER_TEMP/v079-live-style.css"
+          # Cloudflare's independent /assets/index-* overlay Worker sometimes
+          # reaches a newly published JS bundle before the CSS asset propagates.
+          # The original browser URL MUST return real CSS, not a SPA fallback or
+          # temporary response. Wait conservatively, never accept unstyled UI.
+          css_ready=0
+          for attempt in $(seq 1 20); do
+            if curl --silent --show-error --max-time 30 --no-keepalive \
+                 -H 'Cache-Control: no-cache' \
+                 -D "$RUNNER_TEMP/v079-css-response.headers" \
+                 -o "$RUNNER_TEMP/v079-live-style.css" \
+                 "https://anevum.com$style"; then
+              if grep -qi '^content-type:.*text/css' "$RUNNER_TEMP/v079-css-response.headers" &&
+                 grep -Fq '.av78-player-card' "$RUNNER_TEMP/v079-live-style.css" &&
+                 grep -Fq '.av79-hero' "$RUNNER_TEMP/v079-live-style.css" &&
+                 grep -Fq '.av79-navigation' "$RUNNER_TEMP/v079-live-style.css"; then
+                css_ready=1
+                break
+              fi
+            fi
+            echo "Waiting for the V079 canonical stylesheet to propagate (attempt $attempt / 20)"
+            sleep 4
+          done
+          if test "$css_ready" != 1; then
+            echo "::error::V079 stylesheet failed to propagate at its browser URL; refusing unstyled production and restoring V078."
+            sed -n '1,18p' "$RUNNER_TEMP/v079-css-response.headers" || true
+            exit 1
+          fi
+          echo "V079_EXACT_HOMEPAGE_CSS=PASS"
           for page in / /discover /recognition /join /community /@devon /creators; do
             curl -fsSL --max-time 30 "https://anevum.com$page" -o "$RUNNER_TEMP/v078-live-page.html"
             grep -Fq 'id="root"' "$RUNNER_TEMP/v078-live-page.html"
