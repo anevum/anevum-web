@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07101c">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="description" content="A synthetic, consent-first 3D neighborhood prototype for ANEVUM Porchlight. No real households or public enrollment.">
+  <title>Porchlight / Living Neighborhood — Private Concept</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <div class="atmosphere" aria-hidden="true"></div>
+  <div class="frame">
+    <header class="topbar">
+      <a class="brand" href="#home" aria-label="Porchlight top">
+        <span class="brandmark" aria-hidden="true"><span class="orbit"></span><span class="core"></span><span class="satellite"></span></span>
+        <span class="brandtype"><strong>ANEVUM</strong><small>PORCHLIGHT / FIELD NETWORK</small></span>
+      </a>
+      <nav aria-label="Pilot sections" class="nav-links">
+        <a href="#neighborhood">Neighborhood</a>
+        <a href="#resources">Services</a>
+        <a href="#how">Participation</a>
+      </nav>
+      <span class="lab-status"><span class="pulse-dot"></span> PRIVATE CONCEPT · SYNTHETIC DATA</span>
+    </header>
+
+    <main id="home">
+      <div class="intro-strip">
+        <span class="eyebrow">THE CONTINUANCE INSTITUTE / CIVIC SYSTEMS / 001</span>
+        <span class="intro-right">ST. CLOUD, FLORIDA · PROPOSED PILOT AREA</span>
+      </div>
+      <div class="stage-grid">
+        <section class="intro-panel" aria-labelledby="hero-title">
+          <div class="section-index">01 <span>THE LIVING BLOCK</span></div>
+          <h1 id="hero-title">Your block.<br><em>Better together.</em></h1>
+          <p class="lead">A neighborhood becomes more than addresses when families can coordinate experiences, services and shared moments on their own terms.</p>
+          <div class="feature-tags" aria-label="Design pillars">
+            <span>NEIGHBORHOOD MAP</span><span>OPT-IN HOMES</span><span>LOCAL SERVICES</span>
+          </div>
+          <div class="featured-event">
+            <span class="event-icon" aria-hidden="true">✦</span>
+            <div class="featured-event-copy">
+              <span class="eyebrow">OFFICIAL PUBLIC EVENT · INDEPENDENT LISTING</span>
+              <strong>St. Cloud Trunk or Treat</strong>
+              <span>Oct 31, 2026 · 5–7 PM · Centennial Park</span>
+              <a href="https://www.stcloudfl.gov/Calendar.aspx?EID=5614" target="_blank" rel="noopener noreferrer">View city event ↗</a>
+            </div>
+          </div>
+          <div class="trust-note"><span class="trust-icon" aria-hidden="true">◈</span><span>No children, real homes, live positions or resident accounts are shown in this demo. Fictional building markers are for interaction testing only.</span></div>
+          <div class="chapter" id="how">
+            <span class="eyebrow">HOW HOUSEHOLDS JOIN · FUTURE PILOT</span>
+            <ol class="steps">
+              <li><b>01</b><span>Adult resident requests participation.</span></li>
+              <li><b>02</b><span>Organizer independently confirms permission and details.</span></li>
+              <li><b>03</b><span>Explicitly consented event listing becomes visible.</span></li>
+              <li><b>04</b><span>Resident withdraws at any time; listing expires automatically.</span></li>
+            </ol>
+          </div>
+        </section>
+
+        <section class="map-panel" id="neighborhood" aria-label="Navigable synthetic 3D neighborhood scene">
+          <div class="map-head">
+            <div>
+              <span class="eyebrow">DIGITAL TWIN / ILLUSTRATIVE</span>
+              <h2>Living neighborhood <span class="live-chip">SIMULATION</span></h2>
+            </div>
+            <div class="coordinates">SC–FL / PORCHLIGHT <span>001</span></div>
+          </div>
+          <div class="canvas-area" id="canvas-area" tabindex="0" aria-label="Fictional neighborhood map. Drag to move. Use the map buttons to rotate and zoom. Click glowing house markers to inspect them.">
+            <canvas id="scene" aria-hidden="true"></canvas>
+            <div class="glass-shimmer" aria-hidden="true"></div>
+            <div class="map-top-meta">
+              <span><i class="beacon-icon"></i> HOUSEHOLDS DISPLAYED: <b id="activeCount">0</b> DEMO ONLY</span>
+              <span>NO GPS · NO REAL PROPERTY DATA</span>
+            </div>
+            <div class="map-controls" aria-label="3D map camera controls">
+              <button type="button" id="zoom-in" aria-label="Zoom in" title="Zoom in">＋</button>
+              <button type="button" id="zoom-out" aria-label="Zoom out" title="Zoom out">−</button>
+              <button type="button" id="turn-left" aria-label="Rotate left" title="Rotate left">↶</button>
+              <button type="button" id="turn-right" aria-label="Rotate right" title="Rotate right">↷</button>
+              <button type="button" id="reset-map" aria-label="Reset view" title="Reset view">⌖</button>
+            </div>
+            <div class="map-bottom">
+              <span class="map-legend"><i></i> OPTED-IN DEMONSTRATION HOUSE</span>
+              <span>DRAG TO PAN · SELECT MARKER</span>
+            </div>
+            <div class="map-empty" id="mapEmpty" hidden>This event has ended. Synthetic house listings are no longer visible.</div>
+          </div>
+          <div class="map-info-bar">
+            <div><span class="eyebrow">MODE</span><strong>EXPLORATORY 3D VIEW</strong></div>
+            <div><span class="eyebrow">PRIVACY</span><strong>RESIDENT CONTROL FIRST</strong></div>
+            <div><span class="eyebrow">DATA</span><strong>ILLUSTRATIVE / 0 REAL HOMES</strong></div>
+          </div>
+        </section>
+
+        <aside class="side-panel" aria-labelledby="inspector-title">
+          <div class="section-index">02 <span>PARTICIPATION</span></div>
+          <h2 id="inspector-title">The neighborhood</h2>
+          <p class="side-subtitle">Explore fictional participating houses, then test how consent and organizer review affect visibility.</p>
+          <div class="filter-row" role="group" aria-label="Directory filter">
+            <button class="filter active" type="button" data-filter="all" aria-pressed="true">All</button>
+            <button class="filter" type="button" data-filter="Treats" aria-pressed="false">Treats</button>
+            <button class="filter" type="button" data-filter="Non-food treats" aria-pressed="false">Non-food</button>
+          </div>
+          <div id="house-list" class="house-list" aria-live="polite"></div>
+          <div class="selected-panel" id="selected-panel" aria-live="polite">
+            <span class="eyebrow">HOUSE DETAIL</span><p>Select a glowing marker or an entry above.</p>
+          </div>
+          <div class="demo-actions">
+            <span class="eyebrow">PRIVATE TEST CONTROLS · LOCAL ONLY</span>
+            <h3>Participation simulator</h3>
+            <p>These buttons change fictional house records in this browser tab. No address or application is sent anywhere.</p>
+            <div class="demo-controls">
+              <button class="demo-btn" type="button" id="request-demo">Stage a mock host request</button>
+              <button class="demo-btn secondary" type="button" id="approve-demo">Simulate organizer approval</button>
+              <button class="demo-btn danger" type="button" id="withdraw-demo">Withdraw mock consent</button>
+            </div>
+            <p class="interaction-feedback" id="feedback" role="status" aria-live="polite">Ready. No real households enrolled.</p>
+          </div>
+        </aside>
+      </div>
+
+      <section class="resources" id="resources" aria-labelledby="resource-title">
+        <div class="resources-heading">
+          <div><span class="section-index">03 <span>CIVIC CONNECTIONS</span></span><h2 id="resource-title">Useful, every week.</h2></div>
+          <p>Use verified municipal services. Household addresses and student transportation details do not enter Porchlight.</p>
+        </div>
+        <div class="resource-grid">
+          <article class="resource-card">
+            <span class="card-icon">▦</span><span class="eyebrow">COLLECTION / CITY</span>
+            <h3>City of St. Cloud</h3>
+            <p>Verify your municipal garbage and recycling route with the city's official Public Works information.</p>
+            <a target="_blank" rel="noopener noreferrer" href="https://www.stcloudfl.gov/907/Public-Works">Official city schedule ↗</a>
+          </article>
+          <article class="resource-card">
+            <span class="card-icon">◫</span><span class="eyebrow">COLLECTION / COUNTY</span>
+            <h3>Osceola County</h3>
+            <p>Unincorporated county addresses have different waste collection services. Check the official lookup.</p>
+            <a target="_blank" rel="noopener noreferrer" href="https://www.osceola.org/My-Property/Waste-and-Recycling/Curbside-Collection-Services">Official county services ↗</a>
+          </article>
+          <article class="resource-card">
+            <span class="card-icon">⌁</span><span class="eyebrow">TRANSPORT / FUTURE</span>
+            <h3>School transportation</h3>
+            <p>Guardian-only school bus information belongs with the school district. Porchlight will not expose routes, riders or child locations.</p>
+            <a target="_blank" rel="noopener noreferrer" href="https://www.osceolaschools.net/">Visit school district ↗</a>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>ANEVUM / PORCHLIGHT / EXPERIMENT 001</span>
+      <span>NOT AFFILIATED WITH THE CITY OR SCHOOL DISTRICT · NOT AN EMERGENCY SERVICE · CALL 911 FOR EMERGENCIES</span>
+    </footer>
+  </div>
+</body>
+</html>
