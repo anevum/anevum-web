@@ -45,6 +45,16 @@ test('album, episode series, visual gallery and strict Studio document round-tri
   assert.equal(opened.assets.size,Object.keys(assets).length);
  }
 });
+test('game background art survives native packaging and can be reopened for editing',async()=>{
+ const png=new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,0]);
+ const background='assets/orbit.png';
+ const playable={...game,scenes:[{...game.scenes[0],background},game.scenes[1]]};
+ const pkg=await createNativePack({...opts,document:playable,assets:{[background]:png}});
+ const restored=await openNativePack(pkg.filename,pkg.bytes);
+ assert.deepEqual(restored.document,playable);
+ assert.deepEqual(restored.assets.get(background),png);
+ assert.equal(restored.manifest.files.find(f=>f.path===background)?.mime,'image/png');
+});
 test('reject spoofed media headers even when extension appears valid',async()=>{
  await assert.rejects(createNativePack({...opts,kind:'album',document:album,
   assets:{'assets/signal.mp3':bytes('not mp3 audio')}}),/signature mismatch/);
@@ -97,4 +107,14 @@ test('private Studio UI renders imported creative data without running HTML or e
  assert.match(lab,/Nothing here uploads media, runs user scripts, awards XP or publishes projects/);
  assert.doesNotMatch(lab,/dangerouslySetInnerHTML|eval\(|new Function\(|iframe|fetch\(/i);
  assert.match(workbench,/<NativePackLab/);
+ assert.match(lab,/CONTINUE EDITING THIS GAME/);
+ assert.match(lab,/GAME BEGINS AT/);
+ assert.match(lab,/ADD BACKGROUND ART/);
+ const player=source('web/src/pages/NativeFilePlayerPage.tsx');
+ const app=source('web/src/App.tsx');
+ assert.match(player,/openNativePack\(file.name/);
+ assert.match(player,/No upload, account permission, review approval or XP/);
+ assert.match(player,/URL.revokeObjectURL/);
+ assert.doesNotMatch(player,/dangerouslySetInnerHTML|eval\(|new Function\(|iframe|fetch\(/i);
+ assert.match(app,/path="open"/);
 });
