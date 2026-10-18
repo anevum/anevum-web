@@ -27,6 +27,7 @@ const portalCategories = [
 ] as const;
 const directory = [
   {to:"/boards",label:"Public boards",detail:"Reviewed releases and first looks"},
+  {to:"/creations",label:"The Makers’ Atlas",detail:"Independently reviewed external works; pilot activation pending"},
   {to:"/levels",label:"Artifacts & levels",detail:"Thirty permanent evolution levels"},
   {to:"/recognition",label:"Badge and medal archive",detail:"All defined achievements, ribbons and medals"},
   {to:"/support",label:"Support ANEVUM",detail:"Supporter benefits, infrastructure and open transparency"},
