@@ -63,7 +63,7 @@ try{
   assert.equal(info.cards[0].level,true,'First creator has verified level 7 specimen');
   assert.equal(info.cards[1].level,false,'No fabricated second creator level');
   assert.match(info.cards[0].player,/Evolution level 7/);
-  assert.equal(info.cards[0].href,'/creations/00000000-0000-4000-8000-000000008001');
+  assert.equal(info.cards[0].href,'/creator/creations/00000000-0000-4000-8000-000000008001','React Router preserves staging basename');
   await shot('creations-'+width);
   records.push(info);
  }
