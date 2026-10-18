@@ -126,7 +126,7 @@ async function prepareFile(file) {
 async function upload(req,env,u) {
   if(!pilot(env,u.id)) return fail(403,"Creator alpha access required");
   const headerSize=Number(req.headers.get("content-length")||0);
-  if(headerSize>32*MiB) return fail(413,"Upload exceeds the 30 MiB ZIP limit");
+  if(headerSize>22*MiB) return fail(413,"Upload exceeds the 20 MiB ZIP limit");
   if(!String(req.headers.get("content-type")||"").startsWith("multipart/form-data;"))
     return fail(415,"Upload a multipart form");
   let body;
