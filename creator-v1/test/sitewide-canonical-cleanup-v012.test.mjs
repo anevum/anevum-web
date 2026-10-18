@@ -11,7 +11,9 @@ test("one active cinematic route shell and preserved member boundaries",()=>{
  assert.doesNotMatch(app,/<AtlasMorphLayout\/>|<AtlasPage\/>|<WorkspacePage\/>/);
  for(const route of ["discover","community","boards","creators","levels","account","library","create","status"])
    assert.ok(app.includes('path="'+route+'"'),route);
- assert.match(app,/<MemberGate\/>/);
+ assert.match(app,/path="member" element={<Phase1MemberPage\/>}/);
+ assert.match(app,/path="library" element={<Navigate to="\/saved" replace\/>}/);
+ assert.doesNotMatch(app,/<MemberGate\/>/);
  assert.match(app,/path="workspace" element={<Navigate to="\/account" replace\/>}/);
 });
 test("active board, post, editor and scoped discussion link within canonical routes",()=>{

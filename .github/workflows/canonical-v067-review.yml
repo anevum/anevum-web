@@ -1,0 +1,69 @@
+name: ANEVUM V067 Canonical Entry and Community Integration Review
+
+# Exact-head source-only verification. Never provide Cloudflare, Stripe,
+# database, email-provider or GitHub write secrets to this job.
+on:
+  pull_request:
+    branches:
+      - build/evolution-miniature-native-webgl-v062-20261017-011
+    paths:
+      - creator-v1/**
+      - tests/creator-v1-cinematic-v005.test.mjs
+      - docs/creator-platform/ANEVUM-V067-CANONICAL-FLOW-RECONCILIATION-2026-10-17.md
+      - .github/workflows/canonical-v067-review.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact reviewed source, never a floating default branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Assert exact reviewed head
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install frontend dependencies without lifecycle scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Typecheck public and member frontend
+        run: npm run check:creator-v1-web
+
+      - name: Build current public and staged variants
+        run: |
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+
+      - name: Verify combined route, OTP visuals and existing auth/forum contracts
+        run: |
+          node --test creator-v1/test/community-entry-v066.test.mjs creator-v1/test/continuance-entry-v052.test.mjs creator-v1/test/community-hub-v007.test.mjs
+          node --test creator-v1/test/canonical-forums-v041.test.mjs creator-v1/test/apex-prelaunch-gateway.test.mjs
+          node --test creator-v1/test/canonical-open-signup-gate-v020.test.mjs creator-v1/test/canonical-otp-resend-v023.test.mjs
+          node --experimental-strip-types --test creator-v1/test/canonical-saved-works-v009.test.mjs
+          node --test creator-v1/test/canonical-profile-save-error-v027.test.mjs
+          node --test creator-v1/test/member-profile-ui.test.mjs
+          node --test creator-v1/test/sitewide-canonical-cleanup-v012.test.mjs creator-v1/test/sitewide-experience-v009.test.mjs creator-v1/test/atlas-morph-navigation.test.mjs
+          node --test tests/creator-v1-cinematic-v005.test.mjs
+
+      - name: Verify new four-door homepage stays in source
+        run: node --test creator-v1/test/interactive-arrival-v065.test.mjs
+
+      - name: Confirm review-only boundary
+        run: |
+          echo "V067_SOURCE_REVIEW_ONLY=PASS"
+          echo "No Cloudflare deployment, D1 changes, member enrollment, roles, payment, upload, social OAuth or forum enablement."

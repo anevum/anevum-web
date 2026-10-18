@@ -101,7 +101,9 @@ test("Atlas remains archived while real site entrypoints use one shell",()=>{
  assert.match(app,/path="atlas\/\*" element={<LegacyAtlasRedirect\/>}/);
  assert.match(app,/function LegacyAtlasRedirect/);
  assert.match(app,/<Route element={<Shell\/>}>/);
- assert.match(app,/<MemberGate\/>/);
+ assert.match(app,/path="member" element={<Phase1MemberPage\/>}/);
+ assert.match(app,/path="library" element={<Navigate to="\/saved" replace\/>}/);
+ assert.doesNotMatch(app,/<MemberGate\/>/);
  assert.match(app,/path="workspace" element={<Navigate to="\/account" replace\/>}/);
  assert.doesNotMatch(app,/<AtlasMorphLayout\/>|<AtlasPage\/>/);
  assert.match(archive,/<Outlet\/>/);
