@@ -1,0 +1,107 @@
+name: ANEVUM Family Field Synthetic 3D Preview
+
+on:
+  push:
+    branches: [build/family-safety-synthetic-preview-v001-20261018]
+    paths:
+      - 'prototypes/family-safety-synthetic-preview/**'
+      - '.github/workflows/family-safety-synthetic-preview.yml'
+  pull_request:
+    paths:
+      - 'prototypes/family-safety-synthetic-preview/**'
+      - '.github/workflows/family-safety-synthetic-preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: family-field-synthetic-review
+  cancel-in-progress: true
+
+jobs:
+  verify-synthetic-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Static and functional safety checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check prototypes/family-safety-synthetic-preview/public/synthetic-engine.mjs
+          node --check prototypes/family-safety-synthetic-preview/public/app.mjs
+          node --check prototypes/family-safety-synthetic-preview/worker.mjs
+          node --test prototypes/family-safety-synthetic-preview/test.mjs
+      - name: Reject unsafe runtime bindings and public asset bypass
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module -e '
+          import fs from "node:fs";
+          const p="prototypes/family-safety-synthetic-preview/wrangler.jsonc";
+          const c=JSON.parse(fs.readFileSync(p,"utf8"));
+          if(c.name!=="anevum-family-field-synthetic-review-20261018"||
+             c.main!=="./worker.mjs" || c.workers_dev!==true ||
+             c.preview_urls!==false || c.assets?.directory!=="./public" ||
+             c.assets?.binding!=="ASSETS" || c.assets?.run_worker_first!==true ||
+             c.observability?.enabled!==false || c.upload_source_maps!==false)
+             throw Error("Preview not isolated or worker-first gated");
+          for(const key of ["routes","route","d1_databases","durable_objects",
+            "r2_buckets","kv_namespaces","services","send_email","unsafe",
+            "queues","analytics_engine_datasets","ai","hyperdrive"]){
+            if(Object.hasOwn(c,key))throw Error("Disallowed binding: "+key);
+          }
+          if(Object.keys(c.vars||{}).some(k=>k!=="FS_SYNTH_REVIEW_AUD"))
+            throw Error("Unexpected environment variables");
+          const w=fs.readFileSync("prototypes/family-safety-synthetic-preview/worker.mjs","utf8");
+          if(!w.includes("getIdentity")||!w.includes("FS_SYNTH_REVIEW_AUD"))
+            throw Error("Missing mandatory Access auth gate");
+          const pdir="prototypes/family-safety-synthetic-preview/public";
+          if(fs.readdirSync(pdir).some(x=>!["index.html","styles.css","app.mjs","synthetic-engine.mjs"].includes(x)))
+            throw Error("Unexpected public artifact");
+          '
+      - name: Capture browser screenshots for desktop and phone layouts
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome"
+          mkdir -p evidence/family-field
+          python3 -m http.server 8899 --bind 127.0.0.1 \
+            --directory prototypes/family-safety-synthetic-preview/public \
+            > evidence/family-field/fixture.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8899/ >/dev/null; then break; fi
+            sleep 0.3
+          done
+          curl -fsS http://127.0.0.1:8899/index.html \
+            | grep -q 'SYNTHETIC REVIEW'
+          "$chrome" --headless=new --no-sandbox --disable-dev-shm-usage \
+            --window-size=1440,920 --virtual-time-budget=4000 \
+            --screenshot="$PWD/evidence/family-field/desktop.png" \
+            http://127.0.0.1:8899/ \
+            > evidence/family-field/chromium-desktop.log 2>&1
+          "$chrome" --headless=new --no-sandbox --disable-dev-shm-usage \
+            --window-size=390,844 --force-device-scale-factor=1 \
+            --virtual-time-budget=4000 \
+            --screenshot="$PWD/evidence/family-field/mobile.png" \
+            http://127.0.0.1:8899/ \
+            > evidence/family-field/chromium-mobile.log 2>&1
+          test -s evidence/family-field/desktop.png
+          test -s evidence/family-field/mobile.png
+      - name: Retain screenshots without publishing site or GPS
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: family-field-fictional-3d-visual-evidence
+          path: evidence/family-field
+          if-no-files-found: ignore
+          retention-days: 7
