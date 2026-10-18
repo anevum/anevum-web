@@ -4,7 +4,7 @@ import type {CanonicalProfile,MemberSpace} from '../lib/canonical-beta';
 import {BADGE_CATALOG,DISTINCTION_CATALOG,
  type BadgeDisplay,type PlayerAura} from '../lib/player-recognition';
 import {readRecognition,saveRecognition,previewDistinctions,type RecognitionSettings} from '../lib/player-recognition-api';
-import {CompactMemberIdentity} from './CompactMemberIdentity';
+import {CompactMemberIdentity,type PublicIdentity} from './CompactMemberIdentity';
 import {BadgeInsignia} from './BadgeInsignia';
 import {HonorInsignia} from './HonorInsignia';
 import './player-card-studio-v065.css';
@@ -71,6 +71,17 @@ export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:C
  }
  const badges=data?.earnedBadges??[];
  const honor= data?previewDistinctions(data,medalId,ribbonIds):{medals:[],ribbons:[]};
+ const previewMember:PublicIdentity={
+  handle:profile.handle,displayName:profile.displayName,
+  avatar:Boolean(space.media.avatar),
+  level:space.showStats&&space.stats?space.stats.level:null,
+  featuredAwards:badgeIds,earnedBadges:badges,
+  badgeDisplay:{mode:badgeMode,ids:badgeIds},
+  distinctions:honor,aura,
+  constellation:space.constellation,
+  supporterAppearance:space.supporterAppearance,
+  progress:space.showStats?space.stats:undefined
+ };
  return <section className="av65-studio ms-card" aria-labelledby="av65-studio-heading">
   <header className="av65-studio-head"><div><span className="kicker">CONTINUANCE INSTITUTE / PLAYER REGISTRY</span>
    <h2 id="av65-studio-heading">Your public signature.</h2>
@@ -83,14 +94,16 @@ export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:C
   {data&&<>
    <div className="av65-studio-preview">
     <div><span className="kicker">LIVE OWNER PREVIEW</span><small>Exactly what you choose to publish, subject to your profile visibility.</small></div>
-    <CompactMemberIdentity size="featured" href="/member" member={{
-     handle:profile.handle,displayName:profile.displayName,
-     avatar:Boolean(space.media.avatar),level:space.showStats&&space.stats?space.stats.level:null,
-     featuredAwards:badgeIds,earnedBadges:badges,
-     badgeDisplay:{mode:badgeMode,ids:badgeIds},
-     distinctions:honor,aura,
-     supporterAppearance:space.supporterAppearance
-    }}/>
+    <div className="av78-preview-variants" aria-label="Your player card in three contexts">
+     <div className="av78-preview-featured"><span>PROFILE / FEATURED</span>
+      <CompactMemberIdentity size="featured" interactive={false} href="/member" member={previewMember}/></div>
+     <div className="av78-preview-row">
+      <div><span>COMMUNITY / COMPACT</span>
+       <CompactMemberIdentity size="compact" interactive={false} href="/member" member={previewMember}/></div>
+      <div><span>THREAD / INLINE</span>
+       <CompactMemberIdentity size="inline" interactive={false} href="/member" member={previewMember}/></div>
+     </div>
+    </div>
    </div>
    <div className="av65-studio-section"><div className="av65-studio-section-head">
     <div><span>01 / ACHIEVEMENT BADGES</span><h3>Three marks on your card.</h3></div>
