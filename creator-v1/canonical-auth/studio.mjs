@@ -34,6 +34,12 @@ const dbRow=row=>({
  submittedAt:row.submitted_at===null?null:Number(row.submitted_at)
 });
 const COLS='id,slug,title,summary,description,category,free_to_use,license_name,source_url,demo_url,ai_disclosure,human_contribution,status,revision,created_at,updated_at,submitted_at';
+async function ownerPublicationStatuses(db,userId){
+ if(!await studioPublicationReady(db))return new Map();
+ const found=await rows(db,'SELECT project_id,status FROM member_studio_publications WHERE user_id=? ORDER BY published_at DESC LIMIT 50',[userId]);
+ return new Map(found.map(item=>[item.project_id,item.status]));
+}
+
 function cleanText(value,min,max){
  if(typeof value!=='string'||value.length>max||CTRL.test(value))throw Error('Invalid text');
  const s=value.trim();if(s.length<min)return (()=>{throw Error('Required text missing')})();return s;
@@ -132,7 +138,9 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
     const items=await rows(db,'SELECT '+COLS+' FROM member_studio_projects WHERE user_id=? ORDER BY updated_at DESC,id DESC LIMIT 50',[user.id]);
     const canReview=String(env.CANONICAL_STUDIO_REVIEWER_IDS||'')
      .split(',').map(x=>x.trim()).filter(Boolean).includes(user.id);
-    return json({projects:items.map(dbRow),uploadsReady:studioUploadReady(env,user.id),canReview});
+    const releases=await ownerPublicationStatuses(db,user.id);
+    return json({projects:items.map(item=>({...dbRow(item),publicationStatus:releases.get(item.id)||null})),
+     uploadsReady:studioUploadReady(env,user.id),canReview});
    }
    if(req.method!=='POST')return fail(405,'Method not allowed');
    const incoming=await body(req);
@@ -204,7 +212,10 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
   if(req.method==='GET'){
    const history=await rows(db,
     'SELECT action,reason,created_at,submission_id FROM member_studio_review_log WHERE project_id=? ORDER BY created_at DESC LIMIT 20',[id]);
-   return json({project:dbRow(selected),uploadsReady:studioUploadReady(env,user.id),reviewHistory:history.map(x=>({action:x.action,reason:x.reason,createdAt:Number(x.created_at),submissionId:x.submission_id}))});
+   const releases=await ownerPublicationStatuses(db,user.id);
+   return json({project:{...dbRow(selected),publicationStatus:releases.get(id)||null},
+    uploadsReady:studioUploadReady(env,user.id),
+    reviewHistory:history.map(x=>({action:x.action,reason:x.reason,createdAt:Number(x.created_at),submissionId:x.submission_id}))});
   }
   if(req.method==='DELETE'){
    const input=await body(req,500);
