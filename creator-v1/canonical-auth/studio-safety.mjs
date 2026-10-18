@@ -73,21 +73,24 @@ export async function takedownReviewedCreation(db,{
    reason.length>1200||typeof moderatorId!=='string'||!moderatorId||
    !await studioSafetyReady(db))return {ok:false,reason:'Invalid safety review or inactive publication evidence'};
  const target=await one(db,
-  "SELECT p.project_id,p.user_id,p.submission_id,p.published_at "+
-  "FROM member_studio_publications p WHERE p.project_id=? AND p.status='published' "+
+  "SELECT p.project_id,p.user_id,p.submission_id,p.published_at,p.status,p.withdrawn_at,r.reviewer_id "+
+  "FROM member_studio_publications p JOIN member_studio_publication_reviews r ON r.id=p.review_id "+
+  "WHERE p.project_id=? AND p.status IN ('published','withdrawn') "+
   "AND p.published_at=? AND NOT EXISTS ("+
   "SELECT 1 FROM member_studio_publication_takedowns t WHERE t.project_id=p.project_id)",
   projectId,expectedPublishedAt);
- if(!target)return {ok:false,reason:'Publication withdrawn, removed or changed'};
- if(target.user_id===moderatorId)return {ok:false,reason:'Independent safety review required'};
+ if(!target)return {ok:false,reason:'Publication removed, already reviewed or changed'};
+ if(target.user_id===moderatorId||target.reviewer_id===moderatorId)
+  return {ok:false,reason:'Safety officer must differ from both creator and publication approver'};
  // Every statement below is evidence-bound to the new takedown row and
  // scoped exclusively to the affected author, not another user's grants.
  const deactivate=db.prepare(
-  "UPDATE member_studio_publications SET status='withdrawn',withdrawn_at=? "+
-  "WHERE project_id=? AND user_id=? AND status='published' AND published_at=? "+
+  "UPDATE member_studio_publications SET status='withdrawn',withdrawn_at="+
+   (target.status==='published'?'?':'withdrawn_at')+" "+
+  "WHERE project_id=? AND user_id=? AND status=? AND published_at=? "+
   "AND NOT EXISTS(SELECT 1 FROM member_studio_publication_takedowns t "+
   "WHERE t.project_id=member_studio_publications.project_id) RETURNING project_id"
- ).bind(now,projectId,target.user_id,expectedPublishedAt);
+ ).bind(...(target.status==='published'?[now]:[]),projectId,target.user_id,target.status,expectedPublishedAt);
  const audit=db.prepare(
   "INSERT INTO member_studio_publication_takedowns("+
    "project_id,submission_id,owner_id,moderator_id,reason_code,reason,taken_down_at) "+
@@ -97,7 +100,8 @@ export async function takedownReviewedCreation(db,{
   "AND p.withdrawn_at=? AND p.published_at=? AND p.user_id<>? "+
   "AND NOT EXISTS(SELECT 1 FROM member_studio_publication_takedowns t WHERE t.project_id=p.project_id) "+
   "RETURNING project_id"
- ).bind(moderatorId,reasonCode,reason.trim(),now,projectId,target.user_id,now,expectedPublishedAt,moderatorId);
+ ).bind(moderatorId,reasonCode,reason.trim(),now,projectId,target.user_id,
+  target.status==='published'?now:target.withdrawn_at,expectedPublishedAt,moderatorId);
  const statements=[deactivate,audit],expected=[];
  for(const [badge,min] of AWARDS){
   // The grant's unique primary key remains in place as historical evidence.
@@ -148,15 +152,18 @@ export async function canonicalStudioSafety(req,env,user,now=Math.floor(Date.now
  try{
   if(req.method==='GET'){
    const data=await rows(db,
-    "SELECT p.project_id AS id,s.title,s.summary,s.category,p.published_at,profile.handle "+
+    "SELECT p.project_id AS id,s.title,s.summary,s.category,p.published_at,p.status,profile.handle "+
     "FROM member_studio_publications p "+
     "JOIN member_studio_submissions s ON s.id=p.submission_id "+
     "JOIN member_creator_profiles profile ON profile.user_id=p.user_id "+
-    "WHERE p.status='published' AND p.user_id<>? "+
+    "JOIN member_studio_publication_reviews r ON r.id=p.review_id "+
+    "WHERE p.status IN ('published','withdrawn') AND p.user_id<>? "+
+    "AND r.reviewer_id<>? "+
     "AND NOT EXISTS(SELECT 1 FROM member_studio_publication_takedowns t WHERE t.project_id=p.project_id) "+
-    "ORDER BY p.published_at DESC,p.project_id DESC LIMIT 50",user.id);
+    "ORDER BY p.published_at DESC,p.project_id DESC LIMIT 50",user.id,user.id);
    return json({creations:data.map(x=>({id:x.id,title:x.title,summary:x.summary,
-    category:x.category,handle:x.handle,publishedAt:Number(x.published_at)}))});
+    category:x.category,handle:x.handle,publishedAt:Number(x.published_at),
+    publicationStatus:x.status}))});
   }
   if(!/^application\/json(?:\s*;|$)/i.test(req.headers.get('content-type')||''))
    return fail(400,'Invalid request type');
