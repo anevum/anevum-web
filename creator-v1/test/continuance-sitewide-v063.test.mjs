@@ -36,9 +36,10 @@ test('V063 touches presentation only and retains accessibility fallbacks',()=>{
 
 test('alerts and awards share the canonical 30-level progression',()=>{
   assert.match(alerts,/aria-label=\{queue\.some\(n=>n\.serverId\)/);
-  assert.match(alerts,/level:30,title:'Level 30 reached',detail:'ANEVUM'/);
+  assert.doesNotMatch(alerts,/level:30,title:'Level 30 reached',detail:'ANEVUM'/);
+  assert.match(alerts,/Visual notification sample. No award, XP or specimen revealed/);
   assert.doesNotMatch(instrument,/EXPLORE ALL 60 LEVEL ICONS/);
-  assert.match(instrument,/EXPLORE ALL 30 LIVING LEVELS/);
+  assert.match(instrument,/INSPECT MY EARNED LEVELS/);
   assert.match(collection,/Thirty permanent levels/);
   assert.doesNotMatch(specimen,/registerAnimatedSpecimen/);
   assert.match(specimen,/v073-preserved-optical-icon/);
