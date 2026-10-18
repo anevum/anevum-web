@@ -33,6 +33,10 @@ Source/policy tests from repository root:
 
 Sample homes are fictional. The geographic environment is NOT the street map of downtown St. Cloud.
 
+## Portable owner preview
+
+Run node build-standalone.mjs in experiments/porchlight or download the generated CI artifact named porchlight-portable-offline-demo. It produces porchlight-offline.html, a self-contained HTML file with inline style and JavaScript, no remote network dependencies, no server/account and no personal data. The generated file is a developer/owner REVIEW, not a secure production host-enrollment service. Some iPhone file viewers disable JavaScript; open it in a capable browser or serve it through a private static review origin instead.
+
 ## Safety invariants
 
 - No child accounts, child route, bus stop, real-time GPS, livestream, camera or property-occupancy information.
