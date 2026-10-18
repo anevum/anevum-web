@@ -259,7 +259,7 @@ createServer((req,res)=>{
       activeRibbonIds:[],activeMedalIds:[]
     }));
   }
-  if(u.pathname==="/api/v1/creations"||/^\\/api\\/v1\\/creations\\/[0-9a-f-]{36}$/.test(u.pathname)){
+  if(u.pathname==="/api/v1/creations"||u.pathname.startsWith("/api/v1/creations/")){
     if(req.method!=="GET"&&req.method!=="HEAD")return json(res,{error:"Read-only"},405);
     if(u.search)return json(res,{error:"Invalid query"},404);
     const selected=u.pathname==="/api/v1/creations"?null:atlasFixtures.find(x=>u.pathname.endsWith('/'+x.id));
