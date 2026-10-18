@@ -7,6 +7,7 @@
  */
 import {progressionReady,readProgression} from './progression.mjs';
 import ARTIFACTS from '../shared/level-artifacts.json' with {type:'json'};
+import {renderEvolutionCardArt} from './evolution-card-art.mjs';
 
 const OWN_INVENTORY='/api/v1/member/rewards/inventory';
 const PUBLIC_INVENTORY=/^\/api\/v1\/members\/([a-z][a-z0-9_]{2,29})\/rewards\/inventory$/;
@@ -60,8 +61,8 @@ export async function earnedRewardInventory(req,env,user=null,match=matchRewardI
   });
  }catch{return deny(503)}
 }
-const OWN=/^\/api\/v1\/member\/rewards\/levels\/([1-9]|[12][0-9]|30)\/(icon|preview|poster|scene|runtime|height|albedo)$/;
-const PUBLIC=/^\/api\/v1\/members\/([a-z][a-z0-9_]{2,29})\/rewards\/levels\/([1-9]|[12][0-9]|30)\/(icon|preview|poster|scene|runtime|height|albedo)$/;
+const OWN=/^\/api\/v1\/member\/rewards\/levels\/([1-9]|[12][0-9]|30)\/(card|icon|preview|poster|scene|runtime|height|albedo)$/;
+const PUBLIC=/^\/api\/v1\/members\/([a-z][a-z0-9_]{2,29})\/rewards\/levels\/([1-9]|[12][0-9]|30)\/(card|icon|preview|poster|scene|runtime|height|albedo)$/;
 const HEADERS={
  'cache-control':'private, no-store',
  'x-content-type-options':'nosniff',
@@ -122,6 +123,19 @@ export async function earnedRewardMedia(req,env,user=null,match=matchRewardMedia
   const state=await readProgression(env.MEMBER_DB,ownerId);
   if(!Number.isSafeInteger(state.level)||
    (match.handle?state.level!==match.level:state.level<match.level))return missing(req);
+  // Front-facing 2D card plates are private to this Worker and require the
+  // same D1 XP/visibility authorization as the full collectible model.
+  // Never return the entire collection or fall back to an unearned level.
+  if(match.kind==='card'){
+   const svg=renderEvolutionCardArt(match.level);
+   if(!svg)return missing(req);
+   return new Response(req.method==='HEAD'?null:svg,{status:200,headers:{
+    ...HEADERS,
+    'content-type':'image/svg+xml; charset=utf-8',
+    'content-disposition':'inline',
+    'content-security-policy':"default-src 'none'; script-src 'none'; object-src 'none'; base-uri 'none'"
+   }});
+  }
   const original=sourceFile(match.level,match.kind);
   // Fetch the approved internal asset by URL. Cloudflare's ASSETS
   // binding resolves the pathname inside the worker asset manifest.

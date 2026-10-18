@@ -26,6 +26,8 @@ export function ProjectCard({ project, returnTo = "/discover", presentation = "v
   project: Project; returnTo?: string; presentation?: "visual" | "editorial";
 }) {
   const href=projectDetailPath(project.id,returnTo);
+  const handle=typeof project.creatorHandle==="string"&&/^[a-z][a-z0-9_]{2,29}$/.test(project.creatorHandle)?project.creatorHandle:null;
+  const credit=project.creatorName||"ANEVUM member";
   if(presentation==="editorial")return <article className="project-card av73-project-card">
     <div className="av73-project-card-top">
       <span className="av73-project-card-category">{labels[project.category] || "Project"}</span>
@@ -34,7 +36,7 @@ export function ProjectCard({ project, returnTo = "/discover", presentation = "v
     <h3><Link to={href}>{project.title}</Link></h3>
     <p>{project.summary}</p>
     <div className="av73-project-card-bottom">
-      <Link className="av73-project-card-author" to={`/creators/${encodeURIComponent(project.creatorHandle)}`}>@{project.creatorHandle}</Link>
+      {handle?<Link className="av73-project-card-author" to={`/creators/${encodeURIComponent(handle)}`}>@{handle}</Link>:<span className="av73-project-card-author" aria-label="Creator profile not publicly linked">{credit}</span>}
       <Link className="av73-project-card-action" to={href}>View project <Icon name="arrow" size={16}/></Link>
     </div>
   </article>;
@@ -51,7 +53,7 @@ export function ProjectCard({ project, returnTo = "/discover", presentation = "v
         <h3><Link to={href}>{project.title}</Link></h3>
         <p>{project.summary}</p>
         <footer>
-          <Link className="creator-inline" to={`/creators/${encodeURIComponent(project.creatorHandle)}`}>@{project.creatorHandle}</Link>
+          {handle?<Link className="creator-inline" to={`/creators/${encodeURIComponent(handle)}`}>@{handle}</Link>:<span className="creator-inline" aria-label="Creator profile not publicly linked">{credit}</span>}
           <Link className="project-arrow" to={href} aria-label={`View ${project.title}`}><Icon name="arrow" size={16} /></Link>
         </footer>
       </div>

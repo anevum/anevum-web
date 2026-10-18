@@ -1,0 +1,182 @@
+[
+  {
+    "level": 1,
+    "name": "Pre-Grain",
+    "accent": "#c2cbd1",
+    "art": "<g filter=\"url(#depth)\"><path d=\"M92 39 157 46 206 93 198 159 156 211 91 204 48 153 58 85Z\" fill=\"url(#stone)\" stroke=\"url(#metal)\" stroke-width=\"5\"/><path d=\"M92 39 130 78 157 46 206 93 148 108 198 159 156 211 123 150 91 204 48 153 102 124 58 85Z\" fill=\"none\" stroke=\"#a6b2c4\" stroke-opacity=\".22\" stroke-width=\"2\"/><path d=\"m83 80 43 37 14-8 27 46\" fill=\"none\" stroke=\"#f4b799\" stroke-width=\"4\" stroke-linecap=\"round\"/><path d=\"m84 80 42 37 14-8 27 46\" fill=\"none\" stroke=\"#ffe1c7\" stroke-width=\"12\" opacity=\".25\" filter=\"url(#glow)\"/><path d=\"M71 87 95 59 118 70\" fill=\"none\" stroke=\"#fbfbf0\" opacity=\".4\" stroke-width=\"3\"/></g>"
+  },
+  {
+    "level": 2,
+    "name": "Vacuum Whisper",
+    "accent": "#a9c7d4",
+    "art": "<g filter=\"url(#depth)\"><ellipse cx=\"128\" cy=\"128\" rx=\"72\" ry=\"90\" fill=\"url(#glass)\" opacity=\".55\" stroke=\"url(#metal)\" stroke-width=\"2\"/><path d=\"M42 135Q76 60 127 131T214 133M41 154Q80 83 130 153T217 155M45 109Q79 40 129 110T212 108\" stroke=\"url(#energy)\" fill=\"none\" stroke-width=\"7\" opacity=\".9\"/><path d=\"M53 94q78-66 151 0M54 170q74 63 148-1\" fill=\"none\" stroke=\"#f8faff\" opacity=\".36\" stroke-width=\"2\"/><ellipse cx=\"128\" cy=\"128\" rx=\"35\" ry=\"80\" fill=\"none\" stroke=\"#e1f0fc\" stroke-width=\"1.5\" opacity=\".5\"/></g>"
+  },
+  {
+    "level": 3,
+    "name": "Quantum Foam",
+    "accent": "#b4aed9",
+    "art": "<g filter=\"url(#depth)\" stroke=\"url(#metal)\" stroke-width=\"2.6\"><circle cx=\"88\" cy=\"75\" r=\"35\" fill=\"url(#stone)\"/><circle cx=\"80\" cy=\"66\" r=\"14.7\" fill=\"none\" stroke=\"#fff\" stroke-opacity=\".42\" stroke-width=\"2\"/><circle cx=\"149\" cy=\"70\" r=\"27\" fill=\"url(#glass)\"/><circle cx=\"141\" cy=\"61\" r=\"11.34\" fill=\"none\" stroke=\"#fff\" stroke-opacity=\".42\" stroke-width=\"2\"/><circle cx=\"185\" cy=\"118\" r=\"35\" fill=\"url(#stone)\"/><circle cx=\"177\" cy=\"109\" r=\"14.7\" fill=\"none\" stroke=\"#fff\" stroke-opacity=\".42\" stroke-width=\"2\"/><circle cx=\"155\" cy=\"184\" r=\"33\" fill=\"url(#glass)\"/><circle cx=\"147\" cy=\"175\" r=\"13.86\" fill=\"none\" stroke=\"#fff\" stroke-opacity=\".42\" stroke-width=\"2\"/><circle cx=\"82\" cy=\"173\" r=\"29\" fill=\"url(#stone)\"/><circle cx=\"74\" cy=\"164\" r=\"12.18\" fill=\"none\" stroke=\"#fff\" stroke-opacity=\".42\" stroke-width=\"2\"/><circle cx=\"68\" cy=\"118\" r=\"26\" fill=\"url(#glass)\"/><circle cx=\"60\" cy=\"109\" r=\"10.92\" fill=\"none\" stroke=\"#fff\" stroke-opacity=\".42\" stroke-width=\"2\"/><circle cx=\"127\" cy=\"129\" r=\"46\" fill=\"url(#stone)\"/><circle cx=\"119\" cy=\"120\" r=\"19.32\" fill=\"none\" stroke=\"#fff\" stroke-opacity=\".42\" stroke-width=\"2\"/><path d=\"m79 93 46 36 58-12-28 67-75-11Z\" fill=\"none\" stroke=\"#e8dcff\" stroke-opacity=\".5\" stroke-width=\"2\"/></g>"
+  },
+  {
+    "level": 4,
+    "name": "Symmetry Field",
+    "accent": "#d5c9b9",
+    "art": "<g filter=\"url(#depth)\" stroke-linejoin=\"round\"><path d=\"M128 20 165 78 128 128 91 78Z\" fill=\"url(#metal)\" stroke=\"#ffe2ca\" stroke-width=\"3\"/><path d=\"M128 236 91 178 128 128 165 178Z\" fill=\"url(#stone)\" stroke=\"#cbd3e2\" stroke-width=\"3\"/><path d=\"M25 128 87 83 128 128 87 173Z\" fill=\"url(#ceramic)\" stroke=\"#f6ddc3\" stroke-width=\"4\"/><path d=\"M231 128 169 83 128 128 169 173Z\" fill=\"url(#metal)\" stroke=\"#f6ddc3\" stroke-width=\"4\"/><path d=\"M128 35V221\" stroke=\"#f6e7d6\" stroke-width=\"6\"/><path d=\"M41 128H215\" stroke=\"#e3bdab\" stroke-width=\"2\"/><path d=\"M128 69 159 128 128 187 97 128Z\" fill=\"url(#stone)\" stroke=\"#fff1df\" stroke-width=\"3\"/><path d=\"M128 87 145 128 128 169 111 128Z\" fill=\"url(#core)\" stroke=\"#fff4e8\" stroke-width=\"2\"/><path d=\"M128 22 128 234\" stroke=\"#fac7ae\" stroke-width=\"2\" opacity=\".7\"/><circle cx=\"128\" cy=\"128\" r=\"8\" fill=\"#fff8e9\" stroke=\"#da8e85\" stroke-width=\"2\"/></g>"
+  },
+  {
+    "level": 5,
+    "name": "First Expansion",
+    "accent": "#f2b58c",
+    "art": "<g filter=\"url(#depth)\"><circle cx=\"126\" cy=\"128\" r=\"48\" fill=\"url(#core)\"/><path d=\"M109 38 135 79 164 26 162 88 217 70 176 116 235 131 177 144 219 194 162 174 148 230 128 181 91 223 98 164 43 185 79 144 20 118 81 117 49 62 100 91Z\" fill=\"url(#metal)\" stroke=\"#f7ddbf\" stroke-width=\"3\" stroke-linejoin=\"round\"/><circle cx=\"128\" cy=\"128\" r=\"28\" fill=\"url(#core)\" stroke=\"#fff6e6\" stroke-width=\"4\"/><path d=\"M128 92v72M92 128h72\" stroke=\"#fff3cc\" stroke-width=\"2\"/><circle cx=\"128\" cy=\"128\" r=\"61\" fill=\"none\" stroke=\"#f6c19e\" stroke-width=\"2\" stroke-dasharray=\"6 9\"/></g>"
+  },
+  {
+    "level": 6,
+    "name": "Primordial Plasma",
+    "accent": "#ef9878",
+    "art": "<g filter=\"url(#depth)\"><ellipse cx=\"128\" cy=\"128\" rx=\"83\" ry=\"78\" fill=\"url(#glass)\" stroke=\"#f9a787\" stroke-width=\"3\"/><path d=\"M72 172Q27 120 97 84T178 58Q223 82 166 123T123 207Q64 221 80 160T175 115\" stroke=\"url(#energy)\" stroke-width=\"18\" fill=\"none\" stroke-linecap=\"round\" opacity=\".86\"/><path d=\"M67 122Q87 65 146 88T179 161Q150 194 105 159\" stroke=\"#fff4d9\" stroke-width=\"5\" fill=\"none\"/><path d=\"M73 177Q115 114 176 171\" stroke=\"#78b9f2\" stroke-width=\"7\" fill=\"none\" opacity=\".8\"/></g>"
+  },
+  {
+    "level": 7,
+    "name": "Quark Wake",
+    "accent": "#a6b0f1",
+    "art": "<g filter=\"url(#depth)\"><path d=\"M128 48 201 168 55 168Z\" fill=\"url(#stone)\" stroke=\"#a7c0fa\" stroke-width=\"5\"/><path d=\"m128 48 0 89 73 31M128 137 55 168\" fill=\"none\" stroke=\"#ffe5b7\" stroke-width=\"5\" opacity=\".8\"/><path d=\"m127 51 72 117-146 0Z\" fill=\"none\" stroke=\"#84e7ff\" stroke-width=\"1.5\" stroke-dasharray=\"4 6\"/><circle cx=\"128\" cy=\"48\" r=\"17\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"201\" cy=\"168\" r=\"17\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"55\" cy=\"168\" r=\"17\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"128\" cy=\"136\" r=\"11\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><path d=\"M81 113q46-27 95 0\" stroke=\"#ffb581\" fill=\"none\" stroke-width=\"4\"/></g>"
+  },
+  {
+    "level": 8,
+    "name": "Proton Seed",
+    "accent": "#dda6a1",
+    "art": "<g filter=\"url(#depth)\"><path d=\"m128 36 65 45 2 93-67 46-68-46V81Z\" fill=\"url(#stone)\" stroke=\"url(#metal)\" stroke-width=\"6\"/><path d=\"M128 36v184M60 82l135 92M195 82 60 174\" stroke=\"#efb3ab\" stroke-opacity=\".45\" stroke-width=\"3\"/><path d=\"m127 60 35 46-10 53-48 17-33-47 10-48Z\" fill=\"url(#ceramic)\" stroke=\"#f9dfd5\" stroke-width=\"3\"/><path d=\"m111 92 47 13-5 52-49 18-30-45Z\" fill=\"url(#metal)\" stroke=\"#f4c4bb\" stroke-width=\"3\"/><circle cx=\"128\" cy=\"128\" r=\"20\" fill=\"url(#core)\" stroke=\"#fff2e5\" stroke-width=\"3\"/></g>"
+  },
+  {
+    "level": 9,
+    "name": "Proto-Atom",
+    "accent": "#a9d2dc",
+    "art": "<g filter=\"url(#depth)\"><circle cx=\"128\" cy=\"128\" r=\"43\" fill=\"url(#glass)\" opacity=\".8\"/><ellipse cx=\"128\" cy=\"128\" rx=\"101\" ry=\"40\" transform=\"rotate(0 128 128)\" fill=\"none\" stroke=\"url(#energy)\" stroke-width=\"2.8\" /><ellipse cx=\"128\" cy=\"128\" rx=\"101\" ry=\"40\" transform=\"rotate(60 128 128)\" fill=\"none\" stroke=\"url(#energy)\" stroke-width=\"2.8\" /><ellipse cx=\"128\" cy=\"128\" rx=\"101\" ry=\"40\" transform=\"rotate(120 128 128)\" fill=\"none\" stroke=\"url(#energy)\" stroke-width=\"2.8\" /><circle cx=\"128\" cy=\"128\" r=\"24\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"227\" cy=\"128\" r=\"8\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"81\" cy=\"44\" r=\"7\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"86\" cy=\"215\" r=\"7\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"128\" cy=\"128\" r=\"34\" fill=\"none\" stroke=\"#fff4d3\" stroke-width=\"2\" stroke-dasharray=\"3 7\"/></g>"
+  },
+  {
+    "level": 10,
+    "name": "Ancient Afterglow",
+    "accent": "#f0b187",
+    "art": "<g filter=\"url(#depth)\"><circle cx=\"128\" cy=\"128\" r=\"87\" fill=\"url(#stone)\" stroke=\"#ebc4a8\" stroke-width=\"2\"/><circle cx=\"128\" cy=\"128\" r=\"72\" fill=\"none\" stroke=\"#f9ba8a\" stroke-opacity=\".42\" stroke-width=\"13\"/><circle cx=\"128\" cy=\"128\" r=\"50\" fill=\"none\" stroke=\"#9dc6db\" stroke-opacity=\".5\" stroke-width=\"12\"/><circle cx=\"128\" cy=\"128\" r=\"28\" fill=\"url(#core)\"/><path d=\"M43 118Q77 85 108 118T174 118T212 118M43 151Q77 118 108 151T174 151T212 151\" fill=\"none\" stroke=\"#fff0d5\" stroke-width=\"3\" opacity=\".9\"/></g>"
+  },
+  {
+    "level": 11,
+    "name": "Quiet Epoch",
+    "accent": "#adb9d8",
+    "art": "<g filter=\"url(#depth)\"><path d=\"M39 151q15-54 66-42 25-73 66-26 59-17 53 64-20 49-81 48-48 22-85-12Z\" fill=\"url(#stone)\" stroke=\"#cad9f6\" stroke-opacity=\".65\" stroke-width=\"3\"/><path d=\"M48 151q85-66 160 12M64 179q68-34 133 0\" fill=\"none\" stroke=\"#dae6fa\" stroke-width=\"3\" opacity=\".32\"/><circle cx=\"132\" cy=\"119\" r=\"21\" fill=\"url(#glass)\" stroke=\"#b5c4dc\" opacity=\".7\"/><circle cx=\"78\" cy=\"91\" r=\"4\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"187\" cy=\"67\" r=\"3\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"50\" cy=\"117\" r=\"3\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"183\" cy=\"183\" r=\"3\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/></g>"
+  },
+  {
+    "level": 12,
+    "name": "Gravity Well",
+    "accent": "#abc7e0",
+    "art": "<g filter=\"url(#depth)\"><ellipse cx=\"128\" cy=\"107\" rx=\"104\" ry=\"46\" fill=\"url(#stone)\" stroke=\"#a9d0ec\" stroke-width=\"3\"/><path d=\"M27 109Q73 208 128 219Q183 206 229 109\" fill=\"url(#glass)\" stroke=\"#9eb6d3\" stroke-width=\"3\"/><ellipse cx=\"128\" cy=\"125\" rx=\"81\" ry=\"31\" fill=\"none\" stroke=\"#dceeff\" stroke-width=\"4\"/><ellipse cx=\"128\" cy=\"143\" rx=\"55\" ry=\"21\" fill=\"none\" stroke=\"#a6d3e8\" stroke-width=\"4\"/><ellipse cx=\"128\" cy=\"161\" rx=\"32\" ry=\"13\" fill=\"#121a31\" stroke=\"#d2ebfc\" stroke-width=\"3\"/><ellipse cx=\"128\" cy=\"167\" rx=\"15\" ry=\"7\" fill=\"url(#core)\"/><path d=\"M44 93 87 131 99 175M213 93 169 131 157 175\" fill=\"none\" stroke=\"#f5f7fe\" stroke-opacity=\".25\" stroke-width=\"2\"/></g>"
+  },
+  {
+    "level": 13,
+    "name": "Star Ignition",
+    "accent": "#d2eff6",
+    "art": "<g filter=\"url(#depth)\"><path d=\"M128 72 V16\" transform=\"rotate(0 128 128)\" stroke=\"url(#energy)\" stroke-width=\"3\" stroke-linecap=\"round\"/><path d=\"M128 72 V34\" transform=\"rotate(30 128 128)\" stroke=\"url(#energy)\" stroke-width=\"3\" stroke-linecap=\"round\"/><path d=\"M128 72 V34\" transform=\"rotate(60 128 128)\" stroke=\"url(#energy)\" stroke-width=\"3\" stroke-linecap=\"round\"/><path d=\"M128 72 V16\" transform=\"rotate(90 128 128)\" stroke=\"url(#energy)\" stroke-width=\"3\" stroke-linecap=\"round\"/><path d=\"M128 72 V34\" transform=\"rotate(120 128 128)\" stroke=\"url(#energy)\" stroke-width=\"3\" stroke-linecap=\"round\"/><path d=\"M128 72 V34\" transform=\"rotate(150 128 128)\" stroke=\"url(#energy)\" stroke-width=\"3\" stroke-linecap=\"round\"/><path d=\"M128 72 V16\" transform=\"rotate(180 128 128)\" stroke=\"url(#energy)\" stroke-width=\"3\" stroke-linecap=\"round\"/><path d=\"M128 72 V34\" transform=\"rotate(210 128 128)\" stroke=\"url(#energy)\" stroke-width=\"3\" stroke-linecap=\"round\"/><path d=\"M128 72 V34\" transform=\"rotate(240 128 128)\" stroke=\"url(#energy)\" stroke-width=\"3\" stroke-linecap=\"round\"/><path d=\"M128 72 V16\" transform=\"rotate(270 128 128)\" stroke=\"url(#energy)\" stroke-width=\"3\" stroke-linecap=\"round\"/><path d=\"M128 72 V34\" transform=\"rotate(300 128 128)\" stroke=\"url(#energy)\" stroke-width=\"3\" stroke-linecap=\"round\"/><path d=\"M128 72 V34\" transform=\"rotate(330 128 128)\" stroke=\"url(#energy)\" stroke-width=\"3\" stroke-linecap=\"round\"/><circle cx=\"128\" cy=\"128\" r=\"63\" fill=\"url(#core)\" stroke=\"#e2f4ff\" stroke-width=\"3\"/><circle cx=\"128\" cy=\"128\" r=\"45\" fill=\"none\" stroke=\"#ffffff\" stroke-opacity=\".58\" stroke-width=\"4\"/><path d=\"M89 110q42-56 83 0M80 149q47 48 95 0\" fill=\"none\" stroke=\"#f8ffff\" stroke-width=\"5\" opacity=\".7\"/><circle cx=\"128\" cy=\"128\" r=\"24\" fill=\"#fff9e4\"/></g>"
+  },
+  {
+    "level": 14,
+    "name": "Fusion Ember",
+    "accent": "#f1b489",
+    "art": "<g filter=\"url(#depth)\"><circle cx=\"128\" cy=\"128\" r=\"84\" fill=\"url(#stone)\" stroke=\"#e7b394\" stroke-width=\"5\"/><path d=\"M52 104 89 90 100 48M180 62l-29 38 62 11M217 151l-47 1-22 62M91 214l9-61-53-15\" fill=\"none\" stroke=\"#fcaf71\" stroke-width=\"11\" stroke-linejoin=\"round\"/><circle cx=\"128\" cy=\"128\" r=\"52\" fill=\"url(#core)\" stroke=\"#ffdfb3\" stroke-width=\"5\"/><circle cx=\"128\" cy=\"128\" r=\"23\" fill=\"#fff8d9\"/><path d=\"M128 48v42M207 128h-42M128 206v-42M49 128h42\" fill=\"none\" stroke=\"#ffedd0\" stroke-width=\"4\"/></g>"
+  },
+  {
+    "level": 15,
+    "name": "Nebula Bloom",
+    "accent": "#dba6cb",
+    "art": "<g filter=\"url(#depth)\"><path d=\"M42 164q-19-66 37-84 9-56 51-34 53-43 78 21 51 22 27 74 4 67-65 69-78 39-128-46Z\" fill=\"url(#glass)\" stroke=\"#d6b7ea\" stroke-width=\"4\"/><path d=\"M53 163q67-39 91 6t61-41M68 112q43 39 87 10t46-42\" fill=\"none\" stroke=\"#ffb7ca\" stroke-opacity=\".8\" stroke-width=\"13\" stroke-linecap=\"round\"/><path d=\"M80 184q34-78 75-49\" fill=\"none\" stroke=\"#8ed9f2\" stroke-width=\"10\" stroke-linecap=\"round\"/><circle cx=\"147\" cy=\"123\" r=\"18\" fill=\"#fff7dd\" filter=\"url(#glow)\"/><circle cx=\"147\" cy=\"123\" r=\"7\" fill=\"#fff\"/></g>"
+  },
+  {
+    "level": 16,
+    "name": "Element Forge",
+    "accent": "#e9a58b",
+    "art": "<g filter=\"url(#depth)\"><path d=\"m128 27 41 50-41 40-37-40Z\" fill=\"url(#metal)\" stroke=\"#efc3aa\" stroke-width=\"4\"/><path d=\"m210 105 11 58-63 28-28-54Z\" fill=\"url(#stone)\" stroke=\"#bddce7\" stroke-width=\"4\"/><path d=\"m47 105 69 32-22 60-66-36Z\" fill=\"url(#ceramic)\" stroke=\"#f4c1a2\" stroke-width=\"4\"/><path d=\"M128 116 154 139 145 178 112 189 94 147Z\" fill=\"url(#core)\" stroke=\"#fff3d5\" stroke-width=\"3\"/><path d=\"m126 34 0 70M40 117l65 40M210 121l-70 28\" stroke=\"#fff1ce\" opacity=\".55\" stroke-width=\"3\"/></g>"
+  },
+  {
+    "level": 17,
+    "name": "Galactic Seed",
+    "accent": "#9dbada",
+    "art": "<g filter=\"url(#depth)\"><ellipse cx=\"128\" cy=\"128\" rx=\"99\" ry=\"69\" fill=\"url(#glass)\" opacity=\".66\" transform=\"rotate(-27 128 128)\"/><path d=\"M35 111q39-79 127-55 74 14 45 78-23 47-87 39-52-11-22-48 18-24 43-8 21 11 6 25\" stroke=\"url(#energy)\" fill=\"none\" stroke-width=\"17\" stroke-linecap=\"round\"/><path d=\"M220 144q-30 78-126 56-79-21-44-84 29-44 81-33\" stroke=\"#a8c9ec\" fill=\"none\" stroke-width=\"7\" opacity=\".67\"/><circle cx=\"133\" cy=\"133\" r=\"14\" fill=\"#fffbe6\"/><circle cx=\"133\" cy=\"133\" r=\"30\" fill=\"none\" stroke=\"#eef4ff\" stroke-width=\"1.5\" opacity=\".6\"/></g>"
+  },
+  {
+    "level": 18,
+    "name": "First Galaxy",
+    "accent": "#c0c2ea",
+    "art": "<g filter=\"url(#depth)\"><ellipse cx=\"128\" cy=\"128\" rx=\"108\" ry=\"80\" transform=\"rotate(-26 128 128)\" fill=\"url(#glass)\" opacity=\".54\"/><path d=\"M26 136q40-94 129-76 87 17 55 85-26 56-83 31-31-13-9-41 15-20 32-3\" stroke=\"url(#energy)\" fill=\"none\" stroke-width=\"22\" stroke-linecap=\"round\"/><path d=\"M232 120q-32 91-119 77-84-16-55-81 16-34 53-35\" stroke=\"#d3d3ff\" stroke-opacity=\".8\" fill=\"none\" stroke-width=\"11\"/><circle cx=\"135\" cy=\"130\" r=\"24\" fill=\"url(#core)\"/><circle cx=\"36\" cy=\"96\" r=\"3\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"57\" cy=\"64\" r=\"3\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"206\" cy=\"186\" r=\"3\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"182\" cy=\"204\" r=\"3\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"85\" cy=\"202\" r=\"3\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"226\" cy=\"97\" r=\"3\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"66\" cy=\"158\" r=\"3\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"182\" cy=\"68\" r=\"3\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/></g>"
+  },
+  {
+    "level": 19,
+    "name": "Cosmic Web",
+    "accent": "#91ced6",
+    "art": "<g filter=\"url(#depth)\" stroke=\"#9fe4ea\" stroke-width=\"5\" stroke-linecap=\"round\" fill=\"none\"><path d=\"M32 69 97 43 157 68 213 37M32 69 56 143 121 126 157 68M56 143 27 212 109 200 181 214 228 150 213 37M121 126 181 214M121 126 228 150M157 68 228 150M109 200 56 143\" opacity=\".8\"/><circle cx=\"32\" cy=\"69\" r=\"6\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"97\" cy=\"43\" r=\"6\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"157\" cy=\"68\" r=\"6\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"213\" cy=\"37\" r=\"6\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"56\" cy=\"143\" r=\"6\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"121\" cy=\"126\" r=\"14\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"27\" cy=\"212\" r=\"6\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"109\" cy=\"200\" r=\"6\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"181\" cy=\"214\" r=\"6\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"228\" cy=\"150\" r=\"6\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"121\" cy=\"126\" r=\"30\" fill=\"none\" stroke=\"#c5f4fa\" stroke-width=\"2\" opacity=\".5\"/></g>"
+  },
+  {
+    "level": 20,
+    "name": "Stellar System",
+    "accent": "#e4be98",
+    "art": "<g filter=\"url(#depth)\"><ellipse cx=\"128\" cy=\"128\" rx=\"106\" ry=\"40\" transform=\"rotate(-16 128 128)\" fill=\"none\" stroke=\"url(#energy)\" stroke-width=\"2.8\" opacity=\".55\"/><ellipse cx=\"128\" cy=\"128\" rx=\"88\" ry=\"77\" transform=\"rotate(27 128 128)\" fill=\"none\" stroke=\"url(#energy)\" stroke-width=\"2.8\" opacity=\".7\"/><circle cx=\"113\" cy=\"116\" r=\"47\" fill=\"url(#core)\" stroke=\"#ffe3ac\" stroke-width=\"3\"/><path d=\"M88 102q30-24 49 12\" fill=\"none\" stroke=\"#fff9db\" stroke-width=\"5\"/><circle cx=\"213\" cy=\"120\" r=\"12\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"50\" cy=\"156\" r=\"8\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"142\" cy=\"203\" r=\"10\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"213\" cy=\"115\" r=\"4\" fill=\"#b2dfff\"/><circle cx=\"53\" cy=\"152\" r=\"3\" fill=\"#303e5e\"/></g>"
+  },
+  {
+    "level": 21,
+    "name": "Planetary Accretion",
+    "accent": "#d8aa91",
+    "art": "<g filter=\"url(#depth)\"><circle cx=\"128\" cy=\"129\" r=\"76\" fill=\"url(#stone)\" stroke=\"#e9b8a4\" stroke-width=\"4\"/><path d=\"M77 79 122 104 148 78 178 123 144 143 158 185M56 138 100 126 118 166 95 191\" stroke=\"#f8a373\" stroke-width=\"12\" fill=\"none\"/><path d=\"M62 108Q135 77 200 115\" stroke=\"#ffd2a9\" opacity=\".45\" stroke-width=\"3\" fill=\"none\"/><ellipse cx=\"128\" cy=\"129\" rx=\"113\" ry=\"34\" transform=\"rotate(-17 128 129)\" fill=\"none\" stroke=\"#c6b3ac\" stroke-width=\"9\" stroke-dasharray=\"6 9\"/><circle cx=\"25\" cy=\"154\" r=\"5\" fill=\"url(#metal)\" /><circle cx=\"207\" cy=\"79\" r=\"6\" fill=\"url(#metal)\" /><circle cx=\"202\" cy=\"169\" r=\"7\" fill=\"url(#metal)\" /><circle cx=\"52\" cy=\"67\" r=\"5\" fill=\"url(#metal)\" /><circle cx=\"217\" cy=\"139\" r=\"6\" fill=\"url(#metal)\" /></g>"
+  },
+  {
+    "level": 22,
+    "name": "Ocean World",
+    "accent": "#9bc9d0",
+    "art": "<g filter=\"url(#depth)\"><circle cx=\"128\" cy=\"128\" r=\"88\" fill=\"url(#glass)\" stroke=\"#c4f1ef\" stroke-width=\"4\"/><path d=\"M52 116q59-40 145-8M43 138q66-25 170 6M55 170q70 16 147-18\" fill=\"none\" stroke=\"#56d1dc\" stroke-width=\"14\" opacity=\".85\"/><path d=\"M73 88q33-29 77-21M62 190q78 35 136-12\" stroke=\"#f1fffc\" stroke-width=\"8\" fill=\"none\" opacity=\".8\"/><path d=\"M76 77q52-31 93-8\" stroke=\"#fff\" stroke-width=\"4\" fill=\"none\" opacity=\".45\"/><circle cx=\"128\" cy=\"128\" r=\"92\" fill=\"none\" stroke=\"#7de3e2\" stroke-width=\"2\" opacity=\".48\"/></g>"
+  },
+  {
+    "level": 23,
+    "name": "Molecular Chorus",
+    "accent": "#a8cde5",
+    "art": "<g filter=\"url(#depth)\"><path d=\"M57 93 108 56 164 76 205 127 167 190 103 204 49 157Z\" fill=\"none\" stroke=\"#c0edfb\" stroke-width=\"8\" stroke-linejoin=\"round\"/><path d=\"M57 93 138 132 164 76M138 132l29 58M138 132l-35 72M49 157l89-25 67-5\" fill=\"none\" stroke=\"#f3d0b9\" stroke-width=\"5\"/><circle cx=\"57\" cy=\"93\" r=\"13\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"108\" cy=\"56\" r=\"14\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"164\" cy=\"76\" r=\"17\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"205\" cy=\"127\" r=\"13\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"167\" cy=\"190\" r=\"15\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"103\" cy=\"204\" r=\"14\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"49\" cy=\"157\" r=\"12\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><circle cx=\"138\" cy=\"132\" r=\"22\" fill=\"url(#core)\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"1.4\"/><path d=\"M112 115l36 24\" stroke=\"#fff\" stroke-width=\"3\"/></g>"
+  },
+  {
+    "level": 24,
+    "name": "First Replicator",
+    "accent": "#adcdb7",
+    "art": "<g filter=\"url(#depth)\"><path d=\"M93 36Q188 72 105 127T110 223\" fill=\"none\" stroke=\"#dbf7de\" stroke-width=\"15\" stroke-linecap=\"round\"/><path d=\"M158 35Q66 68 148 128T145 223\" fill=\"none\" stroke=\"#86cfc9\" stroke-width=\"15\" stroke-linecap=\"round\"/><path d=\"M113 50 H141\" stroke=\"#fff8da\" stroke-width=\"5\" stroke-linecap=\"round\" opacity=\".7\"/><path d=\"M104 74 H151\" stroke=\"#fff8da\" stroke-width=\"5\" stroke-linecap=\"round\" opacity=\".7\"/><path d=\"M113 98 H141\" stroke=\"#fff8da\" stroke-width=\"5\" stroke-linecap=\"round\" opacity=\".7\"/><path d=\"M104 122 H151\" stroke=\"#fff8da\" stroke-width=\"5\" stroke-linecap=\"round\" opacity=\".7\"/><path d=\"M113 146 H141\" stroke=\"#fff8da\" stroke-width=\"5\" stroke-linecap=\"round\" opacity=\".7\"/><path d=\"M104 170 H151\" stroke=\"#fff8da\" stroke-width=\"5\" stroke-linecap=\"round\" opacity=\".7\"/><path d=\"M113 194 H141\" stroke=\"#fff8da\" stroke-width=\"5\" stroke-linecap=\"round\" opacity=\".7\"/><path d=\"M104 216 H151\" stroke=\"#fff8da\" stroke-width=\"5\" stroke-linecap=\"round\" opacity=\".7\"/><ellipse cx=\"128\" cy=\"130\" rx=\"92\" ry=\"111\" fill=\"none\" stroke=\"#d4f3e4\" stroke-width=\"2\" opacity=\".35\"/></g>"
+  },
+  {
+    "level": 25,
+    "name": "Biosphere",
+    "accent": "#9ddac7",
+    "art": "<g filter=\"url(#depth)\"><circle cx=\"128\" cy=\"128\" r=\"89\" fill=\"url(#glass)\" stroke=\"#c6f4e0\" stroke-width=\"5\"/><path d=\"M46 143q48-17 71 5t91-5M64 179q66-26 129 2\" fill=\"none\" stroke=\"#5ed9ab\" stroke-width=\"14\"/><path d=\"M128 193V90M127 117q-34-42-66-24M129 132q35-55 69-40M128 155q-35-34-56-16M126 172q43-32 66-19\" stroke=\"#e8ffdf\" fill=\"none\" stroke-width=\"7\" stroke-linecap=\"round\"/><circle cx=\"62\" cy=\"93\" r=\"13\" fill=\"url(#ceramic)\" /><circle cx=\"198\" cy=\"92\" r=\"13\" fill=\"url(#ceramic)\" /><circle cx=\"72\" cy=\"139\" r=\"13\" fill=\"url(#ceramic)\" /><circle cx=\"192\" cy=\"153\" r=\"13\" fill=\"url(#ceramic)\" /><path d=\"M72 66q65-34 121 19\" stroke=\"#fff\" stroke-width=\"3\" opacity=\".45\" fill=\"none\"/></g>"
+  },
+  {
+    "level": 26,
+    "name": "Awareness",
+    "accent": "#badbd2",
+    "art": "<g filter=\"url(#depth)\"><path d=\"M40 130Q78 66 128 70T216 130Q179 196 128 191T40 130Z\" fill=\"url(#glass)\" stroke=\"#c6f0df\" stroke-width=\"5\"/><circle cx=\"128\" cy=\"130\" r=\"54\" fill=\"url(#stone)\" stroke=\"#b6e2d2\" stroke-width=\"5\"/><circle cx=\"128\" cy=\"130\" r=\"31\" fill=\"url(#core)\" stroke=\"#f3fbe7\" stroke-width=\"3\"/><circle cx=\"128\" cy=\"130\" r=\"12\" fill=\"#fff0c2\"/><path d=\"M55 122 29 98M66 151 33 177M200 120l26-23M190 157l36 22M115 75l-10-33M142 75l12-35\" stroke=\"#b9e6e2\" stroke-width=\"4\" stroke-linecap=\"round\"/><path d=\"M65 117q58-59 132-3\" stroke=\"#fff\" stroke-width=\"3\" fill=\"none\" opacity=\".4\"/></g>"
+  },
+  {
+    "level": 27,
+    "name": "The Signal",
+    "accent": "#e1b5a0",
+    "art": "<g filter=\"url(#depth)\"><path d=\"M91 208 128 63 166 208Z\" fill=\"url(#stone)\" stroke=\"#e0c0b1\" stroke-width=\"4\"/><path d=\"M128 69v137M96 189h63M107 150h43\" stroke=\"#faf5e8\" stroke-width=\"4\"/><circle cx=\"128\" cy=\"70\" r=\"12\" fill=\"url(#core)\" stroke=\"#fff4df\" stroke-width=\"3\"/><path d=\"M100 52Q52 70 71 118M156 52q48 18 29 66M86 28Q18 68 47 149M170 28q68 40 39 121\" fill=\"none\" stroke=\"url(#energy)\" stroke-width=\"6\" stroke-linecap=\"round\"/><path d=\"M48 214h159\" stroke=\"#e2cdbf\" stroke-width=\"6\"/></g>"
+  },
+  {
+    "level": 28,
+    "name": "Civilization",
+    "accent": "#d9c7b2",
+    "art": "<g filter=\"url(#depth)\"><path d=\"M30 205V113h35v92M65 205V79h37v126M102 205V123h24v82M126 205V56h45v149M171 205V96h44v109\" fill=\"url(#stone)\" stroke=\"#e7d6c4\" stroke-width=\"4\" stroke-linejoin=\"round\"/><path d=\"M46 132v57M83 102v87M145 78v111M194 117v72\" stroke=\"#fff2df\" stroke-width=\"8\" stroke-dasharray=\"5 14\"/><path d=\"M127 56l20-30 24 30\" fill=\"url(#metal)\" stroke=\"#f6e6d7\" stroke-width=\"3\"/><path d=\"M20 214h216M35 228h186\" stroke=\"url(#metal)\" stroke-width=\"6\"/></g>"
+  },
+  {
+    "level": 29,
+    "name": "Continuance Institute",
+    "accent": "#e4ded1",
+    "art": "<g filter=\"url(#depth)\"><path d=\"M128 22 188 60V204H68V60Z\" fill=\"url(#stone)\" stroke=\"#e7e6e2\" stroke-width=\"5\"/><path d=\"M128 22v183M69 60h119\" fill=\"none\" stroke=\"#f7f4e8\" stroke-width=\"4\"/><path d=\"M87 191V88h82v103\" fill=\"url(#ceramic)\" stroke=\"#d5d7da\" stroke-width=\"3\"/><path d=\"M112 192V109h32v83\" fill=\"url(#glass)\" stroke=\"#fff5e9\" stroke-width=\"3\"/><circle cx=\"128\" cy=\"93\" r=\"17\" fill=\"url(#core)\" stroke=\"#fff\" stroke-width=\"3\"/><path d=\"M41 206h174M51 224h154M61 238h134\" stroke=\"url(#metal)\" stroke-width=\"8\"/><path d=\"M85 70H172\" stroke=\"#facdb8\" stroke-width=\"3\"/></g>"
+  },
+  {
+    "level": 30,
+    "name": "ANEVUM",
+    "accent": "#eaddca",
+    "art": "<g filter=\"url(#depth)\"><path d=\"m128 16 64 38 20 78-33 71-51 36-51-36-33-71 20-78Z\" fill=\"url(#glass)\" stroke=\"url(#metal)\" stroke-width=\"6\"/><path d=\"M128 33 180 67 193 130 166 185 128 209 90 185 63 130 76 67Z\" fill=\"url(#stone)\" stroke=\"#f9ede0\" stroke-opacity=\".76\" stroke-width=\"3\"/><path d=\"M128 41 158 112 128 194 98 112Z\" fill=\"url(#ceramic)\" stroke=\"#f0e8dc\" stroke-width=\"4\"/><path d=\"M87 128 128 81 169 128 128 175Z\" fill=\"url(#glass)\" stroke=\"#f4dac2\" stroke-width=\"4\"/><circle cx=\"128\" cy=\"128\" r=\"26\" fill=\"url(#core)\" stroke=\"#fff9ea\" stroke-width=\"4\"/><circle cx=\"128\" cy=\"128\" r=\"10\" fill=\"#fff\" opacity=\".92\"/><path d=\"M58 67q70-42 140 0M45 170q81 59 166 0\" fill=\"none\" stroke=\"#f6d6c7\" stroke-width=\"3\" opacity=\".7\"/></g>"
+  }
+]

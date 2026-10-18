@@ -19,6 +19,11 @@ const work=seeds.map(([title,category,creatorHandle],i)=>({
  aiDisclosure:"Offline synthetic design fixture.",humanContribution:"No real human creator record."
 }));
 
+// Independent incident regression: one approved-but-unlinked publication.
+// Enabled only in local loopback browser tests. Never shipped to production.
+if(process.env.ANEVUM_UNLINKED_ALPHA_VISUAL_TEST==="1"){
+  work[0]={...work[0],title:"UNLINKED ALPHA RELEASE",creatorHandle:null,creatorName:"ANEVUM member"};
+}
 // Synthetic-only player cases live in the loopback fixture, not the public listings.
 // No real creator or approval is inferred from these test records.
 const playerCases=new Map([

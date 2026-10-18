@@ -163,3 +163,51 @@
 .av65-player-card--compact .av65-badge .av66-badge-insignia{width:20px!important;height:20px!important}
 .av65-player-card--compact .av65-badge .av66-badge-insignia svg{width:100%;height:100%}
 @media(max-width:640px){.av65-badge .av66-badge-insignia{width:20px!important;height:20px!important}.av65-badge .av66-badge-insignia svg{width:100%;height:100%}}
+
+
+/* V077 / Front-facing earned Evolution identity artwork.
+ * Keep card art fixed and sharp at 30-60px. Never re-enable WebGL miniature
+ * canvases or transform the image into an angled model silhouette.
+ */
+.av65-player-card .av61-specimen:has([data-presentation="v077-front-facing-illustration"]) {
+ filter:none;
+ perspective:none!important;
+ isolation:isolate;
+}
+.av65-player-card .av61-specimen:has([data-presentation="v077-front-facing-illustration"])::after {
+ content:none!important;
+}
+.av65-player-card .level-emblem[data-presentation="v077-front-facing-illustration"] {
+ box-sizing:border-box;
+ padding:1px;
+ border-radius:11px;
+ border:1px solid rgba(231,211,191,.31);
+ background:linear-gradient(142deg,#253147 0%,#151e31 49%,#101725 100%);
+ box-shadow:inset 0 1px 1px rgba(255,248,233,.17),0 4px 8px rgba(0,0,0,.45);
+ animation:none!important;
+ transform:none!important;
+ transition:border-color .18s ease,box-shadow .18s ease;
+}
+.av65-player-card:hover .level-emblem[data-presentation="v077-front-facing-illustration"],
+.av65-player-card:focus-visible .level-emblem[data-presentation="v077-front-facing-illustration"] {
+ border-color:rgba(241,221,204,.6);
+ box-shadow:inset 0 1px 1px rgba(255,248,233,.22),0 5px 11px rgba(0,0,0,.6);
+}
+.av65-player-card .level-emblem[data-presentation="v077-front-facing-illustration"] > .av62-native-poster {
+ padding:0!important;
+ border-radius:10px;
+ width:100%!important;
+ height:100%!important;
+ object-fit:contain;
+ object-position:center;
+ image-rendering:auto;
+ filter:none!important;
+}
+.av65-player-card--inline .level-emblem[data-presentation="v077-front-facing-illustration"] {
+ border-radius:8px;
+}
+@media(prefers-reduced-motion:reduce) {
+ .av65-player-card .level-emblem[data-presentation="v077-front-facing-illustration"] {
+  transition:none!important;
+ }
+}

@@ -54,6 +54,8 @@ const fakeEnv=(overrides={})=>{
 test('V075 reward asset router matches only numbered levels and known media names',()=>{
  assert.deepEqual(matchRewardMedia('/api/v1/member/rewards/levels/2/scene'),
   {level:2,kind:'scene',handle:null});
+ assert.deepEqual(matchRewardMedia('/api/v1/member/rewards/levels/2/card'),
+  {level:2,kind:'card',handle:null});
  assert.deepEqual(matchRewardMedia('/api/v1/members/devon/rewards/levels/30/poster'),
   {level:30,kind:'poster',handle:'devon'});
  for(const path of [
@@ -73,6 +75,8 @@ test('V075 owner must be verified and never receives unreached level model or po
  assert.equal(unearned.status,404);
  const noSpoiler=await earnedRewardMedia(new Request(levelUrl(30,'poster')),env,signed);
  assert.equal(noSpoiler.status,404);
+ const unreachedCard=await earnedRewardMedia(new Request(levelUrl(30,'card')),env,signed);
+ assert.equal(unreachedCard.status,404);
  const owned=await earnedRewardMedia(new Request(levelUrl(2)),env,signed);
  assert.equal(owned.status,200);
  assert.equal(owned.headers.get('cache-control'),'private, no-store');
@@ -94,6 +98,21 @@ test('V075 public reward media needs verified opt-in profile, visible statistics
  assert.equal(valid.status,200);
  assert.equal(valid.headers.get('content-type'),'image/png');
  assert.equal(assets[0],'/evolution/assets/level-03-compact-128.png');
+ const card=await earnedRewardMedia(new Request(levelUrl(3,'card','example')),env);
+ assert.equal(card.status,200);
+ assert.match(card.headers.get('content-type'),/^image\/svg\+xml/);
+ assert.equal(card.headers.get('cache-control'),'private, no-store');
+ assert.equal(card.headers.get('content-disposition'),'inline');
+ assert.match(card.headers.get('content-security-policy'),/script-src 'none'/);
+ const xml=await card.text();
+ assert.match(xml,/Quantum Foam/);
+ assert.match(xml,/viewBox="0 0 256 256"/);
+ assert.doesNotMatch(xml,/Symmetry Field|ANEVUM|<script/);
+ // SVGs are privately composed in the Worker, not retrieved from direct ASSETS.
+ assert.equal(assets.length,1);
+ const head=await earnedRewardMedia(new Request(levelUrl(3,'card','example'),{method:'HEAD'}),env);
+ assert.equal(head.status,200);
+ assert.equal(await head.text(),'');
 });
 test('V075 runtime never reveals other level colors, static paths or failed image redirects',async()=>{
  const {env}=fakeEnv();
