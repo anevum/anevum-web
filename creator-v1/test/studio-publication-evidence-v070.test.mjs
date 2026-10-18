@@ -26,9 +26,9 @@ function database(){
   'CREATE TABLE member_reward_notifications(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id TEXT NOT NULL,kind TEXT NOT NULL,reference TEXT NOT NULL,created_at INTEGER NOT NULL,UNIQUE(user_id,kind,reference));',
   'CREATE TABLE member_notification_receipts(user_id TEXT PRIMARY KEY,through_id INTEGER);',
   'CREATE TABLE member_creator_edit_limits(user_id TEXT PRIMARY KEY,window_start INTEGER,requests INTEGER);',
-  "INSERT INTO \"user\"(id,emailVerified) VALUES ('owner',1),('reviewer',1),('other',1),('private',1);",
-  "INSERT INTO member_creator_profiles(user_id,handle,display_name,visibility) VALUES ('owner','owner_sample','Owner Sample','public'),('reviewer','reviewer_sample','Reviewer Sample','public'),('other','other_sample','Other Sample','public'),('private','private_sample','Private Sample','private');",
-  "INSERT INTO member_space_settings(user_id) VALUES ('owner'),('reviewer'),('other'),('private');"
+  "INSERT INTO \"user\"(id,emailVerified) VALUES ('owner',1),('reviewer',1),('safety',1),('other',1),('private',1);",
+  "INSERT INTO member_creator_profiles(user_id,handle,display_name,visibility) VALUES ('owner','owner_sample','Owner Sample','public'),('reviewer','reviewer_sample','Reviewer Sample','public'),('safety','safety_sample','Safety Sample','public'),('other','other_sample','Other Sample','public'),('private','private_sample','Private Sample','private');",
+  "INSERT INTO member_space_settings(user_id) VALUES ('owner'),('reviewer'),('safety'),('other'),('private');"
  ].join('\n'));
  for(const file of [
   'canonical-auth/migrations/0008_private_creator_studio.sql',
@@ -70,7 +70,7 @@ const env=db=>({
  MEMBER_DB:db,CANONICAL_CREATOR_STUDIO_ENABLED:'true',
  CANONICAL_STUDIO_PUBLICATION_ENABLED:'true',
  CANONICAL_STUDIO_SAFETY_ENABLED:'true',
- CANONICAL_STUDIO_SAFETY_REVIEWER_IDS:'reviewer',
+ CANONICAL_STUDIO_SAFETY_REVIEWER_IDS:'safety',
  CANONICAL_RECOGNITION_ENABLED:'true',
  CANONICAL_STUDIO_REVIEWER_IDS:'reviewer'
 });
