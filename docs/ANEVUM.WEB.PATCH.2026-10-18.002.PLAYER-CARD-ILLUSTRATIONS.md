@@ -32,4 +32,7 @@ The V077 SVGs are deliberate frontal graphic illustrations, not new volumetric m
 - `.github/workflows/evolution-card-v077-qa.yml`: branch-local source, TS typecheck, Vite build, reward privacy and recognition tests. No deployment performed.
 - Rollout should use existing guarded V076 workflow semantics: build frontend and Worker together, verify D1/ASSETS/Better Auth/Resend bindings independently, confirm XP/privacy policy, test real Level 4 public avatar and private collector, test desktop/mobile, retain prior Worker rollback. No direct `wrangler deploy --keep-vars` that might drop secrets.
 
+
+**Disclosure boundary:** This is a PUBLIC GitHub repository. The client bundle and unauthenticated website do not enumerate unreached art, but anyone who browses the source repository can see the 30 SVG recipes and previously published V059 model definitions. API gating therefore provides site access control, not absolute secrecy. To make unreached collection artwork truly undiscoverable, move the art and model asset source to private storage/repositories before a promotional reveal. Do not describe public-source designs as cryptographically hidden.
+
 Status: feature branch implementation and CI testing; **not promoted to anevum.com**.
