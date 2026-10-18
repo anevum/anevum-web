@@ -14,7 +14,7 @@ const publicStage=createPublicStageWorker({hostname:"anevum.com"});
 const MEMBER=/^\/api\/v1\/member\//;
 const PUBLIC_METRICS="/api/v1/public/supporter/metrics";
 const PUBLIC_RECOGNITION_CATALOG="/api/v1/public/recognition/catalog";
-const PUBLIC_IDENTITY=/^\/api\/v1\/members\/[a-z][a-z0-9_]{2,29}(?:\/(?:space|wall|media\/(?:avatar|banner)|rewards\/(?:inventory|levels\/(?:[1-9]|[12][0-9]|30)\/(?:icon|preview|poster|scene|runtime|height|albedo))))?$/;
+const PUBLIC_IDENTITY=/^\/api\/v1\/members\/[a-z][a-z0-9_]{2,29}(?:\/(?:space|wall|media\/(?:avatar|banner)|rewards\/(?:inventory|levels\/(?:[1-9]|[12][0-9]|30)\/(?:card|icon|preview|poster|scene|runtime|height|albedo))))?$/;
 const SECRET_EVOLUTION=/^\/(?:evolution(?:\/|$)|assets\/levels(?:\/|$))/i;
 const COMMUNITY=/^\/api\/v1\/community\/(?:members|activity|threads(?:\/[a-f0-9-]{36}(?:\/(?:replies|reaction))?)?|reports)$/;
 
