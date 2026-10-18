@@ -123,20 +123,45 @@ export default {
     try{url=new URL(request.url);}catch{return answer("Not found",404,request.method);}
     if(!["GET","HEAD"].includes(request.method))
       return answer("Read-only review",405,request.method);
-    if(url.hash || (url.search && !(url.pathname==="/vendor/maplibre-gl-worker.mjs" && url.search==="?v=6.14.0")))
-      return answer("Not found",404,request.method);
-    if(url.pathname==="/__review")
+    // Cloudflare Access may return to the requested HTML path with a query
+    // string. A GET navigation with such parameters must not be a 404.
+    // Do not allow arbitrary query strings to bypass the asset allowlist.
+    if(url.pathname==="/__review" && !url.search)
       return answer(JSON.stringify({
         status:"SYNTHETIC_REVIEW",familyAccounts:false,
         gps:false,geolocationPermission:false,privateDatabase:false,
         durableObjects:false,history:false,source:"fictional-only",
         memberApi:false,sharingBackend:false
       }),200,request.method,"application/json; charset=utf-8");
-    if(!FILES.has(url.pathname))return answer("Not found",404,request.method);
+
+    if(!FILES.has(url.pathname)){
+      // Safe, same-origin landing fallback for a browser sent to a benign
+      // legacy HTML path. APIs, internal Cloudflare routes, dotfiles, vendor
+      // assets and all other non-navigation requests remain 404.
+      const acceptsHtml=(request.headers.get("Accept")||"").includes("text/html");
+      const reserved=/^\/(?:api(?:\/|$)|__|cdn-cgi(?:\/|$)|vendor(?:\/|$)|\.)/i;
+      if(request.method==="GET" && acceptsHtml &&
+        url.pathname.length<=256 && !reserved.test(url.pathname))
+        return new Response(null,{status:302,headers:{...HEADERS,Location:url.origin+"/"}});
+      return answer("Not found",404,request.method);
+    }
+    if(url.hash)return answer("Not found",404,request.method);
+    if(url.search) {
+      if(url.pathname==="/" || url.pathname==="/index.html")
+        return new Response(null,{status:302,headers:{...HEADERS,Location:url.origin+"/"}});
+      if(url.pathname!=="/vendor/maplibre-gl-worker.mjs" || url.search!=="?v=6.14.0")
+        return answer("Not found",404,request.method);
+    }
     if(!env?.ASSETS || typeof env.ASSETS.fetch!=="function")
       return answer("Preview assets are unavailable",503,request.method);
     try{
-      const response=await env.ASSETS.fetch(request);
+      // Request the exact allowlisted file, not the authentication callback
+      // URL. The default asset HTML auto-redirects are disabled by Wrangler.
+      // The asset binding receives no Access cookies or callback query tokens.
+      const assetPath=url.pathname==="/" ? "/index.html" : url.pathname;
+      const response=await env.ASSETS.fetch(new URL(assetPath,url.origin));
+      if(response.status===404)
+        return answer("Preview file is unavailable",503,request.method);
       const headers=new Headers(response.headers);
       for(const [key,value] of Object.entries(HEADERS))headers.set(key,value);
       headers.set("Content-Type",CTYPE[url.pathname]);
