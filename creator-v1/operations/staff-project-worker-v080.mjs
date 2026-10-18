@@ -32,9 +32,13 @@ export default {
   if(url.hostname!=="anevum.com"||!["/staff/projects","/staff/projects/","/staff/projects/api/manage","/staff/projects/api/review"].includes(url.pathname))
    return error(404,"Not found");
   if(!env.DB||!env.AUTH)return error(503,"Staff workspace unavailable");
+  // Fail closed until an isolated worker has explicitly verified storage binding.
+  // No project lifecycle or publication mutation is safe without this binding.
+  if(url.pathname.startsWith("/staff/projects/api/")&&!env.MEDIA)return error(503,"Staff media binding unavailable");
   if((url.pathname==="/staff/projects/api/manage"||url.pathname==="/staff/projects/api/review")&&req.method!=="POST")return error(405,"Method not allowed");
   if(!["/staff/projects/api/manage","/staff/projects/api/review"].includes(url.pathname)&&!["GET","HEAD"].includes(req.method))return error(405,"Method not allowed");
-  // Cloudflare Access must be enforced by the Access application on /staff*.
+  // Cloudflare Access is enforced by the Access application on /staff*.
+  // Deployment must additionally verify its audience and worker route are protected.
   // The session and D1 grant are a second, independent authorization boundary.
   let id,role;
   try{id=await session(req,env);if(!id)return error(401,"Verified member sign-in required");role=await grant(env.DB,id);if(!role)return error(403,"Staff clearance required");}
