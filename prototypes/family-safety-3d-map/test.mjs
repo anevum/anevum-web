@@ -44,6 +44,7 @@ function harness() {
     zoomOut() { this.events.push(['zoomOut']); }
     easeTo(options) { this.events.push(['easeTo', options]); }
     flyTo(options) { this.events.push(['flyTo', options]); }
+    fitBounds(bounds, options) { this.events.push(['fitBounds', bounds, options]); }
     setTerrain(options) { this.events.push(['terrain', options]); }
   }
   class FakeMarker {
@@ -134,6 +135,32 @@ test('fictional circle markers preview identity without live member feeds', () =
   click('preview-family');
   assert.equal(node('sample-family-members').hidden,true);
   assert.equal(node('family-count').textContent,'NO MEMBERS CONNECTED');
+});
+
+test('sample positions demonstrate stale and revoked access without real tracking', () => {
+  const { click, node, markerInstances, mapInstances } = harness();
+  click('preview-family');
+  assert.equal(markerInstances.length,2);
+  assert.equal(node('family-count').textContent,'FICTIONAL SAMPLE · 2');
+  click('preview-focus');
+  assert.equal(mapInstances[0].events.at(-1)[0],'fitBounds');
+  click('preview-stale');
+  assert.match(node('sample-a-status').textContent,/Stale sample/);
+  assert.equal(node('preview-stale').getAttribute('aria-pressed'),'true');
+  assert.equal(markerInstances[0].getElement().style.opacity,'0.58');
+  click('preview-revoke');
+  assert.match(node('sample-a-status').textContent,/access revoked/);
+  assert.equal(node('preview-stale').disabled,true);
+  assert.equal(node('family-count').textContent,'FICTIONAL SAMPLE · 1 VISIBLE');
+  assert.equal(markerInstances[0].getElement().style.display,'none');
+  assert.equal(markerInstances[1].getElement().style.display,'');
+  click('preview-focus');
+  assert.equal(mapInstances[0].events.at(-1)[0],'flyTo');
+  assert.deepEqual(Array.from(mapInstances[0].events.at(-1)[1].center),[-81.2898,28.2464]);
+  click('preview-reset');
+  assert.equal(node('preview-stale').disabled,false);
+  assert.equal(markerInstances[0].getElement().style.display,'');
+  assert.equal(node('sample-a-status').textContent,'Recent (fictional) · access granted for this demonstration');
 });
 
 test('community pins are clearly fictional and not shown by default', () => {

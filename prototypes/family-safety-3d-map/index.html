@@ -45,6 +45,16 @@
     .secondarybutton[aria-pressed="true"]{background:rgba(165,156,252,.20);border-color:#ada5ff}
     .sample-members{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:6px 11px;background:rgba(255,255,255,.028)}
     .sample-members .person{margin:8px 0}.sample-members .avatar{width:30px;height:30px;border-radius:10px;font-size:12px}
+    .sample-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+    .sample-actions button{padding:9px 7px;min-height:39px;border-radius:9px;border:1px solid var(--line);background:rgba(165,156,252,.10);color:#f0eaf7;font-size:10px}
+    .sample-actions button[aria-pressed="true"]{border-color:#e49e99;background:rgba(231,139,124,.24)}
+    .sample-actions button:disabled{opacity:.4;cursor:not-allowed}
+    .sample-disclosure{margin-top:11px;padding:10px 11px;border:1px solid rgba(165,156,252,.30);background:rgba(165,156,252,.05);border-radius:10px;color:#d6d1e1;font-size:10px;line-height:1.6}
+    .signal-key{display:flex;gap:11px;flex-wrap:wrap;font-size:10px;color:var(--muted);margin-top:9px}
+    .signal-key b{font-weight:500}
+    .signal-key b:before{content:"";display:inline-block;height:7px;width:7px;border-radius:50%;background:#9ccbc6;margin-right:5px}
+    .signal-key .stale:before{background:#e9af7b}
+    .signal-key .off:before{background:#697184}
     .mainbutton.active{color:#f8e0de;border-color:#c58889;background:rgba(154,76,91,.22)}
     .note{font-size:11px;line-height:1.5;color:var(--muted);margin-top:9px}
     .hint{margin:9px 0 0;padding:12px;border-left:2px solid var(--violet);border-radius:2px 9px 9px 2px;background:rgba(165,156,252,.07);font-size:11px;color:var(--muted);line-height:1.5}
@@ -111,8 +121,16 @@
         <p>No family accounts or location feeds are connected in this isolated demo.</p>
         <button type="button" class="secondarybutton" id="preview-family" aria-pressed="false">Preview two fictional family markers</button>
         <div class="sample-members" id="sample-family-members" hidden>
-          <div class="person"><div class="avatar">A</div><div><strong>Sample device A</strong><span>Fictional map position · not a live device</span></div></div>
-          <div class="person"><div class="avatar">B</div><div><strong>Sample device B</strong><span>Fictional map position · not a live device</span></div></div>
+          <div class="person"><div class="avatar">A</div><div><strong>Sample device A</strong><span id="sample-a-status">Recent (fictional) · access granted for this demonstration</span></div></div>
+          <div class="person"><div class="avatar">B</div><div><strong>Sample device B</strong><span id="sample-b-status">Recent (fictional) · access granted for this demonstration</span></div></div>
+          <div class="signal-key" aria-label="Position freshness legend"><b>Recent</b><b class="stale">Stale</b><b class="off">Unavailable</b></div>
+          <div class="sample-actions">
+            <button type="button" id="preview-stale" aria-pressed="false">Simulate stale A</button>
+            <button type="button" id="preview-revoke" aria-pressed="false">Revoke A access</button>
+            <button type="button" id="preview-focus">Frame permitted markers</button>
+            <button type="button" id="preview-reset">Reset fictional sample</button>
+          </div>
+          <div class="sample-disclosure">Illustration only. These markers have static fictional coordinates, not accounts, phone locations or location-sharing permissions. Actual permissions require server validation before any feed can exist.</div>
         </div>
         <button type="button" class="mainbutton" id="location-button" aria-pressed="false">Show my position on this device</button>
         <div class="note">Requires HTTPS and your permission. ANEVUM does not receive or store your GPS coordinates. The map provider still receives tile requests for the area you view. Tracking stops when the page is inactive.</div>
@@ -156,7 +174,7 @@
       {coordinates:[-81.2832,28.2466],name:"Illustrative waypoint B"}
     ];
     const communityPins = [], familyPins = [];
-    let familyPreview = false;
+    let familyPreview = false, sampleStale = false, sampleRevoked = false;
     const sampleFamilyDevices = [
       {coordinates:[-81.2850,28.2502],name:"Sample device A",glyph:"A"},
       {coordinates:[-81.2898,28.2464],name:"Sample device B",glyph:"B"}
@@ -226,16 +244,35 @@
       if(!map)return;
       map.easeTo({pitch:enabled?62:0,bearing:enabled?-18:0,duration:600});
     }
+    function syncFamilySample() {
+      const familyTab=!el("family-content").hidden;
+      familyPins.forEach((pin,i)=>{
+        const authorized=familyPreview&&familyTab&&(i!==0||!sampleRevoked);
+        pin.getElement().style.display=authorized?"":"none";
+        pin.getElement().style.opacity=(i===0&&sampleStale&&!sampleRevoked)?"0.58":"1";
+      });
+      el("sample-family-members").hidden=!familyPreview;
+      el("family-count").textContent=familyPreview?
+        (sampleRevoked?"FICTIONAL SAMPLE · 1 VISIBLE":"FICTIONAL SAMPLE · 2"):
+        "NO MEMBERS CONNECTED";
+      el("sample-a-status").textContent=sampleRevoked?"Unavailable · fictional access revoked":
+        sampleStale?"Stale sample · 45 seconds old · not a safety alarm":
+        "Recent (fictional) · access granted for this demonstration";
+      el("sample-b-status").textContent="Recent (fictional) · access granted for this demonstration";
+      el("preview-stale").setAttribute("aria-pressed",String(sampleStale&&!sampleRevoked));
+      el("preview-revoke").setAttribute("aria-pressed",String(sampleRevoked));
+      el("preview-stale").disabled=sampleRevoked;
+      el("preview-focus").disabled=!familyPreview;
+    }
     function switchMode(mode){
       const family=mode==="family";
       el("family-tab").setAttribute("aria-pressed",String(family));
       el("community-tab").setAttribute("aria-pressed",String(!family));
       el("family-content").hidden=!family;
       el("community-content").hidden=family;
-      // The demo waypoints are only visible on the community tab.
       const visible=!family&&el("demo-markers").checked;
       communityPins.forEach(pin=>pin.getElement().style.display=visible?"":"none");
-      familyPins.forEach(pin=>pin.getElement().style.display=family&&familyPreview?"":"none");
+      syncFamilySample();
     }
     function updateMe(position) {
       const coords=[position.coords.longitude,position.coords.latitude];
@@ -271,23 +308,51 @@
     }
     el("preview-family").addEventListener("click",()=>{
       familyPreview=!familyPreview;
+      if(familyPreview){sampleRevoked=false;sampleStale=false;}
       el("preview-family").setAttribute("aria-pressed",String(familyPreview));
       el("preview-family").textContent=familyPreview?"Hide fictional family markers":"Preview two fictional family markers";
-      el("family-count").textContent=familyPreview?"FICTIONAL SAMPLE · 2":"NO MEMBERS CONNECTED";
-      el("sample-family-members").hidden=!familyPreview;
       if(familyPreview&&familyPins.length===0&&map){
-        sampleFamilyDevices.forEach(person=>{
+        sampleFamilyDevices.forEach((person,i)=>{
           const pin=marker(person.coordinates,"demo",person.name+" — fictional location, no account connected",person.glyph);
           pin.getElement().addEventListener("click",event=>{
             event.stopPropagation();
+            if(i===0&&sampleRevoked){notice("Access revoked in the fictional sample.");return;}
             map.flyTo({center:person.coordinates,zoom:17,pitch:view3d?62:0,duration:800});
             notice(person.name+" is a fictional static example, not a connected person.");
           });
           familyPins.push(pin);
         });
       }
-      familyPins.forEach(pin=>pin.getElement().style.display=familyPreview?"":"none");
-      if(familyPreview)notice("Demo positions are fictional and static. No other devices are connected.");
+      syncFamilySample();
+      if(familyPreview)notice("Fictional devices loaded. Revocation and stale states are demonstrations only.");
+    });
+    el("preview-stale").addEventListener("click",()=>{
+      if(!familyPreview||sampleRevoked)return;
+      sampleStale=!sampleStale;
+      syncFamilySample();
+      notice(sampleStale?"Sample A is stale (fictional). Stale does not mean unsafe.":"Sample A was reset to recent (fictional).");
+    });
+    el("preview-revoke").addEventListener("click",()=>{
+      if(!familyPreview||sampleRevoked)return;
+      sampleRevoked=true;
+      sampleStale=false;
+      syncFamilySample();
+      notice("Fictional Sample A: viewing access revoked, marker removed. A real revocation requires server enforcement.");
+    });
+    el("preview-reset").addEventListener("click",()=>{
+      if(!familyPreview)return;
+      sampleStale=false;sampleRevoked=false;
+      syncFamilySample();
+      notice("Fictional scenario restarted. Real revoked permissions never reset automatically.");
+    });
+    el("preview-focus").addEventListener("click",()=>{
+      if(!map||!familyPreview)return;
+      const coords=sampleFamilyDevices.filter((_,i)=>i!==0||!sampleRevoked).map(p=>p.coordinates);
+      if(coords.length===1)map.flyTo({center:coords[0],zoom:16.8,pitch:view3d?62:0,duration:800});
+      else if(coords.length>1)map.fitBounds([
+        [Math.min(...coords.map(p=>p[0])),Math.min(...coords.map(p=>p[1]))],
+        [Math.max(...coords.map(p=>p[0])),Math.max(...coords.map(p=>p[1]))]
+      ],{padding:90,duration:850,maxZoom:17});
     });
     el("family-tab").addEventListener("click",()=>switchMode("family"));
     el("community-tab").addEventListener("click",()=>switchMode("community"));
