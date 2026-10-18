@@ -4,8 +4,6 @@ import {useResource} from '../lib/useResource';
 
 import {MemberWall} from '../components/MemberWall';
 import {CompactMemberIdentity} from '../components/CompactMemberIdentity';
-import {BadgeInsignia} from '../components/BadgeInsignia';
-import {BADGE_CATALOG} from '../lib/player-recognition';
 import {SpaceProgress} from '../components/MemberSpaceDashboard';
 import {EarnedRewardVault} from '../components/EarnedRewardVault';
 
