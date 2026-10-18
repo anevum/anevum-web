@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
-test('every modern public author surface uses the shared 3D mini specimen identity',()=>{
+test('every modern public author surface reuses the protected optical specimen identity',()=>{
  const shared=read('web/src/components/CompactMemberIdentity.tsx');
  const forum=read('web/src/components/ForumAuthorCard.tsx');
  const member=read('web/src/components/MemberCommunity.tsx');
