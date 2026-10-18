@@ -1,4 +1,5 @@
 name: ANEVUM V076 Evolution Media Canary
+# Requires preserved V059 artwork and updated 68px high-resolution icon check.
 on:
   push:
     branches:
