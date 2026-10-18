@@ -9,7 +9,7 @@
  */
 const FILES=new Set([
   "/","/index.html","/styles.css","/app.mjs","/synthetic-engine.mjs",
-  "/vendor/maplibre-gl.mjs","/vendor/maplibre-gl-worker.mjs","/vendor/maplibre-gl.css"
+  "/vendor/maplibre-gl.mjs","/vendor/maplibre-gl-worker.mjs","/vendor/maplibre-gl.css","/synthetic-scene.mjs"
 ]);
 const CTYPE={
   "/":"text/html; charset=utf-8",
@@ -19,7 +19,8 @@ const CTYPE={
   "/synthetic-engine.mjs":"application/javascript; charset=utf-8",
   "/vendor/maplibre-gl.mjs":"application/javascript; charset=utf-8",
   "/vendor/maplibre-gl-worker.mjs":"application/javascript; charset=utf-8",
-  "/vendor/maplibre-gl.css":"text/css; charset=utf-8"
+  "/vendor/maplibre-gl.css":"text/css; charset=utf-8",
+  "/synthetic-scene.mjs":"application/javascript; charset=utf-8"
 };
 const CSP=[
   "default-src 'none'",
@@ -67,7 +68,8 @@ export default {
     try{url=new URL(request.url);}catch{return answer("Not found",404,request.method);}
     if(!["GET","HEAD"].includes(request.method))
       return answer("Read-only review",405,request.method);
-    if(url.search||url.hash)return answer("Not found",404,request.method);
+    if(url.hash || (url.search && !(url.pathname==="/vendor/maplibre-gl-worker.mjs" && url.search==="?v=6.14.0")))
+      return answer("Not found",404,request.method);
     if(url.pathname==="/__review")
       return answer(JSON.stringify({
         status:"SYNTHETIC_REVIEW",familyAccounts:false,
