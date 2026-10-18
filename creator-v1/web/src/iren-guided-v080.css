@@ -50,3 +50,12 @@
 @media(prefers-reduced-motion:reduce){.ir80-orb,.ir80-guide-avatar svg,.ir80-guide-body{animation:none}.ir80-spotlight,.ms-dashboard .ir80-action-grid>*{transition:none}}
 @media(forced-colors:active){.ir80-shade{background:Canvas}.ir80-spotlight,.ir80-guide-card,.ir80-help,.ir80-dock{border:2px solid Highlight}}
 @keyframes ir80-float{50%{transform:translateY(-4px)}}@keyframes ir80-turn{to{transform:rotate(360deg)}}@keyframes ir80-arrive{from{opacity:.4;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+/* Contextual help is a separate utility, not a fifth primary Wayfinder route. */
+.av79-navigation .ir80-wayfinder-entry{display:flex;align-items:center;gap:12px;width:100%;margin-top:10px;padding:12px 15px;border:1px solid #dac8bc56;border-radius:13px;color:#f8eadc;background:linear-gradient(120deg,#202d46,#172138);text-align:left;cursor:pointer;font-family:inherit}
+.ir80-wayfinder-entry .av79-destination-icon{flex:none;display:grid;place-items:center;width:36px;height:36px;border:1px solid #f2d5b044;border-radius:11px;color:#ead1b9}
+.ir80-wayfinder-entry>span:nth-child(2){display:grid;gap:4px;min-width:0;flex:1}
+.ir80-wayfinder-entry strong{font-size:13px;font-weight:650}.ir80-wayfinder-entry small{font-size:11px;color:#c1c8d9}
+.ir80-wayfinder-action{font:700 9px/1.4 ui-monospace,monospace;color:#ead2ad;letter-spacing:.04em;white-space:nowrap}
+.ir80-wayfinder-entry:hover{border-color:#edd5b1}.ir80-wayfinder-entry:focus-visible{outline:3px solid #86ddeb;outline-offset:3px}
+@media(max-width:380px){.ir80-wayfinder-action{display:none}}
