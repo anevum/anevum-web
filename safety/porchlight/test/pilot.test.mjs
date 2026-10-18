@@ -329,3 +329,61 @@ test('host consent is versioned and event audit does not outlive its parent',asy
   assert.deepEqual(new Set(entries.map(x=>x.action)),new Set(['event_drafted','event_active']));
  }finally{db.close()}
 });
+
+test('D1 transactional event creation rolls back both event and audit on failure',async()=>{
+ const {db,settings}=env();
+ try{
+  const batch=db.batch.bind(db);
+  db.batch=async stmts=>batch([...stmts,{run:async()=>{throw Error('INJECTED_TRANSACTION_FAILURE')}}]);
+  await assert.rejects(
+    ()=>api(settings,admin+'/events','POST',eventData,auth),
+    /INJECTED_TRANSACTION_FAILURE/
+  );
+  assert.equal(db.sqlite.prepare('SELECT COUNT(*) n FROM events').get().n,0);
+  assert.equal(db.sqlite.prepare('SELECT COUNT(*) n FROM audit_events').get().n,0);
+ }finally{db.close()}
+});
+
+test('D1 transactional approval and withdrawal roll back private/public changes on injected failure',async()=>{
+ const {db,settings}=env();
+ try{
+  await newActiveEvent(settings);
+  const host=await application(settings);
+  const batch=db.batch.bind(db);
+  const inject=()=>{db.batch=async statements=>batch([...statements,{run:async()=>{throw Error('INJECTED_TRANSACTION_FAILURE')}}])};
+  const restore=()=>{db.batch=batch};
+  const decision=admin+'/hosts/'+host.id+'/decision';
+  inject();
+  await assert.rejects(
+    ()=>api(settings,decision,'POST',{
+      action:'approve',publicLabel:'Approved Lantern Host',lat:28.24,lng:-81.29,
+      verifiedOutOfBand:true,verificationMethod:'direct_contact'
+    },auth),/INJECTED_TRANSACTION_FAILURE/
+  );
+  assert.equal(db.sqlite.prepare('SELECT status FROM host_submissions WHERE id=?').get(host.id).status,'pending');
+  assert.equal(db.sqlite.prepare("SELECT COUNT(*) n FROM audit_events WHERE action='host_approve'").get().n,0);
+  restore();
+  const good=await api(settings,decision,'POST',{
+    action:'approve',publicLabel:'Approved Lantern Host',lat:28.24,lng:-81.29,
+    verifiedOutOfBand:true,verificationMethod:'direct_contact'
+  },auth);
+  assert.equal(good.result.status,'published');
+  const report=await api(settings,publicApi+'/events/'+eventData.slug+'/reports','POST',{
+    hostId:host.id,reason:'incorrect',details:'Possible private contact detail'
+  });
+  assert.equal(report.response.status,201);
+  inject();
+  await assert.rejects(
+    ()=>api(settings,publicApi+'/submissions/'+host.id+'/revoke','POST',{receipt:host.receipt}),
+    /INJECTED_TRANSACTION_FAILURE/
+  );
+  const existing=db.sqlite.prepare('SELECT * FROM host_submissions WHERE id=?').get(host.id);
+  assert.equal(existing.status,'published');
+  assert.equal(existing.private_address,hostData.privateAddress);
+  assert.equal(db.sqlite.prepare('SELECT COUNT(*) n FROM reports WHERE host_id=?').get(host.id).n,1);
+  restore();
+  const removed=await api(settings,publicApi+'/submissions/'+host.id+'/revoke','POST',{receipt:host.receipt});
+  assert.equal(removed.result.status,'withdrawn');
+  assert.equal(db.sqlite.prepare('SELECT COUNT(*) n FROM reports WHERE host_id=?').get(host.id).n,0);
+ }finally{db.close()}
+});
