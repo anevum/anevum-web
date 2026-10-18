@@ -14,7 +14,8 @@ const publicStage=createPublicStageWorker({hostname:"anevum.com"});
 const MEMBER=/^\/api\/v1\/member\//;
 const PUBLIC_METRICS="/api/v1/public/supporter/metrics";
 const PUBLIC_RECOGNITION_CATALOG="/api/v1/public/recognition/catalog";
-const PUBLIC_IDENTITY=/^\/api\/v1\/members\/[a-z][a-z0-9_]{2,29}(?:\/(?:space|wall|media\/(?:avatar|banner)))?$/;
+const PUBLIC_IDENTITY=/^\/api\/v1\/members\/[a-z][a-z0-9_]{2,29}(?:\/(?:space|wall|media\/(?:avatar|banner)|rewards\/levels\/(?:[1-9]|[12][0-9]|30)\/(?:icon|preview|poster|scene|runtime|height|albedo)))?$/;
+const SECRET_EVOLUTION=/^\/(?:evolution(?:\/|$)|assets\/levels(?:\/|$))/i;
 const COMMUNITY=/^\/api\/v1\/community\/(?:members|activity|threads(?:\/[a-f0-9-]{36}(?:\/(?:replies|reaction))?)?|reports)$/;
 
 export async function apexPlatformFetch(request,env,ctx){
@@ -22,6 +23,8 @@ export async function apexPlatformFetch(request,env,ctx){
   if(url.origin!==ORIGIN||url.protocol!=="https:"||
     env?.ANEVUM_CANONICAL_APEX_ENABLED!=="true")
     return new Response("Not found",{status:404,headers:{"cache-control":"no-store"}});
+  // The previously released gallery exposed all rewards without earning them.
+  if(SECRET_EVOLUTION.test(url.pathname))return new Response("Not found",{status:404,headers:{"cache-control":"no-store"}});
   if(url.pathname===PUBLIC_METRICS||url.pathname===PUBLIC_RECOGNITION_CATALOG||MEMBER.test(url.pathname)||
     PUBLIC_IDENTITY.test(url.pathname)||COMMUNITY.test(url.pathname))
     return canonicalIdentity.fetch(request,env,ctx);
