@@ -65,3 +65,19 @@ The older orbit decoration inside Index health is removed. Styling is flat, read
 Sitewide restructuring of Creator Studio, the full Community and every user-owned profile; retiring all atmospheric assets in other experiences; rewriting Evolution level specimens; new community data, AI media generation or app functionality; turning off authentic creator artworks when there are real rights-cleared works to show.
 
 **Design principle:** Every repeated module should answer “What is this, what is available right now, and what can I do next?” before asking the visitor to admire how it looks.
+
+## Continuation / V073.2 — actual screenshot review and Discover correction
+
+Visual inspection of the original passed V073 browser captures at 1440, 1024, 390 and 320 px revealed that first-contact modules are legible, but the linked **Discover** destination still inherited a tall cosmic illustration, cramped mobile search, oversized duplicated category side directory and repetitive generic category illustrations for every project. Passing layout tests alone did not make that destination usable.
+
+This iteration therefore:
+
+- Keeps the original immersive `PortalHeading` behind the explicit `immersive` prop for legacy experimental use, but the canonical `/discover` route now starts with a compact text introduction and a visible full-width search.
+- Uses one category filter strip instead of category filters **plus** an almost identical sidebar directory. Counts are from the existing read-only `readCategories` API, not fabricated metrics.
+- Moves the honest creator-declared free filter into the same search surface, retaining URL-driven `q`, `category`, `free` and cursor reset behavior.
+- Provides an editorial project-card presentation only in the canonical Discover view, with real project title, summary, category, creator handle and actual project route. There is no inferred/generated cover when no rights-cleared project image exists; older default project-card presentation remains available elsewhere.
+- Replaces the repeated empty-state graphic and implied future releases with a neutral empty result; distinguishes empty results from unavailable network data.
+- Adds scoped responsive styling for readable 320-px search controls, a scrollable visibly hinted mobile category strip, and one-column mobile project records.
+- Extends source-level and synthetic browser QA with no duplicated directory/artwork, 44-ish px controls, verified URL category/search roundtrips, and no horizontal document overflow at the four reference widths.
+
+**Important:** Source changes are still a draft, not published. New browser evidence must be visually inspected rather than inferred solely from a green CI result. No public product content or moderation review settings changed.
