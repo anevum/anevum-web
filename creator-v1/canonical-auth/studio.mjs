@@ -181,11 +181,21 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
    const hasExternal=Boolean(selected.demo_url||selected.source_url);
    const eligible=hasExternal?true:(kinds.length||nativeExtension)?Boolean(await getOne(db,
     "SELECT id FROM member_studio_assets WHERE project_id=? AND user_id=? AND status='quarantined' "+
-    "AND sha256 IS NOT NULL AND (kind IN ("+kinds.map(()=>'?').join(',')+")"+
+    "AND sha256 IS NOT NULL AND ((kind IN ("+kinds.map(()=>'?').join(',')+") "+
+    "AND extension NOT IN ('anvg','anva','anvs','anvw','anvp'))"+
     (nativeExtension?" OR (kind='package' AND extension=?)":'')+") LIMIT 1",
     [id,user.id,...kinds,...(nativeExtension?[nativeExtension]:[])])):false;
    if(!readyToSubmit(selected,eligible))return fail(422,
     'A matching completed file or HTTPS destination, license and accurate contribution disclosures are required');
+   // A file uploaded for one category cannot silently join an unrelated
+   // frozen review after its project is reclassified. No generic package
+   // rule may turn a native pack into an executable or publishable build.
+   const expectedNative=NATIVE_PACK_EXTENSION[selected.category]||'';
+   const mismatchedNative=await getOne(db,
+    "SELECT id FROM member_studio_assets WHERE project_id=? AND user_id=? "+
+    "AND extension IN ('anvg','anva','anvs','anvw','anvp') AND extension<>? LIMIT 1",
+    [id,user.id,expectedNative]);
+   if(mismatchedNative)return fail(422,'Remove native packages from the previous project category before review');
    const unfinished=await getOne(db,
     "SELECT id FROM member_studio_assets WHERE project_id=? AND user_id=? AND status<>'quarantined' LIMIT 1",
     [id,user.id]);
