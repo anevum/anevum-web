@@ -48,8 +48,10 @@ test('miniature shader uses real native mesh, GGX materials, dust, aura, glow an
  assert.match(native,/this\.saveData/);
  assert.match(native,/this\.activeLast/);
  assert.match(native,/new Map<number,GPUPart\[\]>/);
- assert.match(emblem,/registerAnimatedSpecimen/);
- assert.match(emblem,/av62-native-host/);
+ // Standalone WebGL shader/runtime is preserved for archive experiments,
+ // but the shared LevelEmblem must no longer mount a glitchy inline stage.
+ assert.doesNotMatch(emblem,/registerAnimatedSpecimen/);
+ assert.match(emblem,/av73-static-level-icon/);
  assert.match(emblem,/av62-native-poster/);
  assert.match(style,/data-live="true"/);
  assert.match(style,/visibility:hidden/);
@@ -57,7 +59,7 @@ test('miniature shader uses real native mesh, GGX materials, dust, aura, glow an
  assert.doesNotMatch(emblem,/getContext|canvas.*getContext|new WebGLRenderingContext/);
  assert.doesNotMatch(native,/POST|DELETE|PATCH|member_xp_events|featuredAwards/);
 });
-test('native animation displays anywhere LevelEmblem is already used without changing earned XP',()=>{
+test('approved optical icons display anywhere LevelEmblem is used without changing earned XP',()=>{
  const files=[
   'web/src/components/CompactMemberIdentity.tsx',
   'web/src/components/MemberSpaceDashboard.tsx',
