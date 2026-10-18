@@ -1,0 +1,49 @@
+name: V070 Studio Publication Evidence Security Review
+on:
+  push:
+    branches: [build/creator-publication-evidence-v070-20261017-019]
+    paths:
+      - "creator-v1/canonical-auth/studio-publications.mjs"
+      - "creator-v1/canonical-auth/studio.mjs"
+      - "creator-v1/canonical-auth/worker.mjs"
+      - "creator-v1/apex-prelaunch/platform.mjs"
+      - "creator-v1/canonical-auth/recognition-catalog.mjs"
+      - "creator-v1/canonical-auth/migrations/0011_studio_publication_evidence.sql"
+      - "creator-v1/test/studio-publication-evidence-v070.test.mjs"
+      - ".github/workflows/v070-studio-publication-review.yml"
+permissions:
+  contents: read
+jobs:
+  safe-review:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check every canonical Worker module
+        shell: bash
+        run: |
+          set -euo pipefail
+          for source in creator-v1/canonical-auth/*.mjs creator-v1/apex-prelaunch/*.mjs; do node --check "$source"; done
+      - name: Verify real SQLite private review and award issuance semantics
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-sqlite --test             creator-v1/test/studio-publication-evidence-v070.test.mjs             creator-v1/test/player-recognition-roundtrip-v069.test.mjs             creator-v1/test/player-recognition-issuance-v066.test.mjs
+      - name: Typecheck exact app source before packaging
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+      - name: Record release is not live
+        run: |
+          echo "V070_STUDIO_PUBLICATION_SOURCE_TESTS=PASS" >> "$GITHUB_STEP_SUMMARY"
+          echo "V070_NOT_MIGRATED_NOT_ACTIVATED_NOT_DEPLOYED=TRUE" >> "$GITHUB_STEP_SUMMARY"
+          echo "SOURCE_SHA=$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
