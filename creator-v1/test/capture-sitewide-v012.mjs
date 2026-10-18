@@ -135,6 +135,28 @@ try{
       throw Error("SITEWIDE_V012_LEVELS_TEXT_SQUEEZED_"+width+":"+JSON.stringify(metrics));
    }
    await screenshot(name+"-"+width);
+   if(name==="discover"){
+     // V073: the catalogue must be a usable search/filter surface on phone
+     // and desktop, not a tall, decorative hero or duplicate sidebar.
+     await until(()=>evaluate('!!document.querySelector(".portal-result-toolbar,.portal-true-empty")'));
+     const browse=await evaluate('(()=>{const root=document.querySelector(".av73-discover"),form=root?.querySelector(".portal-wide-search"),field=form?.querySelector("input"),submit=form?.querySelector("button"),fr=field?.getBoundingClientRect(),sr=submit?.getBoundingClientRect();return {headline:root?.querySelector(".av73-discover-intro h1")?.textContent,hero:!!root?.querySelector(".portal-page-heading"),directory:root?.querySelectorAll(".portal-directory").length||0,filters:root?.querySelectorAll(".portal-channel-filters button").length||0,searchWidth:fr?.width||0,submitWidth:sr?.width||0,searchVisible:fr?.left>=-1&&fr?.right<=innerWidth+1,submitVisible:sr?.left>=-1&&sr?.right<=innerWidth+1,subHeight:sr?.height||0,projectCards:root?.querySelectorAll(".av73-project-card").length||0,decorativeCovers:root?.querySelectorAll(".portal-discover-results .project-art,.portal-discover-results img").length||0,overflow:document.documentElement.scrollWidth>innerWidth+1}})()');
+     if(!browse.headline?.includes("Find something")||browse.hero||browse.directory||
+       browse.filters!==9||browse.searchWidth<170||browse.submitWidth<80||
+       !browse.searchVisible||!browse.submitVisible||browse.subHeight<40||
+       browse.decorativeCovers||browse.overflow)
+       throw Error("V073_DISCOVER_FIRST_FOLD_"+width+":"+JSON.stringify(browse));
+     await evaluate('document.querySelector(".portal-channel-filters button:nth-child(2)").click()');
+     await until(()=>evaluate('new URLSearchParams(location.search).get("category")==="games"'));
+     const selected=await evaluate('(()=>({pressed:document.querySelector(".portal-channel-filters button:nth-child(2)")?.getAttribute("aria-pressed"),reset:!!document.querySelector(".portal-result-actions a[href$=\"/discover\"]"),overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
+     if(selected.pressed!=="true"||selected.overflow)
+       throw Error("V073_DISCOVER_FILTER_"+width+":"+JSON.stringify(selected));
+     await evaluate('(()=>{const input=document.getElementById("portal-project-query");const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set;setter.call(input,"experiment");input.dispatchEvent(new Event("input",{bubbles:true}));})()');
+     await evaluate('document.querySelector(".portal-wide-search button").click()');
+     await until(()=>evaluate('new URLSearchParams(location.search).get("q")==="experiment"'));
+     const term=await evaluate('(()=>({q:new URLSearchParams(location.search).get("q"),category:new URLSearchParams(location.search).get("category"),overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
+     if(term.q!=="experiment"||term.category!=="games"||term.overflow)
+       throw Error("V073_DISCOVER_SEARCH_"+width+":"+JSON.stringify(term));
+   }
 
    // V002 compiled browser acceptance: synthetic player cases only.
    if(name==="project"){
