@@ -28,6 +28,7 @@ import {TheButtonPage} from './pages/TheButtonPage';
 import {SupporterPage} from './pages/SupporterPage';
 
 const PublicBoardsPage = lazy(() => import("./pages/PublicBoardsPage").then(mod=>({default:mod.PublicBoardsPage})));
+const NativeFilePlayerPage = lazy(() => import("./pages/NativeFilePlayerPage").then(mod=>({default:mod.NativeFilePlayerPage})));
 const pageFallback=<LoadingState label="Opening approved public boards"/>;
 
 /** Historical Atlas links return to the canonical public experience.
@@ -70,6 +71,7 @@ export default function App(){
     <Route path="guide" element={<FieldGuidePage/>}/>
     <Route path="discover" element={<DiscoverPage/>}/>
     <Route path="projects/:id" element={<ProjectPage/>}/>
+    <Route path="open" element={<Suspense fallback={<LoadingState label="Opening local file player"/>}><NativeFilePlayerPage/></Suspense>}/>
     <Route path="saved" element={<CanonicalSavedWorksPage/>}/>
     <Route path="creators" element={<CreatorsPage/>}/>
     <Route path="creators/:handle" element={<CreatorPage/>}/>
