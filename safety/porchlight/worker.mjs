@@ -186,6 +186,9 @@ async function revokeSubmission(request, env, id, now) {
   if ((removed?.meta?.changes ?? removed?.changes ?? 0) !== 1)
     return fail("REMOVAL_ALREADY_APPLIED", 409);
   await env.PORCHLIGHT_DB.prepare(
+    "DELETE FROM reports WHERE host_id=?"
+  ).bind(id).run(); // Discard free-text reports that may still name the withdrawn household.
+  await env.PORCHLIGHT_DB.prepare(
     "INSERT INTO audit_events (id, event_id, action, record_id, created_at) VALUES (?, ?, 'host_self_withdrawn', ?, ?)"
   ).bind(crypto.randomUUID(), host.event_id, id, now).run();
   return response({ ok: true, status: "withdrawn", notice: "Listing removed. Private contact and address cleared." });
@@ -263,10 +266,12 @@ async function decideHost(request, env, id, now) {
   ).bind(id).first();
   if (!host) return fail("HOST_NOT_FOUND", 404);
   if (b.action === "withdraw") {
+    if (host.status === "withdrawn") return fail("HOST_ALREADY_WITHDRAWN", 409);
     await env.PORCHLIGHT_DB.prepare(
       "UPDATE host_submissions SET status='withdrawn', withdrawn_at=?, public_name=NULL, public_label=NULL, " +
-      "approved_lat=NULL, approved_lng=NULL, private_address=NULL, contact_email=NULL, note=NULL, host_name='Withdrawn host', options_json='[]', receipt_hash=NULL WHERE id=?"
+      "approved_lat=NULL, approved_lng=NULL, private_address=NULL, contact_email=NULL, note=NULL, host_name='Withdrawn host', options_json='[]', receipt_hash=NULL WHERE id=? AND status!='withdrawn'"
     ).bind(now, id).run();
+    await env.PORCHLIGHT_DB.prepare("DELETE FROM reports WHERE host_id=?").bind(id).run();
   } else {
     if (host.status !== "pending") return fail("HOST_NOT_PENDING", 409);
     if (b.action === "approve") {
@@ -282,11 +287,12 @@ async function decideHost(request, env, id, now) {
       await env.PORCHLIGHT_DB.prepare(
         "UPDATE host_submissions SET status='published', public_name=?, public_label=?, " +
         "approved_lat=?, approved_lng=?, reviewed_at=?, verification_method=? WHERE id=? AND status='pending'"
-      ).bind(host.host_name, label, host.visibility === "exact" ? b.lat : null,
+      ).bind(host.visibility === "exact" ? host.host_name : "Participating household", label, host.visibility === "exact" ? b.lat : null,
         host.visibility === "exact" ? b.lng : null, now, b.verificationMethod, id).run();
     } else {
       await env.PORCHLIGHT_DB.prepare(
-        "UPDATE host_submissions SET status='rejected', reviewed_at=?, verification_method='not_verified' " +
+        "UPDATE host_submissions SET status='rejected', reviewed_at=?, verification_method='not_verified', " +
+        "private_address=NULL, contact_email=NULL, note=NULL, host_name='Rejected submission', options_json='[]' " +
         "WHERE id=? AND status='pending'"
       ).bind(now, id).run();
     }
