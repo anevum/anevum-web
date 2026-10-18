@@ -156,6 +156,7 @@ function MemberEditor({memberId,memberName,memberEmail}:{memberId:string;memberN
       setFocus(checked.profile.focus);
       setPublicVisible(checked.profile.visibility==="public");
       setNotice(claimed?"Your profile changes were saved.":"Your identity is saved. Welcome to ANEVUM. You can explore now and customize your profile later.");
+      if(!claimed)window.dispatchEvent(new CustomEvent("anevum:member-created",{detail:{memberId}}));
     }catch(cause){
       setError(cause instanceof CanonicalBetaError?cause.message:
         "The server did not confirm your save. Your account remains signed in; refresh and try again.");
