@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import {CompactMemberIdentity} from "./CompactMemberIdentity";
 import type { Project } from "../lib/api";
 import { Icon } from "./Icons";
 import {CosmicArtwork} from "./CosmicArtwork";
@@ -34,7 +35,10 @@ export function ProjectCard({ project, returnTo = "/discover", presentation = "v
     <h3><Link to={href}>{project.title}</Link></h3>
     <p>{project.summary}</p>
     <div className="av73-project-card-bottom">
-      <Link className="av73-project-card-author" to={`/creators/${encodeURIComponent(project.creatorHandle)}`}>@{project.creatorHandle}</Link>
+      <CompactMemberIdentity size="inline" className="av79-public-project-author"
+        href={`/creators/${encodeURIComponent(project.creatorHandle)}`}
+        member={{handle:project.creatorHandle,displayName:project.creatorName||project.creatorHandle,
+          source:"creator-channel",avatar:false,level:null,featuredAwards:[]}}/>
       <Link className="av73-project-card-action" to={href}>View project <Icon name="arrow" size={16}/></Link>
     </div>
   </article>;
@@ -51,7 +55,10 @@ export function ProjectCard({ project, returnTo = "/discover", presentation = "v
         <h3><Link to={href}>{project.title}</Link></h3>
         <p>{project.summary}</p>
         <footer>
-          <Link className="creator-inline" to={`/creators/${encodeURIComponent(project.creatorHandle)}`}>@{project.creatorHandle}</Link>
+          <CompactMemberIdentity size="inline" className="av79-public-project-author"
+        href={`/creators/${encodeURIComponent(project.creatorHandle)}`}
+        member={{handle:project.creatorHandle,displayName:project.creatorName||project.creatorHandle,
+          source:"creator-channel",avatar:false,level:null,featuredAwards:[]}}/>
           <Link className="project-arrow" to={href} aria-label={`View ${project.title}`}><Icon name="arrow" size={16} /></Link>
         </footer>
       </div>
