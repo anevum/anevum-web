@@ -6,6 +6,7 @@ import {projectDetailPath} from "../lib/navigation";
 import {Icon} from "../components/Icons";
 import {CompactMemberIdentity} from "../components/CompactMemberIdentity";
 import {useOwnPlayerCard} from "../lib/useOwnPlayerCard";
+import {canonicalAuthClient} from "../lib/canonical-beta";
 
 /**
  * ANEVUM / V079 — concise, member-led home.
@@ -43,6 +44,8 @@ export function CinematicLandingPage(){
   const [lastVerified,setLastVerified]=useState<PublicSnapshot|null>(null);
   const [revision,setRevision]=useState(0);
   const ownCard=useOwnPlayerCard();
+  const {data:session}=canonicalAuthClient.useSession();
+  const signedIn=Boolean(session?.user?.id&&session.user.emailVerified===true);
   useEffect(()=>{
     const refresh=()=>{if(document.visibilityState==="visible")setRevision(v=>v+1);};
     const interval=window.setInterval(refresh,180000);
@@ -157,10 +160,10 @@ export function CinematicLandingPage(){
       </section>:<section className="av79-member-invitation" aria-label="Join the creative network">
         <span className="av79-invitation-seal" aria-hidden="true">✳</span>
         <div><span className="av79-kicker">YOUR PLACE IN THE NETWORK</span>
-          <h2>Make your mark.</h2>
-          <p>Build your player identity, share what you make and earn recognition through real participation.</p>
+          <h2>{signedIn?"Complete your signature.":"Make your mark."}</h2>
+          <p>{signedIn?"Finish your profile to carry your player identity into creations and conversations.":"Build your player identity, share what you make and earn recognition through real participation."}</p>
         </div>
-        <Link to="/join">JOIN ANEVUM <Icon name="arrow" size={17}/></Link>
+        <Link to={signedIn?"/member":"/join"}>{signedIn?"SET UP MY CARD":"JOIN ANEVUM"} <Icon name="arrow" size={17}/></Link>
       </section>}
 
       <footer className="av79-home-end">
