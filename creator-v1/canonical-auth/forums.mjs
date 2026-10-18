@@ -92,12 +92,55 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
    if(!reviewers.includes(user.id)&&!staff)return fail(403,'Reviewer access required');
    if(req.method==='GET'){
     if(url.search)return fail(400,'Unexpected filters');
-    const [threads,replies,reports]=await Promise.all([
-     db.prepare("SELECT t.id,t.topic,t.title,t.body,t.created_at,p.handle,p.display_name FROM member_forum_threads t JOIN member_creator_profiles p ON p.user_id=t.author_id WHERE t.status='pending_review' ORDER BY t.created_at ASC LIMIT 50").all(),
-     db.prepare("SELECT r.id,r.thread_id,r.body,r.created_at,p.handle,p.display_name FROM member_forum_replies r JOIN member_creator_profiles p ON p.user_id=r.author_id WHERE r.status='pending_review' ORDER BY r.created_at ASC LIMIT 50").all(),
-     db.prepare("SELECT id,target_kind,target_id,reason,created_at FROM member_forum_reports WHERE resolved_at IS NULL ORDER BY created_at ASC LIMIT 50").all()
+    // Return backward-compatible flat V041 fields for the existing public review
+    // desk, plus server-authoritative V005 flags used by the isolated IREN UI.
+    // A reviewer may see their own queued work but must never approve it.
+    const [threads,replies,reports,recent]=await Promise.all([
+     db.prepare("SELECT t.id,t.topic,t.title,t.body,t.author_id,t.created_at,p.handle,p.display_name,p.visibility "+
+      "FROM member_forum_threads t JOIN member_creator_profiles p ON p.user_id=t.author_id "+
+      "WHERE t.status='pending_review' ORDER BY t.created_at ASC LIMIT 50").all(),
+     db.prepare("SELECT r.id,r.thread_id,r.body,r.author_id,r.created_at,p.handle,p.display_name,p.visibility,"+
+      "t.title AS thread_title,t.status AS parent_status,parent_profile.visibility AS parent_visibility "+
+      "FROM member_forum_replies r JOIN member_creator_profiles p ON p.user_id=r.author_id "+
+      "LEFT JOIN member_forum_threads t ON t.id=r.thread_id "+
+      "LEFT JOIN member_creator_profiles parent_profile ON parent_profile.user_id=t.author_id "+
+      "WHERE r.status='pending_review' ORDER BY r.created_at ASC LIMIT 50").all(),
+     db.prepare("SELECT r.id,r.target_kind,r.target_id,r.reason,r.created_at,"+
+      "CASE WHEN r.target_kind='thread' THEN t.title ELSE parent.title END AS thread_title,"+
+      "CASE WHEN r.target_kind='thread' THEN t.status ELSE reply.status END AS target_status "+
+      "FROM member_forum_reports r "+
+      "LEFT JOIN member_forum_threads t ON r.target_kind='thread' AND t.id=r.target_id "+
+      "LEFT JOIN member_forum_replies reply ON r.target_kind='reply' AND reply.id=r.target_id "+
+      "LEFT JOIN member_forum_threads parent ON parent.id=reply.thread_id "+
+      "WHERE r.resolved_at IS NULL ORDER BY r.created_at ASC LIMIT 50").all(),
+     db.prepare("SELECT l.id,l.target_kind,l.action,l.created_at,p.handle AS reviewer_handle "+
+      "FROM member_forum_review_log l LEFT JOIN member_creator_profiles p ON p.user_id=l.reviewer_id "+
+      "ORDER BY l.created_at DESC,l.id DESC LIMIT 40").all()
     ]);
-    return json({threads:threads.results,replies:replies.results,reports:reports.results});
+    const threadItems=threads.results.map(t=>({
+     id:t.id,topic:t.topic,title:t.title,body:t.body,created_at:t.created_at,
+     handle:t.handle,display_name:t.display_name,createdAt:Number(t.created_at),
+     author:{handle:t.handle,displayName:t.display_name},
+     selfAuthored:t.author_id===user.id,canPublish:t.author_id!==user.id&&t.visibility==='public'
+    }));
+    const replyItems=replies.results.map(r=>({
+     id:r.id,thread_id:r.thread_id,body:r.body,created_at:r.created_at,
+     handle:r.handle,display_name:r.display_name,createdAt:Number(r.created_at),
+     threadTitle:r.thread_title||'Community discussion',
+     author:{handle:r.handle,displayName:r.display_name},
+     selfAuthored:r.author_id===user.id,canPublish:r.author_id!==user.id&&r.visibility==='public'&&
+       r.parent_status==='published'&&r.parent_visibility==='public'
+    }));
+    const reportItems=reports.results.map(r=>({
+     id:r.id,target_kind:r.target_kind,target_id:r.target_id,reason:r.reason,created_at:r.created_at,
+     targetKind:r.target_kind,targetId:r.target_id,createdAt:Number(r.created_at),
+     threadTitle:r.thread_title||null,contentPreview:'Review the reported content before applying a moderation action.',
+     canHide:r.target_status==='published'
+    }));
+    return json({threads:threadItems,replies:replyItems,reports:reportItems,
+     recent:recent.results.map(r=>({id:r.id,targetKind:r.target_kind,action:r.action,
+      reviewerHandle:r.reviewer_handle||null,createdAt:Number(r.created_at)})),
+     totals:{threads:threadItems.length,replies:replyItems.length,reports:reportItems.length},checkedAt:now});
    }
    if(req.method!=='POST'||url.search)return fail(405,'Method not allowed');
    const v=await payload(req);
