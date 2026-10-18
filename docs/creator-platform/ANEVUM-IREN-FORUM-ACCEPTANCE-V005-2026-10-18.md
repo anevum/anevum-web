@@ -53,3 +53,13 @@ This is **source-level synthetic E2E**, not live human acceptance.
 - Additional infrastructure spending or bulk user outreach would be required.
 
 Rollback: restore pinned apex version and the prior forum OFF binding; do NOT delete canonical member records, reviewer evidence, or current staff operations. Reconcile member-visible state after rollback before retry.
+
+## Follow-up defects found by executable acceptance
+
+**Reviewer queue contract mismatch:** The older V041 private review API exposed flat records without a server-computed self-review flag or target publication status. The one-screen IREN docket consequently assumed every pending thread was approvable and left the report **HIDE CONTENT** button disabled. V005 now returns a backward-compatible private queue with `canPublish`, `selfAuthored`, parent-thread status, report `canHide`, bounded counts and a recent decision log. The existing independent-review POST authorization is still the final authority. The public review desk can continue to consume the V041 fields unchanged.
+
+**Internal session rate-limit collision:** Real Better Auth `/get-session` calls from the IREN Worker previously omitted Cloudflare's client IP before passing to its private `APEX_AUTH` service binding. The 20/minute Better Auth rate limit then collapsed rapid calls for multiple staff into a single fallback IP bucket. The synthetic journey reproduced a valid reviewer receiving 401 after repeated operations. V005 now relays only a bounded IPv4/IPv6 `CF-Connecting-IP` value from an incoming request with **actual Cloudflare edge metadata**, never arbitrary `x-forwarded-for`, `x-user-id` or bearer identity claims. Production Cloudflare supplies this header on direct client requests; a forged ordinary request or missing metadata cannot inject a trusted IP. Tests cover both paths. The rate-limit policy itself remains unchanged. See [Cloudflare's current header contract](https://developers.cloudflare.com/fundamentals/reference/http-headers/) and [Better Auth rate limiting](https://better-auth.com/docs/concepts/rate-limit).
+
+**Correction to first CI attempt:** An early synthetic reaction POST failed with HTTP 403 because the test helper omitted `Origin` on a bodyless mutation; the server was enforcing CSRF correctly. The fixture now supplies a browser-like same-origin header for all mutating methods and explicitly checks an origin-less forged reaction is still rejected. No CSRF relaxation.
+
+These changes remain **isolated draft source**. The rebuilt IREN Worker must pass focused CI and exact-head independent staff/public tests before any human release.
