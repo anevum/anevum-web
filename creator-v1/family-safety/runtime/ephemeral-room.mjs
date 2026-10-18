@@ -12,6 +12,7 @@ const ID = /^[A-Za-z0-9][A-Za-z0-9:_-]{0,127}$/;
 const MIN_WRITE_INTERVAL_MS = 5_000;
 const MAX_PEOPLE = 128;
 const MAX_BAN_MS = 60 * 60 * 1_000;
+const MAX_REVOCATION_FENCES = 2048;
 const valid = value => typeof value === "string" && ID.test(value);
 const finiteNow = value => Number.isSafeInteger(value) && value > 0;
 
@@ -19,6 +20,7 @@ export class EphemeralPresenceRoom {
   #points = new Map();
   #revokedSessions = new Map();
   #writeTimes = new Map();
+  #failClosed = false;
 
   prune(now) {
     if (!finiteNow(now)) return;
@@ -54,10 +56,13 @@ export class EphemeralPresenceRoom {
         position.observedAt > now + 5_000 || now - position.observedAt >= POSITION_TTL_MS)
       return "invalid";
     this.prune(now);
-    if (this.#revokedSessions.has(sessionId)) return "revoked";
+    if (this.#failClosed || this.#revokedSessions.has(sessionId)) return "revoked";
     const recent=this.#writeTimes.get(subjectId);
     if (recent && recent.sessionId===sessionId &&
         now - recent.at < MIN_WRITE_INTERVAL_MS) return "throttled";
+    const prior=this.#points.get(subjectId);
+    if (prior?.sessionId===sessionId &&
+        position.observedAt <= prior.position.observedAt) return "invalid";
     if (!this.#points.has(subjectId) && this.#points.size>=MAX_PEOPLE)
       return "capacity";
     this.#points.set(subjectId, {
@@ -80,6 +85,13 @@ export class EphemeralPresenceRoom {
     this.prune(now);
     const record=this.#points.get(subjectId);
     if (record?.sessionId===sessionId) this.#points.delete(subjectId);
+    if (!this.#revokedSessions.has(sessionId) &&
+        this.#revokedSessions.size >= MAX_REVOCATION_FENCES) {
+      // Bounded memory under malicious repeated session churn. The room
+      // refuses all subsequent writes rather than dropping revocation fences.
+      this.#failClosed = true;
+      return false;
+    }
     this.#revokedSessions.set(sessionId,now+MAX_BAN_MS);
     const last=this.#writeTimes.get(subjectId);
     if(last?.sessionId===sessionId)this.#writeTimes.delete(subjectId);
