@@ -100,7 +100,7 @@ jobs:
             sleep 2
           done
           test "$status" = 200
-          jq -e '.currentLevel==4 and (.records|length)==6 and all(.[]; .status==200)' "$RUNNER_TEMP/evolution-v076/asset-status.json"
+          jq -e '.currentLevel==4 and (.records|length)==6 and all(.records[]; .status==200)' "$RUNNER_TEMP/evolution-v076/asset-status.json"
           curl -fsS --retry-all-errors --retry 4 --retry-delay 2 --max-time 25 -D "$RUNNER_TEMP/evolution-v076/icon.headers" -o "$RUNNER_TEMP/evolution-v076/icon.png" "$CANARY/api/v1/members/devon/rewards/levels/4/icon"
           grep -qi '^content-type: image/png' "$RUNNER_TEMP/evolution-v076/icon.headers"
           test "$(wc -c < "$RUNNER_TEMP/evolution-v076/icon.png")" -gt 1000
