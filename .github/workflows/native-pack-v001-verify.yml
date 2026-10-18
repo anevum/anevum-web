@@ -12,6 +12,7 @@ on:
       - "creator-v1/web/src/pages/StudioWorkbench.tsx"
       - "creator-v1/web/src/pages/CanonicalStudioPage.tsx"
       - "creator-v1/test/native-pack-v001.test.mjs"
+      - "creator-v1/test/native-pack-browser-v001.mjs"
       - "creator-v1/package.json"
       - "docs/creator-platform/ANEVUM-NATIVE-PACKS-V001-2026-10-17.md"
       - ".github/workflows/native-pack-v001-verify.yml"
@@ -48,6 +49,26 @@ jobs:
         run: |
           npm run build:creator-v1-web
           npm run build:creator-v1-web:staging
+      - name: Browser-verify local native player at desktop and phone sizes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/native-pack-player
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+          test -n "$chrome"
+          node creator-v1/test/native-pack-browser-v001.mjs --chrome "$chrome" --output evidence/native-pack-player
+          test -s evidence/native-pack-player/acceptance.json
+          test -s evidence/native-pack-player/native-player-1440.png
+          test -s evidence/native-pack-player/native-player-390.png
+          test -s evidence/native-pack-player/native-player-320.png
+      - name: Upload local native player evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-pack-player-${{ github.run_id }}
+          path: evidence/native-pack-player/
+          if-no-files-found: ignore
+          retention-days: 10
       - name: Confirm release boundaries
         run: |
           node -e "const fs=require('node:fs'); const lab=fs.readFileSync('creator-v1/web/src/pages/NativePackLab.tsx','utf8'); const p=fs.readFileSync('creator-v1/web/src/lib/anevum-native-pack.ts','utf8'); if(/dangerouslySetInnerHTML|\\beval\\s*\\(|new Function|<iframe|\\bfetch\\s*\\(/.test(lab+'\n'+p))process.exit(1);"
