@@ -54,10 +54,16 @@ function modelState(){
  const canvas=dialog?.querySelector('.av75-model-canvas');
  if(!dialog?.open||!canvas)return null;
  const first=dialog.querySelector('.av75-reward-controls button');
+ const frame=dialog.querySelector('.av75-model-stage')?.getBoundingClientRect();
+ const rect=canvas.getBoundingClientRect();
  let version=null;
  try{version=canvas.getContext('webgl')?.getParameter(7938)||null}catch{}
  return {dialogOpen:dialog.open,title:dialog.querySelector('h2')?.textContent||'',
   canvasWidth:canvas.width,canvasHeight:canvas.height,
+  cssWidth:Math.round(rect.width),cssHeight:Math.round(rect.height),
+  centered:!!frame&&Math.abs((rect.left+rect.right)-(frame.left+frame.right))<5,
+  contained:!!frame&&rect.left>=frame.left-1&&rect.right<=frame.right+1&&
+   rect.top>=frame.top-1&&rect.bottom<=frame.bottom+1,
   controlsEnabled:!!first&&!first.disabled,poster:!!dialog.querySelector('.av75-model-poster'),
   glVersion:version,overflow:document.documentElement.scrollWidth>innerWidth+2};
 }
@@ -113,7 +119,9 @@ try{
    const state=await evaluate('('+modelState.toString()+')()');
    return state?.controlsEnabled&&!state.poster?state:null;
   },30000);
-  if(rendered.canvasWidth<200||rendered.canvasHeight<200||!rendered.glVersion||rendered.overflow)
+  if(rendered.canvasWidth<200||rendered.canvasHeight<200||!rendered.glVersion||
+    Math.abs(rendered.cssWidth-rendered.cssHeight)>2||!rendered.centered||!rendered.contained||
+    rendered.overflow)
    throw Error('V076_WEBGL_RENDER_FAILED_'+label+':'+JSON.stringify(rendered));
   await delay(1100);
   await screenshot('v076-native-model-level4-'+label);
