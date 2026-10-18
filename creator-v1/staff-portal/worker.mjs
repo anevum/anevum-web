@@ -55,10 +55,17 @@ async function getVerifiedUser(request,env){
   if(!response.ok||!response.headers.get('content-type')?.includes('application/json'))return null;
   const data=await response.json();
   if(!data||typeof data!=='object'||Array.isArray(data))return null;
-  if(!data.session||typeof data.session!=='object')return null;
+  const session=data.session;
+  if(!session||typeof session!=='object'||Array.isArray(session)||
+     typeof session.id!=='string'||session.id.length<1||
+     typeof session.expiresAt!=='string')return null;
+  const expires=Date.parse(session.expiresAt);
+  // Even if the upstream identity service has accidentally returned a stale
+  // session, privileged staff access must fail closed.
+  if(!Number.isFinite(expires)||expires<=Date.now())return null;
   const user=data.user;
   if(!user||typeof user.id!=='string'||user.id.length<1||user.id.length>128||
-     user.emailVerified!==true||data.session.userId!==user.id)return null;
+     user.emailVerified!==true||session.userId!==user.id)return null;
   // Identities come ONLY from the internal Worker session verifier response.
   return {id:user.id,emailVerified:true};
  }catch{return null}
