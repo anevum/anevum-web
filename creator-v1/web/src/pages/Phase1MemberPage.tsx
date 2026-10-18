@@ -104,7 +104,6 @@ function MemberEditor({memberId,memberName,memberEmail}:{memberId:string;memberN
   const [notice,setNotice]=useState("");
   const [persisted,setPersisted]=useState<CanonicalProfile|null>(null);
   const [loaded,setLoaded]=useState(false);
-  const [newMember,setNewMember]=useState(false);
 
   useEffect(()=>{
     if(current.state!=="ready"||current.data?.memberId!==memberId)return;
@@ -117,7 +116,6 @@ function MemberEditor({memberId,memberName,memberEmail}:{memberId:string;memberN
     setFocus(value?.focus||[]);
     setPublicVisible(value?.visibility==="public");
     setPersisted(value);
-    if(!value)setNewMember(true);
     setLoaded(true);
   },[current.state, current.state==="ready"?current.data?.profile?.revision:null,memberId,memberName]);
 
@@ -156,7 +154,10 @@ function MemberEditor({memberId,memberName,memberEmail}:{memberId:string;memberN
       setFocus(checked.profile.focus);
       setPublicVisible(checked.profile.visibility==="public");
       setNotice(claimed?"Your profile changes were saved.":"Your identity is saved. Welcome to ANEVUM. You can explore now and customize your profile later.");
-      if(!claimed)window.dispatchEvent(new CustomEvent("anevum:member-created",{detail:{memberId}}));
+      if(!claimed){
+        navigate("/member?tab=overview",{replace:true});
+        window.dispatchEvent(new CustomEvent("anevum:member-created",{detail:{memberId}}));
+      }
     }catch(cause){
       setError(cause instanceof CanonicalBetaError?cause.message:
         "The server did not confirm your save. Your account remains signed in; refresh and try again.");
@@ -269,7 +270,7 @@ function MemberEditor({memberId,memberName,memberEmail}:{memberId:string;memberN
     </div>
   </section>;
   const privacyControls=<MemberClosurePanel memberId={memberId} memberEmail={memberEmail}/>;
-  return <><div>{claimed&&persisted?<MemberSpaceDashboard profile={persisted} editor={editor} newMember={newMember} onSetupComplete={()=>setNewMember(false)}/>:editor}</div><ConnectedSignInMethods memberId={memberId}/>{privacyControls}</>;
+  return <><div>{claimed&&persisted?<MemberSpaceDashboard profile={persisted} editor={editor}/>:editor}</div><ConnectedSignInMethods memberId={memberId}/>{privacyControls}</>;
 }
 export function Phase1MemberPage(){
  const {data:session,isPending}=canonicalAuthClient.useSession();
