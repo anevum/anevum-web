@@ -59,3 +59,13 @@ CREATE TABLE IF NOT EXISTS anevum_package_upload_limits (
   window_start INTEGER NOT NULL,
   attempts INTEGER NOT NULL DEFAULT 0 CHECK (attempts >= 0)
 );
+
+CREATE TABLE IF NOT EXISTS anevum_package_preview_tokens (
+  token_hash TEXT PRIMARY KEY,
+  release_id TEXT NOT NULL REFERENCES anevum_package_releases(id),
+  issued_by TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_anevum_package_preview_tokens_expiry
+  ON anevum_package_preview_tokens(expires_at);
