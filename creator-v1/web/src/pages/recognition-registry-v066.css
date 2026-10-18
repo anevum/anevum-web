@@ -73,3 +73,80 @@
 @media(max-width:960px){.av66-catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.av66-catalog-intro{align-items:start;flex-direction:column}.av66-registry-eyebrow>span:last-child{display:none}}
 @media(max-width:640px){.av66-registry{padding:13px}.av66-registry-header{padding:20px 5px}.av66-registry-header h1{font-size:clamp(43px,12vw,68px)}.av66-registry-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.av66-registry-metrics>div:nth-child(2){border-right:0}.av66-registry-metrics>div:nth-child(-n+2){border-bottom:1px solid #eecbd02d}.av66-catalog-shell{padding:12px}.av66-catalog-tabs{grid-template-columns:1fr}.av66-catalog-tabs button{min-height:66px;padding:11px}.av66-catalog-grid{grid-template-columns:1fr}.av66-catalog-item{min-height:250px}.av66-catalog-footer{flex-direction:column;align-items:start}.av66-search{flex-basis:100%;max-width:none}.av66-count{margin-left:0}.av66-toolbar{justify-content:space-between}.av66-registry-nav a{width:100%}}
 @media(prefers-reduced-motion:reduce){.av66-registry *{transition:none!important;animation:none!important}.av66-catalog-item:hover{transform:none}}
+
+
+/* V068 / Recognition first-contact.
+   Keep the earned archive within reach on the first phone viewport.
+   This is a content-density adjustment, not a replacement of the
+   Continuance material system or a change to the earned-only ledger. */
+.av66-registry-header{padding-top:18px;padding-bottom:20px}
+.av66-registry-header h1{
+ font-size:clamp(45px,5.7vw,82px);
+ line-height:.91;
+ margin:17px 0 14px;
+}
+.av66-registry-header>p{font-size:clamp(13px,1.25vw,16px);line-height:1.5;margin-bottom:18px}
+.av66-registry-nav{margin-bottom:19px}
+.av66-registry-nav a{min-height:40px;padding:10px 13px}
+.av66-registry-metrics>div{padding:12px 10px 13px}
+.av66-registry-metrics b{font-size:clamp(22px,2.5vw,32px)}
+.av68-tab-short{display:none}
+@media(max-width:640px){
+ .av66-registry{padding:10px}
+ .av66-registry-header{padding:12px 4px 11px}
+ .av66-registry-header h1{
+  font-size:clamp(36px,10.7vw,47px);
+  line-height:.93;
+  margin:12px 0 10px;
+ }
+ .av66-registry-header>p{font-size:12px;line-height:1.43;margin:0 0 14px}
+ .av66-registry-nav{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;
+  margin:0 0 16px;
+ }
+ .av66-registry-nav a{
+  min-width:0;min-height:40px;
+  justify-content:center;text-align:center;
+  padding:8px 5px;
+  font-size:9px;letter-spacing:.015em;
+  line-height:1.4;
+ }
+ .av66-registry-metrics{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .av66-registry-metrics>div{
+  padding:10px 5px 11px;
+  gap:4px;
+  border-right:1px solid #eecbd02d;
+  min-width:0;
+ }
+ .av66-registry-metrics>div:nth-child(2){border-right:1px solid #eecbd02d}
+ .av66-registry-metrics>div:nth-child(-n+2){border-bottom:0}
+ .av66-registry-metrics>div:last-child{border-right:0}
+ .av66-registry-metrics b{font-size:clamp(20px,6vw,27px)}
+ .av66-registry-metrics span{font-size:9px;letter-spacing:.03em}
+ .av66-catalog-shell{padding:10px}
+ .av66-catalog-intro{gap:7px;margin-bottom:12px}
+ .av66-catalog-intro h2{font-size:23px}
+ .av66-catalog-intro p{font-size:10px;line-height:1.35}
+ .av66-catalog-tabs{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding-bottom:12px}
+ .av66-catalog-tabs button{
+  min-height:44px;align-items:center;justify-content:center;
+  padding:7px 5px;text-align:center;gap:0
+ }
+ .av66-tab-full,.av66-catalog-tabs small{display:none}
+ .av68-tab-short{display:block;font-size:12px;line-height:1.15}
+ .av66-toolbar{padding:12px 0;gap:8px}
+ .av66-search{flex:1 1 100%;max-width:none}
+ .av66-search input{min-height:39px}
+ .av66-filters{
+  flex-wrap:nowrap;
+  overflow-x:auto;overflow-y:hidden;
+  padding:0 0 10px;
+  margin-bottom:10px;
+  overscroll-behavior-inline:contain;
+  scroll-snap-type:x proximity;
+  scrollbar-width:thin;
+ }
+ .av66-filters button{flex:0 0 auto;scroll-snap-align:start}
+}
