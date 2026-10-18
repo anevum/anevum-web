@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: '22'
       - name: Install checked-in tooling
-        run: npm ci --ignore-scripts --no-audit --no-fund
+        run: npm install --ignore-scripts --no-audit --no-fund
       - name: Validate private artwork, syntax, earned access, and collectible inspector
         shell: bash
         run: |
