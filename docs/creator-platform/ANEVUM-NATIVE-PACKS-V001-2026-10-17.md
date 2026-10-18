@@ -63,6 +63,18 @@ The private Studio Workbench receives an optional collapsed NATIVE PACK LAB:
 
 Local game and media build state is not persisted in D1; exporting the file is how a creator retains a copy. This preview never executes creator HTML, JavaScript, SVG, iframes, WASM or arbitrary executables. No external resource is fetched.
 
+## V001 continued implementation — native player and reusable games
+
+The review branch now also includes a **standalone local file player route** at `/open`, backed by `creator-v1/web/src/pages/NativeFilePlayerPage.tsx` and its responsive Continuance styling. The route can read a user-selected or dropped .anvg/.anva/.anvs/.anvw/.anvp file without an account, web upload, CDN request, or runtime permission. File bytes are held locally, validated against the strict archive and content contracts, converted into temporary browser Blob object URLs for approved media, and revoked when closed.
+
+The game composer now supports explicit start-scene selection, unique new-scene IDs after import, optional local image backgrounds and a **Continue Editing This Game** action for a validated .anvg package. Imported scenes, choices and image bytes are loaded back into the private browser editor. Switching away from a nonempty media list warns the creator. Changes remain unsaved until the creator exports a new package. No database write is triggered.
+
+Media files now receive **basic binary-header checks** (PNG/JPEG/GIF/WebP, MP3/WAV/OGG, MP4/WebM) on both export and import in addition to extension, MIME, CRC and SHA-256 checks. These are deliberately minimal signature checks; they do **not** establish media decodability, absence of malicious content, publisher authenticity or rights clearance. Host publication requires separate scanning/transcoding and moderation.
+
+A dedicated `.github/workflows/native-pack-v001-verify.yml` runs focused native-pack tests, existing Studio compatibility suites, TypeScript and both Vite output modes, independently from legacy sitewide visual-browser tests. It does not deploy or modify any release gates. Full Creator V1 CI remains mandatory for promotion. Earlier CI encountered an unrelated V042 moderator-console Chromium exception; it has not been waived.
+
+The `/open` route is **source-only** until an independent staging promotion is approved and verified on deployed worker assets. A route's existence in React source is not evidence that it is currently live.
+
 ## Non-goals and release gates
 
 This branch does not add any public upload endpoint, R2 binding, D1 migration, new member permission, automatic approval, signed release, billing, XP award, executable HTML5 game hosting, or production deployment.
