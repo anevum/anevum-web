@@ -13,6 +13,27 @@ const el = id => document.getElementById(id);
 const world = createSyntheticWorld();
 let map=null, mapReady=false, tilt3d=true, buildingsReady=false, terrainReady=false;
 let ticker=null, tab="circle", markers={}, places={}, shownError=false;
+const renderErrors=[];
+window.__FIELD_SYNTHETIC_QA__=Object.freeze({
+  snapshot(){
+    let visibleFeatures=0;
+    try{
+      if(mapReady && map?.getLayer("field-building-volumes")){
+        visibleFeatures=map.queryRenderedFeatures(undefined,{layers:["field-building-volumes"]}).length;
+      }
+    }catch{}
+    return {
+      ready:mapReady,
+      running:world.getSnapshot().running,
+      syntheticOnly:true,
+      mapLayerCount:map?.getStyle?.()?.layers?.length||0,
+      visualBuildingCount:visibleFeatures,
+      deviceMarkers:Object.keys(markers).length,
+      errors:renderErrors.slice(-8),
+      mapErrorVisible:!el("map-error").hidden
+    };
+  }
+});
 
 function toast(message){
   const node=el("toast");
@@ -226,8 +247,10 @@ function initMap(){
       render();
     });
     map.on("error",error=>{
+      const detail=error?.error?.message||"Unknown MapLibre style/source failure";
+      renderErrors.push(detail.slice(0,180));
       if(!shownError){shownError=true;toast("The fictional map renderer may be incomplete. Scenario controls remain local.");}
-      if(error?.error)console.warn("Synthetic map tile error:",error.error.message);
+      if(error?.error)console.warn("Synthetic map style/render error:",detail);
     });
   }catch{
     el("map-error").hidden=false;
