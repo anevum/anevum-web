@@ -6,6 +6,7 @@ import {canonicalStudioAssets,studioUploadReady} from './studio-assets.mjs';
 import {studioReviewSchemaReady,freezeStudioReview,withdrawStudioReview,decideStudioReview,getStudioReviewReceipt,listStudioReviewReceipts} from './studio-submissions.mjs';
 import {studioPublicationReady,canonicalStudioPublicationConsent,publishReviewedExternalStudioMetadata} from './studio-publications.mjs';
 import {approvedSafetyReviewer} from './studio-safety.mjs';
+import {approvedAppealReviewer,studioAppealsReady} from './studio-appeals.mjs';
 
 const PREFIX='/api/v1/member/studio';
 const COLLECTION=PREFIX+'/projects';
@@ -115,13 +116,18 @@ export async function canonicalStudioSchemaReady(env){
  }catch{return false;}
 }
 export async function studioReadiness(env){
- if(env?.CANONICAL_CREATOR_STUDIO_ENABLED!=='true')return {studioReady:false,studioUploadsReady:false,studioPublicationReady:false};
+ if(env?.CANONICAL_CREATOR_STUDIO_ENABLED!=='true')return {studioReady:false,studioUploadsReady:false,studioPublicationReady:false,studioAppealsReady:false};
  const ready=await canonicalStudioSchemaReady(env);
  return {studioReady:ready,studioUploadsReady:Boolean(ready&&studioUploadReady(env)),
   studioPublicationReady:Boolean(ready&&env.CANONICAL_STUDIO_PUBLICATION_ENABLED==='true'&&
    env.CANONICAL_STUDIO_SAFETY_ENABLED==='true'&&
    (env.CANONICAL_STUDIO_SAFETY_REVIEWER_IDS||'').trim()&&
-   await studioPublicationReady(env.MEMBER_DB))};
+   await studioPublicationReady(env.MEMBER_DB)),
+  studioAppealsReady:Boolean(ready&&env.CANONICAL_STUDIO_APPEALS_ENABLED==='true'&&
+   env.CANONICAL_STUDIO_PUBLICATION_ENABLED==='true'&&
+   env.CANONICAL_STUDIO_SAFETY_ENABLED==='true'&&
+   String(env.CANONICAL_STUDIO_APPEAL_REVIEWER_IDS||'').trim()&&
+   await studioAppealsReady(env.MEMBER_DB))};
 }
 export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/1000)){
  if(env?.CANONICAL_CREATOR_STUDIO_ENABLED!=='true')return fail(404,'Creator Studio is not activated');
@@ -139,13 +145,17 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
   if(!id){
    if(req.method==='GET'){
     const items=await rows(db,'SELECT '+COLS+' FROM member_studio_projects WHERE user_id=? ORDER BY updated_at DESC,id DESC LIMIT 50',[user.id]);
+    const canAppealReview=env.CANONICAL_STUDIO_APPEALS_ENABLED==='true'&&
+     env.CANONICAL_STUDIO_PUBLICATION_ENABLED==='true'&&
+     env.CANONICAL_STUDIO_SAFETY_ENABLED==='true'&&
+     approvedAppealReviewer(env,user.id)&&await studioAppealsReady(db);
     const canSafetyReview=env.CANONICAL_STUDIO_SAFETY_ENABLED==='true'&&
      env.CANONICAL_STUDIO_PUBLICATION_ENABLED==='true'&&approvedSafetyReviewer(env,user.id);
     const canReview=String(env.CANONICAL_STUDIO_REVIEWER_IDS||'')
      .split(',').map(x=>x.trim()).filter(Boolean).includes(user.id);
     const releases=await ownerPublicationStatuses(db,user.id);
     return json({projects:items.map(item=>({...dbRow(item),publicationStatus:releases.get(item.id)||null})),
-     uploadsReady:studioUploadReady(env,user.id),canReview,canSafetyReview});
+     uploadsReady:studioUploadReady(env,user.id),canReview,canSafetyReview,canAppealReview});
    }
    if(req.method!=='POST')return fail(405,'Method not allowed');
    const incoming=await body(req);
