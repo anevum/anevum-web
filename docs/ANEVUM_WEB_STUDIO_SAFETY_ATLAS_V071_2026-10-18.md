@@ -43,7 +43,7 @@
 
 - [V071 SQLite + TypeScript review](https://github.com/anevum/anevum-web/actions/runs/39097045026): **34 passing tests, 0 failures**, includes V070 consent and V069 recognition regressions, audit rollback, historical takedown, independent safety roles and 1/5/20 badge count reconciliation.
 - [V071 Creator Atlas synthetic Chromium review](https://github.com/anevum/anevum-web/actions/runs/39097069551): **pass** at 1440, 1024, 390 and 320 pixels; renders two distinct fake-only user cards, one with earned badge + level specimen, one with neither; detail links external-only; mobile no horizontal overflow; reduced motion honored; 0 uncaught exceptions.
-- A dedicated [ANEVUM Creator V1 Verify](https://github.com/anevum/anevum-web/actions?query=workflow%3A%22ANEVUM+Creator+V1+Verify%22) run is required on the latest PR source before staging.
+- [Full Creator V1 verification](https://github.com/anevum/anevum-web/actions/runs/39097183866) **PASSED** at exact PR head `25de2f60e04644091e233750589940d9d8238a7a`. It includes frontend build, member integration, sitewide desktop/mobile captures and production read-only signup canary.
 - The two fixtures are explicitly synthetic and never bundled into Cloudflare production.
 
 ## Still needed before activation
