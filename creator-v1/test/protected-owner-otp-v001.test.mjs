@@ -50,7 +50,9 @@ test('owner-authorized exceptions are auditable and do not undermine protected-e
   assert.equal(count(f.db,'staff_access_grants'),1);
   assert.equal(f.db.prepare("SELECT role FROM staff_access_grants").get().role,'owner');
   assert.deepEqual(f.db.prepare('SELECT action FROM canonical_protected_email_login_audit').all().map(r=>r.action),['approved']);
-  f.db.prepare("UPDATE canonical_protected_email_login_allowance SET revoked_at=1792300002 WHERE email='owner@fixture.invalid'").run();
+  assert.throws(()=>f.db.prepare("UPDATE canonical_protected_email_login_allowance SET email='another@fixture.invalid' WHERE email='owner@fixture.invalid'").run(),/allowance is immutable/);
+  assert.throws(()=>f.db.prepare("UPDATE canonical_protected_email_login_allowance SET revoked_at=1792300002 WHERE email='owner@fixture.invalid'").run(),/NOT NULL|CHECK constraint|allowance is immutable/);
+  f.db.prepare("UPDATE canonical_protected_email_login_allowance SET revoked_at=1792300002,revoked_by='trusted-founder' WHERE email='owner@fixture.invalid'").run();
   assert.equal(await permitCanonicalUserCreationApproved(f.env,'owner@fixture.invalid'),false);
   assert.deepEqual(f.db.prepare('SELECT action FROM canonical_protected_email_login_audit ORDER BY created_at').all().map(r=>r.action),['approved','revoked']);
   assert.equal(count(f.db,'staff_access_grants'),1);
@@ -97,7 +99,7 @@ test('protected mailbox gets real hashed OTP only after owner approval and no el
   assert.equal(f.db.prepare("SELECT COUNT(*) AS n FROM staff_access_grants WHERE role='owner'").get().n,1);
   assert.equal(f.db.prepare("SELECT COUNT(*) AS n FROM staff_access_grants g JOIN \"user\" u ON u.id=g.member_id WHERE u.email='owner@fixture.invalid'").get().n,0,'A protected identity does not gain owner or reviewer privilege by signing in');
 
-  f.db.prepare("UPDATE canonical_protected_email_login_allowance SET revoked_at=1792300003 WHERE email='owner@fixture.invalid'").run();
+  f.db.prepare("UPDATE canonical_protected_email_login_allowance SET revoked_at=1792300003,revoked_by='trusted-founder' WHERE email='owner@fixture.invalid'").run();
   const afterRevoke=await worker.fetch(sendRequest('owner@fixture.invalid'),f.env);
   assert.equal(afterRevoke.status,200);
   assert.equal(sent.size,1,'Revocation prevents new code sends while maintaining generic public response');
