@@ -1,0 +1,53 @@
+name: V069 Anonymous Recognition Catalog Browser Review
+on:
+  push:
+    branches: [patch/player-recognition-catalog-v069-20261017-018]
+    paths:
+      - "creator-v1/web/src/pages/RecognitionRegistryPage.tsx"
+      - "creator-v1/web/src/lib/player-recognition-api.ts"
+      - "creator-v1/test/portal-offline-preview.mjs"
+      - "creator-v1/test/recognition-public-catalog-v069-browser.mjs"
+      - ".github/workflows/v069-catalog-browser-review.yml"
+permissions:
+  contents: read
+jobs:
+  anonymous-catalog:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build isolated public visual candidate
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web:staging
+      - name: Prove guest badge state and award category rendering
+        run: |
+          set -euo pipefail
+          node --check creator-v1/test/recognition-public-catalog-v069-browser.mjs
+          node creator-v1/test/portal-offline-preview.mjs > "$RUNNER_TEMP/catalog-fixture.log" 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for i in $(seq 1 80); do
+            if curl -fsS http://127.0.0.1:4178/__ready >/dev/null 2>&1; then ready=1; break; fi
+            sleep 0.2
+          done
+          test "$ready" = 1
+          node creator-v1/test/recognition-public-catalog-v069-browser.mjs
+          echo V069_ANONYMOUS_ISSUER_STATUS_4_VIEWPORTS=PASS
+      - name: Retain synthetic-only screenshots and computed status
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v069-anonymous-recognition-review
+          path: qa-v069-public-catalog/
+          if-no-files-found: warn
+          retention-days: 7
