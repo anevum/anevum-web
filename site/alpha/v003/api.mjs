@@ -2,7 +2,7 @@
  * New routes do not replace or mutate the v002 alpha experience.
  * Dependencies: AUTH service, DB D1, MEDIA R2, PACKAGE_PREVIEW_KEY secret,
  * RUNTIME_HOST (isolated executable-code hostname without scheme), PILOT_IDS,
- * STAFF_IDS. No tokens, emails, or account IDs are exposed to project code.
+ * STAFF_IDS. Preview capabilities are short-lived and stored hashed in D1.
  */
 import { inspectZip, extractEntry, sha256Hex, assetMime, ZIP_LIMITS, PackageError } from "./archive.mjs";
 import { mintPreview } from "./tokens.mjs";
@@ -319,7 +319,7 @@ async function player(req,env,id) {
   let runtime="";
   if(host) {
     if(isPreview) {
-      const token=await mintPreview(env.PACKAGE_PREVIEW_KEY,release.id);
+      const token=await mintPreview(env.DB,release.id,u.id);
       runtime="https://"+host+"/p/"+release.id+"/"+token+"/index.html";
     } else runtime="https://"+host+"/r/"+release.id+"/index.html";
   }
