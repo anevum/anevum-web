@@ -46,7 +46,8 @@ test("user entry points resolve to canonical membership without assigning Creato
  const overview=source("web/src/components/MemberExperienceMap.tsx");
  assert.match(shell,/canonicalAuthClient\.useSession\(\)/);
  assert.match(shell,/canonicalMember\?"\/member":"\/join"/);
- assert.match(shell,/label:"My profile",detail:/);
+ assert.match(shell,/aria-label="Your player card"/);
+ assert.match(shell,/<CompactMemberIdentity member={ownCard} href="\/member"/);
  assert.match(rail,/label:"Profile",to:"\/member"/);
  assert.match(portal,/path:"\/join",category:"Account"/);
  assert.match(portal,/path:"\/member",category:"Account"/);

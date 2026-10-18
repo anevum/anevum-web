@@ -2,12 +2,13 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent, type MouseEvent
 import { Link, useNavigate } from "react-router-dom";
 import { Icon } from "./Icons";
 import { findPortalDestinations, publishedSearchPath } from "../lib/portal-destinations";
+import { publicCreatorHandle } from "../lib/public-creator-handle";
 import { OrbitalMark } from "./OrbitalMark";
 import { readProjects,readCreators,type Project,type Creator } from "../lib/api";
 
 /**
- * Primary navigation indexes fixed first-party routes. Inside Atlas, a debounced
- * lookup additionally searches actual approved projects and creator channels.
+ * Primary navigation indexes fixed first-party routes. For every route, a debounced
+ * lookup searches actual approved projects and creator channels.
  * No private API access, invented accounts, or synthetic search results.
  */
 export function PortalLauncher({ open, onClose, routePrefix="" }: { open: boolean; onClose: () => void; routePrefix?: "" | "/atlas" }) {
@@ -25,7 +26,7 @@ export function PortalLauncher({ open, onClose, routePrefix="" }: { open: boolea
   }>({status:"idle",query:"",projects:[],creators:[]});
   const matches = findPortalDestinations(query);
   const liveQuery=query.trim();
-  const liveEnabled=open&&routePrefix==="/atlas"&&liveQuery.length>=2;
+  const liveEnabled=open&&liveQuery.length>=2;
   const searchPath = publishedSearchPath(query);
   const entries = [
     ...matches.map(item => ({ id: item.id, path: item.path, title: item.title, detail: item.description, category: item.category, icon: item.icon, gated: !!item.gated, liveSearch: false })),
@@ -33,7 +34,7 @@ export function PortalLauncher({ open, onClose, routePrefix="" }: { open: boolea
     ...(liveEnabled&&live.query===liveQuery&&live.status==="ready"?[
       ...live.projects.map(project=>({
         id:"project-"+project.id,path:"/projects/"+encodeURIComponent(project.id),title:project.title,
-        detail:"Approved "+project.category+" by @"+project.creatorHandle,category:"Explore" as const,
+        detail:"Approved "+project.category+" by "+(publicCreatorHandle(project.creatorHandle)?"@"+publicCreatorHandle(project.creatorHandle):project.creatorName||"ANEVUM member"),category:"Explore" as const,
         icon:"star",gated:false,liveSearch:true
       })),
       ...live.creators.map(creator=>({
@@ -131,7 +132,7 @@ export function PortalLauncher({ open, onClose, routePrefix="" }: { open: boolea
           placeholder="WHERE DO YOU WANT TO GO?" aria-describedby={listId+"-hint"}/>
         <kbd>/</kbd>
       </div>
-      <p className="portal-launcher-hint" id={listId+"-hint"}>{routePrefix==="/atlas"?"FIND REAL PROJECTS AND CREATORS · ↑ ↓ TO SELECT · ENTER TO OPEN · ESC TO CLOSE":"TYPE TO FILTER PAGES · ↑ ↓ TO SELECT · ENTER TO OPEN · ESC TO CLOSE"}</p>
+      <p className="portal-launcher-hint" id={listId+"-hint"}>FIND REAL PROJECTS AND CREATORS · ↑ ↓ TO SELECT · ENTER TO OPEN · ESC TO CLOSE</p>
       {liveEnabled&&<div className="portal-launcher-live-status" role="status" aria-live="polite">
         {live.status==="loading"?"SEARCHING REAL RELEASES AND CREATOR CHANNELS…":
          live.status==="error"?"Live directory search is temporarily unavailable. Full catalogue search is still available.":
@@ -157,7 +158,7 @@ export function PortalLauncher({ open, onClose, routePrefix="" }: { open: boolea
         ) : <div className="portal-launcher-empty" role="status">No matching page. Try Games, Guide, Creators, or Build Status.</div>}
       </nav>
       <footer className="portal-launcher-foot">
-        <span>LOCAL ROUTE SEARCH / NOT A FAKE LIVE FEED</span>
+        <span>VERIFIED PUBLIC SEARCH / NO SYNTHETIC ACTIVITY</span>
         <Link to={insideWorkspace("/start")} onClick={leave}>NEW HERE? START HERE <Icon name="arrow" size={15}/></Link>
       </footer>
     </div>

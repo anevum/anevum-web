@@ -106,7 +106,7 @@ function connect(url){
  });
 }
 const result={fixture:'synthetic',widths:[],authorCards:false,threadNavigation:false,
- homeHighlights:false,pagination:false,privateThreadExcluded:false};
+ homeWayfinder:false,pagination:false,privateThreadExcluded:false};
 let client=null;
 try{
  const port=await until(()=>{const p=join(profile,'DevToolsActivePort');return existsSync(p)?readFileSync(p,'utf8').split('\n')[0]:null;});
@@ -144,18 +144,19 @@ try{
  const detailShot=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
  writeFileSync(join(out,'forum-detail-390.png'),Buffer.from(detailShot.data,'base64'));
  await goto('/');
- await until(()=>evaluate("!!document.querySelector('.cf-highlights')"));
- result.homeHighlights=true;
+ // V079 deliberately removes the old forum-highlights panel from the
+ // homepage. Forum author cards are verified above on real thread routes;
+ // the homepage now supplies direct community navigation instead.
+ await until(()=>evaluate("document.querySelectorAll('.av79-gateway').length===4&&!!document.querySelector('.av79-home .av79-hero')"));
+ result.homeWayfinder=true;
  await client.send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
- await evaluate("document.querySelector('.cf-highlights').scrollIntoView({block:'start'})");
- await delay(500);
- await evaluate("document.querySelector('.cf-highlights').scrollIntoView({block:'start'})");
- await delay(300);
- const homePosition=await evaluate("(()=>{const r=document.querySelector('.cf-highlights').getBoundingClientRect();return {top:r.top,bottom:r.bottom}})()");
- assert.ok(homePosition.top<844&&homePosition.bottom>75,JSON.stringify(homePosition));
+ await evaluate("document.querySelector('.av79-gateways').scrollIntoView({block:'start'})");
+ await delay(350);
+ const homePosition=await evaluate("(()=>{const r=document.querySelector('.av79-gateways').getBoundingClientRect();return {top:r.top,bottom:r.bottom,community:!!document.querySelector('.av79-gateway[href*=community]'),overflow:document.documentElement.scrollWidth>innerWidth+1}})()");
+ assert.ok(homePosition.top<844&&homePosition.bottom>75&&!homePosition.overflow&&homePosition.community,JSON.stringify(homePosition));
  result.homeCaptureVisible=true;
  const homeShot=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
- writeFileSync(join(out,'forum-home-highlights-390.png'),Buffer.from(homeShot.data,'base64'));
+ writeFileSync(join(out,'forum-home-wayfinder-390.png'),Buffer.from(homeShot.data,'base64'));
  await goto('/community');
  await until(()=>evaluate("document.querySelectorAll('.cf-forums .cf-thread').length===20"));
  for(const [width,height] of [[1440,900],[1024,768],[390,844],[320,720]]){

@@ -129,7 +129,8 @@ test("Evolution routes preserve canonical XP with signed-in earned-only reward a
   const app=read("web/src/App.tsx");
   const panel=read("web/src/components/LevelPanel.tsx");
   const levels=read("web/src/pages/LevelsPage.tsx");
-  assert.match(shell,/portalCategories/);
+  assert.match(shell,/menuDestinations/);
+  assert.match(shell,/menuCategories/);
   assert.match(shell,/\/levels/);
   assert.match(app,/path="levels"/);
   assert.match(panel,/useMemberProgression/);

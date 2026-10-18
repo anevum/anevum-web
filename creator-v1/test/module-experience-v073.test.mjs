@@ -11,18 +11,19 @@ const css=read("web/src/module-experience-v073.css");
 const main=read("web/src/main.tsx");
 const browser=read("test/capture-sitewide-v012.mjs");
 
-test("V073 homepage leads with functional modules instead of a cinematic hero",()=>{
-  for(const source of [home,doors,activity])
-    assert.doesNotThrow(()=>parse(source,{sourceType:"module",plugins:["typescript","jsx"]}));
-  assert.match(main,/module-experience-v073\.css/);
-  assert.match(home,/<WorldGatewayDeck projects=\{projects\} creators=\{creators\} status=\{status\} state=\{signalState\}\/>/);
-  assert.doesNotMatch(home,/<LiveSignalHero\s/);
-  const portals=home.indexOf("<WorldGatewayDeck ");
-  const verified=home.indexOf("<LiveSignalModules");
-  const community=home.indexOf("<CommunityHomeFeed");
-  assert.ok(portals>=0&&portals<verified&&verified<community,"functional four-door module navigation must lead public activity");
+test("V079 replaces V073's stacked public modules with a short real-content homepage",()=>{
+ for(const source of [home,doors,activity])
+  assert.doesNotThrow(()=>parse(source,{sourceType:"module",plugins:["typescript","jsx"]}));
+ assert.match(main,/home-navigation-v079\.css/);
+ assert.match(home,/<nav className="av79-gateways"/);
+ assert.match(home,/readProjects/);
+ assert.match(home,/readCreators/);
+ assert.match(home,/readStatus/);
+ assert.match(home,/const featured=games\[0\]\|\|projects\[0\]\|\|null/);
+ assert.match(home,/useOwnPlayerCard/);
+ assert.match(home,/CompactMemberIdentity/);
+ assert.doesNotMatch(home,/<WorldGatewayDeck|<LiveSignalModules|<CommunityHomeFeed|<LiveSignalHero/);
 });
-
 test("V073 four doors use authentic routes and useful previews, never generated illustrations",()=>{
   for(const key of ['id:"play"','id:"discover"','id:"connect"','id:"create"'])
     assert.ok(doors.includes(key),"Missing door "+key);
@@ -66,14 +67,13 @@ test("V073 both module selectors support accessible keyboard tabs and reduced-mo
   assert.doesNotMatch(css,/animation:\s*[^;]*infinite|image-rendering:\s*pixelated/);
 });
 
-test("V073 offline browser review exercises four working modules without relying on their artwork",()=>{
-  for(const check of [
-    "V073_MODULE_ENTRY","V073_MODULE_ACCESS","V073_ACTIVITY_WORKBENCH",
-    "av73-module-tab-play","av73-module-tab-connect","av73-module-tab-create",
-    "av11-tab-creators"
-  ])assert.ok(browser.includes(check),check);
-  assert.ok(browser.includes('".av73-world-deck"'));
-  assert.doesNotMatch(browser,/COMMUNITY_PORTAL_ART_OR_LAYOUT/);
+test("V079 browser checks four direct journeys, compact wayfinder and no decorative category gallery",()=>{
+ for(const check of [
+  "V079_HOME_ENTRY","V079_MENU_ACCESS","av79-gateway",
+  "av79-feature","av79-navigation","av79-destination"
+ ])assert.ok(browser.includes(check),check);
+ assert.ok(browser.includes('".av79-home"'));
+ assert.doesNotMatch(browser,/COMMUNITY_PORTAL_ART_OR_LAYOUT/);
 });
 
 test("V073 Discover is search-led with verified counts and real metadata cards",()=>{

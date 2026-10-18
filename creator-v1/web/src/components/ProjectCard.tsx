@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
+import {CompactMemberIdentity} from "./CompactMemberIdentity";
 import type { Project } from "../lib/api";
 import { Icon } from "./Icons";
 import {CosmicArtwork} from "./CosmicArtwork";
 import type {CosmicScene} from "./CosmicIllustration";
 import { projectDetailPath } from "../lib/navigation";
+import { publicCreatorHandle } from "../lib/public-creator-handle";
 import {applyPointerDepth,clearPointerDepth} from "../lib/pointer-depth";
 
 const labels: Record<string, string> = {
@@ -26,7 +28,7 @@ export function ProjectCard({ project, returnTo = "/discover", presentation = "v
   project: Project; returnTo?: string; presentation?: "visual" | "editorial";
 }) {
   const href=projectDetailPath(project.id,returnTo);
-  const handle=typeof project.creatorHandle==="string"&&/^[a-z][a-z0-9_]{2,29}$/.test(project.creatorHandle)?project.creatorHandle:null;
+  const handle=publicCreatorHandle(project.creatorHandle);
   const credit=project.creatorName||"ANEVUM member";
   if(presentation==="editorial")return <article className="project-card av73-project-card">
     <div className="av73-project-card-top">
@@ -36,7 +38,11 @@ export function ProjectCard({ project, returnTo = "/discover", presentation = "v
     <h3><Link to={href}>{project.title}</Link></h3>
     <p>{project.summary}</p>
     <div className="av73-project-card-bottom">
-      {handle?<Link className="av73-project-card-author" to={`/creators/${encodeURIComponent(handle)}`}>@{handle}</Link>:<span className="av73-project-card-author" aria-label="Creator profile not publicly linked">{credit}</span>}
+      {handle?<CompactMemberIdentity size="inline" className="av73-project-card-author av79-public-project-author"
+        href={"/creators/"+encodeURIComponent(handle)}
+        member={{handle,displayName:credit,
+          source:"creator-channel",avatar:false,level:null,featuredAwards:[]}}/>:
+        <span className="av73-project-card-author av79-unlinked-project" aria-label="Creator profile not publicly linked">Public creator channel not linked. <strong>{credit}</strong></span>}
       <Link className="av73-project-card-action" to={href}>View project <Icon name="arrow" size={16}/></Link>
     </div>
   </article>;
@@ -53,7 +59,11 @@ export function ProjectCard({ project, returnTo = "/discover", presentation = "v
         <h3><Link to={href}>{project.title}</Link></h3>
         <p>{project.summary}</p>
         <footer>
-          {handle?<Link className="creator-inline" to={`/creators/${encodeURIComponent(handle)}`}>@{handle}</Link>:<span className="creator-inline" aria-label="Creator profile not publicly linked">{credit}</span>}
+          {handle?<CompactMemberIdentity size="inline" className="creator-inline av79-public-project-author"
+            href={"/creators/"+encodeURIComponent(handle)}
+            member={{handle,displayName:credit,
+              source:"creator-channel",avatar:false,level:null,featuredAwards:[]}}/>:
+            <span className="creator-inline av79-unlinked-project" aria-label="Creator profile not publicly linked">Public creator channel not linked. <strong>{credit}</strong></span>}
           <Link className="project-arrow" to={href} aria-label={`View ${project.title}`}><Icon name="arrow" size={16} /></Link>
         </footer>
       </div>
