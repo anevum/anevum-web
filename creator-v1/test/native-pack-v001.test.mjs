@@ -55,6 +55,22 @@ test('game background art survives native packaging and can be reopened for edit
  assert.deepEqual(restored.assets.get(background),png);
  assert.equal(restored.manifest.files.find(f=>f.path===background)?.mime,'image/png');
 });
+test('native album cover and series poster survive media round-trip',async()=>{
+ const png=new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,0]);
+ const jobs=[
+  {kind:'album',document:{...album,cover:'assets/cover.png'},
+   assets:{'assets/signal.mp3':mediaFixtures.mp3,'assets/cover.png':png},field:'cover'},
+  {kind:'series',document:{...series,poster:'assets/poster.png'},
+   assets:{'assets/pilot.webm':mediaFixtures.webm,'assets/poster.png':png},field:'poster'}
+ ];
+ for(const input of jobs){
+  const pack=await createNativePack({...opts,...input});
+  const opened=await openNativePack(pack.filename,pack.bytes);
+  assert.deepEqual(opened.document,input.document);
+  assert.deepEqual(opened.assets.get(input.document[input.field]),png);
+  assert.equal(opened.manifest.files.find(f=>f.path===input.document[input.field])?.mime,'image/png');
+ }
+});
 test('reject spoofed media headers even when extension appears valid',async()=>{
  await assert.rejects(createNativePack({...opts,kind:'album',document:album,
   assets:{'assets/signal.mp3':bytes('not mp3 audio')}}),/signature mismatch/);
@@ -110,6 +126,10 @@ test('private Studio UI renders imported creative data without running HTML or e
  assert.match(lab,/CONTINUE EDITING THIS GAME/);
  assert.match(lab,/GAME BEGINS AT/);
  assert.match(lab,/ADD BACKGROUND ART/);
+ assert.match(lab,/CONTINUE EDITING THIS \{opened\.manifest\.kind\.toUpperCase\(\)\}/);
+ assert.match(lab,/ALBUM COVER/);
+ assert.match(lab,/SERIES POSTER/);
+ assert.match(lab,/NATIVE FILE TITLE/);
  const player=source('web/src/pages/NativeFilePlayerPage.tsx');
  const app=source('web/src/App.tsx');
  assert.match(player,/openNativePack\(file.name/);
