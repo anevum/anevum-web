@@ -64,28 +64,24 @@ test("V011 emissive motion sleeps when hidden, and has static accessible fallbac
   assert.doesNotMatch(css,/overflow-x:hidden|animation:.*infinite.*glare/i);
 });
 
-test("V073 functional modules lead public activity and the verified community feed",()=>{
-  const home=source("web/src/pages/CinematicLandingPage.tsx");
-  const signal=source("web/src/components/LiveSignalHero.tsx");
-  const deck=source("web/src/components/WorldGatewayDeck.tsx");
-  const worlds=home.indexOf("<WorldGatewayDeck ");
-  const index=home.indexOf("<LiveSignalModules");
-  const feed=home.indexOf("<CommunityHomeFeed");
-  assert.ok(worlds>=0&&worlds<index&&index<feed,
-    "homepage must lead with usable modules rather than promotional artwork");
-  assert.doesNotMatch(home,/<LiveSignalHero /,"decorative cinematic hero must not block the useful first viewport");
-  assert.match(signal,/export function LiveSignalModules/);
-  assert.match(signal,/readCommunityPosts/);
-  assert.match(signal,/LatestReleases projects=/);
-  assert.match(signal,/RecentConversations enabled=/);
-  assert.match(signal,/MakerChannels creators=/);
-  assert.match(signal,/IndexPulse status=/);
-  assert.match(deck,/id="world-gateways"/);
-  assert.match(deck,/aria-label="Explore ANEVUM modules"/);
-  assert.match(signal,/href="#world-gateways"/);
-  assert.match(css,/\.av11-live-index-heading/);
-  assert.match(css,/max-width:700px/);
-  assert.doesNotMatch(home,/fakeMember|fakeProject|Math\.random/);
+test("V079 home presents direct routes and approved public work without duplicated feeds",()=>{
+ const home=source("web/src/pages/CinematicLandingPage.tsx");
+ const signal=source("web/src/components/LiveSignalHero.tsx");
+ const deck=source("web/src/components/WorldGatewayDeck.tsx");
+ assert.match(home,/<nav className="av79-gateways"/);
+ assert.match(home,/const featured=games\[0\]\|\|projects\[0\]\|\|null/);
+ assert.match(home,/av79-feature/);
+ assert.match(home,/projectDetailPath/);
+ assert.match(home,/useOwnPlayerCard/);
+ assert.match(home,/CompactMemberIdentity/);
+ assert.doesNotMatch(home,/<LiveSignalHero |<WorldGatewayDeck |<LiveSignalModules|<CommunityHomeFeed/);
+ // Original component remains available to deep links without occupying the first viewport.
+ assert.match(signal,/export function LiveSignalModules/);
+ assert.match(signal,/readCommunityPosts/);
+ assert.match(deck,/id="world-gateways"/);
+ assert.match(css,/\.av11-live-index-heading/);
+ assert.match(css,/max-width:700px/);
+ assert.doesNotMatch(home,/fakeMember|fakeProject|Math\.random/);
 });
 
 test("V011 world gateways maintain legible text over bright image regions",()=>{
