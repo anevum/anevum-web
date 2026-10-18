@@ -168,7 +168,7 @@ function StudioEditor({create,uploadsReady,creator}:{create:boolean;uploadsReady
   };
  },[unsavedChanges]);
  const eligibleAttachment=Boolean(assetSummary?.some(a=>a.status==='quarantined'&&
-  studioEligibleUpload(draft.category,a.kind)));
+  studioEligibleUpload(draft.category,a.kind,a.name)));
  const ready=Boolean((draft.demoUrl||draft.sourceUrl||eligibleAttachment)&&draft.license.trim().length>=2&&
   draft.aiDisclosure.trim().length>=6&&draft.humanContribution.trim().length>=10);
  function assign<K extends keyof StudioDraft>(name:K,value:StudioDraft[K]){setDraft(p=>({...p,[name]:value}));setNotice('');setError('');}
