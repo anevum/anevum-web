@@ -95,7 +95,8 @@ export async function canonicalStudioAppeals(req,env,user,now=Math.floor(Date.no
     't.reason_code AS takedown_reason,t.taken_down_at,s.title,p.handle '+
     'FROM member_studio_publication_appeals a '+
     'JOIN member_studio_publication_takedowns t ON t.project_id=a.project_id AND t.owner_id=a.owner_id '+
-    'JOIN member_studio_publication_reviews pub ON pub.project_id=a.project_id '+
+    'JOIN member_studio_publications publication ON publication.project_id=a.project_id '+
+    'JOIN member_studio_publication_reviews pub ON pub.id=publication.review_id '+
     'JOIN member_studio_submissions s ON s.id=t.submission_id '+
     'JOIN member_creator_profiles p ON p.user_id=a.owner_id '+
     'LEFT JOIN member_studio_appeal_decisions d ON d.appeal_id=a.id '+
@@ -143,7 +144,8 @@ export async function canonicalStudioAppeals(req,env,user,now=Math.floor(Date.no
   const eligible=await rows(db,
    'SELECT a.id FROM member_studio_publication_appeals a '+
    'JOIN member_studio_publication_takedowns t ON t.project_id=a.project_id AND t.owner_id=a.owner_id '+
-   'JOIN member_studio_publication_reviews pub ON pub.project_id=a.project_id '+
+   'JOIN member_studio_publications publication ON publication.project_id=a.project_id '+
+    'JOIN member_studio_publication_reviews pub ON pub.id=publication.review_id '+
    'WHERE a.id=? AND a.filed_at=? AND a.owner_id<>? AND t.moderator_id<>? '+
    'AND pub.reviewer_id<>? AND NOT EXISTS('+
    'SELECT 1 FROM member_studio_appeal_decisions d WHERE d.appeal_id=a.id)',
@@ -155,7 +157,8 @@ export async function canonicalStudioAppeals(req,env,user,now=Math.floor(Date.no
    '(appeal_id,reviewer_id,decision,explanation,decided_at) '+
    'SELECT a.id,?,?,?,? FROM member_studio_publication_appeals a '+
    'JOIN member_studio_publication_takedowns t ON t.project_id=a.project_id AND t.owner_id=a.owner_id '+
-   'JOIN member_studio_publication_reviews pub ON pub.project_id=a.project_id '+
+   'JOIN member_studio_publications publication ON publication.project_id=a.project_id '+
+    'JOIN member_studio_publication_reviews pub ON pub.id=publication.review_id '+
    'WHERE a.id=? AND a.filed_at=? AND a.owner_id<>? AND t.moderator_id<>? AND pub.reviewer_id<>? '+
    'ON CONFLICT(appeal_id) DO NOTHING RETURNING appeal_id',
    user.id,b.decision,b.explanation.trim(),now,b.appealId,b.expectedFiledAt,user.id,user.id,user.id);
