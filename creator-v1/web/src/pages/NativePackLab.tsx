@@ -1,4 +1,5 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
+import {Link} from 'react-router-dom';
 import {createNativePack,openNativePack,MAX_PACK_BYTES,
  type PackKind,type PackManifest} from '../lib/anevum-native-pack';
 import {getVisibleWorkbenchBlocks,type StudioBlockDocument} from '../lib/studio-blocks';
@@ -283,6 +284,7 @@ export function NativePackLab({title,creator,document,onImportDocument,disabled}
   <div className="np-content">
    <p className="np-info">Turn creations into ANEVUM files. Packages stay in your browser until downloaded.
     Nothing here uploads media, runs user scripts, awards XP or publishes projects.</p>
+   <p className="np-small">Want a larger listening or play surface? <Link to="/open">OPEN THE STANDALONE LOCAL PLAYER ↗</Link></p>
    <div className="np-two-col">
     <section className="np-console" aria-label="Native pack creator">
      <p className="np-eyebrow">01 / CREATE A NATIVE FILE</p>
