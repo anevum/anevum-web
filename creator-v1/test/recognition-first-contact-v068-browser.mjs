@@ -1,9 +1,11 @@
-// Synthetic loopback first-fold acceptance, ANEVUM.WEB.PATCH.2026-10-17.017.
+// First-fold acceptance. Uses synthetic loopback unless explicitly switched to
+// read-only https://anevum.com after an independent production deployment.
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {spawn} from 'node:child_process';
-const out=path.resolve('qa-v068-registry');
+const live=process.env.ANEVUM_REGISTRY_LIVE_QA==='1';
+const out=path.resolve(live?'qa-v068-live':'qa-v068-registry');
 await fs.mkdir(out,{recursive:true});
 const profile=await fs.mkdtemp(path.join(os.tmpdir(),'av67-'));
 const chrome=spawn(process.env.CHROME_PATH||'/usr/bin/google-chrome',[
@@ -35,7 +37,7 @@ try{
  await send('Page.enable');await send('Runtime.enable');
  for(const [width,height] of [[1440,900],[1024,768],[390,844],[320,740]]){
   await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<=640});
-  await send('Page.navigate',{url:'http://127.0.0.1:4178/creator/recognition'});
+  await send('Page.navigate',{url:live?'https://anevum.com/recognition':'http://127.0.0.1:4178/creator/recognition'});
   let ready=false;
   for(let i=0;i<100;i++){if(await evaluate("!!document.querySelector('.av66-registry-mark') && !!document.querySelector('.av66-catalog-shell')")){ready=true;break;}await sleep(200);}
   if(!ready){
@@ -52,7 +54,7 @@ try{
   const shot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   await fs.writeFile(path.join(out,'registry-'+width+'.png'),Buffer.from(shot.data,'base64'));
  }
- const report={source:'127.0.0.1 synthetic offline preview; not real members',captures,errors};
+ const report={source:live?'anevum.com read-only production':'127.0.0.1 synthetic offline preview; not real members',captures,errors};
  await fs.writeFile(path.join(out,'geometry.json'),JSON.stringify(report,null,2));
  console.log(JSON.stringify(report));
  const invalid=captures.filter(x=>{
