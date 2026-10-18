@@ -47,15 +47,15 @@ export function layout(title, body, runner = "") {
 }
 export function card(p, owner = false, reviewer = false) {
   const hasDraft = !!p.draft_release_id;
-  const preview = owner && hasDraft ? '/play/v3/'+p.id+'?preview=1' : '/play/v3/'+p.id;
+  const preview = (owner || reviewer) && hasDraft ? '/play/v3/'+p.id+'?preview=1' : '/play/v3/'+p.id;
   const summary = p.summary.length > 190 ? p.summary.slice(0,190)+'…' : p.summary;
-  const badgeState = owner && hasDraft ? p.draft_status : p.status;
+  const badgeState = (owner || reviewer) && hasDraft ? p.draft_status : p.status;
   return '<article class="project"><span class="chip '+esc(badgeState)+'">'+esc(state(badgeState))+' · '+esc(p.category)+'</span><h3>'+esc(p.title)+'</h3><p>'+esc(summary)+'</p>'+
     '<div class="meta">'+(p.release_version?'Build v'+Number(p.release_version)+' · ':'')+'Updated '+new Date(p.updated_at * 1000).toLocaleDateString("en-US")+'</div>'+
     (p.review_reason?'<p class="status bad">Review: '+esc(p.review_reason)+'</p>':'')+
-    '<div class="actions">'+(!reviewer?'<a class="button" href="'+preview+'">'+(hasDraft&&owner?'Preview build':'Play project')+'</a>':'')+
+    '<div class="actions">'+(!reviewer&&(!owner||hasDraft||p.status==="published")?'<a class="button" href="'+preview+'">'+(hasDraft&&owner?'Preview build':'Play project')+'</a>':'')+
     (owner&&hasDraft&&p.draft_status==="ready"?action(p,"submit","Submit for review"):'')+
-    (owner&&p.status==="published"&&!hasDraft?'<a class="button quiet" href="/upload/v3?update='+esc(p.id)+'">Upload update</a>':'')+
+    (owner&&!hasDraft?'<a class="button quiet" href="/upload/v3?update='+esc(p.id)+'">'+(p.status==="published"?"Upload update":"Revise project")+'</a>':'')+
     (reviewer?'<a class="button primary" href="/play/v3/'+esc(p.id)+'?preview=1">Review build</a>':'')+
     '</div></article>';
 }
