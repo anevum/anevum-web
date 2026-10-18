@@ -38,7 +38,7 @@ test('archived full meshes remain buildable but access is guarded by the platfor
  const folder=join(root,'web/public/evolution');
  const html=read('web/public/evolution/index.html');
  const gate=read('apex-prelaunch/platform.mjs');
- assert.match(gate,/SECRET_EVOLUTION\\.test\\(url\\.pathname\\)/);
+ assert.ok(gate.includes('SECRET_EVOLUTION.test(url.pathname)'));
  assert.equal(readdirSync(join(folder,'assets')).length,152);
  assert.match(html,/src="\/evolution\/app.js"/);
  assert.match(html,/href="\/evolution\/app.css"/);
