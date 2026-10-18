@@ -141,14 +141,15 @@ try{
  }
  await navigate('/open');
  await until(()=>evaluate("Boolean(document.querySelector('#np-local-package')&&document.querySelector('.np-page-empty'))"));
- assert.match(String(await evaluate("document.querySelector('.np-page-header h1')?.textContent")),'OPEN A WORLD');
+ assert.match(String(await evaluate("document.querySelector('.np-page-header h1')?.textContent")),/OPEN A WORLD/);
  acceptance.tests.push('Unauthenticated /open route boots from isolated web build');
 
  await pick(goodPath);
  await until(()=>evaluate("document.querySelector('.np-page-loaded h2')?.textContent==='The First Signal'"));
  let stage=await evaluate("({scene:document.querySelector('.np-game h4')?.textContent,background:document.querySelector('.np-game img')?.complete,choices:document.querySelectorAll('.np-game .np-choices button').length})");
  assert.equal(stage.scene,'The First Observatory');assert.equal(stage.choices,1);
- acceptance.backgroundMediaLoaded=Boolean(stage.background);
+ acceptance.backgroundMediaLoaded=Boolean(await until(()=>evaluate("(()=>{const i=document.querySelector('.np-game img');return i?.complete&&i?.naturalWidth>0})()")));
+ assert.equal(acceptance.backgroundMediaLoaded,true,'Bundled image must decode in Chromium');
  await evaluate("document.querySelector('.np-game .np-choices button').click()");
  await until(()=>evaluate("document.querySelector('.np-game h4')?.textContent==='Beyond the Aperture'"));
  await evaluate("document.querySelector('.np-game .np-restart').click()");
