@@ -35,7 +35,7 @@ const fakeEnv=(overrides={})=>{
  };
  const jsonRuntime={version:'anevum.mini-native.v062',vertex:'void main(){}',
   fragment:'void main(){}',materials:{stone:[[1,1,1],1,0,0,1,0]},
-  accents:Array.from({length:30},(_,i)=>i===1?'#123456':'#abcdef'),
+  accents:Array.from({length:30},(_,i)=>i===2?'#123456':'#abcdef'),
   height:'/evolution/assets/height.png',albedo:'/evolution/assets/albedo.webp'};
  const staticAssets={async fetch(request){
   assets.push(new URL(request.url).pathname);
@@ -84,25 +84,25 @@ test('V075 public reward media needs verified opt-in profile, visible statistics
   {visibility:'private'}, {verified:false},{stats:false},{xp:0}
  ]){
   const {env,assets}=fakeEnv(changes);
-  const result=await earnedRewardMedia(new Request(levelUrl(2,'icon','example')),env);
+  const result=await earnedRewardMedia(new Request(levelUrl(3,'icon','example')),env);
   assert.equal(result.status,404,JSON.stringify(changes));
   assert.deepEqual(assets,[]);
  }
  const {env,assets}=fakeEnv();
- const valid=await earnedRewardMedia(new Request(levelUrl(2,'icon','example')),env);
+ const valid=await earnedRewardMedia(new Request(levelUrl(3,'icon','example')),env);
  assert.equal(valid.status,200);
  assert.equal(valid.headers.get('content-type'),'image/png');
- assert.equal(assets[0],'/evolution/assets/level-02-compact-128.png');
+ assert.equal(assets[0],'/evolution/assets/level-03-compact-128.png');
 });
 test('V075 runtime never reveals other level colors, static paths or failed image redirects',async()=>{
  const {env}=fakeEnv();
- const url=levelUrl(2,'runtime','example');
+ const url=levelUrl(3,'runtime','example');
  const res=await earnedRewardMedia(new Request(url),env);
  assert.equal(res.status,200);
  const body=await res.json();
  assert.deepEqual(body.accents,['#123456']);
- assert.equal(body.height,'/api/v1/members/example/rewards/levels/2/height');
- assert.equal(body.albedo,'/api/v1/members/example/rewards/levels/2/albedo');
+ assert.equal(body.height,'/api/v1/members/example/rewards/levels/3/height');
+ assert.equal(body.albedo,'/api/v1/members/example/rewards/levels/3/albedo');
  assert.equal(res.headers.get('x-robots-tag'),'noindex, nofollow, noarchive');
  const head=await earnedRewardMedia(new Request(url,{method:'HEAD'}),env);
  assert.equal(head.status,200);
@@ -189,7 +189,8 @@ test('V075 public inventory never exposes private, hidden-stats or unverified re
  const permitted=await earnedRewardInventory(new Request(path),env);
  assert.equal(permitted.status,200);
  const data=await permitted.json();
- assert.equal(data.levels.length,3);
+ assert.equal(data.levels.length,1);
+ assert.equal(data.levels[0].level,3);
  const head=await earnedRewardInventory(new Request(path,{method:'HEAD'}),env);
  assert.equal(head.status,200);
  assert.equal(await head.text(),'');
