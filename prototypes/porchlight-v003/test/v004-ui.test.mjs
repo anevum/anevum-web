@@ -15,7 +15,7 @@ test('public event reporting requires a published listing and explicit private d
   assert.match(j,/select\.disabled=!enabled/);
 });
 test('staff report actions remain tied to independently verified role and revision',()=>{
-  for(const id of ['reports-state','report-queue','refresh-reports'])
+  for(const id of ['reports-state','reports-feedback','report-queue','refresh-reports'])
     assert.ok(h.includes('id="'+id+'"'),id);
   assert.match(j,/!app\.role/);
   assert.match(j,/expectedRevision:report\.revision/);
