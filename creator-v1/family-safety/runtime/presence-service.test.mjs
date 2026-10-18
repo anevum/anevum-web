@@ -19,7 +19,7 @@ const grant=()=>({
 });
 const point=(at=T)=>({lat:28.2483,lng:-81.2873,accuracyM:12,observedAt:at});
 
-function fixture({onRoomRead=null}={}) {
+function fixture({onRoomRead=null,onRoomWrite=null}={}) {
   const clock={now:T};
   const permissions={
     circle:{...circle}, memberships:[member("alice"),member("bob"),member("carol")],
@@ -55,7 +55,12 @@ function fixture({onRoomRead=null}={}) {
       assert.equal(id,circle.id);
       return {
         read:async (...args)=>{const point=room.read(...args); if(onRoomRead) await onRoomRead({permissions,clock,room}); return point;},
-        write:async (...args)=>{writes++;return room.write(...args);},
+        write:async (...args)=>{
+          writes++;
+          const result=room.write(...args);
+          if(onRoomWrite)await onRoomWrite({permissions,clock,room});
+          return result;
+        },
         purge:async (...args)=>room.purge(...args)
       };
     },
@@ -84,6 +89,8 @@ test("room writes only valid current positions, never maintains history",()=>{
   assert.equal(room.write("alice",point(T+MIN_WRITE_INTERVAL_MS),T+MIN_WRITE_INTERVAL_MS,"session-1"),"ok");
   assert.equal(room.size,1);
   assert.equal(room.read("alice",T+MIN_WRITE_INTERVAL_MS,"session-1").observedAt,T+MIN_WRITE_INTERVAL_MS);
+  assert.equal(room.write("alice",point(T+1),T+MIN_WRITE_INTERVAL_MS*2,"session-1"),"invalid");
+  assert.equal(room.read("alice",T+MIN_WRITE_INTERVAL_MS*2,"session-1").observedAt,T+MIN_WRITE_INTERVAL_MS);
   room.prune(T+MIN_WRITE_INTERVAL_MS+POSITION_TTL_MS);
   assert.equal(room.read("alice",T+MIN_WRITE_INTERVAL_MS+POSITION_TTL_MS,"session-1"),null);
   assert.equal(room.size,0);
@@ -226,6 +233,23 @@ test("old session GPS never leaks through a new grant during a concurrent read",
   }));
   assert.equal(res.status,200);
   assert.equal((await res.json()).state,"unavailable");
+});
+
+test("write is purged if consent is revoked while the private room processes it",async()=>{
+  const app=fixture({onRoomWrite:async({permissions,clock})=>{
+    permissions.session={...permissions.session,state:"revoked",revokedAt:clock.now};
+    permissions.grant={...permissions.grant,state:"revoked",revokedAt:clock.now};
+  }});
+  const put=await app.fetch(app.requestFor("PUT","/v1/circles/family-1/presence/me",{
+    actor:"alice",json:point()
+  }));
+  assert.equal(put.status,403);
+  assert.equal(app.metrics().writes,1);
+  assert.equal(app.room.size,0);
+  assert.equal(app.room.write("alice",point(T+1),T+1,"session-1"),"revoked");
+  const later=await app.fetch(app.requestFor("GET",
+    "/v1/circles/family-1/presence/alice",{actor:"bob"}));
+  assert.equal((await later.json()).state,"unavailable");
 });
 
 test("malformed untrusted policy shapes fail closed",async()=>{
