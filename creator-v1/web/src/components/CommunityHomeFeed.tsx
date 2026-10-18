@@ -9,6 +9,7 @@ import {Icon} from "./Icons";
 import {ErrorState,LoadingState} from "./States";
 import {PublicAuthorShowcase} from "./PublicAuthorShowcase";
 import {CompactMemberIdentity} from "./CompactMemberIdentity";
+import {publicCreatorHandle} from "../lib/public-creator-handle";
 
 /** A real public index, never a synthetic social feed. Private, queued and
  * unreviewed records must remain excluded by their authoritative API.
@@ -42,13 +43,6 @@ function dateOrder(raw:string|null|undefined){
 function dateLabel(raw:string|null|undefined){
   const value=dateOrder(raw);
   return value?new Intl.DateTimeFormat("en-US",{month:"short",day:"numeric",year:"numeric",timeZone:"UTC"}).format(value):"Date unavailable";
-}
-/** Alpha releases may be approved before their author links a public creator channel.
- * Never invent a handle or link to /creators/null for such releases. */
-function publicCreatorHandle(value: unknown): string | null {
-  if (typeof value !== "string") return null;
-  const handle=value.trim().toLowerCase();
-  return /^[a-z][a-z0-9_]{2,29}$/.test(handle)?handle:null;
 }
 function ProjectEntry({project,creators,showcases,priority=false}:{project:Project;creators:readonly Creator[];showcases:Record<string,PublicCreatorShowcase>;priority?:boolean}){
   const linkedHandle=publicCreatorHandle(project.creatorHandle);
