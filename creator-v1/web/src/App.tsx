@@ -95,6 +95,8 @@ export default function App(){
     <Route path="studio/new" element={<CanonicalStudioPage mode="new"/>}/>
     <Route path="studio/review" element={<CanonicalStudioPage mode="review"/>}/>
     <Route path="studio/safety" element={<CanonicalStudioPage mode="safety"/>}/>
+    <Route path="studio/appeals" element={<CanonicalStudioPage mode="appeals"/>}/>
+    <Route path="studio/appeals/review" element={<CanonicalStudioPage mode="appeal-review"/>}/>
     <Route path="studio/:projectId" element={<CanonicalStudioPage mode="edit"/>}/>
     <Route element={<MemberGate/>}>
       <Route path="community/write" element={<CommunityPostEditorPage/>}/>
