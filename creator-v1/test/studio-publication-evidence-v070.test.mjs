@@ -81,7 +81,7 @@ const reviewBody=(projectId,revision=2)=>({
  rightsChecked:true,contentChecked:true,externalLinkChecked:true
 });
 function project(db,index=1,{
- user='owner',link='https://creator.example/projects/'+index,profile='public'
+ user='owner',link='https://creator.example.com/projects/'+index,profile='public'
 }={}){
  const id=uid(1000+index),submissionId=uid(2000+index);
  const slug='external-work-'+index;
@@ -237,8 +237,8 @@ test('creator withdrawal removes public metadata atomically but preserves an aud
 });
 test('same underlying external release cannot be counted twice through query strings or alternate slugs',async t=>{
  const db=database();t.after(()=>db.raw.close());
- const p=project(db,1,{link:'https://creator.example/work/atlas?v=1'});
- const q=project(db,2,{link:'https://creator.example/work/atlas?v=2'});
+ const p=project(db,1,{link:'https://creator.example.com/work/atlas?v=1'});
+ const q=project(db,2,{link:'https://creator.example.com/work/atlas?v=2'});
  assert.equal((await consent(db,p)).status,200);
  assert.equal((await consent(db,q)).status,200);
  assert.equal((await publish(db,p)).ok,true);
@@ -262,7 +262,7 @@ test('catalog creation badges require a live reviewed publication feature and re
 test('Five Worlds and Architect of Worlds require five and twenty unique reviewed public works',async t=>{
  const db=database();t.after(()=>db.raw.close());
  for(let i=1;i<=20;i++){
-  const p=project(db,i,{link:'https://artist.example/art/'+i});
+  const p=project(db,i,{link:'https://artist.example.com/art/'+i});
   const c=await consent(db,p,now-100+i);
   assert.equal(c.status,200,'submission '+i+' consent');
   const release=await publish(db,p,now+i);
