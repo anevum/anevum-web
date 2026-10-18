@@ -38,7 +38,6 @@ const menuUtilities = [
   {to:"/levels",label:"Evolution"},
   {to:"/recognition",label:"Rewards"},
   {to:"/library",label:"My library"},
-  {to:"/saved",label:"Saved"},
   {to:"/status",label:"Status"}
 ] as const;
 
