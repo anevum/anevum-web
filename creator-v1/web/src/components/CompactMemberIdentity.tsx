@@ -17,7 +17,7 @@ import './player-card-v065.css';
  * Use in forums, threads, replies, creator/project credits, directory and walls.
  * No award, level, aura, flag or medal is inferred from public writing or account
  * age. Members receive only the verified/visible records passed by the API.
- * The shared LevelEmblem displays verified high-resolution Evolution artwork;
+ * The shared LevelEmblem requests private, front-facing Evolution card plates;
  * the moving miniature WebGL overlay is retired from every player card.
  */
 export type PublicIdentity={
@@ -64,7 +64,7 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
     src={!channel&&member.avatar?(href==='/member'?'/api/v1/member/media/avatar':'/api/v1/members/'+encodeURIComponent(member.handle)+'/media/avatar'):undefined}
     supporterFrame={member.supporterAppearance?.frame}/></span>
    {specimen&&<span className="av61-specimen" title={'Earned Evolution Level '+level}>
-    <LevelEmblem level={level!} size={size==='inline'?30:size==='compact'?38:size==='featured'?60:44} handle={href==='/member'?null:member.handle}/>
+    <LevelEmblem level={level!} artwork="card" size={size==='inline'?30:size==='compact'?38:size==='featured'?60:44} handle={href==='/member'?null:member.handle}/>
    </span>}
   </span>
   <span className="av61-member-copy">
