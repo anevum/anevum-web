@@ -47,8 +47,13 @@ jobs:
           set -euo pipefail
           test ! -e creator-v1/web/public/evolution-card-plates.json
           test ! -e creator-v1/web/public/assets/levels/evolution-card-plates.json
-          ! grep -r -l 'Symmetry Field' creator-v1/web/dist/assets --include='*.js' >/dev/null || {
-            echo "Front-facing private artwork leaked into public frontend bundle" >&2
+          test -d creator-v1/dist/web/assets
+          if grep -r -l 'M128 20 165 78 128 128' creator-v1/dist/web/assets --include='*.js' >/dev/null; then
+            echo "Private Level 4 SVG geometry leaked into public frontend bundle" >&2
             exit 1
-          }
+          fi
+          if grep -r -l 'evolution-card-plates' creator-v1/dist/web/assets --include='*.js' >/dev/null; then
+            echo "Private card art registry leaked into public frontend bundle" >&2
+            exit 1
+          fi
           echo 'V077_PRIVATE_ARTWORK_3D_PRESERVATION_AND_WEB_BUILD=PASS' >> "$GITHUB_STEP_SUMMARY"
