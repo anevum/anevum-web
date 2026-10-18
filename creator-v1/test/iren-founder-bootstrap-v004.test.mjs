@@ -25,9 +25,9 @@ test('IREN V004 verified founder bootstrap writes exactly one atomic audit event
  const f=setup();
  try{
   f.grant('founder');
-  const owners=f.db.prepare("SELECT member_id,role FROM staff_access_grants WHERE role='owner' AND revoked_at IS NULL").all();
+  const owners=f.db.prepare("SELECT member_id,role FROM staff_access_grants WHERE role='owner' AND revoked_at IS NULL").all().map(row=>({...row}));
   assert.deepEqual(owners,[{member_id:'founder',role:'owner'}]);
-  const a=f.db.prepare("SELECT actor_id,member_id,action,created_at FROM staff_access_audit").all();
+  const a=f.db.prepare("SELECT actor_id,member_id,action,created_at FROM staff_access_audit").all().map(row=>({...row}));
   assert.deepEqual(a,[{actor_id:'founder',member_id:'founder',action:'bootstrap-owner',created_at:1770000000}]);
   assert.throws(()=>f.grant('other'),/owner bootstrap refused|UNIQUE constraint/i);
   assert.equal(f.db.prepare("SELECT COUNT(*) AS n FROM staff_access_audit").get().n,1);
