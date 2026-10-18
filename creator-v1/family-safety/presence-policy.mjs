@@ -26,15 +26,16 @@ const deny = () => ({ state: "unavailable", position: null, updatedAt: null, acc
 
 function hasActiveMember(memberships, circleId, id) {
   if (!Array.isArray(memberships) || !validId(circleId) || !validId(id)) return false;
-  return memberships.some(member =>
-    isRecord(member) &&
-    member.circleId === circleId &&
-    member.subjectId === id &&
-    member.state === "active" &&
-    member.identityVerified === true &&
-    (member.ageBand === "adult") &&
-    (member.role === "adult" || member.role === "guardian")
+  // Duplicate or conflicting membership rows must never elevate access.
+  const matches = memberships.filter(member =>
+    isRecord(member) && member.circleId === circleId && member.subjectId === id
   );
+  if (matches.length !== 1) return false;
+  const member = matches[0];
+  return member.state === "active" &&
+    member.identityVerified === true &&
+    member.ageBand === "adult" &&
+    (member.role === "adult" || member.role === "guardian");
 }
 
 /**
@@ -92,26 +93,47 @@ export function mayWritePresence({ actorId, subjectId, circleId, circle, members
 }
 
 /**
+ * Validate location payloads independently of membership authorization.
+ * An accurate-looking GPS reading is NOT proof of physical safety or identity.
+ * Use a server-derived now; do not trust client supplied server time.
+ */
+export function sanitizePosition(location, now) {
+  if (!isRecord(location) || !validNow(now)) return null;
+  const { lat, lng, observedAt, accuracyM } = location;
+  if (!Number.isFinite(lat) || lat < -90 || lat > 90 ||
+      !Number.isFinite(lng) || lng < -180 || lng > 180 ||
+      !Number.isFinite(accuracyM) || accuracyM < 0 || accuracyM > 2_000 ||
+      !validTime(observedAt) || observedAt > now + MAX_CLOCK_SKEW_MS ||
+      now - observedAt >= POSITION_TTL_MS) return null;
+  return { lat, lng, observedAt, accuracyM };
+}
+
+/**
+ * Location admission combines a verified session actor with allowed payload.
+ * Do not write anything to the ephemeral store if this returns null.
+ */
+export function admitLocationWrite(context = {}) {
+  if (!mayWritePresence(context)) return null;
+  return sanitizePosition(context.location, context.now);
+}
+
+/**
  * The only intended presentation transform for a server-side read.
  * Denied readers get exactly the same response shape as absent data
  * (no presence / account enumeration through error details).
  */
 export function visiblePresence(context = {}) {
   const { location, now } = context;
-  if (!mayReadPresence(context) || !isRecord(location) || !validNow(now)) return deny();
-  const { lat, lng, observedAt, accuracyM } = location;
-  if (!Number.isFinite(lat) || lat < -90 || lat > 90 ||
-      !Number.isFinite(lng) || lng < -180 || lng > 180 ||
-      !Number.isFinite(accuracyM) || accuracyM < 0 || accuracyM > 2_000 ||
-      !validTime(observedAt) || observedAt > now + MAX_CLOCK_SKEW_MS ||
-      now - observedAt >= POSITION_TTL_MS) return deny();
+  if (!mayReadPresence(context)) return deny();
+  const point = sanitizePosition(location, now);
+  if (!point) return deny();
 
-  const age = Math.max(0, now - observedAt);
+  const age = Math.max(0, now - point.observedAt);
   return {
     state: age <= LIVE_MAX_AGE_MS ? "recent" : "stale",
-    position: { lat, lng },
-    updatedAt: observedAt,
-    accuracyM
+    position: { lat: point.lat, lng: point.lng },
+    updatedAt: point.observedAt,
+    accuracyM: point.accuracyM
   };
 }
 
