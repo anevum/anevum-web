@@ -185,6 +185,12 @@ test('public host publication is impossible until adult consent and organizer ve
     assert.equal(row[field],null,field+' should be purged');
    assert.equal(row.host_name,'Withdrawn host');
    assert.equal(row.options_json,'[]');
+   assert.equal(db.sqlite.prepare('SELECT COUNT(*) n FROM reports WHERE host_id=?').get(submission.id).n,0,
+      'private reports are deleted on host withdrawal');
+   const audits=db.sqlite.prepare("SELECT COUNT(*) n FROM audit_events WHERE action='host_self_withdrawn' AND event_id=?").get(row.event_id).n;
+   assert.equal(audits,1);
+   const replay=await api(settings,endpoint,'POST',{receipt:submission.receipt});
+   assert.equal(replay.response.status,404);
   });
   await t.test('area-only host never gets fake point even after approval',async()=>{
    const area=await application(settings,{
@@ -201,6 +207,22 @@ test('public host publication is impossible until adult consent and organizer ve
    assert.equal(published.lat,null);assert.equal(published.lng,null);
    assert.equal(published.visibility,'area');
    assert.equal(published.location,eventData.neighborhood,'area labels must be server-derived neighborhood, never a host address');
+   assert.equal(published.name,'Participating household','area-only display names must not leak addresses');
+  });
+  await t.test('rejected host private contact and address are scrubbed',async()=>{
+   const applicationResult=await application(settings,{
+     ...hostData,hostName:'Sensitive Applicant',visibility:'area',note:'Do not publicize address',
+     contactEmail:'privateperson@example.test',consent:{...hostData.consent,exactLocation:false}
+   });
+   const decision=await api(settings,admin+'/hosts/'+applicationResult.id+'/decision','POST',{action:'reject'},auth);
+   assert.equal(decision.response.status,200);
+   const row=db.sqlite.prepare('SELECT * FROM host_submissions WHERE id=?').get(applicationResult.id);
+   assert.equal(row.status,'rejected');
+   assert.equal(row.host_name,'Rejected submission');
+   assert.equal(row.private_address,null);
+   assert.equal(row.contact_email,null);
+   assert.equal(row.note,null);
+   assert.equal(row.options_json,'[]');
   });
   await t.test('event close hides every public pin without touching Creator V1',async()=>{
    const r=await api(settings,admin+'/events/'+eventData.slug+'/close','POST',{},auth);
@@ -240,6 +262,8 @@ test('expired event records cascade out of private database after retention wind
   await purgeExpired(db,now);
   assert.equal(db.sqlite.prepare('SELECT COUNT(*) n FROM events').get().n,0);
   assert.equal(db.sqlite.prepare('SELECT COUNT(*) n FROM host_submissions').get().n,0);
+  assert.equal(db.sqlite.prepare('SELECT COUNT(*) n FROM audit_events').get().n,0,
+      'audit trail must expire when event is deleted');
  }finally{db.close()}
 });
 test('public UI never requests browser GPS, child identity, unreviewed host feeds, or third-party tiles',()=>{
@@ -265,4 +289,31 @@ test('standalone default Worker denies writes to non-API static paths',async()=>
  const request=req('/index.html','POST',{body:'test'});
  const result=await worker.fetch(request,{});
  assert.equal(result.status,405);
+});
+
+test('oversized JSON requests are rejected without writing private household data',async()=>{
+ const {db,settings}=env();
+ try{
+  await newActiveEvent(settings);
+  const input={...hostData,note:'x'.repeat(6200)};
+  const r=await api(settings,publicApi+'/events/'+eventData.slug+'/hosts','POST',input);
+  assert.equal(r.response.status,400);
+  assert.equal(r.result.code,'PAYLOAD_TOO_LARGE');
+  assert.equal(db.sqlite.prepare('SELECT COUNT(*) n FROM host_submissions').get().n,0);
+ }finally{db.close()}
+});
+
+test('host consent is versioned and event audit does not outlive its parent',async()=>{
+ const {db,settings}=env();
+ try{
+  await newActiveEvent(settings);
+  const submitted=await application(settings);
+  const row=db.sqlite.prepare('SELECT consent_version,event_id,contact_email FROM host_submissions WHERE id=?').get(submitted.id);
+  assert.match(row.consent_version,/^porchlight-v001\./);
+  assert.equal(row.contact_email,hostData.contactEmail);
+  const entries=db.sqlite.prepare('SELECT action,event_id FROM audit_events ORDER BY created_at').all();
+  assert.equal(entries.length,2);
+  assert.ok(entries.every(x=>x.event_id===row.event_id));
+  assert.deepEqual(new Set(entries.map(x=>x.action)),new Set(['event_drafted','event_active']));
+ }finally{db.close()}
 });
