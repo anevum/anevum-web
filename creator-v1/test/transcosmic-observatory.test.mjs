@@ -71,8 +71,9 @@ test("original orbit identity is unchanged and the star map is decorative",()=>{
   assert.match(worlds,/aria-hidden=\{title\?undefined:true\}/);
   assert.match(heading,/<CosmicHorizon\/>/);
   assert.match(heading,/<OrbitalStage variant="heading"\/>/);
-  assert.match(levels,/<CosmicHorizon\/>/);
-  assert.match(levels,/<OrbitalStage variant="monument"\/>/);
+  // An unreached specimen no longer appears in a public masthead.
+  assert.match(levels,/EarnedRewardVault/);
+  assert.doesNotMatch(levels,/<CosmicHorizon\/>|<OrbitalStage variant="monument"\/>/);
   assert.match(horizon,/className="cosmic-horizon" aria-hidden="true"/);
   assert.match(horizon,/focusable="false"/);
   assert.doesNotMatch(horizon,/useEffect|fetch\(|<canvas|<video|<img|src=|data-live|Date\.now|Math\.random/);
