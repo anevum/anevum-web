@@ -56,8 +56,14 @@ try{
     return page;
   }
   async function contains(page,id,text){
-    await page.waitForFunction(([element,value])=>
-      (document.getElementById(element)?.textContent||'').includes(value),[id,text],{timeout:12000});
+    try {
+      await page.waitForFunction(([element,value])=>
+        (document.getElementById(element)?.textContent||'').includes(value),[id,text],{timeout:12000});
+    } catch(error) {
+      const observed=await page.locator('#'+id).innerText().catch(()=>'<missing>');
+      await page.screenshot({path:join(screenshots,'failed-'+id+'.png'),fullPage:true}).catch(()=>{});
+      throw new Error('Expected '+JSON.stringify(text)+' in #'+id+', observed '+JSON.stringify(observed.slice(0,1200))+'; '+error.message);
+    }
   }
   const guest=await tab(null,1440);
   assert.equal((await guest.locator('#pin-count').innerText()).trim(),'0 homes');
