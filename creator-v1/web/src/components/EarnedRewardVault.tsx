@@ -8,14 +8,14 @@ import {RewardInspector,type InspectedReward} from './RewardInspector';
 
 export type EarnedLevelRecord={level:number;name:string;subtitle:string;motion:string};
 type Inventory={currentLevel:number;levels:EarnedLevelRecord[]};
-function validInventory(value:unknown):value is Inventory{
+function validInventory(value:unknown,publicProfile:boolean):value is Inventory{
  if(!value||typeof value!=='object')return false;
  const data=value as Partial<Inventory>;
  return typeof data.currentLevel==='number'&&
   Number.isSafeInteger(data.currentLevel)&&data.currentLevel>=1&&
   data.currentLevel<=30&&Array.isArray(data.levels)&&
-  data.levels.length===data.currentLevel&&data.levels.every((item,index)=>
-   item&&item.level===index+1&&
+  data.levels.length===(publicProfile?1:data.currentLevel)&&data.levels.every((item,index)=>
+   item&&item.level===(publicProfile?data.currentLevel:index+1)&&
    typeof item.name==='string'&&item.name.length>0&&item.name.length<100&&
    typeof item.subtitle==='string'&&item.subtitle.length<=250&&
    typeof item.motion==='string'&&item.motion.length<=450);
@@ -68,7 +68,7 @@ export function EarnedRewardVault({
     if(!res.ok||!res.headers.get('content-type')?.includes('application/json'))
      throw Error('Earned inventory unavailable');
     const result:unknown=await res.json();
-    if(!validInventory(result))throw Error('Invalid reward inventory');
+    if(!validInventory(result,publicProfile))throw Error('Invalid reward inventory');
     return result;
    }).then(result=>{
     if(signal.aborted)return;
