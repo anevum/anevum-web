@@ -32,6 +32,9 @@ jobs:
         run: |
           set -euo pipefail
           node --check creator-v1/test/capture-home-navigation-v079.mjs
+          node --check creator-v1/test/capture-sitewide-v012.mjs
+          node --check creator-v1/test/capture-community-hub-v007.mjs
+          node --check creator-v1/test/capture-canonical-forums-v041.mjs
           node --experimental-strip-types --test \
             creator-v1/test/home-navigation-v079.test.mjs \
             creator-v1/test/react-shell-contract.test.mjs \
