@@ -81,3 +81,20 @@ This iteration therefore:
 - Extends source-level and synthetic browser QA with no duplicated directory/artwork, 44-ish px controls, verified URL category/search roundtrips, and no horizontal document overflow at the four reference widths.
 
 **Important:** Source changes are still a draft, not published. New browser evidence must be visually inspected rather than inferred solely from a green CI result. No public product content or moderation review settings changed.
+
+## Continuation / V074 — existing level icons protected, unstable miniature engine retired
+
+**User-approved locked design:** all 30 existing Evolution of Everything level icon designs, materials, high-resolution PNG/WebP exports, chapter names and XP thresholds remain unchanged. The instruction to avoid generic AI artwork **does not apply** to this established Evolution collection. Original level 04 artwork also remains unchanged, pending any separately authorized artistic revision.
+
+The cross-site inline `LevelEmblem` presentation used to start a shared V062 WebGL miniature renderer that overlaid moving models on player cards and level galleries. This could let models escape their allocated cards, cover other elements or make the underlying poster invisible. This presentation is explicitly retired.
+
+- `LevelEmblem.tsx` now displays the original optical image exports directly, with original 128px compact, 256px preview and 1024px poster fallbacks in a size-appropriate order. No runtime canvas, miniature shader import, fake earned state or arbitrary substitute image is introduced.
+- `level-icon-preservation-v074.css` keeps the art contained within profile, player card, forum and level-gallery sockets; no rotating/tilting inline WebGL or drifting models. Image resolution, alpha transparency and faithful material presentation remain. Existing lighting and subtle card hover are acceptable when contained.
+- `/evolution/` remains the dedicated native 3D animated collection. The standalone V062 mini runtime remains in source for archive experiments and shader regression tests, but it is **not mounted through the shared `LevelEmblem`**.
+- `level-artwork-preservation-v074.test.mjs` checks the precise 30 sets of canonical image assets, unchanged archive links, static inline API, responsive containment, and absence of WebGL registration in the shared component.
+- The V012 browser check now requires all 30 image hosts, an actual decoded high-resolution first specimen, no inline mini canvas, correct native artwork label, no animated drift, and icon containment at 320/390/1024/1440 pixels.
+
+**Must not change:** original meshes, icons, preview/poster assets, XP/level state, badge and medal recognition, award permissions or the standalone full-resolution 3D archive.
+
+**Release status:** review-only source candidate. Do not confuse passing synthetic browser QA with actual production deployment or iPhone Safari signoff.
+
