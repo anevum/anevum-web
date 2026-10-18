@@ -96,11 +96,12 @@ export function NativePackExperience({kind,document,urls}:{kind:PackKind;documen
 }
 
 /** Folded into signed-in Studio. All pack operations stay local to this browser. */
-export function NativePackLab({title,creator,document,onImportDocument,disabled}:{
- title:string;creator:string;document:StudioBlockDocument|null;
+export function NativePackLab({title,creator,document,onImportDocument,disabled,category}:{
+ title:string;creator:string;document:StudioBlockDocument|null;category?:string;
  onImportDocument:(value:StudioBlockDocument)=>void;disabled:boolean;
 }){
- const [kind,setKind]=useState<PackKind>('game');
+ const [kind,setKind]=useState<PackKind>(()=>category==='music'?'album':category==='video'?'series':
+  category==='art'?'visual':category==='games'?'game':'project');
  const [nativeTitle,setNativeTitle]=useState<string|null>(null);
  const [creditedCreator,setCreditedCreator]=useState<string|null>(null);
  const [scenes,setScenes]=useState<Scene[]>(DEMO_SCENES);
