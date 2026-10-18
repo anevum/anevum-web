@@ -3,7 +3,7 @@ import {Link} from "react-router-dom";
 import type {Creator,PublicCreatorShowcase} from "../lib/api";
 import {CelestialEmblem} from "./CelestialEmblem";
 import {achievementMotif} from "../lib/artifact-art";
-import {LevelEmblem,LEVEL_ARTIFACTS} from './LevelEmblem';
+import {LevelEmblem} from './LevelEmblem';
 import {CompactMemberIdentity} from './CompactMemberIdentity';
 
 type Props={
@@ -24,8 +24,10 @@ export function PublicAuthorShowcase({handle,name,known,showcase,variant="feed"}
   const level=showcase&&Number.isSafeInteger(showcase.level)&&showcase.level>=1&&showcase.level<=30?showcase.level:null;
   const currentArtifact=typeof showcase?.currentArtifact==="string"?showcase.currentArtifact:null;
   const desiredArtifact=showcase?.equippedArtifact?.name;
-  const equipped=typeof desiredArtifact==="string"&&LEVEL_ARTIFACTS.some(a=>a.name===desiredArtifact&&a.level<=(level??0))?desiredArtifact:null;
-  const artifact=level!==null&&LEVEL_ARTIFACTS[level-1]?.name===currentArtifact?equipped||currentArtifact:null;
+  // The public API supplies vetted current/equipped rewards. Never import or
+  // expose all 30 unearned artifact names merely to validate one display.
+  const equipped=typeof desiredArtifact==="string"&&desiredArtifact.length<=90?desiredArtifact:null;
+  const artifact=level!==null&&currentArtifact?equipped||currentArtifact:null;
   const awards=Array.isArray(showcase?.featuredAwards)?showcase.featuredAwards.slice(0,3):[];
   const toggle=(title:string,body:string)=>setDetail(old=>old?.title===title?null:{title,body});
 
@@ -38,7 +40,7 @@ export function PublicAuthorShowcase({handle,name,known,showcase,variant="feed"}
         aria-expanded={detail?.title==="LEVEL "+level} onClick={()=>toggle("LEVEL "+level,
           "Level and current artifact are derived from verified ANEVUM progression, not member-entered scores.")}>
         <span className="av7-level-crest">
-          <LevelEmblem level={level} size={46}/>
+          <LevelEmblem level={level} size={46} handle={handle}/>
           <b>{level}</b>
         </span>
         <span className="av7-level-copy"><strong>LEVEL {String(level).padStart(2,"0")}</strong>
@@ -51,7 +53,7 @@ export function PublicAuthorShowcase({handle,name,known,showcase,variant="feed"}
         onClick={()=>toggle(artifact,equipped?
           "This Evolution of Everything specimen was selected from levels earned by this creator.":
           "This is the current artifact confirmed by the ANEVUM progression service. The member has not yet equipped a personal selection.")}>
-        <span className="av7-item-face" aria-hidden="true"><LevelEmblem level={level!} size={36}/></span>
+        <span className="av7-item-face" aria-hidden="true"><LevelEmblem level={level!} size={36} handle={handle}/></span>
         <span className="av7-item-meta"><strong>{artifact}</strong><small>EVOLUTION / EARNED</small></span>
       </button>
     </div>}

@@ -75,7 +75,7 @@ export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:C
   <header className="av65-studio-head"><div><span className="kicker">CONTINUANCE INSTITUTE / PLAYER REGISTRY</span>
    <h2 id="av65-studio-heading">Your public signature.</h2>
    <p>One identity on every forum, creation, conversation and member wall. Only server-earned marks can appear.</p>
-   <Link to="/recognition" className="av65-studio-archive-link">OPEN THE BADGE & MEDAL ARCHIVE ↗</Link></div>
+   <Link to="/recognition" className="av65-studio-archive-link">INSPECT MY EARNED REWARDS ↗</Link></div>
    <span className="av65-studio-step">IDENTITY / 01</span></header>
   {loading&&<p role="status">Loading your earned recognition…</p>}
   {notEnabled&&<p className="av65-studio-note">The expanded recognition archive has not been activated. Your existing earned level and awards still appear in the member interface; no new medals or ribbons have been issued here.</p>}

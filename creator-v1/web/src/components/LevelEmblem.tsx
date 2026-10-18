@@ -1,5 +1,4 @@
 import {useEffect,useState} from 'react';
-import artifacts from '../../../shared/level-artifacts.json';
 import {OrbitalMark} from './OrbitalMark';
 import {BadgeInsignia} from './BadgeInsignia';
 import {BADGE_CATALOG} from '../lib/player-recognition';
@@ -10,23 +9,22 @@ import {BADGE_CATALOG} from '../lib/player-recognition';
 // shared WebGL miniature renderer is intentionally retired from member cards,
 // forums, and level grids; its independent full-screen /evolution/ archive
 // remains untouched. Inline icons never create a canvas or hide their poster.
-export const LEVEL_ARTIFACTS=artifacts;
-export function LevelEmblem({level,size=64}:{level:number;size?:number}){
+export function LevelEmblem({level,size=64,handle=null}:{level:number;size?:number;handle?:string|null}){
  const [assetIndex,setAssetIndex]=useState(0);
  const safe=Number.isSafeInteger(level)&&level>0?Math.min(30,level):1;
- const item=artifacts[safe-1];
- useEffect(()=>setAssetIndex(0),[safe,size]);
 
- // Reuse the original optical exports, from the compact 128px icon through
- // the 256px gallery preview and 1024px archive poster. Never synthesize an
- // unrelated icon or silently hide artwork when one asset cannot load.
- const sources=item?(size>104
-  ?[item.preview,item.poster,item.icon]
-  :[item.icon,item.preview,item.poster]):[];
- if(!item||assetIndex>=sources.length)return <span className="level-emblem level-emblem-beyond av73-static-level-fallback" style={{width:size,height:size}} aria-label={'Evolution level '+safe}><OrbitalMark/><small>{safe}</small></span>;
- const src=import.meta.env.BASE_URL+sources[assetIndex].slice(1);
+ useEffect(()=>setAssetIndex(0),[safe,size,handle]);
+
+ // Originals stay unchanged. The owner/public route checks XP and public
+ // consent on every request before exposing even a compact specimen image.
+ const kinds=size>104?['preview','poster','icon']:['icon','preview','poster'];
+ if(assetIndex>=kinds.length)return <span className="level-emblem level-emblem-beyond av73-static-level-fallback" style={{width:size,height:size}} role="img" aria-label={'Evolution level '+safe+' artwork unavailable'}><OrbitalMark/><small>{safe}</small></span>;
+ const validHandle=handle&&/^[a-z][a-z0-9_]{2,29}$/.test(handle)?handle:null;
+ const base=validHandle?'/api/v1/members/'+validHandle+'/rewards/levels/'+safe:
+   '/api/v1/member/rewards/levels/'+safe;
+ const src=base+'/'+kinds[assetIndex];
  return <span className="level-emblem is-illustrated av62-native-host av73-static-level-icon"
-  style={{width:size,height:size}} role="img" aria-label={'Level '+safe+' · '+item.name}
+  style={{width:size,height:size}} role="img" aria-label={'Earned Evolution level '+safe}
   data-artwork="v073-preserved-optical-icon" data-level={safe}>
   <img className="av62-native-poster" src={src} width={size} height={size}
    alt="" loading={size>=104?'lazy':'eager'} decoding="async" draggable={false}

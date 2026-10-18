@@ -124,7 +124,7 @@ test("staging preview carries restrictive HTML headers and strips member cookies
 });
 
 
-test("30-level Evolution presentation is independent of member permissions",()=>{
+test("Evolution routes preserve canonical XP with signed-in earned-only reward access",()=>{
   const shell=read("web/src/components/Shell.tsx");
   const app=read("web/src/App.tsx");
   const panel=read("web/src/components/LevelPanel.tsx");
@@ -134,13 +134,13 @@ test("30-level Evolution presentation is independent of member permissions",()=>
   assert.match(app,/path="levels"/);
   assert.match(panel,/useMemberProgression/);
   assert.match(panel,/30 PERMANENT LEVELS/);
-  assert.match(levels,/30 PERMANENT LEVELS/);
-  assert.match(levels,/moderation powers/);
-  assert.match(levels,/10 XP/);
- assert.match(levels,/25 XP/);
- assert.match(levels,/does not grant extra XP/);
+  assert.match(levels,/canonicalAuthClient\.useSession/);
+  assert.match(levels,/signedIn/);
+  assert.match(levels,/EarnedRewardVault/);
+  assert.match(levels,/moderation authority/);
+  assert.doesNotMatch(levels,/LevelCollection|30 LIVING SPECIMENS|<LevelCollection/);
+  assert.match(levels,/verified server records/);
 });
-
 
 test("mobile has no fixed bottom tab bar and header drawer exposes every member route",()=>{
   const shell=read("web/src/components/Shell.tsx");

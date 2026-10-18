@@ -17,8 +17,10 @@ test('retired icon set is not selected anywhere in the active level UI',()=>{
  assert.match(emulator,/v073-preserved-optical-icon/);
  assert.match(emulator,/av73-static-level-icon/);
  assert.doesNotMatch(emulator,/registerAnimatedSpecimen/);
- assert.match(cabinet,/ENTER THE LIVING 3D ARCHIVE/);
- assert.match(page,/30 LIVING SPECIMENS/);
+ assert.match(cabinet,/ENTER THE LIVING 3D ARCHIVE/); // archival source retained, no public mount
+ assert.doesNotMatch(page,/LevelCollection|<LevelCollection/);
+ assert.match(page,/Your evolution/);
+ assert.match(page,/EarnedRewardVault/);
  assert.match(panel,/FINAL LEVEL/);
 });
 test('all thirty exact V059 specimen names and thresholds remain unchanged',()=>{
@@ -32,9 +34,11 @@ test('all thirty exact V059 specimen names and thresholds remain unchanged',()=>
   assert.equal(installed.chapterName,item.chapterName);
  }
 });
-test('production gallery publishes 152 assets with external CSP-compatible scripts',()=>{
+test('archived full meshes remain buildable but access is guarded by the platform Worker',()=>{
  const folder=join(root,'web/public/evolution');
  const html=read('web/public/evolution/index.html');
+ const gate=read('apex-prelaunch/platform.mjs');
+ assert.match(gate,/SECRET_EVOLUTION\\.test\\(url\\.pathname\\)/);
  assert.equal(readdirSync(join(folder,'assets')).length,152);
  assert.match(html,/src="\/evolution\/app.js"/);
  assert.match(html,/href="\/evolution\/app.css"/);

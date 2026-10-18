@@ -35,6 +35,7 @@ export default {
     if(!["GET","HEAD"].includes(request.method))return reject(405,"Read-only staging preview");
 
     const relative=url.pathname.slice(PREFIX.length);
+    if(/^\/(?:evolution(?:\/|$)|assets\/levels(?:\/|$))/i.test(relative))return reject(404);
     if(relative.startsWith("/api/")){
       if(!PUBLISHED.test(relative))return reject(404);
       const forwarded=new URL(request.url);

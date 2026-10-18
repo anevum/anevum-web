@@ -49,8 +49,8 @@ test("V074 makes shared member and gallery icons optical only, never a moving mi
   assert.match(icons,/av73-static-level-fallback/);
   assert.match(icons,/av62-native-poster/);
   assert.match(icons,/size>104/);
-  assert.match(icons,/item\.preview,item\.poster,item\.icon/);
-  assert.match(icons,/item\.icon,item\.preview,item\.poster/);
+  assert.match(icons,/\['preview','poster','icon'\]/);
+  assert.match(icons,/\['icon','preview','poster'\]/);
   assert.match(icons,/role="img"/);
   assert.match(icons,/setAssetIndex\(i=>i\+1\)/);
   assert.doesNotMatch(icons,/registerAnimatedSpecimen|evolution-mini-renderer|<canvas|createElement\(['"]canvas['"]\)/);
@@ -85,8 +85,8 @@ test("V074 contains all small specimens and preserves accessibility and phone la
     "overflow:hidden"
   ])assert.ok(css.includes(token),"Missing icon protection: "+token);
   assert.doesNotMatch(css,/background-image:\s*url|image-rendering:\s*pixelated|animation:\s*[^;]*infinite/);
-  assert.match(browser,/V074_LEVEL_ICON_ARTWORK/);
-  assert.match(browser,/levels-icon-gallery/);
-  assert.match(browser,/artwork\.cards!==30/);
-  assert.match(browser,/artwork\.meshes!==0/);
+  assert.match(browser,/V075_HIDDEN_REWARD_GUEST/);
+  assert.match(browser,/V075_REWARDS_HIDDEN/);
+  assert.match(browser,/privateView\.gallery/);
+  assert.doesNotMatch(browser,/V074_LEVEL_ICON_ARTWORK/);
 });

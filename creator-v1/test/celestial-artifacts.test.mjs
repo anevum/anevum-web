@@ -63,13 +63,13 @@ test("full-detail emblems use isolated SVG defs, original gradient/material laye
  assert.match(main,/import "\.\/cosmic-observatory\.css";\s*import "\.\/celestial-artifacts\.css";/);
 });
 
-test("public level collection and medal states remain server-controlled",()=>{
- assert.match(levels,/<LevelCollection\/>/);
- assert.match(levels,/useMemberProgression/);
- assert.match(levels,/earned=Boolean\(p\?\.awards/);
- assert.match(levels,/earned=\{earned\}/);
- for(const text of ['10 XP','25 XP','does not grant extra XP','30 LIVING SPECIMENS'])assert.ok(levels.includes(text));
- assert.doesNotMatch(levels,/localStorage|sessionStorage|purchaseXP/);
+test("Evolution page requires verified sign-in and never publishes a gallery",()=>{
+  assert.match(levels,/useMemberProgression/);
+  assert.match(levels,/EarnedRewardVault/);
+  assert.match(levels,/canonicalAuthClient\.useSession/);
+  assert.match(levels,/signedIn/);
+  assert.doesNotMatch(levels,/LevelCollection|30 LIVING SPECIMENS|<LevelCollection/);
+  assert.doesNotMatch(levels,/localStorage|sessionStorage|purchaseXP/);
 });
 
 test("private account and public channel never infer earned state from artwork",()=>{
@@ -78,7 +78,7 @@ test("private account and public channel never infer earned state from artwork",
  assert.match(account,/progress\.data\.progression\.artifactEarned\?"earned":"preview"/);
  assert.match(account,/cabinet\.data\.achievements\.map/);
  assert.match(panel,/useMemberProgression/);
- assert.match(panel,/<LevelEmblem level=\{p\?\.level\|\|1\}/);
+  assert.match(panel,/<LevelEmblem level=\{p\.level\}/);
  assert.match(creator,/earned=detailed\?\.achievements\?\.filter\(a=>a\.earned\)/);
  assert.match(creator,/state="earned"/);
  assert.match(creator,/detailed\.progression\.artifactEarned\?"earned":"preview"/);

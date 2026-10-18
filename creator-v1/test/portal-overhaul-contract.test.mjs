@@ -54,12 +54,13 @@ test("Community is a truthful project-and-creator hub without fabricated threads
  assert.match(page,/Visit Join for the current account options/);
  assert.doesNotMatch(page,/fakeMessage|sampleComments|createThread\(/);
 });
-test("unlimited levels preserve server authoritative progress and first named artifact series",()=>{
+test("canonical progression remains capped at thirty while model artwork requires earned status",()=>{
  const levels=read("web/src/pages/LevelsPage.tsx");
  const panel=read("web/src/components/LevelPanel.tsx");
  const engine=read("auth/community.mjs");
- assert.match(levels,/30 LIVING SPECIMENS/);
- assert.match(levels,/30 PERMANENT LEVELS/);
+ assert.match(levels,/EarnedRewardVault/);
+ assert.match(levels,/canonicalAuthClient\.useSession/);
+ assert.doesNotMatch(levels,/LevelCollection|30 LIVING SPECIMENS/);
  assert.match(panel,/useMemberProgression/);
  assert.match(panel,/30 PERMANENT LEVELS/);
  assert.match(engine,/maxLevel:artifactSeriesLength/);
@@ -72,7 +73,7 @@ test("member account shows server-verified achievements and unlimited XP without
  assert.match(page,/MY ACHIEVEMENT CABINET/);
  assert.match(page,/a\.earned/);
  assert.match(page,/NO FIXED/i);
- assert.match(shell,/to:"\/levels",label:"Artifacts & levels"/);
+ assert.match(shell,/to:"\/levels",label:"My evolution"/);
  assert.match(shell,/to:"\/library",label:"My library"/);
  assert.match(shell,/to:"\/member",label:"My profile"/);
  assert.match(read("web/src/App.tsx"),/path="account" element={<Navigate to="\/member" replace\/>}/);
