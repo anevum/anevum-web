@@ -71,6 +71,18 @@ jobs:
           test -s evidence/porchlight-v001/porchlight-offline-review.html
           echo "PORCHLIGHT_OFFLINE_DEMO_ONLY=PASS"
 
+      - name: Assemble and validate optional same-Wi-Fi phone review
+        run: |
+          set -euo pipefail
+          node --check safety/porchlight/review/phone/server.mjs
+          node --check safety/porchlight/review/phone/build-kit.mjs
+          node --check safety/porchlight/review/phone/test/server.test.mjs
+          node safety/porchlight/review/phone/build-kit.mjs evidence/porchlight-v001/porchlight-phone-review
+          node --test evidence/porchlight-v001/porchlight-phone-review/test/server.test.mjs
+          (cd evidence/porchlight-v001 && zip -qr porchlight-phone-review-v0013.zip porchlight-phone-review)
+          test -s evidence/porchlight-v001/porchlight-phone-review-v0013.zip
+          echo "PORCHLIGHT_LAN_REVIEW=FICTIONAL_ONLY_PASS"
+
       - name: Preserve synthetic design screenshots
         if: always()
         uses: actions/upload-artifact@v4
