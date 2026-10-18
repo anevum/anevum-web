@@ -61,10 +61,10 @@ export function StudioSafetyDesk(){
   {!loading&&!error&&items.length===0&&<div className="st-empty"><h3>NO REVIEWABLE PUBLIC RECORDS.</h3><p>All currently verified releases are clear, or no public metadata has been published yet.</p><Link to="/creations" className="st-action">VIEW PUBLIC ATLAS ↗</Link></div>}
   <div className="st-review-list">
    {items.map(item=><article key={item.id} className="st-review st-safety-record">
-    <p className="st-kicker">{item.category.toUpperCase()} / @{item.handle} / VERIFIED PUBLICATION</p>
+    <p className="st-kicker">{item.category.toUpperCase()} / @{item.handle} / {item.publicationStatus==='published'?'LIVE PUBLICATION':'CREATOR-WITHDRAWN HISTORIC RELEASE'}</p>
     <h3>{item.title}</h3><p>{item.summary}</p>
     <small>Publication ID: <code>{item.id}</code> · Published {new Date(item.publishedAt*1000).toLocaleDateString()}</small>
-    <div className="st-actions"><Link to={'/creations/'+item.id} className="st-link">INSPECT PUBLIC RECORD ↗</Link></div>
+    {item.publicationStatus==='published'?<div className="st-actions"><Link to={'/creations/'+item.id} className="st-link">INSPECT PUBLIC RECORD ↗</Link></div>:<p className="st-muted">This record was voluntarily withdrawn by the creator. Historic publication evidence can still be disqualified after independent investigation; it is not publicly visible.</p>}
     <label className="st-field"><span>REVIEW FINDING</span>
      <select disabled={busy!==null} value={code[item.id]||''}
       onChange={e=>setCode(x=>({...x,[item.id]:e.target.value as StudioSafetyReason}))}>
