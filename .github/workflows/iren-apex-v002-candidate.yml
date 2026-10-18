@@ -4,7 +4,18 @@ name: IREN Apex V002 Unrouted Candidate
 on:
   push:
     branches: [integrate/iren-apex-staff-v002-20261017]
-    paths: [.github/workflows/iren-apex-v002-candidate.yml, creator-v1/test/capture-iren-staff-v002.mjs, creator-v1/web/src/staff-main.tsx, creator-v1/web/vite.staff.config.ts, creator-v1/web/src/pages/StaffCommandPage.tsx]
+    paths:
+      - .github/workflows/iren-apex-v002-candidate.yml
+      - creator-v1/staff-portal/worker.mjs
+      - creator-v1/canonical-auth/staff-ops.mjs
+      - creator-v1/test/iren-auth-boundary-v003.test.mjs
+      - creator-v1/test/iren-better-auth-service-v003.test.mjs
+      - creator-v1/test/iren-apex-staff-gateway.test.mjs
+      - creator-v1/test/capture-iren-staff-v002.mjs
+      - creator-v1/web/src/staff-main.tsx
+      - creator-v1/web/vite.staff.config.ts
+      - creator-v1/web/src/pages/StaffCommandPage.tsx
+      - creator-v1/package.json
 permissions:
   contents: read
 concurrency:
