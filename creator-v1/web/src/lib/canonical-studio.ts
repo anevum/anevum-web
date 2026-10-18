@@ -22,6 +22,17 @@ export interface StudioReviewReceipt extends StudioDraft {
 }
 export interface StudioReviewManifest {
  projectId:string;revision:number;note:string;assets:StudioAsset[];
+ nativeTextInspectionReady:boolean;
+}
+export interface StudioNativeTextSummary {
+ kind:string;title:string;creditedCreator:string;version:string;
+ itemCount:number;assetCount:number;hasCover?:boolean;hasPoster?:boolean;
+ items:Array<{label:string;detail?:string;choices?:number;hasImage?:boolean}>;
+ note:string;
+}
+export interface StudioNativeTextReceipt {
+ projectId:string;revision:number;assetId:string;note:string;
+ summary:StudioNativeTextSummary;
 }
 const UPLOAD_KINDS:Record<StudioCategory,StudioAsset['kind'][]>={
  games:['package'],tools:['package'],creative:['image','audio','document','package'],
@@ -158,5 +169,7 @@ export const studioReviewQueue=(signal?:AbortSignal)=>
  request<{projects:StudioReviewProject[]}>(ROOT+'/review','GET',undefined,signal);
 export const studioReviewManifest=(id:string,signal?:AbortSignal)=>
  request<StudioReviewManifest>(ROOT+'/review/'+validId(id)+'/manifest','GET',undefined,signal);
+export const studioReviewNativeText=(projectId:string,assetId:string,signal?:AbortSignal)=>
+ request<StudioNativeTextReceipt>(ROOT+'/review/'+validId(projectId)+'/native/'+validAsset(assetId)+'/summary','GET',undefined,signal);
 export const studioReviewDecision=(projectId:string,revision:number,action:'changes_requested'|'rejected',reason:string)=>
  request<{ok:boolean;status:string}>(ROOT+'/review','POST',{projectId:validId(projectId),revision,action,reason});
