@@ -33,7 +33,7 @@ function setup({migration=true}={}){
  const get=(sql,...args)=>db.prepare(sql).get(...args);
  const ownerAction=(projectId,action,extra={})=>staffOwnerAction(env,"owner-a","owner",{projectId,action,confirmedTitle:projectId===ID.published?"Single Drift":projectId===ID.pending?"Pending item":"Rejected item",...extra});
  async function request(who,method="GET",path="/staff/projects",body,extra={}){
-  const headers=new Headers({...extra,...(who?{cookie:"auth="+who}:{}),...(method==="POST"?{origin:ORIGIN,"sec-fetch-site":"same-origin","x-anevum-staff":"1","content-type":"application/json"}:{})});
+  const headers=new Headers({...(method==="POST"?{origin:ORIGIN,"sec-fetch-site":"same-origin","x-anevum-staff":"1","content-type":"application/json"}:{}),...(who?{cookie:"auth="+who}:{}),...extra});
   return worker.fetch(new Request(ORIGIN+path,{method,headers,...(body===undefined?{}:{body:JSON.stringify(body)})}),env);
  }
  return {db,env,objects,get,ownerAction,request,storageFailure:x=>storageFailure=x,corrupted:x=>corrupted=x,close:()=>db.close()};
