@@ -18,7 +18,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: native-pack-v003-\${{ github.ref }}
+  group: native-pack-v003-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   audited-native-staff-inspection:
@@ -28,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: \${{ github.sha }}
+          ref: ${{ github.sha }}
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
