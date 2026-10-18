@@ -37,3 +37,21 @@ This is **SOURCE ONLY** on a pinned V062/V064/V065 3D-and-first-contact baseline
 5. Physical iPhone Safari 320/390 accessibility and reduced-motion checks; no public Reddit promotion before authentic completed member/community loop.
 
 The first approved public project and rights review remain separate work in #329/#331. This review creates no accounts, no D1 writes, no charges and no public publishing.
+
+## Functional audit continuation — canonical account route recovery
+
+Session: `ANEVUM.WEB.AUDIT.2026-10-17.001.FUNCTIONAL-COMPLETION`. Read-only browser audit on October 17 (EDT) verified that `https://anevum.com/library` still displayed the retired invitation-only member gate while `https://anevum.com/saved` displayed the real, capability-gated canonical Saved Works state. The active main site uses `anevum.com`, and `a.anevum.com` is assigned to a retirement Worker.
+
+A bounded V067 follow-up retires the old `/library` frontend route and redirects to `/saved`. The unused `MemberGate`/legacy library imports are removed from the public router. This **does not** enable currently disabled saves or move/merge member data; the canonical Saved Works page continues to check the authenticated Better Auth account, feature capability and server authorization before any read/write.
+
+The profile editor previously told members receiving a same-origin 403 to open **a.anevum.com**, which is no longer the public origin. It now correctly instructs them to visit **anevum.com**, reload and sign in again. The actual same-origin credential mode, redirect denial and CSRF policy are unchanged. Historical staging policy tests retain the old stage URL solely as a negative/source test, not as user-facing product guidance.
+
+Verification added to focused V067 source review:
+- Legacy `/library` redirects to `/saved`, never to obsolete `MemberGate`.
+- Current `/saved` remains protected by actual canonical session and capability.
+- Origin recovery copy points only to the public origin and does not weaken header checks.
+- Existing V041 forum and OTP identity tests continue unchanged.
+
+**Deployment boundary:** still source-only. The Cloudflare gateway remains a separately governed production release; do not flip the forum flag, grant moderator roles, enable uploads, or promote arbitrary stacked branches. Preserve all opaque secrets, D1 bindings and rollback state.
+
+**Live readiness snapshot:** apex gateway settings show open email registration and disabled creator uploads; new IREN staff routes are present but anonymous `/staff` remains sealed and the forum review API rejects anonymous callers. Canonical D1 read-only counts remain two verified accounts, one claimed public profile, one pending forum thread, zero published threads. A separately authorized non-author reviewer is still required before the pending thread can be approved.
