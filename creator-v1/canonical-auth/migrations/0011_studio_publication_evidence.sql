@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS member_studio_publication_reviews(
   REFERENCES member_studio_submissions(id) ON DELETE CASCADE,
  project_id TEXT NOT NULL
   REFERENCES member_studio_projects(id) ON DELETE CASCADE,
- reviewer_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
+ reviewer_id TEXT NOT NULL, -- stable audit key; account deletion must not be blocked
  owner_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
  action TEXT NOT NULL DEFAULT 'publish_metadata'
   CHECK(action='publish_metadata'),
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS member_studio_publications(
   REFERENCES member_studio_submissions(id) ON DELETE CASCADE,
  user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
  review_id TEXT NOT NULL UNIQUE
-  REFERENCES member_studio_publication_reviews(id) ON DELETE RESTRICT,
+  REFERENCES member_studio_publication_reviews(id) ON DELETE CASCADE,
  status TEXT NOT NULL DEFAULT 'published'
   CHECK(status IN ('published','withdrawn')),
  published_at INTEGER NOT NULL CHECK(published_at>0),
