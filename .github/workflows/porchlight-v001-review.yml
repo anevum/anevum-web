@@ -1,0 +1,73 @@
+name: ANEVUM Porchlight V001 Isolated Source Review
+
+# No deployment credentials. No routes, workers, D1 resources, member accounts,
+# finance providers, or production state are modified.
+on:
+  pull_request:
+    paths:
+      - safety/porchlight/**
+      - .github/workflows/porchlight-v001-review.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-isolated-pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Read exact reviewed branch head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Verify exact reviewed head
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Validate browser and Worker syntax
+        run: |
+          set -euo pipefail
+          node --check safety/porchlight/worker.mjs
+          node --check safety/porchlight/public/app.js
+          node --check safety/porchlight/public/organizer.js
+          node --check safety/porchlight/test/pilot.test.mjs
+
+      - name: Verify consent, moderation, isolation, expiry and revocation in memory
+        run: node --test safety/porchlight/test/pilot.test.mjs
+
+      - name: Enforce no-public-release boundary
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const c=JSON.parse(fs.readFileSync('safety/porchlight/wrangler.example.jsonc','utf8'));
+          assert.equal(c.name,'anevum-porchlight-v001-review');
+          assert.equal(c.workers_dev,false);
+          assert.equal(c.preview_urls,false);
+          assert.equal(c.vars.PORCHLIGHT_PUBLIC_ENABLED,'false');
+          assert.equal(c.vars.PORCHLIGHT_HOST_SUBMISSIONS_ENABLED,'false');
+          assert.equal(c.vars.PORCHLIGHT_ADMIN_ENABLED,'false');
+          assert.equal(c.d1_databases.length,1);
+          assert.equal(c.d1_databases[0].binding,'PORCHLIGHT_DB');
+          assert.equal(c.d1_databases[0].database_id,'REPLACE_WITH_SEPARATE_PORCHLIGHT_D1');
+          assert.equal(fs.existsSync('safety/porchlight/public/index.html'),true);
+          assert.equal(fs.existsSync('safety/porchlight/public/organizer.html'),true);
+          console.log('PORCHLIGHT_RELEASE_GATES_DISABLED=PASS');
+          NODE
+
+      - name: Verify no production provider secrets used
+        run: |
+          set -euo pipefail
+          test -z "${CLOUDFLARE_API_TOKEN:-}"
+          test -z "${PORCHLIGHT_RATE_KEY:-}"
+          test -z "${PORCHLIGHT_ADMIN_SHA256:-}"
+          echo "PORCHLIGHT_SOURCE_ONLY=PASS"
