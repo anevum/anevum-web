@@ -324,3 +324,22 @@ test('public metadata permission mutations are rate limited independently of gra
  assert.equal(scalar(db,'SELECT requests FROM member_studio_rate_limits WHERE user_id=? AND action=?','owner','project').requests,30);
  assert.equal(scalar(db,'SELECT COUNT(*) c FROM member_recognition_grants').c,0);
 });
+
+test('reviewer queue exposes only scoped consent and excludes published decisions',async t=>{
+ const db=database();t.after(()=>db.raw.close());
+ const p=project(db,1);
+ const q=project(db,2);
+ assert.equal((await consent(db,p)).status,200);
+ const queue=await canonicalStudioReview(new Request(base+'/api/v1/member/studio/review'),env(db),owner('reviewer'));
+ assert.equal(queue.status,200,await queue.clone().text());
+ const before=(await queue.json()).projects;
+ assert.equal(before.length,2);
+ assert.equal(Number(before.find(row=>row.id===p.id)?.metadata_consent),1);
+ assert.equal(Number(before.find(row=>row.id===q.id)?.metadata_consent),0);
+ assert.equal((await publish(db,p)).ok,true);
+ const after=await canonicalStudioReview(new Request(base+'/api/v1/member/studio/review'),env(db),owner('reviewer'));
+ assert.equal(after.status,200);
+ assert.deepEqual((await after.json()).projects.map(row=>row.id),[q.id]);
+ const stale=await canonicalStudioReview(new Request(base+'/api/v1/member/studio/review/'+p.id+'/manifest'),env(db),owner('reviewer'));
+ assert.equal(stale.status,409);
+});
