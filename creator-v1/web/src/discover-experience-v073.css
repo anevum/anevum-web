@@ -340,3 +340,20 @@
     padding:0 0 0 20px;border:0;border-left:1px solid #48536c;
   }
 }
+
+/* The phone fold prioritizes actual work: keep one search, the category strip,
+ * the creator-marked free control, and a screen-reader-readable provenance note. */
+@media(max-width:700px){
+  .av9-shell .av73-discover-intro{padding-bottom:14px}
+  .av9-shell .av73-discover .portal-box-header{display:none}
+  .av9-shell .av73-discover .av73-discover-filter-heading{display:none}
+  .av9-shell .av73-discover .portal-wide-search{margin-bottom:10px}
+  .av9-shell .av73-discover .portal-availability-filter{margin-top:7px;padding-top:9px}
+  .av9-shell .av73-discover .portal-availability-filter small{
+    position:absolute!important;
+    width:1px!important;height:1px!important;
+    padding:0!important;margin:-1px!important;
+    border:0!important;overflow:hidden!important;
+    clip-path:inset(50%)!important;white-space:nowrap!important;
+  }
+}
