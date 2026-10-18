@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {parse} from '@babel/parser';
-import {earnedRewardMedia,matchRewardMedia} from '../canonical-auth/reward-media.mjs';
+import {earnedRewardMedia,matchRewardMedia,earnedRewardInventory,matchRewardInventory} from '../canonical-auth/reward-media.mjs';
 
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const levelUrl=(level,kind='scene',handle)=>'https://anevum.com/api/v1/'+
@@ -120,7 +120,7 @@ test('V075 direct gallery and model paths are blocked before static ASSETS deliv
  const prod=read('web/production-worker.mjs');
  for(const s of [platform,publicStage,preview,prod]){
   assert.match(s,/evolution/);
-  assert.match(s,/assets\\\/levels|assets\\\/levels|assets\\\/levels|assets\\\/levels/);
+  assert.match(s,/assets/);
  }
  assert.match(platform,/SECRET_EVOLUTION\.test\(url\.pathname\)/);
  assert.match(worker,/ownRewardMedia/);
@@ -140,7 +140,9 @@ test('V075 renders no public level gallery, badge preview or simulated Level 30 
   assert.doesNotThrow(()=>parse(s,{sourceType:'module',plugins:['typescript','jsx']}));
  assert.doesNotMatch(levels,/LevelCollection|\.an-series-grid|\/evolution\//);
  assert.doesNotMatch(badges,/BadgeItem|DistinctionItem|BADGE_CATALOG|statusOf|preview/);
- assert.match(vault,/Array\.from\(\{length:earnedLevel\}/);
+ assert.match(vault,/inventory\?\.levels/);
+ assert.match(vault,/validInventory/);
+ assert.doesNotMatch(vault,/LEVEL_ARTIFACTS|shared\/level-artifacts\.json/);
  assert.match(vault,/ledger\?\.earnedBadges/);
  assert.match(vault,/EarnedRewardVault/);
  assert.match(modal,/<dialog/);
@@ -155,4 +157,53 @@ test('V075 renders no public level gallery, badge preview or simulated Level 30 
  assert.match(member,/<EarnedRewardVault/);
  assert.match(publicPage,/<EarnedRewardVault/);
  assert.match(publicPage,/handle=\{profile\.handle\}/);
+});
+
+
+test('V075 only earned inventory names are returned; no unreached level metadata',async()=>{
+ assert.deepEqual(matchRewardInventory('/api/v1/member/rewards/inventory'),{handle:null});
+ assert.deepEqual(matchRewardInventory('/api/v1/members/example/rewards/inventory'),{handle:'example'});
+ assert.equal(matchRewardInventory('/api/v1/member/rewards/inventory/30'),null);
+ const {env}=fakeEnv();
+ const response=await earnedRewardInventory(new Request('https://anevum.com/api/v1/member/rewards/inventory'),env,signed);
+ assert.equal(response.status,200);
+ const inventory=await response.json();
+ assert.equal(inventory.currentLevel,3);
+ assert.deepEqual(inventory.levels.map(level=>level.level),[1,2,3]);
+ assert.ok(inventory.levels.every(x=>typeof x.name==='string'&&x.subtitle&&x.motion));
+ assert.equal(inventory.levels.some(item=>item.level===30),false);
+ assert.equal(inventory.levels.some(item=>item.name==='ANEVUM'),false);
+ assert.equal(Object.hasOwn(inventory,'allLevels'),false);
+ assert.equal(Object.hasOwn(inventory,'testXp'),false);
+ const anonymous=await earnedRewardInventory(new Request('https://anevum.com/api/v1/member/rewards/inventory'),env);
+ assert.equal(anonymous.status,401);
+});
+test('V075 public inventory never exposes private, hidden-stats or unverified reward identities',async()=>{
+ const path='https://anevum.com/api/v1/members/example/rewards/inventory';
+ for(const changes of [{visibility:'private'},{verified:false},{stats:false}]){
+  const {env}=fakeEnv(changes);
+  const result=await earnedRewardInventory(new Request(path),env);
+  assert.equal(result.status,404);
+ }
+ const {env}=fakeEnv();
+ const permitted=await earnedRewardInventory(new Request(path),env);
+ assert.equal(permitted.status,200);
+ const data=await permitted.json();
+ assert.equal(data.levels.length,3);
+ const head=await earnedRewardInventory(new Request(path,{method:'HEAD'}),env);
+ assert.equal(head.status,200);
+ assert.equal(await head.text(),'');
+});
+test('V075 shared player-card and inspector code does not bundle all 30 hidden level names',()=>{
+ const shared=read('web/src/components/LevelEmblem.tsx');
+ const card=read('web/src/components/CompactMemberIdentity.tsx');
+ const publicAuthor=read('web/src/components/PublicAuthorShowcase.tsx');
+ const vault=read('web/src/components/EarnedRewardVault.tsx');
+ for(const code of [shared,card,publicAuthor,vault]){
+  assert.doesNotMatch(code,/LEVEL_ARTIFACTS|shared\/level-artifacts\.json|item\.name/);
+ }
+ const catalog=read('web/src/components/LevelCollection.tsx');
+ assert.match(catalog,/level-artifacts\.json/);
+ assert.doesNotMatch(read('web/src/pages/LevelsPage.tsx'),/LevelCollection/);
+ assert.match(read('canonical-auth/reward-media.mjs'),/ARTIFACTS\.slice\(0,state\.level\)/);
 });
