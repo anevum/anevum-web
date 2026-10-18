@@ -118,7 +118,25 @@ export async function canonicalStudioPublicationConsent(req,env,user,projectId,n
    return changes(result)===1?json({consented:true,submissionId:body.submissionId,
     scope:'external_metadata_only'}):fail(409,'Consent changed');
   }
-  if(info?.publication_status==='published')return fail(409,'Unpublish the public release before changing consent');
+  if(info?.submission_id!==body.submissionId||owner.revision!==body.revision)
+   return fail(409,'Consent snapshot changed');
+  if(info.publication_status==='published'){
+   // Author unpublishes PUBLIC METADATA and revokes consent in ONE D1 batch.
+   // This does not expose, fetch or delete any quarantined R2 object, and
+   // deliberately retains the verified historical recognition audit.
+   const publication=db.prepare(
+    "UPDATE member_studio_publications SET status='withdrawn',withdrawn_at=? "+
+    "WHERE project_id=? AND submission_id=? AND user_id=? AND status='published' RETURNING project_id"
+   ).bind(now,projectId,body.submissionId,user.id);
+   const consent=db.prepare(
+    'UPDATE member_studio_publication_consents SET revoked_at=? '+
+    'WHERE submission_id=? AND project_id=? AND user_id=? AND revoked_at IS NULL RETURNING submission_id'
+   ).bind(now,body.submissionId,projectId,user.id);
+   const result=await db.batch([publication,consent]);
+   if(result?.[0]?.results?.length!==1||result?.[1]?.results?.length!==1)
+    return fail(409,'Publication changed during withdrawal');
+   return json({consented:false,publicationStatus:'withdrawn',publicMetadataRemoved:true});
+  }
   const result=await db.prepare(
    'UPDATE member_studio_publication_consents SET revoked_at=? '+
    'WHERE submission_id=? AND project_id=? AND user_id=? AND revoked_at IS NULL'
