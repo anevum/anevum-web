@@ -1,12 +1,14 @@
 name: ANEVUM V076 Original Evolution Media Production Repair
 # Release activation is deliberately gated on successful V076 canary results.
 on:
-  workflow_dispatch:
+  push:
+    branches: [fix/evolution-of-everything-media-v076]
+    paths: [.github/workflows/evolution-v076-production.yml]
 permissions:
   contents: read
 concurrency:
   group: anevum-apex-original-evolution-v076-live
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   release:
