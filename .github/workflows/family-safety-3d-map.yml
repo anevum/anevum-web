@@ -11,6 +11,7 @@ on:
     branches:
       - 'build/family-safety-3d-map-*'
       - 'build/family-safety-circle-privacy-*'
+      - 'build/family-safety-private-presence-*'
     paths:
       - 'prototypes/family-safety-3d-map/**'
       - 'creator-v1/family-safety/**'
@@ -32,6 +33,6 @@ jobs:
         with:
           node-version: '22'
       - name: Test map navigation, consent, and server authorization
-        run: node --test prototypes/family-safety-3d-map/test.mjs creator-v1/family-safety/presence-policy.test.mjs
+        run: node --test prototypes/family-safety-3d-map/test.mjs creator-v1/family-safety/presence-policy.test.mjs creator-v1/family-safety/runtime/presence-service.test.mjs
       - name: Test private circle SQL schema using an in-memory SQLite database
         run: python3 -m unittest discover -s docs/family-safety/sql -p 'test_schema.py' -v
