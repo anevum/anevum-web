@@ -46,6 +46,7 @@ test("V074 makes shared member and gallery icons optical only, never a moving mi
   assert.doesNotThrow(()=>parse(icons,{sourceType:"module",plugins:["typescript","jsx"]}));
   assert.match(icons,/data-artwork="v073-preserved-optical-icon"/);
   assert.match(icons,/av73-static-level-icon/);
+  assert.match(icons,/av73-static-level-fallback/);
   assert.match(icons,/av62-native-poster/);
   assert.match(icons,/size>104/);
   assert.match(icons,/item\.preview,item\.poster,item\.icon/);
@@ -72,6 +73,7 @@ test("V074 contains all small specimens and preserves accessibility and phone la
   for(const token of [
     ".av73-static-level-icon",
     ".av73-static-level-icon > .av62-native-poster",
+    ".an-artifact-visual .av73-static-level-fallback",
     ".av61-specimen .av73-static-level-icon",
     ".an-series-v060 .an-artifact-card-v034 .an-artifact-visual",
     ".av73-static-level-icon[data-live=\"true\"]",
