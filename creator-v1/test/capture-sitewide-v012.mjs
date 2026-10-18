@@ -300,6 +300,10 @@ try{
      await until(()=>evaluate('document.querySelector("#av73-module-content .av73-action-main")?.getAttribute("href")?.endsWith("/studio")'));
      await evaluate('document.getElementById("av73-module-tab-discover").click()');
      await until(()=>evaluate('document.querySelector("#av73-module-content .av73-action-main")?.getAttribute("href")?.endsWith("/discover")'));
+     await evaluate('(()=>{const tab=document.getElementById("av73-module-tab-discover");tab.focus();tab.dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowRight",bubbles:true,cancelable:true}));})()');
+     await until(()=>evaluate('document.querySelector(".av73-world-tab[aria-selected=true]")?.id==="av73-module-tab-connect"'));
+     await evaluate('document.getElementById("av73-module-tab-discover").click()');
+     await until(()=>evaluate('document.querySelector(".av73-world-tab[aria-selected=true]")?.id==="av73-module-tab-discover"'));
      const access=await evaluate('(()=>({tabs:document.querySelectorAll(".av73-world-tab[role=tab]").length,active:document.querySelector(".av73-world-tab[aria-selected=true]")?.id,stage:document.getElementById("av73-module-content")?.getAttribute("role"),overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
      if(access.tabs!==4||access.active!=="av73-module-tab-discover"||access.stage!=="tabpanel"||access.overflow)
       throw Error("V073_MODULE_ACCESS_"+width+":"+JSON.stringify(access));
