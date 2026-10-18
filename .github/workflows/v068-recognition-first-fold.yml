@@ -1,0 +1,54 @@
+name: V068 Recognition First-Fold Review
+on:
+  push:
+    branches: [patch/recognition-registry-first-contact-v068-20261017-017]
+    paths:
+      - "creator-v1/web/src/pages/RecognitionRegistryPage.tsx"
+      - "creator-v1/web/src/pages/recognition-registry-v066.css"
+      - "creator-v1/test/recognition-first-contact-v068-browser.mjs"
+      - ".github/workflows/v068-recognition-first-fold.yml"
+permissions:
+  contents: read
+jobs:
+  visual-review:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build the React candidate without publishing
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web:staging
+      - name: Capture synthetic offline phone, tablet and desktop first folds
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check creator-v1/test/recognition-first-contact-v068-browser.mjs
+          node creator-v1/test/portal-offline-preview.mjs > "$RUNNER_TEMP/v068-fixture.log" 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for i in $(seq 1 75); do
+            if curl -fsS http://127.0.0.1:4178/__ready >/dev/null 2>&1; then ready=1; break; fi
+            sleep 0.2
+          done
+          test "$ready" = 1
+          node creator-v1/test/recognition-first-contact-v068-browser.mjs
+          echo V068_OFFLINE_FIRST_FOLD_BROWSER=PASS
+      - name: Retain local-only screenshots and geometry
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v068-offline-recognition-review
+          path: qa-v068-registry/
+          if-no-files-found: warn
+          retention-days: 7
