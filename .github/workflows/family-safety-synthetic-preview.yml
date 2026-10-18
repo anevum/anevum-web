@@ -109,3 +109,62 @@ jobs:
           path: evidence/family-field
           if-no-files-found: ignore
           retention-days: 7
+
+  deploy-protected-review:
+    name: Deploy owner-only synthetic 3D review
+    if: github.event_name == 'push' && github.ref == 'refs/heads/build/family-safety-synthetic-preview-v001-20261018'
+    needs: verify-synthetic-review
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm Access audience and zero sensitive runtime bindings
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const p="prototypes/family-safety-synthetic-preview/wrangler.jsonc";
+            const c=JSON.parse(fs.readFileSync(p,"utf8"));
+            if(c.name!=="anevum-family-field-synthetic-review-20261018" ||
+               c.workers_dev!==true || c.preview_urls!==false ||
+               c.main!=="./worker.mjs" || c.assets?.run_worker_first!==true ||
+               c.vars?.FS_SYNTH_REVIEW_AUD!=="8b4f7da26f249d7c59e73ec7f84b2b7d605dc65253091c134947359602094a32")
+              throw Error("Owner-only review binding/audience mismatch");
+            for(const forbidden of ["routes","route","d1_databases","r2_buckets",
+              "durable_objects","kv_namespaces","services","queues","unsafe",
+              "analytics_engine_datasets","send_email"]){
+              if(Object.hasOwn(c,forbidden))throw Error("Private binding not permitted");
+            }
+          '
+      - name: Stage pinned local MapLibre and deploy isolated review Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          cd prototypes/family-safety-synthetic-preview
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run stage:vendor
+          npx wrangler deploy --config wrangler.jsonc
+      - name: Confirm unauthenticated users cannot read a single preview asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://anevum-family-field-synthetic-review-20261018.devonakins.workers.dev"
+          for path in "/" "/styles.css" "/app.mjs" "/synthetic-scene.mjs" "/__review"; do
+            result="$(curl --silent --show-error --max-time 30 -o /dev/null -w '%{http_code}' "$base$path" || true)"
+            case "$result" in
+              301|302|303|307|308|401|403) ;;
+              *) echo "ACCESS_GATE_FAILED path=$path status=$result"; exit 1;;
+            esac
+          done
+          echo "FAMILY_FIELD_OWNER_ONLY_ACCESS_GATE=PASS"
