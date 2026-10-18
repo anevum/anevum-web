@@ -82,6 +82,7 @@ try{
    const state=await evaluate(String.raw`(()=>({main:document.querySelectorAll('main').length,header:document.querySelectorAll('.site-header').length,overflow:document.documentElement.scrollWidth>innerWidth+1,heading:document.querySelector('main h1')?.textContent||null,unlinked:[...document.querySelectorAll('main a')].filter(a=>/\/creators\/(null|undefined)(?:$|[?#])/.test(a.href)).length}))()`);
    if(state.main!==1||state.header!==1||(phase==="after"&&(state.overflow||state.unlinked)))throw Error("SITEWIDE_LAYOUT_"+phase+"_"+name+"_"+label+":"+JSON.stringify(state));
    if(phase==="after"&&["boards","creator"].includes(name)&&await evaluate('!!document.querySelector("main .cw-artwork")'))throw Error("DECORATIVE_CATEGORY_ART_"+name);
+   if(phase==="after"&&["boards","creator"].includes(name)&&!await evaluate('(()=>{const card=document.querySelector(".av73-project-card");return !card||parseFloat(getComputedStyle(card).paddingLeft)>=14})()'))throw Error("EDITORIAL_CARD_MATERIAL_MISSING_"+name);
    await screenshot(name+"-"+label);
    evidence.push({viewport:label,page:name,...state});
    console.log(phase+" "+label+" "+name+" PASS");
@@ -99,6 +100,7 @@ try{
   if(phase==="after"){
    const semantics=await evaluate('(()=>{const input=document.querySelector(".portal-launcher input"),active=document.getElementById(input.getAttribute("aria-activedescendant"));return {role:input.getAttribute("role"),option:active?.getAttribute("role"),lock:document.documentElement.style.overflow,overflow:document.querySelector(".portal-launcher").scrollWidth>document.querySelector(".portal-launcher").clientWidth+1}})()');
    if(semantics.role!=="combobox"||semantics.option!=="option"||semantics.lock!=="hidden"||semantics.overflow)throw Error("SEARCH_ACCESSIBILITY_"+JSON.stringify(semantics));
+   if(!await evaluate('document.querySelector(".portal-launcher").getBoundingClientRect().height<=document.querySelector(".portal-launcher-content").getBoundingClientRect().height+3'))throw Error("SEARCH_OVERSIZED_EMPTY_SURFACE");
    await send("Input.dispatchKeyEvent",{type:"keyDown",key:"ArrowDown",code:"ArrowDown",windowsVirtualKeyCode:40});
    await send("Input.dispatchKeyEvent",{type:"keyUp",key:"ArrowDown",code:"ArrowDown",windowsVirtualKeyCode:40});
    if(!await evaluate('document.querySelector(".portal-launcher input").getAttribute("aria-activedescendant").endsWith("-1")'))throw Error("SEARCH_ARROW_SELECTION");
@@ -133,6 +135,15 @@ try{
   await evaluate('document.querySelector(".av79-route-recovery a").click()');
   await until(()=>evaluate('!!document.querySelector(".portal-discover-results")'));
   await fetch(base+"/__boards-fixture?mode=ready");
+  await send("Network.enable");
+  await send("Network.setCacheDisabled",{cacheDisabled:true});
+  await send("Network.setBlockedURLs",{urls:["*PublicBoardsPage-*.js"]});
+  await send("Page.navigate",{url:base+"/creator/boards"});
+  await until(()=>evaluate('!!document.querySelector(".av79-route-recovery")'));
+  await screenshot("boards-lazy-import-recovery");
+  await send("Network.setBlockedURLs",{urls:[]});
+  await send("Page.navigate",{url:base+"/creator/boards"});
+  await until(()=>evaluate('!!document.querySelector(".av79-board-results")'));
   await send("Page.navigate",{url:base+"/creator/library"});
   await until(()=>evaluate('location.pathname.endsWith("/saved")&&!!document.querySelector(".avsaved-shell")'));
   // Keyboard traversal stays inside the native modal; reduced-motion CSS is applied.

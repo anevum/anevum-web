@@ -1,8 +1,8 @@
 /* V079 RC: shared overlay geometry and compact creator presentation.
    Keep the approved homepage, reward media and native player untouched. */
-.av9-shell .portal-launcher{border:1px solid #b7a5cc88;border-radius:20px;background:#0b1324;color:#f0edf8;width:min(690px,calc(100vw - 20px));max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;box-shadow:inset 0 1px #ffffff18,0 30px 100px #000a}
+.av9-shell .portal-launcher{height:fit-content;min-height:0;border:1px solid #b7a5cc88;border-radius:20px;background:#0b1324;color:#f0edf8;width:min(690px,calc(100vw - 20px));max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;box-shadow:inset 0 1px #ffffff18,0 30px 100px #000a}
 .av9-shell .portal-launcher-content{background:radial-gradient(ellipse at 85% 0,#8b65b22b,transparent 55%),linear-gradient(145deg,#151c30,#0a1222);min-width:0}
-.av9-shell .portal-launcher-head{padding:22px 24px 16px;border-color:#a59bc03d;align-items:flex-start;gap:12px}
+.av9-shell .portal-launcher-head{padding:22px 24px 16px;border-color:#a59bc03d;align-items:flex-start;gap:12px;position:sticky;top:0;z-index:2;background:#151c30}
 .av9-shell .portal-launcher-mark{width:34px;height:34px;transform:none;background:transparent;border:0;box-shadow:none}
 .av9-shell .portal-launcher-mark svg{width:30px;height:30px;filter:none}
 .av9-shell .portal-launcher-head h2{font:400 32px/1.15 var(--av9-display,Georgia,serif);letter-spacing:-.025em;margin:6px 0}
