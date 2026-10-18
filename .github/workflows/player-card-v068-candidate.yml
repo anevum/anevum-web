@@ -73,7 +73,7 @@ jobs:
           for f in creator-v1/canonical-auth/*.mjs; do node --check "$f"; done
           node --experimental-sqlite --test \
             creator-v1/test/player-card-recognition-v065.test.mjs \
-            creator-v1/test/player-recognition-issuance-v068.test.mjs \
+            creator-v1/test/player-recognition-issuance-v066.test.mjs \
             creator-v1/test/member-identity-v061.test.mjs
           node --test creator-v1/test/evolution-v060-contract.test.mjs creator-v1/test/evolution-v062-native.test.mjs
           test "$(find creator-v1/dist/web/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
