@@ -227,12 +227,20 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
    if(!input||!exactly(input,['revision'])||!Number.isSafeInteger(input.revision))return fail(400,'Invalid revision');
    if(selected.revision!==input.revision||!['draft','changes_requested','rejected'].includes(selected.status))
     return fail(409,'Project must be withdrawn from review before deletion');
+   // A withdrawn public listing is still evidence of a previously issued
+   // achievement. Ordinary project deletion cannot erase an audited release.
+   if(await studioPublicationReady(db)&&
+      await getOne(db,'SELECT project_id FROM member_studio_publications WHERE project_id=?',[id]))
+    return fail(409,'Audited public releases cannot be deleted as private drafts');
    if(!await pace(db,user.id,'project',now,30))return fail(429,'Too many project updates');
    const result=await rows(db,
     "DELETE FROM member_studio_projects WHERE id=? AND user_id=? AND revision=? "+
     "AND status IN ('draft','changes_requested','rejected') AND "+
-    'NOT EXISTS(SELECT 1 FROM member_studio_assets WHERE project_id=?) RETURNING id',
-    [id,user.id,input.revision,id]);
+    'NOT EXISTS(SELECT 1 FROM member_studio_assets WHERE project_id=?) '+
+    (await studioPublicationReady(db)?
+      'AND NOT EXISTS(SELECT 1 FROM member_studio_publications p WHERE p.project_id=?) ':'')+
+    'RETURNING id',
+    [id,user.id,input.revision,id,...(await studioPublicationReady(db)?[id]:[])]);
    return result.length===1?json({deleted:true}):fail(409,'Remove private files or withdraw review before deleting this project');
   }
   if(req.method!=='PATCH')return fail(405,'Method not allowed');
