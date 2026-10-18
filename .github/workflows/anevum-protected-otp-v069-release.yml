@@ -57,7 +57,9 @@ jobs:
           npm run check:creator-v1-web
           npm run build:creator-v1-web
           (cd creator-v1 && npm run test:protected-owner-otp)
-          (cd creator-v1 && npm run test:signup-activation)
+          # The old V026 visual contract in the convenience signup script is obsolete on V069.
+          # Run auth-specific contracts and the already-green complete V069 suite instead.
+          node --test creator-v1/test/canonical-real-session-v019.test.mjs creator-v1/test/canonical-auth-email-signup.test.mjs creator-v1/test/canonical-open-signup-gate-v020.test.mjs creator-v1/test/canonical-otp-resend-v023.test.mjs
           test -s creator-v1/dist/web/index.html
       - name: Inspect current deployment, protected recovery and public assets
         shell: bash
