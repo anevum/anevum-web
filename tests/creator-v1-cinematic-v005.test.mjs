@@ -16,7 +16,7 @@ const tactile=get("creator-v1/web/src/tactile-editorial-v006.css");
 const stylesheet=get("creator-v1/web/src/cinematic-world-v005.css");
 test("V005 source TSX parses and shares actual navigation",()=>{
   for(const src of [shell,landing,rail,hero])assert.doesNotThrow(()=>parse(src,{sourceType:"module",plugins:["typescript","jsx"]}));
-  assert.match(landing,/<WorldGatewayDeck\s+projects=\{projects\}/);
+  assert.match(landing,/<nav className="av79-gateways"/);
   assert.match(shell,/className="site-main av9-main"/);
   assert.match(shell,/<dialog ref=\{menuDialog\}/);
   assert.match(shell,/aria-haspopup="dialog"/);
@@ -29,7 +29,7 @@ test("V008 homepage preserves the source-backed public release and creator index
   assert.match(landing,/readStatus/);
   assert.match(landing,/readCreators/);
   assert.doesNotMatch(landing,/<LiveSignalHero\s/);
-  assert.match(landing,/<WorldGatewayDeck\s+projects=\{projects\}/);
+  assert.match(landing,/<nav className="av79-gateways"/);
   assert.match(landing,/lastVerified/);
   assert.match(hero,/projectDetailPath/);
   assert.match(hero,/sortByPublication/);
@@ -58,7 +58,9 @@ test("V005 supplies mobile, reduced motion and forced-colors behavior",()=>{
 
 test("V006 builds a source-backed homepage feed and links real creator identities",()=>{
   assert.doesNotThrow(()=>parse(feed,{sourceType:"module",plugins:["typescript","jsx"]}));
-  assert.match(landing,/<CommunityHomeFeed\b/);
+  assert.doesNotMatch(landing,/<CommunityHomeFeed\b/);
+  assert.match(landing,/CreatorSignature/);
+  assert.match(landing,/av79-feature/);
   assert.match(feed,/readCommunityPosts/);
   assert.match(feed,/communityEnabled/);
   assert.match(feed,/readCommunityPosts\(\{sort:"new",limit:"8"\}/);
@@ -82,11 +84,11 @@ test("V006 second pass keeps bounded field selection and mobile-first content",(
   assert.match(feed,/id="av6-field-filter"/);
   assert.match(feed,/field==="all"/);
   assert.match(feed,/Latest approved|LATEST APPROVED FIRST/);
-  // V073 puts interactive module navigation before the verified public index.
-  assert.match(hero,/href="#world-gateways"/);
-  assert.match(landing,/<WorldGatewayDeck\s+projects=\{projects\}/);
-  assert.match(landing,/<LiveSignalModules/);
-  assert.ok(landing.indexOf("<WorldGatewayDeck ")<landing.indexOf("<LiveSignalModules"));
+  // V079 puts a short four-way navigation before a verified featured release.
+  assert.match(landing,/<nav className="av79-gateways"/);
+  assert.match(landing,/av79-feature/);
+  assert.match(landing,/av79-latest/);
+  assert.doesNotMatch(landing,/<WorldGatewayDeck|<LiveSignalModules/);
   assert.match(feed,/id="community-index"/);
   assert.match(tactile,/\.cinema-feature\{display:none\}/);
   assert.match(tactile,/\.av6-feed-fields select:focus-visible/);
@@ -102,7 +104,7 @@ test("V008 Live Signal transmits verified public content, not fictional dashboar
   assert.match(hero,/state!=="ready"/);
   assert.match(landing,/document\.visibilityState==="visible"/);
   assert.match(landing,/180000/);
-  assert.match(landing,/portal\.state==="error"&&hasVerifiedData/);
+  assert.match(landing,/portal\.state==="error"&&verified/);
 });
 test("V008 typography, controls and mobile motion respect public UX boundaries",()=>{
   assert.match(main,/live-signal-v008\.css/);
