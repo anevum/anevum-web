@@ -11,6 +11,7 @@ import {canonicalForums} from "./forums.mjs";
 import {canonicalProgression,progressionReady} from './progression.mjs';
 import {canonicalSpace} from "./space.mjs";
 import {canonicalRecognition} from './recognition.mjs';
+import {canonicalRecognitionCatalog} from './recognition-catalog.mjs';
 import {boundedText} from "./request-body.mjs";
 import {supporterMember,supporterWebhook} from "./supporter.mjs";
 import {supporterRewardsRoute} from "./supporter-rewards.mjs";
@@ -109,6 +110,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const publicCommunity=/^\/api\/v1\/community\/(?:members|activity)$/.test(path);
     const forumRoute=/^\/api\/v1\/community\/(?:threads(?:\/[a-f0-9-]{36}(?:\/(?:replies|reaction))?|\/?)?|reports)$/.test(path)||(/^\/api\/v1\/member\/forum-submissions(?:\/[a-f0-9-]{36})?$/.test(path)||path==="/api/v1/member/forum-review");
     const publicMetrics=path===PUBLIC_TELEMETRY_PATH;
+    const publicRecognitionCatalog=path==='/api/v1/public/recognition/catalog';
     const ownSpace=OWN_SPACE.test(path),publicSpace=path.match(PUBLIC_SPACE);
      const ownRecognition=path===CANONICAL_PREFIX+'/recognition';
      if(ownRecognition&&env.CANONICAL_RECOGNITION_ENABLED!=='true')return fail(request,404);
@@ -127,13 +129,14 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     // This is a proposed, source-only pilot. Do not expose even a GET
     // endpoint without a deliberate rollout flag and an approved D1 schema.
     if(ownProjectSave&&env?.CANONICAL_PROJECT_SAVES_ENABLED!=="true")return fail(request,404);
-    if(path!==HEALTH && path!==METHODS && !publicHandle && !ownProfile && !ownExport && !ownClosure && !ownSpace && !publicSpace && !ownRecognition && !publicCommunity && !forumRoute && !publicMetrics && !ownProgression && !ownSupporter && !ownProjectSave && !ownStudio && !ownStudioReview &&
+    if(path!==HEALTH && path!==METHODS && !publicRecognitionCatalog && !publicHandle && !ownProfile && !ownExport && !ownClosure && !ownSpace && !publicSpace && !ownRecognition && !publicCommunity && !forumRoute && !publicMetrics && !ownProgression && !ownSupporter && !ownProjectSave && !ownStudio && !ownStudioReview &&
       !(path.startsWith(CANONICAL_AUTH_PATH+"/") &&
         (AUTH_ALLOWLIST[request.method]?.has(path)??false)))
       return fail(request,404);
 
     if((publicHandle||publicSpace) && !READ_METHODS.has(request.method))return fail(request,404);
     if(publicMetrics&&request.method!=="GET")return fail(request,405);
+    if(publicRecognitionCatalog&&!READ_METHODS.has(request.method))return fail(request,405);
     if(ownProfile && !["GET","POST","PATCH"].includes(request.method))return fail(request,404);
     if(ownExport && request.method!=="GET")return fail(request,404);
      if(ownRecognition&&!['GET','PATCH'].includes(request.method))return fail(request,405);
@@ -182,6 +185,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const callback=path.match(/^\/api\/v1\/member\/auth\/callback\/(google|github|apple|microsoft)$/);
     if(callback&&!configured[callback[1]])return fail(request,404);
     if(publicMetrics)return safeResponse(await publicSupporterTelemetry(request,env));
+    if(publicRecognitionCatalog)return safeResponse(await canonicalRecognitionCatalog(request,env));
     if(publicCommunity)return safeResponse(await canonicalCommunity(request,env));
     if(forumRoute){
       const publicForumRead=request.method==="GET" && !path.includes("/forum-submissions") && !path.endsWith("/forum-review") && !path.endsWith("/reaction");
