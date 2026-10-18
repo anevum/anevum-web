@@ -571,3 +571,26 @@
   .av9-shell .av73-world-tab[aria-selected="true"]{border-color:Highlight;color:Highlight}
   .av9-shell .av73-action-main{background:ButtonFace;color:ButtonText!important;border-color:ButtonText}
 }
+
+/* Neutralize the older full-width pulse-card exception inside the new stage. */
+.av9-shell .av11-live-index .av11-module-stage .av8-module--pulse{
+  display:block;
+  flex:none;
+  grid-column:auto;
+}
+.av9-shell .av11-live-index .av11-module-stage .av8-module--pulse .av8-module-head{
+  display:flex;
+  min-width:0;
+  margin:0 0 7px;
+  padding:0 0 14px;
+  border-bottom:1px solid #46536b;
+}
+.av9-shell .av11-live-index .av11-module-stage .av8-module--pulse .av8-module-index{
+  display:block;
+}
+.av9-shell .av11-live-index .av11-module-stage .av8-module--pulse .av8-module-head h2{
+  font:500 clamp(21px,2.3vw,28px)/1.15 var(--av9-display,Georgia,serif)!important;
+}
+.av9-shell .av11-live-index .av11-module-stage .av8-pulse-policy{
+  display:block;
+}
