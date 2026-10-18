@@ -1,0 +1,27 @@
+name: ANEVUM Staff V080 Safety
+on:
+  pull_request:
+    paths:
+      - "creator-v1/operations/**"
+      - "creator-v1/test/staff-project-v080.test.mjs"
+      - "creator-v1/package.json"
+      - ".github/workflows/staff-v080-safety.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  staff-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check Worker, UI and lifecycle module syntax
+        run: |
+          node --check creator-v1/operations/staff-project-worker-v080.mjs
+          node --check creator-v1/operations/staff-project-control-v080.mjs
+          node --check creator-v1/operations/staff-project-ui-v080.mjs
+      - name: Validate staff access, lifecycle, and preview contracts
+        run: node --test creator-v1/test/staff-project-v080.test.mjs
