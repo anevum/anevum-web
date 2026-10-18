@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#08101b">
-  <meta name="description" content="ANEVUM Family Safety 3D map prototype. No accounts, live family feeds or server-side location collection.">
+  <meta name="description" content="ANEVUM Family Safety 3D map prototype. No accounts or live family feeds; GPS data is not sent to ANEVUM. Map tile requests reveal the viewed area to the map provider.">
   <title>ANEVUM / Family Safety Map — Isolated Prototype</title>
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.14.0/dist/maplibre-gl.css">
   <style>
@@ -106,7 +106,7 @@
         <div class="person"><div class="avatar">Y</div><div><strong>Your device</strong><span id="location-status">Location disabled</span></div></div>
         <p>No family accounts or location feeds are connected in this isolated demo.</p>
         <button type="button" class="mainbutton" id="location-button" aria-pressed="false">Show my position on this device</button>
-        <div class="note">Requires HTTPS and your permission. Coordinates remain in your browser, are not uploaded, and stop updating when the page is inactive.</div>
+        <div class="note">Requires HTTPS and your permission. ANEVUM does not receive or store your GPS coordinates. The map provider still receives tile requests for the area you view. Tracking stops when the page is inactive.</div>
       </section>
       <section class="section" id="community-content" aria-label="Neighborhood map layers" hidden>
         <div class="section-title">Neighborhood layer <span class="kicker">SAMPLE ONLY</span></div>
@@ -122,7 +122,7 @@
     </div>
     <footer class="panel-footer">
       <strong>Safety architecture boundary</strong>
-      <p>Precision location must never appear in public neighborhood feeds. Live family location needs invitations, authentication, consent, revocation and server-enforced access before launch.</p>
+      <p>Precise location must never appear in public neighborhood feeds. Live family location needs invitations, authentication, consent, revocation and server-enforced access before launch.</p>
     </footer>
   </aside>
   <div class="controls" aria-label="Map viewpoint controls">
@@ -221,7 +221,7 @@
       else me.setLngLat(coords);
       const time=new Date(position.timestamp).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
       el("location-status").textContent="On this device · updated "+time+" · ±"+Math.round(position.coords.accuracy)+" m";
-      notice("Your location is visible locally. It is not being shared with anyone.");
+      notice("Your GPS position is shown only on this device. Map tile requests disclose the viewed area to the map provider.");
     }
     function stopLocation(message){
       if(watchId!==null&&navigator.geolocation)navigator.geolocation.clearWatch(watchId);
