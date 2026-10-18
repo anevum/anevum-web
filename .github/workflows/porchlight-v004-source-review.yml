@@ -7,11 +7,13 @@ on:
     paths:
       - "prototypes/porchlight-v002/**"
       - "prototypes/porchlight-v003/**"
+      - "prototypes/porchlight-v004/**"
       - ".github/workflows/porchlight-v004-source-review.yml"
   pull_request:
     paths:
       - "prototypes/porchlight-v002/**"
       - "prototypes/porchlight-v003/**"
+      - "prototypes/porchlight-v004/**"
       - ".github/workflows/porchlight-v004-source-review.yml"
   workflow_dispatch:
 
@@ -37,3 +39,32 @@ jobs:
         run: node --experimental-sqlite --test prototypes/porchlight-v002/test/service.test.mjs prototypes/porchlight-v002/test/v003.test.mjs prototypes/porchlight-v002/test/v004.test.mjs
       - name: Review client static tests
         run: node --test prototypes/porchlight-v003/test/ui-contract.test.mjs prototypes/porchlight-v003/test/v004-ui.test.mjs
+
+
+  synthetic-browser:
+    name: Localhost-only browser integration with fake adults
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    needs: isolated-security-and-privacy
+    defaults:
+      run:
+        working-directory: prototypes/porchlight-v004
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install isolated review dependencies
+        run: npm install --no-audit --no-fund --package-lock=false
+      - name: Install headless Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Exercise approval, reporting, revocation and pause
+        run: npm run smoke
+      - name: Save fictional-only browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: porchlight-v004-synthetic-browser-captures
+          path: prototypes/porchlight-v004/test/screenshots/*.png
+          retention-days: 7
+          if-no-files-found: ignore
