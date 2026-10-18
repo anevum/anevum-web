@@ -130,6 +130,13 @@ try {
     const dossier=await evaluate('(()=>{const card=document.querySelector(".av6-feed-project"),a=card?.querySelector(".av7-author");return {width:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth+1,dossiers:document.querySelectorAll(".av7-author").length,level:!!a?.querySelector(".av7-level-panel"),artifact:!!a?.querySelector(".av7-artifact-panel"),awards:a?.querySelectorAll(".av7-award").length,watermark:getComputedStyle(document.body,"::after").content.includes("SYNTHETIC OFFLINE REVIEW")};})()');
     if(dossier.overflow||dossier.dossiers<1||!dossier.level||!dossier.artifact||!dossier.awards||!dossier.watermark)
       throw Error("V009_DOSSIER_LAYOUT_"+width+":"+JSON.stringify(dossier));
+    // V074: the verified dossier level icon stays visible inside its
+    // original crest, with no miniature WebGL canvas or displaced model.
+    await until(()=>evaluate('document.querySelector(".av7-level-crest .av73-static-level-icon img")?.naturalWidth>0'));
+    const levelIcon=await evaluate('(()=>{const frame=document.querySelector(".av7-author .av7-level-crest"),icon=frame?.querySelector(".av73-static-level-icon"),img=icon?.querySelector("img"),a=frame?.getBoundingClientRect(),b=icon?.getBoundingClientRect();return {visible:img?getComputedStyle(img).visibility:null,width:img?.naturalWidth||0,source:img?.currentSrc||"",type:icon?.dataset.artwork,canvas:document.querySelectorAll("canvas.av62-native-stage").length,contained:!!a&&!!b&&b.left>=a.left-1&&b.right<=a.right+1&&b.top>=a.top-1&&b.bottom<=a.bottom+1}})()');
+    if(levelIcon.visible!=="visible"||levelIcon.width<120||!levelIcon.source.includes("/evolution/assets/level-")||
+      levelIcon.type!=="v073-preserved-optical-icon"||levelIcon.canvas!==0||!levelIcon.contained)
+      throw Error("V074_PLAYER_LEVEL_ICON_"+width+":"+JSON.stringify(levelIcon));
     // V073 final visual-flow acceptance: useful modules lead the page.
     const flow=await evaluate('(()=>{const selectors=["#world-gateways",".av11-live-index","#community-index"];const y=selectors.map(selector=>{const el=document.querySelector(selector);return el?Math.round(el.getBoundingClientRect().top+window.scrollY):null});const tabs=document.querySelectorAll(".av73-world-tab");const activity=document.querySelectorAll(".av11-module-tab");return {y,tabs:tabs.length,activity:activity.length,activeTab:document.querySelector(".av73-world-tab[aria-selected=true]")?.id,overflow:document.documentElement.scrollWidth>innerWidth+1,portalTarget:!!document.querySelector("#world-gateways .av73-action-main")};})()');
     if(flow.overflow||flow.tabs!==4||flow.activity!==4||flow.activeTab!=="av73-module-tab-discover"||!flow.portalTarget||
