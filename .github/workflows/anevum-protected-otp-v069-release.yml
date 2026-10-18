@@ -131,7 +131,7 @@ jobs:
           }))assert.equal(bindings.get(n)?.text,v);
           for(const r of [
             ['anevum.com/*','anevum-apex-prelaunch-gateway'],
-            ['anevum.com/assets/index-*','anevum-first-contact-bridge-v065-20261017'],
+            ['anevum.com/assets/index-*','anevum-evolution-runtime-v068-20261018'],
             ['anevum.com/staff*','anevum-iren-apex-staff-v002']
           ])assert.ok(routes.result.some(x=>x.pattern===r[0]&&x.script===r[1]));
           const bundle=html=>html.match(/\/assets\/index-[a-zA-Z0-9_-]+\.js/)?.[0];
