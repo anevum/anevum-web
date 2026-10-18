@@ -52,8 +52,8 @@ test("V007 keeps moderation and member privileges entirely on existing backend r
   assert.doesNotMatch(hub, /fetch\(|credentials\s*:|authorization|memberCreate|memberVote|memberReact|set-cookie/i);
   assert.match(routes, /<MemberGate\/>/);
   // V067: legacy composer deep links must reach canonical staff-reviewed threads.
-  assert.match(routes, /path="community\\/write" element={<Navigate to="\\/community\\?compose=1" replace\\/>}/);
-  assert.doesNotMatch(routes, /path="community\\/write" element={<CommunityPostEditorPage\\/>}/);
+  assert.match(routes, /path="community\/write" element={<Navigate to="\/community\?compose=1" replace\/>}/);
+  assert.doesNotMatch(routes, /path="community\/write" element={<CommunityPostEditorPage\/>}/);
 });
 
 test("V007 is full-width on phones with readable type and reduced-motion/accessibility support", () => {
