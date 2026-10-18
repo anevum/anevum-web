@@ -22,7 +22,7 @@ export function RecognitionRegistryPage(){
     <p>There are no sample medals or unlocked achievements here to spoil upcoming discoveries.</p>
     <Link to="/join">Join or sign in ↗</Link>
    </section>:
-   <EarnedRewardVault level={null} fallbackBadges={earnedFounding} title="Your awarded insignia"/>}
+   <EarnedRewardVault level={null} showLevels={false} fallbackBadges={earnedFounding} title="Your awarded insignia"/>}
   <footer className="av75-vault-principles">A displayed mark must come from an earned record. Prestige honors require independent review; neither recognition nor level grants staff authority.</footer>
  </section>;
 }
