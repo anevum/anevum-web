@@ -97,7 +97,7 @@ test('GPS is opt-in and stopped on backgrounding without server writes', () => {
   assert.equal(geolocationCalls.options.enableHighAccuracy,true);
   geolocationCalls.success({coords:{longitude:-81.285, latitude:28.245, accuracy:9.4}, timestamp:Date.parse('2026-10-17T20:00:00Z')});
   assert.equal(markerInstances.length,1);
-  assert.deepEqual(markerInstances[0].coords,[-81.285,28.245]);
+  assert.deepEqual(Array.from(markerInstances[0].coords),[-81.285,28.245]);
   assert.match(node('location-status').textContent,/±9 m/);
   document.hidden=true;
   documentListeners.visibilitychange();
