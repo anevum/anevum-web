@@ -79,7 +79,7 @@ jobs:
           if(vendor.some(x=>!["maplibre-gl.mjs","maplibre-gl-worker.mjs","maplibre-gl.css"].includes(x))||vendor.length!==3)
             throw Error("Missing or unexpected pinned MapLibre browser assets");
           '
-      - name: Capture browser screenshots for desktop and phone layouts
+      - name: Verify real 3D map rendering and fictional interactions on desktop and phone viewport
         shell: bash
         run: |
           set -euo pipefail
@@ -91,35 +91,16 @@ jobs:
             > evidence/family-field/fixture.log 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
-          for i in $(seq 1 30); do
-            if curl -fsS http://127.0.0.1:8899/ >/dev/null; then break; fi
-            sleep 0.3
+          ready=0
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8899/ >/dev/null 2>&1; then ready=1; break; fi
+            sleep 0.25
           done
-          curl -fsS http://127.0.0.1:8899/index.html \
-            | grep -q 'SYNTHETIC REVIEW'
-          "$chrome" --headless=new --no-sandbox --disable-dev-shm-usage \
-            --window-size=1440,920 --virtual-time-budget=4000 \
-            --screenshot="$PWD/evidence/family-field/desktop.png" \
-            http://127.0.0.1:8899/ \
-            > evidence/family-field/chromium-desktop.log 2>&1
-          "$chrome" --headless=new --no-sandbox --disable-dev-shm-usage \
-            --window-size=390,844 --force-device-scale-factor=1 \
-            --virtual-time-budget=4000 \
-            --screenshot="$PWD/evidence/family-field/mobile.png" \
-            http://127.0.0.1:8899/ \
-            > evidence/family-field/chromium-mobile.log 2>&1
+          test "$ready" = 1
+          CHROME_BIN="$chrome" node prototypes/family-safety-synthetic-preview/capture-browser.mjs
           test -s evidence/family-field/desktop.png
           test -s evidence/family-field/mobile.png
-          python3 - <<'PY'
-          from PIL import Image
-          for f in ("desktop.png","mobile.png"):
-              im=Image.open("evidence/family-field/"+f).convert("RGB")
-              w,h=im.size
-              colors=im.crop((int(w*.55),int(h*.2),int(w*.8),int(h*.65))).getcolors(w*h)
-              if colors is not None and len(colors)<35:
-                  raise SystemExit("Insufficient map detail: "+f)
-          print("SYNTHETIC_VISUAL_VARIANCE=PASS")
-          PY
+          test -s evidence/family-field/browser-assertions.json
       - name: Retain screenshots without publishing site or GPS
         if: always()
         uses: actions/upload-artifact@v4
