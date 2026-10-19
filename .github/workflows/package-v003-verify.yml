@@ -4,6 +4,7 @@ on:
     paths:
       - "site/alpha/v003/**"
       - "tests/alpha-package-v003.test.mjs"
+      - "tests/alpha-package-v004-browser.mjs"
       - ".github/workflows/package-v003-verify.yml"
   push:
     branches:
@@ -30,3 +31,21 @@ jobs:
           node --check site/alpha/v003/api.mjs
           node --check site/alpha/v003/ui.mjs
       - run: node --experimental-sqlite --test tests/alpha-package-v003.test.mjs
+      - name: Chromium mobile and desktop UI acceptance
+        run: |
+          if command -v google-chrome >/dev/null 2>&1; then
+            CHROME_BIN="$(command -v google-chrome)" node tests/alpha-package-v004-browser.mjs
+          elif command -v chromium >/dev/null 2>&1; then
+            CHROME_BIN="$(command -v chromium)" node tests/alpha-package-v004-browser.mjs
+          else
+            echo "Chrome unavailable; browser acceptance cannot pass"
+            exit 1
+          fi
+      - name: Upload visual QA screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-package-v004-browser
+          path: artifacts/package-v004-ui/
+          if-no-files-found: warn
+          retention-days: 7
