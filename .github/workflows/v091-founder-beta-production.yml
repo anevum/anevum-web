@@ -178,11 +178,11 @@ jobs:
           echo V089_REAL_WEBGL_AND_RESPONSIVE_ACCEPTANCE=PASS >> "$GITHUB_STEP_SUMMARY"
       - name: Verify the preserved staff identity transport
         run: node --test creator-v1/test/staff-session-transport-v091.test.mjs creator-v1/test/staff-transport-release-v091.test.mjs
-      - name: Verify or repair the five pinned staff identity Workers
+      - name: Verify five already-repaired staff identity Workers (read-only)
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: node creator-v1/ops/v091-staff-transport.mjs --apply
+        run: node creator-v1/ops/v091-staff-transport.mjs
       - name: Deploy V091 verified experience without changing live routes, bindings or IREN
         shell: bash
         env:
