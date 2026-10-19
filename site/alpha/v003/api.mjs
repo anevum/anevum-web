@@ -216,6 +216,8 @@ async function upload(req,env,u) {
   }
 }
 async function submit(env,u,id) {
+  // Never queue an executable that staff cannot actually preview in the isolated runner.
+  if(!isolatedHost(env)) return fail(503,"Private playback is not configured; submission is paused");
   const p=await getProject(env.DB,id);
   if(!p||p.owner_id!==u.id||!pilot(env,u.id)) return fail(404,"Project unavailable");
   const release=await getDraft(env.DB,p);
@@ -237,11 +239,14 @@ async function review(req,env,u,id) {
   const p=await getProject(env.DB,id);
   const release=p?await getDraft(env.DB,p):null;
   if(!p||!release||release.status!=="pending_review") return fail(409,"Project not awaiting review");
+  // A creator must never independently approve their own executable package.
+  if(p.owner_id===u.id) return fail(403,"An independent reviewer must approve this project");
   const input=await req.json().catch(()=>null);
   if(!["publish","reject"].includes(input?.action)) return fail(422,"Choose publish or reject");
   if(input.action==="reject"&&(typeof input.reason!=="string"||input.reason.trim().length<10||input.reason.length>1000))
     return fail(422,"A rejection reason of 10–1000 characters is required");
   if(input.action==="publish") {
+    if(!isolatedHost(env)) return fail(503,"Isolated player is not configured; publication is paused");
     const asset=await query(env.DB,"SELECT object_key,bytes,sha256 FROM anevum_package_files WHERE release_id=? AND path='index.html'",release.id);
     const file=asset?await env.MEDIA.head(asset.object_key):null;
     if(!file||file.size!==asset.bytes||file.customMetadata?.sha256!==asset.sha256)
