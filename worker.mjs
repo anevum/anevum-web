@@ -1,5 +1,6 @@
 import releaseRegistry from "./src/data/releases.json";
 import { fieldNotes } from "./src/data/fieldNotes";
+import { rhenLessonBySlug } from "./src/data/rhen-learning";
 import { shadowRead } from "./shadow-transport.mjs";
 import { memberEndpoint } from "./src/server/member.mjs";
 import { studioPublicEndpoint } from "./src/server/studio-content.mjs";
@@ -363,6 +364,10 @@ function publicRouteMetadata(pathname) {
       title: "RHEN — ANEVUM",
       description: "RHEN V5 is under reconstruction. Legacy public trading is suspended; member brokerage execution is not yet available."
     },
+    "/products/rhen/learn": {
+      title: "Free RHEN lessons — ANEVUM",
+      description: "Two free lessons covering market orders, trading costs, risk mathematics and research evidence. No account or broker required."
+    },
     "/products/rhen/evidence": {
       title: "RHEN Public Evidence — ANEVUM",
       description: "Published RHEN evidence and historical releases. Legacy public runtime is SUSPENDED_FOR_REBUILD, with no current public performance or broker data."
@@ -412,6 +417,15 @@ function publicRouteMetadata(pathname) {
     };
   }
 
+  if (pathname.startsWith("/products/rhen/learn/")) {
+    const slug = pathname.slice("/products/rhen/learn/".length);
+    const lesson = rhenLessonBySlug(slug);
+    if (lesson) return {
+      title: lesson.title + " — Free RHEN Learning — ANEVUM",
+      description: lesson.summary,
+      url: "https://anevum.com/products/rhen/learn/" + lesson.slug
+    };
+  }
   if (pathname.startsWith("/field-notes/")) {
     const slug = pathname.slice("/field-notes/".length);
     const note = fieldNotes.find(item => item.slug === slug);
