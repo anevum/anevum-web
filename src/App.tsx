@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useLayoutEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { OverflowPan } from "./components/OverflowPan";
 import { fieldNotes } from "./data/fieldNotes";
+import { rhenLessonBySlug } from "./data/rhen-learning";
 import { currentRhenRelease, rhenReleaseBySlug } from "./data/releases";
 
 const RhenTerminal = lazy(() => import("./pages/RhenTerminal"));
@@ -27,6 +28,7 @@ const titles: Record<string, string> = {
   "/updates": "Studio updates — ANEVUM",
   "/studio": "ANEVUM Studio — Administration",
   "/products/rhen": "RHEN — ANEVUM",
+  "/products/rhen/learn": "Free RHEN lessons — ANEVUM",
   "/products/rhen/evidence": "RHEN Public Evidence — ANEVUM",
   "/products/rhen/architecture": "RHEN Architecture — ANEVUM",
   "/products/rhen/releases": "RHEN Releases — ANEVUM",
@@ -54,6 +56,7 @@ const descriptions: Record<string, string> = {
   "/updates": "Real published project updates and AHA posts from ANEVUM Studio.",
   "/studio": "Owner and administrator editorial management.",
   "/products/rhen": "RHEN is ANEVUM's research application under V5 reconstruction. Legacy live trading is suspended; member brokerage and execution are not available.",
+  "/products/rhen/learn": "Two free lessons covering market orders, trading costs, risk mathematics and research evidence. No account or broker required.",
   "/products/rhen/evidence": "RHEN V5 rebuild and historical public evidence; no active legacy trading telemetry.",
   "/products/rhen/architecture": "Inspect RHEN execution, research, replay, forecasting, control, storage, and evidence boundaries.",
   "/products/rhen/releases": "RHEN release records document production changes, verification, limitations, and public system history.",
@@ -72,13 +75,17 @@ const descriptions: Record<string, string> = {
 
 const publishedPublicPaths = new Set([
   "/", "/products", "/beta", "/feed", "/field-notes", "/updates", "/communities", "/learn",
-  "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture",
+  "/products/rhen", "/products/rhen/learn", "/products/rhen/evidence", "/products/rhen/architecture",
   "/products/rhen/releases", "/about", "/help", "/resume", "/privacy", "/terms"
 ]);
 
 function isPublishedPublicPath(pathname: string) {
   if (publishedPublicPaths.has(pathname)) return true;
   if (/^\/updates\/[a-z0-9-]{1,96}$/.test(pathname)) return true;
+  if (pathname.startsWith("/products/rhen/learn/")) {
+    const slug = pathname.slice("/products/rhen/learn/".length);
+    return Boolean(rhenLessonBySlug(slug));
+  }
   if (pathname.startsWith("/field-notes/")) {
     const slug = pathname.slice("/field-notes/".length);
     return fieldNotes.some(note => note.slug === slug);
@@ -173,6 +180,11 @@ function RouteEffects() {
     } else if (path.startsWith("/command")) {
       title = path === "/command" ? "Command — ANEVUM" : "RHEN Terminal — ANEVUM";
       description = path === "/command" ? "Your private member profile and programs." : "Protected RHEN operator workspace.";
+    } else if (path.startsWith("/products/rhen/learn/")) {
+      const slug = path.slice("/products/rhen/learn/".length);
+      const lesson = rhenLessonBySlug(slug);
+      title = lesson ? lesson.title + " — Free RHEN Learning — ANEVUM" : "Lesson not found — ANEVUM";
+      description = lesson?.summary || descriptions["/products/rhen/learn"];
     } else if (path.startsWith("/products/rhen/releases/")) {
       const slug = path.slice("/products/rhen/releases/".length);
       const release = rhenReleaseBySlug(slug);
@@ -267,6 +279,8 @@ export default function App() {
         <Route path="/apps/rhen/*" element={<Suspense fallback={<Loader />}><CommonsV5 content={<RhenApp />} /></Suspense>} />
 
         <Route path="/products/rhen" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/products/rhen/learn" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
+        <Route path="/products/rhen/learn/:slug" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/products/rhen/evidence" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/products/rhen/architecture" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/products/rhen/releases" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />

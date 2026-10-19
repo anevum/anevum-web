@@ -1,0 +1,47 @@
+/* RHEN Open R2 lessons: public content styled inside the existing Commons V5 shadow root. */
+.rh-learn{max-width:920px;gap:20px}
+.rh-learn h1,.rh-learn h2,.rh-learn h3,.rh-learn p,.rh-learn li,.rh-learn dd{overflow-wrap:anywhere}
+.rh-learn-crumb{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--sub);font-size:12px;line-height:1.6}
+.rh-learn-crumb a{color:var(--accent);text-decoration:none}
+.rh-learn-crumb a:hover{text-decoration:underline}
+.rh-learn-crumb [aria-current=page]{color:var(--text)}
+.rh-learn-meta{color:var(--muted)!important;font-size:12px!important;line-height:1.55!important}
+.rh-learn-grid{margin-top:2px;align-items:stretch}
+.rh-learn-card{display:flex;flex-direction:column;gap:10px}
+.rh-learn-card h2{margin:0}
+.rh-learn-card h2 a:hover{text-decoration:underline;text-decoration-color:var(--accent)}
+.rh-learn-card>p{margin:0;color:var(--sub);line-height:1.6}
+.rh-learn-card .c2-text-link{margin-top:auto}
+.rh-lesson-intro .rh-learn-meta{margin-top:14px}
+.rh-learn-list{margin:8px 0 0;padding-left:22px;color:var(--sub);font-size:14px;line-height:1.75}
+.rh-learn-list li{margin:0 0 8px}
+.rh-lesson-section{padding:25px 0 20px;border-top:1px solid var(--line);max-width:820px}
+.rh-lesson-section h2{font-size:clamp(20px,2.6vw,26px);line-height:1.25;margin:5px 0 17px}
+.rh-learn-index{color:var(--accent);font-size:11px;font-weight:800;letter-spacing:.12em}
+.rh-lesson-section>p{color:var(--sub);font-size:14px;line-height:1.82;margin:0 0 16px}
+.rh-learn-example{margin:22px 0 8px;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--radius);background:var(--panel);padding:18px}
+.rh-learn-example h3{font-size:16px;line-height:1.4;margin:0 0 11px}
+.rh-learn-example ol{padding-left:23px;margin:0 0 13px;color:var(--sub);font-size:13px;line-height:1.75}
+.rh-learn-example li{margin-bottom:9px}
+.rh-learn-example p{border-top:1px solid var(--line);padding-top:11px;margin:0;color:var(--text);font-size:13px;line-height:1.75}
+.rh-learn-glossary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:15px 0 0}
+.rh-learn-glossary>div{padding:15px;background:var(--panel);border:1px solid var(--line);border-radius:9px;min-width:0}
+.rh-learn-glossary dt{font-size:13px;font-weight:750;color:var(--text);margin:0 0 7px}
+.rh-learn-glossary dd{font-size:12px;line-height:1.65;color:var(--sub);margin:0}
+.rh-learn-check{display:grid;gap:10px;margin-top:15px}
+.rh-learn-check details{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:14px 16px}
+.rh-learn-check summary{cursor:pointer;color:var(--text);font-weight:650;font-size:13px;line-height:1.6}
+.rh-learn-check summary span{color:var(--accent)}
+.rh-learn-check summary:focus-visible,.rh-learn a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.rh-learn-check details>div{border-top:1px solid var(--line);padding-top:11px;margin-top:11px;color:var(--text);font-size:13px;line-height:1.75}
+.rh-learn-check details p{color:var(--sub);font-size:13px;line-height:1.75;margin:8px 0 0}
+.rh-learn-sources{padding-left:20px;margin-top:13px;display:grid;gap:14px}
+.rh-learn-sources li{padding-left:2px;color:var(--sub);font-size:13px;line-height:1.6}
+.rh-learn-sources a{display:block;font-weight:700;color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+.rh-learn-sources span{display:block;font-size:12px;margin-top:4px}
+.rh-learn-footer{display:flex;align-items:center;flex-wrap:wrap;gap:12px;border-top:1px solid var(--line);padding:20px 0 36px}
+.rh-learn-footer a{color:var(--accent);font-size:12px;font-weight:700}
+.rh-learn-footer .rh-learn-next{background:var(--accent-alpha);padding:12px 14px;border:1px solid var(--line);border-radius:9px;max-width:100%}
+@media(max-width:720px){.rh-learn-glossary{grid-template-columns:1fr}.rh-lesson-section{padding:21px 0 15px}.rh-learn-example{padding:15px}.rh-learn-footer{align-items:flex-start;flex-direction:column}}
+@media(max-width:380px){.rh-learn-crumb{font-size:11px}.rh-learn-check details{padding:13px}.rh-learn-card{padding:15px}}
+@media(prefers-reduced-motion:reduce){.rh-learn *{scroll-behavior:auto!important;transition:none!important}}
