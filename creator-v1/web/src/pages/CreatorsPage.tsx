@@ -72,43 +72,35 @@ export function CreatorPage(){
   const [params]=useSearchParams();
   const cursor=params.get("cursor")||"";
   const data=useResource(async signal=>{
-    const [profile,projects]=await Promise.all([
-      readCreator(handle,signal).then(result=>result.creator).catch((error:unknown)=>{
-        // The legacy creator directory does not always index an approved alpha
-        // uploader. A 404 is not evidence that the canonical member is absent.
+    if(!/^[a-z][a-z0-9_]{2,29}$/.test(handle))return {kind:"missing" as const};
+    // A legacy Creator V1 404 is not a missing canonical member identity.
+    // Resolve both independently, with the verified, publicly visible member
+    // world as a fallback. Never infer a relationship from display names.
+    const profile=await readCreator(handle,signal).then(result=>result.creator)
+      .catch((error:unknown)=>{
         if((error as {status?:number})?.status===404)return null;
         throw error;
-      }),
-      readProjects({creator:handle,cursor:cursor||undefined,limit:"24"},signal)
-    ]);
-    return {profile,projects};
+      });
+    if(!profile){
+      try{
+        const member=await canonicalPublic(handle,signal);
+        if(member.profile.handle===handle)return {kind:"member" as const};
+      }catch{/* Unavailable/private canonical identity must not be exposed. */}
+      return {kind:"missing" as const};
+    }
+    const projects=await readProjects({creator:handle,cursor:cursor||undefined,limit:"24"},signal);
+    return {kind:"channel" as const,profile,projects};
   },[handle,cursor]);
-  // A public member world is an independently verified identity destination,
-  // never a fabricated Creator V1 channel or a claim that two accounts merged.
-  // Only perform this extra read when the legacy channel is genuinely missing.
-  const publicMember=useResource(async signal=>{
-    if(data.state!=="ready"||data.data.profile!==null||
-       !/^[a-z][a-z0-9_]{2,29}$/.test(handle))return false;
-    try{
-      const result=await canonicalPublic(handle,signal);
-      return result.profile.handle===handle;
-    }catch{return false;}
-  },[handle,data.state,data.state==="ready"&&data.data.profile===null]);
-  // Public profile/achievement detail is optional; it uses the existing
-  // anonymous-readable staging endpoint and never gates the public catalogue.
+  // Independent public-member enhancements are optional for real Creator V1
+  // channels. This client cannot grant roles, XP or publication permissions.
   const channel=useResource(async signal=>{
     if(!/^[a-z][a-z0-9_]{2,29}$/.test(handle))return null;
     try{return await memberCreatorProfile(handle,signal);}catch{return null;}
   },[handle]);
-  if(data.state==="loading"||(data.state==="ready"&&!data.data.profile&&publicMember.state==="loading"))
-    return <LoadingState label="Finding the verified creator or member world"/>;
-  if(data.state==="error")return <ErrorState title="CREATOR INDEX UNAVAILABLE" detail="The published creator index could not be reached. Try the live discovery catalogue or return later."/>;
-  if(data.state==="ready"&&!data.data.profile){
-    if(publicMember.state==="ready"&&publicMember.data)
-      return <Navigate to={"/@"+encodeURIComponent(handle)} replace/>;
-    return <ErrorState title="NO PUBLIC CREATOR CHANNEL" detail="There is no published Creator V1 channel under this handle. Private accounts are never exposed; explore approved work instead."/>;
-  }
-  if(data.state!=="ready"||!data.data.profile)return <LoadingState label="Opening creator records"/>;
+  if(data.state==="loading")return <LoadingState label="Finding verified public identity"/>;
+  if(data.state==="error")return <ErrorState title="CREATOR INDEX UNAVAILABLE" detail="The published creator index could not be reached. Try discovery or return later."/>;
+  if(data.data.kind==="member")return <Navigate to={"/@"+encodeURIComponent(handle)} replace/>;
+  if(data.data.kind==="missing")return <ErrorState title="NO PUBLIC CREATOR CHANNEL" detail="There is no published Creator V1 channel under this handle. Private member accounts remain protected; explore approved work instead."/>;
   const {profile,projects}=data.data;
   const path="/creators/"+encodeURIComponent(handle);
   const current=path+(params.size?"?"+params.toString():"");
