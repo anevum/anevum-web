@@ -64,8 +64,10 @@ test("secondary pages share the same world art while preserving genuine content 
   const creators=read("web/src/pages/CreatorsPage.tsx");
   const community=read("web/src/pages/CommunityPage.tsx");
   const css=read("web/src/cinematic-subpages.css");
-  for(const section of [heading,projectPlayer,creators,community])
+  // V091 creator headers now prioritize verified identity over category art.
+  for(const section of [heading,projectPlayer,community])
     assert.match(section,/CosmicArtwork/);
+  assert.doesNotMatch(creators,/CosmicArtwork|cw-channel-scene/);
   assert.match(project,/safeExternal/);
   assert.match(project,/MemberEngagementPanel/);
   assert.match(project,/ProjectPlayerShell/);

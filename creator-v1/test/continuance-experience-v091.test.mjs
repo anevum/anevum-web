@@ -28,6 +28,8 @@ test("V091 updates compile as genuine TSX with bounded public navigation",()=>{
 test("V091 repairs unavailable legacy creator channel only through an independently public canonical world",()=>{
   assert.match(creators,/readCreator\(handle,signal\)/);
   assert.match(creators,/resolveCreatorRoute\(handle/);
+  assert.match(creators,/<CreatorIdentityPage key=\{handle\}/);
+  assert.match(publicPage,/<PublicMemberWorld key=\{memberHandle\}/);
   assert.match(creatorRoute,/status\?:number/);
   assert.match(creatorRoute,/\.status!==404/);
   assert.match(creators,/canonicalPublic\(handle,signal\)/);

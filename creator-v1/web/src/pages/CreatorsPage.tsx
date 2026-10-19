@@ -12,7 +12,6 @@ import {PortalHeading} from "../components/PortalHeading";
 import {LevelPanel} from "../components/LevelPanel";
 import {EmptyState,ErrorState,LoadingState} from "../components/States";
 import {CelestialEmblem} from "../components/CelestialEmblem";
-import {CosmicArtwork} from "../components/CosmicArtwork";
 import {achievementMotif,seriesOneMotif} from "../lib/artifact-art";
 import {ContextDiscussions} from "../components/ContextDiscussions";
 
@@ -70,6 +69,9 @@ export function CreatorsPage(){
 
 export function CreatorPage(){
   const {handle=""}=useParams();
+  return <CreatorIdentityPage key={handle} handle={handle}/>;
+}
+function CreatorIdentityPage({handle}:{handle:string}){
   const [params]=useSearchParams();
   const cursor=params.get("cursor")||"";
   const data=useResource(async signal=>{
@@ -98,7 +100,7 @@ export function CreatorPage(){
   const earned=detailed?.achievements?.filter(a=>a.earned)||[];
   return <div className="portal-creator-channel">
     <Link to="/creators" className="project-return">← ALL PUBLIC CREATORS</Link>
-    <section className="portal-channel-banner"><div className="cw-channel-scene" aria-hidden="true"><CosmicArtwork scene="portal"/></div>
+    <section className="portal-channel-banner">
       <div className="portal-channel-avatar" aria-hidden="true"><span className="cw-letter-avatar">{profile.displayName.slice(0,1).toUpperCase()}</span></div>
       <div className="portal-channel-identity">
         <span className="kicker">ANEVUM / PUBLIC CREATOR CHANNEL</span>
@@ -108,7 +110,6 @@ export function CreatorPage(){
           {detailed&&<><span><strong>{detailed.contributions.ratings}</strong> VERIFIED RATINGS</span><span><strong>{earned.length}</strong> EARNED ACHIEVEMENTS</span></>}
         </div>
       </div>
-      <div className="portal-channel-badge" aria-hidden="true">CREATOR<br/>IN ORBIT</div>
     </section>
     <div className="portal-browse-layout portal-channel-content">
       <div className="portal-browse-main">

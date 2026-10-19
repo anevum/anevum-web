@@ -12,6 +12,9 @@ import {EarnedRewardVault} from '../components/EarnedRewardVault';
 const HANDLE=/^[a-z][a-z0-9_]{2,29}$/;
 export function Phase1PublicMemberPage(){
  const {memberHandle=''}=useParams<{memberHandle:string}>();
+ return <PublicMemberWorld key={memberHandle} memberHandle={memberHandle}/>;
+}
+function PublicMemberWorld({memberHandle}:{memberHandle:string}){
  const handle=memberHandle.startsWith('@')?memberHandle.slice(1):'';
  const valid=HANDLE.test(handle),base='/api/v1/members/'+handle;
  const revalidation=useMemberRevalidation();
