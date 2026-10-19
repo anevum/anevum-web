@@ -6,6 +6,7 @@ import {useIrenSignals} from "./AnevumNotifications";
 import {LevelEmblem,AwardEmblem} from "./LevelEmblem";
 import {IrenLivingCanvas} from "./IrenLivingCanvas";
 import type {IrenMood} from "../lib/iren-living-rig-v088";
+import {irenStationForPath} from "../lib/iren-companion-context-v089";
 
 /**
  * IREN Guided Continuance V080
@@ -144,6 +145,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   const {recent,unreadCount,markSignalsSeen}=useIrenSignals();
   const storageKey=storagePrefix+(memberId||"visitor");
   const steps=memberId?memberSteps:visitorSteps;
+  const station=irenStationForPath(pathname,Boolean(memberId));
   const [tourIndex,setTourIndex]=useState<number|null>(null);
   const [panelOpen,setPanelOpen]=useState(false);
   const [activeView,setActiveView]=useState<"help"|"updates">("help");
@@ -155,6 +157,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   const [motionPaused,setMotionPaused]=useState(()=>readPaused(storageKey));
   const [dockPosition,setDockPosition]=useState<DockPosition|null>(()=>readPosition(storageKey));
   const [look,setLook]=useState<[number,number]>([0,0]);
+  const [wakeCycle,setWakeCycle]=useState(0);
   const [viewport,setViewport]=useState(()=>({width:window.innerWidth,height:window.innerHeight}));
   const dragRef=useRef<{id:number;x:number;y:number;right:number;bottom:number;moved:boolean}|null>(null);
   const suppressClick=useRef(false);
@@ -176,6 +179,13 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     setSpotlight(null);
     setHidden(hiddenInStorage(storageKey));
   },[storageKey]);
+
+  // Page-specific assistance chooses a relevant topic, but never opens
+  // unrequested popups, reads private route payloads or guesses privileges.
+  useEffect(()=>{
+    setActiveTopic(irenStationForPath(pathname,Boolean(memberId)).topic);
+    if(panelOpen&&tourIndex===null)setMood("curious");
+  },[pathname,memberId]);
 
   const pause=useCallback((restoreFocus=true)=>{
     setTourIndex(index=>{
@@ -261,8 +271,6 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     lastSignalId.current=latest;
     if(!memberId||unreadCount<1||!arriving)return;
     setMood(arriving.kind==="level"?"celebrate":"notify");
-    const timer=window.setTimeout(()=>setMood("idle"),2600);
-    return()=>window.clearTimeout(timer);
   },[recent,memberId,unreadCount]);
 
   useEffect(()=>{
@@ -272,11 +280,26 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     return()=>{window.removeEventListener("resize",measure);window.removeEventListener("orientationchange",measure)};
   },[]);
 
+  // Expressiveness settles naturally; IREN is never forced into a permanent
+  // thinking, greeting or celebration pose after a one-time interaction.
   useEffect(()=>{
-    if(mood!=="greet")return;
-    const timer=window.setTimeout(()=>setMood(panelOpen?"curious":"idle"),1800);
+    const durations:Partial<Record<IrenMood,number>>={
+      greet:1900,think:2200,notify:2500,celebrate:3200,curious:4200
+    };
+    const wait=durations[mood];
+    if(!wait)return;
+    const timer=window.setTimeout(()=>setMood(prev=>
+      prev===mood?(panelOpen?"idle":"idle"):prev),wait);
     return()=>window.clearTimeout(timer);
   },[mood,panelOpen]);
+
+  // Long-quiet characters settle into a low-energy pose to preserve mobile
+  // battery and let the user's content take priority.
+  useEffect(()=>{
+    if(panelOpen||hidden||tourIndex!==null)return;
+    const timer=window.setTimeout(()=>setMood(previous=>previous==="idle"?"rest":previous),32000);
+    return()=>window.clearTimeout(timer);
+  },[panelOpen,hidden,tourIndex,pathname,wakeCycle]);
   const step=tourIndex===null?null:steps[tourIndex]||null;
   useEffect(()=>{
     if(!step){setGuideTravelling(false);return;}
@@ -493,14 +516,38 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     setMotionPaused(paused);
     try{window.localStorage.setItem(motionPrefix+storageKey,paused?"paused":"active")}catch{/* Optional preference. */}
   };
+  const attendPointer=(event:React.PointerEvent<HTMLDivElement>)=>{
+    if(!panelOpen||dragRef.current)return;
+    const now=performance.now();
+    if(now-pointerStamp.current<75)return;
+    pointerStamp.current=now;
+    const bot=dockRef.current?.getBoundingClientRect();
+    if(!bot)return;
+    setLook([clamp((event.clientX-bot.left-bot.width*.5)/(bot.width*.75),-1,1),
+      clamp((event.clientY-bot.top-bot.height*.5)/(bot.height*.75),-1,1)]);
+  };
+  const attendFocus=(event:React.FocusEvent<HTMLDivElement>)=>{
+    if(!panelOpen||!(event.target instanceof HTMLElement))return;
+    const target=event.target.getBoundingClientRect(),bot=dockRef.current?.getBoundingClientRect();
+    if(!bot)return;
+    setLook([clamp((target.left+target.width*.5-bot.left-bot.width*.5)/(bot.width*1.2),-1,1),
+      clamp((target.top+target.height*.5-bot.top-bot.height*.5)/(bot.height*1.2),-1,1)]);
+  };
+  const restoreDock=()=>{
+    setDockPosition(null);
+    try{window.localStorage.removeItem(positionPrefix+storageKey)}catch{/* Optional preference. */}
+  };
 
   return <>
     {tourIndex===null&&!hidden&&<div ref={companionRef}
       className={"ir80-companion ir87-companion ir88-companion"+(panelOpen?" ir88-companion-expanded":"")}
-      style={companionStyle}>
+      style={companionStyle}
+      onPointerMove={attendPointer} onFocusCapture={attendFocus}
+      onPointerLeave={()=>setLook([0,0])}>
       {panelOpen&&<section id="ir87-panel" className="ir80-help ir87-panel" style={helpStyle} aria-label="IREN companion">
         <header className="ir80-help-head">
-          <span className="ir80-code">IREN / CONTINUANCE COMPANION</span>
+          <span className="ir80-code">IREN / CONTINUANCE COMPANION
+            <small className="ir88-station">{station.code}</small></span>
           <button type="button" className="ir80-icon-button" aria-label="Close IREN" onClick={()=>setPanelOpen(false)}><Icon name="close" size={17}/></button>
         </header>
         <div className="ir87-tabs" role="tablist" aria-label="IREN tools">
@@ -512,9 +559,10 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
           </button>
         </div>
         {activeView==="help"?<div id="ir87-help-body" role="tabpanel" aria-labelledby="ir87-help-tab">
-          <p className="ir88-voice-line">{mood==="greet"
-            ?"Hello, explorer. I can show you around."
-            :"I'm here when you need a hand navigating the Institute."}</p>
+          <p className="ir88-voice-line" aria-live="off">{mood==="greet"
+            ?"Welcome, explorer. I'm IREN. Shall we find our way?"
+            :mood==="think"?"Let me check the field notes. Here's what I know."
+            :station.line}</p>
           <h2>Where to next?</h2>
           <p className="ir80-subtitle">Explore ANEVUM or take a guided site tour.</p>
           <div className="ir80-topic-grid" role="group" aria-label="Help topics">
@@ -533,6 +581,8 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
             </button>
             <button type="button" className="ir88-motion-toggle" onClick={changeMotion}
               aria-pressed={motionPaused}>{motionPaused?"Enable animation":"Pause animation"}</button>
+            {dockPosition&&<button type="button" className="ir88-motion-toggle"
+              onClick={restoreDock}>Return to corner</button>}
             <button type="button" className="ir80-hide" onClick={hide}>Hide helper</button>
           </footer>
         </div>:<div id="ir87-updates-body" role="tabpanel" aria-labelledby="ir87-updates-tab">
@@ -556,10 +606,11 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
         aria-controls="ir87-panel" aria-expanded={panelOpen} title="IREN companion"
         onPointerDown={beginDrag} onPointerMove={moveDrag} onPointerUp={finishDrag}
         onPointerCancel={finishDrag}
-        onPointerEnter={()=>{if(mood==="idle")setMood("curious")}}
+        onPointerEnter={()=>{setWakeCycle(c=>c+1);if(mood==="idle"||mood==="rest")setMood("curious")}}
         onPointerLeave={()=>{setLook([0,0]);if(mood==="curious")setMood("idle")}}
         onClick={()=>{
           if(suppressClick.current){suppressClick.current=false;return}
+          setWakeCycle(c=>c+1);
           setMood(panelOpen?"idle":"greet");
           setPanelOpen(open=>!open);
         }}>
