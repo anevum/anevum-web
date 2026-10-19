@@ -8,7 +8,7 @@ import {BADGE_CATALOG} from '../lib/player-recognition';
 // shared WebGL miniature renderer is intentionally retired from member cards,
 // forums, and level grids; its independent full-screen /evolution/ archive
 // remains untouched. Inline icons never create a canvas or hide their poster.
-export function LevelEmblem({level,size=64,handle=null,artwork='original'}:{level:number;size?:number;handle?:string|null;artwork?:'original'|'card'}){
+export function LevelEmblem({level,size=64,handle=null,artwork='card'}:{level:number;size?:number;handle?:string|null;artwork?:'original'|'card'}){
  const [assetIndex,setAssetIndex]=useState(0);
  const safe=Number.isSafeInteger(level)&&level>0?Math.min(30,level):1;
 
@@ -24,7 +24,7 @@ export function LevelEmblem({level,size=64,handle=null,artwork='original'}:{leve
  const src=base+'/'+kinds[assetIndex];
  return <span className="level-emblem is-illustrated av62-native-host av73-static-level-icon"
   style={{width:size,height:size}} role="img" aria-label={'Earned Evolution level '+safe}
-  data-artwork="v073-preserved-optical-icon" data-presentation={artwork==='card'?'v077-front-facing-illustration':'original-optical'} data-level={safe}>
+  data-artwork="v081-hd-emblem" data-presentation={artwork==='card'?'v077-front-facing-illustration':'original-optical'} data-visual={artwork==='card'?'v081-vector-sigil':'v074-preserved-optical'} data-level={safe}>
   <img className="av62-native-poster" src={src} width={size} height={size}
    alt="" loading={size>=104?'lazy':'eager'} decoding="async" draggable={false}
    onError={()=>setAssetIndex(i=>i+1)}/>

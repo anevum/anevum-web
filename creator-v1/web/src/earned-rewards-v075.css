@@ -471,3 +471,55 @@
   background:Canvas;border-color:CanvasText;
  }
 }
+
+/* V081 / premium inspectable SVG sigil, no native 3D viewer */
+.av75-reward-dialog:has(.av81-reward-inspector--sigil){width:min(96vw,780px);max-height:min(94dvh,900px);padding:0;
+ background:#0d192c;border:1px solid #9bb7d65f;box-shadow:0 20px 90px #020711f2,inset 0 1px #d4e7ff25}
+.av81-reward-inspector--sigil .av75-reward-header{padding:22px 26px 14px}
+.av81-reward-inspector--sigil .av75-reward-stage{position:relative;display:grid;place-items:center;overflow:hidden;
+ min-height:380px;margin:0 16px;border-radius:15px;border:1px solid #9eb9de44;
+ background:radial-gradient(circle at 50% 48%,#344666 0%,#162540 42%,#071323 78%)}
+.av81-sigil-stage{position:relative;width:100%;height:380px;display:grid;place-items:center;overflow:hidden}
+.av81-sigil-rim{position:absolute;left:50%;top:50%;width:344px;height:344px;max-width:85%;
+ transform:translate(-50%,-50%);border-radius:50%;
+ background:repeating-conic-gradient(from -2deg,#e3cdab00 0deg 4deg,#e3cdab4a 5deg,#e3cdab00 7.5deg);
+ mask:radial-gradient(circle,transparent 0 75%,#000 76% 77%,transparent 79%);
+ -webkit-mask:radial-gradient(circle,transparent 0 75%,#000 76% 77%,transparent 79%)}
+.av81-sigil-inspected{position:relative;z-index:1;display:grid;place-items:center;width:320px;height:320px;
+ max-width:min(74vw,320px);transition:transform .3s cubic-bezier(.2,.75,.2,1);transform-origin:center}
+.av81-sigil-inspected .level-emblem{width:100%!important;height:100%!important;max-width:100%;max-height:100%;
+ border-radius:50%;background:none!important;border:0;box-shadow:0 15px 55px #0106109c}
+.av81-sigil-inspected .av62-native-poster{width:100%;height:100%;object-fit:contain}
+.av81-sigil-stage.is-animated .av81-sigil-inspected::after{
+ content:"";position:absolute;inset:-7px;z-index:-1;border-radius:50%;
+ background:conic-gradient(from 10deg,transparent,#d7e8ff48,transparent,#d2affc5e,transparent);
+ animation:av81-inspector-halo 18s linear infinite;filter:blur(6px);pointer-events:none}
+.av81-sigil-caption{position:absolute;bottom:12px;left:10px;right:10px;text-align:center;
+ color:#a6c4e0;font:750 9px/1.4 ui-monospace,monospace;letter-spacing:.13em}
+.av81-reward-controls{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;
+ gap:8px;margin:12px 20px;padding:10px;border:1px solid #97b4d042;border-radius:12px;background:#101f36}
+.av81-reward-controls button{color:#e1edfc;background:#1a2d49;border:1px solid #a3c4e663;
+ border-radius:7px;padding:9px 12px;min-height:39px;cursor:pointer;font:750 10px/1.4 ui-monospace,monospace}
+.av81-reward-controls button:hover{border-color:#d8f0ff;background:#263b5a}
+.av81-reward-controls label{display:flex;align-items:center;gap:9px;color:#d1e6ff;
+ font:750 10px/1.4 ui-monospace,monospace}
+.av81-reward-controls input{width:116px;accent-color:#a9dafa}
+.av81-reward-inspector--sigil .av75-reward-description{margin:14px 26px;color:#cdddf1;line-height:1.65}
+.av81-reward-inspector--sigil .av75-reward-footer{margin:12px 26px 22px;color:#a6bbd3}
+@keyframes av81-inspector-halo{to{transform:rotate(360deg)}}
+@media(max-width:620px){
+ .av75-reward-dialog:has(.av81-reward-inspector--sigil){width:calc(100vw - 12px)}
+ .av81-reward-inspector--sigil .av75-reward-header{padding:15px}
+ .av81-reward-inspector--sigil .av75-reward-stage{min-height:290px;margin:0 9px}
+ .av81-sigil-stage{height:min(47dvh,330px)}
+ .av81-sigil-inspected{width:clamp(160px,63vw,285px);height:clamp(160px,63vw,285px)}
+ .av81-reward-controls{margin:10px 9px;padding:7px;gap:6px}
+ .av81-reward-controls button{padding:7px 8px}
+ .av81-reward-inspector--sigil .av75-reward-description{margin:12px 15px}
+ .av81-reward-inspector--sigil .av75-reward-footer{margin:12px 15px}}
+@media(prefers-reduced-motion:reduce){
+ .av81-sigil-stage.is-animated .av81-sigil-inspected::after{animation:none!important}
+ .av81-sigil-inspected{transition:none!important}}
+@media(forced-colors:active){
+ .av81-reward-controls button{color:ButtonText;background:ButtonFace;border:1px solid ButtonText}
+ .av81-reward-inspector--sigil .av75-reward-stage{border-color:CanvasText;background:Canvas}}
