@@ -139,6 +139,8 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
   return {async fetch(request,env){
     if(!isCanonicalOrigin(request,env))return fail(request,404);
     const url=new URL(request.url),path=url.pathname;
+    // Retired route: reject even if a future deployment enables an old flag.
+    if(path==='/api/v1/member/xp-test')return fail(request,404);
     const rewardMedia=matchRewardMedia(path);
     const rewardInventory=matchRewardInventory(path);
     const ownRewardMedia=rewardMedia?.handle===null;
@@ -153,7 +155,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const ownSpace=OWN_SPACE.test(path),publicSpace=path.match(PUBLIC_SPACE);
      const ownRecognition=path===CANONICAL_PREFIX+'/recognition';
      if(ownRecognition&&env.CANONICAL_RECOGNITION_ENABLED!=='true')return fail(request,404);
-    const ownProgression=/^\/api\/v1\/member\/(?:progression|notifications(?:\/ack)?|xp-test)$/.test(path);
+    const ownProgression=/^\/api\/v1\/member\/(?:progression|notifications(?:\/ack)?)$/.test(path);
     const ownSupporter=/^\/api\/v1\/member\/supporter(?:\/(?:checkout|portal|webhook|rewards))?$/.test(path);
     const supporterHook=path===CANONICAL_PREFIX+"/supporter/webhook";
     const ownProfile=path===PROFILE;
