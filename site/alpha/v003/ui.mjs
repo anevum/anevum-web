@@ -307,7 +307,7 @@ export function card(p,owner=false,reviewer=false){
       if(isUpdate)controls+='<a class="button quiet" href="'+projectURL(p.id)+'">Live version</a>';
     }else if(!hasDraft){
       controls+=(p.status==="published"?'<a class="button" href="'+projectURL(p.id)+'">Play live release</a>':"")+
-        '<a class="button quiet" href="/upload/v3?update='+esc(p.id)+'">'+(p.status==="published"?"Upload an update":"Try a new build")+'</a>';
+        '<a class="button quiet" href="/upload/v3?update='+esc(p.id)+'">'+(p.status==="published"?"Upload an update":"Revise project")+'</a>';
     }
   }else controls='<a class="button primary" href="'+projectURL(p.id)+'">Open project</a>';
   return '<article class="project" aria-label="'+esc(p.title)+'">'+
