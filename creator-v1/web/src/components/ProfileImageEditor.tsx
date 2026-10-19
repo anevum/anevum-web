@@ -32,7 +32,7 @@ export function ProfileImageEditor({slot,version,onSaved}:{slot:'avatar'|'banner
    <label>Horizontal position<input type="range" min="0" max="100" value={x} onChange={e=>setX(Number(e.target.value))} disabled={busy}/></label>
    <label>Vertical position<input type="range" min="0" max="100" value={y} onChange={e=>setY(Number(e.target.value))} disabled={busy}/></label>
    <div className="ms-actions"><button className="ms-primary" type="button" onClick={()=>void upload()} disabled={busy}>{busy?'SAVING…':'SAVE '+(slot==='avatar'?'PICTURE':'BANNER')}</button><button type="button" onClick={()=>setSource('')} disabled={busy}>CANCEL</button></div>
-  </div>:version?<img className="ms-current-image" src={'/api/v1/member/media/'+slot} key={version} alt={'Current '+slot}/>:<div className="ms-image-empty" aria-hidden="true">{slot==='avatar'?'◈':'✦ · · · ✦'}</div>}
+  </div>:version?<img className="ms-current-image" src={'/api/v1/member/media/'+slot+'?v='+version} key={version} alt={'Current '+slot}/>:<div className="ms-image-empty" aria-hidden="true">{slot==='avatar'?'◈':'✦ · · · ✦'}</div>}
   <label className="ms-file-button">CHOOSE {slot==='avatar'?'PICTURE':'BANNER'}<input ref={input} type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={e=>choose(e.target.files?.[0])}/></label>
   {version&&!source&&<button type="button" onClick={()=>void remove()} disabled={busy}>REMOVE IMAGE</button>}
   <small>JPEG, PNG or WebP · up to 12 MB. Your crop is resized before upload.</small>

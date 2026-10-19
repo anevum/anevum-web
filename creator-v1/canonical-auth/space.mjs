@@ -91,8 +91,13 @@ function imageResponse(data){
 export async function canonicalSpace(req,env,user,publicHandle=null,now=Math.floor(Date.now()/1000)){
  const db=env.MEMBER_DB;
  if(!await spaceReady(db))return error(503,'Member space is being prepared. Try again shortly.');
- const path=new URL(req.url).pathname;
- if(new URL(req.url).search)return error(400,'Query not supported');
+ const url=new URL(req.url),path=url.pathname;
+ const mediaRoute=/\/media\/(avatar|banner)$/.test(path);
+ // An image revision is only a cache-busting hint, never an authorization key.
+ // Keep every non-media route and every mutation query-free.
+ if(url.search && !(req.method==='GET'&&mediaRoute&&url.searchParams.size===1&&
+   url.searchParams.has('v')&&/^[1-9][0-9]{0,9}$/.test(url.searchParams.get('v')||'')))
+  return error(400,'Query not supported');
  try{
   const isPublic=publicHandle!==null;
   let id=user?.id;

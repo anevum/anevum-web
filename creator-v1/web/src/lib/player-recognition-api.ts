@@ -1,4 +1,5 @@
 import type {EarnedBadge,PlayerAura,PublicDistinctions} from './player-recognition';
+import {alertAccount,memberChanged} from './ui-events';
 export type RecognitionSettings={
  badgeMode:'automatic'|'curated'|'hidden';
  badgeIds:string[];
@@ -37,7 +38,12 @@ async function request(method:'GET'|'PATCH',body?:RecognitionUpdate,signal?:Abor
  return data;
 }
 export const readRecognition=(signal?:AbortSignal)=>request('GET',undefined,signal);
-export const saveRecognition=(value:RecognitionUpdate)=>request('PATCH',value);
+export async function saveRecognition(value:RecognitionUpdate){
+ const owner=alertAccount();
+ const saved=await request('PATCH',value);
+ memberChanged(owner);
+ return saved;
+}
 export function previewDistinctions(data:RecognitionSettings,medalId:string|null,ribbonIds:string[]):PublicDistinctions{
  return {
   medals:medalId&&data.earnedMedals.some(x=>x.id===medalId)?[medalId]:[],

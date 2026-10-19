@@ -11,6 +11,7 @@ const ownerColumns=new Set(['t.author_id','r.author_id','p.user_id']);
 export function publicMemberColumns(owner){
  if(!ownerColumns.has(owner))throw Error('Unsafe identity column');
  return `${owner} AS member_identity_key,s.featured_json,s.show_stats,
+ COALESCE((SELECT m.version FROM member_space_media m WHERE m.user_id=${owner} AND m.slot='avatar'),0) AS avatar_version,
  (COALESCE((SELECT SUM(amount) FROM member_xp_events x WHERE x.user_id=${owner}),0)+
   COALESCE((SELECT SUM(CASE milestone WHEN 'first_signal' THEN 10 WHEN 'world_shaper' THEN 25 ELSE 0 END)
    FROM member_space_milestones z WHERE z.user_id=${owner}),0)) AS member_xp,
@@ -26,7 +27,10 @@ export function publicMemberCard(row){
  const number=Number(row.member_xp);
  const xp=Number.isSafeInteger(number)&&number>=0?number:0;
  return {
-  handle:row.handle,displayName:row.display_name,avatar:Boolean(row.avatar),
+  handle:row.handle,displayName:row.display_name,
+  avatar:Boolean(row.avatar_version??row.avatar),
+  ...(Number.isSafeInteger(Number(row.avatar_version))&&Number(row.avatar_version)>0?
+   {avatarVersion:Number(row.avatar_version)}:{}),
   level:row.show_stats===0?null:levelProgress(xp).level,
   featuredAwards
  };

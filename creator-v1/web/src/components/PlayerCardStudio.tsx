@@ -74,6 +74,7 @@ export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:C
  const previewMember:PublicIdentity={
   handle:profile.handle,displayName:profile.displayName,
   avatar:Boolean(space.media.avatar),
+  avatarVersion:space.media.avatar,
   level:space.showStats&&space.stats?space.stats.level:null,
   featuredAwards:badgeIds,earnedBadges:badges,
   badgeDisplay:{mode:badgeMode,ids:badgeIds},
