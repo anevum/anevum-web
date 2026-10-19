@@ -23,7 +23,7 @@ function validInventory(value:unknown,publicProfile:boolean):value is Inventory{
 
 /** UI-only list of server-verified inventory; no unreached level names,
  * thumbnails, scene URLs or badge definitions are enumerated in the DOM.
- * Full model/thumbnail requests are independently reauthorized server-side.
+ * High-definition SVG emblem requests remain independently reauthorized server-side.
  */
 export function EarnedRewardVault({
  level,handle=null,badges=[],distinctions,fallbackBadges=[],
@@ -108,12 +108,12 @@ export function EarnedRewardVault({
     'Only earned items appear here. Progression and grants must be confirmed by ANEVUM.'}</p>
   </div>}
   {showLevels&&records.length>0&&<div className="av75-vault-section">
-   <h3>Earned evolution</h3>
+   <h3>Earned evolution emblems</h3>
    <div className="av75-levels-earned">
     {records.map(item=><button type="button" className={'av75-earned-level'+
      (item.level===verifiedLevel?' is-current':'')}
       key={item.level}
-      onClick={()=>setSelected({kind:'level',level:item.level,name:item.name,detail:item.subtitle+' · '+item.motion})}
+      onClick={()=>setSelected({kind:'level',level:item.level,name:item.name,detail:item.subtitle})}
       aria-label={'Inspect earned level '+item.level+' · '+item.name}>
       <LevelEmblem level={item.level} size={74} handle={handle}/>
       <span><small>LEVEL {String(item.level).padStart(2,'0')}{item.level===verifiedLevel?' / CURRENT':''}</small>
