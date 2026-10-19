@@ -3,7 +3,7 @@
  * Visual injection occurs only on a successful /staff HTML GET.
  * To roll back, rebind /staff* to anevum-staff-review-navigation-v001.
  */
-const STYLE = \`
+const STYLE = `
 .iren-staff-dock{position:fixed;right:15px;bottom:15px;z-index:999999;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#eaf1f9;isolation:isolate}
 .iren-staff-dock>summary{width:43px;height:43px;border:1px solid #b8a67b;border-radius:50%;display:grid;place-items:center;list-style:none;cursor:pointer;background:radial-gradient(circle at 40% 30%,#304e67,#101b2c 77%);box-shadow:0 4px 22px #0007,0 0 16px #d8b8872b;position:relative;transition:transform .16s,border-color .16s}
 .iren-staff-dock>summary::-webkit-details-marker{display:none}
@@ -19,7 +19,7 @@ const STYLE = \`
 .iren-staff-dock a span{color:#e7c48d}
 @media(max-width:550px){.iren-staff-dock{right:11px;bottom:calc(12px + env(safe-area-inset-bottom))}.iren-staff-dock>summary{width:41px;height:41px}}
 @media(prefers-reduced-motion:reduce){.iren-staff-dock>summary{transition:none}}
-\`;
+`;
 const NAV = '<details class="iren-staff-dock"><summary aria-label="Open IREN staff navigation" title="IREN staff navigation"><span class="orbit" aria-hidden="true"></span></summary><nav class="menu" aria-label="IREN staff shortcuts"><div class="menu-label">IREN / CONTINUANCE</div><a href="/staff/observatory">Engagement Observatory <span aria-hidden="true">↗</span></a><a href="/staff/projects">Project reviews <span aria-hidden="true">↗</span></a><a href="/staff">Staff operations <span aria-hidden="true">↗</span></a></nav></details>';
 export default {
   async fetch(request,env) {
