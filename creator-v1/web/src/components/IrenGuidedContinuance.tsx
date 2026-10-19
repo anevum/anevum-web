@@ -261,10 +261,23 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     const width=Math.min(400,window.innerWidth-32);
     const center=spotlight?spotlight.left+spotlight.width/2:window.innerWidth/2;
     panelStyle.left=clamp(center-width/2,16,window.innerWidth-width-16);
-    const panelHeight=304;
-    panelStyle.top=spotlight
-      ?spotlight.top>panelHeight+30?spotlight.top-panelHeight-14:clamp(spotlight.top+spotlight.height+14,16,window.innerHeight-panelHeight-12)
-      :Math.max(16,(window.innerHeight-panelHeight)/2);
+    // The guide is not a fixed 304px card: copy length and font scaling can
+    // increase its height. Use the actual scroll height and constrain the
+    // available area below the selected top so controls never leave the screen.
+    const viewportHeight=window.innerHeight;
+    const panelHeight=Math.min(
+      Math.max(dialogRef.current?.scrollHeight||360,304),
+      Math.max(120,viewportHeight-24)
+    );
+    const maxTop=Math.max(12,viewportHeight-panelHeight-12);
+    const desiredTop=spotlight
+      ?spotlight.top>panelHeight+30
+        ?spotlight.top-panelHeight-14
+        :spotlight.top+spotlight.height+14
+      :(viewportHeight-panelHeight)/2;
+    const top=clamp(desiredTop,12,maxTop);
+    panelStyle.top=top;
+    panelStyle.maxHeight=Math.max(100,viewportHeight-top-12);
   }
 
   return <>
