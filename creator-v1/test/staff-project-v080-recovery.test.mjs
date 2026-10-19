@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import worker from "../operations/staff-project-worker-v080.mjs";
 import {staffInventory} from "../operations/staff-project-control-v080.mjs";
+import {renderStaffOperations} from "../operations/staff-project-ui-v080.mjs";
 
 const ROOT="https://anevum.com";
 function request(path="/staff/projects",method="GET",cookie="fixture-session",body=null){
@@ -90,4 +91,19 @@ test("HEAD error never serves a body to staff pages",async()=>{
  assert.equal(res.status,503);
  assert.equal(await res.text(),"");
  assert.match(res.headers.get("content-type"),/^text\/html/);
+});
+
+test("missing bindings return a branded unavailable page, not JSON",async()=>{
+ const missing=await worker.fetch(request(),{DB:null,AUTH:AUTH,MEDIA:{}});
+ assert.equal(missing.status,503);
+ assert.match(missing.headers.get("content-type"),/^text\/html/);
+ assert.match(await missing.text(),/STAFF_BINDINGS_UNAVAILABLE/);
+});
+test("owner alone receives pending private-file cleanup controls",()=>{
+ const pending=[{project_id:"11111111-1111-4111-8111-111111111111",title:"Fixture project",attempts:2}];
+ const owner=renderStaffOperations({role:"owner",controlsReady:true,cleanups:pending,projects:[]});
+ assert.match(owner,/data-action="retry_cleanup"/);
+ assert.match(owner,/Pending private-file cleanup/);
+ const reviewer=renderStaffOperations({role:"reviewer",controlsReady:false,cleanups:pending,projects:[]});
+ assert.doesNotMatch(reviewer,/data-action="retry_cleanup"/);
 });
