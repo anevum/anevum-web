@@ -161,6 +161,8 @@ export class IrenLivingRig{
  private expanded=false;
  private mood:IrenMood="idle";
  private look:[number,number]=[0,0];
+ private lookTarget:[number,number]=[0,0];
+ private armPose:[number,number]=[0,0];
  private moodEnergy=0;
  private lightPulse=0;
  private view=I();
@@ -197,7 +199,10 @@ export class IrenLivingRig{
   this.render();
  }
  setMood(mood:IrenMood){if(this.mood!==mood){this.mood=mood;this.moodEnergy=1;this.lightPulse=1;this.render()}}
- setLook(x:number,y:number){this.look=[clamp(x,-1,1),clamp(y,-1,1)];if(this.reduced)this.render()}
+ setLook(x:number,y:number){
+  this.lookTarget=[clamp(x,-1,1),clamp(y,-1,1)];
+  if(this.reduced){this.look=[...this.lookTarget];this.render()}
+ }
  setExpanded(expanded:boolean){this.expanded=expanded;this.render()}
  setReducedMotion(reduced:boolean){this.reduced=reduced;if(reduced)this.pause();this.render();if(!reduced)this.play()}
  setVisible(visible:boolean){this.visible=visible;if(visible){this.render();this.play()}else this.pause()}
@@ -219,10 +224,14 @@ export class IrenLivingRig{
  }
  private frame= (now:number)=>{
   if(this.stopped||!this.visible||this.reduced){this.request=0;return}
-  const interval=1000/(this.expanded?60:30);
+  // Ambient rest runs at half frame rate; interaction remains responsive.
+  const interval=1000/(this.mood==="rest"?12:this.expanded?50:24);
   if(this.last && now-this.last<interval){this.request=requestAnimationFrame(this.frame);return}
   const delta=this.last?Math.min(.07,(now-this.last)/1000):1/60;
   this.last=now;this.seconds+=delta;
+  const smooth=Math.min(1,delta*7.2);
+  this.look[0]=mix(this.look[0],this.lookTarget[0],smooth);
+  this.look[1]=mix(this.look[1],this.lookTarget[1],smooth);
   this.moodEnergy=Math.max(0,this.moodEnergy-delta*.9);
   this.lightPulse=Math.max(0,this.lightPulse-delta*.6);
   this.render();
@@ -259,8 +268,8 @@ export class IrenLivingRig{
   const resting=this.mood==="rest";
   const flying=this.mood==="travel";
   const active=excited||greeting||guiding||thinking||curious||notifying||flying;
-  const bob=(moving?Math.sin(t*2.4)*(resting?.013:.043)+
-    (excited?Math.sin(t*12)*.042:0):0)-(resting?.10:0);
+  const bob=(moving?Math.sin(t*(resting?1.1:2.4))*(resting?.014:.043)+
+    (excited?Math.sin(t*12)*.05:0):0)-(resting?.10:0)+this.moodEnergy*.025;
   const yaw= -.13+(moving?Math.sin(t*.5)*.10:0)+this.look[0]*.19+
     (flying?.32:0)+(curious?.14:0);
   const lean=(flying?-.19:.02)+(moving?Math.sin(t*1.2)*.028:0);
@@ -285,6 +294,10 @@ export class IrenLivingRig{
   for(let index=0;index<3;index++){
    const angle=orbitalPhase+index*TAU/3+Math.PI/2;
    const nx=.164*Math.cos(angle),ny=-.19+.164*Math.sin(angle);
+   const dy=ny+.19;
+   // The connecting struts revolve with the three nodes as one true 3D rig.
+   this.draw("tube",root,palette.spine,[nx*.5,-.19+dy*.5,.512],
+    [.011,Math.hypot(nx,dy)*.5,.011],Rz(-Math.atan2(nx,dy)),pulse*.2);
    this.draw("sphere",root,palette.node,[nx,ny,.537],
     [.055,.055,.035],I(),pulse*.5+(excited?.31:0));
    this.draw("sphere",root,palette.cyan,[nx-.012,ny+.014,.565],
@@ -297,8 +310,10 @@ export class IrenLivingRig{
    const wave=excited?-side*1.2:greeting&&side===1?-1.35:guiding&&side===1?-1.18:
     notifying&&side===1?-1.02:thinking&&side===1?-.66:
     curious&&side===1?-.35:side*.17;
-   const swing=moving?Math.sin(t*(active?5:1.8)+side)*.075:0;
-   const arm=chain(shoulder,Rz(wave+swing));
+   const swing=moving?Math.sin(t*(active?5:1.8)+side)*(greeting||excited?.12:.052):0;
+   const slot=side===-1?0:1;
+   this.armPose[slot]=mix(this.armPose[slot],wave,moving?.14:1);
+   const arm=chain(shoulder,Rz(this.armPose[slot]+swing));
    this.draw("sphere",arm,palette.trim,[0,0,0],[.16,.17,.16]);
    this.draw("sphere",arm,palette.ceramic,[side*.035,-.20,.015],[.15,.30,.17],Rz(-side*.15));
    this.draw("sphere",arm,palette.midnight,[side*.05,-.39,.045],[.12,.13,.14]);
@@ -322,25 +337,38 @@ export class IrenLivingRig{
   this.draw("sphere",head,palette.ceramic,[0,.48,.03],[.59,.51,.468]);
   this.draw("sphere",head,palette.visor,[0,.43,.462],[.505,.385,.085]);
   this.draw("sphere",head,palette.midnight,[0,.43,.529],[.457,.341,.041]);
-  const blinking=moving&&(t%5.4>5.17&&t%5.4<5.30);
-  const blink=blinking?.10:(resting?.40:1);
+  const blinkCycle=t%6.9;
+  const blinking=moving&&(blinkCycle>6.54&&blinkCycle<6.68||
+    blinkCycle>6.79&&blinkCycle<6.86);
+  const blink=blinking?.10:(resting?.42:1);
   const happy=excited||greeting||notifying;
   for(const side of [-1,1] as const){
-   this.draw("sphere",head,palette.steel,[side*.262,.45,.562],[.172,.166,.052]);
-   this.draw("sphere",head,palette.eye,[side*.262,.45,.608],[.114,.118*blink,.035],I(),pulse*.65);
-   this.draw("sphere",head,palette.cyan,[side*.285,.477,.643],[.042,.04*blink,.017],I(),pulse*.3);
+   const eyeX=side*.258,glanceX=this.look[0]*.027+glance*.028;
+   const glanceY=this.look[1]*-.024+(thinking?-.008:0);
+   this.draw("sphere",head,palette.steel,[eyeX,.44,.561],[.153,.147,.047]);
+   this.draw("sphere",head,palette.eye,[eyeX,.44,.601],[.112,.105*blink,.028],I(),pulse*.65);
+   this.draw("sphere",head,palette.cyan,[eyeX+glanceX,.444+glanceY,.625],
+    [.046,.050*blink,.015],I(),pulse*.28);
+   this.draw("sphere",head,palette.node,[eyeX-.023+glanceX,.465+glanceY,.640],
+    [.016,.016*blink,.009]);
    this.draw("sphere",head,palette.trim,[side*.48,.17,.185],[.09,.09,.09]);
    this.draw("sphere",head,palette.cyan,[side*.48,.17,.257],[.035,.055,.028],I(),pulse*.3);
   }
-  this.draw("smile",head,palette.mouth,[0,.20,.565],[.105,happy?.10:.068,.035],I(),pulse*.3);
+  // Express through physical optics; keep the face understated and attentive.
+  this.draw("smile",head,palette.mouth,[0,.19,.565],
+    [.091,happy?.088:thinking?.028:.053,.028],I(),pulse*.22);
   // Antenna and responsive sensor crystal.
   this.draw("tube",head,palette.trim,[0,.995,-.04],[.038,.16,.038]);
   this.draw("sphere",head,palette.cyan,[0,1.166,-.04],[.094,.11,.094],I(),pulse*.6);
   this.draw("sphere",head,palette.eye,[-.026,1.197,.04],[.032,.037,.022]);
-  // Floating cheek orbit satellite.
-  const sat=moving?t*.9:0;
-  const satX=.67*Math.cos(sat),satY=.74+.11*Math.sin(sat*2);
-  this.draw("sphere",head,palette.beacon,[satX,satY,-.28],[.062,.062,.062],I(),pulse*.35);
+  // Three micro-observatories echo the Institute's tri-node coordination axis.
+  const sat=moving?t*.55:0;
+  for(let index=0;index<3;index++){
+   const angle=sat+index*TAU/3;
+   this.draw("sphere",head,palette.beacon,
+    [.66*Math.cos(angle),.74+.08*Math.sin(angle*2),-.23],
+    [.047,.047,.047],I(),pulse*.32);
+  }
   gl.depthMask(true);
  }
  dispose(){
