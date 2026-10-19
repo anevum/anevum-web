@@ -416,9 +416,13 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   const currentTopic=topics.find(topic=>topic.id===activeTopic)||topics[0];
   const isMobile=viewport.width<=650;
   const spriteSize=panelOpen?(isMobile?130:164):54;
+  // Keep IREN clear of fixed Wayfinder/header controls even if dragged
+  // directly against the top of the viewport or restored from old storage.
+  const topClearance=isMobile?74:88;
+  const bottomLimit=Math.max(10,viewport.height-spriteSize-topClearance);
   const safePosition=dockPosition?{
     right:clamp(dockPosition.right,10,Math.max(10,viewport.width-spriteSize-10)),
-    bottom:clamp(dockPosition.bottom,10,Math.max(10,viewport.height-spriteSize-10))
+    bottom:clamp(dockPosition.bottom,10,bottomLimit)
   }:null;
   const companionStyle:CSSProperties=safePosition
     ?{right:safePosition.right,bottom:safePosition.bottom}:{};
@@ -516,7 +520,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
       if(!drag.moved&&Math.hypot(dx,dy)>7)drag.moved=true;
       if(drag.moved){
         const next={right:clamp(drag.right-dx,10,Math.max(10,viewport.width-spriteSize-10)),
-          bottom:clamp(drag.bottom-dy,10,Math.max(10,viewport.height-spriteSize-10))};
+          bottom:clamp(drag.bottom-dy,10,bottomLimit)};
         setDockPosition(next);suppressClick.current=true;return;
       }
     }
@@ -533,7 +537,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     if(drag.moved){
       const dx=event.clientX-drag.x,dy=event.clientY-drag.y;
       const next={right:clamp(drag.right-dx,10,Math.max(10,viewport.width-spriteSize-10)),
-        bottom:clamp(drag.bottom-dy,10,Math.max(10,viewport.height-spriteSize-10))};
+        bottom:clamp(drag.bottom-dy,10,bottomLimit)};
       setDockPosition(next);writePosition(storageKey,next);
     }
     dragRef.current=null;
