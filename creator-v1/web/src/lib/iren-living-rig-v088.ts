@@ -57,7 +57,7 @@ function surface(rings:number,segments:number,position:(u:number,v:number)=>[num
  return new Float32Array(data);
 }
 function sphere(){
- return surface(14,22,(u,v)=>{
+ return surface(18,28,(u,v)=>{
   const latitude=Math.PI*(u-.5),angle=TAU*v,ct=Math.cos(latitude);
   return [ct*Math.cos(angle),Math.sin(latitude),ct*Math.sin(angle)];
  });
@@ -74,20 +74,25 @@ function orbit(start=0,end=TAU){
   return [Math.cos(ring)*radius,Math.sin(ring)*radius,.038*Math.sin(minor)];
  });
 }
+/** The existing IREN orbital mark and cobalt/near-black palette are canonical.
+ * This is IREN's field embodiment, not a separate helper or authority. */
 const palette:Record<string,Finish>={
- ceramic:{color:[.26,.38,.60],metal:.52,glow:0},
- chassis:{color:[.105,.16,.30],metal:.86,glow:0},
- midnight:{color:[.045,.088,.17],metal:.72,glow:0},
- visor:{color:[.045,.12,.23],metal:.50,glow:.02},
- trim:{color:[.84,.72,.61],metal:.88,glow:.05},
- steel:{color:[.47,.62,.76],metal:.88,glow:0},
- eye:{color:[.86,.98,.98],metal:.16,glow:.83},
- cyan:{color:[.43,.86,1.0],metal:.35,glow:.8},
- beacon:{color:[1,.78,.55],metal:.2,glow:.9},
- orbit:{color:[.76,.70,.88],metal:.75,glow:.38,alpha:.91},
- thruster:{color:[.21,.74,1],metal:.2,glow:.8,alpha:.74},
- mouth:{color:[.66,.86,.95],metal:.5,glow:.48},
- shadow:{color:[.20,.38,.64],metal:.18,glow:.15,alpha:.3}
+ ceramic:{color:[.16,.25,.45],metal:.74,glow:0},
+ chassis:{color:[.025,.055,.12],metal:.91,glow:0},
+ midnight:{color:[.016,.027,.051],metal:.76,glow:0},
+ visor:{color:[.024,.058,.12],metal:.69,glow:.016},
+ trim:{color:[.431,.631,1.0],metal:.90,glow:.11},
+ steel:{color:[.32,.45,.65],metal:.83,glow:.012},
+ eye:{color:[.722,.824,1.0],metal:.22,glow:.66},
+ cyan:{color:[.196,.435,1.0],metal:.35,glow:.90},
+ beacon:{color:[.431,.631,1.0],metal:.27,glow:.92},
+ orbit:{color:[.431,.631,1.0],metal:.65,glow:.43,alpha:.93},
+ thruster:{color:[.196,.435,1.0],metal:.29,glow:.85,alpha:.77},
+ mouth:{color:[.722,.824,1.0],metal:.44,glow:.46},
+ shadow:{color:[.06,.21,.50],metal:.16,glow:.16,alpha:.23},
+ node:{color:[.722,.824,1.0],metal:.20,glow:.95},
+ spine:{color:[.196,.435,1.0],metal:.66,glow:.60},
+ armor:{color:[.065,.108,.215],metal:.95,glow:0}
 };
 const vert=[
  "attribute vec3 aPosition;attribute vec3 aNormal;",
@@ -102,13 +107,13 @@ const frag=[
  "uniform vec3 uColor;uniform float uMetal;uniform float uGlow;uniform float uAlpha;",
  "void main(){",
  "vec3 n=normalize(vNormal);vec3 eye=normalize(vec3(0.,0.,4.)-vPosition);",
- "vec3 key=normalize(vec3(-.5,1.,1.4));vec3 fill=normalize(vec3(1.,-.15,.8));",
+ "vec3 key=normalize(vec3(-.45,.92,1.18));vec3 fill=normalize(vec3(.76,-.21,.92));",
  "float diffuse=max(dot(n,key),0.);float bounce=max(dot(n,fill),0.);",
  "vec3 halfV=normalize(key+eye);",
- "float spec=pow(max(dot(n,halfV),0.),mix(20.,95.,uMetal))*(.25+.62*uMetal);",
- "float rim=pow(1.-clamp(dot(n,eye),0.,1.),3.);",
- "vec3 lit=uColor*(.28+.60*diffuse+.23*bounce)+vec3(.76,.88,1.)*spec;",
- "lit+=uColor*uGlow*(.80+.32*rim)+vec3(.18,.33,.55)*rim*(.12+.22*uMetal);",
+ "float spec=pow(max(dot(n,halfV),0.),mix(21.,135.,uMetal))*(.20+.70*uMetal);",
+ "float rim=pow(1.-clamp(dot(n,eye),0.,1.),2.8);",
+ "vec3 lit=uColor*(.19+.61*diffuse+.24*bounce)+vec3(.70,.83,1.)*spec;",
+ "lit+=uColor*uGlow*(.79+.38*rim)+vec3(.09,.20,.52)*rim*(.08+.38*uMetal);",
  "gl_FragColor=vec4(clamp(lit,0.,1.),uAlpha);}"
 ].join("\n");
 function shader(gl:WebGLRenderingContext,type:number,source:string):WebGLShader{
@@ -251,18 +256,31 @@ export class IrenLivingRig{
     (flying?.32:0)+(curious?.14:0);
   const lean=(flying?-.19:.02)+(moving?Math.sin(t*1.2)*.028:0);
   const root=chain(T(0,bob,0),Ry(yaw),Rz(lean));
-  // Outer orbital instrument, physically surrounding the character.
-  const halo=chain(root,T(0,-.11,-.06),Ry(moving?t*.22:.45),Rx(1.05),Rz(.27));
-  this.draw("orbit",halo,palette.orbit,[0,0,0],[.88,.88,.88]);
-  this.draw("sphere",halo,palette.beacon,[.89,0,0],[.075,.075,.075],I(),pulse*.45);
-  this.draw("sphere",root,palette.shadow,[0,-1.18,-.12],[.66,.035,.28]);
-  // Hover body, armored segmented chest and central luminous insignia.
+  // Dual counter-rotating observatory rings, not a decorative static halo.
+  const halo=chain(root,T(0,-.11,-.10),Ry(moving?t*.23:.45),Rx(1.12),Rz(.23));
+  const counterHalo=chain(root,T(0,-.11,-.12),Ry(moving?-t*.13:-.3),Rx(-.48));
+  this.draw("orbit",halo,palette.orbit,[0,0,0],[.86,.86,.86]);
+  this.draw("orbit",counterHalo,palette.steel,[0,0,0],[.79,.79,.79]);
+  this.draw("sphere",halo,palette.beacon,[.86,0,0],[.063,.063,.063],I(),pulse*.42);
+  this.draw("sphere",root,palette.shadow,[0,-1.18,-.12],[.60,.025,.24]);
+  // Floating protective shell and genuine 3D IREN coordination mark.
   this.draw("sphere",root,palette.chassis,[0,-.26,0],[.49,.49,.37]);
   this.draw("sphere",root,palette.ceramic,[0,-.20,.12],[.43,.42,.31]);
-  this.draw("sphere",root,palette.midnight,[0,-.19,.39],[.24,.22,.056]);
-  this.draw("orbit",root,palette.trim,[0,-.19,.452],[.171,.171,.171]);
-  this.draw("sphere",root,palette.cyan,[0,-.19,.471],[.10,.10,.035],I(),pulse*.45);
-  this.draw("sphere",root,palette.eye,[0,-.19,.493],[.031,.072,.022]);
+  this.draw("sphere",root,palette.armor,[0,-.19,.38],[.27,.29,.085]);
+  this.draw("sphere",root,palette.midnight,[0,-.19,.451],[.23,.25,.049]);
+  this.draw("orbit",root,palette.trim,[0,-.19,.492],[.205,.205,.205],Rx(.08));
+  // Central axis + three physical orbital nodes reflect IREN's locked emblem.
+  this.draw("tube",root,palette.spine,[0,-.19,.506],[.021,.32,.021],I(),pulse*.4);
+  this.draw("sphere",root,palette.node,[0,-.19,.529],[.050,.050,.027],I(),pulse*.5);
+  const orbitalPhase=moving?t*(excited?2.5:notifying?1.25:.18):.10;
+  for(let index=0;index<3;index++){
+   const angle=orbitalPhase+index*TAU/3+Math.PI/2;
+   const nx=.164*Math.cos(angle),ny=-.19+.164*Math.sin(angle);
+   this.draw("sphere",root,palette.node,[nx,ny,.537],
+    [.055,.055,.035],I(),pulse*.5+(excited?.31:0));
+   this.draw("sphere",root,palette.cyan,[nx-.012,ny+.014,.565],
+    [.017,.017,.011],I(),pulse*.4);
+  }
   for(const side of [-1,1] as const){
    // Back stabilizer and articulated shoulder/forearm/hand assembly.
    this.draw("sphere",root,palette.steel,[side*.46,-.22,-.13],[.16,.27,.21],Rz(side*.22));
