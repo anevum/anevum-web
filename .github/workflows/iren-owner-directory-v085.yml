@@ -1,0 +1,28 @@
+name: IREN V085 Owner Directory Safety
+on:
+  push:
+    branches: [build/iren-owner-control-v085-20261019-001]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Validate owner-only directory and staff guard
+        run: |
+          node --check creator-v1/canonical-auth/staff-ops.mjs
+          grep -Fq "permit.role!=='owner'" creator-v1/canonical-auth/staff-ops.mjs
+          grep -Fq "lane==='members'" creator-v1/canonical-auth/staff-ops.mjs
+          grep -Fq "snapshot.role==='owner'" creator-v1/web/src/pages/StaffCommandPage.tsx
+          npm run check:creator-v1-web
+          npm run build:iren-apex-staff
+          cd creator-v1
+          npm run test:staff-command
