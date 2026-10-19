@@ -67,7 +67,10 @@ try{
  };
  const check=async (label,expr)=>{
   const result=await evaluate(expr);
-  if(!result)throw Error("IREN_V080_FAILED_"+label);
+  if(!result){
+   const geometry=label.includes("inside-")?await evaluate('(()=>{const e=document.querySelector(".ir80-help");if(!e)return "no-panel";const r=e.getBoundingClientRect(),p=e.parentElement?.getBoundingClientRect(),s=getComputedStyle(e);return JSON.stringify({viewport:[innerWidth,innerHeight],panel:[r.left,r.top,r.right,r.bottom,r.width,r.height],parent:p?[p.left,p.top,p.right,p.bottom,p.width,p.height]:null,computed:{width:s.width,maxHeight:s.maxHeight,right:s.right,bottom:s.bottom,boxSizing:s.boxSizing},className:e.className,outer:document.querySelector(".ir88-companion")?.className});})()'):"";
+   throw Error("IREN_V080_FAILED_"+label+(geometry?" / "+geometry:""));
+  }
  };
  await send("Page.enable");await send("Runtime.enable");
  await send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:"reduce"}]});
@@ -76,11 +79,18 @@ try{
   await send("Page.navigate",{url:base+"/creator/"});
   await until(()=>evaluate('!!document.querySelector(".ir80-dock")&&!!document.querySelector(".av79-home")'));
   await check("one-compact-helper-"+width,'(()=>{const buttons=document.querySelectorAll(".ir87-scout");if(buttons.length!==1||document.querySelector(".an-notification-center"))return false;const r=buttons[0].getBoundingClientRect();return r.width>=48&&r.width<=58&&r.height>=48&&r.height<=58;})()');
+  // The 3D WebGL scene must actually render in Chromium. Parsing source or
+  // showing the SVG fallback alone is insufficient acceptance evidence.
+  await until(()=>evaluate('!!document.querySelector(".ir88-figure.is-rendering")'),16000);
+  await check("one-real-webgl-"+width,'document.querySelectorAll(".ir88-3d-canvas").length===1');
   await capture("iren-scout-"+width);
   await evaluate('document.querySelector(".ir80-dock").click()');
   await until(()=>evaluate('!!document.querySelector(".ir80-help")'));
   await check("help-accessible-"+width,'document.querySelector(".ir80-help").getAttribute("aria-label")==="IREN companion"');
+  await check("home-station-"+width,'document.querySelector(".ir88-station")?.textContent.includes("THE WAYFINDER")');
+  await check("home-dialogue-"+width,'document.querySelector(".ir88-voice-line")?.textContent.includes("Welcome, explorer")');
   await check("help-inside-"+width,'(()=>{const r=document.querySelector(".ir80-help").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1;})()');
+  await check("expanded-real-webgl-"+width,'document.querySelectorAll(".ir88-figure.is-rendering").length===1');
   await capture("iren-help-"+width);
   await evaluate('document.querySelector("#ir87-updates-tab").click()');
   await until(()=>evaluate('!!document.querySelector("#ir87-updates-body")'));
@@ -90,6 +100,8 @@ try{
   await evaluate('document.querySelector(".ir80-tour-launch").click()');
   await until(()=>evaluate('!!document.querySelector(".ir80-guide-card")&&location.pathname.endsWith("/discover")'));
   await until(()=>evaluate('!!document.querySelector(".ir80-spotlight")'));
+  await until(()=>evaluate('!!document.querySelector(".ir80-guide-layer .ir88-figure.is-rendering")'),16000);
+  await check("guide-single-real-webgl-"+width,'document.querySelectorAll(".ir88-3d-canvas").length===1');
   await check("tour-step-"+width,'document.querySelector("#ir80-guide-title")?.textContent.includes("interests you")');
   await check("tour-modal-"+width,'document.querySelector(".ir80-guide-card").getAttribute("aria-modal")==="true"');
   await check("tour-inside-"+width,'(()=>{const r=document.querySelector(".ir80-guide-card").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1&&r.top>=0&&r.bottom<=innerHeight+1;})()');
@@ -107,6 +119,8 @@ try{
   await check("help-route-"+width,'!!document.querySelector(".av79-navigation[open] .ir80-wayfinder-entry")');
   await evaluate('document.querySelector(".ir80-wayfinder-entry").click()');
   await until(()=>evaluate('!!document.querySelector(".ir80-help")&&!document.querySelector(".av79-navigation[open]")'));
+  await check("community-station-"+width,'document.querySelector(".ir88-station")?.textContent.includes("THE COMMONS")');
+  await check("community-topic-"+width,'document.querySelector(".ir80-topic-grid button[aria-pressed=true]")?.textContent.includes("Meet people")');
   await evaluate('document.querySelector(".ir80-tour-launch").click()');
   await until(()=>evaluate('document.querySelector("#ir80-guide-title")?.textContent.includes("your people")'));
   await evaluate('document.querySelector("[data-iren-next]").click()');
@@ -114,6 +128,21 @@ try{
   await evaluate('document.querySelector("[data-iren-next]").click()');
   await until(()=>evaluate('!document.querySelector(".ir80-guide-card")'));
   await check("finished-"+width,'(()=>{const k=Object.keys(localStorage).find(k=>k.startsWith("anevum.iren.guided-continuance.v080."));return k&&JSON.parse(localStorage.getItem(k)).status==="completed";})()');
+  // A user can drag the helper all the way to the top edge. Check its expanded
+  // panel stays inside the 320px viewport and flips below the character.
+  if(width===320){
+   const key="anevum.iren.living.position.v088.anevum.iren.guided-continuance.v080.visitor";
+   await evaluate('localStorage.setItem('+JSON.stringify(key)+',JSON.stringify({right:254,bottom:654}))');
+   await send("Page.navigate",{url:base+"/creator/"});
+   await until(()=>evaluate('!!document.querySelector(".ir80-dock")&&!!document.querySelector(".av79-home")'));
+   await evaluate('document.querySelector(".ir80-dock").click()');
+   await until(()=>evaluate('!!document.querySelector(".ir80-help")'));
+   await check("docked-top-panel-bounds",'(()=>{const e=document.querySelector(".ir80-help"),r=e.getBoundingClientRect();return r.top>=0&&r.left>=0&&r.bottom<=innerHeight+1&&r.right<=innerWidth+1;})()');
+   await check("docked-top-panel-flipped",'(()=>{const b=document.querySelector(".ir80-dock").getBoundingClientRect(),h=document.querySelector(".ir80-help").getBoundingClientRect();return h.top>=b.bottom-1;})()');
+   await check("docked-clear-navigation",'(()=>{const b=document.querySelector(".ir80-dock").getBoundingClientRect(),h=document.querySelector(".av9-brand").getBoundingClientRect();return b.top>=h.bottom+2;})()');
+   await capture("iren-docked-top-320");
+   await evaluate('localStorage.removeItem('+JSON.stringify(key)+')');
+  }
   await check("overflow-"+width,'document.documentElement.scrollWidth<=innerWidth+1');
   evidence.push({width,height,guestTour:"PASS",help:"PASS",spotlight:"PASS",skipResume:"PASS",completed:"PASS",navCount:4,overflow:false});
   console.log("IREN_V080_BROWSER_PASS_"+width);
