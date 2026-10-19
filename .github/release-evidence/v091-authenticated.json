@@ -1,10 +1,10 @@
 {
-  "source_sha": "a55ae856be8718ea2c299ad48e63cb1f32eadf29",
+  "source_sha": "9ccec9bca12da2cfa8e4d1206484966f0ae78cd6",
   "founder_staff_session": false,
   "reviewer_staff_session": false,
   "creator_journey": false,
   "cross_account_identity": false,
   "verified_at": null,
   "evidence": [],
-  "status": "BLOCKED: The five transport-only staff Worker repairs passed the existing guarded workflow and are verified in Cloudflare production (GitHub run 39339508685). Real signed-in founder/reviewer UI, creator release journey and cross-account behavior remain unverified. Full V091 deployment has not occurred."
+  "status": "BLOCKED: Integrated V091 + IREN V092 + Aura Codex application source is pinned for release review. All four authenticated browser gates remain unverified; V091 production frontend is not deployed. Source and strict file allowlist have been reconciled without enabling release."
 }
