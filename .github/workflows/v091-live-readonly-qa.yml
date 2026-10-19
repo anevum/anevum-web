@@ -5,6 +5,7 @@ on:
       - build/v091-experience-integration-20261019-001
     paths:
       - creator-v1/test/v091-public-live-canary.mjs
+      - creator-v1/test/v091-live-emblem-browser.mjs
       - .github/workflows/v091-live-readonly-qa.yml
   pull_request:
     paths:
@@ -33,6 +34,25 @@ jobs:
           set -euo pipefail
           node --check creator-v1/test/v091-public-live-canary.mjs
           node creator-v1/test/v091-public-live-canary.mjs
+      - name: Inspect real public emblem rendering on a mobile Chromium viewport
+        shell: bash
+        env:
+          V091_VISUAL_DIR: ${{ runner.temp }}/v091-art-evidence
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome"
+          export CHROME_BIN="$chrome"
+          node --check creator-v1/test/v091-live-emblem-browser.mjs
+          node creator-v1/test/v091-live-emblem-browser.mjs
+      - name: Save public browser visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v091-public-earned-art-browser
+          path: ${{ runner.temp }}/v091-art-evidence
+          retention-days: 7
+          if-no-files-found: warn
       - name: Confirm no deployment, database modification or account writes
         shell: bash
         run: |
