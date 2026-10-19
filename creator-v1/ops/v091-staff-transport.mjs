@@ -7,20 +7,19 @@ export const digest=source=>createHash('sha256').update(source.trimEnd()+'\n').d
 const stable=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b))):v);
 const routeLock=rows=>stable(rows.map(({pattern,script})=>({pattern,script})).sort((a,b)=>a.pattern.localeCompare(b.pattern)));
 const settingsLock=s=>stable(Object.fromEntries(['bindings','compatibility_date','compatibility_flags','usage_model','tags','tail_consumers','logpush','placement','observability'].filter(k=>k in s).map(k=>[k,k==='bindings'?[...s[k]].sort((a,b)=>a.name.localeCompare(b.name)):s[k]])));
-function moduleSource(multipart){
- if(typeof multipart!=='string')throw Error('Worker source must be multipart text');
- const lineEnd=multipart.indexOf('\r\n');
- const boundary=multipart.slice(0,lineEnd);
+export function moduleSource(download,expectedModule='index.mjs'){
+ if(typeof download!=='string')throw Error('Worker source must be text');
+ if(!download.startsWith('--'))return {source:download,module:expectedModule};
+ const boundary=download.split(/\r?\n/,1)[0];
  if(!/^--[A-Za-z0-9_-]{4,}$/.test(boundary))throw Error('Unexpected Worker multipart boundary');
- const headerEnd=multipart.indexOf('\r\n\r\n',lineEnd+2);
- const header=headerEnd<0?'':multipart.slice(lineEnd+2,headerEnd);
+ const parts=download.split(boundary).slice(1).filter(p=>p.trim()&&p.trim()!=='--');
+ if(parts.length!==1)throw Error('Unexpected Worker module count');
+ const part=parts[0].replace(/^\r?\n/,'');
+ const separator=/\r?\n\r?\n/.exec(part);
+ const header=separator?part.slice(0,separator.index):'';
  const module=/^Content-Disposition: form-data; name="(index\.mjs|worker\.js)"/m.exec(header)?.[1];
- const footer='\r\n'+boundary+'--\r\n';
- if(!module||!multipart.endsWith(footer)||headerEnd<lineEnd+2||headerEnd+4>multipart.length-footer.length)
-  throw Error('Unexpected Worker module layout');
- const source=multipart.slice(headerEnd+4,-footer.length);
- if(source.includes('\r\n'+boundary+'\r\n'))throw Error('Unexpected multipart Worker assets or extra modules');
- return {source,module};
+ if(!module||module!==expectedModule||!separator)throw Error('Unexpected Worker module layout');
+ return {source:part.slice(separator.index+separator[0].length).replace(/\r?\n$/,''),module};
 }
 function currentVersion(value){
  const versions=value.deployments?.[0]?.versions;
@@ -38,7 +37,7 @@ export async function repairStaffTransport(api,{apply=false,context=process.env,
  for(const worker of manifest.workers){
   const base=prefix+worker.name;
   const [settings,deployment,download]=await Promise.all([api('GET',base+'/settings'),api('GET',base+'/deployments'),api('GET',base)]);
-  const version=currentVersion(deployment),downloaded=moduleSource(download),live=digest(downloaded.source),candidate=readSource(worker.name);
+  const version=currentVersion(deployment),downloaded=moduleSource(download,worker.module_file||'index.mjs'),live=digest(downloaded.source),candidate=readSource(worker.name);
   if(downloaded.module!==(worker.module_file||'index.mjs'))throw Error('Live Worker module layout drift: '+worker.name);
   if(digest(candidate)!==worker.candidate_sha256)throw Error('Candidate source drift: '+worker.name);
   if(!settings.bindings?.some(b=>b.type==='service'&&['APEX_AUTH','AUTH'].includes(b.name)&&b.service==='anevum-apex-prelaunch-gateway')||
@@ -63,7 +62,7 @@ export async function repairStaffTransport(api,{apply=false,context=process.env,
    // Record before PUT: a transport failure can occur after the server applies it.
    changed.push(plan);
    await api('PUT',plan.base,{metadata:plan.metadata,source:plan.candidate});
-   if((await (async()=>{const live=moduleSource(await api('GET',plan.base));return live.module===plan.metadata.main_module&&digest(live.source)===plan.candidate_sha256;})())!==true||settingsLock(await api('GET',plan.base+'/settings'))!==settingsLock(plan.settings))
+   if((await (async()=>{const live=moduleSource(await api('GET',plan.base),plan.metadata.main_module);return live.module===plan.metadata.main_module&&digest(live.source)===plan.candidate_sha256;})())!==true||settingsLock(await api('GET',plan.base+'/settings'))!==settingsLock(plan.settings))
     throw Error('Post-repair source/settings mismatch: '+plan.name);
   }
   if(routeLock(await api('GET',routesPath))!==routesBefore)throw Error('Route drift after staff repair');
@@ -74,7 +73,7 @@ export async function repairStaffTransport(api,{apply=false,context=process.env,
    try{
     const active=currentVersion(await api('GET',plan.base+'/deployments'));
     if(active===plan.version)continue;
-    if(digest(moduleSource(await api('GET',plan.base)).source)!==plan.candidate_sha256)
+    if(digest(moduleSource(await api('GET',plan.base),plan.metadata.main_module).source)!==plan.candidate_sha256)
      throw Error('Concurrent source deployment; refusing to overwrite it');
     await api('POST',plan.base+'/deployments',{strategy:'percentage',versions:[{version_id:plan.version,percentage:100}]});
     if(currentVersion(await api('GET',plan.base+'/deployments'))!==plan.version)throw Error('Rollback verification failed');
