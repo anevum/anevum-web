@@ -42,6 +42,17 @@
  background:linear-gradient(90deg,#7fb6df15,transparent);
  color:#e4e9f2!important
 }
+/* A small station indicator gives IREN a sense of place, without a popup. */
+.ir88-station{display:block;padding-top:3px;line-height:1.25;
+ letter-spacing:.18em;color:#9cbff8;font:600 8px/1.4 ui-monospace,monospace}
+.ir88-companion .ir87-scout.ir80-dock{
+ border-color:#4778c26b;
+ background:radial-gradient(circle at 38% 28%,#20417b 0%,#081328 68%,#060a16 100%);
+ box-shadow:0 6px 28px #0009,0 0 21px #2d62ff20,inset 0 1px #bdd6ff32
+}
+.ir88-companion .ir87-scout.ir80-dock:focus-visible{
+ outline:3px solid #96c4ff;outline-offset:3px
+}
 .ir88-motion-toggle{border:0;background:none;cursor:pointer;padding:8px 0;
  color:#d4dbeb;font:600 11px/1.4 system-ui,sans-serif;white-space:nowrap}
 .ir88-motion-toggle[aria-pressed="true"]{color:#ead2b6}
@@ -83,6 +94,9 @@
  .ir80-guide-top .ir88-guide-avatar{width:64px;height:64px;min-width:64px}
  .ir88-voice-line{font-size:11px!important}
  .ir80-guide-layer .ir88-guide-bot{filter:drop-shadow(0 4px 9px #0007)}
+}
+@media(max-width:650px){
+ .ir88-station{font-size:7px;letter-spacing:.13em}
 }
 @media(prefers-reduced-motion:reduce){
  .ir88-companion.ir80-companion,
