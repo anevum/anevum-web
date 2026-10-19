@@ -6,6 +6,7 @@ on:
       - "creator-v1/test/staff-project-v080*.test.mjs"
       - "creator-v1/package.json"
       - "creator-v1/test/staff-session-transport-v091.test.mjs"
+      - "creator-v1/test/staff-observatory-ux-v091.test.mjs"
       - ".github/workflows/staff-v080-safety.yml"
   workflow_dispatch:
 permissions:
@@ -30,3 +31,5 @@ jobs:
         run: npm install --ignore-scripts --no-audit --no-fund
       - name: Exercise the preserved staff Workers in workerd
         run: node --test creator-v1/test/staff-session-transport-v091.test.mjs creator-v1/test/staff-transport-release-v091.test.mjs
+      - name: Check isolated V092 Observatory candidate and unchanged protected V091 staff source
+        run: node --test creator-v1/test/staff-observatory-ux-v091.test.mjs

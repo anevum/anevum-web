@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {spawnSync} from 'node:child_process';
-const source=readFileSync(new URL('../operations/anevum-iren-staff-observatory-v001.mjs',import.meta.url),'utf8');
-const pinned=readFileSync(new URL('./fixtures/observatory-v091-baseline.txt',import.meta.url),'utf8');
+const source=readFileSync(new URL('../operations/anevum-iren-staff-observatory-v092.mjs',import.meta.url),'utf8');
+const pinned=readFileSync(new URL('../operations/anevum-iren-staff-observatory-v001.mjs',import.meta.url),'utf8');
 function part(name) {
  const m=source.match(new RegExp('const '+name+' = ("(?:\\\\.|[^"\\\\])*");'));
  assert.ok(m,'missing '+name);
@@ -35,7 +35,7 @@ test('chart fills missing signup days without inventing counts',()=>{
  assert.ok(js.includes('LIVE DATA UNAVAILABLE'));
 });
 test('published JS modules and embedded client syntax are valid',()=>{
- const sourcePath=new URL('../operations/anevum-iren-staff-observatory-v001.mjs',import.meta.url).pathname;
+ const sourcePath=new URL('../operations/anevum-iren-staff-observatory-v092.mjs',import.meta.url).pathname;
  const node=spawnSync(process.execPath,['--check',sourcePath],{encoding:'utf8'});
  assert.equal(node.status,0,node.stderr);
  const js=part('CLIENT');
