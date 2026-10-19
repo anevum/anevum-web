@@ -50,7 +50,7 @@ jobs:
           grep -Fq "snapshot.role==='owner'&&<OwnerControlRoom" creator-v1/web/src/pages/StaffCommandPage.tsx
           grep -Fq "snapshot.role==='owner'&&<OwnerReleaseShelf" creator-v1/web/src/pages/StaffCommandPage.tsx
           grep -Fq 'realIsolatedStaging:false' creator-v1/canonical-auth/staff-owner-hub.mjs
-          ! grep -Eq 'wrangler deploy|d1 migrations apply|d1 execute|--remote' .github/workflows/iren-owner-control-v085-qa.yml
+          ! grep -Eq '[w]rangler deploy|[d]1 migrations apply|[d]1 execute|--rem[o]te' .github/workflows/iren-owner-control-v085-qa.yml
       - name: Capture compiled V085 owner workspace using synthetic browser fixtures only
         shell: bash
         run: |
