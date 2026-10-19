@@ -11,6 +11,7 @@ const bootstrap=read("web/src/main.tsx");
 const css=read("web/src/continuance-experience-v091.css");
 const publicPage=read("web/src/pages/Phase1PublicMemberPage.tsx");
 const levelArt=read("web/src/components/LevelEmblem.tsx");
+const studio=read("web/src/pages/CanonicalStudioPage.tsx");
 const app=read("web/src/App.tsx");
 const shell=read("web/src/components/Shell.tsx");
 
@@ -79,4 +80,13 @@ test("V091 absent art preserves verified level without exposing hidden specimens
   assert.match(css,/\.v091-level-safe-fallback/);
   assert.match(css,/\.v091-sr-only/);
   assert.doesNotMatch(levelArt,/LEVEL_ARTIFACTS|level-artifacts\.json|Math\.random|localStorage/);
+});
+
+test("V091 distinguishes private Studio drafts from separately approved public releases",()=>{
+  assert.match(studio,/PRIVATE VERIFIED WORKSPACE/);
+  assert.match(studio,/STUDIO PUBLICATION/);
+  assert.match(studio,/SEPARATE REVIEW/);
+  assert.match(studio,/does not automatically make an app playable or award XP/);
+  assert.doesNotMatch(studio,/PRIVATE STAGING WORKSPACE|STAGING \/ FEATURE NOT ACTIVE/);
+  assert.doesNotThrow(()=>parse(studio,{sourceType:"module",plugins:["typescript","jsx"]}));
 });
