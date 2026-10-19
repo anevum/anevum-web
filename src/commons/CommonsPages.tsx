@@ -1,4 +1,5 @@
 import { Link, useSearchParams } from "react-router-dom";
+import RhenMark from "../components/RhenMark";
 import type { ReactNode } from "react";
 import { fieldNotes, type FieldNote } from "../data/fieldNotes";
 import { publicProducts, publishedSourceRecords } from "../data/products";
@@ -34,7 +35,8 @@ function Intro({ kicker, title, children }: { kicker: string; title: string; chi
   return <header className="c2-intro"><span className="c2-kicker">{kicker}</span><h1>{title}</h1><p>{children}</p></header>;
 }
 function NoteCard({ note }: { note: FieldNote }) {
-  return <article className="c2-card c2-note">
+  return <article className={"c2-card c2-note v6-index-note v6-index-"+note.type.toLowerCase()}>
+    <div className="v6-index-art" aria-hidden="true"><span>{({systems:"λ",engineering:"⌘",research:"∑",release:"✳"} as Record<string,string>)[note.type.toLowerCase()] || "✳"}</span></div>
     <div className="c2-card-meta"><span>{note.type}</span><time dateTime={note.date}>{dateLabel(note.date)}</time><span>{note.readMinutes} min read</span></div>
     <h2><Link to={"/field-notes/" + note.slug}>{note.title}</Link></h2>
     <p>{note.summary}</p>
@@ -50,7 +52,7 @@ function NoteIndex() {
   const filtered = orderedNotes.filter(n => (category === "all" || n.type.toLowerCase() === category) &&
     [n.title, n.summary, n.type, ...n.systems].join(" ").toLowerCase().includes(query));
   return <div className="c2-page">
-    <Intro kicker="COMMONS / FIELD NOTES" title="Research and Field Notes">
+    <Intro kicker="ANEVUM / FIELD NOTES" title="Research and Field Notes">
       Published investigations, engineering decisions, experiments and failures. These are dated records, not claims of a currently running trading service.
     </Intro>
     <nav className="c2-tabs" aria-label="Filter published work">{categories.map(c =>
@@ -88,12 +90,18 @@ function NoteDetail({ slug }: { slug: string }) {
 function Projects() {
   const products = publicProducts();
   return <div className="c2-page">
-    <Intro kicker="COMMONS / DISCOVER" title="Projects and applications">
+    <Intro kicker="ANEVUM / DISCOVER" title="Projects and applications">
       ANEVUM is an independent software workshop. RHEN is its first major application, not the entire purpose of the community.
     </Intro>
     <div className="c2-truth">Only registered ANEVUM projects appear here. An app's public information does not imply active broker execution, user enrollment or paid access.</div>
     <section className="c2-grid" aria-label="Registered projects">{products.map(product =>
-      <article className="c2-card c2-project" key={product.slug}>
+      <article className={"c2-card c2-project v6-project v6-project-"+product.slug} key={product.slug}>
+        <div className="v6-project-art" aria-hidden="true">
+          <span className="v6-project-tag">{product.name} / PUBLIC PROJECT</span>
+          <span className="v6-project-axis"/>
+          <span className="v6-project-orbit"/>
+          <span className="v6-project-glyph">{product.slug==="rhen"?<RhenMark decorative />:product.name.charAt(0)}</span>
+        </div>
         <div className="c2-project-icon" aria-hidden="true">{product.name.charAt(0)}</div>
         <span className="c2-kicker">{product.category}</span>
         <h2>{product.name}</h2><p>{product.oneLine}</p>
@@ -123,7 +131,7 @@ function RhenOverview() {
       ].map(([title, body, href]) => <article className="c2-card" key={title}><h2>{title}</h2><p>{body}</p><Link to={href} className="c2-text-link">Explore →</Link></article>)}
     </div>
     <section className="c2-section"><h2>One application, multiple capabilities</h2>
-      <p>Research, replay and optional forecasting are modules of RHEN—not independent paid apps or always-running branded services. Research cannot enable execution. Paper and live permissions must be approved separately, and a Commons account alone grants neither.</p>
+      <p>Research, replay and optional forecasting are modules of RHEN—not independent paid apps or always-running branded services. Research cannot enable execution. Paper and live permissions must be approved separately, and an ANEVUM account alone grants neither.</p>
       <div className="c2-action-row"><Link to="/products/rhen/evidence">Public evidence status</Link><Link to="/apps/rhen">Open my RHEN workspace</Link></div>
     </section>
     <section className="c2-section" aria-label="RHEN public source and collaboration">
@@ -174,7 +182,7 @@ function RhenArchitecture() {
   return <div className="c2-page">
     <Intro kicker="RHEN / DESIGN" title="Architecture and authority">One application with isolated research, evidence and operational boundaries. This describes the V5 target, not a currently deployed trading runtime.</Intro>
     <div className="c2-grid">{sections.map(([name, body]) => <section className="c2-card" key={name}><h2>{name}</h2><p>{body}</p></section>)}</div>
-    <div className="c2-truth">The founder's historical operator terminal is separately protected. A member does not gain owner access by authenticating with Google or using Commons.</div>
+    <div className="c2-truth">The founder's historical operator terminal is separately protected. A member does not gain owner access by authenticating with Google or using ANEVUM.</div>
     <Link className="c2-text-link" to="/products/rhen">← RHEN overview</Link>
   </div>;
 }
@@ -186,17 +194,23 @@ function Communities() {
     ["Releases", "What was changed and verified", "release"]
   ];
   return <div className="c2-page">
-    <Intro kicker="COMMONS / TOPICS" title="Explore the subjects">Browse authentic published research. Member discussion is separate and only opens after the invite-only pilot passes its moderation and privacy checks.</Intro>
-    <div className="c2-grid">{types.map(([title, detail, slug]) => <article className="c2-card" key={slug}><h2>{title}</h2><p>{detail}</p><Link className="c2-text-link" to={"/field-notes?category=" + slug}>Read publications →</Link></article>)}</div>
+    <Intro kicker="ANEVUM / TOPICS" title="Explore the subjects">Browse authentic published research. Member discussion is separate and only opens after the invite-only pilot passes its moderation and privacy checks.</Intro>
+    <div className="c2-grid v6-topics">{types.map(([title, detail, slug]) =>
+      <article className={"c2-card v6-topic v6-topic-"+slug} key={slug}>
+        <div className="v6-topic-glyph" aria-hidden="true">{slug==="systems"?"λ":slug==="engineering"?"⌘":slug==="research"?"∑":"✳"}</div>
+        <span className="c2-kicker">ANEVUM / TOPIC</span>
+        <h2>{title}</h2><p>{detail}</p>
+        <Link className="c2-text-link" to={"/field-notes?category=" + slug}>Read publications →</Link>
+      </article>)}</div>
     <div className="c2-truth">No fictional communities, membership counts, rankings, votes or endorsements are displayed.</div>
-    <p className="c2-truth">Commons discussions are for independent learning and research methods. Following a member or reading their work never grants brokerage access, copies their orders, mirrors a portfolio, or executes another person\'s trades. RHEN connections and settings remain individually controlled.</p>
+    <p className="c2-truth">ANEVUM discussions are for independent learning and research methods. Following a member or reading their work never grants brokerage access, copies their orders, mirrors a portfolio, or executes another person\'s trades. RHEN connections and settings remain individually controlled.</p>
     <CommonsPostsBeta/>
   </div>;
 }
 function Learn() {
   const notes = orderedNotes.filter(n => n.type === "RESEARCH" || n.type === "ENGINEERING").slice(0, 6);
   return <div className="c2-page">
-    <Intro kicker="COMMONS / LEARNING" title="Learn by examining real work">A reading path through methods and software experiments—not a claim that a course, trading result or personalized instruction is ready.</Intro>
+    <Intro kicker="ANEVUM / LEARNING" title="Learn by examining real work">A reading path through methods and software experiments—not a claim that a course, trading result or personalized instruction is ready.</Intro>
     <section className="c2-section"><h2>A practical research loop</h2>
       <ol className="c2-steps"><li>Frame one testable question.</li><li>Record data sources, assumptions and failure conditions.</li><li>Test against evidence without changing live authority.</li><li>Publish what worked, what failed and what remains uncertain.</li></ol>
     </section>
@@ -260,9 +274,9 @@ function BetaLanding() {
 function Help() {
   return <div className="c2-page c2-help" aria-labelledby="commons-help-title">
     <header className="c2-intro">
-      <span className="c2-kicker">COMMONS / HELP</span>
+      <span className="c2-kicker">ANEVUM / HELP</span>
       <h1 id="commons-help-title">Help and account support</h1>
-      <p>Find current ANEVUM pages, manage your own account and understand which RHEN and Commons features are available. No account or brokerage connection is required to read the public work.</p>
+      <p>Find current ANEVUM pages, manage your own account and understand which RHEN and community features are available. No account or brokerage connection is required to read the public work.</p>
     </header>
     <section className="c2-grid" aria-label="Frequently asked questions">
       <article className="c2-card"><h2>Do I need an account?</h2>
@@ -278,11 +292,11 @@ function Help() {
         <Link to="/products/rhen/evidence" className="c2-text-link">Current RHEN evidence →</Link>
       </article>
       <article className="c2-card"><h2>Can I connect a brokerage account?</h2>
-        <p>Broker connections require separate provider approval and feature-specific authorization. If connecting is unavailable, registering with Commons does not unlock it. Do not send API keys, OAuth URLs, access tokens or screenshots containing secrets by email.</p>
+        <p>Broker connections require separate provider approval and feature-specific authorization. If connecting is unavailable, registering with ANEVUM does not unlock it. Do not send API keys, OAuth URLs, access tokens or screenshots containing secrets by email.</p>
         <Link to="/products/rhen" className="c2-text-link">RHEN product status →</Link>
       </article>
       <article className="c2-card"><h2>Can I post or message other members?</h2>
-        <p>Commons posting, notifications and moderation are still under development. Public Field Notes and topic pages are real publications, not simulated user conversations. Signing in does not automatically enable posting.</p>
+        <p>Community posting, notifications and moderation are still under development. Public Field Notes and topic pages are real publications, not simulated user conversations. Signing in does not automatically enable posting.</p>
         <Link to="/communities" className="c2-text-link">Explore published topics →</Link>
       </article>
       <article className="c2-card"><h2>How do I report a problem?</h2>
@@ -316,9 +330,9 @@ function About() {
 }
 function Missing() {
   return <div className="c2-page c2-empty" data-page-state="not-found">
-    <Intro kicker="COMMONS / NOT FOUND" title="Page not found">That page or record is not published at this address. It may have moved or never existed.</Intro>
+    <Intro kicker="ANEVUM / NOT FOUND" title="Page not found">That page or record is not published at this address. It may have moved or never existed.</Intro>
     <div className="c2-action-row">
-      <Link className="c2-text-link" to="/">Return to Commons →</Link>
+      <Link className="c2-text-link" to="/">Return to ANEVUM →</Link>
       <Link className="c2-text-link" to="/products">Browse projects →</Link>
       <Link className="c2-text-link" to="/field-notes">Read Field Notes →</Link>
     </div>

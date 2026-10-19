@@ -30,7 +30,8 @@ export default function StudioRecentPosts(){
  if(!items.length)return null;
  return <section className="studio-home-feed" aria-label="Recent ANEVUM Studio publications">
   <header><h2>Latest from ANEVUM Studio</h2><Link to="/updates">View all updates →</Link></header>
-  <div className="studio-home-items">{items.map(item=><article className="c2-card" key={item.slug}>
+  <div className="studio-home-items">{items.map(item=><article className={"c2-card v6-studio-story v6-studio-"+item.kind.toLowerCase()} key={item.slug}>
+   <span className="v6-story-glyph" aria-hidden="true">{item.kind==="AHA"?"✳":item.kind==="UPDATE"?"↗":"✎"}</span>
    <span className="c2-kicker">{labels[item.kind]} ·
     {" "+new Date(item.publishedAt*1000).toLocaleDateString(undefined,{dateStyle:"medium"})}</span>
    <h3><Link to={"/updates/"+item.slug}>{item.title}</Link></h3>

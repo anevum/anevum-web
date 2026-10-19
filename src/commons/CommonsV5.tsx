@@ -23,6 +23,7 @@ import privateRhenCss from "../styles/commons-v5-private-rhen.css?inline";
 import discussionsCss from "../styles/commons-v5-discussions.css?inline";
 import betaCss from "../styles/commons-v5-beta.css?inline";
 import memberFinancialCss from "../styles/member-financial.css?inline";
+import identityCss from "../styles/commons-v5-identity.css?inline";
 
 /**
  * Project Commons Stage 1. V5 visual parity baseline in an isolated Shadow DOM.
@@ -90,9 +91,9 @@ function Header({ onMenu, search, setSearch, onDesign, inputRef, pathname, onSea
   return <header className="global-header">
     <div className="header-brand">
       <button type="button" className="icon-btn nav-toggle" aria-label="Toggle navigation" onClick={onMenu}><Icon name="menu"/></button>
-      <Link className="brand" to="/" aria-label="ANEVUM Commons home">
+      <Link className="brand" to="/" aria-label="ANEVUM home">
         <span className="brand-mark"><Mark /></span>
-        <span className="brand-text"><strong>ANEVUM</strong><small>the commons</small></span>
+        <span className="brand-text"><strong>ANEVUM</strong><small>open workshop</small></span>
       </Link>
     </div>
     <div className="global-search" role="search">
@@ -101,16 +102,17 @@ function Header({ onMenu, search, setSearch, onDesign, inputRef, pathname, onSea
         placeholder="Search ANEVUM publications..." aria-label="Search published ANEVUM work" onKeyDown={event=>{if(event.key==="Enter"){event.preventDefault();onSearchSubmit();}}} />
       <kbd>/</kbd>
     </div>
-    <nav className="top-links" aria-label="Top navigation">
+    <nav className="top-links v6-top-nav" aria-label="Quick navigation">
       {primaryNavigation.filter(item=>["/","/products","/communities","/field-notes","/updates"].includes(item.path)).map(item=>
         <Link key={item.path} to={item.path} className={isSiteNavigationActive(pathname,item.path)?"active":""}
-          aria-current={isSiteNavigationActive(pathname,item.path)?"page":undefined}>{item.label}</Link>)}
+          aria-current={isSiteNavigationActive(pathname,item.path)?"page":undefined}
+          aria-label={item.label} title={item.label+" — "+item.description}><Icon name={item.icon}/></Link>)}
     </nav>
     <div className="global-actions">
       <Link className="create-btn" to={session?.user?"/apps/rhen":"/beta"}>
         <Icon name={session?.user?"chart":"arrow-up-right"}/><span>{session?.user?"My RHEN":"Get started"}</span>
       </Link>
-      <button type="button" className="icon-btn design-launch" aria-label="Customize design" title="Customize design" onClick={onDesign}><Icon name="palette"/></button>
+      <button type="button" className="icon-btn design-launch" aria-label="Customize design" title="Customize appearance" onClick={onDesign}><Icon name="palette"/></button>
       <Link to={session?.user ? "/command" : "/sign-in"} className="user-chip" aria-label={session?.user ? "My Command" : "Sign in"}>
         <span className="avatar avatar-header user-avatar">{session?.user?.name?.charAt(0).toUpperCase() || "G"}</span>
         <Icon name="chevron"/>
@@ -131,10 +133,10 @@ function Sidebar({ collapsed, onClose, pathname }: {
       {primaryNavigation.map(item=><Link key={item.path} to={item.path} onClick={onClose}
         className={"side-link "+(isSiteNavigationActive(pathname,item.path)?"active":"")}
         aria-current={isSiteNavigationActive(pathname,item.path)?"page":undefined}
-        title={item.description}><Icon name={item.icon}/><span>{item.label}</span></Link>)}
+        title={item.label+" — "+item.description} aria-label={item.label}><Icon name={item.icon}/><span>{item.label}</span></Link>)}
     </div>
     <div className="side-divider"/>
-    <div className="sidebar-nav-group community-nav">
+    <div className="sidebar-nav-group community-nav" aria-label="Topic shortcuts">
       <div className="group-heading"><span className="side-heading">EXPLORE TOPICS</span><Link className="side-mini-btn" to="/communities" aria-label="Browse topics" onClick={onClose}><Icon name="plus"/></Link></div>
       <Link className="community-link" to="/field-notes?category=systems" onClick={onClose}><span className="community-icon ci-blue">λ</span><span>Systems &amp; architecture</span></Link>
       <Link className="community-link" to="/field-notes?category=engineering" onClick={onClose}><span className="community-icon ci-orange">⌘</span><span>Engineering &amp; software</span></Link>
@@ -148,7 +150,7 @@ function Sidebar({ collapsed, onClose, pathname }: {
       {accountNavigation.map(item=><Link key={item.path} to={session?.user?item.path:"/sign-in"} onClick={onClose}
         className={"side-link "+(isSiteNavigationActive(pathname,item.path)?"active":"")}
         aria-current={isSiteNavigationActive(pathname,item.path)?"page":undefined}
-        title={item.description}><Icon name={item.icon}/><span>{item.label}</span></Link>)}
+        title={item.label+" — "+item.description} aria-label={item.label}><Icon name={item.icon}/><span>{item.label}</span></Link>)}
     </div>
     <StudioNavLink pathname={pathname} onClose={onClose}/>
     <div className="side-bottom">
@@ -186,6 +188,20 @@ function PublishedActivity() {
     <span className="v5-activity-note">Recorded publications · not trading data</span>
   </div>;
 }
+function EditorialArt({note,feature}: {note:FieldNote;feature:boolean}) {
+  const subject=note.type.toLowerCase();
+  if(feature) return <div className={"v6-story-media v6-media-"+subject+" v6-media-featured"}>
+    <PublishedActivity/>
+  </div>;
+  const glyph:Record<string,string>={systems:"λ",engineering:"⌘",research:"∑",release:"✳"};
+  return <div className={"v6-story-media v6-media-"+subject} aria-hidden="true">
+    <span className="v6-media-grid"/>
+    <span className="v6-media-orbit v6-media-orbit-a"/>
+    <span className="v6-media-orbit v6-media-orbit-b"/>
+    <span className="v6-media-glyph">{glyph[subject]||"✳"}</span>
+    <small>{subject.toUpperCase()}</small>
+  </div>;
+}
 function prettyDate(date: string) {
   const parsed = new Date(date + "T12:00:00Z");
   return Number.isNaN(parsed.valueOf()) ? date :
@@ -196,7 +212,7 @@ function NotePost({ note, feature }: {
 }) {
   const url = "/field-notes/" + note.slug;
   const tags = note.systems.slice(0,2);
-  return <article className="post">
+  return <article className={"post v6-story v6-story-"+note.type.toLowerCase()+(feature?" v6-story-feature":"")}>
     <header className="post-header">
       <OfficialAvatar size=""/>
       <div className="post-identity">
@@ -208,7 +224,7 @@ function NotePost({ note, feature }: {
         <span className="post-community">Field Notes / {note.type.toLowerCase()}</span>
       </div>
     </header>
-    <div className={feature ? "post-preview-split" : ""}>
+    <div className={"v6-story-body"+(feature ? " post-preview-split" : "")}>
       <div className="post-main">
         <h2 className="post-title"><Link to={url}>{note.title}</Link></h2>
         <p className="post-excerpt">{note.summary}</p>
@@ -217,7 +233,7 @@ function NotePost({ note, feature }: {
           <span className="real-badge">Published source</span>
         </div>
       </div>
-      {feature ? <PublishedActivity/> : null}
+      <EditorialArt note={note} feature={feature}/>
     </div>
     <footer className="post-foot">
       <Link className="action-pill" to={url}><Icon name="book"/>Read note</Link>
@@ -248,25 +264,50 @@ function Feed({ search, filter, setFilter, density, setDensity }: {
     {id:"release",label:"Releases"}
   ];
   return <>
-    <section className="feed-header">
-      <div><h1>The Commons<span style={{color:"var(--accent)"}}>.</span></h1><p>Build something. Learn something. Share what you find.</p></div>
+    <section className="v6-entrance" aria-label="Welcome to ANEVUM">
+      <div className="v6-entrance-copy">
+        <span className="v6-kicker"><i aria-hidden="true"/> ANEVUM / AN OPEN WORKSHOP</span>
+        <h1>Build what you need.<br/><em>Share what you learn.</em></h1>
+        <p>Independent software, experiments, and the people curious enough to make them better. Discover practical projects, examine the work behind them, and find your place in the conversation.</p>
+        <div className="v6-entrance-actions">
+          <Link className="v6-enter-primary" to="/products">Explore projects <Icon name="arrow-up-right"/></Link>
+          <Link className="v6-enter-secondary" to="/beta">Join ANEVUM <Icon name="arrow-right"/></Link>
+        </div>
+        <span className="v6-entrance-caption">REAL PROJECTS <i/> OPEN LEARNING <i/> COMMUNITY IN PROGRESS</span>
+      </div>
+      <div className="v6-entrance-visual" aria-hidden="true">
+        <div className="v6-visual-field"/>
+        <div className="v6-visual-axis v6-axis-x"/>
+        <div className="v6-visual-axis v6-axis-y"/>
+        <div className="v6-visual-ring v6-ring-one"/>
+        <div className="v6-visual-ring v6-ring-two"/>
+        <div className="v6-visual-ring v6-ring-three"/>
+        <div className="v6-visual-emblem"><Mark/></div>
+        <span className="v6-visual-tag v6-tag-one">001 / CREATE</span>
+        <span className="v6-visual-tag v6-tag-two">002 / QUESTION</span>
+        <span className="v6-visual-tag v6-tag-three">003 / SHARE</span>
+      </div>
+    </section>
+    <section className="feed-header v6-feed-heading">
+      <div><span className="v6-section-index">THE WORKBENCH / CURRENT</span><h2>What's happening at ANEVUM</h2><p>Published work and ideas worth examining.</p></div>
       <div className="feed-header-controls">
         <button type="button" className={"layout-btn "+(density==="comfortable"?"active":"")} onClick={()=>setDensity("comfortable")} aria-label="Comfortable feed" aria-pressed={density==="comfortable"}><Icon name="layout"/></button>
         <button type="button" className={"layout-btn "+(density==="compact"?"active":"")} onClick={()=>setDensity("compact")} aria-label="Compact feed" aria-pressed={density==="compact"}><Icon name="list"/></button>
       </div>
     </section>
-    <div className="demo-strip"><span className="dot"/><span><strong>Public ANEVUM work</strong> — {notes.length} authentic publications; member discussions are in development.</span></div>
+    <div className="demo-strip v6-truthline"><span className="dot"/><span><strong>{notes.length} published Field Notes</strong> from ANEVUM. Member discussions are in development; engagement counts are never simulated.</span></div>
     <section aria-label="Explore ANEVUM">
-      <div className="v5-site-pathway-title"><h2>Find your way around</h2><span>Real software, documented work</span></div>
+      <div className="v5-site-pathway-title"><h2>Find your way around</h2><span>Follow a project, explore a topic, or learn from the work</span></div>
       <nav className="v5-site-pathway" aria-label="Find your next step">
         {[
-          {index:"01",title:"Projects",detail:"Applications and their current status",path:"/products"},
-          {index:"02",title:"Field Notes",detail:"Decisions, experiments and results",path:"/field-notes"},
-          {index:"03",title:"Learning",detail:"Understand the research methods",path:"/learn"},
-          {index:"04",title:"Your workspace",detail:"Free member access and available tools",path:"/beta"}
+          {index:"01",title:"Projects",detail:"Useful applications, from ideas to real releases",path:"/products",icon:"cube"},
+          {index:"02",title:"Field Notes",detail:"What worked, what failed, and what changed",path:"/field-notes",icon:"book"},
+          {index:"03",title:"Learning",detail:"Practical methods and open explanations",path:"/learn",icon:"layers"},
+          {index:"04",title:"Your workspace",detail:"Start with an ANEVUM account, no broker needed",path:"/beta",icon:"user"}
         ].map(item=><Link key={item.path} to={item.path}>
+          <span className="v6-path-icon"><Icon name={item.icon}/></span>
           <span className="v5-path-ordinal">{item.index} / ANEVUM</span>
-          <strong>{item.title}</strong><small>{item.detail}</small>
+          <strong>{item.title}</strong><small>{item.detail}</small><Icon name="arrow-up-right" className="v6-path-arrow"/>
         </Link>)}
       </nav>
     </section>
@@ -301,9 +342,9 @@ function RightRail() {
   const largest = Math.max(1,...categories.map(category=>category.count));
   return <aside className="right-sidebar" aria-label="Discover">
     <section className="right-card rail-intro">
-      <span className="tiny-overline">WELCOME TO THE COMMONS</span>
+      <span className="tiny-overline">INSIDE ANEVUM</span>
       <h2>Ideas are better when we can examine them.</h2>
-      <p>Read real published ANEVUM work. Public member profiles and community participation are still being built.</p>
+      <p>Read real published ANEVUM work. Profiles and community discussion are being developed alongside real projects.</p>
       <Link to={session?.user ? "/command" : "/sign-in"} className="rail-link">{session?.user ? "Open your Command" : "Sign in to ANEVUM"} <Icon name="arrow-up-right"/></Link>
       <Link to={session?.user ? "/me/beta" : "/beta"} className="rail-link">{session?.user ? "Check your beta access" : "Explore member beta"} <Icon name="arrow-up-right"/></Link>
     </section>
@@ -358,7 +399,7 @@ function AppearancePanel({ prefs, onChange, onClose, onReset }: {
     {key:"forest",label:"Forest"},{key:"midnight",label:"Midnight"},{key:"carbon",label:"Carbon"},
     {key:"paper",label:"Daylight"},{key:"plum",label:"Plum"}
   ];
-  return <div className="design-panel" role="region" aria-label="Customize Commons appearance">
+  return <div className="design-panel" role="region" aria-label="Customize ANEVUM appearance">
     <div className="design-panel-header"><div><span className="eyebrow">INTERFACE LAB</span><h3>Make it yours.</h3></div>
       <button type="button" className="icon-btn" aria-label="Close appearance settings" onClick={onClose}><Icon name="x"/></button>
     </div>
@@ -388,7 +429,7 @@ function CommonsApp({prefs,setPrefs,content}: {prefs:Preferences;setPrefs:(next:
   const [search,setSearch] = useState("");
   const [designOpen,setDesignOpen] = useState(false);
   const [drawerOpen,setDrawerOpen] = useState(false);
-  const [collapsed,setCollapsed] = useState(false);
+  const [collapsed,setCollapsed] = useState(true);
   const searchRef=useRef<HTMLInputElement>(null);
   const { data: session } = memberAuthClient.useSession();
   const location = useLocation();
@@ -437,7 +478,7 @@ function CommonsApp({prefs,setPrefs,content}: {prefs:Preferences;setPrefs:(next:
       </main>
       {content ? null : <RightRail/>}
     </div>
-    <nav className="mobile-nav" aria-label="Mobile navigation">
+    <nav className="mobile-nav v6-mobile-dock" aria-label="Mobile navigation">
       {mobileNavigation.map(item=><Link key={item.path}
         to={item.path==="/command"?safeAccountDestination(Boolean(session?.user)):item.path}
         className={isSiteNavigationActive(pathname,item.path)?"active":""}
@@ -468,7 +509,7 @@ export default function CommonsV5({content}: {content?:ReactNode}) {
   return <div ref={mount} className="anevum-commons-v5-mount"
     data-theme={prefs.theme} data-layout={prefs.layout} data-density={prefs.density}
     data-radius={prefs.radius} data-surface={prefs.surface} style={{display:"block",minHeight:"100dvh"}}>
-    {shadow ? createPortal(<><style>{css+"\n"+polishCss+"\n"+pagesCss+"\n"+memberCommandCss+"\n"+memberBaseCss+"\n"+memberFinancialCss+"\n"+memberDraftCss+"\n"+accountCss+"\n"+privateRhenCss+"\n"+brokerReviewCss+"\n"+discussionsCss+"\n"+betaCss+"\n"+memberVerifierCss+"\n"+liveCss+"\n"+studioCss}</style><CommonsApp prefs={prefs} setPrefs={setPrefs} content={content}/></>,shadow) : null}
+    {shadow ? createPortal(<><style>{css+"\n"+polishCss+"\n"+pagesCss+"\n"+memberCommandCss+"\n"+memberBaseCss+"\n"+memberFinancialCss+"\n"+memberDraftCss+"\n"+accountCss+"\n"+privateRhenCss+"\n"+brokerReviewCss+"\n"+discussionsCss+"\n"+betaCss+"\n"+memberVerifierCss+"\n"+liveCss+"\n"+studioCss+"\n"+identityCss}</style><CommonsApp prefs={prefs} setPrefs={setPrefs} content={content}/></>,shadow) : null}
   </div>;
 }
 

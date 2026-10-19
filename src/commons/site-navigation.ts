@@ -11,7 +11,7 @@ export type SiteNavItem = Readonly<{
 }>;
 
 export const primaryNavigation:ReadonlyArray<SiteNavItem> = Object.freeze([
-  {path:"/",label:"Commons",icon:"home",description:"Published ANEVUM work"},
+  {path:"/",label:"Home",icon:"home",description:"ANEVUM homepage and current activity"},
   {path:"/products",label:"Projects",icon:"compass",description:"Real applications and status"},
   {path:"/communities",label:"Topics",icon:"users",description:"Explore research categories"},
   {path:"/learn",label:"Learning",icon:"book",description:"Methods and open resources"},
@@ -28,7 +28,7 @@ export const accountNavigation:ReadonlyArray<SiteNavItem> = Object.freeze([
 ].map(item=>Object.freeze(item)));
 
 export const mobileNavigation:ReadonlyArray<SiteNavItem> = Object.freeze([
-  primaryNavigation[0],primaryNavigation[1],primaryNavigation[3],primaryNavigation[5],accountNavigation[0]
+  primaryNavigation[0],primaryNavigation[2],primaryNavigation[1],primaryNavigation[4],accountNavigation[0]
 ]);
 
 /** All route highlighting uses this function, irrespective of navbar size.

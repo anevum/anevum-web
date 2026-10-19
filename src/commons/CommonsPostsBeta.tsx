@@ -107,7 +107,7 @@ function DiscussionFeed({memberId,filter,onFilterChange}:{memberId:string;filter
       <p>Real member-written discussions, separate from RHEN execution, brokerage accounts and published research evidence.</p>
     </header>
     {message&&<p role={problem?"alert":"status"} className="c2-social-message">{message}</p>}
-    {status==="loading"&&<p role="status">Checking private Commons availability…</p>}
+    {status==="loading"&&<p role="status">Checking ANEVUM discussion availability…</p>}
     {status==="off"&&<div className="c2-truth" role="status">Discussion access is unavailable. Posting and replies remain closed until membership and pilot authorization are verified.</div>}
     {status==="error"&&<p role="alert">The discussion feed is unavailable. No posts have been loaded.</p>}
     <button type="button" className="c2-social-reload" disabled={busy||status==="loading"} onClick={()=>setRevision(old=>old+1)}>Reload latest discussions</button>
@@ -127,7 +127,7 @@ function DiscussionFeed({memberId,filter,onFilterChange}:{memberId:string;filter
         <p className="c2-social-limit">Pilot limit: 3 posts per member every 24 hours. No trading instructions or automatically copied orders.</p>
         <button type="submit" disabled={busy||uncertain||!validDiscussionText(title,8,120)||!validDiscussionText(body,20,3000)}>Publish discussion</button>
       </form>
-      <nav className="c2-tabs" aria-label="Filter Commons discussions">
+      <nav className="c2-tabs" aria-label="Filter ANEVUM discussions">
         {(["all",...topics] as const).map(value=>
           <button type="button" key={value} className={filter===value?"selected":""}
             aria-current={filter===value?"page":undefined} onClick={()=>onFilterChange(value)} disabled={busy||uncertain}>
@@ -137,8 +137,11 @@ function DiscussionFeed({memberId,filter,onFilterChange}:{memberId:string;filter
       </nav>
       <div className="c2-social-stream" aria-label="Member discussions">
         {posts.length===0?<div className="c2-empty"><h3>No discussions in this view</h3><p>No published records were returned for this topic. Reload or select another topic.</p></div>:
-          posts.map(post=><article className="c2-card c2-social-post" key={post.id}>
-            <div className="c2-card-meta"><span>{post.topic}</span><time dateTime={isoDate(post.createdAt)}>{stamp(post.createdAt)}</time><span>{post.authorLabel}</span></div>
+          posts.map(post=><article className={"c2-card c2-social-post v6-discussion-post v6-discussion-"+post.topic} key={post.id}>
+            <div className="v6-discussion-top">
+              <span className="v6-discussion-sigil" aria-hidden="true">{post.topic==="systems"?"λ":post.topic==="engineering"?"⌘":post.topic==="research"?"∑":"✳"}</span>
+              <div className="c2-card-meta"><span>{post.topic}</span><time dateTime={isoDate(post.createdAt)}>{stamp(post.createdAt)}</time><span>{post.authorLabel}</span></div>
+            </div>
             <h3>{post.title}</h3><p>{post.body}</p>
             <div className="c2-social-actions">
               <button type="button" disabled={busy||uncertain} onClick={()=>void showReplies(post.id)}>View replies</button>
@@ -177,11 +180,11 @@ export default function CommonsPostsBeta(){
   const availability=useMemberAvailability();
   const {data:session,isPending}=memberAuthClient.useSession();
   if(isPending || availability==="checking")
-    return <section className="c2-social"><p role="status">Checking Commons membership…</p></section>;
+    return <section className="c2-social"><p role="status">Checking ANEVUM membership…</p></section>;
   if(availability!=="available" || !session?.user?.id)
     return <section className="c2-social">
       <h2>Member discussions</h2><p>Published Field Notes are open to everyone. Member participation requires an ANEVUM account and an approved discussion pilot.</p>
-      <Link to="/sign-in" className="c2-text-link">Sign in to Commons</Link>
+      <Link to="/sign-in" className="c2-text-link">Sign in to ANEVUM</Link>
     </section>;
   return <SignedInDiscussions key={session.user.id} memberId={session.user.id}/>;
 }
