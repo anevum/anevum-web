@@ -312,7 +312,7 @@ export async function canonicalStaffOps(req,env,user,now=Math.floor(Date.now()/1
    const page=Number(pageRaw);
    if(!Number.isSafeInteger(page)||page>100)return fail(400,'Invalid directory page');
    const pattern='%'+q.replace(/[\\%_]/g,m=>'\\'+m)+'%';
-   const filter=q?" WHERE (u.name LIKE ? ESCAPE '\\\\' OR u.email LIKE ? ESCAPE '\\\\' OR p.handle LIKE ? ESCAPE '\\\\' OR p.display_name LIKE ? ESCAPE '\\\\') ":' ';
+   const filter=q?" WHERE (u.name LIKE ? ESCAPE '\\' OR u.email LIKE ? ESCAPE '\\' OR p.handle LIKE ? ESCAPE '\\' OR p.display_name LIKE ? ESCAPE '\\') ":' ';
    const sql="SELECT u.id,COALESCE(p.display_name,u.name,'MEMBER') AS name,"+
     "COALESCE(p.handle,'') AS handle,u.email AS email,u.emailVerified AS verified,"+
     "u.createdAt AS joinedAt,COALESCE(p.visibility,'private') AS visibility,g.role AS staffRole,"+
