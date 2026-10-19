@@ -1,0 +1,41 @@
+name: ANEVUM V091 Public Journey and Earned Artwork Canary
+on:
+  push:
+    branches:
+      - build/v091-experience-integration-20261019-001
+    paths:
+      - creator-v1/test/v091-public-live-canary.mjs
+      - .github/workflows/v091-live-readonly-qa.yml
+  pull_request:
+    paths:
+      - creator-v1/test/v091-public-live-canary.mjs
+      - .github/workflows/v091-live-readonly-qa.yml
+permissions:
+  contents: read
+concurrency:
+  group: anevum-v091-live-readonly-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  public-canary:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify read-only API checks and execute live public canary
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check creator-v1/test/v091-public-live-canary.mjs
+          node creator-v1/test/v091-public-live-canary.mjs
+      - name: Confirm no deployment, database modification or account writes
+        shell: bash
+        run: |
+          echo 'V091_PUBLIC_CANARY=READ_ONLY' >> "$GITHUB_STEP_SUMMARY"
+          echo 'PRODUCTION_DEPLOY=NOT_AUTHORIZED' >> "$GITHUB_STEP_SUMMARY"
+          echo 'D1_MIGRATIONS=NONE' >> "$GITHUB_STEP_SUMMARY"
