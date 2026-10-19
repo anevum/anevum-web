@@ -52,9 +52,7 @@ jobs:
           git diff --name-only "$PROD_SOURCE_BASE" HEAD | sort > "$RUNNER_TEMP/v082-files.txt"
           cat > "$RUNNER_TEMP/v082-expected.txt" <<'EOF'
           .github/workflows/xp-test-v082-production.yml
-          creator-v1/canonical-auth/migrations/0011_xp_test_1000.sql
           creator-v1/canonical-auth/progression.mjs
-          creator-v1/test/helpers/canonical-fixture.mjs
           creator-v1/test/progression-browser-v031.mjs
           creator-v1/test/progression-v031.test.mjs
           creator-v1/web/src/pages/TheButtonPage.tsx
@@ -63,7 +61,6 @@ jobs:
           sort -o "$RUNNER_TEMP/v082-expected.txt" "$RUNNER_TEMP/v082-expected.txt"
           diff -u "$RUNNER_TEMP/v082-expected.txt" "$RUNNER_TEMP/v082-files.txt"
           grep -Fq "const XP_TEST_AWARD=1000;" creator-v1/canonical-auth/progression.mjs
-          grep -Fq "amount IN (5,1000)" creator-v1/canonical-auth/migrations/0011_xp_test_1000.sql
           grep -Fq "+1,000 XP" creator-v1/web/src/pages/TheButtonPage.tsx
 
       - name: Rebuild preserved Evolution assets
@@ -124,35 +121,6 @@ jobs:
           jq -S '[.result.bindings[]|select(.type=="d1")|{name,database:(.database_id//.id)}]|sort_by(.name)' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/db.lock.json"
           jq -S '[.result.bindings[]|select(.type=="plain_text")|{name,text}]|sort_by(.name)' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/vars.lock.json"
           jq -S '[.result.bindings[]|select(.type=="secret_text")|.name]|sort' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/secrets.lock.json"
-
-      - name: Record D1 recovery bookmark and widen only the test XP ledger
-        shell: bash
-        env:
-          CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
-        run: |
-          set -euo pipefail
-          test -n "$CLOUDFLARE_D1_TOKEN"
-          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/d1/database/$MEMBER_DB_ID"
-          auth=(-H "Authorization: Bearer $CLOUDFLARE_D1_TOKEN" -H "Content-Type: application/json")
-          curl --fail --silent --show-error --max-time 25 "${auth[@]}"             "$api/time_travel/bookmark" > "$RUNNER_TEMP/d1-bookmark.json"
-          jq -e '.success and (.result.bookmark|length)>0' "$RUNNER_TEMP/d1-bookmark.json" >/dev/null
-
-          jq -n '{sql:"SELECT sql FROM sqlite_master WHERE type=\"table\" AND name=\"member_xp_events\"; SELECT COUNT(*) AS events, COALESCE(SUM(amount),0) AS xp FROM member_xp_events;"}'             > "$RUNNER_TEMP/d1-before-body.json"
-          curl --fail --silent --show-error --max-time 25 "${auth[@]}"             -X POST --data @"$RUNNER_TEMP/d1-before-body.json" "$api/query" > "$RUNNER_TEMP/d1-before.json"
-          jq -e '.success and .result[0].success and .result[1].success and (.result[0].results[0].sql|contains("CHECK(amount=5)"))' "$RUNNER_TEMP/d1-before.json" >/dev/null
-          before_events="$(jq -r '.result[1].results[0].events' "$RUNNER_TEMP/d1-before.json")"
-          before_xp="$(jq -r '.result[1].results[0].xp' "$RUNNER_TEMP/d1-before.json")"
-
-          jq -n --rawfile sql creator-v1/canonical-auth/migrations/0011_xp_test_1000.sql '{sql:$sql}'             > "$RUNNER_TEMP/d1-migrate-body.json"
-          curl --fail --silent --show-error --max-time 30 "${auth[@]}"             -X POST --data @"$RUNNER_TEMP/d1-migrate-body.json" "$api/query" > "$RUNNER_TEMP/d1-migrate.json"
-          jq -e '.success and ([.result[]|select(.success!=true)]|length)==0' "$RUNNER_TEMP/d1-migrate.json" >/dev/null
-
-          jq -n '{sql:"SELECT sql FROM sqlite_master WHERE type=\"table\" AND name=\"member_xp_events\"; SELECT COUNT(*) AS events, COALESCE(SUM(amount),0) AS xp FROM member_xp_events; PRAGMA foreign_key_check;"}'             > "$RUNNER_TEMP/d1-after-body.json"
-          curl --fail --silent --show-error --max-time 25 "${auth[@]}"             -X POST --data @"$RUNNER_TEMP/d1-after-body.json" "$api/query" > "$RUNNER_TEMP/d1-after.json"
-          jq -e '.success and .result[0].success and .result[1].success and .result[2].success and (.result[0].results[0].sql|contains("amount IN (5,1000)")) and (.result[2].results|length)==0' "$RUNNER_TEMP/d1-after.json" >/dev/null
-          test "$(jq -r '.result[1].results[0].events' "$RUNNER_TEMP/d1-after.json")" = "$before_events"
-          test "$(jq -r '.result[1].results[0].xp' "$RUNNER_TEMP/d1-after.json")" = "$before_xp"
-          echo "V082_D1_TEST_XP_SCHEMA_AND_DATA_PRESERVED=PASS"
 
       - name: Deploy exact hotfix while preserving live bindings, variables and routes
         shell: bash
@@ -241,9 +209,6 @@ jobs:
         with:
           name: anevum-v082-xp-hotfix-evidence
           path: |
-            ${{ runner.temp }}/d1-bookmark.json
-            ${{ runner.temp }}/d1-before.json
-            ${{ runner.temp }}/d1-after.json
             ${{ runner.temp }}/pre-deployments.json
             ${{ runner.temp }}/post-deployments.json
           retention-days: 21
