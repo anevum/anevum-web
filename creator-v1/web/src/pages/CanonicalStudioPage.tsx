@@ -11,7 +11,7 @@ import {
 import './canonical-studio.css';
 
 const CATEGORY_GUIDE:Record<StudioCategory,string>={
- games:'Upload a browser-game ZIP or link an external HTTPS game. ZIPs are not playable or installed yet.',
+ games:'Upload a browser-game ZIP or link an external HTTPS game. Private Studio ZIPs do not become playable automatically. An approved hosted release has a separate review and publication process.',
  tools:'Upload a web app build ZIP or link an existing HTTPS application. A dedicated isolated player is planned.',
  creative:'Attach original creative work, audio, images, writing or a ZIP.',
  music:'Attach MP3 or WAV audio. Files remain in private quarantine.',
@@ -76,8 +76,8 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
  </section>;
  if(phase==='loading')return <section className="st-status" role="status">OPENING PRIVATE CREATOR STUDIO…</section>;
  if(phase==='unavailable')return <section className="st-status">
-  <span className="st-kicker">STAGING / FEATURE NOT ACTIVE</span><h1>THE STUDIO IS IN DEVELOPMENT.</h1>
-  <p>{message||'Canonical drafts are not enabled in this environment. No project information has been changed.'}</p>
+  <span className="st-kicker">CREATOR STUDIO / SERVICE STATUS</span><h1>STUDIO ACCESS UNAVAILABLE.</h1>
+  <p>{message||'The Studio service is disabled or temporarily unavailable. No project information has been changed.'}</p>
   <Link className="st-action" to="/member">RETURN TO MY SPACE ↗</Link>
  </section>;
  if(phase==='incomplete')return <section className="st-status">
@@ -90,9 +90,9 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
    <div><Link className="st-back" to="/member">← MEMBER ATLAS</Link>
     <p className="st-kicker">ANEVUM / CONTINUANCE INSTITUTE / CREATOR STUDIO</p>
     <h1>{mode==='review'?'SUBMISSION REVIEW.':mode==='list'?'YOUR CREATIVE ARCHIVE.':mode==='new'?'BEGIN A NEW WORK.':'PROJECT WORKSPACE.'}</h1>
-    <p>Build privately, preserve versions, and prepare original work for independent review.</p>
+    <p>Build privately, preserve versions, and prepare original work for independent review. Publication remains a separate, staff-approved step.</p>
    </div>
-   <div className="st-identity"><span>VERIFIED CREATOR</span><strong>@{identity?.handle}</strong><small>PRIVATE STAGING WORKSPACE</small></div>
+   <div className="st-identity"><span>VERIFIED CREATOR</span><strong>@{identity?.handle}</strong><small>PRIVATE VERIFIED WORKSPACE</small></div>
   </header>
   <nav className="st-nav" aria-label="Studio navigation">
    <Link to="/studio" aria-current={mode==='list'?'page':undefined}>MY PROJECTS</Link>
@@ -124,12 +124,12 @@ function StudioLibrary(){
    <div><span>TOTAL WORKS</span><strong>{loading?'—':items.length}</strong></div>
    <div><span>IN PROGRESS</span><strong>{loading?'—':drafts}</strong></div>
    <div><span>AWAITING REVIEW</span><strong>{loading?'—':pending}</strong></div>
-   <div><span>PUBLIC RELEASES</span><strong>NOT YET ACTIVE</strong></div>
+   <div><span>STUDIO PUBLICATION</span><strong>SEPARATE REVIEW</strong></div>
   </section>
   <section className="st-panel">
    <div className="st-section-head"><div><p className="st-kicker">01 / PERSONAL WORKSPACE</p><h2>PROJECT RECORDS</h2></div>
     <Link className="st-action" to="/studio/new">+ CREATE PROJECT</Link></div>
-   <p className="st-muted">Your project records are private. Public publication, native gameplay and XP are not enabled through Studio uploads.</p>
+   <p className="st-muted">Your Studio projects and attachments remain private. Staff review and live publication are separate. Uploading here does not automatically make an app playable or award XP.</p>
    {items.length>0&&<div className="st-filters">
     <label className="st-field"><span>SEARCH YOUR PROJECTS</span>
      <input type="search" maxLength={100} placeholder="Title, summary, slug, category"
