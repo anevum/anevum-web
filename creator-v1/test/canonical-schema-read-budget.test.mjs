@@ -19,7 +19,7 @@ function fixture(){
  for(let i=0;i<130;i++)sqlite.exec('CREATE TABLE unrelated_'+i+'(n INTEGER)');
  const queries=[];
  const database={
-  prepare(sql){queries.push(sql);return sqlite.prepare(sql)},
+  prepare(sql){queries.push(sql);return {async all(){return {success:true,results:sqlite.prepare(sql).all()}}}},
   async batch(){return []}
  };
  return {sqlite,database,queries};
