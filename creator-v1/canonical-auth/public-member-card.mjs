@@ -29,7 +29,8 @@ export function publicMemberCard(row){
  return {
   handle:row.handle,displayName:row.display_name,
   avatar:Boolean(row.avatar_version??row.avatar),
-  avatarVersion:Number.isSafeInteger(Number(row.avatar_version))&&Number(row.avatar_version)>0?Number(row.avatar_version):undefined,
+  ...(Number.isSafeInteger(Number(row.avatar_version))&&Number(row.avatar_version)>0?
+   {avatarVersion:Number(row.avatar_version)}:{}),
   level:row.show_stats===0?null:levelProgress(xp).level,
   featuredAwards
  };
