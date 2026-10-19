@@ -3,6 +3,7 @@ import {Link,Navigate,useParams,useSearchParams} from "react-router-dom";
 import {readCreator,readCreators,readProjects} from "../lib/api";
 import {memberCreatorProfile} from "../lib/member-api";
 import {canonicalPublic} from "../lib/canonical-beta";
+import {resolveCreatorRoute} from "../lib/creator-route";
 import {useResource} from "../lib/useResource";
 import {ProjectCard} from "../components/ProjectCard";
 import {CompactMemberIdentity} from "../components/CompactMemberIdentity";
@@ -72,24 +73,12 @@ export function CreatorPage(){
   const [params]=useSearchParams();
   const cursor=params.get("cursor")||"";
   const data=useResource(async signal=>{
-    if(!/^[a-z][a-z0-9_]{2,29}$/.test(handle))return {kind:"missing" as const};
-    // A legacy Creator V1 404 is not a missing canonical member identity.
-    // Resolve both independently, with the verified, publicly visible member
-    // world as a fallback. Never infer a relationship from display names.
-    const profile=await readCreator(handle,signal).then(result=>result.creator)
-      .catch((error:unknown)=>{
-        if((error as {status?:number})?.status===404)return null;
-        throw error;
-      });
-    if(!profile){
-      try{
-        const member=await canonicalPublic(handle,signal);
-        if(member.profile.handle===handle)return {kind:"member" as const};
-      }catch{/* Unavailable/private canonical identity must not be exposed. */}
-      return {kind:"missing" as const};
-    }
+    const identity=await resolveCreatorRoute(handle,
+      async()=>(await readCreator(handle,signal)).creator,
+      ()=>canonicalPublic(handle,signal));
+    if(identity.kind!=="channel")return identity;
     const projects=await readProjects({creator:handle,cursor:cursor||undefined,limit:"24"},signal);
-    return {kind:"channel" as const,profile,projects};
+    return {...identity,projects};
   },[handle,cursor]);
   // Independent public-member enhancements are optional for real Creator V1
   // channels. This client cannot grant roles, XP or publication permissions.

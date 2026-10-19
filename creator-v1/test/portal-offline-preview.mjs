@@ -63,6 +63,27 @@ const FAKE_MEMBER=Object.freeze({
 });
 const LOCAL_REVIEW_COOKIE="anevum_offline_visual_fixture=1";
 function offlineMember(req,res,url){
+  // V091 anonymous public identity fixtures. These are loopback-only records,
+  // not authentication, actual members, earned specimens or production data.
+  const publicFixture=/^\/api\/v1\/members\/(v091_public|v091_other|v091_private|v091_offline)(\/.*)?$/.exec(url.pathname);
+  if(publicFixture){
+    const [,handle,tail='']=publicFixture;
+    if(req.method!=='GET')return json(res,{error:'Read-only synthetic fixture'},405);
+    if(handle==='v091_private')return json(res,{error:'Not found'},404);
+    if(handle==='v091_offline')return json(res,{error:'Synthetic service outage'},503);
+    if(!tail)return json(res,{profile:{handle,displayName:'SYNTHETIC / '+handle,
+      bio:'Offline browser acceptance fixture, not a real member.',joinedAt:1791763200,
+      headline:'Synthetic public identity',worldTheme:'nocturne',focus:['games']}});
+    if(tail==='/space')return json(res,{media:{},awards:[],featuredAwards:[],showStats:true,revision:1,
+      stats:{level:5,xp:900,levelStart:750,nextLevel:1200}});
+    if(tail==='/wall')return json(res,{posts:[]});
+    if(tail==='/rewards/levels/5/card'){
+      if(handle==='v091_public')return json(res,{error:'Synthetic media outage'},503);
+      res.writeHead(200,{'content-type':'image/svg+xml','cache-control':'no-store'});
+      return res.end('<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><rect width="256" height="256" fill="#101d34"/><circle cx="128" cy="128" r="96" fill="none" stroke="#b6ddee" stroke-width="4"/><text x="128" y="150" text-anchor="middle" fill="#edf5ff" font-size="72">5</text></svg>');
+    }
+    return json(res,{error:'No additional synthetic rewards'},404);
+  }
   // Synthetic auth and saved works are loopback-only and do not exist in the
   // compiled production Worker. No actual session can be created here.
   if(url.pathname==="/api/v1/member/auth/get-session"&&req.method==="GET"){
@@ -245,7 +266,7 @@ createServer((req,res)=>{
   }
   if(u.pathname==="/__ready")return json(res,{ready:existsSync(resolve(dist,"index.html"))});
   if(u.pathname.startsWith("/creator/api/v1/"))return api(res,u);
-  if(u.pathname.startsWith("/api/v1/member/"))return offlineMember(req,res,u);
+  if(u.pathname.startsWith("/api/v1/member/")||u.pathname.startsWith("/api/v1/members/"))return offlineMember(req,res,u);
   if(u.pathname.startsWith("/creator/assets/")){
     const rel=u.pathname.slice(9);
     if(!/^assets\/(?:[a-zA-Z0-9._-]+|cinematic\/(?:hero|categories)\/[a-zA-Z0-9._-]+\.webp|cinematic-v2\/atmosphere\/[a-zA-Z0-9._-]+\.webp|community-portals\/(?:games|tools|creative|libraries)-(?:768|1536)\.webp)$/.test(rel))return json(res,{error:"not-found"},404);

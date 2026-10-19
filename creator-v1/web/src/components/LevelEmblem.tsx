@@ -1,4 +1,4 @@
-import {useEffect,useState} from 'react';
+import {useState} from 'react';
 import {BadgeInsignia} from './BadgeInsignia';
 import {BADGE_CATALOG} from '../lib/player-recognition';
 
@@ -9,15 +9,20 @@ import {BADGE_CATALOG} from '../lib/player-recognition';
 // forums, and level grids; its independent full-screen /evolution/ archive
 // remains untouched. Inline icons never create a canvas or hide their poster.
 export function LevelEmblem({level,size=64,handle=null,artwork='card'}:{level:number;size?:number;handle?:string|null;artwork?:'original'|'card'}){
- const [assetIndex,setAssetIndex]=useState(0);
  const safe=Number.isSafeInteger(level)&&level>0?Math.min(30,level):1;
-
- useEffect(()=>setAssetIndex(0),[safe,size,handle,artwork]);
+ // Remount the image request state with its identity. An old image's failure
+ // must not consume another member's attempts or leave that member in fallback.
+ return <EarnedLevelImage key={JSON.stringify([safe,size,handle,artwork])}
+  safe={safe} size={size} handle={handle} artwork={artwork}/>;
+}
+function EarnedLevelImage({safe,size,handle,artwork}:{safe:number;size:number;handle:string|null;artwork:'original'|'card'}){
+ const [assetIndex,setAssetIndex]=useState(0);
+ const validHandle=handle&&/^[a-z][a-z0-9_]{2,29}$/.test(handle)?handle:null;
 
  // Originals stay unchanged. The owner/public route checks XP and public
  // consent on every request before exposing even a compact specimen image.
  const kinds=artwork==='card'?['card']:size>=68?['preview','poster','icon']:['icon','preview','poster'];
- if(assetIndex>=kinds.length)return <span
+ if((handle!==null&&!validHandle)||assetIndex>=kinds.length)return <span
   className="level-emblem level-emblem-beyond av73-static-level-fallback av76-asset-error v091-level-safe-fallback"
   style={{width:size,height:size}} role="img"
   title={'Earned level '+safe+' — artwork temporarily unavailable'}
@@ -25,7 +30,6 @@ export function LevelEmblem({level,size=64,handle=null,artwork='card'}:{level:nu
     <span className="v091-level-glyph" aria-hidden="true"><small>LVL</small><strong>{String(safe).padStart(2,'0')}</strong></span>
     <small className="av76-artwork-unavailable v091-sr-only">ARTWORK UNAVAILABLE</small>
    </span>;
- const validHandle=handle&&/^[a-z][a-z0-9_]{2,29}$/.test(handle)?handle:null;
  const base=validHandle?'/api/v1/members/'+validHandle+'/rewards/levels/'+safe:
    '/api/v1/member/rewards/levels/'+safe;
  const src=base+'/'+kinds[assetIndex];

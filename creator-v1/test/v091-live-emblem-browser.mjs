@@ -81,42 +81,44 @@ try{
   await browser.send('Page.enable');
   await browser.send('Network.enable');
   await browser.send('Runtime.enable');
-  await browser.send('Emulation.setDeviceMetricsOverride',
-    {width:390,height:844,deviceScaleFactor:2,mobile:true});
-  const navigation=await browser.send('Page.navigate',{url});
-  if(navigation.errorText)throw Error('V091_NAVIGATION_'+navigation.errorText);
-  const evaluate=async expression=>{
-    const o=await browser.send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});
-    if(o.exceptionDetails)throw Error(o.exceptionDetails.exception?.description||'EVALUATION_ERROR');
-    return o.result?.value;
-  };
-  await until(()=>evaluate("document.readyState==='complete'&&!!document.querySelector('.ms-public, .ms-public-world, .member-gate, .state-card')"),30000);
-  await until(()=>evaluate("!!document.querySelector('.level-emblem, .av76-artwork-unavailable, .member-gate, .state-card')"),30000);
-  await delay(3500);
-  const results=await evaluate(`(()=>{
-    const levels=[...document.querySelectorAll('.level-emblem')];
-    return {
-      path:location.pathname,
-      width:innerWidth,
-      images:levels.flatMap(level=>[...level.querySelectorAll('img')].map(img=>({
-        path:img.currentSrc?new URL(img.currentSrc).pathname:null,
-        complete:img.complete,naturalWidth:img.naturalWidth,naturalHeight:img.naturalHeight
-      }))),
-      fallback:document.querySelectorAll('.av76-artwork-unavailable').length,
-      renderedLevels:levels.length,
-      overflow:document.documentElement.scrollWidth>innerWidth+1
+  for(const [width,height,label] of [[390,844,'phone'],[1440,900,'desktop']]){
+    await browser.send('Emulation.setDeviceMetricsOverride',
+      {width,height,deviceScaleFactor:width<641?2:1,mobile:width<641});
+    const navigation=await browser.send('Page.navigate',{url});
+    if(navigation.errorText)throw Error('V091_NAVIGATION_'+navigation.errorText);
+    const evaluate=async expression=>{
+      const o=await browser.send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});
+      if(o.exceptionDetails)throw Error(o.exceptionDetails.exception?.description||'EVALUATION_ERROR');
+      return o.result?.value;
     };
-  })()`);
-  console.log('V091_LIVE_EMBLEM_BROWSER='+JSON.stringify({results,media}));
-  const shot=await browser.send('Page.captureScreenshot',{format:'png',fromSurface:true});
-  if(shot.data)writeFileSync(join(output,'public-earned-level-phone.png'),Buffer.from(shot.data,'base64'));
-  assert.equal(results.path,'/@devonakins');
-  assert.equal(results.overflow,false,'Actual mobile public member layout overflows');
-  assert.ok(results.renderedLevels>0,'No public earned level was rendered');
-  assert.equal(results.fallback,0,'Protected public art still falls back in an actual browser');
-  assert.ok(results.images.some(image=>image.complete&&image.naturalWidth>0),
-    'Approved public SVG could not render in the browser');
-  console.log('V091_LIVE_PUBLIC_LEVEL_BROWSER=PASS');
+    await until(()=>evaluate("document.readyState==='complete'&&!!document.querySelector('.ms-public, .ms-public-world, .member-gate, .state-card')"),30000);
+    await until(()=>evaluate("!!document.querySelector('.level-emblem, .av76-artwork-unavailable, .member-gate, .state-card')"),30000);
+    await delay(3500);
+    const results=await evaluate(`(()=>{
+      const levels=[...document.querySelectorAll('.level-emblem')];
+      return {
+        path:location.pathname,
+        width:innerWidth,
+        images:levels.flatMap(level=>[...level.querySelectorAll('img')].map(img=>({
+          path:img.currentSrc?new URL(img.currentSrc).pathname:null,
+          complete:img.complete,naturalWidth:img.naturalWidth,naturalHeight:img.naturalHeight
+        }))),
+        fallback:document.querySelectorAll('.av76-artwork-unavailable').length,
+        renderedLevels:levels.length,
+        overflow:document.documentElement.scrollWidth>innerWidth+1
+      };
+    })()`);
+    console.log('V091_LIVE_EMBLEM_BROWSER_'+width+'='+JSON.stringify({results,media}));
+    const shot=await browser.send('Page.captureScreenshot',{format:'png',fromSurface:true});
+    if(shot.data)writeFileSync(join(output,'public-earned-level-'+label+'.png'),Buffer.from(shot.data,'base64'));
+    assert.equal(results.path,'/@devonakins');
+    assert.equal(results.overflow,false,'Actual public member layout overflows at '+width);
+    assert.ok(results.renderedLevels>0,'No public earned level was rendered');
+    assert.equal(results.fallback,0,'Protected public art still falls back in an actual browser');
+    assert.ok(results.images.some(image=>image.complete&&image.naturalWidth>0),
+      'Approved public SVG could not render in the browser');
+    console.log('V091_LIVE_PUBLIC_LEVEL_BROWSER_'+width+'=PASS');
+  }
 }finally{
   try{browser?.close()}catch{}
   const exited=child.exitCode!==null||child.signalCode!==null;

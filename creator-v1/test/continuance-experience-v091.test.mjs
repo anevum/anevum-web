@@ -5,6 +5,7 @@ import {parse} from "@babel/parser";
 
 const read=path=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
 const creators=read("web/src/pages/CreatorsPage.tsx");
+const creatorRoute=read("web/src/lib/creator-route.ts");
 const status=read("web/src/pages/StatusPage.tsx");
 const states=read("web/src/components/States.tsx");
 const bootstrap=read("web/src/main.tsx");
@@ -26,13 +27,14 @@ test("V091 updates compile as genuine TSX with bounded public navigation",()=>{
 
 test("V091 repairs unavailable legacy creator channel only through an independently public canonical world",()=>{
   assert.match(creators,/readCreator\(handle,signal\)/);
-  assert.match(creators,/status\?:number/);
-  assert.match(creators,/\.status===404/);
+  assert.match(creators,/resolveCreatorRoute\(handle/);
+  assert.match(creatorRoute,/status\?:number/);
+  assert.match(creatorRoute,/\.status!==404/);
   assert.match(creators,/canonicalPublic\(handle,signal\)/);
-  assert.match(creators,/member\.profile\.handle===handle/);
-  assert.match(creators,/kind:"member"/);
+  assert.match(creatorRoute,/member\.profile\.handle===handle/);
+  assert.match(creatorRoute,/'member'/);
   assert.match(creators,/<Navigate to=\{"\/@"/);
-  assert.match(creators,/kind:"missing"/);
+  assert.match(creatorRoute,/kind:'missing'/);
   assert.doesNotMatch(creators,/memberClaim|canonicalClaim|memberSaveProfile|memberCreateProject|localStorage|Math\.random/);
 });
 

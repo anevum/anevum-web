@@ -34,7 +34,7 @@ jobs:
           set -euo pipefail
           node --check creator-v1/test/v091-public-live-canary.mjs
           node creator-v1/test/v091-public-live-canary.mjs
-      - name: Inspect real public emblem rendering on a mobile Chromium viewport
+      - name: Inspect real public emblems in desktop and mobile Chromium
         shell: bash
         env:
           V091_VISUAL_DIR: ${{ runner.temp }}/v091-art-evidence
@@ -57,5 +57,5 @@ jobs:
         shell: bash
         run: |
           echo 'V091_PUBLIC_CANARY=READ_ONLY' >> "$GITHUB_STEP_SUMMARY"
-          echo 'PRODUCTION_DEPLOY=NOT_AUTHORIZED' >> "$GITHUB_STEP_SUMMARY"
+          echo 'PRODUCTION_DEPLOY=NONE_IN_READONLY_CANARY' >> "$GITHUB_STEP_SUMMARY"
           echo 'D1_MIGRATIONS=NONE' >> "$GITHUB_STEP_SUMMARY"

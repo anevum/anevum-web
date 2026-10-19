@@ -5,6 +5,7 @@ import {existsSync,readFileSync,writeFileSync,mkdirSync,mkdtempSync,rmSync} from
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {canonicalAvailabilityProbe,canonicalParticipationProbe} from "./player-browser-probes.mjs";
+import {captureCreatorIdentityV091} from "./creator-identity-browser-v091.mjs";
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(fn,timeout=18000){
  const stop=Date.now()+timeout;
@@ -343,7 +344,8 @@ try{
    results.push({page:"discussion",width,...post});
   }
  }
- writeFileSync(join(output,"sitewide-v012-capture.json"),JSON.stringify({syntheticFixture:true,pages:results},null,2));
+ await captureCreatorIdentityV091({client,base,evaluate,until,screenshot});
+ writeFileSync(join(output,"sitewide-v012-capture.json"),JSON.stringify({syntheticFixture:true,creatorIdentityV091:'PASS',pages:results},null,2));
  writeFileSync(join(output,"capture-status.txt"),"SITEWIDE_V012_BROWSER_CAPTURE=PASS\nAll records are synthetic offline visual fixtures; no live member acceptance.\n");
  console.log("SITEWIDE_V012_BROWSER_CAPTURE=PASS; PAGES="+results.length);
 }finally{
