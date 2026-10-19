@@ -272,6 +272,11 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     return()=>{window.removeEventListener("resize",measure);window.removeEventListener("orientationchange",measure)};
   },[]);
 
+  useEffect(()=>{
+    if(mood!=="greet")return;
+    const timer=window.setTimeout(()=>setMood(panelOpen?"curious":"idle"),1800);
+    return()=>window.clearTimeout(timer);
+  },[mood,panelOpen]);
   const step=tourIndex===null?null:steps[tourIndex]||null;
   useEffect(()=>{
     if(!step){setGuideTravelling(false);return;}
@@ -424,9 +429,15 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   const preferRight=spotlight
     ?spotlight.left+spotlight.width+botWidth+20<viewport.width
     :true;
-  const anchorX=spotlight?(preferRight?spotlight.left+spotlight.width+10:spotlight.left-botWidth-10)
+  // Large full-width highlights have no free side. Park beside the guide
+  // card rather than covering search fields and headings inside the target.
+  const wideSpotlight=Boolean(spotlight&&spotlight.width>viewport.width*.76);
+  const nearCardX=typeof panelStyle.left==="number"?panelStyle.left+410:viewport.width-botWidth-24;
+  const anchorX=wideSpotlight?nearCardX:spotlight?
+    (preferRight?spotlight.left+spotlight.width+10:spotlight.left-botWidth-10)
     :viewport.width-botWidth-24;
-  const anchorY=spotlight?spotlight.top+Math.min(spotlight.height*.45,70)-botHeight*.5:84;
+  const anchorY=wideSpotlight&&spotlight?spotlight.top+spotlight.height+15:
+    spotlight?spotlight.top+Math.min(spotlight.height*.45,70)-botHeight*.5:84;
   const guideBotStyle:CSSProperties={
     width:botWidth,height:botHeight,
     left:clamp(anchorX,8,Math.max(8,viewport.width-botWidth-8)),
@@ -489,9 +500,9 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
         </header>
         <div className="ir87-tabs" role="tablist" aria-label="IREN tools">
           <button id="ir87-help-tab" type="button" role="tab" aria-selected={activeView==="help"}
-            aria-controls="ir87-help-body" onClick={()=>setActiveView("help")}>Guidance</button>
+            aria-controls="ir87-help-body" onClick={()=>{setActiveView("help");setMood("curious")}}>Guidance</button>
           <button id="ir87-updates-tab" type="button" role="tab" aria-selected={activeView==="updates"}
-            aria-controls="ir87-updates-body" onClick={()=>setActiveView("updates")}>
+            aria-controls="ir87-updates-body" onClick={()=>{setActiveView("updates");setMood(unreadCount>0?"notify":"curious")}}>
             Signals{unreadCount>0&&<span className="ir87-tab-count">{unreadCount>9?"9+":unreadCount}</span>}
           </button>
         </div>
@@ -503,7 +514,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
           <p className="ir80-subtitle">Explore ANEVUM or take a guided site tour.</p>
           <div className="ir80-topic-grid" role="group" aria-label="Help topics">
             {topics.map(topic=><button key={topic.id} type="button" aria-pressed={topic.id===activeTopic}
-              onClick={()=>setActiveTopic(topic.id)}>{topic.label}</button>)}
+              onClick={()=>{setActiveTopic(topic.id);setMood("think")}}>{topic.label}</button>)}
           </div>
           <div className="ir80-topic-detail" aria-live="polite">
             <strong>{currentTopic.label}</strong><p>{currentTopic.detail}</p>
@@ -533,13 +544,15 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
           <Link className="ir87-signals-link" to={memberId?"/member?tab=awards":"/join"} onClick={()=>setPanelOpen(false)}>
             {memberId?"OPEN AWARDS & STATS":"JOIN OR SIGN IN"} <Icon name="arrow" size={15}/>
           </Link>
-          <button type="button" className="ir87-back-help" onClick={()=>setActiveView("help")}>Back to guidance</button>
+          <button type="button" className="ir87-back-help" onClick={()=>{setActiveView("help");setMood("curious")}}>Back to guidance</button>
         </div>}
       </section>}
       <button type="button" ref={dockRef} className="ir80-dock ir87-scout" aria-label={panelOpen?"Close IREN companion":"Open IREN companion"+(unreadCount>0?", "+unreadCount+" new signals":"")}
         aria-controls="ir87-panel" aria-expanded={panelOpen} title="IREN companion"
         onPointerDown={beginDrag} onPointerMove={moveDrag} onPointerUp={finishDrag}
-        onPointerCancel={finishDrag} onPointerLeave={()=>setLook([0,0])}
+        onPointerCancel={finishDrag}
+        onPointerEnter={()=>{if(mood==="idle")setMood("curious")}}
+        onPointerLeave={()=>{setLook([0,0]);if(mood==="curious")setMood("idle")}}
         onClick={()=>{
           if(suppressClick.current){suppressClick.current=false;return}
           setMood(panelOpen?"idle":"greet");
@@ -551,10 +564,10 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
       </button>
     </div>}
     {step&&<div className="ir80-guide-layer" aria-label="IREN guided website tour">
-      <div className="ir88-guide-bot" style={guideBotStyle} aria-hidden="true">
+      {!isMobile&&<div className="ir88-guide-bot" style={guideBotStyle} aria-hidden="true">
         <IrenLivingCanvas mood={guideTravelling?"travel":"guide"} expanded paused={motionPaused}
           fallback={<IrenScout/>}/>
-      </div>
+      </div>}
       {spotlight?<><div className="ir80-shade" style={{left:0,top:0,width:"100%",height:spotlight.top}}/>
         <div className="ir80-shade" style={{left:0,top:spotlight.top+spotlight.height,width:"100%",bottom:0}}/>
         <div className="ir80-shade" style={{left:0,top:spotlight.top,width:spotlight.left,height:spotlight.height}}/>
@@ -564,7 +577,10 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
       <div ref={dialogRef} className="ir80-guide-card" style={panelStyle} role="dialog" aria-modal="true"
         aria-labelledby="ir80-guide-title" aria-describedby="ir80-guide-description">
         <div className="ir80-guide-top">
-          <span className="ir80-guide-avatar" aria-hidden="true"><OrbitalMark/></span>
+          <span className={"ir80-guide-avatar"+(isMobile?" ir88-guide-avatar":"")} aria-hidden="true">
+            {isMobile?<IrenLivingCanvas mood={guideTravelling?"travel":"guide"} expanded paused={motionPaused}
+              fallback={<IrenScout/>}/>:<OrbitalMark/>}
+          </span>
           <div><strong>IREN</strong><span>CONTINUANCE FIELD GUIDE</span></div>
           <button type="button" className="ir80-icon-button" aria-label="Close and resume tour later" onClick={()=>pause()}>
             <Icon name="close" size={18}/>
