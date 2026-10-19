@@ -2,6 +2,8 @@ import {useCallback,useEffect,useRef,useState,type CSSProperties} from "react";
 import {Link,useLocation,useNavigate} from "react-router-dom";
 import {OrbitalMark} from "./OrbitalMark";
 import {Icon} from "./Icons";
+import {useIrenSignals} from "./AnevumNotifications";
+import {LevelEmblem,AwardEmblem} from "./LevelEmblem";
 
 /**
  * IREN Guided Continuance V080
@@ -84,22 +86,54 @@ function setStoredHidden(key:string,hidden:boolean){
 }
 function clamp(value:number,min:number,max:number){return Math.max(min,Math.min(max,value));}
 
+/** Tiny orbital helper, rendered as vectors rather than another floating pill. */
+function IrenScout(){
+ return <svg className="ir87-scout-art" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+  <defs>
+   <linearGradient id="ir87-hull" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stopColor="#5879a2"/><stop offset=".48" stopColor="#283c63"/><stop offset="1" stopColor="#161c35"/>
+   </linearGradient>
+   <radialGradient id="ir87-visor" cx=".5" cy=".2" r=".95">
+    <stop offset="0" stopColor="#243f65"/><stop offset="1" stopColor="#0b142b"/>
+   </radialGradient>
+  </defs>
+  <ellipse className="ir87-orbit" cx="32" cy="34" rx="28" ry="8" transform="rotate(-17 32 34)"
+   fill="none" stroke="#d8bad9" strokeWidth="2.1" opacity=".8"/>
+  <path className="ir87-thruster" d="M26 49L30 59L33 52L37 59L40 49Z" fill="#78c8f0" opacity=".65"/>
+  <path d="M31 14V9" stroke="#d9c2e3" strokeWidth="2" strokeLinecap="round"/>
+  <circle className="ir87-antenna" cx="31" cy="7" r="2.8" fill="#ffe5ba"/>
+  <path d="M12 31Q12 15 28 14H36Q52 15 52 31V39Q51 52 35 53H29Q13 52 12 39Z"
+   fill="url(#ir87-hull)" stroke="#b6bfdc" strokeWidth="1.8"/>
+  <path d="M17 29Q18 21 29 20H35Q46 21 47 29V38Q46 46 35 47H29Q18 46 17 38Z"
+   fill="url(#ir87-visor)" stroke="#6e92b9" strokeWidth="1.2"/>
+  <ellipse className="ir87-eye" cx="25" cy="33" rx="3.6" ry="4.2" fill="#f7e5c7"/>
+  <ellipse className="ir87-eye" cx="39" cy="33" rx="3.6" ry="4.2" fill="#f7e5c7"/>
+  <path d="M28 41Q32 43.5 36 41" stroke="#a9cfea" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+  <circle cx="14" cy="40" r="2.7" fill="#a4daed" opacity=".9"/>
+  <circle cx="50" cy="40" r="2.7" fill="#a4daed" opacity=".9"/>
+ </svg>;
+}
+
 export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   const {pathname,search}=useLocation();
   const navigate=useNavigate();
+  const {recent,unreadCount,markSignalsSeen}=useIrenSignals();
   const storageKey=storagePrefix+(memberId||"visitor");
   const steps=memberId?memberSteps:visitorSteps;
   const [tourIndex,setTourIndex]=useState<number|null>(null);
   const [panelOpen,setPanelOpen]=useState(false);
+  const [activeView,setActiveView]=useState<"help"|"updates">("help");
   const [activeTopic,setActiveTopic]=useState("discover");
   const [hidden,setHidden]=useState(()=>hiddenInStorage(storageKey));
   const [spotlight,setSpotlight]=useState<Spotlight|null>(null);
   const dialogRef=useRef<HTMLDivElement>(null);
   const dockRef=useRef<HTMLButtonElement>(null);
+  const companionRef=useRef<HTMLDivElement>(null);
 
   useEffect(()=>{
     setTourIndex(null);
     setPanelOpen(false);
+    setActiveView("help");
     setSpotlight(null);
     setHidden(hiddenInStorage(storageKey));
   },[storageKey]);
@@ -140,6 +174,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
       setStoredHidden(storageKey,false);
       setHidden(false);
       setTourIndex(null);
+      setActiveView("help");
       setPanelOpen(true);
     };
     const onStart=()=>start();
@@ -152,6 +187,29 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
       window.removeEventListener("anevum:iren-tour",onStart);
     };
   },[memberId,storageKey,start]);
+
+  // One anchored panel on all routes, not a second notification dock.
+  useEffect(()=>{
+    if(!panelOpen)return;
+    const onOutside=(event:PointerEvent)=>{
+      if(event.target instanceof Node&&!companionRef.current?.contains(event.target))setPanelOpen(false);
+    };
+    const onEscape=(event:KeyboardEvent)=>{
+      if(event.key==="Escape"){setPanelOpen(false);dockRef.current?.focus({preventScroll:true});}
+    };
+    document.addEventListener("pointerdown",onOutside);
+    document.addEventListener("keydown",onEscape);
+    return()=>{
+      document.removeEventListener("pointerdown",onOutside);
+      document.removeEventListener("keydown",onEscape);
+    };
+  },[panelOpen]);
+
+  useEffect(()=>{
+    if(panelOpen&&activeView==="updates"&&memberId)markSignalsSeen();
+    // Refresh of server history is intentional: notice indicators clear while
+    // the member is actually viewing Signals rather than on transient toast ACK.
+  },[panelOpen,activeView,memberId,recent]);
 
   const step=tourIndex===null?null:steps[tourIndex]||null;
   useEffect(()=>{
@@ -281,33 +339,61 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   }
 
   return <>
-    {tourIndex===null&&!hidden&&<div className="ir80-companion">
-      {panelOpen&&<section className="ir80-help" aria-label="IREN field assistance">
+    {tourIndex===null&&!hidden&&<div ref={companionRef} className="ir80-companion ir87-companion">
+      {panelOpen&&<section id="ir87-panel" className="ir80-help ir87-panel" aria-label="IREN companion">
         <header className="ir80-help-head">
-          <span className="ir80-code">IREN / FIELD ASSISTANT</span>
-          <button type="button" className="ir80-icon-button" aria-label="Close IREN help" onClick={()=>setPanelOpen(false)}><Icon name="close" size={17}/></button>
+          <span className="ir80-code">IREN / CONTINUANCE COMPANION</span>
+          <button type="button" className="ir80-icon-button" aria-label="Close IREN" onClick={()=>setPanelOpen(false)}><Icon name="close" size={17}/></button>
         </header>
-        <h2>Where would you like to go?</h2>
-        <p className="ir80-subtitle">A guide to the parts of ANEVUM you can use today.</p>
-        <div className="ir80-topic-grid" role="group" aria-label="Help topics">
-          {topics.map(topic=><button key={topic.id} type="button" aria-pressed={topic.id===activeTopic}
-            onClick={()=>setActiveTopic(topic.id)}>{topic.label}</button>)}
+        <div className="ir87-tabs" role="tablist" aria-label="IREN tools">
+          <button id="ir87-help-tab" type="button" role="tab" aria-selected={activeView==="help"}
+            aria-controls="ir87-help-body" onClick={()=>setActiveView("help")}>Guidance</button>
+          <button id="ir87-updates-tab" type="button" role="tab" aria-selected={activeView==="updates"}
+            aria-controls="ir87-updates-body" onClick={()=>setActiveView("updates")}>
+            Signals{unreadCount>0&&<span className="ir87-tab-count">{unreadCount>9?"9+":unreadCount}</span>}
+          </button>
         </div>
-        <div className="ir80-topic-detail" aria-live="polite">
-          <strong>{currentTopic.label}</strong><p>{currentTopic.detail}</p>
-          <Link to={currentTopic.id==="profile"&&!memberId?"/join":currentTopic.href} onClick={()=>setPanelOpen(false)}>
-            {currentTopic.id==="profile"&&!memberId?"Join or sign in":currentTopic.action} <Icon name="arrow" size={15}/>
+        {activeView==="help"?<div id="ir87-help-body" role="tabpanel" aria-labelledby="ir87-help-tab">
+          <h2>Where to next?</h2>
+          <p className="ir80-subtitle">Explore ANEVUM or take a guided site tour.</p>
+          <div className="ir80-topic-grid" role="group" aria-label="Help topics">
+            {topics.map(topic=><button key={topic.id} type="button" aria-pressed={topic.id===activeTopic}
+              onClick={()=>setActiveTopic(topic.id)}>{topic.label}</button>)}
+          </div>
+          <div className="ir80-topic-detail" aria-live="polite">
+            <strong>{currentTopic.label}</strong><p>{currentTopic.detail}</p>
+            <Link to={currentTopic.id==="profile"&&!memberId?"/join":currentTopic.href} onClick={()=>setPanelOpen(false)}>
+              {currentTopic.id==="profile"&&!memberId?"Join or sign in":currentTopic.action} <Icon name="arrow" size={15}/>
+            </Link>
+          </div>
+          <footer className="ir80-help-foot">
+            <button type="button" className="ir80-tour-launch" onClick={()=>start()}>
+              {readProgress(storageKey).status==="paused"?"RESUME SITE TOUR":"TAKE THE SITE TOUR"} <Icon name="arrow" size={15}/>
+            </button>
+            <button type="button" className="ir80-hide" onClick={hide}>Hide helper</button>
+          </footer>
+        </div>:<div id="ir87-updates-body" role="tabpanel" aria-labelledby="ir87-updates-tab">
+          <h2>Your signals.</h2>
+          {!memberId?<p className="ir87-empty">Sign in to see your earned levels, badges, and recognition updates.</p>:
+           recent.length?<ul className="ir87-signal-list">
+             {recent.slice(0,8).map(item=><li key={item.id}>
+               <span className="ir87-signal-symbol">{item.kind==="level"
+                 ?<LevelEmblem level={item.level!} size={38}/>
+                 :<AwardEmblem award={item.award}/>}</span>
+               <span><strong>{item.title}</strong><small>{item.detail}</small></span>
+             </li>)}
+           </ul>:<p className="ir87-empty">No earned recognition yet. New awards and levels will appear here when verified.</p>}
+          <Link className="ir87-signals-link" to={memberId?"/member?tab=awards":"/join"} onClick={()=>setPanelOpen(false)}>
+            {memberId?"OPEN AWARDS & STATS":"JOIN OR SIGN IN"} <Icon name="arrow" size={15}/>
           </Link>
-        </div>
-        <footer className="ir80-help-foot">
-          <button type="button" className="ir80-tour-launch" onClick={()=>start()}> {readProgress(storageKey).status==="paused"?"RESUME SITE TOUR":"TAKE THE SITE TOUR"} <Icon name="arrow" size={15}/></button>
-          <button type="button" className="ir80-hide" onClick={hide}>Hide IREN</button>
-        </footer>
+          <button type="button" className="ir87-back-help" onClick={()=>setActiveView("help")}>Back to guidance</button>
+        </div>}
       </section>}
-      <button type="button" ref={dockRef} className="ir80-dock" aria-label={panelOpen?"Close IREN help":"Open IREN help"}
-        aria-expanded={panelOpen} onClick={()=>setPanelOpen(open=>!open)}>
-        <span className="ir80-orb" aria-hidden="true"><OrbitalMark/></span>
-        <span><strong>IREN</strong><small>{panelOpen?"CLOSE HELP":"HERE TO HELP"}</small></span>
+      <button type="button" ref={dockRef} className="ir80-dock ir87-scout" aria-label={panelOpen?"Close IREN companion":"Open IREN companion"}
+        aria-controls="ir87-panel" aria-expanded={panelOpen} title="IREN companion"
+        onClick={()=>{setPanelOpen(open=>!open);}}>
+        <IrenScout/>
+        {unreadCount>0&&<span className="ir87-unread" aria-label={unreadCount+" new signals"}>{unreadCount>9?"9+":unreadCount}</span>}
       </button>
     </div>}
     {step&&<div className="ir80-guide-layer" aria-label="IREN guided website tour">
