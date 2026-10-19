@@ -5,11 +5,11 @@ import {useEffect,useRef,useState, type FormEvent, type PointerEvent as ReactPoi
 import {canonicalAuthClient} from '../lib/canonical-beta';
 import {OrbitalMark} from '../components/OrbitalMark';
 import {StaffBridge,type StaffPeer} from '../components/StaffBridge';
+import {OwnerControlRoom,OwnerReleaseShelf} from '../components/OwnerControlRoom';
 import './staff-command.css';
 
 type Room='operations'|'review'|'projects';
-type Pane='overview'|'communications'|'board'|'invitations'|'tasks'|'moderation'|'team'|'members';
-type DirectoryMember={id:string;name:string;handle:string;verified:boolean;visibility:string;staffRole:string|null};
+type Pane='overview'|'communications'|'board'|'invitations'|'tasks'|'moderation'|'team'|'members'|'releases';
 type InviteStage='invited'|'responded'|'joined'|'staff-candidate'|'closed';
 type TaskStage='open'|'in-progress'|'blocked'|'done';
 type Invitation={id:string;alias:string;channel:string;stage:InviteStage;note:string;createdAt:number;updatedAt:number};
@@ -45,7 +45,8 @@ const menu:{id:Pane;code:string;name:string;short:string;description:string}[]=[
  {id:'tasks',code:'05',name:'Assignments',short:'Tasks',description:'Shared team actions'},
  {id:'moderation',code:'06',name:'Review',short:'Review',description:'Community integrity'},
  {id:'team',code:'07',name:'Personnel',short:'Team',description:'Verified staff roster'},
- {id:'members',code:'08',name:'Members',short:'Members',description:'Owner directory'}
+ {id:'members',code:'08',name:'Members',short:'Members',description:'Owner directory'},
+ {id:'releases',code:'09',name:'Observatory',short:'Builds',description:'Owner build review'}
 ];
 const rooms:{id:Room;name:string}[]=[{id:'operations',name:'Operations'},{id:'review',name:'Moderation'},{id:'projects',name:'Projects'}];
 const inviteStages:InviteStage[]=['invited','responded','joined','staff-candidate','closed'];
@@ -134,13 +135,6 @@ function CommandWorkspace({memberId}:{memberId:string}){
  const [inviteNote,setInviteNote]=useState('');
  const [taskName,setTaskName]=useState('');
  const [candidate,setCandidate]=useState('');
- const [members,setMembers]=useState<DirectoryMember[]>([]);
- const [memberSearch,setMemberSearch]=useState('');
- const [memberError,setMemberError]=useState('');
- const [membersLoading,setMembersLoading]=useState(false);
- const [inspectedRewards,setInspectedRewards]=useState<{grants:{kind:string;id:string;earnedAt:number}[];milestones:{id:string;earnedAt:number}[]}|null>(null);
- const [inspectedMember,setInspectedMember]=useState('');
- const [rewardFault,setRewardFault]=useState('');
  const [taskPriority,setTaskPriority]=useState('routine');
  const [penColor,setPenColor]=useState(colors[0]);
  const [penWidth,setPenWidth]=useState(2);
@@ -197,14 +191,6 @@ function CommandWorkspace({memberId}:{memberId:string}){
   return()=>{disposed=true;window.clearInterval(id)};
  },[snapshot?.memberId]);
 
- useEffect(()=>{
-  if(pane!=='members'||snapshot?.role!=='owner')return;
-  let alive=true;setMembersLoading(true);setMemberError('');
-  void staffRequest<{members:DirectoryMember[]}>('GET',undefined,'lane=members').then(d=>{
-   if(alive)setMembers(d.members);
-  }).catch(e=>{if(alive)setMemberError(errorOf(e))}).finally(()=>{if(alive)setMembersLoading(false)});
-  return()=>{alive=false};
- },[pane,snapshot?.role]);
  const refresh=async()=>{
   const next=await staffRequest<StaffSnapshot>('GET',undefined,'room='+roomRef.current);
   if(next.room===roomRef.current){setSnapshot(next);setFault('')}
@@ -333,7 +319,7 @@ function CommandWorkspace({memberId}:{memberId:string}){
   <div className="ir-atmosphere" aria-hidden="true"/><div className="ir-scanner" aria-hidden="true"/>
   <header className="ir-header">
    <div className="ir-header-brand"><OrbitalMark className="ir-mark"/>
-    <div><small>ANEVUM / CONTINUANCE INSTITUTE</small><strong>IREN <span>COMMAND</span></strong></div></div>
+    <div><small>ANEVUM / CONTINUANCE INSTITUTE</small><strong>IREN <span>{snapshot?.role==='owner'?'CONTROL':'MODERATOR'}</span></strong></div></div>
    <div className="ir-header-signal"><span className="ir-pulse" aria-hidden="true"/>
     <span>STAFF CHANNEL <b>{memberHasAccess?'AUTHENTICATED':loading?'NEGOTIATING':'SEALED'}</b></span></div>
    <div className="ir-header-right"><span className="ir-time">{new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}</span>
@@ -349,8 +335,8 @@ function CommandWorkspace({memberId}:{memberId:string}){
    </div>:
    <div className="ir-body">
     <nav className="ir-nav" aria-label="IREN command sections">
-     <div className="ir-nav-top"><span className="ir-kicker">OPERATIONS ARRAY</span><strong>07 / ACTIVE MODULES</strong></div>
-     {menu.filter(item=>item.id!=='members'||snapshot.role==='owner').map(item=><button type="button" key={item.id} className={pane===item.id?'is-current':''}
+     <div className="ir-nav-top"><span className="ir-kicker">OPERATIONS ARRAY</span><strong>{snapshot.role==='owner'?'09 / OWNER MODULES':'07 / TEAM MODULES'}</strong></div>
+     {menu.filter(item=>!['members','releases'].includes(item.id)||snapshot.role==='owner').map(item=><button type="button" key={item.id} className={pane===item.id?'is-current':''}
       onClick={()=>{setPane(item.id);setNotice('')}} aria-current={pane===item.id?'page':undefined}>
       <span className="ir-nav-index">{item.code}</span><span className="ir-nav-copy"><b className="ir-nav-name">{item.name}</b><b className="ir-nav-short">{item.short}</b><small>{item.description}</small></span>
       {(item.id==='moderation'&&reviewTotal!==null&&reviewTotal>0)||(item.id==='tasks'&&pendingTasks.length>0)||
@@ -540,33 +526,8 @@ function CommandWorkspace({memberId}:{memberId:string}){
        </div>
        <p className="ir-hint">The docket shows the first authorized review window. The existing <a href="/community/review">full reviewer console</a> retains pagination and the complete independent-review workflow.</p>
       </div>}
-      {pane==='members'&&snapshot.role==='owner'&&<div className="ir-list-module">
-       <div className="ir-pane-heading"><div><span className="ir-kicker">OWNER ACCESS / VERIFIED DIRECTORY</span><h2>Members</h2></div><Badge label={members.length+' SHOWN'}/></div>
-       <p className="ir-section-intro">Private member records. Cosmetic halos, earned levels and staff permissions are separate systems.</p>
-       <label className="ir-inline-form"><span>SEARCH MEMBER</span><input value={memberSearch} maxLength={100} onChange={e=>setMemberSearch(e.target.value)} placeholder="Name or handle"/></label>
-       {membersLoading?<p role="status">Loading directory…</p>:null}{memberError?<p role="alert">{memberError}</p>:null}
-       <div className="ir-record-list">{members.filter(m=>(m.name+' '+m.handle).toLowerCase().includes(memberSearch.trim().toLowerCase())).map(m=><article className="ir-record" key={m.id}>
-        <span className="ir-person-sigil">{m.name.charAt(0).toUpperCase()}</span>
-        <div className="ir-record-copy"><strong>{m.name}</strong><small>{m.handle?'@'+m.handle:'PRIVATE HANDLE'} · {m.verified?'VERIFIED':'UNVERIFIED'} · {m.visibility.toUpperCase()}</small></div>
-        <Badge label={m.staffRole?uppercase(m.staffRole):'MEMBER'} kind={m.staffRole?'active':'neutral'}/>
-        {m.verified?<button type="button" disabled={busy} onClick={()=>{
-         setInspectedMember(m.name);setInspectedRewards(null);setRewardFault('');
-         void staffRequest<{grants:{kind:string;id:string;earnedAt:number}[];milestones:{id:string;earnedAt:number}[]}>('GET',undefined,'lane=member-rewards&member='+encodeURIComponent(m.id))
-         .then(setInspectedRewards).catch(e=>setRewardFault(errorOf(e)));
-        }}>INSPECT REWARDS</button>:null}
-       </article>)}</div>
-       {inspectedMember?<section className="ir-surface" aria-label="Read-only earned recognition">
-        <div className="ir-pane-heading"><span className="ir-kicker">EARNED RECORDS / {inspectedMember.toUpperCase()}</span><button type="button" onClick={()=>{setInspectedMember('');setInspectedRewards(null);setRewardFault('')}}>CLOSE</button></div>
-        {rewardFault?<p role="alert">{rewardFault}</p>:null}
-        {!rewardFault&&!inspectedRewards?<p role="status">Reading verified reward ledger…</p>:null}
-        {inspectedRewards?<div className="ir-record-list">
-         {[...inspectedRewards.milestones.map(x=>({kind:'MILESTONE',id:x.id,earnedAt:x.earnedAt})),...inspectedRewards.grants].map((r,i)=><article className="ir-record" key={r.kind+r.id+i}><div className="ir-record-copy"><strong>{r.id.replaceAll('_',' ')}</strong><small>{r.kind.toUpperCase()} · EARNED RECORD · {stamp(r.earnedAt)}</small></div></article>)}
-         {inspectedRewards.milestones.length+inspectedRewards.grants.length===0?<p>No verified reward records found.</p>:null}
-        </div>:null}
-        <p className="ir-hint">This inspector shows historical earned records, not unearned art, staff entitlements or direct award controls.</p>
-       </section>:null}
-       <p className="ir-hint">Showing the newest 100. Grant or revoke staff access under Personnel; this directory does not issue rewards or XP.</p>
-      </div>}
+      {pane==='members'&&snapshot.role==='owner'&&<OwnerControlRoom onOpenPersonnel={()=>setPane('team')}/>}
+      {pane==='releases'&&snapshot.role==='owner'&&<OwnerReleaseShelf/>}
       {pane==='team'&&<div className="ir-list-module">
        <div className="ir-pane-heading"><div><span className="ir-kicker">AUTHENTICATED PERSONNEL / ROLE BOUNDARIES</span><h2>Staff directory</h2></div>
         <Badge label={roster.length+' VERIFIED'}/></div>
