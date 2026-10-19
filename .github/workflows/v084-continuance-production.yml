@@ -1,4 +1,4 @@
-name: ANEVUM V090 Guarded Player Identity Synchronization Production
+name: ANEVUM V091 Guarded Continuance Experience Production
 on:
   push:
     branches:
@@ -21,6 +21,18 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+      - name: Require recorded V091 authenticated acceptance before release
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test creator-v1/test/v091-release-acceptance.test.mjs
+          node creator-v1/ops/v091-release-acceptance.mjs
+          # Only release configuration/evidence may differ from the tested app.
+          git diff --exit-code b9a7735cd6661ff5824862e6fc4d3b774885a04e HEAD -- . \
+            ':(exclude).github/workflows/v084-continuance-production.yml' \
+            ':(exclude).github/release-evidence/v091-authenticated.json' \
+            ':(exclude)creator-v1/ops/v091-release-acceptance.mjs' \
+            ':(exclude)creator-v1/test/v091-release-acceptance.test.mjs'
       - name: Node runtime
         uses: actions/setup-node@v4
         with:
@@ -131,7 +143,7 @@ jobs:
           test -s "$RUNNER_TEMP/v084-release-evidence/iren-discover-1440.png"
           test -s "$RUNNER_TEMP/v084-release-evidence/iren-docked-top-320.png"
           echo V089_REAL_WEBGL_AND_RESPONSIVE_ACCEPTANCE=PASS >> "$GITHUB_STEP_SUMMARY"
-      - name: Deploy V090 synchronized player identity without changing live routes, bindings or IREN
+      - name: Deploy V091 verified experience without changing live routes, bindings or IREN
         shell: bash
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -145,31 +157,35 @@ jobs:
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           git merge-base --is-ancestor 6c60b1c9d4860e84cadc2c76bc01f8254b26d139 HEAD
           git merge-base --is-ancestor 00ba9f32f2c862de4b362eaafddc80890e2b577b HEAD
-          # Allow only the reviewed V090 identity patch and this guarded deployment workflow.
-          # Fail before any Cloudflare writes if even one extra source file differs.
+          # Pin the completed V091 application and allow only its reviewed files.
+          # A stale or broadened release fails before any Cloudflare write.
+          git merge-base --is-ancestor b9a7735cd6661ff5824862e6fc4d3b774885a04e HEAD
           diff -u <(printf '%s\n' \
+             '.github/release-evidence/v091-authenticated.json' \
+             '.github/workflows/creator-v1-verify.yml' \
              '.github/workflows/v084-continuance-production.yml' \
-             'creator-v1/canonical-auth/community.mjs' \
-             'creator-v1/canonical-auth/forums.mjs' \
-             'creator-v1/canonical-auth/public-member-card.mjs' \
-             'creator-v1/canonical-auth/space.mjs' \
+             '.github/workflows/v091-live-readonly-qa.yml' \
+             'creator-v1/ops/v091-release-acceptance.mjs' \
              'creator-v1/package.json' \
-             'creator-v1/test/member-community-v030.test.mjs' \
-             'creator-v1/test/member-identity-v061.test.mjs' \
-             'creator-v1/test/member-spaces-v028.test.mjs' \
-             'creator-v1/web/src/components/CompactMemberIdentity.tsx' \
-             'creator-v1/web/src/components/MemberCommunity.tsx' \
-             'creator-v1/web/src/components/MemberSpaceDashboard.tsx' \
-             'creator-v1/web/src/components/PlayerCardStudio.tsx' \
-             'creator-v1/web/src/components/ProfileImageEditor.tsx' \
-             'creator-v1/web/src/lib/member-community.ts' \
-             'creator-v1/web/src/lib/member-forums.ts' \
-             'creator-v1/web/src/lib/player-recognition-api.ts' \
-             'creator-v1/web/src/lib/useMemberRevalidation.ts' \
-             'creator-v1/web/src/lib/useOwnPlayerCard.ts' \
-             'creator-v1/web/src/pages/CanonicalForums.tsx' \
-             'creator-v1/web/src/pages/Phase1PublicMemberPage.tsx') \
-            <(git diff --name-only 6c60b1c9d4860e84cadc2c76bc01f8254b26d139 HEAD)
+             'creator-v1/test/capture-sitewide-v012.mjs' \
+             'creator-v1/test/cinematic-worlds.test.mjs' \
+             'creator-v1/test/continuance-experience-v091.test.mjs' \
+             'creator-v1/test/creator-identity-browser-v091.mjs' \
+             'creator-v1/test/creator-route-v091.test.mjs' \
+             'creator-v1/test/portal-offline-preview.mjs' \
+             'creator-v1/test/v091-live-emblem-browser.mjs' \
+             'creator-v1/test/v091-public-live-canary.mjs' \
+             'creator-v1/test/v091-release-acceptance.test.mjs' \
+             'creator-v1/web/src/components/LevelEmblem.tsx' \
+             'creator-v1/web/src/components/States.tsx' \
+             'creator-v1/web/src/continuance-experience-v091.css' \
+             'creator-v1/web/src/lib/creator-route.ts' \
+             'creator-v1/web/src/main.tsx' \
+             'creator-v1/web/src/pages/CanonicalStudioPage.tsx' \
+             'creator-v1/web/src/pages/CreatorsPage.tsx' \
+             'creator-v1/web/src/pages/Phase1PublicMemberPage.tsx' \
+             'creator-v1/web/src/pages/StatusPage.tsx') \
+            <(git diff --name-only db2b8c0f8f79061adf1677986b87077856204267 HEAD)
           test -f creator-v1/web/src/lib/public-creator-handle.ts
           grep -Fq 'publicCreatorHandle(project.creatorHandle)' creator-v1/web/src/pages/CinematicLandingPage.tsx
           grep -Fq 'publicCreatorHandle(project.creatorHandle)' creator-v1/web/src/components/ProjectCard.tsx
@@ -193,7 +209,7 @@ jobs:
           echo "Production flags and binding checks passed. Checking deployed Worker version..."
           cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" > "$RUNNER_TEMP/pre-deployments.json"
           pre_version="$(jq -r '(.result.deployments // .result)[0].versions[0].version_id' "$RUNNER_TEMP/pre-deployments.json")"
-          test "$pre_version" = "3db3ba18-882d-4810-b228-e84ac10be952"
+          test "$pre_version" = "8e4932d5-467d-418b-be10-2098053f375a"
           echo "Deployed version matches expected baseline. Checking routes..."
           cf "$cf_api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/pre-routes.json"
           jq -e '.success and any(.result[]; .pattern=="anevum.com/*" and .script=="anevum-native-frame-policy-v001") and ([.result[]|select(.pattern=="anevum.com/assets/index-*")|.script]==["anevum-native-project-community-v002"])' "$RUNNER_TEMP/pre-routes.json" > /dev/null
@@ -235,7 +251,7 @@ jobs:
           jq -S '[.result.bindings[]|select(.type=="secret_text")|.name]|sort' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/pre-secrets.json"
           # Verify the same live baseline immediately before the first write.
           cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" > "$RUNNER_TEMP/immediate-pre-deployments.json"
-          test "$(jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/immediate-pre-deployments.json")" = "3db3ba18-882d-4810-b228-e84ac10be952"
+          test "$(jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/immediate-pre-deployments.json")" = "8e4932d5-467d-418b-be10-2098053f375a"
           cf "$cf_api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/immediate-pre-routes.json"
           jq -S '[.result[]|{pattern,script}]|sort_by(.pattern)' "$RUNNER_TEMP/immediate-pre-routes.json" > "$RUNNER_TEMP/immediate-routes.lock.json"
           cmp "$RUNNER_TEMP/routes.lock.json" "$RUNNER_TEMP/immediate-routes.lock.json"
@@ -247,14 +263,14 @@ jobs:
             code=$?
             trap - EXIT
             if test "$deploy_started" = "1" && test "$accepted" != "1"; then
-              echo "::warning::V089 rollout did not pass all checks; verifying production Worker state for rollback."
+              echo "::warning::V091 rollout did not pass all checks; verifying production Worker state for rollback."
               current="$(cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" | jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' || true)"
               if test -n "$current" && test "$current" != "$pre_version"; then
-                echo "::warning::Restoring recorded previous V089 Worker version."
+                echo "::warning::Restoring recorded previous V090 Worker version."
                 printf '{"strategy":"percentage","versions":[{"percentage":100,"version_id":"%s"}]}' "$pre_version" > "$RUNNER_TEMP/revert.json"
                 curl --fail --silent --show-error --max-time 40 -X POST -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" -d @"$RUNNER_TEMP/revert.json" "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" >/dev/null || echo "::error::ROLLBACK REQUIRES MANUAL INTERVENTION"
                 rollback_version="$(cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" | jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' || true)"
-                test "$rollback_version" = "$pre_version" && echo "V089_PREVIOUS_WORKER_ROLLBACK=PASS" || echo "::error::ROLLBACK DID NOT REACH RECORDED V078 VERSION"
+                test "$rollback_version" = "$pre_version" && echo "V091_PREVIOUS_WORKER_ROLLBACK=PASS" || echo "::error::ROLLBACK DID NOT REACH RECORDED V078 VERSION"
               fi
             fi
             exit "$code"
@@ -296,7 +312,7 @@ jobs:
             sleep 4
           done
           test "$ready" = 1
-          echo "PASS: production serves the exact approved V089 JavaScript asset."
+          echo "PASS: production serves the exact approved V091 JavaScript asset."
           # Vite emits the actual 3D scene as a separately loaded JS chunk.
           rig="$(find creator-v1/dist/web/assets -maxdepth 1 -name 'iren-living-rig-v088-*.js' -printf '%f\n' | head -n 1)"
           test -n "$rig"
