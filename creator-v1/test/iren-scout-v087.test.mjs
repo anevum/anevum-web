@@ -20,7 +20,8 @@ test("Only IREN owns a persistent floating bottom-right control",()=>{
 
 test("Animated small IREN scout is accessible and respects motion settings",()=>{
  assert.match(scout,/function IrenScout\(\)/);
- assert.match(scout,/aria-label=\{panelOpen\?"Close IREN companion":"Open IREN companion"\}/);
+ assert.match(scout,/aria-label=\{panelOpen\?"Close IREN companion":"Open IREN companion"/);
+ assert.match(scout,/unreadCount>0\?", "\+unreadCount\+" new signals"/);
  assert.match(scout,/className="ir87-unread"/);
  assert.match(css,/\.ir87-scout\.ir80-dock\{[^}]*width:54px/);
  assert.match(css,/@media\(max-width:650px\)[\s\S]*?\.ir87-scout\.ir80-dock\{width:51px/);
