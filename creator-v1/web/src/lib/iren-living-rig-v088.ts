@@ -240,10 +240,15 @@ export class IrenLivingRig{
   const greeting=this.mood==="greet";
   const guiding=this.mood==="guide";
   const thinking=this.mood==="think";
+  const curious=this.mood==="curious";
+  const notifying=this.mood==="notify";
+  const resting=this.mood==="rest";
   const flying=this.mood==="travel";
-  const active=excited||greeting||guiding||thinking||flying;
-  const bob=moving?Math.sin(t*2.4)*.043+(excited?Math.sin(t*12)*.042:0):0;
-  const yaw= -.13+(moving?Math.sin(t*.5)*.10:0)+this.look[0]*.19+(flying?.32:0);
+  const active=excited||greeting||guiding||thinking||curious||notifying||flying;
+  const bob=(moving?Math.sin(t*2.4)*(resting?.013:.043)+
+    (excited?Math.sin(t*12)*.042:0):0)-(resting?.10:0);
+  const yaw= -.13+(moving?Math.sin(t*.5)*.10:0)+this.look[0]*.19+
+    (flying?.32:0)+(curious?.14:0);
   const lean=(flying?-.19:.02)+(moving?Math.sin(t*1.2)*.028:0);
   const root=chain(T(0,bob,0),Ry(yaw),Rz(lean));
   // Outer orbital instrument, physically surrounding the character.
@@ -263,7 +268,8 @@ export class IrenLivingRig{
    this.draw("sphere",root,palette.steel,[side*.46,-.22,-.13],[.16,.27,.21],Rz(side*.22));
    const shoulder=chain(root,T(side*.51,-.11,.035));
    const wave=excited?-side*1.2:greeting&&side===1?-1.35:guiding&&side===1?-1.18:
-    thinking&&side===1?-.66:side*.17;
+    notifying&&side===1?-1.02:thinking&&side===1?-.66:
+    curious&&side===1?-.35:side*.17;
    const swing=moving?Math.sin(t*(active?5:1.8)+side)*.075:0;
    const arm=chain(shoulder,Rz(wave+swing));
    this.draw("sphere",arm,palette.trim,[0,0,0],[.16,.17,.16]);
@@ -281,15 +287,17 @@ export class IrenLivingRig{
   }
   // Independent two-axis head mount; the visor and eyes turn toward the target.
   const glance=moving?Math.sin(t*.95)*.12:0;
-  const head=chain(root,T(0,.24,.02),Ry(glance+this.look[0]*.30),Rx(-.045-this.look[1]*.21+(thinking?-.16:0)));
+  const head=chain(root,T(0,.24,.02),Ry(glance+this.look[0]*.30),
+    Rx(-.045-this.look[1]*.21+(thinking?-.16:0)+(curious?-.12:0)),
+    Rz(curious?.09:0));
   this.draw("sphere",head,palette.trim,[0,.43,.015],[.65,.56,.49]);
   this.draw("sphere",head,palette.chassis,[0,.43,.026],[.64,.55,.495]);
   this.draw("sphere",head,palette.ceramic,[0,.48,.03],[.59,.51,.468]);
   this.draw("sphere",head,palette.visor,[0,.43,.462],[.505,.385,.085]);
   this.draw("sphere",head,palette.midnight,[0,.43,.529],[.457,.341,.041]);
   const blinking=moving&&(t%5.4>5.17&&t%5.4<5.30);
-  const blink=blinking?.10:1;
-  const happy=excited||greeting;
+  const blink=blinking?.10:(resting?.40:1);
+  const happy=excited||greeting||notifying;
   for(const side of [-1,1] as const){
    this.draw("sphere",head,palette.steel,[side*.262,.45,.562],[.172,.166,.052]);
    this.draw("sphere",head,palette.eye,[side*.262,.45,.608],[.114,.118*blink,.035],I(),pulse*.65);
