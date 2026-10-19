@@ -32,7 +32,27 @@ const server=createServer((req,res)=>{
    session:{id:'synthetic-non-deployable-session',userId:'fixture-founder',
     createdAt:'2026-10-17T00:00:00Z',updatedAt:'2026-10-17T00:00:00Z',expiresAt:'2027-01-01T00:00:00Z'}
   });
-  if(url.pathname==='/api/v1/member/staff-ops')return json(res,{...mock,room:url.searchParams.get('room')||'operations'});
+  if(url.pathname==='/api/v1/member/staff-ops'){
+   if(url.searchParams.get('lane')==='members')return json(res,{
+    members:[{id:'fixture-second',name:'Synthetic Member',handle:'fixture_second',
+     email:'member@fixture.invalid',verified:true,visibility:'private',
+     staffRole:null,cosmeticAura:'nebula',joinedAt:'2026-10-19T10:00:00Z'}],
+    page:0,pageSize:25,hasMore:false,query:'',source:'synthetic-test-only'
+   });
+   if(url.searchParams.get('lane')==='member-rewards')return json(res,{
+    grants:[{kind:'badge',id:'first_orbit',earnedAt:now-86400}],
+    milestones:[{id:'first_signal',earnedAt:now-86400}],
+    memberVerified:true,cosmeticAura:'nebula',badgeDisplayMode:'curated',
+    roleRegistryReady:false,roleDistinctions:[],canIssue:false,canChangeXp:false
+   });
+   if(url.searchParams.get('lane')==='release-evidence')return json(res,{
+    stagingReady:false,stagingReason:'Functional staging requires isolated D1 and test identities.',
+    releases:[{id:'v084-fixture',name:'V084 Production',status:'live',environment:'production',
+     summary:'CI artifact fixture only.',source:'https://github.com/anevum/anevum-web/actions/runs/39271162169',
+     evidence:'https://github.com/anevum/anevum-web/actions/runs/39271162169/artifacts/12195298181'}]
+   });
+   return json(res,{...mock,room:url.searchParams.get('room')||'operations'});
+  }
   if(url.pathname==='/api/v1/member/forum-review')return json(res,{
    threads:[],replies:[],reports:[],recent:[],totals:{threads:0,replies:0,reports:0},checkedAt:now
   });
@@ -82,7 +102,7 @@ try{
    throw error;
   }
   const layout=await evaluate("(()=>{const e=document.querySelector('.ir-screen');const r=e.getBoundingClientRect();return {left:r.left,top:r.top,right:r.right,bottom:r.bottom,viewportW:innerWidth,viewportH:innerHeight,locked:getComputedStyle(document.documentElement).overflow==='hidden',nav:document.querySelectorAll('.ir-nav>button').length,founder:document.body.innerText.includes('CREATOR PROFILES'),overflow:e.scrollWidth>e.clientWidth+2}})()");
-  assert.equal(layout.nav,7,JSON.stringify({width,layout}));
+  assert.equal(layout.nav,8,JSON.stringify({width,layout}));
   assert.equal(layout.locked,true,JSON.stringify({width,layout}));
   assert.equal(layout.overflow,false,JSON.stringify({width,layout}));
   assert.equal(layout.founder,true,JSON.stringify({width,layout}));
@@ -96,7 +116,21 @@ try{
   const shot=await c.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   assert.ok(shot.data?.length>5000);
   writeFileSync(join(out,'iren-v002-'+width+'.png'),Buffer.from(shot.data,'base64'));
-  console.log('IREN_V002_SYNTHETIC_LAYOUT_'+width+'=PASS');
+  // V086 genuine compiled React Owner Control Room, isolated synthetic fixture;
+  // the browser never connects to a production member or grants real roles.
+  await evaluate("document.querySelectorAll('.ir-nav>button')[7].click()");
+  await until(()=>evaluate("Boolean(document.querySelector('.ir-owner-hub'))"));
+  await until(()=>evaluate("document.body.innerText.includes('Synthetic Member')"));
+  const ownerLayout=await evaluate("(()=>{const root=document.querySelector('.ir-screen');const hub=document.querySelector('.ir-owner-hub');return {owner:root.dataset.owner,nav:document.querySelectorAll('.ir-nav>button').length,tab:hub.querySelectorAll('[role=tab]').length,containsSimulatedData:hub.innerText.includes('Synthetic Member'),viewportOverflow:root.scrollWidth>root.clientWidth+2}})()");
+  assert.equal(ownerLayout.owner,'true',JSON.stringify({width,ownerLayout}));
+  assert.equal(ownerLayout.nav,8,JSON.stringify({width,ownerLayout}));
+  assert.equal(ownerLayout.tab,3,JSON.stringify({width,ownerLayout}));
+  assert.equal(ownerLayout.containsSimulatedData,true,JSON.stringify({width,ownerLayout}));
+  assert.equal(ownerLayout.viewportOverflow,false,JSON.stringify({width,ownerLayout}));
+  const ownerShot=await c.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  assert.ok(ownerShot.data?.length>5000);
+  writeFileSync(join(out,'iren-v086-'+width+'.png'),Buffer.from(ownerShot.data,'base64'));
+  console.log('IREN_V086_OWNER_BROWSER_QA_'+width+'=PASS');
  }
  console.log('IREN_V002_SYNTHETIC_BROWSER_QA=PASS');
 }finally{

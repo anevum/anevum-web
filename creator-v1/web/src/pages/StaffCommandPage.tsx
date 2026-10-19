@@ -5,10 +5,11 @@ import {useEffect,useRef,useState, type FormEvent, type PointerEvent as ReactPoi
 import {canonicalAuthClient} from '../lib/canonical-beta';
 import {OrbitalMark} from '../components/OrbitalMark';
 import {StaffBridge,type StaffPeer} from '../components/StaffBridge';
+import {StaffOwnerControl} from '../components/StaffOwnerControl';
 import './staff-command.css';
 
 type Room='operations'|'review'|'projects';
-type Pane='overview'|'communications'|'board'|'invitations'|'tasks'|'moderation'|'team';
+type Pane='overview'|'communications'|'board'|'invitations'|'tasks'|'moderation'|'team'|'members';
 type InviteStage='invited'|'responded'|'joined'|'staff-candidate'|'closed';
 type TaskStage='open'|'in-progress'|'blocked'|'done';
 type Invitation={id:string;alias:string;channel:string;stage:InviteStage;note:string;createdAt:number;updatedAt:number};
@@ -43,7 +44,8 @@ const menu:{id:Pane;code:string;name:string;short:string;description:string}[]=[
  {id:'invitations',code:'04',name:'Invitations',short:'Invites',description:'People you reached'},
  {id:'tasks',code:'05',name:'Assignments',short:'Tasks',description:'Shared team actions'},
  {id:'moderation',code:'06',name:'Review',short:'Review',description:'Community integrity'},
- {id:'team',code:'07',name:'Personnel',short:'Team',description:'Verified staff roster'}
+ {id:'team',code:'07',name:'Personnel',short:'Team',description:'Verified staff roster'},
+ {id:'members',code:'08',name:'Control Room',short:'Control',description:'Owner members and releases'}
 ];
 const rooms:{id:Room;name:string}[]=[{id:'operations',name:'Operations'},{id:'review',name:'Moderation'},{id:'projects',name:'Projects'}];
 const inviteStages:InviteStage[]=['invited','responded','joined','staff-candidate','closed'];
@@ -312,7 +314,7 @@ function CommandWorkspace({memberId}:{memberId:string}){
  const invited=invites.filter(x=>x.stage==='invited');
  const selectedMenu=menu.find(x=>x.id===pane)!;
  const memberHasAccess=Boolean(snapshot);
- return <section className="ir-screen" data-pane={pane} aria-label="IREN staff command portal">
+ return <section className="ir-screen" data-pane={pane} data-owner={snapshot?.role==='owner'?'true':'false'} aria-label="IREN staff command portal">
   <div className="ir-atmosphere" aria-hidden="true"/><div className="ir-scanner" aria-hidden="true"/>
   <header className="ir-header">
    <div className="ir-header-brand"><OrbitalMark className="ir-mark"/>
@@ -332,8 +334,8 @@ function CommandWorkspace({memberId}:{memberId:string}){
    </div>:
    <div className="ir-body">
     <nav className="ir-nav" aria-label="IREN command sections">
-     <div className="ir-nav-top"><span className="ir-kicker">OPERATIONS ARRAY</span><strong>07 / ACTIVE MODULES</strong></div>
-     {menu.map(item=><button type="button" key={item.id} className={pane===item.id?'is-current':''}
+     <div className="ir-nav-top"><span className="ir-kicker">OPERATIONS ARRAY</span><strong>{snapshot.role==='owner'?'08':'07'} / ACTIVE MODULES</strong></div>
+     {menu.filter(item=>item.id!=='members'||snapshot.role==='owner').map(item=><button type="button" key={item.id} className={pane===item.id?'is-current':''}
       onClick={()=>{setPane(item.id);setNotice('')}} aria-current={pane===item.id?'page':undefined}>
       <span className="ir-nav-index">{item.code}</span><span className="ir-nav-copy"><b className="ir-nav-name">{item.name}</b><b className="ir-nav-short">{item.short}</b><small>{item.description}</small></span>
       {(item.id==='moderation'&&reviewTotal!==null&&reviewTotal>0)||(item.id==='tasks'&&pendingTasks.length>0)||
@@ -523,6 +525,8 @@ function CommandWorkspace({memberId}:{memberId:string}){
        </div>
        <p className="ir-hint">The docket shows the first authorized review window. The existing <a href="/community/review">full reviewer console</a> retains pagination and the complete independent-review workflow.</p>
       </div>}
+      {pane==='members'&&snapshot.role==='owner'&&
+       <StaffOwnerControl onPersonnel={()=>setPane('team')} onReview={()=>setPane('moderation')}/>}
       {pane==='team'&&<div className="ir-list-module">
        <div className="ir-pane-heading"><div><span className="ir-kicker">AUTHENTICATED PERSONNEL / ROLE BOUNDARIES</span><h2>Staff directory</h2></div>
         <Badge label={roster.length+' VERIFIED'}/></div>

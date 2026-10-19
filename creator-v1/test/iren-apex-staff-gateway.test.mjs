@@ -119,3 +119,28 @@ test('IREN V002 isolated Worker: existing independent moderation endpoint uses a
   assert.equal((await f.call('/staff')).status,404);
  }finally{f.db.close()}
 });
+
+
+test('V085 owner member directory and reward inspector reject non-owner identities',async()=>{
+ const f=setup();
+ try{
+  const owner={cookie:'auth=owner'};
+  const outsiders={cookie:'auth=outsider'};
+  assert.equal((await f.call(API+'?lane=members')).status,401);
+  assert.equal((await f.call(API+'?lane=members','GET',undefined,outsiders)).status,403);
+  const response=await f.call(API+'?lane=members','GET',undefined,owner);
+  assert.equal(response.status,200);
+  const body=await response.json();
+  assert.ok(Array.isArray(body.members));
+  assert.equal(body.limitedTo,100);
+  assert.ok(body.members.some(x=>x.name==='Founder Test'));
+  assert.doesNotMatch(JSON.stringify(body),/@synthetic\\.invalid/);
+  assert.equal((await f.call(API+'?lane=members&member=outsider','GET',undefined,owner)).status,400);
+  assert.equal((await f.call(API+'?lane=member-rewards&member=founder','GET',undefined,outsiders)).status,403);
+  assert.equal((await f.call(API+'?lane=member-rewards&member=missing','GET',undefined,owner)).status,404);
+  assert.equal((await f.call(API+'?lane=member-rewards&member=founder','GET',undefined,owner)).status,503);
+  const header={cookie:'auth=owner',origin:BASE,'sec-fetch-site':'same-origin'};
+  assert.equal((await f.call(API,'POST',{kind:'staff-grant',memberId:'outsider'},header)).status,200);
+  assert.equal((await f.call(API+'?lane=members','GET',undefined,outsiders)).status,403);
+ }finally{f.db.close()}
+});
