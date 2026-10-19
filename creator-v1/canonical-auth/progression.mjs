@@ -7,7 +7,17 @@ const headers={'cache-control':'private, no-store','content-type':'application/j
 const json=(data,status=200)=>Response.json(data,{status,headers});
 const error=(status,message)=>json({error:message},status);
 const rows=async(db,sql,...args)=>{const r=await db.prepare(sql).bind(...args).all();if(r.success===false)throw Error('Storage unavailable');return r.results};
-export async function progressionReady(db){try{return (await rows(db,"SELECT name FROM sqlite_master WHERE type='table' AND name IN ('member_xp_events','member_reward_notifications','member_notification_receipts')")).length===3}catch{return false}}
+// Cache only validated schema presence for 30s per D1 binding.
+// User data, permissions and mutations are never cached.
+const verifiedProgressionSchema=new WeakMap();
+export async function progressionReady(db){
+ if((verifiedProgressionSchema.get(db)||0)>Date.now())return true;
+ try{
+  const ready=(await rows(db,"SELECT name FROM sqlite_master WHERE type='table' AND name IN ('member_xp_events','member_reward_notifications','member_notification_receipts')")).length===3;
+  if(ready)verifiedProgressionSchema.set(db,Date.now()+30_000);
+  return ready;
+ }catch{return false}
+}
 export function levelProgress(raw){
  const xp=Number.isSafeInteger(raw)&&raw>=0?raw:0;
  const level=Math.min(30,1+Math.floor(Math.sqrt(xp/75)));
@@ -15,8 +25,16 @@ export function levelProgress(raw){
 }
 export async function readProgression(db,id){
  const earned=await rows(db,'SELECT milestone,earned_at FROM member_space_milestones WHERE user_id=?',id);
- const test=await db.prepare('SELECT COALESCE(SUM(amount),0) AS xp FROM member_xp_events WHERE user_id=?').bind(id).first();
- const milestoneXp=MILESTONES.reduce((n,a)=>n+(earned.some(e=>e.milestone===a.id)?a.xp:0),0),testXp=Number(test?.xp)||0;
+ // Once migration 0011 is installed, XP reads are O(1) per member.
+ // The ledger remains the source of truth and triggers maintain its total.
+ // Until that migration is deployed, retain the exact legacy behavior.
+ let total;
+ try{total=await db.prepare('SELECT xp FROM member_xp_totals WHERE user_id=?').bind(id).first();}
+ catch(err){
+  if(!/no such table:\s*member_xp_totals/i.test(String(err?.message||err)))throw err;
+  total=await db.prepare('SELECT COALESCE(SUM(amount),0) AS xp FROM member_xp_events WHERE user_id=?').bind(id).first();
+ }
+ const milestoneXp=MILESTONES.reduce((n,a)=>n+(earned.some(e=>e.milestone===a.id)?a.xp:0),0),testXp=Number(total?.xp)||0;
  return {...levelProgress(milestoneXp+testXp),testXp,milestoneXp,awards:MILESTONES.map(a=>({...a,earnedAt:earned.find(e=>e.milestone===a.id)?.earned_at??null}))};
 }
 export async function syncRewardNotifications(db,id,now){

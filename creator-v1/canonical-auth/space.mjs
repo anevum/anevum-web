@@ -14,8 +14,17 @@ async function input(req,max=9000){
  const text=await boundedText(req,max);if(text===null)return null;
  try{const v=JSON.parse(text);return v&&typeof v==='object'&&!Array.isArray(v)?v:null}catch{return null}
 }
+// Cache only validated schema presence for 30s per D1 binding.
+// User data, permissions and mutations are never cached.
+const verifiedSpaceSchema=new WeakMap();
 export async function spaceReady(db){
- try{const r=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('member_space_media','member_space_settings','member_wall_posts','member_space_milestones')").all();return r.results?.length===4}catch{return false}
+ if((verifiedSpaceSchema.get(db)||0)>Date.now())return true;
+ try{
+  const r=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('member_space_media','member_space_settings','member_wall_posts','member_space_milestones')").all();
+  const ready=r?.success!==false&&r.results?.length===4;
+  if(ready)verifiedSpaceSchema.set(db,Date.now()+30_000);
+  return ready;
+ }catch{return false}
 }
 async function rows(db,sql,...args){const r=await db.prepare(sql).bind(...args).all();if(!r.success)throw Error('Space unavailable');return r.results}
 async function allowance(db,id,now){

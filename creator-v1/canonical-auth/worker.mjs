@@ -21,6 +21,37 @@ import {publicSupporterTelemetry,PUBLIC_TELEMETRY_PATH} from "./public-supporter
 import {canonicalProjectSave,canonicalProjectSaveReady} from "./project-saves.mjs";
 import {canonicalStudio,canonicalStudioReview,studioReadiness} from "./studio.mjs";
 
+// Reuse the Better Auth engine only while the same database binding and
+// exact authentication configuration are present in this Worker isolate.
+// The engine is not a session cache. Every request still resolves cookies,
+// revoked sessions, rate limits, and member authorization from D1.
+const AUTH_ENGINE_CONFIG=Object.freeze([
+ "ANEVUM_CANONICAL_APEX_ENABLED","ANEVUM_CANONICAL_STAGE_ENABLED",
+ "CANONICAL_SCHEMA_APPROVED","CANONICAL_PUBLIC_SIGNUP_ENABLED",
+ "CANONICAL_INVITED_SIGNUP_ENABLED","CANONICAL_EMAIL_ENABLED",
+ "CANONICAL_GOOGLE_ENABLED","CANONICAL_GITHUB_ENABLED",
+ "CANONICAL_APPLE_ENABLED","CANONICAL_MICROSOFT_ENABLED",
+ "CANONICAL_GOOGLE_CLIENT_ID","CANONICAL_GOOGLE_CLIENT_SECRET",
+ "CANONICAL_GITHUB_CLIENT_ID","CANONICAL_GITHUB_CLIENT_SECRET",
+ "CANONICAL_APPLE_CLIENT_ID","CANONICAL_APPLE_CLIENT_SECRET",
+ "CANONICAL_MICROSOFT_CLIENT_ID","CANONICAL_MICROSOFT_CLIENT_SECRET",
+ "CANONICAL_BETTER_AUTH_SECRET","CANONICAL_RESEND_API_KEY",
+ "CANONICAL_PROTECTED_EMAILS","CANONICAL_INVITE_EMAILS"
+]);
+export function createCanonicalAuthResolver(factory=createCanonicalAuth){
+ const engines=new WeakMap();
+ return function authFor(env){
+  const db=env?.MEMBER_DB;
+  if(!db||typeof db!=="object")return factory(env);
+  const config=AUTH_ENGINE_CONFIG.map(key=>env[key]);
+  const prior=engines.get(db);
+  if(prior&&prior.config.every((value,i)=>value===config[i]))return prior.engine;
+  const engine=factory(env);
+  engines.set(db,{engine,config});
+  return engine;
+ };
+}
+
 const HEALTH=CANONICAL_PREFIX+"/health";
 const METHODS=CANONICAL_PREFIX+"/auth-methods";
 const READ_METHODS=new Set(["GET","HEAD"]);
@@ -104,6 +135,7 @@ async function boundedEmailBody(request,verification){
  * It intentionally does not serve Creator V1 /me, projects, XP, or moderation.
  */
 export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={}){
+  const authFor=createCanonicalAuthResolver(authFactory);
   return {async fetch(request,env){
     if(!isCanonicalOrigin(request,env))return fail(request,404);
     const url=new URL(request.url),path=url.pathname;
@@ -161,10 +193,16 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const ready=configured.operational&&await canonicalSchemaReady(env);
     const profilesReady=ready&&await canonicalCreatorSchemaReady(env.MEMBER_DB);
     const stageReady=ready&&profilesReady;
+    // Never mistake temporary database/auth failure for an intentional
+    // enrollment closure. Client status never authorizes member creation.
+    const enrollmentIntended=env?.CANONICAL_PUBLIC_SIGNUP_ENABLED==="true"||
+      env?.CANONICAL_INVITED_SIGNUP_ENABLED==="true";
+    const availability=stageReady?"ready":enrollmentIntended?"unavailable":"closed";
     if((rewardMedia||rewardInventory)&&!stageReady)return fail(request,503);
     if(path===HEALTH)return safeJson(request,{
       service:"anevum-canonical-auth-staging",
       status:stageReady?"ready":"closed",
+      ...(env?.ANEVUM_CANONICAL_STAGE_ENABLED==="true"?{availability}:{}),
       registration:stageReady?(configured.open?"open":configured.invited?"invite-only":"closed"):"closed",
       linkedCreatorAccounts:false,
       ...(env.CANONICAL_CREATOR_STUDIO_ENABLED==="true"?await studioReadiness(env):{}),
@@ -180,6 +218,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     if(path===METHODS)return safeJson(request,{
       version:2,
       issuer:"anevum-better-auth-staging-v1",
+      availability,
       registration:stageReady?(configured.open?"open":configured.invited?"invite-only":"closed"):"closed",
       methods:{google:{available:Boolean(stageReady&&configured.google)},
         email:{available:Boolean(stageReady&&configured.email&&(configured.invited||configured.open))},
@@ -203,7 +242,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
       if(!publicForumRead&&["POST","PATCH","PUT","DELETE"].includes(request.method)&&!sameOriginMutation(request,env))return safeJson(request,{error:"Same-origin request required"},403);
       if(publicForumRead)return safeResponse(await canonicalForums(request,env));
       try{
-        const auth=authFactory(env);
+        const auth=authFor(env);
         const clean=withoutForeignCookies(request,env);
         const session=await auth.api.getSession({headers:clean.headers});
         return safeResponse(await canonicalForums(clean,env,session?.user));
@@ -296,7 +335,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
       return safeJson(request,{error:"Invalid request"},400);
 
     try{
-      const auth=authFactory(env);
+      const auth=authFor(env);
       if(path===CANONICAL_AUTH_PATH+"/link-social"){
         const session=await auth.api.getSession({headers:clean.headers});
         if(!session?.user?.id||session.user.emailVerified!==true)

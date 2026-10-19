@@ -1,0 +1,101 @@
+name: ANEVUM V083 Live Auth Inventory (Read Only)
+on:
+  push:
+    branches: [integration/anevum-v083-d1-signup-20261019]
+    paths:
+      - 'creator-v1/**'
+      - '.github/workflows/v083-live-auth-inventory.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: v083-live-auth-inventory-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify exact source and required Cloudflare secrets
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = 'anevum/anevum-web'
+          test "$GITHUB_REF" = 'refs/heads/integration/anevum-v083-d1-signup-20261019'
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          echo 'V083_SOURCE=VERIFIED' >> "$GITHUB_STEP_SUMMARY"
+      - name: Inventory active apex version, locked secrets/bindings, and scoped routes
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p "$RUNNER_TEMP/anevum-v083-readonly"
+          base="https://api.cloudflare.com/client/v4"
+          cf() { curl --fail --silent --show-error --retry 2 --max-time 20 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$1"; }
+          prefix="$base/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway"
+          cf "$prefix/deployments" > "$RUNNER_TEMP/anevum-v083-readonly/deployments.json"
+          cf "$prefix/settings" > "$RUNNER_TEMP/anevum-v083-readonly/settings.json"
+          cf "$base/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/anevum-v083-readonly/routes.json"
+          jq -e '.success and ((.result.deployments // .result)[0].versions | length)==1 and
+            ((.result.deployments // .result)[0].versions[0].percentage)==100 and
+            ((.result.deployments // .result)[0].versions[0].version_id|type)=="string"' \
+            "$RUNNER_TEMP/anevum-v083-readonly/deployments.json" >/dev/null
+          jq -e '.success and (.result.bindings|length)==24 and
+            ([.result.bindings[]|select(.type=="secret_text")]|length)==4 and
+            ([.result.bindings[]|select(.type=="d1")]|length)==2 and
+            any(.result.bindings[];.type=="assets" and .name=="ASSETS") and
+            any(.result.bindings[];.type=="d1" and .name=="MEMBER_DB" and ((.database_id//.id)=="e1d29049-c83b-4534-8355-dc1fa36ba6d8")) and
+            any(.result.bindings[];.type=="d1" and .name=="COMMUNITY_DB" and ((.database_id//.id)=="fa96e36d-6257-4883-bf15-074947e11a13")) and
+            any(.result.bindings[];.type=="secret_text" and .name=="CANONICAL_BETTER_AUTH_SECRET") and
+            any(.result.bindings[];.type=="secret_text" and .name=="CANONICAL_RESEND_API_KEY") and
+            any(.result.bindings[];.type=="plain_text" and .name=="ANEVUM_PRELAUNCH_MODE" and .text=="public") and
+            any(.result.bindings[];.type=="plain_text" and .name=="ANEVUM_LAUNCH_APPROVED" and .text=="true") and
+            any(.result.bindings[];.type=="plain_text" and .name=="CANONICAL_PUBLIC_SIGNUP_ENABLED" and .text=="true") and
+            any(.result.bindings[];.type=="plain_text" and .name=="CANONICAL_EMAIL_ENABLED" and .text=="true")' \
+            "$RUNNER_TEMP/anevum-v083-readonly/settings.json" >/dev/null
+          jq -e '.success and ([.result[]|select(.pattern|startswith("anevum.com/"))]|length)==23 and
+            any(.result[];.pattern=="anevum.com/*" and .script=="anevum-native-frame-policy-v001") and
+            any(.result[];.pattern=="anevum.com/staff*" and .script=="anevum-staff-review-navigation-v001") and
+            any(.result[];.pattern=="anevum.com/staff/projects*" and .script=="anevum-staff-project-review-v003")' \
+            "$RUNNER_TEMP/anevum-v083-readonly/routes.json" >/dev/null
+          active="$(jq -r '(.result.deployments // .result)[0].versions[0].version_id' "$RUNNER_TEMP/anevum-v083-readonly/deployments.json")"
+          {
+            echo "LIVE_APEX_VERSION=$active"
+            echo 'LIVE_D1_BINDINGS=2'
+            echo 'LIVE_SECRET_BINDINGS=4'
+            echo 'LIVE_TOTAL_BINDINGS=24'
+            echo 'LIVE_APEX_ROUTES=23'
+            echo 'LIVE_STAFF_ROUTE=ROLLBACK_PRESERVED'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Probe authentic public member health and method availability without a login or OTP
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --retry 2 --max-time 20 \
+            -H 'Cache-Control: no-cache' \
+            'https://anevum.com/api/v1/member/health' | \
+            jq -e '.status=="ready" and .registration=="open"' >/dev/null
+          curl --fail --silent --show-error --retry 2 --max-time 20 \
+            -H 'Cache-Control: no-cache' \
+            'https://anevum.com/api/v1/member/auth-methods' | \
+            jq -e '.registration=="open" and .methods.email.available==true' >/dev/null
+          echo 'MEMBER_HEALTH=READY' >> "$GITHUB_STEP_SUMMARY"
+          echo 'EMAIL_CODE_METHOD=AVAILABLE' >> "$GITHUB_STEP_SUMMARY"
+      - name: Finalize strictly read-only evidence
+        shell: bash
+        run: |
+          echo 'NO_DEPLOY_OR_DB_MUTATION=PASS' >> "$GITHUB_STEP_SUMMARY"
+          echo 'OWNER_SIGNIN_STAFF_ACCESS=NOT_TESTED' >> "$GITHUB_STEP_SUMMARY"
+          echo 'PRODUCTION_RELEASE_AUTHORITY=NONE' >> "$GITHUB_STEP_SUMMARY"

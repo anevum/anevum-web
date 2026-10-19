@@ -22,6 +22,9 @@ const fakeEnv=(overrides={})=>{
      throw Error('Unexpected all query '+sql.slice(0,75));
     },
     async first(){
+     // V075 fixture intentionally has no V081 materialized XP table.
+     // Model the actual SQLite missing-table response for legacy fallback.
+     if(sql.includes("SELECT xp FROM member_xp_totals"))throw Error("no such table: member_xp_totals");
      if(sql.includes("COALESCE(SUM(amount)"))return {xp:state.xp};
      if(sql.includes('WHERE user_id=?')&&sql.includes('SELECT user_id FROM member_creator_profiles'))
       return {user_id:args[0]};
