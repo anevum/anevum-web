@@ -1,4 +1,6 @@
 import { betterAuth } from "better-auth";
+import { emailOTP } from "better-auth/plugins";
+import { memberGithubConfigured, memberEmailOtpConfigured, memberSignInMethods, sendMemberEmailOtp, isPrivilegedMemberEmail } from "./member-auth-methods.mjs";
 import { memberRewardsStatus, memberBrokerageStatus } from "./member-capabilities.mjs";
 import { reviewerSchemaReady, reviewerEndpoint, exportReviewerConnection } from "./member-alpaca-review.mjs";
 import { commonsSocialEndpoint, socialSchemaReady, exportMemberSocial } from "./commons-social.mjs";
@@ -33,8 +35,27 @@ export function makeMemberAuth(env, verifiedOrigin) {
         clientId: env.GOOGLE_CLIENT_ID,
         clientSecret: env.GOOGLE_CLIENT_SECRET,
         requireEmailVerification: true
-      }
+      },
+      ...(memberGithubConfigured(env) ? {
+        github: {
+          clientId: env.GITHUB_CLIENT_ID,
+          clientSecret: env.GITHUB_CLIENT_SECRET,
+          scope: ["read:user", "user:email"],
+          requireEmailVerification: true
+        }
+      } : {})
     },
+    plugins: [
+      ...(memberEmailOtpConfigured(env) ? [emailOTP({
+        otpLength: 8,
+        expiresIn: 600,
+        allowedAttempts: 3,
+        storeOTP: "hashed",
+        async sendVerificationOTP({ email, otp, type }) {
+          await sendMemberEmailOtp(env, { email, otp, type });
+        }
+      })] : [])
+    ],
     account: {
       encryptOAuthTokens: true,
       storeStateStrategy: "database",
@@ -63,7 +84,9 @@ export function makeMemberAuth(env, verifiedOrigin) {
       window: 60,
       max: 40,
       customRules: {
-        "/sign-in/social": { window: 60, max: 8 }
+        "/sign-in/social": { window: 60, max: 8 },
+        "/email-otp/send-verification-otp": { window: 60, max: 3 },
+        "/sign-in/email-otp": { window: 60, max: 5 }
       }
     }
   });
@@ -138,15 +161,38 @@ export async function memberEndpoint(request, env, pathname, verifiedContext = {
       : reply({ message: "Method not allowed." }, 405);
   }
 
+  if (pathname === "/api/member/auth-methods") {
+    const available = memberConfigured(env) && Boolean(verifiedOrigin) && await memberSchemaReady(env);
+    return request.method === "GET"
+      ? reply({ available, methods: available ? memberSignInMethods(env) : [] })
+      : reply({ message: "Method not allowed." }, 405);
+  }
+
   // The API cannot open accidentally on a new preview or after missing secrets.
   if (!memberConfigured(env)) return reply({ message: "Member accounts are not available yet." }, 503);
   if (!verifiedOrigin) return reply({ message: "Member API origin is not authorized." }, 403);
 
-  const auth = makeMemberAuth(env, verifiedOrigin);
   if (pathname === "/api/auth" || pathname.startsWith("/api/auth/")) {
-    return auth.handler(request);
+    // Mailbox ownership alone must never become an alternate founder/owner
+    // login path. Check both code issuance and redemption before Better Auth.
+    if (memberEmailOtpConfigured(env) && request.method === "POST" &&
+      (pathname === "/api/auth/email-otp/send-verification-otp" ||
+       pathname === "/api/auth/sign-in/email-otp")) {
+      try {
+        const body = await request.clone().text();
+        if (body.length > 2048) return reply({ message: "Invalid email login request." }, 400);
+        const payload = JSON.parse(body);
+        if (typeof payload?.email !== "string") return reply({ message: "Invalid email login request." }, 400);
+        if (isPrivilegedMemberEmail(env, payload.email))
+          return reply({ message: "Use your existing sign-in method for this account." }, 403);
+      } catch {
+        return reply({ message: "Invalid email login request." }, 400);
+      }
+    }
+    return makeMemberAuth(env, verifiedOrigin).handler(request);
   }
 
+  const auth = makeMemberAuth(env, verifiedOrigin);
   const session = await auth.api.getSession({ headers: request.headers }).catch(() => null);
   const user = session?.user;
   if (!user?.id) return reply({ message: "Sign in required." }, 401);
