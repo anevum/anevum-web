@@ -41,3 +41,15 @@ The pre-existing `anevum.com/staff*` route will then serve the old app, unmodifi
 The older IREN Command SPA is still available as a Worker and its staff-ops API remains unchanged. The new /staff entry intentionally lands in the newer Observatory because the old SPA displays unreliable clearance messaging. A future integration can migrate remaining operational controls into the Observatory. Do not re-enable retired V5 production workflows to pass unrelated legacy CI tests.
 
 To also withdraw the legacy Command adapter, remove exactly two separate route mappings: `anevum.com/staff/command` and `anevum.com/staff/command/`. No database migration or staff API changes are involved.
+
+## Redacted same-browser staff session diagnostic
+
+Live diagnostic: `https://anevum.com/__anevum_iren_staff_session_status_v001`.
+
+A dedicated Worker uses the same canonical auth and staff-ops service bindings as the live staff application, and independently reads the active verified D1 grant. It returns only the presence of the expected cookie (boolean), canonical session validity, the `owner`/`reviewer`/missing grant classification, the session-expiry value type, and the staff API HTTP status. It does **not** return or log the browser's cookie, user ID, email, member profile, session token, or staff-ops response body. The route is read-only and private/no-store.
+
+An unsigned control probe returned `apexCookiePresent:false` and `canonicalSession:not_signed_in` as expected. A separate synthetic apex service-binding probe returned HTTP 200 with `null` for unsigned and invalid cookies, confirming the service binding itself is functional. These probes do **not** establish the behavior of a signed-in owner's browser.
+
+If signed-in access still fails, visit the diagnostic URL in that same browser and record the redacted status. Values such as `canonicalSession:verified` with `staffApi:http_401` identify a disagreement in the isolated staff API; `canonicalSession:not_signed_in` means this particular browser is not passing the expected canonical cookie. This is the remaining decisive acceptance test. Never request or share session cookies or verification codes.
+
+Two temporary support routes and their unbound Workers were withdrawn after testing: `/__anevum_iren_auth_probe_v001` and `/staff/access-check*`. Only the redacted session-status endpoint remains.
