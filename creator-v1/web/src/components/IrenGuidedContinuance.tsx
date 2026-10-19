@@ -478,10 +478,16 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     right:clamp(dockPosition.right,10,Math.max(10,viewport.width-spriteSize-10)),
     bottom:clamp(dockPosition.bottom,10,bottomLimit)
   }:null;
+  // On the text-led Aura Codex, park the compact helper against the left
+  // viewport edge by default: the card meanings occupy the right side.
+  // Never override a member's draggable, persisted dock position.
+  const codexCornerRight=!dockPosition&&pathname==="/auras"
+    ?Math.max(10,viewport.width-spriteSize-(isMobile?10:16)):null;
   const companionStyle:CSSProperties=safePosition
-    ?{right:safePosition.right,bottom:safePosition.bottom}:{};
+    ?{right:safePosition.right,bottom:safePosition.bottom}
+    :codexCornerRight!==null?{right:codexCornerRight}:{};
   const panelWidth=Math.min(isMobile?326:338,viewport.width-(isMobile?22:24));
-  const panelRight=safePosition?.right??(isMobile?10:16);
+  const panelRight=safePosition?.right??codexCornerRight??(isMobile?10:16);
   const panelShift=Math.max(0,panelRight-(viewport.width-panelWidth-10));
   // A dragged character may sit near the top of a phone. Flip the help panel
   // below it when necessary, rather than hiding its close/action controls
