@@ -1,0 +1,83 @@
+name: IREN V085 Owner Control & Moderator Safety QA
+
+on:
+  push:
+    branches: [build/iren-owner-control-v085-20261019-001]
+  pull_request:
+    paths:
+      - 'creator-v1/**'
+      - '.github/workflows/iren-owner-control-v085-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: iren-v085-control-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tested-source-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies without lifecycle scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Verify TypeScript and compile actual IREN Staff frontend
+        run: |
+          npm run check:creator-v1-web
+          npm run build:iren-apex-staff
+          test -s creator-v1/dist/staff/index.html
+          test -d creator-v1/dist/staff/assets
+          grep -Fq '/staff/assets/' creator-v1/dist/staff/index.html
+      - name: Verify real session authorization and private read-only owner registry
+        run: |
+          node --check creator-v1/canonical-auth/staff-owner-hub.mjs
+          node --check creator-v1/canonical-auth/staff-ops.mjs
+          node --check creator-v1/staff-portal/worker.mjs
+          (cd creator-v1 && npm run test:staff-command)
+      - name: Verify private owner and moderator security constraints
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq "ownerControlLane(req,db,permit)" creator-v1/canonical-auth/staff-ops.mjs
+          grep -Fq "permit?.role!=='owner'" creator-v1/canonical-auth/staff-owner-hub.mjs
+          grep -Fq "CANONICAL_STAFF_OPS_ENABLED" creator-v1/staff-portal/worker.mjs
+          grep -Fq "method:'GET'" creator-v1/web/src/components/OwnerControlRoom.tsx
+          grep -Fq "snapshot.role==='owner'&&<OwnerControlRoom" creator-v1/web/src/pages/StaffCommandPage.tsx
+          grep -Fq "snapshot.role==='owner'&&<OwnerReleaseShelf" creator-v1/web/src/pages/StaffCommandPage.tsx
+          grep -Fq 'realIsolatedStaging:false' creator-v1/canonical-auth/staff-owner-hub.mjs
+          ! grep -Eq 'wrangler deploy|d1 migrations apply|d1 execute|--remote' .github/workflows/iren-owner-control-v085-qa.yml
+      - name: Capture compiled V085 owner workspace using synthetic browser fixtures only
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome"
+          mkdir -p evidence/iren-v085
+          node creator-v1/test/capture-iren-staff-v002.mjs --chrome "$chrome" --output evidence/iren-v085
+          for width in 1440 390 320; do
+            test -s "evidence/iren-v085/iren-v002-$width.png"
+            test -s "evidence/iren-v085/iren-v085-owner-members-$width.png"
+            test -s "evidence/iren-v085/iren-v085-owner-inspect-$width.png"
+            test -s "evidence/iren-v085/iren-v085-owner-releases-$width.png"
+          done
+      - name: Archive private-source synthetic UI captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: iren-v085-owner-control-synthetic-qa
+          path: evidence/iren-v085/*.png
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Report release hold and source lineage
+        run: |
+          git rev-parse HEAD
+          echo 'V085_SOURCE_TESTED=YES' >> "$GITHUB_STEP_SUMMARY"
+          echo 'V085_PRODUCTION_RELEASE=NOT_AUTHORIZED' >> "$GITHUB_STEP_SUMMARY"
+          echo 'V085_DATABASE_MIGRATIONS=NONE' >> "$GITHUB_STEP_SUMMARY"
+          echo 'V085_ACCOUNT_OR_REWARD_MUTATIONS=NONE' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Browser captures use SYNTHETIC account fixtures, not owner login.' >> "$GITHUB_STEP_SUMMARY"
