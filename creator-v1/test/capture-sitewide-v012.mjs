@@ -71,7 +71,7 @@ try{
   ["creators","/creators",".portal-creators"],["creator-channel","/creators/nova_demo",".portal-creator-channel"],
   ["community","/community",".ch7-hub"],["boards","/boards",".cnb-hub"],
   ["levels","/levels",".av75-levels-page"],["recognition","/recognition",".av75-recognition-page"],["start","/start",".start-page"],
-  ["guide","/guide",".field-guide-page"],["status","/status",".status-list"],
+  ["guide","/guide",".field-guide-page"],["status","/status",".v091-status-page"],
   ["guest-library","/library",".member-gate"],
   ["member-account","/account",".av12-account-await"],
   ["member-profile-editor","/account/edit",".av12-account-await"],
