@@ -425,7 +425,21 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   const panelWidth=Math.min(isMobile?326:338,viewport.width-(isMobile?22:24));
   const panelRight=safePosition?.right??(isMobile?10:16);
   const panelShift=Math.max(0,panelRight-(viewport.width-panelWidth-10));
+  // A dragged character may sit near the top of a phone. Flip the help panel
+  // below it when necessary, rather than hiding its close/action controls
+  // above the viewport. All bounds are computed from actual available space.
+  const dockBottom=safePosition?.bottom??(isMobile?12:20);
+  const roomAbove=viewport.height-dockBottom-spriteSize-12;
+  const roomBelow=dockBottom-12;
+  const helpBelow=Boolean(panelOpen&&safePosition&&roomAbove<220&&roomBelow>roomAbove);
   const helpStyle:CSSProperties=panelShift?{right:-panelShift}:{};
+  if(helpBelow){
+    helpStyle.top=spriteSize+10;
+    helpStyle.bottom="auto";
+    helpStyle.maxHeight=Math.max(90,Math.min(roomBelow-12,viewport.height*.70));
+  }else if(panelOpen&&safePosition){
+    helpStyle.maxHeight=Math.max(90,Math.min(roomAbove-12,viewport.height*.70));
+  }
   const panelStyle:CSSProperties={};
   if(step&&!isMobile){
     const width=Math.min(400,window.innerWidth-32);
