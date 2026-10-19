@@ -128,6 +128,20 @@ try{
   await evaluate('document.querySelector("[data-iren-next]").click()');
   await until(()=>evaluate('!document.querySelector(".ir80-guide-card")'));
   await check("finished-"+width,'(()=>{const k=Object.keys(localStorage).find(k=>k.startsWith("anevum.iren.guided-continuance.v080."));return k&&JSON.parse(localStorage.getItem(k)).status==="completed";})()');
+  // A user can drag the helper all the way to the top edge. Check its expanded
+  // panel stays inside the 320px viewport and flips below the character.
+  if(width===320){
+   const key="anevum.iren.living.position.v088.anevum.iren.guided-continuance.v080.visitor";
+   await evaluate('localStorage.setItem('+JSON.stringify(key)+',JSON.stringify({right:254,bottom:654}))');
+   await send("Page.navigate",{url:base+"/creator/"});
+   await until(()=>evaluate('!!document.querySelector(".ir80-dock")&&!!document.querySelector(".av79-home")'));
+   await evaluate('document.querySelector(".ir80-dock").click()');
+   await until(()=>evaluate('!!document.querySelector(".ir80-help")'));
+   await check("docked-top-panel-bounds",'(()=>{const e=document.querySelector(".ir80-help"),r=e.getBoundingClientRect();return r.top>=0&&r.left>=0&&r.bottom<=innerHeight+1&&r.right<=innerWidth+1;})()');
+   await check("docked-top-panel-flipped",'(()=>{const b=document.querySelector(".ir80-dock").getBoundingClientRect(),h=document.querySelector(".ir80-help").getBoundingClientRect();return h.top>=b.bottom-1;})()');
+   await capture("iren-docked-top-320");
+   await evaluate('localStorage.removeItem('+JSON.stringify(key)+')');
+  }
   await check("overflow-"+width,'document.documentElement.scrollWidth<=innerWidth+1');
   evidence.push({width,height,guestTour:"PASS",help:"PASS",spotlight:"PASS",skipResume:"PASS",completed:"PASS",navCount:4,overflow:false});
   console.log("IREN_V080_BROWSER_PASS_"+width);
