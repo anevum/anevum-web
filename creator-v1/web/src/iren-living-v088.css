@@ -60,7 +60,7 @@
 /* Mobile keeps IREN within the guide header rather than obscuring selected
    form controls, card titles or small-screen navigation. */
 .ir80-guide-top .ir88-guide-avatar{
- width:64px;height:64px;min-width:64px;flex-shrink:0;
+ width:72px;height:72px;min-width:72px;flex-shrink:0;
  border:0;box-shadow:none;background:transparent;overflow:visible
 }
 .ir80-guide-top .ir88-guide-avatar .ir88-3d-canvas{border-radius:0}
@@ -80,6 +80,7 @@
   width:min(326px,calc(100vw - 22px))
  }
  .ir88-companion-expanded .ir87-scout.ir80-dock .ir87-unread{top:12px;right:13px}
+ .ir80-guide-top .ir88-guide-avatar{width:64px;height:64px;min-width:64px}
  .ir88-voice-line{font-size:11px!important}
  .ir80-guide-layer .ir88-guide-bot{filter:drop-shadow(0 4px 9px #0007)}
 }
