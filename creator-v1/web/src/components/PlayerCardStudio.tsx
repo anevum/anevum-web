@@ -1,7 +1,7 @@
 import {useEffect,useState} from 'react';
 import {Link} from 'react-router-dom';
 import type {CanonicalProfile,MemberSpace} from '../lib/canonical-beta';
-import {BADGE_CATALOG,DISTINCTION_CATALOG,creditedContributionCount,
+import {BADGE_CATALOG,DISTINCTION_CATALOG,AURA_CATALOG,creditedContributionCount,
  type BadgeDisplay,type PlayerAura} from '../lib/player-recognition';
 import {readRecognition,saveRecognition,previewDistinctions,type RecognitionSettings} from '../lib/player-recognition-api';
 import {CompactMemberIdentity,type PublicIdentity} from './CompactMemberIdentity';
@@ -9,16 +9,6 @@ import {BadgeInsignia} from './BadgeInsignia';
 import {HonorInsignia} from './HonorInsignia';
 import './player-card-studio-v065.css';
 
-const AURA_CHOICES:[
- PlayerAura,string,string
-][]=[
- ['none','Unadorned','No animated atmosphere'],
- ['aurora','Aurora','Cold electric radiance'],
- ['eclipse','Eclipse','Violet shadow halo'],
- ['ember','Ember','Warm stellar edge light'],
- ['nebula','Nebula','Soft rose cosmic clouds'],
- ['transcosmic','Transcosmic','Continuance coral and violet']
-];
 const MODES:readonly {id:BadgeDisplay['mode'];label:string;help:string}[]=[
  {id:'automatic',label:'Latest three',help:'Updates as you earn new achievements'},
  {id:'curated',label:'My selection',help:'Pin up to three badges you choose'},
@@ -159,12 +149,14 @@ export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:C
    <div className="av65-studio-section"><div className="av65-studio-section-head">
     <div><span>03 / PERSONAL ATMOSPHERE</span><h3>Choose your ambient aura.</h3></div><small>Cosmetic; earned auras and verified roles are separate</small>
    </div>
-    <div className="av65-aura-options">{AURA_CHOICES.map(([id,name,detail])=>
+    <p className="av65-aura-principle">Choose a personal affinity, not a rank or verified institutional affiliation. Every atmosphere is equal; your achievements and permissions remain independently verified.</p>
+    <div className="av65-aura-options">{AURA_CATALOG.map(({id,name,discipline,motto,meaning,appearance})=>
      <button type="button" key={id} aria-pressed={aura===id} disabled={saving}
       onClick={()=>setAura(id)} className={'av65-aura-option av65-aura-option--'+id}>
-       <span className="av65-aura-swatch" aria-hidden="true"/><strong>{name}</strong><small>{detail}</small>
+       <span className="av65-aura-swatch" aria-hidden="true"/><strong>{name}</strong><span className="av65-aura-discipline">{discipline}</span><small>{meaning}</small><em>{motto}</em><span className="av65-aura-appearance">{appearance}</span>
      </button>
     )}</div>
+    <Link className="av65-aura-codex-link" to="/auras">EXPLORE THE AURA CODEX ↗</Link>
    </div>
    <div className="av81-standing-panel" aria-label="Earned reputation and role status">
     <div className="av65-studio-section-head"><div><span>04 / CONTRIBUTION SIGNAL</span><h3>Your standing changes as you contribute.</h3></div>

@@ -67,6 +67,39 @@ export type DisplayMode='automatic'|'curated'|'hidden';
 export type BadgeDisplay={mode:DisplayMode;ids?:string[]};
 export type PublicDistinctions={medals:string[];ribbons:string[]};
 export type PlayerAura='none'|'aurora'|'eclipse'|'ember'|'nebula'|'transcosmic';
+/**
+ * Personal auras express a chosen creative affinity, not a verified sect,
+ * constellation, staff role, achievement or reputation. Existing stored
+ * identifiers remain unchanged; neither the client nor a label grants access.
+ */
+export type AuraDefinition={
+ id:PlayerAura;name:string;discipline:string;motto:string;
+ meaning:string;appearance:string
+};
+export const AURA_CATALOG:readonly AuraDefinition[]=[
+ {id:'none',name:'Unadorned',discipline:'Open Signal',
+  motto:'Let the work speak.',meaning:'A clear player identity without an ambient signature. There is no disadvantage to leaving an aura off.',
+  appearance:'No animated atmosphere'},
+ {id:'aurora',name:'Aurora',discipline:'Discovery',
+  motto:'Follow the first light.',meaning:'Curiosity, exploration and the willingness to ask new questions about the unknown.',
+  appearance:'Cold electric radiance'},
+ {id:'eclipse',name:'Eclipse',discipline:'Inquiry',
+  motto:'Look beyond what is visible.',meaning:'Careful observation, critical thinking and the patience to examine assumptions.',
+  appearance:'Violet shadow halo'},
+ {id:'ember',name:'Ember',discipline:'Creation',
+  motto:'Bring the spark into form.',meaning:'Building, writing and making: the persistence required to turn an idea into something real.',
+  appearance:'Warm stellar edge light'},
+ {id:'nebula',name:'Nebula',discipline:'Imagination',
+  motto:'Give possibility a shape.',meaning:'Stories, art and worldbuilding that open space for perspectives and worlds not yet realized.',
+  appearance:'Soft rose cosmic clouds'},
+ {id:'transcosmic',name:'Transcosmic',discipline:'Continuance',
+  motto:'Carry the work beyond boundaries.',meaning:'Connecting ideas and people across disciplines so discovery and creation can continue.',
+  appearance:'Continuance coral and violet'}
+];
+export function describePlayerAura(input:unknown):AuraDefinition{
+ const id=safePlayerAura(input);
+ return AURA_CATALOG.find(item=>item.id===id)??AURA_CATALOG[0]!;
+}
 export type ConstellationIdentity={slug:string;name:string;emblem:string};
 
 const validId=(id:unknown):id is string=>typeof id==='string'&&/^[a-z][a-z0-9_]{1,47}$/.test(id);
@@ -91,7 +124,7 @@ export function selectedDistinctions(input?:PublicDistinctions):{medal:Distincti
  return {medal,ribbons:[...new Set(ribbons)].map(id=>DISTINCTION_CATALOG[id]).filter((v):v is DistinctionDefinition=>v?.kind==='ribbon').slice(0,2)};
 }
 export function safePlayerAura(input:unknown):PlayerAura{
- return typeof input==='string'&&['aurora','eclipse','ember','nebula','transcosmic'].includes(input)?input as PlayerAura:'none';
+ return typeof input==='string'&&AURA_CATALOG.some(item=>item.id===input)?input as PlayerAura:'none';
 }
 export function safeConstellation(input:ConstellationIdentity|undefined):ConstellationIdentity|null{
  if(!input||!(/^[a-z][a-z0-9-]{2,39}$/).test(input.slug)||input.name.trim().length<2||input.name.length>60)return null;

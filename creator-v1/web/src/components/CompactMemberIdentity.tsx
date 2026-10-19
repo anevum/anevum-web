@@ -8,7 +8,7 @@ import {SupporterIdentity} from './SupporterSeal';
 import type {SupporterAppearance,SpaceStats} from '../lib/canonical-beta';
 import {
  BADGE_CATALOG,selectFeaturedBadges,selectedDistinctions,safePlayerAura,safeConstellation,
- safePublicReputation,safeVerifiedRole,ROLE_LABELS,REPUTATION_LABELS,creditedContributionCount,
+ safePublicReputation,safeVerifiedRole,ROLE_LABELS,REPUTATION_LABELS,describePlayerAura,creditedContributionCount,
  type EarnedBadge,type BadgeDisplay,type PublicDistinctions,type PlayerAura,type ConstellationIdentity,
  type VerifiedRole,type PublicReputation,type ReputationTier
 } from '../lib/player-recognition';
@@ -73,6 +73,7 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
   medal?'Medal: '+medal.name:'',
   ribbons.length?'Ribbons: '+ribbons.map(r=>r.name).join(', '):'',
   constellation?'Constellation: '+constellation.name:'',
+  aura!=='none'?'Personal aura: '+describePlayerAura(aura).name+' / '+describePlayerAura(aura).discipline:'',
   role?'Verified role: '+ROLE_LABELS[role]:'',
   reputation?'Reputation: '+reputation.score+', '+REPUTATION_LABELS[earnedAura]+' tier':''
  ].filter(Boolean).join(' · ');
@@ -122,6 +123,9 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
     </span>}
    </span>
    <small className="av61-member-handle">@{member.handle}</small>
+   {size==='featured'&&aura!=='none'&&<span className="av91-aura-signature" title={describePlayerAura(aura).meaning}>
+    {describePlayerAura(aura).name} · {describePlayerAura(aura).discipline}
+   </span>}
    {(role||reputation)&&<span className="av81-standing" aria-label="Verified status">
     {role&&<span className="av81-role-token" title={'Verified ANEVUM '+ROLE_LABELS[role]+' role'}><RoleInsignia role={role}/>{ROLE_LABELS[role]}</span>}
     {reputation&&<span className="av81-reputation-token" title={'Reputation is based on approved community activity · '+REPUTATION_LABELS[earnedAura]}>
