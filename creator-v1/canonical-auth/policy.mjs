@@ -121,7 +121,11 @@ export async function canonicalSchemaReady(env){
   const tablesCached=(verifiedCanonicalSchema.get(env.MEMBER_DB)||0)>Date.now();
   try{
     if(!tablesCached){
-      const x=await env.MEMBER_DB.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all();
+      // The six required identity tables only; never enumerate the entire schema.
+      const x=await env.MEMBER_DB.prepare(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name IN "+
+        "('user','session','account','verification','rateLimit','canonical_identity_manifest')"
+      ).all();
       if(x?.success===false||!Array.isArray(x?.results))return false;
       const tables=new Set(x.results.map(row=>row?.name).filter(x=>typeof x==="string"));
       if(!REQUIRED_CANONICAL_TABLES.every(name=>tables.has(name)) ||

@@ -1,0 +1,39 @@
+name: ANEVUM V082 Signup Recovery QA
+# Source-only, never mutates Cloudflare, D1, member records, or production.
+on:
+  push:
+    branches: [patch/join-v052-service-recovery-v082-20261019]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: signup-recovery-v082-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install frontend dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Typecheck public Creator application
+        run: npm run check:creator-v1-web
+      - name: Build both frontends
+        run: |
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+      - name: New UI, availability, D1 budget and auth-regression checks
+        run: |
+          node --check creator-v1/canonical-auth/policy.mjs
+          node --check creator-v1/canonical-auth/worker.mjs
+          cd creator-v1
+          npm run test:entry-v082
+          node --test test/canonical-auth-worker-v013.test.mjs test/canonical-auth-email-signup.test.mjs test/canonical-email-signup-v016.test.mjs test/canonical-live-signup-canary.test.mjs test/canonical-open-signup-gate-v020.test.mjs
+      - name: Preserve exact source SHA
+        run: git rev-parse HEAD

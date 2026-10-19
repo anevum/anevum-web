@@ -193,10 +193,16 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const ready=configured.operational&&await canonicalSchemaReady(env);
     const profilesReady=ready&&await canonicalCreatorSchemaReady(env.MEMBER_DB);
     const stageReady=ready&&profilesReady;
+    // Never mistake temporary database/auth failure for an intentional
+    // enrollment closure. Client status never authorizes member creation.
+    const enrollmentIntended=env?.CANONICAL_PUBLIC_SIGNUP_ENABLED==="true"||
+      env?.CANONICAL_INVITED_SIGNUP_ENABLED==="true";
+    const availability=stageReady?"ready":enrollmentIntended?"unavailable":"closed";
     if((rewardMedia||rewardInventory)&&!stageReady)return fail(request,503);
     if(path===HEALTH)return safeJson(request,{
       service:"anevum-canonical-auth-staging",
       status:stageReady?"ready":"closed",
+      ...(env?.ANEVUM_CANONICAL_STAGE_ENABLED==="true"?{availability}:{}),
       registration:stageReady?(configured.open?"open":configured.invited?"invite-only":"closed"):"closed",
       linkedCreatorAccounts:false,
       ...(env.CANONICAL_CREATOR_STUDIO_ENABLED==="true"?await studioReadiness(env):{}),
@@ -212,6 +218,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     if(path===METHODS)return safeJson(request,{
       version:2,
       issuer:"anevum-better-auth-staging-v1",
+      availability,
       registration:stageReady?(configured.open?"open":configured.invited?"invite-only":"closed"):"closed",
       methods:{google:{available:Boolean(stageReady&&configured.google)},
         email:{available:Boolean(stageReady&&configured.email&&(configured.invited||configured.open))},

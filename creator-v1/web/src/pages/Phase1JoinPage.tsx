@@ -4,6 +4,7 @@ import {useNavigate} from "react-router-dom";
 import {canonicalAuthClient,canonicalMethods} from "../lib/canonical-beta";
 import {useResource} from "../lib/useResource";
 import {OrbitalMark} from "../components/OrbitalMark";
+import {ContinuanceEntryArtwork} from "../components/ContinuanceEntryArtwork";
 
 const METHODS=[
  {key:"google",name:"Google",initial:"G",caption:"Verified Google account"},
@@ -29,14 +30,20 @@ export function Phase1JoinPage(){
    :oauthFailure
    ?"Your provider could not finish signing you in. Try your original method; your ANEVUM account is unchanged."
    :null;
- const capability=useResource(canonicalMethods,[]);
+ const [availabilityAttempt,setAvailabilityAttempt]=useState(0);
+ const capability=useResource(canonicalMethods,[availabilityAttempt]);
  const [email,setEmail]=useState("");
  const [otp,setOtp]=useState("");
  const [codeSent,setCodeSent]=useState(false);
  const [notice,setNotice]=useState("");
- const {data:session,isPending}=canonicalAuthClient.useSession();
+ const {data:session}=canonicalAuthClient.useSession();
  const [busy,setBusy]=useState(false),[error,setError]=useState("");
  const ready=capability.state==="ready"&&(capability.data.registration==="invite-only"||capability.data.registration==="open");
+ // An unavailable database/auth service is not an intentional registration pause.
+ // The server remains authoritative: these labels never unlock signup.
+ const serviceUnavailable=capability.state==="error"||
+   (capability.state==="ready"&&capability.data.registration==="closed"&&
+    capability.data.availability!=="ready"&&capability.data.availability!=="closed");
  const emailReady=ready&&capability.data.methods.email.available===true;
  const socialReady=(key:string)=>ready&&["google","github","apple","microsoft"].includes(key)&&capability.data.methods[key as "google"|"github"|"apple"|"microsoft"]?.available===true;
  const member=session?.user;
@@ -107,13 +114,16 @@ export function Phase1JoinPage(){
  }
  function resetCode(){setCodeSent(false);setOtp("");setNotice("");setError("");}
  return <section className="join-experience av12-phase1-join" aria-labelledby="phase1-join-title">
-   <img className="join-world-art" src={import.meta.env.BASE_URL+"assets/cinematic/hero/skyward-city.webp"}
-     alt="" aria-hidden="true" draggable={false}/>
+   <div className="av52-celestial-stage" aria-hidden="true"><ContinuanceEntryArtwork/></div>
+   <div className="av52-stage-grain" aria-hidden="true"/>
+   <div className="av52-stage-vignette" aria-hidden="true"/>
    <div className="join-story">
      <div className="join-orbit-art" aria-hidden="true"><OrbitalMark/></div>
+     <div className="av52-entry-index" aria-hidden="true"><span>TRANSMISSION 001 / ANEVUM</span><i/></div>
      <p className="kicker">ANEVUM / THE MEMBER NETWORK</p>
      <h1 id="phase1-join-title">ENTER THE<br/><em>CONTINUANCE.</em></h1>
-     <p>Discover new worlds, share what you make, and find your people. Your free account is the beginning.</p>
+     <p className="av52-hero-copy">A home for things people make. Discover worlds, find your people, and leave something of your own.</p>
+     <div className="av52-entry-counters" aria-hidden="true"><span><b>01</b> IDENTIFY</span><span><b>02</b> VERIFY</span><span><b>03</b> CREATE</span></div>
      <div className="join-chapters" aria-label="Three-step membership">
        <div><span>01</span><strong>Join</strong><small>Enter your email.</small></div>
        <div><span>02</span><strong>Verify</strong><small>Confirm your eight-digit code.</small></div>
@@ -123,8 +133,9 @@ export function Phase1JoinPage(){
    <div className="join-panel">
      <div className="join-panel-top"><span className="kicker">ANEVUM / MEMBER ACCESS</span>
        <span className="join-state" role="status">
-         {capability.state==="loading"||isPending?"VERIFYING SERVICE":
-           ready?(capability.data.registration==="open"?"OPEN REGISTRATION":"INVITATION BETA"):"REGISTRATION CLOSED"}
+         {capability.state==="loading"?"CHECKING ACCESS":
+           ready?(capability.data.registration==="open"?"OPEN REGISTRATION":"INVITATION BETA"):
+           serviceUnavailable?"SERVICE UNAVAILABLE":"REGISTRATION PAUSED"}
        </span>
      </div>
      {member?.emailVerified===true&&ready?<div className="join-return">
@@ -134,8 +145,9 @@ export function Phase1JoinPage(){
          <div><strong>{member.name||"ANEVUM MEMBER"}</strong><small>CANONICAL MEMBER SESSION</small></div></div>
        <Link className="button primary join-main-action" to="/member">OPEN MY PROFILE <span aria-hidden="true">↗</span></Link>
      </div>:<>
+       <div className="av52-form-progress" aria-label="Registration progress"><span className="is-current">01 <small>ACCOUNT</small></span><i/><span className={codeSent?"is-current":""}>02 <small>VERIFY</small></span><i/><span>03 <small>ARRIVE</small></span></div>
        <h2>{codeSent?"CHECK YOUR INBOX.":requiresEmailVerification?"VERIFY YOUR EMAIL.":"YOUR STORY STARTS HERE."}</h2>
-       <p className="join-lead">{codeSent?"Enter the latest eight-digit code sent to your email.":requiresEmailVerification?"Your sign-in provider did not verify your email. Confirm the email on this session before opening your ANEVUM profile.":"One email, one verification, and you are in. Membership is free."}</p>
+       <p className="join-lead">{codeSent?"Your access code is on its way. Enter all eight digits below to continue.":requiresEmailVerification?"Your sign-in provider did not verify your email. Confirm the email on this session before opening your ANEVUM profile.":"A place to discover, publish and belong. No password. No cost to join."}</p>
        {oauthFeedback&&<p role="alert" className="av12-join-error">{oauthFeedback}</p>}
        {requiresEmailVerification&&<div className="join-service-note" role="status">
          <strong>EMAIL VERIFICATION REQUIRED</strong>
@@ -154,7 +166,7 @@ export function Phase1JoinPage(){
          </button>)}
        </div>}
        {emailReady&&(!requiresEmailVerification||Boolean(sessionEmail))&&<form className="av12-email-entry" onSubmit={event=>void submitEmail(event)}>
-         <label htmlFor="anevum-email">{codeSent?"VERIFICATION SENT TO":"YOUR EMAIL ADDRESS"}</label>
+         <label htmlFor="anevum-email">{codeSent?"CODE SENT TO":"YOUR EMAIL ADDRESS"}</label>
          <input id="anevum-email" type="email" autoComplete="email" placeholder="you@example.com" value={emailForVerification}
            onChange={event=>{setEmail(event.target.value);if(codeSent)resetCode();}}
            disabled={busy||codeSent} readOnly={requiresEmailVerification} required maxLength={254}/>
@@ -170,18 +182,26 @@ export function Phase1JoinPage(){
            </button>
            {!requiresEmailVerification&&<button type="button" className="av12-email-reset" onClick={resetCode} disabled={busy}>USE A DIFFERENT EMAIL</button>}
          </>}
-         <button type="submit" className="av12-email-submit" disabled={busy}>
-           {busy?"WORKING…":codeSent?"VERIFY & CONTINUE":"CONTINUE WITH EMAIL"}
+         <button type="submit" className="av12-email-submit" disabled={busy} aria-busy={busy}>
+           <span>{busy?"CONNECTING…":codeSent?"VERIFY & CONTINUE":"CONTINUE WITH EMAIL"}</span><span className="av52-action-arrow" aria-hidden="true">↗</span>
          </button>
          {notice&&<p role="status">{notice}</p>}
        </form>}
-       <p className="join-service-note" role="status">{ready?
+       <p className="join-service-note" role="status">{capability.state==="loading"?
+         "Checking whether new member verification is available.":ready?
          capability.data.registration==="open"?"Registration is open.":"Early access is currently limited to invited accounts.":
-         "Registration is not yet activated. The public catalogue remains available."}</p>
+         serviceUnavailable?
+         "Member verification is temporarily unavailable. Registration will resume when the service recovers. Your existing account is protected.":
+         "New registrations are currently paused. You can still explore ANEVUM as a guest."}</p>
+       {!ready&&capability.state!=="loading"&&
+         <button type="button" className="av52-retry-availability"
+           onClick={()=>setAvailabilityAttempt(value=>value+1)} disabled={busy}>
+           CHECK ACCESS AGAIN <span aria-hidden="true">↗</span>
+         </button>}
        {error&&<p role="alert" className="av12-join-error">{error}</p>}
        <Link className="join-guest-action" to="/discover">EXPLORE AS A GUEST <span aria-hidden="true">↗</span></Link>
      </>}
-     <p className="join-security">Your profile starts private. You choose what others can see.</p>
+     <p className="join-security"><span className="av52-privacy-icon" aria-hidden="true">◇</span>Your profile starts private. You decide what becomes public.</p>
    </div>
  </section>;
 }

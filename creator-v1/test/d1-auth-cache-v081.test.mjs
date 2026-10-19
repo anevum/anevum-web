@@ -14,8 +14,8 @@ function syntheticDb(){
  const db={
   prepare(sql){queried.push(sql);
    return {async all(){
-    if(sql==="SELECT name FROM sqlite_master WHERE type = 'table'")
-     return {success:true,results:[...canonicalTables,...creatorTables].map(name=>({name}))};
+    if(/^SELECT name FROM sqlite_master WHERE type='table' AND name IN /.test(sql))
+     return {success:true,results:canonicalTables.map(name=>({name}))};
     if(sql.includes("SELECT issuer,migration FROM canonical_identity_manifest"))
      return {success:true,results:[{issuer,migration:"0001_canonical_better_auth_core"}]};
     if(sql.includes("member_creator_profiles','member_creator_edit_limits"))
