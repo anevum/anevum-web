@@ -119,6 +119,13 @@ try{
   console.log('V091_LIVE_PUBLIC_LEVEL_BROWSER=PASS');
 }finally{
   try{browser?.close()}catch{}
-  child.kill('SIGTERM');
-  rmSync(profile,{recursive:true,force:true});
+  const exited=child.exitCode!==null||child.signalCode!==null;
+  if(!exited){
+    child.kill('SIGTERM');
+    await Promise.race([new Promise(resolve=>child.once('exit',resolve)),delay(4000)]);
+  }
+  // Chrome writes profile metadata briefly after CDP disconnects. Cleanup
+  // must not turn a verified real-browser pass into a false test failure.
+  try{rmSync(profile,{recursive:true,force:true,maxRetries:8,retryDelay:180});}
+  catch(error){console.warn('V091_BROWSER_TEMP_CLEANUP_INCOMPLETE',error?.code||'unknown');}
 }
