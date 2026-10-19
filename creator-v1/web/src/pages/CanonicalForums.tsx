@@ -2,6 +2,7 @@ import {useEffect,useRef,useState,type FormEvent} from 'react';
 import {Link,useParams} from 'react-router-dom';
 import {canonicalAuthClient} from '../lib/canonical-beta';
 import {useResource} from '../lib/useResource';
+import {useMemberRevalidation} from '../lib/useMemberRevalidation';
 import {ForumAuthorCard as AuthorCard} from '../components/ForumAuthorCard';
 import {forumRequest as request,FORUM_TOPICS as topics,FORUM_ID as UUID,ForumApiError,
  type ForumThread as Thread,type ForumReply as Reply,type MemberSubmission as MyThread,
@@ -39,11 +40,12 @@ function MySubmissions({memberId}:{memberId:string}){
 }
 export function CommunityForums(){
  const {data:session}=canonicalAuthClient.useSession();
+ const identityRevision=useMemberRevalidation();
  const [topic,setTopic]=useState('all'),[revision,setRevision]=useState(0),[compose,setCompose]=useState(false);
  const [title,setTitle]=useState(''),[body,setBody]=useState(''),[draftTopic,setDraftTopic]=useState('community'),[busy,setBusy]=useState(false),[notice,setNotice]=useState(''),[error,setError]=useState('');
- const threads=useResource(signal=>request<ForumThreadPage>('/api/v1/community/threads'+(topic==='all'?'':'?topic='+topic),'GET',undefined,signal),[topic,revision]);
+ const threads=useResource(signal=>request<ForumThreadPage>('/api/v1/community/threads'+(topic==='all'?'':'?topic='+topic),'GET',undefined,signal),[topic,revision,identityRevision]);
  const [requestId,setRequestId]=useState(()=>crypto.randomUUID());
- const streamKey=topic+'|'+revision;
+ const streamKey=topic+'|'+revision+'|'+identityRevision;
  const activeStream=useRef(streamKey);activeStream.current=streamKey;
  const [extra,setExtra]=useState<{key:string;items:Thread[];nextCursor:string|null}>({key:'',items:[],nextCursor:null});
  const [morePending,setMorePending]=useState(false),[moreFailure,setMoreFailure]=useState('');
@@ -92,6 +94,7 @@ export function CommunityForums(){
 }
 export function CommunityThread(){
  const {id=''}=useParams();
+ const identityRevision=useMemberRevalidation();
  const {data:session}=canonicalAuthClient.useSession();
  const memberId=session?.user?.id??null;
  const [revision,setRevision]=useState(0),[body,setBody]=useState('');
@@ -102,9 +105,9 @@ export function CommunityThread(){
  const [reportReason,setReportReason]=useState<'spam'|'harassment'|'unsafe'|'other'>('spam');
  useEffect(()=>{setLikedOverride(null);setReportTarget(null);setNotice('')},[id,memberId]);
  const valid=UUID.test(id);
- const thread=useResource(signal=>valid?request<{thread:Thread}>('/api/v1/community/threads/'+id,'GET',undefined,signal):Promise.reject(Error('Invalid thread')),[id,revision]);
- const replies=useResource(signal=>valid?request<ForumReplyPage>('/api/v1/community/threads/'+id+'/replies','GET',undefined,signal):Promise.reject(Error('Invalid thread')),[id,revision]);
- const replyKey=id+'|'+revision;
+ const thread=useResource(signal=>valid?request<{thread:Thread}>('/api/v1/community/threads/'+id,'GET',undefined,signal):Promise.reject(Error('Invalid thread')),[id,revision,identityRevision]);
+ const replies=useResource(signal=>valid?request<ForumReplyPage>('/api/v1/community/threads/'+id+'/replies','GET',undefined,signal):Promise.reject(Error('Invalid thread')),[id,revision,identityRevision]);
+ const replyKey=id+'|'+revision+'|'+identityRevision;
  const activeReplyKey=useRef(replyKey);activeReplyKey.current=replyKey;
  const [extraReplies,setExtraReplies]=useState<{key:string;items:Reply[];nextCursor:string|null}>({key:'',items:[],nextCursor:null});
  const [moreReplyPending,setMoreReplyPending]=useState(false),[moreReplyError,setMoreReplyError]=useState('');
