@@ -29,8 +29,12 @@ export function invitedCanonicalEmail(env,email){
 export async function verifyInvitedCanonicalCreation(env,newUser){
  return invitedCanonicalEmail(env,newUser?.email)?{data:newUser}:false;
 }
+// Schema readiness is not member authorization. Cache only successful checks
+// for 30 seconds per D1 binding; all account/session reads stay current.
+const verifiedCreatorSchema=new WeakMap();
 export async function canonicalCreatorSchemaReady(db){
  if(!db||typeof db.prepare!=="function")return false;
+ if((verifiedCreatorSchema.get(db)||0)>Date.now())return true;
  try{
   const result=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('user','member_creator_profiles','member_creator_edit_limits')").all();
   const names=new Set((result?.results||[]).map(x=>x.name));
@@ -38,8 +42,10 @@ export async function canonicalCreatorSchemaReady(db){
   const columns=await db.prepare("PRAGMA table_info(member_creator_profiles)").all();
   if(columns?.success===false||!Array.isArray(columns?.results))return false;
   const present=new Set(columns.results.map(c=>c?.name));
-  return ["user_id","handle","display_name","bio","visibility","revision",
+  const verified=["user_id","handle","display_name","bio","visibility","revision",
     "headline","world_theme","focus_json"].every(name=>present.has(name));
+  if(verified)verifiedCreatorSchema.set(db,Date.now()+30_000);
+  return verified;
  }catch{return false}
 }
 function safeHandle(raw){
