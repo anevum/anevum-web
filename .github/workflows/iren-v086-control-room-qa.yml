@@ -60,6 +60,9 @@ jobs:
           test -s evidence/iren-v086/iren-v002-1440.png
           test -s evidence/iren-v086/iren-v002-390.png
           test -s evidence/iren-v086/iren-v002-320.png
+          test -s evidence/iren-v086/iren-v086-1440.png
+          test -s evidence/iren-v086/iren-v086-390.png
+          test -s evidence/iren-v086/iren-v086-320.png
       - name: Preserve mobile and desktop visual evidence
         uses: actions/upload-artifact@v4
         if: always()
