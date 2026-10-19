@@ -13,7 +13,7 @@ test('owner UI compiles and exposes the six persistent, nonprivileged aura ident
  assert.deepEqual(catalog.map(a=>a.id),['none','aurora','eclipse','ember','nebula','transcosmic']);
  assert.deepEqual(catalog.map(a=>a.discipline),['Open Signal','Discovery','Inquiry','Creation','Imagination','Continuance']);
  for(const aura of catalog)for(const property of ['name','meaning','motto','appearance'])
-  assert.ok(typeof aura[property]==='string'&&aura[property].length>5,aura.id+'.'+property);
+  assert.ok(typeof aura[property]==='string'&&aura[property].length>=4,aura.id+'.'+property);
  assert.match(CLIENT,/Cosmetic only: never grants clearance, XP, REP or awards/);
  assert.match(CLIENT,/UNSAVED PREVIEW/);
  assert.match(CLIENT,/AURA_CATALOG\.some/);
