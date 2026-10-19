@@ -51,7 +51,13 @@ export async function resolveAccess(request,env){
 }
 export default {async fetch(request,env){
  let url;try{url=new URL(request.url)}catch{return new Response("Not found",{status:404});}
- if(url.origin!==SITE||!["/staff","/staff/"].includes(url.pathname))return new Response("Not found",{status:404});
+ if(url.origin!==SITE)return new Response("Not found",{status:404});
+ if(url.pathname.startsWith("/staff/assets/")){
+  if(!["GET","HEAD"].includes(request.method))return new Response("Method not allowed",{status:405,headers:HEAD});
+  if(!env?.COMMAND?.fetch)return new Response("Staff assets unavailable",{status:503,headers:HEAD});
+  return env.COMMAND.fetch(request);
+ }
+ if(!["/staff","/staff/"].includes(url.pathname))return new Response("Not found",{status:404});
  if(!["GET","HEAD"].includes(request.method))return new Response("Method not allowed",{status:405,headers:HEAD});
  const access=await resolveAccess(request,env);
  if(url.search==="?diagnose=1"){
