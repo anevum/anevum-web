@@ -88,7 +88,10 @@ async function main(){
  const release={status:"ready",version:2,proposed_title:"Signal Drift v2",
   proposed_summary:"A new private build of the synthetic game.",proposed_category:"game",
   file_count:5,expanded_bytes:1048576};
- const runner="https://runtime-synthetic.invalid/r/33333333-3333-4333-8333-333333333333/index.html";
+ const runtimeFixture='<!doctype html><html lang="en"><meta name="viewport" content="width=device-width, initial-scale=1">'+
+   '<style>*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% 30%,#22425f,#080f20 72%);color:#edfaff;font:16px system-ui;display:grid;place-items:center;text-align:center;padding:20px}h1{font-size:29px;letter-spacing:-.04em;margin:10px 0}p{color:#bad0df}button{background:#bedee7;border:0;padding:16px 24px;border-radius:10px;color:#06121d;font-weight:700}small{color:#a0d6ea}</style>'+
+   '<main><small>OFFLINE QA FIXTURE / NOT A PUBLISHED GAME</small><h1>Signal Drift</h1><p>Synthetic browser-player scene to test stage layout.</p><button onclick="this.textContent=\'RUNNING LOCAL FIXTURE\'">Begin test</button></main></html>';
+ const runner="data:text/html;charset=utf-8,"+encodeURIComponent(runtimeFixture);
  const pages={
   uploader:await (await uploadScreen([],true,true,"")).text(),
   guest:await (await uploadScreen([],false,false,"")).text(),
