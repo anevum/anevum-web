@@ -139,6 +139,7 @@ try{
    await until(()=>evaluate('!!document.querySelector(".ir80-help")'));
    await check("docked-top-panel-bounds",'(()=>{const e=document.querySelector(".ir80-help"),r=e.getBoundingClientRect();return r.top>=0&&r.left>=0&&r.bottom<=innerHeight+1&&r.right<=innerWidth+1;})()');
    await check("docked-top-panel-flipped",'(()=>{const b=document.querySelector(".ir80-dock").getBoundingClientRect(),h=document.querySelector(".ir80-help").getBoundingClientRect();return h.top>=b.bottom-1;})()');
+   await check("docked-clear-navigation",'(()=>{const b=document.querySelector(".ir80-dock").getBoundingClientRect(),h=document.querySelector(".av9-brand").getBoundingClientRect();return b.top>=h.bottom+2;})()');
    await capture("iren-docked-top-320");
    await evaluate('localStorage.removeItem('+JSON.stringify(key)+')');
   }
