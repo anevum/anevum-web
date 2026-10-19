@@ -31,10 +31,10 @@ button:focus-visible,.button:focus-visible,select:focus-visible{outline-color:#b
 .drop strong{font-size:16px}.drop span{font-size:12px}.drop .symbol{background:#17344d;color:#b5e9ef;width:46px;height:46px;font-size:21px}
 .drop[aria-invalid=true]{border-color:#f4a2a2}
 .drop input{position:absolute;opacity:0;width:1px;height:1px}
-.file-check{display:flex;gap:8px;align-items:center;font-size:12px;margin-top:9px;color:#a8d8da}
+.file-check{display:flex;gap:8px;align-items:center;font-size:12px;margin:10px 0 13px;color:#a8d8da}
 .form-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 13px}
 .form-grid>.full{grid-column:1/-1}
-.format-options{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:19px}
+.format-options{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:4px 0 15px}
 .format-option{padding:12px 13px;border:1px solid #405975;border-radius:11px;background:rgba(12,26,45,.8)}
 .format-option strong{font-size:13px;display:block;margin:1px 0 4px}
 .format-option span{font-size:11px;color:#acc0d5;line-height:1.4;display:block}
@@ -111,6 +111,7 @@ dialog textarea{width:100%}
  .titlebar{margin-top:27px}
  .help-quick article{padding:10px}
 }
+@media(max-width:350px){.format-options{grid-template-columns:1fr}.format-option{padding:10px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
 `;
@@ -339,13 +340,14 @@ export function uploadScreen(projects,loggedIn,pilot,updateId){
         '<div class="ey" id="project-version">'+(update?"UPDATE A RELEASE":"NEW CREATION")+'</div>'+
         '<h2>'+(update?"Upload a new version":"Prepare your playable build")+'</h2>'+
         '<p class="small">'+(update?"Your current approved version stays live until the replacement passes review.":"Nothing goes public when you upload. You can test the exact build first.")+'</p>'+
-        stepper+format+
+        stepper+
         '<label class="drop" id="drop" for="bundle" aria-invalid="false">'+
         '<span class="symbol" aria-hidden="true">↑</span><strong id="file-label">Choose a ZIP or HTML file</strong>'+
         '<span>Tap to browse, or drag a file here</span>'+
         '<span>ZIP up to 20 MiB · HTML up to 5 MiB</span>'+
         '<input id="bundle" name="file" type="file" accept=".zip,.html,application/zip,text/html" required></label>'+
         '<div class="file-check"><span aria-hidden="true">●</span> Validates files and prepares an isolated private playtest.</div>'+
+        format+
         '<div class="form-grid">'+
         '<div class="full"><label for="title">Project title</label><input class="field" id="title" name="title" type="text" minlength="3" maxlength="100" autocomplete="off" value="'+initialTitle+'" placeholder="e.g. Signal Drift" required></div>'+
         '<div class="full"><label for="category">Type</label><select class="field" id="category" name="category">'+
@@ -400,8 +402,7 @@ export function playerScreen(p,release,runnerURL,isPreview,canEdit,isStaff){
     '</div><p id="activity" class="status" role="status" aria-live="polite"></p>';
   const lead='<div class="ey">ANEVUM / '+esc(kind||"CREATION")+' / BUILD '+esc(release.version)+'</div>'+
     '<div class="player-head"><div><h1>'+esc(label)+'</h1><span class="chip '+esc(release.status)+'">'+esc(state(release.status))+
-    (isPreview?" · Private preview":"")+'</span></div><div class="actions"><a class="button quiet" href="/upload/v3">My uploads</a>'+
-    '<a class="button quiet" href="/discover">Discover</a></div></div>';
+    (isPreview?" · Private preview":"")+'</span></div></div>';
   const stage=runnerURL?'<section class="viewport" id="game-viewport" aria-label="Playable project">'+
     '<iframe id="game-frame" title="'+esc(label)+'" src="'+esc(runnerURL)+'" sandbox="allow-scripts allow-pointer-lock" allow="fullscreen; gamepad" referrerpolicy="no-referrer" loading="eager"></iframe>'+
     '<button type="button" class="exit-immersive" id="exit-immersive" data-package-action="exit-immersive" data-project="'+esc(p.id)+'">Exit player</button></section>':
