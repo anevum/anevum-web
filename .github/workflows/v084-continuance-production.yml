@@ -1,4 +1,4 @@
-name: ANEVUM V087 Guarded IREN Scout Production
+name: ANEVUM V089 Guarded Living IREN Production
 on:
   push:
     branches:
@@ -76,7 +76,7 @@ jobs:
           grep -Fq 'import "./iren-guided-v080.css";' creator-v1/web/src/main.tsx
           grep -Fq 'import "./continuance-entry-v052.css";' creator-v1/web/src/main.tsx
           grep -Fq "CANONICAL_REPUTATION_ENABLED" creator-v1/canonical-auth/space.mjs
-          (cd creator-v1 && npm run test:entry-v082 && npm run test:iren-v080 && npm run test:player-v081 && npm run test:d1-efficiency-v081)
+          (cd creator-v1 && npm run test:entry-v082 && npm run test:iren-v080 && npm run test:iren-v088 && npm run test:player-v081 && npm run test:d1-efficiency-v081)
           if grep -rl 'evolution-card-plates' creator-v1/dist/web/assets --include='*.js' >/dev/null; then
             echo "::error::Private earned card artwork registry leaked into public client build"
             exit 1
@@ -103,7 +103,7 @@ jobs:
             exit 1
           fi
           echo "PASS: compiled frontend remains mounted and renders the project with an unlinked creator"
-      - name: Exercise V087 home, menu and published-work search in real desktop and phone browsers
+      - name: Exercise V089 home, menu and published-work search in real desktop and phone browsers
         shell: bash
         run: |
           set -euo pipefail
@@ -124,8 +124,14 @@ jobs:
           test -s "$RUNNER_TEMP/v084-release-evidence/home-phone.png"
           test -s "$RUNNER_TEMP/v084-release-evidence/wayfinder-phone.png"
           test -s "$RUNNER_TEMP/v084-release-evidence/search-phone.png"
-          echo V087_REAL_REACT_RELEASE_ACCEPTANCE=PASS >> "$GITHUB_STEP_SUMMARY"
-      - name: Deploy exact V087 Continuance source with invariant bindings, assets, routes and rollback
+          # Genuine WebGL animation must render at all four phone/tablet/desktop sizes.
+          node creator-v1/test/capture-iren-guided-v080.mjs "$chrome" http://127.0.0.1:4178 "$RUNNER_TEMP/v084-release-evidence"
+          test -s "$RUNNER_TEMP/v084-release-evidence/iren-scout-320.png"
+          test -s "$RUNNER_TEMP/v084-release-evidence/iren-help-390.png"
+          test -s "$RUNNER_TEMP/v084-release-evidence/iren-discover-1440.png"
+          test -s "$RUNNER_TEMP/v084-release-evidence/iren-docked-top-320.png"
+          echo V089_REAL_WEBGL_AND_RESPONSIVE_ACCEPTANCE=PASS >> "$GITHUB_STEP_SUMMARY"
+      - name: Deploy exact V089 Continuance source with invariant bindings, assets, routes and rollback
         shell: bash
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -138,7 +144,20 @@ jobs:
           test "$GITHUB_REF" = "refs/heads/release/v084-continuance-approved-20261019"
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           git merge-base --is-ancestor 7f248b34375747523a82a0dbfb7f1e29df8a6141 HEAD
-          test "$(git diff --name-only 7f248b34375747523a82a0dbfb7f1e29df8a6141 HEAD)" = ".github/workflows/v084-continuance-production.yml"
+          # Guard only the reviewed V089 files and the release workflow.
+          git merge-base --is-ancestor 054edf5e56f3abf3dc4b7af7726e304ca3ec7bc5 HEAD
+          diff -u <(printf '%s\n' \
+            '.github/workflows/v084-continuance-production.yml' \
+            'creator-v1/package.json' \
+            'creator-v1/test/capture-iren-guided-v080.mjs' \
+            'creator-v1/test/iren-living-v088.test.mjs' \
+            'creator-v1/web/src/components/IrenGuidedContinuance.tsx' \
+            'creator-v1/web/src/components/IrenLivingCanvas.tsx' \
+            'creator-v1/web/src/iren-living-v088.css' \
+            'creator-v1/web/src/lib/iren-companion-context-v089.ts' \
+            'creator-v1/web/src/lib/iren-living-rig-v088.ts' \
+            'creator-v1/web/src/main.tsx') \
+            <(git diff --name-only a0c51926115cea77ebde2086126a5c7cf5313eb0 HEAD)
           test -f creator-v1/web/src/lib/public-creator-handle.ts
           grep -Fq 'publicCreatorHandle(project.creatorHandle)' creator-v1/web/src/pages/CinematicLandingPage.tsx
           grep -Fq 'publicCreatorHandle(project.creatorHandle)' creator-v1/web/src/components/ProjectCard.tsx
@@ -162,7 +181,7 @@ jobs:
           echo "Production flags and binding checks passed. Checking deployed Worker version..."
           cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" > "$RUNNER_TEMP/pre-deployments.json"
           pre_version="$(jq -r '(.result.deployments // .result)[0].versions[0].version_id' "$RUNNER_TEMP/pre-deployments.json")"
-          test "$pre_version" = "4aaaa67a-0d67-43b6-b012-50a2a92adbf5"
+          test "$pre_version" = "422c8a73-d24a-4fb6-84b3-a9818942ca1e"
           echo "Deployed version matches expected baseline. Checking routes..."
           cf "$cf_api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/pre-routes.json"
           jq -e '.success and any(.result[]; .pattern=="anevum.com/*" and .script=="anevum-native-frame-policy-v001") and ([.result[]|select(.pattern=="anevum.com/assets/index-*")|.script]==["anevum-native-project-community-v002"])' "$RUNNER_TEMP/pre-routes.json" > /dev/null
@@ -171,8 +190,13 @@ jobs:
            any(.result[]; .pattern=="anevum.com/evolution/vectors/*" and .script=="anevum-apex-prelaunch-gateway") and
            any(.result[]; .pattern=="anevum.com/play/*" and .script=="anevum-unified-creation-routes-v002") and
            any(.result[]; .pattern=="anevum.com/upload*" and .script=="anevum-unified-creation-routes-v002") and
-           any(.result[]; .pattern=="anevum.com/staff*" and .script=="anevum-staff-review-navigation-v001")' "$RUNNER_TEMP/pre-routes.json" >/dev/null
-          jq -e '.success and (.result|length)==26 and ([.result[]|select(.pattern|startswith("anevum.com/"))]|length)==20 and any(.result[];.pattern=="lab.anevum.com/previews*" and .script=="anevum-lab-previews-v001")' "$RUNNER_TEMP/pre-routes.json" >/dev/null
+           any(.result[]; .pattern=="anevum.com/staff*" and .script=="anevum-iren-staff-entry-v003")' "$RUNNER_TEMP/pre-routes.json" >/dev/null
+          jq -e '.success and (.result|length)==36 and ([.result[]|select(.pattern|startswith("anevum.com/"))]|length)==30 and any(.result[];.pattern=="lab.anevum.com/previews*" and .script=="anevum-lab-previews-v001")' "$RUNNER_TEMP/pre-routes.json" >/dev/null
+          jq -e '.success and
+            any(.result[];.pattern=="anevum.com/" and .script=="anevum-profile-staff-access-v001") and
+            any(.result[];.pattern=="anevum.com/member*" and .script=="anevum-profile-staff-access-v001") and
+            any(.result[];.pattern=="anevum.com/api/v1/member/xp-test*" and .script=="anevum-xp-test-retirement-v001") and
+            any(.result[];.pattern=="anevum.com/staff" and .script=="anevum-iren-staff-entry-v003")' "$RUNNER_TEMP/pre-routes.json" >/dev/null
           jq -S '[.result[]|{pattern,script}]|sort_by(.pattern)' "$RUNNER_TEMP/pre-routes.json" > "$RUNNER_TEMP/routes.lock.json"
           jq -e '.success and (.result.bindings|length)==24 and
            any(.result.bindings[]; .type=="assets" and .name=="ASSETS") and
@@ -192,14 +216,14 @@ jobs:
           const vars=Object.fromEntries(live.result.bindings.filter(x=>x.type==="plain_text").map(x=>[x.name,x.text]));
           if(vars.ANEVUM_PRELAUNCH_MODE!=="public"||vars.ANEVUM_LAUNCH_APPROVED!=="true"||vars.ANEVUM_CANONICAL_APEX_ENABLED!=="true"||vars.CANONICAL_SCHEMA_APPROVED!=="true")throw Error("Live launch flags did not match the authorized public state");
           config.vars=vars;
-          writeFileSync("creator-v1/wrangler.v087.generated.json",JSON.stringify(config,null,2));
+          writeFileSync("creator-v1/wrangler.v089.generated.json",JSON.stringify(config,null,2));
           console.log("Preserving all live plain-text Worker variables and existing secret bindings.");
           NODE
           jq -S '[.result.bindings[]|select(.type=="plain_text")|{name,text}]|sort_by(.name)' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/pre-vars.json"
           jq -S '[.result.bindings[]|select(.type=="secret_text")|.name]|sort' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/pre-secrets.json"
           # Verify the same live baseline immediately before the first write.
           cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" > "$RUNNER_TEMP/immediate-pre-deployments.json"
-          test "$(jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/immediate-pre-deployments.json")" = "4aaaa67a-0d67-43b6-b012-50a2a92adbf5"
+          test "$(jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/immediate-pre-deployments.json")" = "422c8a73-d24a-4fb6-84b3-a9818942ca1e"
           cf "$cf_api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/immediate-pre-routes.json"
           jq -S '[.result[]|{pattern,script}]|sort_by(.pattern)' "$RUNNER_TEMP/immediate-pre-routes.json" > "$RUNNER_TEMP/immediate-routes.lock.json"
           cmp "$RUNNER_TEMP/routes.lock.json" "$RUNNER_TEMP/immediate-routes.lock.json"
@@ -211,21 +235,21 @@ jobs:
             code=$?
             trap - EXIT
             if test "$deploy_started" = "1" && test "$accepted" != "1"; then
-              echo "::warning::V087 rollout did not pass all checks; verifying production Worker state for rollback."
+              echo "::warning::V089 rollout did not pass all checks; verifying production Worker state for rollback."
               current="$(cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" | jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' || true)"
               if test -n "$current" && test "$current" != "$pre_version"; then
-                echo "::warning::Restoring recorded previous V087 Worker version."
+                echo "::warning::Restoring recorded previous V089 Worker version."
                 printf '{"strategy":"percentage","versions":[{"percentage":100,"version_id":"%s"}]}' "$pre_version" > "$RUNNER_TEMP/revert.json"
                 curl --fail --silent --show-error --max-time 40 -X POST -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" -d @"$RUNNER_TEMP/revert.json" "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" >/dev/null || echo "::error::ROLLBACK REQUIRES MANUAL INTERVENTION"
                 rollback_version="$(cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" | jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' || true)"
-                test "$rollback_version" = "$pre_version" && echo "V087_PREVIOUS_WORKER_ROLLBACK=PASS" || echo "::error::ROLLBACK DID NOT REACH RECORDED V078 VERSION"
+                test "$rollback_version" = "$pre_version" && echo "V089_PREVIOUS_WORKER_ROLLBACK=PASS" || echo "::error::ROLLBACK DID NOT REACH RECORDED V078 VERSION"
               fi
             fi
             exit "$code"
           }
           trap revert EXIT
           deploy_started=1
-          npx wrangler deploy --config creator-v1/wrangler.v087.generated.json --keep-vars
+          npx wrangler deploy --config creator-v1/wrangler.v089.generated.json --keep-vars
           cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/settings" > "$RUNNER_TEMP/post-settings.json"
           cf "$cf_api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/post-routes.json"
           jq -S '[.result[]|{pattern,script}]|sort_by(.pattern)' "$RUNNER_TEMP/post-routes.json" > "$RUNNER_TEMP/post-route.lock.json"
@@ -260,7 +284,22 @@ jobs:
             sleep 4
           done
           test "$ready" = 1
-          echo "PASS: production serves the exact approved V087 JavaScript asset."
+          echo "PASS: production serves the exact approved V089 JavaScript asset."
+          # Vite emits the actual 3D scene as a separately loaded JS chunk.
+          rig="$(find creator-v1/dist/web/assets -maxdepth 1 -name 'iren-living-rig-v088-*.js' -printf '%f\n' | head -n 1)"
+          test -n "$rig"
+          rig_ready=0
+          for attempt in $(seq 1 16); do
+            if curl --fail --silent --show-error --max-time 20 -o "$RUNNER_TEMP/live-iren-rig.js" "https://anevum.com/assets/$rig"; then
+              if cmp -s "$RUNNER_TEMP/live-iren-rig.js" "creator-v1/dist/web/assets/$rig"; then
+                rig_ready=1
+                break
+              fi
+            fi
+            sleep 4
+          done
+          test "$rig_ready" = 1
+          echo "V089_LIVE_THREE_DIMENSIONAL_RIG_ASSET=PASS"
           style="$(node --input-type=module -e 'import{readFileSync}from"node:fs";const s=readFileSync("creator-v1/dist/web/index.html","utf8");console.log(s.match(/href="(\/assets\/index-[^"]+\.css)"/)?.[1]||"")')"
           test -n "$style"
           # Cloudflare's independent /assets/index-* overlay Worker sometimes
@@ -281,32 +320,34 @@ jobs:
                   grep -Fq '.av81-player-card' "$RUNNER_TEMP/v079-live-style.css" &&
                   grep -Fq '.ir80-dock' "$RUNNER_TEMP/v079-live-style.css" &&
                    grep -Fq '.ir87-scout' "$RUNNER_TEMP/v079-live-style.css" &&
+                   grep -Fq '.ir88-figure' "$RUNNER_TEMP/v079-live-style.css" &&
+                   grep -Fq '.ir88-station' "$RUNNER_TEMP/v079-live-style.css" &&
                   grep -Fq '.av52-universe-art' "$RUNNER_TEMP/v079-live-style.css"; then
                 css_ready=1
                 break
               fi
             fi
-            echo "Waiting for the V087 canonical stylesheet to propagate (attempt $attempt / 20)"
+            echo "Waiting for the V089 canonical stylesheet to propagate (attempt $attempt / 20)"
             sleep 4
           done
           if test "$css_ready" != 1; then
-            echo "::error::V087 stylesheet failed to propagate at its browser URL; refusing unstyled production and restoring recorded production."
+            echo "::error::V089 stylesheet failed to propagate at its browser URL; refusing unstyled production and restoring recorded production."
             sed -n '1,18p' "$RUNNER_TEMP/v079-css-response.headers" || true
             exit 1
           fi
-          echo "V087_EXACT_HOMEPAGE_CSS=PASS"
+          echo "V089_EXACT_HOMEPAGE_CSS=PASS"
           for page in / /discover /recognition /join /community /@devon /creators; do
-            echo "V087 checking real public route $page"
+            echo "V089 checking real public route $page"
             curl -fsSL --max-time 30 "https://anevum.com$page" -o "$RUNNER_TEMP/v079-live-page.html"
             grep -Fq 'id="root"' "$RUNNER_TEMP/v079-live-page.html"
           done
-          echo "V087 checking public availability of email authentication"
+          echo "V089 checking public availability of email authentication"
           curl -fsS --max-time 30 https://anevum.com/api/v1/member/health | jq -e '.status=="ready" and .registration=="open"' >/dev/null
           curl -fsS --max-time 30 https://anevum.com/api/v1/member/auth-methods | jq -e '.methods.email.available==true and .registration=="open"' >/dev/null
           # Never require public access to one specific person's earned rewards.
           # The same profile can legitimately switch from public to private.
           # A private profile MUST NOT leak its earned card SVG or 3D scene.
-          echo "V087 checking visibility-sensitive public reward routes"
+          echo "V089 checking visibility-sensitive public reward routes"
           card_status="$(curl --silent --show-error --max-time 30 -w '%{http_code}' \
             -D "$RUNNER_TEMP/v084-level04.headers" -o "$RUNNER_TEMP/v084-level04.svg" \
             https://anevum.com/api/v1/members/devon/rewards/levels/4/card)"
@@ -314,10 +355,10 @@ jobs:
             200)
               grep -qi '^content-type:.*image/svg+xml' "$RUNNER_TEMP/v084-level04.headers"
               grep -Fq '<svg' "$RUNNER_TEMP/v084-level04.svg"
-              echo "V087_EARNED_LEVEL_VECTOR_AVAILABLE=PASS"
+              echo "V089_EARNED_LEVEL_VECTOR_AVAILABLE=PASS"
               ;;
             404)
-              echo "V087_PRIVATE_OR_UNEARNED_LEVEL_NOT_DISCLOSED=PASS"
+              echo "V089_PRIVATE_OR_UNEARNED_LEVEL_NOT_DISCLOSED=PASS"
               ;;
             *)
               echo "::error::Unexpected level-4 public card status: $card_status"
@@ -357,8 +398,8 @@ jobs:
             fi
             sleep 3
           done
-          test "$member_page_valid" = 1 || { echo "::error::V087 member privacy/public player-card contract failed"; tail -n 35 "$RUNNER_TEMP/v079-live-chrome.log" || true; exit 1; }
-          echo "V087_V078_PUBLIC_CARD_OR_PRIVATE_WORLD_SAFETY=PASS"
+          test "$member_page_valid" = 1 || { echo "::error::V089 member privacy/public player-card contract failed"; tail -n 35 "$RUNNER_TEMP/v079-live-chrome.log" || true; exit 1; }
+          echo "V089_V078_PUBLIC_CARD_OR_PRIVATE_WORLD_SAFETY=PASS"
           # Render public React in a real Chromium session, without account privileges.
           homepage_ok=0
           for attempt in 1 2 3; do
@@ -368,6 +409,8 @@ jobs:
                  grep -Fq 'av79-gateways' "$RUNNER_TEMP/v079-live-home.html" &&
                  grep -Fq 'av79-navigation' "$RUNNER_TEMP/v079-live-home.html" &&
                   grep -Fq 'ir87-scout' "$RUNNER_TEMP/v079-live-home.html" &&
+                  grep -Fq 'ir88-3d-canvas' "$RUNNER_TEMP/v079-live-home.html" &&
+                  grep -Fq 'ir88-figure' "$RUNNER_TEMP/v079-live-home.html" &&
                  ! grep -Fq '/creators/null' "$RUNNER_TEMP/v079-live-home.html"; then
                 homepage_ok=1
                 break
@@ -375,19 +418,19 @@ jobs:
             fi
             sleep 3
           done
-          test "$homepage_ok" = 1 || { echo "::error::V087 React homepage or Wayfinder missing in live Chromium"; tail -n 35 "$RUNNER_TEMP/v079-live-home-chrome.log" || true; exit 1; }
-          echo "V087_LIVE_HOMEPAGE_WAYFINDER=PASS"
+          test "$homepage_ok" = 1 || { echo "::error::V089 React homepage or Wayfinder missing in live Chromium"; tail -n 35 "$RUNNER_TEMP/v079-live-home-chrome.log" || true; exit 1; }
+          echo "V089_LIVE_HOMEPAGE_WAYFINDER=PASS"
           cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments?per_page=1" > "$RUNNER_TEMP/v079-live-deployments.json"
           jq -e --arg old "$pre_version" '.success and .result.deployments[0].versions[0].version_id!=$old and .result.deployments[0].versions[0].percentage==100' "$RUNNER_TEMP/v079-live-deployments.json" >/dev/null
           accepted=1
           trap - EXIT
-          echo "ANEVUM_V087_GUARDED_HOME_WAYFINDER_LIVE=PASS" >> "$GITHUB_STEP_SUMMARY"
-          echo "ANEVUM_V087_EARNED_2D_ACTIVE_AND_HISTORIC_3D_PRESERVED=PASS" >> "$GITHUB_STEP_SUMMARY"
-          echo "ANEVUM_V087_PRODUCTION_ROUTES_DATABASES_SECRETS_UNCHANGED=PASS" >> "$GITHUB_STEP_SUMMARY"
-          echo "APPROVED_SOURCE_SHA=7f248b34375747523a82a0dbfb7f1e29df8a6141" >> "$GITHUB_STEP_SUMMARY"
+          echo "ANEVUM_V089_GUARDED_HOME_WAYFINDER_LIVE=PASS" >> "$GITHUB_STEP_SUMMARY"
+          echo "ANEVUM_V089_EARNED_2D_ACTIVE_AND_HISTORIC_3D_PRESERVED=PASS" >> "$GITHUB_STEP_SUMMARY"
+          echo "ANEVUM_V089_PRODUCTION_ROUTES_DATABASES_SECRETS_UNCHANGED=PASS" >> "$GITHUB_STEP_SUMMARY"
+          echo "APPROVED_SOURCE_SHA=054edf5e56f3abf3dc4b7af7726e304ca3ec7bc5" >> "$GITHUB_STEP_SUMMARY"
           echo "RELEASE_SHA=$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
           jq -r '.result.deployments[0].versions[0].version_id' "$RUNNER_TEMP/v079-live-deployments.json" | sed 's/^/WORKER_VERSION=/' >> "$GITHUB_STEP_SUMMARY"
-      - name: Preserve V087 release acceptance screenshots
+      - name: Preserve V089 release acceptance screenshots
         uses: actions/upload-artifact@v4
         if: always()
         with:
