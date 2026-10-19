@@ -26,4 +26,4 @@ jobs:
         with:
           node-version: "22"
       - name: Verify public and private Worker contracts
-        run: node --test sites/sites-contract.test.mjs
+        run: node --test sites/sites-contract.test.mjs sites/tests/worker.test.mjs
