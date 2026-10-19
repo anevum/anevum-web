@@ -43,6 +43,8 @@ test("V091 status no longer claims a stale launch date or invented service readi
     "PUBLIC READ / ROLE-GATED WRITE","AUTHORIZED STAFF ONLY"
   ])assert.ok(status.includes(token),"Missing live status input or access boundary: "+token);
   assert.doesNotMatch(status,/JAN 01|OPENING TARGET|public submissions remain closed|all services operational|public launch complete/i);
+  assert.match(status,/?<a href="\/staff">/);
+  assert.doesNotMatch(status,/<Link to="\/staff">/);
   assert.doesNotMatch(status,/fetch\(|localStorage|sessionStorage|Math\.random|memberCreateProject|canonicalClaim/);
 });
 
