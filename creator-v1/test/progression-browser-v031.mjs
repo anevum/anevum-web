@@ -125,29 +125,27 @@ try{
  browser=await launchBrowser();
  context=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width:390,height:844},storageState:preservedSession});
  page=await context.newPage();
- // New progression: real fixed XP, a live level-up, persistent notices and artwork.
+ // New progression: real fixed 1,000 XP, live level-ups, persistent notices and artwork.
  await page.goto(base+'/thebutton',{waitUntil:'domcontentloaded'});await page.locator('.an-xp-button').waitFor();
  await until(async()=>await page.locator('.an-xp-button').isEnabled());
  // Observe the earned toast from before the XP sequence. WebKit can render
  // and dismiss it while later presses are still running: its absence at the
  // end of the sequence is not evidence that no notification was presented.
  await page.evaluate(()=>{
-   window.__anevumObservedLevel3=false;
+   window.__anevumObservedLevel4=false;
    const scan=()=>{for(const el of document.querySelectorAll('.an-toast-level')){
-     if((el.textContent||'').includes('Level 3 reached'))window.__anevumObservedLevel3=true;
+     if((el.textContent||'').includes('Level 4 reached'))window.__anevumObservedLevel4=true;
    }};
    const observer=new MutationObserver(scan);
    observer.observe(document.body,{childList:true,subtree:true,characterData:true});
    scan();
  });
  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM member_xp_events').get().n,0);
- for(let i=1;i<=13;i++){
-  await page.locator('.an-xp-button').click();
-  await until(()=>db.prepare('SELECT COUNT(*) AS n FROM member_xp_events').get().n===i);
-  await until(async()=>await page.locator('.an-xp-button').isEnabled());
- }
- await until(async()=>/100 XP/.test(await page.locator('.an-button-progress').innerText()));
- assert.match(await page.locator('.an-button-progress').innerText(),/Level 3/);
+ await page.locator('.an-xp-button').click();
+ await until(()=>db.prepare('SELECT COUNT(*) AS n FROM member_xp_events').get().n===1);
+ await until(async()=>await page.locator('.an-xp-button').isEnabled());
+ await until(async()=>/1,035 XP/.test(await page.locator('.an-button-progress').innerText()));
+ assert.match(await page.locator('.an-button-progress').innerText(),/Level 4/);
  async function drain(){
    for(let i=0;i<32;i++){
      const toast=page.locator('.an-toast');
@@ -160,8 +158,8 @@ try{
  }
  // The persisted level event and observed real animation are the assertion.
  // A temporary toast is not required to remain visible after thirteen presses.
- assert.equal(db.prepare("SELECT COUNT(*) AS n FROM member_reward_notifications WHERE kind='level' AND level=3").get().n,1);
- await until(()=>evaluate('window.__anevumObservedLevel3 === true'),20000);
+ assert.equal(db.prepare("SELECT COUNT(*) AS n FROM member_reward_notifications WHERE kind='level' AND level=4").get().n,1);
+ await until(()=>evaluate('window.__anevumObservedLevel4 === true'),20000);
  // Use a clearly labeled, non-awarding replay for repeatable viewport screenshots.
  await drain();
  await page.locator('.an-preview-controls button').filter({hasText:'PREVIEW LEVEL UP'}).click();
@@ -182,8 +180,8 @@ try{
  await page.locator('.an-toast-info.an-toast-open').waitFor();
  // Let one complete flash-expand-hold-collapse cycle finish naturally.
  await page.locator('.an-toast-info').waitFor({state:'detached',timeout:9000});
- assert.equal(db.prepare('SELECT SUM(amount) AS n FROM member_xp_events').get().n,65);
- await page.reload();await until(async()=>/100 XP/.test(await page.locator('.an-button-progress').innerText()));
+ assert.equal(db.prepare('SELECT SUM(amount) AS n FROM member_xp_events').get().n,1000);
+ await page.reload();await until(async()=>/1,035 XP/.test(await page.locator('.an-button-progress').innerText()));
  await page.locator('.an-inbox-toggle').click();await page.locator('.an-history').waitFor();
  assert.match(await page.locator('.an-history').innerText(),/Level 3 reached/);
  await page.locator('.an-history header button').click();
@@ -206,7 +204,7 @@ try{
  await page.locator('.an-toast-level.an-toast-open').waitFor();
  assert.equal(await page.locator('.an-toast-mark').evaluate(el=>getComputedStyle(el).animationName),'none');
  await page.screenshot({path:join(out,'reduced-motion-level-up.png')});
- Object.assign(results,{fixedXpPresses:13,persistedTestXp:65,totalXp:100,level:3,sixtyIconsLoaded:true,notificationHistory:true,fullAnimationCycle:true,reducedMotion:true});
+ Object.assign(results,{fixedXpPresses:1,persistedTestXp:1000,totalXp:1035,level:4,sixtyIconsLoaded:true,notificationHistory:true,fullAnimationCycle:true,reducedMotion:true});
  writeFileSync(join(out,'acceptance.json'),JSON.stringify(results,null,2));console.log('BROWSER_LEVELS_AWARDS_XP_NOTIFICATIONS_AND_SIXTY_ICONS=PASS');
 }catch(error){
  if(page){const state=await page.evaluate('({url:location.pathname+location.hash,text:document.body.innerText.slice(-5000)})').catch(()=>null);console.error('BROWSER_FAILURE_STATE='+JSON.stringify(state));await page.screenshot({path:join(out,'failure.png')}).catch(()=>{});}
