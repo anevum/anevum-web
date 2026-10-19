@@ -15,7 +15,7 @@ import {canonicalCommunity} from '../canonical-auth/community.mjs';
 
 // Keep the complete test suite's 72-hour supporter freshness window relative to
 // test execution. The original fixed 2026-10-16 clock expired on 2026-10-19.
-const NOW=Date.now(),DAY=86400000,ORIGIN='https://a.anevum.com';
+const NOW=Math.floor(Date.now()/1000)*1000,DAY=86400000,ORIGIN='https://a.anevum.com';
 function setup(){
  const {db,env}=fixture();
  db.exec(readFileSync(new URL('../canonical-auth/migrations/0006_supporter_commerce.sql',import.meta.url),'utf8'));
