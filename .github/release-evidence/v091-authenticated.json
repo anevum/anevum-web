@@ -1,10 +1,10 @@
 {
-  "source_sha": "f426886a4dae3a535101c020e067826621a4d7a2",
+  "source_sha": "a55ae856be8718ea2c299ad48e63cb1f32eadf29",
   "founder_staff_session": false,
   "reviewer_staff_session": false,
   "creator_journey": false,
   "cross_account_identity": false,
   "verified_at": null,
   "evidence": [],
-  "status": "BLOCKED: Real member and Cloudflare Access sign-in succeeded. The live staff entry fails identity_request_failed because redirect:error is unsupported by workerd. Five transport-only Worker repairs are runtime-tested and pinned to their verified module layout; no production repair has been deployed. Authenticated staff and creator-journey acceptance remain pending."
+  "status": "BLOCKED: The five transport-only staff Worker repairs passed the existing guarded workflow and are verified in Cloudflare production (GitHub run 39339508685). Real signed-in founder/reviewer UI, creator release journey and cross-account behavior remain unverified. Full V091 deployment has not occurred."
 }
