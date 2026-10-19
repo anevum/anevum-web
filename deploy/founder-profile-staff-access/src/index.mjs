@@ -24,7 +24,7 @@ function failure(status,message) { return reply({role:null,error:message},status
 async function roleFor(request,env) {
   if (request.method !== "GET" && request.method !== "HEAD") return failure(405,"Method not allowed");
   const cookie = request.headers.get("cookie");
-  if (!cookie || cookie.length>8192) return failure(401,"Verified member sign-in required");
+  if (!cookie || cookie.length>8192 || !/(?:^|;\s*)(?:__Secure-|__Host-)?anevum_can_apex\.session_token=/.test(cookie)) return failure(401,"Verified member sign-in required");
   if (!env?.APEX_AUTH?.fetch || !env?.MEMBER_DB?.prepare) return failure(503,"Staff access check unavailable");
   const fetchSite = request.headers.get("sec-fetch-site");
   if (fetchSite && !["same-origin","none"].includes(fetchSite)) return failure(403,"Cross-origin access refused");
