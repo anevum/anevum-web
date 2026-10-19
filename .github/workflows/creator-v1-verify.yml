@@ -128,7 +128,7 @@ jobs:
             sleep 0.2
           done
           test "$ready" = 1
-          node creator-v1/test/capture-sitewide-v012.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/sitewide-v012-review
+          node creator-v1/test/capture-sitewide-v012.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/sitewide-v012-review 2>&1 | tee evidence/sitewide-v012-review/browser-capture.log
           test -s evidence/sitewide-v012-review/capture-status.txt
           test -s evidence/sitewide-v012-review/home-1440.png
           test -s evidence/sitewide-v012-review/discussion-390.png
