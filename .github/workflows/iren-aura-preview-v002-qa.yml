@@ -39,6 +39,14 @@ jobs:
           node --check deploy/iren-observatory/test/browser-aura-preview-v002.mjs
           node --test deploy/iren-observatory/test/aura-preview-v002.test.mjs
           node --test deploy/iren-observatory/test/staff-transport-v002.test.mjs
+      - name: Offline isolated-Worker bundle (strict dry run; no deployment)
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts --no-audit --no-fund
+          mkdir -p "$RUNNER_TEMP/iren-worker-dryrun"
+          npx --no-install wrangler deploy --dry-run --config deploy/iren-observatory/wrangler.jsonc --outdir "$RUNNER_TEMP/iren-worker-dryrun"
+          test -n "$(find "$RUNNER_TEMP/iren-worker-dryrun" -type f -size +2k -print -quit)"
       - name: Synthetic responsive Chromium proof at 320, 390 and 1440px
         shell: bash
         run: |
