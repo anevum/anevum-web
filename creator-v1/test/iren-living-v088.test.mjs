@@ -66,6 +66,9 @@ test("Personality states include genuine articulated motions and controlled trav
  assert.match(guide,/irenStationForPath\(pathname,Boolean\(memberId\)\)/);
  assert.match(guide,/attendFocus/);
  assert.match(guide,/attendPointer/);
+ assert.match(guide,/const guideLook:readonly \[number,number\]=\[/);
+ assert.match(guide,/look=\{guideLook\}/);
+ assert.match(rig,/const pointingSide=this\.look\[0\]<-\.12\?-1:1/);
  assert.match(guide,/restoreDock/);
  assert.match(guide,/setMood\(previous=>previous==="idle"\?"rest":previous\)/);
  assert.match(context,/STAFF CLEARANCE/);
