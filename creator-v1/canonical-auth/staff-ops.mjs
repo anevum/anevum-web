@@ -276,6 +276,13 @@ export async function canonicalStaffOps(req,env,user,now=Math.floor(Date.now()/1
   const url=new URL(req.url);
   if([...url.searchParams.keys()].some(k=>!['room','lane','after'].includes(k)||url.searchParams.getAll(k).length!==1))return fail(400,'Invalid query');
   const lane=url.searchParams.get('lane')||'snapshot';
+  if(lane==='members'){
+   if(permit.role!=='owner')return fail(403,'Owner authorization required');
+   if(url.searchParams.has('room')||url.searchParams.has('after'))return fail(400,'Invalid query');
+   const r=await db.prepare("SELECT u.id,COALESCE(p.display_name,u.name,'MEMBER') AS name,COALESCE(p.handle,'') AS handle,u.emailVerified AS verified,COALESCE(p.visibility,'private') AS visibility,g.role AS staffRole FROM \"user\" u LEFT JOIN member_creator_profiles p ON p.user_id=u.id LEFT JOIN staff_access_grants g ON g.member_id=u.id AND g.revoked_at IS NULL ORDER BY u.createdAt DESC LIMIT 100").all();
+   if(r.success===false)return fail(503,'Directory unavailable');
+   return json({members:(r.results||[]).map(x=>({id:x.id,name:x.name,handle:x.handle,verified:Boolean(x.verified),visibility:x.visibility,staffRole:x.staffRole||null})),limitedTo:100});
+  }
   if(lane==='signals'){
    if(url.searchParams.has('room'))return fail(400,'Unsupported signal room');
    const after=Number(url.searchParams.get('after')||0);
