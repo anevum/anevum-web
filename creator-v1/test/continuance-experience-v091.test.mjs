@@ -10,6 +10,7 @@ const states=read("web/src/components/States.tsx");
 const bootstrap=read("web/src/main.tsx");
 const css=read("web/src/continuance-experience-v091.css");
 const publicPage=read("web/src/pages/Phase1PublicMemberPage.tsx");
+const levelArt=read("web/src/components/LevelEmblem.tsx");
 const app=read("web/src/App.tsx");
 const shell=read("web/src/components/Shell.tsx");
 
@@ -69,4 +70,13 @@ test("V091 public data error states give meaningful navigation and an explicit r
   assert.match(states,/to="\/status"/);
   assert.match(states,/v091-recovery-actions/);
   assert.doesNotMatch(states,/setTimeout|setInterval|unbounded/i);
+});
+
+test("V091 absent art preserves verified level without exposing hidden specimens or changing permissions",()=>{
+  assert.match(levelArt,/assetIndex>=kinds.length/);
+  assert.match(levelArt,/v091-level-safe-fallback/);
+  assert.match(levelArt,/Earned Evolution level/);
+  assert.match(css,/\.v091-level-safe-fallback/);
+  assert.match(css,/\.v091-sr-only/);
+  assert.doesNotMatch(levelArt,/LEVEL_ARTIFACTS|level-artifacts\.json|Math\.random|localStorage/);
 });
