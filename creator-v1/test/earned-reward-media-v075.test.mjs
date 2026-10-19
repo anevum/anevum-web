@@ -166,7 +166,8 @@ test('V075 renders no public level gallery, badge preview or simulated Level 30 
  assert.match(vault,/ledger\?\.earnedBadges/);
  assert.match(vault,/EarnedRewardVault/);
  assert.match(modal,/<dialog/);
- assert.match(modal,/rewardModelBase\(/);
+ assert.match(modal,/<LevelEmblem level=\{level!\} artwork="card"/);
+ assert.doesNotMatch(modal,/RewardModelRenderer|<canvas/);
  assert.match(renderer,/DecompressionStream\('gzip'\)/);
  assert.match(renderer,/webgl/);
  assert.doesNotMatch(renderer,/position:'fixed'|document\.body\.appendChild\(canvas\)/);
@@ -224,7 +225,7 @@ test('V075 shared player-card and inspector code does not bundle all 30 hidden l
   assert.doesNotMatch(code,/LEVEL_ARTIFACTS|shared\/level-artifacts\.json/);
  }
  const catalog=read('web/src/components/LevelCollection.tsx');
- assert.match(catalog,/level-artifacts\.json/);
+ assert.doesNotMatch(catalog,/level-artifacts\.json/);
  assert.doesNotMatch(read('web/src/pages/LevelsPage.tsx'),/LevelCollection/);
  assert.match(read('canonical-auth/reward-media.mjs'),/ARTIFACTS\.slice\(0,state\.level\)/);
 });
