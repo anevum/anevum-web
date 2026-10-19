@@ -32,6 +32,10 @@ const config=db=>({
  ANEVUM_CANONICAL_STAGE_ENABLED:"true",
  CANONICAL_SCHEMA_APPROVED:"true",
  CANONICAL_BETTER_AUTH_SECRET:"s".repeat(48),
+ CANONICAL_EMAIL_ENABLED:"true",CANONICAL_RESEND_API_KEY:"t".repeat(48),
+ CANONICAL_PROTECTED_EMAILS:"owner@fixture.invalid",
+ CANONICAL_INVITED_SIGNUP_ENABLED:"true",
+ CANONICAL_INVITE_EMAILS:"alpha@fixture.invalid,beta@fixture.invalid",
  MEMBER_DB:db
 });
 
