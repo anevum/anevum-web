@@ -13,7 +13,8 @@ import canonicalWorker from '../web/a-canonical-stage.review.mjs';
 import {canonicalSpace} from '../canonical-auth/space.mjs';
 import {canonicalCommunity} from '../canonical-auth/community.mjs';
 
-const NOW=1792155000000,DAY=86400000,ORIGIN='https://a.anevum.com';
+// Use UTC second-aligned test time: this fixture's 72-hour expiry must not age out.
+const NOW=Math.floor(Date.now()/1000)*1000,DAY=86400000,ORIGIN='https://a.anevum.com';
 function setup(){
  const {db,env}=fixture();
  db.exec(readFileSync(new URL('../canonical-auth/migrations/0006_supporter_commerce.sql',import.meta.url),'utf8'));
