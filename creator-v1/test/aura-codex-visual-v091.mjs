@@ -92,9 +92,16 @@ try{
   });
   const title=document.querySelector('#av91-codex-title')?.textContent||'';
   const orbit=document.querySelector('.av91-codex-orbit');
+  const helper=document.querySelector('.ir88-companion .ir87-scout')?.getBoundingClientRect();
+  const helperCollision=Boolean(helper&&cards.some(card=>{
+   const copy=card.querySelector('.av91-codex-entry-copy')?.getBoundingClientRect();
+   return copy&&helper.left<copy.right&&helper.right>copy.left&&
+    helper.top<copy.bottom&&helper.bottom>copy.top;
+  }));
   return {title,pathname:location.pathname,innerWidth,
    overflow:document.documentElement.scrollWidth>innerWidth+2,
    cards:coords,animations:getComputedStyle(orbit).animationName,
+   helperCollision,helperLeft:helper?.left??null,
    links:[...document.querySelectorAll('.av91-codex-actions a')].map(a=>a.getAttribute('href'))};
  };
  await send('Page.enable');await send('Runtime.enable');
@@ -109,6 +116,9 @@ try{
   assert.equal(data.pathname,'/auras');
   assert.equal(data.innerWidth,width,'CDP emulation should use requested width');
   assert.equal(data.overflow,false,'no full-page horizontal overflow at '+width);
+  assert.equal(data.helperCollision,false,'IREN obscures aura meaning text at '+width);
+  assert.ok(data.helperLeft!==null&&data.helperLeft>=8&&data.helperLeft<=25,
+   'IREN should start in left reading gutter without overriding draggable preferences at '+width);
   assert.deepEqual(data.cards.map(x=>x.name),
    ['Unadorned','Aurora','Eclipse','Ember','Nebula','Transcosmic']);
   assert.ok(data.links.includes('/recognition')&&data.links.includes('/member?tab=awards'));
