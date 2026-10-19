@@ -8,7 +8,7 @@ test("signup opens the email form immediately and retains live server method ver
  assert.doesNotMatch(source,/emailOpen/);
  assert.match(source,/useResource\(canonicalMethods,\[availabilityAttempt\]\)/);
  assert.match(source,/onClick=\{\(\)=>setAvailabilityAttempt\(value=>value\+1\)\}/);
- assert.match(source,/emailReady&&<form/);
+ assert.match(source,/emailReady&&\(!requiresEmailVerification\|\|Boolean\(sessionEmail\)\)&&<form/);
  assert.doesNotMatch(source,/join-method-unavailable/);
  assert.match(source,/METHODS\.filter\(method=>method\.key!=="email"&&socialReady/);
 });
