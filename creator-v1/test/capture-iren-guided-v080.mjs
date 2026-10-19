@@ -120,7 +120,7 @@ try{
   await evaluate('document.querySelector(".ir80-wayfinder-entry").click()');
   await until(()=>evaluate('!!document.querySelector(".ir80-help")&&!document.querySelector(".av79-navigation[open]")'));
   await check("community-station-"+width,'document.querySelector(".ir88-station")?.textContent.includes("THE COMMONS")');
-  await check("community-topic-"+width,'document.querySelector(".ir80-topic-grid button[aria-pressed="true"]')?.textContent.includes("Meet people")');
+  await check("community-topic-"+width,'document.querySelector(".ir80-topic-grid button[aria-pressed=true]")?.textContent.includes("Meet people")');
   await evaluate('document.querySelector(".ir80-tour-launch").click()');
   await until(()=>evaluate('document.querySelector("#ir80-guide-title")?.textContent.includes("your people")'));
   await evaluate('document.querySelector("[data-iren-next]").click()');
