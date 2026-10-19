@@ -1,0 +1,62 @@
+name: ANEVUM V091 / Aura Codex Real React Browser QA
+# Synthetic localhost only. Build and inspect candidate artifacts; never deploy,
+# mutate accounts, call production staff APIs, or publish earned hidden artwork.
+on:
+  push:
+    branches:
+      - build/v091-experience-integration-20261019-001
+    paths:
+      - 'creator-v1/web/src/lib/player-recognition.ts'
+      - 'creator-v1/web/src/pages/AuraCodexPage.tsx'
+      - 'creator-v1/web/src/pages/aura-codex-v091.css'
+      - 'creator-v1/test/aura-codex-visual-v091.mjs'
+      - '.github/workflows/v091-aura-codex-browser.yml'
+  pull_request:
+    paths:
+      - 'creator-v1/web/src/**'
+      - 'creator-v1/test/aura-codex-visual-v091.mjs'
+      - '.github/workflows/v091-aura-codex-browser.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-v091-aura-browser-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  aura-react-browser:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install frontend build dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Build the actual candidate React frontend
+        run: |
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+      - name: Verify six genuine aura entries at 320, 390 and 1440 pixels
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome" || { echo "::error::Chromium unavailable"; exit 1; }
+          mkdir -p "$RUNNER_TEMP/v091-aura"
+          node --check creator-v1/test/aura-codex-visual-v091.mjs
+          node creator-v1/test/aura-codex-visual-v091.mjs "$chrome" "$RUNNER_TEMP/v091-aura"
+          test -s "$RUNNER_TEMP/v091-aura/acceptance.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v091-aura-codex-real-react-visual-qa
+          path: ${{ runner.temp }}/v091-aura/
+          if-no-files-found: warn
+          retention-days: 14
