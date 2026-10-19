@@ -38,6 +38,7 @@ jobs:
           node --check deploy/iren-observatory/src/staff-navigation.mjs
           node --check deploy/iren-observatory/test/browser-aura-preview-v002.mjs
           node --test deploy/iren-observatory/test/aura-preview-v002.test.mjs
+          node --test deploy/iren-observatory/test/staff-transport-v002.test.mjs
       - name: Synthetic responsive Chromium proof at 320, 390 and 1440px
         shell: bash
         run: |
