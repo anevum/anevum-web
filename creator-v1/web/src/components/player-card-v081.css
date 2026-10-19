@@ -113,3 +113,21 @@
  .av81-role-token,.av81-reputation-token,.av81-earned-token{border-color:CanvasText;background:Canvas;color:CanvasText}
  .av81-corona{display:none}
 }
+
+/* V081 / individual institutional seals and honest milestone route */
+.av81-role-token svg{flex:none;width:17px;height:17px;color:var(--av81-role-strong)}
+.av81-player-card--inline .av81-role-token svg{width:14px;height:14px}
+.av81-signal-track{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:16px 0}
+.av81-signal-track>span{display:grid;gap:3px;min-width:0;border-radius:9px;padding:11px;
+ background:linear-gradient(135deg,#192940,#0f1d31);border:1px solid #9ebdd649}
+.av81-signal-track>span.is-earned{border-color:#9dc4ebaa;box-shadow:inset 0 1px #e5f5ff26}
+.av81-signal-track strong{font:800 12px/1.2 ui-monospace,monospace;color:#ebf3ff}
+.av81-signal-track small{font:650 10px/1.3 ui-monospace,monospace;color:#b1c6d9}
+.av81-signal-track em{font:800 9px/1.3 ui-monospace,monospace;font-style:normal;color:#9fc5e8;letter-spacing:.065em}
+.av81-signal-track>span.is-locked{opacity:.61}
+.av81-contribute-link{display:inline-flex;padding:10px 12px;border-radius:7px;margin-top:12px;
+ border:1px solid #a7cbec80;color:#d9efff;background:#192c47;
+ font:800 10px/1.3 ui-monospace,monospace;letter-spacing:.07em;text-decoration:none}
+.av81-contribute-link:where(:hover,:focus-visible){border-color:#d4efff;background:#223b5e}
+@media(max-width:440px){.av81-signal-track{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(forced-colors:active){.av81-signal-track>span,.av81-contribute-link{background:Canvas;border-color:CanvasText;color:CanvasText}}

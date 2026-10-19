@@ -173,7 +173,15 @@ export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:C
      <span>THREADS {space.reputation.stats.discussions} · REPLIES {space.reputation.stats.replies} · PEERS {space.reputation.stats.appreciations} · MARKS {space.reputation.stats.badges}</span>
      <small>{space.reputation.nextAt===null?'Highest activity aura earned':(space.reputation.nextAt-space.reputation.score)+' REP until your next aura'}</small>
     </div>:<p className="av65-studio-note">Reputation appears when verified activity statistics are available and public stats visibility is enabled. No reputation is guessed from XP, account age, or test actions.</p>}
-    <p className="av81-standing-help">Published discussions, approved replies, distinct peer appreciation and verified badges contribute. Hidden content stops counting. The founder, moderator, administrator and curator halos require separately verified role grants; they cannot be selected here.</p>
+    {space.showStats&&space.reputation&&<div className="av81-signal-track" aria-label="Reputation aura milestones">
+     {([['Signal',40],['Orbit',160],['Nova',420],['Zenith',900]] as const).map(([label,min])=>
+      <span key={label} className={space.reputation!.score>=min?'is-earned':'is-locked'}>
+       <strong>{label}</strong><small>{min} REP</small>
+       <em>{space.reputation!.score>=min?'EARNED':'SEALED'}</em>
+      </span>)}
+    </div>}
+    <p className="av81-standing-help">Published discussions, approved replies, distinct peer appreciation and verified badges contribute. Hidden content stops counting. Your next contribution should be useful, not repetitive. Founder, moderator, administrator and curator marks require independently verified role grants; they cannot be selected here.</p>
+    <Link className="av81-contribute-link" to="/community">CONTRIBUTE TO THE COMMUNITY ↗</Link>
    </div>
    <div className="av65-studio-end"><div>
     <strong>Constellations are the next extension.</strong>

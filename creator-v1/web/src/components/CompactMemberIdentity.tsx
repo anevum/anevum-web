@@ -3,6 +3,7 @@ import {LevelEmblem} from './LevelEmblem';
 import {BadgeInsignia} from './BadgeInsignia';
 import {HonorInsignia} from './HonorInsignia';
 import {MemberPortrait} from './MemberPortrait';
+import {RoleInsignia} from './RoleInsignia';
 import {SupporterIdentity} from './SupporterSeal';
 import type {SupporterAppearance,SpaceStats} from '../lib/canonical-beta';
 import {
@@ -119,7 +120,7 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
    </span>
    <small className="av61-member-handle">@{member.handle}</small>
    {(role||reputation)&&<span className="av81-standing" aria-label="Verified status">
-    {role&&<span className="av81-role-token" title={'Verified ANEVUM '+ROLE_LABELS[role]+' role'}>{ROLE_LABELS[role]}</span>}
+    {role&&<span className="av81-role-token" title={'Verified ANEVUM '+ROLE_LABELS[role]+' role'}><RoleInsignia role={role}/>{ROLE_LABELS[role]}</span>}
     {reputation&&<span className="av81-reputation-token" title={'Reputation is based on approved community activity · '+REPUTATION_LABELS[earnedAura]}>
      <span aria-hidden="true">✦</span> {reputation.score.toLocaleString()} REP
     </span>}
