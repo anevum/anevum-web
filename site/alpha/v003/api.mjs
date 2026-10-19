@@ -251,6 +251,9 @@ async function review(req,env,u,id) {
   if(input.action==="reject"&&(typeof input.reason!=="string"||input.reason.trim().length<10||input.reason.length>1000))
     return fail(422,"A rejection reason of 10–1000 characters is required");
   if(input.action==="publish") {
+    // Fail closed by default: content execution needs separate platform/security acceptance.
+    if(env.PACKAGE_PUBLIC_PUBLISH_ENABLED!=="true")
+      return fail(503,"Executable publication is disabled until the security and release gates pass");
     if(!isolatedHost(env)) return fail(503,"Isolated player is not configured; publication is paused");
     const rights=await query(env.DB,
       "SELECT release_id FROM anevum_package_rights_receipts WHERE release_id=? AND owner_id=?",
