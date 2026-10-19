@@ -29,10 +29,10 @@ const RELEASES=Object.freeze([
 const FIELDS='SELECT u.id,u.name,u.email,u.emailVerified AS verified,u.createdAt AS joinedAt,'+
  "COALESCE(p.display_name,u.name,'Member') AS displayName,"+
  "COALESCE(p.handle,'') AS handle,COALESCE(p.visibility,'private') AS visibility,"+
- 'g.role AS staffRole,COALESCE(r.aura,\'none\') AS selectedAura '+
+ 'g.role AS staffRole '+
  'FROM "user" u LEFT JOIN member_creator_profiles p ON p.user_id=u.id '+
  'LEFT JOIN staff_access_grants g ON g.member_id=u.id AND g.revoked_at IS NULL '+
- 'LEFT JOIN member_recognition_preferences r ON r.user_id=u.id ';
+ '';
 const shape=r=>({id:r.id,name:r.name||'Member',displayName:r.displayName||r.name||'Member',
  email:r.email,verified:r.verified===1||r.verified===true,handle:r.handle,
  visibility:r.visibility,joinedAt:r.joinedAt,staffRole:r.staffRole||null,
@@ -70,7 +70,7 @@ export async function ownerControlLane(req,db,permit){
  if(!id||id.length>128||CONTROL.test(id))return json({error:'Invalid member'},400);
  const row=await db.prepare(FIELDS+'WHERE u.id=? LIMIT 1').bind(id).first();
  if(!row)return json({error:'Member not found'},404);
- const schema=await queryRows(db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('member_recognition_grants','member_space_milestones','member_role_grants','member_xp_totals')"));
+ const schema=await queryRows(db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('member_recognition_grants','member_space_milestones','member_role_grants','member_xp_totals','member_recognition_preferences')"));
  const tables=new Set(schema.map(x=>x.name));
  const grants=tables.has('member_recognition_grants')?await queryRows(db.prepare(
   "SELECT kind,recognition_id AS id,earned_at AS earnedAt FROM member_recognition_grants WHERE user_id=? AND revoked_at IS NULL ORDER BY earned_at DESC LIMIT 70"
@@ -81,10 +81,11 @@ export async function ownerControlLane(req,db,permit){
  const roleBadges=tables.has('member_role_grants')?await queryRows(db.prepare(
   "SELECT role,granted_at AS grantedAt FROM member_role_grants WHERE user_id=? AND revoked_at IS NULL ORDER BY granted_at DESC LIMIT 4"
  ).bind(id)):null;
+ const chosenAura=tables.has('member_recognition_preferences')?await db.prepare('SELECT aura FROM member_recognition_preferences WHERE user_id=?').bind(id).first():null;
  const audit=await queryRows(db.prepare(
   "SELECT action,created_at AS createdAt FROM staff_access_audit WHERE member_id=? ORDER BY created_at DESC LIMIT 15"
  ).bind(id));
- return json({member:shape(row),recognition:{grants,milestones,roleBadges,
+ return json({member:{...shape(row),selectedAura:chosenAura?.aura||'none'},recognition:{grants,milestones,roleBadges,
    verifiedRoleRegistryReady:tables.has('member_role_grants')},
   staffAudit:audit,storage:{xpAggregateReady:tables.has('member_xp_totals')},
   controls:{moderatorAssignments:'Personnel',earnedLevels:'automatic-only',
