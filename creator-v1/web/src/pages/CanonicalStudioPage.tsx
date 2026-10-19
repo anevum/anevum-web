@@ -12,7 +12,7 @@ import './canonical-studio.css';
 
 const CATEGORY_GUIDE:Record<StudioCategory,string>={
  games:'Upload a browser-game ZIP or link an external HTTPS game. Private Studio ZIPs do not become playable automatically. An approved hosted release has a separate review and publication process.',
- tools:'Upload a web app build ZIP or link an existing HTTPS application. A dedicated isolated player is planned.',
+ tools:'Attach a web app build ZIP or an existing HTTPS application for private review. Use playable upload when preparing an in-browser release.',
  creative:'Attach original creative work, audio, images, writing or a ZIP.',
  music:'Attach MP3 or WAV audio. Files remain in private quarantine.',
  art:'Attach PNG, JPEG, WebP or GIF artwork. Images are not rendered from quarantine.',
@@ -96,7 +96,8 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
   </header>
   <nav className="st-nav" aria-label="Studio navigation">
    <Link to="/studio" aria-current={mode==='list'?'page':undefined}>MY PROJECTS</Link>
-   <Link to="/studio/new" aria-current={mode==='new'?'page':undefined}>NEW SUBMISSION</Link>
+   <Link to="/studio/new" aria-current={mode==='new'?'page':undefined}>NEW PRIVATE DRAFT</Link>
+   <a href="/upload">PLAYABLE UPLOAD ↗</a>
    {canReview&&<Link to="/studio/review" aria-current={mode==='review'?'page':undefined}>REVIEW DESK</Link>}
    <Link to="/discover">DISCOVER ↗</Link>
   </nav>
@@ -130,6 +131,10 @@ function StudioLibrary(){
    <div className="st-section-head"><div><p className="st-kicker">01 / PERSONAL WORKSPACE</p><h2>PROJECT RECORDS</h2></div>
     <Link className="st-action" to="/studio/new">+ CREATE PROJECT</Link></div>
    <p className="st-muted">Your Studio projects and attachments remain private. Staff review and live publication are separate. Uploading here does not automatically make an app playable or award XP.</p>
+   <div className="v091-studio-release-entry">
+    <div><strong>Ready for people to play?</strong><p>Use the playable upload flow to preview your build and submit it for staff review. Publication requires approval.</p></div>
+    <a className="st-action" href="/upload">OPEN PLAYABLE UPLOAD ↗</a>
+   </div>
    {items.length>0&&<div className="st-filters">
     <label className="st-field"><span>SEARCH YOUR PROJECTS</span>
      <input type="search" maxLength={100} placeholder="Title, summary, slug, category"

@@ -91,6 +91,11 @@ test("V091 distinguishes private Studio drafts from separately approved public r
   assert.match(studio,/STUDIO PUBLICATION/);
   assert.match(studio,/SEPARATE REVIEW/);
   assert.match(studio,/does not automatically make an app playable or award XP/);
+  // /upload belongs to the existing protected upload Worker. React navigation
+  // would stay inside Studio and swallow the publication entry point.
+  assert.match(studio,/<a href="\/upload">PLAYABLE UPLOAD/);
+  assert.match(studio,/<a className="st-action" href="\/upload">/);
+  assert.doesNotMatch(studio,/<Link[^>]+to="\/upload"/);
   assert.doesNotMatch(studio,/PRIVATE STAGING WORKSPACE|STAGING \/ FEATURE NOT ACTIVE/);
   assert.doesNotThrow(()=>parse(studio,{sourceType:"module",plugins:["typescript","jsx"]}));
 });
