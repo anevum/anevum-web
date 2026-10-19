@@ -1,3 +1,4 @@
+# V091 guarded staff transport: verified Worker module layout; no full frontend rollout here.
 name: ANEVUM V091 Guarded Continuance Experience Production
 on:
   push:
