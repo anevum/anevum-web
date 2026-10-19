@@ -10,7 +10,7 @@ function seed(db,id){db.prepare('INSERT INTO user(id,name,email,emailVerified,cr
 const req=(path,body)=>new Request(base+'/api/v1/member/'+path,{method:body===undefined?'GET':'POST',headers:{origin:base,'content-type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
 test('test XP has fixed value, durable level notices, isolated users, idempotent concurrent retries and guarded acknowledgement',async()=>{
  const {db,env}=fixture();try{const a=seed(db,'alpha'),b=seed(db,'beta');const post=(id)=>canonicalProgression(req('xp-test',{requestId:id}),env,a,1000);
- const id=crypto.randomUUID();const results=await Promise.all([post(id),post(id),post(id)]);assert.ok(results.every(r=>r.status===200));assert.equal(db.prepare('SELECT COUNT(*) AS n FROM member_xp_events').get().n,1);assert.equal((await readProgression(env.MEMBER_DB,a.id)).xp,1000);
+ const id=crypto.randomUUID();const results=await Promise.all([post(id),post(id),post(id)]);assert.ok(results.every(r=>r.status===200));assert.equal(db.prepare('SELECT COUNT(*) AS n FROM member_xp_events').get().n,1);const stored=db.prepare('SELECT request_id,amount FROM member_xp_events').get();assert.equal(stored.request_id,'v082:'+id);assert.equal(stored.amount,5);assert.equal((await readProgression(env.MEMBER_DB,a.id)).xp,1000);
  const p=await readProgression(env.MEMBER_DB,a.id);assert.equal(p.xp,1000);assert.equal(p.level,4);assert.equal(p.artifact,'Symmetry Field');assert.equal((await readProgression(env.MEMBER_DB,b.id)).xp,0);
  const inbox=await (await canonicalProgression(req('notifications'),env,a)).json();assert.deepEqual(inbox.items.map(i=>[i.kind,i.level]),[['level',2],['level',3],['level',4]]);
  const latest=inbox.items.at(-1).id;
