@@ -392,8 +392,8 @@ export function playerScreen(p,release,runnerURL,isPreview,canEdit,isStaff){
   const label=isPreview?release.proposed_title||p.title:p.title;
   const synopsis=isPreview?release.proposed_summary||p.summary:p.summary;
   const kind=isPreview?release.proposed_category||p.category:p.category;
-  const ready=isPreview&&release.status==="ready";
-  const review=isStaff&&isPreview&&release.status==="pending_review";
+  const ready=Boolean(runnerURL)&&isPreview&&release.status==="ready";
+  const review=Boolean(runnerURL)&&isStaff&&isPreview&&release.status==="pending_review";
   const controls='<div class="player-controls">'+
     (runnerURL?action(p,"restart","Restart")+action(p,"fullscreen","Expand"): "")+
     (!isPreview?action(p,"share","Share"): "")+
