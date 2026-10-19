@@ -33,7 +33,7 @@ export async function canonicalCommunity(req,env){
    JOIN user u ON u.id=p.user_id LEFT JOIN member_space_settings s ON s.user_id=p.user_id WHERE ${where.join(' AND ')} ORDER BY ${at} DESC,${key} DESC LIMIT 13`;
   const result=await db.prepare(sql).bind(...params).all();if(result.success===false)throw Error('Unavailable');
   const hasMore=result.results.length>12,rows=result.results.slice(0,12);
-  const cards=await hydratedPublicMemberCards(db,rows,env.CANONICAL_RECOGNITION_ENABLED==='true');
+  const cards=await hydratedPublicMemberCards(db,rows,env.CANONICAL_RECOGNITION_ENABLED==='true',env.CANONICAL_REPUTATION_ENABLED==='true');
   const items=await Promise.all(rows.map(async (row,index)=>{
    // Public-only recognition, no account/Stripe IDs or billing metadata
    // leave this endpoint. Absent consent or stale subscription -> no badge.

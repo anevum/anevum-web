@@ -37,14 +37,14 @@ test("V074 retains the exact 30 original high-resolution optical level exports",
       if(existsSync(generated))assert.ok(statSync(generated).size>300,file);
     }
   }
-  assert.match(collection,/LEVEL_ARTIFACTS/);
-  assert.match(collection,/ENTER THE LIVING 3D ARCHIVE/);
-  assert.match(collection,/\/evolution\/\?level=/);
+  assert.doesNotMatch(collection,/LEVEL_ARTIFACTS|level-artifacts\.json/);
+  assert.match(collection,/<EarnedRewardVault level=/);
+  assert.doesNotMatch(collection,/LIVING 3D ARCHIVE|\/evolution\/\?level=/);
 });
 
 test("V074 makes shared member and gallery icons optical only, never a moving mini WebGL overlay",()=>{
   assert.doesNotThrow(()=>parse(icons,{sourceType:"module",plugins:["typescript","jsx"]}));
-  assert.match(icons,/data-artwork="v073-preserved-optical-icon"/);
+  assert.match(icons,/data-artwork="v081-hd-emblem"/);
   assert.match(icons,/av73-static-level-icon/);
   assert.match(icons,/av73-static-level-fallback/);
   assert.match(icons,/av62-native-poster/);
@@ -64,7 +64,7 @@ test("V074 makes shared member and gallery icons optical only, never a moving mi
   assert.match(archiveSource,/webglcontextlost/);
   assert.match(read("web/src/components/CompactMemberIdentity.tsx"),/LevelEmblem level=/);
   assert.match(read("web/src/components/LevelPanel.tsx"),/LevelEmblem level=/);
-  assert.match(collection,/LevelEmblem level=/);
+  assert.match(collection,/EarnedRewardVault level=/);
 });
 
 test("V074 contains all small specimens and preserves accessibility and phone layouts",()=>{

@@ -48,13 +48,13 @@ test('V077 front-facing card art is an explicitly opted-in mode on the shared pl
  assert.doesNotThrow(()=>parseTsx(identity));
  assert.doesNotThrow(()=>parseTsx(icon));
  assert.match(identity,/<LevelEmblem level=\{level!\} artwork="card"/);
- assert.match(icon,/artwork='original'/);
+ assert.match(icon,/artwork='card'/);
  assert.match(icon,/const kinds=artwork==='card'\?\['card'\]/);
  assert.match(icon,/data-presentation/);
  assert.match(css,/v077-front-facing-illustration/);
  assert.doesNotMatch(icon,/evolution-mini-renderer|registerAnimatedSpecimen|canvas\.getContext/);
 });
-test('V077 original earn-only high-detail collectible 3D inspector remains intact',()=>{
+test('V081 preserves entitlement checks while replacing 3D rewards with inspectable vectors',()=>{
  const media=read('canonical-auth/reward-media.mjs');
  const vault=read('web/src/components/EarnedRewardVault.tsx');
  const inspector=read('web/src/components/RewardInspector.tsx');
@@ -67,10 +67,10 @@ test('V077 original earn-only high-detail collectible 3D inspector remains intac
  assert.match(media,/const state=await readProgression/);
  assert.match(media,/match\.handle\?state\.level!==match\.level:state\.level<match\.level/);
  assert.match(vault,/<RewardInspector reward=\{selected\}/);
- assert.match(inspector,/<canvas ref=\{canvas\}/);
- assert.match(inspector,/new RewardModelRenderer\(element\)/);
- assert.match(inspector,/native\.current\?\.rotate/);
+ assert.match(inspector,/<LevelEmblem level=\{level!\} artwork="card"/);
  assert.match(inspector,/setZoom/);
+ assert.match(inspector,/setAngle/);
+ assert.doesNotMatch(inspector,/RewardModelRenderer|<canvas/);
  assert.match(model,/DecompressionStream\('gzip'\)/);
  assert.doesNotMatch(inspector,/renderEvolutionCardArt/);
 });
