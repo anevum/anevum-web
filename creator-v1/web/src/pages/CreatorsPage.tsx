@@ -1,7 +1,8 @@
 import {FormEvent,useEffect,useState} from "react";
-import {Link,useParams,useSearchParams} from "react-router-dom";
+import {Link,Navigate,useParams,useSearchParams} from "react-router-dom";
 import {readCreator,readCreators,readProjects} from "../lib/api";
 import {memberCreatorProfile} from "../lib/member-api";
+import {canonicalPublic} from "../lib/canonical-beta";
 import {useResource} from "../lib/useResource";
 import {ProjectCard} from "../components/ProjectCard";
 import {CompactMemberIdentity} from "../components/CompactMemberIdentity";
@@ -72,19 +73,42 @@ export function CreatorPage(){
   const cursor=params.get("cursor")||"";
   const data=useResource(async signal=>{
     const [profile,projects]=await Promise.all([
-      readCreator(handle,signal),
+      readCreator(handle,signal).then(result=>result.creator).catch((error:unknown)=>{
+        // The legacy creator directory does not always index an approved alpha
+        // uploader. A 404 is not evidence that the canonical member is absent.
+        if((error as {status?:number})?.status===404)return null;
+        throw error;
+      }),
       readProjects({creator:handle,cursor:cursor||undefined,limit:"24"},signal)
     ]);
-    return {profile:profile.creator,projects};
+    return {profile,projects};
   },[handle,cursor]);
+  // A public member world is an independently verified identity destination,
+  // never a fabricated Creator V1 channel or a claim that two accounts merged.
+  // Only perform this extra read when the legacy channel is genuinely missing.
+  const publicMember=useResource(async signal=>{
+    if(data.state!=="ready"||data.data.profile!==null||
+       !/^[a-z][a-z0-9_]{2,29}$/.test(handle))return false;
+    try{
+      const result=await canonicalPublic(handle,signal);
+      return result.profile.handle===handle;
+    }catch{return false;}
+  },[handle,data.state,data.state==="ready"&&data.data.profile===null]);
   // Public profile/achievement detail is optional; it uses the existing
   // anonymous-readable staging endpoint and never gates the public catalogue.
   const channel=useResource(async signal=>{
     if(!/^[a-z][a-z0-9_]{2,29}$/.test(handle))return null;
     try{return await memberCreatorProfile(handle,signal);}catch{return null;}
   },[handle]);
-  if(data.state==="loading")return <LoadingState label="Opening a real creator channel"/>;
-  if(data.state==="error")return <ErrorState title="CREATOR NOT AVAILABLE" detail="This creator has no available public profile, or the public catalogue cannot be reached."/>;
+  if(data.state==="loading"||(data.state==="ready"&&!data.data.profile&&publicMember.state==="loading"))
+    return <LoadingState label="Finding the verified creator or member world"/>;
+  if(data.state==="error")return <ErrorState title="CREATOR INDEX UNAVAILABLE" detail="The published creator index could not be reached. Try the live discovery catalogue or return later."/>;
+  if(data.state==="ready"&&!data.data.profile){
+    if(publicMember.state==="ready"&&publicMember.data)
+      return <Navigate to={"/@"+encodeURIComponent(handle)} replace/>;
+    return <ErrorState title="NO PUBLIC CREATOR CHANNEL" detail="There is no published Creator V1 channel under this handle. Private accounts are never exposed; explore approved work instead."/>;
+  }
+  if(data.state!=="ready"||!data.data.profile)return <LoadingState label="Opening creator records"/>;
   const {profile,projects}=data.data;
   const path="/creators/"+encodeURIComponent(handle);
   const current=path+(params.size?"?"+params.toString():"");
