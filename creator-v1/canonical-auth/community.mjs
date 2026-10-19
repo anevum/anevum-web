@@ -27,8 +27,7 @@ export async function canonicalCommunity(req,env){
   if(after){where.push(`(${at}<? OR (${at}=? AND ${key}<?))`);params.push(after[0],after[0],after[1])}
   const sql=`SELECT p.user_id AS member_user_id,p.handle,p.display_name,p.headline,p.world_theme,p.focus_json,p.created_at AS joined_at,
    ${publicMemberColumns('p.user_id')},
-   EXISTS(SELECT 1 FROM member_space_media m WHERE m.user_id=${owner} AND m.slot='avatar') AS avatar,
-   ${activity?'w.id,w.body,w.created_at,w.updated_at':'p.created_at'}
+      ${activity?'w.id,w.body,w.created_at,w.updated_at':'p.created_at'}
    FROM ${activity?'member_wall_posts w JOIN member_creator_profiles p ON p.user_id=w.user_id':'member_creator_profiles p'}
    JOIN user u ON u.id=p.user_id LEFT JOIN member_space_settings s ON s.user_id=p.user_id WHERE ${where.join(' AND ')} ORDER BY ${at} DESC,${key} DESC LIMIT 13`;
   const result=await db.prepare(sql).bind(...params).all();if(result.success===false)throw Error('Unavailable');
