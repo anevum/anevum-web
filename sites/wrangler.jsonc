@@ -11,5 +11,8 @@
       "database_name": "anevum-commission-sites-workshop",
       "database_id": "da8daff1-b57b-416d-9c1f-dfd657c29480"
     }
-  ]
+  ],
+  "observability": {
+    "enabled": true
+  }
 }
