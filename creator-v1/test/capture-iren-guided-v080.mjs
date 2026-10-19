@@ -79,11 +79,16 @@ try{
   await send("Page.navigate",{url:base+"/creator/"});
   await until(()=>evaluate('!!document.querySelector(".ir80-dock")&&!!document.querySelector(".av79-home")'));
   await check("one-compact-helper-"+width,'(()=>{const buttons=document.querySelectorAll(".ir87-scout");if(buttons.length!==1||document.querySelector(".an-notification-center"))return false;const r=buttons[0].getBoundingClientRect();return r.width>=48&&r.width<=58&&r.height>=48&&r.height<=58;})()');
+  // The 3D WebGL scene must actually render in Chromium. Parsing source or
+  // showing the SVG fallback alone is insufficient acceptance evidence.
+  await until(()=>evaluate('!!document.querySelector(".ir88-figure.is-rendering")'),16000);
+  await check("one-real-webgl-"+width,'document.querySelectorAll(".ir88-3d-canvas").length===1');
   await capture("iren-scout-"+width);
   await evaluate('document.querySelector(".ir80-dock").click()');
   await until(()=>evaluate('!!document.querySelector(".ir80-help")'));
   await check("help-accessible-"+width,'document.querySelector(".ir80-help").getAttribute("aria-label")==="IREN companion"');
   await check("help-inside-"+width,'(()=>{const r=document.querySelector(".ir80-help").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1;})()');
+  await check("expanded-real-webgl-"+width,'document.querySelectorAll(".ir88-figure.is-rendering").length===1');
   await capture("iren-help-"+width);
   await evaluate('document.querySelector("#ir87-updates-tab").click()');
   await until(()=>evaluate('!!document.querySelector("#ir87-updates-body")'));
@@ -93,6 +98,8 @@ try{
   await evaluate('document.querySelector(".ir80-tour-launch").click()');
   await until(()=>evaluate('!!document.querySelector(".ir80-guide-card")&&location.pathname.endsWith("/discover")'));
   await until(()=>evaluate('!!document.querySelector(".ir80-spotlight")'));
+  await until(()=>evaluate('!!document.querySelector(".ir80-guide-layer .ir88-figure.is-rendering")'),16000);
+  await check("guide-single-real-webgl-"+width,'document.querySelectorAll(".ir88-3d-canvas").length===1');
   await check("tour-step-"+width,'document.querySelector("#ir80-guide-title")?.textContent.includes("interests you")');
   await check("tour-modal-"+width,'document.querySelector(".ir80-guide-card").getAttribute("aria-modal")==="true"');
   await check("tour-inside-"+width,'(()=>{const r=document.querySelector(".ir80-guide-card").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1&&r.top>=0&&r.bottom<=innerHeight+1;})()');
