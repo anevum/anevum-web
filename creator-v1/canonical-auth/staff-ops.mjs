@@ -2,6 +2,7 @@
 // Protected, additive staff collaboration. Invitations are manual records,
 // never credentials, registration approvals or reviewer-role grants.
 import {boundedText} from './request-body.mjs';
+import {ownerControlLane} from './staff-owner-hub.mjs';
 
 export const STAFF_OPS_PATH='/api/v1/member/staff-ops';
 const HEAD={'content-type':'application/json; charset=utf-8','cache-control':'private, no-store','x-content-type-options':'nosniff'};
@@ -273,6 +274,8 @@ export async function canonicalStaffOps(req,env,user,now=Math.floor(Date.now()/1
  try{
   if(req.method==='POST')return postCommand(req,db,env,permit,now);
   if(req.method!=='GET')return fail(405,'Method not allowed');
+  if(new URL(req.url).searchParams.get('lane')?.startsWith('owner-'))
+   return ownerControlLane(req,db,permit);
   const url=new URL(req.url);
   if([...url.searchParams.keys()].some(k=>!['room','lane','after','member'].includes(k)||url.searchParams.getAll(k).length!==1))return fail(400,'Invalid query');
   const lane=url.searchParams.get('lane')||'snapshot';
