@@ -13,7 +13,9 @@ import canonicalWorker from '../web/a-canonical-stage.review.mjs';
 import {canonicalSpace} from '../canonical-auth/space.mjs';
 import {canonicalCommunity} from '../canonical-auth/community.mjs';
 
-const NOW=1792155000000,DAY=86400000,ORIGIN='https://a.anevum.com';
+// Keep the complete test suite's 72-hour supporter freshness window relative to
+// test execution. The original fixed 2026-10-16 clock expired on 2026-10-19.
+const NOW=Date.now(),DAY=86400000,ORIGIN='https://a.anevum.com';
 function setup(){
  const {db,env}=fixture();
  db.exec(readFileSync(new URL('../canonical-auth/migrations/0006_supporter_commerce.sql',import.meta.url),'utf8'));
