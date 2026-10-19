@@ -389,8 +389,9 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   }:null;
   const companionStyle:CSSProperties=safePosition
     ?{right:safePosition.right,bottom:safePosition.bottom}:{};
-  const panelRight=safePosition?.right??12;
-  const panelShift=Math.max(0,panelRight-(viewport.width-(isMobile?326:338)-10));
+  const panelWidth=Math.min(isMobile?326:338,viewport.width-(isMobile?22:24));
+  const panelRight=safePosition?.right??(isMobile?10:16);
+  const panelShift=Math.max(0,panelRight-(viewport.width-panelWidth-10));
   const helpStyle:CSSProperties=panelShift?{right:-panelShift}:{};
   const panelStyle:CSSProperties={};
   if(step&&!isMobile){
