@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import stage from "../web/a-staging-worker.mjs";
 const read=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
-test("V013 keeps the V012 public shell with closed canonical signup UI",()=>{
+test("V013 retains the public shell and canonical signup safety states",()=>{
   const app=read("web/src/App.tsx"),shell=read("web/src/components/Shell.tsx");
   for(const route of ["join","member","account/studio","create","account"])
     assert.ok(app.includes('path="'+route+'"'),route);
@@ -11,7 +11,10 @@ test("V013 keeps the V012 public shell with closed canonical signup UI",()=>{
   assert.doesNotMatch(app,/<AtlasMorphLayout\/>|<AtlasPage\/>|<WorkspacePage\/>/);
   assert.match(shell,/to="\/join"/);
   assert.match(shell,/canonicalMember\?"\/member":"\/join"/);
-  assert.match(read("web/src/pages/Phase1JoinPage.tsx"),/REGISTRATION CLOSED/);
+  const join=read("web/src/pages/Phase1JoinPage.tsx");
+  assert.match(join,/REGISTRATION PAUSED/);
+  assert.match(join,/SERVICE UNAVAILABLE/);
+  assert.doesNotMatch(join,/REGISTRATION CLOSED/);
   assert.match(read("web/src/lib/canonical-beta.ts"),/registration==="invite-only"/);
 });
 test("V013 read-only public staging cannot activate canonical auth or private uploads",async()=>{
