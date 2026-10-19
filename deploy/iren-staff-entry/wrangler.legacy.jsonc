@@ -1,0 +1,24 @@
+{
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  "name": "anevum-iren-legacy-command-entry-v001",
+  "main": "./src/legacy-command.mjs",
+  "compatibility_date": "2026-10-19",
+  "workers_dev": false,
+  "routes": [
+    {
+      "pattern": "anevum.com/staff/command",
+      "zone_name": "anevum.com"
+    },
+    {
+      "pattern": "anevum.com/staff/command/",
+      "zone_name": "anevum.com"
+    }
+  ],
+  "services": [
+    {
+      "binding": "LEGACY_STAFF",
+      "service": "anevum-iren-apex-staff-v002",
+      "environment": "production"
+    }
+  ]
+}
