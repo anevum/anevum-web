@@ -51,10 +51,10 @@ export default {
   const url=new URL(req.url);
   if(url.hostname!=="anevum.com"||!["/staff/projects","/staff/projects/","/staff/projects/api/manage","/staff/projects/api/review"].includes(url.pathname))
    return error(404,"Not found");
-  if(!env.DB||!env.AUTH)return error(503,"Staff workspace unavailable");
+  if(!env.DB||!env.AUTH)return showFailure(req,503,"STAFF_BINDINGS_UNAVAILABLE","Staff workspace temporarily unavailable","ANEVUM cannot verify the staff workspace service configuration. No project changes were made.");
   // Fail closed until an isolated worker has explicitly verified storage binding.
   // No project lifecycle or publication mutation is safe without this binding.
-  if(url.pathname.startsWith("/staff/projects/api/")&&!env.MEDIA)return error(503,"Staff media binding unavailable");
+  if(url.pathname.startsWith("/staff/projects/api/")&&!env.MEDIA)return showFailure(req,503,"STAFF_MEDIA_UNAVAILABLE","Staff media temporarily unavailable","Project publication and deletion are disabled until private media storage can be verified.");
   if((url.pathname==="/staff/projects/api/manage"||url.pathname==="/staff/projects/api/review")&&req.method!=="POST")return error(405,"Method not allowed");
   if(!["/staff/projects/api/manage","/staff/projects/api/review"].includes(url.pathname)&&!["GET","HEAD"].includes(req.method))return error(405,"Method not allowed");
   // Cloudflare Access is enforced by the Access application on /staff*.
