@@ -116,7 +116,12 @@ export async function permitCanonicalUserCreationApproved(env,email){
 export async function canonicalSchemaReady(env){
   if(!configured(env?.MEMBER_DB))return false;
   try{
-    const x=await env.MEMBER_DB.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all();
+    // Bound read volume to six required identity tables, not every D1 schema
+    // object. The issuer/migration check below remains independently required.
+    const x=await env.MEMBER_DB.prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name IN "+
+      "('user','session','account','verification','rateLimit','canonical_identity_manifest')"
+    ).all();
     if(x?.success===false||!Array.isArray(x?.results))return false;
     const tables=new Set(x.results.map(row=>row?.name).filter(x=>typeof x==="string"));
     if(!REQUIRED_CANONICAL_TABLES.every(name=>tables.has(name)) ||

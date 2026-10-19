@@ -75,6 +75,7 @@ async function request<T>(path:string,method:"GET"|"POST"|"PATCH"="GET",body?:un
 }
 export type CanonicalMethods={
   registration:"closed"|"invite-only"|"open";
+  availability?:"ready"|"unavailable"|"closed";
   linking:"disabled"|"explicit";
   methods:{email:{available:boolean};google:{available:boolean};github:{available:boolean};apple:{available:boolean};microsoft:{available:boolean};passkey:{available:boolean}};
 };
