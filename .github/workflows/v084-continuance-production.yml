@@ -1,3 +1,4 @@
+# V091 RC: staff transport is repaired in production; full experience release requires authenticated acceptance.
 # V091 release candidate: staff transport filename fix pinned; authenticated full release remains gated.
 name: ANEVUM V091 Guarded Continuance Experience Production
 on:
