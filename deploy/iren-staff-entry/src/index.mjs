@@ -65,7 +65,7 @@ export default {async fetch(request,env){
   const diag=new Response(JSON.stringify(body),{status:200,headers:{...HEAD,"content-type":"application/json; charset=utf-8"}});
   return request.method==="HEAD"?new Response(null,{status:diag.status,headers:diag.headers}):diag;
  }
- if(url.search&&url.search!=="?view=command")return new Response("Not found",{status:404,headers:HEAD});
+ if(url.search&&url.search!=="?view=command")return new Response(null,{status:302,headers:{...HEAD,location:"/staff"}});
  if(access.status==="verified"){
   if(url.search==="?view=command"){
     if(!env.COMMAND?.fetch)return html(503,"Command temporarily unavailable.","The staff command application could not be loaded. Use the Observatory to continue.");
