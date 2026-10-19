@@ -67,14 +67,6 @@ export default {
     if (url.origin!==ORIGIN || url.protocol!=="https:" || url.username || url.password)
       return new Response("Not found",{status:404});
 
-    if (url.pathname==="/__anevum_staff_access_binding_probe") {
-      if (request.method!=="GET") return new Response("Method not allowed",{status:405});
-      return Response.json({
-        upstream:typeof env?.UPSTREAM?.fetch==="function",
-        authentication:typeof env?.APEX_AUTH?.fetch==="function",
-        database:typeof env?.MEMBER_DB?.prepare==="function"
-      },{headers:{"cache-control":"no-store","x-robots-tag":"noindex"}});
-    }
     if (url.pathname===ROLE_PATH) {
       if (url.search) return failure(400,"Unexpected query");
       const answer=await roleFor(request,env);
