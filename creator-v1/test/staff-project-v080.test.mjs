@@ -29,14 +29,14 @@ test("malformed owner request is rejected before database access",async()=>{
  assert.equal(out.status,400);
 });
 test("missing lifecycle tables disables mutation path",async()=>{
- const db={prepare(){return {bind(){return {all:async()=>({success:true,results:[]})}}}}};
+ const db={prepare(){return {async all(){return {success:true,results:[]}},bind(){return this}}}};
  assert.equal(await controlSchemaReady(db),false);
  const out=await staffOwnerAction({DB:db},"owner-id","owner",{action:"delete",projectId:id});
  assert.equal(out.status,503);
 });
 test("reviewer inventory only requests pending records",async()=>{
  const statements=[];
- const db={prepare(sql){statements.push(sql);return {bind(){return {all:async()=>({success:true,results:[]})}}}}};
+ const db={prepare(sql){statements.push(sql);return {async all(){return {success:true,results:[]}},bind(){return this}}}};
  const result=await staffInventory(db,"reviewer");
  assert.deepEqual(result.projects,[]);
  assert.ok(statements[0].includes("WHERE p.status='pending_review'"));
