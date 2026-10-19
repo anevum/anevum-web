@@ -1,6 +1,7 @@
 import {useEffect,useState} from "react";
 import {canonicalAuthClient,canonicalMe,canonicalSpace} from "./canonical-beta";
 import type {PublicIdentity} from "../components/CompactMemberIdentity";
+import {useMemberRevalidation} from "./useMemberRevalidation";
 
 /**
  * The owner's actual verified player identity.
@@ -9,6 +10,7 @@ import type {PublicIdentity} from "../components/CompactMemberIdentity";
 export function useOwnPlayerCard(enabled=true):PublicIdentity|null {
   const {data:session}=canonicalAuthClient.useSession();
   const memberId=session?.user?.emailVerified===true?session.user.id:null;
+  const revision=useMemberRevalidation(memberId||undefined);
   const [current,setCurrent]=useState<{owner:string;card:PublicIdentity}|null>(null);
 
   useEffect(()=>{
@@ -24,6 +26,7 @@ export function useOwnPlayerCard(enabled=true):PublicIdentity|null {
           handle:profile.handle,
           displayName:profile.displayName,
           avatar:Boolean(space.media.avatar),
+          avatarVersion:space.media.avatar,
           level:space.showStats&&space.stats?space.stats.level:null,
           featuredAwards:space.featuredAwards||[],
           earnedBadges:space.earnedBadges,
@@ -41,6 +44,6 @@ export function useOwnPlayerCard(enabled=true):PublicIdentity|null {
       })
       .catch(()=>{if(active)setCurrent(null);});
     return()=>{active=false;controller.abort();};
-  },[enabled,memberId]);
+  },[enabled,memberId,revision]);
   return enabled&&memberId&&current?.owner===memberId?current.card:null;
 }
