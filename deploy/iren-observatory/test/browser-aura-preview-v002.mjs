@@ -19,6 +19,8 @@ const inject='<script>window.addEventListener("load",function(){'+
  'setTimeout(function(){'+
  'const select=document.querySelector("select[data-aura-member]");if(!select)return;'+
  'select.value="nebula";select.dispatchEvent(new Event("change",{bubbles:true}));'+
+ 'const panel=document.querySelector("[data-aura-preview]");'+
+ 'if(panel){panel.dataset.copyWidth=Math.round(panel.querySelector(".aura-copy").getBoundingClientRect().width);}'+
  'if(window.innerWidth<=720)select.scrollIntoView({block:"center",behavior:"instant"});'+
  '},280);},90);});</script>';
 const html=PAGE.replace('<body>','<body><div style="position:fixed;bottom:3px;left:3px;z-index:9999;pointer-events:none;border:1px solid #d9bb90;background:#07111fee;color:#f4dfbb;font:700 9px/1.3 monospace;padding:5px">SYNTHETIC FIXTURE - NOT PRODUCTION</div>')
@@ -64,6 +66,8 @@ async function capture(width,height){
  assert.match(result.stdout,/data-aura-preview="fixture-member"/,'member at '+width);
  assert.match(result.stdout,/data-aura="nebula"/,'aura selection at '+width);
  assert.match(result.stdout,/UNSAVED PREVIEW/,'pending status at '+width);
+ const copyWidth=result.stdout.match(/data-copy-width="([0-9]+)"/);
+ assert.ok(copyWidth&&Number(copyWidth[1])>=140,'aura explanation readable at '+width+'px, got '+(copyWidth?.[1]||'missing'));
  assert.match(result.stdout,/SYNTHETIC FIXTURE/,'fixture marker at '+width);
  assert.ok(statSync(screenshot).size>15000,'screenshot at '+width);
  writeFileSync(join(out,'staff-aura-'+width+'.dom.html'),result.stdout);
