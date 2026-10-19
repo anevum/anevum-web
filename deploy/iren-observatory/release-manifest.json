@@ -1,0 +1,10 @@
+{
+  "session": "ANEVUM.IREN.BUILD.2026-10-19.001.STAFF-ENGAGEMENT-OBSERVATORY",
+  "target": "anevum.com/staff/observatory",
+  "canonicalDatabase": "e1d29049-c83b-4534-8355-dc1fa36ba6d8",
+  "existingStaffWorker": "anevum-iren-apex-staff-v002",
+  "existingNavigationWorker": "anevum-staff-review-navigation-v001",
+  "isolation": "Standalone Worker; existing /staff and /staff/projects routes not replaced",
+  "safety": "Owner and reviewer validated through apex canonical auth per request; read-only analytics; owner-only audited aura changes; moderator grant/revoke uses existing staff API",
+  "rollback": "Remove only anevum.com/staff/observatory* route; preserve audit table and canonical DB"
+}
