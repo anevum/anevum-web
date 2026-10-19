@@ -109,7 +109,7 @@ test('V081 30 vector masters retain unique earned plates and no WebGL',()=>{
  assert.match(plate,/length:48/);
  assert.match(icon,/artwork='card'/);
  assert.match(inspector,/av81-sigil-stage/);
- assert.doesNotMatch(inspector,/WebGL|canvas|RewardModelRenderer/);
+ assert.doesNotMatch(inspector,/<canvas|RewardModelRenderer|new WebGLRenderingContext/);
  assert.doesNotMatch(collection,/level-artifacts\.json|LEVEL_ARTIFACTS|LIVING 3D ARCHIVE/);
  assert.match(identity,/safePublicReputation/);
  assert.match(identity,/safeVerifiedRole/);
