@@ -84,6 +84,8 @@ function validatedText(form) {
   if(typeof title!=="string"||typeof summary!=="string"||typeof category!=="string"
     ||title.trim().length<3||title.trim().length>100||summary.trim().length<10||summary.trim().length>500
     ||/[\x00-\x1f\x7f]/.test(title+summary)||!kinds.has(category)) throw new PackageError("Check the project name, description, and category");
+  if(form.get("rights_ack")!=="yes") throw new PackageError(
+    "Confirm that you own this project or have permission to publish all included code and media");
   return { title:title.trim(), summary:summary.trim(), category };
 }
 function validateHtml(b) {
@@ -201,6 +203,9 @@ async function upload(req,env,u) {
       "WHERE p.id=? AND p.owner_id=? AND p.draft_release_id=?"
     ).bind(releaseId,version,file.name,details.title,details.summary,details.category,
       archiveSHA,plan.bytes.byteLength,plan.expandedBytes,plan.entries.length,sourceKey,now,id,u.id,releaseId));
+    statements.push(env.DB.prepare(
+      "INSERT INTO anevum_package_rights_receipts(release_id,owner_id,attested_at,statement) VALUES(?,?,?,'creator_has_publication_rights_v1')"
+    ).bind(releaseId,u.id,now));
     // Atomic D1 batch: a lost optimistic-update race inserts no release.
     // Dependent asset inserts then fail foreign-key validation and roll back.
     const results=await env.DB.batch([...statements,...fileStatements]);
@@ -247,6 +252,10 @@ async function review(req,env,u,id) {
     return fail(422,"A rejection reason of 10–1000 characters is required");
   if(input.action==="publish") {
     if(!isolatedHost(env)) return fail(503,"Isolated player is not configured; publication is paused");
+    const rights=await query(env.DB,
+      "SELECT release_id FROM anevum_package_rights_receipts WHERE release_id=? AND owner_id=?",
+      release.id,p.owner_id);
+    if(!rights) return fail(422,"A creator rights declaration is required before publication");
     const asset=await query(env.DB,"SELECT object_key,bytes,sha256 FROM anevum_package_files WHERE release_id=? AND path='index.html'",release.id);
     const file=asset?await env.MEDIA.head(asset.object_key):null;
     if(!file||file.size!==asset.bytes||file.customMetadata?.sha256!==asset.sha256)
