@@ -96,7 +96,7 @@
  .ir-owner-title{padding:16px}
 }
 @media(max-width:900px){
- .ir-screen:has(.ir-owner-hub) .ir-nav{grid-template-columns:repeat(8,minmax(0,1fr))}
+ .ir-screen[data-owner="true"] .ir-nav{grid-template-columns:repeat(8,minmax(42px,1fr));overflow-x:auto;scrollbar-width:thin}
  .ir-owner-hub{gap:10px}
 }
 @media(max-width:600px){
