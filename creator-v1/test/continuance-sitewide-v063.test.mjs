@@ -6,6 +6,7 @@ const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const css=read('web/src/continuance-sitewide-v063.css');
 const entry=read('web/src/main.tsx');
 const alerts=read('web/src/components/AnevumNotifications.tsx');
+const scout=read('web/src/components/IrenGuidedContinuance.tsx');
 const collection=read('web/src/components/LevelCollection.tsx');
 const specimen=read('web/src/components/LevelEmblem.tsx');
 const instrument=read('web/src/pages/TheButtonPage.tsx');
@@ -35,7 +36,12 @@ test('V063 touches presentation only and retains accessibility fallbacks',()=>{
 });
 
 test('alerts and awards share the canonical 30-level progression',()=>{
-  assert.match(alerts,/aria-label=\{queue\.some\(n=>n\.serverId\)/);
+  // The permanent Updates dock was retired by V087. Server-authoritative
+  // recognition still feeds the single IREN scout and its unread indicator.
+  assert.match(alerts,/useIrenSignals/);
+  assert.match(alerts,/markSignalsSeen/);
+  assert.match(scout,/className="ir80-dock ir87-scout"/);
+  assert.doesNotMatch(alerts,/an-notification-center|an-inbox-toggle/);
   assert.doesNotMatch(alerts,/level:30,title:'Level 30 reached',detail:'ANEVUM'/);
   assert.match(alerts,/Visual notification sample. No award, XP or specimen revealed/);
   assert.doesNotMatch(instrument,/EXPLORE ALL 60 LEVEL ICONS/);
