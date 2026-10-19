@@ -25,6 +25,7 @@ test('member views revalidate and version photos without fake client progression
  const revalidation=read('web/src/lib/useMemberRevalidation.ts');
  const own=read('web/src/lib/useOwnPlayerCard.ts');
  const community=read('web/src/components/MemberCommunity.tsx');
+ const forums=read('web/src/pages/CanonicalForums.tsx');
  const publicWorld=read('web/src/pages/Phase1PublicMemberPage.tsx');
  const dashboard=read('web/src/components/MemberSpaceDashboard.tsx');
  const recognition=read('web/src/lib/player-recognition-api.ts');
@@ -34,6 +35,7 @@ test('member views revalidate and version photos without fake client progression
  assert.match(revalidation,/visibilitychange/);
  assert.match(own,/\[enabled,memberId,revision\]/);
  assert.match(community,/useMemberRevalidation/);
+ assert.match(forums,/useMemberRevalidation/);
  assert.match(publicWorld,/\[handle,revalidation\]/);
  assert.match(dashboard,/\[profile.handle,profile.revision,revalidation\]/);
  assert.match(recognition,/memberChanged\(owner\)/);
