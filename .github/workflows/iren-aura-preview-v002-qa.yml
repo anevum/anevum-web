@@ -43,7 +43,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          npm ci --ignore-scripts --no-audit --no-fund
+          npm install --ignore-scripts --no-audit --no-fund --no-save
           mkdir -p "$RUNNER_TEMP/iren-worker-dryrun"
           npx --no-install wrangler deploy --dry-run --config deploy/iren-observatory/wrangler.jsonc --outdir "$RUNNER_TEMP/iren-worker-dryrun"
           test -n "$(find "$RUNNER_TEMP/iren-worker-dryrun" -type f -size +2k -print -quit)"
