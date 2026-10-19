@@ -74,7 +74,9 @@ export function StatusPage(){
         <article key={item.name} className="v091-status-service" data-signal={item.signal}>
           <div className="v091-status-service-top"><h3>{item.name}</h3><span className="v091-status-chip">{item.state}</span></div>
           <p>{item.detail}</p>
-          <Link to={item.to}>{item.action} <span aria-hidden="true">↗</span></Link>
+          {item.to==="/staff"
+            ?<a href="/staff">{item.action} <span aria-hidden="true">↗</span></a>
+            :<Link to={item.to}>{item.action} <span aria-hidden="true">↗</span></Link>}
         </article>)}</div>
     </section>
     <p className="v091-status-note">Public counts are genuine, but do not include private drafts or unpublished projects. Account and Studio checks are read-only; this page neither opens access nor changes member records.</p>
