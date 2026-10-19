@@ -7,11 +7,17 @@ export const digest=source=>createHash('sha256').update(source.trimEnd()+'\n').d
 const stable=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b))):v);
 const routeLock=rows=>stable(rows.map(({pattern,script})=>({pattern,script})).sort((a,b)=>a.pattern.localeCompare(b.pattern)));
 const settingsLock=s=>stable(Object.fromEntries(['bindings','compatibility_date','compatibility_flags','usage_model','tags','tail_consumers','logpush','placement','observability'].filter(k=>k in s).map(k=>[k,k==='bindings'?[...s[k]].sort((a,b)=>a.name.localeCompare(b.name)):s[k]])));
-function moduleSource(multipart){
- if(typeof multipart!=='string')throw Error('Worker source must be multipart text');
- const start=multipart.indexOf('\r\n\r\n'),end=multipart.lastIndexOf('\r\n--');
- if(start<0||end<start||!multipart.slice(0,start).includes('name="index.mjs"'))throw Error('Unexpected Worker module layout');
- return multipart.slice(start+4,end);
+export function moduleSource(download){
+ if(typeof download!=='string')throw Error('Worker source must be text');
+ // A single-module download can be raw JavaScript or multipart, depending on
+ // content negotiation. The caller must still match the exact pinned hash.
+ if(!download.startsWith('--'))return download;
+ const boundary=download.split(/\r?\n/,1)[0];
+ const parts=download.split(boundary).slice(1).filter(p=>p.trim()&&p.trim()!=='--');
+ if(parts.length!==1)throw Error('Unexpected Worker module count');
+ const part=parts[0].replace(/^\r?\n/,''),separator=/\r?\n\r?\n/.exec(part);
+ if(!separator||!part.slice(0,separator.index).includes('name="index.mjs"'))throw Error('Unexpected Worker module layout');
+ return part.slice(separator.index+separator[0].length).replace(/\r?\n$/,'');
 }
 function currentVersion(value){
  const versions=value.deployments?.[0]?.versions;

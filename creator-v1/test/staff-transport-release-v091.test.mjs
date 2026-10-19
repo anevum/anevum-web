@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {repairStaffTransport,digest} from '../ops/v091-staff-transport.mjs';
+import {repairStaffTransport,digest,moduleSource} from '../ops/v091-staff-transport.mjs';
 const spec=JSON.parse(readFileSync(new URL('../operations/staff-transport-v091.json',import.meta.url),'utf8'));
 const candidate=w=>readFileSync(new URL('../operations/'+w.name+'.mjs',import.meta.url),'utf8');
 function original(w){let text=candidate(w);for(const e of [...w.source_edits].reverse()){
@@ -10,7 +10,7 @@ function original(w){let text=candidate(w);for(const e of [...w.source_edits].re
  text=text.slice(0,e.offset)+e.before+text.slice(e.offset+e.after.length);
 }return text;}
 const context={GITHUB_REPOSITORY:'anevum/anevum-web',GITHUB_REF:'refs/heads/release/v084-continuance-approved-20261019',GITHUB_WORKFLOW:'ANEVUM V091 Guarded Continuance Experience Production'};
-function fixture({drift=false,failAt=0}={}){
+function fixture({drift=false,failAt=0,format='multipart'}={}){
  const writes=[],states=new Map(spec.workers.map(w=>[w.name,{version:w.baseline_version,source:original(w)}]));
  const routes=Array.from({length:36},(_,i)=>({pattern:'anevum.com/fixture-'+i,script:'preserved'}));
  const settings={bindings:[{name:'APEX_AUTH',type:'service',service:'anevum-apex-prelaunch-gateway',environment:'production'},
@@ -24,7 +24,9 @@ function fixture({drift=false,failAt=0}={}){
   if(method==='GET'){
    if(path.endsWith('/settings'))return structuredClone(settings);
    if(path.endsWith('/deployments'))return {deployments:[{versions:[{version_id:drift?'unexpected':state.version,percentage:100}]}]};
-   return '--boundary\r\nContent-Disposition: form-data; name="index.mjs"\r\n\r\n'+state.source+'\r\n--boundary--\r\n';
+   if(format==='raw')return state.source;
+   const newline=format==='lf'?'\n':'\r\n';
+   return ['--boundary','Content-Disposition: form-data; name="index.mjs"','',state.source,'--boundary--',''].join(newline);
   }
   writes.push({method,path,body});
   if(method==='PUT'){
@@ -46,6 +48,15 @@ test('default preflight is read-only and source/version drift stops every produc
  const f=fixture();assert.equal((await repairStaffTransport(f.api)).status,'verified_read_only');assert.equal(f.writes.length,0);
  const drift=fixture({drift:true});await assert.rejects(()=>repairStaffTransport(drift.api,{apply:true,context}),/drift/);assert.equal(drift.writes.length,0);
  await assert.rejects(()=>repairStaffTransport(f.api,{apply:true,context:{}}),/guarded production workflow/);assert.equal(f.writes.length,0);
+});
+test('raw and multipart downloads retain exact hash checks and reject extra modules',async()=>{
+ for(const format of ['raw','multipart','lf']){
+  const f=fixture({format});assert.equal((await repairStaffTransport(f.api)).status,'verified_read_only');assert.equal(f.writes.length,0);
+ }
+ assert.throws(()=>moduleSource('--boundary\nContent-Disposition: form-data; name="index.mjs"\n\nfirst\n--boundary\nContent-Disposition: form-data; name="other.mjs"\n\nsecond\n--boundary--\n'),/module count/);
+ const f=fixture({format:'raw'});await assert.rejects(()=>repairStaffTransport(async(method,path,body)=>{
+  const data=await f.api(method,path,body);return method==='GET'&&!path.endsWith('/settings')&&!path.endsWith('/deployments')&&!path.endsWith('/routes')?data+'// unexpected source':data;
+ }),/source\/version drift/);assert.equal(f.writes.length,0);
 });
 test('guarded rollout preserves assets, bindings and routes and changes exactly the five scripts',async()=>{
  const f=fixture();assert.equal((await repairStaffTransport(f.api,{apply:true,context})).status,'repaired');
