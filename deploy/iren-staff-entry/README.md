@@ -53,3 +53,18 @@ An unsigned control probe returned `apexCookiePresent:false` and `canonicalSessi
 If signed-in access still fails, visit the diagnostic URL in that same browser and record the redacted status. Values such as `canonicalSession:verified` with `staffApi:http_401` identify a disagreement in the isolated staff API; `canonicalSession:not_signed_in` means this particular browser is not passing the expected canonical cookie. This is the remaining decisive acceptance test. Never request or share session cookies or verification codes.
 
 Two temporary support routes and their unbound Workers were withdrawn after testing: `/__anevum_iren_auth_probe_v001` and `/staff/access-check*`. Only the redacted session-status endpoint remains.
+
+## Live routing correction (2026-10-19, later incident)
+
+The originally released exact patterns `anevum.com/staff` and `anevum.com/staff/` did **not** intercept every staff URL. Cloudflare route matching includes query strings, so links with callback or other query parameters matched the existing broader `anevum.com/staff*` route, which still ran the obsolete IREN Command navigation adapter.
+
+After confirming `anevum-iren-staff-entry-v003` contains a dedicated `/staff/assets/` passthrough to the unchanged legacy navigation Worker, the wildcard **route mapping only** was updated:
+
+- Before: `anevum.com/staff*` → `anevum-iren-staff-navigation-v002`
+- After: `anevum.com/staff*` → `anevum-iren-staff-entry-v003`
+
+Exact Observatory (`/staff/observatory*`), project-review, community-review, and command routes remain more specific and were not changed. The v003 Worker normalizes unexpected `/staff` query parameters to the canonical staff URL without forwarding query values. Role verification and 401/403 behavior remain required. The original navigation Worker still exists as the `COMMAND` service binding.
+
+**Independent protection still present:** Cloudflare Access account application `ANEVUM IREN Staff UI - Authorized Operators` still covers the staff wildcard and staff API paths, with a separate one-hour Cloudflare login and a static allowlist. That app and its policies were *not* modified. This means single sign-on is **not yet achieved**; neither this route fix nor valid D1 owner grants automatically satisfy Cloudflare Access. An authenticated browser acceptance test through both layers is still required. Do not claim full signed-in access is fixed solely from Cloudflare route mappings.
+
+If the wildcard correction must be rolled back, restore only `anevum.com/staff*` to `anevum-iren-staff-navigation-v002`, keeping the exact routes unchanged; this restores the prior routing behavior. No member data changes are involved.
