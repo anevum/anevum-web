@@ -131,3 +131,20 @@
 .av81-contribute-link:where(:hover,:focus-visible){border-color:#d4efff;background:#223b5e}
 @media(max-width:440px){.av81-signal-track{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(forced-colors:active){.av81-signal-track>span,.av81-contribute-link{background:Canvas;border-color:CanvasText;color:CanvasText}}
+
+/* V081 visual review: keep the earned medallion distinct but subordinate to
+ * verified data, especially when text compresses on narrow viewports. */
+.av81-player-card .av78-featured-art{opacity:.4}
+.av81-player-card .av78-featured-art .level-emblem{width:min(205px,100%)!important;height:min(205px,100%)!important}
+.av81-player-card .av81-reputation-line small{text-shadow:0 1px 3px #040b19}
+.av81-player-card .av81-reputation-dossier{z-index:3}
+.av81-player-card .av81-reputation-dossier progress{position:relative;z-index:3}
+@media(max-width:740px){
+ .av81-player-card .av78-featured-art{opacity:.19}
+}
+@media(max-width:430px){
+ .av81-player-card .av78-featured-art{opacity:.095!important;width:38%!important;right:0}
+ .av81-player-card .av81-reputation-line{gap:2px 5px;flex-wrap:wrap}
+ .av81-player-card .av81-contribution-stats{gap:3px 7px}
+ .av81-player-card.av65-player-card--featured .av61-member-copy{padding-right:0}
+}

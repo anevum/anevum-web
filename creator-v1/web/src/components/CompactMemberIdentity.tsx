@@ -129,7 +129,8 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
    </span>}
    {reputation&&size==='featured'&&<span className="av81-reputation-dossier" aria-label={'Verified reputation '+reputation.score}>
     <span className="av81-reputation-line"><strong>CONTRIBUTION SIGNAL</strong>
-     <small>{reputation.nextAt===null?'HIGHEST AURA EARNED':(reputation.nextAt-reputation.score).toLocaleString()+' REP TO NEXT AURA'}</small></span>
+     <small>{reputation.nextAt===null?'HIGHEST AURA EARNED':(reputation.nextAt-reputation.score).toLocaleString()+' TO '+
+      (reputation.nextAt===40?'SIGNAL':reputation.nextAt===160?'ORBIT':reputation.nextAt===420?'NOVA':'ZENITH')}</small></span>
     <progress value={reputation.nextAt===null?1:reputation.score} max={reputation.nextAt??1}
      aria-label="Reputation progress to next earned aura"/>
     <span className="av81-contribution-stats">
