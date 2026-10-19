@@ -1,3 +1,4 @@
+# V091 release candidate: staff transport filename fix pinned; authenticated full release remains gated.
 name: ANEVUM V091 Guarded Continuance Experience Production
 on:
   push:
