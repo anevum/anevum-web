@@ -314,7 +314,7 @@ function CommandWorkspace({memberId}:{memberId:string}){
  const invited=invites.filter(x=>x.stage==='invited');
  const selectedMenu=menu.find(x=>x.id===pane)!;
  const memberHasAccess=Boolean(snapshot);
- return <section className="ir-screen" data-pane={pane} aria-label="IREN staff command portal">
+ return <section className="ir-screen" data-pane={pane} data-owner={snapshot?.role==='owner'?'true':'false'} aria-label="IREN staff command portal">
   <div className="ir-atmosphere" aria-hidden="true"/><div className="ir-scanner" aria-hidden="true"/>
   <header className="ir-header">
    <div className="ir-header-brand"><OrbitalMark className="ir-mark"/>
