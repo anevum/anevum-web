@@ -6,6 +6,7 @@ import {recognitionReady} from './recognition.mjs';
 const headers={'cache-control':'private, no-store','content-type':'application/json; charset=utf-8','x-content-type-options':'nosniff'};
 const json=(data,status=200)=>Response.json(data,{status,headers});
 const error=(status,message)=>json({error:message},status);
+const XP_TEST_AWARD=1000;
 const rows=async(db,sql,...args)=>{const r=await db.prepare(sql).bind(...args).all();if(r.success===false)throw Error('Storage unavailable');return r.results};
 export async function progressionReady(db){try{return (await rows(db,"SELECT name FROM sqlite_master WHERE type='table' AND name IN ('member_xp_events','member_reward_notifications','member_notification_receipts')")).length===3}catch{return false}}
 export function levelProgress(raw){
@@ -66,10 +67,10 @@ export async function canonicalProgression(req,env,user,now=Math.floor(Date.now(
    // Atomic per-member minute limit, fixed server XP and idempotent retries.
    const old=await db.prepare('SELECT id FROM member_xp_events WHERE user_id=? AND request_id=?').bind(user.id,v.requestId).first();
    let inserted=[];
-   if(!old)inserted=await rows(db,"INSERT INTO member_xp_events(user_id,request_id,source,amount,created_at) SELECT ?,?,'test_button',5,? WHERE (SELECT COUNT(*) FROM member_xp_events WHERE user_id=? AND created_at>?)<120 ON CONFLICT(user_id,request_id) DO NOTHING RETURNING id",user.id,v.requestId,now,user.id,now-60);
+   if(!old)inserted=await rows(db,"INSERT INTO member_xp_events(user_id,request_id,source,amount,created_at) SELECT ?,?,'test_button',?,? WHERE (SELECT COUNT(*) FROM member_xp_events WHERE user_id=? AND created_at>?)<120 ON CONFLICT(user_id,request_id) DO NOTHING RETURNING id",user.id,v.requestId,XP_TEST_AWARD,now,user.id,now-60);
    const saved=old||inserted[0]||await db.prepare('SELECT id FROM member_xp_events WHERE user_id=? AND request_id=?').bind(user.id,v.requestId).first();
    if(!saved)return error(429,'The button is cooling down. Try again in a minute.');
-   return json({awarded:inserted.length?5:0,progression:await syncRewardNotifications(db,user.id,now),replayed:!inserted.length});
+   return json({awarded:inserted.length?XP_TEST_AWARD:0,progression:await syncRewardNotifications(db,user.id,now),replayed:!inserted.length});
   }
   return error(405,'Method not allowed');
  }catch{return error(503,'Progression could not be confirmed. Retry the same press.');}
