@@ -138,6 +138,9 @@ function CommandWorkspace({memberId}:{memberId:string}){
  const [memberSearch,setMemberSearch]=useState('');
  const [memberError,setMemberError]=useState('');
  const [membersLoading,setMembersLoading]=useState(false);
+ const [inspectedRewards,setInspectedRewards]=useState<{grants:{kind:string;id:string;earnedAt:number}[];milestones:{id:string;earnedAt:number}[]}|null>(null);
+ const [inspectedMember,setInspectedMember]=useState('');
+ const [rewardFault,setRewardFault]=useState('');
  const [taskPriority,setTaskPriority]=useState('routine');
  const [penColor,setPenColor]=useState(colors[0]);
  const [penWidth,setPenWidth]=useState(2);
@@ -546,7 +549,22 @@ function CommandWorkspace({memberId}:{memberId:string}){
         <span className="ir-person-sigil">{m.name.charAt(0).toUpperCase()}</span>
         <div className="ir-record-copy"><strong>{m.name}</strong><small>{m.handle?'@'+m.handle:'PRIVATE HANDLE'} · {m.verified?'VERIFIED':'UNVERIFIED'} · {m.visibility.toUpperCase()}</small></div>
         <Badge label={m.staffRole?uppercase(m.staffRole):'MEMBER'} kind={m.staffRole?'active':'neutral'}/>
+        {m.verified?<button type="button" disabled={busy} onClick={()=>{
+         setInspectedMember(m.name);setInspectedRewards(null);setRewardFault('');
+         void staffRequest<{grants:{kind:string;id:string;earnedAt:number}[];milestones:{id:string;earnedAt:number}[]}>('GET',undefined,'lane=member-rewards&member='+encodeURIComponent(m.id))
+         .then(setInspectedRewards).catch(e=>setRewardFault(errorOf(e)));
+        }}>INSPECT REWARDS</button>:null}
        </article>)}</div>
+       {inspectedMember?<section className="ir-surface" aria-label="Read-only earned recognition">
+        <div className="ir-pane-heading"><span className="ir-kicker">EARNED RECORDS / {inspectedMember.toUpperCase()}</span><button type="button" onClick={()=>{setInspectedMember('');setInspectedRewards(null);setRewardFault('')}}>CLOSE</button></div>
+        {rewardFault?<p role="alert">{rewardFault}</p>:null}
+        {!rewardFault&&!inspectedRewards?<p role="status">Reading verified reward ledger…</p>:null}
+        {inspectedRewards?<div className="ir-record-list">
+         {[...inspectedRewards.milestones.map(x=>({kind:'MILESTONE',id:x.id,earnedAt:x.earnedAt})),...inspectedRewards.grants].map((r,i)=><article className="ir-record" key={r.kind+r.id+i}><div className="ir-record-copy"><strong>{r.id.replaceAll('_',' ')}</strong><small>{r.kind.toUpperCase()} · EARNED RECORD · {stamp(r.earnedAt)}</small></div></article>)}
+         {inspectedRewards.milestones.length+inspectedRewards.grants.length===0?<p>No verified reward records found.</p>:null}
+        </div>:null}
+        <p className="ir-hint">This inspector shows historical earned records, not unearned art, staff entitlements or direct award controls.</p>
+       </section>:null}
        <p className="ir-hint">Showing the newest 100. Grant or revoke staff access under Personnel; this directory does not issue rewards or XP.</p>
       </div>}
       {pane==='team'&&<div className="ir-list-module">
