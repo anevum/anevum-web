@@ -352,7 +352,8 @@ export function uploadScreen(projects,loggedIn,pilot,updateId){
         ['game','app','simulation','story'].map(x=>'<option value="'+x+'"'+(category===x?" selected":"")+'>'+({game:"Game",app:"Application",simulation:"Interactive simulation",story:"Interactive story"}[x])+'</option>').join("")+'</select></div>'+
         '<div class="full"><label for="summary">What does someone do in it?</label>'+
         '<textarea class="field" id="summary" name="summary" minlength="10" maxlength="500" placeholder="Describe what people can play, explore or use." required>'+initialSummary+'</textarea></div></div>'+
-        '<p class="file-form-note">Only upload work you have permission to share. The private build still requires independent content and security review.</p>'+
+        '<label class="review-confirm" for="rights-ack"><input id="rights-ack" type="checkbox" name="rights_ack" value="yes" required><span>I confirm that I own this project or have permission to publish its code, artwork, audio and other included files.</span></label>'+
+        '<p class="file-form-note">A creator rights declaration is required for every version. This does not replace independent moderation or security review.</p>'+
         '<div class="actions"><button type="submit" class="primary" id="upload-button">Prepare private playtest →</button></div>'+
         '<p class="status" id="activity" role="status" aria-live="polite" aria-atomic="true"></p></form>';
   const guide='<div class="ey">EXPORT INSTRUCTIONS</div><h2>Build once. Share here.</h2>'+
