@@ -1,6 +1,6 @@
-import type {EarnedBadge,BadgeDisplay,PublicDistinctions,PlayerAura,ConstellationIdentity} from './player-recognition';
+import type {EarnedBadge,BadgeDisplay,PublicDistinctions,PlayerAura,ConstellationIdentity,VerifiedRole,PublicReputation,ReputationTier} from './player-recognition';
 export type ForumAuthor={
- handle:string;displayName:string;avatar:boolean;avatarVersion?:number;level:number|null;featuredAwards:string[];earnedBadges?:EarnedBadge[];badgeDisplay?:BadgeDisplay;distinctions?:PublicDistinctions;aura?:PlayerAura;constellation?:ConstellationIdentity
+ handle:string;displayName:string;avatar:boolean;avatarVersion?:number;level:number|null;featuredAwards:string[];earnedBadges?:EarnedBadge[];badgeDisplay?:BadgeDisplay;distinctions?:PublicDistinctions;aura?:PlayerAura;constellation?:ConstellationIdentity;role?:VerifiedRole;reputation?:PublicReputation;earnedAura?:ReputationTier
 };
 export type ForumThread={
  id:string;topic:string;title:string;body:string;publishedAt:number;
