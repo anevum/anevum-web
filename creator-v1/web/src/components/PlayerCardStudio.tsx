@@ -78,6 +78,8 @@ export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:C
   featuredAwards:badgeIds,earnedBadges:badges,
   badgeDisplay:{mode:badgeMode,ids:badgeIds},
   distinctions:honor,aura,
+  role:space.role,reputation:space.showStats?space.reputation:undefined,
+  earnedAura:space.showStats?space.earnedAura:undefined,
   constellation:space.constellation,
   supporterAppearance:space.supporterAppearance,
   progress:space.showStats?space.stats:undefined
@@ -154,7 +156,7 @@ export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:C
     </>}
    </div>
    <div className="av65-studio-section"><div className="av65-studio-section-head">
-    <div><span>03 / AURA</span><h3>Your card's atmosphere.</h3></div><small>Cosmetic only</small>
+    <div><span>03 / PERSONAL ATMOSPHERE</span><h3>Choose your ambient aura.</h3></div><small>Cosmetic; earned auras and verified roles are separate</small>
    </div>
     <div className="av65-aura-options">{AURA_CHOICES.map(([id,name,detail])=>
      <button type="button" key={id} aria-pressed={aura===id} disabled={saving}
@@ -162,6 +164,16 @@ export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:C
        <span className="av65-aura-swatch" aria-hidden="true"/><strong>{name}</strong><small>{detail}</small>
      </button>
     )}</div>
+   </div>
+   <div className="av81-standing-panel" aria-label="Earned reputation and role status">
+    <div className="av65-studio-section-head"><div><span>04 / CONTRIBUTION SIGNAL</span><h3>Your standing changes as you contribute.</h3></div>
+     <small>Server-verified; never self-assigned</small></div>
+    {space.showStats&&space.reputation?<div className="av81-standing-data">
+     <strong>{space.reputation.score.toLocaleString()} REP</strong>
+     <span>THREADS {space.reputation.stats.discussions} · REPLIES {space.reputation.stats.replies} · PEERS {space.reputation.stats.appreciations} · MARKS {space.reputation.stats.badges}</span>
+     <small>{space.reputation.nextAt===null?'Highest activity aura earned':(space.reputation.nextAt-space.reputation.score)+' REP until your next aura'}</small>
+    </div>:<p className="av65-studio-note">Reputation appears when verified activity statistics are available and public stats visibility is enabled. No reputation is guessed from XP, account age, or test actions.</p>}
+    <p className="av81-standing-help">Published discussions, approved replies, distinct peer appreciation and verified badges contribute. Hidden content stops counting. The founder, moderator, administrator and curator halos require separately verified role grants; they cannot be selected here.</p>
    </div>
    <div className="av65-studio-end"><div>
     <strong>Constellations are the next extension.</strong>

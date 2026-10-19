@@ -7,11 +7,14 @@ import {SupporterIdentity} from './SupporterSeal';
 import type {SupporterAppearance,SpaceStats} from '../lib/canonical-beta';
 import {
  BADGE_CATALOG,selectFeaturedBadges,selectedDistinctions,safePlayerAura,safeConstellation,
- type EarnedBadge,type BadgeDisplay,type PublicDistinctions,type PlayerAura,type ConstellationIdentity
+ safePublicReputation,safeVerifiedRole,ROLE_LABELS,REPUTATION_LABELS,
+ type EarnedBadge,type BadgeDisplay,type PublicDistinctions,type PlayerAura,type ConstellationIdentity,
+ type VerifiedRole,type PublicReputation,type ReputationTier
 } from '../lib/player-recognition';
 import './member-identity-v061.css';
 import './player-card-v065.css';
 import './player-card-premium-v078.css';
+import './player-card-v081.css';
 
 /**
  * Universal player identity, v065.
@@ -35,6 +38,10 @@ export type PublicIdentity={
  aura?:PlayerAura;
  constellation?:ConstellationIdentity;
  supporterAppearance?:SupporterAppearance;
+ /** Strictly server-derived. Independent of preferred cosmetic aura and XP. */
+ role?:VerifiedRole;
+ reputation?:PublicReputation;
+ earnedAura?:ReputationTier;
  /** The canonical server may supply a current, visible earned level label and XP. */
  progress?:Pick<SpaceStats,'level'|'xp'|'levelStart'|'nextLevel'|'artifact'>;
 };
@@ -50,6 +57,11 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
  const {medal,ribbons}=selectedDistinctions(channel?undefined:member.distinctions);
  const aura=safePlayerAura(channel?'none':member.aura);
  const constellation=safeConstellation(channel?undefined:member.constellation);
+ const role=channel?null:safeVerifiedRole(member.role);
+ const reputation=channel?null:safePublicReputation(member.reputation);
+ // Effective earned treatment is derived from the verified score, never from
+ // a user-submitted appearance choice or an unverified creator channel.
+ const earnedAura:ReputationTier=reputation?.tier??'none';
  const url=href||'/@'+encodeURIComponent(member.handle);
  const label=[
   member.displayName+' @'+member.handle+(channel?' · Creator channel, not linked to a canonical member identity':''),
@@ -57,7 +69,9 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
   badges.length?badges.length+' earned badges: '+badges.map(id=>BADGE_CATALOG[id]?.name||cleanName(id)).join(', '):'',
   medal?'Medal: '+medal.name:'',
   ribbons.length?'Ribbons: '+ribbons.map(r=>r.name).join(', '):'',
-  constellation?'Constellation: '+constellation.name:''
+  constellation?'Constellation: '+constellation.name:'',
+  role?'Verified role: '+ROLE_LABELS[role]:'',
+  reputation?'Reputation: '+reputation.score+', '+REPUTATION_LABELS[earnedAura]+' tier':''
  ].filter(Boolean).join(' · ');
  // A featured card can show real progress only when the caller explicitly
  // provides the visibility-approved canonical member stats. No sample XP.
@@ -74,9 +88,13 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
  const amount=progress?.nextLevel===null?1:progress?Math.max(0,Math.min(maximum,progress.xp-progress.levelStart)):0;
  const levelTitle=progress&&typeof progress.artifact==='string'&&progress.artifact.length<=96&&progress.artifact.trim()?progress.artifact:null;
  const artworkHandle=href==='/member'?null:member.handle;
- const classNames='av61-identity av61-identity--'+size+' av65-player-card av65-player-card--'+size+' av78-player-card av65-aura--'+aura+(channel?' av65-player-card--channel':'')+(className?' '+className:'');
+ const classNames='av61-identity av61-identity--'+size+' av65-player-card av65-player-card--'+size+
+ ' av78-player-card av81-player-card av65-aura--'+aura+
+ ' av81-role--'+(role??'none')+' av81-earned--'+earnedAura+
+ (channel?' av65-player-card--channel':'')+(className?' '+className:'');
  const face=<>
   {aura!=='none'&&<span className="av65-aura-field" aria-hidden="true"/>}
+  {(role||earnedAura!=='none')&&<span className="av81-corona" aria-hidden="true"/>}
   {size==='featured'&&specimen&&<span className="av78-featured-art" aria-hidden="true">
    <LevelEmblem level={level!} artwork="card" size={184} handle={artworkHandle}/>
   </span>}
@@ -100,6 +118,26 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
     </span>}
    </span>
    <small className="av61-member-handle">@{member.handle}</small>
+   {(role||reputation)&&<span className="av81-standing" aria-label="Verified status">
+    {role&&<span className="av81-role-token" title={'Verified ANEVUM '+ROLE_LABELS[role]+' role'}>{ROLE_LABELS[role]}</span>}
+    {reputation&&<span className="av81-reputation-token" title={'Reputation is based on approved community activity · '+REPUTATION_LABELS[earnedAura]}>
+     <span aria-hidden="true">✦</span> {reputation.score.toLocaleString()} REP
+    </span>}
+    {reputation&&earnedAura!=='none'&&<span className="av81-earned-token" title="Activity-earned aura">
+      {REPUTATION_LABELS[earnedAura]} aura</span>}
+   </span>}
+   {reputation&&size==='featured'&&<span className="av81-reputation-dossier" aria-label={'Verified reputation '+reputation.score}>
+    <span className="av81-reputation-line"><strong>CONTRIBUTION SIGNAL</strong>
+     <small>{reputation.nextAt===null?'HIGHEST AURA EARNED':(reputation.nextAt-reputation.score).toLocaleString()+' REP TO NEXT AURA'}</small></span>
+    <progress value={reputation.nextAt===null?1:reputation.score} max={reputation.nextAt??1}
+     aria-label="Reputation progress to next earned aura"/>
+    <span className="av81-contribution-stats">
+     <span><b>{reputation.stats.discussions}</b> THREADS</span>
+     <span><b>{reputation.stats.replies}</b> REPLIES</span>
+     <span><b>{reputation.stats.appreciations}</b> PEERS</span>
+     <span><b>{reputation.stats.badges}</b> MARKS</span>
+    </span>
+   </span>}
    {progress&&<span className="av78-player-progress">
     <span className="av78-progress-caption"><strong>{progress.xp.toLocaleString()} XP</strong>
      <small>{progress.nextLevel===null?'MAX LEVEL REACHED':Math.max(0,progress.nextLevel-progress.xp).toLocaleString()+' XP TO NEXT LEVEL'}</small></span>
