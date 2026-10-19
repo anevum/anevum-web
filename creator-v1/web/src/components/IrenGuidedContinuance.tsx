@@ -389,11 +389,11 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
           <button type="button" className="ir87-back-help" onClick={()=>setActiveView("help")}>Back to guidance</button>
         </div>}
       </section>}
-      <button type="button" ref={dockRef} className="ir80-dock ir87-scout" aria-label={panelOpen?"Close IREN companion":"Open IREN companion"}
+      <button type="button" ref={dockRef} className="ir80-dock ir87-scout" aria-label={panelOpen?"Close IREN companion":"Open IREN companion"+(unreadCount>0?", "+unreadCount+" new signals":"")}
         aria-controls="ir87-panel" aria-expanded={panelOpen} title="IREN companion"
         onClick={()=>{setPanelOpen(open=>!open);}}>
         <IrenScout/>
-        {unreadCount>0&&<span className="ir87-unread" aria-label={unreadCount+" new signals"}>{unreadCount>9?"9+":unreadCount}</span>}
+        {unreadCount>0&&<span className="ir87-unread" aria-hidden="true">{unreadCount>9?"9+":unreadCount}</span>}
       </button>
     </div>}
     {step&&<div className="ir80-guide-layer" aria-label="IREN guided website tour">
