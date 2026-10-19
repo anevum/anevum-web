@@ -2,7 +2,7 @@ import { SCRIPT, STYLE } from "./ui.mjs";
 
 const ORIGIN = "https://anevum.com";
 const SCRIPT_PATH = "/__anevum_profile_staff_access_v001.js";
-const ROLE_PATH = "/api/v1/member/staff-access";
+const ROLE_PATH = "/__anevum_profile_staff_role_v001";
 const APP_PATH = /^\/(?:$|member(?:\/|$)|account(?:\/|$)|discover(?:\/|$)|community(?:\/|$)|creators(?:\/|$)|join(?:\/|$)|studio(?:\/|$)|create(?:\/|$)|library(?:\/|$)|saved(?:\/|$)|start(?:\/|$)|guide(?:\/|$)|boards(?:\/|$)|status(?:\/|$)|levels(?:\/|$)|recognition(?:\/|$)|support(?:\/|$)|settings(?:\/|$))/;
 const ROLES = new Set(["owner", "reviewer"]);
 const PRIVATE_HEADERS = {
