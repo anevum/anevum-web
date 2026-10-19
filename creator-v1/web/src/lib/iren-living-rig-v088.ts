@@ -307,7 +307,9 @@ export class IrenLivingRig{
    // Back stabilizer and articulated shoulder/forearm/hand assembly.
    this.draw("sphere",root,palette.steel,[side*.46,-.22,-.13],[.16,.27,.21],Rz(side*.22));
    const shoulder=chain(root,T(side*.51,-.11,.035));
-   const wave=excited?-side*1.2:greeting&&side===1?-1.35:guiding&&side===1?-1.18:
+   const pointingSide=this.look[0]<-.12?-1:1;
+   const wave=excited?-side*1.2:greeting&&side===1?-1.35:
+    guiding&&side===pointingSide?side*1.11:
     notifying&&side===1?-1.02:thinking&&side===1?-.66:
     curious&&side===1?-.35:side*.17;
    const swing=moving?Math.sin(t*(active?5:1.8)+side)*(greeting||excited?.12:.052):0;
