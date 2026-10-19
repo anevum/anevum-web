@@ -6,6 +6,7 @@ import {recognitionReady} from './recognition.mjs';
 const headers={'cache-control':'private, no-store','content-type':'application/json; charset=utf-8','x-content-type-options':'nosniff'};
 const json=(data,status=200)=>Response.json(data,{status,headers});
 const error=(status,message)=>json({error:message},status);
+const XP_TEST_AWARD=1000;
 const rows=async(db,sql,...args)=>{const r=await db.prepare(sql).bind(...args).all();if(r.success===false)throw Error('Storage unavailable');return r.results};
 export async function progressionReady(db){try{return (await rows(db,"SELECT name FROM sqlite_master WHERE type='table' AND name IN ('member_xp_events','member_reward_notifications','member_notification_receipts')")).length===3}catch{return false}}
 export function levelProgress(raw){
@@ -15,7 +16,7 @@ export function levelProgress(raw){
 }
 export async function readProgression(db,id){
  const earned=await rows(db,'SELECT milestone,earned_at FROM member_space_milestones WHERE user_id=?',id);
- const test=await db.prepare('SELECT COALESCE(SUM(amount),0) AS xp FROM member_xp_events WHERE user_id=?').bind(id).first();
+ const test=await db.prepare("SELECT COALESCE(SUM(CASE WHEN request_id LIKE 'v082:%' THEN 1000 ELSE amount END),0) AS xp FROM member_xp_events WHERE user_id=?").bind(id).first();
  const milestoneXp=MILESTONES.reduce((n,a)=>n+(earned.some(e=>e.milestone===a.id)?a.xp:0),0),testXp=Number(test?.xp)||0;
  return {...levelProgress(milestoneXp+testXp),testXp,milestoneXp,awards:MILESTONES.map(a=>({...a,earnedAt:earned.find(e=>e.milestone===a.id)?.earned_at??null}))};
 }
@@ -63,13 +64,16 @@ export async function canonicalProgression(req,env,user,now=Math.floor(Date.now(
   }
   if(path.endsWith('/xp-test')&&req.method==='POST'){
    const v=await body(req);if(!v||Object.keys(v).join(',')!=='requestId'||typeof v.requestId!=='string'||!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(v.requestId))return error(400,'Invalid button press');
-   // Atomic per-member minute limit, fixed server XP and idempotent retries.
-   const old=await db.prepare('SELECT id FROM member_xp_events WHERE user_id=? AND request_id=?').bind(user.id,v.requestId).first();
+   // Atomic per-member minute limit, fixed server XP and idempotent retries. The
+   // existing D1 schema keeps 5-point calibration rows; V082 request IDs mark
+   // new presses so progression can value one stored row as 1,000 test XP.
+   const storedRequestId='v082:'+v.requestId;
+   const old=await db.prepare('SELECT id FROM member_xp_events WHERE user_id=? AND request_id=?').bind(user.id,storedRequestId).first();
    let inserted=[];
-   if(!old)inserted=await rows(db,"INSERT INTO member_xp_events(user_id,request_id,source,amount,created_at) SELECT ?,?,'test_button',5,? WHERE (SELECT COUNT(*) FROM member_xp_events WHERE user_id=? AND created_at>?)<120 ON CONFLICT(user_id,request_id) DO NOTHING RETURNING id",user.id,v.requestId,now,user.id,now-60);
-   const saved=old||inserted[0]||await db.prepare('SELECT id FROM member_xp_events WHERE user_id=? AND request_id=?').bind(user.id,v.requestId).first();
+   if(!old)inserted=await rows(db,"INSERT INTO member_xp_events(user_id,request_id,source,amount,created_at) SELECT ?,?,'test_button',5,? WHERE (SELECT COUNT(*) FROM member_xp_events WHERE user_id=? AND created_at>?)<120 ON CONFLICT(user_id,request_id) DO NOTHING RETURNING id",user.id,storedRequestId,now,user.id,now-60);
+   const saved=old||inserted[0]||await db.prepare('SELECT id FROM member_xp_events WHERE user_id=? AND request_id=?').bind(user.id,storedRequestId).first();
    if(!saved)return error(429,'The button is cooling down. Try again in a minute.');
-   return json({awarded:inserted.length?5:0,progression:await syncRewardNotifications(db,user.id,now),replayed:!inserted.length});
+   return json({awarded:inserted.length?XP_TEST_AWARD:0,progression:await syncRewardNotifications(db,user.id,now),replayed:!inserted.length});
   }
   return error(405,'Method not allowed');
  }catch{return error(503,'Progression could not be confirmed. Retry the same press.');}
