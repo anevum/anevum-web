@@ -27,5 +27,15 @@ jobs:
           node --check lab/previews/worker.mjs
           node --check lab/previews/worker.test.mjs
           node --test lab/previews/worker.test.mjs
+      - name: Run real Chromium visual and interaction checks at 320px / 390px / 1440px
+        run: node lab/previews/browser-qa.mjs
+      - name: Preserve screenshot evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-lab-previews-v001-${{ github.run_id }}
+          path: test-artifacts/lab-previews/*.png
+          if-no-files-found: warn
+          retention-days: 14
       - name: Verify exact source identity
         run: git rev-parse HEAD
