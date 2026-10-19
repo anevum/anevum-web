@@ -490,6 +490,16 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     left:clamp(anchorX,8,Math.max(8,viewport.width-botWidth-8)),
     top:clamp(anchorY,60,Math.max(60,(isMobile?viewport.height*.44:viewport.height)-botHeight-15))
   };
+  // IREN's optical rig and active pointing arm aim at the actual highlighted
+  // site element, not a fixed decorative pose. No hidden DOM data is read.
+  const guideEyeX=spotlight?spotlight.left+spotlight.width*.5:viewport.width*.5;
+  const guideEyeY=spotlight?spotlight.top+spotlight.height*.5:viewport.height*.5;
+  const guideBotX=typeof guideBotStyle.left==="number"?guideBotStyle.left+botWidth*.5:viewport.width*.5;
+  const guideBotY=typeof guideBotStyle.top==="number"?guideBotStyle.top+botHeight*.5:viewport.height*.5;
+  const guideLook:readonly [number,number]=[
+    clamp((guideEyeX-guideBotX)/Math.max(135,viewport.width*.28),-1,1),
+    clamp((guideEyeY-guideBotY)/Math.max(125,viewport.height*.32),-1,1)
+  ];
   const beginDrag=(event:React.PointerEvent<HTMLButtonElement>)=>{
     if(event.pointerType==="mouse"&&event.button!==0)return;
     const bounds=event.currentTarget.getBoundingClientRect();
@@ -641,7 +651,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     {step&&<div className="ir80-guide-layer" aria-label="IREN guided website tour">
       {!embeddedGuideBot&&<div className="ir88-guide-bot" style={guideBotStyle} aria-hidden="true">
         <IrenLivingCanvas mood={guideTravelling?"travel":"guide"} expanded paused={motionPaused}
-          fallback={<IrenScout/>}/>
+          look={guideLook} fallback={<IrenScout/>}/>
       </div>}
       {spotlight?<><div className="ir80-shade" style={{left:0,top:0,width:"100%",height:spotlight.top}}/>
         <div className="ir80-shade" style={{left:0,top:spotlight.top+spotlight.height,width:"100%",bottom:0}}/>
@@ -654,7 +664,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
         <div className="ir80-guide-top">
           <span className={"ir80-guide-avatar"+(embeddedGuideBot?" ir88-guide-avatar":"")} aria-hidden="true">
             {embeddedGuideBot?<IrenLivingCanvas mood={guideTravelling?"travel":"guide"} expanded paused={motionPaused}
-              fallback={<IrenScout/>}/>:<OrbitalMark/>}
+              look={guideLook} fallback={<IrenScout/>}/>:<OrbitalMark/>}
           </span>
           <div><strong>IREN</strong><span>CONTINUANCE FIELD GUIDE</span></div>
           <button type="button" className="ir80-icon-button" aria-label="Close and resume tour later" onClick={()=>pause()}>
