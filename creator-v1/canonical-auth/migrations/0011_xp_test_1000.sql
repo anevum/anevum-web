@@ -3,7 +3,7 @@
 -- V082 test instrument to award 1,000 XP per confirmed press.
 -- This migration does not alter member accounts, milestone XP, badges, or permissions.
 
-BEGIN TRANSACTION;
+PRAGMA defer_foreign_keys = true;
 
 CREATE TABLE member_xp_events_v082 (
  id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,4 +24,3 @@ ALTER TABLE member_xp_events_v082 RENAME TO member_xp_events;
 
 CREATE INDEX member_xp_owner_time ON member_xp_events(user_id,created_at DESC);
 
-COMMIT;
