@@ -1,0 +1,250 @@
+name: ANEVUM V082 XP Test Hotfix Production
+
+on:
+  push:
+    branches:
+      - hotfix/v082-xp-test-1000-live-20261019
+    paths:
+      - .github/workflows/xp-test-v082-production.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-v082-xp-test-production
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      CLOUDFLARE_ACCOUNT_ID: 2f7ee83107240152097efd956a4e8335
+      MEMBER_DB_ID: e1d29049-c83b-4534-8355-dc1fa36ba6d8
+      WORKER_NAME: anevum-apex-prelaunch-gateway
+      LIVE_BASE_VERSION: df09d4b8-6d42-4cf3-a816-0c3c5682f947
+      PROD_SOURCE_BASE: 28b9dfe0d539385453e20f52604e30aaaf1e50fe
+    steps:
+      - name: Checkout exact hotfix source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Node runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Prove minimal scope from exact live V079 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "anevum/anevum-web"
+          test "$GITHUB_REF" = "refs/heads/hotfix/v082-xp-test-1000-live-20261019"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git merge-base "$PROD_SOURCE_BASE" HEAD)" = "$PROD_SOURCE_BASE"
+          git diff --name-only "$PROD_SOURCE_BASE" HEAD | sort > "$RUNNER_TEMP/v082-files.txt"
+          cat > "$RUNNER_TEMP/v082-expected.txt" <<'EOF'
+          .github/workflows/xp-test-v082-production.yml
+          creator-v1/canonical-auth/migrations/0011_xp_test_1000.sql
+          creator-v1/canonical-auth/progression.mjs
+          creator-v1/test/helpers/canonical-fixture.mjs
+          creator-v1/test/progression-browser-v031.mjs
+          creator-v1/test/progression-v031.test.mjs
+          creator-v1/web/src/pages/TheButtonPage.tsx
+          EOF
+          sed -i 's/^          //' "$RUNNER_TEMP/v082-expected.txt"
+          sort -o "$RUNNER_TEMP/v082-expected.txt" "$RUNNER_TEMP/v082-expected.txt"
+          diff -u "$RUNNER_TEMP/v082-expected.txt" "$RUNNER_TEMP/v082-files.txt"
+          grep -Fq "const XP_TEST_AWARD=1000;" creator-v1/canonical-auth/progression.mjs
+          grep -Fq "amount IN (5,1000)" creator-v1/canonical-auth/migrations/0011_xp_test_1000.sql
+          grep -Fq "+1,000 XP" creator-v1/web/src/pages/TheButtonPage.tsx
+
+      - name: Rebuild preserved Evolution assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install -q numpy==2.2.6 scipy==1.15.3 Pillow==11.2.1
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libgl1-mesa-dri
+          (
+            cd design/evolution-v059
+            mkdir -p artwork/{native,textures,vector,masters,web,compact} docs dist previews
+            python src/export_native.py
+            python src/render_web.py
+            python src/build.py
+          )
+          python creator-v1/ops/install-evolution-v060.py
+          test "$(find creator-v1/web/public/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+
+      - name: Build and verify the hotfix without live writes
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          node --test creator-v1/test/progression-v031.test.mjs
+          node --experimental-strip-types --test creator-v1/test/home-navigation-v079.test.mjs
+          node --test creator-v1/test/player-card-premium-v078.test.mjs
+          bundle="$(node --input-type=module -e 'import{readFileSync}from"node:fs";const s=readFileSync("creator-v1/dist/web/index.html","utf8");console.log(s.match(/src="(\/assets\/index-[^"]+\.js)"/)?.[1]||"")')"
+          test -n "$bundle"
+          grep -Fq '+1,000 XP' "creator-v1/dist/web$bundle"
+
+      - name: Lock current production Worker state
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          cf_api="https://api.cloudflare.com/client/v4"
+          cf() { curl --fail --silent --show-error --retry 2 --max-time 25 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$1"; }
+          cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$WORKER_NAME/deployments?per_page=3" > "$RUNNER_TEMP/pre-deployments.json"
+          pre_version="$(jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/pre-deployments.json")"
+          test "$pre_version" = "$LIVE_BASE_VERSION"
+          printf '%s' "$pre_version" > "$RUNNER_TEMP/pre-version.txt"
+          cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$WORKER_NAME/settings" > "$RUNNER_TEMP/pre-settings.json"
+          jq -e --arg db "$MEMBER_DB_ID" '
+            .success and
+            any(.result.bindings[]; .type=="assets" and .name=="ASSETS") and
+            any(.result.bindings[]; .type=="d1" and .name=="MEMBER_DB" and ((.database_id//.id)==$db)) and
+            any(.result.bindings[]; .type=="plain_text" and .name=="CANONICAL_XP_TEST_ENABLED" and .text=="true")
+          ' "$RUNNER_TEMP/pre-settings.json" >/dev/null
+          curl --fail --silent --show-error --retry 2 --max-time 25             -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN"             "https://api.cloudflare.com/client/v4/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes"             > "$RUNNER_TEMP/pre-routes.json"
+          jq -e '.success and (.result|length)==23' "$RUNNER_TEMP/pre-routes.json" >/dev/null
+          jq -S '[.result[]|{pattern,script}]|sort_by(.pattern)' "$RUNNER_TEMP/pre-routes.json" > "$RUNNER_TEMP/routes.lock.json"
+          jq -S '[.result.bindings[]|{name,type}]|sort_by(.name)' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/bindings.lock.json"
+          jq -S '[.result.bindings[]|select(.type=="d1")|{name,database:(.database_id//.id)}]|sort_by(.name)' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/db.lock.json"
+          jq -S '[.result.bindings[]|select(.type=="plain_text")|{name,text}]|sort_by(.name)' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/vars.lock.json"
+          jq -S '[.result.bindings[]|select(.type=="secret_text")|.name]|sort' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/secrets.lock.json"
+
+      - name: Record D1 recovery bookmark and widen only the test XP ledger
+        shell: bash
+        env:
+          CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_D1_TOKEN"
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/d1/database/$MEMBER_DB_ID"
+          auth=(-H "Authorization: Bearer $CLOUDFLARE_D1_TOKEN" -H "Content-Type: application/json")
+          curl --fail --silent --show-error --max-time 25 "${auth[@]}"             "$api/time_travel/bookmark" > "$RUNNER_TEMP/d1-bookmark.json"
+          jq -e '.success and (.result.bookmark|length)>0' "$RUNNER_TEMP/d1-bookmark.json" >/dev/null
+
+          jq -n '{sql:"SELECT sql FROM sqlite_master WHERE type=\"table\" AND name=\"member_xp_events\"; SELECT COUNT(*) AS events, COALESCE(SUM(amount),0) AS xp FROM member_xp_events;"}'             > "$RUNNER_TEMP/d1-before-body.json"
+          curl --fail --silent --show-error --max-time 25 "${auth[@]}"             -X POST --data @"$RUNNER_TEMP/d1-before-body.json" "$api/query" > "$RUNNER_TEMP/d1-before.json"
+          jq -e '.success and .result[0].success and .result[1].success and (.result[0].results[0].sql|contains("CHECK(amount=5)"))' "$RUNNER_TEMP/d1-before.json" >/dev/null
+          before_events="$(jq -r '.result[1].results[0].events' "$RUNNER_TEMP/d1-before.json")"
+          before_xp="$(jq -r '.result[1].results[0].xp' "$RUNNER_TEMP/d1-before.json")"
+
+          jq -n --rawfile sql creator-v1/canonical-auth/migrations/0011_xp_test_1000.sql '{sql:$sql}'             > "$RUNNER_TEMP/d1-migrate-body.json"
+          curl --fail --silent --show-error --max-time 30 "${auth[@]}"             -X POST --data @"$RUNNER_TEMP/d1-migrate-body.json" "$api/query" > "$RUNNER_TEMP/d1-migrate.json"
+          jq -e '.success and ([.result[]|select(.success!=true)]|length)==0' "$RUNNER_TEMP/d1-migrate.json" >/dev/null
+
+          jq -n '{sql:"SELECT sql FROM sqlite_master WHERE type=\"table\" AND name=\"member_xp_events\"; SELECT COUNT(*) AS events, COALESCE(SUM(amount),0) AS xp FROM member_xp_events; PRAGMA foreign_key_check;"}'             > "$RUNNER_TEMP/d1-after-body.json"
+          curl --fail --silent --show-error --max-time 25 "${auth[@]}"             -X POST --data @"$RUNNER_TEMP/d1-after-body.json" "$api/query" > "$RUNNER_TEMP/d1-after.json"
+          jq -e '.success and .result[0].success and .result[1].success and .result[2].success and (.result[0].results[0].sql|contains("amount IN (5,1000)")) and (.result[2].results|length)==0' "$RUNNER_TEMP/d1-after.json" >/dev/null
+          test "$(jq -r '.result[1].results[0].events' "$RUNNER_TEMP/d1-after.json")" = "$before_events"
+          test "$(jq -r '.result[1].results[0].xp' "$RUNNER_TEMP/d1-after.json")" = "$before_xp"
+          echo "V082_D1_TEST_XP_SCHEMA_AND_DATA_PRESERVED=PASS"
+
+      - name: Deploy exact hotfix while preserving live bindings, variables and routes
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          cf_api="https://api.cloudflare.com/client/v4"
+          cf() { curl --fail --silent --show-error --retry 2 --max-time 25 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$1"; }
+          node --input-type=module <<'NODE'
+          import {readFileSync,writeFileSync} from "node:fs";
+          const config=JSON.parse(readFileSync("creator-v1/wrangler.apex-prelaunch.jsonc","utf8"));
+          const live=JSON.parse(readFileSync(process.env.RUNNER_TEMP+"/pre-settings.json","utf8"));
+          if(config.name!=="anevum-apex-prelaunch-gateway"||config.routes.length!==0||config.assets?.binding!=="ASSETS"||config.assets?.run_worker_first!==true)throw Error("Unexpected hotfix deployment scope");
+          config.vars=Object.fromEntries(live.result.bindings.filter(x=>x.type==="plain_text").map(x=>[x.name,x.text]));
+          writeFileSync("creator-v1/wrangler.v082.generated.json",JSON.stringify(config,null,2));
+          NODE
+
+          pre_version="$(cat "$RUNNER_TEMP/pre-version.txt")"
+          deploy_started=0
+          accepted=0
+          revert() {
+            code=$?
+            trap - EXIT
+            if test "$deploy_started" = "1" && test "$accepted" != "1"; then
+              current="$(cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$WORKER_NAME/deployments?per_page=2" | jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' || true)"
+              if test -n "$current" && test "$current" != "$pre_version"; then
+                printf '{"strategy":"percentage","versions":[{"percentage":100,"version_id":"%s"}]}' "$pre_version" > "$RUNNER_TEMP/revert.json"
+                curl --fail --silent --show-error --max-time 40 -X POST                   -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json"                   -d @"$RUNNER_TEMP/revert.json"                   "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$WORKER_NAME/deployments" >/dev/null || true
+              fi
+            fi
+            exit "$code"
+          }
+          trap revert EXIT
+
+          deploy_started=1
+          npx wrangler deploy --config creator-v1/wrangler.v082.generated.json --keep-vars
+
+          cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$WORKER_NAME/settings" > "$RUNNER_TEMP/post-settings.json"
+          curl --fail --silent --show-error --retry 2 --max-time 25             -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN"             "https://api.cloudflare.com/client/v4/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes"             > "$RUNNER_TEMP/post-routes.json"
+          jq -S '[.result[]|{pattern,script}]|sort_by(.pattern)' "$RUNNER_TEMP/post-routes.json" > "$RUNNER_TEMP/post-routes.lock.json"
+          jq -S '[.result.bindings[]|{name,type}]|sort_by(.name)' "$RUNNER_TEMP/post-settings.json" > "$RUNNER_TEMP/post-bindings.lock.json"
+          jq -S '[.result.bindings[]|select(.type=="d1")|{name,database:(.database_id//.id)}]|sort_by(.name)' "$RUNNER_TEMP/post-settings.json" > "$RUNNER_TEMP/post-db.lock.json"
+          jq -S '[.result.bindings[]|select(.type=="plain_text")|{name,text}]|sort_by(.name)' "$RUNNER_TEMP/post-settings.json" > "$RUNNER_TEMP/post-vars.lock.json"
+          jq -S '[.result.bindings[]|select(.type=="secret_text")|.name]|sort' "$RUNNER_TEMP/post-settings.json" > "$RUNNER_TEMP/post-secrets.lock.json"
+          cmp "$RUNNER_TEMP/routes.lock.json" "$RUNNER_TEMP/post-routes.lock.json"
+          cmp "$RUNNER_TEMP/bindings.lock.json" "$RUNNER_TEMP/post-bindings.lock.json"
+          cmp "$RUNNER_TEMP/db.lock.json" "$RUNNER_TEMP/post-db.lock.json"
+          cmp "$RUNNER_TEMP/vars.lock.json" "$RUNNER_TEMP/post-vars.lock.json"
+          cmp "$RUNNER_TEMP/secrets.lock.json" "$RUNNER_TEMP/post-secrets.lock.json"
+
+          cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$WORKER_NAME/deployments?per_page=2" > "$RUNNER_TEMP/post-deployments.json"
+          new_version="$(jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/post-deployments.json")"
+          test -n "$new_version"
+          test "$new_version" != "$pre_version"
+
+          bundle="$(node --input-type=module -e 'import{readFileSync}from"node:fs";const s=readFileSync("creator-v1/dist/web/index.html","utf8");console.log(s.match(/src="(\/assets\/index-[^"]+\.js)"/)?.[1]||"")')"
+          test -n "$bundle"
+          ready=0
+          for attempt in $(seq 1 18); do
+            if curl --fail --silent --show-error --max-time 20 -o "$RUNNER_TEMP/live-asset.js" "https://anevum.com$bundle"; then
+              if node --input-type=module - "$RUNNER_TEMP/live-asset.js" "creator-v1/dist/web$bundle" <<'NODE'
+          import {readFileSync} from "node:fs";
+          const live=readFileSync(process.argv[2]),candidate=readFileSync(process.argv[3]);
+          process.exit(live.length>=candidate.length&&live.subarray(0,candidate.length).equals(candidate)?0:1);
+          NODE
+              then
+                ready=1
+                break
+              fi
+            fi
+            sleep 4
+          done
+          test "$ready" = 1
+          grep -Fq '+1,000 XP' "$RUNNER_TEMP/live-asset.js"
+
+          accepted=1
+          trap - EXIT
+          echo "ANEVUM_V082_XP_TEST_1000_LIVE=PASS" >> "$GITHUB_STEP_SUMMARY"
+          echo "HOTFIX_SOURCE_SHA=$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "WORKER_VERSION=$new_version" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Preserve V082 recovery evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v082-xp-hotfix-evidence
+          path: |
+            ${{ runner.temp }}/d1-bookmark.json
+            ${{ runner.temp }}/d1-before.json
+            ${{ runner.temp }}/d1-after.json
+            ${{ runner.temp }}/pre-deployments.json
+            ${{ runner.temp }}/post-deployments.json
+          retention-days: 21
+          if-no-files-found: warn
