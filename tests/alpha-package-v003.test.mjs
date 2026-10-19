@@ -85,7 +85,7 @@ function mockR2(){
   };
 }
 function setup(){
-  const env={DB:mockD1(),MEDIA:mockR2(),RUNTIME_HOST:"run-tests.example",PACKAGE_PREVIEW_KEY:"a".repeat(48),
+  const env={DB:mockD1(),MEDIA:mockR2(),RUNTIME_HOST:"run-tests.example",PACKAGE_PREVIEW_KEY:"a".repeat(48),PACKAGE_PUBLIC_PUBLISH_ENABLED:"true",
     PILOT_IDS:"owner-id",STAFF_IDS:"staff-id",
     AUTH:{async fetch(req){
       const v=req.headers.get("cookie")||"";
@@ -407,4 +407,28 @@ test("untrusted creator metadata is escaped in package catalogue and player",asy
     assert.match(mine,/&lt;img src=x onerror=alert\(1\)&gt;/);
     assert.doesNotMatch(mine,/<h3><img src=x/);
   } finally{env.DB.close();}
+});
+
+
+test("executable publication defaults OFF until an explicit guarded release flag is enabled",async()=>{
+  const env=setup();delete env.PACKAGE_PUBLIC_PUBLISH_ENABLED;
+  try {
+    const p=(await (await post(env,"/api/v1/packages/upload",uploadForm(sample()))).json());
+    assert.equal((await post(env,"/api/v1/packages/projects/"+p.id+"/submit",{})).status,200);
+    const disabled=await post(env,"/api/v1/packages/projects/"+p.id+"/review",{action:"publish"},"staff");
+    assert.equal(disabled.status,503);
+    assert.match((await disabled.json()).error,/security and release gates/);
+    assert.deepEqual((await (await getPage(env,"/api/v1/packages/projects")).json()).projects,[]);
+    env.PACKAGE_PUBLIC_PUBLISH_ENABLED="true";
+    assert.equal((await post(env,"/api/v1/packages/projects/"+p.id+"/review",{action:"publish"},"staff")).status,200);
+  } finally {env.DB.close();}
+});
+test("a missing player shows no submission or approval actions",async()=>{
+  const env=setup();env.RUNTIME_HOST="";
+  try {
+    const p=(await (await post(env,"/api/v1/packages/upload",uploadForm(sample()))).json());
+    const html=await (await getPage(env,"/play/v3/"+p.id+"?preview=1")).text();
+    assert.match(html,/Private playback is not configured/);
+    assert.doesNotMatch(html,/data-package-action="submit"/);
+  } finally {env.DB.close();}
 });
