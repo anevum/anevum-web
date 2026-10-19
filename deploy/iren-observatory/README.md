@@ -45,3 +45,13 @@ The bundled standalone release (separate ZIP artifact attached in ChatGPT) passe
 ## Remaining production checks
 
 Sign in as `devon@anevum.com`, open the staff portal, use the IREN dock and verify Overview, Members, Rewards and Moderation. Verify one reviewer sees only overview/moderation and receives HTTP 403 for the owner-only APIs. Finally confirm all existing project moderation actions work as before. Keep real aura grants unchanged until authenticated QA is complete.
+
+## V002 aura preview follow-on (source-only)
+
+Session: `ANEVUM.IREN.UPDATE.2026-10-19.002.AURA-ASSIGNMENT-PREVIEW`
+
+The Observatory's owner-only member directory now explains the six existing cosmetic aura presets and displays a live local preview when an owner changes a dropdown. Unchanged selections cannot be submitted; selecting a new aura shows an UNSAVED PREVIEW label, then requires the existing confirmation, version check and audited POST. The server remains the authority on owner access and legal aura identifiers. Responsive member cards at narrow widths replace the 1000px horizontal-only table experience. The Rewards distribution tab now labels aura types with creative affinity and appearance.
+
+This change does **not** grant sect membership, institution honors, staff access, XP, reputation or rewards. Aura IDs, D1 schema, app permissions and authentication APIs are unchanged. The descriptive labels intentionally mirror the companion V091 public Aura Codex (#557); those public and staff features have separate review paths.
+
+Source-only QA: `.github/workflows/iren-aura-preview-v002-qa.yml` runs Node UI-state/permission simulations, Worker syntax checks and synthetic Chromium desktop/phone captures at 320, 390, 1440 widths. Screenshots use fabricated data and are **not proof of live authenticated owner access**. Production Observatory activation requires the guarded Staff Worker release workflow, fresh staff-session smoke, binding verification, and a matching rollback checkpoint. Until those gates pass, the currently deployed Observatory remains unchanged by V002.

@@ -34,7 +34,7 @@ async function getStaff(request, env) {
     const identity = new Request(`${ORIGIN}/api/v1/member/auth/get-session`, {
       method: 'GET',
       headers: { cookie, accept: 'application/json' },
-      redirect: 'error',
+      redirect: 'manual',
       cache: 'no-store',
     });
     const result = await env.APEX_AUTH.fetch(identity);

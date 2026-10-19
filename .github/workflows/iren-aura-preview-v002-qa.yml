@@ -1,0 +1,56 @@
+name: IREN V002 / Owner Aura Preview and Mobile QA
+# Source-only verification. No deployment, Cloudflare credentials, D1 changes,
+# real accounts, staff grants, XP writes, or aura mutations.
+on:
+  push:
+    branches:
+      - feat/iren-observatory-aura-preview-20261019-002
+    paths:
+      - 'deploy/iren-observatory/**'
+      - '.github/workflows/iren-aura-preview-v002-qa.yml'
+  pull_request:
+    paths:
+      - 'deploy/iren-observatory/**'
+      - '.github/workflows/iren-aura-preview-v002-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  staff-aura-preview:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Parse Worker UI and verify owner-only aura contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check deploy/iren-observatory/src/index.mjs
+          node --check deploy/iren-observatory/src/ui.mjs
+          node --check deploy/iren-observatory/src/staff-navigation.mjs
+          node --check deploy/iren-observatory/test/browser-aura-preview-v002.mjs
+          node --test deploy/iren-observatory/test/aura-preview-v002.test.mjs
+          node --test deploy/iren-observatory/test/staff-transport-v002.test.mjs
+      - name: Synthetic responsive Chromium proof at 320, 390 and 1440px
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome" || { echo "::error::Chromium unavailable"; exit 1; }
+          mkdir -p "$RUNNER_TEMP/iren-aura"
+          node deploy/iren-observatory/test/browser-aura-preview-v002.mjs "$chrome" "$RUNNER_TEMP/iren-aura"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: iren-aura-preview-synthetic-viewport-QA
+          path: ${{ runner.temp }}/iren-aura/
+          if-no-files-found: warn
+          retention-days: 14
