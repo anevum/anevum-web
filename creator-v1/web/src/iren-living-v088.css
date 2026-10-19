@@ -31,6 +31,7 @@
 .ir88-companion-expanded .ir87-scout.ir80-dock .ir88-3d-canvas{border-radius:0}
 .ir88-companion-expanded .ir87-scout.ir80-dock .ir87-unread{top:17px;right:17px}
 .ir88-companion-expanded .ir87-panel.ir80-help{
+ box-sizing:border-box;
  bottom:174px;width:min(338px,calc(100vw - 24px));
  max-height:min(550px,calc(100dvh - 190px))
 }
