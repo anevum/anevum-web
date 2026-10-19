@@ -60,19 +60,19 @@ test('V078 profile shows only opted-in, authoritative XP; wall and forum cards r
  assert.match(member,/showStats:|const \[featured,setFeatured\]/);
  assert.doesNotMatch(page,/LEVEL_ARTIFACTS|shared\/level-artifacts\.json/);
 });
-test('V078 collectible stage uses existing earned 3D native renderer, not a mock model',()=>{
+test('V081 restores premium earned 2D emblem inspection with real authorized media',()=>{
  const inspector=read('web/src/components/RewardInspector.tsx');
  const css=read('web/src/earned-rewards-v075.css');
  const media=read('canonical-auth/reward-media.mjs');
  assert.doesNotThrow(()=>parseTsx(inspector));
- assert.match(inspector,/av78-reward-inspector--model/);
- assert.match(inspector,/new RewardModelRenderer\(element\)/);
- assert.match(inspector,/rewardModelBase\(reward\.level,handle\)/);
- assert.match(inspector,/native\.current\?\.rotate/);
- assert.match(inspector,/native\.current\?\.setZoom/);
- assert.match(inspector,/native\.current\?\.pause\(\)/);
- assert.match(css,/\.av78-reward-inspector--model \.av75-reward-controls/);
- assert.match(css,/@media\(max-width:690px\)/);
+ assert.match(inspector,/av81-reward-inspector--sigil/);
+ assert.match(inspector,/<LevelEmblem level=\{level!\} artwork="card"/);
+ assert.match(inspector,/setZoom/);
+ assert.match(inspector,/setAngle/);
+ assert.match(inspector,/setAnimate/);
+ assert.doesNotMatch(inspector,/RewardModelRenderer|<canvas/);
+ assert.match(css,/\.av81-reward-controls/);
+ assert.match(css,/@media\(max-width:620px\)/);
  assert.match(media,/readProgression\(env\.MEMBER_DB,ownerId\)/);
  assert.doesNotMatch(inspector,/model-viewer|fabricate|placeholder-sample/);
 });

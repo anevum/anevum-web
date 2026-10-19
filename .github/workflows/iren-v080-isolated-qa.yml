@@ -1,0 +1,69 @@
+name: ANEVUM IREN V080 Isolated Release Candidate QA
+on:
+  push:
+    branches:
+      - release/iren-guided-v080-isolated-20261018
+permissions:
+  contents: read
+concurrency:
+  group: iren-v080-release-candidate
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Typecheck and compile production/staging
+        run: |
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+      - name: IREN, V079 navigation, V078 earned artifacts, all public tests
+        working-directory: creator-v1
+        run: npm test
+      - name: Verify secure member integration
+        run: |
+          node --test creator-v1/auth/tests/*.test.mjs creator-v1/integration/*.test.mjs
+      - name: Browser interactions and responsive IREN screenshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$chrome"
+          mkdir -p evidence/iren-v080
+          node creator-v1/test/portal-offline-preview.mjs > evidence/iren-v080/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 70); do
+            if curl -fsS http://127.0.0.1:4178/__ready >/dev/null; then ready=1; break; fi
+            sleep 0.25
+          done
+          test "$ready" = 1
+          node creator-v1/test/capture-iren-guided-v080.mjs "$chrome" http://127.0.0.1:4178 evidence/iren-v080
+          test -s evidence/iren-v080/acceptance.json
+          test -s evidence/iren-v080/iren-discover-320.png
+          test -s evidence/iren-v080/iren-help-390.png
+      - name: Upload offline responsive IREN acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: iren-v080-browser-evidence
+          path: evidence/iren-v080/
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Preserve source SHA
+        run: git rev-parse HEAD
+# QA only. Never accesses Cloudflare credentials or production resources.

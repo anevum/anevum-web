@@ -1,0 +1,30 @@
+name: ANEVUM D1 Efficiency V081 Safety
+on:
+  pull_request:
+    paths:
+      - "creator-v1/canonical-auth/**"
+      - "creator-v1/test/d1-*.test.mjs"
+      - "creator-v1/package.json"
+      - ".github/workflows/d1-efficiency-v081-safety.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  db-and-identity-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install auth and fixture dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Verify Auth, D1 readiness, migration and progression source
+        run: |
+          node --check creator-v1/canonical-auth/worker.mjs
+          node --check creator-v1/canonical-auth/policy.mjs
+          node --check creator-v1/canonical-auth/profile.mjs
+          node --check creator-v1/canonical-auth/progression.mjs
+      - name: Test auth isolation, upgrade ledger and legacy progression
+        run: node --test creator-v1/test/d1-auth-cache-v081.test.mjs creator-v1/test/d1-xp-totals-v081.test.mjs creator-v1/test/progression-v031.test.mjs

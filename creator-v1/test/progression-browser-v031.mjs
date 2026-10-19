@@ -120,94 +120,34 @@ try{
  // Restore the real fixture session in a new process; the original authenticated
  // user and SQLite state remain unchanged while renderer memory is reclaimed.
  const preservedSession=await context.storageState();
- await context.close();
- await browser.close();
+ await context.close();await browser.close();
  browser=await launchBrowser();
  context=await browser.newContext({ignoreHTTPSErrors:true,viewport:{width:390,height:844},storageState:preservedSession});
  page=await context.newPage();
- // New progression: real fixed XP, a live level-up, persistent notices and artwork.
- await page.goto(base+'/thebutton',{waitUntil:'domcontentloaded'});await page.locator('.an-xp-button').waitFor();
- await until(async()=>await page.locator('.an-xp-button').isEnabled());
- // Observe the earned toast from before the XP sequence. WebKit can render
- // and dismiss it while later presses are still running: its absence at the
- // end of the sequence is not evidence that no notification was presented.
- await page.evaluate(()=>{
-   window.__anevumObservedLevel3=false;
-   const scan=()=>{for(const el of document.querySelectorAll('.an-toast-level')){
-     if((el.textContent||'').includes('Level 3 reached'))window.__anevumObservedLevel3=true;
-   }};
-   const observer=new MutationObserver(scan);
-   observer.observe(document.body,{childList:true,subtree:true,characterData:true});
-   scan();
+ // Signed-in member experience survives, but the XP test control and API do not.
+ await page.goto(base+'/member',{waitUntil:'domcontentloaded'});
+ await page.locator('.ms-dashboard').waitFor();
+ assert.equal(await page.locator('a[href="/thebutton"]').count(),0);
+ await page.goto(base+'/thebutton',{waitUntil:'domcontentloaded'});
+ await until(()=>new URL(page.url()).pathname==='/member');
+ await page.locator('.ms-dashboard').waitFor();
+ assert.equal(await page.locator('.an-xp-button').count(),0);
+ const forbiddenStatus=await page.evaluate(async()=>{
+  const r=await fetch('/api/v1/member/xp-test',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({requestId:crypto.randomUUID()})});
+  return r.status;
  });
+ assert.equal(forbiddenStatus,404);
  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM member_xp_events').get().n,0);
- for(let i=1;i<=13;i++){
-  await page.locator('.an-xp-button').click();
-  await until(()=>db.prepare('SELECT COUNT(*) AS n FROM member_xp_events').get().n===i);
-  await until(async()=>await page.locator('.an-xp-button').isEnabled());
- }
- await until(async()=>/100 XP/.test(await page.locator('.an-button-progress').innerText()));
- assert.match(await page.locator('.an-button-progress').innerText(),/Level 3/);
- async function drain(){
-   for(let i=0;i<32;i++){
-     const toast=page.locator('.an-toast');
-     if(!await toast.count())break;
-     const close=page.locator('.an-toast-open button');
-     if(await close.count())await close.click();else await delay(350);
-     await delay(100);
-   }
-   await until(async()=>await page.locator('.an-toast').count()===0,12000);
- }
- // The persisted level event and observed real animation are the assertion.
- // A temporary toast is not required to remain visible after thirteen presses.
- assert.equal(db.prepare("SELECT COUNT(*) AS n FROM member_reward_notifications WHERE kind='level' AND level=3").get().n,1);
- await until(()=>evaluate('window.__anevumObservedLevel3 === true'),20000);
- // Use a clearly labeled, non-awarding replay for repeatable viewport screenshots.
- await drain();
- await page.locator('.an-preview-controls button').filter({hasText:'PREVIEW LEVEL UP'}).click();
- await page.locator('.an-toast-level.an-toast-open').waitFor();
- assert.match(await page.locator('.an-toast-level').innerText(),/ANIMATION PREVIEW/);
- for(const [width,height] of [[1440,900],[390,844],[320,720]]){
-  await page.setViewportSize({width,height});await delay(80);
-  assert.equal(await evaluate('document.documentElement.scrollWidth>innerWidth+1'),false,'Button overflow '+width);
-  await page.screenshot({path:join(out,'xp-button-level-up-preview-'+width+'.png')});
- }
- await drain();
- await page.locator('.an-preview-controls button').filter({hasText:'PREVIEW MEDAL'}).click();
- await page.locator('.an-toast-award.an-toast-open').waitFor();
- assert.match(await page.locator('.an-toast-award').innerText(),/ANIMATION PREVIEW/);
- await page.screenshot({path:join(out,'medal-notification-'+engine+'.png')});
- await drain();
- await page.locator('.an-preview-controls button').filter({hasText:'PREVIEW UPDATE'}).click();
- await page.locator('.an-toast-info.an-toast-open').waitFor();
- // Let one complete flash-expand-hold-collapse cycle finish naturally.
- await page.locator('.an-toast-info').waitFor({state:'detached',timeout:9000});
- assert.equal(db.prepare('SELECT SUM(amount) AS n FROM member_xp_events').get().n,65);
- await page.reload();await until(async()=>/100 XP/.test(await page.locator('.an-button-progress').innerText()));
- await page.locator('.an-inbox-toggle').click();await page.locator('.an-history').waitFor();
- assert.match(await page.locator('.an-history').innerText(),/Level 3 reached/);
- await page.locator('.an-history header button').click();
- // Capture the animated card collection in stable reduced-motion mode.
- // Moving emblems never become Playwright-stable scroll targets otherwise.
- await page.emulateMedia({reducedMotion:'reduce'});
- await page.goto(base+'/levels');await wait('.an-artifact-card');
- assert.equal(await page.locator('.an-artifact-card').count(),60);
  for(const [width,height] of [[1440,900],[390,844],[320,720]]){
   await page.setViewportSize({width,height});await delay(100);
-  assert.equal(await evaluate('document.documentElement.scrollWidth>innerWidth+1'),false,'Collection overflow '+width);
-  // Force lazy images into view before checking every original SVG.
-  const icons=page.locator('.an-artifact-card .level-emblem');
-  for(let i=0;i<60;i++){await icons.nth(i).scrollIntoViewIfNeeded()}
-  await until(()=>evaluate(`[...document.querySelectorAll('.an-artifact-card img')].every(i=>i.complete&&i.naturalWidth>0)`));
-  await page.locator('.an-series').screenshot({path:join(out,'level-collection-'+width+'.png')});
+  assert.equal(await evaluate('document.documentElement.scrollWidth>innerWidth+1'),false,'Member overflow '+width);
+  await page.screenshot({path:join(out,'xp-test-retired-member-'+width+'.png')});
  }
- await page.emulateMedia({reducedMotion:'reduce'});
- await page.goto(base+'/thebutton');await page.locator('.an-preview-controls button').filter({hasText:'PREVIEW LEVEL UP'}).click();
- await page.locator('.an-toast-level.an-toast-open').waitFor();
- assert.equal(await page.locator('.an-toast-mark').evaluate(el=>getComputedStyle(el).animationName),'none');
- await page.screenshot({path:join(out,'reduced-motion-level-up.png')});
- Object.assign(results,{fixedXpPresses:13,persistedTestXp:65,totalXp:100,level:3,sixtyIconsLoaded:true,notificationHistory:true,fullAnimationCycle:true,reducedMotion:true});
- writeFileSync(join(out,'acceptance.json'),JSON.stringify(results,null,2));console.log('BROWSER_LEVELS_AWARDS_XP_NOTIFICATIONS_AND_SIXTY_ICONS=PASS');
+ await page.goto(base+'/levels');await page.locator('main').waitFor();
+ assert.equal(await page.locator('.an-xp-button').count(),0);
+ Object.assign(results,{xpTestPageRedirected:true,xpTestLinkRemoved:true,xpAwardEndpoint404:true,xpEventWrites:0,existingProgressionPreserved:true});
+ writeFileSync(join(out,'acceptance.json'),JSON.stringify(results,null,2));
+ console.log('BROWSER_XP_TEST_RETIRED_NO_WRITES_AND_MEMBER_EXPERIENCE=PASS');
 }catch(error){
  if(page){const state=await page.evaluate('({url:location.pathname+location.hash,text:document.body.innerText.slice(-5000)})').catch(()=>null);console.error('BROWSER_FAILURE_STATE='+JSON.stringify(state));await page.screenshot({path:join(out,'failure.png')}).catch(()=>{});}
  throw error;

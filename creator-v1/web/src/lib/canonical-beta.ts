@@ -2,7 +2,7 @@
 // No JWT/localStorage session material, cross-origin proxy or Creator V1 OTP
 // identity. Server decides the account ID for all mutation paths.
 import {alertAccount,memberChanged,notify} from './ui-events';
-import type {EarnedBadge,BadgeDisplay,PublicDistinctions,PlayerAura,ConstellationIdentity} from './player-recognition';
+import type {EarnedBadge,BadgeDisplay,PublicDistinctions,PlayerAura,ConstellationIdentity,PublicReputation,VerifiedRole,ReputationTier} from './player-recognition';
 import {createAuthClient} from "better-auth/react";
 import {emailOTPClient} from "better-auth/client/plugins";
 export const canonicalAuthClient=createAuthClient({
@@ -75,6 +75,7 @@ async function request<T>(path:string,method:"GET"|"POST"|"PATCH"="GET",body?:un
 }
 export type CanonicalMethods={
   registration:"closed"|"invite-only"|"open";
+  availability?:"ready"|"unavailable"|"closed";
   linking:"disabled"|"explicit";
   methods:{email:{available:boolean};google:{available:boolean};github:{available:boolean};apple:{available:boolean};microsoft:{available:boolean};passkey:{available:boolean}};
 };
@@ -99,7 +100,7 @@ export const canonicalPublic=(handle:string,signal?:AbortSignal)=>
 export type SpaceAward={id:string;name:string;detail:string;xp:number;symbol:string;earnedAt:number|null};
 export type SpaceStats={wallPosts:number;awards:number;xp:number;level:number;levelStart:number;nextLevel:number|null;testXp?:number;artifact?:string|null};
 export type SupporterAppearance={seal:'signal'|'orbit'|'constellation'|'continuance';frame:'orbital'|'rose'|'lumen'|'stellar'|'continuance';aura:'aurora'|'eclipse'|'ember'|'nebula'|'transcosmic'};
-export type MemberSpace={supporter?:boolean;supporterAppearance?:SupporterAppearance;media:{avatar?:number;banner?:number};awards:SpaceAward[];featuredAwards:string[];earnedBadges?:EarnedBadge[];badgeDisplay?:BadgeDisplay;distinctions?:PublicDistinctions;aura?:PlayerAura;constellation?:ConstellationIdentity;showStats:boolean;revision:number;stats?:SpaceStats};
+export type MemberSpace={supporter?:boolean;supporterAppearance?:SupporterAppearance;role?:VerifiedRole;reputation?:PublicReputation;earnedAura?:ReputationTier;media:{avatar?:number;banner?:number};awards:SpaceAward[];featuredAwards:string[];earnedBadges?:EarnedBadge[];badgeDisplay?:BadgeDisplay;distinctions?:PublicDistinctions;aura?:PlayerAura;constellation?:ConstellationIdentity;showStats:boolean;revision:number;stats?:SpaceStats};
 export type WallEntry={id:string;body:string;createdAt:number;updatedAt:number;revision:number};
 export async function spaceRequest<T>(path:string,method="GET",body?:unknown,signal?:AbortSignal):Promise<T>{
  const owner=alertAccount();

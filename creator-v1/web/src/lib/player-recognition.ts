@@ -97,3 +97,45 @@ export function safeConstellation(input:ConstellationIdentity|undefined):Constel
  if(!input||!(/^[a-z][a-z0-9-]{2,39}$/).test(input.slug)||input.name.trim().length<2||input.name.length>60)return null;
  return {slug:input.slug,name:input.name,emblem:/^[a-z][a-z0-9_-]{1,32}$/.test(input.emblem)?input.emblem:'orbit'};
 }
+
+/** Public provenance-only decoration. No user-editable route can grant these. */
+export type VerifiedRole='founder'|'administrator'|'moderator'|'curator';
+export type ReputationTier='none'|'signal'|'orbit'|'nova'|'zenith';
+export type PublicReputation={
+ score:number;tier:ReputationTier;nextAt:number|null;
+ stats:{discussions:number;replies:number;appreciations:number;badges:number};
+};
+export const ROLE_LABELS:Readonly<Record<VerifiedRole,string>>={
+ founder:'Founder',administrator:'Administrator',moderator:'Moderator',curator:'Curator'
+};
+export const REPUTATION_LABELS:Readonly<Record<ReputationTier,string>>={
+ none:'New signal',signal:'Signal',orbit:'Orbit',nova:'Nova',zenith:'Zenith'
+};
+export function safeVerifiedRole(input:unknown):VerifiedRole|null{
+ return typeof input==='string'&&Object.hasOwn(ROLE_LABELS,input)?input as VerifiedRole:null;
+}
+/** Ensure the presentation does not display corrupted or fabricated-looking
+ * numbers if a partial/older API response reaches the card. */
+export function safePublicReputation(input:unknown):PublicReputation|null{
+ if(!input||typeof input!=='object')return null;
+ const p=input as Partial<PublicReputation>,s=p.stats;
+ if(!s||typeof s!=='object')return null;
+ const counts=[s.discussions,s.replies,s.appreciations,s.badges];
+ if(!counts.every((x,i)=>typeof x==='number'&&Number.isSafeInteger(x)&&x>=0&&
+   x<=[40,80,60,20][i]))return null;
+ const expected=Math.min(1800,16*Math.min(s.discussions!,40)+4*Math.min(s.replies!,80)+
+  3*Math.min(s.appreciations!,60)+10*Math.min(s.badges!,20));
+ const tier:ReputationTier=expected>=900?'zenith':expected>=420?'nova':expected>=160?'orbit':expected>=40?'signal':'none';
+ const nextAt=[40,160,420,900].find(n=>expected<n)??null;
+ if(p.score!==expected||p.tier!==tier||p.nextAt!==nextAt)return null;
+ return p as PublicReputation;
+}
+
+/** At or above the credit limit, the display means "at least N" and does
+ * not pretend these are full account lifetime totals.
+ */
+export const REP_CREDIT_LIMITS={discussions:40,replies:80,appreciations:60,badges:20} as const;
+export function creditedContributionCount(value:number,kind:keyof typeof REP_CREDIT_LIMITS){
+ const cap=REP_CREDIT_LIMITS[kind];
+ return value>=cap?String(cap)+'+':String(value);
+}
