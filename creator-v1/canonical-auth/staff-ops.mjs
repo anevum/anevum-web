@@ -308,7 +308,7 @@ export async function canonicalStaffOps(req,env,user,now=Math.floor(Date.now()/1
    if(permit.role!=='owner')return fail(403,'Owner authorization required');
    if(url.searchParams.has('room')||url.searchParams.has('after')||url.searchParams.has('member'))return fail(400,'Invalid query');
    const q=(url.searchParams.get('q')||'').trim(),pageRaw=url.searchParams.get('page')||'0';
-   if(q.length>64||(q.length>0&&q.length<2)||CONTROL.test(q)||!/^\\d{1,3}$/.test(pageRaw))return fail(400,'Invalid directory search');
+   if(q.length>64||(q.length>0&&q.length<2)||CONTROL.test(q)||!/^\d{1,3}$/.test(pageRaw))return fail(400,'Invalid directory search');
    const page=Number(pageRaw);
    if(!Number.isSafeInteger(page)||page>100)return fail(400,'Invalid directory page');
    const pattern='%'+q.replace(/[\\%_]/g,m=>'\\'+m)+'%';
