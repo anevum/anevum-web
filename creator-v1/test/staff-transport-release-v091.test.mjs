@@ -26,11 +26,13 @@ function fixture({drift=false,failAt=0,format='multipart'}={}){
    if(path.endsWith('/deployments'))return {deployments:[{versions:[{version_id:drift?'unexpected':state.version,percentage:100}]}]};
    if(format==='raw')return state.source;
    const newline=format==='lf'?'\n':'\r\n';
-   return ['--boundary','Content-Disposition: form-data; name="index.mjs"','',state.source,'--boundary--',''].join(newline);
+   const moduleName=name==='anevum-iren-apex-staff-v002'?'worker.js':'index.mjs';
+   return ['--boundary','Content-Disposition: form-data; name="'+moduleName+'"','',state.source,'--boundary--',''].join(newline);
   }
   writes.push({method,path,body});
   if(method==='PUT'){
    assert.equal(body.metadata.keep_assets,true);assert.deepEqual(body.metadata.bindings,settings.bindings);
+   assert.equal(body.metadata.main_module,name==='anevum-iren-apex-staff-v002'?'worker.js':'index.mjs');
    state.source=body.source;state.version='repaired-'+name;
    if(writes.filter(w=>w.method==='PUT').length===failAt)throw Error('Transport failed after upload');
   }else{
@@ -54,6 +56,8 @@ test('raw and multipart downloads retain exact hash checks and reject extra modu
   const f=fixture({format});assert.equal((await repairStaffTransport(f.api)).status,'verified_read_only');assert.equal(f.writes.length,0);
  }
  assert.throws(()=>moduleSource('--boundary\nContent-Disposition: form-data; name="index.mjs"\n\nfirst\n--boundary\nContent-Disposition: form-data; name="other.mjs"\n\nsecond\n--boundary--\n'),/module count/);
+ assert.throws(()=>moduleSource('--boundary\nContent-Disposition: form-data; name="worker.js"\n\nsource\n--boundary--\n'),/module layout/);
+ assert.equal(moduleSource('--boundary\nContent-Disposition: form-data; name="worker.js"\n\nsource\n--boundary--\n','worker.js'),'source');
  const f=fixture({format:'raw'});await assert.rejects(()=>repairStaffTransport(async(method,path,body)=>{
   const data=await f.api(method,path,body);return method==='GET'&&!path.endsWith('/settings')&&!path.endsWith('/deployments')&&!path.endsWith('/routes')?data+'// unexpected source':data;
  }),/source\/version drift/);assert.equal(f.writes.length,0);
@@ -61,6 +65,8 @@ test('raw and multipart downloads retain exact hash checks and reject extra modu
 test('guarded rollout preserves assets, bindings and routes and changes exactly the five scripts',async()=>{
  const f=fixture();assert.equal((await repairStaffTransport(f.api,{apply:true,context})).status,'repaired');
  assert.equal(f.writes.length,5);assert.ok(f.writes.every(w=>w.method==='PUT'));
+ assert.equal(f.writes.filter(w=>w.body.metadata.main_module==='worker.js').length,1);
+ assert.equal(f.writes.filter(w=>w.body.metadata.main_module==='index.mjs').length,4);
  for(const w of spec.workers)assert.equal(digest(f.states.get(w.name).source),w.candidate_sha256);
 });
 test('failure after an upload restores every attempted Worker to its recorded baseline',async()=>{
