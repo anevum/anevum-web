@@ -51,6 +51,33 @@ test('directory uses literal search, interest filters and bounded stable paginat
  }finally{db.close()}
 });
 
+test('same display name stays bound to independent canonical handles, XP and media revisions',async()=>{
+ const {db,env}=fixture();
+ try{
+  seed(db,'a','jackson_one');seed(db,'b','jackson_two');
+  db.prepare("UPDATE member_creator_profiles SET display_name='Jackson' WHERE user_id IN ('a','b')").run();
+  db.prepare("INSERT INTO member_space_media(user_id,slot,data,version,updated_at) VALUES('a','avatar',X'FFD8FFD9',1,100)").run();
+  for(let i=0;i<15;i++)
+   db.prepare("INSERT INTO member_xp_events(user_id,request_id,source,amount,created_at) VALUES(?,?,'test_button',5,1000)").run('a',crypto.randomUUID());
+  const initial=await (await worker.fetch(get('/api/v1/community/members'),env)).json();
+  assert.equal(initial.items.length,2);
+  const first=initial.items.find(item=>item.handle==='jackson_one');
+  const second=initial.items.find(item=>item.handle==='jackson_two');
+  assert.equal(first.displayName,'Jackson');assert.equal(second.displayName,'Jackson');
+  assert.equal(first.avatar,true);assert.equal(first.avatarVersion,1);
+  assert.equal(second.avatar,false);assert.equal(second.avatarVersion,undefined);
+  assert.ok(first.level>second.level,'XP must be scoped to the verified member, never their shared name');
+  db.prepare("UPDATE member_space_media SET version=version+1 WHERE user_id='a' AND slot='avatar'").run();
+  db.prepare("UPDATE member_creator_profiles SET display_name='Jackson Updated' WHERE user_id='a'").run();
+  const updated=await (await worker.fetch(get('/api/v1/community/activity'),env)).json();
+  const a=updated.items.find(item=>item.handle==='jackson_one');
+  const b=updated.items.find(item=>item.handle==='jackson_two');
+  assert.equal(a.displayName,'Jackson Updated');assert.equal(a.avatarVersion,2);
+  assert.equal(b.displayName,'Jackson');assert.equal(b.avatarVersion,undefined);
+  assert.equal(b.level,second.level);
+ }finally{db.close()}
+});
+
 test('community composer rejects a stale visibility choice without saving an entry',async()=>{
  const {db,env}=fixture();try{
   seed(db,'a','alpha_world','public');
