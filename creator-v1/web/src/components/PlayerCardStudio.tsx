@@ -1,7 +1,7 @@
 import {useEffect,useState} from 'react';
 import {Link} from 'react-router-dom';
 import type {CanonicalProfile,MemberSpace} from '../lib/canonical-beta';
-import {BADGE_CATALOG,DISTINCTION_CATALOG,
+import {BADGE_CATALOG,DISTINCTION_CATALOG,creditedContributionCount,
  type BadgeDisplay,type PlayerAura} from '../lib/player-recognition';
 import {readRecognition,saveRecognition,previewDistinctions,type RecognitionSettings} from '../lib/player-recognition-api';
 import {CompactMemberIdentity,type PublicIdentity} from './CompactMemberIdentity';
@@ -170,7 +170,7 @@ export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:C
      <small>Server-verified; never self-assigned</small></div>
     {space.showStats&&space.reputation?<div className="av81-standing-data">
      <strong>{space.reputation.score.toLocaleString()} REP</strong>
-     <span>THREADS {space.reputation.stats.discussions} · REPLIES {space.reputation.stats.replies} · PEERS {space.reputation.stats.appreciations} · MARKS {space.reputation.stats.badges}</span>
+     <span>THREADS {creditedContributionCount(space.reputation.stats.discussions,'discussions')} · REPLIES {creditedContributionCount(space.reputation.stats.replies,'replies')} · PEERS {creditedContributionCount(space.reputation.stats.appreciations,'appreciations')} · MARKS {creditedContributionCount(space.reputation.stats.badges,'badges')}</span>
      <small>{space.reputation.nextAt===null?'Highest activity aura earned':(space.reputation.nextAt-space.reputation.score)+' REP until your next aura'}</small>
     </div>:<p className="av65-studio-note">Reputation appears when verified activity statistics are available and public stats visibility is enabled. No reputation is guessed from XP, account age, or test actions.</p>}
     {space.showStats&&space.reputation&&<div className="av81-signal-track" aria-label="Reputation aura milestones">
@@ -180,7 +180,7 @@ export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:C
        <em>{space.reputation!.score>=min?'EARNED':'SEALED'}</em>
       </span>)}
     </div>}
-    <p className="av81-standing-help">Published discussions, approved replies, distinct peer appreciation and verified badges contribute. Hidden content stops counting. Your next contribution should be useful, not repetitive. Founder, moderator, administrator and curator marks require independently verified role grants; they cannot be selected here.</p>
+    <p className="av81-standing-help">Published discussions, approved replies, distinct peer appreciation and verified badges contribute. Hidden content stops counting. Only the first 40 threads, 80 replies, 60 distinct peers and 20 badges contribute to the score. Your next contribution should be useful, not repetitive. Founder, moderator, administrator and curator marks require independently verified role grants; they cannot be selected here.</p>
     <Link className="av81-contribute-link" to="/community">CONTRIBUTE TO THE COMMUNITY ↗</Link>
    </div>
    <div className="av65-studio-end"><div>

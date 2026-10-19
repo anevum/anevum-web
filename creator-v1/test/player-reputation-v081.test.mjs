@@ -125,3 +125,22 @@ test('V081 30 vector masters retain unique earned plates and no WebGL',()=>{
  }
  assert.equal(motifs.size,30);
 });
+
+test('V081 keeps reputation credit bounded across large histories without falsely claiming exact totals',async t=>{
+ const {raw,db}=makeFixture();t.after(()=>raw.close());
+ for(let i=0;i<100;i++){
+  raw.prepare("INSERT INTO member_forum_threads(id,author_id,status) VALUES(?,?,'published')").run('many-'+i,'alpha');
+  raw.prepare("INSERT INTO member_forum_replies(id,thread_id,author_id,status) VALUES(?,?,'published')").run('reply-'+i,'bt','alpha');
+  raw.prepare("INSERT INTO member_forum_reactions(thread_id,user_id) VALUES(?,?)").run('many-'+i,'peer-'+i);
+  if(i<30)raw.prepare("INSERT INTO member_recognition_grants VALUES(?,'badge',?,NULL)").run('alpha','mark-'+i);
+ }
+ const record=(await memberReputationMap(db,['alpha'])).get('alpha');
+ assert.deepEqual(record.reputation.stats,{discussions:40,replies:80,appreciations:60,badges:20});
+ assert.equal(record.reputation.score,1340);
+ assert.equal(record.reputation.tier,'zenith');
+ assert.equal(record.reputation.nextAt,null);
+ const helper=read('web/src/lib/player-recognition.ts');
+ const card=read('web/src/components/CompactMemberIdentity.tsx');
+ assert.match(helper,/creditedContributionCount/);
+ assert.match(card,/creditedContributionCount\(reputation\.stats\.discussions/);
+});

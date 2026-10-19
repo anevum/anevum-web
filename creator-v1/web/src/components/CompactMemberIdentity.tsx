@@ -8,7 +8,7 @@ import {SupporterIdentity} from './SupporterSeal';
 import type {SupporterAppearance,SpaceStats} from '../lib/canonical-beta';
 import {
  BADGE_CATALOG,selectFeaturedBadges,selectedDistinctions,safePlayerAura,safeConstellation,
- safePublicReputation,safeVerifiedRole,ROLE_LABELS,REPUTATION_LABELS,
+ safePublicReputation,safeVerifiedRole,ROLE_LABELS,REPUTATION_LABELS,creditedContributionCount,
  type EarnedBadge,type BadgeDisplay,type PublicDistinctions,type PlayerAura,type ConstellationIdentity,
  type VerifiedRole,type PublicReputation,type ReputationTier
 } from '../lib/player-recognition';
@@ -134,10 +134,10 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
     <progress value={reputation.nextAt===null?1:reputation.score} max={reputation.nextAt??1}
      aria-label="Reputation progress to next earned aura"/>
     <span className="av81-contribution-stats">
-     <span><b>{reputation.stats.discussions}</b> THREADS</span>
-     <span><b>{reputation.stats.replies}</b> REPLIES</span>
-     <span><b>{reputation.stats.appreciations}</b> PEERS</span>
-     <span><b>{reputation.stats.badges}</b> MARKS</span>
+     <span><b>{creditedContributionCount(reputation.stats.discussions,'discussions')}</b> THREADS</span>
+     <span><b>{creditedContributionCount(reputation.stats.replies,'replies')}</b> REPLIES</span>
+     <span><b>{creditedContributionCount(reputation.stats.appreciations,'appreciations')}</b> PEERS</span>
+     <span><b>{creditedContributionCount(reputation.stats.badges,'badges')}</b> MARKS</span>
     </span>
    </span>}
    {progress&&<span className="av78-player-progress">

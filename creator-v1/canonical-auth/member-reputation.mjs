@@ -11,7 +11,10 @@ const number=(input,cap)=>Math.max(0,Math.min(cap,Number.isSafeInteger(Number(in
 const tierFor=score=>TIER_THRESHOLDS.find(([,min])=>score>=min)?.[0]||'none';
 const nextAt=score=>[40,160,420,900].find(min=>score<min)||null;
 const unique=items=>[...new Set(items)];
-const sqlCount=(available,table,sql)=>available.has(table)?'('+sql+')':'0';
+// Bound every counted stream to the maximum creditable actions: the score
+// must never repeatedly scan unbounded user history on public card reads.
+const sqlCount=(available,table,sql,cap)=>available.has(table)?
+ '(SELECT COUNT(*) FROM ('+sql+' LIMIT '+cap+'))':'0';
 
 /** Returns server-only map keyed by account ID. Never serialize map keys.
  * Call only AFTER verifying member identity and public-profile visibility.
@@ -26,13 +29,16 @@ export async function memberReputationMap(db,identities){
   // An uninstalled activity schema is unknown, not a real zero score.
   if(!available.has('member_forum_threads')||!available.has('member_forum_replies'))return new Map();
   const discussions=sqlCount(available,'member_forum_threads',
-   "SELECT COUNT(*) FROM member_forum_threads t WHERE t.author_id=p.user_id AND t.status='published'");
+   "SELECT t.id FROM member_forum_threads t WHERE t.author_id=p.user_id AND t.status='published'",40);
   const replies=sqlCount(available,'member_forum_replies',
-   "SELECT COUNT(*) FROM member_forum_replies r JOIN member_forum_threads t ON t.id=r.thread_id WHERE r.author_id=p.user_id AND r.status='published' AND t.status='published'");
+   "SELECT r.id FROM member_forum_replies r JOIN member_forum_threads t ON t.id=r.thread_id WHERE r.author_id=p.user_id AND r.status='published' AND t.status='published'",80);
+  // One appreciation per distinct peer, never the author's own reaction.
+  // DISTINCT is intentionally retained; the cap limits emitted peers, although
+  // SQLite may inspect additional duplicate reactions to find those peers.
   const appreciations=sqlCount(available,'member_forum_reactions',
-   "SELECT COUNT(DISTINCT rx.user_id) FROM member_forum_reactions rx JOIN member_forum_threads t ON t.id=rx.thread_id WHERE t.author_id=p.user_id AND t.status='published' AND rx.user_id<>p.user_id");
+   "SELECT DISTINCT rx.user_id FROM member_forum_threads t JOIN member_forum_reactions rx ON rx.thread_id=t.id WHERE t.author_id=p.user_id AND t.status='published' AND rx.user_id<>p.user_id",60);
   const badges=sqlCount(available,'member_recognition_grants',
-   "SELECT COUNT(*) FROM member_recognition_grants g WHERE g.user_id=p.user_id AND g.kind='badge' AND g.revoked_at IS NULL");
+   "SELECT g.recognition_id FROM member_recognition_grants g WHERE g.user_id=p.user_id AND g.kind='badge' AND g.revoked_at IS NULL",20);
   const placeholders=ids.map(()=>'?').join(',');
   const statement=`SELECT p.user_id,(${discussions}) AS discussions,(${replies}) AS replies,(${appreciations}) AS appreciations,(${badges}) AS badges FROM member_creator_profiles p WHERE p.user_id IN (${placeholders})`;
   const stats=await db.prepare(statement).bind(...ids).all();
@@ -48,11 +54,11 @@ export async function memberReputationMap(db,identities){
   }
   const result=new Map();
   for(const row of stats.results||[]){
-   const activity={discussions:number(row.discussions,100000),replies:number(row.replies,100000),
-    appreciations:number(row.appreciations,100000),badges:number(row.badges,100000)};
+   const activity={discussions:number(row.discussions,40),replies:number(row.replies,80),
+    appreciations:number(row.appreciations,60),badges:number(row.badges,20)};
    // A bounded, explainable quality-weighted score. No artificial daily login streak.
-   const score=Math.min(1800,16*number(activity.discussions,40)+4*number(activity.replies,80)+
-    3*number(activity.appreciations,60)+10*number(activity.badges,20));
+   const score=16*activity.discussions+4*activity.replies+
+    3*activity.appreciations+10*activity.badges;
    const tier=tierFor(score);
    result.set(row.user_id,{
     reputation:{score,tier,nextAt:nextAt(score),stats:activity},earnedAura:tier,
