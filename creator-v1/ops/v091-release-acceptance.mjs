@@ -2,7 +2,7 @@
  * public canary as proof of an authenticated creator/staff browser journey. */
 import {readFileSync} from 'node:fs';
 import {pathToFileURL} from 'node:url';
-export const V091_APPLICATION_SOURCE='9ccec9bca12da2cfa8e4d1206484966f0ae78cd6';
+export const V091_APPLICATION_SOURCE='8fc66f5328fe7c821ddf7bfa49773668a66872e7';
 export function verifyV091Acceptance(record){
   if(record?.source_sha!==V091_APPLICATION_SOURCE)throw Error('V091 acceptance does not match the pinned application source.');
   for(const gate of ['founder_staff_session','reviewer_staff_session','creator_journey','cross_account_identity']){
