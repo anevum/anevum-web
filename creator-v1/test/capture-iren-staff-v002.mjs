@@ -32,7 +32,33 @@ const server=createServer((req,res)=>{
    session:{id:'synthetic-non-deployable-session',userId:'fixture-founder',
     createdAt:'2026-10-17T00:00:00Z',updatedAt:'2026-10-17T00:00:00Z',expiresAt:'2027-01-01T00:00:00Z'}
   });
-  if(url.pathname==='/api/v1/member/staff-ops')return json(res,{...mock,room:url.searchParams.get('room')||'operations'});
+  if(url.pathname==='/api/v1/member/staff-ops'){
+   const lane=url.searchParams.get('lane');
+   const simulated=[
+    {id:'fixture-founder',name:'Synthetic Founder',displayName:'Synthetic Founder',
+     email:'founder@synthetic.invalid',verified:true,handle:'fixture_founder',visibility:'public',
+     joinedAt:'2026-10-18T00:00:00Z',staffRole:'owner',selectedAura:'transcosmic'},
+    {id:'fixture-second',name:'Synthetic Creator',displayName:'Synthetic Creator',
+     email:'creator@synthetic.invalid',verified:true,handle:'fixture_second',visibility:'private',
+     joinedAt:'2026-10-18T00:00:00Z',staffRole:null,selectedAura:'eclipse'}
+   ];
+   if(lane==='owner-members')return json(res,{members:simulated,page:0,pageSize:25,hasMore:false,
+    query:url.searchParams.get('q')||'',source:'SYNTHETIC BROWSER FIXTURE'});
+   if(lane==='owner-member')return json(res,{member:simulated[0],
+    recognition:{grants:[{kind:'badge',id:'first_orbit',earnedAt:1792300000}],milestones:[{id:'first_signal',earnedAt:1792300000}],
+     roleBadges:null,verifiedRoleRegistryReady:false},
+    staffAudit:[{action:'bootstrap-owner',createdAt:1792300000}],storage:{xpAggregateReady:false},
+    controls:{moderatorAssignments:'Personnel',earnedLevels:'automatic-only',roleHalos:'independent-review-required',
+     cosmeticAura:'member-controlled'},source:'SYNTHETIC BROWSER FIXTURE'});
+   if(lane==='owner-releases')return json(res,{releases:[
+    {id:'v084-live',name:'V084 Continuance',status:'LIVE',kind:'production',summary:'Released production evidence',
+     page:'https://anevum.com',evidence:'https://github.com/anevum/anevum-web/actions/runs/39271162169',captures:null},
+    {id:'private-lab',name:'Private Lab studies',status:'SYNTHETIC ONLY',kind:'simulation',
+     summary:'Design study, not real staging',page:'https://lab.anevum.com/previews/',
+     evidence:'https://github.com/anevum/anevum-web/pull/540',captures:null}
+    ],realIsolatedStaging:false,note:'SYNTHETIC BROWSER FIXTURE. Actual production staging remains separate.'});
+   return json(res,{...mock,room:url.searchParams.get('room')||'operations'});
+  }
   if(url.pathname==='/api/v1/member/forum-review')return json(res,{
    threads:[],replies:[],reports:[],recent:[],totals:{threads:0,replies:0,reports:0},checkedAt:now
   });
@@ -82,7 +108,7 @@ try{
    throw error;
   }
   const layout=await evaluate("(()=>{const e=document.querySelector('.ir-screen');const r=e.getBoundingClientRect();return {left:r.left,top:r.top,right:r.right,bottom:r.bottom,viewportW:innerWidth,viewportH:innerHeight,locked:getComputedStyle(document.documentElement).overflow==='hidden',nav:document.querySelectorAll('.ir-nav>button').length,founder:document.body.innerText.includes('CREATOR PROFILES'),overflow:e.scrollWidth>e.clientWidth+2}})()");
-  assert.equal(layout.nav,7,JSON.stringify({width,layout}));
+  assert.equal(layout.nav,9,JSON.stringify({width,layout}));
   assert.equal(layout.locked,true,JSON.stringify({width,layout}));
   assert.equal(layout.overflow,false,JSON.stringify({width,layout}));
   assert.equal(layout.founder,true,JSON.stringify({width,layout}));
@@ -91,6 +117,24 @@ try{
   await until(()=>evaluate("Boolean(document.querySelector('canvas.ir-canvas'))"));
   await evaluate("document.querySelectorAll('.ir-nav>button')[6].click()");
   await until(()=>evaluate("Boolean(document.querySelector('.ir-role-form'))"));
+  // V085 control panels use *synthetic* fixture data and a real compiled React UI.
+  // The production owner directory is never exposed to GitHub test artifacts.
+  await evaluate("document.querySelectorAll('.ir-nav>button')[7].click()");
+  await until(()=>evaluate("document.body.innerText.includes('Synthetic Creator')"));
+  assert.equal(await evaluate("document.querySelectorAll('.ir85-member').length"),2);
+  const membersShot=await c.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  assert.ok(membersShot.data?.length>5000);
+  writeFileSync(join(out,'iren-v085-owner-members-'+width+'.png'),Buffer.from(membersShot.data,'base64'));
+  await evaluate("document.querySelector('.ir85-member')?.click()");
+  await until(()=>evaluate("Boolean(document.querySelector('.ir85-profile-facts'))"));
+  const inspectShot=await c.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  assert.ok(inspectShot.data?.length>5000);
+  writeFileSync(join(out,'iren-v085-owner-inspect-'+width+'.png'),Buffer.from(inspectShot.data,'base64'));
+  await evaluate("document.querySelectorAll('.ir-nav>button')[8].click()");
+  await until(()=>evaluate("document.body.innerText.includes('Release observatory')"));
+  const releaseShot=await c.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  assert.ok(releaseShot.data?.length>5000);
+  writeFileSync(join(out,'iren-v085-owner-releases-'+width+'.png'),Buffer.from(releaseShot.data,'base64'));
   await evaluate("document.querySelectorAll('.ir-nav>button')[0].click()");
   await until(()=>evaluate("Boolean(document.querySelector('.ir-overview'))"));
   const shot=await c.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
@@ -98,7 +142,7 @@ try{
   writeFileSync(join(out,'iren-v002-'+width+'.png'),Buffer.from(shot.data,'base64'));
   console.log('IREN_V002_SYNTHETIC_LAYOUT_'+width+'=PASS');
  }
- console.log('IREN_V002_SYNTHETIC_BROWSER_QA=PASS');
+ console.log('IREN_V085_OWNER_SYNTHETIC_BROWSER_QA=PASS');
 }finally{
  try{c?.close()}catch{}
  browser.kill('SIGKILL');await new Promise(resolve=>server.close(resolve));

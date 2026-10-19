@@ -18,6 +18,7 @@
     "test:apex-prelaunch": "node --test test/apex-prelaunch-gateway.test.mjs test/apex-retirement.test.mjs",
     "test:visual-v063": "node --test test/continuance-sitewide-v063.test.mjs",
     "test:visual-v064": "node --test test/continuance-worldstage-v064.test.mjs",
-    "test:staff-command": "node --test test/staff-command-v001.test.mjs test/iren-apex-staff-gateway.test.mjs test/iren-auth-boundary-v003.test.mjs test/iren-better-auth-service-v003.test.mjs test/iren-founder-bootstrap-v004.test.mjs test/staff-owner-bootstrap-v004.test.mjs"
+    "test:staff-command": "node --test test/staff-command-v001.test.mjs test/iren-apex-staff-gateway.test.mjs test/iren-auth-boundary-v003.test.mjs test/iren-better-auth-service-v003.test.mjs test/iren-founder-bootstrap-v004.test.mjs test/staff-owner-bootstrap-v004.test.mjs test/iren-owner-control-v085.test.mjs",
+    "test:owner-control-v085": "node --test test/iren-owner-control-v085.test.mjs"
   }
 }
