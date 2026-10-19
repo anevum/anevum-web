@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import { deflateRawSync } from "node:zlib";
 import { DatabaseSync } from "node:sqlite";
+import { Script } from "node:vm";
+import { SCRIPT, CSS } from "../site/alpha/v003/ui.mjs";
 import api from "../site/alpha/v003/api.mjs";
 import runtime from "../site/alpha/v003/runtime.mjs";
 import { inspectZip, extractEntry, crc32, PackageError } from "../site/alpha/v003/archive.mjs";
@@ -104,6 +106,7 @@ function uploadForm(zip,title="Cosmic Racer",projectId="",fileName="cosmic-racer
   f.set("title",title);
   f.set("summary","A real playable prototype with several web assets.");
   f.set("category","game");
+  f.set("rights_ack","yes");
   if(projectId)f.set("project_id",projectId);
   f.set("file",new File([zip],fileName,{type:fileName.endsWith(".zip")?"application/zip":"text/html"}));
   return f;
@@ -301,4 +304,107 @@ test("simultaneous creator updates publish at most one new draft", async()=>{
     const src=iframeSrc(await publicPage.text());
     assert.match(src,new RegExp(p.live_release_id));
   }finally{env.DB.close();}
+});
+
+
+test("browser interface scripts parse and publishing UI has accurate functional controls",async()=>{
+  assert.doesNotThrow(()=>new Script(SCRIPT));
+  assert.match(CSS,/@media\(max-width:500px\)/);
+  assert.match(CSS,/safe-area-inset-top/);
+  const env=setup();
+  try {
+    const uploader=await (await getPage(env,"/upload/v3")).text();
+    assert.match(uploader,/id="publish-form"/);
+    assert.match(uploader,/accept="\.zip,\.html/);
+    assert.match(uploader,/ZIP up to 20 MiB/);
+    assert.match(uploader,/HTML up to 5 MiB/);
+    assert.match(uploader,/name="rights_ack" value="yes" required/);
+    assert.match(uploader,/href="\/studio"/);
+    assert.match(uploader,/id="activity" role="status"/);
+    const guest=await (await getPage(env,"/upload/v3","visitor")).text();
+    assert.match(guest,/Sign in to upload/);
+    assert.doesNotMatch(guest,/id="publish-form"/);
+    const guide=await (await getPage(env,"/help/packages")).text();
+    assert.match(guide,/index\.html/);
+    assert.match(guide,/≤ 180 files/);
+    assert.match(guide,/Node\/Python\/PHP backends/);
+  } finally{env.DB.close();}
+});
+test("server refuses uploads without creator rights and persists a receipt per release",async()=>{
+  const env=setup();
+  try {
+    const f=uploadForm(sample());f.delete("rights_ack");
+    const denied=await post(env,"/api/v1/packages/upload",f);
+    assert.equal(denied.status,422);
+    assert.match((await denied.json()).error,/permission to publish/);
+    assert.equal(env.MEDIA.data.size,0);
+    const ok=await post(env,"/api/v1/packages/upload",uploadForm(sample()));
+    assert.equal(ok.status,201);
+    const release=(await ok.json()).release_id;
+    const rights=await env.DB.prepare("SELECT owner_id,statement FROM anevum_package_rights_receipts WHERE release_id=?").bind(release).first();
+    assert.equal(rights.owner_id,"owner-id");
+    assert.equal(rights.statement,"creator_has_publication_rights_v1");
+  } finally{env.DB.close();}
+});
+test("a creator with staff role cannot approve their own executable project",async()=>{
+  const env=setup();env.STAFF_IDS="owner-id,staff-id";
+  try {
+    const project=(await (await post(env,"/api/v1/packages/upload",uploadForm(sample()))).json());
+    assert.equal((await post(env,"/api/v1/packages/projects/"+project.id+"/submit",{})).status,200);
+    const denied=await post(env,"/api/v1/packages/projects/"+project.id+"/review",{action:"publish"},"owner");
+    assert.equal(denied.status,403);
+    assert.match((await denied.json()).error,/independent reviewer/);
+    const independent=await post(env,"/api/v1/packages/projects/"+project.id+"/review",{action:"publish"},"staff");
+    assert.equal(independent.status,200);
+  } finally{env.DB.close();}
+});
+test("a missing isolated runtime blocks submission and public approval",async()=>{
+  const env=setup();
+  try {
+    const project=(await (await post(env,"/api/v1/packages/upload",uploadForm(sample()))).json());
+    env.RUNTIME_HOST="";
+    const page=await (await getPage(env,"/play/v3/"+project.id+"?preview=1")).text();
+    assert.match(page,/Private playback is not configured/);
+    assert.doesNotMatch(page,/<iframe/);
+    const blocked=await post(env,"/api/v1/packages/projects/"+project.id+"/submit",{});
+    assert.equal(blocked.status,503);
+    env.RUNTIME_HOST="run-tests.example";
+    assert.equal((await post(env,"/api/v1/packages/projects/"+project.id+"/submit",{})).status,200);
+    env.RUNTIME_HOST="";
+    const blockedReview=await post(env,"/api/v1/packages/projects/"+project.id+"/review",{action:"publish"},"staff");
+    assert.equal(blockedReview.status,503);
+    assert.deepEqual((await (await getPage(env,"/api/v1/packages/projects")).json()).projects,[]);
+  } finally{env.DB.close();}
+});
+test("private player, reviewer decisions and public player share the accessible Continuance shell",async()=>{
+  const env=setup();
+  try {
+    const project=(await (await post(env,"/api/v1/packages/upload",uploadForm(sample()))).json());
+    const privatePage=await (await getPage(env,"/play/v3/"+project.id+"?preview=1")).text();
+    assert.match(privatePage,/id="game-viewport"/);
+    assert.match(privatePage,/id="exit-immersive"/);
+    assert.match(privatePage,/data-package-action="submit"/);
+    assert.match(privatePage,/Private playtest/);
+    assert.equal((await post(env,"/api/v1/packages/projects/"+project.id+"/submit",{})).status,200);
+    const reviewer=await (await getPage(env,"/play/v3/"+project.id+"?preview=1","staff")).text();
+    assert.match(reviewer,/id="review-dialog"/);
+    assert.match(reviewer,/data-package-action="publish"/);
+    assert.match(reviewer,/data-package-action="reject"/);
+    assert.match(reviewer,/id="decision-confirm"/);
+    assert.equal((await post(env,"/api/v1/packages/projects/"+project.id+"/review",{action:"publish"},"staff")).status,200);
+    const publicPage=await (await getPage(env,"/play/v3/"+project.id,"visitor")).text();
+    assert.match(publicPage,/data-package-action="share"/);
+    assert.doesNotMatch(publicPage,/id="review-dialog"/);
+    assert.match(publicPage,/ANEVUM/);
+  } finally{env.DB.close();}
+});
+test("untrusted creator metadata is escaped in package catalogue and player",async()=>{
+  const env=setup();
+  try{
+    const form=uploadForm(sample(),'<img src=x onerror=alert(1)>');
+    assert.equal((await post(env,"/api/v1/packages/upload",form)).status,201);
+    const mine=(await (await getPage(env,"/upload/v3")).text());
+    assert.match(mine,/&lt;img src=x onerror=alert\(1\)&gt;/);
+    assert.doesNotMatch(mine,/<h3><img src=x/);
+  } finally{env.DB.close();}
 });
