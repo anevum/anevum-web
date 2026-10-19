@@ -4,7 +4,7 @@ const read=p=>readFileSync(new URL("../../canonical-auth/migrations/"+p,import.m
 export function fixture(){
   const db=new DatabaseSync(":memory:");
   for(const file of ["0001_canonical_better_auth_core.sql",
-    "0002_member_creator_profiles.sql","0003_member_world_personalization.sql","0004_member_spaces.sql","0005_progression_notifications.sql","0011_xp_test_1000.sql"]){
+    "0002_member_creator_profiles.sql","0003_member_world_personalization.sql","0004_member_spaces.sql","0005_progression_notifications.sql"]){
     db.exec(read(file));
   }
   const adapter={
