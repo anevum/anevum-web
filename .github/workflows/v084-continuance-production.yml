@@ -143,6 +143,13 @@ jobs:
           test -s "$RUNNER_TEMP/v084-release-evidence/iren-discover-1440.png"
           test -s "$RUNNER_TEMP/v084-release-evidence/iren-docked-top-320.png"
           echo V089_REAL_WEBGL_AND_RESPONSIVE_ACCEPTANCE=PASS >> "$GITHUB_STEP_SUMMARY"
+      - name: Verify the preserved staff identity transport
+        run: node --test creator-v1/test/staff-session-transport-v091.test.mjs creator-v1/test/staff-transport-release-v091.test.mjs
+      - name: Verify or repair the five pinned staff identity Workers
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node creator-v1/ops/v091-staff-transport.mjs --apply
       - name: Deploy V091 verified experience without changing live routes, bindings or IREN
         shell: bash
         env:
@@ -163,9 +170,17 @@ jobs:
           diff -u <(printf '%s\n' \
              '.github/release-evidence/v091-authenticated.json' \
              '.github/workflows/creator-v1-verify.yml' \
+             '.github/workflows/staff-v080-safety.yml' \
              '.github/workflows/v084-continuance-production.yml' \
              '.github/workflows/v091-live-readonly-qa.yml' \
+             'creator-v1/operations/anevum-iren-apex-staff-v002.mjs' \
+             'creator-v1/operations/anevum-iren-staff-entry-v003.mjs' \
+             'creator-v1/operations/anevum-iren-staff-observatory-v001.mjs' \
+             'creator-v1/operations/anevum-iren-staff-session-status-v001.mjs' \
+             'creator-v1/operations/anevum-profile-staff-access-v001.mjs' \
+             'creator-v1/operations/staff-transport-v091.json' \
              'creator-v1/ops/v091-release-acceptance.mjs' \
+             'creator-v1/ops/v091-staff-transport.mjs' \
              'creator-v1/package.json' \
              'creator-v1/test/capture-sitewide-v012.mjs' \
              'creator-v1/test/cinematic-worlds.test.mjs' \
@@ -173,17 +188,24 @@ jobs:
              'creator-v1/test/creator-identity-browser-v091.mjs' \
              'creator-v1/test/creator-route-v091.test.mjs' \
              'creator-v1/test/portal-offline-preview.mjs' \
+             'creator-v1/test/project-hosting-v091.test.mjs' \
+             'creator-v1/test/staff-session-transport-v091.test.mjs' \
+             'creator-v1/test/staff-transport-release-v091.test.mjs' \
              'creator-v1/test/v091-live-emblem-browser.mjs' \
              'creator-v1/test/v091-public-live-canary.mjs' \
              'creator-v1/test/v091-release-acceptance.test.mjs' \
              'creator-v1/web/src/components/LevelEmblem.tsx' \
+             'creator-v1/web/src/components/MemberSpaceDashboard.tsx' \
              'creator-v1/web/src/components/States.tsx' \
              'creator-v1/web/src/continuance-experience-v091.css' \
+             'creator-v1/web/src/discover-experience-v073.css' \
              'creator-v1/web/src/lib/creator-route.ts' \
+             'creator-v1/web/src/lib/project-hosting.ts' \
              'creator-v1/web/src/main.tsx' \
              'creator-v1/web/src/pages/CanonicalStudioPage.tsx' \
              'creator-v1/web/src/pages/CreatorsPage.tsx' \
              'creator-v1/web/src/pages/Phase1PublicMemberPage.tsx' \
+             'creator-v1/web/src/pages/ProjectPage.tsx' \
              'creator-v1/web/src/pages/StatusPage.tsx') \
             <(git diff --name-only db2b8c0f8f79061adf1677986b87077856204267 HEAD)
           test -f creator-v1/web/src/lib/public-creator-handle.ts

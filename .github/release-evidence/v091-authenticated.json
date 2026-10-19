@@ -6,5 +6,5 @@
   "cross_account_identity": false,
   "verified_at": null,
   "evidence": [],
-  "status": "BLOCKED: Interactive browser connection timed out before opening ANEVUM. No authenticated acceptance has been claimed."
+  "status": "BLOCKED: Real member and Cloudflare Access sign-in succeeded. The live staff entry fails identity_request_failed because redirect:error is unsupported by workerd. Five transport-only Worker repairs are runtime-tested but not deployed. Authenticated staff and creator-journey acceptance remain pending."
 }

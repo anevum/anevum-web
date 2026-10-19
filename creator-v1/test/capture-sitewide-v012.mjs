@@ -130,8 +130,8 @@ try{
    if(!state.cinematic||state.header!==1||state.main!==1||state.overflow||state.atlas||!state.fixture)
     throw Error("SITEWIDE_V012_INCONSISTENT_"+name+"_"+width+":"+JSON.stringify(state));
    if(name==="creator-channel"){
-     const channelCards=await evaluate('({count:document.querySelectorAll(".portal-channel-content .av73-project-card").length,art:document.querySelectorAll(".portal-channel-content .project-art").length,widths:[...document.querySelectorAll(".portal-channel-content .av73-project-card")].map(x=>x.getBoundingClientRect().width)})');
-     if(channelCards.count!==2||channelCards.art!==0||(width<650&&channelCards.widths.some(value=>value<240)))
+     const channelCards=await evaluate('({count:document.querySelectorAll(".portal-channel-content .av73-project-card").length,art:document.querySelectorAll(".portal-channel-content .project-art").length,widths:[...document.querySelectorAll(".portal-channel-content .av73-project-card")].map(x=>x.getBoundingClientRect().width),styles:[...document.querySelectorAll(".portal-channel-content .av73-project-card")].map(x=>({padding:parseFloat(getComputedStyle(x).paddingLeft),display:getComputedStyle(x).display,title:parseFloat(getComputedStyle(x.querySelector("h3")).fontSize)}))})');
+     if(channelCards.count!==2||channelCards.art!==0||channelCards.styles.some(s=>s.padding<16||s.display!=="flex"||s.title<20)||(width<650&&channelCards.widths.some(value=>value<240)))
        throw Error("V091_CREATOR_PROJECT_READABILITY_"+width+":"+JSON.stringify(channelCards));
    }
    if(name==="levels"||name==="recognition"){

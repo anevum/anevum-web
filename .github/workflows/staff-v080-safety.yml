@@ -5,6 +5,7 @@ on:
       - "creator-v1/operations/**"
       - "creator-v1/test/staff-project-v080*.test.mjs"
       - "creator-v1/package.json"
+      - "creator-v1/test/staff-session-transport-v091.test.mjs"
       - ".github/workflows/staff-v080-safety.yml"
   workflow_dispatch:
 permissions:
@@ -25,3 +26,7 @@ jobs:
           node --check creator-v1/operations/staff-project-ui-v080.mjs
       - name: Validate staff access, lifecycle, and preview contracts
         run: node --test creator-v1/test/staff-project-v080.test.mjs creator-v1/test/staff-project-v080-integration.test.mjs
+      - name: Install the existing Workers runtime for V091 service-binding regression
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Exercise the preserved staff Workers in workerd
+        run: node --test creator-v1/test/staff-session-transport-v091.test.mjs creator-v1/test/staff-transport-release-v091.test.mjs
