@@ -67,7 +67,10 @@ try{
  };
  const check=async (label,expr)=>{
   const result=await evaluate(expr);
-  if(!result)throw Error("IREN_V080_FAILED_"+label);
+  if(!result){
+   const geometry=label.includes("inside-")?await evaluate('(()=>{const e=document.querySelector(".ir80-help");if(!e)return "no-panel";const r=e.getBoundingClientRect(),p=e.parentElement?.getBoundingClientRect(),s=getComputedStyle(e);return JSON.stringify({viewport:[innerWidth,innerHeight],panel:[r.left,r.top,r.right,r.bottom,r.width,r.height],parent:p?[p.left,p.top,p.right,p.bottom,p.width,p.height]:null,computed:{width:s.width,maxHeight:s.maxHeight,right:s.right,bottom:s.bottom,boxSizing:s.boxSizing},className:e.className,outer:document.querySelector(".ir88-companion")?.className});})()'):"";
+   throw Error("IREN_V080_FAILED_"+label+(geometry?" / "+geometry:""));
+  }
  };
  await send("Page.enable");await send("Runtime.enable");
  await send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:"reduce"}]});
