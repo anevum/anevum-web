@@ -1,10 +1,10 @@
 {
-  "source_sha": "8fc66f5328fe7c821ddf7bfa49773668a66872e7",
+  "source_sha": "7b13e37191c9647509f8251bd2a489a614f76cdf",
   "founder_staff_session": false,
   "reviewer_staff_session": false,
   "creator_journey": false,
   "cross_account_identity": false,
   "verified_at": null,
   "evidence": [],
-  "status": "BLOCKED: Integrated V091 + IREN V092 + Aura Codex + responsive Wayfinder test baseline pinned at 8fc66f53. All four authenticated real-browser gates remain false. Guarded production frontend deployment has not occurred."
+  "status": "BLOCKED: Full V091 frontend including IREN first contact, Aura Codex, responsive Wayfinder and IREN positioning is pinned to audited source 7b13e371. Signed-in founder/reviewer access, full creator journey and cross-account identity still require real browser verification. Production deployment has not occurred."
 }
