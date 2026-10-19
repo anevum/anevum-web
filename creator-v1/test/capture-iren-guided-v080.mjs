@@ -76,8 +76,33 @@ try{
  await send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:"reduce"}]});
  for(const [width,height] of [[320,720],[390,844],[768,1024],[1440,900]]){
   await send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:1,mobile:width<700});
+  // Each viewport exercises a genuinely fresh visitor. Prior viewport history
+  // is removed before the next navigation, never while the first page is blank.
+  if(width!==320)await evaluate('localStorage.removeItem("anevum.iren.first-contact.v092")');
   await send("Page.navigate",{url:base+"/creator/"});
   await until(()=>evaluate('!!document.querySelector(".ir80-dock")&&!!document.querySelector(".av79-home")'));
+  await until(()=>evaluate('!!document.querySelector(".ir92-first-contact")'),10000);
+  await check("first-contact-four-choices-"+width,'document.querySelectorAll(".ir92-intent-grid > a,.ir92-intent-grid > button").length===4');
+  await check("first-contact-real-destinations-"+width,'(()=>{const paths=[...document.querySelectorAll(".ir92-intent-grid a")].map(a=>new URL(a.href).pathname);return paths.some(p=>p.endsWith("/discover"))&&paths.some(p=>p.endsWith("/studio"))&&paths.some(p=>p.endsWith("/community"));})()');
+  await check("first-contact-one-companion-"+width,'document.querySelectorAll(".ir87-scout").length===1');
+  await check("first-contact-no-modal-"+width,'!document.querySelector(".ir80-guide-card")');
+  await check("first-contact-inside-viewport-"+width,'(()=>{const r=document.querySelector(".ir80-help").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1&&r.top>=0&&r.bottom<=innerHeight+1;})()');
+  await capture("iren-first-contact-"+width);
+  if(width===320){
+    await evaluate('document.querySelector(".ir92-intent-grid button").click()');
+    await until(()=>evaluate('!!document.querySelector(".ir80-guide-card")&&location.pathname.endsWith("/discover")'));
+    await check("first-contact-tour-opt-in",'document.querySelector("#ir80-guide-title")?.textContent.includes("interests you")');
+    await evaluate('document.querySelector(".ir80-skip").click()');
+    await until(()=>evaluate('!document.querySelector(".ir80-guide-card")'));
+    await send("Page.navigate",{url:base+"/creator/"});
+    await until(()=>evaluate('!!document.querySelector(".ir80-dock")&&!!document.querySelector(".av79-home")'));
+    await pause(1400);
+    await check("first-contact-does-not-repeat",'!document.querySelector(".ir92-first-contact")');
+  }else{
+    await evaluate('document.querySelector(".ir92-not-now").click()');
+    await until(()=>evaluate('!document.querySelector(".ir92-first-contact")'));
+  }
+  await check("first-contact-remembered-"+width,'localStorage.getItem("anevum.iren.first-contact.v092")==="seen"');
   await check("one-compact-helper-"+width,'(()=>{const buttons=document.querySelectorAll(".ir87-scout");if(buttons.length!==1||document.querySelector(".an-notification-center"))return false;const r=buttons[0].getBoundingClientRect();return r.width>=48&&r.width<=58&&r.height>=48&&r.height<=58;})()');
   // The 3D WebGL scene must actually render in Chromium. Parsing source or
   // showing the SVG fallback alone is insufficient acceptance evidence.
