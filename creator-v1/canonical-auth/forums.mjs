@@ -24,7 +24,6 @@ const authorSql=`JOIN member_creator_profiles p ON p.user_id=t.author_id JOIN "u
  WHERE p.visibility='public' AND u.emailVerified=1`;
 const selectThread=`SELECT t.id,t.topic,t.title,t.body,t.status,t.created_at,t.published_at,t.updated_at,
  p.handle,p.display_name,${publicMemberColumns('t.author_id')},
- EXISTS(SELECT 1 FROM member_space_media m WHERE m.user_id=p.user_id AND m.slot='avatar') AS avatar,
 
  (SELECT COUNT(*) FROM member_forum_replies r JOIN member_creator_profiles rp ON rp.user_id=r.author_id
  JOIN "user" ru ON ru.id=rp.user_id WHERE r.thread_id=t.id AND r.status='published'
@@ -72,8 +71,7 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
    if(reply){
     const parent=await db.prepare(selectThread+' AND t.id=?').bind(reply[1]).first();
     if(!parent)return fail(404,'Thread is not public');
-    const r=await db.prepare(`SELECT r.id,r.body,r.published_at,p.handle,p.display_name,${publicMemberColumns('r.author_id')},
-      EXISTS(SELECT 1 FROM member_space_media m WHERE m.user_id=p.user_id AND m.slot='avatar') AS avatar
+    const r=await db.prepare(`SELECT r.id,r.body,r.published_at,p.handle,p.display_name,${publicMemberColumns('r.author_id')}
  FROM member_forum_replies r JOIN member_creator_profiles p ON r.author_id=p.user_id JOIN "user" u ON u.id=p.user_id
       LEFT JOIN member_space_settings s ON s.user_id=p.user_id
       WHERE r.thread_id=? AND r.status='published' AND p.visibility='public' AND u.emailVerified=1
