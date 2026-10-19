@@ -115,7 +115,7 @@ dialog textarea{width:100%}
 
 `;
 
-const SCRIPT = String.raw`
+export const SCRIPT = String.raw`
 (function(){
   const q=id=>document.getElementById(id);
   const file=q("bundle"),drop=q("drop"),form=q("publish-form"),status=q("activity");
