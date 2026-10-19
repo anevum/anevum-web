@@ -116,26 +116,31 @@ function IrenScout(){
  return <svg className="ir87-scout-art" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
   <defs>
    <linearGradient id="ir87-hull" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0" stopColor="#5879a2"/><stop offset=".48" stopColor="#283c63"/><stop offset="1" stopColor="#161c35"/>
+    <stop offset="0" stopColor="#396ab8"/><stop offset=".48" stopColor="#15366c"/><stop offset="1" stopColor="#060e21"/>
    </linearGradient>
    <radialGradient id="ir87-visor" cx=".5" cy=".2" r=".95">
-    <stop offset="0" stopColor="#243f65"/><stop offset="1" stopColor="#0b142b"/>
+    <stop offset="0" stopColor="#143975"/><stop offset="1" stopColor="#041124"/>
    </radialGradient>
   </defs>
   <ellipse className="ir87-orbit" cx="32" cy="34" rx="28" ry="8" transform="rotate(-17 32 34)"
-   fill="none" stroke="#d8bad9" strokeWidth="2.1" opacity=".8"/>
-  <path className="ir87-thruster" d="M26 49L30 59L33 52L37 59L40 49Z" fill="#78c8f0" opacity=".65"/>
-  <path d="M31 14V9" stroke="#d9c2e3" strokeWidth="2" strokeLinecap="round"/>
-  <circle className="ir87-antenna" cx="31" cy="7" r="2.8" fill="#ffe5ba"/>
+   fill="none" stroke="#8db4ff" strokeWidth="2.1" opacity=".8"/>
+  <path className="ir87-thruster" d="M26 49L30 59L33 52L37 59L40 49Z" fill="#3b7eff" opacity=".65"/>
+  <path d="M31 14V9" stroke="#b6d1ff" strokeWidth="2" strokeLinecap="round"/>
+  <circle className="ir87-antenna" cx="31" cy="7" r="2.8" fill="#bad5ff"/>
   <path d="M12 31Q12 15 28 14H36Q52 15 52 31V39Q51 52 35 53H29Q13 52 12 39Z"
-   fill="url(#ir87-hull)" stroke="#b6bfdc" strokeWidth="1.8"/>
+   fill="url(#ir87-hull)" stroke="#7fa6eb" strokeWidth="1.8"/>
   <path d="M17 29Q18 21 29 20H35Q46 21 47 29V38Q46 46 35 47H29Q18 46 17 38Z"
-   fill="url(#ir87-visor)" stroke="#6e92b9" strokeWidth="1.2"/>
-  <ellipse className="ir87-eye" cx="25" cy="33" rx="3.6" ry="4.2" fill="#f7e5c7"/>
-  <ellipse className="ir87-eye" cx="39" cy="33" rx="3.6" ry="4.2" fill="#f7e5c7"/>
-  <path d="M28 41Q32 43.5 36 41" stroke="#a9cfea" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-  <circle cx="14" cy="40" r="2.7" fill="#a4daed" opacity=".9"/>
-  <circle cx="50" cy="40" r="2.7" fill="#a4daed" opacity=".9"/>
+   fill="url(#ir87-visor)" stroke="#467bd7" strokeWidth="1.2"/>
+  <ellipse className="ir87-eye" cx="25" cy="33" rx="3.6" ry="4.2" fill="#cfe2ff"/>
+  <ellipse className="ir87-eye" cx="39" cy="33" rx="3.6" ry="4.2" fill="#cfe2ff"/>
+  <path d="M28 41Q32 43.5 36 41" stroke="#a9c9ff" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+  <circle cx="32" cy="47.3" r="3.1" fill="none" stroke="#467bd7" strokeWidth=".8"/>
+  <path d="M32 45V50" stroke="#6cb4ff" strokeWidth=".9" strokeLinecap="round"/>
+  <circle cx="29.8" cy="48.1" r=".9" fill="#bad5ff"/>
+  <circle cx="34.2" cy="48.1" r=".9" fill="#bad5ff"/>
+  <circle cx="32" cy="45.2" r="1" fill="#cfe2ff"/>
+  <circle cx="14" cy="40" r="2.7" fill="#6cb4ff" opacity=".9"/>
+  <circle cx="50" cy="40" r="2.7" fill="#6cb4ff" opacity=".9"/>
  </svg>;
 }
 
