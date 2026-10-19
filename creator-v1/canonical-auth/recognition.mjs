@@ -36,10 +36,16 @@ async function getRows(db,query,...args){
  if(result.success===false)throw Error('Recognition query unavailable');
  return result.results||[];
 }
+// Cache only validated schema presence for 30s per D1 binding.
+// User data, permissions and mutations are never cached.
+const verifiedRecognitionSchema=new WeakMap();
 export async function recognitionReady(db){
+ if((verifiedRecognitionSchema.get(db)||0)>Date.now())return true;
  try{
   const rows=await getRows(db,"SELECT name FROM sqlite_master WHERE type='table' AND name IN ('member_recognition_grants','member_recognition_preferences')");
-  return rows.length===2;
+  const ready=rows.length===2;
+  if(ready)verifiedRecognitionSchema.set(db,Date.now()+30_000);
+  return ready;
  }catch{return false}
 }
 export async function memberRecognitionState(db,userId){

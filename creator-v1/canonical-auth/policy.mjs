@@ -112,23 +112,31 @@ export async function permitCanonicalUserCreationApproved(env,email){
   }catch{return false}
 }
 
+// Positive-only schema table-presence cache: bounded to 30s per D1 binding.
+// Issuer marker, sessions, grants, and authorization are rechecked each request.
+const verifiedCanonicalSchema=new WeakMap();
 /** Must be independently verified against an isolated D1, not a source flag. */
 export async function canonicalSchemaReady(env){
   if(!configured(env?.MEMBER_DB))return false;
+  const tablesCached=(verifiedCanonicalSchema.get(env.MEMBER_DB)||0)>Date.now();
   try{
-    const x=await env.MEMBER_DB.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all();
-    if(x?.success===false||!Array.isArray(x?.results))return false;
-    const tables=new Set(x.results.map(row=>row?.name).filter(x=>typeof x==="string"));
-    if(!REQUIRED_CANONICAL_TABLES.every(name=>tables.has(name)) ||
-      !tables.has("canonical_identity_manifest"))return false;
-    // An existing V5 D1 can have ALL Better Auth tables; accepting it would
-    // silently mix accounts. Require a deliberately provisioned issuer marker.
+    if(!tablesCached){
+      const x=await env.MEMBER_DB.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all();
+      if(x?.success===false||!Array.isArray(x?.results))return false;
+      const tables=new Set(x.results.map(row=>row?.name).filter(x=>typeof x==="string"));
+      if(!REQUIRED_CANONICAL_TABLES.every(name=>tables.has(name)) ||
+        !tables.has("canonical_identity_manifest"))return false;
+    }
+    // Never cache the issuer marker: verify it against D1 on EVERY request.
+    // A swapped issuer or revoked canonical database must fail closed immediately.
     const marker=await env.MEMBER_DB.prepare(
       "SELECT issuer,migration FROM canonical_identity_manifest WHERE id=1"
     ).all();
-    return marker?.success!==false && Array.isArray(marker?.results) &&
+    const verified=marker?.success!==false && Array.isArray(marker?.results) &&
       marker.results.length===1 && marker.results[0]?.issuer===CANONICAL_ISSUER &&
       marker.results[0]?.migration==="0001_canonical_better_auth_core";
+    if(verified&&!tablesCached)verifiedCanonicalSchema.set(env.MEMBER_DB,Date.now()+30_000);
+    return verified;
   }catch{return false;}
 }
 
