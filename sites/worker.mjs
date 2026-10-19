@@ -21,7 +21,7 @@ function send(body,status=200,type="text/html; charset=utf-8",method="GET"){
 export default {async fetch(request){
   const u=new URL(request.url),m=request.method;
   if(!["GET","HEAD"].includes(m))return send("Method not allowed",405,"text/plain; charset=utf-8",m);
-  if(!(u.hostname==="sites.anevum.com"||u.hostname==="sites-preview.anevum.com"||u.hostname.endsWith(".workers.dev")||u.hostname==="localhost"||u.hostname==="127.0.0.1"))return send("Unknown host",421,"text/plain; charset=utf-8",m);
+  if(!(u.hostname==="web.anevum.com"||u.hostname==="sites.anevum.com"||u.hostname==="sites-preview.anevum.com"||u.hostname.endsWith(".workers.dev")||u.hostname==="localhost"||u.hostname==="127.0.0.1"))return send("Unknown host",421,"text/plain; charset=utf-8",m);
   const path=u.pathname.replace(/\/+$/,"")||"/";
   if(path==="/")return send(STUDIO,200,undefined,m);
   if(path==="/preview/tobacco-vapor-time")return send(DEMO,200,undefined,m);
