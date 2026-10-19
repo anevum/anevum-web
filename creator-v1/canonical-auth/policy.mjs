@@ -112,9 +112,14 @@ export async function permitCanonicalUserCreationApproved(env,email){
   }catch{return false}
 }
 
+// Positive-only schema cache: bounded to 30s and one D1 binding in this isolate.
+// Session, grants, authorization and blocked migrations are never cached.
+const verifiedCanonicalSchema=new WeakMap();
 /** Must be independently verified against an isolated D1, not a source flag. */
 export async function canonicalSchemaReady(env){
   if(!configured(env?.MEMBER_DB))return false;
+  const cached=verifiedCanonicalSchema.get(env.MEMBER_DB);
+  if(cached>Date.now())return true;
   try{
     const x=await env.MEMBER_DB.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all();
     if(x?.success===false||!Array.isArray(x?.results))return false;
@@ -126,9 +131,11 @@ export async function canonicalSchemaReady(env){
     const marker=await env.MEMBER_DB.prepare(
       "SELECT issuer,migration FROM canonical_identity_manifest WHERE id=1"
     ).all();
-    return marker?.success!==false && Array.isArray(marker?.results) &&
+    const verified=marker?.success!==false && Array.isArray(marker?.results) &&
       marker.results.length===1 && marker.results[0]?.issuer===CANONICAL_ISSUER &&
       marker.results[0]?.migration==="0001_canonical_better_auth_core";
+    if(verified)verifiedCanonicalSchema.set(env.MEMBER_DB,Date.now()+30_000);
+    return verified;
   }catch{return false;}
 }
 
