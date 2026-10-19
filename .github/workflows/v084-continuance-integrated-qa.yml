@@ -1,0 +1,98 @@
+name: ANEVUM V084 Continuance Integrated Release QA
+on:
+  push:
+    branches: [integration/anevum-v084-continuance-playercards-auth-20261019]
+  pull_request:
+    paths:
+      - 'creator-v1/**'
+      - '.github/workflows/v084-continuance-integrated-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: v084-continuance-integrated-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verified-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install production toolchain without lifecycle execution
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Typecheck and compile actual public and staging applications
+        run: |
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+      - name: Verify member authentication, D1 read bounds, staff and rewarded identity
+        working-directory: creator-v1
+        run: |
+          npm run test:d1-efficiency-v081
+          npm run test:entry-v082
+          npm run test:iren-v080
+          npm run test:player-v081
+          npm run test:signup-activation
+          npm run test:staff-v080
+      - name: Verify 2D-only member-facing level icons and protected identity rules
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'v081-vector-sigil' creator-v1/web/src/components/LevelEmblem.tsx
+          grep -Fq 'role?:VerifiedRole' creator-v1/web/src/lib/canonical-beta.ts
+          grep -Fq 'availability?:"ready"|"unavailable"|"closed"' creator-v1/web/src/lib/canonical-beta.ts
+          grep -Fq 'import "./iren-guided-v080.css";' creator-v1/web/src/main.tsx
+          grep -Fq 'import "./continuance-entry-v052.css";' creator-v1/web/src/main.tsx
+          grep -Fq 'CANONICAL_REPUTATION_ENABLED' creator-v1/canonical-auth/space.mjs
+          test ! -e creator-v1/web/public/evolution-card-plates.json
+          if grep -r -l 'M128 20 165 78 128 128' creator-v1/dist/web/assets --include='*.js' >/dev/null; then
+            echo "::error::Unreleased protected emblem artwork leaked into public bundle"
+            exit 1
+          fi
+      - name: Capture genuine React IREN onboarding at four responsive widths
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome"
+          mkdir -p evidence/v084-iren
+          node creator-v1/test/portal-offline-preview.mjs > evidence/v084-iren/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 70); do
+            curl -fsS http://127.0.0.1:4178/__ready >/dev/null && break
+            sleep 0.25
+          done
+          curl -fsS http://127.0.0.1:4178/__ready >/dev/null
+          node creator-v1/test/capture-iren-guided-v080.mjs "$chrome" http://127.0.0.1:4178 evidence/v084-iren
+          test -s evidence/v084-iren/acceptance.json
+          test -s evidence/v084-iren/iren-discover-320.png
+          test -s evidence/v084-iren/iren-help-390.png
+      - name: Capture responsive earned player cards and emblems without production sessions
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome"
+          mkdir -p evidence/v084-cards
+          node creator-v1/test/player-card-v078-live-react-browser.mjs "$chrome" evidence/v084-cards
+      - name: Archive actual UI evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v084-visual-qa
+          path: |
+            evidence/v084-iren/
+            evidence/v084-cards/
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Record reviewed source (not deployed)
+        run: |
+          git rev-parse HEAD
+          echo 'PRODUCTION_DEPLOY=NOT_AUTHORIZED' >> "$GITHUB_STEP_SUMMARY"
+          echo 'D1_MIGRATIONS=NOT_APPLIED' >> "$GITHUB_STEP_SUMMARY"
+# Nothing in this workflow can deploy, modify Cloudflare, grant roles, or create XP.
