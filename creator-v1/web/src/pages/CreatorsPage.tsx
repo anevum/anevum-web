@@ -116,7 +116,7 @@ function CreatorIdentityPage({handle}:{handle:string}){
         <section className="portal-box">
           <header className="portal-box-header"><div><span className="kicker">ORIGINAL WORK / PUBLIC RELEASES</span><h2>FROM THIS MAKER</h2></div><span className="portal-hall-stamp">{profile.publishedProjects} RELEASES</span></header>
           {projects.items.length?
-            <div className="portal-discover-results">{projects.items.map(p=><ProjectCard key={p.id} project={p} returnTo={current}/>)}</div>:
+            <div className="portal-discover-results">{projects.items.map(p=><ProjectCard key={p.id} project={p} returnTo={current} presentation="editorial"/>)}</div>:
             <EmptyState title={cursor?"NO MORE PUBLIC RELEASES":"NO PUBLIC RELEASES AVAILABLE"} detail="Only currently approved published projects appear here. Private drafts cannot be browsed."/>}
           <PageNav route={path} search={params} nextCursor={projects.nextCursor} label="Creator project releases"/>
         </section>

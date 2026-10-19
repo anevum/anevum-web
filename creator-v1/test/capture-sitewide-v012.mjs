@@ -129,6 +129,11 @@ try{
      throw Error("SITEWIDE_V012_VISUAL_OR_ROUTE_DRIFT_"+name+"_"+width+":"+JSON.stringify(presentation));
    if(!state.cinematic||state.header!==1||state.main!==1||state.overflow||state.atlas||!state.fixture)
     throw Error("SITEWIDE_V012_INCONSISTENT_"+name+"_"+width+":"+JSON.stringify(state));
+   if(name==="creator-channel"){
+     const channelCards=await evaluate('({count:document.querySelectorAll(".portal-channel-content .av73-project-card").length,art:document.querySelectorAll(".portal-channel-content .project-art").length,widths:[...document.querySelectorAll(".portal-channel-content .av73-project-card")].map(x=>x.getBoundingClientRect().width)})');
+     if(channelCards.count!==2||channelCards.art!==0||(width<650&&channelCards.widths.some(value=>value<240)))
+       throw Error("V091_CREATOR_PROJECT_READABILITY_"+width+":"+JSON.stringify(channelCards));
+   }
    if(name==="levels"||name==="recognition"){
     // V075 guest acceptance: no catalogue thumbnails, reward identity,
     // unearned badges, models or full-gallery links. Owner rewards are

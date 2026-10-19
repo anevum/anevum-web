@@ -210,6 +210,7 @@
 .av9-shell .v091-studio-release-entry p{max-width:66ch;margin:7px 0 0;color:var(--v091-muted);font-size:14px;line-height:1.6}
 .av9-shell .v091-studio-release-entry .st-action{flex:none;max-width:100%;white-space:normal}
 @media(max-width:650px){
+  .av9-shell .portal-channel-content .portal-discover-results{grid-template-columns:minmax(0,1fr)}
   .av9-shell .portal-channel-banner{align-items:flex-start;gap:15px;padding:22px 17px;flex-wrap:wrap}
   .av9-shell .portal-channel-avatar{width:60px;height:60px;border-radius:17px}
   .av9-shell .portal-channel-avatar .cw-letter-avatar{font-size:29px}
