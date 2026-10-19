@@ -18,13 +18,48 @@ const headers={
 function send(body,status=200,type="text/html; charset=utf-8",method="GET"){
   return new Response(method==="HEAD"?null:body,{status,headers:{...headers,"Content-Type":type}});
 }
-export default {async fetch(request){
+
+function escapeHtml(value) {
+  return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+}
+function previewHtml(row) {
+  const p=JSON.parse(row.payload||"{}");
+  const name=escapeHtml(row.title||"Local business");
+  const eyebrow=escapeHtml(p.eyebrow||"LOCAL BUSINESS / DESIGN PREVIEW");
+  const headline=escapeHtml(p.headline||"Made for your neighborhood.");
+  const summary=escapeHtml(p.description||"A useful place to find this business online.");
+  const about=escapeHtml(p.about||"A local business serving its community.");
+  const address=typeof p.address==="string"?p.address.slice(0,240).trim():"";
+  const phone=typeof p.phone==="string"?p.phone.slice(0,35).trim():"";
+  const hours=escapeHtml(p.hours||"Please confirm current hours by contacting the business.");
+  const addrEsc=escapeHtml(address);
+  const number=phone.replace(/[^0-9+]/g,"");
+  const tel=number.replace(/\+/g,"");
+  const callLink=tel.length>=7&&tel.length<=15?'<a class="btn secondary" href="tel:+'+tel+'">Call '+escapeHtml(phone)+'</a>':"";
+  const mapLink=address?'<a class="btn primary" href="https://www.google.com/maps/search/?api=1&amp;query='+escapeHtml(encodeURIComponent(address))+'" target="_blank" rel="noopener noreferrer">Get directions ↗</a>':"";
+  const email=typeof p.email==="string"?p.email.slice(0,120).trim():"";
+  const emailLink=/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)?'<a class="btn secondary" href="mailto:'+escapeHtml(encodeURIComponent(email))+'">Email the business ↗</a>':"";
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b1512"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="description" content="Unofficial ANEVUM Sites concept for ${name}. Information requires business approval."><title>${name} — ANEVUM Sites Concept</title><link rel="stylesheet" href="/assets/sites.css"></head><body class="demo"><div class="demo-notice">INDEPENDENT DESIGN CONCEPT · NOT AN OFFICIAL BUSINESS WEBSITE · DETAILS REQUIRE OWNER CONFIRMATION</div><div class="container"><header class="demo-top"><a class="demo-brand" href="/">${name}<small>PROPOSED WEB EXPERIENCE · ANEVUM</small></a><nav class="demo-nav"><a href="#details">About</a><a href="#hours">Hours &amp; location</a><a href="/">ANEVUM Sites ↗</a></nav></header></div><main><div class="container demo-hero"><div><span class="eyebrow">${eyebrow}</span><h1>${headline}</h1><p>${summary}</p><div class="actions">${mapLink}${callLink}${emailLink}</div><div class="demo-trust"><span>Mobile friendly</span><span>Community first</span><span>Uncommissioned preview</span></div></div><div class="demo-art" role="img" aria-label="Abstract architectural concept artwork"><div class="demo-art-label">ANEVUM / SITES · BUSINESS CONCEPT</div></div></div><section class="container demo-info" id="details"><article class="demo-card"><span class="eyebrow">Discover</span><h2>Get to know ${name}.</h2><p>${about}</p><p>${addrEsc||"Location to be confirmed by the business."}</p>${mapLink}</article><article class="demo-card" id="hours"><span class="eyebrow">Visit planning</span><h2>Hours &amp; contact.</h2><p>${hours}</p><p>Hours, address, telephone number and business details must be confirmed before official use.</p><div class="actions">${callLink}${emailLink}</div></article></section></main><div class="container"><footer class="demo-footer"><span>© 2026 · Unofficial design demonstration. Not affiliated with, commissioned by, or endorsed by the business unless explicitly agreed.</span><span><a href="/">Concept by ANEVUM Sites ↗</a></span></footer></div></body></html>`;
+}
+
+export default {async fetch(request,env){
   const u=new URL(request.url),m=request.method;
   if(!["GET","HEAD"].includes(m))return send("Method not allowed",405,"text/plain; charset=utf-8",m);
   if(!(u.hostname==="web.anevum.com"||u.hostname==="sites.anevum.com"||u.hostname==="sites-preview.anevum.com"||u.hostname.endsWith(".workers.dev")||u.hostname==="localhost"||u.hostname==="127.0.0.1"))return send("Unknown host",421,"text/plain; charset=utf-8",m);
   const path=u.pathname.replace(/\/+$/,"")||"/";
   if(path==="/")return send(STUDIO,200,undefined,m);
   if(path==="/preview/tobacco-vapor-time")return send(DEMO,200,undefined,m);
+  if(/^\/preview\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(path)){
+    try{
+      if(!env?.SITES_DB)return send("Preview temporarily unavailable",503,"text/plain; charset=utf-8",m);
+      const slug=path.slice("/preview/".length);
+      const row=await env.SITES_DB.prepare("SELECT slug,title,kind,status,payload FROM sites WHERE slug = ?").bind(slug).first();
+      if(!row||row.status==="archived")return send("Concept not found",404,"text/plain; charset=utf-8",m);
+      return send(previewHtml(row),200,undefined,m);
+    }catch{
+      return send("Preview temporarily unavailable",503,"text/plain; charset=utf-8",m);
+    }
+  }
   if(path==="/assets/sites.css")return send(STYLE,200,"text/css; charset=utf-8",m);
   if(path==="/assets/sites.js")return send(JS,200,"application/javascript; charset=utf-8",m);
   if(path==="/robots.txt")return send("User-agent: *\nDisallow: /\n",200,"text/plain; charset=utf-8",m);
