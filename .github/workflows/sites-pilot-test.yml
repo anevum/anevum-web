@@ -1,0 +1,33 @@
+name: ANEVUM Sites pilot verification
+
+on:
+  pull_request:
+    branches:
+      - release/home-wayfinder-v079-approved-20261018
+    paths:
+      - "sites/**"
+      - ".github/workflows/sites-pilot-test.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-and-security:
+    name: Node 22 isolated Worker contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check out reviewed branch
+        uses: actions/checkout@v4
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check Worker syntax
+        run: |
+          node --check sites/worker.mjs
+          node --check sites/workshop.mjs
+          node --check sites/tests/worker.test.mjs
+      - name: Run no-network contract tests
+        run: node --test sites/tests/worker.test.mjs
