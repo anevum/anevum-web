@@ -130,7 +130,7 @@ test('V081 keeps reputation credit bounded across large histories without falsel
  const {raw,db}=makeFixture();t.after(()=>raw.close());
  for(let i=0;i<100;i++){
   raw.prepare("INSERT INTO member_forum_threads(id,author_id,status) VALUES(?,?,'published')").run('many-'+i,'alpha');
-  raw.prepare("INSERT INTO member_forum_replies(id,thread_id,author_id,status) VALUES(?,?,'published')").run('reply-'+i,'bt','alpha');
+  raw.prepare("INSERT INTO member_forum_replies(id,thread_id,author_id,status) VALUES(?,?,?,'published')").run('reply-'+i,'bt','alpha');
   raw.prepare("INSERT INTO member_forum_reactions(thread_id,user_id) VALUES(?,?)").run('many-'+i,'peer-'+i);
   if(i<30)raw.prepare("INSERT INTO member_recognition_grants VALUES(?,'badge',?,NULL)").run('alpha','mark-'+i);
  }
