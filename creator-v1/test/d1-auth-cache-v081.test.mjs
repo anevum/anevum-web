@@ -66,7 +66,9 @@ test("engine resolution is confined to a binding and exact auth settings",()=>{
  assert.equal(created,2);
  assert.notEqual(authFor(config(db2)),rotated);
  assert.equal(created,3);
- assert.equal(authFor(config(db1)),original.created===1?undefined:authFor(config(db1))); // prove config revert can construct a new engine
+ const originalConfigAgain=authFor(config(db1));
+ assert.notEqual(originalConfigAgain,original);
+ assert.equal(created,4);
 });
 
 test("reused auth engine resolves fresh cookies on every request",async()=>{
