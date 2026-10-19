@@ -116,7 +116,13 @@ export async function permitCanonicalUserCreationApproved(env,email){
 export async function canonicalSchemaReady(env){
   if(!configured(env?.MEMBER_DB))return false;
   try{
-    const x=await env.MEMBER_DB.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all();
+    // Bound metadata rows to the exact tables needed for issuer verification.
+    // Selecting every table on every public health/auth call can amplify D1
+    // row reads as ANEVUM installs more unrelated schemas.
+    const x=await env.MEMBER_DB.prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name IN "+
+      "('user','session','account','verification','rateLimit','canonical_identity_manifest')"
+    ).all();
     if(x?.success===false||!Array.isArray(x?.results))return false;
     const tables=new Set(x.results.map(row=>row?.name).filter(x=>typeof x==="string"));
     if(!REQUIRED_CANONICAL_TABLES.every(name=>tables.has(name)) ||
