@@ -100,7 +100,8 @@ test("private UI validates exact session and hides metrics on errors",()=>{
  const css=read("src/styles/commons-v5-studio.css");
  assert.match(server,/pathname === "\/api\/member\/studio\/overview"/);
  assert.match(server,/studioOperationsOverview\(request,env,user,origin\)/);
- assert.match(page,/<StudioOperations memberId=\{id\}\/>/);
+ assert.match(page,/<StudioOperations key=\{operationsRefresh\} memberId=\{id\}\/>/);
+ assert.match(page,/setOperationsRefresh\(x=>x\+1\)/);
  assert.match(component,/v.viewerMemberId!==id/);
  assert.match(component,/controller.abort\(\)/);
  assert.match(component,/state==="unavailable"/);

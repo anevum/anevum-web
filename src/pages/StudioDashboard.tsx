@@ -2,13 +2,12 @@ import {useCallback,useEffect,useRef,useState} from "react";
 import {Link} from "react-router-dom";
 import {memberAuthClient} from "../member/auth-client";
 import {useMemberAvailability} from "../member/useMemberAvailability";
-import {studioDraftDirty,studioDraftProblem} from "../member/studio-editorial";
+import {studioDraftDirty,studioDraftProblem,studioSameSavedRevision,studioMutationMatches,
+ studioPublicStateMatches,type StudioSavedEntry,type StudioAction} from "../member/studio-editorial";
 import StudioOperations from "./StudioOperations";
 
 type Kind="POST"|"UPDATE"|"AHA";
-type State="DRAFT"|"PUBLISHED"|"ARCHIVED";
-type Entry={id:string;slug:string;kind:Kind;title:string;summary:string;body:string;
- status:State;revision:number;createdAt:number;updatedAt:number;publishedAt:number|null};
+type Entry=StudioSavedEntry;
 type Grant={role:"owner"|"admin";contentReady:boolean;publishingEnabled:boolean};
 type EditorialEvent={action:"CREATE"|"EDIT"|"PUBLISH"|"UNPUBLISH"|"ARCHIVE";
  revision:number;actorMemberId:string;createdAt:number};
@@ -19,13 +18,19 @@ function object(value:unknown):value is Record<string,unknown>{
 }
 function verifiedEntry(value:unknown):value is Entry {
  if(!object(value))return false;
- return typeof value.id==="string"&&typeof value.slug==="string"&&
-  typeof value.title==="string"&&typeof value.summary==="string"&&typeof value.body==="string"&&
-  ["POST","UPDATE","AHA"].includes(String(value.kind))&&
-  ["DRAFT","PUBLISHED","ARCHIVED"].includes(String(value.status))&&
-  Number.isSafeInteger(value.revision)&&Number(value.revision)>0&&
-  typeof value.createdAt==="number"&&typeof value.updatedAt==="number"&&
-  (value.publishedAt===null||typeof value.publishedAt==="number");
+ if(typeof value.id!=="string"||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.id)||
+  typeof value.slug!=="string"||value.slug.length>96||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value.slug)||
+  typeof value.title!=="string"||typeof value.summary!=="string"||typeof value.body!=="string"||
+  !["POST","UPDATE","AHA"].includes(String(value.kind))||
+  !["DRAFT","PUBLISHED","ARCHIVED"].includes(String(value.status))||
+  !Number.isSafeInteger(value.revision)||Number(value.revision)<1||
+  !Number.isSafeInteger(value.createdAt)||Number(value.createdAt)<0||
+  !Number.isSafeInteger(value.updatedAt)||Number(value.updatedAt)<Number(value.createdAt))return false;
+ if(value.status==="PUBLISHED"?
+  !Number.isSafeInteger(value.publishedAt)||Number(value.publishedAt)<Number(value.createdAt)||
+    Number(value.publishedAt)>Number(value.updatedAt):value.publishedAt!==null)return false;
+ return studioDraftProblem({kind:value.kind as Kind,title:value.title,summary:value.summary,body:value.body})===null&&
+  value.title===value.title.trim()&&value.summary===value.summary.trim()&&value.body===value.body.trim();
 }
 function stamp(seconds:number|null) {
  return seconds?new Date(seconds*1000).toLocaleString(undefined,{dateStyle:"medium",timeStyle:"short"}):"Not published";
@@ -47,6 +52,7 @@ function StudioMember({id,checking}:{id?:string;checking:boolean}){
  const [uncertain,setUncertain]=useState(false);
  const [message,setMessage]=useState("");
  const [reload,setReload]=useState(0);
+ const [operationsRefresh,setOperationsRefresh]=useState(0);
  const [preview,setPreview]=useState(false);
  const [history,setHistory]=useState<EditorialEvent[]>([]);
  const [historyStatus,setHistoryStatus]=useState<"idle"|"loading"|"ready"|"error">("idle");
@@ -98,6 +104,12 @@ function StudioMember({id,checking}:{id?:string;checking:boolean}){
   if(current)setForm({kind:current.kind,title:current.title,summary:current.summary,body:current.body});
  },[current?.id,current?.revision]);
  useEffect(()=>{
+  if(!dirty||stage!=="ready")return;
+  const warn=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue="";};
+  window.addEventListener("beforeunload",warn);
+  return ()=>window.removeEventListener("beforeunload",warn);
+ },[dirty,stage]);
+ useEffect(()=>{
   setHistory([]);setHistoryMore(false);setHistoryStatus("idle");
   if(!id||!current||stage!=="ready"||!grant?.contentReady)return;
   const entryId=current.id,expectedRevision=current.revision;
@@ -131,7 +143,7 @@ function StudioMember({id,checking}:{id?:string;checking:boolean}){
   setSelected(next);setPreview(false);setMessage("");
   if(next===null)setForm(newDraft());
  }
- async function act(action:"CREATE"|"EDIT"|"PUBLISH"|"UNPUBLISH"|"ARCHIVE"){
+ async function act(action:StudioAction){
   const controller=scope.current;
   if(!id||!controller||controller.signal.aborted||writing.current||uncertain||
     stage!=="ready"||!grant?.contentReady)return;
@@ -147,7 +159,9 @@ function StudioMember({id,checking}:{id?:string;checking:boolean}){
   if(action==="PUBLISH"&&dirty){
    setMessage("Save your changes before publishing this revision.");return;
   }
-  if(action==="PUBLISH"&&!window.confirm("Publish this entry on ANEVUM now?"))return;
+  if(action==="ARCHIVE"&&dirty){
+   setMessage("Save or discard unsaved changes before archiving this draft.");return;
+  }
   if(action==="UNPUBLISH"&&!window.confirm("Remove this entry from public view?"))return;
   if(action==="ARCHIVE"&&!window.confirm("Archive this draft permanently?"))return;
   const url=action==="CREATE"?"/api/member/studio/entries":
@@ -156,6 +170,21 @@ function StudioMember({id,checking}:{id?:string;checking:boolean}){
     {confirm:action,expectedRevision:current!.revision};
   writing.current=true;setBusy(true);setMessage("");
   try{
+   if(action==="PUBLISH"){
+    const preflight=await fetch("/api/member/studio/entries/"+current!.id,{
+      credentials:"same-origin",cache:"no-store",redirect:"manual",signal:controller.signal,
+      headers:{"X-ANEVUM-EXPECTED-MEMBER-ID":id}});
+    if(controller.signal.aborted)return;
+    if(!preflight.ok)throw Error("Saved revision unavailable");
+    const saved:unknown=await preflight.json();
+    if(controller.signal.aborted)return;
+    if(!object(saved)||saved.schemaVersion!=="anevum.studio.v1"||saved.viewerMemberId!==id||
+      !verifiedEntry(saved.entry)||!studioSameSavedRevision(saved.entry,current!)){
+     setUncertain(true);setMessage("The saved draft changed. Reload Studio before publishing.");return;
+    }
+    if(!window.confirm("Publish this entry on ANEVUM now?"))return;
+    if(controller.signal.aborted)return;
+   }
    const result=await fetch(url,{method:action==="EDIT"?"PATCH":"POST",credentials:"same-origin",
      redirect:"manual",cache:"no-store",signal:controller.signal,
      headers:{"Content-Type":"application/json","X-ANEVUM-EXPECTED-MEMBER-ID":id},
@@ -173,16 +202,26 @@ function StudioMember({id,checking}:{id?:string;checking:boolean}){
    if(!object(receipt)||receipt.schemaVersion!=="anevum.studio.v1"||
      receipt.viewerMemberId!==id||receipt.saved!==true||receipt.action!==action||
      receipt.auditRecorded!==true||!verifiedEntry(receipt.entry)||
-     (current&&receipt.entry.id!==current.id)||
-     (current&&receipt.entry.revision!==current.revision+1)||
-     (action==="CREATE"&&receipt.entry.status!=="DRAFT"))throw Error("Invalid write receipt");
+     !studioMutationMatches(receipt.entry,action,current,form))throw Error("Invalid write receipt");
    if(controller.signal.aborted)return;
    const item=receipt.entry;
    setSelected(item.id);
    setEntries(old=>[item,...old.filter(e=>e.id!==item.id)]);
    setForm({kind:item.kind,title:item.title,summary:item.summary,body:item.body});
-   setMessage(action==="PUBLISH"?"Publication recorded.":action==="UNPUBLISH"?
-     "Entry unpublished.":action==="ARCHIVE"?"Draft archived.":"Draft saved.");
+   setOperationsRefresh(x=>x+1);
+   if(action==="PUBLISH"||action==="UNPUBLISH"){
+    // Verify the anonymous read path, never an authenticated preview or cache.
+    const publicView=await fetch("/api/public/studio/entries/"+item.slug,{
+      credentials:"omit",cache:"no-store",redirect:"manual",signal:controller.signal});
+    if(controller.signal.aborted)return;
+    const publicData:unknown=await publicView.json();
+    if(controller.signal.aborted)return;
+    if(!studioPublicStateMatches(action,publicView.status,publicData,item)){
+     setUncertain(true);setMessage("The change was saved, but its public state could not be verified. Reload and reconcile; do not repeat the write.");return;
+    }
+   }
+   setMessage(action==="PUBLISH"?"Publication recorded and public content verified.":action==="UNPUBLISH"?
+     "Entry unpublished; the public endpoint now returns not found.":action==="ARCHIVE"?"Draft archived.":"Draft saved.");
   }catch{
    if(!controller.signal.aborted){setUncertain(true);setMessage(
     "The change could not be verified. Reload Studio before another action; it may already have been saved.");}
@@ -209,7 +248,7 @@ function StudioMember({id,checking}:{id?:string;checking:boolean}){
    <nav className="studio-nav" aria-label="Staff destinations">
     <Link to="/updates">Public updates</Link><Link to="/communities/moderation">Moderation pilot</Link>
     <Link to="/me/settings">Account</Link><Link to="/products">Projects</Link></nav>
-   {grant.contentReady&&id&&<StudioOperations memberId={id}/>}
+   {grant.contentReady&&id&&<StudioOperations key={operationsRefresh} memberId={id}/>}
    {!grant.contentReady?<div className="studio-panel" role="status">
     <h2>Editorial database not yet activated</h2>
     <p>The Studio migration must pass the separate production release and data-backup gates before drafts can be saved.</p>
@@ -258,15 +297,18 @@ function StudioMember({id,checking}:{id?:string;checking:boolean}){
        current.status==="DRAFT"?<>
        <button className="primary" disabled={locked} onClick={()=>void act("EDIT")}>Save changes</button>
        <button disabled={locked||!grant.publishingEnabled||dirty} onClick={()=>void act("PUBLISH")}>Publish now</button>
-       <button disabled={locked} onClick={()=>void act("ARCHIVE")}>Archive</button>
+       <button disabled={locked||dirty} onClick={()=>void act("ARCHIVE")}>Archive</button>
       </>:current.status==="PUBLISHED"?<>
        <Link to={"/updates/"+current.slug}>View publication</Link>
        <button disabled={locked} onClick={()=>void act("UNPUBLISH")}>Unpublish</button>
       </>:<p>Archived entries are read-only.</p>}
      </div>
-     {busy&&<p role="status">Submitting the change…</p>}
+     {busy&&<p role="status">Verifying the revision and applying the change…</p>}
      {message&&<p className="studio-feedback" role="status">{message}</p>}
-     {uncertain&&<button type="button" onClick={()=>setReload(x=>x+1)}>Reload and reconcile</button>}
+     {uncertain&&<button type="button" onClick={()=>{
+      if(dirty&&!window.confirm("Reload Studio and discard unsaved editorial changes?"))return;
+      setReload(x=>x+1);
+     }}>Reload and reconcile</button>}
      {current&&<section className="studio-history" aria-label="Publication audit history">
       <h3>Change history</h3>
       {historyStatus==="loading"&&<p role="status">Verifying editorial history…</p>}
