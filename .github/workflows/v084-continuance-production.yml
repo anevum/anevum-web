@@ -1,4 +1,4 @@
-name: ANEVUM V089 Guarded Living IREN Production
+name: ANEVUM V090 Guarded Player Identity Synchronization Production
 on:
   push:
     branches:
@@ -131,7 +131,7 @@ jobs:
           test -s "$RUNNER_TEMP/v084-release-evidence/iren-discover-1440.png"
           test -s "$RUNNER_TEMP/v084-release-evidence/iren-docked-top-320.png"
           echo V089_REAL_WEBGL_AND_RESPONSIVE_ACCEPTANCE=PASS >> "$GITHUB_STEP_SUMMARY"
-      - name: Deploy exact V089 Continuance source with invariant bindings, assets, routes and rollback
+      - name: Deploy V090 synchronized player identity without changing live routes, bindings or IREN
         shell: bash
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -143,21 +143,33 @@ jobs:
           test "$GITHUB_REPOSITORY" = "anevum/anevum-web"
           test "$GITHUB_REF" = "refs/heads/release/v084-continuance-approved-20261019"
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          git merge-base --is-ancestor 7f248b34375747523a82a0dbfb7f1e29df8a6141 HEAD
-          # Guard only the reviewed V089 files and the release workflow.
-          git merge-base --is-ancestor 054edf5e56f3abf3dc4b7af7726e304ca3ec7bc5 HEAD
-          diff -u <(printf '%s\n' \
-            '.github/workflows/v084-continuance-production.yml' \
-            'creator-v1/package.json' \
-            'creator-v1/test/capture-iren-guided-v080.mjs' \
-            'creator-v1/test/iren-living-v088.test.mjs' \
-            'creator-v1/web/src/components/IrenGuidedContinuance.tsx' \
-            'creator-v1/web/src/components/IrenLivingCanvas.tsx' \
-            'creator-v1/web/src/iren-living-v088.css' \
-            'creator-v1/web/src/lib/iren-companion-context-v089.ts' \
-            'creator-v1/web/src/lib/iren-living-rig-v088.ts' \
-            'creator-v1/web/src/main.tsx') \
-            <(git diff --name-only a0c51926115cea77ebde2086126a5c7cf5313eb0 HEAD)
+          git merge-base --is-ancestor 6c60b1c9d4860e84cadc2c76bc01f8254b26d139 HEAD
+          git merge-base --is-ancestor 00ba9f32f2c862de4b362eaafddc80890e2b577b HEAD
+          # Allow only the reviewed V090 identity patch and this guarded deployment workflow.
+          # Fail before any Cloudflare writes if even one extra source file differs.
+          diff -u <(printf '%s\\n' \
+             '.github/workflows/v084-continuance-production.yml' \
+             'creator-v1/canonical-auth/community.mjs' \
+             'creator-v1/canonical-auth/forums.mjs' \
+             'creator-v1/canonical-auth/public-member-card.mjs' \
+             'creator-v1/canonical-auth/space.mjs' \
+             'creator-v1/package.json' \
+             'creator-v1/test/member-community-v030.test.mjs' \
+             'creator-v1/test/member-identity-v061.test.mjs' \
+             'creator-v1/test/member-spaces-v028.test.mjs' \
+             'creator-v1/web/src/components/CompactMemberIdentity.tsx' \
+             'creator-v1/web/src/components/MemberCommunity.tsx' \
+             'creator-v1/web/src/components/MemberSpaceDashboard.tsx' \
+             'creator-v1/web/src/components/PlayerCardStudio.tsx' \
+             'creator-v1/web/src/components/ProfileImageEditor.tsx' \
+             'creator-v1/web/src/lib/member-community.ts' \
+             'creator-v1/web/src/lib/member-forums.ts' \
+             'creator-v1/web/src/lib/player-recognition-api.ts' \
+             'creator-v1/web/src/lib/useMemberRevalidation.ts' \
+             'creator-v1/web/src/lib/useOwnPlayerCard.ts' \
+             'creator-v1/web/src/pages/CanonicalForums.tsx' \
+             'creator-v1/web/src/pages/Phase1PublicMemberPage.tsx') \
+            <(git diff --name-only 6c60b1c9d4860e84cadc2c76bc01f8254b26d139 HEAD)
           test -f creator-v1/web/src/lib/public-creator-handle.ts
           grep -Fq 'publicCreatorHandle(project.creatorHandle)' creator-v1/web/src/pages/CinematicLandingPage.tsx
           grep -Fq 'publicCreatorHandle(project.creatorHandle)' creator-v1/web/src/components/ProjectCard.tsx
@@ -181,7 +193,7 @@ jobs:
           echo "Production flags and binding checks passed. Checking deployed Worker version..."
           cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" > "$RUNNER_TEMP/pre-deployments.json"
           pre_version="$(jq -r '(.result.deployments // .result)[0].versions[0].version_id' "$RUNNER_TEMP/pre-deployments.json")"
-          test "$pre_version" = "422c8a73-d24a-4fb6-84b3-a9818942ca1e"
+          test "$pre_version" = "3db3ba18-882d-4810-b228-e84ac10be952"
           echo "Deployed version matches expected baseline. Checking routes..."
           cf "$cf_api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/pre-routes.json"
           jq -e '.success and any(.result[]; .pattern=="anevum.com/*" and .script=="anevum-native-frame-policy-v001") and ([.result[]|select(.pattern=="anevum.com/assets/index-*")|.script]==["anevum-native-project-community-v002"])' "$RUNNER_TEMP/pre-routes.json" > /dev/null
@@ -223,7 +235,7 @@ jobs:
           jq -S '[.result.bindings[]|select(.type=="secret_text")|.name]|sort' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/pre-secrets.json"
           # Verify the same live baseline immediately before the first write.
           cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" > "$RUNNER_TEMP/immediate-pre-deployments.json"
-          test "$(jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/immediate-pre-deployments.json")" = "422c8a73-d24a-4fb6-84b3-a9818942ca1e"
+          test "$(jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/immediate-pre-deployments.json")" = "3db3ba18-882d-4810-b228-e84ac10be952"
           cf "$cf_api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/immediate-pre-routes.json"
           jq -S '[.result[]|{pattern,script}]|sort_by(.pattern)' "$RUNNER_TEMP/immediate-pre-routes.json" > "$RUNNER_TEMP/immediate-routes.lock.json"
           cmp "$RUNNER_TEMP/routes.lock.json" "$RUNNER_TEMP/immediate-routes.lock.json"
@@ -426,8 +438,8 @@ jobs:
           trap - EXIT
           echo "ANEVUM_V089_GUARDED_HOME_WAYFINDER_LIVE=PASS" >> "$GITHUB_STEP_SUMMARY"
           echo "ANEVUM_V089_EARNED_2D_ACTIVE_AND_HISTORIC_3D_PRESERVED=PASS" >> "$GITHUB_STEP_SUMMARY"
-          echo "ANEVUM_V089_PRODUCTION_ROUTES_DATABASES_SECRETS_UNCHANGED=PASS" >> "$GITHUB_STEP_SUMMARY"
-          echo "APPROVED_SOURCE_SHA=054edf5e56f3abf3dc4b7af7726e304ca3ec7bc5" >> "$GITHUB_STEP_SUMMARY"
+          echo "ANEVUM_V090_PRODUCTION_ROUTES_DATABASES_SECRETS_UNCHANGED=PASS" >> "$GITHUB_STEP_SUMMARY"
+          echo "APPROVED_SOURCE_SHA=$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
           echo "RELEASE_SHA=$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
           jq -r '.result.deployments[0].versions[0].version_id' "$RUNNER_TEMP/v079-live-deployments.json" | sed 's/^/WORKER_VERSION=/' >> "$GITHUB_STEP_SUMMARY"
       - name: Preserve V089 release acceptance screenshots
