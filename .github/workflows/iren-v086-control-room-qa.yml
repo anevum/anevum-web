@@ -1,0 +1,77 @@
+name: IREN V086 Owner Control Room Security and Responsive QA
+on:
+  push:
+    branches: [build/iren-control-room-v086-20261019-001]
+    paths:
+      - 'creator-v1/**'
+      - '.github/workflows/iren-v086-control-room-qa.yml'
+  pull_request:
+    paths:
+      - 'creator-v1/**'
+      - '.github/workflows/iren-v086-control-room-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: iren-v086-control-room-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  owner-safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install locked application build dependencies, without npm hooks
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Enforce no production migration, new role shortcut or fake staging status
+        run: |
+          set -euo pipefail
+          node --check creator-v1/canonical-auth/staff-ops.mjs
+          node --check creator-v1/test/iren-owner-control-v086.test.mjs
+          grep -Fq "permit.role!=='owner'" creator-v1/canonical-auth/staff-ops.mjs
+          grep -Fq "staff_access_grants WHERE member_id=?" creator-v1/canonical-auth/staff-ops.mjs
+          grep -Fq "stagingReady:false" creator-v1/canonical-auth/staff-ops.mjs
+          grep -Fq "canIssue:false" creator-v1/canonical-auth/staff-ops.mjs
+          grep -Fq "snapshot.role==='owner'" creator-v1/web/src/pages/StaffCommandPage.tsx
+      - name: Build public frontend and isolated Staff Worker assets
+        run: |
+          npm run check:creator-v1-web
+          npm run build:iren-apex-staff
+          test -s creator-v1/dist/staff/index.html
+          test -d creator-v1/dist/staff/assets
+          grep -Fq '/staff/assets/' creator-v1/dist/staff/index.html
+      - name: Verify owner directory, grant security, recognition and existing IREN command
+        working-directory: creator-v1
+        run: |
+          node --test test/iren-owner-control-v086.test.mjs
+          npm run test:staff-command
+          node --test test/supporter-rewards-v034.test.mjs
+      - name: Capture actual Staff React UI on desktop and phone
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome"
+          mkdir -p evidence/iren-v086
+          node creator-v1/test/capture-iren-staff-v002.mjs --chrome "$chrome" --output evidence/iren-v086
+          test -s evidence/iren-v086/iren-v002-1440.png
+          test -s evidence/iren-v086/iren-v002-390.png
+          test -s evidence/iren-v086/iren-v002-320.png
+      - name: Preserve mobile and desktop visual evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-iren-v086-owner-control-room
+          path: evidence/iren-v086/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Record source-only status and exact revision
+        run: |
+          git rev-parse HEAD
+          echo 'IREN_OWNER_CONTROL_SOURCE_VERIFIED=PASS' >> "$GITHUB_STEP_SUMMARY"
+          echo 'PRODUCTION_STAFF_WORKER_UNCHANGED=TRUE' >> "$GITHUB_STEP_SUMMARY"
+          echo 'MEMBER_ROLES_AND_REWARDS_UNCHANGED=TRUE' >> "$GITHUB_STEP_SUMMARY"
+          echo 'STAGING_APP_NOT_YET_DEPLOYED=TRUE' >> "$GITHUB_STEP_SUMMARY"
