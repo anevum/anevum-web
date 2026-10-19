@@ -10,7 +10,7 @@ function original(w){let text=candidate(w);for(const e of [...w.source_edits].re
  text=text.slice(0,e.offset)+e.before+text.slice(e.offset+e.after.length);
 }return text;}
 const context={GITHUB_REPOSITORY:'anevum/anevum-web',GITHUB_REF:'refs/heads/release/v084-continuance-approved-20261019',GITHUB_WORKFLOW:'ANEVUM V091 Guarded Continuance Experience Production'};
-function fixture({drift=false,failAt=0}={}){
+function fixture({drift=false,failAt=0,moduleDrift=false}={}){
  const writes=[],states=new Map(spec.workers.map(w=>[w.name,{version:w.baseline_version,source:original(w)}]));
  const routes=Array.from({length:36},(_,i)=>({pattern:'anevum.com/fixture-'+i,script:'preserved'}));
  const settings={bindings:[{name:'APEX_AUTH',type:'service',service:'anevum-apex-prelaunch-gateway',environment:'production'},
@@ -24,11 +24,13 @@ function fixture({drift=false,failAt=0}={}){
   if(method==='GET'){
    if(path.endsWith('/settings'))return structuredClone(settings);
    if(path.endsWith('/deployments'))return {deployments:[{versions:[{version_id:drift?'unexpected':state.version,percentage:100}]}]};
-   return '--boundary\r\nContent-Disposition: form-data; name="index.mjs"\r\n\r\n'+state.source+'\r\n--boundary--\r\n';
+   const module=moduleDrift?'unexpected.js':(spec.workers.find(w=>w.name===name).module_file||'index.mjs');
+   return '--boundary\r\nContent-Disposition: form-data; name="'+module+'"\r\n\r\n'+state.source+'\r\n--boundary--\r\n';
   }
   writes.push({method,path,body});
   if(method==='PUT'){
    assert.equal(body.metadata.keep_assets,true);assert.deepEqual(body.metadata.bindings,settings.bindings);
+   assert.equal(body.metadata.main_module,spec.workers.find(w=>w.name===name).module_file||'index.mjs');
    state.source=body.source;state.version='repaired-'+name;
    if(writes.filter(w=>w.method==='PUT').length===failAt)throw Error('Transport failed after upload');
   }else{
@@ -46,10 +48,14 @@ test('default preflight is read-only and source/version drift stops every produc
  const f=fixture();assert.equal((await repairStaffTransport(f.api)).status,'verified_read_only');assert.equal(f.writes.length,0);
  const drift=fixture({drift:true});await assert.rejects(()=>repairStaffTransport(drift.api,{apply:true,context}),/drift/);assert.equal(drift.writes.length,0);
  await assert.rejects(()=>repairStaffTransport(f.api,{apply:true,context:{}}),/guarded production workflow/);assert.equal(f.writes.length,0);
+ const changed=fixture({moduleDrift:true});await assert.rejects(()=>repairStaffTransport(changed.api,{apply:true,context}),/module layout/);
+ assert.equal(changed.writes.length,0);
 });
 test('guarded rollout preserves assets, bindings and routes and changes exactly the five scripts',async()=>{
  const f=fixture();assert.equal((await repairStaffTransport(f.api,{apply:true,context})).status,'repaired');
  assert.equal(f.writes.length,5);assert.ok(f.writes.every(w=>w.method==='PUT'));
+ assert.equal(f.writes.filter(w=>w.body.metadata.main_module==='worker.js').length,1);
+ assert.equal(f.writes.filter(w=>w.body.metadata.main_module==='index.mjs').length,4);
  for(const w of spec.workers)assert.equal(digest(f.states.get(w.name).source),w.candidate_sha256);
 });
 test('failure after an upload restores every attempted Worker to its recorded baseline',async()=>{

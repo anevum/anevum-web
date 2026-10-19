@@ -57,7 +57,8 @@
           "before": "redirect: \"error\"",
           "after": "redirect:\"manual\""
         }
-      ]
+      ],
+      "module_file": "worker.js"
     },
     {
       "name": "anevum-iren-staff-observatory-v001",

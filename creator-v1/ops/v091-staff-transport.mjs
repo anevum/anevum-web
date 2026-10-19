@@ -9,9 +9,18 @@ const routeLock=rows=>stable(rows.map(({pattern,script})=>({pattern,script})).so
 const settingsLock=s=>stable(Object.fromEntries(['bindings','compatibility_date','compatibility_flags','usage_model','tags','tail_consumers','logpush','placement','observability'].filter(k=>k in s).map(k=>[k,k==='bindings'?[...s[k]].sort((a,b)=>a.name.localeCompare(b.name)):s[k]])));
 function moduleSource(multipart){
  if(typeof multipart!=='string')throw Error('Worker source must be multipart text');
- const start=multipart.indexOf('\r\n\r\n'),end=multipart.lastIndexOf('\r\n--');
- if(start<0||end<start||!multipart.slice(0,start).includes('name="index.mjs"'))throw Error('Unexpected Worker module layout');
- return multipart.slice(start+4,end);
+ const lineEnd=multipart.indexOf('\r\n');
+ const boundary=multipart.slice(0,lineEnd);
+ if(!/^--[A-Za-z0-9_-]{4,}$/.test(boundary))throw Error('Unexpected Worker multipart boundary');
+ const headerEnd=multipart.indexOf('\r\n\r\n',lineEnd+2);
+ const header=headerEnd<0?'':multipart.slice(lineEnd+2,headerEnd);
+ const module=/^Content-Disposition: form-data; name="(index\.mjs|worker\.js)"/m.exec(header)?.[1];
+ const footer='\r\n'+boundary+'--\r\n';
+ if(!module||!multipart.endsWith(footer)||headerEnd<lineEnd+2||headerEnd+4>multipart.length-footer.length)
+  throw Error('Unexpected Worker module layout');
+ const source=multipart.slice(headerEnd+4,-footer.length);
+ if(source.includes('\r\n'+boundary+'\r\n'))throw Error('Unexpected multipart Worker assets or extra modules');
+ return {source,module};
 }
 function currentVersion(value){
  const versions=value.deployments?.[0]?.versions;
@@ -29,14 +38,15 @@ export async function repairStaffTransport(api,{apply=false,context=process.env,
  for(const worker of manifest.workers){
   const base=prefix+worker.name;
   const [settings,deployment,download]=await Promise.all([api('GET',base+'/settings'),api('GET',base+'/deployments'),api('GET',base)]);
-  const version=currentVersion(deployment),live=digest(moduleSource(download)),candidate=readSource(worker.name);
+  const version=currentVersion(deployment),downloaded=moduleSource(download),live=digest(downloaded.source),candidate=readSource(worker.name);
+  if(downloaded.module!==(worker.module_file||'index.mjs'))throw Error('Live Worker module layout drift: '+worker.name);
   if(digest(candidate)!==worker.candidate_sha256)throw Error('Candidate source drift: '+worker.name);
   if(!settings.bindings?.some(b=>b.type==='service'&&['APEX_AUTH','AUTH'].includes(b.name)&&b.service==='anevum-apex-prelaunch-gateway')||
     !settings.bindings.some(b=>b.type==='d1'&&['MEMBER_DB','DB'].includes(b.name)&&(b.database_id||b.id)==='e1d29049-c83b-4534-8355-dc1fa36ba6d8')||
     settings.bindings.some(b=>!['service','d1','assets','plain_text'].includes(b.type)))throw Error('Unexpected staff bindings: '+worker.name);
   if(live===worker.candidate_sha256){plans.push({...worker,alreadyRepaired:true});continue;}
   if(version!==worker.baseline_version||live!==worker.baseline_sha256)throw Error('Live source/version drift: '+worker.name);
-  const metadata={main_module:'index.mjs',keep_assets:true,bindings:settings.bindings.map(({id,...binding})=>binding)};
+  const metadata={main_module:downloaded.module,keep_assets:true,bindings:settings.bindings.map(({id,...binding})=>binding)};
   for(const key of ['compatibility_date','compatibility_flags','usage_model','tags','tail_consumers','logpush','placement','observability'])
    if(key in settings)metadata[key]=settings[key];
   plans.push({...worker,base,settings,metadata,candidate,version});
@@ -53,7 +63,7 @@ export async function repairStaffTransport(api,{apply=false,context=process.env,
    // Record before PUT: a transport failure can occur after the server applies it.
    changed.push(plan);
    await api('PUT',plan.base,{metadata:plan.metadata,source:plan.candidate});
-   if(digest(moduleSource(await api('GET',plan.base)))!==plan.candidate_sha256||settingsLock(await api('GET',plan.base+'/settings'))!==settingsLock(plan.settings))
+   if((await (async()=>{const live=moduleSource(await api('GET',plan.base));return live.module===plan.metadata.main_module&&digest(live.source)===plan.candidate_sha256;})())!==true||settingsLock(await api('GET',plan.base+'/settings'))!==settingsLock(plan.settings))
     throw Error('Post-repair source/settings mismatch: '+plan.name);
   }
   if(routeLock(await api('GET',routesPath))!==routesBefore)throw Error('Route drift after staff repair');
@@ -64,7 +74,7 @@ export async function repairStaffTransport(api,{apply=false,context=process.env,
    try{
     const active=currentVersion(await api('GET',plan.base+'/deployments'));
     if(active===plan.version)continue;
-    if(digest(moduleSource(await api('GET',plan.base)))!==plan.candidate_sha256)
+    if(digest(moduleSource(await api('GET',plan.base)).source)!==plan.candidate_sha256)
      throw Error('Concurrent source deployment; refusing to overwrite it');
     await api('POST',plan.base+'/deployments',{strategy:'percentage',versions:[{version_id:plan.version,percentage:100}]});
     if(currentVersion(await api('GET',plan.base+'/deployments'))!==plan.version)throw Error('Rollback verification failed');
@@ -82,7 +92,9 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
   const headers={authorization:'Bearer '+token};let payload;
   if(method==='PUT'){
    payload=new FormData();payload.append('metadata',new Blob([JSON.stringify(body.metadata)],{type:'application/json'}));
-   payload.append('index.mjs',new Blob([body.source],{type:'application/javascript+module'}),'index.mjs');
+   const module=body.metadata.main_module;
+   if(!['index.mjs','worker.js'].includes(module))throw Error('Unexpected Worker module filename');
+   payload.append(module,new Blob([body.source],{type:'application/javascript+module'}),module);
   }else if(body){headers['content-type']='application/json';payload=JSON.stringify(body);}
   const response=await fetch('https://api.cloudflare.com/client/v4'+path,{method,headers,body:payload,signal:AbortSignal.timeout(30000)});
   if(!response.ok)throw Error('Cloudflare request failed: '+method+' '+path+' HTTP '+response.status);
