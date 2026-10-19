@@ -59,3 +59,75 @@
 .ir80-wayfinder-action{font:700 9px/1.4 ui-monospace,monospace;color:#ead2ad;letter-spacing:.04em;white-space:nowrap}
 .ir80-wayfinder-entry:hover{border-color:#edd5b1}.ir80-wayfinder-entry:focus-visible{outline:3px solid #86ddeb;outline-offset:3px}
 @media(max-width:380px){.ir80-wayfinder-action{display:none}}
+
+
+/* V087: a single unobtrusive IREN scout, not overlapping fixed toolbars. */
+.ir87-companion{right:max(12px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom))}
+.ir87-scout.ir80-dock{
+ position:relative;isolation:isolate;display:grid;place-items:center;
+ width:54px;height:54px;min-width:54px;min-height:54px;padding:0;gap:0;
+ border:1px solid #bb9dd090;border-radius:50%;
+ background:radial-gradient(circle at 34% 24%,#48577dcb,#141c32ee 72%);
+ box-shadow:0 7px 25px #020712a8,inset 0 1px #ffffff55,0 0 14px #8ca9e52a;
+ cursor:pointer;transition:background .24s,border-color .24s,box-shadow .24s
+}
+.ir87-scout.ir80-dock:hover,.ir87-scout.ir80-dock[aria-expanded="true"]{
+ border-color:#f2d5b5cc;background:radial-gradient(circle at 38% 22%,#647aa6,#192343 74%);
+ box-shadow:0 9px 28px #020712c0,inset 0 1px #ffffff65,0 0 18px #89cce854
+}
+.ir87-scout-art{display:block;width:47px;height:47px;overflow:visible;filter:drop-shadow(0 2px 5px #05091d);animation:ir87-hover 5.5s ease-in-out infinite}
+.ir87-scout-art .ir87-eye{transform-box:fill-box;transform-origin:center;animation:ir87-blink 8.8s ease-in-out infinite}
+.ir87-scout-art .ir87-thruster{transform-box:fill-box;transform-origin:center;animation:ir87-thruster 3s ease-in-out infinite}
+.ir87-scout-art .ir87-orbit{animation:ir87-orbit-pulse 5s ease-in-out infinite}
+.ir87-scout-art .ir87-antenna{animation:ir87-antenna 5s ease-in-out infinite}
+.ir87-unread{position:absolute;z-index:2;top:-4px;right:-4px;display:grid;place-items:center;
+ min-width:19px;height:19px;padding:0 4px;box-sizing:border-box;border:2px solid #161c32;
+ border-radius:11px;background:#f0d4b1;color:#19213a;font:800 10px/1 system-ui,sans-serif;box-shadow:0 1px 6px #0009}
+.ir87-panel.ir80-help{bottom:65px;width:min(338px,calc(100vw - 24px));max-height:min(620px,calc(100dvh - 95px));
+ padding:16px;overflow-y:auto;border-radius:18px;box-shadow:0 18px 55px #000b}
+.ir87-panel .ir80-help-head{margin-bottom:12px}
+.ir87-panel .ir80-code{font-size:9px;letter-spacing:.11em}
+.ir87-panel .ir87-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;
+ border:1px solid #a9b7cf35;background:#0a152780;border-radius:11px;margin-bottom:13px}
+.ir87-tabs button{min-width:0;min-height:38px;border:1px solid transparent;border-radius:8px;
+ background:none;color:#bfcde0;cursor:pointer;font:700 11px/1.2 system-ui,sans-serif}
+.ir87-tabs button[aria-selected="true"]{color:#f6e2c9;background:#6079a34d;border-color:#e2c4ce57}
+.ir87-tab-count{display:inline-grid;place-items:center;margin-left:6px;padding:2px 5px;
+ border-radius:10px;background:#f0d4b1;color:#1b2740;font:800 9px/1 system-ui,sans-serif}
+.ir87-panel h2{font-size:clamp(21px,3vw,26px);margin:10px 0}
+.ir87-panel .ir80-topic-grid{gap:6px;margin:12px 0}
+.ir87-panel .ir80-topic-grid button{padding:9px;min-height:40px;font-size:11px}
+.ir87-panel .ir80-topic-detail{padding:12px}
+.ir87-panel .ir80-topic-detail p{font-size:12px}
+.ir87-panel .ir80-help-foot{margin-top:12px;padding-top:12px}
+.ir87-panel .ir80-tour-launch{min-height:38px}
+.ir87-empty{padding:10px 0;font-size:12px}
+.ir87-signal-list{list-style:none;display:grid;gap:0;margin:8px 0 16px;padding:0}
+.ir87-signal-list li{display:grid;grid-template-columns:42px minmax(0,1fr);gap:9px;
+ align-items:center;padding:10px 0;border-bottom:1px solid #adc0d428}
+.ir87-signal-symbol{display:grid;place-items:center;width:40px;height:40px;overflow:hidden}
+.ir87-signal-symbol .celestial-emblem{max-width:37px;max-height:37px}
+.ir87-signal-list strong,.ir87-signal-list small{display:block;min-width:0;overflow-wrap:anywhere}
+.ir87-signal-list strong{font:700 12px/1.4 system-ui,sans-serif;color:#f9e7d1}
+.ir87-signal-list small{font:400 11px/1.5 system-ui,sans-serif;color:#bfc8d8;margin-top:2px}
+.ir87-signals-link,.ir87-back-help{display:inline-flex;align-items:center;gap:7px;min-height:40px;
+ color:#f0d4b1;font:700 10px/1.4 ui-monospace,monospace;letter-spacing:.05em;text-decoration:none}
+.ir87-back-help{display:block;border:0;background:none;cursor:pointer;margin-top:4px;color:#c3cde0}
+.ir87-panel :is(button,a):focus-visible{outline:2px solid #a4e1ec;outline-offset:2px}
+@keyframes ir87-hover{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-3px) rotate(2deg)}}
+@keyframes ir87-blink{0%,42%,44%,87%,89%,100%{transform:scaleY(1)}43%,88%{transform:scaleY(.13)}}
+@keyframes ir87-thruster{0%,100%{opacity:.28;transform:scaleY(.74)}50%{opacity:.8;transform:scaleY(1.05)}}
+@keyframes ir87-orbit-pulse{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes ir87-antenna{0%,100%{opacity:.45}50%{opacity:1}}
+@media(max-width:650px){
+ .ir87-companion.ir80-companion{right:max(10px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom))}
+ .ir87-scout.ir80-dock{width:51px;height:51px;min-width:51px;min-height:51px}
+ .ir87-scout-art{width:45px;height:45px}
+ .ir87-panel.ir80-help{bottom:60px;width:min(326px,calc(100vw - 22px));max-height:min(65dvh,calc(100dvh - 86px));padding:14px}
+}
+@media(prefers-reduced-motion:reduce){
+ .ir87-scout-art,.ir87-scout-art .ir87-eye,.ir87-scout-art .ir87-thruster,
+ .ir87-scout-art .ir87-orbit,.ir87-scout-art .ir87-antenna{animation:none}
+ .ir87-scout.ir80-dock{transition:none}
+}
+@media(forced-colors:active){.ir87-scout.ir80-dock,.ir87-panel.ir80-help{border:2px solid CanvasText;background:Canvas;color:CanvasText}}
