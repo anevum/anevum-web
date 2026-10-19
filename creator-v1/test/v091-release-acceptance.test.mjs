@@ -34,7 +34,7 @@ test('guarded V091 release stays pinned to precisely the reviewed integrated fil
  const end=release.indexOf('<(git diff --name-only db2b8c0f8f79061adf1677986b87077856204267 HEAD)',start);
  assert.ok(start>=0&&end>start,'A static source-delta allowlist must be present');
  const scope=release.slice(start,end);
- const files=[...scope.matchAll(/'([^']+)'/g)].map(match=>match[1]);
+ const files=[...scope.matchAll(/^\s*'([^']+)'/gm)].map(match=>match[1]);
  assert.equal(files.length,59,'The candidate contains exactly 59 reviewed source files');
  assert.equal(new Set(files).size,files.length,'No duplicated entries');
  assert.deepEqual(files,[...files].sort(),'Source scope must be deterministic');
