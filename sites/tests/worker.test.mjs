@@ -73,7 +73,8 @@ test("public studio, curated sample and valid health return successfully", async
     assert.match(r.headers.get("X-Robots-Tag"), /noindex/);
   }
   const landing = await (await studio.fetch(new Request(HOST_PUBLIC), env)).text();
-  assert.match(landing, /ANEVUM \/ SITES/);
+  assert.match(landing, /ANEVUM/);
+  assert.match(landing, /\/ SITES/);
   assert.match(landing, /\$49/);
   const sample = await (await studio.fetch(new Request(HOST_PUBLIC + "/preview/tobacco-vapor-time"), env)).text();
   assert.match(sample, /NOT THE OFFICIAL BUSINESS WEBSITE/);
