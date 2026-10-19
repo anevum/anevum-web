@@ -29,6 +29,8 @@ export type PublicIdentity={
  handle:string;
  displayName:string;
  avatar:boolean;
+ /** Server-authoritative media revision; never a user-supplied identity key. */
+ avatarVersion?:number;
  level:number|null;
  featuredAwards:string[];
  source?:'canonical-member'|'creator-channel';
@@ -101,7 +103,8 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
   </span>}
   <span className="av61-portrait-zone">
    <span className="av61-photo"><MemberPortrait name={member.displayName}
-    src={!channel&&member.avatar?(href==='/member'?'/api/v1/member/media/avatar':'/api/v1/members/'+encodeURIComponent(member.handle)+'/media/avatar'):undefined}
+    src={!channel&&member.avatar?((href==='/member'?'/api/v1/member/media/avatar':'/api/v1/members/'+encodeURIComponent(member.handle)+'/media/avatar')+
+    (Number.isSafeInteger(member.avatarVersion)&&member.avatarVersion!>0?'?v='+member.avatarVersion:'')):undefined}
     supporterFrame={member.supporterAppearance?.frame}/></span>
    {specimen&&<span className="av61-specimen" title={'Earned Evolution Level '+level}>
     <LevelEmblem level={level!} artwork="card" size={size==='inline'?30:size==='compact'?38:size==='featured'?60:44} handle={artworkHandle}/>
