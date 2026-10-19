@@ -274,11 +274,28 @@ export async function canonicalStaffOps(req,env,user,now=Math.floor(Date.now()/1
   if(req.method==='POST')return postCommand(req,db,env,permit,now);
   if(req.method!=='GET')return fail(405,'Method not allowed');
   const url=new URL(req.url);
-  if([...url.searchParams.keys()].some(k=>!['room','lane','after'].includes(k)||url.searchParams.getAll(k).length!==1))return fail(400,'Invalid query');
+  if([...url.searchParams.keys()].some(k=>!['room','lane','after','member'].includes(k)||url.searchParams.getAll(k).length!==1))return fail(400,'Invalid query');
   const lane=url.searchParams.get('lane')||'snapshot';
-  if(lane==='members'){
+  if(lane==='member-rewards'){
    if(permit.role!=='owner')return fail(403,'Owner authorization required');
    if(url.searchParams.has('room')||url.searchParams.has('after'))return fail(400,'Invalid query');
+   const target=url.searchParams.get('member');
+   if(!target||target.length>128||CONTROL.test(target))return fail(400,'Invalid member');
+   const verified=await db.prepare('SELECT id FROM "user" WHERE id=? AND emailVerified=1').bind(target).first();
+   if(!verified)return fail(404,'Verified member not found');
+   const schema=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('member_recognition_grants','member_space_milestones','member_recognition_preferences')").all();
+   const exists=new Set((schema.results||[]).map(x=>x.name));
+   if(!exists.has('member_recognition_grants')||!exists.has('member_space_milestones'))return fail(503,'Reward ledger unavailable');
+   const [grants,milestones]=await Promise.all([
+    db.prepare("SELECT kind,recognition_id AS id,earned_at AS earnedAt FROM member_recognition_grants WHERE user_id=? AND revoked_at IS NULL ORDER BY earned_at DESC LIMIT 70").bind(target).all(),
+    db.prepare("SELECT milestone AS id,earned_at AS earnedAt FROM member_space_milestones WHERE user_id=? ORDER BY earned_at DESC LIMIT 20").bind(target).all()
+   ]);
+   if(grants.success===false||milestones.success===false)return fail(503,'Reward ledger unavailable');
+   return json({grants:grants.results||[],milestones:milestones.results||[],memberVerified:true,source:'earned-records',canIssue:false});
+  }
+  if(lane==='members'){
+   if(permit.role!=='owner')return fail(403,'Owner authorization required');
+   if(url.searchParams.has('room')||url.searchParams.has('after')||url.searchParams.has('member'))return fail(400,'Invalid query');
    const r=await db.prepare("SELECT u.id,COALESCE(p.display_name,u.name,'MEMBER') AS name,COALESCE(p.handle,'') AS handle,u.emailVerified AS verified,COALESCE(p.visibility,'private') AS visibility,g.role AS staffRole FROM \"user\" u LEFT JOIN member_creator_profiles p ON p.user_id=u.id LEFT JOIN staff_access_grants g ON g.member_id=u.id AND g.revoked_at IS NULL ORDER BY u.createdAt DESC LIMIT 100").all();
    if(r.success===false)return fail(503,'Directory unavailable');
    return json({members:(r.results||[]).map(x=>({id:x.id,name:x.name,handle:x.handle,verified:Boolean(x.verified),visibility:x.visibility,staffRole:x.staffRole||null})),limitedTo:100});
