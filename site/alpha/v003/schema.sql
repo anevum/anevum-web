@@ -69,3 +69,12 @@ CREATE TABLE IF NOT EXISTS anevum_package_preview_tokens (
 );
 CREATE INDEX IF NOT EXISTS idx_anevum_package_preview_tokens_expiry
   ON anevum_package_preview_tokens(expires_at);
+
+-- Immutable, release-specific creator rights statement. Required on every new upload.
+-- Do not treat self-attestation as independent copyright or malware verification.
+CREATE TABLE IF NOT EXISTS anevum_package_rights_receipts (
+  release_id TEXT PRIMARY KEY REFERENCES anevum_package_releases(id),
+  owner_id TEXT NOT NULL,
+  attested_at INTEGER NOT NULL,
+  statement TEXT NOT NULL CHECK (statement='creator_has_publication_rights_v1')
+);
