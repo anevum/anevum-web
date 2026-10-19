@@ -42,6 +42,19 @@ test('member space: real independent sessions, private media/walls, persisted se
   const publicSpace=await worker.fetch(req('/api/v1/members/pilot_alpha/space'),env);assert.equal(publicSpace.status,200);const publicData=await publicSpace.json();assert.equal(publicData.stats,undefined);assert.equal(publicData.revision,undefined);assert.deepEqual(publicData.awards.map(a=>a.id),['world_shaper']);
   const publicWall=await worker.fetch(req('/api/v1/members/pilot_alpha/wall'),env);assert.equal(publicWall.status,200);assert.equal((await publicWall.json()).posts[0].body,'Updated entry');
   assert.equal((await worker.fetch(req('/api/v1/members/pilot_alpha/media/avatar'),env)).status,200);
+  assert.equal((await worker.fetch(req('/api/v1/members/pilot_alpha/media/avatar?v=1'),env)).status,200);
+  assert.equal((await worker.fetch(req('/api/v1/member/media/avatar?v=1','GET',undefined,a),env)).status,200);
+  for(const invalid of ['?v=0','?v=not-a-number','?v=1&v=2','?q=1'])
+   assert.equal((await worker.fetch(req('/api/v1/members/pilot_alpha/media/avatar'+invalid),env)).status,400);
+  assert.equal((await worker.fetch(req('/api/v1/members/pilot_alpha/space?v=1'),env)).status,400);
+  assert.equal((await worker.fetch(req('/api/v1/member/media/avatar?v=1','GET',undefined,b),env)).status,404);
+  assert.equal((await worker.fetch(req('/api/v1/member/media/avatar?v=1','DELETE',undefined,a),env)).status,400);
+  const secondPhoto=await worker.fetch(new Request(origin+'/api/v1/member/media/avatar',{method:'PUT',headers:{cookie:a,origin,'content-type':'image/jpeg'},body:jpeg}),env);
+  assert.equal(secondPhoto.status,200);
+  const afterPhoto=await (await worker.fetch(req(space,'GET',undefined,a),env)).json();
+  assert.equal(afterPhoto.media.avatar,2);
+  const directory=await (await worker.fetch(req('/api/v1/community/members'),env)).json();
+  assert.equal(directory.items.find(item=>item.handle==='pilot_alpha').avatarVersion,2);
   assert.equal((await worker.fetch(req(wall,'POST',{body:'CSRF'},a,{origin:'https://evil.invalid'}),env)).status,403);
   assert.equal((await worker.fetch(new Request(origin+'/api/v1/member/media/avatar',{method:'PUT',headers:{cookie:a,'content-type':'image/jpeg'},body:jpeg}),env)).status,403);
   assert.equal((await worker.fetch(req('/api/v1/member/media/avatar','DELETE',undefined,a,{origin:'https://evil.invalid'}),env)).status,403);
