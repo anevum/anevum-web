@@ -35,6 +35,9 @@ const verifiedSpace=visible=>({
  badgeDisplay:{mode:'automatic',ids:[]},
  distinctions:{medals:[],ribbons:[]},
  aura:'aurora',constellation:null,showStats:visible,revision:1,
+ role:'founder',
+ ...(visible?{earnedAura:'signal',reputation:{score:72,tier:'signal',nextAt:160,
+  stats:{discussions:3,replies:2,appreciations:2,badges:1}}}:{}),
  ...(visible?{stats:{level:4,xp:925,levelStart:675,nextLevel:1200,
   artifact:'Symmetry Field',wallPosts:0,awards:3}}:{})
 });
@@ -125,7 +128,7 @@ try{
   features:[{name:'prefers-reduced-motion',value:'reduce'}]
  });
  const results=[];
- for(const [width,height,name] of [[1440,900,'desktop'],[390,844,'mobile']]){
+ for(const [width,height,name] of [[1440,900,'desktop'],[768,1024,'tablet'],[390,844,'mobile'],[320,740,'small-phone']]){
   await send('Emulation.setDeviceMetricsOverride',{
    width,height,deviceScaleFactor:1,mobile:width<700
   });
@@ -150,7 +153,11 @@ try{
       progressText:card.querySelector('.av78-progress-caption')?.textContent,
       width:Math.round(rect.width),left:Math.round(rect.left),right:Math.round(rect.right),
       viewport,overflow:document.documentElement.scrollWidth>innerWidth+2,
-      hiddenAssetCount:[...document.querySelectorAll('img')].filter(x=>x.currentSrc.includes('levels/30')).length
+      hiddenAssetCount:[...document.querySelectorAll('img')].filter(x=>x.currentSrc.includes('levels/30')).length,
+      role:card.querySelector('.av81-role-token')?.textContent,
+      rep:card.querySelector('.av81-reputation-token')?.textContent,
+      aura:card.className.includes('av81-earned--signal'),
+      statusLabel:card.querySelector('.av81-contribution-stats')?.textContent
     };
    })()`);
    return data;
@@ -158,6 +165,8 @@ try{
   if(view.memberName!=='QA Member'||!view.artworkType.includes('/rewards/levels/4/card')||
    view.pixels!==256||view.badgePixels!==256||!view.label.includes('Symmetry Field')||
    view.progressValue!==250||view.progressMax!==525||view.hiddenAssetCount||
+   view.role!=='Founder'||!view.rep.includes('72 REP')||!view.aura||
+   !view.statusLabel.includes('THREADS')||
    view.left<0||view.right>view.viewport+2)
    throw Error('V078_REACT_CARD_INVALID '+name+' '+JSON.stringify(view));
   const capture=await send('Page.captureScreenshot',{format:'png',fromSurface:true});
@@ -180,11 +189,12 @@ try{
    if(!card)return null;
    return {name:card.querySelector('.av61-member-name')?.textContent,
      level:!!card.querySelector('.av61-level-label'),art:!!card.querySelector('.av78-featured-art'),
-     progress:!!card.querySelector('.av78-player-progress'),specimen:!!card.querySelector('.av61-specimen')};
+     progress:!!card.querySelector('.av78-player-progress'),specimen:!!card.querySelector('.av61-specimen'),
+     rep:!!card.querySelector('.av81-reputation-token'),role:card.querySelector('.av81-role-token')?.textContent};
   })()`);
   return data;
  });
- if(hidden.level||hidden.art||hidden.progress||hidden.specimen||hidden.name!=='QA Member')
+ if(hidden.level||hidden.art||hidden.progress||hidden.specimen||hidden.rep||hidden.role!=='Founder'||hidden.name!=='QA Member')
   throw Error('V078_PRIVACY_LEAK '+JSON.stringify(hidden));
  p=await send('Page.navigate',{url:origin+'/@privateqa'});
  if(p.errorText)throw Error('V078_PRIVATE_NAVIGATION_FAILED');
