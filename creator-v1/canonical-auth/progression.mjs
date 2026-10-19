@@ -16,7 +16,7 @@ export function levelProgress(raw){
 }
 export async function readProgression(db,id){
  const earned=await rows(db,'SELECT milestone,earned_at FROM member_space_milestones WHERE user_id=?',id);
- const test=await db.prepare('SELECT COALESCE(SUM(amount),0) AS xp FROM member_xp_events WHERE user_id=?').bind(id).first();
+ const test=await db.prepare("SELECT COALESCE(SUM(CASE WHEN request_id LIKE 'v082:%' THEN 1000 ELSE amount END),0) AS xp FROM member_xp_events WHERE user_id=?").bind(id).first();
  const milestoneXp=MILESTONES.reduce((n,a)=>n+(earned.some(e=>e.milestone===a.id)?a.xp:0),0),testXp=Number(test?.xp)||0;
  return {...levelProgress(milestoneXp+testXp),testXp,milestoneXp,awards:MILESTONES.map(a=>({...a,earnedAt:earned.find(e=>e.milestone===a.id)?.earned_at??null}))};
 }
@@ -64,11 +64,14 @@ export async function canonicalProgression(req,env,user,now=Math.floor(Date.now(
   }
   if(path.endsWith('/xp-test')&&req.method==='POST'){
    const v=await body(req);if(!v||Object.keys(v).join(',')!=='requestId'||typeof v.requestId!=='string'||!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(v.requestId))return error(400,'Invalid button press');
-   // Atomic per-member minute limit, fixed server XP and idempotent retries.
-   const old=await db.prepare('SELECT id FROM member_xp_events WHERE user_id=? AND request_id=?').bind(user.id,v.requestId).first();
+   // Atomic per-member minute limit, fixed server XP and idempotent retries. The
+   // existing D1 schema keeps 5-point calibration rows; V082 request IDs mark
+   // new presses so progression can value one stored row as 1,000 test XP.
+   const storedRequestId='v082:'+v.requestId;
+   const old=await db.prepare('SELECT id FROM member_xp_events WHERE user_id=? AND request_id=?').bind(user.id,storedRequestId).first();
    let inserted=[];
-   if(!old)inserted=await rows(db,"INSERT INTO member_xp_events(user_id,request_id,source,amount,created_at) SELECT ?,?,'test_button',?,? WHERE (SELECT COUNT(*) FROM member_xp_events WHERE user_id=? AND created_at>?)<120 ON CONFLICT(user_id,request_id) DO NOTHING RETURNING id",user.id,v.requestId,XP_TEST_AWARD,now,user.id,now-60);
-   const saved=old||inserted[0]||await db.prepare('SELECT id FROM member_xp_events WHERE user_id=? AND request_id=?').bind(user.id,v.requestId).first();
+   if(!old)inserted=await rows(db,"INSERT INTO member_xp_events(user_id,request_id,source,amount,created_at) SELECT ?,?,'test_button',5,? WHERE (SELECT COUNT(*) FROM member_xp_events WHERE user_id=? AND created_at>?)<120 ON CONFLICT(user_id,request_id) DO NOTHING RETURNING id",user.id,storedRequestId,now,user.id,now-60);
+   const saved=old||inserted[0]||await db.prepare('SELECT id FROM member_xp_events WHERE user_id=? AND request_id=?').bind(user.id,storedRequestId).first();
    if(!saved)return error(429,'The button is cooling down. Try again in a minute.');
    return json({awarded:inserted.length?XP_TEST_AWARD:0,progression:await syncRewardNotifications(db,user.id,now),replayed:!inserted.length});
   }
