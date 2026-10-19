@@ -13,8 +13,8 @@ The new standalone Worker `anevum-profile-staff-access-v001` proxies the unchang
 Specific Worker routes:
 - `anevum.com/`
 - `anevum.com/member*`
-- `anevum.com/__anevum_profile_staff_access_v001.js`
-- `anevum.com/api/v1/member/staff-access`
+- `anevum.com/__anevum_profile_staff_access_v002.js`
+- `anevum.com/__anevum_profile_staff_role_v001`
 
 The dedicated access endpoint delegates authentication to `anevum-apex-prelaunch-gateway`, validates the canonical cookie/session and email-verification status, and queries the production-bound member D1 role grant. Owner returns `{role:"owner",designation:"founder"}` for Devon, reviewer returns `{role:"reviewer"}`, a non-staff verified member returns `{role:null}`, and unsigned/non-verified users receive HTTP 401. On errors the UI remains hidden. The endpoint does not expose the email or account ID. Every staff destination retains its own independent authorization.
 
@@ -31,7 +31,7 @@ The client adds accessible, small navigation links under the verified member car
 ## Deployment and verification
 `npx wrangler deploy --config wrangler.jsonc` from this directory, or upload a bundled module using the Cloudflare Workers API with compatible service/D1 bindings.
 
-After deployment confirm anonymous `/api/v1/member/staff-access` returns HTTP 401, static script is served with JS MIME, and homepage/member HTML retains the original CSP and `frame-src 'self'`. Then sign into ANEVUM as the verified owner and confirm the new links display in both places and navigate to the existing staff portal. Sign into a reviewer account and confirm the moderator link. Verify a normal user sees no link. Signed-in acceptance tests cannot be completed without those accounts' browser sessions.
+After deployment confirm anonymous `/__anevum_profile_staff_role_v001` returns HTTP 401, static script is served with JS MIME, and homepage/member HTML retains the original CSP and `frame-src 'self'`. Then sign into ANEVUM as the verified owner and confirm the new links display in both places and navigate to the existing staff portal. Sign into a reviewer account and confirm the moderator link. Verify a normal user sees no link. Signed-in acceptance tests cannot be completed without those accounts' browser sessions.
 
 ## Rollback
 Remove only these four routes, leaving the existing `anevum.com/*` route mapped to `anevum-native-frame-policy-v001`. There are no database changes to revert. Do not unmap or overwrite the current staff portal Workers.
