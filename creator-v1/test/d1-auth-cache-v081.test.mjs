@@ -10,13 +10,14 @@ const canonicalTables=["user","session","account","verification","rateLimit","ca
 const creatorTables=["user","member_creator_profiles","member_creator_edit_limits"];
 function syntheticDb(){
  const queried=[];
+ let issuer='anevum-better-auth-staging-v1';
  const db={
   prepare(sql){queried.push(sql);
    return {async all(){
     if(sql==="SELECT name FROM sqlite_master WHERE type = 'table'")
      return {success:true,results:[...canonicalTables,...creatorTables].map(name=>({name}))};
     if(sql.includes("SELECT issuer,migration FROM canonical_identity_manifest"))
-     return {success:true,results:[{issuer:"anevum-better-auth-staging-v1",migration:"0001_canonical_better_auth_core"}]};
+     return {success:true,results:[{issuer,migration:"0001_canonical_better_auth_core"}]};
     if(sql.includes("member_creator_profiles','member_creator_edit_limits"))
      return {success:true,results:creatorTables.map(name=>({name}))};
     if(sql==="PRAGMA table_info(member_creator_profiles)")
@@ -26,7 +27,7 @@ function syntheticDb(){
   },
   async batch(){return []}
  };
- return {db,queried};
+ return {db,queried,setIssuer:value=>issuer=value};
 }
 const config=db=>({
  ANEVUM_CANONICAL_STAGE_ENABLED:"true",
@@ -47,7 +48,17 @@ test("positive readiness checks run once per binding within 30 seconds",async()=
  assert.equal(first,4);
  assert.equal(await canonicalSchemaReady(env),true);
  assert.equal(await canonicalCreatorSchemaReady(db),true);
- assert.equal(queried.length,first);
+ // Database-wide table scans are cached. The trusted issuer is not.
+ assert.equal(queried.length,first+1);
+ assert.ok(queried.at(-1).includes("SELECT issuer,migration"));
+});
+
+test("issuer marker changes immediately invalidate schema readiness",async()=>{
+ const setup=syntheticDb(),env=config(setup.db);
+ assert.equal(await canonicalSchemaReady(env),true);
+ setup.setIssuer("untrusted-issuer");
+ assert.equal(await canonicalSchemaReady(env),false);
+ assert.equal(setup.queried.length,3,"metadata cached, issuer verified a second time");
 });
 
 test("independent databases do not reuse a previous schema certification",async()=>{
