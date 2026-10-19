@@ -9,7 +9,8 @@ const now=()=>Math.floor(Date.now()/1000);
 const items=out=>Array.isArray(out?.results)?out.results:[];
 const changed=out=>Number(out?.meta?.changes||0)===1||items(out).length===1;
 async function all(db,sql,args=[]){
- const out=await db.prepare(sql).bind(...args).all();
+ const statement=db.prepare(sql);
+ const out=await (args.length?statement.bind(...args):statement).all();
  if(out?.success===false||!Array.isArray(out?.results))throw Error("Staff database unavailable");
  return out.results;
 }

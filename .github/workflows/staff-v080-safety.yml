@@ -24,4 +24,4 @@ jobs:
           node --check creator-v1/operations/staff-project-control-v080.mjs
           node --check creator-v1/operations/staff-project-ui-v080.mjs
       - name: Validate staff access, lifecycle, and preview contracts
-        run: node --test creator-v1/test/staff-project-v080.test.mjs creator-v1/test/staff-project-v080-integration.test.mjs
+        run: node --test creator-v1/test/staff-project-v080.test.mjs creator-v1/test/staff-project-v080-integration.test.mjs creator-v1/test/staff-project-v080-recovery.test.mjs
