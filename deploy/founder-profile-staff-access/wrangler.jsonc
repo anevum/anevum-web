@@ -14,11 +14,11 @@
       "zone_name": "anevum.com"
     },
     {
-      "pattern": "anevum.com/__anevum_profile_staff_access_v001.js",
+      "pattern": "anevum.com/__anevum_profile_staff_access_v002.js",
       "zone_name": "anevum.com"
     },
     {
-      "pattern": "anevum.com/api/v1/member/staff-access",
+      "pattern": "anevum.com/__anevum_profile_staff_role_v001",
       "zone_name": "anevum.com"
     }
   ],
