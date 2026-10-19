@@ -426,6 +426,11 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   // compact mode is unmounted throughout the tour, never double-mounted.
   // Coordinates are bounded to the visible area and animate between anchors.
   const botWidth=isMobile?90:118,botHeight=isMobile?106:139;
+  // For tall or full-width targets there is no safe adjacent space. Dock the
+  // expressive 3D companion into the guide header instead of covering content.
+  const embeddedGuideBot=isMobile||!spotlight||
+    spotlight.width>viewport.width*.58||
+    spotlight.height>viewport.height*.48;
   const preferRight=spotlight
     ?spotlight.left+spotlight.width+botWidth+20<viewport.width
     :true;
@@ -564,7 +569,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
       </button>
     </div>}
     {step&&<div className="ir80-guide-layer" aria-label="IREN guided website tour">
-      {!isMobile&&<div className="ir88-guide-bot" style={guideBotStyle} aria-hidden="true">
+      {!embeddedGuideBot&&<div className="ir88-guide-bot" style={guideBotStyle} aria-hidden="true">
         <IrenLivingCanvas mood={guideTravelling?"travel":"guide"} expanded paused={motionPaused}
           fallback={<IrenScout/>}/>
       </div>}
@@ -577,8 +582,8 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
       <div ref={dialogRef} className="ir80-guide-card" style={panelStyle} role="dialog" aria-modal="true"
         aria-labelledby="ir80-guide-title" aria-describedby="ir80-guide-description">
         <div className="ir80-guide-top">
-          <span className={"ir80-guide-avatar"+(isMobile?" ir88-guide-avatar":"")} aria-hidden="true">
-            {isMobile?<IrenLivingCanvas mood={guideTravelling?"travel":"guide"} expanded paused={motionPaused}
+          <span className={"ir80-guide-avatar"+(embeddedGuideBot?" ir88-guide-avatar":"")} aria-hidden="true">
+            {embeddedGuideBot?<IrenLivingCanvas mood={guideTravelling?"travel":"guide"} expanded paused={motionPaused}
               fallback={<IrenScout/>}/>:<OrbitalMark/>}
           </span>
           <div><strong>IREN</strong><span>CONTINUANCE FIELD GUIDE</span></div>
