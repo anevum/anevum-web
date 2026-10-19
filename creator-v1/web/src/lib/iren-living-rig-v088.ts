@@ -35,44 +35,51 @@ function projection(aspect:number):Mat{
  p[10]=(far+near)/(near-far);p[11]=-1;p[14]=2*far*near/(near-far);
  return mul(p,T(0,0,-4.05));
 }
-function surface(rings:number,segments:number,position:(u:number,v:number)=>[number,number,number]):Float32Array{
+type Vec3=[number,number,number];
+type Surface=(u:number,v:number)=>Vec3;
+/** Explicit analytic normals prevent seam/pole artifacts in the 3D rig.
+ * Each mesh is a real triangulated surface, not a flat image or sprite. */
+function surface(rings:number,segments:number,position:Surface,normal:Surface):Float32Array{
  const data:number[]=[];
- function vertex(p:[number,number,number],u:number,v:number){
-  const e=.001,pu=position(Math.min(1,u+e),v),pv=position(u,Math.min(1,v+e));
-  const a=[pu[0]-p[0],pu[1]-p[1],pu[2]-p[2]];
-  const b=[pv[0]-p[0],pv[1]-p[1],pv[2]-p[2]];
-  let nx=a[1]*b[2]-a[2]*b[1],ny=a[2]*b[0]-a[0]*b[2],nz=a[0]*b[1]-a[1]*b[0];
-  const length=Math.hypot(nx,ny,nz)||1;
-  nx/=length;ny/=length;nz/=length;
-  // Outward normals, winding and fixed-function depth are consistent.
-  if(nx*p[0]+ny*p[1]+nz*p[2]<0 && Math.abs(ny)<.999){nx=-nx;ny=-ny;nz=-nz}
-  data.push(p[0],p[1],p[2],nx,ny,nz);
- }
+ const vertex=(u:number,v:number)=>{
+  const p=position(u,v),n=normal(u,v);
+  const scale=Math.hypot(n[0],n[1],n[2])||1;
+  data.push(...p,n[0]/scale,n[1]/scale,n[2]/scale);
+ };
  for(let i=0;i<rings;i++)for(let j=0;j<segments;j++){
   const u=i/rings,u1=(i+1)/rings,v=j/segments,v1=(j+1)/segments;
-  const p=position(u,v),q=position(u1,v),r=position(u,v1),s=position(u1,v1);
-  vertex(p,u,v);vertex(q,u1,v);vertex(r,u,v1);
-  vertex(q,u1,v);vertex(s,u1,v1);vertex(r,u,v1);
+  vertex(u,v);vertex(u1,v);vertex(u,v1);
+  vertex(u1,v);vertex(u1,v1);vertex(u,v1);
  }
  return new Float32Array(data);
 }
-function sphere(){
- return surface(18,28,(u,v)=>{
-  const latitude=Math.PI*(u-.5),angle=TAU*v,ct=Math.cos(latitude);
-  return [ct*Math.cos(angle),Math.sin(latitude),ct*Math.sin(angle)];
- });
+function spherePoint(u:number,v:number):Vec3{
+ const latitude=Math.PI*(u-.5),angle=TAU*v,ct=Math.cos(latitude);
+ return [ct*Math.cos(angle),Math.sin(latitude),ct*Math.sin(angle)];
 }
+function sphere(){return surface(18,28,spherePoint,spherePoint)}
 function tube(){
- return surface(2,20,(u,v)=>{
-  const angle=v*TAU,r=.94+(u-.5)*.13;
-  return [Math.cos(angle)*r,(u-.5)*2,Math.sin(angle)*r];
- });
+ return surface(2,20,
+  (u,v)=>{const angle=v*TAU,r=.94+(u-.5)*.13;return [Math.cos(angle)*r,(u-.5)*2,Math.sin(angle)*r]},
+  (_u,v)=>[Math.cos(v*TAU),0,Math.sin(v*TAU)]);
 }
 function orbit(start=0,end=TAU){
- return surface(8,54,(u,v)=>{
-  const ring=start+(end-start)*v,minor=u*TAU,radius=1+.038*Math.cos(minor);
-  return [Math.cos(ring)*radius,Math.sin(ring)*radius,.038*Math.sin(minor)];
- });
+ return surface(8,54,
+  (u,v)=>{const angle=start+(end-start)*v,phi=u*TAU,radius=1+.038*Math.cos(phi);
+   return [Math.cos(angle)*radius,Math.sin(angle)*radius,.038*Math.sin(phi)]},
+  (u,v)=>{const angle=start+(end-start)*v,phi=u*TAU;
+   return [Math.cos(angle)*Math.cos(phi),Math.sin(angle)*Math.cos(phi),Math.sin(phi)]});
+}
+/** Inverse-transpose upper 3x3: necessary for elliptical head/visor normals
+ * after nonuniform scales. GLSL ES 1 has no built-in inverse(mat3). */
+function normalMatrix(m:Mat):Float32Array{
+ const a=m[0],b=m[4],c=m[8],d=m[1],e=m[5],f=m[9],g=m[2],h=m[6],i=m[10];
+ const c00=e*i-f*h,c01=f*g-d*i,c02=d*h-e*g;
+ const c10=c*h-b*i,c11=a*i-c*g,c12=b*g-a*h;
+ const c20=b*f-c*e,c21=c*d-a*f,c22=a*e-b*d;
+ const det=a*c00+b*c01+c*c02;
+ const inv=Math.abs(det)>1e-8?1/det:1;
+ return new Float32Array([c00*inv,c10*inv,c20*inv,c01*inv,c11*inv,c21*inv,c02*inv,c12*inv,c22*inv]);
 }
 /** The existing IREN orbital mark and cobalt/near-black palette are canonical.
  * This is IREN's field embodiment, not a separate helper or authority. */
@@ -96,10 +103,10 @@ const palette:Record<string,Finish>={
 };
 const vert=[
  "attribute vec3 aPosition;attribute vec3 aNormal;",
- "uniform mat4 uModel;uniform mat4 uView;",
+ "uniform mat4 uModel;uniform mat4 uView;uniform mat3 uNormal;",
  "varying vec3 vPosition;varying vec3 vNormal;",
  "void main(){vec4 p=uModel*vec4(aPosition,1.);vPosition=p.xyz;",
- "vNormal=normalize(mat3(uModel)*aNormal);gl_Position=uView*p;}"
+ "vNormal=normalize(uNormal*aNormal);gl_Position=uView*p;}"
 ].join("\n");
 const frag=[
  "precision mediump float;",
@@ -135,7 +142,7 @@ function program(gl:WebGLRenderingContext){
  return p;
 }
 type Uniforms={
- model:WebGLUniformLocation|null;view:WebGLUniformLocation|null;
+ model:WebGLUniformLocation|null;view:WebGLUniformLocation|null;normal:WebGLUniformLocation|null;
  color:WebGLUniformLocation|null;metal:WebGLUniformLocation|null;
  glow:WebGLUniformLocation|null;alpha:WebGLUniformLocation|null
 };
@@ -167,6 +174,7 @@ export class IrenLivingRig{
   this.uniforms={
    model:gl.getUniformLocation(this.program,"uModel"),
    view:gl.getUniformLocation(this.program,"uView"),
+   normal:gl.getUniformLocation(this.program,"uNormal"),
    color:gl.getUniformLocation(this.program,"uColor"),
    metal:gl.getUniformLocation(this.program,"uMetal"),
    glow:gl.getUniformLocation(this.program,"uGlow"),
@@ -198,6 +206,7 @@ export class IrenLivingRig{
   const gl=this.gl,mesh=this.meshes[kind];
   const model=chain(base,T(...position),rotation,S(...dimensions));
   gl.uniformMatrix4fv(this.uniforms.model,false,model);
+  gl.uniformMatrix3fv(this.uniforms.normal,false,normalMatrix(model));
   gl.uniform3fv(this.uniforms.color,finish.color);
   gl.uniform1f(this.uniforms.metal,finish.metal);
   gl.uniform1f(this.uniforms.glow,finish.glow+brightness);
