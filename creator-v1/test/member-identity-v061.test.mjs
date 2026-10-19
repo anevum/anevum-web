@@ -21,6 +21,28 @@ test('every modern public author surface reuses the protected optical specimen i
  assert.match(css,/prefers-reduced-motion:reduce/);
  assert.doesNotMatch(shared,/new WebGLRenderingContext|requestAnimationFrame|clientAward|userEnteredLevel/);
 });
+test('member views revalidate and version photos without fake client progression',()=>{
+ const revalidation=read('web/src/lib/useMemberRevalidation.ts');
+ const own=read('web/src/lib/useOwnPlayerCard.ts');
+ const community=read('web/src/components/MemberCommunity.tsx');
+ const publicWorld=read('web/src/pages/Phase1PublicMemberPage.tsx');
+ const dashboard=read('web/src/components/MemberSpaceDashboard.tsx');
+ const recognition=read('web/src/lib/player-recognition-api.ts');
+ const card=read('web/src/components/CompactMemberIdentity.tsx');
+ const media=read('canonical-auth/space.mjs');
+ assert.match(revalidation,/anevum:member-change/);
+ assert.match(revalidation,/visibilitychange/);
+ assert.match(own,/\[enabled,memberId,revision\]/);
+ assert.match(community,/useMemberRevalidation/);
+ assert.match(publicWorld,/\[handle,revalidation\]/);
+ assert.match(dashboard,/\[profile.handle,profile.revision,revalidation\]/);
+ assert.match(recognition,/memberChanged\(owner\)/);
+ assert.match(card,/avatarVersion/);
+ assert.match(card,/\?v=/);
+ assert.match(media,/req.method==='GET'&&mediaRoute/);
+ assert.doesNotMatch(revalidation,/setInterval\(/,'no background polling of the member database');
+});
+
 test('forum and wall activity derive levels from one V060 XP authority',()=>{
  const author=read('canonical-auth/public-member-card.mjs');
  const threads=read('canonical-auth/forums.mjs');
