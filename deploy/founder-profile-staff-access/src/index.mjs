@@ -23,12 +23,12 @@ function failure(status,message) { return reply({role:null,error:message},status
 
 async function roleFor(request,env) {
   if (request.method !== "GET" && request.method !== "HEAD") return failure(405,"Method not allowed");
+  const cookie = request.headers.get("cookie");
+  if (!cookie || cookie.length>8192) return failure(401,"Verified member sign-in required");
   if (!env?.APEX_AUTH?.fetch || !env?.MEMBER_DB?.prepare) return failure(503,"Staff access check unavailable");
   const fetchSite = request.headers.get("sec-fetch-site");
   if (fetchSite && !["same-origin","none"].includes(fetchSite)) return failure(403,"Cross-origin access refused");
   if (request.headers.get("origin") && request.headers.get("origin") !== ORIGIN) return failure(403,"Cross-origin access refused");
-  const cookie = request.headers.get("cookie");
-  if (!cookie || cookie.length>8192) return failure(401,"Verified member sign-in required");
   try {
     const authRequest = new Request(ORIGIN + "/api/v1/member/auth/get-session",{
       method:"GET",headers:{cookie,accept:"application/json"},cache:"no-store",redirect:"error"
@@ -67,6 +67,14 @@ export default {
     if (url.origin!==ORIGIN || url.protocol!=="https:" || url.username || url.password)
       return new Response("Not found",{status:404});
 
+    if (url.pathname==="/__anevum_staff_access_binding_probe") {
+      if (request.method!=="GET") return new Response("Method not allowed",{status:405});
+      return Response.json({
+        upstream:typeof env?.UPSTREAM?.fetch==="function",
+        authentication:typeof env?.APEX_AUTH?.fetch==="function",
+        database:typeof env?.MEMBER_DB?.prepare==="function"
+      },{headers:{"cache-control":"no-store","x-robots-tag":"noindex"}});
+    }
     if (url.pathname===ROLE_PATH) {
       if (url.search) return failure(400,"Unexpected query");
       const answer=await roleFor(request,env);
