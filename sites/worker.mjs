@@ -48,7 +48,15 @@ export default {async fetch(request,env){
   if(!(u.hostname==="web.anevum.com"||u.hostname==="sites.anevum.com"||u.hostname==="sites-preview.anevum.com"||u.hostname.endsWith(".workers.dev")||u.hostname==="localhost"||u.hostname==="127.0.0.1"))return send("Unknown host",421,"text/plain; charset=utf-8",m);
   const path=u.pathname.replace(/\/+$/,"")||"/";
   if(path==="/")return send(STUDIO,200,undefined,m);
-  if(path==="/preview/tobacco-vapor-time")return send(DEMO,200,undefined,m);
+  // The first hand-crafted showcase stays visually curated; the private editor
+  // can request a dynamically rendered draft with ?draft=1. Archive hides both.
+  if(path==="/preview/tobacco-vapor-time"&&!u.searchParams.has("draft")){
+    try{
+      const record=await env.SITES_DB.prepare("SELECT status FROM sites WHERE slug=?").bind("tobacco-vapor-time").first();
+      if(!record||record.status==="archived")return send("Concept not found",404,"text/plain; charset=utf-8",m);
+      return send(DEMO,200,undefined,m);
+    }catch{return send("Preview temporarily unavailable",503,"text/plain; charset=utf-8",m)}
+  }
   if(/^\/preview\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(path)){
     try{
       if(!env?.SITES_DB)return send("Preview temporarily unavailable",503,"text/plain; charset=utf-8",m);
