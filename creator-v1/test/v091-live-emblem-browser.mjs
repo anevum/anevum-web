@@ -90,8 +90,8 @@ try{
     if(o.exceptionDetails)throw Error(o.exceptionDetails.exception?.description||'EVALUATION_ERROR');
     return o.result?.value;
   };
-  await until(()=>evaluate("document.readyState==='complete'&&!!document.querySelector('.ms-public')"));
-  await until(()=>evaluate("!!document.querySelector('.level-emblem, .av76-artwork-unavailable')"));
+  await until(()=>evaluate("document.readyState==='complete'&&!!document.querySelector('.ms-public, .ms-public-world, .member-gate, .state-card')"),30000);
+  await until(()=>evaluate("!!document.querySelector('.level-emblem, .av76-artwork-unavailable, .member-gate, .state-card')"),30000);
   await delay(3500);
   const results=await evaluate(`(()=>{
     const levels=[...document.querySelectorAll('.level-emblem')];
