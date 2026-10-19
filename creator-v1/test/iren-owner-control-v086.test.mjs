@@ -59,7 +59,7 @@ test('owner can page and filter real member records, no stale client fixture',as
  const next=await (await f.call('?lane=members&page=1')).json();
  assert.deepEqual(next.members,[]);
  assert.equal((await f.call('?lane=members&q=s')).status,400);
- assert.equal((await f.call('?lane=members&q=%25')).status,200);
+ assert.equal((await f.call('?lane=members&q=%25%5F')).status,200);
  assert.equal((await f.call('?lane=members&page=999')).status,400);
  assert.equal((await f.call('?lane=members&page=0&page=1')).status,400);
  assert.equal((await f.call('?lane=members&unknown=1')).status,400);
