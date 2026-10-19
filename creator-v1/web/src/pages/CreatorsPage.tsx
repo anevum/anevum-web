@@ -93,10 +93,11 @@ export function CreatorPage(){
   },[handle,cursor]);
   // Independent public-member enhancements are optional for real Creator V1
   // channels. This client cannot grant roles, XP or publication permissions.
+  const legacyChannelVerified=data.state==="ready"&&data.data.kind==="channel";
   const channel=useResource(async signal=>{
-    if(!/^[a-z][a-z0-9_]{2,29}$/.test(handle))return null;
+    if(!legacyChannelVerified||!/^[a-z][a-z0-9_]{2,29}$/.test(handle))return null;
     try{return await memberCreatorProfile(handle,signal);}catch{return null;}
-  },[handle]);
+  },[handle,legacyChannelVerified]);
   if(data.state==="loading")return <LoadingState label="Finding verified public identity"/>;
   if(data.state==="error")return <ErrorState title="CREATOR INDEX UNAVAILABLE" detail="The published creator index could not be reached. Try discovery or return later."/>;
   if(data.data.kind==="member")return <Navigate to={"/@"+encodeURIComponent(handle)} replace/>;
