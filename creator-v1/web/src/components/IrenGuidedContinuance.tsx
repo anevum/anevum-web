@@ -289,7 +289,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     const wait=durations[mood];
     if(!wait)return;
     const timer=window.setTimeout(()=>setMood(prev=>
-      prev===mood?(panelOpen?"idle":"idle"):prev),wait);
+      prev===mood?"idle":prev),wait);
     return()=>window.clearTimeout(timer);
   },[mood,panelOpen]);
 
