@@ -41,6 +41,10 @@ test("Personality states include genuine articulated motions and controlled trav
  for(const action of ["setMood","setLook","setReducedMotion","setVisible","setExpanded","dispose"])
   assert.ok(rig.includes(action+"("),action);
  assert.match(guide,/ir88-guide-bot/);
+ assert.match(guide,/!isMobile&&<div className="ir88-guide-bot"/);
+ assert.match(guide,/isMobile\?<IrenLivingCanvas mood=/);
+ assert.match(guide,/wideSpotlight/);
+ assert.match(styles,/\.ir88-guide-avatar/);
  assert.match(guide,/guideTravelling\?"travel":"guide"/);
  assert.match(guide,/spotlight\.left/);
  assert.match(guide,/onPointerDown=\{beginDrag\}/);
