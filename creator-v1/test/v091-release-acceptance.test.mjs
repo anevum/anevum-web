@@ -25,3 +25,31 @@ test('a different source, future timestamp, missing evidence or credential URL c
   assert.throws(()=>verifyV091Acceptance({...complete(),evidence}),/evidence/);
  assert.equal(verifyV091Acceptance(complete()),true);
 });
+
+test('guarded V091 release stays pinned to precisely the reviewed integrated files',()=>{
+ const release=readFileSync(new URL('../../.github/workflows/v084-continuance-production.yml',import.meta.url),'utf8');
+ assert.ok(release.includes('git merge-base --is-ancestor '+V091_APPLICATION_SOURCE+' HEAD'));
+ assert.ok(release.includes('git diff --exit-code '+V091_APPLICATION_SOURCE+' HEAD'));
+ const start=release.indexOf("diff -u <(printf '%s\\n' \\");
+ const end=release.indexOf('<(git diff --name-only db2b8c0f8f79061adf1677986b87077856204267 HEAD)',start);
+ assert.ok(start>=0&&end>start,'A static source-delta allowlist must be present');
+ const scope=release.slice(start,end);
+ const files=[...scope.matchAll(/'([^']+)'/g)].map(match=>match[1]);
+ assert.equal(files.length,59,'The candidate contains exactly 59 reviewed source files');
+ assert.equal(new Set(files).size,files.length,'No duplicated entries');
+ assert.deepEqual(files,[...files].sort(),'Source scope must be deterministic');
+ for(const required of [
+  'creator-v1/web/src/components/IrenGuidedContinuance.tsx',
+  'creator-v1/web/src/iren-living-v088.css',
+  'creator-v1/web/src/iren-guided-v080.css',
+  'creator-v1/test/iren-first-contact-v092.test.mjs',
+  'creator-v1/web/src/pages/AuraCodexPage.tsx',
+  'creator-v1/test/aura-codex-visual-v091.mjs',
+  '.github/workflows/v091-aura-codex-browser.yml',
+  'creator-v1/test/capture-home-navigation-v079.mjs'
+ ])assert.ok(files.includes(required),'Reviewed source is missing '+required);
+ assert.ok(files.every(file=>!/[?*{}]/.test(file)),'Globs are not allowed in the release scope');
+ assert.ok(release.includes('test "$(git rev-parse HEAD)" = "$GITHUB_SHA"'));
+ assert.match(release,/ANEVUM_LAUNCH_APPROVED/);
+ assert.match(release,/CLOUDFLARE_ACCOUNT_ID/);
+});
