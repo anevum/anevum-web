@@ -174,7 +174,7 @@ jobs:
            any(.result[]; .pattern=="anevum.com/staff*" and .script=="anevum-staff-review-navigation-v001")' "$RUNNER_TEMP/pre-routes.json" >/dev/null
           jq -e '.success and (.result|length)==26 and ([.result[]|select(.pattern|startswith("anevum.com/"))]|length)==20 and any(.result[];.pattern=="lab.anevum.com/previews*" and .script=="anevum-lab-previews-v001")' "$RUNNER_TEMP/pre-routes.json" >/dev/null
           jq -S '[.result[]|{pattern,script}]|sort_by(.pattern)' "$RUNNER_TEMP/pre-routes.json" > "$RUNNER_TEMP/routes.lock.json"
-          jq -e '.success and (.result.bindings|length)==25 and
+          jq -e '.success and (.result.bindings|length)==24 and
            any(.result.bindings[]; .type=="assets" and .name=="ASSETS") and
            any(.result.bindings[]; .type=="d1" and .name=="MEMBER_DB" and ((.database_id//.id)=="e1d29049-c83b-4534-8355-dc1fa36ba6d8")) and
            any(.result.bindings[]; .type=="d1" and .name=="COMMUNITY_DB" and ((.database_id//.id)=="fa96e36d-6257-4883-bf15-074947e11a13")) and
