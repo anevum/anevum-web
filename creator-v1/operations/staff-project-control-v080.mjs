@@ -97,4 +97,45 @@ async function finishCleanup(env,tombstone){
   return {status:202,body:{ok:true,deleted:true,storageCleanup:"pending",note:"Project removed from the database. Private file cleanup is pending; retry from Staff."}};
  }
 }
+
+/** Review one pending alpha release. Both the state change and audit event
+ * execute in a single D1 transaction. Reviewers cannot publish absent or
+ * corrupt media. Authorization and CSRF remain enforced by the route. */
+export async function staffReviewAction(env,memberId,role,input){
+ if(!memberId||!["owner","reviewer"].includes(role))
+  return {status:403,body:{error:"Reviewer clearance required"}};
+ if(!input||typeof input!=="object"||Array.isArray(input)||
+    !UUID.test(String(input.projectId||""))||
+    !["publish","reject"].includes(input.action))
+  return {status:400,body:{error:"Invalid review action"}};
+ const action=input.action,reason=typeof input.reason==="string"?input.reason.trim():"";
+ if(action==="reject"&&(reason.length<10||reason.length>1000))
+  return {status:422,body:{error:"A specific rejection reason (10–1000 characters) is required"}};
+ const db=env.DB;
+ if(!db)return {status:503,body:{error:"Review database unavailable"}};
+ const project=await row(db,
+  "SELECT id,title,status,owner_id,object_key,size_bytes,sha256 FROM anevum_alpha_projects WHERE id=?",
+  [input.projectId]);
+ if(!project)return {status:404,body:{error:"Submission not found"}};
+ if(project.status!=="pending_review")
+  return {status:409,body:{error:"Submission has changed; refresh the review queue"}};
+ if(action==="publish"){
+  if(!env.MEDIA)return {status:503,body:{error:"Private project media unavailable"}};
+  let object;try{object=await env.MEDIA.head(project.object_key)}catch{}
+  if(!object||Number(object.size)!==Number(project.size_bytes)||
+     object.customMetadata?.sha256!==project.sha256)
+    return {status:503,body:{error:"Project media integrity could not be verified"}};
+ }
+ const timestamp=now(),next=action==="publish"?"published":"rejected";
+ const batch=await db.batch([
+  db.prepare("UPDATE anevum_alpha_projects SET status=?,reviewed_by=?,reviewed_at=?,published_at=?,rejection_reason=? WHERE id=? AND status='pending_review' RETURNING id")
+   .bind(next,memberId,timestamp,action==="publish"?timestamp:null,action==="reject"?reason:null,project.id),
+  db.prepare("INSERT INTO anevum_alpha_review_events(project_id,reviewer_id,decision,decided_at,rejection_reason) SELECT id,?,?,?,? FROM anevum_alpha_projects WHERE id=? AND status=? AND reviewed_by=? AND reviewed_at=? RETURNING event_id")
+   .bind(memberId,next,timestamp,action==="reject"?reason:null,project.id,next,memberId,timestamp)
+ ]);
+ if(!changed(batch[0])||!changed(batch[1]))
+  return {status:409,body:{error:"Review changed during the decision. Refresh the queue."}};
+ return {status:200,body:{ok:true,status:next,projectId:project.id}};
+}
+
 export {UNPUBLISHED};
