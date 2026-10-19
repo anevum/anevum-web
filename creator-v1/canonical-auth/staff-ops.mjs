@@ -274,11 +274,11 @@ export async function canonicalStaffOps(req,env,user,now=Math.floor(Date.now()/1
   if(req.method==='POST')return postCommand(req,db,env,permit,now);
   if(req.method!=='GET')return fail(405,'Method not allowed');
   const url=new URL(req.url);
-  if([...url.searchParams.keys()].some(k=>!['room','lane','after','member'].includes(k)||url.searchParams.getAll(k).length!==1))return fail(400,'Invalid query');
+  if([...url.searchParams.keys()].some(k=>!['room','lane','after','member','q','page'].includes(k)||url.searchParams.getAll(k).length!==1))return fail(400,'Invalid query');
   const lane=url.searchParams.get('lane')||'snapshot';
   if(lane==='member-rewards'){
    if(permit.role!=='owner')return fail(403,'Owner authorization required');
-   if(url.searchParams.has('room')||url.searchParams.has('after'))return fail(400,'Invalid query');
+   if(url.searchParams.has('room')||url.searchParams.has('after')||url.searchParams.has('q')||url.searchParams.has('page'))return fail(400,'Invalid query');
    const target=url.searchParams.get('member');
    if(!target||target.length>128||CONTROL.test(target))return fail(400,'Invalid member');
    const verified=await db.prepare('SELECT id FROM "user" WHERE id=? AND emailVerified=1').bind(target).first();
@@ -286,19 +286,73 @@ export async function canonicalStaffOps(req,env,user,now=Math.floor(Date.now()/1
    const schema=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('member_recognition_grants','member_space_milestones','member_recognition_preferences')").all();
    const exists=new Set((schema.results||[]).map(x=>x.name));
    if(!exists.has('member_recognition_grants')||!exists.has('member_space_milestones'))return fail(503,'Reward ledger unavailable');
-   const [grants,milestones]=await Promise.all([
+   const [grants,milestones,preference,rolesSchema]=await Promise.all([
     db.prepare("SELECT kind,recognition_id AS id,earned_at AS earnedAt FROM member_recognition_grants WHERE user_id=? AND revoked_at IS NULL ORDER BY earned_at DESC LIMIT 70").bind(target).all(),
-    db.prepare("SELECT milestone AS id,earned_at AS earnedAt FROM member_space_milestones WHERE user_id=? ORDER BY earned_at DESC LIMIT 20").bind(target).all()
+    db.prepare("SELECT milestone AS id,earned_at AS earnedAt FROM member_space_milestones WHERE user_id=? ORDER BY earned_at DESC LIMIT 20").bind(target).all(),
+    exists.has('member_recognition_preferences')?
+     db.prepare("SELECT aura,badge_mode AS badgeMode FROM member_recognition_preferences WHERE user_id=?").bind(target).first():Promise.resolve(null),
+    db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='member_role_grants'").all()
    ]);
-   if(grants.success===false||milestones.success===false)return fail(503,'Reward ledger unavailable');
-   return json({grants:grants.results||[],milestones:milestones.results||[],memberVerified:true,source:'earned-records',canIssue:false});
+   if(grants.success===false||milestones.success===false||rolesSchema.success===false)return fail(503,'Reward ledger unavailable');
+   const roleRegistryReady=(rolesSchema.results||[]).length===1;
+   const roleDistinctions=roleRegistryReady?
+    await db.prepare("SELECT role,granted_at AS grantedAt FROM member_role_grants WHERE user_id=? AND revoked_at IS NULL ORDER BY granted_at DESC LIMIT 4").bind(target).all():null;
+   if(roleDistinctions?.success===false)return fail(503,'Role ledger unavailable');
+   return json({grants:grants.results||[],milestones:milestones.results||[],memberVerified:true,
+    cosmeticAura:preference?.aura||'none',badgeDisplayMode:preference?.badgeMode||'automatic',
+    roleRegistryReady,roleDistinctions:roleDistinctions?.results||[],
+    source:'earned-records',canIssue:false,canChangeXp:false,
+    note:'Verified earned records; changing a member\'s cosmetic aura or honor requires an independently reviewed grant workflow.'});
   }
   if(lane==='members'){
    if(permit.role!=='owner')return fail(403,'Owner authorization required');
    if(url.searchParams.has('room')||url.searchParams.has('after')||url.searchParams.has('member'))return fail(400,'Invalid query');
-   const r=await db.prepare("SELECT u.id,COALESCE(p.display_name,u.name,'MEMBER') AS name,COALESCE(p.handle,'') AS handle,u.emailVerified AS verified,COALESCE(p.visibility,'private') AS visibility,g.role AS staffRole FROM \"user\" u LEFT JOIN member_creator_profiles p ON p.user_id=u.id LEFT JOIN staff_access_grants g ON g.member_id=u.id AND g.revoked_at IS NULL ORDER BY u.createdAt DESC LIMIT 100").all();
-   if(r.success===false)return fail(503,'Directory unavailable');
-   return json({members:(r.results||[]).map(x=>({id:x.id,name:x.name,handle:x.handle,verified:Boolean(x.verified),visibility:x.visibility,staffRole:x.staffRole||null})),limitedTo:100});
+   const q=(url.searchParams.get('q')||'').trim(),pageRaw=url.searchParams.get('page')||'0';
+   if(q.length>64||(q.length>0&&q.length<2)||CONTROL.test(q)||!/^\\d{1,3}$/.test(pageRaw))return fail(400,'Invalid directory search');
+   const page=Number(pageRaw);
+   if(!Number.isSafeInteger(page)||page>100)return fail(400,'Invalid directory page');
+   const pattern='%'+q.replace(/[\\%_]/g,m=>'\\'+m)+'%';
+   const filter=q?" WHERE (u.name LIKE ? ESCAPE '\\\\' OR u.email LIKE ? ESCAPE '\\\\' OR p.handle LIKE ? ESCAPE '\\\\' OR p.display_name LIKE ? ESCAPE '\\\\') ":' ';
+   const sql="SELECT u.id,COALESCE(p.display_name,u.name,'MEMBER') AS name,"+
+    "COALESCE(p.handle,'') AS handle,u.email AS email,u.emailVerified AS verified,"+
+    "u.createdAt AS joinedAt,COALESCE(p.visibility,'private') AS visibility,g.role AS staffRole,"+
+    "COALESCE(r.aura,'none') AS cosmeticAura FROM \"user\" u "+
+    "LEFT JOIN member_creator_profiles p ON p.user_id=u.id "+
+    "LEFT JOIN staff_access_grants g ON g.member_id=u.id AND g.revoked_at IS NULL "+
+    "LEFT JOIN member_recognition_preferences r ON r.user_id=u.id"+filter+
+    "ORDER BY u.createdAt DESC,u.id DESC LIMIT ? OFFSET ?";
+   const values=q?[pattern,pattern,pattern,pattern,26,page*25]:[26,page*25];
+   const out=await db.prepare(sql).bind(...values).all();
+   if(out.success===false)return fail(503,'Directory unavailable');
+   const records=out.results||[];
+   return json({members:records.slice(0,25).map(x=>({
+    id:x.id,name:x.name,handle:x.handle,email:x.email,verified:Boolean(x.verified),
+    joinedAt:x.joinedAt,visibility:x.visibility,staffRole:x.staffRole||null,cosmeticAura:x.cosmeticAura||'none'
+   })),page,pageSize:25,hasMore:records.length>25,query:q,source:'canonical-verified-directory'});
+  }
+  if(lane==='release-evidence'){
+   if(permit.role!=='owner')return fail(403,'Owner authorization required');
+   if(url.searchParams.has('room')||url.searchParams.has('after')||url.searchParams.has('member')||url.searchParams.has('q')||url.searchParams.has('page'))return fail(400,'Invalid query');
+   return json({stagingReady:false,
+    stagingReason:'a.anevum.com is retired; production-accurate isolated staging requires a separate database and Worker.',
+    releases:[
+     {id:'v084',name:'V084 Continuance release',status:'live',environment:'production',
+      summary:'Real production release, earned vector emblems, IREN onboarding, Continuance entry.',
+      source:'https://github.com/anevum/anevum-web/actions/runs/39271162169',
+      evidence:'https://github.com/anevum/anevum-web/actions/runs/39271162169/artifacts/12195298181'},
+     {id:'v084-qa',name:'V084 compiled React review',status:'verified',environment:'browser-capture',
+      summary:'Genuine compiled IREN/player cards on mobile and desktop; not a live development server.',
+      source:'https://github.com/anevum/anevum-web/actions/runs/39266440691',
+      evidence:'https://github.com/anevum/anevum-web/actions/runs/39266440691/artifacts/12192583247'},
+     {id:'v081-cards',name:'V081 player-card artwork',status:'verified',environment:'browser-capture',
+      summary:'High-resolution earned 2D emblem and card snapshots; historical 3D not active.',
+      source:'https://github.com/anevum/anevum-web/actions/runs/39266440685',
+      evidence:'https://github.com/anevum/anevum-web/actions/runs/39266440685/artifacts/12193611782'},
+     {id:'lab-v001',name:'Lab concept simulator',status:'synthetic',environment:'owner-only Lab',
+      summary:'A visual interaction mockup, NOT functional membership staging.',
+      source:'https://github.com/anevum/anevum-web/pull/540',
+      evidence:'https://lab.anevum.com/previews/'}
+    ]});
   }
   if(lane==='signals'){
    if(url.searchParams.has('room'))return fail(400,'Unsupported signal room');
