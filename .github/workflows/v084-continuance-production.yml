@@ -147,7 +147,7 @@ jobs:
           git merge-base --is-ancestor 00ba9f32f2c862de4b362eaafddc80890e2b577b HEAD
           # Allow only the reviewed V090 identity patch and this guarded deployment workflow.
           # Fail before any Cloudflare writes if even one extra source file differs.
-          diff -u <(printf '%s\\n' \
+          diff -u <(printf '%s\n' \
              '.github/workflows/v084-continuance-production.yml' \
              'creator-v1/canonical-auth/community.mjs' \
              'creator-v1/canonical-auth/forums.mjs' \
