@@ -4,33 +4,264 @@
 export const CSS = String.raw`
 :root{color-scheme:dark;--bg:#080c13;--surface:#111925;--surface2:#182332;--line:#354357;--text:#f3f0e9;--muted:#aab8c9;--gold:#e3c18b;--red:#efa9a0;--green:#a7ddc4}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--text);background:radial-gradient(ellipse at 80% -10%,#172536 0%,transparent 46%),var(--bg);font:15px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select,textarea{font:inherit}a{color:var(--gold)}button,.button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:43px;padding:10px 16px;border:1px solid #657288;border-radius:9px;background:#263449;color:var(--text);text-decoration:none;font-size:13px;font-weight:680;cursor:pointer}button:hover,.button:hover{background:#31435b}button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-offset:3px}button:disabled{opacity:.5;cursor:not-allowed}.primary{background:var(--gold);color:#0b121d;border-color:var(--gold)}.primary:hover{background:#f4d7a7;color:#080e16}.quiet{background:transparent;border-color:#526075}.danger{color:#ffd9d5;border-color:#7e4a53;background:#38232c}header{position:sticky;top:0;z-index:2;border-bottom:1px solid #3a4758;background:#0c121dde;backdrop-filter:blur(18px)}.top{max-width:1250px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 22px}.brand{text-decoration:none;color:var(--text);font-weight:760;font-size:14px;letter-spacing:.15em}.brand small{display:block;letter-spacing:.12em;color:var(--gold);font-size:9px;font-weight:600}.top nav{display:flex;flex-wrap:wrap;align-items:center;gap:16px}.top nav a{font-size:12px;color:#c7d2df;text-decoration:none}.top nav a:hover{text-decoration:underline;color:var(--gold)}main{width:min(1150px,calc(100% - 36px));margin:0 auto;padding:44px 0 90px}.ey{font:700 11px/1.5 system-ui,sans-serif;color:var(--gold);letter-spacing:.16em;text-transform:uppercase}.intro{max-width:780px;margin:5px 0 28px}h1{font-size:clamp(33px,5.7vw,66px);letter-spacing:-.062em;line-height:1.04;margin:9px 0 18px;font-weight:720}h2{font-size:clamp(21px,2.6vw,30px);letter-spacing:-.045em;margin:0 0 10px}h3{font-size:19px;letter-spacing:-.025em;margin:0 0 8px}p{margin:9px 0 13px;color:var(--muted)}.lead{font-size:clamp(15px,2vw,18px);max-width:660px}.meta{color:#92a1b4;font-size:12px}.grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,1fr);gap:20px;align-items:start}.panel{border:1px solid var(--line);border-radius:14px;background:linear-gradient(145deg,#151e2b,#101823);padding:clamp(18px,3vw,30px);box-shadow:0 15px 35px #0003}.panel h2{margin:0 0 4px}.panel+.panel{margin-top:15px}label{display:block;color:#d1dae6;font-size:12px;font-weight:650;margin:15px 0 7px}.field{width:100%;min-height:44px;padding:11px 13px;color:var(--text);background:#0a121d;border:1px solid #56657b;border-radius:8px}.field::placeholder{color:#77879d}textarea.field{min-height:92px;resize:vertical}.drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;min-height:175px;text-align:center;background:#0a131f;border:1.5px dashed #697991;border-radius:12px;padding:20px;cursor:pointer;transition:border-color .15s,background .15s}.drop:hover,.drop.drag,.drop:focus-within{border-color:var(--gold);background:#152130}.drop input{position:absolute;opacity:0;width:1px;height:1px}.drop strong{font-size:17px}.drop span{color:#acbbcc;font-size:12px}.drop .symbol{display:grid;place-items:center;width:41px;height:41px;border-radius:11px;background:#25344b;color:var(--gold);font-size:22px}.actions{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin:20px 0 0}.tip{border-left:2px solid var(--gold);padding:3px 0 3px 13px;margin:17px 0;color:#c6d0de;font-size:13px}.steps{display:grid;gap:14px;margin:18px 0}.step{display:flex;gap:13px;align-items:flex-start;padding-bottom:14px;border-bottom:1px solid #344355}.step:last-child{border-bottom:0;padding-bottom:0}.num{width:27px;height:27px;border:1px solid #6e7b8d;border-radius:8px;display:grid;place-items:center;color:var(--gold);flex:none;font-size:12px}.step strong{display:block;font-size:14px}.step p{font-size:12px;margin:1px 0}.status{min-height:23px;margin-top:14px;color:var(--green);font-size:13px}.status.bad{color:var(--red)}.titlebar{margin:50px 0 14px;display:flex;gap:16px;justify-content:space-between;align-items:end;flex-wrap:wrap}.titlebar p{margin:0}.project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(278px,1fr));gap:12px}.project{border:1px solid #45546a;background:#151e2a;border-radius:12px;padding:19px;display:flex;flex-direction:column;gap:9px}.project h3{margin:3px 0}.project p{font-size:13px;margin:0;flex:1;overflow-wrap:anywhere}.project .actions{margin:8px 0 0}.project .actions>*{flex:1}.chip{display:inline-block;width:max-content;max-width:100%;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:#c8d9e6;border:1px solid #526177;border-radius:6px;padding:4px 7px}.chip.ready,.chip.published{color:var(--green);border-color:#436e61}.chip.rejected{color:var(--red);border-color:#824b50}.notice{border:1px dashed #728096;border-radius:11px;padding:18px 19px;background:#111927;color:#c5cfdc}.notice p{margin:0}.player-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap}.player-head h1{font-size:clamp(28px,4vw,48px)}.viewport{position:relative;display:grid;place-items:center;margin:26px 0 0;background:#020509;border:1px solid #53637b;border-radius:13px;overflow:hidden;min-height:340px;box-shadow:0 24px 80px #0008}.viewport iframe{display:block;width:100%;height:clamp(390px,70vh,820px);border:0;background:#03070c}.viewport:fullscreen{width:100%;height:100%;border:0;border-radius:0}.viewport:fullscreen iframe{height:100%;min-height:100%}.player-controls{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:12px}.details{margin:26px 0;padding-top:20px;border-top:1px solid #334256}.queue{display:grid;gap:12px}.queue .project{display:block}.small{font-size:12px}.foot{border-top:1px solid #2c3b4e;color:#8491a5;padding:22px;text-align:center;font-size:11px}.foot a{color:#bfcadc;text-decoration:none}.hidden{display:none!important}dialog{color:var(--text);background:#151f2b;border:1px solid #62728a;border-radius:13px;max-width:480px;padding:25px}dialog::backdrop{background:#000b}@media(max-width:800px){.grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column;gap:10px}.top nav{gap:11px}main{padding-top:30px}.viewport iframe{height:64dvh;min-height:290px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.drop{transition:none}}
+
+/* ANEVUM / Continuance Uplink v004 — focused, phone-first shipping experience */
+:root{--bg:#071020;--surface:#101c2d;--surface2:#182940;--line:#344c66;--text:#eef4fb;--muted:#b5c5d9;--gold:#c8e9ee;--green:#a9dfc8}
+body{background:radial-gradient(ellipse 58% 35% at 88% -8%,rgba(61,101,146,.2),transparent),linear-gradient(165deg,#091427,#07101f 68%);min-width:0}
+main{width:min(1140px,calc(100% - 38px));padding:33px 0 90px}
+header{backdrop-filter:blur(18px);background:rgba(8,17,32,.94);border-bottom-color:rgba(153,193,231,.19)}
+.top{padding:12px 22px}.top nav a{min-height:44px;display:inline-flex;align-items:center}
+.brand small{font-size:9px;color:#a9d8df;letter-spacing:.12em}.brand{letter-spacing:.08em;font-size:15px}
+h1{font-size:clamp(35px,5.1vw,57px);font-weight:650;line-height:1.09;letter-spacing:-.047em}
+h2{font-weight:630;letter-spacing:-.03em}
+.ey{font-size:10px;color:#a9dce5;letter-spacing:.145em}
+.lead{line-height:1.6;max-width:690px}
+.grid{grid-template-columns:minmax(0,1.45fr) minmax(275px,.85fr);gap:17px}
+.panel{background:linear-gradient(155deg,#122037,#0b1729);border-color:rgba(151,191,224,.21);box-shadow:0 13px 36px #0004;border-radius:16px}
+.panel.soft{background:#101c2e}.panel+.panel{margin-top:14px}
+label{font-size:13px;margin:14px 0 7px}
+.field{min-height:49px;border-color:#516983;background:#091426;padding:13px 15px;border-radius:10px}
+textarea.field{min-height:105px;line-height:1.5}
+.field:focus{border-color:#a9dce5}
+button,.button{min-height:46px;border-radius:10px;border-color:#506a86;font-size:13px;font-weight:650}
+.primary{background:#c5e8ee;color:#09182a;border-color:#c5e8ee}.primary:hover{background:#edfcff;color:#071323}
+button:focus-visible,.button:focus-visible,select:focus-visible{outline-color:#b8ebf3}
+.drop{border:1.5px dashed #5e8aab;background:linear-gradient(145deg,#0b1a2f,#0b1524);min-height:160px;padding:22px 16px;border-radius:13px;gap:7px}
+.drop:hover,.drop.drag,.drop:focus-within{background:#112941;border-color:#a3e8f2}
+.drop strong{font-size:16px}.drop span{font-size:12px}.drop .symbol{background:#17344d;color:#b5e9ef;width:46px;height:46px;font-size:21px}
+.drop[aria-invalid=true]{border-color:#f4a2a2}
+.drop input{position:absolute;opacity:0;width:1px;height:1px}
+.file-check{display:flex;gap:8px;align-items:center;font-size:12px;margin-top:9px;color:#a8d8da}
+.form-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 13px}
+.form-grid>.full{grid-column:1/-1}
+.format-options{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:19px}
+.format-option{padding:12px 13px;border:1px solid #405975;border-radius:11px;background:rgba(12,26,45,.8)}
+.format-option strong{font-size:13px;display:block;margin:1px 0 4px}
+.format-option span{font-size:11px;color:#acc0d5;line-height:1.4;display:block}
+.subheading{font-size:11px;color:#acc0d5;letter-spacing:.08em;text-transform:uppercase;margin:10px 0}
+.stepper{display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:7px;margin:0 0 21px}
+.stepper span{font-size:11px;border:1px solid #37516d;border-radius:99px;padding:5px 10px;color:#a9b9ce}
+.stepper .active{background:#1b3647;border-color:#79b9c6;color:#e2f7f8}
+.upload-guide{position:sticky;top:80px}
+.tip{border-left-color:#8fbfce;font-size:12px;line-height:1.6}
+.tip a{color:#b8e8f1}
+.status{min-height:23px;color:#b5e8d3}
+.status.bad{color:#ffb2ad}
+.foot{border-top-color:#2d4059}
+.help-quick{display:grid;gap:10px}.help-quick article{border:1px solid #2d4761;padding:11px 13px;border-radius:10px;background:#101e33}
+.help-quick p{font-size:12px;margin:4px 0}
+.bordered-link{display:inline-flex;align-items:center;min-height:43px;font-size:12px}
+.project{background:linear-gradient(150deg,#142239,#0e1a2b);border-color:#35506b;border-radius:15px;padding:19px}
+.project h3{font-size:19px}.project .actions>*{min-width:0}
+.project .meta{color:#9ab0c9}.project .chip{border-radius:99px}
+.chip.pending_review{border-color:#9b8164;color:#e7c9a4}
+.chip.rejected{color:#ffbbb4}
+.notice{background:#101c2d;border-color:#526982}
+.notice strong{color:#e7f3fd}
+.notice a{color:#b9eaf1}
+.titlebar{margin-top:40px}
+.viewport{background:#020609;border-color:#3a526d;border-radius:14px;min-height:280px}
+.viewport iframe{height:clamp(360px,70vh,760px)}
+.viewport .exit-immersive{display:none;position:absolute;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));z-index:5;background:#091727ee;border:1px solid #a3cbd8;color:#fff;min-width:70px;min-height:46px}
+.viewport:fullscreen .exit-immersive,.viewport.immersive .exit-immersive{display:flex}
+.viewport:fullscreen,.viewport.immersive{position:fixed;inset:0;z-index:100;width:100%;height:100%;max-width:none;margin:0;border:0;border-radius:0;background:#000}
+.viewport:fullscreen iframe,.viewport.immersive iframe{height:100%;min-height:100%;width:100%}
+body.player-immersive{overflow:hidden}
+.player-head h1{font-size:clamp(28px,4.5vw,48px)}
+.player-controls{gap:9px}
+.player-controls button{flex:0 0 auto}
+.inline-note{font-size:12px;color:#aabbd1}
+.inline-note strong{color:#eff7ff}
+.detail-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.detail-row>*{border:1px solid #3b5471;border-radius:8px;padding:7px 11px;color:#c7d8e9;font-size:12px}
+.empty-state{display:grid;gap:5px;border:1px dashed #47637e;border-radius:14px;padding:24px;background:#0e1b2d}
+.empty-state strong{font-size:17px;color:#e9f4fd}
+dialog{width:min(92vw,500px);background:#101f33;border-radius:16px;border-color:#62859f;color:var(--text);padding:24px}
+dialog::backdrop{background:#010715c7}
+dialog textarea{width:100%}
+.dialog-actions{display:flex;flex-wrap:wrap;gap:9px;justify-content:flex-end;margin-top:18px}
+.review-confirm{display:flex;gap:10px;align-items:flex-start;color:#d5e3f2;font-size:12px;line-height:1.45}
+.review-confirm input{margin:3px 0;flex:none;width:18px;height:18px}
+.review-confirm strong{display:block}
+.file-form-note{font-size:12px;margin:7px 0 0}
+@media(max-width:800px){
+ .grid{grid-template-columns:1fr;gap:12px}.top{flex-direction:row;align-items:center;gap:8px}
+ .top nav{justify-content:flex-end;gap:11px}
+ main{padding-top:24px}
+ .upload-guide{position:static}
+ .viewport iframe{height:62dvh;min-height:290px}
+ .player-head{gap:8px}
+}
+@media(max-width:500px){
+ body{font-size:14px}.top{padding:10px 14px}
+ .brand{font-size:13px}.brand small{font-size:7px}
+ .top nav{gap:8px}.top nav a{font-size:11px;min-height:44px}
+ .top nav a:last-child{display:none}
+ main{width:min(100% - 26px,1140px);padding-top:20px}
+ h1{font-size:clamp(31px,9vw,39px);margin:6px 0 12px}
+ .panel{padding:17px}.grid{gap:12px}
+ .format-options{gap:7px}.format-option{padding:10px}
+ .drop{min-height:151px;padding:16px}
+ .form-grid{grid-template-columns:1fr}.form-grid>.full{grid-column:auto}
+ .actions{gap:8px}.actions>*{flex:1}
+ .project-grid{grid-template-columns:1fr}
+ .viewport{margin-top:12px}.viewport iframe{height:61dvh;min-height:300px}
+ .player-controls button{flex:1}
+ .stepper span{padding:4px 7px;font-size:10px}
+ .titlebar{margin-top:27px}
+ .help-quick article{padding:10px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
 `;
 
 const SCRIPT = String.raw`
 (function(){
- const q=id=>document.getElementById(id),file=q("bundle"),drop=q("drop"),form=q("publish-form"),status=q("activity");
- function note(message,error){if(status){status.textContent=message;status.classList.toggle("bad",!!error)}}
- function updateFile(f){if(!f)return;const ext=f.name.split(".").pop().toLowerCase();if(!["zip","html"].includes(ext)){note("Choose a .zip build or self-contained .html file.",true);return}if(f.size>20*1048576){note("Maximum upload size is 20 MiB.",true);return}q("file-label").textContent=f.name+" · "+(f.size/1048576).toFixed(2)+" MiB";note("Ready to validate and prepare a private build.")}
- if(file)file.addEventListener("change",()=>updateFile(file.files[0]));
- if(drop){drop.addEventListener("dragover",e=>{e.preventDefault();drop.classList.add("drag")});drop.addEventListener("dragleave",()=>drop.classList.remove("drag"));drop.addEventListener("drop",e=>{e.preventDefault();drop.classList.remove("drag");if(e.dataTransfer.files.length){file.files=e.dataTransfer.files;updateFile(file.files[0])}});}
- async function post(url,data,isFile=false){const r=await fetch(url,{method:"POST",credentials:"same-origin",headers:isFile?{"x-anevum-package":"v003"}:{"x-anevum-package":"v003","content-type":"application/json"},body:isFile?data:JSON.stringify(data||{})});let json={};try{json=await r.json()}catch{}if(!r.ok)throw Error(json.error||("Request failed ("+r.status+")"));return json;}
- if(form)form.addEventListener("submit",async e=>{e.preventDefault();const b=q("upload-button");b.disabled=true;note("Validating your package and preparing a private build. This may take a moment…");try{const x=await post("/api/v1/packages/upload",new FormData(form),true);location.href="/play/v3/"+x.id+"?preview=1"}catch(err){note(err.message,true);b.disabled=false}});
- document.addEventListener("click",async e=>{
-   const btn=e.target.closest("[data-package-action]");if(!btn)return;
-   const id=btn.dataset.project,action=btn.dataset.packageAction;
-   if(!id)return;
-   if(action==="version"){q("existing-project").value=id;q("publish-form").scrollIntoView({behavior:"smooth"});q("project-version").textContent="New version of "+(btn.dataset.title||"project");return;}
-   if(action==="fullscreen"){const v=q("game-viewport");if(v?.requestFullscreen)await v.requestFullscreen().catch(()=>{});return;}
-   if(action==="restart"){const frame=q("game-frame");if(frame)frame.src=frame.getAttribute("src");return;}
-   if(action==="submit"&&!confirm("Submit this build for review?"))return;
-   if(action==="publish"&&!confirm("Make this build publicly playable?"))return;
-   if(action==="delete"&&!confirm("Remove this unpublished project?"))return;
-   let reason="";
-   if(action==="reject"){reason=prompt("State the reason for rejection (10+ characters):")||"";if(reason.trim().length<10)return;}
-   btn.disabled=true;note("Processing "+action+"…");
-   try{await post("/api/v1/packages/projects/"+id+"/"+(action==="publish"||action==="reject"?"review":action),{action,reason});location.reload()}catch(err){note(err.message,true);btn.disabled=false}
- });
+  const q=id=>document.getElementById(id);
+  const file=q("bundle"),drop=q("drop"),form=q("publish-form"),status=q("activity");
+  const MiB=1048576;
+  function note(message,error){if(status){status.textContent=message;status.classList.toggle("bad",!!error);status.setAttribute("role",error?"alert":"status");}}
+  function validFile(f){
+    if(!f)return "Choose a ZIP or HTML build.";
+    const ext=f.name.split(".").at(-1)?.toLowerCase();
+    if(ext!=="zip"&&ext!=="html")return "Choose a .zip build or a self-contained .html file.";
+    if(f.size===0)return "This file is empty. Export a complete browser build.";
+    if(f.size>(ext==="html"?5:20)*MiB)return ext==="html"?"Standalone HTML is limited to 5 MiB. Export a ZIP for multi-file builds.":"ZIP uploads are limited to 20 MiB in this pilot.";
+    return "";
+  }
+  function updateFile(f){
+    const error=validFile(f);
+    if(drop)drop.setAttribute("aria-invalid",String(!!error));
+    if(f&&q("file-label"))q("file-label").textContent=f.name+" · "+(f.size/MiB).toFixed(2)+" MiB";
+    if(error)note(error,true);
+    else note("File selected. Add the project details, then prepare a private preview.");
+    if(q("upload-button"))q("upload-button").disabled=!!error;
+  }
+  if(file){
+    file.addEventListener("change",()=>updateFile(file.files[0]));
+  }
+  if(drop){
+    for(const event of ["dragenter","dragover"])drop.addEventListener(event,e=>{e.preventDefault();drop.classList.add("drag");});
+    for(const event of ["dragleave","dragend"])drop.addEventListener(event,e=>{e.preventDefault();drop.classList.remove("drag");});
+    drop.addEventListener("drop",e=>{
+      e.preventDefault();drop.classList.remove("drag");
+      const f=e.dataTransfer?.files?.[0];
+      if(!f)return;
+      if(validFile(f)){updateFile(f);return;}
+      try{const list=new DataTransfer();list.items.add(f);file.files=list.files;updateFile(f);}
+      catch{note("Your browser cannot attach this dropped file. Tap Browse instead.",true);}
+    });
+  }
+  async function post(url,data,isFile){
+    const r=await fetch(url,{method:"POST",credentials:"same-origin",
+      headers:isFile?{"x-anevum-package":"v003"}:{"x-anevum-package":"v003","content-type":"application/json"},
+      body:isFile?data:JSON.stringify(data||{})});
+    let body={};try{body=await r.json()}catch{}
+    if(!r.ok)throw Error(body.error||"The request failed ("+r.status+"). Your public release has not changed.");
+    return body;
+  }
+  if(form)form.addEventListener("submit",async e=>{
+    e.preventDefault();
+    const b=q("upload-button"),f=file?.files?.[0],error=validFile(f);
+    if(error){note(error,true);if(file)file.focus();return;}
+    if(!form.reportValidity())return;
+    b.disabled=true;
+    note("Uploading and validating your files. Keep this page open until the private build is ready.");
+    try{
+      const result=await post("/api/v1/packages/upload",new FormData(form),true);
+      note("Private build prepared. Opening your real playtest.");
+      location.assign("/play/v3/"+encodeURIComponent(result.id)+"?preview=1");
+    }catch(err){note(err.message||"Upload failed. Retry without leaving the page.",true);b.disabled=false;}
+  });
+  function modalAction(btn){
+    const d=q("review-dialog"),kind=btn.dataset.packageAction;
+    if(!d||!d.showModal)return false;
+    d.dataset.project=btn.dataset.project;
+    d.dataset.action=kind;
+    q("review-title").textContent=kind==="publish"?"Approve this build?":"Request changes";
+    q("review-copy").textContent=kind==="publish"
+      ?"Approve only after reviewing the actual playable build and its safety, rights and device compatibility. Publication makes it accessible to everyone."
+      :"Explain what the creator should fix. The current approved release, if any, will remain playable.";
+    q("decision-reason-wrap").hidden=kind!=="reject";
+    q("decision-reason").required=kind==="reject";
+    q("decision-reason").value="";
+    q("decision-confirm").checked=false;
+    q("review-accept").textContent=kind==="publish"?"Approve and publish":"Send changes request";
+    q("review-accept").classList.toggle("danger",kind==="reject");
+    q("decision-confirm-label").textContent=kind==="publish"
+      ?"I reviewed this actual build and I am independently authorized to approve it."
+      :"I reviewed this build and explained a specific actionable change.";
+    q("review-error").textContent="";
+    d.showModal();
+    return true;
+  }
+  const modal=q("review-dialog"),modalForm=q("review-form");
+  if(modalForm)modalForm.addEventListener("submit",async e=>{
+    e.preventDefault();
+    const id=modal.dataset.project,action=modal.dataset.action,reason=q("decision-reason").value.trim();
+    if(!q("decision-confirm").checked){q("review-error").textContent="Confirm the review before continuing.";return;}
+    if(action==="reject"&&(reason.length<10||reason.length>1000)){q("review-error").textContent="Give the creator a reason of 10–1000 characters.";return;}
+    const accept=q("review-accept");accept.disabled=true;
+    q("review-error").textContent="Recording your review…";
+    try{await post("/api/v1/packages/projects/"+id+"/review",{action,reason},false);location.reload();}
+    catch(err){q("review-error").textContent=err.message;accept.disabled=false;}
+  });
+  document.addEventListener("click",async e=>{
+    const close=e.target.closest("[data-review-close]");
+    if(close){modal?.close();return;}
+    const btn=e.target.closest("[data-package-action]");
+    if(!btn)return;
+    const id=btn.dataset.project,action=btn.dataset.packageAction;
+    if(!id)return;
+    if(action==="publish"||action==="reject"){modalAction(btn);return;}
+    if(action==="fullscreen"){
+      const v=q("game-viewport");if(!v)return;
+      if(document.fullscreenElement){await document.exitFullscreen().catch(()=>{});return;}
+      try{if(v.requestFullscreen){await v.requestFullscreen();return;}}catch{}
+      v.classList.add("immersive");document.body.classList.add("player-immersive");
+      try{history.pushState({anevumImmersive:true},"","#play");}catch{}
+      q("exit-immersive")?.focus();
+      return;
+    }
+    if(action==="exit-immersive"){
+      const v=q("game-viewport");
+      if(document.fullscreenElement)await document.exitFullscreen().catch(()=>{});
+      v?.classList.remove("immersive");document.body.classList.remove("player-immersive");
+      return;
+    }
+    if(action==="restart"){
+      const frame=q("game-frame");
+      if(frame){frame.src=frame.getAttribute("src");note("Restarting the experience.");}
+      return;
+    }
+    if(action==="share"){
+      const url=new URL(location.href);
+      url.searchParams.delete("preview");url.hash="";
+      if(location.search.includes("preview=1")){note("Private previews cannot be shared. Submit your build for review first.",true);return;}
+      try{if(navigator.share)await navigator.share({title:document.title,url:url.href});
+      else if(navigator.clipboard){await navigator.clipboard.writeText(url.href);note("Public project link copied.");}
+      else note("Copy the page address to share this released project.");}
+      catch(err){if(err.name!=="AbortError")note("Sharing was unavailable. Copy the page address instead.",true);}
+      return;
+    }
+    if(action==="submit"&&!confirm("Submit this exact private build for independent review?"))return;
+    if(action==="delete"&&!confirm("Permanently remove this unpublished project and its uploaded files?"))return;
+    btn.disabled=true;note(action==="submit"?"Submitting for review…":"Removing private project…");
+    try{await post("/api/v1/packages/projects/"+id+"/"+action,{action},false);location.reload();}
+    catch(err){note(err.message,true);btn.disabled=false;}
+  });
+  function leaveImmersive(){
+    const v=q("game-viewport");
+    if(!v?.classList.contains("immersive"))return;
+    v.classList.remove("immersive");document.body.classList.remove("player-immersive");
+  }
+  addEventListener("popstate",leaveImmersive);
+  addEventListener("keydown",e=>{if(e.key==="Escape")leaveImmersive();});
+  document.addEventListener("fullscreenchange",()=>{
+    if(!document.fullscreenElement)document.body.classList.remove("player-immersive");
+  });
 })();
+
 `;
 
 export const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" })[c]);
