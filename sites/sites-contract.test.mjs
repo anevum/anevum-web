@@ -102,8 +102,9 @@ test("non-public methods and unrelated hosts fail closed", async () => {
   assert.equal(badHost.status, 421);
   const post = await publicWorker.fetch(makeRequest("/", "POST"), {});
   assert.equal(post.status, 405);
-  const head = await publicWorker.fetch(makeRequest("/"), {});
+  const head = await publicWorker.fetch(makeRequest("/", "HEAD"), {});
   assert.equal(head.status, 200);
+  assert.equal(await head.text(), "", "HEAD response must not have a body");
 });
 
 test("protected workbench rejects unauthenticated requests and workers.dev", async () => {
