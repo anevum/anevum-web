@@ -8,7 +8,9 @@ const entry=read('web/src/main.tsx');
 const alerts=read('web/src/components/AnevumNotifications.tsx');
 const collection=read('web/src/components/LevelCollection.tsx');
 const specimen=read('web/src/components/LevelEmblem.tsx');
-const instrument=read('web/src/pages/TheButtonPage.tsx');
+const app=read('web/src/App.tsx');
+const memberDashboard=read('web/src/components/MemberSpaceDashboard.tsx');
+const progression=read('canonical-auth/progression.mjs');
 
 test('V063 is loaded after the accumulated Creator V1 presentation layers',()=>{
   const v63=entry.lastIndexOf('continuance-sitewide-v063.css');
@@ -38,8 +40,10 @@ test('alerts and awards share the canonical 30-level progression',()=>{
   assert.match(alerts,/aria-label=\{queue\.some\(n=>n\.serverId\)/);
   assert.doesNotMatch(alerts,/level:30,title:'Level 30 reached',detail:'ANEVUM'/);
   assert.match(alerts,/Visual notification sample. No award, XP or specimen revealed/);
-  assert.doesNotMatch(instrument,/EXPLORE ALL 60 LEVEL ICONS/);
-  assert.match(instrument,/INSPECT MY EARNED LEVELS/);
+  assert.doesNotMatch(app,/import \{TheButtonPage\}/);
+  assert.match(app,/<Route path="thebutton" element=\{<Navigate to="\/member" replace\/>\}/);
+  assert.doesNotMatch(memberDashboard,/XP TEST|to="\/thebutton"/);
+  assert.doesNotMatch(progression,/INSERT INTO member_xp_events\(/);
   assert.match(collection,/Thirty levels\. Your earned emblems/);
   assert.match(collection,/EarnedRewardVault/);
   assert.doesNotMatch(collection,/level-artifacts\.json|LIVING 3D ARCHIVE/);
