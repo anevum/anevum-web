@@ -1,0 +1,85 @@
+/*
+ * ANEVUM / IREN LIVING COMPANION V088
+ * One genuinely articulated WebGL bot. Does not change player-card renderers.
+ */
+.ir88-figure{position:relative;display:block;width:100%;height:100%;isolation:isolate;overflow:visible}
+.ir88-3d-canvas{display:block;position:absolute;inset:0;width:100%;height:100%;
+ pointer-events:none;opacity:0;transition:opacity .25s ease;outline:none}
+.ir88-figure.is-rendering .ir88-3d-canvas{opacity:1}
+.ir88-svg-fallback{position:absolute;inset:0;display:grid;place-items:center;
+ transition:opacity .2s ease}
+.ir88-figure.is-rendering .ir88-svg-fallback{opacity:0}
+.ir88-figure.has-fallback .ir88-svg-fallback{opacity:1}
+
+.ir88-companion.ir80-companion{transition:right .25s ease,bottom .25s ease}
+.ir88-companion .ir87-scout.ir80-dock{overflow:visible;touch-action:none;user-select:none;-webkit-user-select:none}
+.ir88-companion .ir87-scout.ir80-dock .ir88-figure{width:100%;height:100%}
+.ir88-companion .ir87-scout.ir80-dock .ir88-3d-canvas{border-radius:50%}
+.ir88-companion .ir87-scout.ir80-dock:hover{filter:drop-shadow(0 0 8px #8db9db38)}
+
+.ir88-companion-expanded .ir87-scout.ir80-dock{
+ width:164px;height:164px;min-width:164px;min-height:164px;
+ padding:0;border:1px solid transparent;border-radius:24px;
+ background:transparent;box-shadow:none;filter:drop-shadow(0 12px 18px #050c17bb);
+ transition:filter .2s ease,transform .28s ease
+}
+.ir88-companion-expanded .ir87-scout.ir80-dock:hover,
+.ir88-companion-expanded .ir87-scout.ir80-dock[aria-expanded="true"]{
+ background:transparent;border-color:transparent;box-shadow:none;
+ filter:drop-shadow(0 12px 23px #90c6f065)
+}
+.ir88-companion-expanded .ir87-scout.ir80-dock .ir88-3d-canvas{border-radius:0}
+.ir88-companion-expanded .ir87-scout.ir80-dock .ir87-unread{top:17px;right:17px}
+.ir88-companion-expanded .ir87-panel.ir80-help{
+ bottom:174px;width:min(338px,calc(100vw - 24px));
+ max-height:min(550px,calc(100dvh - 190px))
+}
+.ir88-voice-line{
+ font:500 12px/1.55 system-ui,sans-serif!important;letter-spacing:.01em;
+ margin:2px 0 8px!important;padding:8px 10px;
+ border-left:2px solid #b9d8f1;border-radius:0 9px 9px 0;
+ background:linear-gradient(90deg,#7fb6df15,transparent);
+ color:#e4e9f2!important
+}
+.ir88-motion-toggle{border:0;background:none;cursor:pointer;padding:8px 0;
+ color:#d4dbeb;font:600 11px/1.4 system-ui,sans-serif;white-space:nowrap}
+.ir88-motion-toggle[aria-pressed="true"]{color:#ead2b6}
+.ir88-motion-toggle:focus-visible{outline:2px solid #9fe6ff;outline-offset:4px;border-radius:4px}
+
+/* Tour presentation: the same character is mounted in the spotlight layer.
+   Its body animates in three dimensions; screen traversal is safely bounded. */
+.ir80-guide-layer .ir88-guide-bot{
+ position:fixed;z-index:2;pointer-events:none;
+ transition:left .72s cubic-bezier(.22,.8,.27,1),top .72s cubic-bezier(.22,.8,.27,1);
+ filter:drop-shadow(0 10px 24px #000a);
+}
+.ir80-guide-layer .ir88-guide-bot .ir88-3d-canvas{border-radius:0}
+.ir80-guide-layer .ir80-guide-card{z-index:3}
+.ir80-guide-layer .ir88-guide-bot .ir88-figure{width:100%;height:100%}
+.ir80-guide-layer .ir88-guide-bot .ir88-svg-fallback{opacity:.9}
+.ir80-guide-layer .ir88-guide-bot .ir88-figure.is-rendering .ir88-svg-fallback{opacity:0}
+
+@media(max-width:650px){
+ .ir88-companion-expanded .ir87-scout.ir80-dock{
+  width:130px;height:130px;min-width:130px;min-height:130px
+ }
+ .ir88-companion-expanded .ir87-panel.ir80-help{
+  bottom:141px;max-height:min(60dvh,calc(100dvh - 170px));
+  width:min(326px,calc(100vw - 22px))
+ }
+ .ir88-companion-expanded .ir87-scout.ir80-dock .ir87-unread{top:12px;right:13px}
+ .ir88-voice-line{font-size:11px!important}
+ .ir80-guide-layer .ir88-guide-bot{filter:drop-shadow(0 4px 9px #0007)}
+}
+@media(prefers-reduced-motion:reduce){
+ .ir88-companion.ir80-companion,
+ .ir88-companion-expanded .ir87-scout.ir80-dock,
+ .ir80-guide-layer .ir88-guide-bot,
+ .ir88-3d-canvas,.ir88-svg-fallback{transition:none!important}
+}
+@media(forced-colors:active){
+ .ir88-companion-expanded .ir87-scout.ir80-dock{outline:2px solid CanvasText}
+ .ir88-companion .ir87-scout.ir80-dock .ir88-3d-canvas{visibility:hidden}
+ .ir88-companion .ir87-scout.ir80-dock .ir88-svg-fallback{opacity:1}
+ .ir88-voice-line{border-color:CanvasText}
+}
