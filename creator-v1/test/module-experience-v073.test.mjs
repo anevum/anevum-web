@@ -100,7 +100,7 @@ test("V073 Discover is search-led with verified counts and real metadata cards",
   const editorial=project.slice(project.indexOf('if(presentation==="editorial")'),project.indexOf('  return ('));
   assert.doesNotMatch(editorial,/CosmicArtwork|project-art|<img|<canvas|Math\.random/);
   for(const token of [".av73-discover-intro",".av73-discover .portal-wide-search",".av73-discover .portal-channel-filters",
-    ".av73-discover .av73-project-card",".av73-discover .portal-true-empty","max-width:365px",
+    ":is(.av73-discover,.portal-creator-channel) .av73-project-card",".av73-discover .portal-true-empty","max-width:365px",
     "max-width:700px","prefers-reduced-motion:reduce","forced-colors:active"])
     assert.ok(browseCss.includes(token),"Missing Discover surface "+token);
   for(const check of ["V073_DISCOVER_FIRST_FOLD","V073_DISCOVER_FILTER","V073_DISCOVER_SEARCH"])

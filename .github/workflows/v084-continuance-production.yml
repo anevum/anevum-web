@@ -187,6 +187,7 @@ jobs:
              'creator-v1/test/continuance-experience-v091.test.mjs' \
              'creator-v1/test/creator-identity-browser-v091.mjs' \
              'creator-v1/test/creator-route-v091.test.mjs' \
+             'creator-v1/test/module-experience-v073.test.mjs' \
              'creator-v1/test/portal-offline-preview.mjs' \
              'creator-v1/test/project-hosting-v091.test.mjs' \
              'creator-v1/test/staff-session-transport-v091.test.mjs' \
