@@ -169,7 +169,7 @@ function actualControllerFixture(){
  const stageEnv={
    DB:{prepare(sql){
      const stmt={bind(){return stmt;},async first(){
-       if(sql.includes("sqlite_master"))return {n:6};
+       if(sql.includes("sqlite_master"))return {n:7};
        return null;
      },async all(){return {results:[]}},async run(){return {meta:{changes:0}}}};
      return stmt;
@@ -185,6 +185,9 @@ function actualControllerFixture(){
      const token=req.headers.get("cookie")||"";
      const id=token==="session=creator"?"creator-member":
        token==="session=reviewer"?"reviewer-member":null;
+     if(new URL(req.url).pathname==="/api/v1/member/creator-profile")
+       return id?Response.json({memberId:id,profile:{handle:id==="creator-member"?"cosmiccreator":"trustedreviewer",createdAt:1760000000,visibility:"public"}}):
+         Response.json({error:"Sign-in required"},{status:401});
      return Response.json({user:id?{id,emailVerified:true}:null,
        session:id?{id:"verified-session"}:null});
    }}
