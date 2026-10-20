@@ -49,6 +49,7 @@ jobs:
           CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
           test -n "$CHROME"
           CHROME="$CHROME" timeout 100s node sites/v005/gpu-qa.mjs sites/v005/shader-check.html /tmp/sites-v005/gpu-qa.png
+          CHROME="$CHROME" timeout 100s node sites/v005/gpu-qa.mjs /tmp/sites-v005/interactive-preview.html /tmp/sites-v005/integrated-gpu.png
       - name: Attach screenshots
         uses: actions/upload-artifact@v4
         with:
@@ -58,5 +59,7 @@ jobs:
             /tmp/sites-v005/mobile.png
             /tmp/sites-v005/gpu-qa.png
             /tmp/sites-v005/gpu-qa.json
+            /tmp/sites-v005/integrated-gpu.png
+            /tmp/sites-v005/integrated-gpu.json
             /tmp/sites-v005/interactive-preview.html
           retention-days: 14
