@@ -7,7 +7,7 @@
 import { inspectZip, extractEntry, sha256Hex, assetMime, ZIP_LIMITS, PackageError } from "./archive.mjs";
 import { mintPreview } from "./tokens.mjs";
 import { layout, uploadScreen, catalogScreen, playerScreen, queueScreen, helpScreen } from "./ui.mjs";
-import {POLICY,ResourceError,readBoundedMultipart} from "./resource-policy.mjs";
+import {POLICY,ResourceError,readBoundedMultipart,readBoundedJson} from "./resource-policy.mjs";
 import {resourcePolicyReady,acquireUploadLease,releaseUploadLease,recordUploadAttempt,getStorageUsage,reserveUpload,markReservationForCleanup,jobStatement,findDuplicate,saveDraft,discardDraft} from "./resource-service.mjs";
 import {cleanupPackageResources,staffMetrics} from "./resource-cleanup.mjs";
 
@@ -96,7 +96,7 @@ async function prepareFile(file) {
     throw new PackageError("Choose a ZIP or HTML build with a valid filename");
   const extension=file.name.split(".").at(-1).toLowerCase();
   if(extension!=="zip"&&extension!=="html") throw new PackageError("Upload a .zip package or .html file");
-  if(file.size<1||file.size>ZIP_LIMITS.archive) throw new PackageError("The file must be below 30 MiB",413);
+  if(file.size<1||file.size>ZIP_LIMITS.archive) throw new PackageError("The file must be below 20 MiB",413);
   if(extension==="zip"&&!["application/zip","application/x-zip-compressed","application/octet-stream",""].includes(file.type))
     throw new PackageError("The selected file does not have a ZIP media type");
   if(extension==="html"&&!["text/html","application/octet-stream",""].includes(file.type))
@@ -131,13 +131,11 @@ async function prepareFile(file) {
 async function preflight(req,env,u){
   if(!pilot(env,u.id))return fail(403,"Creator alpha access required");
   if(!await resourcePolicyReady(env.DB))return fail(503,"Creator storage setup is incomplete");
-  const raw=await req.text();
-  if(raw.length>2048)return fail(413,"Preflight request exceeds limit");
-  let x;try{x=JSON.parse(raw);}catch{return fail(400,"Invalid preflight request");}
+  const x=await readBoundedJson(req);
   const size=x?.size,sha=x?.sha256,id=x?.projectId||"",name=x?.filename||"";
   if(!Number.isSafeInteger(size)||size<1||size>POLICY.maxArchiveBytes||
     !/^[a-f0-9]{64}$/.test(sha||"")||
-    typeof name!=="string"||!/^[^\\/\\x00-\\x1f]{3,160}\.(zip|html)$/.test(name)||
+    typeof name!=="string"||name.length<3||name.length>160||!/\.(zip|html)$/i.test(name)||/[\/\\\x00-\x1f]/.test(name)||
     (id&&!UUID.test(id)))return fail(422,"Choose a ZIP/HTML build below 20 MiB");
   const project=id?await getProject(env.DB,id):null;
   if(id&&(!project||project.owner_id!==u.id))return fail(404,"Project unavailable");
