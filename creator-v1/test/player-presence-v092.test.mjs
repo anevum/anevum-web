@@ -52,3 +52,17 @@ test('V092 atmosphere and insignia presentations cover all five live affinities 
  assert.match(stylesheet,/@media\(forced-colors:active\)/);
  assert.doesNotMatch(stylesheet,/position:fixed|100vh|pointer-events:auto/);
 });
+
+test('V092 protected staff member directory distinguishes saved auras from unsaved previews',()=>{
+ const source=read('operations/anevum-iren-staff-observatory-v001.mjs');
+ const match=source.match(/const CLIENT = ("(?:\\\\.|[^"\\\\])*");/);
+ assert.ok(match,'Embedded staff frontend must be available for review');
+ const script=JSON.parse(match[1]);
+ assert.doesNotThrow(()=>parse(script,{sourceType:'script'}));
+ assert.match(script,/const assignedAura=roles\.includes\(m\.aura\)/);
+ assert.match(script,/roles\.includes\(selector\.value\)/);
+ assert.match(script,/Preview only/);
+ assert.match(script,/member-aura-label/);
+ assert.match(source,/member-aura--transcosmic/);
+ assert.match(source,/prefers-reduced-motion/);
+});
