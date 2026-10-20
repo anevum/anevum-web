@@ -78,6 +78,7 @@ export function verifyV091GitSourceScope(){
 }
 export function verifyV091Acceptance(record){
   if(record?.source_sha!==V091_APPLICATION_SOURCE)throw Error('V091 acceptance does not match the pinned application source.');
+  if(record.native_candidate_pending===true)throw Error('V095 native application candidate remains unverified; the previous V091 upload cannot be promoted for changed source.');
   for(const gate of ['founder_staff_session','reviewer_staff_session','creator_journey','cross_account_identity']){
     if(record[gate]!==true)throw Error('V091 authenticated release gate remains unverified: '+gate);
   }

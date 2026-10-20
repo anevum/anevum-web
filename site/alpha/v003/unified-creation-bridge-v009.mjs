@@ -152,6 +152,18 @@ export async function interceptPackageNamespace(request,env){
   if(env?.PACKAGE_CANONICAL_BRIDGE_ENABLED!=="true")return unavailable(404);
   if(env?.PACKAGE_IDENTITY_BRIDGE_VERIFIED!=="true"||typeof env?.PACKAGE_CONTROL?.fetch!=="function")
     return unavailable(503);
+  // Native UI uses the same deployed namespace API, never a new route owner.
+  // The explicit flag is OFF until the matching React build and backend pass.
+  if(request.method==="GET"&&env.PACKAGE_NATIVE_STUDIO_ENABLED==="true"&&!route.target.startsWith("/api/")){
+    let destination=null;
+    if(route.target==="/upload/v3"){
+      const update=url.searchParams.get("update");
+      destination=update&&new RegExp("^"+UUID+"$").test(update)?"/studio/packages/"+update:"/studio/packages/new";
+    }else if(route.target==="/packages")destination="/studio/packages";
+    else if(route.target==="/staff/packages")destination="/studio/packages/review";
+    else if(route.target.startsWith("/play/v3/"))destination="/projects/package/"+route.target.slice("/play/v3/".length)+(url.searchParams.get("preview")==="1"?"?preview=1":"");
+    if(destination){const headers=responseHeaders();headers.set("location",destination);return new Response(null,{status:302,headers});}
+  }
   if(request.method==="POST"){
     const origin=request.headers.get("origin"),site=request.headers.get("sec-fetch-site");
     if(origin!==ORIGIN||(site!==null&&!["same-origin","none"].includes(site)))

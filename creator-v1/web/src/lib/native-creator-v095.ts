@@ -23,7 +23,7 @@ export interface NativeUsage{memberPhysicalBytes:number;memberPhysicalLimit:numb
 export interface NativeLibrary{contract:'native-creator-v095';memberId:string;projects:NativeProject[];usage:NativeUsage|null}
 export interface NativeQueue{contract:'native-creator-v095';memberId:string;pending:NativeProject[];moderation:NativeProject[]}
 export interface NativePlayback{
- contract:'native-creator-v095';project:NativeProject;preview:boolean;
+ contract:'native-creator-v095';memberId:string|null;project:NativeProject;preview:boolean;
  release:{id:string;version:number;status:string;fileCount:number;expandedBytes:number;archiveSha256:string|null};
  canEdit:boolean;canReview:boolean;runtimeUrl:string;expiresAt:number|null;
 }
@@ -39,7 +39,11 @@ export function validNativeProject(value:unknown):value is NativeProject{
  if(value.version!==null&&(!nonnegative(value.version)||value.version<1))return false;
  if(value.coverUrl!==null&&!(typeof value.coverUrl==='string'&&/^\/upload\/v3\/api\/v1\/packages\/covers\/[0-9a-f-]{36}$/.test(value.coverUrl)))return false;
  for(const key of ['updatedAt','publishedAt','expiresAt'])if(value[key]!=null&&!nonnegative(value[key]))return false;
- return value.reviewReason==null||string(value.reviewReason,1000);
+ for(const [key,max] of [['draftTitle',100],['draftSummary',500],['reviewReason',1000]] as const)if(value[key]!=null&&!string(value[key],max))return false;
+ if(value.draftStatus!=null&&!['ready','pending_review','rejected','draft','published'].includes(String(value.draftStatus)))return false;
+ if(value.draftCategory!=null&&!['game','app','simulation','story'].includes(String(value.draftCategory)))return false;
+ if(value.retention!=null&&!['test','saved'].includes(String(value.retention)))return false;
+ return true;
 }
 /** This is a reviewed execution host, never a user-provided iframe URL.
  * Queries, fragments, credentials and all other origins are refused. */
@@ -84,25 +88,30 @@ export async function readNativeQueue(memberId:string,signal?:AbortSignal):Promi
  if(!Array.isArray(v.pending)||v.pending.length>100||!v.pending.every(validNativeProject)||!Array.isArray(v.moderation)||v.moderation.length>75||!v.moderation.every(validNativeProject))throw Error('Invalid review inventory.');
  return v as unknown as NativeQueue;
 }
-export async function readNativePlayback(id:string,preview:boolean,signal?:AbortSignal):Promise<NativePlayback>{
+export async function readNativePlayback(id:string,preview:boolean,signal?:AbortSignal,memberId:string|null=null):Promise<NativePlayback>{
  if(!packageId(id))throw Error('Invalid project identifier.');
  const v=await request('native/projects/'+id+(preview?'?preview=1':''),{signal});contract(v);
+ if(preview&&(!memberId||v.memberId!==memberId))throw new CreatorRequestError('The signed-in account changed. Reopen your playtest.',401);
  if(!validNativeProject(v.project)||v.project.id!==id||!object(v.release)||typeof v.release.id!=='string'||!packageId(v.release.id)||v.preview!==preview||typeof v.canEdit!=='boolean'||typeof v.canReview!=='boolean'||!validRuntimeURL(v.runtimeUrl,v.release.id,preview))throw Error('The player response could not be verified.');
  if(!nonnegative(v.release.version)||v.release.version<1||!nonnegative(v.release.fileCount)||!nonnegative(v.release.expandedBytes))throw Error('Invalid release inventory.');
  if(v.release.archiveSha256!==null&&!(typeof v.release.archiveSha256==='string'&&/^[a-f0-9]{64}$/.test(v.release.archiveSha256)))throw Error('Invalid release hash.');
  if(preview&&(!nonnegative(v.expiresAt)||v.expiresAt<=Date.now()/1000))throw Error('The private playtest expired. Reopen it from your Studio.');
  return v as unknown as NativePlayback;
 }
-export async function uploadNativeBuild(form:FormData):Promise<{id:string;release_id:string}>{
+export async function uploadNativeBuild(form:FormData):Promise<{id:string;release_id:string;status:'ready'|'published'}>{
  const v=await request('upload',{body:form});
  if(!object(v)||typeof v.id!=='string'||!packageId(v.id)||typeof v.release_id!=='string'||!packageId(v.release_id))throw new CreatorRequestError('Upload status is uncertain. Check your build library before retrying.',502);
- return {id:v.id,release_id:v.release_id};
+ if(v.status!=='ready'&&v.status!=='published')throw new CreatorRequestError('Upload status is uncertain. Reload your build library.',502);
+ return {id:v.id,release_id:v.release_id,status:v.status};
 }
 export type BuildAction='save'|'submit'|'discard'|'delete'|'publish'|'reject'|'suspend'|'restore';
 export async function nativeBuildAction(id:string,releaseId:string,action:BuildAction,reason=''):Promise<void>{
  if(!packageId(id)||!packageId(releaseId))throw Error('Invalid release identifier.');
  const endpoint=['publish','reject'].includes(action)?'review':['suspend','restore'].includes(action)?'moderate':action;
- await request('projects/'+id+'/'+endpoint,{body:{action,reason,expected_release_id:releaseId}});
+ const value=await request('projects/'+id+'/'+endpoint,{body:{action,reason,expected_release_id:releaseId}});
+ const expected:Record<BuildAction,[string,string|boolean]>={save:['saved',true],submit:['status','pending_review'],discard:['discarded',true],delete:['deleted',true],publish:['status','published'],reject:['status','rejected'],suspend:['status','suspended'],restore:['status','published']};
+ const [key,result]=expected[action];
+ if(!object(value)||value[key]!==result)throw new CreatorRequestError('The action result could not be confirmed. Reload the build before retrying.',502);
 }
 export function checkNativeFile(file:File|null):string{
  if(!file)return 'Choose a ZIP or self-contained HTML file.';

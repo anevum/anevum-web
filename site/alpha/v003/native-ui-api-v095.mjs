@@ -95,7 +95,7 @@ export async function nativeStudioApi(req,env,h){
   category:preview?release.proposed_category:p.category,
   release_version:release.version,cover_release_id:cover?.release_id,
   draft_status:preview?release.status:null},preview);
- return response({contract:'native-creator-v095',project:record,preview,
+ return response({contract:'native-creator-v095',memberId:preview?user.id:null,project:record,preview,
   release:{id:release.id,version:release.version,status:release.status,
    fileCount:release.file_count,expandedBytes:release.expanded_bytes,
    archiveSha256:preview?release.archive_sha256:null},

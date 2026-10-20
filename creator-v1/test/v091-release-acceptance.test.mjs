@@ -410,3 +410,7 @@ test('production uses candidate promotion and keeps the acceptance gate before a
  assert.ok(releaseWorkflow.includes('live-css "$RUNNER_TEMP/v079-live-style.css"'));
  assert.match(releaseWorkflow,/if curl --fail --silent --show-error --max-time 30 --no-keepalive/);
 });
+
+test('new native application cannot reuse the previous immutable deployment candidate',()=>{
+ assert.throws(()=>verifyV091Acceptance({...complete(),native_candidate_pending:true}),/candidate remains unverified/);
+});

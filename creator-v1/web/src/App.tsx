@@ -31,6 +31,9 @@ import {SupporterPage} from './pages/SupporterPage';
 import SupporterTransparencyPage from './pages/SupporterTransparencyPage';
 import SupporterCollectionPage from './pages/SupporterCollectionPage';
 
+const NativeCreatorStudioPage=lazy(()=>import("./pages/NativeCreatorStudio").then(m=>({default:m.NativeCreatorStudioPage})));
+const NativePackagePlayerPage=lazy(()=>import("./pages/NativeCreatorStudio").then(m=>({default:m.NativePackagePlayerPage})));
+const creatorFallback=<LoadingState label="Opening Creator Studio"/>;
 const PublicBoardsPage = lazy(() => import("./pages/PublicBoardsPage").then(mod=>({default:mod.PublicBoardsPage})));
 const pageFallback=<LoadingState label="Opening approved public boards"/>;
 
@@ -89,6 +92,11 @@ export default function App(){
     <Route path="create" element={<Navigate to="/studio" replace/>}/>
     <Route path="create/new" element={<Navigate to="/studio/new" replace/>}/>
     <Route path="create/:projectId" element={<LegacyStudioRedirect/>}/>
+    <Route path="studio/packages" element={<Suspense fallback={creatorFallback}><NativeCreatorStudioPage/></Suspense>}/>
+    <Route path="studio/packages/new" element={<Suspense fallback={creatorFallback}><NativeCreatorStudioPage mode="new"/></Suspense>}/>
+    <Route path="studio/packages/review" element={<Suspense fallback={creatorFallback}><NativeCreatorStudioPage mode="review"/></Suspense>}/>
+    <Route path="studio/packages/:projectId" element={<Suspense fallback={creatorFallback}><NativeCreatorStudioPage mode="edit"/></Suspense>}/>
+    <Route path="projects/package/:projectId" element={<Suspense fallback={creatorFallback}><NativePackagePlayerPage/></Suspense>}/>
     <Route path="studio" element={<CanonicalStudioPage/>}/>
     <Route path="studio/new" element={<CanonicalStudioPage mode="new"/>}/>
     <Route path="studio/review" element={<CanonicalStudioPage mode="review"/>}/>

@@ -145,7 +145,7 @@ function BuildUpload({memberId,projectId}:{memberId:string;projectId?:string}){
   const form=new FormData();form.set('file',file!);form.set('title',title.trim());form.set('summary',summary.trim());form.set('category',category);form.set('rights_ack','yes');
   if(cover)form.set('cover',cover);
   if(project){form.set('project_id',project.id);if(project.draftReleaseId){form.set('replace_draft','1');form.set('expected_release_id',project.draftReleaseId);}}
-  try{const result=await uploadNativeBuild(form);setFile(null);setCover(null);setRights(false);navigate(nativePlayerPath(result.id,true));}
+  try{const result=await uploadNativeBuild(form);setFile(null);setCover(null);setRights(false);navigate(nativePlayerPath(result.id,result.status!=='published'));}
   catch(e){setError(message(e));}finally{busyRef.current=false;setBusy(false);}
  }
  if(projectId&&!packageId(projectId))return <Status title="Project unavailable."><p>That identifier is not a valid playable project.</p></Status>;
@@ -227,7 +227,7 @@ function PlaybackContent({data,reload}:{data:NativePlayback;reload:()=>void}){
 export function NativePackagePlayerPage(){
  const {projectId=''}=useParams<{projectId:string}>(),[search]=useSearchParams(),identity=useIdentity();
  const preview=search.get('preview')==='1',key=projectId+':'+preview+':'+(identity.id||'guest');
- const playback=useRead(key,nativeCreatorEnabled&&packageId(projectId)&&!identity.pending&&(!preview||!!identity.id),signal=>readNativePlayback(projectId,preview,signal));
+ const playback=useRead(key,nativeCreatorEnabled&&packageId(projectId)&&!identity.pending&&(!preview||!!identity.id),signal=>readNativePlayback(projectId,preview,signal,identity.id));
  if(!nativeCreatorEnabled)return <Status title="Integrated playback is not active yet."><p>The existing approved player is retained during the release transition.</p>{packageId(projectId)&&<a className="st-action" href={'/upload/v3/play/'+projectId+(preview?'?preview=1':'')}>Open the existing player</a>}</Status>;
  if(!packageId(projectId))return <Status title="Project unavailable."><p>The project identifier is invalid.</p></Status>;
  if(preview&&!identity.pending&&!identity.id)return <Status title="Sign in for this private playtest."><p>A private revision requires its creator or an authorized reviewer.</p><Link className="st-action" to="/join">Sign in</Link></Status>;
