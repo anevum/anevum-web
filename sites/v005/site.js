@@ -83,7 +83,14 @@ function mountLab(){
  const nav=$(".lab-nav",root),stage=$(".lab-stage",root),side=$(".lab-side",root);let current=0,cleanup=()=>{};
  entries.forEach((item,i)=>{const button=document.createElement("button");button.type="button";button.className="lab-tab"+(i===0?" active":"");button.id="lab-tab-"+item.id;button.setAttribute("role","tab");button.setAttribute("aria-selected",i===0?"true":"false");button.setAttribute("aria-controls","lab-panel");button.innerHTML='<span class="tab-index">'+item.number+'</span><span class="tab-label">'+item.label+'</span><span class="tab-icon">'+item.icon+'</span>';button.addEventListener("click",()=>select(i));button.addEventListener("keydown",e=>{if(e.key==="ArrowRight"||e.key==="ArrowLeft"){e.preventDefault();const next=(i+(e.key==="ArrowRight"?1:entries.length-1))%entries.length;nav.children[next].focus();select(next);}});nav.append(button);});
  function select(i){cleanup();current=i;const item=entries[i];$$(".lab-tab",nav).forEach((b,j)=>{b.classList.toggle("active",j===i);b.setAttribute("aria-selected",j===i?"true":"false");b.tabIndex=j===i?0:-1;});stage.innerHTML="";const holder=document.createElement("div");holder.className=i===0?"demo-3d-stage":i===1?"game-stage":i===2?"app-stage":"pwa-stage";stage.append(holder);const top=document.createElement("div");top.className="lab-stage-top";top.innerHTML='<span>ANV / EXPERIMENT '+item.number+'</span><span class="green">● LIVE</span>';holder.append(top);$("#lab-current",root).textContent=item.number;$("h3",side).textContent=item.title;$(".lab-description",side).textContent=item.description;$(".lab-tech",side).innerHTML=item.tags.map(t=>'<span>'+t+'</span>').join("");$(".lab-side-footer span",side).textContent=item.footer;cleanup=(i===0?mount3D(holder):i===1?createGame(holder):i===2?createApp(holder):createPWA(holder))||(()=>{});}
- select(0);return()=>cleanup();
+ // Mount the expensive second WebGL environment only when the Lab approaches view.
+ let initialized=false;
+ const activate=new IntersectionObserver(entries=>{
+   if(initialized||!entries[0]?.isIntersecting)return;
+   initialized=true;activate.disconnect();select(0);
+ },{rootMargin:"250px 0px",threshold:0});
+ activate.observe(root);
+ return()=>{activate.disconnect();cleanup();};
 }
 function initInquiry(){
  const form=$("#site-inquiry");if(!form)return;
