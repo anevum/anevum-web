@@ -48,7 +48,7 @@ function changed(s,field,expected){
 test('manifest pins the merged V095+V096 source, 39 routes, family Worker and zero approval',()=>{
  assert.equal(manifest.source_sha,'d5af32fd8f04b05e0381f7ac12c59d06c0e836a2');
  assert.equal(manifest.routes.length,39);
- assert.equal(manifest.routes.filter(x=>x.pattern==='family.anevum.com/*'&&x.script==='anevum-family-holiday-v001').length,1);
+ assert.equal(manifest.routes.filter(x=>x.pattern==='family.anevum.com/*'&&x.script==='anevum-family-link-v004').length,1);
  assert.equal(manifest.routes.filter(x=>x.pattern.startsWith('anevum.com/studio/alpha')).length,0);
  assert.equal(manifest.approval.production,false);
  assert.equal(manifest.approval.live_traffic_promotion,false);
