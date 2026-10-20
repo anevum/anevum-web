@@ -61,7 +61,7 @@ export async function canonicalWorkbench(req,env,user,now=Math.floor(Date.now()/
    const body=await jsonBody(req,1200);
    if(!exact(body,['memberId','expectedRevision','action','days','reason'])||typeof body.memberId!=='string'||!body.memberId||body.memberId.length>128||
      !Number.isSafeInteger(body.expectedRevision)||body.expectedRevision<0||!['grant','revoke'].includes(body.action)||
-     ![7,30,90].includes(body.days)||typeof body.reason!=='string'||body.reason.trim().length<10||body.reason.length>240||CONTROL.test(body.reason))
+     ![7,30].includes(body.days)||typeof body.reason!=='string'||body.reason.trim().length<10||body.reason.length>240||CONTROL.test(body.reason))
     return fail(422,'Select a verified account, expiry, current revision and a reason of 10 to 240 characters.');
    if(body.memberId===user.id)return fail(422,'The existing owner grant already controls your access.');
    if(await one(db,'SELECT 1 AS ok WHERE '+OWNER,body.memberId))return fail(422,'Existing owner access is managed separately.');
