@@ -1,0 +1,102 @@
+name: ANEVUM V091 IREN Wayfinder CSS-Only Hotfix QA
+on:
+  push:
+    branches:
+      - hotfix/v091-iren-wayfinder-live-css-20261019-001
+  pull_request:
+    paths:
+      - creator-v1/web/src/iren-guided-v080.css
+      - creator-v1/test/iren-guided-v080.test.mjs
+      - creator-v1/test/capture-home-navigation-v079.mjs
+      - creator-v1/test/v091-wayfinder-hotfix-asset-parity.mjs
+      - .github/workflows/v091-iren-wayfinder-hotfix-qa.yml
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: anevum-v091-iren-wayfinder-hotfix
+  cancel-in-progress: true
+jobs:
+  verified-hotfix:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Require exact live-matching source with five-file hotfix delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor 2938f8d387cf08ee3de4abc32c4fabf737556597 HEAD
+          diff -u <(printf '%s\n' \
+            '.github/workflows/v091-iren-wayfinder-hotfix-qa.yml' \
+            'creator-v1/test/capture-home-navigation-v079.mjs' \
+            'creator-v1/test/iren-guided-v080.test.mjs' \
+            'creator-v1/test/v091-wayfinder-hotfix-asset-parity.mjs' \
+            'creator-v1/web/src/iren-guided-v080.css' | sort) \
+            <(git diff --name-only 2938f8d387cf08ee3de4abc32c4fabf737556597 HEAD | sort)
+          test "$(git hash-object creator-v1/web/src/components/Shell.tsx)" = "8b4e87f9f000db04e854c4b0b71e168f04a82d5d"
+          test "$(git hash-object creator-v1/web/src/main.tsx)" = "bea62c4b49d329de62c59aef3af16ba0b5691586"
+      - name: Typecheck and build the real unchanged application
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+      - name: Download passing immutable production-matching CI artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reference
+          gh run download 39339804557 -R anevum/anevum-web -n creator-v1-build-39339804557 -D reference
+          test -s reference/react-web/assets/index-DU9BE5mP.css
+          test -s reference/react-web/assets/index-AsGe25lN.js
+      - name: Prove only one CSS block changed and JavaScript is byte-identical
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/wayfinder-css
+          node creator-v1/test/v091-wayfinder-hotfix-asset-parity.mjs \
+            reference/react-web creator-v1/dist/web evidence/wayfinder-css
+          (cd creator-v1 && npm run test:iren-v080 && npm run test:ux-v079)
+      - name: Check built React Wayfinder with real Chromium at three widths
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome"
+          node creator-v1/test/portal-offline-preview.mjs > evidence/wayfinder-css/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 80); do
+            if curl -fsS http://127.0.0.1:4178/__ready >/dev/null; then break; fi
+            sleep 0.25
+          done
+          curl -fsS http://127.0.0.1:4178/__ready >/dev/null
+          node creator-v1/test/capture-home-navigation-v079.mjs "$chrome" http://127.0.0.1:4178 evidence/wayfinder-css
+          test -s evidence/wayfinder-css/acceptance.json
+          test -s evidence/wayfinder-css/wayfinder-iren-desktop.png
+          test -s evidence/wayfinder-css/wayfinder-iren-phone.png
+          test -s evidence/wayfinder-css/wayfinder-iren-small-phone.png
+      - name: Preserve real browser and CSS binary-parity evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v091-iren-wayfinder-live-css-parity
+          path: evidence/wayfinder-css/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Record isolated hotfix readiness
+        run: |
+          echo 'CSS_ONLY_QA=PASS' >> "$GITHUB_STEP_SUMMARY"
+          echo 'PRODUCTION_DEPLOY=NONE' >> "$GITHUB_STEP_SUMMARY"
+          echo 'FULL_V091_RELEASE_STILL_REQUIRES_AUTHENTICATED_ACCEPTANCE' >> "$GITHUB_STEP_SUMMARY"
