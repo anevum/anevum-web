@@ -306,6 +306,26 @@ async function submit(env,u,id) {
   return changes[0]?.meta?.changes===1&&changes[1]?.meta?.changes===1
     ?json({status:"pending_review"}):fail(409,"Release state changed");
 }
+async function attestReview(req,env,u,id){
+  if(!staff(env,u.id))return fail(403,"Staff review permission required");
+  const p=await getProject(env.DB,id),release=p?await getDraft(env.DB,p):null;
+  if(!release||release.status!=="pending_review")return fail(409,"Build is not awaiting review");
+  const x=await readBoundedJson(req,4096);
+  const checks=x?.checks;
+  if(!checks||checks.isolatedPreview!==true||checks.assetIntegrity!==true||
+     checks.mobileReviewed!==true||checks.securityReviewed!==true)
+    return fail(422,"Confirm isolated preview, asset integrity, mobile review and security review");
+  if(x.archiveSha256!==release.archive_sha256)return fail(409,"Review must match the submitted build hash");
+  const asset=await query(env.DB,"SELECT object_key,bytes,sha256 FROM anevum_package_files WHERE release_id=? AND path='index.html'",release.id);
+  const file=asset?await env.MEDIA.head(asset.object_key):null;
+  if(!file||file.size!==asset.bytes||file.customMetadata?.sha256!==asset.sha256)
+    return fail(503,"Build entry point integrity failed");
+  const now=Math.floor(Date.now()/1000);
+  await env.DB.prepare("INSERT INTO anevum_package_review_attestations(release_id,archive_sha256,reviewer_id,verified_at,checks_json) VALUES(?,?,?,?,?) "+
+    "ON CONFLICT(release_id) DO UPDATE SET archive_sha256=excluded.archive_sha256,reviewer_id=excluded.reviewer_id,verified_at=excluded.verified_at,checks_json=excluded.checks_json")
+    .bind(release.id,release.archive_sha256,u.id,now,JSON.stringify(checks)).run();
+  return json({verified:true,release_id:release.id,archive_sha256:release.archive_sha256});
+}
 async function review(req,env,u,id) {
   if(!staff(env,u.id)) return fail(403,"Staff review permission required");
   const p=await getProject(env.DB,id);
@@ -322,6 +342,18 @@ async function review(req,env,u,id) {
       return fail(503,"Entry point integrity failed");
     const count=await query(env.DB,"SELECT COUNT(*) AS n FROM anevum_package_files WHERE release_id=?",release.id);
     if(count.n!==release.file_count) return fail(503,"Build asset inventory is incomplete");
+  }
+  if(input.action==="publish"){
+    // A signed-in reviewer is not a malware scanner. No automated compatibility
+    // report may substitute for an explicit, build-bound staff verification.
+    const report=await query(env.DB,
+      "SELECT archive_sha256,reviewer_id,verified_at,checks_json FROM anevum_package_review_attestations WHERE release_id=?",release.id);
+    if(!report||report.archive_sha256!==release.archive_sha256||report.reviewer_id!==u.id)
+      return fail(409,"A staff verification for this exact build is required before publication");
+    let checks;try{checks=JSON.parse(report.checks_json);}catch{return fail(409,"Review verification is invalid");}
+    if(!checks||checks.isolatedPreview!==true||checks.assetIntegrity!==true||
+       checks.mobileReviewed!==true||checks.securityReviewed!==true)
+      return fail(409,"Finish isolated preview, mobile, and security review before publication");
   }
   const now=Math.floor(Date.now()/1000),publish=input.action==="publish",reason=publish?null:input.reason.trim();
   const changes=await env.DB.batch([
@@ -399,10 +431,11 @@ async function api(req,env,path,ctx){
    if(path==="/api/v1/packages/preflight")return preflight(req,env,u);
   if(path==="/api/v1/packages/upload")return upload(req,env,u);
   if(!await resourcePolicyReady(env.DB))return fail(503,"Creator storage setup is incomplete");
-  const m=path.match(/^\/api\/v1\/packages\/projects\/([0-9a-f-]{36})\/(submit|review|delete|save|discard)$/);
+  const m=path.match(/^\/api\/v1\/packages\/projects\/([0-9a-f-]{36})\/(submit|review|attest|delete|save|discard)$/);
   if(!m||!UUID.test(m[1]))return fail(404,"Unknown API route");
   if(m[2]==="submit")return submit(env,u,m[1]);
   if(m[2]==="review")return review(req,env,u,m[1]);
+   if(m[2]==="attest")return attestReview(req,env,u,m[1]);
   if(m[2]==="save"){
     return json(await saveDraft(env,u.id,m[1],Math.floor(Date.now()/1000)));
   }
