@@ -13,6 +13,40 @@ const A = "https://anevum.com";
 const MiB = 1048576;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const kinds = new Set(["game","app","simulation","story"]);
+const MAX_MULTIPART_UPLOAD = 25 * MiB;
+async function boundedMultipart(req) {
+  const type=String(req.headers.get("content-type")||"");
+  if(!type.startsWith("multipart/form-data;"))throw new PackageError("Upload a multipart form",415);
+  if(!req.body)throw new PackageError("Upload body is missing",400);
+  const declared=req.headers.get("content-length");
+  if(declared && (!/^[0-9]+$/.test(declared)||!Number.isSafeInteger(Number(declared))))
+    throw new PackageError("Invalid upload size header",400);
+  if(declared && Number(declared)>MAX_MULTIPART_UPLOAD)
+    throw new PackageError("Upload request exceeds the ZIP plus cover allowance",413);
+  // The content-length header is optional and cannot be trusted. Guard the
+  // actual incoming multipart bytes BEFORE calling the multipart parser.
+  let received=0;
+  const guard=new TransformStream({
+    transform(chunk,controller) {
+      received+=chunk.byteLength;
+      if(received>MAX_MULTIPART_UPLOAD) {
+        controller.error(new PackageError("Upload request exceeds the ZIP plus cover allowance",413));
+        return;
+      }
+      controller.enqueue(chunk);
+    }
+  });
+  try {
+    return await new Response(req.body.pipeThrough(guard),
+      {headers:{"content-type":type}}).formData();
+  }catch(e) {
+    if(received>MAX_MULTIPART_UPLOAD)
+      throw new PackageError("Upload request exceeds the ZIP plus cover allowance",413);
+    if(e instanceof PackageError)throw e;
+    throw new PackageError("Invalid upload form",400);
+  }
+}
+
 const json = (value,status=200) => Response.json(value,{status,headers:{
   "cache-control":"private,no-store","x-content-type-options":"nosniff","referrer-policy":"no-referrer","x-robots-tag":"noindex"}});
 const fail = (status,message) => json({error:message},status);
@@ -158,12 +192,7 @@ async function upload(req,env,u) {
     return fail(503,"Package stage schema is not ready; upload is paused before storing any files");
   if(!env.MEDIA?.put||!env.MEDIA?.get||!env.MEDIA?.head)
     return fail(503,"Package storage is not configured; upload is paused");
-  const headerSize=Number(req.headers.get("content-length")||0);
-  if(headerSize>25*MiB) return fail(413,"Upload exceeds the 20 MiB ZIP plus 3 MiB cover allowance");
-  if(!String(req.headers.get("content-type")||"").startsWith("multipart/form-data;"))
-    return fail(415,"Upload a multipart form");
-  let body;
-  try{body=await req.formData();}catch{return fail(400,"Invalid upload form");}
+  const body=await boundedMultipart(req);
   const details=validatedText(body);
   const file=body.get("file"), coverInput=body.get("cover");
   const projectParam=body.get("project_id");
