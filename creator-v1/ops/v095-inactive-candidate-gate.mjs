@@ -1,5 +1,33 @@
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,readdirSync,statSync} from 'node:fs';
+import {join} from 'node:path';
+import {createHash} from 'node:crypto';
+
+/** Assets are versioned independently of script ETags. A successful upload
+ * cannot prove the earned-media tree was included. Fail before uploading. */
+export function verifyCandidateAssets(root){
+  const earned=join(root,'evolution/assets');
+  assert.equal(readdirSync(earned).length,152,'All 152 earned-media assets are required');
+  for(let level=1;level<=30;level++)for(const suffix of ['-scene.gz','-1024.webp','-256.webp','-compact-128.png','-field.svg'])
+    assert.ok(statSync(join(earned,'level-'+String(level).padStart(2,'0')+suffix)).size>300,'Missing earned level media');
+  assert.ok(readFileSync(join(root,'evolution/mini-runtime.json')).length>6000,'Missing earned runtime');
+  assert.ok(readFileSync(join(root,'index.html')).length>1000,'Missing compiled application');
+  const assets=[];
+  function visit(relative=''){
+    for(const entry of readdirSync(join(root,relative),{withFileTypes:true}).sort((a,b)=>a.name.localeCompare(b.name))){
+      const path=relative?relative+'/'+entry.name:entry.name;
+      assert.ok(!entry.isSymbolicLink(),'Asset symlinks are forbidden');
+      if(entry.isDirectory())visit(path);
+      else{
+        assert.ok(entry.isFile()&&!path.endsWith('.map'),'Unexpected asset or public source map');
+        const bytes=readFileSync(join(root,path));
+        assets.push({path,bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex')});
+      }
+    }
+  }
+  visit();
+  return {assets,sha256:createHash('sha256').update(JSON.stringify(assets)).digest('hex'),earned_media_count:152};
+}
 
 export const manifest=JSON.parse(readFileSync(new URL('../operations/v095-inactive-baseline-20261020.json',import.meta.url),'utf8'));
 export const normalizeRoutes=routes=>routes.map(({pattern,script,request_limit_fail_open})=>({pattern,script,request_limit_fail_open:request_limit_fail_open===true})).sort((a,b)=>a.pattern.localeCompare(b.pattern));
