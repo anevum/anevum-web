@@ -106,11 +106,16 @@ async function main(){
   await c("Page.enable");await c("Runtime.enable");
   for(const w of [320,390,1440]){
    await visit(c,join(tmp,"uploader.html"),w,w===1440?900:844);
-   const dims=await evalJS(c,"({w:innerWidth,scroll:document.documentElement.scrollWidth,drop:document.querySelector('#drop').getBoundingClientRect().height,button:document.querySelector('#upload-button').getBoundingClientRect().height})");
+   const dims=await evalJS(c,"({w:innerWidth,scroll:document.documentElement.scrollWidth,drop:document.querySelector('#drop').getBoundingClientRect().height,dropTop:document.querySelector('#drop').getBoundingClientRect().top,header:document.querySelector('header').getBoundingClientRect().height,button:document.querySelector('#upload-button').getBoundingClientRect().height,crest:!!document.querySelector('.av-crest'),orbit:!!document.querySelector('.av-orbit')})");
    assert.equal(dims.w,w,"Correct browser viewport");
    assert.ok(dims.scroll<=w,"No horizontal overflow at "+w+": "+dims.scroll);
    assert.ok(dims.drop>=120,"Touch file selection target");
    assert.ok(dims.button>=44,"CTA touch target");
+   assert.ok(dims.crest&&dims.orbit,"Original Continuance vector identity must render");
+   if(w<700){
+    assert.ok(dims.header<=85,"Mobile header must fit in one short row; measured "+dims.header);
+    assert.ok(dims.dropTop<770,"Upload selector should be visible in the first mobile screen");
+   }
    await image(c,join(out,"upload-"+w+".png"));
   }
   await visit(c,join(tmp,"uploader.html"),390,844);
