@@ -7,6 +7,13 @@ on:
       - build/v091-experience-integration-20261019-001
     paths:
       - 'creator-v1/web/src/lib/player-recognition.ts'
+      - 'creator-v1/web/src/components/CompactMemberIdentity.tsx'
+      - 'creator-v1/web/src/components/MemberSpaceDashboard.tsx'
+      - 'creator-v1/web/src/components/MemberPresenceStatus.tsx'
+      - 'creator-v1/web/src/pages/Phase1PublicMemberPage.tsx'
+      - 'creator-v1/web/src/member-presence-v092.css'
+      - 'creator-v1/test/player-presence-v092.test.mjs'
+      - 'creator-v1/test/player-card-v078-live-react-browser.mjs'
       - 'creator-v1/web/src/pages/AuraCodexPage.tsx'
       - 'creator-v1/web/src/pages/aura-codex-v091.css'
       - 'creator-v1/test/aura-codex-visual-v091.mjs'
@@ -15,6 +22,8 @@ on:
     paths:
       - 'creator-v1/web/src/**'
       - 'creator-v1/test/aura-codex-visual-v091.mjs'
+      - 'creator-v1/test/player-presence-v092.test.mjs'
+      - 'creator-v1/test/player-card-v078-live-react-browser.mjs'
       - '.github/workflows/v091-aura-codex-browser.yml'
   workflow_dispatch:
 
@@ -43,6 +52,8 @@ jobs:
         run: |
           npm run check:creator-v1-web
           npm run build:creator-v1-web
+      - name: Verify server-only roles and responsive aura source invariants
+        run: node --test creator-v1/test/player-presence-v092.test.mjs
       - name: Verify six genuine aura entries at 320, 390 and 1440 pixels
         shell: bash
         run: |
@@ -53,6 +64,9 @@ jobs:
           node --check creator-v1/test/aura-codex-visual-v091.mjs
           node creator-v1/test/aura-codex-visual-v091.mjs "$chrome" "$RUNNER_TEMP/v091-aura"
           test -s "$RUNNER_TEMP/v091-aura/acceptance.json"
+          mkdir -p "$RUNNER_TEMP/v091-aura/presence"
+          node creator-v1/test/player-card-v078-live-react-browser.mjs "$chrome" "$RUNNER_TEMP/v091-aura/presence"
+          test -s "$RUNNER_TEMP/v091-aura/presence/result.json"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
