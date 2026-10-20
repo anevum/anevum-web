@@ -118,7 +118,7 @@ try{
   assert.equal(data.overflow,false,'no full-page horizontal overflow at '+width);
   assert.equal(data.helperCollision,false,'IREN obscures aura meaning text at '+width);
   assert.ok(data.helperLeft!==null&&data.helperLeft>=8&&data.helperLeft<=25,
-   'IREN should start in left reading gutter without overriding draggable preferences at '+width);
+   'IREN should start in left reading gutter at '+width+'; actual left='+data.helperLeft);
   assert.deepEqual(data.cards.map(x=>x.name),
    ['Unadorned','Aurora','Eclipse','Ember','Nebula','Transcosmic']);
   assert.ok(data.links.includes('/recognition')&&data.links.includes('/member?tab=awards'));
