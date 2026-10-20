@@ -73,9 +73,11 @@ test('only alpha route adds limited frame permission; anonymous APIs remain unav
  assert.match(csp,/frame-src 'self' about: blob:/);
  assert.match(csp,/default-src 'none'/);
  assert.match(csp,/script-src 'self'/);
- assert.match(csp,/frame-ancestors 'none'/);
+ assert.equal(publicAlpha.headers.get('x-frame-options'),'DENY','Guest route still forbids framing of the HTTP page');
+ assert.doesNotMatch(csp,/frame-ancestors/,'Opaque srcdoc must not inherit a self-blocking ancestor policy');
  const ordinary=await fetch('/studio');
  assert.doesNotMatch(ordinary.headers.get('content-security-policy'),/frame-src/);
+ assert.match(ordinary.headers.get('content-security-policy'),/frame-ancestors 'none'/);
  assert.equal((await worker.fetch(new Request('https://anevum.com/studio/alpha',{method:'POST'}),env,{})).status,405);
  assert.equal((await fetch('/api/v1/member/studio/projects')).status,404);
  assert.match(stage,/url\.pathname==="\/studio\/alpha"/);
