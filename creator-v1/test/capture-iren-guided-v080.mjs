@@ -142,6 +142,7 @@ try{
   }else{
     await evaluate('document.querySelector(".ir92-not-now").click()');
     await until(()=>evaluate('!document.querySelector(".ir92-first-contact")'));
+    await until(()=>evaluate('document.activeElement?.classList.contains("ir87-scout")'));
     await check("not-now-restores-dock-focus",'document.activeElement?.classList.contains("ir87-scout")');
   }
   await check("first-contact-remembered-"+width,'localStorage.getItem("anevum.iren.first-contact.v092")==="seen"');
