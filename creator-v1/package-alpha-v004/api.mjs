@@ -23,6 +23,7 @@ const query = (db, sql, ...values) => db.prepare(sql).bind(...values).first();
 const run = (db, sql, ...values) => db.prepare(sql).bind(...values).run();
 function listAllowed(value, id) { return !!id && String(value||"").split(",").map(s=>s.trim()).includes(id); }
 function pilot(env,id) { return listAllowed(env.PILOT_IDS,id); }
+function uploadOpen(env,id) { return env.PACKAGE_UPLOADS_ENABLED==="true" && pilot(env,id); }
 function staff(env,id) { return listAllowed(env.STAFF_IDS,id); }
 function isolatedHost(env) {
   const h=String(env.RUNTIME_HOST||"").toLowerCase();
@@ -129,7 +130,7 @@ async function prepareFile(file) {
   return {bytes,entries,expandedBytes,extractor};
 }
 async function preflight(req,env,u){
-  if(!pilot(env,u.id))return fail(403,"Creator alpha access required");
+  if(!uploadOpen(env,u.id))return fail(403,"Creator uploads are paused or unavailable for this member");
   if(!await resourcePolicyReady(env.DB))return fail(503,"Creator storage setup is incomplete");
   const x=await readBoundedJson(req);
   const size=x?.size,sha=x?.sha256,id=x?.projectId||"",name=x?.filename||"";
@@ -149,7 +150,7 @@ async function preflight(req,env,u){
     usage,maxArchiveBytes:POLICY.maxArchiveBytes,testLifetimeHours:48});
 }
 async function upload(req,env,u) {
-  if(!pilot(env,u.id))return fail(403,"Creator alpha access required");
+  if(!uploadOpen(env,u.id))return fail(403,"Creator uploads are paused or unavailable for this member");
   if(!env.MEDIA||!await resourcePolicyReady(env.DB))
     return fail(503,"Creator storage setup is incomplete; uploads are safely paused");
   const now=Math.floor(Date.now()/1000),lease=crypto.randomUUID();
@@ -256,7 +257,7 @@ async function upload(req,env,u) {
 }
 async function submit(env,u,id) {
   const p=await getProject(env.DB,id);
-  if(!p||p.owner_id!==u.id||!pilot(env,u.id)) return fail(404,"Project unavailable");
+  if(!p||p.owner_id!==u.id) return fail(404,"Project unavailable");
   const release=await getDraft(env.DB,p);
   if(!release||release.status!=="ready") return fail(409,"This project has no ready build to submit");
   const retention=await query(env.DB,"SELECT mode,expires_at FROM anevum_package_build_retention WHERE release_id=?",release.id);
@@ -314,7 +315,7 @@ async function review(req,env,u,id) {
 }
 async function deleteUnpublished(env,u,id){
   const p=await getProject(env.DB,id);
-  if(!p||p.owner_id!==u.id||!pilot(env,u.id))return fail(404,"Project unavailable");
+  if(!p||p.owner_id!==u.id)return fail(404,"Project unavailable");
   if(p.live_release_id||p.status==="pending_review"||p.status==="suspended")
     return fail(409,"Published and pending-review projects cannot be erased here");
   const rows=(await env.DB.prepare(
@@ -369,11 +370,9 @@ async function api(req,env,path,ctx){
   if(m[2]==="submit")return submit(env,u,m[1]);
   if(m[2]==="review")return review(req,env,u,m[1]);
   if(m[2]==="save"){
-    if(!pilot(env,u.id))return fail(403,"Creator alpha permission required");
     return json(await saveDraft(env,u.id,m[1],Math.floor(Date.now()/1000)));
   }
   if(m[2]==="discard"){
-    if(!pilot(env,u.id))return fail(403,"Creator alpha permission required");
     const result=await discardDraft(env,u.id,m[1],Math.floor(Date.now()/1000));
     ctx?.waitUntil?.(cleanupPackageResources(env));
     return json(result);
@@ -422,12 +421,13 @@ export default {
       if(req.method!=="GET")return fail(405,"Method not allowed");
       if(path==="/upload/v3"||path==="/upload/v3/") {
         const u=await member(req,env);
-        const owner=!!u&&pilot(env,u.id);
+        const owner=!!u;
+        const canUpload=owner&&uploadOpen(env,u.id);
         const projects=owner?await ownerList(env.DB,u.id):[];
         const chosen=url.searchParams.get("update");
         const updateId=owner&&projects.some(x=>x.id===chosen&&["published","rejected","draft"].includes(x.status)&&(!x.draft_release_id||x.draft_status==="ready"))?chosen:"";
         const usage=owner&&await resourcePolicyReady(env.DB)?await getStorageUsage(env.DB,u.id):null;
-        return uploadScreen(projects,!!u,owner,updateId,usage);
+        return uploadScreen(projects,!!u,canUpload,updateId,usage);
       }
       if(path==="/packages"||path==="/packages/")return catalogScreen(await publicList(env.DB));
       if(path==="/help/packages"||path==="/help/packages/")return helpScreen();
