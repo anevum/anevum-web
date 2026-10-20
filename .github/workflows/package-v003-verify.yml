@@ -1,0 +1,87 @@
+name: Package Alpha v003 verification
+on:
+  pull_request:
+    paths:
+      - "site/alpha/v003/**"
+      - "tests/alpha-package-v003.test.mjs"
+      - "tests/alpha-package-v004-browser.mjs"
+      - "tests/alpha-package-stage-readiness.mjs"
+      - "tests/alpha-package-v009-bridge.test.mjs"
+      - "tests/alpha-package-v009-owner.test.mjs"
+      - "tests/alpha-package-v009-live-owner.test.mjs"
+      - ".github/workflows/package-v003-verify.yml"
+  push:
+    branches:
+      - "build/alpha-universal-package-v003-20261018"
+    paths:
+      - "site/alpha/v003/**"
+      - "tests/alpha-package-v003.test.mjs"
+      - "tests/alpha-package-v004-browser.mjs"
+      - "tests/alpha-package-stage-readiness.mjs"
+      - "tests/alpha-package-v009-bridge.test.mjs"
+      - "tests/alpha-package-v009-owner.test.mjs"
+      - "tests/alpha-package-v009-live-owner.test.mjs"
+      - ".github/workflows/package-v003-verify.yml"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: |
+          node --check site/alpha/v003/archive.mjs
+          node --check site/alpha/v003/tokens.mjs
+          node --check site/alpha/v003/runtime.mjs
+          node --check site/alpha/v003/cover.mjs
+          node --check site/alpha/v003/continuance-visuals.mjs
+          node --check site/alpha/v003/api.mjs
+          node --check site/alpha/v003/ui.mjs
+          node --check site/alpha/v003/unified-creation-bridge-v009.mjs
+          node --check site/alpha/v003/unified-creation-owner-v009.mjs
+          node --check site/alpha/v003/unified-creation-v002-pinned-snapshot.mjs
+          node --check site/alpha/v003/unified-creation-candidate-v009.mjs
+      - run: node --experimental-sqlite --test tests/alpha-package-v003.test.mjs tests/alpha-package-v009-bridge.test.mjs tests/alpha-package-v009-owner.test.mjs tests/alpha-package-v009-live-owner.test.mjs
+      - name: Chromium mobile and desktop UI acceptance
+        run: |
+          if command -v google-chrome >/dev/null 2>&1; then
+            CHROME_BIN="$(command -v google-chrome)" node tests/alpha-package-v004-browser.mjs
+          elif command -v chromium >/dev/null 2>&1; then
+            CHROME_BIN="$(command -v chromium)" node tests/alpha-package-v004-browser.mjs
+          else
+            echo "Chrome unavailable; browser acceptance cannot pass"
+            exit 1
+          fi
+      - name: Upload visual QA screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-package-v004-browser
+          path: artifacts/package-v004-ui/
+          if-no-files-found: warn
+          retention-days: 7
+
+  stage_readiness:
+    name: Isolated staging probe (advisory; no production writes)
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Read-only check of public package staging hosts
+        run: node tests/alpha-package-stage-readiness.mjs
+      - name: Save actual staging readiness evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-package-stage-readiness
+          path: artifacts/package-stage-readiness/
+          if-no-files-found: error
+          retention-days: 7
