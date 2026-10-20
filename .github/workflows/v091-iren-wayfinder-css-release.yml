@@ -1,0 +1,236 @@
+# Standalone, guarded IREN styling release. Never authorizes a broader V091 rollout.
+name: ANEVUM V091 IREN Wayfinder CSS-Only Guarded Production
+on:
+  push:
+    branches:
+      - release/v091-iren-wayfinder-css-only-20261019-001
+    paths:
+      - .github/workflows/v091-iren-wayfinder-css-release.yml
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: anevum-v084-guarded-apex-production
+  cancel-in-progress: false
+jobs:
+  release:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout exactly pinned hotfix source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact successful CSS-only QA and download immutable binary
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = 'anevum/anevum-web'
+          test "$GITHUB_REF" = 'refs/heads/release/v091-iren-wayfinder-css-only-20261019-001'
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git merge-base --is-ancestor ddd68f09ee2e9c83f2e24bfd0b9620840eccbb06 HEAD
+          test "$(git diff --name-only ddd68f09ee2e9c83f2e24bfd0b9620840eccbb06 HEAD)" = '.github/workflows/v091-iren-wayfinder-css-release.yml'
+          run_check="$(gh api repos/anevum/anevum-web/actions/runs/39352363391 --jq '.head_sha+" "+.conclusion+" "+.status')"
+          test "$run_check" = 'ddd68f09ee2e9c83f2e24bfd0b9620840eccbb06 success completed'
+          gh run download 39352363391 -R anevum/anevum-web -n anevum-v091-iren-binary-css-qa -D .
+          test -s creator-v1/dist/web/index.html
+          test -s creator-v1/dist/web/assets/index-AsGe25lN.js
+          test -s creator-v1/dist/web/assets/index-DU9BE5mP.css
+          test -s creator-v1/dist/web/assets/index-iren-wayfinder-17edd74201ac4e89.css
+          jq -e '.all_other_files_byte_identical == true and
+            .new_css == "index-iren-wayfinder-17edd74201ac4e89.css" and
+            .before_file_count == 236 and .after_file_count == 237' evidence/wayfinder-css/binary-parity.json
+          echo '09063ce69dbe6aaa992c2e25429f03ae6cd08165e0b4cffb53be29ab423e772f  creator-v1/dist/web/assets/index-AsGe25lN.js' | sha256sum -c -
+          echo 'a0da446ea4f17b97cc296eef55aeff5d1ceaad2ae25ab78bc16f1e87b8a7a20c  creator-v1/dist/web/assets/index-DU9BE5mP.css' | sha256sum -c -
+          echo '17edd74201ac4e897e378acf357d8ed3db81fb1af1a2d024e6955e2960aa42e7  creator-v1/dist/web/assets/index-iren-wayfinder-17edd74201ac4e89.css' | sha256sum -c -
+          grep -Fq '/assets/index-AsGe25lN.js' creator-v1/dist/web/index.html
+          grep -Fq '/assets/index-iren-wayfinder-17edd74201ac4e89.css' creator-v1/dist/web/index.html
+          if grep -Fq '/assets/index-DU9BE5mP.css' creator-v1/dist/web/index.html; then exit 1; fi
+          echo 'EXACT_TESTED_CSS_ONLY_BINARY_SOURCE=PASS' >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve legacy V059 earned native assets exactly as existing live release
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install numpy==2.2.6 scipy==1.15.3 Pillow==11.2.1
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libgl1-mesa-dri
+          (
+            cd design/evolution-v059
+            mkdir -p artwork/{native,textures,vector,masters,web,compact} docs dist previews
+            python src/export_native.py
+            python src/render_web.py
+            python src/build.py
+          )
+          python creator-v1/ops/install-evolution-v060.py
+          test "$(find creator-v1/web/public/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+          mkdir -p creator-v1/dist/web/evolution
+          cp -a creator-v1/web/public/evolution/. creator-v1/dist/web/evolution/
+          test "$(find creator-v1/dist/web/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+          test -s creator-v1/dist/web/evolution/assets/level-04-scene.gz
+          test -s creator-v1/dist/web/evolution/assets/level-30-scene.gz
+          test -s creator-v1/dist/web/evolution/mini-runtime.json
+          test ! -e creator-v1/dist/web/evolution-card-plates.json
+          echo 'V059_EARNED_MEDIA_PRESERVED=YES' >> "$GITHUB_STEP_SUMMARY"
+      - name: Install existing Wrangler toolchain, no application rebuild
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Require unchanged live bindings, routes, asset prefix and exact Worker baseline before any write
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test "$CLOUDFLARE_ACCOUNT_ID" = '2f7ee83107240152097efd956a4e8335'
+          test -n "$CLOUDFLARE_API_TOKEN"
+          api='https://api.cloudflare.com/client/v4'
+          script='anevum-apex-prelaunch-gateway'
+          zone='8abe27259b5436af5966d3b40d9a3760'
+          cf() { curl --fail --silent --show-error --retry 2 --max-time 35 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$1"; }
+          cf "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$script/settings" > "$RUNNER_TEMP/pre-settings.json"
+          cf "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$script/deployments" > "$RUNNER_TEMP/pre-deployments.json"
+          cf "$api/zones/$zone/workers/routes" > "$RUNNER_TEMP/pre-routes.json"
+          pre_version="$(jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/pre-deployments.json")"
+          test "$pre_version" = '31486866-9739-4521-9f2a-fc0d9b166a4f'
+          jq -e '.success and (.result.bindings|length)==24 and
+            any(.result.bindings[]; .type=="assets" and .name=="ASSETS") and
+            any(.result.bindings[]; .type=="d1" and .name=="MEMBER_DB" and (.database_id//.id)=="e1d29049-c83b-4534-8355-dc1fa36ba6d8") and
+            any(.result.bindings[]; .type=="d1" and .name=="COMMUNITY_DB" and (.database_id//.id)=="fa96e36d-6257-4883-bf15-074947e11a13") and
+            any(.result.bindings[]; .type=="plain_text" and .name=="ANEVUM_PRELAUNCH_MODE" and .text=="public") and
+            any(.result.bindings[]; .type=="plain_text" and .name=="ANEVUM_LAUNCH_APPROVED" and .text=="true") and
+            any(.result.bindings[]; .type=="secret_text" and .name=="CANONICAL_BETTER_AUTH_SECRET")' "$RUNNER_TEMP/pre-settings.json" > /dev/null
+          jq -e '.success and (.result|length)==36 and
+            any(.result[]; .pattern=="anevum.com/*" and .script=="anevum-native-frame-policy-v001") and
+            any(.result[]; .pattern=="anevum.com/assets/index-*" and .script=="anevum-native-project-community-v002") and
+            any(.result[]; .pattern=="anevum.com/" and .script=="anevum-profile-staff-access-v001") and
+            any(.result[]; .pattern=="anevum.com/staff*" and .script=="anevum-iren-staff-entry-v003")' "$RUNNER_TEMP/pre-routes.json" > /dev/null
+          jq -S '[.result[]|{pattern,script}]|sort_by(.pattern)' "$RUNNER_TEMP/pre-routes.json" > "$RUNNER_TEMP/routes.lock"
+          jq -S '[.result.bindings[]|{name,type}]|sort_by(.name)' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/bindings.lock"
+          jq -S '[.result.bindings[]|select(.type=="d1")|{name,database:(.database_id//.id)}]|sort_by(.name)' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/db.lock"
+          jq -S '[.result.bindings[]|select(.type=="plain_text")|{name,text}]|sort_by(.name)' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/vars.lock"
+          jq -S '[.result.bindings[]|select(.type=="secret_text")|.name]|sort' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/secrets.lock"
+          curl --fail --silent --show-error --max-time 35 -o "$RUNNER_TEMP/home-before.html" https://anevum.com/
+          grep -Fq '/assets/index-DU9BE5mP.css' "$RUNNER_TEMP/home-before.html"
+          grep -Fq '/assets/index-AsGe25lN.js' "$RUNNER_TEMP/home-before.html"
+          curl --fail --silent --show-error --max-time 40 -o "$RUNNER_TEMP/live-before.css" https://anevum.com/assets/index-DU9BE5mP.css
+          curl --fail --silent --show-error --max-time 40 -o "$RUNNER_TEMP/live-before.js" https://anevum.com/assets/index-AsGe25lN.js
+          python - <<'PY'
+          from pathlib import Path
+          import os
+          old=Path('creator-v1/dist/web/assets/index-DU9BE5mP.css').read_bytes()
+          js=Path('creator-v1/dist/web/assets/index-AsGe25lN.js').read_bytes()
+          live=Path(os.environ['RUNNER_TEMP'])
+          assert (live/'live-before.css').read_bytes().startswith(old), 'Live CSS differs from pinned original prefix'
+          assert (live/'live-before.js').read_bytes().startswith(js), 'Live JS differs from pinned original prefix'
+          print('LIVE_CSS_AND_JS_PROVENANCE=PASS')
+          PY
+          node --input-type=module <<'NODE'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const config=JSON.parse(readFileSync('creator-v1/wrangler.apex-prelaunch.jsonc','utf8'));
+          const live=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/pre-settings.json','utf8'));
+          if(config.name!=='anevum-apex-prelaunch-gateway'||config.routes.length!==0||
+            config.assets?.binding!=='ASSETS'||config.assets?.run_worker_first!==true||
+            config.assets?.directory!=='./dist/web')throw Error('Unexpected Worker deployment scope');
+          config.vars=Object.fromEntries(live.result.bindings.filter(x=>x.type==='plain_text').map(x=>[x.name,x.text]));
+          if(config.vars.ANEVUM_PRELAUNCH_MODE!=='public'||config.vars.ANEVUM_LAUNCH_APPROVED!=='true')
+            throw Error('Unexpected public launch flags');
+          writeFileSync('creator-v1/wrangler.v091-iren-css.generated.json',JSON.stringify(config,null,2));
+          NODE
+          cf "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$script/deployments" > "$RUNNER_TEMP/immediate-deployments.json"
+          test "$(jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/immediate-deployments.json")" = "$pre_version"
+          cf "$api/zones/$zone/workers/routes" > "$RUNNER_TEMP/immediate-routes.json"
+          jq -S '[.result[]|{pattern,script}]|sort_by(.pattern)' "$RUNNER_TEMP/immediate-routes.json" > "$RUNNER_TEMP/immediate-routes.lock"
+          cmp "$RUNNER_TEMP/routes.lock" "$RUNNER_TEMP/immediate-routes.lock"
+          started=0
+          accepted=0
+          revert() {
+            code=$?
+            trap - EXIT
+            if test "$started" = 1 && test "$accepted" != 1; then
+              echo "::warning::IREN CSS release failed. Restoring exact observed previous production Worker version."
+              now="$(cf "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$script/deployments" | jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' || true)"
+              if test -n "$now" && test "$now" != "$pre_version"; then
+                printf '{"strategy":"percentage","versions":[{"percentage":100,"version_id":"%s"}]}' "$pre_version" > "$RUNNER_TEMP/rollback.json"
+                curl --fail --silent --show-error --max-time 45 -X POST \
+                  -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+                  -H 'Content-Type: application/json' -d @"$RUNNER_TEMP/rollback.json" \
+                  "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$script/deployments" >/dev/null \
+                  || echo '::error::MANUAL ROLLBACK REQUIRED'
+              fi
+            fi
+            exit "$code"
+          }
+          trap revert EXIT
+          started=1
+          npx wrangler deploy --config creator-v1/wrangler.v091-iren-css.generated.json --keep-vars
+          cf "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$script/settings" > "$RUNNER_TEMP/post-settings.json"
+          cf "$api/zones/$zone/workers/routes" > "$RUNNER_TEMP/post-routes.json"
+          jq -S '[.result[]|{pattern,script}]|sort_by(.pattern)' "$RUNNER_TEMP/post-routes.json" > "$RUNNER_TEMP/post-routes.lock"
+          cmp "$RUNNER_TEMP/routes.lock" "$RUNNER_TEMP/post-routes.lock"
+          jq -S '[.result.bindings[]|{name,type}]|sort_by(.name)' "$RUNNER_TEMP/post-settings.json" > "$RUNNER_TEMP/post-bindings.lock"
+          jq -S '[.result.bindings[]|select(.type=="d1")|{name,database:(.database_id//.id)}]|sort_by(.name)' "$RUNNER_TEMP/post-settings.json" > "$RUNNER_TEMP/post-db.lock"
+          jq -S '[.result.bindings[]|select(.type=="plain_text")|{name,text}]|sort_by(.name)' "$RUNNER_TEMP/post-settings.json" > "$RUNNER_TEMP/post-vars.lock"
+          jq -S '[.result.bindings[]|select(.type=="secret_text")|.name]|sort' "$RUNNER_TEMP/post-settings.json" > "$RUNNER_TEMP/post-secrets.lock"
+          cmp "$RUNNER_TEMP/bindings.lock" "$RUNNER_TEMP/post-bindings.lock"
+          cmp "$RUNNER_TEMP/db.lock" "$RUNNER_TEMP/post-db.lock"
+          cmp "$RUNNER_TEMP/vars.lock" "$RUNNER_TEMP/post-vars.lock"
+          cmp "$RUNNER_TEMP/secrets.lock" "$RUNNER_TEMP/post-secrets.lock"
+          cf "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$script/deployments" > "$RUNNER_TEMP/post-deployments.json"
+          new_version="$(jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/post-deployments.json")"
+          test -n "$new_version" && test "$new_version" != "$pre_version"
+          ready=0
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent --show-error --max-time 25 -H 'Cache-Control: no-cache' \
+                 -o "$RUNNER_TEMP/home-after.html" https://anevum.com/ &&
+               grep -Fq '/assets/index-iren-wayfinder-17edd74201ac4e89.css' "$RUNNER_TEMP/home-after.html" &&
+               grep -Fq '/assets/index-AsGe25lN.js' "$RUNNER_TEMP/home-after.html" &&
+               curl --fail --silent --show-error --max-time 35 -H 'Cache-Control: no-cache' \
+                 -D "$RUNNER_TEMP/new-css.headers" -o "$RUNNER_TEMP/new-live.css" \
+                 https://anevum.com/assets/index-iren-wayfinder-17edd74201ac4e89.css &&
+               grep -qi '^content-type:.*text/css' "$RUNNER_TEMP/new-css.headers"; then
+              if python - <<'PY'
+          from pathlib import Path
+          import os
+          root=Path(os.environ['RUNNER_TEMP'])
+          expected=Path('creator-v1/dist/web/assets/index-iren-wayfinder-17edd74201ac4e89.css').read_bytes()
+          received=(root/'new-live.css').read_bytes()
+          assert received.startswith(expected)
+          assert b'grid-column:1/-1' in received
+          PY
+              then ready=1; break; fi
+            fi
+            sleep 4
+          done
+          test "$ready" = 1
+          curl --fail --silent --show-error --max-time 35 -o "$RUNNER_TEMP/js-after.js" \
+            https://anevum.com/assets/index-AsGe25lN.js
+          python - <<'PY'
+          from pathlib import Path
+          import os
+          live=Path(os.environ['RUNNER_TEMP'])
+          js=Path('creator-v1/dist/web/assets/index-AsGe25lN.js').read_bytes()
+          assert (live/'js-after.js').read_bytes().startswith(js), 'Original JS unexpectedly changed'
+          html=(live/'home-after.html').read_text()
+          assert '/assets/index-DU9BE5mP.css' not in html, 'Old stylesheet still referenced'
+          assert '/assets/index-iren-wayfinder-17edd74201ac4e89.css' in html
+          print('LIVE_IREN_MENU_CSS_HOTFIX=PASS')
+          PY
+          for page in /discover /community /studio; do
+            curl --fail --silent --show-error --max-time 35 -o /dev/null "https://anevum.com$page"
+          done
+          accepted=1
+          trap - EXIT
+          echo "IREN_WAYFINDER_CSS_LIVE=PASS" >> "$GITHUB_STEP_SUMMARY"
+          echo "PREVIOUS_WORKER_VERSION=$pre_version" >> "$GITHUB_STEP_SUMMARY"
+          echo "NEW_WORKER_VERSION=$new_version" >> "$GITHUB_STEP_SUMMARY"
+          echo 'ROUTES=UNCHANGED;BINDINGS=UNCHANGED;MEMBER_DB=UNCHANGED;JS=UNCHANGED;XP=UNCHANGED' >> "$GITHUB_STEP_SUMMARY"
+          echo 'FULL_V091_AUTHENTICATED_RELEASE=NOT_PART_OF_THIS_HOTFIX' >> "$GITHUB_STEP_SUMMARY"
