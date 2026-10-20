@@ -6,6 +6,7 @@ on:
       - "tests/alpha-package-v003.test.mjs"
       - "tests/alpha-package-v004-browser.mjs"
       - "tests/alpha-package-stage-readiness.mjs"
+      - "tests/alpha-package-v009-bridge.test.mjs"
       - ".github/workflows/package-v003-verify.yml"
   push:
     branches:
@@ -15,6 +16,7 @@ on:
       - "tests/alpha-package-v003.test.mjs"
       - "tests/alpha-package-v004-browser.mjs"
       - "tests/alpha-package-stage-readiness.mjs"
+      - "tests/alpha-package-v009-bridge.test.mjs"
       - ".github/workflows/package-v003-verify.yml"
 permissions:
   contents: read
@@ -35,7 +37,8 @@ jobs:
           node --check site/alpha/v003/continuance-visuals.mjs
           node --check site/alpha/v003/api.mjs
           node --check site/alpha/v003/ui.mjs
-      - run: node --experimental-sqlite --test tests/alpha-package-v003.test.mjs
+          node --check site/alpha/v003/unified-creation-bridge-v009.mjs
+      - run: node --experimental-sqlite --test tests/alpha-package-v003.test.mjs tests/alpha-package-v009-bridge.test.mjs
       - name: Chromium mobile and desktop UI acceptance
         run: |
           if command -v google-chrome >/dev/null 2>&1; then
