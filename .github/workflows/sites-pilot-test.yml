@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - release/home-wayfinder-v079-approved-20261018
+      - build/anevum-sites-pilot-20261019-001
     paths:
       - "sites/**"
       - ".github/workflows/sites-pilot-test.yml"
@@ -27,6 +28,8 @@ jobs:
       - name: Check Worker syntax
         run: |
           node --check sites/worker.mjs
+          node --check sites/studio-v2.mjs
+          node --check sites/smokebreak-concept.mjs
           node --check sites/workshop.mjs
           node --check sites/tests/worker.test.mjs
       - name: Run no-network contract tests
@@ -36,7 +39,7 @@ jobs:
         run: |
           set -euo pipefail
           curl --fail --silent --show-error --retry 4 --retry-delay 3 --max-time 15 https://web.anevum.com/health -o health.json
-          node -e "const f=require('fs'); const d=JSON.parse(f.readFileSync('health.json','utf8')); if (d.ok !== true || d.version !== 'sites-v001-20261019') process.exit(1)"
+          node -e "const f=require('fs'); const d=JSON.parse(f.readFileSync('health.json','utf8')); if (d.ok !== true || !['sites-v001-20261019','sites-v003-20261020'].includes(d.version)) process.exit(1)"
           curl --fail --silent --show-error --retry 3 --retry-delay 2 --max-time 15 https://web.anevum.com/preview/tobacco-vapor-time -o sample.html
           grep -q 'NOT THE OFFICIAL BUSINESS WEBSITE' sample.html
           PRIVATE_STATUS="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --max-time 15 https://sites.anevum.com/)"
