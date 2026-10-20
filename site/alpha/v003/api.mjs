@@ -13,6 +13,8 @@ const A = "https://anevum.com";
 const MiB = 1048576;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const kinds = new Set(["game","app","simulation","story"]);
+const CREATOR_HANDLE = /^[a-z][a-z0-9_]{2,29}$/;
+const CREATOR_PROJECTS = /^\/api\/v1\/packages\/creators\/([a-z][a-z0-9_]{2,29})\/projects$/;
 const MAX_MULTIPART_UPLOAD = 25 * MiB;
 async function boundedMultipart(req) {
   const type=String(req.headers.get("content-type")||"");
@@ -67,9 +69,10 @@ async function packageSchemaReady(db){
     const x=await db.prepare(
       "SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name IN (" +
       "'anevum_package_projects','anevum_package_releases','anevum_package_files'," +
-      "'anevum_package_preview_tokens','anevum_package_upload_limits','anevum_package_rights_receipts')"
+      "'anevum_package_preview_tokens','anevum_package_upload_limits','anevum_package_rights_receipts'," +
+      "'anevum_package_creator_links')"
     ).first();
-    return Number(x?.n)===6;
+    return Number(x?.n)===7;
   }catch{return false;}
 }
 
@@ -83,6 +86,66 @@ async function member(req,env) {
     const x=r.ok?await r.json():null;
     return x?.user?.emailVerified===true && x?.session && typeof x.user.id==="string" ? {id:x.user.id} : null;
   } catch { return null; }
+}
+async function privateCreatorIdentity(req,env,user) {
+  const cookie=req.headers.get("cookie");
+  if(!cookie||!env.AUTH?.fetch)throw new PackageError("Verified member profile required",401);
+  const headers=new Headers({cookie,accept:"application/json"});
+  if(req.headers.get("user-agent"))headers.set("user-agent",req.headers.get("user-agent"));
+  let response;
+  try{
+    response=await env.AUTH.fetch(new Request(A+"/api/v1/member/creator-profile",
+      {headers,redirect:"manual"}));
+  }catch{throw new PackageError("Canonical creator profile is temporarily unavailable",503);}
+  if(!response||response.status!==200||
+      !response.headers.get("content-type")?.toLowerCase().includes("application/json"))
+    throw new PackageError(response?.status===401?"Member session has expired":
+      "Complete your ANEVUM member profile before uploading a package",
+      response?.status===401?401:response?.status===503?503:409);
+  const identity=await response.json().catch(()=>null);
+  if(!identity||identity.memberId!==user.id)
+    throw new PackageError("Canonical creator identity does not match your signed-in account",403);
+  const handle=identity.profile?.handle,createdAt=identity.profile?.createdAt;
+  if(!CREATOR_HANDLE.test(handle)||!Number.isSafeInteger(createdAt)||createdAt<=0)
+    throw new PackageError("Claim a verified ANEVUM member handle before uploading a package",409);
+  return {handle,profileCreatedAt:createdAt};
+}
+async function publicCreatorIdentity(env,handle) {
+  if(!CREATOR_HANDLE.test(handle)||!env.AUTH?.fetch)return null;
+  let r;
+  try{r=await env.AUTH.fetch(new Request(A+"/api/v1/members/"+handle,
+    {headers:{accept:"application/json"},redirect:"manual"}));}
+  catch{throw new PackageError("Public member visibility could not be verified",503);}
+  if(r?.status===404)return null;
+  if(r?.status!==200||!r.headers.get("content-type")?.includes("application/json"))
+    throw new PackageError("Public member visibility could not be verified",503);
+  const x=await r.json().catch(()=>null);
+  const identity=x?.profile;
+  if(identity?.handle!==handle||!Number.isSafeInteger(identity.joinedAt)||identity.joinedAt<=0)
+    throw new PackageError("Public member identity response could not be verified",503);
+  return {handle,profileCreatedAt:identity.joinedAt};
+}
+async function creatorPublicWorks(env,handle){
+  if(env.PACKAGE_CREATOR_GALLERY_ENABLED!=="true")
+    return fail(404,"Creator release galleries are not yet available");
+  const verified=await publicCreatorIdentity(env,handle);
+  if(!verified)return fail(404,"Public creator profile unavailable");
+  const projects=(await env.DB.prepare(
+    "SELECT p.id,p.title,p.summary,p.category,p.published_at," +
+    "r.version AS release_version," +
+    "(SELECT f.release_id FROM anevum_package_files f WHERE f.release_id=r.id AND f.path='"+COVER_PATH+"' LIMIT 1) AS cover_release_id " +
+    "FROM anevum_package_projects p " +
+    "JOIN anevum_package_creator_links c ON c.owner_id=p.owner_id " +
+    "JOIN anevum_package_releases r ON r.id=p.live_release_id AND r.status='published' " +
+    "WHERE c.handle=? AND c.profile_created_at=? AND p.status='published' " +
+    "ORDER BY p.published_at DESC LIMIT 20"
+  ).bind(handle,verified.profileCreatedAt).all()).results;
+  return json({handle,projects:projects.map(p=>({
+    id:p.id,title:p.title,summary:p.summary,category:p.category,
+    version:p.release_version,published_at:p.published_at,
+    cover_url:p.cover_release_id?"/api/v1/packages/covers/"+p.cover_release_id:null,
+    play_url:"/play/v3/"+p.id
+  }))});
 }
 function csrf(req) {
   const sec=req.headers.get("sec-fetch-site");
@@ -192,6 +255,7 @@ async function upload(req,env,u) {
     return fail(503,"Package stage schema is not ready; upload is paused before storing any files");
   if(!env.MEDIA?.put||!env.MEDIA?.get||!env.MEDIA?.head)
     return fail(503,"Package storage is not configured; upload is paused");
+  const creatorIdentity=await privateCreatorIdentity(req,env,u);
   const body=await boundedMultipart(req);
   const details=validatedText(body);
   const file=body.get("file"), coverInput=body.get("cover");
@@ -278,6 +342,14 @@ async function upload(req,env,u) {
     statements.push(env.DB.prepare(
       "INSERT INTO anevum_package_rights_receipts(release_id,owner_id,attested_at,statement) VALUES(?,?,?,'creator_has_publication_rights_v1')"
     ).bind(releaseId,u.id,now));
+    // Owner ID and immutable handle provenance come only from two verified
+    // canonical-session service calls, never from the upload form.
+    // A UNIQUE handle collision across owners aborts the entire D1 batch.
+    statements.push(env.DB.prepare(
+      "INSERT INTO anevum_package_creator_links(owner_id,handle,profile_created_at,verified_at) " +
+      "VALUES(?,?,?,?) ON CONFLICT(owner_id) DO UPDATE SET " +
+      "handle=excluded.handle,profile_created_at=excluded.profile_created_at,verified_at=excluded.verified_at"
+    ).bind(u.id,creatorIdentity.handle,creatorIdentity.profileCreatedAt,now));
     // Atomic D1 batch: a lost optimistic-update race inserts no release.
     // Dependent asset inserts then fail foreign-key validation and roll back.
     const results=await env.DB.batch([...statements,...fileStatements]);
@@ -287,6 +359,8 @@ async function upload(req,env,u) {
   } catch(e) {
     await env.MEDIA.delete(touched).catch(()=>{});
     if(e instanceof PackageError) throw e;
+    if(/UNIQUE constraint failed.*anevum_package_creator_links/i.test(String(e?.message||"")))
+      return fail(409,"Creator handle ownership requires staff verification");
     if(/UNIQUE constraint failed|FOREIGN KEY constraint failed/i.test(String(e?.message||"")))
       return fail(409,"Another upload updated this project. Refresh and retry");
     return fail(503,"Package storage failed; no project was published");
@@ -517,6 +591,8 @@ async function api(req,env,path) {
       runtimeLiveVerified:false
     });
   }
+  const creatorRoute=path.match(CREATOR_PROJECTS);
+  if(creatorRoute&&req.method==="GET")return creatorPublicWorks(env,creatorRoute[1]);
   if(path==="/api/v1/packages/projects"&&req.method==="GET") {
     const projects=await publicList(env.DB);
     return json({projects:projects.map(p=>({
@@ -527,6 +603,17 @@ async function api(req,env,path) {
   if(path==="/api/v1/packages/me"&&req.method==="GET") {
     const u=await member(req,env);
     return json({authenticated:!!u,pilot:!!u&&pilot(env,u.id),reviewer:!!u&&staff(env,u.id)});
+  }
+  if(path==="/api/v1/packages/mine"&&req.method==="GET"){
+    const u=await member(req,env);
+    if(!u)return fail(401,"Sign in to view your packages");
+    const projects=await ownerList(env.DB,u.id);
+    return json({projects:projects.map(p=>({
+      id:p.id,title:p.title,summary:p.summary,category:p.category,status:p.status,
+      version:p.release_version,draft_status:p.draft_status,
+      cover_url:p.cover_release_id?"/api/v1/packages/covers/"+p.cover_release_id:null,
+      play_url:p.status==="published"&&p.live_release_id?"/play/v3/"+p.id:null
+    }))});
   }
   if(req.method!=="POST"||!csrf(req))return fail(403,"Origin or method not authorized");
   const u=await member(req,env);
