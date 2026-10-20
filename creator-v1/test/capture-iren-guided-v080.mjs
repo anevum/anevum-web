@@ -79,9 +79,51 @@ try{
   // Each viewport exercises a genuinely fresh visitor. Prior viewport history
   // is removed before the next navigation, never while the first page is blank.
   if(width!==320)await evaluate('localStorage.removeItem("anevum.iren.first-contact.v092")');
+  // A background tab must not consume first contact. Install the visibility
+  // probe before any React JS executes, instead of racing the 1100ms timer.
+  let visibilityProbeId=null;
+  if(width===320){
+    const probe=await send("Page.addScriptToEvaluateOnNewDocument",{
+      source:'Object.defineProperty(document,"visibilityState",{configurable:true,get(){return window.__irenQAVisibility||"hidden"}});window.__irenQAVisibility="hidden";'
+    });
+    visibilityProbeId=probe.identifier;
+    if(!visibilityProbeId)throw Error("IREN_VISIBILITY_PROBE_NOT_INSTALLED");
+  }
   await send("Page.navigate",{url:base+"/creator/"});
   await until(()=>evaluate('!!document.querySelector(".ir80-dock")&&!!document.querySelector(".av79-home")'));
-  await until(()=>evaluate('!!document.querySelector(".ir92-first-contact")'),10000);
+  if(width===320){
+    await pause(1430);
+    await check("hidden-tab-does-not-consume-greeting",'document.visibilityState==="hidden"&&!document.querySelector(".ir92-first-contact")&&localStorage.getItem("anevum.iren.first-contact.v092")!=="seen"');
+    await check("visible-but-editing-stays-undisturbed",`(()=>{
+      const input=document.createElement("input");
+      input.id="qa-iren-editing-probe";
+      input.setAttribute("aria-label","Temporary typing safety probe");
+      document.body.appendChild(input);input.focus();
+      window.__irenQAVisibility="visible";
+      document.dispatchEvent(new Event("visibilitychange"));
+      return document.visibilityState==="visible"&&document.activeElement===input;
+    })()`);
+    await pause(1450);
+    await check("typing-does-not-consume-greeting",'!document.querySelector(".ir92-first-contact")&&localStorage.getItem("anevum.iren.first-contact.v092")!=="seen"');
+    await evaluate('(()=>{const input=document.getElementById("qa-iren-editing-probe");input.blur();input.remove();return true})()');
+    await send("Page.removeScriptToEvaluateOnNewDocument",{identifier:visibilityProbeId});
+  }
+  try{
+    await until(()=>evaluate('!!document.querySelector(".ir92-first-contact")'),10000);
+  }catch(error){
+    const diagnostic=await evaluate(`JSON.stringify({
+      visibility:document.visibilityState,
+      active:document.activeElement?.outerHTML?.slice(0,220),
+      seen:localStorage.getItem("anevum.iren.first-contact.v092"),
+      companion:!!document.querySelector(".ir80-dock"),
+      modal:!!document.querySelector('dialog[open],[role="dialog"][aria-modal="true"]'),
+      helperPanel:!!document.querySelector(".ir80-help"),
+      route:location.pathname
+    })`);
+    throw Error("IREN_FIRST_CONTACT_RESUME_FAILED_"+width+": "+diagnostic+" / "+String(error));
+  }
+  await check("automatic-arrival-does-not-steal-focus-"+width,'document.activeElement?.getAttribute("aria-label")!=="Close IREN"');
+  await check("welcome-live-region-"+width,'document.querySelector(".ir92-voice")?.getAttribute("role")==="status"');
   await check("first-contact-four-choices-"+width,'document.querySelectorAll(".ir92-intent-grid > a,.ir92-intent-grid > button").length===4');
   await check("first-contact-real-destinations-"+width,'(()=>{const paths=[...document.querySelectorAll(".ir92-intent-grid a")].map(a=>new URL(a.href).pathname);return paths.some(p=>p.endsWith("/discover"))&&paths.some(p=>p.endsWith("/studio"))&&paths.some(p=>p.endsWith("/community"));})()');
   await check("first-contact-one-companion-"+width,'document.querySelectorAll(".ir87-scout").length===1');
@@ -98,9 +140,23 @@ try{
     await until(()=>evaluate('!!document.querySelector(".ir80-dock")&&!!document.querySelector(".av79-home")'));
     await pause(1400);
     await check("first-contact-does-not-repeat",'!document.querySelector(".ir92-first-contact")');
+  }else if(width===390){
+    await send("Input.dispatchKeyEvent",{type:"keyDown",key:"Escape",code:"Escape",windowsVirtualKeyCode:27});
+    await send("Input.dispatchKeyEvent",{type:"keyUp",key:"Escape",code:"Escape",windowsVirtualKeyCode:27});
+    await until(()=>evaluate('!document.querySelector(".ir92-first-contact")'));
+    await check("escape-restores-dock-focus",'document.activeElement?.classList.contains("ir87-scout")');
+  }else if(width===768){
+    await evaluate('document.querySelector(".ir92-intent-grid a").click()');
+    await until(()=>evaluate('location.pathname.endsWith("/discover")&&!document.querySelector(".ir92-first-contact")'));
+    await send("Page.navigate",{url:base+"/creator/"});
+    await until(()=>evaluate('!!document.querySelector(".ir80-dock")&&!!document.querySelector(".av79-home")'));
+    await pause(1450);
+    await check("destination-is-not-an-invitation-loop",'!document.querySelector(".ir92-first-contact")');
   }else{
     await evaluate('document.querySelector(".ir92-not-now").click()');
     await until(()=>evaluate('!document.querySelector(".ir92-first-contact")'));
+    await until(()=>evaluate('document.activeElement?.classList.contains("ir87-scout")'));
+    await check("not-now-restores-dock-focus",'document.activeElement?.classList.contains("ir87-scout")');
   }
   await check("first-contact-remembered-"+width,'localStorage.getItem("anevum.iren.first-contact.v092")==="seen"');
   await check("one-compact-helper-"+width,'(()=>{const buttons=document.querySelectorAll(".ir87-scout");if(buttons.length!==1||document.querySelector(".an-notification-center"))return false;const r=buttons[0].getBoundingClientRect();return r.width>=48&&r.width<=58&&r.height>=48&&r.height<=58;})()');
@@ -111,6 +167,8 @@ try{
   await capture("iren-scout-"+width);
   await evaluate('document.querySelector(".ir80-dock").click()');
   await until(()=>evaluate('!!document.querySelector(".ir80-help")'));
+  await until(()=>evaluate('document.activeElement?.getAttribute("aria-label")==="Close IREN"'));
+  await check("explicit-help-focuses-panel-"+width,'document.activeElement===document.querySelector(".ir80-help .ir80-icon-button")');
   await check("help-accessible-"+width,'document.querySelector(".ir80-help").getAttribute("aria-label")==="IREN companion"');
   await check("home-station-"+width,'document.querySelector(".ir88-station")?.textContent.includes("THE WAYFINDER")');
   await check("home-dialogue-"+width,'document.querySelector(".ir88-voice-line")?.textContent.includes("Welcome, explorer")');

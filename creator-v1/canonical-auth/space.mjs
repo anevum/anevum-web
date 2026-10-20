@@ -57,6 +57,34 @@ export async function spaceSnapshot(db,id){
   showStats:settings?.show_stats!==0,revision:Number(settings?.revision)||0,
   stats:{wallPosts:Number(count?.count)||0,awards:earned.length,xp:progression?.xp??xp,level,levelStart,nextLevel,...(progression?{testXp:progression.testXp,artifact:progression.artifact}: {})}};
 }
+/** GET and PATCH share the same verified public/owner projection.
+ * Never replace a live aura or server-reviewed role with an undecorated
+ * snapshot after saving appearance or statistics preferences. */
+async function projectedSpace(db,id,env,isPublic,now){
+   const data=await spaceSnapshot(db,id);
+   if(env.CANONICAL_RECOGNITION_ENABLED==='true'){
+    const verified=await publicRecognitionSummary(db,id);
+    if(verified)Object.assign(data,verified);
+   }
+   if(env.CANONICAL_REPUTATION_ENABLED==='true'){
+    const records=await memberReputationMap(db,[id]);
+    const earned=records.get(id);
+    if(earned)Object.assign(data,isPublic?publicReputationProjection(earned,data.showStats?1:0):earned);
+   }
+   // Public institutional marks are read separately from reputation. Never
+   // infer them from owner emails or staff operational permissions.
+   if(env.CANONICAL_VERIFIED_ROLES_ENABLED==='true'){
+    const roles=await memberVerifiedRoleMap(db,[id]);
+    if(roles.has(id))data.role=roles.get(id);
+   }
+   if(isPublic){delete data.revision;if(!data.showStats)delete data.stats;data.awards=data.awards.filter(a=>a.earnedAt&&data.featuredAwards.includes(a.id));}
+   // Public cosmetics require explicit member opt-in; private previews
+   // remain visible to their authenticated owner while subscribed.
+   const supporter=await readSupporterRewards(env,id,now*1000,isPublic);
+   data.supporter=Boolean(supporter);
+   if(supporter)data.supporterAppearance=supporter.selected;
+ return data;
+}
 async function wall(db,id){
  return (await rows(db,'SELECT id,body,created_at,updated_at,revision FROM member_wall_posts WHERE user_id=? ORDER BY created_at DESC,id DESC LIMIT 50',id)).map(r=>({id:r.id,body:r.body,createdAt:Number(r.created_at),updatedAt:Number(r.updated_at),revision:Number(r.revision)}));
 }
@@ -158,29 +186,7 @@ export async function canonicalSpace(req,env,user,publicHandle=null,now=Math.flo
   }
   if(path.endsWith('/space')){
    if(req.method==='GET'){
-    const data=await spaceSnapshot(db,id);
-    if(env.CANONICAL_RECOGNITION_ENABLED==='true'){
-     const verified=await publicRecognitionSummary(db,id);
-     if(verified)Object.assign(data,verified);
-    }
-    if(env.CANONICAL_REPUTATION_ENABLED==='true'){
-     const records=await memberReputationMap(db,[id]);
-     const earned=records.get(id);
-     if(earned)Object.assign(data,isPublic?publicReputationProjection(earned,data.showStats?1:0):earned);
-    }
-    // Public institutional marks are read separately from reputation. Never
-    // infer them from owner emails or staff operational permissions.
-    if(env.CANONICAL_VERIFIED_ROLES_ENABLED==='true'){
-     const roles=await memberVerifiedRoleMap(db,[id]);
-     if(roles.has(id))data.role=roles.get(id);
-    }
-    if(isPublic){delete data.revision;if(!data.showStats)delete data.stats;data.awards=data.awards.filter(a=>a.earnedAt&&data.featuredAwards.includes(a.id));}
-    // Public cosmetics require explicit member opt-in; private previews
-    // remain visible to their authenticated owner while subscribed.
-    const supporter=await readSupporterRewards(env,id,now*1000,isPublic);
-    data.supporter=Boolean(supporter);
-    if(supporter)data.supporterAppearance=supporter.selected;
-    return json(data);
+    return json(await projectedSpace(db,id,env,isPublic,now));
    }
    if(isPublic||req.method!=='PATCH')return error(405,'Read only');
    const body=await input(req,1000);
@@ -192,7 +198,7 @@ export async function canonicalSpace(req,env,user,publicHandle=null,now=Math.flo
     await rows(db,'INSERT INTO member_space_settings(user_id,featured_json,show_stats) VALUES(?,?,?) ON CONFLICT(user_id) DO NOTHING RETURNING revision',id,JSON.stringify(body.featuredAwards),Number(body.showStats)):
     await rows(db,'UPDATE member_space_settings SET featured_json=?,show_stats=?,revision=revision+1 WHERE user_id=? AND revision=? RETURNING revision',JSON.stringify(body.featuredAwards),Number(body.showStats),id,body.revision);
    if(!changed.length)return error(409,'Display preferences changed. Reload before saving.');
-   return json(await spaceSnapshot(db,id));
+   return json(await projectedSpace(db,id,env,false,now));
   }
   return error(404,'Not found');
  }catch{return error(503,'Member space could not be saved or loaded. Try again.');}

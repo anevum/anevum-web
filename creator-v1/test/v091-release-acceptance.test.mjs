@@ -37,7 +37,7 @@ test('guarded V091 release stays pinned to precisely the reviewed integrated fil
  assert.ok(start>=0&&end>start,'A static source-delta allowlist must be present');
  const scope=release.slice(start,end);
  const files=[...scope.matchAll(/^\s*'([^']+)'/gm)].map(match=>match[1]);
- assert.equal(files.length,67,'The candidate contains exactly 67 reviewed source files');
+ assert.equal(files.length,79,'The candidate contains exactly 79 reviewed source files');
  assert.equal(new Set(files).size,files.length,'No duplicated entries');
  assert.deepEqual(files,[...files].sort(),'Source scope must be deterministic');
  for(const required of [
@@ -50,9 +50,16 @@ test('guarded V091 release stays pinned to precisely the reviewed integrated fil
   '.github/workflows/v091-aura-codex-browser.yml',
   'creator-v1/test/capture-home-navigation-v079.mjs',
   'creator-v1/web/src/components/MemberPresenceStatus.tsx',
-  'creator-v1/test/player-presence-v092.test.mjs'
+  'creator-v1/test/player-presence-v092.test.mjs',
+  'creator-v1/canonical-auth/member-verified-roles.mjs',
+  'creator-v1/canonical-auth/migrations/0012_verified_designations_v093.sql',
+  'creator-v1/operations/anevum-iren-insignias-v093.mjs',
+  'creator-v1/test/staff-verified-designations-v093.test.mjs',
+  'creator-v1/wrangler.iren-insignias-v093.jsonc'
  ])assert.ok(files.includes(required),'Reviewed source is missing '+required);
  assert.ok(files.every(file=>!/[?*{}]/.test(file)),'Globs are not allowed in the release scope');
+ assert.ok(release.includes('all(.result.bindings[]; .name!="CANONICAL_VERIFIED_ROLES_ENABLED" or .text!="true")'));
+ assert.ok(release.includes('test "$pre_version" = "93cc7f07-cf39-457e-af69-c9f6f4c02d25"'));
  assert.ok(release.includes('test "$(git rev-parse HEAD)" = "$GITHUB_SHA"'));
  assert.match(release,/ANEVUM_LAUNCH_APPROVED/);
  assert.match(release,/CLOUDFLARE_ACCOUNT_ID/);

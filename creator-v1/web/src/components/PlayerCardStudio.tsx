@@ -15,7 +15,7 @@ const MODES:readonly {id:BadgeDisplay['mode'];label:string;help:string}[]=[
  {id:'hidden',label:'Keep private',help:'No badges on public player cards'}
 ];
 
-export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:CanonicalProfile;space:MemberSpace;onAvailabilityChange?:(enabled:boolean)=>void}){
+export function PlayerCardStudio({profile,space,onAvailabilityChange,onSaved}:{profile:CanonicalProfile;space:MemberSpace;onAvailabilityChange?:(enabled:boolean)=>void;onSaved?:()=>Promise<void>}){
  const [data,setData]=useState<RecognitionSettings|null>(null);
  const [notEnabled,setNotEnabled]=useState(false);
  const [loading,setLoading]=useState(true),[saving,setSaving]=useState(false);
@@ -39,7 +39,7 @@ export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:C
    else setError(e instanceof Error?e.message:'Recognition settings unavailable');
   }).finally(()=>{if(active)setLoading(false)});
   return()=>{active=false;c.abort()};
- },[profile.handle,onAvailabilityChange]);
+ },[profile.handle,space.aura,onAvailabilityChange]);
  async function save(){
   if(!data||saving)return;
   setSaving(true);setError('');setMessage('');
@@ -47,7 +47,9 @@ export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:C
    const next=await saveRecognition({
     badgeMode,badgeIds,medalId,ribbonIds,aura,revision:data.revision
    });
-   apply(next);setMessage('Your verified player card display is saved.');
+   apply(next);
+   if(onSaved)await onSaved();
+   setMessage('Saved. Your aura and earned marks are updated on your player card.');
   }catch(e){setError(e instanceof Error?e.message:'Could not save player card.')}
   finally{setSaving(false)}
  }
@@ -59,6 +61,12 @@ export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:C
   setMessage('');
   setRibbonIds(old=>old.includes(id)?old.filter(x=>x!==id):old.length<2?[...old,id]:old);
  }
+ const unsaved=Boolean(data)&&(
+  aura!==data!.aura||badgeMode!==data!.badgeMode||
+  medalId!==data!.medalId||
+  JSON.stringify(badgeIds)!==JSON.stringify(data!.badgeIds)||
+  JSON.stringify(ribbonIds)!==JSON.stringify(data!.ribbonIds)
+ );
  const badges=data?.earnedBadges??[];
  const honor= data?previewDistinctions(data,medalId,ribbonIds):{medals:[],ribbons:[]};
  const previewMember:PublicIdentity={
@@ -86,7 +94,9 @@ export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:C
   {error&&<p role="alert" className="av65-studio-error">{error}</p>}
   {data&&<>
    <div className="av65-studio-preview">
-    <div><span className="kicker">LIVE OWNER PREVIEW</span><small>Exactly what you choose to publish, subject to your profile visibility.</small></div>
+    <div><span className="kicker">LIVE OWNER PREVIEW</span><small role="status">{unsaved?
+      'UNSAVED PREVIEW · Your public card changes only after Save Player Card.':
+      'SAVED SIGNATURE · Your public profile uses these verified preferences.'}</small></div>
     <div className="av78-preview-variants" aria-label="Your player card in three contexts">
      <div className="av78-preview-featured"><span>PROFILE / FEATURED</span>
       <CompactMemberIdentity size="featured" interactive={false} href="/member" member={previewMember}/></div>

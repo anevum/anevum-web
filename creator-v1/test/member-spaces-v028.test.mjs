@@ -36,7 +36,12 @@ test('member space: real independent sessions, private media/walls, persisted se
   }
   let state=await (await worker.fetch(req(space,'GET',undefined,a),env)).json();assert.equal(state.stats.xp,35);assert.equal(state.stats.level,1);assert.equal(state.stats.awards,2); // V060: level 2 starts at 75 XP; keep earned XP intact.
   assert.equal((await worker.fetch(req(space,'PATCH',{featuredAwards:['fake_award'],showStats:true,revision:0},a),env)).status,400);
-  assert.equal((await worker.fetch(req(space,'PATCH',{featuredAwards:['world_shaper'],showStats:false,revision:0},a),env)).status,200);
+  const savedResponse=await worker.fetch(req(space,'PATCH',{featuredAwards:['world_shaper'],showStats:false,revision:0},a),env);
+  assert.equal(savedResponse.status,200);
+  const savedSpace=await savedResponse.json();
+  assert.equal(savedSpace.showStats,false);
+  assert.ok(savedSpace.revision>=1);
+  assert.deepEqual(savedSpace.featuredAwards,['world_shaper']);
   assert.equal((await worker.fetch(req(space,'PATCH',{featuredAwards:[],showStats:true,revision:0},a),env)).status,409);
   assert.equal((await worker.fetch(req(profile,'PATCH',{displayName:'Pilot Alpha',bio:'Intro',visibility:'public',revision:aProfile.profile.revision},a),env)).status,200);
   const publicSpace=await worker.fetch(req('/api/v1/members/pilot_alpha/space'),env);assert.equal(publicSpace.status,200);const publicData=await publicSpace.json();assert.equal(publicData.stats,undefined);assert.equal(publicData.revision,undefined);assert.deepEqual(publicData.awards.map(a=>a.id),['world_shaper']);
@@ -80,5 +85,28 @@ test('JPEG bounds, field allowlists, unearned display and mutation rate limits',
   for(let i=0;i<20;i++)assert.equal((await canonicalSpace(req('/api/v1/member/wall','POST',{body:'Entry '+i}),env,user)).status,201);
   assert.equal((await canonicalSpace(req('/api/v1/member/wall','POST',{body:'Over rate'}),env,user)).status,429);
   const snapshot=await (await canonicalSpace(req('/api/v1/member/space'),env,user)).json();assert.equal(snapshot.stats.xp,10);assert.equal(snapshot.stats.awards,1);
+ }finally{db.close()}
+});
+
+test('V094 settings mutation and GET share the same guarded recognition projection',async()=>{
+ const {db,env}=fixture();const id='verified-space-test';
+ const {readFileSync}=await import('node:fs');
+ db.exec(readFileSync(new URL('../canonical-auth/migrations/0010_player_recognition.sql',import.meta.url),'utf8'));
+ db.prepare('INSERT INTO user(id,name,email,emailVerified,createdAt,updatedAt) VALUES(?,?,?,1,0,0)').run(id,'Verified','verified@fixture.invalid');
+ db.prepare('INSERT INTO member_creator_profiles(user_id,handle,display_name,created_at,updated_at) VALUES(?,?,?,0,0)').run(id,'verified_space','Verified');
+ db.prepare("INSERT INTO member_recognition_preferences(user_id,aura) VALUES(?,?)").run(id,'aurora');
+ env.CANONICAL_RECOGNITION_ENABLED='true';
+ try{
+  const owner={id,emailVerified:true};
+  const before=await (await canonicalSpace(req('/api/v1/member/space'),env,owner)).json();
+  assert.equal(before.aura,'aurora');
+  const saved=await canonicalSpace(req('/api/v1/member/space','PATCH',{featuredAwards:[],showStats:false,revision:0}),env,owner);
+  assert.equal(saved.status,200);
+  const after=await saved.json();
+  assert.equal(after.aura,'aurora','PATCH must preserve verified aura projection');
+  assert.equal(after.showStats,false);
+  assert.ok(after.revision>=1);
+  assert.deepEqual(after.featuredAwards,[]);
+  assert.equal((await (await canonicalSpace(req('/api/v1/member/space'),env,owner)).json()).aura,'aurora');
  }finally{db.close()}
 });
