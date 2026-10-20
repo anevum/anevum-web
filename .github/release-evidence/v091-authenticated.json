@@ -1,10 +1,10 @@
 {
-  "source_sha": "7c1137bf05de3a77511c083e49f30c5577e93085",
+  "source_sha": "6c750fa8d3d2b8fd67964fb7c68b8dfdf66d4ccf",
   "founder_staff_session": false,
   "reviewer_staff_session": false,
   "creator_journey": false,
   "cross_account_identity": false,
   "verified_at": null,
   "evidence": [],
-  "status": "BLOCKED: V091 + IREN V092 + Aura Codex + mobile Wayfinder + responsive IREN layout source pinned to 7c1137bf, with real founder/reviewer/creator/cross-account acceptance still pending. Full production frontend release remains blocked."
+  "status": "BLOCKED: Integrated V091 + IREN V092 + Aura Codex candidate pinned at 6c750fa8. Four real signed-in acceptance gates remain false; guarded production frontend deployment is prohibited."
 }
