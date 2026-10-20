@@ -57,6 +57,8 @@ export default {async fetch(request,env){
       return send(DEMO,200,undefined,m);
     }catch{return send("Preview temporarily unavailable",503,"text/plain; charset=utf-8",m)}
   }
+  // Explicitly deny this owner-only concept even if a future D1 record uses the same slug.
+  if(path==="/preview/smokebreak-st-cloud")return send("Concept not found",404,"text/plain; charset=utf-8",m);
   if(/^\/preview\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(path)){
     try{
       if(!env?.SITES_DB)return send("Preview temporarily unavailable",503,"text/plain; charset=utf-8",m);
