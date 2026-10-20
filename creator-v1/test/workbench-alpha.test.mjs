@@ -62,6 +62,7 @@ test('foreign origins, unsupported verbs and forged identity fields are refused'
   assert.equal((await s.call('/access',{who:'owner',method:'DELETE'})).status,405);
   assert.equal((await s.call('/access',{who:'owner',method:'POST',body:{memberId:'alice',expectedRevision:0,action:'grant',days:30,reason:'Private pilot participant.',role:'owner'}})).status,422);
   assert.equal((await s.grant('missing')).status,409);
+  assert.equal((await s.grant('alice',0,'grant',90)).status,422,'Invitation beyond 30 days is denied');
   assert.equal((await s.grant('owner')).status,422);
  }finally{s.close()}
 });
