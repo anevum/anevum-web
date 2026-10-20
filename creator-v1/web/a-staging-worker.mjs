@@ -24,7 +24,11 @@ function protect(response,method,forceNoStore=false,nativePlayer=false,guestAlph
     "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; "+
     "img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; "+
     (nativePlayer?"frame-src https://anevum-package-alpha-v003-runtime.devonakins.workers.dev"+(guestAlpha?" 'self' about: blob:":"")+"; ":guestAlpha?"frame-src 'self' about: blob:; ":"")+
-    "base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'");
+    // srcdoc inherits the parent CSP. On this one untrusted sandbox route,
+    // inheriting frame-ancestors 'none' can block its own opaque-origin frame.
+    // X-Frame-Options: DENY still protects the HTTP page from framing.
+    "base-uri 'none'; form-action 'self'; "+
+    (guestAlpha?"":"frame-ancestors 'none'; ")+"object-src 'none'");
   headers.delete("set-cookie");
   return new Response(method==="HEAD"?null:response.body,{
     status:response.status,statusText:response.statusText,headers
