@@ -30,7 +30,7 @@ jobs:
           node --test creator-v1/test/v091-release-acceptance.test.mjs
           node creator-v1/ops/v091-release-acceptance.mjs
           # Only release configuration/evidence may differ from the tested app.
-          git diff --exit-code cbef247f13eccb01fe97fe09fc5c86bf751ba84b HEAD -- . \
+          git diff --exit-code 743e81762754fd0805be60294f68a120b4d491e9 HEAD -- . \
             ':(exclude).github/workflows/v084-continuance-production.yml' \
             ':(exclude).github/workflows/v091-live-readonly-qa.yml' \
             ':(exclude).github/release-evidence/v091-authenticated.json' \
@@ -169,7 +169,7 @@ jobs:
           git merge-base --is-ancestor 00ba9f32f2c862de4b362eaafddc80890e2b577b HEAD
           # Pin the completed V091 application and allow only its reviewed files.
           # A stale or broadened release fails before any Cloudflare write.
-          git merge-base --is-ancestor cbef247f13eccb01fe97fe09fc5c86bf751ba84b HEAD
+          git merge-base --is-ancestor 743e81762754fd0805be60294f68a120b4d491e9 HEAD
           diff -u <(printf '%s\n' \
              '.github/release-evidence/v091-authenticated.json' \
              '.github/workflows/creator-v1-verify.yml' \
@@ -178,6 +178,12 @@ jobs:
              '.github/workflows/v084-continuance-production.yml' \
              '.github/workflows/v091-aura-codex-browser.yml' \
              '.github/workflows/v091-live-readonly-qa.yml' \
+             'creator-v1/canonical-auth/community.mjs' \
+             'creator-v1/canonical-auth/forums.mjs' \
+             'creator-v1/canonical-auth/member-reputation.mjs' \
+             'creator-v1/canonical-auth/member-verified-roles.mjs' \
+             'creator-v1/canonical-auth/public-member-card.mjs' \
+             'creator-v1/canonical-auth/space.mjs' \
              'creator-v1/operations/anevum-iren-apex-staff-v002.mjs' \
              'creator-v1/operations/anevum-iren-staff-entry-v003.mjs' \
              'creator-v1/operations/anevum-iren-staff-observatory-v001.mjs' \
@@ -203,6 +209,7 @@ jobs:
              'creator-v1/test/module-experience-v073.test.mjs' \
              'creator-v1/test/player-card-v078-live-react-browser.mjs' \
              'creator-v1/test/player-presence-v092.test.mjs' \
+             'creator-v1/test/player-reputation-v081.test.mjs' \
              'creator-v1/test/portal-offline-preview.mjs' \
              'creator-v1/test/project-hosting-v091.test.mjs' \
              'creator-v1/test/staff-session-transport-v091.test.mjs' \
@@ -210,6 +217,7 @@ jobs:
              'creator-v1/test/v091-live-emblem-browser.mjs' \
              'creator-v1/test/v091-public-live-canary.mjs' \
              'creator-v1/test/v091-release-acceptance.test.mjs' \
+             'creator-v1/test/verified-roles-v092.test.mjs' \
              'creator-v1/web/src/App.tsx' \
              'creator-v1/web/src/components/CompactMemberIdentity.tsx' \
              'creator-v1/web/src/components/IrenGuidedContinuance.tsx' \
@@ -262,7 +270,7 @@ jobs:
           echo "Production flags and binding checks passed. Checking deployed Worker version..."
           cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" > "$RUNNER_TEMP/pre-deployments.json"
           pre_version="$(jq -r '(.result.deployments // .result)[0].versions[0].version_id' "$RUNNER_TEMP/pre-deployments.json")"
-          test "$pre_version" = "8e4932d5-467d-418b-be10-2098053f375a"
+          test "$pre_version" = "31486866-9739-4521-9f2a-fc0d9b166a4f"
           echo "Deployed version matches expected baseline. Checking routes..."
           cf "$cf_api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/pre-routes.json"
           jq -e '.success and any(.result[]; .pattern=="anevum.com/*" and .script=="anevum-native-frame-policy-v001") and ([.result[]|select(.pattern=="anevum.com/assets/index-*")|.script]==["anevum-native-project-community-v002"])' "$RUNNER_TEMP/pre-routes.json" > /dev/null
@@ -286,7 +294,8 @@ jobs:
            any(.result.bindings[]; .type=="secret_text" and .name=="CANONICAL_RESEND_API_KEY") and
            any(.result.bindings[]; .type=="secret_text" and .name=="CANONICAL_PROTECTED_EMAILS") and
            any(.result.bindings[]; .type=="plain_text" and .name=="CANONICAL_RECOGNITION_ENABLED" and .text=="true") and
-            all(.result.bindings[]; .name!="CANONICAL_REPUTATION_ENABLED" or .text!="true")' "$RUNNER_TEMP/pre-settings.json" >/dev/null
+            all(.result.bindings[]; .name!="CANONICAL_REPUTATION_ENABLED" or .text!="true") and
+            all(.result.bindings[]; .name!="CANONICAL_VERIFIED_ROLES_ENABLED" or .text!="true")' "$RUNNER_TEMP/pre-settings.json" >/dev/null
           jq -S '[.result.bindings[]|{name,type}]|sort_by(.name)' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/bindings.lock.json"
           jq -S '[.result.bindings[]|select(.type=="d1")|{name,database:(.database_id//.id)}]|sort_by(.name)' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/db.lock.json"
           node --input-type=module <<'NODE'
@@ -304,7 +313,7 @@ jobs:
           jq -S '[.result.bindings[]|select(.type=="secret_text")|.name]|sort' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/pre-secrets.json"
           # Verify the same live baseline immediately before the first write.
           cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" > "$RUNNER_TEMP/immediate-pre-deployments.json"
-          test "$(jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/immediate-pre-deployments.json")" = "8e4932d5-467d-418b-be10-2098053f375a"
+          test "$(jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/immediate-pre-deployments.json")" = "31486866-9739-4521-9f2a-fc0d9b166a4f"
           cf "$cf_api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/immediate-pre-routes.json"
           jq -S '[.result[]|{pattern,script}]|sort_by(.pattern)' "$RUNNER_TEMP/immediate-pre-routes.json" > "$RUNNER_TEMP/immediate-routes.lock.json"
           cmp "$RUNNER_TEMP/routes.lock.json" "$RUNNER_TEMP/immediate-routes.lock.json"
@@ -319,11 +328,11 @@ jobs:
               echo "::warning::V091 rollout did not pass all checks; verifying production Worker state for rollback."
               current="$(cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" | jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' || true)"
               if test -n "$current" && test "$current" != "$pre_version"; then
-                echo "::warning::Restoring recorded previous V090 Worker version."
+                echo "::warning::Restoring recorded previous V091 beta Worker version."
                 printf '{"strategy":"percentage","versions":[{"percentage":100,"version_id":"%s"}]}' "$pre_version" > "$RUNNER_TEMP/revert.json"
                 curl --fail --silent --show-error --max-time 40 -X POST -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" -d @"$RUNNER_TEMP/revert.json" "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" >/dev/null || echo "::error::ROLLBACK REQUIRES MANUAL INTERVENTION"
                 rollback_version="$(cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" | jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' || true)"
-                test "$rollback_version" = "$pre_version" && echo "V091_PREVIOUS_WORKER_ROLLBACK=PASS" || echo "::error::ROLLBACK DID NOT REACH RECORDED V078 VERSION"
+                test "$rollback_version" = "$pre_version" && echo "V091_PREVIOUS_WORKER_ROLLBACK=PASS" || echo "::error::ROLLBACK DID NOT REACH RECORDED V091 BETA VERSION"
               fi
             fi
             exit "$code"
