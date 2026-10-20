@@ -4,6 +4,7 @@
 import publicApi from "../api/worker.mjs";
 
 const SITE = "a.anevum.com";
+const PUBLIC_ALPHA = /^\/studio\/alpha\/?$/i;
 const PUBLISHED = /^\/api\/v1\/(?:status|categories|boards|community\/posts(?:\/[a-f0-9]{32})?|projects(?:\/[A-Za-z0-9_-]+(?:\/repository)?)?|creators(?:\/[a-z][a-z0-9_]{2,29})?)$/i;
 const SECURITY = {
   "x-content-type-options":"nosniff",
@@ -61,7 +62,7 @@ return {
     // Only the anonymous alpha needs a sandboxed, scriptless srcdoc frame.
     // Other public pages retain the restrictive default-src policy.
     return protect(await env.ASSETS.fetch(clean),request.method,false,
-      env.PACKAGE_NATIVE_STUDIO_ENABLED==="true",url.pathname==="/studio/alpha");
+      env.PACKAGE_NATIVE_STUDIO_ENABLED==="true",PUBLIC_ALPHA.test(url.pathname));
   }
 };
 }
