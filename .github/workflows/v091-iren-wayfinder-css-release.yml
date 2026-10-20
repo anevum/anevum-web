@@ -108,11 +108,13 @@ jobs:
             any(.result.bindings[]; .type=="plain_text" and .name=="ANEVUM_PRELAUNCH_MODE" and .text=="public") and
             any(.result.bindings[]; .type=="plain_text" and .name=="ANEVUM_LAUNCH_APPROVED" and .text=="true") and
             any(.result.bindings[]; .type=="secret_text" and .name=="CANONICAL_BETTER_AUTH_SECRET")' "$RUNNER_TEMP/pre-settings.json" > /dev/null
-          jq -e '.success and (.result|length)==36 and
+          jq -e '.success and (.result|length)==38 and
             any(.result[]; .pattern=="anevum.com/*" and .script=="anevum-native-frame-policy-v001") and
             any(.result[]; .pattern=="anevum.com/assets/index-*" and .script=="anevum-native-project-community-v002") and
             any(.result[]; .pattern=="anevum.com/" and .script=="anevum-profile-staff-access-v001") and
-            any(.result[]; .pattern=="anevum.com/staff*" and .script=="anevum-iren-staff-entry-v003")' "$RUNNER_TEMP/pre-routes.json" > /dev/null
+            any(.result[]; .pattern=="anevum.com/staff*" and .script=="anevum-iren-staff-entry-v003") and
+            any(.result[]; .pattern=="anevum.com/api/v1/packages/v004/*" and .script=="anevum-package-alpha-v004-control") and
+            any(.result[]; .pattern=="anevum.com/creator-lab/v004*" and .script=="anevum-package-alpha-v004-control")' "$RUNNER_TEMP/pre-routes.json" > /dev/null
           jq -S '[.result[]|{pattern,script}]|sort_by(.pattern)' "$RUNNER_TEMP/pre-routes.json" > "$RUNNER_TEMP/routes.lock"
           jq -S '[.result.bindings[]|{name,type}]|sort_by(.name)' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/bindings.lock"
           jq -S '[.result.bindings[]|select(.type=="d1")|{name,database:(.database_id//.id)}]|sort_by(.name)' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/db.lock"
