@@ -30,7 +30,7 @@ jobs:
           node --test creator-v1/test/v091-release-acceptance.test.mjs
           node creator-v1/ops/v091-release-acceptance.mjs
           # Only release configuration/evidence may differ from the tested app.
-          git diff --exit-code 6c750fa8d3d2b8fd67964fb7c68b8dfdf66d4ccf HEAD -- . \
+          git diff --exit-code cbef247f13eccb01fe97fe09fc5c86bf751ba84b HEAD -- . \
             ':(exclude).github/workflows/v084-continuance-production.yml' \
             ':(exclude).github/workflows/v091-live-readonly-qa.yml' \
             ':(exclude).github/release-evidence/v091-authenticated.json' \
@@ -169,7 +169,7 @@ jobs:
           git merge-base --is-ancestor 00ba9f32f2c862de4b362eaafddc80890e2b577b HEAD
           # Pin the completed V091 application and allow only its reviewed files.
           # A stale or broadened release fails before any Cloudflare write.
-          git merge-base --is-ancestor 6c750fa8d3d2b8fd67964fb7c68b8dfdf66d4ccf HEAD
+          git merge-base --is-ancestor cbef247f13eccb01fe97fe09fc5c86bf751ba84b HEAD
           diff -u <(printf '%s\n' \
              '.github/release-evidence/v091-authenticated.json' \
              '.github/workflows/creator-v1-verify.yml' \
@@ -189,6 +189,7 @@ jobs:
              'creator-v1/package.json' \
              'creator-v1/test/aura-codex-v091.test.mjs' \
              'creator-v1/test/aura-codex-visual-v091.mjs' \
+             'creator-v1/test/canonical-otp-resend-v023.test.mjs' \
              'creator-v1/test/capture-home-navigation-v079.mjs' \
              'creator-v1/test/capture-iren-guided-v080.mjs' \
              'creator-v1/test/capture-sitewide-v012.mjs' \
@@ -198,7 +199,10 @@ jobs:
              'creator-v1/test/creator-route-v091.test.mjs' \
              'creator-v1/test/iren-first-contact-v092.test.mjs' \
              'creator-v1/test/iren-guided-v080.test.mjs' \
+             'creator-v1/test/member-presence-v092.test.mjs' \
              'creator-v1/test/module-experience-v073.test.mjs' \
+             'creator-v1/test/player-card-v078-live-react-browser.mjs' \
+             'creator-v1/test/player-presence-v092.test.mjs' \
              'creator-v1/test/portal-offline-preview.mjs' \
              'creator-v1/test/project-hosting-v091.test.mjs' \
              'creator-v1/test/staff-session-transport-v091.test.mjs' \
@@ -210,6 +214,7 @@ jobs:
              'creator-v1/web/src/components/CompactMemberIdentity.tsx' \
              'creator-v1/web/src/components/IrenGuidedContinuance.tsx' \
              'creator-v1/web/src/components/LevelEmblem.tsx' \
+             'creator-v1/web/src/components/MemberPresenceStatus.tsx' \
              'creator-v1/web/src/components/MemberSpaceDashboard.tsx' \
              'creator-v1/web/src/components/PlayerCardStudio.tsx' \
              'creator-v1/web/src/components/States.tsx' \
@@ -219,13 +224,16 @@ jobs:
              'creator-v1/web/src/discover-experience-v073.css' \
              'creator-v1/web/src/iren-guided-v080.css' \
              'creator-v1/web/src/iren-living-v088.css' \
+             'creator-v1/web/src/lib/canonical-beta.ts' \
              'creator-v1/web/src/lib/creator-route.ts' \
              'creator-v1/web/src/lib/player-recognition.ts' \
              'creator-v1/web/src/lib/project-hosting.ts' \
              'creator-v1/web/src/main.tsx' \
+             'creator-v1/web/src/member-presence-v092.css' \
              'creator-v1/web/src/pages/AuraCodexPage.tsx' \
              'creator-v1/web/src/pages/CanonicalStudioPage.tsx' \
              'creator-v1/web/src/pages/CreatorsPage.tsx' \
+             'creator-v1/web/src/pages/Phase1JoinPage.tsx' \
              'creator-v1/web/src/pages/Phase1PublicMemberPage.tsx' \
              'creator-v1/web/src/pages/ProjectPage.tsx' \
              'creator-v1/web/src/pages/StatusPage.tsx' \
