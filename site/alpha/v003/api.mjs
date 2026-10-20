@@ -51,6 +51,22 @@ const run = (db, sql, ...values) => db.prepare(sql).bind(...values).run();
 function listAllowed(value, id) { return !!id && String(value||"").split(",").map(s=>s.trim()).includes(id); }
 function pilot(env,id) { return listAllowed(env.PILOT_IDS,id); }
 function staff(env,id) { return listAllowed(env.STAFF_IDS,id); }
+function canonicalAuthHeaders(env,req=null) {
+  const headers=new Headers({accept:"application/json"});
+  if(req?.headers.get("cookie"))headers.set("cookie",req.headers.get("cookie"));
+  if(req?.headers.get("user-agent"))headers.set("user-agent",req.headers.get("user-agent"));
+  // A reviewed pilot may pin the canonical issuer's deployed 0%-traffic
+  // version. Only server configuration selects it; never copy caller overrides
+  // or change the issuer, subject checks, cookies, or authorization policy.
+  const version=env.PACKAGE_CANONICAL_AUTH_VERSION;
+  if(version!==undefined){
+    if(typeof version!=="string"||version.length!==36||!UUID.test(version))
+      throw new PackageError("Canonical identity version is not configured correctly",503);
+    headers.set("Cloudflare-Workers-Version-Overrides",
+      'anevum-apex-prelaunch-gateway="'+version+'"');
+  }
+  return headers;
+}
 function isolatedHost(env) {
   const h=String(env.RUNTIME_HOST||"").toLowerCase();
   return /^[a-z0-9][a-z0-9.-]{4,252}$/.test(h)
@@ -72,8 +88,7 @@ async function packageSchemaReady(db){
 async function member(req,env) {
   const cookie=req.headers.get("cookie");
   if (!cookie || !env.AUTH) return null;
-  const headers=new Headers({cookie,accept:"application/json"});
-  if(req.headers.get("user-agent")) headers.set("user-agent",req.headers.get("user-agent"));
+  const headers=canonicalAuthHeaders(env,req);
   try {
     const r=await env.AUTH.fetch(new Request(A+"/api/v1/member/auth/get-session",{headers,redirect:"manual"}));
     const x=r.ok?await r.json():null;
@@ -83,8 +98,7 @@ async function member(req,env) {
 async function privateCreatorIdentity(req,env,user) {
   const cookie=req.headers.get("cookie");
   if(!cookie||!env.AUTH?.fetch)throw new PackageError("Verified member profile required",401);
-  const headers=new Headers({cookie,accept:"application/json"});
-  if(req.headers.get("user-agent"))headers.set("user-agent",req.headers.get("user-agent"));
+  const headers=canonicalAuthHeaders(env,req);
   let response;
   try{
     response=await env.AUTH.fetch(new Request(A+"/api/v1/member/creator-profile",
@@ -108,9 +122,10 @@ async function privateCreatorIdentity(req,env,user) {
 }
 async function publicCreatorIdentity(env,handle) {
   if(!CREATOR_HANDLE.test(handle)||!env.AUTH?.fetch)return null;
+  const headers=canonicalAuthHeaders(env);
   let r;
   try{r=await env.AUTH.fetch(new Request(A+"/api/v1/members/"+handle,
-    {headers:{accept:"application/json"},redirect:"manual"}));}
+    {headers,redirect:"manual"}));}
   catch{throw new PackageError("Public member visibility could not be verified",503);}
   if(r?.status===404)return null;
   if(r?.status!==200||!r.headers.get("content-type")?.includes("application/json"))

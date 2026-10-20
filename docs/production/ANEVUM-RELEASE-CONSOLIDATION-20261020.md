@@ -4,7 +4,82 @@ Session: ANEVUM.OPS.UPDATE.2026-10-20.001.RELEASE-CONSOLIDATION
 
 Continuation: ANEVUM.OPS.UPDATE.2026-10-20.002.RELEASE-CONSOLIDATION
 
-## Continuation — final application completion
+## Approved controlled pilot — 20 October, 09:09 EDT
+
+Session: `ANEVUM.OPS.UPDATE.2026-10-20.003.CONTROLLED-V003-PILOT`
+
+The user approved the concrete V003 pilot, including the package migration,
+proof and service bindings, existing reviewer access, genuine account
+acceptance and the subsequent guarded release. This approval does not turn
+unobserved acceptance checks into passing evidence.
+
+### Completed infrastructure and identity preparation
+
+- Exported the package-only D1 database and retained a private rollback bundle.
+  Backup SHA-256: `7a82508cc0188905c53fa83a88eeda31110252b3159965254bdf1beddf04e599`.
+  The export restored locally, migration 0004 applied twice, integrity and
+  foreign-key checks passed, and all seven original package tables retained
+  their rows. The database contained zero projects, releases, files and creator
+  links at this checkpoint.
+- Applied the exact additive `0004_resource_protection.sql` to the existing
+  package D1 database. All 12 statements succeeded. The database now has 12
+  package tables; live quick-check returned `ok`, foreign-key checks were empty,
+  and original project/release/file/link counts remained zero. Canonical member
+  data was not migrated.
+- Activated identity-preflight version
+  `f06f3ca7-f684-4028-bc99-e40e080ae6a1` on the existing creation-route owner,
+  preserving canonical DB, legacy UPSTREAM and the route inventory. The new
+  private PACKAGE_CONTROL service and preflight are active. Both normal bridge
+  flags remain false. Exact rollback: `3cef3fe8-bb67-4edf-a7f6-9b5ccecb3b7a`.
+- Live unauthenticated checks passed: guest 401, foreign-origin/cross-site 403,
+  invalid preflight query 404, POST 405, normal bridge/API paths 404, and legacy
+  uploader/home 200. An initial Python HTTP harness was not usable in this
+  environment; the verified results use the working curl transport.
+- The existing browser's real founder session passed the new preflight with
+  authenticated/pilot/reviewer all true and both bridge guards false. The
+  separate safe staff diagnostic reported canonical session verified, owner
+  grant and staff API HTTP 200. The user then completed the existing
+  Cloudflare Access email verification through the secure browser sign-in
+  flow. The retained Observatory loaded with OWNER CLEARANCE and live data
+  at 09:23 EDT.
+  These observations are partial pilot evidence, not complete final-source
+  authenticated acceptance.
+
+### Controlled candidate acceptance path
+
+A version upload must not replace the current apex deployment. The prepared
+pilot builds the exact refreshed source with
+`VITE_PACKAGE_CREATOR_GALLERY_V010=true` and uploads its assets and a distinct
+canonical proof secret into an inactive version. Only after refreshed source CI
+passes may the pilot include that version at exactly 0% alongside the recorded
+old version at 100%. Never substitute a nonzero public traffic percentage.
+
+Cloudflare's documented version override can select this candidate for the
+consented browser on the canonical origin. A short-lived routing cookie and
+bounded Transform Rules may select the candidate without changing sign-in,
+roles or the 38 Worker routes. The package controller's optional
+`PACKAGE_CANONICAL_AUTH_VERSION` constructs a fixed internal apex override from
+server configuration, so private session/profile and public proof checks use
+the candidate issuer without trusting caller-supplied version headers. Invalid
+configuration fails closed; absent configuration preserves normal routing.
+Cloudflare only honors an override for a version in the active deployment, so
+its actual presence and proof response must be checked during acceptance.
+
+The pilot routing cookie is omitted by intentionally anonymous frontend
+requests using `credentials: "omit"`. Such requests must not be described as
+candidate responses without separate evidence. The package public feed still
+uses the controlled V003 service, and its public canonical proof call uses the
+server-configured candidate. Other anonymous canonical APIs need direct
+candidate read-only checks in addition to browser UI acceptance.
+
+The final production build must explicitly keep the tested gallery-ON variant.
+The existing guarded release remains mandatory, with all four authenticated
+flags false until genuine founder/reviewer, publishing and cross-account
+acceptance is complete. Update its exact infrastructure baseline only from the
+observed, reviewed pilot deployment; preserve the previous production version,
+all bindings/routes and the optional public role/reputation flags OFF.
+
+## Prior continuation — final application completion
 
 The continuation resumes existing PR #564. The starting combined source was
 `97bd61b078dea7bfe96c8c81b550729a3cbb8d9e`; all ten workflows, including the
@@ -113,6 +188,6 @@ The future phone-first Creator Engine and ANEVUM Sites business are outside this
 6. Release the apex only through `.github/workflows/v084-continuance-production.yml` from its approved branch. The acceptance record stays false until evidence is recorded for the pinned source. Preserve exact live routes, databases, variables, secret names and rollback version.
 7. Verify live source assets, desktop/phone interactions, authenticated journeys and deployment/version evidence after rollout.
 
-## Current production boundary
+## Production boundary at the end of continuation 002
 
-The apex remains version 93cc7f07-cf39-457e-af69-c9f6f4c02d25. This development consolidation does not apply migrations, change roles, provision secrets, change routes, activate flags or deploy production. A merged or green PR alone is not completion on anevum.com.
+The apex remained version 93cc7f07-cf39-457e-af69-c9f6f4c02d25. This development consolidation does not apply migrations, change roles, provision secrets, change routes, activate flags or deploy production. A merged or green PR alone is not completion on anevum.com.

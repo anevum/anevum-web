@@ -14,6 +14,7 @@ import { prepareCover, COVER_PATH } from "../site/alpha/v003/cover.mjs";
 import { mintPreview, verifyPreview } from "../site/alpha/v003/tokens.mjs";
 import {cleanupPackageResources} from "../site/alpha/v003/resource-cleanup.mjs";
 import {getStorageUsage,acquireUploadLease,reserveUpload} from "../site/alpha/v003/resource-service.mjs";
+import {canonicalPackageProof} from "../creator-v1/canonical-auth/package-proof.mjs";
 
 const ROOT=resolve(dirname(fileURLToPath(import.meta.url)),"..");
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -980,6 +981,111 @@ test("V010 upload fails closed without verified canonical profile and does not w
    env.AUTH.fetch=req=>new URL(req.url).pathname==="/api/v1/member/creator-profile"
      ?Response.json({error:"Canonical service down"},{status:503}):original(req);
    assert.equal((await post(env,"/api/v1/packages/upload",uploadForm(sample()))).status,503);
+ }finally{env.DB.close();}
+});
+
+test("configured canonical AUTH version preserves verified owner proof and independent publication without caller overrides",async()=>{
+ const env=setup();env.PACKAGE_CREATOR_GALLERY_ENABLED="true";
+ const version="45fb3b98-67ca-4fe3-8d09-bca96adc5c3b";
+ env.PACKAGE_CANONICAL_AUTH_VERSION=version;
+ const override='anevum-apex-prelaunch-gateway="'+version+'"';
+ const forged='anevum-apex-prelaunch-gateway="147f9d6b-12c3-4ec9-8bce-eb5379891764", unrelated-worker="ignored"';
+ const issuer={CANONICAL_PACKAGE_PROOF_ENABLED:"true",CANONICAL_PACKAGE_PROOF_KEY:"synthetic-pilot-proof-key-".repeat(3)};
+ const expectedProof=await canonicalPackageProof(issuer,"owner-id","cosmiccreator",1760000000);
+ const original=env.AUTH.fetch.bind(env.AUTH),calls=[];
+ env.AUTH.fetch=async request=>{
+   const path=new URL(request.url).pathname;
+   calls.push({path,headers:request.headers});
+   assert.equal(new URL(request.url).origin,"https://anevum.com");
+   assert.equal(request.redirect,"manual");
+   assert.equal(request.headers.get("cloudflare-workers-version-overrides"),override);
+   assert.equal(request.headers.get("authorization"),null);
+   assert.equal(request.headers.get("x-anevum-member-id"),null);
+   const response=await original(request),body=await response.json();
+   if(path==="/api/v1/member/creator-profile"&&body.profile)
+     body.profile.packageProof=await canonicalPackageProof(issuer,body.memberId,body.profile.handle,body.profile.createdAt);
+   if(path==="/api/v1/members/cosmiccreator")
+     body.profile.packageProof=await canonicalPackageProof(issuer,"owner-id",body.profile.handle,body.profile.joinedAt);
+   return Response.json(body,{status:response.status});
+ };
+ try{
+   const upload=req("POST","/api/v1/packages/upload",uploadForm(sample()));
+   upload.headers.set("cloudflare-workers-version-overrides",forged);
+   upload.headers.set("authorization","Bearer synthetic-caller-authority");
+   upload.headers.set("x-anevum-member-id","another-member");
+   upload.headers.set("user-agent","synthetic-canonical-pilot-browser");
+   const created=await api.fetch(upload,env);
+   assert.equal(created.status,201,await created.clone().text());
+   const {id}=await created.json();
+   const mapping=await env.DB.prepare("SELECT owner_id,creator_proof FROM anevum_package_creator_links").first();
+   assert.equal(mapping.owner_id,"owner-id");assert.equal(mapping.creator_proof,expectedProof);
+   assert.equal((await post(env,"/api/v1/packages/projects/"+id+"/submit",{})).status,200);
+   env.STAFF_IDS="staff-id,owner-id";
+   assert.equal((await post(env,"/api/v1/packages/projects/"+id+"/review",{action:"publish"})).status,403,
+     "An issuer version pin cannot let a staff creator approve their own build");
+   assert.equal((await post(env,"/api/v1/packages/projects/"+id+"/review",{action:"publish"},"staff")).status,200);
+   const galleryRequest=req("GET","/api/v1/packages/creators/cosmiccreator/projects",null,"visitor");
+   galleryRequest.headers.set("cloudflare-workers-version-overrides",forged);
+   const gallery=await api.fetch(galleryRequest,env);
+   assert.equal(gallery.status,200);assert.equal((await gallery.json()).projects[0].id,id);
+   const privateCall=calls.find(call=>call.path==="/api/v1/member/creator-profile");
+   assert.equal(privateCall.headers.get("cookie"),"session=owner");
+   assert.equal(privateCall.headers.get("user-agent"),"synthetic-canonical-pilot-browser");
+   const publicCall=calls.find(call=>call.path==="/api/v1/members/cosmiccreator");
+   assert.deepEqual([...publicCall.headers.keys()].sort(),["accept","cloudflare-workers-version-overrides"]);
+   assert.equal((await getPage(env,"/api/v1/packages/mine","visitor")).status,401,
+     "Selecting the configured issuer version does not authenticate another caller");
+ }finally{env.DB.close();}
+});
+
+test("caller version headers cannot select canonical AUTH when no server pin is configured",async()=>{
+ const env=setup();env.PACKAGE_CREATOR_GALLERY_ENABLED="true";
+ const original=env.AUTH.fetch.bind(env.AUTH),paths=[];
+ env.AUTH.fetch=async request=>{
+   assert.equal(request.headers.get("cloudflare-workers-version-overrides"),null);
+   paths.push(new URL(request.url).pathname);
+   return original(request);
+ };
+ try{
+   for(const request of [
+     req("POST","/api/v1/packages/upload",uploadForm(sample())),
+     req("GET","/api/v1/packages/creators/cosmiccreator/projects",null,"visitor")
+   ]){
+     request.headers.set("cloudflare-workers-version-overrides",'anevum-apex-prelaunch-gateway="45fb3b98-67ca-4fe3-8d09-bca96adc5c3b"');
+     const response=await api.fetch(request,env);
+     assert.ok([200,201].includes(response.status),await response.clone().text());
+   }
+   assert.deepEqual(paths,["/api/v1/member/auth/get-session","/api/v1/member/creator-profile","/api/v1/members/cosmiccreator"]);
+ }finally{env.DB.close();}
+});
+
+test("invalid canonical AUTH version fails closed before any issuer call or upload write",async()=>{
+ const env=setup();env.PACKAGE_CREATOR_GALLERY_ENABLED="true";
+ let authCalls=0;env.AUTH.fetch=async()=>{authCalls++;throw Error("Invalid configuration must not contact an issuer");};
+ try{
+   for(const version of ["",null,true,{},"not-a-version","45fb3b98-67ca-4fe3-8d09-bca96adc5c3b\n",'45fb3b98-67ca-4fe3-8d09-bca96adc5c3b",other="x',"45fb3b98-67ca-0fe3-8d09-bca96adc5c3b"]){
+     env.PACKAGE_CANONICAL_AUTH_VERSION=version;
+     for(const request of [
+       req("GET","/api/v1/packages/me"),
+       req("POST","/api/v1/packages/upload",uploadForm(sample())),
+       req("GET","/api/v1/packages/creators/cosmiccreator/projects",null,"visitor")
+     ])assert.equal((await api.fetch(request,env)).status,503);
+   }
+   assert.equal(authCalls,0);assert.equal(env.MEDIA.data.size,0);
+   assert.equal((await env.DB.prepare("SELECT COUNT(*) AS n FROM anevum_package_projects").first()).n,0);
+ }finally{env.DB.close();}
+});
+
+test("configured canonical AUTH version cannot override the authenticated profile subject",async()=>{
+ const env=setup();env.PACKAGE_CANONICAL_AUTH_VERSION="45fb3b98-67ca-4fe3-8d09-bca96adc5c3b";
+ const original=env.AUTH.fetch.bind(env.AUTH);
+ env.AUTH.fetch=async request=>new URL(request.url).pathname==="/api/v1/member/creator-profile"
+   ?Response.json({memberId:"another-member",profile:{handle:"cosmiccreator",createdAt:1760000000,packageProof:"1".repeat(64)}})
+   :original(request);
+ try{
+   assert.equal((await post(env,"/api/v1/packages/upload",uploadForm(sample()))).status,403);
+   assert.equal(env.MEDIA.data.size,0);
+   assert.equal((await env.DB.prepare("SELECT COUNT(*) AS n FROM anevum_package_projects").first()).n,0);
  }finally{env.DB.close();}
 });
 
