@@ -168,7 +168,7 @@ const SCRIPT = String.raw`
 `;
 
 export const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" })[c]);
-const state = x => x === "published" ? "Published" : x === "pending_review" ? "In review" : x === "ready" ? "Ready to submit" : x === "saved" ? "Saved private draft" : x === "test" ? "Private test" : x === "rejected" ? "Needs revision" : x;
+const state = x => x === "published" ? "Published" : x === "pending_review" ? "In review" : x === "ready" ? "Ready to submit" : x === "saved" ? "Saved private draft" : x === "expired" ? "Expired test" : x === "test" ? "Private test" : x === "rejected" ? "Needs revision" : x;
 const action = (project, verb, label, extra = "") =>
   '<button class="'+(verb==="delete"?"danger":"quiet")+'" data-package-action="'+verb+'" data-project="'+esc(project.id)+'" '+extra+'>'+esc(label)+'</button>';
 export function layout(title, body, runner = "") {
@@ -181,21 +181,23 @@ export function layout(title, body, runner = "") {
 }
 export function card(p,owner=false,reviewer=false){
   const hasDraft=!!p.draft_release_id,ready=hasDraft&&p.draft_status==="ready";
-  const preview=(owner||reviewer)&&hasDraft?"/play/v3/"+p.id+"?preview=1":"/play/v3/"+p.id;
+  const expired=!!(ready&&p.draft_mode==="test"&&p.draft_expires_at&&p.draft_expires_at<=Math.floor(Date.now()/1000));
+  const preview=(owner||reviewer)&&hasDraft&&!expired?"/play/v3/"+p.id+"?preview=1":"/play/v3/"+p.id;
   const summary=p.summary.length>190?p.summary.slice(0,190)+"…":p.summary;
-  const badge=ready?(p.draft_mode==="saved"?"saved":"test"):(hasDraft?p.draft_status:p.status);
+  const badge=expired?"expired":ready?(p.draft_mode==="saved"?"saved":"test"):(hasDraft?p.draft_status:p.status);
   const meta=' data-title="'+esc(p.title)+'" data-summary="'+esc(p.summary)+'" data-category="'+esc(p.category)+'"';
-  const when=ready&&p.draft_mode==="test"&&p.draft_expires_at
+  const when=expired?'<div class="build-retention">This private test has expired. Replace or discard it; your project remains.</div>':
+    ready&&p.draft_mode==="test"&&p.draft_expires_at
     ?'<div class="build-retention">Private test expires '+new Date(p.draft_expires_at*1000).toLocaleString("en-US")+'. Save it to keep it.</div>':
     ready&&p.draft_mode==="saved"?'<div class="build-retention">Saved private draft · Occupies your storage until replaced or discarded.</div>':"";
   const actions=
-    (!reviewer&&(!owner||hasDraft||p.status==="published")
-      ?'<a class="button" href="'+preview+'">'+(hasDraft&&owner?"Test build":"Play project")+'</a>':"")+
+    (!reviewer&&(!owner||(hasDraft&&!expired)||p.status==="published")
+      ?'<a class="button" href="'+preview+'">'+(expired?"Play published version":hasDraft&&owner?"Test build":"Play project")+'</a>':"")+
     (owner&&ready
-      ?(p.draft_mode!=="saved"?action(p,"save","Save draft"):"")+
-       action(p,"replace",p.draft_mode==="saved"?"Replace saved draft":"Replace test build",meta)+
+      ?(!expired&&p.draft_mode!=="saved"?action(p,"save","Save draft"):"")+
+       action(p,"replace",expired?"Replace expired build":p.draft_mode==="saved"?"Replace saved draft":"Replace test build",meta)+
        action(p,"discard","Discard build")+
-       action(p,"submit","Submit for review"):"")+
+       (!expired?action(p,"submit","Submit for review"):""):"")+
     (owner&&!hasDraft
       ?action(p,"version",p.status==="published"?"Upload update":"Revise project",meta):"")+
     (owner&&!hasDraft&&!p.live_release_id?action(p,"delete","Delete project"):"")+
