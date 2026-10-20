@@ -1,10 +1,10 @@
 {
-  "source_sha": "6f0efb77f20e6c920d880293796768b9f354f97e",
+  "source_sha": "09d3d890786b1960ed333fe73f09d163c6d7d55d",
   "founder_staff_session": false,
   "reviewer_staff_session": false,
   "creator_journey": false,
   "cross_account_identity": false,
   "verified_at": null,
   "evidence": [],
-  "status": "BLOCKED: V091 / V092 / V093 verified role approvals and member presence source locked at 6f0efb77. Founder/reviewer sessions, real creator journey and cross-account authenticated checks are not signed off. Independent role ledger migration not applied, role operations not routed, role/reputation display flags disabled. No production release authorized."
+  "status": "PENDING AUTHENTICATED ACCEPTANCE: completed consolidation source 09d3d890. Founder/reviewer sessions, the real creator publishing journey and cross-account identity checks require evidence against this source. Controlled canonical pilot configuration, package migration and reviewer scope still need their separate approval. Optional verified-role ledger migration and public role/reputation display remain separate and OFF. Automated regression evidence does not satisfy these authenticated gates."
 }

@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {verifyV091Acceptance,V091_APPLICATION_SOURCE} from '../ops/v091-release-acceptance.mjs';
+import {verifyV091Acceptance,V091_APPLICATION_SOURCE,V091_RELEASE_METADATA,reviewedV091SourceFiles,
+ verifyV091SourceScope} from '../ops/v091-release-acceptance.mjs';
 const complete=()=>({source_sha:V091_APPLICATION_SOURCE,founder_staff_session:true,
  reviewer_staff_session:true,creator_journey:true,cross_account_identity:true,
  verified_at:'2026-10-19T00:00:00Z',evidence:['https://github.com/anevum/anevum-web/actions/runs/123']});
@@ -37,11 +38,17 @@ test('guarded V091 release stays pinned to precisely the reviewed integrated fil
  assert.ok(start>=0&&end>start,'A static source-delta allowlist must be present');
  const scope=release.slice(start,end);
  const files=[...scope.matchAll(/^\s*'([^']+)'/gm)].map(match=>match[1]);
- assert.equal(files.length,79,'The candidate contains exactly 79 reviewed source files');
+ assert.equal(files.length,148,'The candidate contains exactly 148 reviewed source files');
  assert.equal(new Set(files).size,files.length,'No duplicated entries');
  assert.deepEqual(files,[...files].sort(),'Source scope must be deterministic');
  for(const required of [
   'creator-v1/web/src/components/IrenGuidedContinuance.tsx',
+  'creator-v1/web/src/pages/DiscoverPage.tsx',
+  'creator-v1/test/package-discovery-browser-v011.mjs',
+  'creator-v1/test/package-discovery-v011.test.mjs',
+  'site/alpha/v003/unified-creation-bridge-v009.mjs',
+  'site/alpha/v003/resource-service.mjs',
+  'tests/alpha-package-v004-browser.mjs',
   'creator-v1/web/src/iren-living-v088.css',
   'creator-v1/web/src/iren-guided-v080.css',
   'creator-v1/test/iren-first-contact-v092.test.mjs',
@@ -63,4 +70,50 @@ test('guarded V091 release stays pinned to precisely the reviewed integrated fil
  assert.ok(release.includes('test "$(git rev-parse HEAD)" = "$GITHUB_SHA"'));
  assert.match(release,/ANEVUM_LAUNCH_APPROVED/);
  assert.match(release,/CLOUDFLARE_ACCOUNT_ID/);
+});
+
+function sourceFixture(){
+ const release=readFileSync(new URL('../../.github/workflows/v084-continuance-production.yml',import.meta.url),'utf8');
+ return {release,recordedSource:V091_APPLICATION_SOURCE,changedFiles:reviewedV091SourceFiles(release),
+   applicationChangedFiles:[],applicationIsAncestor:true,baselineIsAncestor:true};
+}
+test('source-only scope check requires actual git paths to match every reviewed entry',()=>{
+ const input=sourceFixture();
+ assert.equal(verifyV091SourceScope(input).changedFiles,input.changedFiles.length);
+ assert.throws(()=>verifyV091SourceScope({...input,changedFiles:[...input.changedFiles,'site/alpha/unreviewed.mjs']}),/differs from git; missing:/);
+ assert.throws(()=>verifyV091SourceScope({...input,changedFiles:input.changedFiles.slice(1)}),/extra:/);
+ assert.throws(()=>verifyV091SourceScope({...input,changedFiles:[...input.changedFiles,input.changedFiles[0]]}),/unique literal paths/);
+ assert.throws(()=>verifyV091SourceScope({...input,changedFiles:[...input.changedFiles,'site/alpha/*']}),/unique literal paths/);
+});
+test('source-only validation allows exactly the five metadata differences and cannot certify authenticated acceptance',()=>{
+ const input=sourceFixture(),pending={...complete(),founder_staff_session:false};
+ assert.equal(verifyV091SourceScope({...input,applicationChangedFiles:[...V091_RELEASE_METADATA]}).applicationSource,V091_APPLICATION_SOURCE);
+ assert.throws(()=>verifyV091Acceptance(pending),/unverified/);
+ for(const file of ['creator-v1/web/src/main.tsx','site/alpha/v003/api.mjs','docs/production/unreviewed.md'])
+   assert.throws(()=>verifyV091SourceScope({...input,applicationChangedFiles:[...V091_RELEASE_METADATA,file]}),/changed after its source pin/);
+ const broadened=input.release.replace("':(exclude)creator-v1/test/v091-release-acceptance.test.mjs'",
+   "':(exclude)creator-v1/test/v091-release-acceptance.test.mjs' \\\n            ':(exclude)site/alpha/v003/api.mjs'");
+ assert.throws(()=>verifyV091SourceScope({...input,release:broadened}),/exactly the five/);
+ const bypass=input.release.replace('node creator-v1/ops/v091-release-acceptance.mjs\n',
+   'node creator-v1/ops/v091-release-acceptance.mjs --source-only\n');
+ assert.throws(()=>verifyV091SourceScope({...input,release:bypass}),/must run authenticated acceptance/);
+});
+test('source-only validation fails stale source records, ancestry and nonliteral workflow scope',()=>{
+ const input=sourceFixture();
+ assert.throws(()=>verifyV091SourceScope({...input,recordedSource:'0'.repeat(40)}),/pin is stale/);
+ for(const key of ['applicationIsAncestor','baselineIsAncestor'])
+   for(const value of [false,undefined,'true'])
+     assert.throws(()=>verifyV091SourceScope({...input,[key]:value}),/must be ancestors/);
+ const file=input.changedFiles[0];
+ assert.throws(()=>verifyV091SourceScope({...input,release:input.release.replace("'"+file+"' \\","'creator-v1/**' \\")}),/literal file paths/);
+ const missingPin=input.release.replace('git merge-base --is-ancestor '+V091_APPLICATION_SOURCE+' HEAD',
+   'git merge-base --is-ancestor '+'0'.repeat(40)+' HEAD');
+ assert.throws(()=>verifyV091SourceScope({...input,release:missingPin}),/production ancestry pin is stale/);
+});
+test('read-only CI requires full history and the actual source-scope check before public canary work',()=>{
+ const qa=readFileSync(new URL('../../.github/workflows/v091-live-readonly-qa.yml',import.meta.url),'utf8');
+ assert.match(qa,/persist-credentials: false\s+fetch-depth: 0/);
+ const gate=qa.indexOf('node creator-v1/ops/v091-release-acceptance.mjs --source-only');
+ assert.ok(gate>0&&gate<qa.indexOf('name: Verify read-only API checks'));
+ assert.doesNotMatch(qa,/CLOUDFLARE_API_TOKEN|wrangler deploy|wrangler versions upload/);
 });
