@@ -860,3 +860,118 @@ test("missing or unauthorized playable projects use correct HTTP 404 instead of 
     assert.equal(denied.status,404);
   }finally{env.DB.close();}
 });
+
+
+test("V010 package ownership is linked only to verified canonical member ID and immutable handle",async()=>{
+  const env=setup();env.PACKAGE_CREATOR_GALLERY_ENABLED="true";
+  try{
+    const created=await post(env,"/api/v1/packages/upload",uploadForm(sample()));
+    assert.equal(created.status,201,await created.clone().text());
+    const project=await created.json();
+    const mapping=await env.DB.prepare(
+      "SELECT owner_id,handle,profile_created_at,verified_at FROM anevum_package_creator_links WHERE owner_id=?"
+    ).bind("owner-id").first();
+    assert.equal(mapping.owner_id,"owner-id");
+    assert.equal(mapping.handle,"cosmiccreator");
+    assert.equal(mapping.profile_created_at,1760000000);
+    assert.ok(mapping.verified_at>0);
+    const owner=await getPage(env,"/api/v1/packages/mine");
+    assert.equal(owner.status,200);
+    const data=await owner.json();
+    assert.equal(data.projects[0].id,project.id);
+    assert.equal(data.projects[0].draft_status,"ready");
+    assert.equal(data.projects[0].play_url,null);
+    assert.equal((await getPage(env,"/api/v1/packages/mine","visitor")).status,401);
+    const before=await getPage(env,"/api/v1/packages/creators/cosmiccreator/projects","visitor");
+    assert.equal(before.status,200);
+    assert.deepEqual((await before.json()).projects,[],"Private drafts must not appear on public walls");
+  }finally{env.DB.close();}
+});
+test("V010 public creator gallery only exposes approved releases for a verified visible account",async()=>{
+ const env=setup();env.PACKAGE_CREATOR_GALLERY_ENABLED="true";
+ try{
+   const upload=await post(env,"/api/v1/packages/upload",uploadForm(sample()));
+   assert.equal(upload.status,201);
+   const {id,release_id}=await upload.json();
+   assert.equal((await post(env,"/api/v1/packages/projects/"+id+"/submit",{})).status,200);
+   assert.deepEqual((await (await getPage(env,"/api/v1/packages/creators/cosmiccreator/projects","visitor")).json()).projects,[]);
+   assert.equal((await post(env,"/api/v1/packages/projects/"+id+"/review",{action:"publish"},"staff")).status,200);
+   const res=await getPage(env,"/api/v1/packages/creators/cosmiccreator/projects","visitor");
+   assert.equal(res.status,200);
+   const gallery=await res.json();
+   assert.equal(gallery.handle,"cosmiccreator");
+   assert.equal(gallery.projects.length,1);
+   assert.deepEqual(Object.keys(gallery.projects[0]).sort(),
+     ["category","cover_url","id","play_url","published_at","summary","title","version"].sort());
+   assert.equal(gallery.projects[0].id,id);
+   assert.equal(gallery.projects[0].play_url,"/play/v3/"+id);
+   assert.equal(gallery.projects[0].cover_url,null);
+   assert.equal(gallery.projects[0].version,1);
+   const owner=await (await getPage(env,"/api/v1/packages/mine")).json();
+   assert.equal(owner.projects[0].play_url,"/play/v3/"+id);
+   assert.equal((await getPage(env,"/api/v1/packages/creators/unknownperson/projects","visitor")).status,404);
+   // A new v2 remains private; the public member wall retains only the approved v1.
+   assert.equal((await post(env,"/api/v1/packages/upload",
+     uploadForm(sample(),"Better version",id))).status,201);
+   const during=(await (await getPage(env,"/api/v1/packages/creators/cosmiccreator/projects","visitor")).json()).projects;
+   assert.equal(during.length,1);
+   assert.equal(during[0].version,1);
+   assert.equal(during[0].title,"Cosmic Racer");
+   assert.equal((await post(env,"/api/v1/packages/projects/"+id+"/moderate",
+     {action:"suspend",reason:"Safety review of published build"},"staff")).status,200);
+   assert.deepEqual((await (await getPage(env,"/api/v1/packages/creators/cosmiccreator/projects","visitor")).json()).projects,[]);
+ }finally{env.DB.close();}
+});
+test("V010 gallery is disabled by default and revalidates canonical privacy and profile provenance",async()=>{
+ const env=setup();
+ try{
+   const up=await post(env,"/api/v1/packages/upload",uploadForm(sample()));
+   assert.equal(up.status,201);
+   const p=await up.json();
+   assert.equal((await post(env,"/api/v1/packages/projects/"+p.id+"/submit",{})).status,200);
+   assert.equal((await post(env,"/api/v1/packages/projects/"+p.id+"/review",{action:"publish"},"staff")).status,200);
+   const path="/api/v1/packages/creators/cosmiccreator/projects";
+   assert.equal((await getPage(env,path,"visitor")).status,404);
+   env.PACKAGE_CREATOR_GALLERY_ENABLED="true";
+   const original=env.AUTH.fetch.bind(env.AUTH);
+   env.AUTH.fetch=async req=>{
+     if(new URL(req.url).pathname==="/api/v1/members/cosmiccreator")
+       return Response.json({error:"Private profile"},{status:404});
+     return original(req);
+   };
+   assert.equal((await getPage(env,path,"visitor")).status,404,"Profile made private hides its wall");
+   env.AUTH.fetch=async req=>{
+     if(new URL(req.url).pathname==="/api/v1/members/cosmiccreator")
+       return Response.json({profile:{handle:"cosmiccreator",joinedAt:1760000011}});
+     return original(req);
+   };
+   const reused=await getPage(env,path,"visitor");
+   assert.equal(reused.status,200);
+   assert.deepEqual((await reused.json()).projects,[],"Reassigned or re-created handle must not inherit another account's releases");
+   env.AUTH.fetch=async()=>{throw Error("Canonical service offline");};
+   assert.equal((await getPage(env,path,"visitor")).status,503,
+     "Unknown public privacy must never fall back to cached published member claims");
+ }finally{env.DB.close();}
+});
+test("V010 upload fails closed without verified canonical profile and does not write storage or D1",async()=>{
+ const env=setup();
+ const original=env.AUTH.fetch.bind(env.AUTH);
+ try{
+   for(const broken of [
+     {memberId:"another-member",profile:{handle:"cosmiccreator",createdAt:1760000000}},
+     {memberId:"owner-id",profile:null},
+     {memberId:"owner-id",profile:{handle:"FORGED_HANDLE",createdAt:1760000000}},
+     {memberId:"owner-id",profile:{handle:"cosmiccreator",createdAt:null}}
+   ]){
+     env.AUTH.fetch=req=>new URL(req.url).pathname==="/api/v1/member/creator-profile"
+       ?Response.json(broken):original(req);
+     const response=await post(env,"/api/v1/packages/upload",uploadForm(sample()));
+     assert.ok([403,409].includes(response.status),await response.clone().text());
+     assert.equal(env.MEDIA.data.size,0);
+     assert.equal((await env.DB.prepare("SELECT COUNT(*) AS n FROM anevum_package_projects").first()).n,0);
+   }
+   env.AUTH.fetch=req=>new URL(req.url).pathname==="/api/v1/member/creator-profile"
+     ?Response.json({error:"Canonical service down"},{status:503}):original(req);
+   assert.equal((await post(env,"/api/v1/packages/upload",uploadForm(sample()))).status,503);
+ }finally{env.DB.close();}
+});
