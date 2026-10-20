@@ -98,7 +98,7 @@ test("same-origin session goes only through named Cloudflare service binding; sy
  assert.equal(r.headers.get("x-anevum-package-namespace"),"canonical-v009");
 });
 test("POST rejects missing/wrong origin and explicitly cross-site fetch metadata",async()=>{
- const {env,calls}=makeEnv(response('{"id":"new"}',"application/json",201));
+ const {env,calls}=makeEnv(response(JSON.stringify({id:UUID,release_id:UUID,status:"ready",play_url:"/play/v3/"+UUID+"?preview=1"}),"application/json",201));
  for(const opts of [{origin:"https://evil.invalid"},{origin:ORIGIN,"sec-fetch-site":"cross-site"},
    {origin:ORIGIN,"sec-fetch-site":"same-site"}]){
    const r=await interceptPackageNamespace(post("/upload/v3/api/v1/packages/upload","{}",opts),env);
