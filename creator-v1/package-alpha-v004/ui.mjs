@@ -170,6 +170,13 @@ const SCRIPT = String.raw`
    const id=btn.dataset.project,action=btn.dataset.packageAction;
    if(!id)return;
    if(action==="version"||action==="replace"){chooseProject(btn,action==="replace");return;}
+   if(action==="mobile-preview"||action==="desktop-preview"){
+     const viewport=q("game-viewport");if(!viewport)return;
+     viewport.classList.toggle("viewport-mobile",action==="mobile-preview");
+     const mode=q("preview-mode-status");
+     if(mode)mode.textContent=action==="mobile-preview"?"Phone-sized viewport (layout check only)":"Desktop viewport";
+     return;
+   }
    if(action==="fullscreen"){
      const v=q("game-viewport");if(v?.requestFullscreen)await v.requestFullscreen().catch(()=>{});
      return;
@@ -309,10 +316,12 @@ export function playerScreen(p, release, runnerURL, isPreview, canEdit, isStaff)
   const html='<div class="ey">ANEVUM / '+esc(p.category.toUpperCase())+' / BUILD '+release.version+'</div>'+
     '<div class="player-head"><div><h1>'+esc(p.title)+'</h1><p class="lead">'+esc(p.summary)+'</p><span class="chip '+esc(release.status)+'">'+esc(state(release.status))+(isPreview?' · Private preview':'')+'</span></div><div class="actions"><a class="button quiet" href="/upload/v3">Creator space</a><a class="button quiet" href="/packages">All projects</a></div></div>'+
     (runnerURL?'<section class="viewport" id="game-viewport" aria-label="Interactive experience"><iframe id="game-frame" title="'+esc(p.title)+'" src="'+esc(runnerURL)+'" sandbox="allow-scripts allow-pointer-lock" allow="fullscreen; gamepad" referrerpolicy="no-referrer" loading="eager"></iframe></section>':'<div class="notice">Playable runtime is not configured on this environment.</div>')+
+    '<div class="preview-mode" aria-label="Preview viewport"><button type="button" data-package-action="mobile-preview" data-project="'+esc(p.id)+'">Phone view</button><button type="button" data-package-action="desktop-preview" data-project="'+esc(p.id)+'">Desktop view</button><span id="preview-mode-status" class="subtle-note">Desktop viewport</span></div>'+
     '<div class="player-controls">'+action(p,"restart","Restart")+action(p,"fullscreen","Fullscreen")+actions+'</div>'+
     '<p id="activity" class="status" role="status" aria-live="polite"></p>'+
     '<div class="details"><div class="ey">RELEASE DETAILS</div><p>Package v'+release.version+' · '+release.file_count+' assets · '+(release.expanded_bytes/1048576).toFixed(1)+' MiB installed</p>'+
     (isPreview?'<p class="tip">This is a private, short-lived preview link. Refresh this page if it expires. Your build is not public until a reviewer approves it.</p>':'')+
+    '<p>Phone view simulates viewport width only. Real iOS/Android testing and staff approval are still required.</p>'+
     '<p>Problems loading? Verify your ZIP contains relative local assets and an <code>index.html</code> entry point. Remote APIs are disabled for browser builds.</p></div>';
   return layout(p.title,html,runnerURL?new URL(runnerURL).origin:"");
 }
