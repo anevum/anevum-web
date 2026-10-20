@@ -38,9 +38,12 @@ function setup(){
  }};
  const objects=new Map();
  const MEDIA={
-  failNext:false,
+  failNext:false,failAtPut:0,putCount:0,
   async put(key,data,opts={}){
-   if(this.failNext){this.failNext=false;throw new Error("simulated R2 write failure");}
+   this.putCount++;
+   if(this.failNext||this.failAtPut===this.putCount){
+     this.failNext=false;throw new Error("simulated R2 write failure");
+   }
    objects.set(key,{bytes:Uint8Array.from(data),customMetadata:opts.customMetadata||{}});
   },
   async head(key){
@@ -127,13 +130,15 @@ test("upload, duplicate no-op, atomic replace, saved draft and owner discard",as
   const later=await cleanupPackageResources(s.env,muchLater);
   assert.equal(later.expired,0,JSON.stringify(later));
   assert.equal(s.objects.size,2,"saved draft must not automatically expire");
-  s.MEDIA.failNext=true;
+  s.MEDIA.failAtPut=s.MEDIA.putCount+2;
   const failed=await result(await s.upload(HTML("third"),initial.id,true));
   assert.equal(failed.httpStatus,503,JSON.stringify(failed));
   assert.equal(s.get("SELECT draft_release_id FROM anevum_package_projects WHERE id=?",initial.id)[0].draft_release_id,replacement.release_id);
   assert.equal(s.get("SELECT COUNT(*) count FROM anevum_package_upload_reservations")[0].count,1);
+  assert.equal(s.objects.size,3,"interrupted upload may leave one orphaned source object");
   await cleanupPackageResources(s.env,Math.floor(Date.now()/1000)+1800);
   assert.equal(s.get("SELECT COUNT(*) count FROM anevum_package_upload_reservations")[0].count,0);
+  assert.equal(s.objects.size,2,"orphan erasure restores physical capacity without removing saved build");
   s.env.PACKAGE_UPLOADS_ENABLED="false";
   const paused=await result(await s.upload(HTML("paused"),initial.id,true));
   assert.equal(paused.httpStatus,403,"operators can halt new uploads safely");
