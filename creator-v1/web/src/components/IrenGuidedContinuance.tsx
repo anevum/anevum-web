@@ -184,6 +184,10 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   const dialogRef=useRef<HTMLDivElement>(null);
   const dockRef=useRef<HTMLButtonElement>(null);
   const companionRef=useRef<HTMLDivElement>(null);
+  const closePanelRef=useRef<HTMLButtonElement>(null);
+  // Only explicit user actions move keyboard focus into the panel.
+  // The unsolicited first visit must never steal focus from page content.
+  const focusRequested=useRef(false);
 
   useEffect(()=>{
     setTourIndex(null);
@@ -206,21 +210,51 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     if(panelOpen&&tourIndex===null)setMood("curious");
   },[pathname,memberId]);
 
-  // One respectful, nonmodal first-contact greeting on the public homepage.
-  // Deep-linked projects, registration, staff routes and existing tours are
-  // not interrupted. Opening IREN manually takes precedence over the timer.
+  // First contact is a single invitation, not a page-blocking modal.
+  // Background tabs get the same chance when they become visible. Never
+  // consume the invitation if another dialog is active or a visitor is editing.
   useEffect(()=>{
     if(pathname!=="/"||hidden||panelOpen||tourIndex!==null||firstContactSeen())return;
-    const timer=window.setTimeout(()=>{
-      if(document.visibilityState!=="visible"||firstContactSeen()||document.querySelector("dialog[open]"))return;
-      rememberFirstContact();
-      setWelcomeOpen(true);
-      setActiveView("help");
-      setMood("greet");
-      setPanelOpen(true);
-    },1100);
-    return()=>window.clearTimeout(timer);
+    let timer:number|undefined;
+    const editing=()=>{
+      const active=document.activeElement;
+      return active instanceof HTMLElement&&
+        Boolean(active.matches('input,textarea,select,[contenteditable],[role="textbox"]')||
+          active.closest('[contenteditable="true"]'));
+    };
+    const schedule=()=>{
+      if(timer!==undefined)window.clearTimeout(timer);
+      timer=undefined;
+      if(document.visibilityState!=="visible"||firstContactSeen())return;
+      timer=window.setTimeout(()=>{
+        if(document.visibilityState!=="visible"||firstContactSeen()||
+           document.querySelector("dialog[open]")||
+           document.querySelector('[role="dialog"][aria-modal="true"]')||editing())return;
+        rememberFirstContact();
+        setWelcomeOpen(true);
+        setActiveView("help");
+        setMood("greet");
+        setPanelOpen(true);
+      },1100);
+    };
+    schedule();
+    document.addEventListener("visibilitychange",schedule);
+    // An editor that was focused during the first timer can leave normally:
+    // defer the greeting until after editing rather than popping over a form.
+    document.addEventListener("focusout",schedule,true);
+    return()=>{
+      if(timer!==undefined)window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange",schedule);
+      document.removeEventListener("focusout",schedule,true);
+    };
   },[pathname,hidden,panelOpen,tourIndex]);
+
+  useEffect(()=>{
+    if(panelOpen&&focusRequested.current){
+      focusRequested.current=false;
+      closePanelRef.current?.focus({preventScroll:true});
+    }
+  },[panelOpen]);
 
   useEffect(()=>{
     if(welcomeOpen&&pathname!=="/"){
@@ -272,7 +306,10 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
       setTourIndex(null);
       setActiveView("help");
       setMood("greet");
+      focusRequested.current=true;
       setPanelOpen(true);
+      // Repeated help requests should focus the existing open panel too.
+      window.requestAnimationFrame(()=>closePanelRef.current?.focus({preventScroll:true}));
     };
     const onStart=()=>start();
     window.addEventListener("anevum:member-created",onCreated);
@@ -467,6 +504,10 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     setWelcomeOpen(false);
     setPanelOpen(false);
   };
+  const closePanel=()=>{
+    closeWelcome();
+    window.requestAnimationFrame(()=>dockRef.current?.focus({preventScroll:true}));
+  };
   const currentTopic=topics.find(topic=>topic.id===activeTopic)||topics[0];
   const isMobile=viewport.width<=650;
   const spriteSize=panelOpen?(isMobile?130:164):54;
@@ -645,10 +686,10 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
         <header className="ir80-help-head">
           <span className="ir80-code">IREN / CONTINUANCE COMPANION
             <small className="ir88-station">{station.code}</small></span>
-          <button type="button" className="ir80-icon-button" aria-label="Close IREN" onClick={()=>{setWelcomeOpen(false);setPanelOpen(false)}}><Icon name="close" size={17}/></button>
+          <button type="button" ref={closePanelRef} className="ir80-icon-button" aria-label="Close IREN" onClick={closePanel}><Icon name="close" size={17}/></button>
         </header>
         {welcomeOpen?<div className="ir92-first-contact" aria-label="First visit guidance">
-          <p className="ir92-voice">Welcome to ANEVUM. I'm IREN, your Continuance Institute field assistant.</p>
+          <p className="ir92-voice" role="status" aria-live="polite">Welcome to ANEVUM. I'm IREN, your Continuance Institute field assistant.</p>
           <h2>What brings you here?</h2>
           <p className="ir92-intro">You can explore without an account. Choose a starting point, or I'll show you around.</p>
           <div className="ir92-intent-grid" aria-label="Choose your first destination">
@@ -657,7 +698,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
             <Link to="/community" onClick={closeWelcome}><span>03 / COMMONS</span><strong>Meet the community</strong></Link>
             <button type="button" onClick={()=>start(true)}><span>04 / GUIDANCE</span><strong>Show me around</strong></button>
           </div>
-          <button type="button" className="ir92-not-now" onClick={closeWelcome}>Not now</button>
+          <button type="button" className="ir92-not-now" onClick={closePanel}>Not now</button>
         </div>:<>
         <div className="ir87-tabs" role="tablist" aria-label="IREN tools">
           <button id="ir87-help-tab" type="button" role="tab" aria-selected={activeView==="help"}
@@ -724,6 +765,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
           setWelcomeOpen(false);
           setWakeCycle(c=>c+1);
           setMood(panelOpen?"idle":"greet");
+          if(!panelOpen)focusRequested.current=true;
           setPanelOpen(open=>!open);
         }}>
         <IrenLivingCanvas mood={mood} expanded={panelOpen} paused={motionPaused}
