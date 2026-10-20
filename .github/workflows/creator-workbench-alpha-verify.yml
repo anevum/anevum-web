@@ -36,7 +36,7 @@ jobs:
       - name: Verify private access, persistence, transport and retained Studio
         run: |
           node --check creator-v1/canonical-auth/worker.mjs
-          node --test creator-v1/test/workbench-alpha.test.mjs creator-v1/test/workbench-alpha-transport.test.mjs
+          node --test creator-v1/workbench-alpha/test.mjs creator-v1/test/workbench-alpha.test.mjs creator-v1/test/workbench-alpha-transport.test.mjs
           node --test creator-v1/test/canonical-studio-v043.test.mjs creator-v1/test/canonical-auth-worker-v013.test.mjs
       - name: Typecheck canonical React application
         run: npm run check:creator-v1-web
