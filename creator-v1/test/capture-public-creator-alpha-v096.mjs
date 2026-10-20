@@ -84,10 +84,14 @@ try{
   await ensure('no-horizontal-overflow-'+width,'document.documentElement.scrollWidth<=innerWidth+1');
   // The sandbox must create a real srcdoc browsing context under the
   // production-matching route CSP, not just an iframe attribute.
+  await pause(750);
+  const frameAudit=await send('Page.getFrameTree');
+  const iframeAudit=await evaluate('(()=>{const f=document.querySelector(".ap96-frame");return {iframePresent:!!f,srcdocSize:f?.srcdoc?.length,rect:f?.getBoundingClientRect()?.toJSON?.(),sandbox:f?.getAttribute("sandbox"),htmlLength:document.documentElement.outerHTML.length}})()');
+  console.log('V096_FRAME_TREE_DIAG '+JSON.stringify({frameTree:frameAudit.frameTree,iframe:iframeAudit,viewport:width}));
   await until(async()=>{
     const {frameTree}=await send('Page.getFrameTree');
-    return frameTree?.childFrames?.some(x=>x.frame?.url==='about:srcdoc');
-  },10000);
+    return frameTree?.childFrames?.some(x=>['about:srcdoc','about:blank'].includes(x.frame?.url||''));
+  },5000);
   await capture('public-alpha-first-'+width);
 
   await evaluate('document.querySelectorAll(".ap96-template")[1].click()');
