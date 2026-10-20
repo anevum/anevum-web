@@ -1,10 +1,10 @@
 {
-  "source_sha": "09d3d890786b1960ed333fe73f09d163c6d7d55d",
+  "source_sha": "0116b2eaa63cc1df0530b791a7e30637e4ab5b02",
   "founder_staff_session": false,
   "reviewer_staff_session": false,
   "creator_journey": false,
   "cross_account_identity": false,
   "verified_at": null,
   "evidence": [],
-  "status": "PENDING AUTHENTICATED ACCEPTANCE: completed consolidation source 09d3d890. Founder/reviewer sessions, the real creator publishing journey and cross-account identity checks require evidence against this source. Controlled canonical pilot configuration, package migration and reviewer scope still need their separate approval. Optional verified-role ledger migration and public role/reputation display remain separate and OFF. Automated regression evidence does not satisfy these authenticated gates."
+  "status": "PENDING FINAL-SOURCE AUTHENTICATED ACCEPTANCE: the controlled V003 pilot, package migration, service/proof bindings and reviewer scope were approved on 2026-10-20. Package migration and identity preflight are complete; the real founder preflight and retained staff Observatory session passed. The refreshed application 0116b2ea includes a configured internal issuer-version pin and an upload-only gallery-ON candidate workflow. Full founder/reviewer, publishing and cross-account checks still require genuine evidence on the activated candidate. Optional verified-role ledger migration and public role/reputation display remain separate and OFF. No automated result certifies these gates."
 }

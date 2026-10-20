@@ -38,10 +38,13 @@ test('guarded V091 release stays pinned to precisely the reviewed integrated fil
  assert.ok(start>=0&&end>start,'A static source-delta allowlist must be present');
  const scope=release.slice(start,end);
  const files=[...scope.matchAll(/^\s*'([^']+)'/gm)].map(match=>match[1]);
- assert.equal(files.length,148,'The candidate contains exactly 148 reviewed source files');
+ assert.equal(files.length,151,'The candidate contains exactly 151 reviewed source files');
  assert.equal(new Set(files).size,files.length,'No duplicated entries');
  assert.deepEqual(files,[...files].sort(),'Source scope must be deterministic');
  for(const required of [
+  '.github/workflows/v091-controlled-pilot-upload.yml',
+  'creator-v1/ops/v091-controlled-pilot-upload.mjs',
+  'creator-v1/test/v091-controlled-pilot-upload.test.mjs',
   'creator-v1/web/src/components/IrenGuidedContinuance.tsx',
   'creator-v1/web/src/pages/DiscoverPage.tsx',
   'creator-v1/test/package-discovery-browser-v011.mjs',
