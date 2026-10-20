@@ -159,6 +159,7 @@ button:hover,.button:hover{border-color:#9aceda}button:active,.button:active{tra
 .av-release-art{display:grid;grid-template-columns:minmax(0,160px) minmax(0,1fr);gap:13px;padding:12px;border:1px solid #324d6a;border-radius:10px;background:#0a1829;margin:14px 0}
 .av-release-art img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:6px;border:1px solid #496b86}
 .av-release-art p{font-size:12px;margin:5px 0;color:#abc3d9;line-height:1.55}
+@media(max-width:500px){.project .actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.project .actions>*{min-width:0;width:100%;min-height:48px;flex:none;white-space:normal;text-align:center;line-height:1.4;padding:10px}.project .actions>:only-child,.project .actions>:last-child:nth-child(odd){grid-column:1/-1}}
 @media(max-width:500px){.av-cover-select{grid-template-columns:1fr;gap:10px}.av-cover-preview{max-height:150px}.av-cover-copy p{margin:5px 0}.av-release-art{grid-template-columns:110px minmax(0,1fr)}}
 
 @media(prefers-reduced-motion:reduce){.av-orbit,.av-pulse-ring{animation:none!important}*,*:before,*:after{scroll-behavior:auto!important}}
