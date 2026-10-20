@@ -4,6 +4,7 @@ import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 import {parse} from '@babel/parser';
 import {memberReputationMap,publicReputationProjection} from '../canonical-auth/member-reputation.mjs';
+import {memberVerifiedRoleMap} from '../canonical-auth/member-verified-roles.mjs';
 import {hydratedPublicMemberCard} from '../canonical-auth/public-member-card.mjs';
 import {renderEvolutionCardArt} from '../canonical-auth/evolution-card-art.mjs';
 
@@ -55,8 +56,9 @@ test('V081 signals score only independently published evidence, excludes spam an
  assert.equal(alpha.reputation.tier,'signal');
  assert.equal(alpha.reputation.nextAt,160);
  assert.equal(alpha.earnedAura,'signal');
- assert.equal(alpha.role,'founder','highest independently verified role wins');
- assert.equal(result.get('beta').role,undefined,'revoked roles do not appear');
+ const roles=await memberVerifiedRoleMap(db,['alpha','beta']);
+ assert.equal(roles.get('alpha'),'founder','highest independently verified role wins');
+ assert.equal(roles.has('beta'),false,'revoked roles do not appear');
  assert.ok(!JSON.stringify([...result.values()]).includes('user_id'));
  raw.exec("UPDATE member_forum_threads SET status='hidden' WHERE id='t3'");
  assert.equal((await memberReputationMap(db,['alpha'])).get('alpha').reputation.score,53,
@@ -70,19 +72,21 @@ test('V081 respects private stats without leaking scores or assigning privileges
  const {raw,db}=makeFixture();t.after(()=>raw.close());
  const hidden={handle:'alpha',display_name:'Alpha',avatar:1,member_identity_key:'alpha',
   show_stats:0,member_xp:15000,featured_json:'[]',earned_awards:''};
- const card=await hydratedPublicMemberCard(db,hidden,false,true);
+ const card=await hydratedPublicMemberCard(db,hidden,false,true,true);
  assert.equal(card.level,null);
  assert.equal(card.role,'founder');
  assert.equal(Object.hasOwn(card,'reputation'),false,'stats visibility hides activity');
  assert.equal(Object.hasOwn(card,'earnedAura'),false);
  assert.equal(Object.hasOwn(card,'user_id'),false);
  const enabled={...hidden,show_stats:1};
- const visible=await hydratedPublicMemberCard(db,enabled,false,true);
+ const visible=await hydratedPublicMemberCard(db,enabled,false,true,true);
  assert.equal(visible.reputation.score,72);
  assert.equal(visible.level,15);
  assert.equal((await hydratedPublicMemberCard(db,enabled,false,false)).reputation,undefined,
   'feature flag leaves old public payload unchanged');
- assert.deepEqual(publicReputationProjection({role:'moderator',reputation:{score:1}},0),{role:'moderator'});
+ assert.deepEqual(publicReputationProjection({reputation:{score:1}},0),{});
+ assert.equal((await hydratedPublicMemberCard(db,hidden,false,false,true)).role,'founder',
+  'verified role display does not require reputation');
 });
 
 test('V081 fails closed without activity tables or role migration',async t=>{
