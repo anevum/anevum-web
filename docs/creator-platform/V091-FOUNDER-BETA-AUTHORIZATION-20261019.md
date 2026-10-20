@@ -20,3 +20,17 @@ Authenticated acceptance remains explicitly pending; production browser testing 
 Deploy only the tested V091 application source through the same guarded Cloudflare production script, preserving live settings, service bindings, secrets, routes, progression, collectibles, published projects, D1/R2 content and authentication. Stop if current production Worker version differs from the recorded baseline. Require successful automatic browser and API smoke checks and roll back the main Worker version if the release fails.
 
 V092 Observatory polish and newer V092 IREN updates are out of scope for this release.
+
+## Verified production outcome
+
+- Deployment: SUCCESS, GitHub Actions [run 39344724852](https://github.com/anevum/anevum-web/actions/runs/39344724852), completed 2026-10-20 UTC (2026-10-19 America/New_York).
+- Release workflow commit: `ff7a8233094874830348910bff93e0fe45015501`.
+- Verified Cloudflare primary Worker: `anevum-apex-prelaunch-gateway`.
+- Active new Worker version: `31486866-9739-4521-9f2a-fc0d9b166a4f` at 100% traffic.
+- Previous Worker: `8e4932d5-467d-418b-be10-2098053f375a`, retained for rollback.
+- Independent Cloudflare read: 24 Worker bindings and 36 zone routes; all GET requests successful.
+- Production JavaScript matched exact approved V091 build; IREN 3D asset, CSS, homepage, public profile/reward privacy, navigation and member authentication smoke passed in the release workflow.
+- All five staff identity Workers passed source-and-binding verification in read-only mode (no redeploy).
+- No database migrations, member XP resets, staff grant modifications, reward grants or payment changes were requested or performed by this workflow.
+- Staff Observatory V092 visual changes and newer V091/IREN development-branch commits remain unreleased.
+- **Outstanding real-account verification remains**: owner/reviewer staff browsing, creator upload, review, publish, discover, play, interact, and cross-account interactions. These were not relabeled as passed.
