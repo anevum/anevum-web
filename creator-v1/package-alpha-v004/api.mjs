@@ -136,6 +136,26 @@ async function prepareFile(file) {
   }
   return {bytes,entries,expandedBytes,extractor,compatibility:detectCompatibility(entries,{sourceName:file.name})};
 }
+async function compatibilityProbe(req,env,u){
+  if(!uploadOpen(env,u.id))return fail(403,"Creator compatibility checks are paused or unavailable");
+  if(!await edgeAdmission(env,"PACKAGE_PREFLIGHT_RATE",u.id))return fail(429,"Compatibility checks are temporarily rate-limited");
+  const body=await readBoundedMultipart(req);
+  const file=body.get("file");
+  if(!file||typeof file.name!=="string"||typeof file.arrayBuffer!=="function"||
+     !/^[^\\/\\x00-\\x1f]{3,160}$/.test(file.name)||file.name.includes("..")||
+     !/\\.(zip|html)$/i.test(file.name)||file.size<1||file.size>POLICY.maxArchiveBytes)
+    return fail(422,"Choose a ZIP or HTML file below 20 MiB");
+  const bytes=new Uint8Array(await file.arrayBuffer());
+  let entries;
+  if(/\\.zip$/i.test(file.name)){
+    entries=inspectZip(bytes,{metadataOnly:true}).entries;
+  }else{
+    validateHtml(bytes);
+    entries=[{path:"index.html",unpacked:bytes.length,mime:"text/html"}];
+  }
+  const report=detectCompatibility(entries,{sourceName:file.name});
+  return json({report,stored:false,executed:false,authoritative:false});
+}
 async function preflight(req,env,u){
   if(!uploadOpen(env,u.id))return fail(403,"Creator uploads are paused or unavailable for this member");
   if(!await edgeAdmission(env,"PACKAGE_PREFLIGHT_RATE",u.id))return fail(429,"Preflight is temporarily rate-limited. Try again shortly.");
@@ -375,7 +395,8 @@ async function api(req,env,path,ctx){
   if(req.method!=="POST"||!csrf(req))return fail(403,"Origin or method not authorized");
   const u=await member(req,env);
   if(!u)return fail(401,"A verified ANEVUM session is required");
-  if(path==="/api/v1/packages/preflight")return preflight(req,env,u);
+  if(path==="/api/v1/packages/compatibility")return compatibilityProbe(req,env,u);
+   if(path==="/api/v1/packages/preflight")return preflight(req,env,u);
   if(path==="/api/v1/packages/upload")return upload(req,env,u);
   if(!await resourcePolicyReady(env.DB))return fail(503,"Creator storage setup is incomplete");
   const m=path.match(/^\/api\/v1\/packages\/projects\/([0-9a-f-]{36})\/(submit|review|delete|save|discard)$/);
