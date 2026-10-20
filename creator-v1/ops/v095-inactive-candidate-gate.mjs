@@ -53,6 +53,7 @@ export function validateUploadedCandidate({before,after,candidate,baseline=manif
   assert.deepEqual(signatures(candidate.resources.bindings),signatures(before.pilot.resources.bindings),'Candidate bindings drift');
   const vars=assertPinnedResources(candidate.resources,baseline);
   assert.deepEqual(vars,plainVars(before.pilot.resources.bindings),'Candidate plain-text variables diverge from approved 0% pilot');
+  assert.match(candidate.resources.script?.etag||'',/^[a-f0-9]{64}$/,'Candidate script etag missing or malformed');
   assert.notEqual(candidate.resources.script?.etag,before.live.resources.script?.etag,'Candidate script identical to old active Worker');
   assert.notEqual(candidate.resources.script?.etag,before.pilot.resources.script?.etag,'Candidate script identical to old inactive Worker');
   assert.deepEqual(candidate.resources.script_runtime,before.pilot.resources.script_runtime,'Candidate runtime drift');
