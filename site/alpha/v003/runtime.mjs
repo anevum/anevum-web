@@ -45,7 +45,7 @@ export default {
       }catch{}
       const storage=!!env.MEDIA?.get&&!!env.MEDIA?.head;
       const ready=schemaReady&&storage;
-      return Response.json({ok:ready,runtime:"package-v003",schemaReady,storage,
+      return Response.json({ok:ready,runtime:"package-v003",stageContract:"uplink-v007-readiness",schemaReady,storage,
         independentOrigin:true,cookieless:true},{
         status:ready?200:503,headers:{...common,"cache-control":"no-store"}
       });
