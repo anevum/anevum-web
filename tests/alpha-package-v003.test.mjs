@@ -722,3 +722,33 @@ test("missing R2 binding halts upload and communicates unavailable storage",asyn
     assert.equal(media.data.size,0);
   }finally{env.MEDIA=media;env.DB.close();}
 });
+
+
+test("isolated runtime CSP permits only pinned staging parent and defaults to production-only",async()=>{
+  const env=setup();
+  try{
+    const created=await (await post(env,"/api/v1/packages/upload",uploadForm(sample()))).json();
+    const token=await mintPreview(env.DB,created.release_id,"owner-id");
+    const originalHost=env.RUNTIME_HOST;
+    const stageRuntime="anevum-package-alpha-v003-runtime.devonakins.workers.dev";
+    const stageControl="anevum-package-alpha-v003-control.devonakins.workers.dev";
+    env.RUNTIME_HOST=stageRuntime;
+    const src="https://"+stageRuntime+"/p/"+created.release_id+"/"+token+"/index.html";
+    const productionOnly=await runtime.fetch(new Request(src),env);
+    assert.equal(productionOnly.status,200);
+    assert.match(productionOnly.headers.get("content-security-policy"),/frame-ancestors https:\/\/anevum\.com$/);
+    env.STAGING_CONTROL_HOST="evil-stage.example";
+    const untrusted=await runtime.fetch(new Request(src),env);
+    assert.equal(untrusted.status,200);
+    assert.doesNotMatch(untrusted.headers.get("content-security-policy"),/evil-stage/);
+    env.STAGING_CONTROL_HOST=stageControl;
+    const accepted=await runtime.fetch(new Request(src),env);
+    assert.equal(accepted.status,200);
+    assert.match(accepted.headers.get("content-security-policy"),
+      /frame-ancestors https:\/\/anevum\.com https:\/\/anevum-package-alpha-v003-control\.devonakins\.workers\.dev$/);
+    env.RUNTIME_HOST=originalHost;
+    const notStage=await runtime.fetch(new Request("https://"+originalHost+"/p/"+created.release_id+"/"+token+"/index.html"),env);
+    assert.equal(notStage.status,200);
+    assert.match(notStage.headers.get("content-security-policy"),/frame-ancestors https:\/\/anevum\.com$/);
+  }finally{env.DB.close();}
+});
