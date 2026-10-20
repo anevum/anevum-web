@@ -375,7 +375,7 @@ export function card(p,owner=false,reviewer=false){
     (p.review_reason?'<p class="status bad">Reviewer note: '+esc(p.review_reason)+'</p>':"")+
     '<div class="actions">'+controls+'</div></article>';
 }
-export function uploadScreen(projects,loggedIn,pilot,updateId){
+export function uploadScreen(projects,loggedIn,pilot,updateId,serviceReady=true){
   const selected=projects.find(p=>p.id===updateId)||null;
   const initialTitle=selected?esc(selected.title):"";
   const initialSummary=selected?esc(selected.summary):"";
@@ -394,6 +394,8 @@ export function uploadScreen(projects,loggedIn,pilot,updateId){
     ?'<div class="notice"><strong>Sign in to upload.</strong><p>Use your existing ANEVUM account. Projects stay private until approved.</p><div class="actions"><a class="button primary" href="/join">Sign in</a></div></div>'
     :!pilot
       ?'<div class="notice"><strong>Uploading is currently restricted to pilot creators.</strong><p>You can explore published projects while the independent player and security review are completed. No additional account is needed.</p><div class="actions"><a class="button" href="/discover">Discover</a></div></div>'
+      :!serviceReady
+        ?'<div class="notice" role="status"><strong>New uploads are paused.</strong><p>The isolated package service is preparing its storage and release checks. Your existing approved creations remain unchanged. No files are being accepted until the service is ready.</p><div class="actions"><a class="button" href="/discover">Discover</a><a class="button quiet" href="/help/packages">Supported formats</a></div></div>'
       :'<form id="publish-form" enctype="multipart/form-data"><input type="hidden" name="project_id" id="existing-project" value="'+esc(updateId)+'">'+
         '<div class="av-block-hd"><div class="ey" id="project-version">'+(update?"RELEASE REVISION":"NEW TRANSMISSION")+'</div>'+
         '<span class="av-section-no" aria-hidden="true">01</span></div>'+
