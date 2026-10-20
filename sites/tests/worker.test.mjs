@@ -67,22 +67,23 @@ function fakeDb() {
 
 test("public studio, curated sample and valid health return successfully", async () => {
   const env = { SITES_DB: fakeDb() };
-  for (const url of ["/", "/health", "/privacy", "/thanks", "/assets/sites.css", "/assets/studio-v2.css", "/assets/studio-v2.js"]) {
+  for (const url of ["/", "/health", "/privacy", "/thanks", "/assets/sites.css", "/assets/sites-v005.css", "/assets/sites-v005.js", "/assets/sites-v005-immersive.js", "/site.webmanifest", "/sw.js"]) {
     const r = await studio.fetch(new Request(HOST_PUBLIC + url), env);
     assert.equal(r.status, 200, url);
     assert.match(r.headers.get("X-Content-Type-Options"), /nosniff/);
   }
   const landing = await (await studio.fetch(new Request(HOST_PUBLIC), env)).text();
   assert.match(landing, /ANEVUM/);
-  assert.match(landing, /\/ SITES/);
+  assert.match(landing, /ANEVUM.*?SITES/s);
   assert.match(landing, /\$49/);
-  assert.match(landing, /better first impression/i);
-  assert.match(landing, /Unofficial · not commissioned/);
-  assert.match(landing, /id="sf-inquiry"/);
+  assert.match(landing, /THE INTERNET/);
+  assert.match(landing, /uncommissioned, independent informational concept/i);
+  assert.match(landing, /id="site-inquiry"/);
   assert.match(landing, /action="\/api\/inquiries"/);
   assert.match(landing, /name="consent"/);
   assert.match(landing, /<meta name="robots" content="index,follow">/);
-  assert.match(landing, /data-switch="service"/);
+  assert.match(landing, /sites-v005-immersive.js/);
+  assert.match(landing, /id="experience-react-root"/);
   const sample = await studio.fetch(new Request(HOST_PUBLIC + "/preview/tobacco-vapor-time"), env);
   assert.equal(sample.status, 302);
   assert.equal(sample.headers.get("Location"), "https://preview.anevum.com/tobacco-vapor-time/");
@@ -206,20 +207,26 @@ test("Smokebreak staging stays private and never appears on public Worker", asyn
   assert.doesNotMatch(await guestPreview.text(), /3316 Canoe Creek/);
 });
 
-test("landing page isolates styling, avoids unconsented storage and honors motion preferences", async () => {
+test("V005.1 styling, shader and inquiry boundaries honor accessibility and privacy", async () => {
   const env={SITES_DB:fakeDb()};
-  const response = await studio.fetch(new Request(HOST_PUBLIC + "/assets/studio-v2.css"), env);
+  const response=await studio.fetch(new Request(HOST_PUBLIC+"/assets/sites-v005.css"),env);
   assert.equal(response.status,200);
   const css=await response.text();
-  assert.match(css,/\.studio-v2/);
+  assert.match(css,/Full-bleed Continuance Vault/);
+  assert.match(css,/cinematic-fallback/);
   assert.match(css,/prefers-reduced-motion/);
-  assert.match(css,/sf-scene\[hidden\]/);
-  const script=await (await studio.fetch(new Request(HOST_PUBLIC + "/assets/studio-v2.js"),env)).text();
-  assert.match(script,/data-switch/);
-  assert.doesNotMatch(script,/localStorage|sessionStorage|fetch\(/);
+  const script=await (await studio.fetch(new Request(HOST_PUBLIC+"/assets/sites-v005.js"),env)).text();
+  assert.match(script,/new URLSearchParams/);
+  assert.doesNotMatch(script,/localStorage|sessionStorage/);
+  const immersive=await (await studio.fetch(new Request(HOST_PUBLIC+"/assets/sites-v005-immersive.js"),env)).text();
+  assert.match(immersive,/getContext\('webgl2'/);
+  assert.match(immersive,/ambientOcclusion|softShadow/);
   const home=await (await studio.fetch(new Request(HOST_PUBLIC),env)).text();
-  assert.match(home,/stored|saved/i);
+  assert.match(home,/name="consent"/);
   assert.match(home,/<form[^>]+action="\/api\/inquiries"/);
+  assert.match(home,/No mandatory subscription/);
+  const privateRoute=await studio.fetch(new Request(HOST_PUBLIC+"/preview/smokebreak-st-cloud"),env);
+  assert.equal(privateRoute.status,404);
 });
 
 test("public inquiry endpoint is consent-gated, form encoded and same-origin", async () => {
