@@ -62,14 +62,22 @@ function htmlCanonicalLinks(body){
     .replaceAll('href="/packages"','href="/upload/v3/library"')
     .replaceAll('href="/staff/packages"','href="/upload/v3/review"');
 }
-function mappedPublicData(data){
-  if(!data||typeof data!=="object"||Array.isArray(data)||!Array.isArray(data.projects))return null;
-  return {...data,projects:data.projects.map(p=>{
-    if(!p||typeof p!=="object"||Array.isArray(p))return p;
-    const url=p.cover_url;
-    return typeof url==="string"&&/^\/api\/v1\/packages\/covers\/[0-9a-f-]{36}$/.test(url)
-      ?{...p,cover_url:PACKAGE_NAMESPACE+url}:p;
-  })};
+function mapProject(p){
+  if(!p||typeof p!=="object"||Array.isArray(p))return p;
+  const result={...p};
+  if(typeof p.cover_url==="string"&&
+      /^\/api\/v1\/packages\/covers\/[0-9a-f-]{36}$/.test(p.cover_url))
+    result.cover_url=PACKAGE_NAMESPACE+p.cover_url;
+  if(typeof p.play_url==="string"&&
+      /^\/play\/v3\/[0-9a-f-]{36}(?:\?preview=1)?$/.test(p.play_url))
+    result.play_url=PACKAGE_NAMESPACE+p.play_url;
+  return result;
+}
+function mappedProjectData(data){
+  if(!data||typeof data!=="object"||Array.isArray(data))return null;
+  if(Array.isArray(data.projects))return {...data,projects:data.projects.map(mapProject)};
+  if(typeof data.play_url==="string")return mapProject(data);
+  return null;
 }
 function responseHeaders(headers){
   const h=new Headers(headers);
@@ -124,13 +132,20 @@ export async function interceptPackageNamespace(request,env){
     h.set("content-type","text/html; charset=utf-8");
     return new Response(content,{status:reply.status,headers:h});
   }
-  if(request.method==="GET"&&reply.status===200&&type.includes("application/json")&&
-    route.target==="/api/v1/packages/projects"){
+  // Rewrite only vetted package-generated relative media/player links. This
+  // includes owner library, public creator gallery and successful new uploads.
+  const projectData=route.target==="/api/v1/packages/projects"||
+    route.target==="/api/v1/packages/mine"||
+    /^\/api\/v1\/packages\/creators\/[a-z][a-z0-9_]{2,29}\/projects$/.test(route.target)||
+    (request.method==="POST"&&route.target==="/api/v1/packages/upload");
+  if(projectData&&reply.status>=200&&reply.status<300&&type.includes("application/json")){
     try{
-      const data=mappedPublicData(await reply.json());
+      const raw=await reply.text();
+      if(raw.length>256*1024)return unavailable(503);
+      const data=mappedProjectData(JSON.parse(raw));
       if(!data)return unavailable(503);
       h.set("content-type","application/json; charset=utf-8");
-      return new Response(JSON.stringify(data),{status:200,headers:h});
+      return new Response(JSON.stringify(data),{status:reply.status,headers:h});
     }catch{return unavailable(503);}
   }
   return new Response(reply.body,{status:reply.status,statusText:reply.statusText,headers:h});
