@@ -1,0 +1,30 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "anevum-iren-insignias-v093",
+  "account_id": "2f7ee83107240152097efd956a4e8335",
+  "main": "./operations/anevum-iren-insignias-v093.mjs",
+  "compatibility_date": "2026-10-17",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [],
+  "services": [
+    {
+      "binding": "APEX_AUTH",
+      "service": "anevum-apex-prelaunch-gateway",
+      "environment": "production"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "MEMBER_DB",
+      "database_name": "anevum-canonical-member-staging",
+      "database_id": "e1d29049-c83b-4534-8355-dc1fa36ba6d8"
+    }
+  ],
+  "vars": {
+    "ANEVUM_VERIFIED_ROLE_OPERATIONS_ENABLED": "false"
+  }
+}

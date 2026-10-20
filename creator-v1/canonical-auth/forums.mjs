@@ -18,7 +18,7 @@ function decodeCursor(value){
 }
 const encodeCursor=(at,id)=>btoa(JSON.stringify([Number(at),id]));
 async function payload(req){if(!/^application\/json(?:\s*;|$)/i.test(req.headers.get('content-type')||''))return null;const s=await boundedText(req,7000);try{const p=JSON.parse(s);return p&&typeof p==='object'&&!Array.isArray(p)?p:null}catch{return null}}
-const card=(db,row,env)=>hydratedPublicMemberCard(db,row,env.CANONICAL_RECOGNITION_ENABLED==='true',env.CANONICAL_REPUTATION_ENABLED==='true');
+const card=(db,row,env)=>hydratedPublicMemberCard(db,row,env.CANONICAL_RECOGNITION_ENABLED==='true',env.CANONICAL_REPUTATION_ENABLED==='true',env.CANONICAL_VERIFIED_ROLES_ENABLED==='true');
 const authorSql=`JOIN member_creator_profiles p ON p.user_id=t.author_id JOIN "user" u ON u.id=p.user_id
  LEFT JOIN member_space_settings s ON s.user_id=p.user_id
  WHERE p.visibility='public' AND u.emailVerified=1`;
@@ -61,7 +61,7 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
       ' ORDER BY t.published_at DESC,t.id DESC LIMIT 21';
     const result=await db.prepare(sql).bind(...a).all();
     const rows=result.results.slice(0,20),last=rows.at(-1);
-    const cards=await hydratedPublicMemberCards(db,rows,env.CANONICAL_RECOGNITION_ENABLED==='true',env.CANONICAL_REPUTATION_ENABLED==='true');
+    const cards=await hydratedPublicMemberCards(db,rows,env.CANONICAL_RECOGNITION_ENABLED==='true',env.CANONICAL_REPUTATION_ENABLED==='true',env.CANONICAL_VERIFIED_ROLES_ENABLED==='true');
     return json({items:await Promise.all(rows.map((row,i)=>threadRow(db,row,env,cards[i]))),nextCursor:result.results.length>20&&last?encodeCursor(last.published_at,last.id):null});
    }
    if(item){
@@ -78,7 +78,7 @@ export async function canonicalForums(req,env,user=null,now=Math.floor(Date.now(
       ${after?'AND (r.published_at>? OR (r.published_at=? AND r.id>?))':''}
       ORDER BY r.published_at ASC,r.id ASC LIMIT 26`).bind(reply[1],...(after?[after[0],after[0],after[1]]:[])).all();
     const visible=r.results.slice(0,25),last=visible.at(-1);
-    const cards=await hydratedPublicMemberCards(db,visible,env.CANONICAL_RECOGNITION_ENABLED==='true',env.CANONICAL_REPUTATION_ENABLED==='true');
+    const cards=await hydratedPublicMemberCards(db,visible,env.CANONICAL_RECOGNITION_ENABLED==='true',env.CANONICAL_REPUTATION_ENABLED==='true',env.CANONICAL_VERIFIED_ROLES_ENABLED==='true');
     return json({items:visible.map((v,i)=>({id:v.id,body:v.body,publishedAt:v.published_at,author:cards[i]})),
       nextCursor:r.results.length>25&&last?encodeCursor(last.published_at,last.id):null});
    }
