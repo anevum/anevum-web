@@ -15,7 +15,7 @@ const MODES:readonly {id:BadgeDisplay['mode'];label:string;help:string}[]=[
  {id:'hidden',label:'Keep private',help:'No badges on public player cards'}
 ];
 
-export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:CanonicalProfile;space:MemberSpace;onAvailabilityChange?:(enabled:boolean)=>void}){
+export function PlayerCardStudio({profile,space,onAvailabilityChange,onSaved}:{profile:CanonicalProfile;space:MemberSpace;onAvailabilityChange?:(enabled:boolean)=>void;onSaved?:()=>Promise<void>}){
  const [data,setData]=useState<RecognitionSettings|null>(null);
  const [notEnabled,setNotEnabled]=useState(false);
  const [loading,setLoading]=useState(true),[saving,setSaving]=useState(false);
