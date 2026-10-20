@@ -72,3 +72,18 @@ jobs:
           node --test creator-v1/test/v095-inactive-candidate-gate.test.mjs
           echo 'INACTIVE_CANDIDATE_TESTS=PASS' >> "$GITHUB_STEP_SUMMARY"
           echo 'NO_CLOUDFLARE_TOKEN_USED; NO_UPLOAD; NO_DEPLOYMENT' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Dry-run the actual Wrangler versions upload without secrets or Cloudflare writes
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          VITE_NATIVE_CREATOR_STUDIO_V095=false npm run build:creator-v1-web
+          test -s creator-v1/dist/web/index.html
+          npx wrangler versions upload --dry-run \
+            --config creator-v1/wrangler.apex-prelaunch.jsonc \
+            --keep-vars --strict \
+            --outdir "$RUNNER_TEMP/v095-v096-wrangler-dryrun"
+          echo 'WRANGLER_BUNDLE_DRY_RUN=PASS; NO_TOKEN_OR_UPLOAD_USED' >> "$GITHUB_STEP_SUMMARY"
+
