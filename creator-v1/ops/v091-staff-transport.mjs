@@ -5,7 +5,8 @@ import {pathToFileURL} from 'node:url';
 const manifest=JSON.parse(readFileSync(new URL('../operations/staff-transport-v091.json',import.meta.url),'utf8'));
 export const digest=source=>createHash('sha256').update(source.trimEnd()+'\n').digest('hex');
 const stable=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b))):v);
-const routeLock=rows=>stable(rows.map(({pattern,script})=>({pattern,script})).sort((a,b)=>a.pattern.localeCompare(b.pattern)));
+const routeLock=rows=>stable(rows.map(({pattern,script,request_limit_fail_open})=>({pattern,script,request_limit_fail_open})).sort((a,b)=>a.pattern.localeCompare(b.pattern)));
+export const retainedDeployment=(worker,version,hash)=>worker.retained_deployments?.some(p=>p.version===version&&p.sha256===hash)===true;
 const settingsLock=s=>stable(Object.fromEntries(['bindings','compatibility_date','compatibility_flags','usage_model','tags','tail_consumers','logpush','placement','observability'].filter(k=>k in s).map(k=>[k,k==='bindings'?[...s[k]].sort((a,b)=>a.name.localeCompare(b.name)):s[k]])));
 export function moduleSource(download,expectedModule='index.mjs'){
  if(typeof download!=='string')throw Error('Worker source must be text');
@@ -32,7 +33,7 @@ export async function repairStaffTransport(api,{apply=false,context=process.env,
  const prefix='/accounts/'+manifest.account_id+'/workers/scripts/';
  const routesPath='/zones/'+manifest.zone_id+'/workers/routes';
  const routes=await api('GET',routesPath),routesBefore=routeLock(routes);
- if(routes.length!==36)throw Error('Live routes changed; review before repair');
+ if(routeLock(routes)!==routeLock(manifest.routes))throw Error('Live routes changed; review before repair');
  const plans=[];
  for(const worker of manifest.workers){
   const base=prefix+worker.name;
@@ -44,13 +45,15 @@ export async function repairStaffTransport(api,{apply=false,context=process.env,
     !settings.bindings.some(b=>b.type==='d1'&&['MEMBER_DB','DB'].includes(b.name)&&(b.database_id||b.id)==='e1d29049-c83b-4534-8355-dc1fa36ba6d8')||
     settings.bindings.some(b=>!['service','d1','assets','plain_text'].includes(b.type)))throw Error('Unexpected staff bindings: '+worker.name);
   if(live===worker.candidate_sha256){plans.push({...worker,alreadyRepaired:true});continue;}
+  // A reviewed newer UI deployment must never be downgraded to this old repair.
+  if(retainedDeployment(worker,version,live)){plans.push({...worker,alreadyRepaired:true,retained:true});continue;}
   if(version!==worker.baseline_version||live!==worker.baseline_sha256)throw Error('Live source/version drift: '+worker.name);
   const metadata={main_module:downloaded.module,keep_assets:true,bindings:settings.bindings.map(({id,...binding})=>binding)};
   for(const key of ['compatibility_date','compatibility_flags','usage_model','tags','tail_consumers','logpush','placement','observability'])
    if(key in settings)metadata[key]=settings[key];
   plans.push({...worker,base,settings,metadata,candidate,version});
  }
- if(!apply)return {status:'verified_read_only',workers:plans.map(({name,alreadyRepaired})=>({name,alreadyRepaired:Boolean(alreadyRepaired)}))};
+ if(!apply)return {status:'verified_read_only',workers:plans.map(({name,alreadyRepaired,retained})=>({name,alreadyRepaired:Boolean(alreadyRepaired),retained:Boolean(retained)}))};
  if(context.GITHUB_REPOSITORY!=='anevum/anevum-web'||context.GITHUB_REF!=='refs/heads/release/v084-continuance-approved-20261019'||context.GITHUB_WORKFLOW!=='ANEVUM V091 Guarded Continuance Experience Production')
   throw Error('Staff repair must use the existing guarded production workflow');
  // Every source, version, binding and route has been checked before the first write.

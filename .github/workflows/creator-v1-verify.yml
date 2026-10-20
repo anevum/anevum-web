@@ -6,12 +6,16 @@ on:
     branches: [production/creator-v1, build/anevum-v1-foundation-20261011, build/anevum-v1-newyear-overhaul-20261011]
     paths:
       - creator-v1/**
+      - site/alpha/v003/**
+      - tests/**
       - community-preview/worker.js
       - docs/production/**
       - .github/workflows/creator-v1-verify.yml
   pull_request:
     paths:
       - creator-v1/**
+      - site/alpha/v003/**
+      - tests/**
       - community-preview/worker.js
       - docs/production/**
       - .github/workflows/creator-v1-verify.yml
@@ -26,7 +30,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,9 +52,12 @@ jobs:
         run: |
           set -euo pipefail
           npm run check:creator-v1-web
-          npm run build:creator-v1-web
-          npm run build:creator-v1-web:staging
+          VITE_PACKAGE_CREATOR_GALLERY_V010=false npm run build:creator-v1-web
+          VITE_PACKAGE_CREATOR_GALLERY_V010=false npm run build:creator-v1-web:staging
           node --test creator-v1/test/react-staging-route.test.mjs
+      - name: Verify package gallery privacy and Discover adapters
+        shell: bash
+        run: node --experimental-strip-types --test creator-v1/test/package-gallery-v010.test.mjs creator-v1/test/package-proof-v010.test.mjs creator-v1/test/package-discovery-v011.test.mjs
       - name: Validate cinematic V005 public site contract
         shell: bash
         run: node --test tests/creator-v1-cinematic-v005.test.mjs
@@ -70,6 +77,28 @@ jobs:
           set -euo pipefail
           npm test 2>&1 | tee ../evidence/public-tests.log
           npm run test:project-readiness 2>&1 | tee ../evidence/project-readiness-tests.log
+      - name: Rebuild preserved earned artwork for the complete regression suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install numpy==2.2.6 scipy==1.15.3 Pillow==11.2.1 cryptography==45.0.7
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libgl1-mesa-dri
+          (
+            cd design/evolution-v059
+            mkdir -p artwork/{native,textures,vector,masters,web,compact} docs dist previews
+            python src/export_native.py
+            python src/render_web.py
+            python src/build.py
+          )
+          python creator-v1/ops/install-evolution-v060.py
+      - name: Run complete root and Creator V1 regression suites
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-strip-types --test tests/*.test.mjs creator-v1/test/*.test.mjs creator-v1/auth/tests/*.test.mjs creator-v1/integration/*.test.mjs creator-v1/authoring/tests/*.test.mjs 2>&1 | tee evidence/complete-regression-tests.log
+      - name: Verify consolidated package controller and canonical route preservation
+        run: node --test tests/alpha-package-v003.test.mjs tests/alpha-package-v009-bridge.test.mjs tests/alpha-package-v009-owner.test.mjs tests/alpha-package-v009-live-owner.test.mjs tests/alpha-package-v010-migration.test.mjs
       - name: Guard live public email signup (read-only; never creates accounts)
         working-directory: creator-v1
         shell: bash
@@ -132,6 +161,7 @@ jobs:
           test -s evidence/sitewide-v012-review/capture-status.txt
           test -s evidence/sitewide-v012-review/home-1440.png
           test -s evidence/sitewide-v012-review/discussion-390.png
+          node --input-type=module -e 'import {readFileSync} from "node:fs"; const r=JSON.parse(readFileSync("evidence/sitewide-v012-review/package-discovery-v011.json")); if(r.enabled!==false||r.status!=="PASS")throw Error("Package UI must remain OFF in normal builds");'
           printf '%s\n' 'Offline synthetic screenshots only; not deployed staging content or real members.' > evidence/sitewide-v012-review/README.txt
 
       - name: Verify V041 canonical forum browser and mobile author cards
@@ -145,6 +175,32 @@ jobs:
           test -s evidence/forum-v041-review/acceptance.json
           test -s evidence/forum-v041-review/forum-390.png
           printf '%s\n' 'Synthetic loopback forum fixture; not real member or deployed content.' > evidence/forum-v041-review/README.txt
+
+      - name: Verify compiled package Discover and member wall in isolated flag-on fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/package-discovery-v011
+          VITE_PACKAGE_CREATOR_GALLERY_V010=true npm run build:creator-v1-web:staging
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+          test -n "$chrome"
+          node creator-v1/test/portal-offline-preview.mjs > evidence/package-discovery-v011/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for i in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:4178/__ready >/dev/null; then ready=1; break; fi
+            sleep 0.2
+          done
+          test "$ready" = 1
+          node creator-v1/test/capture-sitewide-v012.mjs --packages-only --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/package-discovery-v011 2>&1 | tee evidence/package-discovery-v011/browser-capture.log
+          node --input-type=module -e 'import {readFileSync} from "node:fs"; const r=JSON.parse(readFileSync("evidence/package-discovery-v011/package-discovery-v011.json")); if(r.enabled!==true||r.status!=="PASS")throw Error("Isolated package UI acceptance failed");'
+          test -s evidence/package-discovery-v011/package-discovery-v011-grid-320.png
+          test -s evidence/package-discovery-v011/package-discovery-v011-member-wall-320.png
+          printf '%s\n' 'Synthetic loopback React fixture with package UI flag ON only for this test. No live creator, reviewer, publication or production activation.' > evidence/package-discovery-v011/README.txt
+      - name: Restore flag-off staging frontend after isolated package QA
+        if: always()
+        run: VITE_PACKAGE_CREATOR_GALLERY_V010=false npm run build:creator-v1-web:staging
 
       - name: Preserve generated public artifact for visual review
         if: always()

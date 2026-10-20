@@ -3,67 +3,59 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 const read=path=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
 
-test("one shared site map drives a four-destination pop-out menu",()=>{
+test("current four-destination navigation retains canonical member identity and accessible dismissal",()=>{
  const navigation=read("web/src/lib/site-navigation.ts");
  const shell=read("web/src/components/Shell.tsx");
- for(const route of ['to:"/"','to:"/discover"','to:"/community"','to:"/account"'])
-   assert.ok(navigation.includes(route),"Primary destination missing: "+route);
+ for(const route of ['to:"/"','to:"/discover"','to:"/community"','to:"/member"'])
+  assert.ok(navigation.includes(route),"Primary destination missing: "+route);
  assert.match(navigation,/PRIMARY_NAV/);
- assert.match(shell,/DRAWER_GROUPS\.map/);
- assert.match(shell,/SECONDARY_DRAWER_GROUPS\.map/);
- assert.match(shell,/<details className="nav-drawer-more">/);
- assert.match(shell,/<summary>More destinations<\/summary>/);
- assert.match(shell,/aria-controls="mobile-menu"/);
- assert.match(shell,/firstMenuLink\.current\?\.focus/);
- assert.match(shell,/dismissOutside/);
- assert.match(shell,/window\.removeEventListener\("pointerdown", dismissOutside\)/);
+ assert.match(shell,/menuDestinations\.map/);
+ assert.match(shell,/menuCategories\.map/);
+ assert.match(shell,/menuUtilities\.map/);
+ assert.match(shell,/aria-controls="av79-navigation"/);
+ assert.match(shell,/showModal\(\)/);
+ assert.match(shell,/menuButton\.current\?\.focus/);
+ assert.match(shell,/onCancel=\{\(\)=>setMenuOpen\(false\)\}/);
  assert.doesNotMatch(shell,/className="portal-navigation"/);
- assert.doesNotMatch(shell,/<Link to="\/create" className="header-create"/);
 });
 
-test("Creator Studio lives under authenticated Account without breaking old project links",()=>{
+test("legacy project routes lead to the verified canonical Studio",()=>{
  const app=read("web/src/App.tsx");
- const member=read("web/src/components/MemberGate.tsx");
- const account=read("web/src/pages/MemberAccountPage.tsx");
- const navigation=read("web/src/lib/site-navigation.ts");
- assert.equal((app.match(/path="account\/studio" element={<MemberProjectsPage\/>}/g)||[]).length,2);
- for(const route of ['path="create"','path="create/new"','path="create/:projectId"'])
-   assert.ok(app.includes(route),route);
- assert.match(app,/<MemberGate\/>/);
- assert.match(account,/YOUR ANEVUM WORKSPACE/);
- assert.match(account,/to="\/account\/studio"/);
- assert.match(account,/to="\/library"/);
- assert.match(account,/memberProgress/);
- assert.match(member,/to="\/account\/studio"/);
- assert.match(navigation,/MEMBER_NAV/);
+ const studio=read("web/src/pages/CanonicalStudioPage.tsx");
+ assert.match(app,/path="account\/studio" element={<Navigate to="\/studio" replace\/>}/);
+ assert.match(app,/path="create" element={<Navigate to="\/studio" replace\/>}/);
+ assert.match(app,/path="create\/new" element={<Navigate to="\/studio\/new" replace\/>}/);
+ assert.match(app,/path="create\/:projectId" element={<LegacyStudioRedirect\/>}/);
+ assert.match(app,/path="studio" element={<CanonicalStudioPage\/>}/);
+ assert.match(studio,/canonicalAuthClient\.useSession\(\)/);
+ assert.match(studio,/session\?\.user\?\.emailVerified!==true/);
+ assert.match(studio,/profile\.memberId!==id/);
+ assert.match(studio,/setCanReview\(memberStudio\.canReview===true\)/);
 });
 
-test("Community is a single genuine public forum, not a demo of invented rooms",()=>{
+test("Community mounts canonical forums and reads real public records",()=>{
  const community=read("web/src/pages/CommunityPage.tsx");
- const forum=read("web/src/pages/HotCommunityPosts.tsx");
- assert.match(community,/<HotCommunityPosts\/>/);
- assert.match(community,/COMMUNITY CONVERSATIONS ARE UNDER PRIVATE REVIEW/);
- assert.match(community,/Only actual approved posts appear publicly/);
- assert.match(community,/to="\/community\/write"/);
- assert.match(forum,/readCommunityPosts/);
- assert.match(forum,/\/community\/posts\//);
+ const forum=read("web/src/pages/CanonicalForums.tsx");
+ assert.match(community,/<CommunityForums\/>/);
+ assert.match(community,/readCommunityPosts/);
+ assert.match(community,/\/community\/posts\//);
+ assert.match(forum,/forumRequest as request/);
+ assert.match(forum,/\/api\/v1\/member\/forum-submissions/);
  assert.doesNotMatch(community,/portal-room-grid|rooms\.map|fakeMessage|sampleComments/);
  assert.doesNotMatch(community,/<main /);
 });
 
-test("Homepage leads with approved community submissions without changing cinematic imagery",()=>{
+test("Homepage links approved public work and keeps the premium Continuance presentation",()=>{
  const landing=read("web/src/pages/CinematicLandingPage.tsx");
- const shell=read("web/src/components/Shell.tsx");
  const main=read("web/src/main.tsx");
- assert.match(landing,/COMMUNITY DASHBOARD/);
- assert.match(landing,/CosmicArtwork scene="hero" priority/);
- assert.match(landing,/<CinematicSiteRail\/>/);
- assert.ok(landing.indexOf("<CommunityHomeFeed")>0);
- assert.ok(landing.indexOf("<CommunityHomeFeed")<landing.indexOf('<nav className="cinema-gateways"'));
- assert.match(shell,/<CinematicSiteRail\/>/);
- for(const visual of ["cinematic-world-v005.css","tactile-editorial-v006.css"])
-   assert.ok(main.includes(visual),"Existing visual package must remain: "+visual);
- assert.match(main,/community-structure\.css/);
+ assert.match(landing,/readProjects\(\{limit:"32"}/);
+ assert.match(landing,/APPROVED AND AVAILABLE/);
+ assert.match(landing,/featured&&featuredPath/);
+ assert.match(landing,/av79-hero-orbit/);
+ assert.match(landing,/av79-gateways/);
+ assert.doesNotMatch(landing,/fakeProject|sampleProjects/);
+ for(const visual of ["cinematic-world-v005.css","tactile-editorial-v006.css","home-navigation-v079.css"])
+  assert.ok(main.includes(visual),"Existing visual package must remain: "+visual);
 });
 
 test("No private DM, unreviewed asset execution or game award endpoint is opened by navigation cleanup",()=>{

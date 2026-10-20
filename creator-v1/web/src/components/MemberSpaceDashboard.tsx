@@ -12,8 +12,9 @@ import {MemberPresenceStatus} from './MemberPresenceStatus';
 import {safePlayerAura,safeVerifiedRole} from '../lib/player-recognition';
 import {EarnedRewardVault} from './EarnedRewardVault';
 import {useMemberRevalidation} from '../lib/useMemberRevalidation';
+import {CreatorPackageGallery,packageGalleryUIEnabled} from './CreatorPackageGallery';
 
-type Tab='overview'|'profile'|'appearance'|'awards'|'wall';
+type Tab='overview'|'profile'|'appearance'|'awards'|'wall'|'creations';
 export function SpaceProgress({space,handle=null}:{space:MemberSpace;handle?:string|null}){
  const s=space.stats;if(!s)return null;
  return <section className="ms-progress" aria-label="Member level and statistics"><div className="ms-level"><LevelEmblem level={s.level} size={72} handle={handle}/><div><span className="kicker">CONTINUANCE LEVEL</span><h3>{s.level===1?'First light.':'An expanding orbit.'}</h3><small>{s.xp.toLocaleString()} XP · {s.nextLevel===null?'Level 30 / Continuance achieved':(s.nextLevel-s.xp).toLocaleString()+' to level '+(s.level+1)}</small></div></div>
@@ -23,7 +24,7 @@ export function SpaceProgress({space,handle=null}:{space:MemberSpace;handle?:str
 export function MemberSpaceDashboard({profile,editor}:{profile:CanonicalProfile;editor:ReactNode}){
  const [params,setParams]=useSearchParams();
  const selected=params.get('tab');
- const tab:Tab=['overview','profile','appearance','awards','wall'].includes(selected||'')?selected as Tab:'overview';
+ const tab:Tab=['overview','profile','appearance','awards','wall',...(packageGalleryUIEnabled?['creations']:[])].includes(selected||'')?selected as Tab:'overview';
  function setTab(value:Tab){const next=new URLSearchParams(params);next.set('tab',value);setParams(next)}
  const [space,setSpace]=useState<MemberSpace|null>(null),[posts,setPosts]=useState<WallEntry[]>([]),[loading,setLoading]=useState(true);
  const [error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false);
@@ -48,7 +49,7 @@ export function MemberSpaceDashboard({profile,editor}:{profile:CanonicalProfile;
       level={space.stats?.level} featuredAwards={space.featuredAwards}
       earnedBadges={space.earnedBadges} badgeDisplay={space.badgeDisplay}/>}</div></div>
   </header>
-  <div className="ms-toolbar"><nav aria-label="My space sections">{([['overview','Dashboard'],['wall','My wall'],['profile','Edit profile'],['appearance','Appearance'],['awards','Awards & stats']] as [Tab,string][]).map(([key,label])=><button key={key} data-iren-anchor={key==='awards'?"awards":undefined} aria-current={tab===key?'page':undefined} onClick={()=>{setTab(key);setNotice('')}}>{label}</button>)}</nav><div className="ms-toolbar-links"><Link to="/community">COMMUNITY ↗</Link> <Link data-iren-anchor="studio" to="/studio">CREATOR STUDIO ↗</Link> <Link to="/support">SUPPORT ANEVUM ↗</Link> {profile.visibility==='public'?<Link to={'/@'+profile.handle}>VIEW PUBLIC WALL ↗</Link>:<button onClick={()=>setTab('profile')}>VISIBILITY SETTINGS</button>}</div></div>
+  <div className="ms-toolbar"><nav aria-label="My space sections">{([['overview','Dashboard'],['wall','My wall'],...(packageGalleryUIEnabled?[['creations','Creations']]:[]),['profile','Edit profile'],['appearance','Appearance'],['awards','Awards & stats']] as [Tab,string][]).map(([key,label])=><button key={key} data-iren-anchor={key==='awards'?"awards":undefined} aria-current={tab===key?'page':undefined} onClick={()=>{setTab(key);setNotice('')}}>{label}</button>)}</nav><div className="ms-toolbar-links"><Link to="/community">COMMUNITY ↗</Link> <Link data-iren-anchor="studio" to="/studio">CREATOR STUDIO ↗</Link> <Link to="/support">SUPPORT ANEVUM ↗</Link> {profile.visibility==='public'?<Link to={'/@'+profile.handle}>VIEW PUBLIC WALL ↗</Link>:<button onClick={()=>setTab('profile')}>VISIBILITY SETTINGS</button>}</div></div>
 
   <div className="ms-body">
    {loading&&<p role="status">Opening your space…</p>}
@@ -82,6 +83,7 @@ export function MemberSpaceDashboard({profile,editor}:{profile:CanonicalProfile;
       </section>
     </aside>
    </div>}
+   {tab==='creations'&&packageGalleryUIEnabled&&<CreatorPackageGallery mode="owner"/>}
    {tab==='profile'&&<div className="ms-profile-editor">{editor}</div>}
    {tab==='appearance'&&<><div className="ms-section-head"><div><span className="kicker">PROFILE STUDIO</span><h2>Frame your world.</h2><p>Crop, preview and save each image. Your wall updates after saving.</p></div><button onClick={()=>setTab('profile')}>CHANGE ATMOSPHERE ↗</button></div><div className="ms-appearance-grid"><ProfileImageEditor slot="avatar" version={space?.media.avatar} onSaved={refresh}/><ProfileImageEditor slot="banner" version={space?.media.banner} onSaved={refresh}/></div><p className="av34-support-note">Supporter frames and banner atmospheres are managed in the <Link to="/support">Supporter Studio ↗</Link>. Your original uploaded images stay yours, and your earned awards remain separate.</p></>}
    {tab==='wall'&&<MemberWall posts={posts} owner onChanged={refresh} identity={{handle:profile.handle,displayName:profile.displayName,avatar:Boolean(space?.media.avatar),avatarVersion:space?.media.avatar,level:space?.stats?.level??null,featuredAwards:space?.featuredAwards??[],earnedBadges:space?.earnedBadges,badgeDisplay:space?.badgeDisplay,distinctions:space?.distinctions,aura:space?.aura,role:space?.role,reputation:space?.showStats?space.reputation:undefined,earnedAura:space?.showStats?space.earnedAura:undefined,constellation:space?.constellation,supporterAppearance:space?.supporterAppearance}}/>}

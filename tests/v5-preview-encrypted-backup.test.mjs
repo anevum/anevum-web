@@ -1,3 +1,4 @@
+import {assertRetiredProductionWorkflow} from "./helpers/retired-production-contract.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -36,16 +37,9 @@ test("only encrypted backup can be uploaded and must be downloaded and restored"
   assert.doesNotMatch(source, /print\(.*signed_url|echo.*signed_url/);
 });
 
-test("production and staging releases are manually gated separately", () => {
-  for (const path of [
-    ".github/workflows/member-staging-bootstrap.yml",
-    ".github/workflows/deploy-production.yml",
-  ]) {
-    const source = read(path);
-    assert.match(source, /inputs\.reviewed_head_sha == github\.sha/);
-    assert.match(source, /git ls-remote origin refs\/heads\/main/);
-  }
-  const prod = read(".github/workflows/deploy-production.yml");
-  assert.match(prod, /inputs\.rollback_confirmed == 'PRODUCTION_ROLLBACK_VERIFIED'/);
-  assert.doesNotMatch(prod, /^\s+push:\s*$/m);
+test("legacy production is retired while staging retains its exact-SHA manual gate", () => {
+  const stage=read(".github/workflows/member-staging-bootstrap.yml");
+  assert.match(stage,/inputs\.reviewed_head_sha == github\.sha/);
+  assert.match(stage,/git ls-remote origin refs\/heads\/main/);
+  assertRetiredProductionWorkflow(read(".github/workflows/deploy-production.yml"));
 });

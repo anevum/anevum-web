@@ -3,6 +3,8 @@ import { Link, useSearchParams } from "react-router-dom";
 import { readCategories,readProjects, type Category } from "../lib/api";
 import { useResource } from "../lib/useResource";
 import { ProjectCard } from "../components/ProjectCard";
+import {WorkCard,packageGalleryUIEnabled} from "../components/CreatorPackageGallery";
+import {readPackageCatalogue,packageDiscoveryResults} from "../lib/creator-package-gallery-v010";
 import { PageNav } from "../components/PageNav";
 import { PortalHeading } from "../components/PortalHeading";
 import { EmptyState, ErrorState, LoadingState } from "../components/States";
@@ -52,6 +54,8 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
     ]);
     return {projects,categories};
   },[q,category,cursor,freeOnly]);
+  const packagesInScope=packageGalleryUIEnabled&&!cursor&&!freeOnly;
+  const packageResource=useResource(signal=>readPackageCatalogue(packagesInScope,signal),[packagesInScope]);
   const current="/discover"+(params.size?"?"+params.toString():"");
   const active=useMemo(()=>channels.find(x=>x.id===category),[category]);
   const world=immersive?immersiveWorlds[category as Category]:undefined;
@@ -77,6 +81,14 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
   }
   const categories=resource.state==="ready"?resource.data.categories.categories:[];
   const countByCategory=new Map(categories.map(x=>[x.category,x.count]));
+  const legacyProjects=resource.state==="ready"?resource.data.projects.items:[];
+  const packages=packageResource.state==="ready"?packageResource.data||[]:[];
+  // Uploaded releases are a bounded first-page feed; never repeat the same
+  // packages on every older catalogue cursor page or change its cursor format.
+  const packageProjects=packagesInScope?packageDiscoveryResults(packages,{query:q,category,freeOnly},legacyProjects):[];
+  const shown=legacyProjects.length+packageProjects.length;
+  const resultsReady=resource.state==="ready"||(packagesInScope&&packageResource.state==="ready");
+  const emptyVerified=resource.state==="ready"&&(!packagesInScope||packageResource.state==="ready")&&shown===0;
   return <div data-iren-anchor="discover" className="portal-discover av73-discover">
     {immersive?<PortalHeading
       eyebrow={world?.eyebrow||"THE PORTALS / EVERYTHING WORTH TRYING"}
@@ -104,7 +116,7 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
           <nav className="portal-channel-filters" aria-label="Filter by project type">
             <button type="button" onClick={()=>selectCategory("")} className={!category?"active":""} aria-pressed={!category}>All work</button>
             {channels.map(x=><button key={x.id} type="button" aria-pressed={category===x.id} className={category===x.id?"active":""} onClick={()=>selectCategory(x.id)}>
-              <span aria-hidden="true">{x.mark}</span><span>{x.label}</span>{resource.state==="ready"&&<span className="av73-filter-count">{countByCategory.get(x.id)||0}</span>}
+              <span aria-hidden="true">{x.mark}</span><span>{x.label}</span>{resource.state==="ready"&&!packageGalleryUIEnabled&&<span className="av73-filter-count">{countByCategory.get(x.id)||0}</span>}
             </button>)}
           </nav>
           <div className="portal-availability-filter" role="group" aria-label="Filter by access cost">
@@ -114,11 +126,13 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
           </div>
         </section>
         {resource.state==="loading"&&<LoadingState label="Reading the live project catalogue"/>}
-        {resource.state==="error"&&<ErrorState title="THE PORTAL COULD NOT LOAD" detail="Published project data is currently unavailable. No sample projects were substituted."/>}
-        {resource.state==="ready"&&<>
+        {resource.state==="error"&&<ErrorState title={packageProjects.length?"PART OF THE CATALOGUE COULD NOT LOAD":"THE PORTAL COULD NOT LOAD"} detail="Published project data is currently unavailable. No sample projects were substituted."/>}
+        {packagesInScope&&packageResource.state==="loading"&&<p className="av010-discovery-status" role="status">Checking approved browser uploads…</p>}
+        {packagesInScope&&packageResource.state==="error"&&<p className="av010-discovery-status" role="status">Uploaded browser releases are temporarily unavailable.</p>}
+        {resultsReady&&<>
           <div className="portal-result-toolbar">
             <div><span className="kicker">{q?"SEARCH / "+q.toUpperCase():active?"CATEGORY / "+active.label.toUpperCase():"ALL RELEASES"}{freeOnly?" / MARKED FREE":""}</span>
-              <strong>{resource.data.projects.items.length} VERIFIED PUBLISHED {resource.data.projects.items.length===1?"RELEASE":"RELEASES"} ON THIS PAGE</strong>
+              <strong>{shown} VERIFIED PUBLISHED {shown===1?"RELEASE":"RELEASES"} ON THIS PAGE</strong>
             </div>
             <div className="portal-result-actions" role="group" aria-label="Choose project layout">
               <button type="button" className={view==="covers"?"active":""} aria-pressed={view==="covers"} onClick={()=>setView("covers")}>▦ GRID</button>
@@ -126,10 +140,12 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
               {(q||category||cursor||freeOnly)&&<Link to="/discover">RESET</Link>}
             </div>
           </div>
-          {resource.data.projects.items.length?
+          {shown>0&&
             <section aria-label="Published project results" className={view==="covers"?"portal-discover-results":"portal-discover-results portal-discover-compact"}>
-              {resource.data.projects.items.map(p=><ProjectCard key={p.id} project={p} returnTo={current} presentation="editorial"/>)}
-            </section>:
+              {packageProjects.map(p=><WorkCard key={'package:'+p.id} work={p} mode="public" compact={view==="compact"}/>)}
+              {legacyProjects.map(p=><ProjectCard key={'catalogue:'+p.id} project={p} returnTo={current} presentation="editorial"/>)}
+            </section>}
+          {emptyVerified&&
             <div className="portal-true-empty">
               <div><span className="kicker">NOTHING HIDDEN / NOTHING FABRICATED</span>
                 <h2>{cursor?"END OF CURRENT RELEASES":q||category||freeOnly?"NO MATCHING PROJECTS YET":"NO APPROVED PROJECTS YET"}</h2>
@@ -137,7 +153,8 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
                 <div className="portal-empty-actions"><Link to="/discover" className="button secondary">EXPLORE ALL</Link><Link to="/guide" className="button secondary">FREE FIELD GUIDE</Link><Link to="/status" className="button secondary">RELEASE STATUS</Link></div>
               </div>
             </div>}
-          <PageNav route="/discover" search={params} nextCursor={resource.data.projects.nextCursor} label="Project catalogue"/>
+          {packagesInScope&&packages.length===100&&<p className="av010-discovery-status">Browser upload search covers the latest 100 approved releases.</p>}
+          {resource.state==="ready"&&<PageNav route="/discover" search={params} nextCursor={resource.data.projects.nextCursor} label="Project catalogue"/>}
         </>}
       </div>
 

@@ -30,7 +30,7 @@ jobs:
           node --test creator-v1/test/v091-release-acceptance.test.mjs
           node creator-v1/ops/v091-release-acceptance.mjs
           # Only release configuration/evidence may differ from the tested app.
-          git diff --exit-code 6f0efb77f20e6c920d880293796768b9f354f97e HEAD -- . \
+          git diff --exit-code d7e8d8a2fda4406ba144bfc8dd03d664e48b7b07 HEAD -- . \
             ':(exclude).github/workflows/v084-continuance-production.yml' \
             ':(exclude).github/workflows/v091-live-readonly-qa.yml' \
             ':(exclude).github/release-evidence/v091-authenticated.json' \
@@ -65,6 +65,8 @@ jobs:
       - name: Install dependencies
         run: npm install --ignore-scripts --no-audit --no-fund
       - name: Verify and compile both frontend variants
+        env:
+          VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
         run: |
           set -euo pipefail
           npm run check:creator-v1-web
@@ -146,6 +148,208 @@ jobs:
           test -s "$RUNNER_TEMP/v084-release-evidence/iren-discover-1440.png"
           test -s "$RUNNER_TEMP/v084-release-evidence/iren-docked-top-320.png"
           echo V089_REAL_WEBGL_AND_RESPONSIVE_ACCEPTANCE=PASS >> "$GITHUB_STEP_SUMMARY"
+      - name: Prepare exact candidate promotion guard and verify rebuilt assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          cat > "$RUNNER_TEMP/v091-promotion-guard.mjs" <<'V091_PROMOTION_GUARD'
+          import {createHash,randomUUID} from 'node:crypto';
+          import {readFileSync,writeFileSync} from 'node:fs';
+          import {join} from 'node:path';
+          import {pathToFileURL} from 'node:url';
+
+          // Reviewed upload run 39430526806, release b0ecd978, application 0116b2ea.
+          // Hashes come from that run's build-manifest.json and candidate-version.json.
+          export const PIN=Object.freeze({
+            original:'93cc7f07-cf39-457e-af69-c9f6f4c02d25',
+            candidate:'4b5c5d60-6c8f-431a-a16c-b660c8baf650',
+            originalEtag:'2c02ac225ced8bdecd764da9c878c7dd32d0cb0d32b8dc476206ef990f25e40a',
+            candidateEtag:'aac1cf1ea0e181d977b2df852023f4bb6ae45b558bba1aacf9d637b1cccaf429',
+            originalBindings:'9a3132a806de3fbe47a3f2fb5e5ab021a793835f5a1d6ca7d9f260b1c60efab4',
+            candidateBindings:'2cf5986868659ac65f842c438c2a4b89083666ecbda446a85e53d109fbf51b43',
+            routes:'45c0bd81f1ebbb401320db1f74a0960121c48a61a25a3a5e012d46ba3c9e3010',
+            manifest:'7efc6d34dccf5d42a4d5727fc1b0078920d5453543b9f8a94798a0acac4e7077'
+          });
+          export const ASSETS=Object.freeze([
+            {path:'index.html',bytes:2553,sha256:'b84f86b4dc631d8d621c83b2d41d7c41a1beeb602d01537ed409c8fc0f9a753e'},
+            {path:'assets/index-Cmx71yTs.js',bytes:794716,sha256:'dfbeded645663e8396890f4ad1a1d7251334d732e24b3c200c639d0cf7d22a3a'},
+            {path:'assets/index-CGCMyZTx.css',bytes:765154,sha256:'dd363a90ed997b687954940ab697ceeb868157ef3965f25c82a4c3672194efde'},
+            {path:'assets/iren-living-rig-v088-D_p8xTtN.js',bytes:12647,sha256:'c4539cc4f9124a32a8096293bd8757774838902c4fae30ccd1d3c9ed5b236d0e'}
+          ]);
+          // Same authorized native CSS suffix observed on the original and pilot bundles.
+          export const CSS_OVERLAY=Object.freeze({bytes:29686,sha256:'b2e7546bb679dc2cf323aed14706e33066afd1a2b666df8326e938dc8ca2b773'});
+          export const RUNTIME=Object.freeze({
+            assets:{not_found_handling:'single-page-application',serve_directly:false,raw_run_worker_first:true,base_path:'/'},
+            compatibility_date:'2026-10-17',compatibility_flags:['nodejs_compat'],usage_model:'standard'
+          });
+          const need=(value,message)=>{if(!value)throw Error('V091 '+message);};
+          export const stable=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?
+            Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b))):v);
+          export const sha=value=>createHash('sha256').update(value).digest('hex');
+          const same=(a,b)=>stable(a)===stable(b);
+          const uuid=value=>typeof value==='string'&&/^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/.test(value);
+          export function bindingLock(bindings){
+            need(Array.isArray(bindings),'Worker bindings missing');
+            need(bindings.every(b=>b&&typeof b.name==='string')&&new Set(bindings.map(b=>b.name)).size===bindings.length,'duplicate or invalid binding');
+            return stable(bindings.map(b=>b.type==='d1'?{name:b.name,type:b.type,database_id:b.database_id||b.id}:b)
+              .sort((a,b)=>a.name.localeCompare(b.name)));
+          }
+          export const routeLock=routes=>stable(routes.map(({pattern,script,request_limit_fail_open})=>
+            ({pattern,script,request_limit_fail_open})).sort((a,b)=>a.pattern.localeCompare(b.pattern)));
+          export function deploymentLock(deployment){
+            need(deployment?.strategy==='percentage'&&Array.isArray(deployment.versions),'invalid deployment');
+            return stable({strategy:deployment.strategy,versions:[...deployment.versions].sort((a,b)=>a.version_id.localeCompare(b.version_id))});
+          }
+          export const pilot=()=>({strategy:'percentage',versions:[{version_id:PIN.original,percentage:100},{version_id:PIN.candidate,percentage:0}]});
+          export const promoted=()=>({strategy:'percentage',versions:[{version_id:PIN.candidate,percentage:100}]});
+          export function requireDeployment(deployment,expected){
+            need(deploymentLock(deployment)===deploymentLock(expected),'deployment versions or exact percentages changed');
+          }
+          const settingsLock=settings=>stable(Object.fromEntries(['placement','usage_model','tags','tail_consumers','logpush','observability']
+            .filter(key=>key in settings).map(key=>[key,settings[key]])));
+          export function validateSnapshot(snapshot,reviewedRoutes,mode='pilot',pins=PIN){
+            requireDeployment(snapshot.deployment,mode==='pilot'?pilot():promoted());
+            need(uuid(snapshot.deployment.id),'deployment identifier missing');
+            need(snapshot.latest.items?.[0]?.id===PIN.candidate,'latest upload is not the reviewed candidate');
+            const original=snapshot.original,candidate=snapshot.candidate;
+            need(original.id===PIN.original&&candidate.id===PIN.candidate,'Worker version identity changed');
+            need(original.resources?.script?.etag===pins.originalEtag&&candidate.resources?.script?.etag===pins.candidateEtag,'Worker code ETag changed');
+            const originalBindings=original.resources.bindings,candidateBindings=candidate.resources.bindings;
+            need(originalBindings?.length===24&&candidateBindings?.length===26,'original or candidate binding count changed');
+            need(sha(bindingLock(originalBindings))===pins.originalBindings,'original binding lock changed');
+            need(sha(bindingLock(candidateBindings))===pins.candidateBindings,'candidate binding lock changed');
+            need(bindingLock(candidateBindings)===bindingLock([...originalBindings,
+              {name:'CANONICAL_PACKAGE_PROOF_ENABLED',type:'plain_text',text:'true'},
+              {name:'CANONICAL_PACKAGE_PROOF_KEY',type:'secret_text'}]),'unreviewed candidate binding delta');
+            need(bindingLock(snapshot.settings.bindings)===bindingLock(candidateBindings),'latest settings differ from the candidate');
+            const vars=Object.fromEntries(candidateBindings.filter(b=>b.type==='plain_text').map(b=>[b.name,b.text]));
+            for(const key of ['ANEVUM_LAUNCH_APPROVED','ANEVUM_CANONICAL_APEX_ENABLED','CANONICAL_SCHEMA_APPROVED','CANONICAL_EMAIL_ENABLED','CANONICAL_RECOGNITION_ENABLED'])
+              need(vars[key]==='true','canonical launch flags changed');
+            need(vars.ANEVUM_PRELAUNCH_MODE==='public'&&vars.CANONICAL_CREATOR_UPLOADS_ENABLED==='false','public mode or creator upload flag changed');
+            need(vars.CANONICAL_VERIFIED_ROLES_ENABLED!=='true'&&vars.CANONICAL_REPUTATION_ENABLED!=='true','optional role or reputation feature enabled');
+            need(same(original.resources.script_runtime,RUNTIME)&&same(candidate.resources.script_runtime,RUNTIME),'runtime or asset policy changed');
+            need(snapshot.settings.compatibility_date===RUNTIME.compatibility_date&&same(snapshot.settings.compatibility_flags,RUNTIME.compatibility_flags),'latest compatibility settings changed');
+            need(settingsLock(snapshot.settings)===stable({placement:{},usage_model:'standard',tags:[],tail_consumers:[],logpush:false}),'non-versioned settings changed');
+            need(snapshot.exposure.enabled===false&&snapshot.exposure.previews_enabled===false,'Worker public exposure changed');
+            need(Array.isArray(snapshot.routes)&&snapshot.routes.length===38&&Array.isArray(reviewedRoutes)&&reviewedRoutes.length===38,'route count changed');
+            need(routeLock(snapshot.routes)===routeLock(reviewedRoutes)&&sha(routeLock(snapshot.routes))===pins.routes,'reviewed route inventory changed');
+          }
+          export function verifyAsset(bytes,pin,{prefix=false}={}){
+            need(prefix?bytes.length>=pin.bytes:bytes.length===pin.bytes,'accepted asset length changed');
+            need(sha(prefix?bytes.subarray(0,pin.bytes):bytes)===pin.sha256,'accepted asset hash changed');
+          }
+          export function verifyBuild(directory){
+            for(const pin of ASSETS)verifyAsset(readFileSync(join(directory,pin.path)),pin);
+          }
+          export function verifyServedCss(bytes,pin=ASSETS.find(asset=>asset.path.endsWith('.css')),suffix=CSS_OVERLAY){
+            need(bytes.length===pin.bytes+suffix.bytes,'served stylesheet length differs from the accepted build plus authorized overlay');
+            verifyAsset(bytes.subarray(0,pin.bytes),pin);
+            verifyAsset(bytes.subarray(pin.bytes),suffix);
+          }
+          const BASE='/accounts/2f7ee83107240152097efd956a4e8335/workers/scripts/anevum-apex-prelaunch-gateway';
+          const ROUTES='/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes';
+          export async function snapshot(api){
+            const paths=[BASE+'/deployments?per_page=1',BASE+'/versions?per_page=1',BASE+'/versions/'+PIN.original,
+              BASE+'/versions/'+PIN.candidate,BASE+'/settings',ROUTES,BASE+'/subdomain'];
+            const results=await Promise.allSettled(paths.map(path=>api(path)));
+            const failure=results.find(result=>result.status==='rejected');if(failure)throw failure.reason;
+            const [deployments,latest,original,candidate,settings,routes,exposure]=results.map(result=>result.value);
+            return {deployment:deployments.deployments?.[0],latest,original,candidate,settings,routes,exposure};
+          }
+          const latestDeployment=async api=>(await api(BASE+'/deployments?per_page=1')).deployments?.[0];
+          export async function prepare(api,reviewedRoutes,save,pins=PIN){
+            const before=await snapshot(api);validateSnapshot(before,reviewedRoutes,'pilot',pins);
+            const journal={before:before.deployment,attempted:false,promotedId:null,marker:'V091 exact-candidate promotion '+randomUUID()};
+            save(journal);return journal;
+          }
+          export async function promote(api,reviewedRoutes,journal,save,pins=PIN){
+            const immediate=await snapshot(api);validateSnapshot(immediate,reviewedRoutes,'pilot',pins);
+            need(immediate.deployment.id===journal.before.id&&deploymentLock(immediate.deployment)===deploymentLock(journal.before),'deployment changed before promotion');
+            need((await latestDeployment(api))?.id===journal.before.id,'concurrent deployment before promotion');
+            journal.attempted=true;save(journal);
+            const result=await api(BASE+'/deployments',{method:'POST',body:{...promoted(),annotations:{'workers/message':journal.marker}}});
+            // POST acknowledges only {id}; GET is authoritative for the deployed shape.
+            journal.promotedId=uuid(result?.id)?result.id:null;save(journal);
+            need(journal.promotedId,'promotion response lacks a deployment identifier');
+            const deployed=await latestDeployment(api);
+            need(deployed?.id===journal.promotedId&&deployed.annotations?.['workers/message']===journal.marker,'promotion readback does not match the acknowledged deployment');
+            requireDeployment(deployed,promoted());
+            return deployed;
+          }
+          export async function postflight(api,reviewedRoutes,journal,pins=PIN){
+            const after=await snapshot(api);validateSnapshot(after,reviewedRoutes,'promoted',pins);
+            need(after.deployment.id===journal.promotedId&&after.deployment.annotations?.['workers/message']===journal.marker,'latest deployment does not belong to this promotion');
+            return after;
+          }
+          export async function rollback(api,journal,save=()=>{}){
+            if(!journal.attempted)return 'NO_PROMOTION_ATTEMPTED';
+            requireDeployment(journal.before,pilot());
+            const current=await latestDeployment(api);
+            if(current?.id===journal.before.id){
+              // A prior-ID GET can be stale even when the POST acknowledgement was lost.
+              need(false,journal.promotedId?
+                'rollback unconfirmed: prior deployment read is stale or inconclusive after an acknowledged promotion':
+                'rollback unconfirmed: prior deployment read cannot establish the outcome of an unacknowledged promotion');
+            }
+            const markerMatches=current?.annotations?.['workers/message']===journal.marker;
+            let owned=uuid(journal.promotedId)&&current?.id===journal.promotedId&&markerMatches;
+            if(!journal.promotedId&&markerMatches){
+              // A lost POST response is recoverable only with this unique marker AND the intended result.
+              try{requireDeployment(current,promoted());owned=true;}catch{}
+            }
+            need(owned,'rollback refused: latest deployment ownership is unproven or an external writer changed it');
+            const immediate=await latestDeployment(api);
+            need(immediate?.id===current.id&&same(immediate,current),'rollback refused: deployment changed during ownership check');
+            // Restore the recorded 100%/0% pair, retaining the candidate proof secret.
+            // Cloudflare offers no conditional deployment POST; all apex writers must serialize.
+            const body={strategy:journal.before.strategy,versions:journal.before.versions};
+            if(journal.before.annotations)body.annotations=journal.before.annotations;
+            const result=await api(BASE+'/deployments',{method:'POST',body});
+            journal.rollbackId=uuid(result?.id)?result.id:null;save(journal);
+            need(journal.rollbackId,'rollback response lacks a deployment identifier');
+            const restored=await latestDeployment(api);
+            need(restored?.id===journal.rollbackId,'rollback was superseded or not visible during verification');
+            need(restored.annotations?.['workers/message']===journal.before.annotations?.['workers/message'],'rollback readback marker differs from the recorded pilot');
+            requireDeployment(restored,journal.before);
+            return 'RECORDED_PILOT_RESTORED';
+          }
+          async function main(){
+            const [action,path]=process.argv.slice(2);
+            if(action==='assets'){need(!path,'unexpected assets argument');verifyBuild('creator-v1/dist/web');return;}
+            if(action==='live-css'){
+              need(typeof path==='string','missing downloaded stylesheet');
+              verifyServedCss(readFileSync(path));return;
+            }
+            need(['prepare','promote','postflight','rollback'].includes(action)&&!path,'unknown promotion operation');
+            const token=process.env.CLOUDFLARE_API_TOKEN;
+            need(token&&process.env.CLOUDFLARE_ACCOUNT_ID==='2f7ee83107240152097efd956a4e8335','Cloudflare context missing or changed');
+            const api=async(path,{method='GET',body}={})=>{
+              let response;try{response=await fetch('https://api.cloudflare.com/client/v4'+path,{method,
+                headers:{authorization:'Bearer '+token,...(body?{'content-type':'application/json'}:{})},
+                ...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(40000)});}catch{throw Error('V091 Cloudflare request failed; outcome requires verification');}
+              let value;try{value=await response.json();}catch{throw Error('V091 Cloudflare returned an invalid response');}
+              // Never emit API bodies, bindings, tokens, identities, or private resource IDs.
+              need(response.ok&&value.success===true,'Cloudflare operation blocked (HTTP '+response.status+', codes '+
+                (value.errors||[]).map(error=>Number.isInteger(error.code)?error.code:'unknown').join(',')+')');
+              return value.result;
+            };
+            const journalPath=join(process.env.RUNNER_TEMP,'v091-promotion-journal.json');
+            const save=journal=>writeFileSync(journalPath,JSON.stringify(journal),{mode:0o600});
+            const reviewedRoutes=JSON.parse(readFileSync('creator-v1/operations/staff-transport-v091.json','utf8')).routes;
+            if(action==='prepare')await prepare(api,reviewedRoutes,save);
+            else{
+              const journal=JSON.parse(readFileSync(journalPath,'utf8'));
+              if(action==='promote')await promote(api,reviewedRoutes,journal,save);
+              if(action==='postflight')await postflight(api,reviewedRoutes,journal);
+              if(action==='rollback')console.log('V091_ROLLBACK='+await rollback(api,journal,save));
+            }
+          }
+          if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
+            try{await main();}catch(error){console.error('::error::'+(error.message.startsWith('V091 ')?error.message:'V091 promotion guard failed'));process.exitCode=1;}
+          }
+          V091_PROMOTION_GUARD
+          node "$RUNNER_TEMP/v091-promotion-guard.mjs" assets
       - name: Verify the preserved staff identity transport
         run: node --test creator-v1/test/staff-session-transport-v091.test.mjs creator-v1/test/staff-transport-release-v091.test.mjs
       - name: Verify or repair the five pinned staff identity Workers
@@ -153,14 +357,14 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: node creator-v1/ops/v091-staff-transport.mjs --apply
-      - name: Deploy V091 verified experience without changing live routes, bindings or IREN
+      - name: Promote exact accepted V091 candidate with pinned pilot rollback
         shell: bash
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
-          trap 'echo "SECURE DEPLOY PREFLIGHT stopped at shell line $LINENO before altering production" >&2' ERR
+          trap 'echo "GUARDED RELEASE stopped at shell line $LINENO; deployment ownership and rollback checks apply" >&2' ERR
           echo "Checking repository/ref, Cloudflare account, and the exact reviewed source..."
           test "$GITHUB_REPOSITORY" = "anevum/anevum-web"
           test "$GITHUB_REF" = "refs/heads/release/v084-continuance-approved-20261019"
@@ -169,66 +373,91 @@ jobs:
           git merge-base --is-ancestor 00ba9f32f2c862de4b362eaafddc80890e2b577b HEAD
           # Pin the completed V091 application and allow only its reviewed files.
           # A stale or broadened release fails before any Cloudflare write.
-          git merge-base --is-ancestor 6f0efb77f20e6c920d880293796768b9f354f97e HEAD
+          git merge-base --is-ancestor d7e8d8a2fda4406ba144bfc8dd03d664e48b7b07 HEAD
           diff -u <(printf '%s\n' \
              '.github/release-evidence/v091-authenticated.json' \
              '.github/workflows/creator-v1-verify.yml' \
+             '.github/workflows/package-v003-verify.yml' \
              '.github/workflows/staff-v080-safety.yml' \
+             '.github/workflows/v010-package-member-ui-verify.yml' \
              '.github/workflows/v084-continuance-integrated-qa.yml' \
              '.github/workflows/v084-continuance-production.yml' \
              '.github/workflows/v091-aura-codex-browser.yml' \
+             '.github/workflows/v091-controlled-pilot-upload.yml' \
              '.github/workflows/v091-live-readonly-qa.yml' \
              'creator-v1/canonical-auth/community.mjs' \
              'creator-v1/canonical-auth/forums.mjs' \
              'creator-v1/canonical-auth/member-reputation.mjs' \
              'creator-v1/canonical-auth/member-verified-roles.mjs' \
              'creator-v1/canonical-auth/migrations/0012_verified_designations_v093.sql' \
+             'creator-v1/canonical-auth/package-proof.mjs' \
+             'creator-v1/canonical-auth/profile.mjs' \
              'creator-v1/canonical-auth/public-member-card.mjs' \
              'creator-v1/canonical-auth/space.mjs' \
+             'creator-v1/docs/V010-MEMBER-PACKAGE-GALLERY-HANDOFF-20261019.md' \
              'creator-v1/operations/anevum-iren-apex-staff-v002.mjs' \
              'creator-v1/operations/anevum-iren-insignias-v093.mjs' \
              'creator-v1/operations/anevum-iren-staff-entry-v003.mjs' \
              'creator-v1/operations/anevum-iren-staff-observatory-v001.mjs' \
+             'creator-v1/operations/anevum-iren-staff-observatory-v092.mjs' \
              'creator-v1/operations/anevum-iren-staff-session-status-v001.mjs' \
              'creator-v1/operations/anevum-profile-staff-access-v001.mjs' \
              'creator-v1/operations/staff-transport-v091.json' \
+             'creator-v1/ops/v091-controlled-pilot-upload.mjs' \
              'creator-v1/ops/v091-release-acceptance.mjs' \
              'creator-v1/ops/v091-staff-transport.mjs' \
              'creator-v1/package.json' \
+             'creator-v1/test/apex-orbit-assets.test.mjs' \
              'creator-v1/test/aura-codex-v091.test.mjs' \
              'creator-v1/test/aura-codex-visual-v091.mjs' \
              'creator-v1/test/canonical-otp-resend-v023.test.mjs' \
              'creator-v1/test/capture-home-navigation-v079.mjs' \
              'creator-v1/test/capture-iren-guided-v080.mjs' \
              'creator-v1/test/capture-sitewide-v012.mjs' \
+             'creator-v1/test/capture-staff-observatory-v092.mjs' \
              'creator-v1/test/cinematic-worlds.test.mjs' \
+             'creator-v1/test/community-structure.test.mjs' \
              'creator-v1/test/continuance-experience-v091.test.mjs' \
              'creator-v1/test/creator-identity-browser-v091.mjs' \
              'creator-v1/test/creator-route-v091.test.mjs' \
+             'creator-v1/test/evolution-v060-contract.test.mjs' \
+             'creator-v1/test/evolution-v062-native.test.mjs' \
              'creator-v1/test/iren-first-contact-v092.test.mjs' \
              'creator-v1/test/iren-guided-v080.test.mjs' \
              'creator-v1/test/member-presence-v092.test.mjs' \
+             'creator-v1/test/member-spaces-v028.test.mjs' \
              'creator-v1/test/module-experience-v073.test.mjs' \
+             'creator-v1/test/package-discovery-browser-v011.mjs' \
+             'creator-v1/test/package-discovery-fixture-v011.mjs' \
+             'creator-v1/test/package-discovery-v011.test.mjs' \
+             'creator-v1/test/package-gallery-v010.test.mjs' \
+             'creator-v1/test/package-proof-v010.test.mjs' \
              'creator-v1/test/player-card-v078-live-react-browser.mjs' \
              'creator-v1/test/player-presence-v092.test.mjs' \
+             'creator-v1/test/player-recognition-issuance-v066.test.mjs' \
              'creator-v1/test/player-reputation-v081.test.mjs' \
              'creator-v1/test/portal-offline-preview.mjs' \
              'creator-v1/test/project-hosting-v091.test.mjs' \
+             'creator-v1/test/staff-observatory-aura-v092.test.mjs' \
+             'creator-v1/test/staff-observatory-ux-v091.test.mjs' \
              'creator-v1/test/staff-session-transport-v091.test.mjs' \
              'creator-v1/test/staff-transport-release-v091.test.mjs' \
              'creator-v1/test/staff-verified-designations-v093.test.mjs' \
+             'creator-v1/test/v091-controlled-pilot-upload.test.mjs' \
              'creator-v1/test/v091-live-emblem-browser.mjs' \
              'creator-v1/test/v091-public-live-canary.mjs' \
              'creator-v1/test/v091-release-acceptance.test.mjs' \
              'creator-v1/test/verified-roles-v092.test.mjs' \
              'creator-v1/web/src/App.tsx' \
              'creator-v1/web/src/components/CompactMemberIdentity.tsx' \
+             'creator-v1/web/src/components/CreatorPackageGallery.tsx' \
              'creator-v1/web/src/components/IrenGuidedContinuance.tsx' \
              'creator-v1/web/src/components/LevelEmblem.tsx' \
              'creator-v1/web/src/components/MemberPresenceStatus.tsx' \
              'creator-v1/web/src/components/MemberSpaceDashboard.tsx' \
              'creator-v1/web/src/components/PlayerCardStudio.tsx' \
              'creator-v1/web/src/components/States.tsx' \
+             'creator-v1/web/src/components/creator-package-gallery-v010.css' \
              'creator-v1/web/src/components/player-card-studio-v065.css' \
              'creator-v1/web/src/components/player-card-v081.css' \
              'creator-v1/web/src/continuance-experience-v091.css' \
@@ -236,6 +465,7 @@ jobs:
              'creator-v1/web/src/iren-guided-v080.css' \
              'creator-v1/web/src/iren-living-v088.css' \
              'creator-v1/web/src/lib/canonical-beta.ts' \
+             'creator-v1/web/src/lib/creator-package-gallery-v010.ts' \
              'creator-v1/web/src/lib/creator-route.ts' \
              'creator-v1/web/src/lib/player-recognition.ts' \
              'creator-v1/web/src/lib/project-hosting.ts' \
@@ -244,12 +474,58 @@ jobs:
              'creator-v1/web/src/pages/AuraCodexPage.tsx' \
              'creator-v1/web/src/pages/CanonicalStudioPage.tsx' \
              'creator-v1/web/src/pages/CreatorsPage.tsx' \
+             'creator-v1/web/src/pages/DiscoverPage.tsx' \
              'creator-v1/web/src/pages/Phase1JoinPage.tsx' \
              'creator-v1/web/src/pages/Phase1PublicMemberPage.tsx' \
              'creator-v1/web/src/pages/ProjectPage.tsx' \
              'creator-v1/web/src/pages/StatusPage.tsx' \
              'creator-v1/web/src/pages/aura-codex-v091.css' \
-             'creator-v1/wrangler.iren-insignias-v093.jsonc') \
+             'creator-v1/wrangler.iren-insignias-v093.jsonc' \
+             'docs/production/ANEVUM-RELEASE-CONSOLIDATION-20261020.md' \
+             'site/alpha/v003/README.md' \
+             'site/alpha/v003/UPLINK-V004-HANDOFF-20261019.md' \
+             'site/alpha/v003/UPLINK-V005-CONTINUANCE-VISUALS-20261019.md' \
+             'site/alpha/v003/UPLINK-V006-RELEASE-ARTWORK-AND-REVISIONS-20261019.md' \
+             'site/alpha/v003/UPLINK-V007-STAGING-READINESS-20261019.md' \
+             'site/alpha/v003/UPLINK-V008-ISOLATED-STAGING-20261019.md' \
+             'site/alpha/v003/UPLINK-V009-CANONICAL-ROUTE-BRIDGE-20261019.md' \
+             'site/alpha/v003/UPLINK-V010-CANONICAL-WALL-PROOF-20261019.md' \
+             'site/alpha/v003/UPLINK-V010-ISOLATED-STAGE-20261020.md' \
+             'site/alpha/v003/UPLINK-V011-CONSOLIDATION-20261020.md' \
+             'site/alpha/v003/api.mjs' \
+             'site/alpha/v003/archive.mjs' \
+             'site/alpha/v003/continuance-visuals.mjs' \
+             'site/alpha/v003/cover.mjs' \
+             'site/alpha/v003/migrations/0002_rights_receipts.sql' \
+             'site/alpha/v003/migrations/0003_canonical_creator_links.sql' \
+             'site/alpha/v003/migrations/0004_resource_protection.sql' \
+             'site/alpha/v003/resource-cleanup.mjs' \
+             'site/alpha/v003/resource-policy.mjs' \
+             'site/alpha/v003/resource-service.mjs' \
+             'site/alpha/v003/runtime.mjs' \
+             'site/alpha/v003/schema.sql' \
+             'site/alpha/v003/tokens.mjs' \
+             'site/alpha/v003/ui.mjs' \
+             'site/alpha/v003/unified-creation-bridge-v009.mjs' \
+             'site/alpha/v003/unified-creation-candidate-v009.mjs' \
+             'site/alpha/v003/unified-creation-owner-v009.mjs' \
+             'site/alpha/v003/unified-creation-v002-pinned-snapshot.mjs' \
+             'tests/alpha-package-stage-readiness.mjs' \
+             'tests/alpha-package-v003.test.mjs' \
+             'tests/alpha-package-v004-browser.mjs' \
+             'tests/alpha-package-v009-bridge.test.mjs' \
+             'tests/alpha-package-v009-live-owner.test.mjs' \
+             'tests/alpha-package-v009-owner.test.mjs' \
+             'tests/alpha-package-v010-migration.test.mjs' \
+             'tests/command-trading.test.mjs' \
+             'tests/helpers/retired-production-contract.mjs' \
+             'tests/single-production-deploy.test.mjs' \
+             'tests/v5-owner-member-binding.test.mjs' \
+             'tests/v5-preview-encrypted-backup.test.mjs' \
+             'tests/v5-production-manual-deploy.test.mjs' \
+             'tests/v5-production-release.test.mjs' \
+             'tests/v5-release-bootstrap.test.mjs' \
+             'tests/v5-verify-deploy-safety.test.mjs') \
              <(git diff --name-only db2b8c0f8f79061adf1677986b87077856204267 HEAD)
           test -f creator-v1/web/src/lib/public-creator-handle.ts
           grep -Fq 'publicCreatorHandle(project.creatorHandle)' creator-v1/web/src/pages/CinematicLandingPage.tsx
@@ -258,69 +534,10 @@ jobs:
           test "$CLOUDFLARE_ACCOUNT_ID" = "2f7ee83107240152097efd956a4e8335"
           test -n "$CLOUDFLARE_API_TOKEN"
           test -s creator-v1/dist/web/index.html
-          cf_api="https://api.cloudflare.com/client/v4"
-          cf() { curl --fail --silent --show-error --retry 2 --max-time 25 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$1"; }
-          echo "Reading live gateway settings..."
-          cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/settings" > "$RUNNER_TEMP/pre-settings.json"
-          jq -e '
-            .success and
-            any(.result.bindings[]; .type=="assets" and .name=="ASSETS") and
-            any(.result.bindings[]; .type=="d1" and .name=="MEMBER_DB" and .database_id=="e1d29049-c83b-4534-8355-dc1fa36ba6d8") and
-            any(.result.bindings[]; .type=="plain_text" and .name=="ANEVUM_PRELAUNCH_MODE" and .text=="public") and
-            any(.result.bindings[]; .type=="plain_text" and .name=="ANEVUM_LAUNCH_APPROVED" and .text=="true") and
-            any(.result.bindings[]; .type=="plain_text" and .name=="CANONICAL_EMAIL_ENABLED" and .text=="true") and
-            any(.result.bindings[]; .type=="secret_text" and .name=="CANONICAL_BETTER_AUTH_SECRET")
-          ' "$RUNNER_TEMP/pre-settings.json" > /dev/null
-          echo "Production flags and binding checks passed. Checking deployed Worker version..."
-          cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" > "$RUNNER_TEMP/pre-deployments.json"
-          pre_version="$(jq -r '(.result.deployments // .result)[0].versions[0].version_id' "$RUNNER_TEMP/pre-deployments.json")"
-          test "$pre_version" = "93cc7f07-cf39-457e-af69-c9f6f4c02d25"
-          echo "Deployed version matches expected baseline. Checking routes..."
-          cf "$cf_api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/pre-routes.json"
-          jq -e '.success and any(.result[]; .pattern=="anevum.com/*" and .script=="anevum-native-frame-policy-v001") and ([.result[]|select(.pattern=="anevum.com/assets/index-*")|.script]==["anevum-native-project-community-v002"])' "$RUNNER_TEMP/pre-routes.json" > /dev/null
-          echo "Routes verified. Preparing config from current production settings..."
-          jq -e '.success and
-           any(.result[]; .pattern=="anevum.com/evolution/vectors/*" and .script=="anevum-apex-prelaunch-gateway") and
-           any(.result[]; .pattern=="anevum.com/play/*" and .script=="anevum-unified-creation-routes-v002") and
-           any(.result[]; .pattern=="anevum.com/upload*" and .script=="anevum-unified-creation-routes-v002") and
-           any(.result[]; .pattern=="anevum.com/staff*" and .script=="anevum-iren-staff-entry-v003")' "$RUNNER_TEMP/pre-routes.json" >/dev/null
-          jq -e '.success and (.result|length)==36 and ([.result[]|select(.pattern|startswith("anevum.com/"))]|length)==30 and any(.result[];.pattern=="lab.anevum.com/previews*" and .script=="anevum-lab-previews-v001")' "$RUNNER_TEMP/pre-routes.json" >/dev/null
-          jq -e '.success and
-            any(.result[];.pattern=="anevum.com/" and .script=="anevum-profile-staff-access-v001") and
-            any(.result[];.pattern=="anevum.com/member*" and .script=="anevum-profile-staff-access-v001") and
-            any(.result[];.pattern=="anevum.com/api/v1/member/xp-test*" and .script=="anevum-xp-test-retirement-v001") and
-            any(.result[];.pattern=="anevum.com/staff" and .script=="anevum-iren-staff-entry-v003")' "$RUNNER_TEMP/pre-routes.json" >/dev/null
-          jq -S '[.result[]|{pattern,script}]|sort_by(.pattern)' "$RUNNER_TEMP/pre-routes.json" > "$RUNNER_TEMP/routes.lock.json"
-          jq -e '.success and (.result.bindings|length)==24 and
-           any(.result.bindings[]; .type=="assets" and .name=="ASSETS") and
-           any(.result.bindings[]; .type=="d1" and .name=="MEMBER_DB" and ((.database_id//.id)=="e1d29049-c83b-4534-8355-dc1fa36ba6d8")) and
-           any(.result.bindings[]; .type=="d1" and .name=="COMMUNITY_DB" and ((.database_id//.id)=="fa96e36d-6257-4883-bf15-074947e11a13")) and
-           any(.result.bindings[]; .type=="secret_text" and .name=="CANONICAL_RESEND_API_KEY") and
-           any(.result.bindings[]; .type=="secret_text" and .name=="CANONICAL_PROTECTED_EMAILS") and
-           any(.result.bindings[]; .type=="plain_text" and .name=="CANONICAL_RECOGNITION_ENABLED" and .text=="true") and
-            all(.result.bindings[]; .name!="CANONICAL_REPUTATION_ENABLED" or .text!="true") and
-            all(.result.bindings[]; .name!="CANONICAL_VERIFIED_ROLES_ENABLED" or .text!="true")' "$RUNNER_TEMP/pre-settings.json" >/dev/null
-          jq -S '[.result.bindings[]|{name,type}]|sort_by(.name)' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/bindings.lock.json"
-          jq -S '[.result.bindings[]|select(.type=="d1")|{name,database:(.database_id//.id)}]|sort_by(.name)' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/db.lock.json"
-          node --input-type=module <<'NODE'
-          import {readFileSync,writeFileSync} from "node:fs";
-          const config=JSON.parse(readFileSync("creator-v1/wrangler.apex-prelaunch.jsonc","utf8"));
-          const live=JSON.parse(readFileSync(process.env.RUNNER_TEMP+"/pre-settings.json","utf8"));
-          if(config.name!=="anevum-apex-prelaunch-gateway"||config.routes.length!==0||config.assets?.binding!=="ASSETS"||config.assets?.run_worker_first!==true)throw Error("Unexpected candidate deployment scope");
-          const vars=Object.fromEntries(live.result.bindings.filter(x=>x.type==="plain_text").map(x=>[x.name,x.text]));
-          if(vars.ANEVUM_PRELAUNCH_MODE!=="public"||vars.ANEVUM_LAUNCH_APPROVED!=="true"||vars.ANEVUM_CANONICAL_APEX_ENABLED!=="true"||vars.CANONICAL_SCHEMA_APPROVED!=="true")throw Error("Live launch flags did not match the authorized public state");
-          config.vars=vars;
-          writeFileSync("creator-v1/wrangler.v089.generated.json",JSON.stringify(config,null,2));
-          console.log("Preserving all live plain-text Worker variables and existing secret bindings.");
-          NODE
-          jq -S '[.result.bindings[]|select(.type=="plain_text")|{name,text}]|sort_by(.name)' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/pre-vars.json"
-          jq -S '[.result.bindings[]|select(.type=="secret_text")|.name]|sort' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/pre-secrets.json"
-          # Verify the same live baseline immediately before the first write.
-          cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" > "$RUNNER_TEMP/immediate-pre-deployments.json"
-          test "$(jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/immediate-pre-deployments.json")" = "93cc7f07-cf39-457e-af69-c9f6f4c02d25"
-          cf "$cf_api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/immediate-pre-routes.json"
-          jq -S '[.result[]|{pattern,script}]|sort_by(.pattern)' "$RUNNER_TEMP/immediate-pre-routes.json" > "$RUNNER_TEMP/immediate-routes.lock.json"
-          cmp "$RUNNER_TEMP/routes.lock.json" "$RUNNER_TEMP/immediate-routes.lock.json"
+          # The helper verifies the original 24 bindings separately from the
+          # reviewed candidate's 26, all 38 routes, runtime and disabled exposure.
+          # Its journal is private runner state and is never included in artifacts.
+          node "$RUNNER_TEMP/v091-promotion-guard.mjs" prepare
           curl -fsS --max-time 20 https://anevum.com/api/v1/member/health | jq -e '.status=="ready" and .registration=="open"' >/dev/null
           curl -fsS --max-time 20 https://anevum.com/api/v1/member/auth-methods | jq -e '.methods.email.available==true' >/dev/null
           deploy_started=0
@@ -329,35 +546,21 @@ jobs:
             code=$?
             trap - EXIT
             if test "$deploy_started" = "1" && test "$accepted" != "1"; then
-              echo "::warning::V091 rollout did not pass all checks; verifying production Worker state for rollback."
-              current="$(cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" | jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' || true)"
-              if test -n "$current" && test "$current" != "$pre_version"; then
-                echo "::warning::Restoring recorded prior apex Worker version."
-                printf '{"strategy":"percentage","versions":[{"percentage":100,"version_id":"%s"}]}' "$pre_version" > "$RUNNER_TEMP/revert.json"
-                curl --fail --silent --show-error --max-time 40 -X POST -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" -d @"$RUNNER_TEMP/revert.json" "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" >/dev/null || echo "::error::ROLLBACK REQUIRES MANUAL INTERVENTION"
-                rollback_version="$(cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" | jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' || true)"
-                test "$rollback_version" = "$pre_version" && echo "V091_PREVIOUS_WORKER_ROLLBACK=PASS" || echo "::error::ROLLBACK DID NOT REACH RECORDED APEX VERSION"
+              test "$code" != "0" || code=1
+              echo "::warning::V091 promotion did not pass; checking ownership before restoring the recorded pilot split."
+              if ! node "$RUNNER_TEMP/v091-promotion-guard.mjs" rollback; then
+                echo "::error::RECORDED PILOT ROLLBACK WAS NOT CONFIRMED; explicit intervention is required."
+                code=1
               fi
             fi
             exit "$code"
           }
           trap revert EXIT
           deploy_started=1
-          npx wrangler deploy --config creator-v1/wrangler.v089.generated.json --keep-vars
-          cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/settings" > "$RUNNER_TEMP/post-settings.json"
-          cf "$cf_api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/post-routes.json"
-          jq -S '[.result[]|{pattern,script}]|sort_by(.pattern)' "$RUNNER_TEMP/post-routes.json" > "$RUNNER_TEMP/post-route.lock.json"
-          cmp "$RUNNER_TEMP/routes.lock.json" "$RUNNER_TEMP/post-route.lock.json"
-          jq -S '[.result.bindings[]|{name,type}]|sort_by(.name)' "$RUNNER_TEMP/post-settings.json" > "$RUNNER_TEMP/post-bindings.lock.json"
-          cmp "$RUNNER_TEMP/bindings.lock.json" "$RUNNER_TEMP/post-bindings.lock.json"
-          jq -S '[.result.bindings[]|select(.type=="d1")|{name,database:(.database_id//.id)}]|sort_by(.name)' "$RUNNER_TEMP/post-settings.json" > "$RUNNER_TEMP/post-db.lock.json"
-          cmp "$RUNNER_TEMP/db.lock.json" "$RUNNER_TEMP/post-db.lock.json"
-          jq -S '[.result.bindings[]|select(.type=="plain_text")|{name,text}]|sort_by(.name)' "$RUNNER_TEMP/post-settings.json" > "$RUNNER_TEMP/post-vars.json"
-          jq -S '[.result.bindings[]|select(.type=="secret_text")|.name]|sort' "$RUNNER_TEMP/post-settings.json" > "$RUNNER_TEMP/post-secrets.json"
-          diff -u "$RUNNER_TEMP/pre-vars.json" "$RUNNER_TEMP/post-vars.json"
-          diff -u "$RUNNER_TEMP/pre-secrets.json" "$RUNNER_TEMP/post-secrets.json"
-          jq -e '.success and any(.result.bindings[]; .type=="assets" and .name=="ASSETS") and any(.result.bindings[]; .type=="d1" and .name=="MEMBER_DB" and .database_id=="e1d29049-c83b-4534-8355-dc1fa36ba6d8")' "$RUNNER_TEMP/post-settings.json" >/dev/null
-          echo "All live flags, secrets, account/database bindings remain unchanged."
+          # No new version, secret, binding, route or asset upload is performed.
+          node "$RUNNER_TEMP/v091-promotion-guard.mjs" promote
+          node "$RUNNER_TEMP/v091-promotion-guard.mjs" postflight
+          echo "PASS: exact reviewed candidate and its approved configuration are active."
           bundle="$(node --input-type=module -e 'import{readFileSync}from"node:fs";let s=readFileSync("creator-v1/dist/web/index.html","utf8");console.log(s.match(/src="(\/assets\/index-[^"]+\.js)"/)?.[1]||"")')"
           test -n "$bundle"
           ready=0
@@ -402,7 +605,7 @@ jobs:
           # temporary response. Wait conservatively, never accept unstyled UI.
           css_ready=0
           for attempt in $(seq 1 20); do
-            if curl --silent --show-error --max-time 30 --no-keepalive \
+            if curl --fail --silent --show-error --max-time 30 --no-keepalive \
                  -H 'Cache-Control: no-cache' \
                  -D "$RUNNER_TEMP/v079-css-response.headers" \
                  -o "$RUNNER_TEMP/v079-live-style.css" \
@@ -416,7 +619,8 @@ jobs:
                    grep -Fq '.ir87-scout' "$RUNNER_TEMP/v079-live-style.css" &&
                    grep -Fq '.ir88-figure' "$RUNNER_TEMP/v079-live-style.css" &&
                    grep -Fq '.ir88-station' "$RUNNER_TEMP/v079-live-style.css" &&
-                  grep -Fq '.av52-universe-art' "$RUNNER_TEMP/v079-live-style.css"; then
+                  grep -Fq '.av52-universe-art' "$RUNNER_TEMP/v079-live-style.css" &&
+                  node "$RUNNER_TEMP/v091-promotion-guard.mjs" live-css "$RUNNER_TEMP/v079-live-style.css"; then
                 css_ready=1
                 break
               fi
@@ -514,16 +718,15 @@ jobs:
           done
           test "$homepage_ok" = 1 || { echo "::error::V089 React homepage or Wayfinder missing in live Chromium"; tail -n 35 "$RUNNER_TEMP/v079-live-home-chrome.log" || true; exit 1; }
           echo "V089_LIVE_HOMEPAGE_WAYFINDER=PASS"
-          cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments?per_page=1" > "$RUNNER_TEMP/v079-live-deployments.json"
-          jq -e --arg old "$pre_version" '.success and .result.deployments[0].versions[0].version_id!=$old and .result.deployments[0].versions[0].percentage==100' "$RUNNER_TEMP/v079-live-deployments.json" >/dev/null
+          node "$RUNNER_TEMP/v091-promotion-guard.mjs" postflight
           accepted=1
           trap - EXIT
           echo "ANEVUM_V089_GUARDED_HOME_WAYFINDER_LIVE=PASS" >> "$GITHUB_STEP_SUMMARY"
           echo "ANEVUM_V089_EARNED_2D_ACTIVE_AND_HISTORIC_3D_PRESERVED=PASS" >> "$GITHUB_STEP_SUMMARY"
-          echo "ANEVUM_V090_PRODUCTION_ROUTES_DATABASES_SECRETS_UNCHANGED=PASS" >> "$GITHUB_STEP_SUMMARY"
+          echo "ANEVUM_V091_REVIEWED_CANDIDATE_CONFIGURATION_AND_ROUTES=PASS" >> "$GITHUB_STEP_SUMMARY"
           echo "APPROVED_SOURCE_SHA=$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
           echo "RELEASE_SHA=$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
-          jq -r '.result.deployments[0].versions[0].version_id' "$RUNNER_TEMP/v079-live-deployments.json" | sed 's/^/WORKER_VERSION=/' >> "$GITHUB_STEP_SUMMARY"
+          echo "ANEVUM_V091_EXACT_PILOT_CANDIDATE_PROMOTED=PASS" >> "$GITHUB_STEP_SUMMARY"
       - name: Preserve V089 release acceptance screenshots
         uses: actions/upload-artifact@v4
         if: always()

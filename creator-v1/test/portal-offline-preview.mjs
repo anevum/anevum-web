@@ -3,7 +3,9 @@ import {createServer} from "node:http";
 import {readFileSync,existsSync} from "node:fs";
 import {resolve,extname} from "node:path";
 import {fileURLToPath} from "node:url";
+import {createPackageDiscoveryFixture} from "./package-discovery-fixture-v011.mjs";
 const dist=resolve(fileURLToPath(new URL("../dist/react-staging/",import.meta.url)));
+const packageDiscoveryFixture=createPackageDiscoveryFixture();
 const people=[["nova_demo","Nova Studio"],["moss_demo","Moss Workshop"],["oxide_demo","Oxide Collective"],["relay_demo","Relay Lab"]].map(([handle,displayName])=>({handle,displayName,publishedProjects:2}));
 const seeds=[
  ["ARCADE AFTER DARK","games","nova_demo"],["PLANET PUZZLE","games","moss_demo"],["VOID RUNNER","games","oxide_demo"],
@@ -230,7 +232,9 @@ function api(res,url){
  if(path.startsWith("/creators/")){const p=people.find(p=>p.handle===path.slice(10));return json(res,p?{creator:p}:{error:"not-found"},p?200:404);}
  if(path==="/projects"){
   const cat=url.searchParams.get("category"),q=(url.searchParams.get("q")||"").toLowerCase(),who=url.searchParams.get("creator");
-  const items=work.filter(p=>(!cat||p.category===cat)&&(!q||p.title.toLowerCase().includes(q))&&(!who||who===p.creatorHandle)).slice(0,Math.min(24,Number(url.searchParams.get("limit"))||24));
+  const candidates=url.searchParams.get('cursor')==='synthetic-empty'?[]:packageDiscoveryFixture.legacy(work);
+  const freeOnly=url.searchParams.get('free')==='1';
+  const items=candidates.filter(p=>(!cat||p.category===cat)&&(!q||(p.title+' '+p.summary).toLowerCase().includes(q))&&(!who||who===p.creatorHandle)&&(!freeOnly||p.freeToUse)).slice(0,Math.min(24,Number(url.searchParams.get("limit"))||24));
   return json(res,{items,count:items.length,nextCursor:null});
  }
  if(path.startsWith("/projects/")){const id=path.slice(10);const p=work.find(p=>p.id===id)||playerCases.get(id);return json(res,p?{item:p}:{error:"not-found"},p?200:404);}
@@ -240,6 +244,7 @@ const mime={".css":"text/css",".js":"text/javascript",".svg":"image/svg+xml",".p
 createServer((req,res)=>{
  try{
   const u=new URL(req.url,"http://127.0.0.1:4178");
+  if(packageDiscoveryFixture.handle(req,res,u))return;
   if(u.pathname==="/__player-member-fixture"&&req.headers.host==="127.0.0.1:4178"&&req.method==="GET"){
     const mode=u.searchParams.get("mode");
     if(!["canonical","canonical-saves","legacy","offline"].includes(mode))return json(res,{error:"invalid-mode"},400);

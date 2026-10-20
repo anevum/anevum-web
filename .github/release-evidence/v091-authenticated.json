@@ -1,10 +1,34 @@
 {
-  "source_sha": "6f0efb77f20e6c920d880293796768b9f354f97e",
-  "founder_staff_session": false,
-  "reviewer_staff_session": false,
+  "source_sha": "d7e8d8a2fda4406ba144bfc8dd03d664e48b7b07",
+  "founder_staff_session": true,
+  "reviewer_staff_session": true,
   "creator_journey": false,
   "cross_account_identity": false,
   "verified_at": null,
   "evidence": [],
-  "status": "BLOCKED: V091 / V092 / V093 verified role approvals and member presence source locked at 6f0efb77. Founder/reviewer sessions, real creator journey and cross-account authenticated checks are not signed off. Independent role ledger migration not applied, role operations not routed, role/reputation display flags disabled. No production release authorized."
+  "status": "Controlled release verification is in progress; final production acceptance remains incomplete.",
+  "implementation_verification": {
+    "source_sha": "d7e8d8a2fda4406ba144bfc8dd03d664e48b7b07",
+    "package_tests": {
+      "passed": 91,
+      "failed": 0,
+      "skipped": 0
+    },
+    "release_acceptance_and_promotion_tests": {
+      "passed": 28,
+      "failed": 0,
+      "skipped": 0,
+      "source_sha": "12b8a1c66b66c5e324c485803682c81ab158b300"
+    },
+    "reviewed_file_inventory": 151,
+    "release_metadata_exclusions": 5,
+    "changes": [
+      "Accept an omitted optional artwork part after multipart parsing while preserving selected-artwork validation.",
+      "Require explicit restoration before reviewing a suspended project and reject conflicting review transactions without partial writes.",
+      "Hide approval and rejection controls from creators reviewing their own build and from suspended projects.",
+      "Map validated package JSON player links to the canonical player path, preserving private-preview queries.",
+      "Give native package revision actions a readable wrapping width within project cards."
+    ],
+    "qualification": "Package tests passed on this source. Release-gate tests and the previous full CI matrix are attributed separately to their tested source. Automated verification does not establish human review, physical-device acceptance or completed authenticated release gates."
+  }
 }

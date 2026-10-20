@@ -1,0 +1,91 @@
+name: ANEVUM V091 Controlled Pilot Version Upload
+
+# The owner approved this controlled V003 pilot on 2026-10-20. This prepares
+# an INACTIVE version; ordinary traffic and authenticated acceptance stay unchanged.
+on:
+  push:
+    branches:
+      - build/v010-creator-wall-package-link-20261019-001
+    paths:
+      - .github/workflows/v091-controlled-pilot-upload.yml
+permissions:
+  contents: read
+concurrency:
+  group: anevum-v091-controlled-pilot-upload
+  cancel-in-progress: false
+jobs:
+  upload_inactive:
+    if: github.repository == 'anevum/anevum-web' && github.ref == 'refs/heads/build/v010-creator-wall-package-link-20261019-001'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify the pinned source without certifying authenticated acceptance
+        run: |
+          set -euo pipefail
+          node --test creator-v1/test/v091-release-acceptance.test.mjs creator-v1/test/v091-controlled-pilot-upload.test.mjs
+          node creator-v1/ops/v091-release-acceptance.mjs --source-only
+      - name: Install pinned toolchain and rebuild preserved Evolution assets
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          python -m pip install numpy==2.2.6 scipy==1.15.3 Pillow==11.2.1
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libgl1-mesa-dri
+          (
+            cd design/evolution-v059
+            mkdir -p artwork/{native,textures,vector,masters,web,compact} docs dist previews
+            python src/export_native.py
+            python src/render_web.py
+            python src/build.py
+          )
+          python creator-v1/ops/install-evolution-v060.py
+      - name: Build gallery-enabled frontend and verify package contracts
+        run: |
+          set -euo pipefail
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+          node --experimental-strip-types --test creator-v1/test/package-gallery-v010.test.mjs creator-v1/test/package-proof-v010.test.mjs creator-v1/test/package-discovery-v011.test.mjs
+          node --test tests/alpha-package-v003.test.mjs tests/alpha-package-v009-bridge.test.mjs tests/alpha-package-v009-owner.test.mjs tests/alpha-package-v009-live-owner.test.mjs tests/alpha-package-v010-migration.test.mjs
+      - name: Verify compiled gallery using isolated browser fixtures
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/v091-pilot/browser
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium)"
+          node creator-v1/test/portal-offline-preview.mjs > evidence/v091-pilot/browser/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent --max-time 3 http://127.0.0.1:4178/__ready >/dev/null; then ready=1; break; fi
+            sleep 0.2
+          done
+          test "$ready" = 1
+          node creator-v1/test/capture-sitewide-v012.mjs --packages-only --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/v091-pilot/browser
+          node --input-type=module -e 'import{readFileSync}from"node:fs";const r=JSON.parse(readFileSync("evidence/v091-pilot/browser/package-discovery-v011.json"));if(r.enabled!==true||r.status!=="PASS")throw Error("Gallery-on fixture failed");'
+      - name: Upload inactive apex version with the separate package proof secret
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node creator-v1/ops/v091-controlled-pilot-upload.mjs --upload
+      - name: Preserve sanitized pilot build and upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v091-controlled-pilot-${{ github.run_id }}
+          path: evidence/v091-pilot/
+          retention-days: 21
+          if-no-files-found: warn

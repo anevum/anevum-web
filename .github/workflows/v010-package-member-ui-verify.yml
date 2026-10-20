@@ -1,0 +1,43 @@
+name: ANEVUM V010 Canonical Member Gallery Safety
+
+on:
+  pull_request:
+    paths:
+      - "creator-v1/web/src/lib/creator-package-gallery-v010.ts"
+      - "creator-v1/web/src/components/CreatorPackageGallery.tsx"
+      - "creator-v1/web/src/components/creator-package-gallery-v010.css"
+      - "creator-v1/web/src/components/MemberSpaceDashboard.tsx"
+      - "creator-v1/web/src/pages/Phase1PublicMemberPage.tsx"
+      - "creator-v1/canonical-auth/package-proof.mjs"
+      - "creator-v1/canonical-auth/profile.mjs"
+      - "creator-v1/test/package-gallery-v010.test.mjs"
+      - "creator-v1/test/package-proof-v010.test.mjs"
+      - ".github/workflows/v010-package-member-ui-verify.yml"
+  push:
+    branches:
+      - "build/v010-member-space-package-gallery-20261019-001"
+    paths:
+      - "creator-v1/web/src/lib/creator-package-gallery-v010.ts"
+      - "creator-v1/web/src/components/**"
+      - "creator-v1/web/src/pages/Phase1PublicMemberPage.tsx"
+      - "creator-v1/canonical-auth/package-proof.mjs"
+      - "creator-v1/canonical-auth/profile.mjs"
+      - "creator-v1/test/package-gallery-v010.test.mjs"
+      - "creator-v1/test/package-proof-v010.test.mjs"
+      - ".github/workflows/v010-package-member-ui-verify.yml"
+permissions:
+  contents: read
+jobs:
+  verified-gallery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Syntax and privacy contract
+        run: |
+          node --check creator-v1/canonical-auth/package-proof.mjs
+          node --check creator-v1/canonical-auth/profile.mjs
+          node --experimental-strip-types --test creator-v1/test/package-gallery-v010.test.mjs creator-v1/test/package-proof-v010.test.mjs
