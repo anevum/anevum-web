@@ -51,15 +51,70 @@
 @media(forced-colors:active){.ir80-shade{background:Canvas}.ir80-spotlight,.ir80-guide-card,.ir80-help,.ir80-dock{border:2px solid Highlight}}
 @keyframes ir80-float{50%{transform:translateY(-4px)}}@keyframes ir80-turn{to{transform:rotate(360deg)}}@keyframes ir80-arrive{from{opacity:.4;transform:translateY(5px)}to{opacity:1;transform:none}}
 
-/* Contextual help is a separate utility, not a fifth primary Wayfinder route. */
-.av79-navigation .ir80-wayfinder-entry{display:flex;align-items:center;gap:12px;width:100%;margin-top:10px;padding:12px 15px;border:1px solid #dac8bc56;border-radius:13px;color:#f8eadc;background:linear-gradient(120deg,#202d46,#172138);text-align:left;cursor:pointer;font-family:inherit}
-.ir80-wayfinder-entry .av79-destination-icon{flex:none;display:grid;place-items:center;width:36px;height:36px;border:1px solid #f2d5b044;border-radius:11px;color:#ead1b9}
-.ir80-wayfinder-entry>span:nth-child(2){display:grid;gap:4px;min-width:0;flex:1}
-.ir80-wayfinder-entry strong{font-size:13px;font-weight:650}.ir80-wayfinder-entry small{font-size:11px;color:#c1c8d9}
-.ir80-wayfinder-action{font:700 9px/1.4 ui-monospace,monospace;color:#ead2ad;letter-spacing:.04em;white-space:nowrap}
-.ir80-wayfinder-entry:hover{border-color:#edd5b1}.ir80-wayfinder-entry:focus-visible{outline:3px solid #86ddeb;outline-offset:3px}
-@media(max-width:380px){.ir80-wayfinder-action{display:none}}
-
+/* Contextual IREN help is a full-width Wayfinder utility, not a fifth half-width route.
+ * It must not squeeze its description or action in the two-column destination grid. */
+.av79-navigation .ir80-wayfinder-entry{
+  grid-column:1 / -1;
+  display:grid;
+  grid-template-columns:36px minmax(0,1fr) auto;
+  align-items:center;
+  column-gap:12px;
+  row-gap:5px;
+  min-width:0;
+  width:100%;
+  min-height:75px;
+  margin:0;
+  padding:12px 15px;
+  border:1px solid #dac8bc56;
+  border-radius:13px;
+  color:#f8eadc;
+  background:linear-gradient(120deg,#202d46,#172138);
+  text-align:left;
+  cursor:pointer;
+  font-family:inherit;
+}
+.ir80-wayfinder-entry .av79-destination-icon{
+  display:grid;
+  place-items:center;
+  flex:none;
+  width:36px;
+  height:36px;
+  border:1px solid #f2d5b044;
+  border-radius:11px;
+  color:#ead1b9;
+}
+.ir80-wayfinder-entry>span:nth-child(2){display:grid;gap:4px;min-width:0}
+.ir80-wayfinder-entry strong{font-size:13px;font-weight:650;line-height:1.3}
+.ir80-wayfinder-entry small{font-size:11px;line-height:1.4;color:#c1c8d9}
+.ir80-wayfinder-action{
+  justify-self:end;
+  font:700 9px/1.4 ui-monospace,monospace;
+  color:#ead2ad;
+  letter-spacing:.04em;
+  white-space:nowrap;
+}
+.ir80-wayfinder-entry:hover{border-color:#edd5b1}
+.ir80-wayfinder-entry:focus-visible{outline:3px solid #86ddeb;outline-offset:3px}
+/* On phones, the action gets its own line instead of forcing vertical wrapping. */
+@media(max-width:650px){
+  .av79-navigation .ir80-wayfinder-entry{
+    grid-template-columns:34px minmax(0,1fr);
+    padding:12px;
+  }
+  .ir80-wayfinder-entry .av79-destination-icon{width:34px;height:34px}
+  .ir80-wayfinder-action{
+    grid-column:2;
+    justify-self:start;
+    white-space:normal;
+  }
+}
+@media(max-width:380px){
+  .av79-navigation .ir80-wayfinder-entry{
+    grid-template-columns:32px minmax(0,1fr);
+    column-gap:10px;
+  }
+  .ir80-wayfinder-entry .av79-destination-icon{width:32px;height:32px}
+}
 
 /* V087: a single unobtrusive IREN scout, not overlapping fixed toolbars. */
 .ir87-companion{right:max(12px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom))}

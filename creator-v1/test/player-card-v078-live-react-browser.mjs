@@ -29,13 +29,21 @@ const publicProfile=handle=>({profile:{
  worldTheme:'nocturne',focus:['art','research']
 }});
 const badgeIds=['first_signal','world_shaper','first_creation'];
-const verifiedSpace=visible=>({
+// Each variant is a synthetic localhost fixture; no real member grant or XP.
+const syntheticVariants=new Map([
+ ...['aurora','eclipse','ember','nebula','transcosmic','none'].map(aura=>
+  ['qa'+aura,{aura,role:'founder'}]),
+ ...['administrator','moderator','curator'].map(role=>
+  ['qa'+role,{aura:'nebula',role}])
+]);
+const validSyntheticHandle=handle=>handle==='qaexample'||handle==='nostats'||syntheticVariants.has(handle);
+const verifiedSpace=(visible,aura='aurora',role='founder')=>({
  media:{},awards:[],featuredAwards:visible?badgeIds:[],
  earnedBadges:visible?badgeIds.map((id,i)=>({id,earnedAt:now-i*7200})):[],
  badgeDisplay:{mode:'automatic',ids:[]},
  distinctions:{medals:[],ribbons:[]},
- aura:'aurora',constellation:null,showStats:visible,revision:1,
- role:'founder',
+ aura,constellation:null,showStats:visible,revision:1,
+ role,
  ...(visible?{earnedAura:'signal',reputation:{score:72,tier:'signal',nextAt:160,
   stats:{discussions:3,replies:2,appreciations:2,badges:1}}}:{}),
  ...(visible?{stats:{level:4,xp:925,levelStart:675,nextLevel:1200,
@@ -45,14 +53,19 @@ const hits=[];
 const server=createServer((req,res)=>{
  const path=new URL(req.url||'/','http://localhost').pathname;
  hits.push(path);
- if(path==='/api/v1/members/qaexample')return json(res,publicProfile('qaexample'));
- if(path==='/api/v1/members/nostats')return json(res,publicProfile('nostats'));
+ const publicPath=/^\/api\/v1\/members\/([a-z][a-z0-9_]{2,29})$/.exec(path);
+ if(publicPath&&validSyntheticHandle(publicPath[1]))
+  return json(res,publicProfile(publicPath[1]));
  if(path==='/api/v1/members/privateqa')return json(res,{error:'Not found'},404);
- const space=/^\/api\/v1\/members\/(qaexample|nostats)\/space$/.exec(path);
- if(space)return json(res,verifiedSpace(space[1]==='qaexample'));
- const wall=/^\/api\/v1\/members\/(qaexample|nostats)\/wall$/.exec(path);
- if(wall)return json(res,{posts:[]});
- if(path==='/api/v1/members/qaexample/rewards/levels/4/card'){
+ const space=/^\/api\/v1\/members\/([a-z][a-z0-9_]{2,29})\/space$/.exec(path);
+ if(space&&validSyntheticHandle(space[1])){
+  const variant=syntheticVariants.get(space[1]);
+  return json(res,verifiedSpace(space[1]!=='nostats',variant?.aura,variant?.role));
+ }
+ const wall=/^\/api\/v1\/members\/([a-z][a-z0-9_]{2,29})\/wall$/.exec(path);
+ if(wall&&validSyntheticHandle(wall[1]))return json(res,{posts:[]});
+ const earnedArt=/^\/api\/v1\/members\/([a-z][a-z0-9_]{2,29})\/rewards\/levels\/4\/card$/.exec(path);
+ if(earnedArt&&validSyntheticHandle(earnedArt[1])&&earnedArt[1]!=='nostats'){
   res.writeHead(200,{
    'content-type':'image/svg+xml; charset=utf-8',
    'content-security-policy':"default-src 'none'; script-src 'none'; object-src 'none'; base-uri 'none'",
@@ -139,15 +152,20 @@ try{
     const card=document.querySelector('[data-player-card="v078"].av65-player-card--featured');
     const progress=card?.querySelector('.av78-player-progress progress');
     const art=card?.querySelector('.av78-featured-art img');
+    const artPanel=card?.querySelector('.av78-featured-art');
     const badge=card?.querySelector('.av61-specimen img');
-    if(!card||!progress||!art?.complete||!art.naturalWidth||!badge?.complete||!badge.naturalWidth)return null;
+    if(!card||!progress||!badge?.complete||!badge.naturalWidth)return null;
+    const decorHidden=!!artPanel&&getComputedStyle(artPanel).display==='none';
+    // The giant watermark is deliberately not rendered on phones; a hidden
+    // decorative image may never load. The earned level seal MUST load.
+    if(!decorHidden&&(!art?.complete||!art.naturalWidth))return null;
     const rect=card.getBoundingClientRect();
     const viewport=innerWidth;
     return {
       memberName:card.querySelector('.av61-member-name')?.textContent,
-      artworkType:art.currentSrc,
-      pixels:art.naturalWidth,
-      badgePixels:badge.naturalWidth,
+      artworkType:decorHidden?badge.currentSrc:art.currentSrc,
+      pixels:decorHidden?badge.naturalWidth:art.naturalWidth,
+      decorHidden,badgePixels:badge.naturalWidth,
       label:card.querySelector('.av61-level-label')?.textContent,
       progressValue:progress.value,progressMax:progress.max,
       progressText:card.querySelector('.av78-progress-caption')?.textContent,
@@ -157,6 +175,11 @@ try{
       role:card.querySelector('.av81-role-token')?.textContent,
       rep:card.querySelector('.av81-reputation-token')?.textContent,
       aura:card.className.includes('av81-earned--signal'),
+      chosenAura:card.classList.contains('av65-aura--aurora'),
+      auraCompasses:card.querySelectorAll('.av92-aura-compass').length,
+      coverAtmosphere:!!document.querySelector('.ms-public .av92-presence-cover--aurora'),
+      roleAtmosphere:!!document.querySelector('.ms-public .av92-presence-role--founder'),
+      auraMarkerAnimation:getComputedStyle(card.querySelector('.av92-aura-compass'),':before').animationName,
       statusLabel:card.querySelector('.av81-contribution-stats')?.textContent
     };
    })()`);
@@ -166,14 +189,16 @@ try{
    view.pixels!==256||view.badgePixels!==256||!view.label.includes('Symmetry Field')||
    view.progressValue!==250||view.progressMax!==525||view.hiddenAssetCount||
    view.role!=='Founder'||!view.rep.includes('72 REP')||!view.aura||
-   !view.statusLabel.includes('THREADS')||
-   view.left<0||view.right>view.viewport+2)
+   !view.chosenAura||view.auraCompasses!==1||!view.coverAtmosphere||!view.roleAtmosphere||
+   view.auraMarkerAnimation!=='none'||!view.statusLabel.includes('THREADS')||
+   view.decorHidden!==(width<=430)||view.left<0||view.right>view.viewport+2)
    throw Error('V078_REACT_CARD_INVALID '+name+' '+JSON.stringify(view));
   const capture=await send('Page.captureScreenshot',{format:'png',fromSurface:true});
   const bytes=Buffer.from(capture.data||'','base64');
   if(bytes.length<3500)throw Error('V078_EMPTY_SCREENSHOT_'+name);
   writeFileSync(join(output,'v078-live-react-'+name+'.png'),bytes);
   results.push({viewport:name,cardWidth:view.width,imagePixels:view.pixels,
+   mobileDecorativeArtHidden:view.decorHidden,
    progressValue:view.progressValue,progressMax:view.progressMax,
    pageOverflow:view.overflow,source:'production-React-rendered'});
   console.log('V078_PREMIUM_REACT_'+name+'=PASS '+JSON.stringify(view));
@@ -181,6 +206,48 @@ try{
  await send('Emulation.setDeviceMetricsOverride',{
   width:390,height:844,deviceScaleFactor:1,mobile:true
  });
+ // Real React rendering of every assigned aura and all four verified roles.
+ const combinations=[...syntheticVariants].map(([handle,{aura,role}])=>({handle,aura,role}));
+ const matrixResults=[];
+ for(const variant of combinations){
+  const navigation=await send('Page.navigate',{url:origin+'/@'+variant.handle});
+  if(navigation.errorText)throw Error('V092_MATRIX_NAVIGATION_'+variant.handle);
+  const view=await until(async()=>evaluate(`(()=>{
+    const card=document.querySelector('[data-player-card="v078"].av65-player-card--featured');
+    const cover=document.querySelector('.ms-public .av92-presence-cover');
+    if(!card||!cover)return null;
+    const rect=card.getBoundingClientRect();
+    const role=card.querySelector('.av81-role-token');
+    const compass=card.querySelector('.av92-aura-compass');
+    return {
+      aura:card.className,
+      cover:cover.className,
+      role:role?.textContent?.trim(),
+      compass:!!compass,
+      badgeCount:card.querySelectorAll('.av65-badge').length,
+      memberToken:!!card.querySelector('.av92-member-token'),
+      rep:card.querySelector('.av81-reputation-token')?.textContent,
+      width:Math.round(rect.width),right:Math.round(rect.right),
+      viewport:innerWidth,
+      reducedMotion:compass?getComputedStyle(compass,':before').animationName:'none'
+    };
+  })()`));
+  if(!view||!view.aura.includes('av65-aura--'+variant.aura)||
+    !view.cover.includes('av92-presence-cover--'+variant.aura)||
+    !view.cover.includes('av92-presence-role--'+variant.role)||
+    view.role!==variant.role[0].toUpperCase()+variant.role.slice(1)||
+    view.compass!==(variant.aura!=='none')||view.badgeCount!==3||
+    view.memberToken||!view.rep?.includes('72 REP')||
+    view.reducedMotion!=='none'||view.right>view.viewport+2)
+   throw Error('V092_MATRIX_INVALID '+variant.handle+' '+JSON.stringify(view));
+  const image=await send('Page.captureScreenshot',{format:'png',fromSurface:true});
+  const bytes=Buffer.from(image.data||'','base64');
+  if(bytes.length<3500)throw Error('V092_MATRIX_EMPTY_SCREENSHOT_'+variant.handle);
+  writeFileSync(join(output,'v092-presence-'+variant.handle+'.png'),bytes);
+  matrixResults.push({handle:variant.handle,aura:variant.aura,role:variant.role,
+   cardWidth:view.width,reducedMotionVerified:true});
+  console.log('V092_VERIFIED_ROLE_AURA_'+variant.handle+'=PASS');
+ }
  let p=await send('Page.navigate',{url:origin+'/@nostats'});
  if(p.errorText)throw Error('V078_NOSTATS_NAVIGATION_FAILED');
  const hidden=await until(async()=>{
@@ -190,11 +257,14 @@ try{
    return {name:card.querySelector('.av61-member-name')?.textContent,
      level:!!card.querySelector('.av61-level-label'),art:!!card.querySelector('.av78-featured-art'),
      progress:!!card.querySelector('.av78-player-progress'),specimen:!!card.querySelector('.av61-specimen'),
-     rep:!!card.querySelector('.av81-reputation-token'),role:card.querySelector('.av81-role-token')?.textContent};
+     rep:!!card.querySelector('.av81-reputation-token'),role:card.querySelector('.av81-role-token')?.textContent,
+      chosenAura:card.classList.contains('av65-aura--aurora'),
+      auraMarker:!!card.querySelector('.av92-aura-compass'),
+      coverAtmosphere:!!document.querySelector('.ms-public .av92-presence-cover--aurora')};
   })()`);
   return data;
  });
- if(hidden.level||hidden.art||hidden.progress||hidden.specimen||hidden.rep||hidden.role!=='Founder'||hidden.name!=='QA Member')
+ if(hidden.level||hidden.art||hidden.progress||hidden.specimen||hidden.rep||hidden.role!=='Founder'||hidden.name!=='QA Member'||!hidden.chosenAura||!hidden.auraMarker||!hidden.coverAtmosphere)
   throw Error('V078_PRIVACY_LEAK '+JSON.stringify(hidden));
  p=await send('Page.navigate',{url:origin+'/@privateqa'});
  if(p.errorText)throw Error('V078_PRIVATE_NAVIGATION_FAILED');
@@ -211,7 +281,7 @@ try{
   throw Error('V078_UNEARNED_ASSET_REQUEST');
  writeFileSync(join(output,'result.json'),JSON.stringify({
   pass:true,source:'isolated built React app',privateAndHiddenStats:true,
-  viewports:results,realProductionApiWrites:0
+  viewports:results,roleAuraMatrix:matrixResults,realProductionApiWrites:0
  },null,2));
  console.log('ANEVUM_V078_REACT_PUBLIC_PRIVATE_RESPONSIVE_VISUAL=PASS');
 }finally{

@@ -73,10 +73,12 @@ try{
   await screenshot("home-"+label);
   await evaluate('document.querySelector(".av9-menu-trigger").click()');
   await until(()=>evaluate('document.querySelector(".av79-navigation[open]")?.querySelectorAll(".av79-destination").length===4'));
-  const menu=await evaluate('(()=>{const root=document.querySelector(".av79-navigation[open]");return {routes:[...root.querySelectorAll(".av79-destination")].map(x=>x.getAttribute("href")),art:root.querySelectorAll("img,.cw-artwork,canvas").length,join:!!root.querySelector(".av79-navigation-join,.av79-navigation-identity"),search:!!root.querySelector(".av79-navigation-search"),overflow:root.scrollWidth>root.clientWidth+1}})()');
-  if(menu.routes.length!==4||menu.art||!menu.join||!menu.search||menu.overflow)
+  const menu=await evaluate("(()=>{const root=document.querySelector(\".av79-navigation[open]\");const grid=root.querySelector(\".av79-navigation-primary\");const help=grid.querySelector(\".ir80-wayfinder-entry\");const copy=help.children[1];const action=help.querySelector(\".ir80-wayfinder-action\");const hr=help.getBoundingClientRect(),gr=grid.getBoundingClientRect(),cr=copy.getBoundingClientRect(),ar=action.getBoundingClientRect();return {routes:[...root.querySelectorAll(\".av79-destination\")].map(x=>x.getAttribute(\"href\")),art:root.querySelectorAll(\"img,.cw-artwork,canvas\").length,join:!!root.querySelector(\".av79-navigation-join,.av79-navigation-identity\"),search:!!root.querySelector(\".av79-navigation-search\"),overflow:root.scrollWidth>root.clientWidth+1,helper:{width:Math.round(hr.width),gridWidth:Math.round(gr.width),copyWidth:Math.round(cr.width),actionVisible:getComputedStyle(action).display!==\"none\",actionSafe:ar.left>=hr.left-1&&ar.right<=hr.right+1&&ar.bottom<=hr.bottom+1&&(ar.top>=cr.bottom-1||ar.left>=cr.right-1),actionStacked:ar.top>=cr.bottom-1}}})()");
+  if(menu.routes.length!==4||menu.art||!menu.join||!menu.search||menu.overflow||!menu.helper.actionVisible||!menu.helper.actionSafe||menu.helper.width<menu.helper.gridWidth-2||menu.helper.copyWidth<(label==="small-phone"?120:160)||(label!=="desktop"&&!menu.helper.actionStacked))
    throw Error("V079_MENU_ACCESS_"+label+":"+JSON.stringify(menu));
   await screenshot("wayfinder-"+label);
+  await evaluate('document.querySelector(".ir80-wayfinder-entry")?.scrollIntoView({block:"center"})');
+  await screenshot("wayfinder-iren-"+label);
   await evaluate('document.querySelector(".av79-navigation-search").click()');
   await until(()=>evaluate('!!document.querySelector(".portal-launcher[open] input[type=search]")'));
   await evaluate('(()=>{const field=document.querySelector(".portal-launcher[open] input[type=search]"),setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set;setter.call(field,"ARCADE");field.dispatchEvent(new Event("input",{bubbles:true}));})()');

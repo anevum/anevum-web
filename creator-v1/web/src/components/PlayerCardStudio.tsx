@@ -1,7 +1,7 @@
 import {useEffect,useState} from 'react';
 import {Link} from 'react-router-dom';
 import type {CanonicalProfile,MemberSpace} from '../lib/canonical-beta';
-import {BADGE_CATALOG,DISTINCTION_CATALOG,creditedContributionCount,
+import {BADGE_CATALOG,DISTINCTION_CATALOG,AURA_CATALOG,creditedContributionCount,
  type BadgeDisplay,type PlayerAura} from '../lib/player-recognition';
 import {readRecognition,saveRecognition,previewDistinctions,type RecognitionSettings} from '../lib/player-recognition-api';
 import {CompactMemberIdentity,type PublicIdentity} from './CompactMemberIdentity';
@@ -9,23 +9,13 @@ import {BadgeInsignia} from './BadgeInsignia';
 import {HonorInsignia} from './HonorInsignia';
 import './player-card-studio-v065.css';
 
-const AURA_CHOICES:[
- PlayerAura,string,string
-][]=[
- ['none','Unadorned','No animated atmosphere'],
- ['aurora','Aurora','Cold electric radiance'],
- ['eclipse','Eclipse','Violet shadow halo'],
- ['ember','Ember','Warm stellar edge light'],
- ['nebula','Nebula','Soft rose cosmic clouds'],
- ['transcosmic','Transcosmic','Continuance coral and violet']
-];
 const MODES:readonly {id:BadgeDisplay['mode'];label:string;help:string}[]=[
  {id:'automatic',label:'Latest three',help:'Updates as you earn new achievements'},
  {id:'curated',label:'My selection',help:'Pin up to three badges you choose'},
  {id:'hidden',label:'Keep private',help:'No badges on public player cards'}
 ];
 
-export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:CanonicalProfile;space:MemberSpace;onAvailabilityChange?:(enabled:boolean)=>void}){
+export function PlayerCardStudio({profile,space,onAvailabilityChange,onSaved}:{profile:CanonicalProfile;space:MemberSpace;onAvailabilityChange?:(enabled:boolean)=>void;onSaved?:()=>Promise<void>}){
  const [data,setData]=useState<RecognitionSettings|null>(null);
  const [notEnabled,setNotEnabled]=useState(false);
  const [loading,setLoading]=useState(true),[saving,setSaving]=useState(false);
@@ -49,7 +39,7 @@ export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:C
    else setError(e instanceof Error?e.message:'Recognition settings unavailable');
   }).finally(()=>{if(active)setLoading(false)});
   return()=>{active=false;c.abort()};
- },[profile.handle,onAvailabilityChange]);
+ },[profile.handle,space.aura,onAvailabilityChange]);
  async function save(){
   if(!data||saving)return;
   setSaving(true);setError('');setMessage('');
@@ -57,7 +47,7 @@ export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:C
    const next=await saveRecognition({
     badgeMode,badgeIds,medalId,ribbonIds,aura,revision:data.revision
    });
-   apply(next);setMessage('Your verified player card display is saved.');
+   apply(next);setMessage('Saved. Your aura and earned marks will appear on your public cards; other open tabs refresh when revisited.');
   }catch(e){setError(e instanceof Error?e.message:'Could not save player card.')}
   finally{setSaving(false)}
  }
@@ -69,6 +59,12 @@ export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:C
   setMessage('');
   setRibbonIds(old=>old.includes(id)?old.filter(x=>x!==id):old.length<2?[...old,id]:old);
  }
+ const unsaved=Boolean(data)&&(
+  aura!==data!.aura||badgeMode!==data!.badgeMode||
+  medalId!==data!.medalId||
+  JSON.stringify(badgeIds)!==JSON.stringify(data!.badgeIds)||
+  JSON.stringify(ribbonIds)!==JSON.stringify(data!.ribbonIds)
+ );
  const badges=data?.earnedBadges??[];
  const honor= data?previewDistinctions(data,medalId,ribbonIds):{medals:[],ribbons:[]};
  const previewMember:PublicIdentity={
@@ -96,7 +92,9 @@ export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:C
   {error&&<p role="alert" className="av65-studio-error">{error}</p>}
   {data&&<>
    <div className="av65-studio-preview">
-    <div><span className="kicker">LIVE OWNER PREVIEW</span><small>Exactly what you choose to publish, subject to your profile visibility.</small></div>
+    <div><span className="kicker">LIVE OWNER PREVIEW</span><small role="status">{unsaved?
+      'UNSAVED PREVIEW · Your public card changes only after Save Player Card.':
+      'SAVED SIGNATURE · Your public profile uses these verified preferences.'}</small></div>
     <div className="av78-preview-variants" aria-label="Your player card in three contexts">
      <div className="av78-preview-featured"><span>PROFILE / FEATURED</span>
       <CompactMemberIdentity size="featured" interactive={false} href="/member" member={previewMember}/></div>
@@ -159,12 +157,14 @@ export function PlayerCardStudio({profile,space,onAvailabilityChange}:{profile:C
    <div className="av65-studio-section"><div className="av65-studio-section-head">
     <div><span>03 / PERSONAL ATMOSPHERE</span><h3>Choose your ambient aura.</h3></div><small>Cosmetic; earned auras and verified roles are separate</small>
    </div>
-    <div className="av65-aura-options">{AURA_CHOICES.map(([id,name,detail])=>
+    <p className="av65-aura-principle">Choose a personal affinity, not a rank or verified institutional affiliation. Every atmosphere is equal; your achievements and permissions remain independently verified.</p>
+    <div className="av65-aura-options">{AURA_CATALOG.map(({id,name,discipline,motto,meaning,appearance})=>
      <button type="button" key={id} aria-pressed={aura===id} disabled={saving}
       onClick={()=>setAura(id)} className={'av65-aura-option av65-aura-option--'+id}>
-       <span className="av65-aura-swatch" aria-hidden="true"/><strong>{name}</strong><small>{detail}</small>
+       <span className="av65-aura-swatch" aria-hidden="true"/><strong>{name}</strong><span className="av65-aura-discipline">{discipline}</span><small>{meaning}</small><em>{motto}</em><span className="av65-aura-appearance">{appearance}</span>
      </button>
     )}</div>
+    <Link className="av65-aura-codex-link" to="/auras">EXPLORE THE AURA CODEX ↗</Link>
    </div>
    <div className="av81-standing-panel" aria-label="Earned reputation and role status">
     <div className="av65-studio-section-head"><div><span>04 / CONTRIBUTION SIGNAL</span><h3>Your standing changes as you contribute.</h3></div>

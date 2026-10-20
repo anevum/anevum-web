@@ -72,6 +72,12 @@ jobs:
           test -s evidence/v084-iren/acceptance.json
           test -s evidence/v084-iren/iren-discover-320.png
           test -s evidence/v084-iren/iren-help-390.png
+          # Check the actual two-column Wayfinder and IREN utility geometry at 1440/390/320.
+          node creator-v1/test/capture-home-navigation-v079.mjs "$chrome" http://127.0.0.1:4178 evidence/v084-wayfinder
+          test -s evidence/v084-wayfinder/acceptance.json
+          test -s evidence/v084-wayfinder/wayfinder-iren-desktop.png
+          test -s evidence/v084-wayfinder/wayfinder-iren-phone.png
+          test -s evidence/v084-wayfinder/wayfinder-iren-small-phone.png
       - name: Capture responsive earned player cards and emblems without production sessions
         shell: bash
         run: |
@@ -87,6 +93,7 @@ jobs:
           name: anevum-v084-visual-qa
           path: |
             evidence/v084-iren/
+            evidence/v084-wayfinder/
             evidence/v084-cards/
           retention-days: 14
           if-no-files-found: warn

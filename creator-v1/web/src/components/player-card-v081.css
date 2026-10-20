@@ -148,3 +148,7 @@
  .av81-player-card .av81-contribution-stats{gap:3px 7px}
  .av81-player-card.av65-player-card--featured .av61-member-copy{padding-right:0}
 }
+
+/* Aura affinities do not impersonate role seals or earned-reputation markers. */
+.av91-aura-signature{display:inline-flex;align-self:flex-start;margin-top:2px;padding:2px 7px;border:1px solid var(--av65-trim);border-radius:5px;background:#0d1c2cba;color:#d1e3f0;font:700 9px/1.5 ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;position:relative;z-index:2}
+@media(forced-colors:active){.av91-aura-signature{border-color:CanvasText;background:Canvas;color:CanvasText}}

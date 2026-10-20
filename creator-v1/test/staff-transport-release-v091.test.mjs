@@ -10,7 +10,7 @@ function original(w){let text=candidate(w);for(const e of [...w.source_edits].re
  text=text.slice(0,e.offset)+e.before+text.slice(e.offset+e.after.length);
 }return text;}
 const context={GITHUB_REPOSITORY:'anevum/anevum-web',GITHUB_REF:'refs/heads/release/v084-continuance-approved-20261019',GITHUB_WORKFLOW:'ANEVUM V091 Guarded Continuance Experience Production'};
-function fixture({drift=false,failAt=0,format='multipart'}={}){
+function fixture({drift=false,failAt=0,moduleDrift=false,format='multipart'}={}){
  const writes=[],states=new Map(spec.workers.map(w=>[w.name,{version:w.baseline_version,source:original(w)}]));
  const routes=Array.from({length:36},(_,i)=>({pattern:'anevum.com/fixture-'+i,script:'preserved'}));
  const settings={bindings:[{name:'APEX_AUTH',type:'service',service:'anevum-apex-prelaunch-gateway',environment:'production'},
@@ -25,14 +25,14 @@ function fixture({drift=false,failAt=0,format='multipart'}={}){
    if(path.endsWith('/settings'))return structuredClone(settings);
    if(path.endsWith('/deployments'))return {deployments:[{versions:[{version_id:drift?'unexpected':state.version,percentage:100}]}]};
    if(format==='raw')return state.source;
+   const module=moduleDrift?'unexpected.js':(spec.workers.find(w=>w.name===name).module_file||'index.mjs');
    const newline=format==='lf'?'\n':'\r\n';
-   const moduleName=name==='anevum-iren-apex-staff-v002'?'worker.js':'index.mjs';
-   return ['--boundary','Content-Disposition: form-data; name="'+moduleName+'"','',state.source,'--boundary--',''].join(newline);
+   return ['--boundary','Content-Disposition: form-data; name="'+module+'"','',state.source,'--boundary--',''].join(newline);
   }
   writes.push({method,path,body});
   if(method==='PUT'){
    assert.equal(body.metadata.keep_assets,true);assert.deepEqual(body.metadata.bindings,settings.bindings);
-   assert.equal(body.metadata.main_module,name==='anevum-iren-apex-staff-v002'?'worker.js':'index.mjs');
+   assert.equal(body.metadata.main_module,spec.workers.find(w=>w.name===name).module_file||'index.mjs');
    state.source=body.source;state.version='repaired-'+name;
    if(writes.filter(w=>w.method==='PUT').length===failAt)throw Error('Transport failed after upload');
   }else{
@@ -50,17 +50,19 @@ test('default preflight is read-only and source/version drift stops every produc
  const f=fixture();assert.equal((await repairStaffTransport(f.api)).status,'verified_read_only');assert.equal(f.writes.length,0);
  const drift=fixture({drift:true});await assert.rejects(()=>repairStaffTransport(drift.api,{apply:true,context}),/drift/);assert.equal(drift.writes.length,0);
  await assert.rejects(()=>repairStaffTransport(f.api,{apply:true,context:{}}),/guarded production workflow/);assert.equal(f.writes.length,0);
+ const changed=fixture({moduleDrift:true});await assert.rejects(()=>repairStaffTransport(changed.api,{apply:true,context}),/module layout/);
+ assert.equal(changed.writes.length,0);
 });
-test('raw and multipart downloads retain exact hash checks and reject extra modules',async()=>{
+test('raw, LF and CRLF module downloads retain exact pinned source and module checks',async()=>{
  for(const format of ['raw','multipart','lf']){
-  const f=fixture({format});assert.equal((await repairStaffTransport(f.api)).status,'verified_read_only');assert.equal(f.writes.length,0);
+  const f=fixture({format});
+  assert.equal((await repairStaffTransport(f.api)).status,'verified_read_only');
+  assert.equal(f.writes.length,0);
  }
- assert.throws(()=>moduleSource('--boundary\nContent-Disposition: form-data; name="index.mjs"\n\nfirst\n--boundary\nContent-Disposition: form-data; name="other.mjs"\n\nsecond\n--boundary--\n'),/module count/);
+ assert.equal(moduleSource('source','worker.js').module,'worker.js');
+ assert.equal(moduleSource('--boundary\nContent-Disposition: form-data; name="worker.js"\n\nsource\n--boundary--\n','worker.js').source,'source');
  assert.throws(()=>moduleSource('--boundary\nContent-Disposition: form-data; name="worker.js"\n\nsource\n--boundary--\n'),/module layout/);
- assert.equal(moduleSource('--boundary\nContent-Disposition: form-data; name="worker.js"\n\nsource\n--boundary--\n','worker.js'),'source');
- const f=fixture({format:'raw'});await assert.rejects(()=>repairStaffTransport(async(method,path,body)=>{
-  const data=await f.api(method,path,body);return method==='GET'&&!path.endsWith('/settings')&&!path.endsWith('/deployments')&&!path.endsWith('/routes')?data+'// unexpected source':data;
- }),/source\/version drift/);assert.equal(f.writes.length,0);
+ assert.throws(()=>moduleSource('--boundary\nContent-Disposition: form-data; name="index.mjs"\n\nfirst\n--boundary\nContent-Disposition: form-data; name="other.mjs"\n\nsecond\n--boundary--\n'),/module count/);
 });
 test('guarded rollout preserves assets, bindings and routes and changes exactly the five scripts',async()=>{
  const f=fixture();assert.equal((await repairStaffTransport(f.api,{apply:true,context})).status,'repaired');

@@ -174,7 +174,7 @@
 .av9-shell .av73-discover .portal-discover-results.portal-discover-compact{
   display:grid;grid-template-columns:minmax(0,1fr);
 }
-.av9-shell .av73-discover .av73-project-card{
+.av9-shell :is(.av73-discover,.portal-creator-channel) .av73-project-card{
   display:flex;flex-direction:column;align-items:stretch;
   min-width:0;min-height:233px;margin:0;padding:22px 22px 18px;
   border:1px solid #55627a;border-radius:10px;
@@ -182,45 +182,45 @@
   transform:none!important;filter:none!important;
   transition:border-color .15s ease,background-color .15s ease;
 }
-.av9-shell .av73-discover .av73-project-card:hover{
+.av9-shell :is(.av73-discover,.portal-creator-channel) .av73-project-card:hover{
   border-color:#99adc8;background:#182235;transform:none;box-shadow:none;
 }
-.av9-shell .av73-discover .av73-project-card-top{
+.av9-shell :is(.av73-discover,.portal-creator-channel) .av73-project-card-top{
   display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
   gap:6px 13px;margin:0 0 14px;
   font:550 10px/1.45 var(--av9-label,Consolas,monospace);
   color:#b5c5d8;letter-spacing:.015em;
 }
-.av9-shell .av73-discover .av73-project-card-category{
+.av9-shell :is(.av73-discover,.portal-creator-channel) .av73-project-card-category{
   color:#e3d0f5;font-weight:650;
 }
-.av9-shell .av73-discover .av73-project-card h3{
+.av9-shell :is(.av73-discover,.portal-creator-channel) .av73-project-card h3{
   margin:0 0 9px;
   font:600 clamp(20px,2vw,27px)/1.16 var(--av9-display,Georgia,serif)!important;
   text-transform:none;letter-spacing:-.02em!important;
   overflow-wrap:anywhere;
 }
-.av9-shell .av73-discover .av73-project-card h3 a{color:#f2f0fa;text-decoration:none}
-.av9-shell .av73-discover .av73-project-card h3 a:hover{text-decoration:underline;text-underline-offset:3px;color:#fff}
-.av9-shell .av73-discover .av73-project-card>p{
+.av9-shell :is(.av73-discover,.portal-creator-channel) .av73-project-card h3 a{color:#f2f0fa;text-decoration:none}
+.av9-shell :is(.av73-discover,.portal-creator-channel) .av73-project-card h3 a:hover{text-decoration:underline;text-underline-offset:3px;color:#fff}
+.av9-shell :is(.av73-discover,.portal-creator-channel) .av73-project-card>p{
   margin:0 0 15px;flex:1;min-height:0;
   color:#c4cedf;font:450 13px/1.6 var(--av9-body,system-ui,sans-serif);
   overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;
   -webkit-line-clamp:4;line-clamp:4;overflow:hidden;
 }
-.av9-shell .av73-discover .av73-project-card-bottom{
+.av9-shell :is(.av73-discover,.portal-creator-channel) .av73-project-card-bottom{
   display:flex;align-items:center;justify-content:space-between;
   flex-wrap:wrap;gap:8px 12px;padding-top:13px;
   border-top:1px solid #46536a;
 }
-.av9-shell .av73-discover .av73-project-card-author,
-.av9-shell .av73-discover .av73-project-card-action{
+.av9-shell :is(.av73-discover,.portal-creator-channel) .av73-project-card-author,
+.av9-shell :is(.av73-discover,.portal-creator-channel) .av73-project-card-action{
   display:inline-flex;align-items:center;gap:7px;min-height:35px;
   color:#d5e4f0;font:650 12px/1.3 var(--av9-body,system-ui,sans-serif);
   text-decoration:none;
 }
-.av9-shell .av73-discover .av73-project-card-action{color:#bcddf0}
-.av9-shell .av73-discover .av73-project-card :is(a,button):focus-visible{outline:2px solid #a9e6f4;outline-offset:3px}
+.av9-shell :is(.av73-discover,.portal-creator-channel) .av73-project-card-action{color:#bcddf0}
+.av9-shell :is(.av73-discover,.portal-creator-channel) .av73-project-card :is(a,button):focus-visible{outline:2px solid #a9e6f4;outline-offset:3px}
 .av9-shell .av73-discover .portal-true-empty{
   display:block;min-height:0;padding:clamp(19px,2.5vw,32px);
   border:1px solid #53617b;border-radius:10px;
@@ -273,8 +273,8 @@
   .av9-shell .av73-discover .portal-discover-results{
     grid-template-columns:minmax(0,1fr);gap:11px;
   }
-  .av9-shell .av73-discover .av73-project-card{padding:16px;min-height:205px}
-  .av9-shell .av73-discover .av73-project-card>p{font-size:12px}
+  .av9-shell :is(.av73-discover,.portal-creator-channel) .av73-project-card{padding:16px;min-height:205px}
+  .av9-shell :is(.av73-discover,.portal-creator-channel) .av73-project-card>p{font-size:12px}
   .av9-shell .av73-discover .portal-result-toolbar{align-items:flex-start;flex-wrap:wrap}
 }
 @media(max-width:365px){

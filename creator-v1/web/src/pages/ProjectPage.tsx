@@ -7,6 +7,7 @@ import {RepositoryPanel} from "../components/RepositoryPanel";
 import {MemberEngagementPanel} from "../components/MemberEngagementPanel";
 import {safeReturnPath} from "../lib/navigation";
 import {ContextDiscussions} from "../components/ContextDiscussions";
+import {isAnevumHostedRelease} from "../lib/project-hosting";
 
 const types:Record<string,string>={
   games:"GAME PROJECT",tools:"APPLICATION",creative:"CREATIVE PROJECT",libraries:"OPEN SOURCE",
@@ -22,6 +23,7 @@ export function ProjectPage(){
   if(project.state==="loading")return <LoadingState label="Preparing the published project page"/>;
   if(project.state==="error")return <ErrorState title="PROJECT NOT AVAILABLE" detail="This work may be unpublished, withdrawn, or the public catalogue is temporarily unavailable."/>;
   const p=project.data.item,demo=safeExternal(p.demoUrl),source=safeExternal(p.sourceUrl);
+  const hosted=isAnevumHostedRelease(p.id,demo);
   const date=p.publishedAt?new Date(p.publishedAt):null;
   const published=date&&Number.isFinite(date.getTime())?new Intl.DateTimeFormat("en-US",{month:"short",day:"numeric",year:"numeric",timeZone:"UTC"}).format(date):"DATE NOT LISTED";
   return <div className="portal-project avp-project">
@@ -30,20 +32,20 @@ export function ProjectPage(){
       <ProjectPlayerShell project={p} demo={demo} source={source}/>
       <aside className="portal-sidebar avp-passport" aria-label="Published project passport">
         <section className="portal-sidebox portal-project-passport"><span className="kicker">THE PASSPORT / PUBLIC FACTS</span><h2>PROJECT DETAILS</h2>
-          <div className="portal-facts-row"><span>ACCESS</span><strong>{p.freeToUse?"LISTED AS FREE":"CHECK CREATOR TERMS"}</strong></div>
+          <div className="portal-facts-row"><span>ACCESS</span><strong>{hosted?"OPEN IN ANEVUM":p.freeToUse?"LISTED AS FREE":"CHECK CREATOR TERMS"}</strong></div>
           <div className="portal-facts-row"><span>CATEGORY</span><strong>{types[p.category]||p.category.toUpperCase()}</strong></div>
-          <div className="portal-facts-row"><span>EXPERIENCE</span><strong>{demo?"EXTERNAL DEMO":source?"SOURCE ONLY":"NO LINKED DEMO"}</strong></div>
+          <div className="portal-facts-row"><span>EXPERIENCE</span><strong>{hosted?"ANEVUM PLAYER":demo?"EXTERNAL DEMO":source?"SOURCE ONLY":"NO LINKED DEMO"}</strong></div>
           <div className="portal-facts-row"><span>DEVICE SUPPORT</span><strong>NOT SPECIFIED</strong></div>
           <div className="portal-facts-row"><span>PUBLISHED</span><strong>{published.toUpperCase()}</strong></div>
           <div className="portal-facts-row"><span>LICENSE AS LISTED</span><strong>{p.license||"NOT SPECIFIED"}</strong></div>
           <div className="portal-facts-row"><span>REVIEW STATUS</span><strong>PUBLIC / APPROVED</strong></div>
-          {demo&&<div className="portal-facts-row"><span>CREATOR HOST</span><strong>{demo.hostname}</strong></div>}
+          {demo&&<div className="portal-facts-row"><span>{hosted?"HOSTED BY":"CREATOR HOST"}</span><strong>{hosted?"ANEVUM":demo.hostname}</strong></div>}
         </section>
         <section className="portal-sidebox"><span className="kicker">THE HUMAN STORY</span><h2>WHO MADE WHAT?</h2>
           <div className="portal-project-disclosure"><strong>AI INVOLVEMENT</strong><p>{p.aiDisclosure||"The creator did not provide an AI-use disclosure."}</p></div>
           <div className="portal-project-disclosure"><strong>HUMAN CONTRIBUTION</strong><p>{p.humanContribution||"The creator did not provide details of human contributions."}</p></div>
         </section>
-        <section className="portal-sidebox portal-external-warning"><span className="kicker">READ BEFORE YOU LEAVE</span><h2>INDEPENDENT HOSTING</h2><p>External demos and code are hosted by their creators. ANEVUM does not certify security, ownership, licensing or payment practices. Check costs and account requirements before sharing data.</p></section>
+        {hosted?<section className="portal-sidebox"><span className="kicker">REVIEWED CREATOR RELEASE</span><h2>HOSTED ON ANEVUM</h2><p>This published release opens in the ANEVUM player. Creator files run in an isolated sandbox without access to your member account. Source links, when provided, open separately.</p></section>:<section className="portal-sidebox portal-external-warning"><span className="kicker">READ BEFORE YOU LEAVE</span><h2>INDEPENDENT HOSTING</h2><p>External demos and code are hosted by their creators. ANEVUM does not certify security, ownership, licensing or payment practices. Check costs and account requirements before sharing data.</p></section>}
       </aside>
     </div>
     <nav className="avp-subnav" aria-label="Project sections">

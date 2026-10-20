@@ -1,7 +1,9 @@
 import {FormEvent,useEffect,useState} from "react";
-import {Link,useParams,useSearchParams} from "react-router-dom";
+import {Link,Navigate,useParams,useSearchParams} from "react-router-dom";
 import {readCreator,readCreators,readProjects} from "../lib/api";
 import {memberCreatorProfile} from "../lib/member-api";
+import {canonicalPublic} from "../lib/canonical-beta";
+import {resolveCreatorRoute} from "../lib/creator-route";
 import {useResource} from "../lib/useResource";
 import {ProjectCard} from "../components/ProjectCard";
 import {CompactMemberIdentity} from "../components/CompactMemberIdentity";
@@ -10,7 +12,6 @@ import {PortalHeading} from "../components/PortalHeading";
 import {LevelPanel} from "../components/LevelPanel";
 import {EmptyState,ErrorState,LoadingState} from "../components/States";
 import {CelestialEmblem} from "../components/CelestialEmblem";
-import {CosmicArtwork} from "../components/CosmicArtwork";
 import {achievementMotif,seriesOneMotif} from "../lib/artifact-art";
 import {ContextDiscussions} from "../components/ContextDiscussions";
 
@@ -68,23 +69,30 @@ export function CreatorsPage(){
 
 export function CreatorPage(){
   const {handle=""}=useParams();
+  return <CreatorIdentityPage key={handle} handle={handle}/>;
+}
+function CreatorIdentityPage({handle}:{handle:string}){
   const [params]=useSearchParams();
   const cursor=params.get("cursor")||"";
   const data=useResource(async signal=>{
-    const [profile,projects]=await Promise.all([
-      readCreator(handle,signal),
-      readProjects({creator:handle,cursor:cursor||undefined,limit:"24"},signal)
-    ]);
-    return {profile:profile.creator,projects};
+    const identity=await resolveCreatorRoute(handle,
+      async()=>(await readCreator(handle,signal)).creator,
+      ()=>canonicalPublic(handle,signal));
+    if(identity.kind!=="channel")return identity;
+    const projects=await readProjects({creator:handle,cursor:cursor||undefined,limit:"24"},signal);
+    return {...identity,projects};
   },[handle,cursor]);
-  // Public profile/achievement detail is optional; it uses the existing
-  // anonymous-readable staging endpoint and never gates the public catalogue.
+  // Independent public-member enhancements are optional for real Creator V1
+  // channels. This client cannot grant roles, XP or publication permissions.
+  const legacyChannelVerified=data.state==="ready"&&data.data.kind==="channel";
   const channel=useResource(async signal=>{
-    if(!/^[a-z][a-z0-9_]{2,29}$/.test(handle))return null;
+    if(!legacyChannelVerified||!/^[a-z][a-z0-9_]{2,29}$/.test(handle))return null;
     try{return await memberCreatorProfile(handle,signal);}catch{return null;}
-  },[handle]);
-  if(data.state==="loading")return <LoadingState label="Opening a real creator channel"/>;
-  if(data.state==="error")return <ErrorState title="CREATOR NOT AVAILABLE" detail="This creator has no available public profile, or the public catalogue cannot be reached."/>;
+  },[handle,legacyChannelVerified]);
+  if(data.state==="loading")return <LoadingState label="Finding verified public identity"/>;
+  if(data.state==="error")return <ErrorState title="CREATOR INDEX UNAVAILABLE" detail="The published creator index could not be reached. Try discovery or return later."/>;
+  if(data.data.kind==="member")return <Navigate to={"/@"+encodeURIComponent(handle)} replace/>;
+  if(data.data.kind==="missing")return <ErrorState title="NO PUBLIC CREATOR CHANNEL" detail="There is no published Creator V1 channel under this handle. Private member accounts remain protected; explore approved work instead."/>;
   const {profile,projects}=data.data;
   const path="/creators/"+encodeURIComponent(handle);
   const current=path+(params.size?"?"+params.toString():"");
@@ -92,7 +100,7 @@ export function CreatorPage(){
   const earned=detailed?.achievements?.filter(a=>a.earned)||[];
   return <div className="portal-creator-channel">
     <Link to="/creators" className="project-return">← ALL PUBLIC CREATORS</Link>
-    <section className="portal-channel-banner"><div className="cw-channel-scene" aria-hidden="true"><CosmicArtwork scene="portal"/></div>
+    <section className="portal-channel-banner">
       <div className="portal-channel-avatar" aria-hidden="true"><span className="cw-letter-avatar">{profile.displayName.slice(0,1).toUpperCase()}</span></div>
       <div className="portal-channel-identity">
         <span className="kicker">ANEVUM / PUBLIC CREATOR CHANNEL</span>
@@ -102,14 +110,13 @@ export function CreatorPage(){
           {detailed&&<><span><strong>{detailed.contributions.ratings}</strong> VERIFIED RATINGS</span><span><strong>{earned.length}</strong> EARNED ACHIEVEMENTS</span></>}
         </div>
       </div>
-      <div className="portal-channel-badge" aria-hidden="true">CREATOR<br/>IN ORBIT</div>
     </section>
     <div className="portal-browse-layout portal-channel-content">
       <div className="portal-browse-main">
         <section className="portal-box">
           <header className="portal-box-header"><div><span className="kicker">ORIGINAL WORK / PUBLIC RELEASES</span><h2>FROM THIS MAKER</h2></div><span className="portal-hall-stamp">{profile.publishedProjects} RELEASES</span></header>
           {projects.items.length?
-            <div className="portal-discover-results">{projects.items.map(p=><ProjectCard key={p.id} project={p} returnTo={current}/>)}</div>:
+            <div className="portal-discover-results">{projects.items.map(p=><ProjectCard key={p.id} project={p} returnTo={current} presentation="editorial"/>)}</div>:
             <EmptyState title={cursor?"NO MORE PUBLIC RELEASES":"NO PUBLIC RELEASES AVAILABLE"} detail="Only currently approved published projects appear here. Private drafts cannot be browsed."/>}
           <PageNav route={path} search={params} nextCursor={projects.nextCursor} label="Creator project releases"/>
         </section>

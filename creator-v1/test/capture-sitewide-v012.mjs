@@ -5,6 +5,7 @@ import {existsSync,readFileSync,writeFileSync,mkdirSync,mkdtempSync,rmSync} from
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {canonicalAvailabilityProbe,canonicalParticipationProbe} from "./player-browser-probes.mjs";
+import {captureCreatorIdentityV091} from "./creator-identity-browser-v091.mjs";
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(fn,timeout=18000){
  const stop=Date.now()+timeout;
@@ -71,7 +72,7 @@ try{
   ["creators","/creators",".portal-creators"],["creator-channel","/creators/nova_demo",".portal-creator-channel"],
   ["community","/community",".ch7-hub"],["boards","/boards",".cnb-hub"],
   ["levels","/levels",".av75-levels-page"],["recognition","/recognition",".av75-recognition-page"],["start","/start",".start-page"],
-  ["guide","/guide",".field-guide-page"],["status","/status",".status-list"],
+  ["guide","/guide",".field-guide-page"],["status","/status",".v091-status-page"],
   ["guest-library","/library",".member-gate"],
   ["member-account","/account",".av12-account-await"],
   ["member-profile-editor","/account/edit",".av12-account-await"],
@@ -128,6 +129,11 @@ try{
      throw Error("SITEWIDE_V012_VISUAL_OR_ROUTE_DRIFT_"+name+"_"+width+":"+JSON.stringify(presentation));
    if(!state.cinematic||state.header!==1||state.main!==1||state.overflow||state.atlas||!state.fixture)
     throw Error("SITEWIDE_V012_INCONSISTENT_"+name+"_"+width+":"+JSON.stringify(state));
+   if(name==="creator-channel"){
+     const channelCards=await evaluate('({count:document.querySelectorAll(".portal-channel-content .av73-project-card").length,art:document.querySelectorAll(".portal-channel-content .project-art").length,widths:[...document.querySelectorAll(".portal-channel-content .av73-project-card")].map(x=>x.getBoundingClientRect().width),styles:[...document.querySelectorAll(".portal-channel-content .av73-project-card")].map(x=>({padding:parseFloat(getComputedStyle(x).paddingLeft),display:getComputedStyle(x).display,title:parseFloat(getComputedStyle(x.querySelector("h3")).fontSize)}))})');
+     if(channelCards.count!==2||channelCards.art!==0||channelCards.styles.some(s=>s.padding<16||s.display!=="flex"||s.title<20)||(width<650&&channelCards.widths.some(value=>value<240)))
+       throw Error("V091_CREATOR_PROJECT_READABILITY_"+width+":"+JSON.stringify(channelCards));
+   }
    if(name==="levels"||name==="recognition"){
     // V075 guest acceptance: no catalogue thumbnails, reward identity,
     // unearned badges, models or full-gallery links. Owner rewards are
@@ -343,7 +349,8 @@ try{
    results.push({page:"discussion",width,...post});
   }
  }
- writeFileSync(join(output,"sitewide-v012-capture.json"),JSON.stringify({syntheticFixture:true,pages:results},null,2));
+ await captureCreatorIdentityV091({client,base,evaluate,until,screenshot});
+ writeFileSync(join(output,"sitewide-v012-capture.json"),JSON.stringify({syntheticFixture:true,creatorIdentityV091:'PASS',pages:results},null,2));
  writeFileSync(join(output,"capture-status.txt"),"SITEWIDE_V012_BROWSER_CAPTURE=PASS\nAll records are synthetic offline visual fixtures; no live member acceptance.\n");
  console.log("SITEWIDE_V012_BROWSER_CAPTURE=PASS; PAGES="+results.length);
 }finally{

@@ -4,6 +4,7 @@ import {levelProgress} from './progression.mjs';
 import {MILESTONES} from './rewards.mjs';
 import {publicRecognitionSummary,publicRecognitionMap} from './recognition.mjs';
 import {memberReputationMap,publicReputationProjection} from './member-reputation.mjs';
+import {memberVerifiedRoleMap} from './member-verified-roles.mjs';
 const awardIds=new Set(MILESTONES.map(item=>item.id));
 const ownerColumns=new Set(['t.author_id','r.author_id','p.user_id']);
 
@@ -37,31 +38,36 @@ export function publicMemberCard(row){
 }
 
 /** Extend only verified opted-in public member cards. The DB identity key is\n * queried server-side and never returned to the browser. When an additive\n * migration is not yet installed, the V061 projection remains unchanged. */
-export async function hydratedPublicMemberCard(db,row,enabled=false,reputationEnabled=false){
+export async function hydratedPublicMemberCard(db,row,enabled=false,reputationEnabled=false,rolesEnabled=false){
  const legacy=publicMemberCard(row);
- if(!enabled&&!reputationEnabled)return legacy;
- const [recognition,activity]=await Promise.all([
+ if(!enabled&&!reputationEnabled&&!rolesEnabled)return legacy;
+ const [recognition,activity,roles]=await Promise.all([
   enabled?publicRecognitionSummary(db,row.member_identity_key):Promise.resolve(null),
-  reputationEnabled?memberReputationMap(db,[row.member_identity_key]):Promise.resolve(new Map())
+  reputationEnabled?memberReputationMap(db,[row.member_identity_key]):Promise.resolve(new Map()),
+  rolesEnabled?memberVerifiedRoleMap(db,[row.member_identity_key]):Promise.resolve(new Map())
  ]);
+ const role=roles.get(row.member_identity_key);
  return {...legacy,...(recognition||{}),
-  ...publicReputationProjection(activity.get(row.member_identity_key),row.show_stats)};
+  ...publicReputationProjection(activity.get(row.member_identity_key),row.show_stats),
+  ...(role?{role}:{})};
 }
 
 /** Hydrate one public forum/directory page with a bounded number of D1 reads.
  * Accept only rows from public verified member queries, not raw user input.
  * The server-owned user ID is never serialized in the returned card.
  */
-export async function hydratedPublicMemberCards(db,rows,enabled=false,reputationEnabled=false){
+export async function hydratedPublicMemberCards(db,rows,enabled=false,reputationEnabled=false,rolesEnabled=false){
  const base=rows.map(publicMemberCard);
- if((!enabled&&!reputationEnabled)||!rows.length)return base;
+ if((!enabled&&!reputationEnabled&&!rolesEnabled)||!rows.length)return base;
  const ids=rows.map(row=>row.member_identity_key);
- const [recognition,activity]=await Promise.all([
+ const [recognition,activity,roles]=await Promise.all([
   enabled?publicRecognitionMap(db,ids):Promise.resolve(new Map()),
-  reputationEnabled?memberReputationMap(db,ids):Promise.resolve(new Map())
+  reputationEnabled?memberReputationMap(db,ids):Promise.resolve(new Map()),
+  rolesEnabled?memberVerifiedRoleMap(db,ids):Promise.resolve(new Map())
  ]);
  return base.map((card,i)=>({
   ...card,...(recognition.get(ids[i])||{}),
-  ...publicReputationProjection(activity.get(ids[i]),rows[i].show_stats)
+  ...publicReputationProjection(activity.get(ids[i]),rows[i].show_stats),
+  ...(roles.has(ids[i])?{role:roles.get(ids[i])}:{})
  }));
 }
