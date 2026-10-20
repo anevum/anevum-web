@@ -8,6 +8,7 @@ import {join as pathJoin} from "node:path";
 import {createHash} from "node:crypto";
 import worker from "../package-alpha-v004/api.mjs";
 import {cleanupPackageResources} from "../package-alpha-v004/resource-cleanup.mjs";
+import {acquireUploadLease,releaseUploadLease,reserveUpload,getStorageUsage} from "../package-alpha-v004/resource-service.mjs";
 
 const MiB=1048576;
 const bridge=fileURLToPath(new URL("../package-alpha-v004/tests/sqlite-bridge.py",import.meta.url));
@@ -196,5 +197,38 @@ test("published releases survive failed edits, expired tests, R2 cleanup and new
   const blocked=await result(await s.request("/api/v1/packages/staff/metrics","alice",{method:"GET"}));
   assert.equal(blocked.httpStatus,404);
   assert.equal(s.get("SELECT status FROM anevum_package_releases WHERE id=?",v1.release_id)[0].status,"published");
+ }finally{await s.close();}
+});
+
+test("a D1 lease serializes same-member uploads and reservations charge physical bytes atomically",async()=>{
+ const s=setup(),now=Math.floor(Date.now()/1000);
+ try{
+  const first=await acquireUploadLease(s.DB,"alice","token-A",now);
+  assert.equal(first,true);
+  const blocked=await acquireUploadLease(s.DB,"alice","token-B",now);
+  assert.equal(blocked,false,"a second request from the same creator must be throttled");
+  const independent=await acquireUploadLease(s.DB,"bob","token-C",now);
+  assert.equal(independent,true,"other creators can still upload");
+  await releaseUploadLease(s.DB,"alice","token-A");
+  assert.equal(await acquireUploadLease(s.DB,"alice","token-B",now),true);
+  const project="123e4567-e89b-42d3-a456-426614174000",release="123e4567-e89b-42d3-a456-426614174001";
+  const root="package-alpha/v004/alice/"+project+"/"+release+"/";
+  await assert.rejects(()=>reserveUpload(s.DB,{
+   ownerId:"alice",projectId:project,releaseId:release,archiveBytes:5*MiB,
+   expandedBytes:200*MiB,now,prefix:root
+  }),e=>e.status===409);
+  const reservation=await reserveUpload(s.DB,{
+   ownerId:"alice",projectId:project,releaseId:release,archiveBytes:10*MiB,
+   expandedBytes:10*MiB,now,prefix:root
+  });
+  assert.ok(reservation);
+  const usage=await getStorageUsage(s.DB,"alice");
+  assert.equal(usage.memberPhysicalBytes,20*MiB);
+  assert.equal(usage.memberArchiveBytes,20*MiB,"uncommitted bytes are charged conservatively");
+  assert.equal(usage.reservations,1);
+  await assert.rejects(()=>reserveUpload(s.DB,{
+   ownerId:"alice",projectId:project,releaseId:"123e4567-e89b-42d3-a456-426614174002",
+   archiveBytes:95*MiB,expandedBytes:1,now,prefix:"package-alpha/v004/alice/"+project+"/123e4567-e89b-42d3-a456-426614174002/"
+  }),e=>e.status===409);
  }finally{await s.close();}
 });
