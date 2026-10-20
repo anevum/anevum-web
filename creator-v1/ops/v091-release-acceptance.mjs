@@ -89,7 +89,8 @@ export function verifyV091GitSourceScope(){
   });
 }
 export const V095_ACCEPTANCE_GATES=Object.freeze(['founder_staff_session','reviewer_staff_session','creator_journey','cross_account_identity','ordinary_member_denial','logged_out_public_alpha','physical_iphone_safari','independent_browser','candidate_assets_verified','owner_release_approved']);
-export const V095_CANDIDATE_ID='904b3b6c-7a7a-401a-9a35-4b5d822dec67';
+export const V095_CANDIDATE_ID='3ba8602c-6616-49a4-af29-1efe60ad164a';
+export const V095_CANDIDATE_CREATED_AT='2026-10-20T22:29:28.550041Z';
 export function verifyV091Acceptance(record){
   if(record?.source_sha!==V091_APPLICATION_SOURCE)throw Error('V091 acceptance does not match the pinned application source.');
   if(record.native_candidate_pending===true)throw Error('V095 native application candidate remains unverified; the previous V091 upload cannot be promoted for changed source.');
@@ -97,7 +98,7 @@ export function verifyV091Acceptance(record){
   for(const gate of V095_ACCEPTANCE_GATES){
     if(record[gate]!==true)throw Error('V091 authenticated release gate remains unverified: '+gate);
   }
-  if(typeof record.verified_at!=='string'||!Number.isFinite(Date.parse(record.verified_at))||Date.parse(record.verified_at)>Date.now())
+  if(typeof record.verified_at!=='string'||!Number.isFinite(Date.parse(record.verified_at))||Date.parse(record.verified_at)>Date.now()||Date.parse(record.verified_at)<Date.parse(V095_CANDIDATE_CREATED_AT))
     throw Error('V091 acceptance requires an actual verification timestamp.');
   if(!Array.isArray(record.evidence)||record.evidence.length<1||record.evidence.some(ref=>
     typeof ref!=='string'||ref!==ref.trim()||!/^https:\/\/github\.com\/anevum\/anevum-web\/(?:actions\/runs\/\d+(?:\/artifacts\/\d+)?|pull\/(?:554|564|573|574|578)#issuecomment-\d+)$/.test(ref)))
@@ -112,7 +113,7 @@ export function verifyV091Acceptance(record){
     const item=record.gate_evidence?.[gate];
     if(item?.source_sha!==V091_APPLICATION_SOURCE||item?.candidate_version!==V095_CANDIDATE_ID||
       !record.evidence.includes(item?.ref)||!Number.isFinite(Date.parse(item?.verified_at))||
-      Date.parse(item.verified_at)>Date.parse(record.verified_at))
+      Date.parse(item.verified_at)>Date.parse(record.verified_at)||Date.parse(item.verified_at)<Date.parse(V095_CANDIDATE_CREATED_AT))
       throw Error('V095 source-bound evidence is missing: '+gate);
   }
   return true;

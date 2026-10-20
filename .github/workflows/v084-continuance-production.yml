@@ -175,13 +175,13 @@ jobs:
           // Hashes come from that run's build-manifest.json and candidate-version.json.
           export const PIN=Object.freeze({
             original:'93cc7f07-cf39-457e-af69-c9f6f4c02d25',
-            candidate:'904b3b6c-7a7a-401a-9a35-4b5d822dec67',
+            candidate:'3ba8602c-6616-49a4-af29-1efe60ad164a',
             originalEtag:'2c02ac225ced8bdecd764da9c878c7dd32d0cb0d32b8dc476206ef990f25e40a',
             candidateEtag:'c6c0a5941764568082c4f38f325df13dfcf7dfb4f936d63e83c69d97f5383eba',
             originalBindings:'9a3132a806de3fbe47a3f2fb5e5ab021a793835f5a1d6ca7d9f260b1c60efab4',
             candidateBindings:'2cf5986868659ac65f842c438c2a4b89083666ecbda446a85e53d109fbf51b43',
             routes:'dddd32d2057f0c24db6b12dbc4dbf0298b488981ada4db9226b68a3ee7bf8b68',
-            manifest:'3db2aa942fe168fc4743765f972b8572a9cf390a8ad9d093cb6f4c5d34baeb74'
+            manifest:'8d5fcdffbea73715d657e036328aed360af90c5b575cf17e57f8129ff2bfa416'
           });
           export const ASSETS=Object.freeze([
             {

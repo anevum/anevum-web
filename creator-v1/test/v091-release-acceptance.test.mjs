@@ -8,7 +8,7 @@ const guardMatch=releaseWorkflow.match(/<<'V091_PROMOTION_GUARD'\n([\s\S]+?)\n  
 assert.ok(guardMatch,'The executable promotion guard must be present');
 const promotionGuard=await import('data:text/javascript;base64,'+Buffer.from(guardMatch[1].replace(/^          /gm,'')).toString('base64'));
 const complete=()=>{
- const ref='https://github.com/anevum/anevum-web/actions/runs/123',verified_at='2026-10-19T00:00:00Z';
+ const ref='https://github.com/anevum/anevum-web/actions/runs/123',verified_at=new Date(Date.now()-1000).toISOString();
  return {source_sha:V091_APPLICATION_SOURCE,candidate_version:V095_CANDIDATE_ID,
   ...Object.fromEntries(V095_ACCEPTANCE_GATES.map(gate=>[gate,true])),verified_at,evidence:[ref],
   account_subjects:['a'.repeat(64),'b'.repeat(64),'c'.repeat(64)],
@@ -29,7 +29,7 @@ test('each authenticated gate is mandatory and never accepts truthy text',()=>{
 });
 test('a different source, future timestamp, missing evidence or credential URL cannot release',()=>{
  assert.throws(()=>verifyV091Acceptance({...complete(),source_sha:'0'.repeat(40)}),/source/);
- for(const verified_at of [null,'not a date','2999-01-01T00:00:00Z'])
+ for(const verified_at of [null,'not a date','2999-01-01T00:00:00Z','2026-10-19T00:00:00Z'])
   assert.throws(()=>verifyV091Acceptance({...complete(),verified_at}),/timestamp/);
  for(const evidence of [[],['https://evil.invalid/'],['https://github.com/anevum/anevum-web/actions/runs/123?token=secret']])
   assert.throws(()=>verifyV091Acceptance({...complete(),evidence}),/evidence/);
@@ -99,7 +99,7 @@ test('guarded V091 release stays pinned to precisely the reviewed integrated fil
  assert.ok(files.every(file=>!/[?*{}]/.test(file)),'Globs are not allowed in the release scope');
  assert.ok(release.includes("vars.CANONICAL_VERIFIED_ROLES_ENABLED!=='true'"));
  assert.equal(promotionGuard.PIN.original,'93cc7f07-cf39-457e-af69-c9f6f4c02d25');
- assert.equal(promotionGuard.PIN.candidate,'904b3b6c-7a7a-401a-9a35-4b5d822dec67');
+ assert.equal(promotionGuard.PIN.candidate,'3ba8602c-6616-49a4-af29-1efe60ad164a');
  assert.ok(release.includes('test "$(git rev-parse HEAD)" = "$GITHUB_SHA"'));
  assert.match(release,/ANEVUM_LAUNCH_APPROVED/);
  assert.match(release,/CLOUDFLARE_ACCOUNT_ID/);
@@ -387,7 +387,7 @@ test('accepted artifact bytes are pinned and the independent JavaScript suffix r
  g.verifyAsset(Buffer.concat([bytes,Buffer.from('overlay')]),pin,{prefix:true});
  assert.throws(()=>g.verifyAsset(Buffer.concat([Buffer.from('changed fixture bytes!'),Buffer.from('overlay')]),pin,{prefix:true}),/asset/);
  assert.deepEqual(g.ASSETS.map(asset=>asset.path),["assets/index-CBvIEFam.js", "assets/index-IFjf5zNC.css", "assets/iren-living-rig-v088-D_p8xTtN.js", "assets/PublicBoardsPage-D_Ou7MAG.css", "assets/PublicBoardsPage-Gy9GU9Bu.js", "index.html"]);
- assert.equal(g.PIN.manifest,'3db2aa942fe168fc4743765f972b8572a9cf390a8ad9d093cb6f4c5d34baeb74');
+ assert.equal(g.PIN.manifest,'8d5fcdffbea73715d657e036328aed360af90c5b575cf17e57f8129ff2bfa416');
 });
 test('served CSS requires the exact compiled prefix and exact authorized suffix with no other bytes',()=>{
  const g=promotionGuard,compiled=Buffer.from('body{color:blue}'),overlay=Buffer.from('/* authorized scoped fixture */');
