@@ -1,10 +1,10 @@
 {
-  "source_sha": "078a5e4a21fcb002d19e59e75c6449eb2d9a82f6",
+  "source_sha": "6494457047f1b5e3f6d1e852043e13828411f2f1",
   "founder_staff_session": false,
   "reviewer_staff_session": false,
   "creator_journey": false,
   "cross_account_identity": false,
   "verified_at": null,
   "evidence": [],
-  "status": "BLOCKED: V091/V092 identity presence and phone readability source 078a5e4a pinned. Authenticated acceptance, role-ledger migration and role issuance remain unverified; no production role or reputation activation."
+  "status": "BLOCKED: V091/V092 verified-role projection and phone-first player presence at 64944570. Real authenticated acceptance remains incomplete. Neither reputation nor verified-role presentation is active in production."
 }
