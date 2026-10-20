@@ -62,10 +62,24 @@ jobs:
           trap 'kill "$fixture" 2>/dev/null || true' EXIT
           chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
           node creator-v1/test/capture-native-creator-v095.mjs --chrome "$chrome" --output "$RUNNER_TEMP/native-v095-evidence/enabled"
-          node --input-type=module - "$RUNNER_TEMP/native-v095-evidence/enabled/acceptance.json" <<'JS'
+          node --input-type=module - "$RUNNER_TEMP/native-v095-evidence" <<'JS'
+          import assert from 'node:assert/strict';
           import {readFileSync} from 'node:fs';
-          const r=JSON.parse(readFileSync(process.argv[2]));
-          if(r.status!=='PASS'||r.syntheticOnly!==true||r.physicalDeviceAcceptance!==false)throw Error('Native browser evidence is invalid');
+          import {execFileSync} from 'node:child_process';
+          import {join} from 'node:path';
+          const expected=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+          assert.match(expected,/^[a-f0-9]{40}$/);
+          assert.equal(readFileSync(join(process.argv[2],'source-sha.txt'),'utf8').trim(),expected);
+          for(const [mode,count] of [['disabled',2],['enabled',24]]){
+            const r=JSON.parse(readFileSync(join(process.argv[2],mode,'acceptance.json'),'utf8'));
+            assert.equal(r.source,expected,'Browser evidence must identify the checked-out commit');
+            assert.equal(r.status,'PASS');
+            assert.equal(r.syntheticOnly,true);
+            assert.equal(r.physicalDeviceAcceptance,false);
+            assert.equal(r.disabled,mode==='disabled');
+            assert.equal(r.cases.length,count);
+            assert.ok(r.cases.every(item=>item.passed===true));
+          }
           JS
           echo 'V095_NATIVE_STUDIO=COMPILED_REACT_SYNTHETIC_QA_ONLY' >> "$GITHUB_STEP_SUMMARY"
           echo 'PRODUCTION_DEPLOY=NONE; AUTHENTICATED_LIVE_ACCEPTANCE=NOT_INFERRED' >> "$GITHUB_STEP_SUMMARY"
