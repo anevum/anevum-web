@@ -154,6 +154,7 @@ async function compatibilityProbe(req,env,u){
     entries=[{path:"index.html",unpacked:bytes.length,mime:"text/html"}];
   }
   const report=detectCompatibility(entries,{sourceName:file.name});
+  // The metadata-only probe is not an authoritative admission or a safety scan.
   return json({report,stored:false,executed:false,authoritative:false});
 }
 async function preflight(req,env,u){
