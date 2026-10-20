@@ -34,7 +34,7 @@ const SCRIPT = String.raw`
      heading.textContent=issue.message;detail.textContent=" "+issue.fix;
      item.append(heading,detail);list.append(item);
    }
-   if(!report.issues?.length){
+   if(!(report.issues||[]).length){
      const item=document.createElement("li");item.textContent="No obvious structural issues detected. This is not a malware or mobile compatibility clearance.";list.append(item);
    }
    const button=q("upload-button");if(button)button.disabled=!report.playableCandidate;
