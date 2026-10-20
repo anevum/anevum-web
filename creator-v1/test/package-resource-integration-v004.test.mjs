@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {spawnSync} from "node:child_process";
 import {mkdtempSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
-import {join,fileURLToPath} from "node:url";
+import {fileURLToPath} from "node:url";
 import {join as pathJoin} from "node:path";
 import {createHash} from "node:crypto";
 import worker from "../package-alpha-v004/api.mjs";
