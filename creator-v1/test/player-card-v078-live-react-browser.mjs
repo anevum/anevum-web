@@ -157,6 +157,11 @@ try{
       role:card.querySelector('.av81-role-token')?.textContent,
       rep:card.querySelector('.av81-reputation-token')?.textContent,
       aura:card.className.includes('av81-earned--signal'),
+      chosenAura:card.classList.contains('av65-aura--aurora'),
+      auraCompasses:card.querySelectorAll('.av92-aura-compass').length,
+      coverAtmosphere:!!document.querySelector('.ms-public .av92-presence-cover--aurora'),
+      roleAtmosphere:!!document.querySelector('.ms-public .av92-presence-role--founder'),
+      auraMarkerAnimation:getComputedStyle(card.querySelector('.av92-aura-compass'),':before').animationName,
       statusLabel:card.querySelector('.av81-contribution-stats')?.textContent
     };
    })()`);
@@ -166,7 +171,8 @@ try{
    view.pixels!==256||view.badgePixels!==256||!view.label.includes('Symmetry Field')||
    view.progressValue!==250||view.progressMax!==525||view.hiddenAssetCount||
    view.role!=='Founder'||!view.rep.includes('72 REP')||!view.aura||
-   !view.statusLabel.includes('THREADS')||
+   !view.chosenAura||view.auraCompasses!==1||!view.coverAtmosphere||!view.roleAtmosphere||
+   view.auraMarkerAnimation!=='none'||!view.statusLabel.includes('THREADS')||
    view.left<0||view.right>view.viewport+2)
    throw Error('V078_REACT_CARD_INVALID '+name+' '+JSON.stringify(view));
   const capture=await send('Page.captureScreenshot',{format:'png',fromSurface:true});
@@ -190,11 +196,14 @@ try{
    return {name:card.querySelector('.av61-member-name')?.textContent,
      level:!!card.querySelector('.av61-level-label'),art:!!card.querySelector('.av78-featured-art'),
      progress:!!card.querySelector('.av78-player-progress'),specimen:!!card.querySelector('.av61-specimen'),
-     rep:!!card.querySelector('.av81-reputation-token'),role:card.querySelector('.av81-role-token')?.textContent};
+     rep:!!card.querySelector('.av81-reputation-token'),role:card.querySelector('.av81-role-token')?.textContent,
+      chosenAura:card.classList.contains('av65-aura--aurora'),
+      auraMarker:!!card.querySelector('.av92-aura-compass'),
+      coverAtmosphere:!!document.querySelector('.ms-public .av92-presence-cover--aurora')};
   })()`);
   return data;
  });
- if(hidden.level||hidden.art||hidden.progress||hidden.specimen||hidden.rep||hidden.role!=='Founder'||hidden.name!=='QA Member')
+ if(hidden.level||hidden.art||hidden.progress||hidden.specimen||hidden.rep||hidden.role!=='Founder'||hidden.name!=='QA Member'||!hidden.chosenAura||!hidden.auraMarker||!hidden.coverAtmosphere)
   throw Error('V078_PRIVACY_LEAK '+JSON.stringify(hidden));
  p=await send('Page.navigate',{url:origin+'/@privateqa'});
  if(p.errorText)throw Error('V078_PRIVATE_NAVIGATION_FAILED');
