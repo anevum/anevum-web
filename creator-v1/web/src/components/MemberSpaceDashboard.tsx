@@ -4,6 +4,7 @@ import {canonicalAuthClient,canonicalSpace,canonicalWall,spaceRequest,type Canon
 import {MemberPortrait} from './MemberPortrait';
 import {ProfileImageEditor} from './ProfileImageEditor';
 import {MemberWall} from './MemberWall';
+import {MemberPublishedWorks} from './MemberPublishedWorks';
 import {PlayerCardStudio} from './PlayerCardStudio';
 
 import {LevelEmblem,AwardEmblem} from './LevelEmblem';
@@ -82,6 +83,7 @@ export function MemberSpaceDashboard({profile,editor}:{profile:CanonicalProfile;
       </section>
     </aside>
    </div>}
+   {(tab==='overview'||tab==='wall')&&<MemberPublishedWorks handle={profile.handle} owner/>}
    {tab==='profile'&&<div className="ms-profile-editor">{editor}</div>}
    {tab==='appearance'&&<><div className="ms-section-head"><div><span className="kicker">PROFILE STUDIO</span><h2>Frame your world.</h2><p>Crop, preview and save each image. Your wall updates after saving.</p></div><button onClick={()=>setTab('profile')}>CHANGE ATMOSPHERE ↗</button></div><div className="ms-appearance-grid"><ProfileImageEditor slot="avatar" version={space?.media.avatar} onSaved={refresh}/><ProfileImageEditor slot="banner" version={space?.media.banner} onSaved={refresh}/></div><p className="av34-support-note">Supporter frames and banner atmospheres are managed in the <Link to="/support">Supporter Studio ↗</Link>. Your original uploaded images stay yours, and your earned awards remain separate.</p></>}
    {tab==='wall'&&<MemberWall posts={posts} owner onChanged={refresh} identity={{handle:profile.handle,displayName:profile.displayName,avatar:Boolean(space?.media.avatar),avatarVersion:space?.media.avatar,level:space?.stats?.level??null,featuredAwards:space?.featuredAwards??[],earnedBadges:space?.earnedBadges,badgeDisplay:space?.badgeDisplay,distinctions:space?.distinctions,aura:space?.aura,role:space?.role,reputation:space?.showStats?space.reputation:undefined,earnedAura:space?.showStats?space.earnedAura:undefined,constellation:space?.constellation,supporterAppearance:space?.supporterAppearance}}/>}
