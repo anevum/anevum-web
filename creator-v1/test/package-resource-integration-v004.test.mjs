@@ -251,3 +251,22 @@ test("an abusive creator reaches 429 before more multipart bodies are parsed",as
   assert.equal(s.get("SELECT attempts FROM anevum_package_upload_limits WHERE owner_id=?","alice")[0].attempts,11);
  }finally{await s.close();}
 });
+
+test("optional edge rate limiter protects metadata preflight and upload admission",async()=>{
+ const s=setup();
+ try{
+  let calls=0;
+  const limiter={async limit(){calls++;return {success:false};}};
+  s.env.PACKAGE_PREFLIGHT_RATE=limiter;
+  s.env.PACKAGE_UPLOAD_RATE=limiter;
+  const request=await result(await s.request("/api/v1/packages/preflight","alice",{
+   json:{size:42,filename:"demo.html",projectId:"",sha256:"a".repeat(64)}}));
+  assert.equal(request.httpStatus,429);
+  const blocked=await result(await s.upload(HTML("rate-limited")));
+  assert.equal(blocked.httpStatus,429);
+  assert.equal(calls,2);
+  assert.equal(s.objects.size,0);
+  assert.equal(s.get("SELECT COUNT(*) count FROM anevum_package_upload_limits")[0].count,0,
+    "edge rejection avoids even the account-rate D1 write");
+ }finally{await s.close();}
+});
