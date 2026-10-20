@@ -53,7 +53,7 @@ jobs:
           node --test creator-v1/test/react-staging-route.test.mjs
       - name: Verify V010 member package gallery privacy and routes
         shell: bash
-        run: node --experimental-strip-types --test creator-v1/test/package-gallery-v010.test.mjs
+        run: node --experimental-strip-types --test creator-v1/test/package-gallery-v010.test.mjs creator-v1/test/package-proof-v010.test.mjs
       - name: Validate cinematic V005 public site contract
         shell: bash
         run: node --test tests/creator-v1-cinematic-v005.test.mjs
