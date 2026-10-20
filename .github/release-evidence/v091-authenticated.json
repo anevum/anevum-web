@@ -1,14 +1,14 @@
 {
-  "source_sha": "12b8a1c66b66c5e324c485803682c81ab158b300",
+  "source_sha": "d7e8d8a2fda4406ba144bfc8dd03d664e48b7b07",
   "founder_staff_session": true,
   "reviewer_staff_session": true,
   "creator_journey": false,
   "cross_account_identity": false,
   "verified_at": null,
   "evidence": [],
-  "status": "Private pilot in progress. Upload, save and review submission were observed. Independent human build approval, required device acceptance and the remaining public release journey are incomplete; final production acceptance remains blocked.",
+  "status": "Controlled release verification is in progress; final production acceptance remains incomplete.",
   "implementation_verification": {
-    "source_sha": "12b8a1c66b66c5e324c485803682c81ab158b300",
+    "source_sha": "d7e8d8a2fda4406ba144bfc8dd03d664e48b7b07",
     "package_tests": {
       "passed": 91,
       "failed": 0,
@@ -17,7 +17,8 @@
     "release_acceptance_and_promotion_tests": {
       "passed": 28,
       "failed": 0,
-      "skipped": 0
+      "skipped": 0,
+      "source_sha": "12b8a1c66b66c5e324c485803682c81ab158b300"
     },
     "reviewed_file_inventory": 151,
     "release_metadata_exclusions": 5,
@@ -25,8 +26,9 @@
       "Accept an omitted optional artwork part after multipart parsing while preserving selected-artwork validation.",
       "Require explicit restoration before reviewing a suspended project and reject conflicting review transactions without partial writes.",
       "Hide approval and rejection controls from creators reviewing their own build and from suspended projects.",
-      "Map validated package JSON player links to the canonical player path, preserving private-preview queries."
+      "Map validated package JSON player links to the canonical player path, preserving private-preview queries.",
+      "Give native package revision actions a readable wrapping width within project cards."
     ],
-    "qualification": "Automated verification does not establish human review, physical-device acceptance or completed authenticated release gates."
+    "qualification": "Package tests passed on this source. Release-gate tests and the previous full CI matrix are attributed separately to their tested source. Automated verification does not establish human review, physical-device acceptance or completed authenticated release gates."
   }
 }
