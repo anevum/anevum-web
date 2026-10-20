@@ -44,7 +44,9 @@ export function MemberSpaceDashboard({profile,editor}:{profile:CanonicalProfile;
    <div className="ms-cover-meta"><span className="kicker">ANEVUM / PERSONAL CONTINUANCE</span><span className="ms-visibility">{profile.visibility==='public'?'PUBLIC WORLD':'PRIVATE WORLD'}</span></div>
    <button className="ms-cover-edit" onClick={()=>setTab('appearance')}>EDIT BANNER ↗</button>
    <div className="ms-identity"><button className="ms-avatar-button" onClick={()=>setTab('appearance')} aria-label="Change profile picture"><MemberPortrait src={avatar} key={space?.media.avatar} name={profile.displayName} supporterFrame={space?.supporterAppearance?.frame}/><span>EDIT</span></button><div><p className="ms-handle">@{profile.handle}</p>{space?.supporterAppearance&&<SupporterIdentity appearance={space.supporterAppearance} compact/>}<h1 id="ms-title" tabIndex={-1}>{profile.displayName}</h1><p>{profile.headline||'Your place in the continuance.'}</p>
-    {space&&<MemberPresenceStatus aura={space.aura} role={space.role} reputation={space.showStats?space.reputation:undefined}/>}</div></div>
+    {space&&<MemberPresenceStatus aura={space.aura} role={space.role} reputation={space.showStats?space.reputation:undefined}
+      level={space.stats?.level} featuredAwards={space.featuredAwards}
+      earnedBadges={space.earnedBadges} badgeDisplay={space.badgeDisplay}/>}</div></div>
   </header>
   <div className="ms-toolbar"><nav aria-label="My space sections">{([['overview','Dashboard'],['wall','My wall'],['profile','Edit profile'],['appearance','Appearance'],['awards','Awards & stats']] as [Tab,string][]).map(([key,label])=><button key={key} data-iren-anchor={key==='awards'?"awards":undefined} aria-current={tab===key?'page':undefined} onClick={()=>{setTab(key);setNotice('')}}>{label}</button>)}</nav><div className="ms-toolbar-links"><Link to="/community">COMMUNITY ↗</Link> <Link data-iren-anchor="studio" to="/studio">CREATOR STUDIO ↗</Link> <Link to="/support">SUPPORT ANEVUM ↗</Link> {profile.visibility==='public'?<Link to={'/@'+profile.handle}>VIEW PUBLIC WALL ↗</Link>:<button onClick={()=>setTab('profile')}>VISIBILITY SETTINGS</button>}</div></div>
 
