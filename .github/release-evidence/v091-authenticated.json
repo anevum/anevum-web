@@ -1,10 +1,73 @@
 {
   "source_sha": "0116b2eaa63cc1df0530b791a7e30637e4ab5b02",
-  "founder_staff_session": false,
+  "founder_staff_session": true,
   "reviewer_staff_session": false,
   "creator_journey": false,
   "cross_account_identity": false,
   "verified_at": null,
   "evidence": [],
-  "status": "PENDING FINAL-SOURCE AUTHENTICATED ACCEPTANCE: the controlled V003 pilot, package migration, service/proof bindings and reviewer scope were approved on 2026-10-20. Package migration and identity preflight are complete; the real founder preflight and retained staff Observatory session passed. The refreshed application 0116b2ea includes a configured internal issuer-version pin and an upload-only gallery-ON candidate workflow. Full founder/reviewer, publishing and cross-account checks still require genuine evidence on the activated candidate. Optional verified-role ledger migration and public role/reputation display remain separate and OFF. No automated result certifies these gates."
+  "status": "FOUNDER VERIFIED; REVIEWER AND CREATOR ACCEPTANCE PENDING. Approved controlled V003 pilot is active with original apex version at 100% and exact candidate 4b5c5d60-6c8f-431a-a16c-b660c8baf650 at 0%. All 11 workflows passed at release b0ecd978 for pinned application 0116b2ea, including 1,329 complete regression tests and 87 package cases. Package migration 0004, matched controller/runtime resource policy, bounded cleanup, and canonical issuer version pin are deployed. Genuine founder candidate profile/proof, package preflight, Cloudflare Access staff Observatory, signout and founder reauthentication were observed. The subsequent secure sign-in resolved to the founder again, so it supplies no independent reviewer evidence. Normal package bridge, public package publishing and gallery remain OFF. Brandi reviewer scope has not yet been granted so the real pre-grant denial can still be measured. Optional verified-role ledger migration and public role/reputation display remain separate and OFF. No automated result certifies the remaining gates.",
+  "pilot_state": {
+    "observed_at": "2026-10-20T13:56:40Z",
+    "candidate_build_release_source": "b0ecd978f30e47ec07ab84853a7c86633604866b",
+    "candidate_version": "4b5c5d60-6c8f-431a-a16c-b660c8baf650",
+    "ordinary_version": "93cc7f07-cf39-457e-af69-c9f6f4c02d25",
+    "ordinary_traffic_percent": 100,
+    "candidate_traffic_percent": 0,
+    "controller_version": "45adc21c-7a71-4349-b088-82b7febf8869",
+    "runtime_version": "ffd28035-3de5-4493-83cf-1982a87cb1e1",
+    "creation_preflight_version": "f06f3ca7-f684-4028-bc99-e40e080ae6a1",
+    "resource_protection_enabled": true,
+    "resource_schema_verified": true,
+    "cleanup_schedule": "*/30 * * * *",
+    "bridge_enabled": false,
+    "identity_bridge_verified": false,
+    "public_publishing_enabled": false,
+    "package_gallery_enabled": false,
+    "candidate_ui_gallery_compiled": true,
+    "reviewer_scope_granted": false,
+    "temporary_selection_expires_at": "2026-10-20T15:37:29Z",
+    "temporary_selection_cleanup": {
+      "request_ruleset": "7a8ccf2e80704acb90de7ad857a2728c",
+      "request_rules": ["1279cf299bef404e883c7832c49d42a3", "d2b00ef8a7de4278bf98e66a45d2afcc"],
+      "response_ruleset": "8aa991fa6ff1404d968dbf80b8743a40",
+      "response_rules": ["d6d4fae0e00b4622acb380228ce5169b", "7602a38056e449fb88c803beb9430441"],
+      "instruction": "At pilot close, remove only these recorded temporary rules after checking for unrelated later changes. The selection cookie chooses application code only and supplies no account authentication."
+    },
+    "promotion_safeguards": {
+      "exact_accepted_candidate_only": true,
+      "recorded_ordinary_100_candidate_0_rollback": true,
+      "independent_authentication_gates_required": true,
+      "deployment_acknowledgement_and_readback_required": true,
+      "latest_version_bindings_runtime_routes_and_assets_locked": true,
+      "external_apex_writers_must_be_serialized": true
+    },
+    "founder_observations": [
+      "Genuine verified canonical founder profile served by selected candidate; ownership proof present.",
+      "Founder public and private canonical ownership proofs matched exactly.",
+      "Package preflight authenticated=true, pilot=true, reviewer=true through the fixed candidate issuer; normal bridge flags remained false.",
+      "Legitimate Cloudflare Access plus canonical session opened the staff Observatory with OWNER CLEARANCE.",
+      "Founder signed out through the product; the member view cleared and redirected to Join.",
+      "A new secure email verification returned to the same canonical founder account; this was not an independent reviewer session."
+    ],
+    "public_candidate_observations": [
+      "Ordinary home referenced the original asset; explicitly selected home referenced /assets/index-Cmx71yTs.js.",
+      "The first 794716 served JavaScript bytes exactly matched the accepted build SHA256 dfbeded645663e8396890f4ad1a1d7251334d732e24b3c200c639d0cf7d22a3a; existing native route-owner enhancement followed.",
+      "Served CSS exactly matched the accepted 765154-byte compiled prefix plus the existing 29686-byte native hosted-creator suffix; the same suffix was verified on ordinary production CSS.",
+      "Anonymous selected public profile supplied canonical package proof; ordinary public profile remained on the original version without that new field."
+    ],
+    "synthetic_ci_evidence": [
+      "https://github.com/anevum/anevum-web/actions/runs/39430535577",
+      "https://github.com/anevum/anevum-web/actions/runs/39430535543",
+      "https://github.com/anevum/anevum-web/actions/runs/39430526806",
+      "https://github.com/anevum/anevum-web/actions/runs/39430535833"
+    ],
+    "remaining": [
+      "Real independent reviewer canonical session and pre-grant denial, then the approved reviewer grant and post-grant access.",
+      "Owner rights declaration for the concrete original package and actual private upload/preview/save/revision/submit.",
+      "Genuine independent build review and approval, followed by public Discover/Play/member-wall and suspend/restore checks.",
+      "Real cross-account ownership/privacy observations and actual required phone acceptance.",
+      "Full authenticated repository evidence and final guarded promotion of the exact accepted candidate."
+    ]
+  }
 }
