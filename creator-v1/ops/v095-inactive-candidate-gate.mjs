@@ -19,7 +19,7 @@ export function validateBaseline({deployment,routes,settings,live,pilot,exposure
   assert.equal(baseline.approval.production,false,'No production approval may be inferred');
   assert.equal(baseline.approval.live_traffic_promotion,false,'No traffic promotion permitted');
   assert.equal(baseline.routes.length,39);
-  assert.equal(baseline.routes.filter(x=>x.pattern==='family.anevum.com/*'&&x.script==='anevum-family-holiday-v001').length,1);
+  assert.equal(baseline.routes.filter(x=>x.pattern==='family.anevum.com/*'&&x.script==='anevum-family-link-v004').length,1);
   assert.equal(deployment?.id,baseline.deployment.id,'Deployment changed; review before uploading');
   assert.deepEqual(deployment.versions,baseline.deployment.versions,'Traffic distribution changed');
   assert.deepEqual(normalizeRoutes(routes),baseline.routes,'Cloudflare route inventory drift');
