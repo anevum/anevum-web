@@ -1,10 +1,10 @@
 {
-  "source_sha": "743e81762754fd0805be60294f68a120b4d491e9",
+  "source_sha": "078a5e4a21fcb002d19e59e75c6449eb2d9a82f6",
   "founder_staff_session": false,
   "reviewer_staff_session": false,
   "creator_journey": false,
   "cross_account_identity": false,
   "verified_at": null,
   "evidence": [],
-  "status": "BLOCKED: V091 and V092 audited-role display source 743e8176 pinned; all four authenticated acceptance gates remain unverified. Live reputation and verified-role flags remain disabled; migration and role grants require separate approval."
+  "status": "BLOCKED: V091/V092 identity presence and phone readability source 078a5e4a pinned. Authenticated acceptance, role-ledger migration and role issuance remain unverified; no production role or reputation activation."
 }
