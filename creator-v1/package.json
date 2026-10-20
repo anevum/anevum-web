@@ -26,7 +26,7 @@
     "test:d1-efficiency-v081": "node --check canonical-auth/worker.mjs && node --check canonical-auth/policy.mjs && node --check canonical-auth/profile.mjs && node --check canonical-auth/progression.mjs && node --test test/d1-auth-cache-v081.test.mjs test/d1-xp-totals-v081.test.mjs test/progression-v031.test.mjs",
     "test:entry-v082": "node --test test/continuance-entry-v052.test.mjs test/signup-access-states-v082.test.mjs test/canonical-schema-read-budget.test.mjs",
     "test:iren-v080": "node --test test/iren-guided-v080.test.mjs test/iren-scout-v087.test.mjs",
-    "test:player-v081": "node --test test/player-reputation-v081.test.mjs test/player-card-premium-v078.test.mjs test/member-identity-v061.test.mjs test/evolution-card-illustrations-v077.test.mjs test/level-artwork-preservation-v074.test.mjs test/earned-reward-media-v075.test.mjs",
+    "test:player-v081": "node --test test/player-reputation-v081.test.mjs test/verified-roles-v092.test.mjs test/player-card-premium-v078.test.mjs test/member-identity-v061.test.mjs test/evolution-card-illustrations-v077.test.mjs test/level-artwork-preservation-v074.test.mjs test/earned-reward-media-v075.test.mjs",
     "test:iren-v088": "node --test test/iren-living-v088.test.mjs test/iren-first-contact-v092.test.mjs",
     "test:experience-v091": "node --test test/continuance-experience-v091.test.mjs && node --experimental-strip-types --test test/creator-route-v091.test.mjs test/project-hosting-v091.test.mjs && node --test test/staff-session-transport-v091.test.mjs && node --test test/staff-transport-release-v091.test.mjs test/member-presence-v092.test.mjs"
   }
