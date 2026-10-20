@@ -560,7 +560,9 @@ export default {
         const projects=owner?await ownerList(env.DB,u.id):[];
         const chosen=url.searchParams.get("update");
         const updateId=owner&&projects.some(x=>x.id===chosen&&["published","rejected"].includes(x.status)&&!x.draft_release_id)?chosen:"";
-        return uploadScreen(projects,!!u,owner,updateId);
+        // Do not show an uploader that cannot persist release rights or media.
+        const ready=!!env.MEDIA?.put&&!!env.MEDIA?.get&&!!env.MEDIA?.head&&await packageSchemaReady(env.DB);
+        return uploadScreen(projects,!!u,owner,updateId,ready);
       }
       if(path==="/packages"||path==="/packages/")return catalogScreen(await publicList(env.DB));
       if(path==="/help/packages"||path==="/help/packages/")return helpScreen();
