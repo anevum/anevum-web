@@ -5,11 +5,10 @@ import assert from "node:assert/strict";
 
 const BASE="https://anevum.com";
 const RUNTIME="https://anevum-package-alpha-v004-runtime.devonakins.workers.dev";
-const timeout=AbortSignal.timeout(15000);
 async function read(path,from=BASE) {
   const r=await fetch(from+path,{
     headers:{"accept":"text/html,application/json","user-agent":"Mozilla/5.0 (ANEVUM-Staging-ReadOnly-QA)"},
-    redirect:"manual",signal:timeout
+    redirect:"manual",signal:AbortSignal.timeout(15000)
   });
   const text=await r.text();
   console.log("CHECK",r.status,path,from===BASE?"ANEVUM":"ISOLATED-RUNTIME");
