@@ -14,6 +14,7 @@
 - Creator quota: 100 MiB compressed and 200 MiB estimated physical (original archive + unpacked assets). Shared pilot physical cap: 512 MiB. Both include reserved uploads and pending cleanup. Quota is evaluated in a single D1 insert statement to avoid concurrent overspending.
 - One active upload lease per member, 20-minute crash expiry; maximum 10 attempts/hour, 30/day and 300 MiB/day. These are safety limits for alpha, not public paid-tier entitlements. Cloudflare edge request/WAF/abuse protections remain separate.
 - Private tests: expire 48 hours after upload. Rejected build objects: eligible for erasure after seven days. Retired private metadata: bounded pruning after 30 days and only after R2 erasure. **All published releases and their immutable payloads remain protected** for public availability and rollback.
+- For staging/production, bind per-member edge limiters PACKAGE_PREFLIGHT_RATE (suggested 12 requests per 60 seconds per colo) and PACKAGE_UPLOAD_RATE (suggested 6 requests per 60 seconds per colo), plus origin-level Cloudflare WAF protections. Edge rate-limiting bindings are not globally exact; only D1 imposes the exact member upload budget. Without edge limiters the isolated code still runs, but the public launch gate is incomplete.
 - No archive/blob content is stored in D1. Object keys use per-owner/per-project/per-release prefixes under a private R2 bucket. All account and reviewer permissions remain on the trusted Worker origin; creator code runs only in the isolated registrable runtime origin.
 
 ## Added routes
