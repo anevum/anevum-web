@@ -1,10 +1,10 @@
 {
-  "source_sha": "6494457047f1b5e3f6d1e852043e13828411f2f1",
+  "source_sha": "c25e41082395a5cd6c730987b18a6b2b2ea88aab",
   "founder_staff_session": false,
   "reviewer_staff_session": false,
   "creator_journey": false,
   "cross_account_identity": false,
   "verified_at": null,
   "evidence": [],
-  "status": "BLOCKED: V091/V092 verified-role projection and phone-first player presence at 64944570. Real authenticated acceptance remains incomplete. Neither reputation nor verified-role presentation is active in production."
+  "status": "BLOCKED: V091/V092 phone-first verified identity and cross-account art source c25e4108 pinned; authenticated acceptance remains unverified, role/reputation disabled in production."
 }
