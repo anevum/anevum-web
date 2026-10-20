@@ -17,6 +17,9 @@ html=html.replace('<link rel="manifest" href="/site.webmanifest">',"");
 html=html.replace('<meta name="robots" content="index,follow">','<meta name="robots" content="noindex,nofollow">');
 html=html.replace('</head>',"<style>body.v5 .preview-banner{position:fixed;right:12px;bottom:12px;z-index:999;background:#c9e8ad;color:#0c1a0b;font:600 10px system-ui;padding:10px 12px;box-shadow:0 0 28px #0008} @media(max-width:600px){body.v5 .preview-banner{right:8px;bottom:8px;padding:8px;font-size:9px}}</style></head>");
 html=html.replace('<body class="v5">','<body class="v5"><div class="preview-banner">V005 DESIGN PREVIEW · NOT LIVE</div>');
+const visualQa='<script>window.addEventListener("load",()=>{setTimeout(()=>{const c=document.querySelector("#hero-react-root canvas");window.__ANE_GPU_QA=c?"RENDERER_READY":"NO_WEBGL2";document.documentElement.setAttribute("data-gpu-test",window.__ANE_GPU_QA);},300);});</script>';
+html=html.replace('</body>',visualQa+'</body>');
+
 if(html.includes(cssLink)||html.includes(jsTag)||html.includes(immersiveTag))throw new Error("External CSS/JS were not embedded");
 const dir=process.argv[2]||"/tmp/sites-v005";
 await mkdir(dir,{recursive:true});
