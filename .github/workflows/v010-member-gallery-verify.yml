@@ -1,0 +1,35 @@
+name: ANEVUM V010 canonical member gallery verification
+on:
+  pull_request:
+    paths:
+      - "creator-v1/web/src/lib/package-gallery.ts"
+      - "creator-v1/web/src/components/MemberPublishedWorks.tsx"
+      - "creator-v1/web/src/components/member-published-works.css"
+      - "creator-v1/web/src/components/MemberSpaceDashboard.tsx"
+      - "creator-v1/web/src/pages/Phase1PublicMemberPage.tsx"
+      - "creator-v1/test/member-published-works-v010.test.mjs"
+      - ".github/workflows/v010-member-gallery-verify.yml"
+  push:
+    branches:
+      - "build/v010-v091-member-gallery-20261019-001"
+    paths:
+      - "creator-v1/web/src/lib/package-gallery.ts"
+      - "creator-v1/web/src/components/MemberPublishedWorks.tsx"
+      - "creator-v1/web/src/components/member-published-works.css"
+      - "creator-v1/web/src/components/MemberSpaceDashboard.tsx"
+      - "creator-v1/web/src/pages/Phase1PublicMemberPage.tsx"
+      - "creator-v1/test/member-published-works-v010.test.mjs"
+      - ".github/workflows/v010-member-gallery-verify.yml"
+permissions:
+  contents: read
+jobs:
+  public-private-gallery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify private/public gallery URL, privacy and canonical mounting
+        run: node --experimental-strip-types --test creator-v1/test/member-published-works-v010.test.mjs
