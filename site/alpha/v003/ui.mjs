@@ -326,7 +326,7 @@ const displayDate=seconds=>{
   const value=Number(seconds);
   return Number.isFinite(value)&&value>0?new Date(value*1000).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):"";
 };
-export function layout(title,body,runner=""){
+export function layout(title,body,runner="",status=200){
   const runnerFrame=runner?"frame-src "+runner+"; ":"frame-src 'none'; ";
   const uploadActive=title==="Upload a creation"?' aria-current="page"':"";
   const html='<!doctype html><html lang="en"><head><meta charset="utf-8">'+
@@ -337,7 +337,7 @@ export function layout(title,body,runner=""){
     '<span class="header-readout" aria-hidden="true"><i></i> CREATOR / UPLINK</span></div></header>'+
     '<main id="main-content">'+body+'</main><footer class="foot">ANEVUM / Creator uplink · <a href="/help/packages">Upload guide</a> · Every playable release requires independent review.</footer>'+
     '<script>'+SCRIPT+'</script></body></html>';
-  return new Response(html,{headers:{"content-type":"text/html; charset=utf-8",
+  return new Response(html,{status,headers:{"content-type":"text/html; charset=utf-8",
     "cache-control":"private, no-store","x-content-type-options":"nosniff",
     "referrer-policy":"no-referrer","x-robots-tag":"noindex",
     "content-security-policy":"default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' data: blob:; "+runnerFrame+" connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'self'"}});
@@ -375,7 +375,7 @@ export function card(p,owner=false,reviewer=false){
     (p.review_reason?'<p class="status bad">Reviewer note: '+esc(p.review_reason)+'</p>':"")+
     '<div class="actions">'+controls+'</div></article>';
 }
-export function uploadScreen(projects,loggedIn,pilot,updateId,serviceReady=true){
+export function uploadScreen(projects,loggedIn,pilot,updateId,serviceReady=true,stagePreview=false){
   const selected=projects.find(p=>p.id===updateId)||null;
   const initialTitle=selected?esc(selected.title):"";
   const initialSummary=selected?esc(selected.summary):"";
@@ -390,7 +390,9 @@ export function uploadScreen(projects,loggedIn,pilot,updateId,serviceReady=true)
     '<div class="format-option"><strong>HTML · Single file</strong><span>One self-contained .html experience with no external dependencies.</span></div></div>';
   const stepper='<div class="stepper" aria-label="Release workflow">'+
     '<span class="active">01 Upload build</span><span>02 Private playtest</span><span>03 Staff review</span></div>';
-  const form= !loggedIn
+  const form= stagePreview
+    ?'<div class="notice" role="status"><strong>Staging interface preview only.</strong><p>This isolated address displays the upload design but does not accept account sessions or real project submissions. Browser ZIP publishing is still under review. No projects are published from this page.</p><div class="actions"><a class="button primary" href="https://anevum.com">Return to ANEVUM</a><a class="button" href="/help/packages">Read format requirements</a></div></div>'
+    :!loggedIn
     ?'<div class="notice"><strong>Sign in to upload.</strong><p>Use your existing ANEVUM account. Projects stay private until approved.</p><div class="actions"><a class="button primary" href="/join">Sign in</a></div></div>'
     :!pilot
       ?'<div class="notice"><strong>Uploading is currently restricted to pilot creators.</strong><p>You can explore published projects while the independent player and security review are completed. No additional account is needed.</p><div class="actions"><a class="button" href="/discover">Discover</a></div></div>'
