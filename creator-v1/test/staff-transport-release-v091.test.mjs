@@ -86,7 +86,7 @@ test('reviewed Observatory V002 can only be retained at its exact version and so
  assert.equal(retainedDeployment(spec.workers[0],kept.version,kept.sha256),false);
 });
 test('route identity and fail-closed limits are pinned even when the route count stays equal',async()=>{
- assert.equal(spec.routes.length,38);
+ assert.equal(spec.routes.length,39);
  assert.ok(spec.routes.every(r=>r.request_limit_fail_open===false));
  for(const edit of [r=>r[0].script='unreviewed-worker',r=>r[0].pattern='anevum.com/unreviewed*',r=>r[0].request_limit_fail_open=true,r=>r.pop()]){
   const f=fixture();edit(f.routes);

@@ -3,14 +3,26 @@
 import {readFileSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath,pathToFileURL} from 'node:url';
-export const V091_APPLICATION_SOURCE='ea1d5e7a402c1e85f9645ea76ced8f8cddbe859f';
+export const V091_APPLICATION_SOURCE='d5af32fd8f04b05e0381f7ac12c59d06c0e836a2';
 export const V091_SOURCE_BASELINE='db2b8c0f8f79061adf1677986b87077856204267';
 export const V091_RELEASE_METADATA=Object.freeze([
   '.github/workflows/v084-continuance-production.yml',
   '.github/workflows/v091-live-readonly-qa.yml',
   '.github/release-evidence/v091-authenticated.json',
   'creator-v1/ops/v091-release-acceptance.mjs',
-  'creator-v1/test/v091-release-acceptance.test.mjs'
+  'creator-v1/test/v091-release-acceptance.test.mjs',
+  '.github/workflows/v095-v096-inactive-preflight.yml',
+  '.github/workflows/v095-v096-inactive-upload.yml',
+  '.github/release-approvals/v095-v096-inactive-upload.json',
+  'creator-v1/operations/v095-inactive-baseline-20261020.json',
+  'creator-v1/ops/v095-inactive-candidate-gate.mjs',
+  'creator-v1/ops/v095-v096-cloudflare-ops.mjs',
+  'creator-v1/test/v095-inactive-candidate-gate.test.mjs',
+  'creator-v1/operations/staff-transport-v091.json',
+  'creator-v1/test/staff-transport-release-v091.test.mjs',
+  'creator-v1/ops/v095-v096-acceptance-entry.mjs',
+  'creator-v1/test/v095-v096-acceptance-entry.test.mjs',
+  '.github/workflows/v096-public-alpha-qa.yml'
 ]);
 const literalPath=path=>typeof path==='string'&&/^[A-Za-z0-9_./-]+$/.test(path)&&
   path.split('/').every(part=>part&&part!=='.'&&part!=='..');
@@ -49,7 +61,7 @@ export function verifyV091SourceScope({release,recordedSource,changedFiles,appli
   const expected=V091_RELEASE_METADATA.map((file,index)=>"':(exclude)"+file+"'"+
     (index===V091_RELEASE_METADATA.length-1?'':' \\'));
   if(start<0||expected.some((line,index)=>lines[start+1+index]!==line))
-    throw Error('V091 application delta must use exactly the five reviewed metadata exclusions.');
+    throw Error('V091 application delta must use exactly the reviewed metadata exclusions.');
   for(const paths of [changedFiles,applicationChangedFiles])
     if(!Array.isArray(paths)||paths.some(path=>!literalPath(path))||new Set(paths).size!==paths.length)
       throw Error('V091 git source inventory must contain unique literal paths.');
@@ -76,17 +88,33 @@ export function verifyV091GitSourceScope(){
     applicationChangedFiles:paths(V091_APPLICATION_SOURCE),applicationIsAncestor:true,baselineIsAncestor:true
   });
 }
+export const V095_ACCEPTANCE_GATES=Object.freeze(['founder_staff_session','reviewer_staff_session','creator_journey','cross_account_identity','ordinary_member_denial','logged_out_public_alpha','physical_iphone_safari','independent_browser','candidate_assets_verified','owner_release_approved']);
+export const V095_CANDIDATE_ID='904b3b6c-7a7a-401a-9a35-4b5d822dec67';
 export function verifyV091Acceptance(record){
   if(record?.source_sha!==V091_APPLICATION_SOURCE)throw Error('V091 acceptance does not match the pinned application source.');
   if(record.native_candidate_pending===true)throw Error('V095 native application candidate remains unverified; the previous V091 upload cannot be promoted for changed source.');
-  for(const gate of ['founder_staff_session','reviewer_staff_session','creator_journey','cross_account_identity']){
+  if(record?.candidate_version!==V095_CANDIDATE_ID)throw Error('V095/V096 acceptance candidate identity changed.');
+  for(const gate of V095_ACCEPTANCE_GATES){
     if(record[gate]!==true)throw Error('V091 authenticated release gate remains unverified: '+gate);
   }
   if(typeof record.verified_at!=='string'||!Number.isFinite(Date.parse(record.verified_at))||Date.parse(record.verified_at)>Date.now())
     throw Error('V091 acceptance requires an actual verification timestamp.');
   if(!Array.isArray(record.evidence)||record.evidence.length<1||record.evidence.some(ref=>
-    typeof ref!=='string'||ref!==ref.trim()||!/^https:\/\/github\.com\/anevum\/anevum-web\/(?:actions\/runs\/\d+(?:\/artifacts\/\d+)?|pull\/(?:554|564)#issuecomment-\d+)$/.test(ref)))
+    typeof ref!=='string'||ref!==ref.trim()||!/^https:\/\/github\.com\/anevum\/anevum-web\/(?:actions\/runs\/\d+(?:\/artifacts\/\d+)?|pull\/(?:554|564|573|574|578)#issuecomment-\d+)$/.test(ref)))
     throw Error('V091 acceptance requires recorded repository evidence, without session credentials.');
+  if(!Array.isArray(record.account_subjects)||record.account_subjects.length!==3||
+    record.account_subjects.some(x=>typeof x!=='string'||!/^[a-f0-9]{64}$/.test(x))||new Set(record.account_subjects).size!==3)
+    throw Error('V095 acceptance requires distinct redacted founder, reviewer and ordinary-member subjects.');
+  if(record.physical_device?.physical!==true||record.physical_device?.browser!=='Safari'||
+    record.physical_device?.os!=='iOS'||typeof record.physical_device?.model!=='string'||!record.physical_device.model.trim())
+    throw Error('V095 acceptance requires actual iPhone Safari device evidence.');
+  for(const gate of V095_ACCEPTANCE_GATES){
+    const item=record.gate_evidence?.[gate];
+    if(item?.source_sha!==V091_APPLICATION_SOURCE||item?.candidate_version!==V095_CANDIDATE_ID||
+      !record.evidence.includes(item?.ref)||!Number.isFinite(Date.parse(item?.verified_at))||
+      Date.parse(item.verified_at)>Date.parse(record.verified_at))
+      throw Error('V095 source-bound evidence is missing: '+gate);
+  }
   return true;
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
@@ -96,6 +124,7 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
   if(args[0]==='--source-only'){
     console.log('V091_SOURCE_SCOPE=PASS '+JSON.stringify(verifyV091GitSourceScope()));
   }else{
+    verifyV091GitSourceScope();
     verifyV091Acceptance(JSON.parse(readFileSync(new URL('../../.github/release-evidence/v091-authenticated.json',import.meta.url),'utf8')));
     console.log('V091_AUTHENTICATED_ACCEPTANCE=PASS');
   }

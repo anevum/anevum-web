@@ -1,6 +1,6 @@
 # V091 RC: staff transport is repaired in production; full experience release requires authenticated acceptance.
 # V091 release candidate: staff transport filename fix pinned; authenticated full release remains gated.
-name: ANEVUM V091 Guarded Continuance Experience Production
+name: ANEVUM V095 V096 Guarded Continuance Experience Production
 on:
   push:
     branches:
@@ -30,12 +30,24 @@ jobs:
           node --test creator-v1/test/v091-release-acceptance.test.mjs
           node creator-v1/ops/v091-release-acceptance.mjs
           # Only release configuration/evidence may differ from the tested app.
-          git diff --exit-code ea1d5e7a402c1e85f9645ea76ced8f8cddbe859f HEAD -- . \
+          git diff --exit-code d5af32fd8f04b05e0381f7ac12c59d06c0e836a2 HEAD -- . \
             ':(exclude).github/workflows/v084-continuance-production.yml' \
             ':(exclude).github/workflows/v091-live-readonly-qa.yml' \
             ':(exclude).github/release-evidence/v091-authenticated.json' \
             ':(exclude)creator-v1/ops/v091-release-acceptance.mjs' \
-            ':(exclude)creator-v1/test/v091-release-acceptance.test.mjs'
+            ':(exclude)creator-v1/test/v091-release-acceptance.test.mjs' \
+            ':(exclude).github/workflows/v095-v096-inactive-preflight.yml' \
+            ':(exclude).github/workflows/v095-v096-inactive-upload.yml' \
+            ':(exclude).github/release-approvals/v095-v096-inactive-upload.json' \
+            ':(exclude)creator-v1/operations/v095-inactive-baseline-20261020.json' \
+            ':(exclude)creator-v1/ops/v095-inactive-candidate-gate.mjs' \
+            ':(exclude)creator-v1/ops/v095-v096-cloudflare-ops.mjs' \
+            ':(exclude)creator-v1/test/v095-inactive-candidate-gate.test.mjs' \
+            ':(exclude)creator-v1/operations/staff-transport-v091.json' \
+            ':(exclude)creator-v1/test/staff-transport-release-v091.test.mjs' \
+            ':(exclude)creator-v1/ops/v095-v096-acceptance-entry.mjs' \
+            ':(exclude)creator-v1/test/v095-v096-acceptance-entry.test.mjs' \
+            ':(exclude).github/workflows/v096-public-alpha-qa.yml'
       - name: Node runtime
         uses: actions/setup-node@v4
         with:
@@ -159,23 +171,49 @@ jobs:
           import {join} from 'node:path';
           import {pathToFileURL} from 'node:url';
 
-          // Reviewed upload run 39430526806, release b0ecd978, application 0116b2ea.
+          // V095/V096 source d5af32fd. Replacement packaging and authentic acceptance remain required.
           // Hashes come from that run's build-manifest.json and candidate-version.json.
           export const PIN=Object.freeze({
             original:'93cc7f07-cf39-457e-af69-c9f6f4c02d25',
-            candidate:'4b5c5d60-6c8f-431a-a16c-b660c8baf650',
+            candidate:'904b3b6c-7a7a-401a-9a35-4b5d822dec67',
             originalEtag:'2c02ac225ced8bdecd764da9c878c7dd32d0cb0d32b8dc476206ef990f25e40a',
-            candidateEtag:'aac1cf1ea0e181d977b2df852023f4bb6ae45b558bba1aacf9d637b1cccaf429',
+            candidateEtag:'c6c0a5941764568082c4f38f325df13dfcf7dfb4f936d63e83c69d97f5383eba',
             originalBindings:'9a3132a806de3fbe47a3f2fb5e5ab021a793835f5a1d6ca7d9f260b1c60efab4',
             candidateBindings:'2cf5986868659ac65f842c438c2a4b89083666ecbda446a85e53d109fbf51b43',
-            routes:'45c0bd81f1ebbb401320db1f74a0960121c48a61a25a3a5e012d46ba3c9e3010',
-            manifest:'7efc6d34dccf5d42a4d5727fc1b0078920d5453543b9f8a94798a0acac4e7077'
+            routes:'dddd32d2057f0c24db6b12dbc4dbf0298b488981ada4db9226b68a3ee7bf8b68',
+            manifest:'3db2aa942fe168fc4743765f972b8572a9cf390a8ad9d093cb6f4c5d34baeb74'
           });
           export const ASSETS=Object.freeze([
-            {path:'index.html',bytes:2553,sha256:'b84f86b4dc631d8d621c83b2d41d7c41a1beeb602d01537ed409c8fc0f9a753e'},
-            {path:'assets/index-Cmx71yTs.js',bytes:794716,sha256:'dfbeded645663e8396890f4ad1a1d7251334d732e24b3c200c639d0cf7d22a3a'},
-            {path:'assets/index-CGCMyZTx.css',bytes:765154,sha256:'dd363a90ed997b687954940ab697ceeb868157ef3965f25c82a4c3672194efde'},
-            {path:'assets/iren-living-rig-v088-D_p8xTtN.js',bytes:12647,sha256:'c4539cc4f9124a32a8096293bd8757774838902c4fae30ccd1d3c9ed5b236d0e'}
+            {
+              "path": "assets/index-CBvIEFam.js",
+              "bytes": 816166,
+              "sha256": "8b81e0d8ed7f5ddfd0744e039fa17944cfdf59aa64631db1c2f8ed470d1d904e"
+            },
+            {
+              "path": "assets/index-IFjf5zNC.css",
+              "bytes": 784128,
+              "sha256": "50f664d81876ea1f9e9c2197bb418bd02138860f1e8fc4e489d72b75d16517db"
+            },
+            {
+              "path": "assets/iren-living-rig-v088-D_p8xTtN.js",
+              "bytes": 12647,
+              "sha256": "c4539cc4f9124a32a8096293bd8757774838902c4fae30ccd1d3c9ed5b236d0e"
+            },
+            {
+              "path": "assets/PublicBoardsPage-D_Ou7MAG.css",
+              "bytes": 9919,
+              "sha256": "34785947a121baa87c675b75560e69eaa321d3d7efcb41d0100e2520d8abdce5"
+            },
+            {
+              "path": "assets/PublicBoardsPage-Gy9GU9Bu.js",
+              "bytes": 8374,
+              "sha256": "ecd8cce8c87cef63f82edd327be806e2e651cfe9944192cd6b48112bcf42dafc"
+            },
+            {
+              "path": "index.html",
+              "bytes": 2553,
+              "sha256": "2eb8795f86a0098079cb1e8fe765fbdd2b63fc6009f9651f2ccb5bcd9bc460c8"
+            }
           ]);
           // Same authorized native CSS suffix observed on the original and pilot bundles.
           export const CSS_OVERLAY=Object.freeze({bytes:29686,sha256:'b2e7546bb679dc2cf323aed14706e33066afd1a2b666df8326e938dc8ca2b773'});
@@ -232,7 +270,7 @@ jobs:
             need(snapshot.settings.compatibility_date===RUNTIME.compatibility_date&&same(snapshot.settings.compatibility_flags,RUNTIME.compatibility_flags),'latest compatibility settings changed');
             need(settingsLock(snapshot.settings)===stable({placement:{},usage_model:'standard',tags:[],tail_consumers:[],logpush:false}),'non-versioned settings changed');
             need(snapshot.exposure.enabled===false&&snapshot.exposure.previews_enabled===false,'Worker public exposure changed');
-            need(Array.isArray(snapshot.routes)&&snapshot.routes.length===38&&Array.isArray(reviewedRoutes)&&reviewedRoutes.length===38,'route count changed');
+            need(Array.isArray(snapshot.routes)&&snapshot.routes.length===39&&Array.isArray(reviewedRoutes)&&reviewedRoutes.length===39,'route count changed');
             need(routeLock(snapshot.routes)===routeLock(reviewedRoutes)&&sha(routeLock(snapshot.routes))===pins.routes,'reviewed route inventory changed');
           }
           export function verifyAsset(bytes,pin,{prefix=false}={}){
@@ -241,6 +279,9 @@ jobs:
           }
           export function verifyBuild(directory){
             for(const pin of ASSETS)verifyAsset(readFileSync(join(directory,pin.path)),pin);
+            need(readFileSync(join(directory,'evolution/mini-runtime.json')).length>6000,'earned runtime missing');
+            for(let level=1;level<=30;level++)for(const suffix of ['-scene.gz','-1024.webp','-256.webp','-compact-128.png','-field.svg'])
+              need(readFileSync(join(directory,'evolution/assets/level-'+String(level).padStart(2,'0')+suffix)).length>300,'earned media missing');
           }
           export function verifyServedCss(bytes,pin=ASSETS.find(asset=>asset.path.endsWith('.css')),suffix=CSS_OVERLAY){
             need(bytes.length===pin.bytes+suffix.bytes,'served stylesheet length differs from the accepted build plus authorized overlay');
@@ -336,7 +377,7 @@ jobs:
             };
             const journalPath=join(process.env.RUNNER_TEMP,'v091-promotion-journal.json');
             const save=journal=>writeFileSync(journalPath,JSON.stringify(journal),{mode:0o600});
-            const reviewedRoutes=JSON.parse(readFileSync('creator-v1/operations/staff-transport-v091.json','utf8')).routes;
+            const reviewedRoutes=JSON.parse(readFileSync('creator-v1/operations/v095-inactive-baseline-20261020.json','utf8')).routes;
             if(action==='prepare')await prepare(api,reviewedRoutes,save);
             else{
               const journal=JSON.parse(readFileSync(journalPath,'utf8'));
@@ -352,11 +393,11 @@ jobs:
           node "$RUNNER_TEMP/v091-promotion-guard.mjs" assets
       - name: Verify the preserved staff identity transport
         run: node --test creator-v1/test/staff-session-transport-v091.test.mjs creator-v1/test/staff-transport-release-v091.test.mjs
-      - name: Verify or repair the five pinned staff identity Workers
+      - name: Verify preserved staff identity Workers without changing them
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: node creator-v1/ops/v091-staff-transport.mjs --apply
+        run: node creator-v1/ops/v091-staff-transport.mjs
       - name: Promote exact accepted V091 candidate with pinned pilot rollback
         shell: bash
         env:
@@ -373,8 +414,9 @@ jobs:
           git merge-base --is-ancestor 00ba9f32f2c862de4b362eaafddc80890e2b577b HEAD
           # Pin the completed V091 application and allow only its reviewed files.
           # A stale or broadened release fails before any Cloudflare write.
-          git merge-base --is-ancestor ea1d5e7a402c1e85f9645ea76ced8f8cddbe859f HEAD
+          git merge-base --is-ancestor d5af32fd8f04b05e0381f7ac12c59d06c0e836a2 HEAD
           diff -u <(printf '%s\n' \
+             '.github/release-approvals/v095-v096-inactive-upload.json' \
              '.github/release-evidence/v091-authenticated.json' \
              '.github/workflows/creator-v1-verify.yml' \
              '.github/workflows/package-v003-verify.yml' \
@@ -386,6 +428,10 @@ jobs:
              '.github/workflows/v091-controlled-pilot-upload.yml' \
              '.github/workflows/v091-live-readonly-qa.yml' \
              '.github/workflows/v095-native-creator-qa.yml' \
+             '.github/workflows/v095-v096-inactive-preflight.yml' \
+             '.github/workflows/v095-v096-inactive-upload.yml' \
+             '.github/workflows/v096-public-alpha-qa.yml' \
+             'creator-v1/apex-prelaunch/gateway.mjs' \
              'creator-v1/canonical-auth/community.mjs' \
              'creator-v1/canonical-auth/forums.mjs' \
              'creator-v1/canonical-auth/member-reputation.mjs' \
@@ -404,9 +450,13 @@ jobs:
              'creator-v1/operations/anevum-iren-staff-session-status-v001.mjs' \
              'creator-v1/operations/anevum-profile-staff-access-v001.mjs' \
              'creator-v1/operations/staff-transport-v091.json' \
+             'creator-v1/operations/v095-inactive-baseline-20261020.json' \
              'creator-v1/ops/v091-controlled-pilot-upload.mjs' \
              'creator-v1/ops/v091-release-acceptance.mjs' \
              'creator-v1/ops/v091-staff-transport.mjs' \
+             'creator-v1/ops/v095-inactive-candidate-gate.mjs' \
+             'creator-v1/ops/v095-v096-acceptance-entry.mjs' \
+             'creator-v1/ops/v095-v096-cloudflare-ops.mjs' \
              'creator-v1/package.json' \
              'creator-v1/test/apex-orbit-assets.test.mjs' \
              'creator-v1/test/aura-codex-v091.test.mjs' \
@@ -415,6 +465,7 @@ jobs:
              'creator-v1/test/capture-home-navigation-v079.mjs' \
              'creator-v1/test/capture-iren-guided-v080.mjs' \
              'creator-v1/test/capture-native-creator-v095.mjs' \
+             'creator-v1/test/capture-public-creator-alpha-v096.mjs' \
              'creator-v1/test/capture-sitewide-v012.mjs' \
              'creator-v1/test/capture-staff-observatory-v092.mjs' \
              'creator-v1/test/cinematic-worlds.test.mjs' \
@@ -441,6 +492,7 @@ jobs:
              'creator-v1/test/player-reputation-v081.test.mjs' \
              'creator-v1/test/portal-offline-preview.mjs' \
              'creator-v1/test/project-hosting-v091.test.mjs' \
+             'creator-v1/test/public-creator-alpha-v096.test.mjs' \
              'creator-v1/test/staff-observatory-aura-v092.test.mjs' \
              'creator-v1/test/staff-observatory-ux-v091.test.mjs' \
              'creator-v1/test/staff-session-transport-v091.test.mjs' \
@@ -450,6 +502,8 @@ jobs:
              'creator-v1/test/v091-live-emblem-browser.mjs' \
              'creator-v1/test/v091-public-live-canary.mjs' \
              'creator-v1/test/v091-release-acceptance.test.mjs' \
+             'creator-v1/test/v095-inactive-candidate-gate.test.mjs' \
+             'creator-v1/test/v095-v096-acceptance-entry.test.mjs' \
              'creator-v1/test/verified-roles-v092.test.mjs' \
              'creator-v1/web/a-staging-worker.mjs' \
              'creator-v1/web/src/App.tsx' \
@@ -475,6 +529,7 @@ jobs:
              'creator-v1/web/src/lib/native-creator-v095.ts' \
              'creator-v1/web/src/lib/player-recognition.ts' \
              'creator-v1/web/src/lib/project-hosting.ts' \
+             'creator-v1/web/src/lib/public-alpha-v096.ts' \
              'creator-v1/web/src/main.tsx' \
              'creator-v1/web/src/member-presence-v092.css' \
              'creator-v1/web/src/pages/AuraCodexPage.tsx' \
@@ -485,9 +540,11 @@ jobs:
              'creator-v1/web/src/pages/Phase1JoinPage.tsx' \
              'creator-v1/web/src/pages/Phase1PublicMemberPage.tsx' \
              'creator-v1/web/src/pages/ProjectPage.tsx' \
+             'creator-v1/web/src/pages/PublicCreatorAlphaPage.tsx' \
              'creator-v1/web/src/pages/StatusPage.tsx' \
              'creator-v1/web/src/pages/aura-codex-v091.css' \
              'creator-v1/web/src/pages/native-creator-v095.css' \
+             'creator-v1/web/src/pages/public-alpha-v096.css' \
              'creator-v1/wrangler.iren-insignias-v093.jsonc' \
              'docs/production/ANEVUM-RELEASE-CONSOLIDATION-20261020.md' \
              'docs/production/ANEVUM-V095-NATIVE-CREATOR-CONSOLIDATION-20261020.md' \
@@ -538,7 +595,7 @@ jobs:
              'tests/v5-production-release.test.mjs' \
              'tests/v5-release-bootstrap.test.mjs' \
              'tests/v5-verify-deploy-safety.test.mjs') \
-             <(git diff --name-only db2b8c0f8f79061adf1677986b87077856204267 HEAD)
+            <(git diff --name-only db2b8c0f8f79061adf1677986b87077856204267 HEAD)
           test -f creator-v1/web/src/lib/public-creator-handle.ts
           grep -Fq 'publicCreatorHandle(project.creatorHandle)' creator-v1/web/src/pages/CinematicLandingPage.tsx
           grep -Fq 'publicCreatorHandle(project.creatorHandle)' creator-v1/web/src/components/ProjectCard.tsx
@@ -646,7 +703,15 @@ jobs:
             exit 1
           fi
           echo "V089_EXACT_HOMEPAGE_CSS=PASS"
-          for page in / /discover /recognition /join /community /@devon /creators; do
+          for alpha in /studio/alpha /studio/alpha/; do
+            curl --fail --silent --show-error --max-time 30 \
+              -D "$RUNNER_TEMP/v096-alpha.headers" -o "$RUNNER_TEMP/v096-alpha.html" "https://anevum.com$alpha"
+            grep -qi '^x-robots-tag:.*noindex' "$RUNNER_TEMP/v096-alpha.headers"
+            grep -qi '^content-type:.*text/html' "$RUNNER_TEMP/v096-alpha.headers"
+            grep -Fq 'assets/index-CBvIEFam.js' "$RUNNER_TEMP/v096-alpha.html"
+            if grep -qi 'location:.*cloudflareaccess.com' "$RUNNER_TEMP/v096-alpha.headers"; then exit 1; fi
+          done
+          for page in / /discover /recognition /join /community /@devon /creators /studio/alpha /studio/alpha/; do
             echo "V089 checking real public route $page"
             curl -fsSL --max-time 30 "https://anevum.com$page" -o "$RUNNER_TEMP/v079-live-page.html"
             grep -Fq 'id="root"' "$RUNNER_TEMP/v079-live-page.html"

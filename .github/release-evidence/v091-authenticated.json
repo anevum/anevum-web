@@ -1,5 +1,5 @@
 {
-  "source_sha": "ea1d5e7a402c1e85f9645ea76ced8f8cddbe859f",
+  "source_sha": "d5af32fd8f04b05e0381f7ac12c59d06c0e836a2",
   "founder_staff_session": false,
   "reviewer_staff_session": false,
   "creator_journey": false,
@@ -7,7 +7,7 @@
   "verified_at": null,
   "evidence": [],
   "native_candidate_pending": true,
-  "status": "V095 native source integrated. Existing V091 immutable candidate is not this application. Native flags remain OFF; exact-source CI and live activation are tracked separately.",
+  "status": "V095/V096 source integrated. Candidate 904b3b6c requires replacement: inactive upload omitted generated earned media and the approved gallery-ON variant. All real-account, device and release-approval gates remain unverified.",
   "reviewed_file_inventory": 163,
   "release_metadata_exclusions": 5,
   "prior_v091_checkpoint": {
@@ -45,7 +45,17 @@
     }
   },
   "implementation_verification": {
-    "source_sha": "ea1d5e7a402c1e85f9645ea76ced8f8cddbe859f",
+    "source_sha": "d5af32fd8f04b05e0381f7ac12c59d06c0e836a2",
     "state": "Source integrated; use exact-source CI artifacts for verification, not this release-authorization record."
-  }
+  },
+  "candidate_version": "904b3b6c-7a7a-401a-9a35-4b5d822dec67",
+  "ordinary_member_denial": false,
+  "logged_out_public_alpha": false,
+  "physical_iphone_safari": false,
+  "independent_browser": false,
+  "candidate_assets_verified": false,
+  "owner_release_approved": false,
+  "account_subjects": [],
+  "physical_device": null,
+  "gate_evidence": {}
 }

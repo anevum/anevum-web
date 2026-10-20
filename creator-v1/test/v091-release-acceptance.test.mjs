@@ -2,23 +2,28 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {verifyV091Acceptance,V091_APPLICATION_SOURCE,V091_RELEASE_METADATA,reviewedV091SourceFiles,
- verifyV091SourceScope} from '../ops/v091-release-acceptance.mjs';
+ verifyV091SourceScope,V095_ACCEPTANCE_GATES,V095_CANDIDATE_ID} from '../ops/v091-release-acceptance.mjs';
 const releaseWorkflow=readFileSync(new URL('../../.github/workflows/v084-continuance-production.yml',import.meta.url),'utf8');
 const guardMatch=releaseWorkflow.match(/<<'V091_PROMOTION_GUARD'\n([\s\S]+?)\n          V091_PROMOTION_GUARD/);
 assert.ok(guardMatch,'The executable promotion guard must be present');
 const promotionGuard=await import('data:text/javascript;base64,'+Buffer.from(guardMatch[1].replace(/^          /gm,'')).toString('base64'));
-const complete=()=>({source_sha:V091_APPLICATION_SOURCE,founder_staff_session:true,
- reviewer_staff_session:true,creator_journey:true,cross_account_identity:true,
- verified_at:'2026-10-19T00:00:00Z',evidence:['https://github.com/anevum/anevum-web/actions/runs/123']});
+const complete=()=>{
+ const ref='https://github.com/anevum/anevum-web/actions/runs/123',verified_at='2026-10-19T00:00:00Z';
+ return {source_sha:V091_APPLICATION_SOURCE,candidate_version:V095_CANDIDATE_ID,
+  ...Object.fromEntries(V095_ACCEPTANCE_GATES.map(gate=>[gate,true])),verified_at,evidence:[ref],
+  account_subjects:['a'.repeat(64),'b'.repeat(64),'c'.repeat(64)],
+  physical_device:{physical:true,browser:'Safari',os:'iOS',model:'iPhone test fixture'},
+  gate_evidence:Object.fromEntries(V095_ACCEPTANCE_GATES.map(gate=>[gate,{source_sha:V091_APPLICATION_SOURCE,candidate_version:V095_CANDIDATE_ID,ref,verified_at}]))};
+};
 test('checked-in V091 acceptance is pinned and stays blocked while any gate is pending',()=>{
  const record=JSON.parse(readFileSync(new URL('../../.github/release-evidence/v091-authenticated.json',import.meta.url),'utf8'));
  assert.equal(record.source_sha,V091_APPLICATION_SOURCE);
- if(['founder_staff_session','reviewer_staff_session','creator_journey','cross_account_identity'].every(key=>record[key]===true))
+ if(V095_ACCEPTANCE_GATES.every(key=>record[key]===true))
   assert.equal(verifyV091Acceptance(record),true);
  else assert.throws(()=>verifyV091Acceptance(record),/unverified/);
 });
 test('each authenticated gate is mandatory and never accepts truthy text',()=>{
- for(const key of ['founder_staff_session','reviewer_staff_session','creator_journey','cross_account_identity'])
+ for(const key of V095_ACCEPTANCE_GATES)
   for(const value of [false,undefined,'true','fixture','owner'])
    assert.throws(()=>verifyV091Acceptance({...complete(),[key]:value}),/unverified/);
 });
@@ -37,7 +42,7 @@ test('repository evidence supports the current release PR without accepting unre
   'https://github.com/anevum/anevum-web/actions/runs/123/artifacts/456'
  ];
  for(const ref of accepted){
-  assert.equal(verifyV091Acceptance({...complete(),evidence:[ref]}),true);
+  {const record=complete();record.evidence=[ref];for(const item of Object.values(record.gate_evidence))item.ref=ref;assert.equal(verifyV091Acceptance(record),true);}
   for(const value of [' '+ref,ref+'\n',ref+'?token=secret',ref+'#extra'])
    assert.throws(()=>verifyV091Acceptance({...complete(),evidence:[value]}),/evidence/);
  }
@@ -62,7 +67,7 @@ test('guarded V091 release stays pinned to precisely the reviewed integrated fil
  assert.ok(start>=0&&end>start,'A static source-delta allowlist must be present');
  const scope=release.slice(start,end);
  const files=[...scope.matchAll(/^\s*'([^']+)'/gm)].map(match=>match[1]);
- assert.equal(files.length,163,'The candidate contains exactly 163 reviewed source files');
+ assert.equal(files.length,179,'The candidate contains exactly 179 reviewed source files');
  assert.equal(new Set(files).size,files.length,'No duplicated entries');
  assert.deepEqual(files,[...files].sort(),'Source scope must be deterministic');
  for(const required of [
@@ -94,7 +99,7 @@ test('guarded V091 release stays pinned to precisely the reviewed integrated fil
  assert.ok(files.every(file=>!/[?*{}]/.test(file)),'Globs are not allowed in the release scope');
  assert.ok(release.includes("vars.CANONICAL_VERIFIED_ROLES_ENABLED!=='true'"));
  assert.equal(promotionGuard.PIN.original,'93cc7f07-cf39-457e-af69-c9f6f4c02d25');
- assert.equal(promotionGuard.PIN.candidate,'4b5c5d60-6c8f-431a-a16c-b660c8baf650');
+ assert.equal(promotionGuard.PIN.candidate,'904b3b6c-7a7a-401a-9a35-4b5d822dec67');
  assert.ok(release.includes('test "$(git rev-parse HEAD)" = "$GITHUB_SHA"'));
  assert.match(release,/ANEVUM_LAUNCH_APPROVED/);
  assert.match(release,/CLOUDFLARE_ACCOUNT_ID/);
@@ -113,15 +118,15 @@ test('source-only scope check requires actual git paths to match every reviewed 
  assert.throws(()=>verifyV091SourceScope({...input,changedFiles:[...input.changedFiles,input.changedFiles[0]]}),/unique literal paths/);
  assert.throws(()=>verifyV091SourceScope({...input,changedFiles:[...input.changedFiles,'site/alpha/*']}),/unique literal paths/);
 });
-test('source-only validation allows exactly the five metadata differences and cannot certify authenticated acceptance',()=>{
+test('source-only validation allows exactly the seventeen metadata differences and cannot certify authenticated acceptance',()=>{
  const input=sourceFixture(),pending={...complete(),founder_staff_session:false};
  assert.equal(verifyV091SourceScope({...input,applicationChangedFiles:[...V091_RELEASE_METADATA]}).applicationSource,V091_APPLICATION_SOURCE);
  assert.throws(()=>verifyV091Acceptance(pending),/unverified/);
  for(const file of ['creator-v1/web/src/main.tsx','site/alpha/v003/api.mjs','docs/production/unreviewed.md'])
    assert.throws(()=>verifyV091SourceScope({...input,applicationChangedFiles:[...V091_RELEASE_METADATA,file]}),/changed after its source pin/);
- const broadened=input.release.replace("':(exclude)creator-v1/test/v091-release-acceptance.test.mjs'",
-   "':(exclude)creator-v1/test/v091-release-acceptance.test.mjs' \\\n            ':(exclude)site/alpha/v003/api.mjs'");
- assert.throws(()=>verifyV091SourceScope({...input,release:broadened}),/exactly the five/);
+ const broadened=input.release.replace("':(exclude).github/workflows/v096-public-alpha-qa.yml'",
+   "':(exclude).github/workflows/v096-public-alpha-qa.yml' \\\n            ':(exclude)site/alpha/v003/api.mjs'");
+ assert.throws(()=>verifyV091SourceScope({...input,release:broadened}),/exactly the reviewed/);
  const bypass=input.release.replace('node creator-v1/ops/v091-release-acceptance.mjs\n',
    'node creator-v1/ops/v091-release-acceptance.mjs --source-only\n');
  assert.throws(()=>verifyV091SourceScope({...input,release:bypass}),/must run authenticated acceptance/);
@@ -160,7 +165,7 @@ function promotionFixture(){
  while(bindings.length<24)bindings.push({name:'FIXTURE_'+bindings.length,type:'plain_text',text:'preserved'});
  const candidateBindings=[...structuredClone(bindings),{name:'CANONICAL_PACKAGE_PROOF_ENABLED',type:'plain_text',text:'true'},
   {name:'CANONICAL_PACKAGE_PROOF_KEY',type:'secret_text'}];
- const routes=Array.from({length:38},(_,i)=>({pattern:'fixture.invalid/'+i,script:'fixture-worker',request_limit_fail_open:false}));
+ const routes=Array.from({length:39},(_,i)=>({pattern:'fixture.invalid/'+i,script:'fixture-worker',request_limit_fail_open:false}));
  const snapshot={deployment:{...g.pilot(),id:fakeId(1),annotations:{'workers/message':'Recorded fixture pilot'}},
   latest:{items:[{id:g.PIN.candidate}]},
   original:{id:g.PIN.original,resources:{script:{etag:g.PIN.originalEtag},bindings,script_runtime:structuredClone(g.RUNTIME)}},
@@ -381,8 +386,8 @@ test('accepted artifact bytes are pinned and the independent JavaScript suffix r
  assert.throws(()=>g.verifyAsset(Buffer.concat([bytes,Buffer.from('overlay')]),pin),/length/);
  g.verifyAsset(Buffer.concat([bytes,Buffer.from('overlay')]),pin,{prefix:true});
  assert.throws(()=>g.verifyAsset(Buffer.concat([Buffer.from('changed fixture bytes!'),Buffer.from('overlay')]),pin,{prefix:true}),/asset/);
- assert.deepEqual(g.ASSETS.map(asset=>asset.path),['index.html','assets/index-Cmx71yTs.js','assets/index-CGCMyZTx.css','assets/iren-living-rig-v088-D_p8xTtN.js']);
- assert.equal(g.PIN.manifest,'7efc6d34dccf5d42a4d5727fc1b0078920d5453543b9f8a94798a0acac4e7077');
+ assert.deepEqual(g.ASSETS.map(asset=>asset.path),["assets/index-CBvIEFam.js", "assets/index-IFjf5zNC.css", "assets/iren-living-rig-v088-D_p8xTtN.js", "assets/PublicBoardsPage-D_Ou7MAG.css", "assets/PublicBoardsPage-Gy9GU9Bu.js", "index.html"]);
+ assert.equal(g.PIN.manifest,'3db2aa942fe168fc4743765f972b8572a9cf390a8ad9d093cb6f4c5d34baeb74');
 });
 test('served CSS requires the exact compiled prefix and exact authorized suffix with no other bytes',()=>{
  const g=promotionGuard,compiled=Buffer.from('body{color:blue}'),overlay=Buffer.from('/* authorized scoped fixture */');
@@ -397,7 +402,7 @@ test('served CSS requires the exact compiled prefix and exact authorized suffix 
   assert.throws(()=>g.verifyServedCss(invalid,pin,suffix),/stylesheet length|asset hash/);
  assert.equal(g.CSS_OVERLAY.bytes,29686);
  assert.equal(g.CSS_OVERLAY.sha256,'b2e7546bb679dc2cf323aed14706e33066afd1a2b666df8326e938dc8ca2b773');
- assert.equal(g.ASSETS.find(asset=>asset.path.endsWith('.css')).bytes+g.CSS_OVERLAY.bytes,794840);
+ assert.equal(g.ASSETS.find(asset=>asset.path.endsWith('.css')).bytes+g.CSS_OVERLAY.bytes,813814);
 });
 test('production uses candidate promotion and keeps the acceptance gate before all mutations',()=>{
  const guardStart=releaseWorkflow.indexOf('name: Prepare exact candidate promotion guard');
@@ -413,4 +418,17 @@ test('production uses candidate promotion and keeps the acceptance gate before a
 
 test('new native application cannot reuse the previous immutable deployment candidate',()=>{
  assert.throws(()=>verifyV091Acceptance({...complete(),native_candidate_pending:true}),/candidate remains unverified/);
+});
+
+test('V095 acceptance binds every gate to the exact candidate, real device and distinct accounts',()=>{
+ for(const mutate of [
+  r=>r.candidate_version='00000000-0000-4000-8000-000000000000',
+  r=>r.account_subjects[1]=r.account_subjects[0],
+  r=>r.physical_device.physical=false,
+  r=>r.physical_device.browser='Chromium emulation',
+  r=>delete r.gate_evidence.physical_iphone_safari,
+  r=>r.gate_evidence.creator_journey.source_sha='0'.repeat(40),
+  r=>r.gate_evidence.logged_out_public_alpha.candidate_version='00000000-0000-4000-8000-000000000000',
+  r=>r.gate_evidence.owner_release_approved.verified_at='2099-01-01T00:00:00Z'
+ ]){const record=complete();mutate(record);assert.throws(()=>verifyV091Acceptance(record));}
 });
