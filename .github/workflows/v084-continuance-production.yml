@@ -32,6 +32,7 @@ jobs:
           # Only release configuration/evidence may differ from the tested app.
           git diff --exit-code 6c750fa8d3d2b8fd67964fb7c68b8dfdf66d4ccf HEAD -- . \
             ':(exclude).github/workflows/v084-continuance-production.yml' \
+            ':(exclude).github/workflows/v091-live-readonly-qa.yml' \
             ':(exclude).github/release-evidence/v091-authenticated.json' \
             ':(exclude)creator-v1/ops/v091-release-acceptance.mjs' \
             ':(exclude)creator-v1/test/v091-release-acceptance.test.mjs'
