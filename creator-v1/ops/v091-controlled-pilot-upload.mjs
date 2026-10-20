@@ -65,7 +65,8 @@ export function assertBaseline(snapshot,reviewedRoutes){
  assert.notEqual(vars.CANONICAL_VERIFIED_ROLES_ENABLED,'true');
  assert.notEqual(vars.CANONICAL_REPUTATION_ENABLED,'true');
  assert.ok(!bindings.some(b=>[PILOT.proofFlag,PILOT.proofSecret].includes(b.name)),'Proof binding already exists; do not rotate it');
- assert.equal(snapshot.routes.length,38);
+ assert.equal(snapshot.routes.length,39);
+ assert.equal(reviewedRoutes.length,39);
  assert.equal(routeLock(snapshot.routes),routeLock(reviewedRoutes),'Reviewed route inventory changed');
  assert.equal(snapshot.exposure.enabled,false,'workers.dev must stay disabled');
  assert.equal(snapshot.exposure.previews_enabled,false,'Version URLs must stay disabled');

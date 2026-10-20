@@ -1,5 +1,5 @@
 {
-  "source_sha": "ea1d5e7a402c1e85f9645ea76ced8f8cddbe859f",
+  "source_sha": "d5af32fd8f04b05e0381f7ac12c59d06c0e836a2",
   "founder_staff_session": false,
   "reviewer_staff_session": false,
   "creator_journey": false,
@@ -7,9 +7,9 @@
   "verified_at": null,
   "evidence": [],
   "native_candidate_pending": true,
-  "status": "V095 native source integrated. Existing V091 immutable candidate is not this application. Native flags remain OFF; exact-source CI and live activation are tracked separately.",
-  "reviewed_file_inventory": 163,
-  "release_metadata_exclusions": 5,
+  "status": "Replacement V095/V096 immutable candidate uploaded with all 152 earned-media assets and gallery ON. Candidate-specific live verification, real accounts, physical iPhone Safari and owner release approval remain pending.",
+  "reviewed_file_inventory": 179,
+  "release_metadata_exclusions": 19,
   "prior_v091_checkpoint": {
     "source_sha": "d7e8d8a2fda4406ba144bfc8dd03d664e48b7b07",
     "founder_staff_session": true,
@@ -45,7 +45,31 @@
     }
   },
   "implementation_verification": {
-    "source_sha": "ea1d5e7a402c1e85f9645ea76ced8f8cddbe859f",
+    "source_sha": "d5af32fd8f04b05e0381f7ac12c59d06c0e836a2",
     "state": "Source integrated; use exact-source CI artifacts for verification, not this release-authorization record."
+  },
+  "candidate_version": "3ba8602c-6616-49a4-af29-1efe60ad164a",
+  "ordinary_member_denial": false,
+  "logged_out_public_alpha": false,
+  "physical_iphone_safari": false,
+  "independent_browser": false,
+  "candidate_assets_verified": false,
+  "owner_release_approved": false,
+  "account_subjects": [],
+  "physical_device": null,
+  "gate_evidence": {},
+  "candidate_upload": {
+    "version_id": "3ba8602c-6616-49a4-af29-1efe60ad164a",
+    "source_sha": "d5af32fd8f04b05e0381f7ac12c59d06c0e836a2",
+    "workflow_source_sha": "6279c3560fbda938d73d0141a8e46893fbdc252c",
+    "run_id": 39508277892,
+    "artifact_id": 12304632009,
+    "script_etag": "c6c0a5941764568082c4f38f325df13dfcf7dfb4f936d63e83c69d97f5383eba",
+    "asset_manifest_sha256": "8d5fcdffbea73715d657e036328aed360af90c5b575cf17e57f8129ff2bfa416",
+    "asset_count": 392,
+    "earned_media_count": 152,
+    "gallery_enabled": true,
+    "native_studio_enabled": false,
+    "production_promoted": false
   }
 }

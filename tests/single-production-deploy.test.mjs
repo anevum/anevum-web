@@ -20,8 +20,9 @@ test("current Continuance production authority retains source, acceptance and ro
  const promote=flow.indexOf('node "$RUNNER_TEMP/v091-promotion-guard.mjs" promote');
  assert.ok(gates>0&&prepare>gates&&promote>prepare,"authenticated acceptance precedes guarded candidate promotion");
  assert.match(flow,/git diff --exit-code [a-f0-9]{40} HEAD/);
- assert.match(flow,/v091-staff-transport.mjs --apply/);
- assert.match(flow,/Verify or repair the five pinned staff identity Workers/);
+ assert.match(flow,/run: node creator-v1\/ops\/v091-staff-transport.mjs\s*\n/);
+ assert.doesNotMatch(flow,/v091-staff-transport.mjs --apply/);
+ assert.match(flow,/Verify preserved staff identity Workers without changing them/);
  assert.match(flow,/node "\$RUNNER_TEMP\/v091-promotion-guard\.mjs" rollback/);
  assert.match(flow,/RECORDED_PILOT_RESTORED/);
  assert.match(flow,/rollback unconfirmed/);

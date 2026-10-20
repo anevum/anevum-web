@@ -93,11 +93,6 @@
       "request_limit_fail_open": false
     },
     {
-      "pattern": "anevum.com/*",
-      "script": "anevum-native-frame-policy-v001",
-      "request_limit_fail_open": false
-    },
-    {
       "pattern": "anevum.com/__anevum_iren_staff_session_status_v001",
       "script": "anevum-iren-staff-session-status-v001",
       "request_limit_fail_open": false
@@ -110,6 +105,11 @@
     {
       "pattern": "anevum.com/__anevum_profile_staff_role_v001",
       "script": "anevum-profile-staff-access-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/*",
+      "script": "anevum-native-frame-policy-v001",
       "request_limit_fail_open": false
     },
     {
@@ -250,6 +250,11 @@
     {
       "pattern": "backstage.anevum.com/*",
       "script": "anevum-legacy-archive",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "family.anevum.com/*",
+      "script": "anevum-family-link-v004",
       "request_limit_fail_open": false
     },
     {

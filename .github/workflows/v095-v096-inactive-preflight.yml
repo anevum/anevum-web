@@ -67,13 +67,25 @@ jobs:
             ':(exclude)creator-v1/test/v095-inactive-candidate-gate.test.mjs' \
             ':(exclude).github/workflows/v095-v096-inactive-preflight.yml' \
             ':(exclude).github/workflows/v095-v096-inactive-upload.yml' \
-            ':(exclude).github/release-approvals/v095-v096-inactive-upload.json'
+            ':(exclude).github/release-approvals/v095-v096-inactive-upload.json' \
+            ':(exclude).github/workflows/v084-continuance-production.yml' \
+            ':(exclude).github/workflows/v091-live-readonly-qa.yml' \
+            ':(exclude).github/release-evidence/v091-authenticated.json' \
+            ':(exclude)creator-v1/ops/v091-release-acceptance.mjs' \
+            ':(exclude)creator-v1/test/v091-release-acceptance.test.mjs' \
+            ':(exclude)creator-v1/operations/staff-transport-v091.json' \
+            ':(exclude)creator-v1/test/staff-transport-release-v091.test.mjs' \
+            ':(exclude)creator-v1/ops/v095-v096-acceptance-entry.mjs' \
+            ':(exclude)creator-v1/test/v095-v096-acceptance-entry.test.mjs' \
+            ':(exclude).github/workflows/v096-public-alpha-qa.yml' \
+            ':(exclude)creator-v1/ops/v091-controlled-pilot-upload.mjs' \
+            ':(exclude)tests/single-production-deploy.test.mjs'
           echo 'APP_SOURCE_STILL_MERGED_V095_V096=PASS' >> "$GITHUB_STEP_SUMMARY"
       - name: Run positive and negative inactive candidate preflight tests
         run: |
           set -euo pipefail
           node --check creator-v1/ops/v095-v096-cloudflare-ops.mjs
-          node --test creator-v1/test/v095-inactive-candidate-gate.test.mjs
+          node --test creator-v1/test/v095-inactive-candidate-gate.test.mjs creator-v1/test/v095-v096-acceptance-entry.test.mjs
           echo 'INACTIVE_CANDIDATE_TESTS=PASS' >> "$GITHUB_STEP_SUMMARY"
           echo 'NO_CLOUDFLARE_TOKEN_USED; NO_UPLOAD; NO_DEPLOYMENT' >> "$GITHUB_STEP_SUMMARY"
 
