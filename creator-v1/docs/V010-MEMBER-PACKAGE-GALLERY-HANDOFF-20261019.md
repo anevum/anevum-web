@@ -30,7 +30,7 @@ The member wall is not a second Creator Studio or new account system. We reuse V
 
 ## Security and identity gates remaining
 
-1. **Canonical ownership proof**: the backend V010 draft currently uses verified owner ID, canonical handle and profile creation timestamp. Creation time alone is not a cryptographically unique identity claim if a handle is recycled by a different member with the same profile timestamp. A stable, issuer-backed owner proof is required before enabling public galleries. Keep `PACKAGE_CREATOR_GALLERY_ENABLED` false until that contract is implemented, tested for collision and audited.
+1. **Canonical ownership proof**: this branch now implements a disabled-by-default HMAC-SHA-256 subject proof in the canonical profile issuer (`canonical-auth/package-proof.mjs`). The separate package backend PR #564 requires the same issuer-generated proof for public attribution, so reused handles and coincident profile timestamps cannot transfer published releases. Deploying the proof requires a distinct `CANONICAL_PACKAGE_PROOF_KEY` secret and explicit `CANONICAL_PACKAGE_PROOF_ENABLED=true` on the canonical issuer, plus controlled staging and real account collision tests; neither flag nor secret is configured here.
 2. Real creator A / independent reviewer B / anonymous visitor C on controlled staging, with the actual single-sign-on session, private preview, approved gameplay, version replacement, suspension and takedown.
 3. Confirm canonical profile changes, deletion and private visibility revoke attribution immediately. No username- or email-based trust fallback.
 4. V091 mobile acceptance on iPhone Safari and desktop with real release covers, script/game loading, keyboard, audio unlock, fullscreen and Exit.
@@ -38,4 +38,4 @@ The member wall is not a second Creator Studio or new account system. We reuse V
 
 ## Dependencies and separation
 
-PR #564 is the backend creator link API and optional handle gallery, kept draft. PR #554 is the ongoing V091 shell. This branch adds only an opt-in read-only UI to V091. Neither PR is merged by this handoff; no production flag, storage write or route change is authorized.
+PR #564 is the backend creator link API and optional handle gallery, kept draft. PR #554 is the ongoing V091 shell. This branch adds only an opt-in read-only UI to V091. Neither PR is merged by this handoff. Targeted TypeScript/build and gallery/proof tests are required, and any inherited V091 CI failures must be tracked independently; no production flag, storage write or route change is authorized.
