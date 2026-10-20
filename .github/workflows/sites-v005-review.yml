@@ -1,0 +1,50 @@
+name: ANEVUM Sites V005 Experience Lab Review
+on:
+  pull_request:
+    paths:
+      - "sites/**"
+      - ".github/workflows/sites-v005-review.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test-and-render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check worker and V005 JavaScript
+        run: |
+          node --check sites/worker.mjs
+          node --check sites/site-v005.mjs
+          node --check sites/v005/site.js
+          node --check sites/v005/sw.js
+          node --check sites/v005/build.mjs
+          node sites/v005/test.mjs
+      - name: Verify deterministic asset bundle
+        run: |
+          sha256sum sites/site-v005.mjs > /tmp/bundle-before.sha
+          node sites/v005/build.mjs
+          sha256sum sites/site-v005.mjs > /tmp/bundle-after.sha
+          diff -u /tmp/bundle-before.sha /tmp/bundle-after.sha
+      - name: Render V005 static screenshots
+        run: |
+          mkdir -p /tmp/sites-v005
+          node sites/v005/build.mjs /tmp/sites-v005
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          test -n "$CHROME"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --no-first-run --window-size=1440,1000 --screenshot=/tmp/sites-v005/desktop.png file:///tmp/sites-v005/index.html
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --no-first-run --window-size=390,844 --screenshot=/tmp/sites-v005/mobile.png file:///tmp/sites-v005/index.html
+          test -s /tmp/sites-v005/desktop.png
+          test -s /tmp/sites-v005/mobile.png
+      - name: Attach screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: sites-v005-experience-lab-review
+          path: |
+            /tmp/sites-v005/desktop.png
+            /tmp/sites-v005/mobile.png
+          retention-days: 14
