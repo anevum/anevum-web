@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS anevum_package_rights_receipts (
 CREATE TABLE IF NOT EXISTS anevum_package_creator_links (
   owner_id TEXT PRIMARY KEY,
   handle TEXT NOT NULL UNIQUE,
+  profile_created_at INTEGER NOT NULL CHECK (profile_created_at > 0),
   verified_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_anevum_package_creator_handle
