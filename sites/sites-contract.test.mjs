@@ -24,7 +24,7 @@ function fakeDb(site) {
   };
 }
 
-function siteRecord(status = "concept") {
+function siteRecord(status = "pitched") {
   return {
     slug: "example-cafe",
     title: '<script>alert("unsafe")</script> Example Café',
@@ -53,7 +53,8 @@ test("public studio landing, package pricing, and security headers", async () =>
   for (const label of ["ANEVUM", "$49", "$99", "$199", "No mandatory subscription"])
     assert.ok(text.includes(label), "missing " + label);
   assert.match(response.headers.get("Content-Security-Policy"), /default-src 'none'/);
-  assert.match(response.headers.get("X-Robots-Tag"), /noindex/);
+  assert.match(response.headers.get("X-Content-Type-Options"), /nosniff/);
+  assert.match(text, /name="consent"/);
 });
 
 test("dynamic preview escapes all untrusted strings and never shows private notes", async () => {
@@ -83,7 +84,7 @@ test("archived previews return 404 and previews require the correct database", a
 });
 
 test("the curated showcase can be archived; draft renders editable content", async () => {
-  const original = { ...siteRecord(), slug: "tobacco-vapor-time" };
+  const original = { ...siteRecord("concept"), slug: "tobacco-vapor-time" };
   const archived = await publicWorker.fetch(
     makeRequest("/preview/tobacco-vapor-time"),
     { SITES_DB: fakeDb({ ...original, status: "archived" }) }
