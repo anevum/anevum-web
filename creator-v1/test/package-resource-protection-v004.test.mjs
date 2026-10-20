@@ -77,3 +77,36 @@ test("API source, generated browser script and additive migration satisfy contra
  assert.ok(!sql.includes("DROP TABLE"));
  assert.ok(!api.includes("env.MEDIA.delete(touched)"));
 });
+
+test("on-device ZIP preflight catches a nested dist/index.html before network upload",async()=>{
+ const ui=readFileSync(new URL("../package-alpha-v004/ui.mjs",import.meta.url),"utf8");
+ const start=ui.indexOf(" async function localStructureCheck(f){");
+ const end=ui.indexOf(" async function digest(f)",start);
+ assert.ok(start>0&&end>start,"on-device validator must be included in uploader");
+ const fn=new Function(ui.slice(start,end)+"\nreturn localStructureCheck;")();
+ function zip(name){
+  const filename=Buffer.from(name),data=Buffer.from("<!doctype html><html></html>");
+  const local=Buffer.alloc(30);
+  local.writeUInt32LE(0x04034b50,0);
+  local.writeUInt16LE(20,4);
+  local.writeUInt32LE(data.length,18);local.writeUInt32LE(data.length,22);
+  local.writeUInt16LE(filename.length,26);
+  const cd=Buffer.alloc(46);
+  cd.writeUInt32LE(0x02014b50,0);cd.writeUInt16LE(20,4);
+  cd.writeUInt32LE(data.length,20);cd.writeUInt32LE(data.length,24);
+  cd.writeUInt16LE(filename.length,28);
+  const at=local.length+filename.length+data.length;
+  const end=Buffer.alloc(22);end.writeUInt32LE(0x06054b50,0);
+  end.writeUInt16LE(1,8);end.writeUInt16LE(1,10);
+  end.writeUInt32LE(cd.length+filename.length,12);end.writeUInt32LE(at,16);
+  return Buffer.concat([local,filename,data,cd,filename,end]);
+ }
+ function file(bytes,filename){
+  const data=new Blob([bytes]);return {name:filename,size:data.size,arrayBuffer:()=>data.arrayBuffer(),slice:(a,b)=>data.slice(a,b)};
+ }
+ await assert.doesNotReject(()=>fn(file(zip("index.html"),"demo.zip")));
+ await assert.rejects(()=>fn(file(zip("dist/index.html"),"demo.zip")),/index.html at its root/);
+ await assert.rejects(()=>fn(file(new Uint8Array(20),"demo.zip")),/empty or incomplete/);
+ await assert.rejects(()=>fn(file(Buffer.from("not a web page"),"demo.html")),/does not look like a playable/);
+ await assert.doesNotReject(()=>fn(file(Buffer.from("<!doctype html><html>hello</html>"),"demo.html")));
+});
