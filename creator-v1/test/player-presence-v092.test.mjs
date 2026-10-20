@@ -10,7 +10,7 @@ const privateWorld=read('web/src/components/MemberSpaceDashboard.tsx');
 const publicWorld=read('web/src/pages/Phase1PublicMemberPage.tsx');
 const stylesheet=read('web/src/member-presence-v092.css');
 const backend=read('canonical-auth/space.mjs');
-const activity=read('canonical-auth/member-reputation.mjs');
+const verifiedRoles=read('canonical-auth/member-verified-roles.mjs');
 
 test('V092 presence surface is valid TSX and is connected to both member worlds',()=>{
  for(const component of [card,presence,privateWorld,publicWorld])
@@ -34,7 +34,8 @@ test('V092 must not infer founder or moderator from cosmetic preferences or emai
  assert.doesNotMatch(presence,/email|member_role_grants|staff_access_grants|localStorage/);
  assert.match(backend,/CANONICAL_RECOGNITION_ENABLED==='true'/);
  assert.match(backend,/CANONICAL_REPUTATION_ENABLED==='true'/);
- assert.match(activity,/member_role_grants/);
+ assert.match(verifiedRoles,/member_role_grants/);
+ assert.doesNotMatch(backend,/staff_access_grants/);
  assert.doesNotMatch(presence,/fetch\(|async function/);
 });
 
