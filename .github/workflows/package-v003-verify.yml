@@ -5,6 +5,7 @@ on:
       - "site/alpha/v003/**"
       - "tests/alpha-package-v003.test.mjs"
       - "tests/alpha-package-v004-browser.mjs"
+      - "tests/alpha-package-stage-readiness.mjs"
       - ".github/workflows/package-v003-verify.yml"
   push:
     branches:
@@ -12,6 +13,8 @@ on:
     paths:
       - "site/alpha/v003/**"
       - "tests/alpha-package-v003.test.mjs"
+      - "tests/alpha-package-v004-browser.mjs"
+      - "tests/alpha-package-stage-readiness.mjs"
       - ".github/workflows/package-v003-verify.yml"
 permissions:
   contents: read
@@ -28,6 +31,8 @@ jobs:
           node --check site/alpha/v003/archive.mjs
           node --check site/alpha/v003/tokens.mjs
           node --check site/alpha/v003/runtime.mjs
+          node --check site/alpha/v003/cover.mjs
+          node --check site/alpha/v003/continuance-visuals.mjs
           node --check site/alpha/v003/api.mjs
           node --check site/alpha/v003/ui.mjs
       - run: node --experimental-sqlite --test tests/alpha-package-v003.test.mjs
@@ -48,4 +53,25 @@ jobs:
           name: anevum-package-v004-browser
           path: artifacts/package-v004-ui/
           if-no-files-found: warn
+          retention-days: 7
+
+  stage_readiness:
+    name: Isolated staging probe (advisory; no production writes)
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Read-only check of public package staging hosts
+        run: node tests/alpha-package-stage-readiness.mjs
+      - name: Save actual staging readiness evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-package-stage-readiness
+          path: artifacts/package-stage-readiness/
+          if-no-files-found: error
           retention-days: 7
