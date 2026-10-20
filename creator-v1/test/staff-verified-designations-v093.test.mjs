@@ -170,3 +170,17 @@ test('V093 externally assigned aura resynchronizes the owner player-card studio 
  assert.match(publicWorld,/useMemberRevalidation/);
  assert.doesNotMatch(ui,/role:\s*['"]founder['"]|role:\s*['"]moderator['"]/);
 });
+
+test('V093 optional Insignias Worker is route-free and feature-disabled by default',()=>{
+ const config=JSON.parse(read('wrangler.iren-insignias-v093.jsonc'));
+ assert.equal(config.name,'anevum-iren-insignias-v093');
+ assert.deepEqual(config.routes,[]);
+ assert.equal(config.workers_dev,false);
+ assert.equal(config.preview_urls,false);
+ assert.equal(config.vars.ANEVUM_VERIFIED_ROLE_OPERATIONS_ENABLED,'false');
+ assert.equal(config.services.length,1);
+ assert.deepEqual(config.services[0],{binding:'APEX_AUTH',service:'anevum-apex-prelaunch-gateway',environment:'production'});
+ assert.deepEqual(config.d1_databases.map(x=>x.binding),['MEMBER_DB']);
+ const liveStaff=read('operations/anevum-iren-staff-observatory-v001.mjs');
+ assert.doesNotMatch(liveStaff,/member_role_requests|ANEVUM_VERIFIED_ROLE_OPERATIONS_ENABLED/);
+});
