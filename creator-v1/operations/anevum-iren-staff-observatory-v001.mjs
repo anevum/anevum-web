@@ -246,6 +246,165 @@ async function changeAura(request, db, staff) {
   return json({ ok: true, aura: data.aura });
 }
 
+
+/* V093 verified institutional display: OWNER nominates, independent REVIEWER
+ * verifies evidence, public profiles render only the resulting active grant.
+ * Never changes staff_access_grants, XP, account metadata or permissions.
+ * Entire workflow remains unavailable without an explicit feature flag
+ * AND the additive reviewed role-ledger schema.
+ */
+const DESIGNATIONS = new Set(['founder','administrator','moderator','curator']);
+const DESIGNATION_PRIORITY = {curator:1,moderator:2,administrator:3,founder:4};
+const EVIDENCE_CASE = /^https:\/\/github\.com\/anevum\/anevum-web\/(?:issues|pull)\/[1-9][0-9]{0,8}$/;
+const ROLE_SCHEMA = ['member_role_grants','member_role_requests','member_role_events'];
+async function roleOpsReady(db,env) {
+ if (env.ANEVUM_VERIFIED_ROLE_OPERATIONS_ENABLED !== 'true') return false;
+ try {
+  const result = await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name IN ('member_role_grants','member_role_requests','member_role_events')").all();
+  return result.success !== false &&
+   ROLE_SCHEMA.every(name => (result.results||[]).some(row=>row.name===name));
+ } catch {return false}
+}
+async function roleQueue(db,staff,env) {
+ if (!await roleOpsReady(db,env))
+  return json({enabled:false,reason:'Audited designation approvals are not activated',requests:[]});
+ const list = await db.prepare(
+  "SELECT r.id,r.role,r.state,r.nominated_at AS nominatedAt,"+
+  "r.evidence_ref AS evidenceRef,"+
+  "COALESCE(NULLIF(p.display_name,''),NULLIF(u.name,''),'Member') AS memberName,"+
+  "COALESCE(p.handle,'') AS handle,"+
+  "CASE WHEN r.nominated_by=? THEN 1 ELSE 0 END AS nominatedByMe,"+
+  "CASE WHEN r.member_id=? THEN 1 ELSE 0 END AS targetsMe "+
+  "FROM member_role_requests r JOIN \"user\" u ON u.id=r.member_id "+
+  "LEFT JOIN member_creator_profiles p ON p.user_id=r.member_id "+
+  "WHERE r.state='pending' ORDER BY r.nominated_at ASC,r.id ASC LIMIT 30"
+ ).bind(staff.id,staff.id).all();
+ if (list.success===false) return error(503,'Designation queue unavailable');
+ return json({enabled:true,clearance:staff.role,requests:list.results||[],
+  note:'Role seals are public display only; staff permissions are independently governed.'});
+}
+async function rolePayload(request,required) {
+ if (request.headers.get('origin') !== ORIGIN ||
+     ![null,'same-origin','none'].includes(request.headers.get('sec-fetch-site')))
+  return {error:error(403,'Same-origin request required')};
+ if (!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type')||''))
+  return {error:error(415,'JSON required')};
+ const size=Number(request.headers.get('content-length')||'0');
+ if (!Number.isSafeInteger(size)||size<0||size>1200)
+  return {error:error(413,'Request too large')};
+ const raw=await readBoundedBody(request,1100);
+ if (raw===null)return {error:error(413,'Request too large')};
+ let data;
+ try{data=JSON.parse(raw)}catch{return {error:error(400,'Invalid JSON')}}
+ if (!data||typeof data!=='object'||Array.isArray(data)||
+     Object.keys(data).sort().join('|')!==[...required].sort().join('|'))
+  return {error:error(400,'Invalid designation request')};
+ return {data};
+}
+async function roleOperation(request,db,staff,env,kind) {
+ if (!await roleOpsReady(db,env))return error(503,'Verified designation approvals are not enabled');
+ const fields=kind==='nominate'?['memberId','role','evidenceRef']:
+  kind==='review'?['requestId','decision']:['memberId','role'];
+ const parsed=await rolePayload(request,fields);
+ if(parsed.error)return parsed.error;
+ const data=parsed.data;
+ const validId=value=>typeof value==='string'&&/^[a-zA-Z0-9_-]{2,128}$/.test(value);
+ const now=Math.floor(Date.now()/1000);
+ if(kind==='nominate'){
+  if(staff.role!=='owner')return error(403,'Owner nomination required');
+  if(!validId(data.memberId)||!DESIGNATIONS.has(data.role)||
+   typeof data.evidenceRef!=='string'||data.evidenceRef.length>240||
+   !EVIDENCE_CASE.test(data.evidenceRef))
+   return error(400,'A role and an approved, non-personal review-case link are required');
+  const user=await db.prepare('SELECT id FROM "user" WHERE id=? AND emailVerified=1')
+   .bind(data.memberId).first();
+  if(!user)return error(404,'Verified member not found');
+  const existing=await db.prepare(
+   'SELECT role FROM member_role_grants WHERE user_id=? AND role=? AND revoked_at IS NULL'
+  ).bind(data.memberId,data.role).first();
+  if(existing)return error(409,'This designation is already active');
+  const limit=await db.prepare(
+   "SELECT COUNT(*) AS n FROM member_role_requests WHERE nominated_by=? AND nominated_at>=?"
+  ).bind(staff.id,now-3600).first();
+  if(Number(limit?.n||0)>=8)return error(429,'Hourly nomination limit reached');
+  try{
+   const result=await db.prepare(
+    "INSERT INTO member_role_requests(id,member_id,role,evidence_ref,nominated_by,nominated_at,state) "+
+    "VALUES(?,?,?,?,?,?,'pending')"
+   ).bind(crypto.randomUUID(),data.memberId,data.role,data.evidenceRef,staff.id,now).run();
+   return result?.meta?.changes===1?
+    json({ok:true,state:'pending',message:'Nomination recorded; independent review required'},201):
+    error(409,'Nomination not recorded');
+  }catch{return error(409,'Nomination already pending or database unavailable')}
+ }
+ if(kind==='review'){
+  if(staff.role!=='reviewer')return error(403,'Independent moderator review required');
+  if(typeof data.requestId!=='string'||
+    !/^[0-9a-f]{8}-[0-9a-f-]{27,40}$/i.test(data.requestId)||
+    !['approved','rejected'].includes(data.decision))
+   return error(400,'Invalid independent review');
+  const requestRow=await db.prepare(
+   'SELECT id,member_id,role,nominated_by,nominated_at,state FROM member_role_requests WHERE id=?'
+  ).bind(data.requestId).first();
+  if(!requestRow)return error(404,'Nomination not found');
+  if(requestRow.state!=='pending')return error(409,'Nomination already decided');
+  if(requestRow.nominated_by===staff.id||requestRow.member_id===staff.id)
+   return error(403,'Reviewer must be independent of the nominator and the member');
+  const recent=await db.prepare(
+   'SELECT COUNT(*) AS n FROM member_role_events WHERE actor_id=? AND happened_at>=?'
+  ).bind(staff.id,now-3600).first();
+  if(Number(recent?.n||0)>=12)return error(429,'Hourly review limit reached');
+  const decision=db.prepare(
+   "UPDATE member_role_requests SET state=?,reviewed_by=?,reviewed_at=? "+
+   "WHERE id=? AND state='pending' AND nominated_by<>? AND member_id<>?"
+  ).bind(data.decision,staff.id,now,data.requestId,staff.id,staff.id);
+  const record=db.prepare(
+   "INSERT INTO member_role_events(id,request_id,member_id,role,action,actor_id,happened_at) "+
+   "SELECT ?,r.id,r.member_id,r.role,?, ?,? FROM member_role_requests r "+
+   "WHERE r.id=? AND r.state=? AND r.reviewed_by=? AND changes()=1"
+  ).bind(crypto.randomUUID(),data.decision,staff.id,now,data.requestId,data.decision,staff.id);
+  if(data.decision==='rejected'){
+   const results=await db.batch([decision,record]);
+   return results[0]?.meta?.changes===1&&results[1]?.meta?.changes===1?
+    json({ok:true,state:'rejected'}):error(409,'Nomination changed during review');
+  }
+  // A conditional insert/upsert permits reissuance only after revocation.
+  const issue=db.prepare(
+   "INSERT INTO member_role_grants(user_id,role,granted_at,granted_by,reviewed_by,evidence_ref,revoked_at) "+
+   "SELECT r.member_id,r.role,?,r.nominated_by,?,r.evidence_ref,NULL "+
+   "FROM member_role_requests r WHERE r.id=? AND r.state='approved' "+
+   "AND r.reviewed_by=? AND changes()=1 "+
+   "ON CONFLICT(user_id,role) DO UPDATE SET "+
+   "granted_at=excluded.granted_at,granted_by=excluded.granted_by,"+
+   "reviewed_by=excluded.reviewed_by,evidence_ref=excluded.evidence_ref,revoked_at=NULL "+
+   "WHERE member_role_grants.revoked_at IS NOT NULL"
+  ).bind(now,staff.id,data.requestId,staff.id);
+  const results=await db.batch([decision,issue,record]);
+  return results[0]?.meta?.changes===1&&results[1]?.meta?.changes===1&&
+   results[2]?.meta?.changes===1?
+    json({ok:true,state:'approved',message:'Audited display designation issued'}):
+    error(409,'Approval could not be finalized; audit the role ledger before retry');
+ }
+ if(staff.role!=='owner')return error(403,'Owner revocation required');
+ if(!validId(data.memberId)||!DESIGNATIONS.has(data.role))
+  return error(400,'Invalid revocation target');
+ const active=await db.prepare(
+  'SELECT granted_at FROM member_role_grants WHERE user_id=? AND role=? AND revoked_at IS NULL'
+ ).bind(data.memberId,data.role).first();
+ if(!active)return error(404,'No active designation to revoke');
+ const updated=db.prepare(
+  'UPDATE member_role_grants SET revoked_at=? WHERE user_id=? AND role=? AND revoked_at IS NULL'
+ ).bind(Math.max(now,Number(active.granted_at)),data.memberId,data.role);
+ const audit=db.prepare(
+  "INSERT INTO member_role_events(id,member_id,role,action,actor_id,happened_at) "+
+  "SELECT ?,? ,?,'revoked',?,? WHERE changes()=1"
+ ).bind(crypto.randomUUID(),data.memberId,data.role,staff.id,now);
+ const results=await db.batch([updated,audit]);
+ return results[0]?.meta?.changes===1&&results[1]?.meta?.changes===1?
+  json({ok:true,state:'revoked'}):error(409,'Revocation not applied');
+}
+
+
 export default {
   async fetch(request, env) {
     let url;
@@ -253,7 +412,8 @@ export default {
     if (url.origin !== ORIGIN || url.protocol !== 'https:' || url.username || url.password ||
         ![BASE,`${BASE}/`,`${BASE}/app.js`,`${BASE}/styles.css`,
           `${BASE}/api/overview`,`${BASE}/api/members`,`${BASE}/api/rewards`,
-          `${BASE}/api/audit`,`${BASE}/api/aura`].includes(url.pathname))
+          `${BASE}/api/audit`,`${BASE}/api/aura`,`${BASE}/api/roles`,
+          `${BASE}/api/role-nominate`,`${BASE}/api/role-review`,`${BASE}/api/role-revoke`].includes(url.pathname))
       return error(404, 'Not found');
     if (url.search && !(request.method === 'GET' && url.pathname === `${BASE}/api/members`))
       return error(400, 'Unexpected query');
@@ -273,12 +433,18 @@ export default {
           case `${BASE}/api/members`: return await members(env.MEMBER_DB, staff, url);
           case `${BASE}/api/rewards`: return await rewards(env.MEMBER_DB, staff);
           case `${BASE}/api/audit`: return await audits(env.MEMBER_DB, staff);
+          case `${BASE}/api/roles`: return await roleQueue(env.MEMBER_DB,staff,env);
           default: return error(405, 'Method not allowed');
         }
       } catch { return error(503, 'Observatory data unavailable'); }
     }
-    if (url.pathname !== `${BASE}/api/aura`) return error(405, 'Method not allowed');
-    try { return await changeAura(request, env.MEMBER_DB, staff); }
-    catch { return error(503, 'Management action unavailable'); }
+    try {
+      if(url.pathname===`${BASE}/api/aura`)return await changeAura(request,env.MEMBER_DB,staff);
+      const kind=url.pathname===`${BASE}/api/role-nominate`?'nominate':
+        url.pathname===`${BASE}/api/role-review`?'review':
+        url.pathname===`${BASE}/api/role-revoke`?'revoke':null;
+      return kind?await roleOperation(request,env.MEMBER_DB,staff,env,kind):
+       error(405,'Method not allowed');
+    }catch{return error(503,'Management action unavailable')}
   },
 };
