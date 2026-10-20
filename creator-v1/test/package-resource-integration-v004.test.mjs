@@ -158,6 +158,8 @@ test("published releases survive failed edits, expired tests, R2 cleanup and new
   const review=await result(await s.request("/api/v1/packages/projects/"+v1.id+"/review","bob",{
    json:{action:"publish"}}));
   assert.equal(review.httpStatus,200,JSON.stringify(review));
+  assert.equal(s.get("SELECT COUNT(*) n FROM anevum_package_build_retention WHERE release_id=?",v1.release_id)[0].n,0,
+    "published releases must not retain ghost temporary-expiry rows");
   const published=await result(await s.request("/api/v1/packages/projects","alice",{method:"GET"}));
   assert.equal(published.projects.length,1);
   assert.equal(published.projects[0].id,v1.id);
@@ -188,6 +190,9 @@ test("published releases survive failed edits, expired tests, R2 cleanup and new
   assert.ok(usage.pilotPhysicalBytes>=Buffer.byteLength(HTML("published"))*2);
   const metrics=await result(await s.request("/api/v1/packages/staff/metrics","bob",{method:"GET"}));
   assert.equal(metrics.httpStatus,200);
+  const staff=await s.request("/staff/packages","bob",{method:"GET"});
+  assert.equal(staff.status,200);
+  assert.ok((await staff.text()).includes("STORAGE GUARDIAN / OPERATIONS"));
   const blocked=await result(await s.request("/api/v1/packages/staff/metrics","alice",{method:"GET"}));
   assert.equal(blocked.httpStatus,404);
   assert.equal(s.get("SELECT status FROM anevum_package_releases WHERE id=?",v1.release_id)[0].status,"published");
