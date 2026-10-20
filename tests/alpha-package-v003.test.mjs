@@ -633,3 +633,31 @@ test("R2 cleanup failures preserve nonpublic revoked release metadata for later 
     assert.ok((await env.DB.prepare("SELECT COUNT(*) AS n FROM anevum_package_files WHERE release_id=?").bind(p.release_id).first()).n>0);
   }finally{env.MEDIA.delete=original;env.DB.close();}
 });
+
+
+test("bounded staff GC retries failed discarded-build cleanup without touching public assets",async()=>{
+  const env=setup(),prior=env.MEDIA.delete.bind(env.MEDIA);
+  try{
+    const live=await (await post(env,"/api/v1/packages/upload",uploadWithCover(makeCover()))).json();
+    assert.equal((await post(env,"/api/v1/packages/projects/"+live.id+"/submit",{})).status,200);
+    assert.equal((await post(env,"/api/v1/packages/projects/"+live.id+"/review",{action:"publish"},"staff")).status,200);
+    const draft=await (await post(env,"/api/v1/packages/upload",uploadWithCover(makeCover(800,450),live.id))).json();
+    env.MEDIA.delete=async()=>{throw Error("simulated R2 unavailable");};
+    const discarded=await (await post(env,"/api/v1/packages/projects/"+live.id+"/discard",{})).json();
+    assert.equal(discarded.cleanup_pending,true);
+    env.MEDIA.delete=prior;
+    const path="/api/v1/packages/maintenance/reclaim";
+    assert.equal((await post(env,path,{confirm:"reclaim_revoked_v1"},"owner")).status,403);
+    assert.equal((await post(env,path,{},"staff")).status,422);
+    const processed=await post(env,path,{confirm:"reclaim_revoked_v1"},"staff");
+    assert.equal(processed.status,200);
+    assert.deepEqual(await processed.json(),{scanned:1,reclaimed:1,pending:0,limited_to:2});
+    const old=await env.DB.prepare("SELECT status,source_key FROM anevum_package_releases WHERE id=?").bind(draft.release_id).first();
+    assert.equal(old.status,"revoked");assert.equal(old.source_key,null);
+    assert.equal((await env.DB.prepare("SELECT COUNT(*) AS n FROM anevum_package_files WHERE release_id=?").bind(draft.release_id).first()).n,0);
+    assert.equal((await getPage(env,"/api/v1/packages/covers/"+live.release_id,"visitor")).status,200);
+    assert.equal((await getPage(env,"/api/v1/packages/covers/"+draft.release_id,"owner")).status,404);
+    assert.equal((await post(env,path,{confirm:"reclaim_revoked_v1"},"staff")).status,200);
+    assert.equal((await (await getPage(env,"/api/v1/packages/projects","visitor")).json()).projects[0].id,live.id);
+  }finally{env.MEDIA.delete=prior;env.DB.close();}
+});
