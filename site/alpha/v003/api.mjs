@@ -330,9 +330,8 @@ async function moderate(req,env,u,id) {
   return updated.meta?.changes===1?json({status:action==="suspend"?"suspended":"published"}):fail(409,"Project status changed");
 }
 async function discardReadyDraft(env,u,id) {
-  if(!pilot(env,u.id))return fail(403,"Creator alpha access required");
   const p=await getProject(env.DB,id);
-  if(!p||p.owner_id!==u.id)return fail(404,"Project unavailable");
+  if(!p||p.owner_id!==u.id||!pilot(env,u.id))return fail(404,"Project unavailable");
   const release=await getDraft(env.DB,p);
   if(!release||release.status!=="ready")return fail(409,"Only an unsubmitted private build can be discarded");
   // Keep the asset inventory as a retryable cleanup record until R2 deletion succeeds.
