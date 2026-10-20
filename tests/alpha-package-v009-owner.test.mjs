@@ -75,8 +75,10 @@ test("package bridge defaults OFF in wrapper even if other original route owner 
 });
 test("old path behavior is not confused by forged cross-origin path or percent-encoded v009 controls",async()=>{
  const f=fixture();
- assert.equal((await f.owner.fetch(new Request(A+"/upload/v3/%2e%2e/alpha"),{})).status,202);
+ // The URL parser resolves an encoded dot-dot segment before routing.
+ // It remains the old owner's responsibility; never turn it into an upload.
+ assert.equal((await f.owner.fetch(new Request(A+"/upload/v3/%2e%2e/alpha"),{})).status,200);
  assert.equal((await f.owner.fetch(new Request("https://evil.invalid/upload/v3"),{})).status,200);
- assert.equal(f.legacy.length,1);
- assert.equal(f.calls.length,1);
+ assert.equal(f.legacy.length,2);
+ assert.equal(f.calls.length,0);
 });
