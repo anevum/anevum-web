@@ -1,0 +1,33 @@
+name: ANEVUM V095 Native Creator Integration QA
+on:
+  push:
+    branches: [build/v095-native-creator-integration-20261020-001]
+permissions:
+  contents: read
+concurrency:
+  group: anevum-v095-native-creator-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source-snapshot:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Preserve tracked source only for reproducible integration debugging
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/v095-source"
+          git archive --format=tar HEAD | gzip > "$RUNNER_TEMP/v095-source/source.tar.gz"
+          git rev-parse HEAD > "$RUNNER_TEMP/v095-source/source-sha.txt"
+          sha256sum "$RUNNER_TEMP/v095-source/source.tar.gz" > "$RUNNER_TEMP/v095-source/source-sha256.txt"
+          echo 'SOURCE_SNAPSHOT_ONLY; NOT APPLICATION_OR_RELEASE_ACCEPTANCE' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v095-source-${{ github.sha }}
+          path: ${{ runner.temp }}/v095-source/
+          retention-days: 2
+          if-no-files-found: error
