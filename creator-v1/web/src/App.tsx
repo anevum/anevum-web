@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { Shell } from "./components/Shell";
 import { CinematicLandingPage } from "./pages/CinematicLandingPage";
 import { FieldGuidePage } from "./pages/FieldGuidePage";
@@ -31,6 +31,9 @@ import {SupporterPage} from './pages/SupporterPage';
 import SupporterTransparencyPage from './pages/SupporterTransparencyPage';
 import SupporterCollectionPage from './pages/SupporterCollectionPage';
 
+const WorkbenchAlphaEntryGate=lazy(()=>import("./pages/WorkbenchAlpha").then(m=>({default:m.WorkbenchAlphaEntryGate})));
+function StudioEntry({children}:{children:ReactNode}){return <><Suspense fallback={null}><WorkbenchAlphaEntryGate/></Suspense>{children}</>;}
+const WorkbenchAlphaPage=lazy(()=>import("./pages/WorkbenchAlpha").then(m=>({default:m.WorkbenchAlphaPage})));
 const NativeCreatorStudioPage=lazy(()=>import("./pages/NativeCreatorStudio").then(m=>({default:m.NativeCreatorStudioPage})));
 const NativePackagePlayerPage=lazy(()=>import("./pages/NativeCreatorStudio").then(m=>({default:m.NativePackagePlayerPage})));
 const creatorFallback=<LoadingState label="Opening Creator Studio"/>;
@@ -92,15 +95,16 @@ export default function App(){
     <Route path="create" element={<Navigate to="/studio" replace/>}/>
     <Route path="create/new" element={<Navigate to="/studio/new" replace/>}/>
     <Route path="create/:projectId" element={<LegacyStudioRedirect/>}/>
-    <Route path="studio/packages" element={<Suspense fallback={creatorFallback}><NativeCreatorStudioPage/></Suspense>}/>
-    <Route path="studio/packages/new" element={<Suspense fallback={creatorFallback}><NativeCreatorStudioPage mode="new"/></Suspense>}/>
-    <Route path="studio/packages/review" element={<Suspense fallback={creatorFallback}><NativeCreatorStudioPage mode="review"/></Suspense>}/>
-    <Route path="studio/packages/:projectId" element={<Suspense fallback={creatorFallback}><NativeCreatorStudioPage mode="edit"/></Suspense>}/>
+    <Route path="studio/alpha" element={<Suspense fallback={creatorFallback}><WorkbenchAlphaPage/></Suspense>}/>
+    <Route path="studio/packages" element={<StudioEntry><Suspense fallback={creatorFallback}><NativeCreatorStudioPage/></Suspense></StudioEntry>}/>
+    <Route path="studio/packages/new" element={<StudioEntry><Suspense fallback={creatorFallback}><NativeCreatorStudioPage mode="new"/></Suspense></StudioEntry>}/>
+    <Route path="studio/packages/review" element={<StudioEntry><Suspense fallback={creatorFallback}><NativeCreatorStudioPage mode="review"/></Suspense></StudioEntry>}/>
+    <Route path="studio/packages/:projectId" element={<StudioEntry><Suspense fallback={creatorFallback}><NativeCreatorStudioPage mode="edit"/></Suspense></StudioEntry>}/>
     <Route path="projects/package/:projectId" element={<Suspense fallback={creatorFallback}><NativePackagePlayerPage/></Suspense>}/>
-    <Route path="studio" element={<CanonicalStudioPage/>}/>
-    <Route path="studio/new" element={<CanonicalStudioPage mode="new"/>}/>
-    <Route path="studio/review" element={<CanonicalStudioPage mode="review"/>}/>
-    <Route path="studio/:projectId" element={<CanonicalStudioPage mode="edit"/>}/>
+    <Route path="studio" element={<StudioEntry><CanonicalStudioPage/></StudioEntry>}/>
+    <Route path="studio/new" element={<StudioEntry><CanonicalStudioPage mode="new"/></StudioEntry>}/>
+    <Route path="studio/review" element={<StudioEntry><CanonicalStudioPage mode="review"/></StudioEntry>}/>
+    <Route path="studio/:projectId" element={<StudioEntry><CanonicalStudioPage mode="edit"/></StudioEntry>}/>
     <Route element={<MemberGate/>}>
       <Route path="community/write" element={<CommunityPostEditorPage/>}/>
       <Route path="library" element={<MemberLibraryPage/>}/>
