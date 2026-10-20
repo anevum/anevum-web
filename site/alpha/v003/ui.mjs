@@ -54,7 +54,7 @@ button:focus-visible,.button:focus-visible,select:focus-visible{outline-color:#b
 .help-quick p{font-size:12px;margin:4px 0}
 .bordered-link{display:inline-flex;align-items:center;min-height:43px;font-size:12px}
 .project{background:linear-gradient(150deg,#142239,#0e1a2b);border-color:#35506b;border-radius:15px;padding:19px}
-.project h3{font-size:19px}.project .actions>*{min-width:0}
+.project h3{font-size:19px}.project .actions>*{flex:1 1 120px;min-width:0}
 .project .meta{color:#9ab0c9}.project .chip{border-radius:99px}
 .chip.pending_review{border-color:#9b8164;color:#e7c9a4}
 .chip.rejected{color:#ffbbb4}
