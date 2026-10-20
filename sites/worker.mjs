@@ -1,5 +1,5 @@
 import { STUDIO_V2_CSS, STUDIO_V2_HTML, STUDIO_V2_JS } from "./studio-v2.mjs";
-import { SITE_V005_HTML, SITE_V005_CSS, SITE_V005_JS, SITE_V005_SW, SITE_V005_MANIFEST, SITE_V005_ICON } from "./site-v005.mjs";
+import { SITE_V005_HTML, SITE_V005_CSS, SITE_V005_JS, SITE_V005_SW, SITE_V005_MANIFEST, SITE_V005_ICON, SITE_V005_IMMERSIVE } from "./site-v005.mjs";
 // ANEVUM.WEB.BUILD.2026-10-19.001.CLIENT-SITES-STUDIO
 // Public-facing, read-only pilot. No customer records, authentication or commerce.
 // Dedicated Cloudflare Worker; do not attach to anevum.com or lab.anevum.com.
@@ -104,6 +104,7 @@ export default {async fetch(request,env){
   }
   if(path==="/assets/sites-v005.css")return send(SITE_V005_CSS,200,"text/css; charset=utf-8",m);
   if(path==="/assets/sites-v005.js")return send(SITE_V005_JS,200,"application/javascript; charset=utf-8",m);
+  if(path==="/assets/sites-v005-immersive.js")return send(SITE_V005_IMMERSIVE,200,"application/javascript; charset=utf-8",m);
   if(path==="/site.webmanifest")return send(SITE_V005_MANIFEST,200,"application/manifest+json; charset=utf-8",m);
   if(path==="/sw.js")return send(SITE_V005_SW,200,"application/javascript; charset=utf-8",m);
   if(path==="/assets/sites-v005-icon.svg")return send(SITE_V005_ICON,200,"image/svg+xml",m);

@@ -1,0 +1,12 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Continuance Vault · GPU QA</title><style>html,body{margin:0;background:#080e15;color:#dbebdf;font-family:system-ui}canvas{display:block;width:100vw;height:100vh;touch-action:none}.tag{position:absolute;left:30px;top:23px;color:#d8f3ce;background:#081119af;padding:15px;font-size:14px;letter-spacing:.1em}.tag small{display:block;margin-top:8px;font-size:10px;color:#87a99c}</style></head><body><div class="tag">CONTINUANCE VAULT / MATERIAL STUDY<small id="report">INITIALIZING</small></div><canvas id="scene" aria-label="Test scene"></canvas><script src="immersive-engine.js"></script><script>
+const canvas=document.getElementById("scene"),status=document.getElementById("report");
+window.addEventListener("load",()=>{
+try {
+ const candidate=document.createElement("canvas").getContext("webgl2");
+ if(!candidate){window.__ANE_GPU_QA="NO_WEBGL2";status.textContent=window.__ANE_GPU_QA;return;}
+ const engine=window.ANEVUMImmersive?.mount(canvas);
+ window.__ANE_GPU_QA=engine?"RENDERER_READY":"SHADER_COMPILE_FAILED";
+ status.textContent=window.__ANE_GPU_QA;
+}catch(e){window.__ANE_GPU_QA="ERROR:"+e.message;status.textContent=window.__ANE_GPU_QA;}
+});
+</script></body></html>
