@@ -30,7 +30,7 @@ jobs:
           node --test creator-v1/test/v091-release-acceptance.test.mjs
           node creator-v1/ops/v091-release-acceptance.mjs
           # Only release configuration/evidence may differ from the tested app.
-          git diff --exit-code 078a5e4a21fcb002d19e59e75c6449eb2d9a82f6 HEAD -- . \
+          git diff --exit-code 6494457047f1b5e3f6d1e852043e13828411f2f1 HEAD -- . \
             ':(exclude).github/workflows/v084-continuance-production.yml' \
             ':(exclude).github/workflows/v091-live-readonly-qa.yml' \
             ':(exclude).github/release-evidence/v091-authenticated.json' \
@@ -169,7 +169,7 @@ jobs:
           git merge-base --is-ancestor 00ba9f32f2c862de4b362eaafddc80890e2b577b HEAD
           # Pin the completed V091 application and allow only its reviewed files.
           # A stale or broadened release fails before any Cloudflare write.
-          git merge-base --is-ancestor 078a5e4a21fcb002d19e59e75c6449eb2d9a82f6 HEAD
+          git merge-base --is-ancestor 6494457047f1b5e3f6d1e852043e13828411f2f1 HEAD
           diff -u <(printf '%s\n' \
              '.github/release-evidence/v091-authenticated.json' \
              '.github/workflows/creator-v1-verify.yml' \
