@@ -50,3 +50,19 @@ jobs:
             exit 1
           fi
           echo "Public read-only routes reachable; private Access boundary not open anonymously"
+
+  bundle-compatibility:
+    name: Wrangler dry-run / no deployment
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check out candidate source
+        uses: actions/checkout@v4
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Bundle public Worker imports without deploying
+        run: npx --yes wrangler@4.135.0 deploy --dry-run --config sites/wrangler.jsonc --outdir /tmp/anevum-sites-public-bundle
+      - name: Bundle owner Worker imports without deploying
+        run: npx --yes wrangler@4.135.0 deploy --dry-run --config sites/wrangler.workshop.jsonc --outdir /tmp/anevum-sites-private-bundle
