@@ -152,15 +152,20 @@ try{
     const card=document.querySelector('[data-player-card="v078"].av65-player-card--featured');
     const progress=card?.querySelector('.av78-player-progress progress');
     const art=card?.querySelector('.av78-featured-art img');
+    const artPanel=card?.querySelector('.av78-featured-art');
     const badge=card?.querySelector('.av61-specimen img');
-    if(!card||!progress||!art?.complete||!art.naturalWidth||!badge?.complete||!badge.naturalWidth)return null;
+    if(!card||!progress||!badge?.complete||!badge.naturalWidth)return null;
+    const decorHidden=!!artPanel&&getComputedStyle(artPanel).display==='none';
+    // The giant watermark is deliberately not rendered on phones; a hidden
+    // decorative image may never load. The earned level seal MUST load.
+    if(!decorHidden&&(!art?.complete||!art.naturalWidth))return null;
     const rect=card.getBoundingClientRect();
     const viewport=innerWidth;
     return {
       memberName:card.querySelector('.av61-member-name')?.textContent,
-      artworkType:art.currentSrc,
-      pixels:art.naturalWidth,
-      badgePixels:badge.naturalWidth,
+      artworkType:decorHidden?badge.currentSrc:art.currentSrc,
+      pixels:decorHidden?badge.naturalWidth:art.naturalWidth,
+      decorHidden,badgePixels:badge.naturalWidth,
       label:card.querySelector('.av61-level-label')?.textContent,
       progressValue:progress.value,progressMax:progress.max,
       progressText:card.querySelector('.av78-progress-caption')?.textContent,
@@ -186,13 +191,14 @@ try{
    view.role!=='Founder'||!view.rep.includes('72 REP')||!view.aura||
    !view.chosenAura||view.auraCompasses!==1||!view.coverAtmosphere||!view.roleAtmosphere||
    view.auraMarkerAnimation!=='none'||!view.statusLabel.includes('THREADS')||
-   view.left<0||view.right>view.viewport+2)
+   view.decorHidden!==(width<=430)||view.left<0||view.right>view.viewport+2)
    throw Error('V078_REACT_CARD_INVALID '+name+' '+JSON.stringify(view));
   const capture=await send('Page.captureScreenshot',{format:'png',fromSurface:true});
   const bytes=Buffer.from(capture.data||'','base64');
   if(bytes.length<3500)throw Error('V078_EMPTY_SCREENSHOT_'+name);
   writeFileSync(join(output,'v078-live-react-'+name+'.png'),bytes);
   results.push({viewport:name,cardWidth:view.width,imagePixels:view.pixels,
+   mobileDecorativeArtHidden:view.decorHidden,
    progressValue:view.progressValue,progressMax:view.progressMax,
    pageOverflow:view.overflow,source:'production-React-rendered'});
   console.log('V078_PREMIUM_REACT_'+name+'=PASS '+JSON.stringify(view));
