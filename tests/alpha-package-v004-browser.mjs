@@ -94,6 +94,7 @@ async function main(){
  const runner="data:text/html;charset=utf-8,"+encodeURIComponent(runtimeFixture);
  const pages={
   uploader:await (await uploadScreen([],true,true,"")).text(),
+  library:await (await uploadScreen([{...project,cover_release_id:"22222222-2222-4222-8222-222222222222"}],true,true,"")).text(),
   guest:await (await uploadScreen([],false,false,"")).text(),
   player:await (await playerScreen(project,release,runner,true,true,false)).text(),
   review:await (await playerScreen(project,{...release,status:"pending_review"},runner,true,false,true)).text(),
@@ -122,6 +123,48 @@ async function main(){
   const selection=await evalJS(c,"(()=>{const input=document.querySelector('#bundle');const data=new DataTransfer();data.items.add(new File(['<!doctype html><html><body>Ready</body></html>'],'example.html',{type:'text/html'}));input.files=data.files;input.dispatchEvent(new Event('change',{bubbles:true}));return {name:document.querySelector('#file-label').textContent,status:document.querySelector('#activity').textContent};})()");
   assert.match(selection.name,/example\.html/);assert.match(selection.status,/File selected/);
   await image(c,join(out,"selected-390.png"));
+  const picked=await evalJS(c,`(async()=>{
+    const canvas=document.createElement('canvas');canvas.width=960;canvas.height=540;
+    const ctx=canvas.getContext('2d'),fill=ctx.createLinearGradient(0,0,960,540);
+    fill.addColorStop(0,'#142b4c');fill.addColorStop(.5,'#34808c');fill.addColorStop(1,'#0a182c');
+    ctx.fillStyle=fill;ctx.fillRect(0,0,960,540);
+    ctx.strokeStyle='rgba(220,250,255,.5)';ctx.lineWidth=2;
+    for(let n=1;n<8;n++){ctx.beginPath();ctx.arc(480,270,n*45,0,Math.PI*2);ctx.stroke();}
+    ctx.fillStyle='#e5fdff';ctx.font='36px Georgia';ctx.textAlign='center';ctx.fillText('SYNTHETIC QA ART',480,280);
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+    const input=document.querySelector('#cover'),files=new DataTransfer();
+    files.items.add(new File([blob],'qa-cover.png',{type:'image/png'}));input.files=files.files;
+    input.dispatchEvent(new Event('change',{bubbles:true}));
+    return {size:blob.size,type:blob.type};
+  })()`);
+  assert.equal(picked.type,"image/png");
+  let coverReady=false;
+  for(let i=0;i<35;i++){
+    coverReady=await evalJS(c,"!!document.querySelector('#cover-preview')?.getAttribute('src')&&document.querySelector('#cover-preview').hidden===false");
+    if(coverReady)break;
+    await sleep(100);
+  }
+  assert.ok(coverReady,"Selected local cover PNG should load and preview");
+  await evalJS(c,"document.querySelector('#cover-preview-wrap').scrollIntoView({block:'center',behavior:'instant'})");
+  await sleep(130);
+  await image(c,join(out,"cover-selected-390.png"));
+  await visit(c,join(tmp,"library.html"),390,844);
+  const art=await evalJS(c,`(async()=>{
+    const canvas=document.createElement('canvas');canvas.width=960;canvas.height=540;
+    const ctx=canvas.getContext('2d');ctx.fillStyle='#102342';ctx.fillRect(0,0,960,540);
+    const fade=ctx.createRadialGradient(480,240,10,480,240,550);
+    fade.addColorStop(0,'#6cbecc');fade.addColorStop(.5,'#315e8c');fade.addColorStop(1,'#09182c');
+    ctx.fillStyle=fade;ctx.fillRect(0,0,960,540);
+    ctx.lineWidth=2;ctx.strokeStyle='#c5f5ee';ctx.beginPath();ctx.arc(480,270,150,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='#ebffff';ctx.textAlign='center';ctx.font='36px Georgia';ctx.fillText('QA ONLY / TEST COVER',480,290);
+    const img=document.querySelector('.av-project-cover');img.src=canvas.toDataURL('image/png');
+    img.scrollIntoView({block:'center',behavior:'instant'});
+    await img.decode();
+    return {loaded:img.naturalWidth,classes:img.closest('.av-project-plate').className};
+  })()`);
+  assert.equal(art.loaded,960);
+  assert.match(art.classes,/av-has-cover/);
+  await image(c,join(out,"library-with-cover-390.png"));
   await visit(c,join(tmp,"guest.html"),390,844);
   assert.equal(await evalJS(c,"document.querySelector('#publish-form')===null"),true);
   await image(c,join(out,"guest-390.png"));
@@ -135,7 +178,7 @@ async function main(){
   const modal=await evalJS(c,"(()=>{document.querySelector('[data-package-action=\"publish\"]').click();return {open:document.querySelector('#review-dialog').open,checked:document.querySelector('#decision-confirm').checked};})()");
   assert.equal(modal.open,true);assert.equal(modal.checked,false);
   await image(c,join(out,"review-390.png"));
-  const result={pass:true,viewports:[320,390,1440],images:8,
+  const result={pass:true,viewports:[320,390,1440],images:10,coverPreview:true,coverCard:true,
    scope:"synthetic headless Chromium UI/interaction acceptance only; real authenticated Safari and rollout still required"};
   await writeFile(join(out,"result.json"),JSON.stringify(result,null,2));
   console.log(JSON.stringify(result));
