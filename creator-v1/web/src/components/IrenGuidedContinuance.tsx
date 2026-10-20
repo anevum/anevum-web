@@ -309,7 +309,10 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
       focusRequested.current=true;
       setPanelOpen(true);
       // Repeated help requests should focus the existing open panel too.
-      window.requestAnimationFrame(()=>closePanelRef.current?.focus({preventScroll:true}));
+      window.requestAnimationFrame(()=>{
+        closePanelRef.current?.focus({preventScroll:true});
+        focusRequested.current=false;
+      });
     };
     const onStart=()=>start();
     window.addEventListener("anevum:member-created",onCreated);
