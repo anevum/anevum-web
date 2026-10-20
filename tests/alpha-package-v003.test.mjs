@@ -811,3 +811,38 @@ test("invalid declared multipart length fails before consuming or storing projec
     assert.equal(env.MEDIA.data.size,0);
   }finally{env.DB.close();}
 });
+
+test("workers.dev staging surface is public read-only and cannot resolve canonical private drafts",async()=>{
+  const env=setup(),host="anevum-package-alpha-v003-control.devonakins.workers.dev";
+  env.STAGING_CONTROL_HOST=host;
+  try{
+    const created=await (await post(env,"/api/v1/packages/upload",uploadForm(sample()))).json();
+    const stage=path=>api.fetch(new Request("https://"+host+path,
+      {headers:{cookie:"session=owner",origin:"https://anevum.com"}}),env);
+    const uploadPage=await stage("/upload/v3");
+    assert.equal(uploadPage.status,200);
+    const html=await uploadPage.text();
+    assert.match(html,/Staging interface preview only/);
+    assert.doesNotMatch(html,/id="publish-form"/);
+    assert.doesNotMatch(html,/data-package-action="discard"/);
+    assert.equal((await stage("/api/v1/packages/health")).status,200);
+    assert.equal((await stage("/api/v1/packages/projects")).status,200);
+    assert.equal((await stage("/api/v1/packages/me")).status,404);
+    assert.equal((await stage("/staff/packages")).status,404);
+    assert.equal((await stage("/play/v3/"+created.id+"?preview=1")).status,404);
+    assert.equal((await stage("/api/v1/packages/covers/"+created.release_id)).status,404);
+    assert.equal((await stage("/play/v3/00000000-0000-4000-8000-000000000000")).status,404);
+    const original=await getPage(env,"/play/v3/"+created.id+"?preview=1","owner");
+    assert.equal(original.status,200,"Canonical owner preview route remains available");
+  }finally{env.DB.close();}
+});
+test("missing or unauthorized playable projects use correct HTTP 404 instead of deceptive 200",async()=>{
+  const env=setup();
+  try{
+    const missing=await getPage(env,"/play/v3/00000000-0000-4000-8000-000000000000","visitor");
+    assert.equal(missing.status,404);
+    const created=await (await post(env,"/api/v1/packages/upload",uploadForm(sample()))).json();
+    const denied=await getPage(env,"/play/v3/"+created.id+"?preview=1","visitor");
+    assert.equal(denied.status,404);
+  }finally{env.DB.close();}
+});
