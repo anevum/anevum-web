@@ -34,7 +34,9 @@ async function expireTemporaryBuilds(env,now){
           "AND EXISTS(SELECT 1 FROM anevum_package_releases WHERE id=? AND status='ready') "+
           "AND EXISTS(SELECT 1 FROM anevum_package_build_retention WHERE release_id=? AND mode='test' AND expires_at<=?)")
           .bind(now,item.project_id,item.release_id,item.release_id,item.release_id,now),
-        env.DB.prepare("UPDATE anevum_package_releases SET status='revoked' WHERE id=? AND status='ready'").bind(item.release_id),
+        env.DB.prepare("UPDATE anevum_package_releases SET status='revoked' WHERE id=? AND status='ready' "+
+          "AND EXISTS(SELECT 1 FROM anevum_package_build_retention WHERE release_id=? AND mode='test' AND expires_at<=?)")
+          .bind(item.release_id,item.release_id,now),
         jobStatement(env.DB,item.release_id,"expired",now)
       ]);
       if(z[0]?.meta?.changes===1&&z[1]?.meta?.changes===1)expired++;
