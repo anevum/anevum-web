@@ -69,23 +69,23 @@ const nomination=(memberId='member',role='moderator',evidenceRef=CASE)=>({member
 test('V093 unavailable or missing role schema fails closed with no account writes',async t=>{
  for(const conditions of [{migrated:false,enabled:true},{migrated:true,enabled:false}]){
   const f=fixture(conditions);t.after(()=>f.raw.close());
-  const queue=await f.call('owner','GET','roles');
+  const queue=await f.call('owner','GET','queue');
   assert.equal(queue.status,200);assert.equal(queue.body.enabled,false);
-  assert.equal((await f.call('owner','POST','role-nominate',nomination())).status,503);
+  assert.equal((await f.call('owner','POST','nominate',nomination())).status,503);
   assert.equal(f.raw.prepare("SELECT COUNT(*) AS n FROM staff_access_grants").get().n,3);
  }
 });
 
 test('V093 enforces independent two-person approval and does not issue staff privileges',async t=>{
  const f=fixture();t.after(()=>f.raw.close());
- assert.equal((await f.call('reviewer','POST','role-nominate',nomination())).status,403);
- assert.equal((await f.call('owner','POST','role-nominate',nomination('unverified'))).status,404);
- assert.equal((await f.call('owner','POST','role-nominate',nomination('member','founder','https://outside.invalid'))).status,400);
- assert.equal((await f.call('owner','POST','role-nominate',nomination(),'https://untrusted.invalid')).status,403);
- const proposed=await f.call('owner','POST','role-nominate',nomination());
+ assert.equal((await f.call('reviewer','POST','nominate',nomination())).status,403);
+ assert.equal((await f.call('owner','POST','nominate',nomination('unverified'))).status,404);
+ assert.equal((await f.call('owner','POST','nominate',nomination('member','founder','https://outside.invalid'))).status,400);
+ assert.equal((await f.call('owner','POST','nominate',nomination(),'https://untrusted.invalid')).status,403);
+ const proposed=await f.call('owner','POST','nominate',nomination());
  assert.equal(proposed.status,201);
  assert.equal(proposed.body.state,'pending');
- const queue=await f.call('reviewer','GET','roles');
+ const queue=await f.call('reviewer','GET','queue');
  assert.equal(queue.body.enabled,true);
  assert.equal(queue.body.requests.length,1);
  assert.equal(queue.body.requests[0].memberName,'Creator');
@@ -97,11 +97,11 @@ test('V093 enforces independent two-person approval and does not issue staff pri
  assert.equal((await f.call('reviewer','GET','members?q=creator')).status,403);
  const id=queue.body.requests[0].id;
  assert.equal((await memberVerifiedRoleMap(f.db,['member'])).size,0,'nomination never implies public role');
- assert.equal((await f.call('owner','POST','role-review',{requestId:id,decision:'approved'})).status,403);
- const approved=await f.call('reviewer','POST','role-review',{requestId:id,decision:'approved'});
+ assert.equal((await f.call('owner','POST','review',{requestId:id,decision:'approved'})).status,403);
+ const approved=await f.call('reviewer','POST','review',{requestId:id,decision:'approved'});
  assert.equal(approved.status,200);assert.equal(approved.body.state,'approved');
  assert.equal((await memberVerifiedRoleMap(f.db,['member'])).get('member'),'moderator');
- assert.equal((await f.call('reviewer','POST','role-review',{requestId:id,decision:'approved'})).status,409);
+ assert.equal((await f.call('reviewer','POST','review',{requestId:id,decision:'approved'})).status,409);
  assert.equal(f.raw.prepare('SELECT COUNT(*) AS n FROM staff_access_grants').get().n,3);
  assert.equal(f.raw.prepare("SELECT COUNT(*) AS n FROM staff_access_grants WHERE member_id='member'").get().n,0);
  assert.equal(f.raw.prepare("SELECT granted_by,reviewed_by FROM member_role_grants WHERE user_id='member'").get().reviewed_by,'reviewer');
@@ -110,25 +110,25 @@ test('V093 enforces independent two-person approval and does not issue staff pri
 
 test('V093 rejects self-approval, records denials, safely revokes and audits reissuance',async t=>{
  const f=fixture();t.after(()=>f.raw.close());
- assert.equal((await f.call('owner','POST','role-nominate',nomination('reviewer','founder'))).status,201);
- let queue=(await f.call('reviewer','GET','roles')).body.requests;
- assert.equal((await f.call('reviewer','POST','role-review',{requestId:queue[0].id,decision:'approved'})).status,403);
- assert.equal((await f.call('other','POST','role-review',{requestId:queue[0].id,decision:'rejected'})).status,200);
+ assert.equal((await f.call('owner','POST','nominate',nomination('reviewer','founder'))).status,201);
+ let queue=(await f.call('reviewer','GET','queue')).body.requests;
+ assert.equal((await f.call('reviewer','POST','review',{requestId:queue[0].id,decision:'approved'})).status,403);
+ assert.equal((await f.call('other','POST','review',{requestId:queue[0].id,decision:'rejected'})).status,200);
  assert.equal((await memberVerifiedRoleMap(f.db,['reviewer'])).size,0);
- assert.equal((await f.call('owner','POST','role-nominate',nomination('member','curator'))).status,201);
- queue=(await f.call('reviewer','GET','roles')).body.requests;
+ assert.equal((await f.call('owner','POST','nominate',nomination('member','curator'))).status,201);
+ queue=(await f.call('reviewer','GET','queue')).body.requests;
  const first=queue.find(x=>x.role==='curator');
  assert.ok(first);
- assert.equal((await f.call('reviewer','POST','role-review',{requestId:first.id,decision:'approved'})).status,200);
- assert.equal((await f.call('owner','POST','role-nominate',nomination('member','curator'))).status,409);
- assert.equal((await f.call('reviewer','POST','role-revoke',{memberId:'member',role:'curator'})).status,403);
- assert.equal((await f.call('owner','POST','role-revoke',{memberId:'member',role:'curator'})).status,200);
+ assert.equal((await f.call('reviewer','POST','review',{requestId:first.id,decision:'approved'})).status,200);
+ assert.equal((await f.call('owner','POST','nominate',nomination('member','curator'))).status,409);
+ assert.equal((await f.call('reviewer','POST','revoke',{memberId:'member',role:'curator'})).status,403);
+ assert.equal((await f.call('owner','POST','revoke',{memberId:'member',role:'curator'})).status,200);
  assert.equal((await memberVerifiedRoleMap(f.db,['member'])).size,0);
- assert.equal((await f.call('owner','POST','role-nominate',nomination('member','curator'))).status,201);
- queue=(await f.call('reviewer','GET','roles')).body.requests;
+ assert.equal((await f.call('owner','POST','nominate',nomination('member','curator'))).status,201);
+ queue=(await f.call('reviewer','GET','queue')).body.requests;
  const second=queue.find(x=>x.role==='curator');
  assert.ok(second);assert.notEqual(second.id,first.id);
- assert.equal((await f.call('other','POST','role-review',{requestId:second.id,decision:'approved'})).status,200);
+ assert.equal((await f.call('other','POST','review',{requestId:second.id,decision:'approved'})).status,200);
  assert.equal((await memberVerifiedRoleMap(f.db,['member'])).get('member'),'curator');
  assert.deepEqual(
   f.raw.prepare('SELECT action FROM member_role_events ORDER BY happened_at,id').all().map(x=>x.action).sort(),
