@@ -374,9 +374,9 @@ async function api(req,env,path,ctx){
   if(req.method!=="POST"||!csrf(req))return fail(403,"Origin or method not authorized");
   const u=await member(req,env);
   if(!u)return fail(401,"A verified ANEVUM session is required");
-  if(!await resourcePolicyReady(env.DB))return fail(503,"Creator storage setup is incomplete");
   if(path==="/api/v1/packages/preflight")return preflight(req,env,u);
   if(path==="/api/v1/packages/upload")return upload(req,env,u);
+  if(!await resourcePolicyReady(env.DB))return fail(503,"Creator storage setup is incomplete");
   const m=path.match(/^\/api\/v1\/packages\/projects\/([0-9a-f-]{36})\/(submit|review|delete|save|discard)$/);
   if(!m||!UUID.test(m[1]))return fail(404,"Unknown API route");
   if(m[2]==="submit")return submit(env,u,m[1]);
