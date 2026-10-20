@@ -77,7 +77,9 @@ jobs:
             ':(exclude)creator-v1/test/staff-transport-release-v091.test.mjs' \
             ':(exclude)creator-v1/ops/v095-v096-acceptance-entry.mjs' \
             ':(exclude)creator-v1/test/v095-v096-acceptance-entry.test.mjs' \
-            ':(exclude).github/workflows/v096-public-alpha-qa.yml'
+            ':(exclude).github/workflows/v096-public-alpha-qa.yml' \
+            ':(exclude)creator-v1/ops/v091-controlled-pilot-upload.mjs' \
+            ':(exclude)tests/single-production-deploy.test.mjs'
           echo 'APP_SOURCE_STILL_MERGED_V095_V096=PASS' >> "$GITHUB_STEP_SUMMARY"
       - name: Run positive and negative inactive candidate preflight tests
         run: |

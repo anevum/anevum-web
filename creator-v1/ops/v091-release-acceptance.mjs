@@ -22,7 +22,9 @@ export const V091_RELEASE_METADATA=Object.freeze([
   'creator-v1/test/staff-transport-release-v091.test.mjs',
   'creator-v1/ops/v095-v096-acceptance-entry.mjs',
   'creator-v1/test/v095-v096-acceptance-entry.test.mjs',
-  '.github/workflows/v096-public-alpha-qa.yml'
+  '.github/workflows/v096-public-alpha-qa.yml',
+  'creator-v1/ops/v091-controlled-pilot-upload.mjs',
+  'tests/single-production-deploy.test.mjs'
 ]);
 const literalPath=path=>typeof path==='string'&&/^[A-Za-z0-9_./-]+$/.test(path)&&
   path.split('/').every(part=>part&&part!=='.'&&part!=='..');

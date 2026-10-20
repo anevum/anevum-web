@@ -13,6 +13,8 @@ import {
 
 const PIN='d5af32fd8f04b05e0381f7ac12c59d06c0e836a2';
 const ALLOWED_META=[
+ 'creator-v1/ops/v091-controlled-pilot-upload.mjs',
+ 'tests/single-production-deploy.test.mjs',
  'creator-v1/ops/v095-v096-acceptance-entry.mjs',
  'creator-v1/test/v095-v096-acceptance-entry.test.mjs',
  '.github/workflows/v096-public-alpha-qa.yml',

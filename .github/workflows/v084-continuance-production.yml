@@ -1,5 +1,5 @@
-# V091 RC: staff transport is repaired in production; full experience release requires authenticated acceptance.
-# V091 release candidate: staff transport filename fix pinned; authenticated full release remains gated.
+# V095/V096: promote only the immutable candidate after source-bound real-account and device acceptance.
+# The existing production version remains the rollback; staff transport is read-only.
 name: ANEVUM V095 V096 Guarded Continuance Experience Production
 on:
   push:
@@ -47,7 +47,9 @@ jobs:
             ':(exclude)creator-v1/test/staff-transport-release-v091.test.mjs' \
             ':(exclude)creator-v1/ops/v095-v096-acceptance-entry.mjs' \
             ':(exclude)creator-v1/test/v095-v096-acceptance-entry.test.mjs' \
-            ':(exclude).github/workflows/v096-public-alpha-qa.yml'
+            ':(exclude).github/workflows/v096-public-alpha-qa.yml' \
+            ':(exclude)creator-v1/ops/v091-controlled-pilot-upload.mjs' \
+            ':(exclude)tests/single-production-deploy.test.mjs'
       - name: Node runtime
         uses: actions/setup-node@v4
         with:

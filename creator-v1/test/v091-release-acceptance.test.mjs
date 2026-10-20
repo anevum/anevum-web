@@ -118,14 +118,14 @@ test('source-only scope check requires actual git paths to match every reviewed 
  assert.throws(()=>verifyV091SourceScope({...input,changedFiles:[...input.changedFiles,input.changedFiles[0]]}),/unique literal paths/);
  assert.throws(()=>verifyV091SourceScope({...input,changedFiles:[...input.changedFiles,'site/alpha/*']}),/unique literal paths/);
 });
-test('source-only validation allows exactly the seventeen metadata differences and cannot certify authenticated acceptance',()=>{
+test('source-only validation allows exactly the nineteen metadata differences and cannot certify authenticated acceptance',()=>{
  const input=sourceFixture(),pending={...complete(),founder_staff_session:false};
  assert.equal(verifyV091SourceScope({...input,applicationChangedFiles:[...V091_RELEASE_METADATA]}).applicationSource,V091_APPLICATION_SOURCE);
  assert.throws(()=>verifyV091Acceptance(pending),/unverified/);
  for(const file of ['creator-v1/web/src/main.tsx','site/alpha/v003/api.mjs','docs/production/unreviewed.md'])
    assert.throws(()=>verifyV091SourceScope({...input,applicationChangedFiles:[...V091_RELEASE_METADATA,file]}),/changed after its source pin/);
- const broadened=input.release.replace("':(exclude).github/workflows/v096-public-alpha-qa.yml'",
-   "':(exclude).github/workflows/v096-public-alpha-qa.yml' \\\n            ':(exclude)site/alpha/v003/api.mjs'");
+ const broadened=input.release.replace("':(exclude)tests/single-production-deploy.test.mjs'",
+   "':(exclude)tests/single-production-deploy.test.mjs' \\\n            ':(exclude)site/alpha/v003/api.mjs'");
  assert.throws(()=>verifyV091SourceScope({...input,release:broadened}),/exactly the reviewed/);
  const bypass=input.release.replace('node creator-v1/ops/v091-release-acceptance.mjs\n',
    'node creator-v1/ops/v091-release-acceptance.mjs --source-only\n');

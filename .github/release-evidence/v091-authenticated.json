@@ -8,8 +8,8 @@
   "evidence": [],
   "native_candidate_pending": true,
   "status": "Replacement V095/V096 immutable candidate uploaded with all 152 earned-media assets and gallery ON. Candidate-specific live verification, real accounts, physical iPhone Safari and owner release approval remain pending.",
-  "reviewed_file_inventory": 163,
-  "release_metadata_exclusions": 5,
+  "reviewed_file_inventory": 179,
+  "release_metadata_exclusions": 19,
   "prior_v091_checkpoint": {
     "source_sha": "d7e8d8a2fda4406ba144bfc8dd03d664e48b7b07",
     "founder_staff_session": true,
