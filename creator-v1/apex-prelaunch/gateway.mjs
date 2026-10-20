@@ -14,6 +14,7 @@ import {verifiedPreviewIdentity} from "./preview-access.mjs";
 import {apexPlatformFetch} from "./platform.mjs";
 
 const ORIGIN="https://anevum.com";
+const PUBLIC_ALPHA = /^\/studio\/alpha\/?$/i;
 const HTML_CSP="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
 const HEADERS={
   "cache-control":"private, no-store",
@@ -56,7 +57,7 @@ function securePlatform(response,mode,pathname=''){
   headers.set("x-content-type-options","nosniff");
   headers.set("referrer-policy","no-referrer");
   headers.set("x-frame-options","DENY");
-  if(mode!=="public"||pathname==="/studio/alpha")headers.set("x-robots-tag","noindex, nofollow, noarchive");
+  if(mode!=="public"||PUBLIC_ALPHA.test(pathname))headers.set("x-robots-tag","noindex, nofollow, noarchive");
   else headers.delete("x-robots-tag");
   // Platform CSP and member cookies must not be discarded/replaced here.
   return new Response(response.body,{status:response.status,
