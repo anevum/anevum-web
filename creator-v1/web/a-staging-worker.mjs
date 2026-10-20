@@ -15,7 +15,7 @@ const SECURITY = {
 const textResponse=(status,message,method)=>new Response(method==="HEAD"?null:message,{
   status,headers:{...SECURITY,"content-type":"text/plain; charset=utf-8","cache-control":"no-store"}
 });
-function protect(response,method,forceNoStore=false,nativePlayer=false){
+function protect(response,method,forceNoStore=false,nativePlayer=false,guestAlpha=false){
   const headers=new Headers(response.headers);
   for(const [key,value] of Object.entries(SECURITY))headers.set(key,value);
   const html=headers.get("content-type")?.toLowerCase().includes("text/html");
@@ -23,7 +23,7 @@ function protect(response,method,forceNoStore=false,nativePlayer=false){
   if(html)headers.set("content-security-policy",
     "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; "+
     "img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; "+
-    (nativePlayer?"frame-src https://anevum-package-alpha-v003-runtime.devonakins.workers.dev; ":"")+
+    (nativePlayer?"frame-src https://anevum-package-alpha-v003-runtime.devonakins.workers.dev"+(guestAlpha?" 'self' about: blob:":"")+"; ":guestAlpha?"frame-src 'self' about: blob:; ":"")+
     "base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'");
   headers.delete("set-cookie");
   return new Response(method==="HEAD"?null:response.body,{
@@ -54,7 +54,10 @@ return {
       if(value)headers.set(name,value);
     }
     const clean=new Request(url.href,{method:request.method,headers});
-    return protect(await env.ASSETS.fetch(clean),request.method,false,env.PACKAGE_NATIVE_STUDIO_ENABLED==="true");
+    // Only the anonymous alpha needs a sandboxed, scriptless srcdoc frame.
+    // Other public pages retain the restrictive default-src policy.
+    return protect(await env.ASSETS.fetch(clean),request.method,false,
+      env.PACKAGE_NATIVE_STUDIO_ENABLED==="true",url.pathname==="/studio/alpha");
   }
 };
 }
