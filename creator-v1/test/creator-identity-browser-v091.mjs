@@ -20,7 +20,7 @@ export async function captureCreatorIdentityV091({client,base,evaluate,until,scr
     // Client-side navigation deliberately reuses the public-world route. A
     // failed image from one identity must not poison the next identity's art.
     await evaluate("history.pushState({},'', '/creator/@v091_other');window.dispatchEvent(new PopStateEvent('popstate'))");
-    await until(()=>evaluate("location.pathname==='/creator/@v091_other'&&document.querySelectorAll('.level-emblem img').length>=2&&[...document.querySelectorAll('.level-emblem img')].every(img=>img.complete&&img.naturalWidth>0&&img.currentSrc.includes('/members/v091_other/'))"));
+    await until(()=>evaluate(`(()=>{\n      const visible=[...document.querySelectorAll('.level-emblem img')].filter(img=>{\n       const decorative=img.closest('.av78-featured-art');\n       return !decorative||getComputedStyle(decorative).display!=='none';\n      });\n      // On narrow phones the duplicate giant watermark is hidden, and the\n      // browser may skip loading it. The earned seal is still mandatory.\n      return location.pathname==='/creator/@v091_other'&&\n       visible.length>=(innerWidth<=430?1:2)&&\n       visible.every(img=>img.complete&&img.naturalWidth>0&&img.currentSrc.includes('/members/v091_other/'));\n     })()`));
     state=await evaluate("({fallback:document.querySelectorAll('.v091-level-safe-fallback').length,overflow:document.documentElement.scrollWidth>innerWidth+1,headers:document.querySelectorAll('.site-header.av9-header').length})");
     assert.equal(state.fallback,0);assert.equal(state.overflow,false);assert.equal(state.headers,1);
     await screenshot('v091-public-art-recovered-'+width);
