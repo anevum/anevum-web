@@ -670,6 +670,7 @@ test("upload readiness health truthfully reflects intact isolated DB and media",
     assert.equal(ready.status,200);
     const body=await ready.json();
     assert.equal(body.schemaReady,true);
+    assert.equal(body.stageContract,"uplink-v007-readiness");
     assert.equal(body.uploadReady,true);
     assert.equal(body.db,true);
     assert.equal(body.storage,true);
@@ -762,7 +763,7 @@ test("isolated runtime exposes narrow host-locked readiness with no secrets or c
     assert.equal(ok.status,200);
     const body=await ok.json();
     assert.deepEqual(body,{
-      ok:true,runtime:"package-v003",schemaReady:true,storage:true,
+      ok:true,runtime:"package-v003",stageContract:"uplink-v007-readiness",schemaReady:true,storage:true,
       independentOrigin:true,cookieless:true
     });
     assert.equal(ok.headers.get("cache-control"),"no-store");
