@@ -161,6 +161,14 @@ test("published releases survive failed edits, expired tests, R2 cleanup and new
   assert.equal(v1.httpStatus,201,JSON.stringify(v1));
   const submit=await result(await s.request("/api/v1/packages/projects/"+v1.id+"/submit"));
   assert.equal(submit.httpStatus,200,JSON.stringify(submit));
+  const blockedReview=await result(await s.request("/api/v1/packages/projects/"+v1.id+"/review","bob",{
+   json:{action:"publish"}}));
+  assert.equal(blockedReview.httpStatus,409,"publish must fail without verified review");
+  const hash=s.get("SELECT archive_sha256 FROM anevum_package_releases WHERE id=?",v1.release_id)[0].archive_sha256;
+  const checks={isolatedPreview:true,assetIntegrity:true,mobileReviewed:true,securityReviewed:true};
+  const attestation=await result(await s.request("/api/v1/packages/projects/"+v1.id+"/attest","bob",{
+   json:{archiveSha256:hash,checks}}));
+  assert.equal(attestation.httpStatus,200,JSON.stringify(attestation));
   const review=await result(await s.request("/api/v1/packages/projects/"+v1.id+"/review","bob",{
    json:{action:"publish"}}));
   assert.equal(review.httpStatus,200,JSON.stringify(review));

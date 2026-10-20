@@ -49,6 +49,8 @@ jobs:
           set -euo pipefail
           test -f creator-v1/package-alpha-v004/migrations/0002_resource_protection.sql
           ! grep -R -E 'DROP TABLE|DELETE FROM user|wrangler deploy' creator-v1/package-alpha-v004/migrations/
+      - name: Test V005 compatibility detection and advisory classification
+        run: node --test creator-v1/test/package-compatibility-v005.test.mjs
       - name: Test bounded uploads and browser script contracts
         run: node --test creator-v1/test/package-resource-protection-v004.test.mjs
       - name: Test D1 transactions against disposable SQLite and fake private R2

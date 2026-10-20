@@ -6,6 +6,7 @@
  */
 import { inspectZip, extractEntry, sha256Hex, assetMime, ZIP_LIMITS, PackageError } from "./archive.mjs";
 import { mintPreview } from "./tokens.mjs";
+import { detectCompatibility } from "./compatibility.mjs";
 import { layout, uploadScreen, catalogScreen, playerScreen, queueScreen, helpScreen } from "./ui.mjs";
 import {POLICY,ResourceError,readBoundedMultipart,readBoundedJson} from "./resource-policy.mjs";
 import {resourcePolicyReady,acquireUploadLease,releaseUploadLease,recordUploadAttempt,recordUploadBytes,getStorageUsage,reserveUpload,markReservationForCleanup,jobStatement,findDuplicate,saveDraft,discardDraft} from "./resource-service.mjs";
@@ -133,7 +134,28 @@ async function prepareFile(file) {
     expandedBytes=bytes.length;
     extractor=async()=>bytes;
   }
-  return {bytes,entries,expandedBytes,extractor};
+  return {bytes,entries,expandedBytes,extractor,compatibility:detectCompatibility(entries,{sourceName:file.name})};
+}
+async function compatibilityProbe(req,env,u){
+  if(!uploadOpen(env,u.id))return fail(403,"Creator compatibility checks are paused or unavailable");
+  if(!await edgeAdmission(env,"PACKAGE_PREFLIGHT_RATE",u.id))return fail(429,"Compatibility checks are temporarily rate-limited");
+  const body=await readBoundedMultipart(req);
+  const file=body.get("file");
+  if(!file||typeof file.name!=="string"||typeof file.arrayBuffer!=="function"||
+     !/^[^\\/\x00-\x1f]{3,160}$/.test(file.name)||file.name.includes("..")||
+     !/\.(zip|html)$/i.test(file.name)||file.size<1||file.size>POLICY.maxArchiveBytes)
+    return fail(422,"Choose a ZIP or HTML file below 20 MiB");
+  const bytes=new Uint8Array(await file.arrayBuffer());
+  let entries;
+  if(/\.zip$/i.test(file.name)){
+    entries=inspectZip(bytes,{metadataOnly:true}).entries;
+  }else{
+    validateHtml(bytes);
+    entries=[{path:"index.html",unpacked:bytes.length,mime:"text/html"}];
+  }
+  const report=detectCompatibility(entries,{sourceName:file.name});
+  // The metadata-only probe is not an authoritative admission or a safety scan.
+  return json({report,stored:false,executed:false,authoritative:false});
 }
 async function preflight(req,env,u){
   if(!uploadOpen(env,u.id))return fail(403,"Creator uploads are paused or unavailable for this member");
@@ -252,7 +274,7 @@ async function upload(req,env,u) {
       committed=true;
       if(results[0]?.meta?.changes!==1)
         return fail(409,"The project changed during upload; reload your Creator space");
-      return json({id,release_id:releaseId,version,status:"ready",
+      return json({id,release_id:releaseId,version,status:"ready",compatibility:plan.compatibility,
         expires_at:now+POLICY.testSeconds,play_url:"/play/v3/"+id+"?preview=1"},201);
     }catch(e){
       // Do not release the reserved bytes until private R2 prefix erasure succeeds.
@@ -285,6 +307,26 @@ async function submit(env,u,id) {
   return changes[0]?.meta?.changes===1&&changes[1]?.meta?.changes===1
     ?json({status:"pending_review"}):fail(409,"Release state changed");
 }
+async function attestReview(req,env,u,id){
+  if(!staff(env,u.id))return fail(403,"Staff review permission required");
+  const p=await getProject(env.DB,id),release=p?await getDraft(env.DB,p):null;
+  if(!release||release.status!=="pending_review")return fail(409,"Build is not awaiting review");
+  const x=await readBoundedJson(req,4096);
+  const checks=x?.checks;
+  if(!checks||checks.isolatedPreview!==true||checks.assetIntegrity!==true||
+     checks.mobileReviewed!==true||checks.securityReviewed!==true)
+    return fail(422,"Confirm isolated preview, asset integrity, mobile review and security review");
+  if(x.archiveSha256!==release.archive_sha256)return fail(409,"Review must match the submitted build hash");
+  const asset=await query(env.DB,"SELECT object_key,bytes,sha256 FROM anevum_package_files WHERE release_id=? AND path='index.html'",release.id);
+  const file=asset?await env.MEDIA.head(asset.object_key):null;
+  if(!file||file.size!==asset.bytes||file.customMetadata?.sha256!==asset.sha256)
+    return fail(503,"Build entry point integrity failed");
+  const now=Math.floor(Date.now()/1000);
+  await env.DB.prepare("INSERT INTO anevum_package_review_attestations(release_id,archive_sha256,reviewer_id,verified_at,checks_json) VALUES(?,?,?,?,?) "+
+    "ON CONFLICT(release_id) DO UPDATE SET archive_sha256=excluded.archive_sha256,reviewer_id=excluded.reviewer_id,verified_at=excluded.verified_at,checks_json=excluded.checks_json")
+    .bind(release.id,release.archive_sha256,u.id,now,JSON.stringify(checks)).run();
+  return json({verified:true,release_id:release.id,archive_sha256:release.archive_sha256});
+}
 async function review(req,env,u,id) {
   if(!staff(env,u.id)) return fail(403,"Staff review permission required");
   const p=await getProject(env.DB,id);
@@ -301,6 +343,18 @@ async function review(req,env,u,id) {
       return fail(503,"Entry point integrity failed");
     const count=await query(env.DB,"SELECT COUNT(*) AS n FROM anevum_package_files WHERE release_id=?",release.id);
     if(count.n!==release.file_count) return fail(503,"Build asset inventory is incomplete");
+  }
+  if(input.action==="publish"){
+    // A signed-in reviewer is not a malware scanner. No automated compatibility
+    // report may substitute for an explicit, build-bound staff verification.
+    const report=await query(env.DB,
+      "SELECT archive_sha256,reviewer_id,verified_at,checks_json FROM anevum_package_review_attestations WHERE release_id=?",release.id);
+    if(!report||report.archive_sha256!==release.archive_sha256||report.reviewer_id!==u.id)
+      return fail(409,"A staff verification for this exact build is required before publication");
+    let checks;try{checks=JSON.parse(report.checks_json);}catch{return fail(409,"Review verification is invalid");}
+    if(!checks||checks.isolatedPreview!==true||checks.assetIntegrity!==true||
+       checks.mobileReviewed!==true||checks.securityReviewed!==true)
+      return fail(409,"Finish isolated preview, mobile, and security review before publication");
   }
   const now=Math.floor(Date.now()/1000),publish=input.action==="publish",reason=publish?null:input.reason.trim();
   const changes=await env.DB.batch([
@@ -374,13 +428,15 @@ async function api(req,env,path,ctx){
   if(req.method!=="POST"||!csrf(req))return fail(403,"Origin or method not authorized");
   const u=await member(req,env);
   if(!u)return fail(401,"A verified ANEVUM session is required");
-  if(path==="/api/v1/packages/preflight")return preflight(req,env,u);
+  if(path==="/api/v1/packages/compatibility")return compatibilityProbe(req,env,u);
+   if(path==="/api/v1/packages/preflight")return preflight(req,env,u);
   if(path==="/api/v1/packages/upload")return upload(req,env,u);
   if(!await resourcePolicyReady(env.DB))return fail(503,"Creator storage setup is incomplete");
-  const m=path.match(/^\/api\/v1\/packages\/projects\/([0-9a-f-]{36})\/(submit|review|delete|save|discard)$/);
+  const m=path.match(/^\/api\/v1\/packages\/projects\/([0-9a-f-]{36})\/(submit|review|attest|delete|save|discard)$/);
   if(!m||!UUID.test(m[1]))return fail(404,"Unknown API route");
   if(m[2]==="submit")return submit(env,u,m[1]);
   if(m[2]==="review")return review(req,env,u,m[1]);
+   if(m[2]==="attest")return attestReview(req,env,u,m[1]);
   if(m[2]==="save"){
     return json(await saveDraft(env,u.id,m[1],Math.floor(Date.now()/1000)));
   }
