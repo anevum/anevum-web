@@ -6,10 +6,18 @@ on:
     paths:
       - creator-v1/test/v091-public-live-canary.mjs
       - creator-v1/test/v091-live-emblem-browser.mjs
+      - creator-v1/test/v091-release-acceptance.test.mjs
+      - creator-v1/ops/v091-release-acceptance.mjs
+      - .github/release-evidence/v091-authenticated.json
+      - .github/workflows/v084-continuance-production.yml
       - .github/workflows/v091-live-readonly-qa.yml
   pull_request:
     paths:
       - creator-v1/test/v091-public-live-canary.mjs
+      - creator-v1/test/v091-release-acceptance.test.mjs
+      - creator-v1/ops/v091-release-acceptance.mjs
+      - .github/release-evidence/v091-authenticated.json
+      - .github/workflows/v084-continuance-production.yml
       - .github/workflows/v091-live-readonly-qa.yml
 permissions:
   contents: read
@@ -28,6 +36,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify exact release source lock and authenticated acceptance tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test creator-v1/test/v091-release-acceptance.test.mjs
       - name: Verify read-only API checks and execute live public canary
         shell: bash
         run: |

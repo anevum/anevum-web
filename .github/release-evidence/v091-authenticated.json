@@ -1,10 +1,10 @@
 {
-  "source_sha": "a55ae856be8718ea2c299ad48e63cb1f32eadf29",
+  "source_sha": "6f0efb77f20e6c920d880293796768b9f354f97e",
   "founder_staff_session": false,
   "reviewer_staff_session": false,
   "creator_journey": false,
   "cross_account_identity": false,
   "verified_at": null,
   "evidence": [],
-  "status": "BLOCKED: The five transport-only staff Worker repairs passed the existing guarded workflow and are verified in Cloudflare production (GitHub run 39339508685). Real signed-in founder/reviewer UI, creator release journey and cross-account behavior remain unverified. Full V091 deployment has not occurred."
+  "status": "BLOCKED: V091 / V092 / V093 verified role approvals and member presence source locked at 6f0efb77. Founder/reviewer sessions, real creator journey and cross-account authenticated checks are not signed off. Independent role ledger migration not applied, role operations not routed, role/reputation display flags disabled. No production release authorized."
 }

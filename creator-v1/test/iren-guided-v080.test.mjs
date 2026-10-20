@@ -47,3 +47,11 @@ test("Compact member landing retains real server-authoritative stats and account
  assert.match(member,/profile\.visibility==='public'/);
  assert.match(member,/canonicalAuthClient\.signOut/); // Account closure controls remain in Phase1MemberPage
 });
+
+test("IREN Wayfinder utility spans both columns and keeps its action on phones",()=>{
+ assert.match(shell,/className="ir80-wayfinder-entry"/);
+ assert.match(styles,/\.av79-navigation \.ir80-wayfinder-entry\s*\{[^}]*grid-column:1\s*\/\s*-1;/);
+ assert.match(styles,/\.av79-navigation \.ir80-wayfinder-entry\s*\{[^}]*grid-template-columns:36px minmax\(0,1fr\) auto;/);
+ assert.match(styles,/@media\(max-width:650px\)\s*\{[\s\S]*?\.ir80-wayfinder-action\s*\{[^}]*grid-column:2;/);
+ assert.doesNotMatch(styles,/\.ir80-wayfinder-action\s*\{display:none/);
+});

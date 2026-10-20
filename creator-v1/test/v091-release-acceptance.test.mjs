@@ -25,3 +25,42 @@ test('a different source, future timestamp, missing evidence or credential URL c
   assert.throws(()=>verifyV091Acceptance({...complete(),evidence}),/evidence/);
  assert.equal(verifyV091Acceptance(complete()),true);
 });
+
+test('guarded V091 release stays pinned to precisely the reviewed integrated files',()=>{
+ const release=readFileSync(new URL('../../.github/workflows/v084-continuance-production.yml',import.meta.url),'utf8');
+ assert.ok(release.includes('git merge-base --is-ancestor '+V091_APPLICATION_SOURCE+' HEAD'));
+ assert.ok(release.includes('git diff --exit-code '+V091_APPLICATION_SOURCE+' HEAD'));
+ assert.ok(release.includes("':(exclude).github/workflows/v091-live-readonly-qa.yml'"),'Only the reviewed read-only QA workflow may differ as release configuration');
+ assert.ok(release.includes("':(exclude).github/workflows/v084-continuance-production.yml'"),'Guard changes must remain separate from reviewed app source');
+ const start=release.indexOf("diff -u <(printf '%s\\n' \\");
+ const end=release.indexOf('<(git diff --name-only db2b8c0f8f79061adf1677986b87077856204267 HEAD)',start);
+ assert.ok(start>=0&&end>start,'A static source-delta allowlist must be present');
+ const scope=release.slice(start,end);
+ const files=[...scope.matchAll(/^\s*'([^']+)'/gm)].map(match=>match[1]);
+ assert.equal(files.length,79,'The candidate contains exactly 79 reviewed source files');
+ assert.equal(new Set(files).size,files.length,'No duplicated entries');
+ assert.deepEqual(files,[...files].sort(),'Source scope must be deterministic');
+ for(const required of [
+  'creator-v1/web/src/components/IrenGuidedContinuance.tsx',
+  'creator-v1/web/src/iren-living-v088.css',
+  'creator-v1/web/src/iren-guided-v080.css',
+  'creator-v1/test/iren-first-contact-v092.test.mjs',
+  'creator-v1/web/src/pages/AuraCodexPage.tsx',
+  'creator-v1/test/aura-codex-visual-v091.mjs',
+  '.github/workflows/v091-aura-codex-browser.yml',
+  'creator-v1/test/capture-home-navigation-v079.mjs',
+  'creator-v1/web/src/components/MemberPresenceStatus.tsx',
+  'creator-v1/test/player-presence-v092.test.mjs',
+  'creator-v1/canonical-auth/member-verified-roles.mjs',
+  'creator-v1/canonical-auth/migrations/0012_verified_designations_v093.sql',
+  'creator-v1/operations/anevum-iren-insignias-v093.mjs',
+  'creator-v1/test/staff-verified-designations-v093.test.mjs',
+  'creator-v1/wrangler.iren-insignias-v093.jsonc'
+ ])assert.ok(files.includes(required),'Reviewed source is missing '+required);
+ assert.ok(files.every(file=>!/[?*{}]/.test(file)),'Globs are not allowed in the release scope');
+ assert.ok(release.includes('all(.result.bindings[]; .name!="CANONICAL_VERIFIED_ROLES_ENABLED" or .text!="true")'));
+ assert.ok(release.includes('test "$pre_version" = "93cc7f07-cf39-457e-af69-c9f6f4c02d25"'));
+ assert.ok(release.includes('test "$(git rev-parse HEAD)" = "$GITHUB_SHA"'));
+ assert.match(release,/ANEVUM_LAUNCH_APPROVED/);
+ assert.match(release,/CLOUDFLARE_ACCOUNT_ID/);
+});

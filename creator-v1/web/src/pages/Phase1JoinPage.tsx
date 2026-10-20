@@ -15,6 +15,34 @@ const METHODS=[
  {key:"apple",name:"Apple",initial:"AP",caption:"Apple ID"}
 ] as const;
 
+const JOIN_TIMEOUT_MS=15_000;
+class AuthRequestTimeout extends Error{
+ constructor(){super("Authentication request timed out");this.name="AuthRequestTimeout";}
+}
+class AuthRequestRejected extends Error{
+ constructor(readonly status:number){super("Authentication request rejected");this.name="AuthRequestRejected";}
+}
+async function withJoinDeadline<T>(operation:()=>Promise<T>):Promise<T>{
+ let timer:ReturnType<typeof setTimeout>|undefined;
+ try{
+   return await Promise.race([
+     operation(),
+     new Promise<never>((_,reject)=>{timer=setTimeout(()=>reject(new AuthRequestTimeout()),JOIN_TIMEOUT_MS);})
+   ]);
+ }finally{
+   if(timer!==undefined)clearTimeout(timer);
+ }
+}
+function joinError(error:unknown,fallback:string):string{
+ if(error instanceof AuthRequestTimeout)
+   return "The connection took too long. A code may still arrive; check your inbox before retrying.";
+ if(error instanceof AuthRequestRejected&&error.status===429)
+   return "Too many sign-in attempts. Wait 10 minutes before requesting another code.";
+ if(error instanceof AuthRequestRejected&&error.status>=500)
+   return "The sign-in service is temporarily unavailable. Please try again shortly.";
+ return fallback;
+}
+
 /** Phase 1 only: no Creator OTP hand-off or cross-origin Google redirect.
  * A disabled provider is not a signup button. All availability is attested
  * by the SAME Better Auth backend that handles the subsequent callback.
@@ -54,7 +82,7 @@ export function Phase1JoinPage(){
    if(busy)return;
    setBusy(true);setError("");
    try{
-     const result=await canonicalAuthClient.signOut();
+     const result=await withJoinDeadline(()=>canonicalAuthClient.signOut());
      if(result.error)throw Error("Sign-out failed");
      window.location.replace("/join");
    }catch{
@@ -66,7 +94,7 @@ export function Phase1JoinPage(){
    if(!socialReady(provider)||busy||requiresEmailVerification)return;
    setBusy(true);setError("");
    try{
-     const response=await canonicalAuthClient.signIn.social({provider,callbackURL:"/member",errorCallbackURL:"/join"});
+     const response=await withJoinDeadline(()=>canonicalAuthClient.signIn.social({provider,callbackURL:"/member",errorCallbackURL:"/join"}));
      if(response.error)throw Error("Social sign-in could not be started.");
    }catch{
      setError("Sign-in is currently unavailable. No account was created.");
@@ -82,16 +110,16 @@ export function Phase1JoinPage(){
    setBusy(true);setError("");setNotice("");
    try{
      if(!codeSent){
-       const result=await canonicalAuthClient.emailOtp.sendVerificationOtp({email:normalized,type:"sign-in"});
-       if(result.error)throw Error("Email verification could not be started");
+       const result=await withJoinDeadline(()=>canonicalAuthClient.emailOtp.sendVerificationOtp({email:normalized,type:"sign-in"}));
+       if(result.error)throw new AuthRequestRejected(result.error.status);
        setEmail(normalized);setCodeSent(true);setNotice("If delivery is available, an 8-digit code has been sent. Check your inbox.");
      }else{
        if(!/^\d{8}$/.test(otp))throw Error("Invalid code");
-       const result=await canonicalAuthClient.signIn.emailOtp({email:normalized,otp,name:"ANEVUM MEMBER"});
-       if(result.error)throw Error("Invalid or expired verification code");
+       const result=await withJoinDeadline(()=>canonicalAuthClient.signIn.emailOtp({email:normalized,otp,name:"ANEVUM MEMBER"}));
+       if(result.error)throw new AuthRequestRejected(result.error.status);
        navigate("/member",{replace:true});
      }
-   }catch{setError(codeSent?"Code verification failed. No replacement is sent automatically; tap SEND A NEW CODE to request one.":"Email verification is temporarily unavailable.");}
+   }catch(e){setError(joinError(e,codeSent?"Code verification failed. No replacement is sent automatically; tap SEND A NEW CODE to request one.":"Email verification is temporarily unavailable."));}
    finally{setBusy(false);}
  }
  async function requestReplacementCode(){
@@ -104,12 +132,12 @@ export function Phase1JoinPage(){
    try{
      // A "resend" must actually contact the email service, not merely reset the form.
      // The server enforces both rate limits and eligibility without disclosing invite status.
-     const result=await canonicalAuthClient.emailOtp.sendVerificationOtp({email:normalized,type:"sign-in"});
-     if(result.error)throw Error("Replacement email code unavailable");
+     const result=await withJoinDeadline(()=>canonicalAuthClient.emailOtp.sendVerificationOtp({email:normalized,type:"sign-in"}));
+     if(result.error)throw new AuthRequestRejected(result.error.status);
      setOtp("");
      setNotice("If delivery is available, a replacement code has been requested. Use the newest 8-digit code.");
-   }catch{
-     setError("Could not request a replacement code. If you have requested several, wait up to 10 minutes and retry.");
+   }catch(e){
+     setError(joinError(e,"Could not request a replacement code. If you have requested several, wait up to 10 minutes and retry."));
    }finally{setBusy(false);}
  }
  function resetCode(){setCodeSent(false);setOtp("");setNotice("");setError("");}
