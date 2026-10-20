@@ -158,3 +158,15 @@ test('V093 gated member/queue UI is syntax valid and never confuses aura with in
  assert.doesNotMatch(migration,/INSERT INTO member_role_grants|UPDATE member_xp_events|DELETE FROM member_xp_events/);
  assert.doesNotMatch(migration,/CREATE INDEX IF NOT EXISTS member_forum_/);
 });
+
+test('V093 externally assigned aura resynchronizes the owner player-card studio without forging role seals',()=>{
+ const ui=read('web/src/components/PlayerCardStudio.tsx');
+ const profile=read('web/src/components/MemberSpaceDashboard.tsx');
+ const publicWorld=read('web/src/pages/Phase1PublicMemberPage.tsx');
+ assert.match(ui,/\[profile\.handle,space\.aura,onAvailabilityChange\]/);
+ assert.match(ui,/UNSAVED PREVIEW/);
+ assert.match(ui,/SAVED SIGNATURE/);
+ assert.match(profile,/useMemberRevalidation/);
+ assert.match(publicWorld,/useMemberRevalidation/);
+ assert.doesNotMatch(ui,/role:\s*['"]founder['"]|role:\s*['"]moderator['"]/);
+});
