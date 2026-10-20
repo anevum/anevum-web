@@ -51,6 +51,8 @@ jobs:
         run: node --test creator-v1/test/package-resource-protection-v004.test.mjs
       - name: Test D1 transactions against disposable SQLite and fake private R2
         run: node --test creator-v1/test/package-resource-integration-v004.test.mjs
+      - name: Test deployed staging router and signed isolated player
+        run: node --test creator-v1/test/package-stage-runtime-v004.test.mjs
       - name: Render Creator Lab at mobile and desktop resolutions
         shell: bash
         run: |
