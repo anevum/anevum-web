@@ -1,0 +1,51 @@
+/* IREN V097: spatially aware companion and non-modal guide. Feature-flag only. */
+.ir97-guide-layer{position:fixed;inset:0;z-index:1300;pointer-events:none;color:#f4f5ff;font-family:system-ui,-apple-system,sans-serif}
+.ir97-target-halo{position:fixed;box-sizing:border-box;border:2px solid #f2d4a0;border-radius:14px;pointer-events:none;box-shadow:0 0 0 5px #66b9ec25,0 0 24px #82caff4b,inset 0 0 18px #e6d8ad12;transition:top .18s,left .18s,width .18s,height .18s}
+.ir97-floating-bot{position:fixed;z-index:2;pointer-events:none;transition:left .65s cubic-bezier(.25,.8,.22,1),top .65s cubic-bezier(.25,.8,.22,1);filter:drop-shadow(0 8px 15px #0008) drop-shadow(0 0 8px #61b6ed44)}
+.ir97-floating-bot .ir88-figure{display:block;width:100%;height:100%;overflow:visible}
+.ir97-floating-bot .ir88-svg-fallback svg{width:75%;height:75%}
+.ir97-floating-bot.is-travelling{filter:drop-shadow(0 3px 11px #0008) drop-shadow(0 0 14px #60bdec88)}
+.ir97-tether{position:fixed;height:2px;z-index:1;transform-origin:left center;background:linear-gradient(90deg,#77d8ffac,#d9c5a48c,transparent);box-shadow:0 0 9px #7acfff55;pointer-events:none}
+.ir97-speech-bubble{position:fixed;z-index:3;box-sizing:border-box;padding:10px 10px 9px;border:1px solid #8eb4e49c;border-radius:15px;background:linear-gradient(142deg,#172949f5,#121a31f8 75%,#18233fee);box-shadow:0 8px 36px #000c,inset 0 1px #e3f5ff2e,0 0 17px #417bba1f;max-height:min(33dvh,228px);overflow-y:auto;overscroll-behavior:contain;pointer-events:auto;overflow-wrap:anywhere;transition:left .65s cubic-bezier(.25,.8,.22,1),top .65s cubic-bezier(.25,.8,.22,1)}
+.ir97-speech-bubble.is-expanded{max-height:min(59dvh,410px)}
+.ir97-bubble-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-bottom:5px;color:#aac7ec;font:700 10px/1.4 ui-monospace,SFMono-Regular,monospace;letter-spacing:.09em}
+.ir97-bubble-heading strong{color:#edf6ff;letter-spacing:.13em}
+.ir97-bubble-heading button{flex-shrink:0;width:34px;height:34px;padding:0;border:1px solid #c1d7fa51;border-radius:999px;background:#ffffff10;color:#edf5ff;font-size:19px;line-height:1;cursor:pointer}
+.ir97-bubble-line{margin:2px 0 8px!important;color:#e4ebf5!important;font:500 13px/1.46 system-ui,-apple-system,sans-serif!important;letter-spacing:0!important}
+.ir97-bubble-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:4px;border-top:1px solid #c2d9fb25;padding-top:6px}
+.ir97-bubble-actions button{min-height:44px;min-width:44px;padding:7px 8px;border-radius:9px;border:1px solid #b7d0f44a;color:#d6e1f4;background:#e2eaff0d;cursor:pointer;font:700 11px/1.15 system-ui,-apple-system,sans-serif}
+.ir97-bubble-actions button.ir97-subtle{margin-right:auto;background:none;border-color:transparent;color:#b9c7de}
+.ir97-bubble-actions button.ir97-forward{background:linear-gradient(120deg,#ddcaac,#f7e1bd);color:#14223a;border-color:#f6dfbd}
+.ir97-bubble-details{border-top:1px solid #d7e6ff30;margin:5px 0;padding:9px 0 2px}
+.ir97-bubble-details strong{font:600 14px/1.3 Georgia,serif;color:#f8e5ce}
+.ir97-bubble-details p{font:400 12px/1.5 system-ui,sans-serif;color:#d4e0f4;margin:7px 0}
+.ir97-bubble-details small{display:block;border-left:2px solid #edd4af;padding-left:9px;color:#c4cad7;font:400 11px/1.5 system-ui,sans-serif}
+.ir97-speech-bubble :is(button,a):focus-visible{outline:3px solid #86e5ef;outline-offset:2px}
+.ir97-speech-bubble.is-compact .ir97-bubble-line{font-size:12px!important}
+.ir97-invite{position:absolute;right:0;bottom:65px;width:min(278px,calc(100vw - 22px));box-sizing:border-box;padding:13px;border:1px solid #b9d6ef9c;border-radius:15px;color:#eaf2ff;background:linear-gradient(145deg,#1b2c4af5,#0d1931fa);box-shadow:0 16px 42px #000b;max-height:min(38dvh,224px);overflow:auto;z-index:2}
+.ir97-invite p{margin:2px 0 10px;color:#ebf3ff;font:500 13px/1.48 system-ui,sans-serif}
+.ir97-invite span.ir97-invite-label{display:block;font:700 10px/1.5 ui-monospace,monospace;letter-spacing:.16em;color:#a8c9f5;margin-bottom:3px}
+.ir97-invite-actions{display:flex;flex-wrap:wrap;gap:6px}
+.ir97-invite-actions button{border:1px solid #a9c8ed70;border-radius:8px;padding:7px 9px;min-height:44px;min-width:44px;background:#dbeaff13;color:#e8edfa;cursor:pointer;font:700 11px/1.2 system-ui,sans-serif}
+.ir97-invite-actions button:first-child{background:#e7d4b7;color:#172640}
+.ir97-invite :is(button,a):focus-visible{outline:3px solid #92e8f0;outline-offset:2px}
+@media(max-width:650px){
+ .ir97-guide-layer{isolation:isolate}
+ .ir97-speech-bubble{border-radius:13px;padding:8px 9px 7px;max-height:min(30dvh,205px)}
+ .ir97-speech-bubble.is-expanded{max-height:min(57dvh,350px)}
+ .ir97-bubble-heading{font-size:9px}
+ .ir97-bubble-heading button{width:32px;height:32px}
+ .ir97-bubble-actions{gap:3px}
+ .ir97-bubble-actions button{font-size:10px;padding:6px 7px}
+ .ir97-invite{bottom:62px}
+}
+@media(prefers-reduced-motion:reduce){
+ .ir97-target-halo,.ir97-floating-bot,.ir97-speech-bubble{transition:none!important}
+ .ir97-floating-bot{filter:none}
+}
+@media(forced-colors:active){
+ .ir97-speech-bubble,.ir97-invite{background:Canvas;color:CanvasText;border:2px solid CanvasText}
+ .ir97-target-halo{border:3px solid Highlight;box-shadow:none}
+ .ir97-speech-bubble :is(button,a),.ir97-invite button{color:ButtonText;background:ButtonFace;border:1px solid ButtonText}
+ .ir97-tether{background:Highlight}
+}
