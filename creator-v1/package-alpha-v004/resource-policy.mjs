@@ -71,3 +71,26 @@ export async function readBoundedMultipart(req){
       body:new Blob(parts)}).formData();
   }catch{throw new ResourceError("Invalid multipart upload",400);}
 }
+
+export async function readBoundedJson(req,limit=2048){
+  const type=req.headers.get("content-type")||"";
+  if(!type.startsWith("application/json"))throw new ResourceError("JSON request required",415);
+  const header=req.headers.get("content-length");
+  if(header!==null&&(!/^\d+$/.test(header)||Number(header)>limit))
+    throw new ResourceError("Preflight request exceeds limit",413);
+  if(!req.body)throw new ResourceError("Empty preflight request",400);
+  const reader=req.body.getReader(),pieces=[];let bytes=0;
+  try{
+    while(true){
+      const {done,value}=await reader.read();
+      if(done)break;
+      bytes+=value?.byteLength||0;
+      if(bytes>limit){await reader.cancel().catch(()=>{});throw new ResourceError("Preflight request exceeds limit",413);}
+      pieces.push(value);
+    }
+  }finally{reader.releaseLock();}
+  const input=new Uint8Array(bytes);let offset=0;
+  for(const p of pieces){input.set(p,offset);offset+=p.byteLength;}
+  try{return JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(input));}
+  catch{throw new ResourceError("Invalid preflight JSON",400);}
+}
