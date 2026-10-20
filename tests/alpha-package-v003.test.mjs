@@ -781,3 +781,33 @@ test("isolated runtime exposes narrow host-locked readiness with no secrets or c
     env.MEDIA=media;
   }finally{env.DB.close();}
 });
+
+test("multipart upload enforces the actual byte limit despite missing or spoofed Content-Length",async()=>{
+  const env=setup();
+  try{
+    for(const spoof of [null,"4"]){
+      const form=uploadForm(sample());
+      form.set("file",new File([new Uint8Array(25*1048576+2048)],"untrusted.zip",{type:"application/zip"}));
+      const request=req("POST","/api/v1/packages/upload",form);
+      if(spoof!==null)request.headers.set("content-length",spoof);
+      else request.headers.delete("content-length");
+      const response=await api.fetch(request,env);
+      assert.equal(response.status,413,"Server must cap physical multipart bytes even when client lies");
+      assert.match((await response.json()).error,/ZIP plus cover allowance/);
+      assert.equal(env.MEDIA.data.size,0,"Oversized requests must never create an R2 object");
+      const projects=(await env.DB.prepare("SELECT COUNT(*) AS n FROM anevum_package_projects").first()).n;
+      assert.equal(projects,0,"Oversized requests must never create a project");
+    }
+  }finally{env.DB.close();}
+});
+test("invalid declared multipart length fails before consuming or storing project files",async()=>{
+  const env=setup();
+  try{
+    const request=req("POST","/api/v1/packages/upload",uploadForm(sample()));
+    request.headers.set("content-length","not-a-size");
+    const response=await api.fetch(request,env);
+    assert.equal(response.status,400);
+    assert.match((await response.json()).error,/size header/);
+    assert.equal(env.MEDIA.data.size,0);
+  }finally{env.DB.close();}
+});
