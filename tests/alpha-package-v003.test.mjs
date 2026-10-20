@@ -496,6 +496,46 @@ test("PNG cover validation checks dimensions, chunk checksums and image structur
   await assert.rejects(prepareCover(new File([makeCover(300,300)],"small.png",{type:"image/png"})),/640/);
   await assert.rejects(prepareCover(new File([good],"cover.svg",{type:"image/svg+xml"})),/PNG/);
 });
+test("unselected optional cover survives multipart parsing without storing artwork",async()=>{
+  for(const createEnv of [setup,protectedSetup]){
+    const env=createEnv();
+    try{
+      const form=uploadForm(sample());
+      form.set("cover",new File([],"",{type:"application/octet-stream"}));
+      const request=req("POST","/api/v1/packages/upload",form);
+      assert.equal((await request.clone().formData()).get("cover"),"",
+        "Multipart parsing can normalize an unselected file input to an empty string");
+      const response=await api.fetch(request,env);
+      assert.equal(response.status,201,await response.clone().text());
+      const created=await response.json();
+      assert.equal(created.status,"ready");
+      assert.equal((await env.DB.prepare(
+        "SELECT COUNT(*) AS n FROM anevum_package_files WHERE release_id=? AND path=?"
+      ).bind(created.release_id,COVER_PATH).first()).n,0);
+      assert.equal(env.MEDIA.data.size,5,"Only the archive and its four playable files are stored");
+      assert.equal((await getPage(env,"/api/v1/packages/covers/"+created.release_id)).status,404);
+    }finally{env.DB.close();}
+  }
+});
+test("selected empty or invalid cover parts remain rejected before file storage",async()=>{
+  for(const createEnv of [setup,protectedSetup]){
+    const env=createEnv();
+    try{
+      for(const [cover,status] of [
+        [new File([],"empty.png",{type:"image/png"}),413],
+        [new File([],"empty.svg",{type:"image/svg+xml"}),422],
+        [new File(["not an image"],"",{type:"image/png"}),422],
+        [" ",422]
+      ]){
+        const form=uploadForm(sample());form.set("cover",cover);
+        const response=await post(env,"/api/v1/packages/upload",form);
+        assert.equal(response.status,status,await response.clone().text());
+        assert.equal(env.MEDIA.data.size,0);
+        assert.equal((await env.DB.prepare("SELECT COUNT(*) AS n FROM anevum_package_releases").first()).n,0);
+      }
+    }finally{env.DB.close();}
+  }
+});
 test("private cover is owner and staff only, and approved cover is public with secure MIME",async()=>{
   const env=setup();
   try{
@@ -548,7 +588,9 @@ test("revision cover remains private until approval, and previous cover is not a
     assert.equal((await post(env,"/api/v1/packages/projects/"+initial.id+"/review",
       {action:"publish"},"staff")).status,200);
     const firstCover="/api/v1/packages/covers/"+initial.release_id;
-    const update=await (await post(env,"/api/v1/packages/upload",uploadForm(sample(),"Revision without cover",initial.id))).json();
+    const revision=uploadForm(sample(),"Revision without cover",initial.id);
+    revision.set("cover",new File([],"",{type:"application/octet-stream"}));
+    const update=await (await post(env,"/api/v1/packages/upload",revision)).json();
     assert.equal(update.version,2);
     const publicBefore=await (await getPage(env,"/api/v1/packages/projects","visitor")).json();
     assert.equal(publicBefore.projects[0].cover_url,firstCover);

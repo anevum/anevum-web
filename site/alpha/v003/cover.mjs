@@ -11,7 +11,9 @@ const text = new TextDecoder("ascii");
 const read = (v,offset) => v.getUint32(offset,false);
 
 export async function prepareCover(file) {
-  if (file === null || file === undefined ||
+  // Multipart parsers may represent an unselected file input as an empty string.
+  // Named empty files still go through the PNG validation below.
+  if (file === null || file === undefined || file === "" ||
     (typeof file.name === "string" && file.name === "" && file.size === 0)) return null;
   if (typeof file.arrayBuffer !== "function" || typeof file.name !== "string" ||
       !/\.png$/i.test(file.name) || file.name.length > 160)
