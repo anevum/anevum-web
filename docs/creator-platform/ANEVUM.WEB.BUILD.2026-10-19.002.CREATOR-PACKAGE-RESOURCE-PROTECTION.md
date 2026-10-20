@@ -1,6 +1,6 @@
 # ANEVUM.WEB.BUILD.2026-10-19.002 — Creator Package V004 / Storage Guardian
 
-**Implementation status:** Isolated development in draft PR #562, stacked on V091. **NOT merged, migrated, switched on, deployed or verified with real member sessions.** Exact V003 package Worker source was preserved before V004 development; the currently deployed V003 service is unchanged.
+**Implementation status:** Isolated opt-in V004 staging deployed at https://anevum.com/creator-lab/v004, from draft PR #562 stacked on V091. A separate V004 D1 migration, private R2 bucket, control Worker, isolated runtime and hourly cleanup trigger are provisioned. **NOT merged into V091, NOT promoted to the primary uploader, and NOT yet verified with a real authenticated member upload.** Existing V003 routes, D1 and R2 remain unchanged.
 
 ## Creator experience
 1. User chooses a .zip or self-contained .html build (maximum 20 MiB compressed) and a project from their creator space.
@@ -59,3 +59,21 @@ Exposed aggregate metrics: physical bytes by account/shared pilot, number of tem
 - The public unauthenticated health endpoint deliberately performs no D1 table checks. Authenticated storage-usage and staff-operations routes perform schema readiness checks.
 - Scheduled cleanup also prunes old daily and hourly upload limits, expired upload leases, and deleted project tombstones, in bounded batches. Project rows are pruned **only after** all referenced release rows have passed retention and erasure and no upload reservation remains. Published works and current account projects are ineligible.
 - These safeguards are covered by additive disposable-SQLite/fake-R2 regression tests; live staging QA and release approval remain required.
+
+## Isolated staged deployment — 2026-10-19 EDT
+
+- **Entry:** https://anevum.com/creator-lab/v004 (on the existing origin so Better Auth cookies remain same-origin). Internal stages are `/creator-lab/v004/projects`, `/creator-lab/v004/help`, `/creator-lab/v004/staff` and `/creator-lab/v004/play/:id`.
+- **API:** https://anevum.com/api/v1/packages/v004/health . All private API calls use `/api/v1/packages/v004/*`; the staging router rewrites responses to this namespace. No existing `/upload`, `/upload/v3`, `/play` or unversioned API route was overwritten.
+- **Staging control:** `anevum-package-alpha-v004-control`. Owner-only PILOT_IDS and STAFF_IDS match the existing V003 pilot. New uploads are enabled only for this pilot; authentication, origin and CSRF rules remain active. Independent per-colo Cloudflare preflight and upload rate limiter bindings plus D1 atomic account budgets are configured.
+- **Dedicated staged D1:** `anevum-package-alpha-v004-staging`, with the V003 base schema and additive V004 retention/lease/cleanup tables and indexes. At launch: 0 projects, 0 releases, 0 file rows, 0 cleanup jobs and 0 orphaned reservations. No existing V003 or canonical member DB rows were copied or mutated.
+- **Dedicated private R2:** `anevum-package-alpha-v004-private-staging`, bound only to the V004 control and runtime. Both the public managed R2 endpoint and custom domains are disabled.
+- **Staging runtime:** `anevum-package-alpha-v004-runtime.devonakins.workers.dev`; isolated from ANEVUM cookies, serves only reviewed public releases or valid signed short-lived private previews, including expiry enforcement even if cleanup is delayed.
+- **Scheduled cleanup:** `0 * * * *` on the V004 control Worker; cancellation and retry policy never deletes an active public release. No R2 bucket-wide TTL is configured.
+- **Public no-auth smoke:** API health 200 version 004, runtime health 200, guest account status false, help and projects load, guest storage usage 401, guest staff metrics 404, guest staff page contains no privileged data. Regression CI covers temporary test expiry and retention, R2 crash recovery and secure routing. Actual founder/reviewer upload, cross-device UI and live staging R2 erasure still need acceptance.
+
+### Reversible operational controls
+
+1. To pause write admission, set `PACKAGE_UPLOADS_ENABLED="false"` **on V004 control only**. Leave D1, R2 and cleanup cron connected so creators can still Save, Discard and reviewers can complete pending work.
+2. To remove the opt-in staging surface, remove only Cloudflare routes `anevum.com/creator-lab/v004*` and `anevum.com/api/v1/packages/v004/*`. Do not change the existing `anevum.com/upload*`, `anevum.com/play/*` or V003 workers.
+3. Do not delete the dedicated bucket/database before reconciling outstanding upload reservations and cleanup jobs and exporting any saved creator draft. Removing the routes is a non-destructive rollback; the original uploader remains intact.
+4. Production cutover requires a real signed-in founder upload and second member permission check, valid signed game runtime preview, reviewer decision, new version rollback, expiry reaper and iOS Safari interaction tests. Existing primary project IDs are not automatically migrated into the isolated V004 database.
