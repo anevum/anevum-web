@@ -14,6 +14,7 @@ const MiB = 1048576;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const kinds = new Set(["game","app","simulation","story"]);
 const CREATOR_HANDLE = /^[a-z][a-z0-9_]{2,29}$/;
+const CREATOR_PROOF = /^[a-f0-9]{64}$/;
 const CREATOR_PROJECTS = /^\/api\/v1\/packages\/creators\/([a-z][a-z0-9_]{2,29})\/projects$/;
 const MAX_MULTIPART_UPLOAD = 25 * MiB;
 async function boundedMultipart(req) {
@@ -108,7 +109,10 @@ async function privateCreatorIdentity(req,env,user) {
   const handle=identity.profile?.handle,createdAt=identity.profile?.createdAt;
   if(!CREATOR_HANDLE.test(handle)||!Number.isSafeInteger(createdAt)||createdAt<=0)
     throw new PackageError("Claim a verified ANEVUM member handle before uploading a package",409);
-  return {handle,profileCreatedAt:createdAt};
+  const proof=identity.profile?.packageProof;
+  if(proof!==undefined&&proof!==null&&!CREATOR_PROOF.test(proof))
+    throw new PackageError("Canonical creator proof could not be verified",503);
+  return {handle,profileCreatedAt:createdAt,creatorProof:typeof proof==="string"?proof:null};
 }
 async function publicCreatorIdentity(env,handle) {
   if(!CREATOR_HANDLE.test(handle)||!env.AUTH?.fetch)return null;
@@ -123,7 +127,10 @@ async function publicCreatorIdentity(env,handle) {
   const identity=x?.profile;
   if(identity?.handle!==handle||!Number.isSafeInteger(identity.joinedAt)||identity.joinedAt<=0)
     throw new PackageError("Public member identity response could not be verified",503);
-  return {handle,profileCreatedAt:identity.joinedAt};
+  // Handles can be recycled and creation timestamps are not unique. The
+  // public issuer must provide its handle-bound, stable HMAC subject proof.
+  if(!CREATOR_PROOF.test(identity.packageProof))return null;
+  return {handle,profileCreatedAt:identity.joinedAt,creatorProof:identity.packageProof};
 }
 async function creatorPublicWorks(env,handle){
   if(env.PACKAGE_CREATOR_GALLERY_ENABLED!=="true")
@@ -137,9 +144,9 @@ async function creatorPublicWorks(env,handle){
     "FROM anevum_package_projects p " +
     "JOIN anevum_package_creator_links c ON c.owner_id=p.owner_id " +
     "JOIN anevum_package_releases r ON r.id=p.live_release_id AND r.status='published' " +
-    "WHERE c.handle=? AND c.profile_created_at=? AND p.status='published' " +
+    "WHERE c.handle=? AND c.profile_created_at=? AND c.creator_proof=? AND p.status='published' " +
     "ORDER BY p.published_at DESC LIMIT 20"
-  ).bind(handle,verified.profileCreatedAt).all()).results;
+  ).bind(handle,verified.profileCreatedAt,verified.creatorProof).all()).results;
   return json({handle,projects:projects.map(p=>({
     id:p.id,title:p.title,summary:p.summary,category:p.category,
     version:p.release_version,published_at:p.published_at,
@@ -346,10 +353,11 @@ async function upload(req,env,u) {
     // canonical-session service calls, never from the upload form.
     // A UNIQUE handle collision across owners aborts the entire D1 batch.
     statements.push(env.DB.prepare(
-      "INSERT INTO anevum_package_creator_links(owner_id,handle,profile_created_at,verified_at) " +
-      "VALUES(?,?,?,?) ON CONFLICT(owner_id) DO UPDATE SET " +
-      "handle=excluded.handle,profile_created_at=excluded.profile_created_at,verified_at=excluded.verified_at"
-    ).bind(u.id,creatorIdentity.handle,creatorIdentity.profileCreatedAt,now));
+      "INSERT INTO anevum_package_creator_links(owner_id,handle,profile_created_at,creator_proof,verified_at) " +
+      "VALUES(?,?,?,?,?) ON CONFLICT(owner_id) DO UPDATE SET " +
+      "handle=excluded.handle,profile_created_at=excluded.profile_created_at," +
+      "creator_proof=excluded.creator_proof,verified_at=excluded.verified_at"
+    ).bind(u.id,creatorIdentity.handle,creatorIdentity.profileCreatedAt,creatorIdentity.creatorProof,now));
     // Atomic D1 batch: a lost optimistic-update race inserts no release.
     // Dependent asset inserts then fail foreign-key validation and roll back.
     const results=await env.DB.batch([...statements,...fileStatements]);
