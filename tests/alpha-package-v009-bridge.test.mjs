@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {interceptPackageNamespace,packageBridgeRoute,PACKAGE_NAMESPACE} from "../site/alpha/v003/unified-creation-bridge-v009.mjs";
+import packageController from "../site/alpha/v003/api.mjs";
 
 const ORIGIN="https://anevum.com";
 const UUID="77a60afb-8e3d-4f2f-86aa-e4cc2dfa3e20";
@@ -161,4 +162,91 @@ test("backend redirects, unreachable service and malformed public payload fail c
    const out=await interceptPackageNamespace(get("/upload/v3/api/v1/packages/projects"),env);
    assert.equal(out?.status,503);
  }
+});
+
+function actualControllerFixture(){
+ const authCalls=[],stageHits=[];
+ const stageEnv={
+   DB:{prepare(sql){
+     const stmt={bind(){return stmt;},async first(){
+       if(sql.includes("sqlite_master"))return {n:6};
+       return null;
+     },async all(){return {results:[]}},async run(){return {meta:{changes:0}}}};
+     return stmt;
+   }},
+   MEDIA:{async put(){throw Error("No R2 writes in route acceptance");},
+     async head(){return null},async get(){return null}},
+   RUNTIME_HOST:"isolated.example.invalid",
+   PILOT_IDS:"creator-member",
+   STAFF_IDS:"reviewer-member",
+   PACKAGE_PUBLIC_PUBLISH_ENABLED:"false",
+   AUTH:{async fetch(req){
+     authCalls.push({url:req.url,cookie:req.headers.get("cookie")});
+     const token=req.headers.get("cookie")||"";
+     const id=token==="session=creator"?"creator-member":
+       token==="session=reviewer"?"reviewer-member":null;
+     return Response.json({user:id?{id,emailVerified:true}:null,
+       session:id?{id:"verified-session"}:null});
+   }}
+ };
+ const service={
+   async fetch(req){
+     stageHits.push({url:req.url,method:req.method});
+     return packageController.fetch(req,stageEnv);
+   }
+ };
+ return {authCalls,stageHits,env:{PACKAGE_CANONICAL_BRIDGE_ENABLED:"true",
+   PACKAGE_IDENTITY_BRIDGE_VERIFIED:"true",PACKAGE_CONTROL:service}};
+}
+test("real package controller through V009 bridge preserves owner session and gives private editable uploader",async()=>{
+ const {authCalls,stageHits,env}=actualControllerFixture();
+ const guest=await interceptPackageNamespace(get("/upload/v3"),env);
+ assert.equal(guest.status,200);
+ const guestHTML=await guest.text();
+ assert.match(guestHTML,/Sign in to upload/);
+ assert.doesNotMatch(guestHTML,/id="publish-form"/);
+ assert.equal(authCalls.length,0);
+ const owner=await interceptPackageNamespace(get("/upload/v3",{cookie:"session=creator"}),env);
+ assert.equal(owner.status,200);
+ const html=await owner.text();
+ assert.match(html,/id="publish-form"/);
+ assert.match(html,/\/upload\/v3\/api\/v1\/packages\/upload/);
+ assert.match(html,/\/upload\/v3\/help/);
+ assert.match(html,/\/upload\/v3\/play\//);
+ assert.equal(authCalls[0].url,ORIGIN+"/api/v1/member/auth/get-session");
+ assert.equal(authCalls[0].cookie,"session=creator");
+ assert.equal(stageHits[stageHits.length-1].url,ORIGIN+"/upload/v3");
+ assert.equal(owner.headers.get("set-cookie"),null);
+});
+test("real package controller bridged review queue requires reviewer session and exposes no owner privilege",async()=>{
+ const {env,authCalls}=actualControllerFixture();
+ const denied=await interceptPackageNamespace(get("/upload/v3/review",{cookie:"session=creator"}),env);
+ assert.equal(denied.status,404);
+ const staff=await interceptPackageNamespace(get("/upload/v3/review",{cookie:"session=reviewer"}),env);
+ assert.equal(staff.status,200);
+ const html=await staff.text();
+ assert.match(html,/Review the <em>experience/);
+ assert.equal(authCalls.at(-1).cookie,"session=reviewer");
+});
+test("real controller rejects forged member headers through service bridge without cookie",async()=>{
+ const {env,authCalls}=actualControllerFixture();
+ const request=post("/upload/v3/api/v1/packages/upload","{}",{
+  "x-anevum-member-id":"creator-member",
+  "x-anevum-verified-user":"true"
+ });
+ const response=await interceptPackageNamespace(request,env);
+ assert.equal(response.status,401);
+ const result=await response.json();
+ assert.match(result.error,/verified ANEVUM session/);
+ assert.equal(authCalls.length,0,"No owner can be invented from a client header");
+});
+test("real controller bridged health truthfully reports disabled publication and ready schema",async()=>{
+ const {env}=actualControllerFixture();
+ const response=await interceptPackageNamespace(get("/upload/v3/api/v1/packages/health"),env);
+ assert.equal(response.status,200);
+ const j=await response.json();
+ assert.equal(j.schemaReady,true);
+ assert.equal(j.uploadReady,true);
+ assert.equal(j.publicPublishingEnabled,false);
+ assert.equal(j.runtimeLiveVerified,false);
 });
