@@ -1,0 +1,88 @@
+name: ANEVUM V095 one-time development source integration
+on:
+  push:
+    branches: [build/v095-native-creator-integration-20261020-001]
+    paths: [.github/workflows/v095-source-assembly.yml]
+permissions:
+  contents: write
+concurrency:
+  group: anevum-v095-source-assembly
+  cancel-in-progress: false
+jobs:
+  assemble-source:
+    if: github.repository == 'anevum/anevum-web' && github.ref == 'refs/heads/build/v095-native-creator-integration-20261020-001'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply exact reviewed source edits on the development branch only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = anevum/anevum-web
+          test "$GITHUB_REF" = refs/heads/build/v095-native-creator-integration-20261020-001
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git merge-base --is-ancestor b68783e6aeb6315c0f12fdde1edda38afb633060 HEAD
+          git diff --exit-code b68783e6aeb6315c0f12fdde1edda38afb633060 HEAD -- site/alpha/v003/api.mjs site/alpha/v003/resource-service.mjs site/alpha/v003/native-ui-api-v095.mjs site/alpha/v003/unified-creation-bridge-v009.mjs creator-v1/web/src/lib/native-creator-v095.ts creator-v1/web/src/pages/NativeCreatorStudio.tsx creator-v1/web/src/App.tsx creator-v1/web/src/pages/CanonicalStudioPage.tsx creator-v1/web/src/components/CreatorPackageGallery.tsx creator-v1/web/a-staging-worker.mjs tests/alpha-package-v003.test.mjs tests/native-creator-v095.test.mjs creator-v1/ops/v091-release-acceptance.mjs creator-v1/test/v091-release-acceptance.test.mjs
+          python creator-v1/ops/v095-integrate.py
+          node --test tests/native-creator-v095.test.mjs tests/native-creator-client-v095.test.mjs tests/alpha-package-v003.test.mjs tests/alpha-package-v009-bridge.test.mjs tests/alpha-package-v009-owner.test.mjs tests/alpha-package-v009-live-owner.test.mjs tests/alpha-package-v010-migration.test.mjs creator-v1/test/v091-release-acceptance.test.mjs
+          git rm .github/workflows/v095-source-assembly.yml creator-v1/ops/v095-integrate.py creator-v1/ops/v095-native-qa-template.txt
+          git add .github/workflows/v095-native-creator-qa.yml site/alpha/v003 creator-v1/web tests creator-v1/ops/v091-release-acceptance.mjs creator-v1/test/v091-release-acceptance.test.mjs
+          git diff --cached --check
+          git config user.name 'ANEVUM source integration'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat(v095): integrate native creator, isolated player and exact-release review into the canonical application'
+          git rev-parse HEAD > "$RUNNER_TEMP/v095-application-source.txt"
+      - name: Pin the new ordinary source commit without granting release acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import json,re,subprocess
+          def git(*args):return subprocess.check_output(['git',*args],text=True).strip()
+          source=git('rev-parse','HEAD')
+          baseline='db2b8c0f8f79061adf1677986b87077856204267'
+          gate=Path('creator-v1/ops/v091-release-acceptance.mjs')
+          previous=re.search(r"V091_APPLICATION_SOURCE='([a-f0-9]{40})'",gate.read_text()).group(1)
+          gate.write_text(gate.read_text().replace(previous,source))
+          workflow=Path('.github/workflows/v084-continuance-production.yml')
+          text=workflow.read_text().replace(previous,source)
+          paths=git('diff','--name-only',baseline,'HEAD').splitlines()
+          assert paths==sorted(set(paths))
+          assert all(re.fullmatch(r'[A-Za-z0-9_./-]+',p) and not p.startswith('/') and '..' not in p.split('/') for p in paths)
+          start=text.index("          diff -u <(printf '%s\\n' \\\n")
+          end=text.index('             <(git diff --name-only '+baseline+' HEAD)',start)
+          lines=["          diff -u <(printf '%s\\n' \\"]
+          lines += ["             '"+p+"'"+(") \\" if i==len(paths)-1 else " \\") for i,p in enumerate(paths)]
+          text=text[:start]+'\n'.join(lines)+'\n'+text[end:]
+          workflow.write_text(text)
+          tests=Path('creator-v1/test/v091-release-acceptance.test.mjs')
+          t=tests.read_text()
+          t,n=re.subn(r"assert.equal\(files.length,151,'The candidate contains exactly 151 reviewed source files'\);",f"assert.equal(files.length,{len(paths)},'The candidate contains exactly {len(paths)} reviewed source files');",t)
+          assert n==1
+          tests.write_text(t)
+          path=Path('.github/release-evidence/v091-authenticated.json')
+          old=json.loads(path.read_text())
+          record={'source_sha':source,'founder_staff_session':False,'reviewer_staff_session':False,'creator_journey':False,'cross_account_identity':False,'verified_at':None,'evidence':[],'native_candidate_pending':True,'status':'V095 native source integrated. Existing V091 immutable candidate is not this application. Native flags remain OFF; exact-source CI and live activation are tracked separately.','reviewed_file_inventory':len(paths),'release_metadata_exclusions':5,'prior_v091_checkpoint':old,'implementation_verification':{'source_sha':source,'state':'Source integrated; use exact-source CI artifacts for verification, not this release-authorization record.'}}
+          path.write_text(json.dumps(record,indent=2)+'\n')
+          print('V095_APPLICATION_SOURCE='+source)
+          print('V095_REVIEWED_SOURCE_FILES='+str(len(paths)))
+          PY
+          git add .github/workflows/v084-continuance-production.yml .github/release-evidence/v091-authenticated.json creator-v1/ops/v091-release-acceptance.mjs creator-v1/test/v091-release-acceptance.test.mjs
+          git diff --cached --check
+          git commit -m 'chore(v095): pin native application source and keep new candidate acceptance closed'
+          node --test creator-v1/test/v091-release-acceptance.test.mjs
+          node creator-v1/ops/v091-release-acceptance.mjs --source-only
+          git fetch origin build/v095-native-creator-integration-20261020-001
+          test "$(git rev-parse origin/build/v095-native-creator-integration-20261020-001)" = "$GITHUB_SHA"
+          git push origin HEAD:refs/heads/build/v095-native-creator-integration-20261020-001
+          echo "V095_PUBLISHED_SOURCE=$(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
+          echo "V095_APPLICATION_SOURCE=$(cat "$RUNNER_TEMP/v095-application-source.txt")" >> "$GITHUB_STEP_SUMMARY"
+          echo 'DEVELOPMENT_SOURCE_ONLY; NO DEPLOYMENT, D1 WRITE, ACCOUNT ACTION OR ACCEPTANCE OVERRIDE' >> "$GITHUB_STEP_SUMMARY"
