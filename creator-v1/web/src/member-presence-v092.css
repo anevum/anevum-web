@@ -160,3 +160,36 @@
  .av92-presence-cover .ms-avatar-button:before{display:none}
  .av92-presence-cover .ms-cover-shade{background:transparent}
 }
+
+/* Compact earned inventory in the member world header.
+ * Every plate is sourced from earned, server-vetted recognition records. */
+.av92-presence-level,.av92-presence-marks{
+ display:inline-flex;align-items:center;gap:6px;min-height:28px;
+ padding:3px 9px;background:rgba(8,21,41,.82);
+ color:#dcecfb;border:1px solid rgba(177,208,239,.34);border-radius:7px;
+ font:750 10px/1.35 ui-monospace,Consolas,monospace;
+ letter-spacing:.06em;white-space:nowrap;
+}
+.av92-presence-level .level-emblem{
+ flex:none;width:25px!important;height:25px!important;
+ filter:drop-shadow(0 0 6px rgba(179,208,242,.26));
+}
+.av92-presence-marks{gap:5px;padding:3px 7px}
+.av92-presence-marks>span{
+ display:inline-grid;place-items:center;width:24px;height:24px;
+ border-radius:6px;
+}
+.av92-presence-marks .av66-badge-insignia{width:22px!important;height:22px!important}
+.av92-presence-marks svg{max-width:100%;max-height:100%}
+@media(max-width:430px){
+ .av92-presence-level,.av92-presence-marks{font-size:9px;min-height:25px;padding:3px 6px}
+ .av92-presence-marks{gap:2px}
+ .av92-presence-marks>span{width:22px;height:22px}
+ .av92-presence-marks .av66-badge-insignia{width:20px!important;height:20px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .av92-presence-level .level-emblem{animation:none!important;transform:none!important}
+}
+@media(forced-colors:active){
+ .av92-presence-level,.av92-presence-marks{background:Canvas;color:CanvasText;border-color:CanvasText}
+}
