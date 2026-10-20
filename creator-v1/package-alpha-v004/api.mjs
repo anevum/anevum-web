@@ -6,6 +6,7 @@
  */
 import { inspectZip, extractEntry, sha256Hex, assetMime, ZIP_LIMITS, PackageError } from "./archive.mjs";
 import { mintPreview } from "./tokens.mjs";
+import { detectCompatibility } from "./compatibility.mjs";
 import { layout, uploadScreen, catalogScreen, playerScreen, queueScreen, helpScreen } from "./ui.mjs";
 import {POLICY,ResourceError,readBoundedMultipart,readBoundedJson} from "./resource-policy.mjs";
 import {resourcePolicyReady,acquireUploadLease,releaseUploadLease,recordUploadAttempt,recordUploadBytes,getStorageUsage,reserveUpload,markReservationForCleanup,jobStatement,findDuplicate,saveDraft,discardDraft} from "./resource-service.mjs";
@@ -133,7 +134,7 @@ async function prepareFile(file) {
     expandedBytes=bytes.length;
     extractor=async()=>bytes;
   }
-  return {bytes,entries,expandedBytes,extractor};
+  return {bytes,entries,expandedBytes,extractor,compatibility:detectCompatibility(entries,{sourceName:file.name})};
 }
 async function preflight(req,env,u){
   if(!uploadOpen(env,u.id))return fail(403,"Creator uploads are paused or unavailable for this member");
@@ -252,7 +253,7 @@ async function upload(req,env,u) {
       committed=true;
       if(results[0]?.meta?.changes!==1)
         return fail(409,"The project changed during upload; reload your Creator space");
-      return json({id,release_id:releaseId,version,status:"ready",
+      return json({id,release_id:releaseId,version,status:"ready",compatibility:plan.compatibility,
         expires_at:now+POLICY.testSeconds,play_url:"/play/v3/"+id+"?preview=1"},201);
     }catch(e){
       // Do not release the reserved bytes until private R2 prefix erasure succeeds.
