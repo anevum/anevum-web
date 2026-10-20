@@ -82,7 +82,7 @@ test("isolated runtime requires HMAC proof and checks temporary expiry itself",a
  assert.match(await play.text(),/Testing without publishing/);
  const publicUrl=runner+"/r/"+id+"/index.html";
  assert.equal((await runtime.fetch(new Request(publicUrl),env)).status,404);
- const forged=privateUrl.replace(token,token.replace(/.$/,"0"));
+ const forged=privateUrl.replace(token,token.slice(0,-1)+(token.endsWith("a")?"b":"a"));
  assert.equal((await runtime.fetch(new Request(forged),env)).status,404);
  expired=true;
  assert.equal((await runtime.fetch(new Request(privateUrl),env)).status,404);
