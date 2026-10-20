@@ -84,6 +84,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # The real preview fixture serves /creator from a separate staging build.
+          # Preserve the immutable baseline staging bundle rather than rebuild JavaScript.
+          test -s reference/react-staging/index.html
+          cp -a reference/react-staging creator-v1/dist/react-staging
           chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
           test -n "$chrome"
           node creator-v1/test/portal-offline-preview.mjs > evidence/wayfinder-css/fixture.log 2>&1 &
