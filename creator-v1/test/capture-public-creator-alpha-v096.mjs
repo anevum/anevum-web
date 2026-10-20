@@ -82,11 +82,21 @@ try{
   await ensure('scriptless-srcdoc-'+width,'Boolean(document.querySelector(".ap96-frame")?.getAttribute("srcdoc")?.includes("script-src"))');
   await ensure('private-files-absent-'+width,'!document.querySelector("[data-native-creator],input[type=file],.av095-review")');
   await ensure('no-horizontal-overflow-'+width,'document.documentElement.scrollWidth<=innerWidth+1');
+  // The sandbox must create a real srcdoc browsing context under the
+  // production-matching route CSP, not just an iframe attribute.
+  await until(async()=>{
+    const {frameTree}=await send('Page.getFrameTree');
+    return frameTree?.childFrames?.some(x=>x.frame?.url==='about:srcdoc');
+  },10000);
   await capture('public-alpha-first-'+width);
 
   await evaluate('document.querySelectorAll(".ap96-template")[1].click()');
   await until(()=>evaluate('document.querySelector(".ap96-template.is-current")?.textContent.includes("Pocket card")'));
   await ensure('template-selected-'+width,'document.querySelector("#ap96-source")?.value.includes("My little universe")');
+  await until(()=>evaluate('document.querySelector(".ap96-frame")?.getAttribute("srcdoc")?.includes("My little universe")'));
+  await evaluate('document.getElementById("ap96-workspace").scrollIntoView({block:"start"});true');
+  await pause(240);
+  await capture('public-alpha-workspace-'+width);
   await capture('public-alpha-card-'+width);
 
   await evaluate('document.querySelector(".ap96-tabs button:nth-child(2)").click()');
