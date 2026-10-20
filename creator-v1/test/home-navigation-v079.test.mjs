@@ -19,7 +19,8 @@ test("V079 has valid React source and applies its override last",()=>{
   assert.doesNotThrow(()=>parse(source,{sourceType:"module",plugins:["typescript","jsx"]}));
  assert.match(bootstrap,/import "\.\/home-navigation-v079\.css";/);
  assert.ok(bootstrap.lastIndexOf("home-navigation-v079.css")>bootstrap.lastIndexOf("site-experience-v009.css"));
- assert.match(app,/path="studio" element={<CanonicalStudioPage\/>}/);
+ // The private-alpha link may wrap the canonical Studio, but must never replace it.
+ assert.match(app,/path="studio" element={<(?:CanonicalStudioPage\/>|StudioEntry><CanonicalStudioPage\/><\/StudioEntry>)}/);
  assert.match(app,/path="community\/threads\/:id" element={<CommunityThread\/>}/);
 });
 
