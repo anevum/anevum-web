@@ -108,6 +108,11 @@ test('member UI is opt-in and uses canonical existing wall instead of creating a
  assert.match(files[1],/packageGalleryUIEnabled/);
  assert.match(files[2],/CreatorPackageGallery mode="public" handle={profile.handle}/);
  assert.doesNotMatch(files[0],/dangerouslySetInnerHTML|localStorage|eval\(/);
- assert.match(files[0],/<a href={work.playUrl}/,
-   'Play link uses a real navigation to the Worker rather than an unregistered SPA route');
+ assert.match(files[0], /<a href={nativeCreatorEnabled\?.*:work.playUrl}/,
+   'Flag-OFF retains real Worker navigation; the native flag selects the verified project route');
+ assert.match(files[0], /nativePlayerPath\(work.id\)/,
+   'Native navigation validates the canonical package identifier');
+ const app=await readFile(new URL('../web/src/App.tsx',import.meta.url),'utf8');
+ assert.match(app,/path="projects\/package\/:projectId"/,
+   'Native player links target a registered canonical React route');
 });
