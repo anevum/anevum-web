@@ -37,10 +37,10 @@ Migration: creator-v1/package-alpha-v004/migrations/0002_resource_protection.sql
 ## Release gates
 1. Pass all isolated Node22 policy tests, Python SQLite/D1 simulated transaction integration tests, fake R2 cleanup/race scenarios and visual mobile/desktop captures from the dedicated read-only GitHub workflow.
 2. Take a tested **backup and restore of staging D1**. Apply V004 additive migration to a dedicated *staging* package database after verifying V003 tables. Use **new** private staging R2 and verified isolated runner origin. Do not apply a migration to the live V003 D1/bucket.
-3. Deploy an independent **V004 staging Worker** with AUTH, DB, MEDIA, RUNTIME_HOST, PACKAGE_PREVIEW_KEY and pilot/staff IDs. Bind an hourly scheduled trigger for garbage collection. Do not change existing routes until explicit acceptance.
+3. Deploy an independent **V004 staging Worker** with AUTH, DB, MEDIA, RUNTIME_HOST, PACKAGE_PREVIEW_KEY, PILOT_IDS, STAFF_IDS and the explicit **PACKAGE_UPLOADS_ENABLED="true"** upload-admission flag (defaults to off). Bind an hourly scheduled trigger for garbage collection. Do not change existing routes until explicit acceptance.
 4. Test with two independent authenticated members and reviewer, then rehearse expiry, duplicate, concurrent uploads, owner save/discard, rejection, R2 outages, completed R2 object inventory and publicly available immutable release rollback.
 5. Check actual worker CPU, D1 read/write counts, R2 list/delete, retained bytes, budget thresholds and representative iOS Safari + desktop browser journeys. Require the existing V091 release gates and exact-source QA before production cutover.
-6. Keep old V003 Worker and route as reversible fallback. Feature shutdown must stop new upload admission without destroying public releases or preventing queued private cleanup.
+6. Keep old V003 Worker and route as reversible fallback. Feature shutdown uses PACKAGE_UPLOADS_ENABLED="false" to stop new upload admission while retaining member access to existing project details, Save, Discard, Delete and staff review; do not destroy public releases or prevent queued private cleanup.
 
 ## Staff Observatory
 Exposed aggregate metrics: physical bytes by account/shared pilot, number of temporary tests, expired tests, queued garbage collections, interrupted reservations, erasure errors. Later polish can surface small, accessible charts in the existing staff Observatory without creating a second dashboard or exposing private filenames/contents.
