@@ -49,6 +49,9 @@ test('V092 atmosphere and insignia presentations cover all five live affinities 
  for(const size of ['featured','compact','inline'])
   assert.match(stylesheet,new RegExp('av65-player-card--'+size));
  assert.match(stylesheet,/@media\(max-width:430px\)/);
+ assert.match(stylesheet,/@media\(max-width:360px\)/);
+ assert.match(stylesheet,/V092 \/ phone-first hierarchy/);
+ assert.match(stylesheet,/\.av78-featured-art\{display:none!important\}/);
  assert.match(stylesheet,/@media\(prefers-reduced-motion:reduce\)/);
  assert.match(stylesheet,/@media\(forced-colors:active\)/);
  assert.doesNotMatch(stylesheet,/position:fixed|100vh|pointer-events:auto/);
