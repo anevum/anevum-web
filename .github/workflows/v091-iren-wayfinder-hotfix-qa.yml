@@ -88,6 +88,26 @@ jobs:
           # Preserve the immutable baseline staging bundle rather than rebuild JavaScript.
           test -s reference/react-staging/index.html
           cp -a reference/react-staging creator-v1/dist/react-staging
+          # The historic Wayfinder browser harness runs /creator/ against a staging bundle.
+          # Apply precisely the same verified CSS block to this *temporary test fixture*.
+          # Neither staging file nor its JavaScript is included in the release artifact.
+          python - <<'PY'
+          from pathlib import Path
+          root=Path('creator-v1/dist/react-staging/assets')
+          staging=next(root.glob('index-*.css'))
+          current=staging.read_bytes()
+          verified=Path('creator-v1/dist/web/assets/index-iren-wayfinder-17edd74201ac4e89.css').read_bytes()
+          begin=b'.av79-navigation .ir80-wayfinder-entry{'
+          end=b'.ir87-companion{'
+          a=current.index(begin)
+          b=current.index(end,a)
+          c=verified.index(begin)
+          d=verified.index(end,c)
+          section=verified[c:d]
+          assert b'grid-column:1/-1' in section
+          staging.write_bytes(current[:a]+section+current[b:])
+          print('BROWSER_FIXTURE_IDENTICAL_IREN_CSS=PASS')
+          PY
           chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
           test -n "$chrome"
           node creator-v1/test/portal-offline-preview.mjs > evidence/wayfinder-css/fixture.log 2>&1 &
