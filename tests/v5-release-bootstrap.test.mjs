@@ -1,19 +1,12 @@
+import {assertRetiredProductionWorkflow} from "./helpers/retired-production-contract.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const read = file => readFileSync(new URL("../" + file, import.meta.url), "utf8");
 
-test("no push can deploy production: owner confirms exact current-main SHA and rollback", () => {
-  const y = read(".github/workflows/deploy-production.yml");
-  assert.match(y, /workflow_dispatch:\s*\n\s+inputs:/);
-  assert.doesNotMatch(y, /^\s+push:\s*$/m);
-  assert.match(y, /DEPLOY_ANEVUM_PRODUCTION_V5/);
-  assert.match(y, /PRODUCTION_ROLLBACK_VERIFIED/);
-  assert.match(y, /inputs\.reviewed_head_sha == github\.sha/);
-  assert.match(y, /git ls-remote origin refs\/heads\/main/);
-  assert.match(y, /Deploy to Cloudflare Workers/);
-  assert.equal((y.match(/cloudflare\/wrangler-action@v3/g)||[]).length,1);
+test("legacy production bootstrap is retired and cannot migrate or deploy", () => {
+  assertRetiredProductionWorkflow(read(".github/workflows/deploy-production.yml"));
 });
 
 test("staging deploy is manual, scoped and rejects stale source", () => {

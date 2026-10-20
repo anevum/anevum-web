@@ -29,7 +29,7 @@ test("Orbit raster assets exist at expected exact dimensions", () => {
     ["anevum-social-share-v2.png", 1200, 630],
   ]) {
     const b = readFileSync(resolve(root, "public", name));
-    assert.equal(b.subarray(0,8).toString("hex"), "89504e470d0a1a", name + " PNG signature");
+    assert.equal(b.subarray(0,8).toString("hex"), "89504e470d0a1a0a", name + " PNG signature");
     assert.equal(b.readUInt32BE(16), width, name + " width");
     assert.equal(b.readUInt32BE(20), height, name + " height");
   }

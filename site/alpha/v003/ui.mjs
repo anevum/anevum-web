@@ -449,7 +449,11 @@ export function uploadScreen(projects,loggedIn,pilot,updateId,serviceReady=true,
     '<div class="empty-state">'+SIGIL+'<div><strong>Your first transmission starts here.</strong><span>Your uploaded browser builds, real review statuses and releases will appear in this space. Existing HTML alpha projects remain intact during integration.</span></div></div>'):"";
   const protection=resources?'<section class="notice" aria-label="Private build storage"><strong>Private test builds last 48 hours.</strong><p>Choose Save draft to keep a build. Replacement keeps the previous build until the new upload succeeds. Published versions remain live.</p><p>'+esc((resources.memberPhysicalBytes/1048576).toFixed(1))+' / '+esc((resources.memberPhysicalLimit/1048576).toFixed(0))+' MiB stored · expired and discarded files are reclaimed in bounded batches.</p></section>':"";
   const preparedForm=resources&&selected?.draft_release_id?form.replace('<input type="hidden" name="project_id"','<input type="hidden" id="replace-private-build" name="replace_draft" value="1"><input type="hidden" name="project_id"'):form;
-  return layout("Upload a creation",intro+protection+'<div class="grid"><section class="panel">'+preparedForm+'</section><aside class="panel soft upload-guide">'+guide+'</aside></div>'+shelf);
+  // Keep the file selector in the first phone screen; explain retention beside
+  // the selected file, before the creator reaches the upload confirmation.
+  const protectedForm=protection&&preparedForm.includes('<div class="file-check">')
+    ?preparedForm.replace(format,protection+format):preparedForm+protection;
+  return layout("Upload a creation",intro+'<div class="grid"><section class="panel">'+protectedForm+'</section><aside class="panel soft upload-guide">'+guide+'</aside></div>'+shelf);
 }
 export function catalogScreen(projects){
   return layout("Playable browser releases",hero('ANEVUM / RELEASE ARCHIVE',

@@ -71,7 +71,206 @@
           "before": "redirect: 'error'",
           "after": "redirect:\"manual\""
         }
+      ],
+      "retained_deployments": [
+        {
+          "version": "03b731d4-be7f-480c-80ad-c50683a2dc8f",
+          "sha256": "856fe98d1fefc3be22b73732a7276402b2b6fd7600a6135251ede153e2690301",
+          "provenance": "PR #549 Observatory V002 UI; complete live UI and server match feat/iren-observatory-release-20261019. Preserve, never replace with the older redirect-only repair."
+        }
       ]
+    }
+  ],
+  "routes": [
+    {
+      "pattern": "a.anevum.com/*",
+      "script": "anevum-a-community-retirement",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/",
+      "script": "anevum-profile-staff-access-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/*",
+      "script": "anevum-native-frame-policy-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/__anevum_iren_staff_session_status_v001",
+      "script": "anevum-iren-staff-session-status-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/__anevum_profile_staff_access_v002.js",
+      "script": "anevum-profile-staff-access-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/__anevum_profile_staff_role_v001",
+      "script": "anevum-profile-staff-access-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/alpha*",
+      "script": "anevum-unified-creation-routes-v002",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/alpha/test-signal-drift*",
+      "script": "anevum-signal-drift-qa-v002",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/api/v1/alpha/*",
+      "script": "anevum-alpha-uploader-player-v004-staff",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/api/v1/alpha/social*",
+      "script": "anevum-project-engagement-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/api/v1/boards",
+      "script": "anevum-alpha-discovery-adapter-v003",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/api/v1/categories",
+      "script": "anevum-alpha-discovery-adapter-v003",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/api/v1/member/forum-review*",
+      "script": "anevum-iren-apex-staff-v002",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/api/v1/member/staff-ops*",
+      "script": "anevum-iren-apex-staff-v002",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/api/v1/member/xp-test*",
+      "script": "anevum-xp-test-retirement-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/api/v1/packages/v004/*",
+      "script": "anevum-package-alpha-v004-control",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/api/v1/projects*",
+      "script": "anevum-alpha-discovery-adapter-v003",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/api/v1/status",
+      "script": "anevum-alpha-discovery-adapter-v003",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/assets/index-*",
+      "script": "anevum-native-project-community-v002",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/creator-lab/v004*",
+      "script": "anevum-package-alpha-v004-control",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/evolution/vectors/*",
+      "script": "anevum-apex-prelaunch-gateway",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/member*",
+      "script": "anevum-profile-staff-access-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/play/*",
+      "script": "anevum-unified-creation-routes-v002",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/staff",
+      "script": "anevum-iren-staff-entry-v003",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/staff*",
+      "script": "anevum-iren-staff-entry-v003",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/staff/",
+      "script": "anevum-iren-staff-entry-v003",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/staff/command",
+      "script": "anevum-iren-legacy-command-entry-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/staff/command/",
+      "script": "anevum-iren-legacy-command-entry-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/staff/observatory*",
+      "script": "anevum-iren-staff-observatory-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/staff/projects*",
+      "script": "anevum-staff-project-review-v003",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/staff/projects/community*",
+      "script": "anevum-staff-community-review-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/thebutton*",
+      "script": "anevum-xp-test-retirement-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/upload*",
+      "script": "anevum-unified-creation-routes-v002",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "backstage.anevum.com/*",
+      "script": "anevum-legacy-archive",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "lab.anevum.com/previews*",
+      "script": "anevum-lab-previews-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "next.anevum.com/api/v1/member/*",
+      "script": "anevum-member-auth-staging",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "next.anevum.com/creator/*",
+      "script": "anevum-creator-v1-react-staging",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "next.anevum.com/join*",
+      "script": "anevum-member-auth-staging",
+      "request_limit_fail_open": false
     }
   ]
 }

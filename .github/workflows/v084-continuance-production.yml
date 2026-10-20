@@ -284,13 +284,15 @@ jobs:
            any(.result[]; .pattern=="anevum.com/play/*" and .script=="anevum-unified-creation-routes-v002") and
            any(.result[]; .pattern=="anevum.com/upload*" and .script=="anevum-unified-creation-routes-v002") and
            any(.result[]; .pattern=="anevum.com/staff*" and .script=="anevum-iren-staff-entry-v003")' "$RUNNER_TEMP/pre-routes.json" >/dev/null
-          jq -e '.success and (.result|length)==36 and ([.result[]|select(.pattern|startswith("anevum.com/"))]|length)==30 and any(.result[];.pattern=="lab.anevum.com/previews*" and .script=="anevum-lab-previews-v001")' "$RUNNER_TEMP/pre-routes.json" >/dev/null
+          jq -e '.success and (.result|length)==38 and ([.result[]|select(.pattern|startswith("anevum.com/"))]|length)==32 and any(.result[];.pattern=="lab.anevum.com/previews*" and .script=="anevum-lab-previews-v001")' "$RUNNER_TEMP/pre-routes.json" >/dev/null
           jq -e '.success and
             any(.result[];.pattern=="anevum.com/" and .script=="anevum-profile-staff-access-v001") and
             any(.result[];.pattern=="anevum.com/member*" and .script=="anevum-profile-staff-access-v001") and
             any(.result[];.pattern=="anevum.com/api/v1/member/xp-test*" and .script=="anevum-xp-test-retirement-v001") and
             any(.result[];.pattern=="anevum.com/staff" and .script=="anevum-iren-staff-entry-v003")' "$RUNNER_TEMP/pre-routes.json" >/dev/null
-          jq -S '[.result[]|{pattern,script}]|sort_by(.pattern)' "$RUNNER_TEMP/pre-routes.json" > "$RUNNER_TEMP/routes.lock.json"
+          jq -S '[.result[]|{pattern,script,request_limit_fail_open}]|sort_by(.pattern)' "$RUNNER_TEMP/pre-routes.json" > "$RUNNER_TEMP/routes.lock.json"
+          jq -S '[.routes[]|{pattern,script,request_limit_fail_open}]|sort_by(.pattern)' creator-v1/operations/staff-transport-v091.json > "$RUNNER_TEMP/reviewed-routes.lock.json"
+          cmp "$RUNNER_TEMP/reviewed-routes.lock.json" "$RUNNER_TEMP/routes.lock.json"
           jq -e '.success and (.result.bindings|length)==24 and
            any(.result.bindings[]; .type=="assets" and .name=="ASSETS") and
            any(.result.bindings[]; .type=="d1" and .name=="MEMBER_DB" and ((.database_id//.id)=="e1d29049-c83b-4534-8355-dc1fa36ba6d8")) and
@@ -319,7 +321,7 @@ jobs:
           cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" > "$RUNNER_TEMP/immediate-pre-deployments.json"
           test "$(jq -r '(.result.deployments // .result)[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/immediate-pre-deployments.json")" = "93cc7f07-cf39-457e-af69-c9f6f4c02d25"
           cf "$cf_api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/immediate-pre-routes.json"
-          jq -S '[.result[]|{pattern,script}]|sort_by(.pattern)' "$RUNNER_TEMP/immediate-pre-routes.json" > "$RUNNER_TEMP/immediate-routes.lock.json"
+          jq -S '[.result[]|{pattern,script,request_limit_fail_open}]|sort_by(.pattern)' "$RUNNER_TEMP/immediate-pre-routes.json" > "$RUNNER_TEMP/immediate-routes.lock.json"
           cmp "$RUNNER_TEMP/routes.lock.json" "$RUNNER_TEMP/immediate-routes.lock.json"
           curl -fsS --max-time 20 https://anevum.com/api/v1/member/health | jq -e '.status=="ready" and .registration=="open"' >/dev/null
           curl -fsS --max-time 20 https://anevum.com/api/v1/member/auth-methods | jq -e '.methods.email.available==true' >/dev/null
@@ -346,7 +348,7 @@ jobs:
           npx wrangler deploy --config creator-v1/wrangler.v089.generated.json --keep-vars
           cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/settings" > "$RUNNER_TEMP/post-settings.json"
           cf "$cf_api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/post-routes.json"
-          jq -S '[.result[]|{pattern,script}]|sort_by(.pattern)' "$RUNNER_TEMP/post-routes.json" > "$RUNNER_TEMP/post-route.lock.json"
+          jq -S '[.result[]|{pattern,script,request_limit_fail_open}]|sort_by(.pattern)' "$RUNNER_TEMP/post-routes.json" > "$RUNNER_TEMP/post-route.lock.json"
           cmp "$RUNNER_TEMP/routes.lock.json" "$RUNNER_TEMP/post-route.lock.json"
           jq -S '[.result.bindings[]|{name,type}]|sort_by(.name)' "$RUNNER_TEMP/post-settings.json" > "$RUNNER_TEMP/post-bindings.lock.json"
           cmp "$RUNNER_TEMP/bindings.lock.json" "$RUNNER_TEMP/post-bindings.lock.json"

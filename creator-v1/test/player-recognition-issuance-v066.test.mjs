@@ -154,7 +154,7 @@ test('25 canonical member cards share one bounded verified-recognition projectio
  const originalPrepare=db.prepare.bind(db);
  db.prepare=function(sql){queryCount++;return originalPrepare(sql)};
  const cards=await hydratedPublicMemberCards(db,rows,true);
- assert.equal(queryCount,4,'one schema read and three bounded recognition queries');
+ assert.ok(queryCount<=4,'at most one cached schema read and three bounded recognition queries');
  assert.equal(cards.length,25);
  assert.deepEqual(cards[0].featuredAwards,['first_orbit']);
  assert.equal(cards[0].level,1);

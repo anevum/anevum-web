@@ -64,10 +64,12 @@ test('approved optical icons display anywhere LevelEmblem is used without changi
   'web/src/components/CompactMemberIdentity.tsx',
   'web/src/components/MemberSpaceDashboard.tsx',
   'web/src/components/PublicAuthorShowcase.tsx',
-  'web/src/components/LevelPanel.tsx',
-  'web/src/components/LevelCollection.tsx'
+  'web/src/components/LevelPanel.tsx'
  ];
  for(const file of files)assert.match(read(file),/LevelEmblem/);
+ const collection=read('web/src/components/LevelCollection.tsx');
+ assert.match(collection,/EarnedRewardVault level={progression\?\.level\?\?null}/);
+ assert.doesNotMatch(collection,/href="\/evolution|<canvas/);
  assert.match(read('canonical-auth/progression.mjs'),/Math\.min\(30/);
  assert.match(read('shared/level-artifacts.json'),/Vacuum Whisper/);
 });

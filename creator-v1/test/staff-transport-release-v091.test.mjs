@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {repairStaffTransport,digest,moduleSource} from '../ops/v091-staff-transport.mjs';
+import {repairStaffTransport,digest,moduleSource,retainedDeployment} from '../ops/v091-staff-transport.mjs';
 const spec=JSON.parse(readFileSync(new URL('../operations/staff-transport-v091.json',import.meta.url),'utf8'));
 const candidate=w=>readFileSync(new URL('../operations/'+w.name+'.mjs',import.meta.url),'utf8');
 function original(w){let text=candidate(w);for(const e of [...w.source_edits].reverse()){
@@ -12,7 +12,7 @@ function original(w){let text=candidate(w);for(const e of [...w.source_edits].re
 const context={GITHUB_REPOSITORY:'anevum/anevum-web',GITHUB_REF:'refs/heads/release/v084-continuance-approved-20261019',GITHUB_WORKFLOW:'ANEVUM V091 Guarded Continuance Experience Production'};
 function fixture({drift=false,failAt=0,moduleDrift=false,format='multipart'}={}){
  const writes=[],states=new Map(spec.workers.map(w=>[w.name,{version:w.baseline_version,source:original(w)}]));
- const routes=Array.from({length:36},(_,i)=>({pattern:'anevum.com/fixture-'+i,script:'preserved'}));
+ const routes=structuredClone(spec.routes);
  const settings={bindings:[{name:'APEX_AUTH',type:'service',service:'anevum-apex-prelaunch-gateway',environment:'production'},
   {name:'MEMBER_DB',type:'d1',database_id:'e1d29049-c83b-4534-8355-dc1fa36ba6d8'},
   {name:'ASSETS',type:'assets'},{name:'EXISTING_FEATURE_FLAG',type:'plain_text',text:'preserve'}],
@@ -41,7 +41,7 @@ function fixture({drift=false,failAt=0,moduleDrift=false,format='multipart'}={})
   }
   return {};
  };
- return {api,writes,states};
+ return {api,writes,states,routes};
 }
 test('all checked-in staff sources differ from the pinned live baseline only in redirect mode',()=>{
  for(const w of spec.workers){assert.equal(digest(candidate(w)),w.candidate_sha256);assert.equal(digest(original(w)),w.baseline_sha256);}
@@ -75,4 +75,22 @@ test('failure after an upload restores every attempted Worker to its recorded ba
  const f=fixture({failAt:2});await assert.rejects(()=>repairStaffTransport(f.api,{apply:true,context}),/baseline deployments restored/);
  assert.equal(f.writes.filter(w=>w.method==='POST').length,2);
  for(const w of spec.workers)assert.equal(f.states.get(w.name).version,w.baseline_version);
+});
+
+test('reviewed Observatory V002 can only be retained at its exact version and source hash',()=>{
+ const worker=spec.workers.find(w=>w.name==='anevum-iren-staff-observatory-v001');
+ const kept=worker.retained_deployments[0];
+ assert.equal(retainedDeployment(worker,kept.version,kept.sha256),true);
+ assert.equal(retainedDeployment(worker,'unreviewed-version',kept.sha256),false);
+ assert.equal(retainedDeployment(worker,kept.version,worker.candidate_sha256),false);
+ assert.equal(retainedDeployment(spec.workers[0],kept.version,kept.sha256),false);
+});
+test('route identity and fail-closed limits are pinned even when the route count stays equal',async()=>{
+ assert.equal(spec.routes.length,38);
+ assert.ok(spec.routes.every(r=>r.request_limit_fail_open===false));
+ for(const edit of [r=>r[0].script='unreviewed-worker',r=>r[0].pattern='anevum.com/unreviewed*',r=>r[0].request_limit_fail_open=true,r=>r.pop()]){
+  const f=fixture();edit(f.routes);
+  await assert.rejects(()=>repairStaffTransport(f.api,{apply:true,context}),/Live routes changed/);
+  assert.equal(f.writes.length,0);
+ }
 });

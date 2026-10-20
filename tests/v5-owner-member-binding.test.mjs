@@ -1,3 +1,4 @@
+import {assertRetiredProductionWorkflow} from "./helpers/retired-production-contract.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
@@ -45,11 +46,11 @@ test("website testing release keeps unbound RHEN closed and requires the separat
   assert.equal(prod.vars.ANEVUM_V5_OWNER_MEMBER_BINDING_REQUIRED,"true");
   assert.equal(stage.vars.ANEVUM_V5_OWNER_MEMBER_BINDING_REQUIRED,undefined);
   assert.equal("RHEN_OWNER_MEMBER_ID" in prod.vars,false);
-  assert.match(workflow,/\.vars\.ANEVUM_V5_OWNER_MEMBER_BINDING_REQUIRED == "true"/);
+  assertRetiredProductionWorkflow(workflow);
   assert.equal(prod.vars.RHEN_OBSERVER_ENABLED,"false");
   assert.equal(prod.vars.ANEVUM_STUDIO_ENABLED,"true");
   assert.equal(prod.vars.ANEVUM_STUDIO_PUBLISH_ENABLED,"false");
-  assert.match(workflow,/BETTER_AUTH_SECRET ANEVUM_STUDIO_OWNER_MEMBER_ID/);
+  assert.doesNotMatch(workflow,/secrets\./);
   assert.doesNotMatch(workflow,/text:.*RHEN_OWNER_MEMBER_ID/);
   assert.match(workflow,/workflow_dispatch:/);
 });

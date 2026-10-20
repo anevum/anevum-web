@@ -1,3 +1,4 @@
+import {assertRetiredProductionWorkflow} from "./helpers/retired-production-contract.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync,mkdtempSync,writeFileSync,rmSync} from "node:fs";
@@ -98,20 +99,8 @@ test("Studio activation honors D1 REST multi-statement limits and binds only the
     }finally{rmSync(temp,{recursive:true,force:true});}
   }
 });
-test("only the manual pinned release may backup, migrate, bind and deploy in that order",()=>{
-  const flow=read(".github/workflows/deploy-production.yml");
-  assert.match(flow,/inputs\.private_recovery_authorized == 'AUTHORIZE_PRIVATE_PRODUCTION_D1_RECOVERY'/);
-  assert.doesNotMatch(flow,/^\s+(push|pull_request|pull_request_target):/m);
-  const names=["Export, restore-test and encrypt the authorized production backup",
-    "Retain encrypted production recovery and rollback metadata",
-    "Re-download the encrypted production recovery archive",
-    "Verify archived backup before any production migration",
-    "Apply only the Studio migration and privately bind the existing owner",
-    "Verify production member release prerequisites before deployment","Deploy to Cloudflare Workers"];
-  let previous=-1;for(const name of names){const index=flow.indexOf(name);assert.ok(index>previous,name);previous=index;}
-  assert.match(flow,/cancel-in-progress: false/);
-  assert.match(flow,/ANEVUM_STUDIO_OWNER_MEMBER_ID/);
-  assert.doesNotMatch(flow,/wrangler d1 migrations apply/);
+test("retired V5 release cannot invoke its retained backup, migration or deployment helpers",()=>{
+  assertRetiredProductionWorkflow(read(".github/workflows/deploy-production.yml"));
 });
 function mockLive(overrides={}){
   const calls=[];

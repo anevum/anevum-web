@@ -14,10 +14,10 @@ test('retired icon set is not selected anywhere in the active level UI',()=>{
  for(const code of [emulator,cabinet,page,panel]){
   assert.doesNotMatch(code,/series-one-v037|THE FIRST 60|NO LEVEL CAP|FIRST 60 ARTIFACTS/);
  }
- assert.match(emulator,/v073-preserved-optical-icon/);
+ assert.match(emulator,/v074-preserved-optical/);
  assert.match(emulator,/av73-static-level-icon/);
  assert.doesNotMatch(emulator,/registerAnimatedSpecimen/);
- assert.match(cabinet,/ENTER THE LIVING 3D ARCHIVE/); // archival source retained, no public mount
+ assert.match(cabinet,/EarnedRewardVault/); // only entitlement-checked earned inventory is mounted
  assert.doesNotMatch(page,/LevelCollection|<LevelCollection/);
  assert.match(page,/Your evolution/);
  assert.match(page,/EarnedRewardVault/);

@@ -134,9 +134,10 @@ async function main(){
   }
   for(const w of [320,390,1440]){
    await visit(c,join(tmp,"protected.html"),w,w===1440?900:844);
-   const protectedUI=await evalJS(c,"({overflow:document.documentElement.scrollWidth>innerWidth,storage:!!document.querySelector('[aria-label=\"Private build storage\"]'),replacement:document.querySelector('#replace-private-build')?.value,save:[...document.querySelectorAll('button')].some(b=>b.textContent==='Save draft'),replace:[...document.querySelectorAll('a')].some(a=>a.textContent==='Replace private build')})");
+   const protectedUI=await evalJS(c,"({overflow:document.documentElement.scrollWidth>innerWidth,dropTop:document.querySelector('#drop').getBoundingClientRect().top,storage:!!document.querySelector('[aria-label=\"Private build storage\"]'),replacement:document.querySelector('#replace-private-build')?.value,save:[...document.querySelectorAll('button')].some(b=>b.textContent==='Save draft'),replace:[...document.querySelectorAll('a')].some(a=>a.textContent==='Replace private build')})");
    assert.equal(protectedUI.overflow,false,'Protected uploader overflow at '+w);
    assert.equal(protectedUI.storage,true);assert.equal(protectedUI.replacement,'1');assert.equal(protectedUI.save,true);assert.equal(protectedUI.replace,true);
+   if(w<700)assert.ok(protectedUI.dropTop<770,'Protected upload selector should be visible in the first mobile screen');
    await image(c,join(out,'protected-upload-'+w+'.png'));
   }
   await visit(c,join(tmp,"uploader.html"),390,844);

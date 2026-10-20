@@ -7,7 +7,7 @@ on:
     paths:
       - creator-v1/**
       - site/alpha/v003/**
-      - tests/alpha-package-*.mjs
+      - tests/**
       - community-preview/worker.js
       - docs/production/**
       - .github/workflows/creator-v1-verify.yml
@@ -15,7 +15,7 @@ on:
     paths:
       - creator-v1/**
       - site/alpha/v003/**
-      - tests/alpha-package-*.mjs
+      - tests/**
       - community-preview/worker.js
       - docs/production/**
       - .github/workflows/creator-v1-verify.yml
@@ -30,7 +30,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
         with:
@@ -55,6 +55,9 @@ jobs:
           npm run build:creator-v1-web
           npm run build:creator-v1-web:staging
           node --test creator-v1/test/react-staging-route.test.mjs
+      - name: Verify V010 member package gallery privacy and routes
+        shell: bash
+        run: node --experimental-strip-types --test creator-v1/test/package-gallery-v010.test.mjs creator-v1/test/package-proof-v010.test.mjs
       - name: Validate cinematic V005 public site contract
         shell: bash
         run: node --test tests/creator-v1-cinematic-v005.test.mjs
@@ -74,6 +77,26 @@ jobs:
           set -euo pipefail
           npm test 2>&1 | tee ../evidence/public-tests.log
           npm run test:project-readiness 2>&1 | tee ../evidence/project-readiness-tests.log
+      - name: Rebuild preserved earned artwork for the complete regression suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install numpy==2.2.6 scipy==1.15.3 Pillow==11.2.1 cryptography==45.0.7
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libgl1-mesa-dri
+          (
+            cd design/evolution-v059
+            mkdir -p artwork/{native,textures,vector,masters,web,compact} docs dist previews
+            python src/export_native.py
+            python src/render_web.py
+            python src/build.py
+          )
+          python creator-v1/ops/install-evolution-v060.py
+      - name: Run complete root and Creator V1 regression suites
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-strip-types --test tests/*.test.mjs creator-v1/test/*.test.mjs creator-v1/auth/tests/*.test.mjs creator-v1/integration/*.test.mjs creator-v1/authoring/tests/*.test.mjs 2>&1 | tee evidence/complete-regression-tests.log
       - name: Verify consolidated package controller and canonical route preservation
         run: node --test tests/alpha-package-v003.test.mjs tests/alpha-package-v009-bridge.test.mjs tests/alpha-package-v009-owner.test.mjs tests/alpha-package-v009-live-owner.test.mjs tests/alpha-package-v010-migration.test.mjs
       - name: Guard live public email signup (read-only; never creates accounts)
