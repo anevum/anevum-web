@@ -46,7 +46,7 @@ function csrf(req) {
 async function ownerList(db,id) {
   return (await db.prepare(
     "SELECT p.*, (SELECT version FROM anevum_package_releases WHERE id=COALESCE(p.draft_release_id,p.live_release_id)) AS release_version, " +
-    "(SELECT status FROM anevum_package_releases WHERE id=p.draft_release_id) AS draft_status " +
+    "(SELECT status FROM anevum_package_releases WHERE id=p.draft_release_id) AS draft_status, " +
     "(SELECT f.release_id FROM anevum_package_files f WHERE f.release_id=COALESCE(p.draft_release_id,p.live_release_id) AND f.path='"+COVER_PATH+"' LIMIT 1) AS cover_release_id " +
     "FROM anevum_package_projects p WHERE p.owner_id=? AND p.status!='deleted' ORDER BY p.updated_at DESC LIMIT 50"
   ).bind(id).all()).results;
@@ -143,7 +143,7 @@ async function prepareFile(file) {
 async function upload(req,env,u) {
   if(!pilot(env,u.id)) return fail(403,"Creator alpha access required");
   const headerSize=Number(req.headers.get("content-length")||0);
-  if(headerSize>22*MiB) return fail(413,"Upload exceeds the 20 MiB ZIP limit");
+  if(headerSize>25*MiB) return fail(413,"Upload exceeds the 20 MiB ZIP plus 3 MiB cover allowance");
   if(!String(req.headers.get("content-type")||"").startsWith("multipart/form-data;"))
     return fail(415,"Upload a multipart form");
   let body;
