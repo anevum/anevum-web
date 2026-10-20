@@ -482,7 +482,7 @@ async function api(req,env,path) {
     const schemaReady=db&&await packageSchemaReady(env.DB);
     const runnerConfigured=!!isolatedHost(env);
     return json({
-      ok:true,version:"003",db,storage,runnerConfigured,schemaReady,
+      ok:true,version:"003",stageContract:"uplink-v007-readiness",db,storage,runnerConfigured,schemaReady,
       uploadReady:!!(schemaReady&&storage),
       publicPublishingEnabled:env.PACKAGE_PUBLIC_PUBLISH_ENABLED==="true",
       runtimeLiveVerified:false
