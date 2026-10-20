@@ -131,9 +131,11 @@ export async function cleanupPackageResources(env,now=Math.floor(Date.now()/1000
 }
 export async function staffMetrics(db,now=Math.floor(Date.now()/1000)){
   const releases=await one(db,"SELECT COUNT(*) n FROM anevum_package_releases WHERE status IN ('ready','pending_review','published','rejected')");
-  const tests=await one(db,"SELECT SUM(CASE WHEN expires_at>? THEN 1 ELSE 0 END) temporary, "+
-    "SUM(CASE WHEN expires_at<=? THEN 1 ELSE 0 END) expired FROM anevum_package_build_retention WHERE mode='test'",
-    now,now);
+  const tests=await one(db,"SELECT SUM(CASE WHEN b.expires_at>? THEN 1 ELSE 0 END) temporary, "+
+    "SUM(CASE WHEN b.expires_at<=? THEN 1 ELSE 0 END) expired "+
+    "FROM anevum_package_build_retention b JOIN anevum_package_releases r ON r.id=b.release_id "+
+    "JOIN anevum_package_projects p ON p.draft_release_id=r.id "+
+    "WHERE b.mode='test' AND r.status='ready'",now,now);
   const cleanup=await one(db,"SELECT COUNT(*) pending,COALESCE(SUM(physical_bytes),0) bytes FROM anevum_package_cleanup_jobs");
   const reservation=await one(db,"SELECT COUNT(*) pending FROM anevum_package_upload_reservations");
   return {releases:Number(releases?.n||0),temporary:Number(tests?.temporary||0),
