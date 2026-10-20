@@ -39,9 +39,11 @@ jobs:
         run: |
           set -euo pipefail
           curl --fail --silent --show-error --retry 4 --retry-delay 3 --max-time 15 https://web.anevum.com/health -o health.json
-          node -e "const f=require('fs'); const d=JSON.parse(f.readFileSync('health.json','utf8')); if (d.ok !== true || !['sites-v001-20261019','sites-v003-20261020'].includes(d.version)) process.exit(1)"
-          curl --fail --silent --show-error --retry 3 --retry-delay 2 --max-time 15 https://web.anevum.com/preview/tobacco-vapor-time -o sample.html
-          grep -q 'NOT THE OFFICIAL BUSINESS WEBSITE' sample.html
+          node -e "const f=require('fs'); const d=JSON.parse(f.readFileSync('health.json','utf8')); if (d.ok !== true || !['sites-v003.1-20261019-tvt-showcase','sites-v004-20261020-studio-v2'].includes(d.version)) process.exit(1)"
+          STATUS="$(curl --silent --show-error --retry 3 --retry-delay 2 --max-time 15 --output /dev/null --write-out '%{http_code}' https://web.anevum.com/preview/tobacco-vapor-time)"
+          test "$STATUS" = "302"
+          LOCATION="$(curl --silent --show-error --max-time 15 --output /dev/null --dump-header - https://web.anevum.com/preview/tobacco-vapor-time | tr -d '\r' | grep -i '^location:' | head -n 1)"
+          echo "$LOCATION" | grep -q 'https://preview.anevum.com/tobacco-vapor-time/'
           PRIVATE_STATUS="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --max-time 15 https://sites.anevum.com/)"
           if [ "$PRIVATE_STATUS" = "200" ] || [ "$PRIVATE_STATUS" = "000" ]; then
             echo "Expected owner-only Access boundary, got HTTP $PRIVATE_STATUS"
