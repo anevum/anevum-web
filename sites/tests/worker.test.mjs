@@ -67,7 +67,7 @@ function fakeDb() {
 
 test("public studio, curated sample and valid health return successfully", async () => {
   const env = { SITES_DB: fakeDb() };
-  for (const url of ["/", "/preview/tobacco-vapor-time", "/health", "/assets/sites.css"]) {
+  for (const url of ["/", "/preview/tobacco-vapor-time", "/health", "/assets/sites.css", "/assets/studio-v2.css", "/assets/studio-v2.js"]) {
     const r = await studio.fetch(new Request(HOST_PUBLIC + url), env);
     assert.equal(r.status, 200, url);
     assert.match(r.headers.get("X-Robots-Tag"), /noindex/);
@@ -76,6 +76,10 @@ test("public studio, curated sample and valid health return successfully", async
   assert.match(landing, /ANEVUM/);
   assert.match(landing, /\/ SITES/);
   assert.match(landing, /\$49/);
+  assert.match(landing, /better first impression/i);
+  assert.match(landing, /Unofficial · not commissioned/);
+  assert.match(landing, /id="sf-email-draft"/);
+  assert.match(landing, /data-switch="service"/);
   const sample = await (await studio.fetch(new Request(HOST_PUBLIC + "/preview/tobacco-vapor-time"), env)).text();
   assert.match(sample, /NOT THE OFFICIAL BUSINESS WEBSITE/);
 });
@@ -147,6 +151,17 @@ test("private workbench validates real RS256-style JWT, scopes origin, and recor
     };
     const page = await workshop.fetch(new Request(HOST_PRIVATE, { headers }), { SITES_DB: db });
     assert.equal(page.status, 200);
+    const privatePreview = await workshop.fetch(new Request(HOST_PRIVATE + "/preview/smokebreak-st-cloud", { headers }), { SITES_DB: db });
+    assert.equal(privatePreview.status, 200);
+    assert.match(privatePreview.headers.get("X-Robots-Tag"), /noindex/);
+    const privateMarkup = await privatePreview.text();
+    assert.match(privateMarkup, /PRIVATE ANEVUM DESIGN REVIEW/);
+    assert.match(privateMarkup, /3316 Canoe Creek Road/);
+    assert.match(privateMarkup, /NOT AN OFFICIAL SHOP WEBSITE/);
+    assert.doesNotMatch(privateMarkup, /buy now|checkout|product catalogue/i);
+    const previewHead = await workshop.fetch(new Request(HOST_PRIVATE + "/preview/smokebreak-st-cloud", { method: "HEAD", headers }), { SITES_DB: db });
+    assert.equal(previewHead.status, 200);
+    assert.equal(await previewHead.text(), "");
     const list = await workshop.fetch(new Request(HOST_PRIVATE + "/api/sites", { headers }), { SITES_DB: db });
     assert.equal(list.status, 200);
     assert.equal((await list.json()).sites.length, 3);
@@ -173,4 +188,32 @@ test("private workbench validates real RS256-style JWT, scopes origin, and recor
   } finally {
     globalThis.fetch = actualFetch;
   }
+});
+
+
+test("Smokebreak staging stays private and never appears on public Worker", async () => {
+  const db = fakeDb();
+  db.data.set("unofficial-smokebreak", { id:"unofficial-smokebreak",slug:"smokebreak-st-cloud",title:"Smokebreak St Cloud",kind:"retail",status:"concept",payload:JSON.stringify({headline:"Private draft",notes:"PRIVATE_REFERRAL_DETAILS"})});
+  const publicPreview = await studio.fetch(new Request(HOST_PUBLIC + "/preview/smokebreak-st-cloud"), { SITES_DB: db });
+  assert.equal(publicPreview.status, 404);
+  assert.doesNotMatch(await publicPreview.text(), /PRIVATE_REFERRAL_DETAILS/);
+  const guestPreview = await workshop.fetch(new Request(HOST_PRIVATE + "/preview/smokebreak-st-cloud"), { SITES_DB: db });
+  assert.equal(guestPreview.status, 401);
+  assert.doesNotMatch(await guestPreview.text(), /3316 Canoe Creek/);
+});
+
+test("landing page isolates styling, avoids unconsented storage and honors motion preferences", async () => {
+  const env={SITES_DB:fakeDb()};
+  const response = await studio.fetch(new Request(HOST_PUBLIC + "/assets/studio-v2.css"), env);
+  assert.equal(response.status,200);
+  const css=await response.text();
+  assert.match(css,/\.studio-v2/);
+  assert.match(css,/prefers-reduced-motion/);
+  assert.match(css,/sf-scene\[hidden\]/);
+  const script=await (await studio.fetch(new Request(HOST_PUBLIC + "/assets/studio-v2.js"),env)).text();
+  assert.match(script,/mailto:devon@anevum.com/);
+  assert.doesNotMatch(script,/localStorage|sessionStorage|fetch\(/);
+  const home=await (await studio.fetch(new Request(HOST_PUBLIC),env)).text();
+  assert.match(home,/not upload or store/i);
+  assert.doesNotMatch(home,/<form[^>]+action=/);
 });
