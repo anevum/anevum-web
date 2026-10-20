@@ -34,10 +34,11 @@ jobs:
         run: |
           mkdir -p /tmp/sites-v005
           node sites/v005/build.mjs /tmp/sites-v005
+          node sites/v005/preview.mjs /tmp/sites-v005
           CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
           test -n "$CHROME"
-          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --no-first-run --window-size=1440,1000 --screenshot=/tmp/sites-v005/desktop.png file:///tmp/sites-v005/index.html
-          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --no-first-run --window-size=390,844 --screenshot=/tmp/sites-v005/mobile.png file:///tmp/sites-v005/index.html
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --no-first-run --window-size=1440,1000 --screenshot=/tmp/sites-v005/desktop.png file:///tmp/sites-v005/interactive-preview.html
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --no-first-run --window-size=390,844 --screenshot=/tmp/sites-v005/mobile.png file:///tmp/sites-v005/interactive-preview.html
           test -s /tmp/sites-v005/desktop.png
           test -s /tmp/sites-v005/mobile.png
       - name: Attach screenshots
@@ -47,4 +48,5 @@ jobs:
           path: |
             /tmp/sites-v005/desktop.png
             /tmp/sites-v005/mobile.png
+            /tmp/sites-v005/interactive-preview.html
           retention-days: 14
