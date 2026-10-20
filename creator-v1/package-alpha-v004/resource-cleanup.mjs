@@ -111,10 +111,12 @@ async function pruneHistory(env,now){
   for(const r of old){
     try{
       const z=await env.DB.batch([
+        // Old preview-token FKs must go before the release metadata itself.
+        env.DB.prepare("DELETE FROM anevum_package_preview_tokens WHERE release_id=?").bind(r.id),
         env.DB.prepare("DELETE FROM anevum_package_build_retention WHERE release_id=?").bind(r.id),
         env.DB.prepare("DELETE FROM anevum_package_releases WHERE id=? AND source_key IS NULL AND status IN ('revoked','rejected','failed')").bind(r.id)
       ]);
-      if(z[1]?.meta?.changes===1)pruned++;
+      if(z[2]?.meta?.changes===1)pruned++;
     }catch{errors++;}
   }
   return {pruned,errors};
