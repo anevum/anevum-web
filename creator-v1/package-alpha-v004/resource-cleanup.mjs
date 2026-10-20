@@ -30,8 +30,10 @@ async function expireTemporaryBuilds(env,now){
         env.DB.prepare(
           "UPDATE anevum_package_projects SET draft_release_id=NULL,updated_at=?,"+
           "status=CASE WHEN live_release_id IS NULL THEN 'draft' ELSE status END "+
-          "WHERE id=? AND draft_release_id=? AND EXISTS(SELECT 1 FROM anevum_package_releases WHERE id=? AND status='ready')")
-          .bind(now,item.project_id,item.release_id,item.release_id),
+          "WHERE id=? AND draft_release_id=? "+
+          "AND EXISTS(SELECT 1 FROM anevum_package_releases WHERE id=? AND status='ready') "+
+          "AND EXISTS(SELECT 1 FROM anevum_package_build_retention WHERE release_id=? AND mode='test' AND expires_at<=?)")
+          .bind(now,item.project_id,item.release_id,item.release_id,item.release_id,now),
         env.DB.prepare("UPDATE anevum_package_releases SET status='revoked' WHERE id=? AND status='ready'").bind(item.release_id),
         jobStatement(env.DB,item.release_id,"expired",now)
       ]);
@@ -48,7 +50,7 @@ async function reapErasureQueue(env,now){
     "ORDER BY j.not_before LIMIT ?").bind(now,POLICY.cleanupBatch).all()).results||[];
   let processed=0,errors=0,protectedCount=0;
   for(const j of due){
-    if(j.status==="published"||j.live_release_id===j.release_id||j.draft_release_id===j.release_id){
+    if(!["revoked","rejected","failed"].includes(j.status)||j.live_release_id===j.release_id||j.draft_release_id===j.release_id){
       protectedCount++;
       continue;
     }
