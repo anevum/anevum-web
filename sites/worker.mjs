@@ -1,4 +1,5 @@
 import { STUDIO_V2_CSS, STUDIO_V2_HTML, STUDIO_V2_JS } from "./studio-v2.mjs";
+import { SITE_V005_HTML, SITE_V005_CSS, SITE_V005_JS, SITE_V005_SW, SITE_V005_MANIFEST, SITE_V005_ICON } from "./site-v005.mjs";
 // ANEVUM.WEB.BUILD.2026-10-19.001.CLIENT-SITES-STUDIO
 // Public-facing, read-only pilot. No customer records, authentication or commerce.
 // Dedicated Cloudflare Worker; do not attach to anevum.com or lab.anevum.com.
@@ -35,7 +36,7 @@ async function receiveInquiry(req,env){
  }catch{return reject("Unable to save. Please email devon@anevum.com.",503)}
 }
 
-const VERSION="sites-v004-20261020-studio-v2";
+const VERSION="sites-v005-20261020-experience-lab";
 const headers={
   "X-Content-Type-Options":"nosniff",
   "Referrer-Policy":"strict-origin-when-cross-origin",
@@ -77,7 +78,7 @@ export default {async fetch(request,env){
   if(!(u.hostname==="web.anevum.com"||u.hostname==="sites.anevum.com"||u.hostname==="sites-preview.anevum.com"||u.hostname.endsWith(".workers.dev")||u.hostname==="localhost"||u.hostname==="127.0.0.1"))return send("Unknown host",421,"text/plain; charset=utf-8",m);
   const path=u.pathname.replace(/\/+$/,"")||"/";
   if(m==="POST"){if(path==="/api/inquiries")return receiveInquiry(request,env);return send("Method not allowed",405,"text/plain; charset=utf-8",m);}
-  if(path==="/")return send(STUDIO_V2_HTML,200,undefined,m);
+  if(path==="/")return send(SITE_V005_HTML,200,undefined,m);
   if(path==="/privacy")return send(PRIVACY,200,undefined,m);
   if(path==="/thanks")return send(THANKS,200,undefined,m);
   // The first hand-crafted showcase stays visually curated; the private editor
@@ -101,6 +102,11 @@ export default {async fetch(request,env){
       return send("Preview temporarily unavailable",503,"text/plain; charset=utf-8",m);
     }
   }
+  if(path==="/assets/sites-v005.css")return send(SITE_V005_CSS,200,"text/css; charset=utf-8",m);
+  if(path==="/assets/sites-v005.js")return send(SITE_V005_JS,200,"application/javascript; charset=utf-8",m);
+  if(path==="/site.webmanifest")return send(SITE_V005_MANIFEST,200,"application/manifest+json; charset=utf-8",m);
+  if(path==="/sw.js")return send(SITE_V005_SW,200,"application/javascript; charset=utf-8",m);
+  if(path==="/assets/sites-v005-icon.svg")return send(SITE_V005_ICON,200,"image/svg+xml",m);
   if(path==="/assets/studio-v2.css")return send(STUDIO_V2_CSS,200,"text/css; charset=utf-8",m);
   if(path==="/assets/studio-v2.js")return send(STUDIO_V2_JS,200,"application/javascript; charset=utf-8",m);
   if(path==="/assets/sites.css")return send(STYLE,200,"text/css; charset=utf-8",m);
