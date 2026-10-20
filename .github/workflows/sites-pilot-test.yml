@@ -66,3 +66,34 @@ jobs:
         run: npx --yes wrangler@4.135.0 deploy --dry-run --config sites/wrangler.jsonc --outdir /tmp/anevum-sites-public-bundle
       - name: Bundle owner Worker imports without deploying
         run: npx --yes wrangler@4.135.0 deploy --dry-run --config sites/wrangler.workshop.jsonc --outdir /tmp/anevum-sites-private-bundle
+
+  render-candidate:
+    name: Review-only mobile and desktop screenshots
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Render isolated source without Cloudflare deployment
+        run: |
+          node --check sites/visual-review.mjs
+          node sites/visual-review.mjs /tmp/anevum-sites-review
+      - name: Capture candidate in installed Chrome
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -z "$CHROME" ]; then echo "Headless Chrome unavailable on runner"; exit 1; fi
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --no-first-run --window-size=1440,1000 --screenshot=/tmp/anevum-sites-review/studio-desktop.png file:///tmp/anevum-sites-review/studio.html
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --no-first-run --window-size=390,844 --screenshot=/tmp/anevum-sites-review/studio-mobile.png file:///tmp/anevum-sites-review/studio.html
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --no-first-run --window-size=1440,1000 --screenshot=/tmp/anevum-sites-review/smokebreak-desktop.png file:///tmp/anevum-sites-review/smokebreak-private.html
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --no-first-run --window-size=390,844 --screenshot=/tmp/anevum-sites-review/smokebreak-mobile.png file:///tmp/anevum-sites-review/smokebreak-private.html
+          for image in /tmp/anevum-sites-review/*.png; do test -s "$image"; done
+      - name: Attach screenshots for PR review
+        uses: actions/upload-artifact@v4
+        with:
+          name: sites-v004-desktop-mobile-review
+          path: /tmp/anevum-sites-review/*.png
+          retention-days: 14
