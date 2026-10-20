@@ -49,14 +49,14 @@ function blockGuest(request){
     return textResponse(request.method==="HEAD"?null:"Not found",404);
   return countdown(request);
 }
-function securePlatform(response,mode){
+function securePlatform(response,mode,pathname=''){
   const headers=new Headers(response.headers);
   headers.set("cache-control","private, no-store");
   headers.set("vary","Cookie");
   headers.set("x-content-type-options","nosniff");
   headers.set("referrer-policy","no-referrer");
   headers.set("x-frame-options","DENY");
-  if(mode!=="public")headers.set("x-robots-tag","noindex, nofollow, noarchive");
+  if(mode!=="public"||pathname==="/studio/alpha")headers.set("x-robots-tag","noindex, nofollow, noarchive");
   else headers.delete("x-robots-tag");
   // Platform CSP and member cookies must not be discarded/replaced here.
   return new Response(response.body,{status:response.status,
@@ -82,7 +82,7 @@ export function createApexPrelaunchGateway({
       const gated=originReady && mode==="gated";
       if(released){
         const output=await platform(request,env,ctx);
-        return securePlatform(output,"public");
+        return securePlatform(output,"public",url.pathname);
       }
       if(!gated)return blockGuest(request);
       let identityResult=null;
@@ -96,7 +96,7 @@ export function createApexPrelaunchGateway({
         return new Response(null,{status:303,headers:{...HEADERS,location:"/"}});
       if(url.pathname==="/robots.txt")return textResponse("User-agent: *\nDisallow: /\n",200);
       const result=await platform(request,env,ctx);
-      return securePlatform(result,"gated");
+      return securePlatform(result,"gated",url.pathname);
     }
   };
 }
