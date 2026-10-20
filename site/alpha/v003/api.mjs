@@ -422,6 +422,39 @@ async function coverImage(req,env,releaseId) {
     "x-robots-tag":"noindex"
   }});
 }
+async function reclaimRevokedAssets(req,env,u) {
+  if(!staff(env,u.id))return fail(403,"Staff operations permission required");
+  const body=await req.json().catch(()=>null);
+  if(body?.confirm!=="reclaim_revoked_v1")return fail(422,"Explicit revoked-asset cleanup confirmation required");
+  const items=(await env.DB.prepare(
+    "SELECT r.id,r.source_key FROM anevum_package_releases r " +
+    "JOIN anevum_package_projects p ON p.id=r.project_id " +
+    "WHERE r.status='revoked' AND r.source_key IS NOT NULL " +
+    "AND COALESCE(p.live_release_id,'')!=r.id AND COALESCE(p.draft_release_id,'')!=r.id " +
+    "ORDER BY r.created_at ASC LIMIT 2"
+  ).all()).results;
+  let reclaimed=0,pending=0;
+  for(const item of items){
+    const assets=(await env.DB.prepare(
+      "SELECT object_key FROM anevum_package_files WHERE release_id=?"
+    ).bind(item.id).all()).results;
+    const keys=[item.source_key,...assets.map(x=>x.object_key)].filter(Boolean);
+    try{
+      for(let n=0;n<keys.length;n+=100)await env.MEDIA.delete(keys.slice(n,n+100));
+      await env.DB.batch([
+        env.DB.prepare(
+          "DELETE FROM anevum_package_files WHERE release_id=? " +
+          "AND EXISTS(SELECT 1 FROM anevum_package_releases WHERE id=? AND status='revoked')"
+        ).bind(item.id,item.id),
+        env.DB.prepare(
+          "UPDATE anevum_package_releases SET source_key=NULL WHERE id=? AND status='revoked'"
+        ).bind(item.id)
+      ]);
+      reclaimed++;
+    }catch{pending++;}
+  }
+  return json({scanned:items.length,reclaimed,pending,limited_to:2});
+}
 async function api(req,env,path) {
   const coverRoute=path.match(/^\/api\/v1\/packages\/covers\/([0-9a-f-]{36})$/);
   if(coverRoute&&req.method==="GET"&&UUID.test(coverRoute[1]))
@@ -442,6 +475,7 @@ async function api(req,env,path) {
   if(req.method!=="POST"||!csrf(req))return fail(403,"Origin or method not authorized");
   const u=await member(req,env);
   if(!u)return fail(401,"A verified ANEVUM session is required");
+  if(path==="/api/v1/packages/maintenance/reclaim")return reclaimRevokedAssets(req,env,u);
   if(path==="/api/v1/packages/upload")return upload(req,env,u);
   const m=path.match(/^\/api\/v1\/packages\/projects\/([0-9a-f-]{36})\/(submit|review|delete|discard|moderate)$/);
   if(!m||!UUID.test(m[1]))return fail(404,"Unknown API route");
