@@ -3,13 +3,14 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
-import { deflateRawSync } from "node:zlib";
+import { deflateRawSync, deflateSync } from "node:zlib";
 import { DatabaseSync } from "node:sqlite";
 import { Script } from "node:vm";
 import { SCRIPT, CSS } from "../site/alpha/v003/ui.mjs";
 import api from "../site/alpha/v003/api.mjs";
 import runtime from "../site/alpha/v003/runtime.mjs";
 import { inspectZip, extractEntry, crc32, PackageError } from "../site/alpha/v003/archive.mjs";
+import { prepareCover, COVER_PATH } from "../site/alpha/v003/cover.mjs";
 import { mintPreview, verifyPreview } from "../site/alpha/v003/tokens.mjs";
 
 const ROOT=resolve(dirname(fileURLToPath(import.meta.url)),"..");
@@ -431,4 +432,129 @@ test("a missing player shows no submission or approval actions",async()=>{
     assert.match(html,/Private playback is not configured/);
     assert.doesNotMatch(html,/data-package-action="submit"/);
   } finally {env.DB.close();}
+});
+
+
+function pngChunk(type,data){
+  const name=Buffer.from(type,"ascii"),bytes=Buffer.from(data),chunk=Buffer.alloc(12+bytes.length);
+  chunk.writeUInt32BE(bytes.length,0);name.copy(chunk,4);bytes.copy(chunk,8);
+  chunk.writeUInt32BE(crc32(Buffer.concat([name,bytes])),8+bytes.length);
+  return chunk;
+}
+function makeCover(width=960,height=540){
+  const head=Buffer.alloc(13);head.writeUInt32BE(width,0);head.writeUInt32BE(height,4);
+  head[8]=8;head[9]=6;
+  const rows=Buffer.alloc(height*(width*4+1));
+  for(let y=0;y<height;y++){
+    const off=y*(width*4+1);rows[off]=0;
+    for(let x=0;x<width;x++){
+      const p=off+1+x*4;
+      rows[p]=24;rows[p+1]=(x%160)+63;rows[p+2]=132;rows[p+3]=255;
+    }
+  }
+  return Buffer.concat([
+    Buffer.from([137,80,78,71,13,10,26,10]),
+    pngChunk("IHDR",head),
+    pngChunk("IDAT",deflateSync(rows,{level:6})),
+    pngChunk("IEND",Buffer.alloc(0))
+  ]);
+}
+function uploadWithCover(img,projectId=""){
+  const form=uploadForm(sample(),"Real Artwork Project",projectId);
+  form.set("cover",new File([img],"cover.png",{type:"image/png"}));
+  return form;
+}
+test("PNG cover validation checks dimensions, chunk checksums and image structure",async()=>{
+  const good=makeCover(),ok=await prepareCover(new File([good],"my-cover.png",{type:"image/png"}));
+  assert.equal(ok.width,960);assert.equal(ok.height,540);
+  assert.equal(ok.path,COVER_PATH);
+  assert.equal(ok.mime,"image/png");
+  assert.equal(ok.bytes.length,good.length);
+  const broken=Buffer.from(good);broken[35]^=0x88;
+  await assert.rejects(prepareCover(new File([broken],"corrupt.png",{type:"image/png"})),/checksum/i);
+  await assert.rejects(prepareCover(new File([makeCover(300,300)],"small.png",{type:"image/png"})),/640/);
+  await assert.rejects(prepareCover(new File([good],"cover.svg",{type:"image/svg+xml"})),/PNG/);
+});
+test("private cover is owner and staff only, and approved cover is public with secure MIME",async()=>{
+  const env=setup();
+  try{
+    const png=makeCover();
+    const response=await post(env,"/api/v1/packages/upload",uploadWithCover(png));
+    assert.equal(response.status,201,await response.clone().text());
+    const project=await response.json(),url="/api/v1/packages/covers/"+project.release_id;
+    const rows=await env.DB.prepare(
+      "SELECT path,mime,bytes FROM anevum_package_files WHERE release_id=? AND path=?"
+    ).bind(project.release_id,COVER_PATH).first();
+    assert.equal(rows.path,COVER_PATH);assert.equal(rows.mime,"image/png");
+    assert.equal(rows.bytes,png.length);
+    const privateOwner=await getPage(env,url,"owner");
+    assert.equal(privateOwner.status,200);
+    assert.equal(privateOwner.headers.get("content-type"),"image/png");
+    assert.equal(privateOwner.headers.get("x-content-type-options"),"nosniff");
+    assert.match(privateOwner.headers.get("content-security-policy"),/default-src 'none'/);
+    assert.equal(Buffer.compare(Buffer.from(await privateOwner.arrayBuffer()),png),0);
+    assert.equal((await getPage(env,url,"visitor")).status,404);
+    assert.equal((await getPage(env,url,"intruder")).status,404);
+    assert.equal((await getPage(env,url,"staff")).status,200);
+    const draft=await (await getPage(env,"/upload/v3")).text();
+    assert.match(draft,new RegExp("/api/v1/packages/covers/"+project.release_id));
+    assert.equal((await post(env,"/api/v1/packages/projects/"+project.id+"/submit",{})).status,200);
+    const queue=await (await getPage(env,"/staff/packages","staff")).text();
+    assert.match(queue,new RegExp("/api/v1/packages/covers/"+project.release_id));
+    assert.equal((await post(env,"/api/v1/packages/projects/"+project.id+"/review",{action:"publish"},"staff")).status,200);
+    assert.equal((await getPage(env,url,"visitor")).status,200);
+    const catalog=await (await getPage(env,"/packages","visitor")).text();
+    assert.match(catalog,/av-project-cover/);
+    assert.match(catalog,new RegExp("/api/v1/packages/covers/"+project.release_id));
+    const publicAPI=await (await getPage(env,"/api/v1/packages/projects","visitor")).json();
+    assert.equal(publicAPI.projects[0].cover_url,url);
+    const publicPlayer=await (await getPage(env,"/play/v3/"+project.id,"visitor")).text();
+    assert.match(publicPlayer,/av-release-art/);
+    const suspend=await post(env,"/api/v1/packages/projects/"+project.id+"/moderate",
+      {action:"suspend",reason:"Temporary safety and rights investigation"},"staff");
+    assert.equal(suspend.status,200);
+    assert.equal((await getPage(env,url,"visitor")).status,404,"suspension must revoke public artwork immediately");
+    assert.equal((await post(env,"/api/v1/packages/projects/"+project.id+"/moderate",
+      {action:"restore"},"staff")).status,200);
+    assert.equal((await getPage(env,url,"visitor")).status,200);
+  } finally{env.DB.close();}
+});
+test("revision cover remains private until approval, and previous cover is not attached to new release",async()=>{
+  const env=setup();
+  try {
+    const initial=await (await post(env,"/api/v1/packages/upload",uploadWithCover(makeCover()))).json();
+    assert.equal((await post(env,"/api/v1/packages/projects/"+initial.id+"/submit",{})).status,200);
+    assert.equal((await post(env,"/api/v1/packages/projects/"+initial.id+"/review",
+      {action:"publish"},"staff")).status,200);
+    const firstCover="/api/v1/packages/covers/"+initial.release_id;
+    const update=await (await post(env,"/api/v1/packages/upload",uploadForm(sample(),"Revision without cover",initial.id))).json();
+    assert.equal(update.version,2);
+    const publicBefore=await (await getPage(env,"/api/v1/packages/projects","visitor")).json();
+    assert.equal(publicBefore.projects[0].cover_url,firstCover);
+    const ownDraft=await (await getPage(env,"/upload/v3")).text();
+    assert.match(ownDraft,/Revision without cover|Real Artwork Project/);
+    assert.equal((await post(env,"/api/v1/packages/projects/"+initial.id+"/submit",{})).status,200);
+    assert.equal((await post(env,"/api/v1/packages/projects/"+initial.id+"/review",
+      {action:"publish"},"staff")).status,200);
+    const publicAfter=await (await getPage(env,"/api/v1/packages/projects","visitor")).json();
+    assert.equal(publicAfter.projects[0].cover_url,null);
+    assert.equal((await getPage(env,firstCover,"visitor")).status,404);
+  }finally{env.DB.close();}
+});
+test("unsafe PNG cover or reserved ZIP metadata path fails without uploading assets",async()=>{
+  const env=setup();
+  try {
+    const png=makeCover(),bad=Buffer.from(png);bad[39]^=8;
+    const failed=await post(env,"/api/v1/packages/upload",uploadWithCover(bad));
+    assert.equal(failed.status,422);
+    assert.equal(env.MEDIA.data.size,0);
+    const zip=makeZip({
+      "index.html":"<!doctype html><html><body>Safe</body></html>",
+      "_anevum/cover.png":Buffer.from("unreviewed", "utf8")
+    });
+    const reserved=await post(env,"/api/v1/packages/upload",uploadForm(zip));
+    assert.equal(reserved.status,422);
+    assert.match((await reserved.json()).error,/reserved/);
+    assert.equal(env.MEDIA.data.size,0);
+  }finally{env.DB.close();}
 });
