@@ -171,6 +171,16 @@ test('V093 externally assigned aura resynchronizes the owner player-card studio 
  assert.doesNotMatch(ui,/role:\s*['"]founder['"]|role:\s*['"]moderator['"]/);
 });
 
+test('V094 studio save rehydrates the owner world instead of leaving stale aura',()=>{
+ const studio=read('web/src/components/PlayerCardStudio.tsx');
+ const dashboard=read('web/src/components/MemberSpaceDashboard.tsx');
+ assert.match(studio,/onSaved\\?:\\(\\)=>Promise<void>/);
+ assert.match(studio,/if\\(onSaved\\)await onSaved\\(\\)/);
+ assert.match(dashboard,/onSaved=\\{refresh\\}/);
+ assert.match(dashboard,/async function refresh\\(\\)/);
+ assert.doesNotMatch(studio,/other open tabs refresh when revisited/);
+});
+
 test('V093 optional Insignias Worker is route-free and feature-disabled by default',()=>{
  const config=JSON.parse(read('wrangler.iren-insignias-v093.jsonc'));
  assert.equal(config.name,'anevum-iren-insignias-v093');
