@@ -470,7 +470,7 @@ test("PNG cover validation checks dimensions, chunk checksums and image structur
   assert.equal(ok.path,COVER_PATH);
   assert.equal(ok.mime,"image/png");
   assert.equal(ok.bytes.length,good.length);
-  const broken=Buffer.from(good);broken[35]^=0x88;
+  const broken=Buffer.from(good);broken[45]^=0x88; // Mutate IDAT payload, not the PNG chunk length.
   await assert.rejects(prepareCover(new File([broken],"corrupt.png",{type:"image/png"})),/checksum/i);
   await assert.rejects(prepareCover(new File([makeCover(300,300)],"small.png",{type:"image/png"})),/640/);
   await assert.rejects(prepareCover(new File([good],"cover.svg",{type:"image/svg+xml"})),/PNG/);
