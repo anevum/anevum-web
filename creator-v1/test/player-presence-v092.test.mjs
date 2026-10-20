@@ -55,9 +55,12 @@ test('V092 atmosphere and insignia presentations cover all five live affinities 
 
 test('V092 protected staff member directory distinguishes saved auras from unsaved previews',()=>{
  const source=read('operations/anevum-iren-staff-observatory-v001.mjs');
- const match=source.match(/const CLIENT = ("(?:\\\\.|[^"\\\\])*");/);
- assert.ok(match,'Embedded staff frontend must be available for review');
- const script=JSON.parse(match[1]);
+ const prefix='const CLIENT = ';
+ const start=source.indexOf(prefix);
+ assert.ok(start>=0,'Embedded staff frontend must be available for review');
+ const end=source.indexOf(';\n',start);
+ assert.ok(end>start,'Staff frontend literal must have a terminator');
+ const script=JSON.parse(source.slice(start+prefix.length,end));
  assert.doesNotThrow(()=>parse(script,{sourceType:'script'}));
  assert.match(script,/const assignedAura=roles\.includes\(m\.aura\)/);
  assert.match(script,/roles\.includes\(selector\.value\)/);
