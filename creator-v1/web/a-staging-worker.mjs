@@ -4,6 +4,7 @@
 import publicApi from "../api/worker.mjs";
 
 const SITE = "a.anevum.com";
+const PUBLIC_ALPHA = /^\/studio\/alpha\/?$/i;
 const PUBLISHED = /^\/api\/v1\/(?:status|categories|boards|community\/posts(?:\/[a-f0-9]{32})?|projects(?:\/[A-Za-z0-9_-]+(?:\/repository)?)?|creators(?:\/[a-z][a-z0-9_]{2,29})?)$/i;
 const SECURITY = {
   "x-content-type-options":"nosniff",
@@ -15,7 +16,7 @@ const SECURITY = {
 const textResponse=(status,message,method)=>new Response(method==="HEAD"?null:message,{
   status,headers:{...SECURITY,"content-type":"text/plain; charset=utf-8","cache-control":"no-store"}
 });
-function protect(response,method,forceNoStore=false,nativePlayer=false){
+function protect(response,method,forceNoStore=false,nativePlayer=false,guestAlpha=false){
   const headers=new Headers(response.headers);
   for(const [key,value] of Object.entries(SECURITY))headers.set(key,value);
   const html=headers.get("content-type")?.toLowerCase().includes("text/html");
@@ -23,8 +24,12 @@ function protect(response,method,forceNoStore=false,nativePlayer=false){
   if(html)headers.set("content-security-policy",
     "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; "+
     "img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; "+
-    (nativePlayer?"frame-src https://anevum-package-alpha-v003-runtime.devonakins.workers.dev; ":"")+
-    "base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'");
+    (nativePlayer?"frame-src https://anevum-package-alpha-v003-runtime.devonakins.workers.dev"+(guestAlpha?" 'self' about: blob:":"")+"; ":guestAlpha?"frame-src 'self' about: blob:; ":"")+
+    // srcdoc inherits the parent CSP. On this one untrusted sandbox route,
+    // inheriting frame-ancestors 'none' can block its own opaque-origin frame.
+    // X-Frame-Options: DENY still protects the HTTP page from framing.
+    "base-uri 'none'; form-action 'self'; "+
+    (guestAlpha?"":"frame-ancestors 'none'; ")+"object-src 'none'");
   headers.delete("set-cookie");
   return new Response(method==="HEAD"?null:response.body,{
     status:response.status,statusText:response.statusText,headers
@@ -54,7 +59,10 @@ return {
       if(value)headers.set(name,value);
     }
     const clean=new Request(url.href,{method:request.method,headers});
-    return protect(await env.ASSETS.fetch(clean),request.method,false,env.PACKAGE_NATIVE_STUDIO_ENABLED==="true");
+    // Only the anonymous alpha needs a sandboxed, scriptless srcdoc frame.
+    // Other public pages retain the restrictive default-src policy.
+    return protect(await env.ASSETS.fetch(clean),request.method,false,
+      env.PACKAGE_NATIVE_STUDIO_ENABLED==="true",PUBLIC_ALPHA.test(url.pathname));
   }
 };
 }

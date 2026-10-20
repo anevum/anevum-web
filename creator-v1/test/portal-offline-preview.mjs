@@ -282,6 +282,15 @@ createServer((req,res)=>{
   }
   if(u.pathname==="/creator"||u.pathname.startsWith("/creator/")){
     const header={"content-type":"text/html; charset=utf-8","cache-control":"no-store"};
+    // V096 local browser QA: replay the route-specific production frame CSP
+    // only when explicitly requested. Never alter other fixture scenarios.
+    if(process.env.ANEVUM_V096_ALPHA_CSP_QA==="1"&&u.pathname==="/creator/studio/alpha"){
+      header["content-security-policy"]=
+        "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; "+
+        "img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; "+
+        "frame-src 'self' about: blob:; base-uri 'none'; form-action 'self'; object-src 'none'";
+      header["x-frame-options"]="DENY";
+    }
     // Restrict the fake member cookie to the local one-off editor visual capture.
     if(u.pathname==="/creator/account"&&req.headers.host==="127.0.0.1:4178")
       header["set-cookie"]=LOCAL_REVIEW_COOKIE+"; Path=/; SameSite=Strict";
