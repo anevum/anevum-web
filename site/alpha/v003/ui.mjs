@@ -289,11 +289,12 @@ const displayDate=seconds=>{
 };
 export function layout(title,body,runner=""){
   const runnerFrame=runner?"frame-src "+runner+"; ":"frame-src 'none'; ";
+  const uploadActive=title==="Upload a creation"?' aria-current="page"':"";
   const html='<!doctype html><html lang="en"><head><meta charset="utf-8">'+
     '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'+
     '<meta name="theme-color" content="#071020"><title>'+esc(title)+' · ANEVUM</title><style>'+CSS+V005_CSS+'</style></head><body>'+
     '<header><div class="top"><a class="brand" href="/"><span class="brand-mark">'+CREST+'</span><span class="brand-words"><strong>ANEVUM</strong><small>CONTINUANCE INSTITUTE</small></span></a>'+
-    '<nav aria-label="Primary"><a href="/discover">Discover</a><a href="/upload/v3" aria-current="page" aria-label="Upload a creation">Upload</a><a href="/member">My Space</a><a href="/help/packages">Guide</a></nav>'+
+    '<nav aria-label="Primary"><a href="/discover">Discover</a><a href="/upload/v3"'+uploadActive+' aria-label="Upload a creation">Upload</a><a href="/member">My Space</a><a href="/help/packages">Guide</a></nav>'+
     '<span class="header-readout" aria-hidden="true"><i></i> CREATOR / UPLINK</span></div></header>'+
     '<main id="main-content">'+body+'</main><footer class="foot">ANEVUM / Creator uplink · <a href="/help/packages">Upload guide</a> · Every playable release requires independent review.</footer>'+
     '<script>'+SCRIPT+'</script></body></html>';
