@@ -181,7 +181,7 @@ export function uploadScreen(projects,loggedIn,pilot,updateId,usage=null){
  const upload=!loggedIn
    ?'<div class="notice"><strong>Member sign-in required.</strong><p>Sign in using your ANEVUM account to create a project.</p><div class="actions"><a class="button primary" href="/join">Sign in</a></div></div>'
    :!pilot
-   ?'<div class="notice"><strong>Creator alpha is invitation-only.</strong><p>New uploads open after the package security and moderation gates are completed.</p></div>'
+   ?'<div class="notice"><strong>New uploads are paused or restricted.</strong><p>You can still manage, save and discard your existing private projects below. IREN will guide you when the uploader becomes available.</p></div>'
    :'<form id="publish-form" aria-busy="false">'+
      '<input type="hidden" name="project_id" id="existing-project" value="'+esc(updateId)+'">'+
      '<input type="hidden" name="replace_draft" id="replace-draft" value="'+(selected?.draft_release_id?"1":"0")+'">'+
