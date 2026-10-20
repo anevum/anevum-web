@@ -433,7 +433,7 @@ export default {
       if(path==="/help/packages"||path==="/help/packages/")return helpScreen();
       if(path==="/staff/packages"||path==="/staff/packages/"||path==="/review/packages") {
         const u=await member(req,env);
-        return u&&staff(env,u.id)?queueScreen(await reviewList(env.DB)):a404();
+        return u&&staff(env,u.id)?queueScreen(await reviewList(env.DB),await staffMetrics(env.DB)):a404();
       }
       const m=path.match(/^\/play\/v3\/([0-9a-f-]{36})\/?$/);
       if(m&&UUID.test(m[1]))return player(req,env,m[1]);
