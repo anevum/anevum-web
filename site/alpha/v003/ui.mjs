@@ -138,11 +138,48 @@ export const SCRIPT = String.raw`
     if(f&&q("file-label"))q("file-label").textContent=f.name+" · "+(f.size/MiB).toFixed(2)+" MiB";
     if(error)note(error,true);
     else note("File selected. Add the project details, then prepare a private preview.");
-    if(q("upload-button"))q("upload-button").disabled=!!error;
+    if(q("upload-button"))q("upload-button").disabled=!!error||!!coverError;
   }
   if(file){
     file.addEventListener("change",()=>updateFile(file.files[0]));
   }
+  const cover=q("cover"),coverPreview=q("cover-preview"),coverArt=q("cover-preview-wrap"),coverNote=q("cover-hint");
+  let coverObjectURL=null,coverError="",coverValidation=0;
+  function coverStatus(message,isError=false){
+    if(coverNote){coverNote.textContent=message;coverNote.classList.toggle("bad",isError);}
+    coverError=isError?message:"";
+    if(q("upload-button"))q("upload-button").disabled=!!coverError||!!validFile(file?.files?.[0]);
+  }
+  if(cover)cover.addEventListener("change",()=>{
+    const token=++coverValidation;
+    const uploaded=cover.files?.[0];
+    if(coverObjectURL){URL.revokeObjectURL(coverObjectURL);coverObjectURL=null;}
+    if(coverPreview){coverPreview.hidden=true;coverPreview.removeAttribute("src");}
+    coverArt?.classList.remove("has-image");
+    if(!uploaded){coverStatus("Optional. Use an original PNG cover you have rights to.");return;}
+    if(uploaded.size>3*MiB||uploaded.size<70||!/\.png$/i.test(uploaded.name)){
+      coverStatus("Choose a PNG cover between 70 bytes and 3 MiB.",true);return;
+    }
+    coverObjectURL=URL.createObjectURL(uploaded);
+    const image=new Image();
+    image.onload=()=>{
+      if(token!==coverValidation)return;
+      const w=image.naturalWidth,h=image.naturalHeight;
+      if(w<640||h<360||w>4096||h>4096||w*h>12000000||w/h<0.5||w/h>3){
+        coverStatus("Use a PNG from 640×360 to 4096×4096 pixels with a sensible aspect ratio.",true);
+        return;
+      }
+      if(coverPreview){
+        coverPreview.src=coverObjectURL;
+        coverPreview.hidden=false;
+        coverArt?.classList.add("has-image");
+      }
+      coverStatus("Artwork ready · "+w+" × "+h+" · "+(uploaded.size/MiB).toFixed(2)+" MiB");
+    };
+    image.onerror=()=>{if(token===coverValidation)coverStatus("The selected PNG could not be displayed.",true);};
+    image.src=coverObjectURL;
+  });
+  addEventListener("pagehide",()=>{if(coverObjectURL)URL.revokeObjectURL(coverObjectURL);});
   if(drop){
     for(const event of ["dragenter","dragover"])drop.addEventListener(event,e=>{e.preventDefault();drop.classList.add("drag");});
     for(const event of ["dragleave","dragend"])drop.addEventListener(event,e=>{e.preventDefault();drop.classList.remove("drag");});
@@ -167,6 +204,7 @@ export const SCRIPT = String.raw`
     e.preventDefault();
     const b=q("upload-button"),f=file?.files?.[0],error=validFile(f);
     if(error){note(error,true);if(file)file.focus();return;}
+    if(coverError){note(coverError,true);cover?.focus();return;}
     if(!form.reportValidity())return;
     b.disabled=true;
     note("Uploading and validating your files. Keep this page open until the private build is ready.");
@@ -301,7 +339,7 @@ export function layout(title,body,runner=""){
   return new Response(html,{headers:{"content-type":"text/html; charset=utf-8",
     "cache-control":"private, no-store","x-content-type-options":"nosniff",
     "referrer-policy":"no-referrer","x-robots-tag":"noindex",
-    "content-security-policy":"default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' data:; "+runnerFrame+" connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'self'"}});
+    "content-security-policy":"default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' data: blob:; "+runnerFrame+" connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'self'"}});
 }
 export function card(p,owner=false,reviewer=false){
   const hasDraft=!!p.draft_release_id;
@@ -323,10 +361,13 @@ export function card(p,owner=false,reviewer=false){
         '<a class="button quiet" href="/upload/v3?update='+esc(p.id)+'">'+(p.status==="published"?"Upload an update":"Revise project")+'</a>';
     }
   }else controls='<a class="button primary" href="'+projectURL(p.id)+'">Open project</a>';
+  const image=p.cover_release_id
+    ?'<img class="av-project-cover" src="/api/v1/packages/covers/'+esc(p.cover_release_id)+'" loading="lazy" decoding="async" alt="Cover artwork for '+esc(p.title)+'">'
+    :"";
   return '<article class="project" aria-label="'+esc(p.title)+'">'+
-    '<div class="av-project-plate" aria-label="ANEVUM project record, not a creator screenshot">'+
+    '<div class="av-project-plate'+(image?' av-has-cover':'')+'" aria-label="'+(image?'Creator-supplied approved or private project cover':'ANEVUM record; no creator cover uploaded')+'">'+
     '<span class="av-project-plate-label">'+(owner?'YOUR PROJECT':reviewer?'AWAITING REVIEW':'PLAYABLE RELEASE')+'</span>'+
-    SIGIL+'<span class="av-project-index">ANEVUM / '+esc(p.category||"PROJECT").toUpperCase()+'</span></div>'+
+    SIGIL+image+'<span class="av-project-index">ANEVUM / '+esc(p.category||"PROJECT").toUpperCase()+'</span></div>'+
     '<span class="chip '+esc(draftState)+'">'+esc(state(draftState))+' / '+esc(p.category||"project")+'</span>'+
     '<h3>'+esc(p.title)+'</h3><p>'+esc(limited(p.summary))+'</p>'+
     '<div class="meta">'+version+(date?" · Updated "+date:"")+'</div>'+
@@ -365,6 +406,14 @@ export function uploadScreen(projects,loggedIn,pilot,updateId){
         '<input id="bundle" name="file" type="file" accept=".zip,.html,application/zip,text/html" required></label>'+
         '<div class="file-check"><span aria-hidden="true">●</span> Validates files and prepares an isolated private playtest.</div>'+
         format+
+        '<div class="av-cover-field"><label for="cover">Cover artwork <span class="av-field-optional">/ OPTIONAL</span></label>'+
+        '<div class="av-cover-select"><div class="av-cover-preview" id="cover-preview-wrap">'+SIGIL+
+        '<img id="cover-preview" alt="Preview of your selected project artwork" hidden></div>'+
+        '<div class="av-cover-copy"><strong>Give your creation a face.</strong>'+
+        '<p>Use your own cover image, game screenshot or approved artwork. It stays private until the release is approved.</p>'+
+        '<input type="file" class="av-cover-input" id="cover" name="cover" accept=".png,image/png" aria-describedby="cover-hint">'+
+        '<p class="av-cover-hint" id="cover-hint" role="status">PNG only · Up to 3 MiB · Minimum 640 × 360 px · Recommended 1600 × 900 px.</p>'+
+        '</div></div></div>'+
         '<div class="form-grid">'+
         '<div class="full"><label for="title">Project title</label><input class="field" id="title" name="title" type="text" minlength="3" maxlength="100" autocomplete="off" value="'+initialTitle+'" placeholder="e.g. Signal Drift" required></div>'+
         '<div class="full"><label for="category">Type</label><select class="field" id="category" name="category">'+
@@ -430,7 +479,10 @@ export function playerScreen(p,release,runnerURL,isPreview,canEdit,isStaff){
     '<iframe id="game-frame" title="'+esc(label)+'" src="'+esc(runnerURL)+'" sandbox="allow-scripts allow-pointer-lock" allow="fullscreen; gamepad" referrerpolicy="no-referrer" loading="eager"></iframe>'+
     '<button type="button" class="exit-immersive" id="exit-immersive" data-package-action="exit-immersive" data-project="'+esc(p.id)+'">Exit player</button></section>':
     '<div class="notice"><strong>Private playback is not configured.</strong><p>This build cannot be tested or approved until the isolated runtime is available.</p></div>';
-  const notes='<div class="details"><div class="ey">ABOUT THIS RELEASE</div><p>'+esc(synopsis||"")+'</p>'+
+  const artwork=release.cover_release_id
+    ?'<div class="av-release-art"><img src="/api/v1/packages/covers/'+esc(release.cover_release_id)+'" loading="lazy" decoding="async" alt="Creator-supplied release artwork for '+esc(label)+'"><div><span class="ey">PROJECT ARTWORK</span><p>Artwork belongs to this specific '+(isPreview?'private':'approved')+' build. It does not replace the playable experience.</p></div></div>'
+    :"";
+  const notes='<div class="details"><div class="ey">ABOUT THIS RELEASE</div><p>'+esc(synopsis||"")+'</p>'+artwork+
     '<div class="detail-row"><span>Version '+esc(release.version)+'</span><span>'+esc(release.file_count)+' browser files</span><span>'+((Number(release.expanded_bytes)||0)/1048576).toFixed(1)+' MiB</span></div>'+
     (isPreview?'<p class="inline-note"><strong>Private playtest:</strong> Only the creator and authorized reviewers can open this build. Review and publication are separate steps.</p>':"")+
     '<p class="inline-note">If this build fails, check that its index.html and all local resources use relative URLs. External APIs and private service credentials are not supported.</p></div>';
