@@ -1,0 +1,18 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "anevum-sites-public-v001",
+  "main": "./worker.mjs",
+  "compatibility_date": "2026-10-19",
+  "workers_dev": false,
+  "preview_urls": false,
+  "d1_databases": [
+    {
+      "binding": "SITES_DB",
+      "database_name": "anevum-commission-sites-workshop",
+      "database_id": "da8daff1-b57b-416d-9c1f-dfd657c29480"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}

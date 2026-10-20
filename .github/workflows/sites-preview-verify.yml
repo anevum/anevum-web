@@ -1,0 +1,29 @@
+name: ANEVUM Sites isolated contract tests
+
+on:
+  pull_request:
+    paths:
+      - "sites/**"
+      - ".github/workflows/sites-preview-verify.yml"
+  push:
+    branches:
+      - "build/anevum-sites-pilot-20261019-001"
+    paths:
+      - "sites/**"
+      - ".github/workflows/sites-preview-verify.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify public and private Worker contracts
+        run: node --test sites/sites-contract.test.mjs sites/tests/worker.test.mjs

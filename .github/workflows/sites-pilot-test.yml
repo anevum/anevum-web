@@ -1,0 +1,101 @@
+name: ANEVUM Sites pilot verification
+
+on:
+  pull_request:
+    branches:
+      - release/home-wayfinder-v079-approved-20261018
+      - build/anevum-sites-pilot-20261019-001
+    paths:
+      - "sites/**"
+      - ".github/workflows/sites-pilot-test.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-and-security:
+    name: Node 22 isolated Worker contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check out reviewed branch
+        uses: actions/checkout@v4
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check Worker syntax
+        run: |
+          node --check sites/worker.mjs
+          node --check sites/studio-v2.mjs
+          node --check sites/smokebreak-concept.mjs
+          node --check sites/workshop.mjs
+          node --check sites/tests/worker.test.mjs
+      - name: Run no-network contract tests
+        run: node --test sites/tests/worker.test.mjs
+      - name: Verify isolated Cloudflare domains (read-only)
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --retry 4 --retry-delay 3 --max-time 15 https://web.anevum.com/health -o health.json
+          node -e "const f=require('fs'); const d=JSON.parse(f.readFileSync('health.json','utf8')); if (d.ok !== true || !['sites-v003.1-20261019-tvt-showcase','sites-v004-20261020-studio-v2'].includes(d.version)) process.exit(1)"
+          STATUS="$(curl --silent --show-error --retry 3 --retry-delay 2 --max-time 15 --output /dev/null --write-out '%{http_code}' https://web.anevum.com/preview/tobacco-vapor-time)"
+          test "$STATUS" = "302"
+          LOCATION="$(curl --silent --show-error --max-time 15 --output /dev/null --dump-header - https://web.anevum.com/preview/tobacco-vapor-time | tr -d '\r' | grep -i '^location:' | head -n 1)"
+          echo "$LOCATION" | grep -q 'https://preview.anevum.com/tobacco-vapor-time/'
+          PRIVATE_STATUS="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --max-time 15 https://sites.anevum.com/)"
+          if [ "$PRIVATE_STATUS" = "200" ] || [ "$PRIVATE_STATUS" = "000" ]; then
+            echo "Expected owner-only Access boundary, got HTTP $PRIVATE_STATUS"
+            exit 1
+          fi
+          echo "Public read-only routes reachable; private Access boundary not open anonymously"
+
+  bundle-compatibility:
+    name: Wrangler dry-run / no deployment
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Check out candidate source
+        uses: actions/checkout@v4
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Bundle public Worker imports without deploying
+        run: npx --yes wrangler@4.135.0 deploy --dry-run --config sites/wrangler.jsonc --outdir /tmp/anevum-sites-public-bundle
+      - name: Bundle owner Worker imports without deploying
+        run: npx --yes wrangler@4.135.0 deploy --dry-run --config sites/wrangler.workshop.jsonc --outdir /tmp/anevum-sites-private-bundle
+
+  render-candidate:
+    name: Review-only mobile and desktop screenshots
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Render isolated source without Cloudflare deployment
+        run: |
+          node --check sites/visual-review.mjs
+          node sites/visual-review.mjs /tmp/anevum-sites-review
+      - name: Capture candidate in installed Chrome
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -z "$CHROME" ]; then echo "Headless Chrome unavailable on runner"; exit 1; fi
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --no-first-run --window-size=1440,1000 --screenshot=/tmp/anevum-sites-review/studio-desktop.png file:///tmp/anevum-sites-review/studio.html
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --no-first-run --window-size=390,844 --screenshot=/tmp/anevum-sites-review/studio-mobile.png file:///tmp/anevum-sites-review/studio.html
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --no-first-run --window-size=1440,1000 --screenshot=/tmp/anevum-sites-review/smokebreak-desktop.png file:///tmp/anevum-sites-review/smokebreak-private.html
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --no-first-run --window-size=390,844 --screenshot=/tmp/anevum-sites-review/smokebreak-mobile.png file:///tmp/anevum-sites-review/smokebreak-private.html
+          for image in /tmp/anevum-sites-review/*.png; do test -s "$image"; done
+      - name: Attach screenshots for PR review
+        uses: actions/upload-artifact@v4
+        with:
+          name: sites-v004-desktop-mobile-review
+          path: |
+            /tmp/anevum-sites-review/*.png
+            /tmp/anevum-sites-review/*.html
+          retention-days: 14
