@@ -36,13 +36,14 @@ const runnerReady=runtime.status===200&&runtime.body?.ok===true&&
   runtime.body?.stageContract===EXPECTED&&runtime.body?.schemaReady===true&&
   runtime.body?.storage===true&&runtime.body?.cookieless===true;
 const unknownReleaseBlocked=missing.status===404;
-const guestNotUploader=guest.status===200&&
-  !guest.body?.includes('id="publish-form"')&&/sign in/i.test(guest.body||"");
+const guestPreviewOnly=guest.status===200&&
+  !guest.body?.includes('id="publish-form"')&&
+  /staging interface preview only/i.test(guest.body||"");
 const report={
   stage:"anevum isolated package alpha v003",
   source_sha:process.env.GITHUB_SHA||"unknown",
   checked_at:new Date().toISOString(),
-  readOnlyStageReady:controllerReady&&runnerReady&&unknownReleaseBlocked&&guestNotUploader,
+  readOnlyStageReady:controllerReady&&runnerReady&&unknownReleaseBlocked&&guestPreviewOnly,
   publicPublishingAuthorized:false,
   authenticatedJourneyVerified:false,
   actualGameExecuted:false,
@@ -54,7 +55,7 @@ const report={
     schemaReady:runtime.body?.schemaReady===true,storageReady:runtime.body?.storage===true,
     cookieless:runtime.body?.cookieless===true,error:runtime.error||null},
   nonexistentRelease:{status:missing.status,blocked:unknownReleaseBlocked},
-  guestUploader:{status:guest.status,signInGate:guestNotUploader},
+  guestUploader:{status:guest.status,previewOnly:guestPreviewOnly},
   knownExclusions:[
     "No authenticated founder/reviewer/guest publication flow verified",
     "No real game ZIP uploaded or executed",
