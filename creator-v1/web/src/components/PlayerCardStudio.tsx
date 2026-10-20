@@ -47,7 +47,9 @@ export function PlayerCardStudio({profile,space,onAvailabilityChange,onSaved}:{p
    const next=await saveRecognition({
     badgeMode,badgeIds,medalId,ribbonIds,aura,revision:data.revision
    });
-   apply(next);setMessage('Saved. Your aura and earned marks will appear on your public cards; other open tabs refresh when revisited.');
+   apply(next);
+   if(onSaved)await onSaved();
+   setMessage('Saved. Your aura and earned marks are updated on your player card.');
   }catch(e){setError(e instanceof Error?e.message:'Could not save player card.')}
   finally{setSaving(false)}
  }
