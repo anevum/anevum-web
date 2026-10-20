@@ -13,6 +13,7 @@ on:
       - 'creator-v1/web/src/pages/Phase1PublicMemberPage.tsx'
       - 'creator-v1/web/src/member-presence-v092.css'
       - 'creator-v1/test/player-presence-v092.test.mjs'
+      - 'creator-v1/operations/anevum-iren-staff-observatory-v001.mjs'
       - 'creator-v1/test/player-card-v078-live-react-browser.mjs'
       - 'creator-v1/web/src/pages/AuraCodexPage.tsx'
       - 'creator-v1/web/src/pages/aura-codex-v091.css'
@@ -24,6 +25,7 @@ on:
       - 'creator-v1/test/aura-codex-visual-v091.mjs'
       - 'creator-v1/test/player-presence-v092.test.mjs'
       - 'creator-v1/test/player-card-v078-live-react-browser.mjs'
+      - 'creator-v1/operations/anevum-iren-staff-observatory-v001.mjs'
       - '.github/workflows/v091-aura-codex-browser.yml'
   workflow_dispatch:
 
@@ -53,7 +55,9 @@ jobs:
           npm run check:creator-v1-web
           npm run build:creator-v1-web
       - name: Verify server-only roles and responsive aura source invariants
-        run: node --test creator-v1/test/player-presence-v092.test.mjs
+        run: |
+          node --check creator-v1/operations/anevum-iren-staff-observatory-v001.mjs
+          node --test creator-v1/test/player-presence-v092.test.mjs
       - name: Verify six genuine aura entries at 320, 390 and 1440 pixels
         shell: bash
         run: |
