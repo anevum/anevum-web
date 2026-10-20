@@ -8,7 +8,7 @@ export const QA_COOKIE='__Host-anevum-v095-v096-qa';
 const ROOT='/__enter/v095-v096';
 const headers={'cache-control':'private, no-store','x-robots-tag':'noindex, nofollow, noarchive',
  'content-security-policy':"default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
- 'referrer-policy':'no-referrer','x-content-type-options':'nosniff','x-frame-options':'DENY'};
+ 'referrer-policy':'same-origin','x-content-type-options':'nosniff','x-frame-options':'DENY'};
 const response=(body,status=200,extra={})=>new Response(body,{status,headers:{...headers,...extra}});
 /** Access can deliver its signed application JWT in the assertion header
  * without forwarding its browser cookie. Both transports receive exactly the

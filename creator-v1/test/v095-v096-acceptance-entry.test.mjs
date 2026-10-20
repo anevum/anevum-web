@@ -33,6 +33,7 @@ test('assertion-header transport requires a genuine signed JWT for this audience
 test('the review page does not enroll the browser or leak the routing token',async()=>{
  const r=await entry().fetch(request(),env);assert.equal(r.status,200);
  assert.equal(r.headers.get('set-cookie'),null);assert.match(r.headers.get('x-robots-tag'),/noindex/);
+ assert.equal(r.headers.get('referrer-policy'),'same-origin','The protected POST form must retain its Origin header');
  const text=await r.text();assert.match(text,/Opening this page does not mark acceptance/);assert.ok(!text.includes(env.QA_ROUTING_TOKEN));
 });
 test('only authorized same-origin POST can set a bounded host-only routing cookie',async()=>{
