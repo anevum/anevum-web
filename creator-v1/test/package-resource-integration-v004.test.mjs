@@ -190,7 +190,7 @@ test("published releases survive failed edits, expired tests, R2 cleanup and new
   assert.equal(project.draft_release_id,null);
   const health=await result(await s.request("/api/v1/packages/health","alice",{method:"GET"}));
   assert.equal(health.version,"004");
-  assert.equal(health.resourcePolicy,true);
+  assert.equal(health.resourcePolicy,"authenticated-check-only");
   const usage=await result(await s.request("/api/v1/packages/usage","alice",{method:"GET"}));
   assert.equal(usage.httpStatus,200);
   assert.ok(usage.pilotPhysicalBytes>=Buffer.byteLength(HTML("published"))*2);
@@ -268,5 +268,55 @@ test("optional edge rate limiter protects metadata preflight and upload admissio
   assert.equal(s.objects.size,0);
   assert.equal(s.get("SELECT COUNT(*) count FROM anevum_package_upload_limits")[0].count,0,
     "edge rejection avoids even the account-rate D1 write");
+ }finally{await s.close();}
+});
+
+test("expired private tests cannot be saved, submitted, or played before cron cleanup",async()=>{
+ const s=setup();
+ try{
+  const v=await result(await s.upload(HTML("will expire")));
+  assert.equal(v.httpStatus,201,JSON.stringify(v));
+  await s.DB.prepare("UPDATE anevum_package_build_retention SET expires_at=? WHERE release_id=?")
+    .bind(Math.floor(Date.now()/1000)-30,v.release_id).run();
+  const saved=await result(await s.request("/api/v1/packages/projects/"+v.id+"/save"));
+  assert.equal(saved.httpStatus,409,JSON.stringify(saved));
+  const submitted=await result(await s.request("/api/v1/packages/projects/"+v.id+"/submit"));
+  assert.equal(submitted.httpStatus,409,JSON.stringify(submitted));
+  const page=await s.request("/play/v3/"+v.id+"?preview=1","alice",{method:"GET"});
+  assert.equal(page.status,200);
+  const html=await page.text();
+  assert.match(html,/Your private test expired/);
+  assert.doesNotMatch(html,/iframe id="game-frame"/);
+  const studio=await s.request("/upload/v3","alice",{method:"GET"});
+  const markup=await studio.text();
+  assert.match(markup,/Expired test/);
+  assert.match(markup,/Replace expired build/);
+  assert.doesNotMatch(markup,/data-package-action="save"/);
+  assert.equal(s.objects.size,2,"files remain until bounded cleanup runs");
+  const done=await cleanupPackageResources(s.env,Math.floor(Date.now()/1000));
+  assert.equal(done.expired,1,JSON.stringify(done));
+  assert.equal(s.objects.size,0);
+ }finally{await s.close();}
+});
+
+test("public health is D1-free and deleted project tombstones are eventually compacted",async()=>{
+ const s=setup();
+ try{
+  const prepare=s.env.DB.prepare;
+  s.env.DB.prepare=()=>{throw Error("public health endpoint must not query D1");};
+  const health=await result(await s.request("/api/v1/packages/health",null,{method:"GET"}));
+  s.env.DB.prepare=prepare;
+  assert.equal(health.httpStatus,200);
+  assert.equal(health.resourcePolicy,"authenticated-check-only");
+  const v=await result(await s.upload(HTML("disposable")));
+  assert.equal(v.httpStatus,201,JSON.stringify(v));
+  const deleted=await result(await s.request("/api/v1/packages/projects/"+v.id+"/delete"));
+  assert.equal(deleted.httpStatus,200,JSON.stringify(deleted));
+  await Promise.allSettled(s.pending);
+  const later=await cleanupPackageResources(s.env,Math.floor(Date.now()/1000)+40*86400);
+  assert.equal(later.errors,0,JSON.stringify(later));
+  assert.equal(s.get("SELECT COUNT(*) n FROM anevum_package_releases WHERE project_id=?",v.id)[0].n,0);
+  assert.equal(s.get("SELECT COUNT(*) n FROM anevum_package_projects WHERE id=?",v.id)[0].n,0);
+  assert.equal(s.objects.size,0);
  }finally{await s.close();}
 });
