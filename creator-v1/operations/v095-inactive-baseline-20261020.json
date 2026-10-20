@@ -377,5 +377,22 @@
     "live_traffic_promotion": false,
     "authenticated_acceptance": false,
     "physical_iphone": false
-  }
+  },
+  "database_ids": {
+    "COMMUNITY_DB": "fa96e36d-6257-4883-bf15-074947e11a13",
+    "MEMBER_DB": "e1d29049-c83b-4534-8355-dc1fa36ba6d8"
+  },
+  "required_plain_vars": {
+    "ANEVUM_CANONICAL_APEX_ENABLED": "true",
+    "ANEVUM_LAUNCH_APPROVED": "true",
+    "ANEVUM_PRELAUNCH_MODE": "public",
+    "CANONICAL_CREATOR_STUDIO_ENABLED": "true",
+    "CANONICAL_CREATOR_UPLOADS_ENABLED": "false",
+    "CANONICAL_PUBLIC_SIGNUP_ENABLED": "true",
+    "CANONICAL_XP_TEST_ENABLED": "true"
+  },
+  "prohibited_worker_route_prefixes": [
+    "anevum.com/studio/alpha",
+    "anevum.com/studio/alpha/"
+  ]
 }
