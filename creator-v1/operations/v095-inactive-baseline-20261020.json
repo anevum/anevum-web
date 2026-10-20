@@ -1,9 +1,9 @@
 {
   "session": "ANEVUM.OPS.UPDATE.2026-10-20.001.RELEASE-CONSOLIDATION",
-  "purpose": "V095 inactive-only preparation. Route snapshot includes newly added family.anevum.com route; no production routing changes authorized.",
+  "purpose": "V095 + V096 native creator and unlisted public alpha inactive candidate preflight only. Route snapshot includes family.anevum.com; no production routing changes authorized.",
   "repository": "anevum/anevum-web",
-  "source_sha": "ea1d5e7a402c1e85f9645ea76ced8f8cddbe859f",
-  "release_parent_sha": "08567cf69267fc25b61424628dc9ee0b101cec05",
+  "source_sha": "d5af32fd8f04b05e0381f7ac12c59d06c0e836a2",
+  "release_parent_sha": "d5af32fd8f04b05e0381f7ac12c59d06c0e836a2",
   "account_id": "2f7ee83107240152097efd956a4e8335",
   "zone_id": "8abe27259b5436af5966d3b40d9a3760",
   "script": "anevum-apex-prelaunch-gateway",
@@ -357,5 +357,25 @@
       "script": "anevum-member-auth-staging",
       "request_limit_fail_open": false
     }
-  ]
+  ],
+  "release_scope": "Upload new immutable Worker version at 0% traffic for review. Production authenticated acceptance, manual physical-device checks, separate promotion and rollback required. This manifest is NOT an authorization to deploy.",
+  "v096_public_guest_alpha": {
+    "paths": [
+      "/studio/alpha",
+      "/studio/alpha/"
+    ],
+    "anonymous_preview": true,
+    "cloudflare_access_required": false,
+    "cloud_storage": false,
+    "creator_uploads": false,
+    "publish_allowed": false,
+    "server_side_staff_boundary_required": true,
+    "robot_indexing": "noindex, nofollow, noarchive"
+  },
+  "approval": {
+    "production": false,
+    "live_traffic_promotion": false,
+    "authenticated_acceptance": false,
+    "physical_iphone": false
+  }
 }
