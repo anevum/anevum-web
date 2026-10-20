@@ -108,7 +108,20 @@ try{
     await evaluate('(()=>{const input=document.getElementById("qa-iren-editing-probe");input.blur();input.remove();return true})()');
     await send("Page.removeScriptToEvaluateOnNewDocument",{identifier:visibilityProbeId});
   }
-  await until(()=>evaluate('!!document.querySelector(".ir92-first-contact")'),10000);
+  try{
+    await until(()=>evaluate('!!document.querySelector(".ir92-first-contact")'),10000);
+  }catch(error){
+    const diagnostic=await evaluate(`JSON.stringify({
+      visibility:document.visibilityState,
+      active:document.activeElement?.outerHTML?.slice(0,220),
+      seen:localStorage.getItem("anevum.iren.first-contact.v092"),
+      companion:!!document.querySelector(".ir80-dock"),
+      modal:!!document.querySelector('dialog[open],[role="dialog"][aria-modal="true"]'),
+      helperPanel:!!document.querySelector(".ir80-help"),
+      route:location.pathname
+    })`);
+    throw Error("IREN_FIRST_CONTACT_RESUME_FAILED_"+width+": "+diagnostic+" / "+String(error));
+  }
   await check("automatic-arrival-does-not-steal-focus-"+width,'document.activeElement?.getAttribute("aria-label")!=="Close IREN"');
   await check("welcome-live-region-"+width,'document.querySelector(".ir92-voice")?.getAttribute("role")==="status"');
   await check("first-contact-four-choices-"+width,'document.querySelectorAll(".ir92-intent-grid > a,.ir92-intent-grid > button").length===4');
