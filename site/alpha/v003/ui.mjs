@@ -287,7 +287,8 @@ export const SCRIPT = String.raw`
     }
     if(action==="submit"&&!confirm("Submit this exact private build for independent review?"))return;
     if(action==="delete"&&!confirm("Permanently remove this unpublished project and its uploaded files?"))return;
-    btn.disabled=true;note(action==="submit"?"Submitting for review…":"Removing private project…");
+    if(action==="discard"&&!confirm("Discard this unsubmitted build and reclaim its uploaded files? Any approved version will remain live."))return;
+    btn.disabled=true;note(action==="submit"?"Submitting for review…":action==="discard"?"Removing private build and reclaiming assets…":"Removing private project…");
     try{await post("/api/v1/packages/projects/"+id+"/"+action,{action},false);location.reload();}
     catch(err){note(err.message,true);btn.disabled=false;}
   });
@@ -354,7 +355,7 @@ export function card(p,owner=false,reviewer=false){
   }else if(owner){
     if(hasDraft&&(draftState==="ready"||draftState==="pending_review")){
       controls='<a class="button" href="'+preview+'">Preview build</a>'+
-        (draftState==="ready"?action(p,"submit","Submit for review"):"");
+        (draftState==="ready"?action(p,"submit","Submit for review")+action(p,"discard","Discard private build"):"");
       if(isUpdate)controls+='<a class="button quiet" href="'+projectURL(p.id)+'">Live version</a>';
     }else if(!hasDraft){
       controls+=(p.status==="published"?'<a class="button" href="'+projectURL(p.id)+'">Play live release</a>':"")+
