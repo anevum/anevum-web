@@ -48,7 +48,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node creator-v1/test/portal-offline-preview.mjs > "$RUNNER_TEMP/v096-guest-alpha/fixture.log" 2>&1 &
+          ANEVUM_V096_ALPHA_CSP_QA=1 node creator-v1/test/portal-offline-preview.mjs > "$RUNNER_TEMP/v096-guest-alpha/fixture.log" 2>&1 &
           fixture=$!
           trap 'kill "$fixture" 2>/dev/null || true' EXIT
           ready=0
