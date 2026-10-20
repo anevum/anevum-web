@@ -78,3 +78,13 @@ CREATE TABLE IF NOT EXISTS anevum_package_rights_receipts (
   attested_at INTEGER NOT NULL,
   statement TEXT NOT NULL CHECK (statement='creator_has_publication_rights_v1')
 );
+
+-- Canonically verified owner/handle mapping. Never trust a submitted browser handle.
+-- Public read APIs must re-check visibility with canonical member service.
+CREATE TABLE IF NOT EXISTS anevum_package_creator_links (
+  owner_id TEXT PRIMARY KEY,
+  handle TEXT NOT NULL UNIQUE,
+  verified_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_anevum_package_creator_handle
+  ON anevum_package_creator_links(handle);
