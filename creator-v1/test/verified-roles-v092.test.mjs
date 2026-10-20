@@ -81,7 +81,7 @@ test('V092 projection never supplies permission or guesses from email/staff gran
  assert.match(publicCard,/rolesEnabled=false/);
  assert.match(forum,/CANONICAL_VERIFIED_ROLES_ENABLED==='true'/);
  assert.match(community,/CANONICAL_VERIFIED_ROLES_ENABLED==='true'/);
- const executable=module.replace(/\/\\*[\\s\\S]*?\\*\/|\/\/[^\\n]*/g,'');
+ const executable=module.split('\n').filter(line=>!line.trim().startsWith('*')&&!line.trim().startsWith('//')).join('\n');
  assert.doesNotMatch(executable,/staff_access_grants|member_xp_events|INSERT INTO|UPDATE |email|grant_by_user/i);
  assert.doesNotMatch(space,/if.*\.email\.includes\(/);
 });
