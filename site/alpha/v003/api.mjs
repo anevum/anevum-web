@@ -50,7 +50,7 @@ async function boundedMultipart(req) {
 const json = (value,status=200) => Response.json(value,{status,headers:{
   "cache-control":"private,no-store","x-content-type-options":"nosniff","referrer-policy":"no-referrer","x-robots-tag":"noindex"}});
 const fail = (status,message) => json({error:message},status);
-const a404 = () => layout("Unavailable",'<h1>Project unavailable.</h1><p>The requested package or release could not be found.</p>');
+const a404 = () => layout("Unavailable",'<h1>Project unavailable.</h1><p>The requested package or release could not be found.</p>',"",404);
 const query = (db, sql, ...values) => db.prepare(sql).bind(...values).first();
 const run = (db, sql, ...values) => db.prepare(sql).bind(...values).run();
 function listAllowed(value, id) { return !!id && String(value||"").split(",").map(s=>s.trim()).includes(id); }
@@ -581,9 +581,19 @@ export default {
     const stagingRead = req.method==="GET" && url.protocol==="https:" && url.hostname===env.STAGING_CONTROL_HOST && env.STAGING_CONTROL_HOST?.endsWith(".devonakins.workers.dev");
     if(url.origin!==A && !stagingRead)return fail(404,"Unknown host");
     try {
+      // The separate workers.dev hostname is an intentionally public, GET-only
+      // inspection surface, NOT a second login domain. Never resolve identity or
+      // mint a private preview capability from a staging-origin request.
+      if(stagingRead && path.startsWith("/api/v1/packages/") &&
+        !["/api/v1/packages/health","/api/v1/packages/projects"].includes(path))
+        return fail(404,"Unavailable on the read-only staging preview");
+      if(stagingRead && (path.startsWith("/staff/") || path.startsWith("/review/") ||
+        (path.startsWith("/play/v3/") && url.searchParams.get("preview")==="1")))
+        return a404();
       if(path.startsWith("/api/v1/packages/"))return await api(req,env,path);
       if(req.method!=="GET")return fail(405,"Method not allowed");
       if(path==="/upload/v3"||path==="/upload/v3/") {
+        if(stagingRead)return uploadScreen([],false,false,"",true,true);
         const u=await member(req,env);
         const owner=!!u&&pilot(env,u.id);
         const projects=owner?await ownerList(env.DB,u.id):[];
