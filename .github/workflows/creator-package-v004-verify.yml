@@ -8,11 +8,13 @@ on:
     paths:
       - creator-v1/package-alpha-v004/**
       - creator-v1/test/package-resource-*.test.mjs
+      - creator-v1/ops/v004-live-smoke.mjs
       - .github/workflows/creator-package-v004-verify.yml
   pull_request:
     paths:
       - creator-v1/package-alpha-v004/**
       - creator-v1/test/package-resource-*.test.mjs
+      - creator-v1/ops/v004-live-smoke.mjs
       - .github/workflows/creator-package-v004-verify.yml
 
 permissions:
@@ -53,6 +55,8 @@ jobs:
         run: node --test creator-v1/test/package-resource-integration-v004.test.mjs
       - name: Test deployed staging router and signed isolated player
         run: node --test creator-v1/test/package-stage-runtime-v004.test.mjs
+      - name: Smoke live opt-in V004 staging (read-only)
+        run: node creator-v1/ops/v004-live-smoke.mjs
       - name: Render Creator Lab at mobile and desktop resolutions
         shell: bash
         run: |
@@ -84,6 +88,11 @@ jobs:
                 --screenshot="$PWD/evidence/v004/creator-lab-$width.png" \
                 "file://$PWD/evidence/v004/creator-lab-fixture.html" \
                 >"/tmp/anevum-package-chrome-$width.log" 2>&1
+              "$chrome" --headless --no-sandbox --disable-gpu --hide-scrollbars \
+                --disable-dev-shm-usage --window-size="$width,900" \
+                --screenshot="$PWD/evidence/v004/creator-lab-live-$width.png" \
+                "https://anevum.com/creator-lab/v004" \
+                >"/tmp/anevum-package-live-$width.log" 2>&1
             done
           else
             echo "Chromium missing; mobile screenshot gate remains outstanding."
