@@ -58,7 +58,7 @@ function setup(){
   return Response.json({user:{id,emailVerified:true},session:{id:"active"}});
  }};
  const env={DB,MEDIA,AUTH,PILOT_IDS:"alice,bob",STAFF_IDS:"bob",
-  RUNTIME_HOST:"runner.independent-example.org",PACKAGE_PREVIEW_KEY:"test-only-not-production"};
+  RUNTIME_HOST:"runner.independent-example.org",PACKAGE_UPLOADS_ENABLED:"true",PACKAGE_PREVIEW_KEY:"test-only-not-production"};
  const pending=[];
  async function request(path,who="alice",options={}){
   const method=options.method||"POST",headers={"cookie":"member="+who};
@@ -133,6 +133,12 @@ test("upload, duplicate no-op, atomic replace, saved draft and owner discard",as
   assert.equal(s.get("SELECT COUNT(*) count FROM anevum_package_upload_reservations")[0].count,1);
   await cleanupPackageResources(s.env,Math.floor(Date.now()/1000)+1800);
   assert.equal(s.get("SELECT COUNT(*) count FROM anevum_package_upload_reservations")[0].count,0);
+  s.env.PACKAGE_UPLOADS_ENABLED="false";
+  const paused=await result(await s.upload(HTML("paused"),initial.id,true));
+  assert.equal(paused.httpStatus,403,"operators can halt new uploads safely");
+  const ownerPage=await s.request("/upload/v3","alice",{method:"GET"});
+  assert.equal(ownerPage.status,200);
+  assert.ok((await ownerPage.text()).includes("A creator experiment"));
   const discard=await result(await s.request("/api/v1/packages/projects/"+initial.id+"/discard"));
   assert.equal(discard.httpStatus,200,JSON.stringify(discard));
   assert.equal(discard.discarded,true);
@@ -159,6 +165,13 @@ test("published releases survive failed edits, expired tests, R2 cleanup and new
   const v2=await result(await s.upload(HTML("temporary"),v1.id));
   assert.equal(v2.httpStatus,201,JSON.stringify(v2));
   assert.equal(s.objects.size,4);
+  await s.DB.prepare("UPDATE anevum_package_build_retention SET expires_at=? WHERE release_id=?")
+    .bind(Math.floor(Date.now()/1000)-1,v2.release_id).run();
+  const currentSha=createHash("sha256").update(HTML("temporary")).digest("hex");
+  const oldPre=await result(await s.request("/api/v1/packages/preflight","alice",{
+    json:{projectId:v1.id,filename:"game.html",sha256:currentSha,size:Buffer.byteLength(HTML("temporary"))}}));
+  assert.equal(oldPre.httpStatus,200);
+  assert.equal(oldPre.duplicate,false,"expired private builds cannot be reused");
   const after48h=await cleanupPackageResources(s.env,Math.floor(Date.now()/1000)+3*86400);
   assert.equal(after48h.expired,1,JSON.stringify(after48h));
   assert.equal(after48h.processed,1,JSON.stringify(after48h));
