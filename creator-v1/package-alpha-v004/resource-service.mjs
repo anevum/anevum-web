@@ -23,7 +23,7 @@ export async function acquireUploadLease(db,ownerId,token,now){
 export async function releaseUploadLease(db,ownerId,token){
   return run(db,"DELETE FROM anevum_package_upload_leases WHERE owner_id=? AND token=?",ownerId,token);
 }
-export async function recordUploadAttempt(db,ownerId,bytes,now){
+export async function recordUploadAttempt(db,ownerId,now){
   const h=await one(db,
     "INSERT INTO anevum_package_upload_limits(owner_id,window_start,attempts) VALUES(?,?,1) "+
     "ON CONFLICT(owner_id) DO UPDATE SET attempts=CASE WHEN window_start<? THEN 1 ELSE attempts+1 END,"+
@@ -31,14 +31,25 @@ export async function recordUploadAttempt(db,ownerId,bytes,now){
     ownerId,now,now-3600,now-3600);
   const day=Math.floor(now/86400)*86400;
   const d=await one(db,
-    "INSERT INTO anevum_package_daily_limits(owner_id,window_start,attempts,upload_bytes) VALUES(?,?,1,?) "+
+    "INSERT INTO anevum_package_daily_limits(owner_id,window_start,attempts,upload_bytes) VALUES(?,?,1,0) "+
     "ON CONFLICT(owner_id) DO UPDATE SET attempts=CASE WHEN window_start<>excluded.window_start THEN 1 ELSE attempts+1 END,"+
-    "upload_bytes=CASE WHEN window_start<>excluded.window_start THEN excluded.upload_bytes ELSE upload_bytes+excluded.upload_bytes END,"+
+    "upload_bytes=CASE WHEN window_start<>excluded.window_start THEN 0 ELSE upload_bytes END,"+
     "window_start=excluded.window_start RETURNING attempts,upload_bytes",
-    ownerId,day,bytes);
-  if(h.attempts>POLICY.hourlyAttempts)throw new ResourceError("Hourly upload limit reached. Try again after the window resets.",429);
-  if(d.attempts>POLICY.dailyAttempts||d.upload_bytes>POLICY.dailyArchiveBytes)
+    ownerId,day);
+  if(h.attempts>POLICY.hourlyAttempts)
+    throw new ResourceError("Hourly upload limit reached. Try again after the window resets.",429);
+  if(d.attempts>POLICY.dailyAttempts||d.upload_bytes>=POLICY.dailyArchiveBytes)
     throw new ResourceError("Daily upload budget reached. Continue testing locally or try again tomorrow.",429);
+}
+export async function recordUploadBytes(db,ownerId,bytes,now){
+  if(!Number.isSafeInteger(bytes)||bytes<1||bytes>POLICY.maxArchiveBytes)
+    throw new ResourceError("Package exceeds the current archive limit",413);
+  const day=Math.floor(now/86400)*86400;
+  const accepted=await one(db,
+    "UPDATE anevum_package_daily_limits SET upload_bytes=upload_bytes+? "+
+    "WHERE owner_id=? AND window_start=? AND upload_bytes+?<=? RETURNING upload_bytes",
+    bytes,ownerId,day,bytes,POLICY.dailyArchiveBytes);
+  if(!accepted)throw new ResourceError("Daily upload budget reached. Try again tomorrow.",429);
 }
 export async function getStorageUsage(db,ownerId){
   const active=await one(db,
