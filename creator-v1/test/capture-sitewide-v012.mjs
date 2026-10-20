@@ -6,6 +6,7 @@ import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {canonicalAvailabilityProbe,canonicalParticipationProbe} from "./player-browser-probes.mjs";
 import {captureCreatorIdentityV091} from "./creator-identity-browser-v091.mjs";
+import {capturePackageDiscoveryV011} from "./package-discovery-browser-v011.mjs";
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(fn,timeout=18000){
  const stop=Date.now()+timeout;
@@ -66,6 +67,10 @@ try{
   const bytes=Buffer.from(reply.data,"base64");if(bytes.length<4000)throw Error("SITEWIDE_V012_SHORT_IMAGE_"+label);
   writeFileSync(join(output,label+".png"),bytes);
  };
+ if(args.includes('--packages-only')||args.includes('--packages-off')){
+  const acceptance=await capturePackageDiscoveryV011({client,base,evaluate,until,screenshot,enabled:!args.includes('--packages-off')});
+  writeFileSync(join(output,'package-discovery-v011.json'),JSON.stringify(acceptance,null,2));
+ }else{
  const pages=[
   ["home","/",".av79-home"],["discover","/discover",".portal-discover"],
   ["project","/projects/00000000000000000000000000000001",".portal-project"],
@@ -350,9 +355,12 @@ try{
   }
  }
  await captureCreatorIdentityV091({client,base,evaluate,until,screenshot});
+ const packageOff=await capturePackageDiscoveryV011({client,base,evaluate,until,screenshot,enabled:false});
+ writeFileSync(join(output,'package-discovery-v011.json'),JSON.stringify(packageOff,null,2));
  writeFileSync(join(output,"sitewide-v012-capture.json"),JSON.stringify({syntheticFixture:true,creatorIdentityV091:'PASS',pages:results},null,2));
  writeFileSync(join(output,"capture-status.txt"),"SITEWIDE_V012_BROWSER_CAPTURE=PASS\nAll records are synthetic offline visual fixtures; no live member acceptance.\n");
  console.log("SITEWIDE_V012_BROWSER_CAPTURE=PASS; PAGES="+results.length);
+ }
 }finally{
  try{if(client)await client.send("Browser.close");}catch{}
  client?.close();

@@ -83,3 +83,64 @@ export async function readPackageGallery(mode:PackageGalleryMode,handle:string|n
   throw Error('The creator gallery service returned an unexpected response.');
  return parsePackageGallery(await response.json(),mode,safe||undefined);
 }
+
+/** The global package endpoint returns approved releases without exposing a
+ * member identity. Member-wall attribution continues to use the proof-bound
+ * handle endpoint above; no identity is inferred from catalogue metadata. */
+export function parsePackageCatalogue(value:unknown):CreatorPackageCard[]{
+ if(!object(value)||!Array.isArray(value.projects))throw Error('Invalid ANEVUM package catalogue response.');
+ const projects:CreatorPackageCard[]=[],seen=new Set<string>();
+ for(const item of value.projects.slice(0,100)){
+  if(!object(item)||typeof item.id!=='string'||!ID.test(item.id)||seen.has(item.id)||
+    typeof item.title!=='string'||item.title.trim().length<3||item.title.length>100||
+    typeof item.summary!=='string'||item.summary.length>500||
+    typeof item.category!=='string'||!CATEGORY.has(item.category)||
+    typeof item.version!=='number'||!Number.isSafeInteger(item.version)||item.version<1||
+    (item.status!==undefined&&item.status!=='published')||
+    (item.draft_status!==undefined&&item.draft_status!==null))continue;
+  const play='/upload/v3/play/'+item.id;
+  // Older approved catalogue responses omit play_url. Only the UUID from this
+  // published-only endpoint can use the existing canonical package player.
+  if(item.play_url!==undefined&&safePackagePlay(item.play_url)!==play)continue;
+  seen.add(item.id);
+  projects.push({id:item.id,title:item.title,summary:item.summary,category:item.category,
+   version:item.version,status:'published',draftStatus:null,previewUrl:null,playUrl:play,
+   coverUrl:safePackageCover(item.cover_url),
+   publishedAt:typeof item.published_at==='number'&&Number.isSafeInteger(item.published_at)&&item.published_at>0?item.published_at:null});
+ }
+ return projects;
+}
+export async function readPackageCatalogue(enabled=false,signal?:AbortSignal):Promise<CreatorPackageCard[]|null>{
+ if(!enabled)return null;
+ const response=await fetch('/upload/v3/api/v1/packages/projects',{
+  method:'GET',credentials:'omit',mode:'same-origin',cache:'no-store',redirect:'error',signal,
+  headers:{Accept:'application/json'}
+ });
+ if(response.status===404)return null;
+ if(!response.ok)throw Error('Uploaded browser releases are temporarily unavailable.');
+ if(!response.headers.get('content-type')?.toLowerCase().includes('application/json'))
+  throw Error('The package catalogue returned an unexpected response.');
+ return parsePackageCatalogue(await response.json());
+}
+const DISCOVERY_CATEGORY:Record<string,string>={game:'games',simulation:'games',app:'tools',story:'creative'};
+export function packageDiscoveryResults(projects:CreatorPackageCard[],
+ filter:{query:string;category:string;freeOnly:boolean},
+ legacy:ReadonlyArray<{id:string;demoUrl:string|null}>=[]):CreatorPackageCard[]{
+ // Packages have no creator-declared freeToUse field. Do not invent a free
+ // declaration merely because their player does not currently charge money.
+ if(filter.freeOnly)return [];
+ const linked=new Set(legacy.map(item=>item.id));
+ for(const item of legacy){
+  if(!item.demoUrl)continue;
+  try{
+   const url=new URL(item.demoUrl,'https://anevum.com');
+   if(url.origin!=='https://anevum.com'||url.username||url.password||url.search)continue;
+   const path=url.pathname.replace(/\/$/,'');
+   if(safePackagePlay(path))linked.add(path.slice('/upload/v3/play/'.length));
+  }catch{/* An invalid legacy demo cannot claim an uploaded package. */}
+ }
+ const query=filter.query.trim().toLowerCase();
+ return projects.filter(project=>!linked.has(project.id)&&
+  (!filter.category||DISCOVERY_CATEGORY[project.category]===filter.category)&&
+  (!query||(project.title+' '+project.summary).toLowerCase().includes(query)));
+}

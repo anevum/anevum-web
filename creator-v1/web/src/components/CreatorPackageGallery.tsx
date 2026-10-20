@@ -16,12 +16,12 @@ function statusLabel(p:CreatorPackageCard,mode:PackageGalleryMode){
  if(p.status==='rejected'||p.draftStatus==='rejected')return 'CHANGES REQUESTED';
  return 'PRIVATE DRAFT';
 }
-function WorkCard({work,mode}:{work:CreatorPackageCard;mode:PackageGalleryMode}){
+export function WorkCard({work,mode,compact=false}:{work:CreatorPackageCard;mode:PackageGalleryMode;compact?:boolean}){
  const published=mode==='public'||work.status==='published';
  const publishedLabel=work.publishedAt
    ?new Date(work.publishedAt*1000).toLocaleDateString(undefined,{month:'short',year:'numeric'})
    :null;
- return <article className="av010-work-card" aria-label={work.title}>
+ return <article className={'av010-work-card'+(compact?' av010-work-card--compact':'')} aria-label={work.title} data-package-id={work.id}>
   <div className={'av010-work-cover'+(work.coverUrl?' av010-work-cover--creator':'')} aria-label={work.coverUrl?'Creator-supplied project artwork':'ANEVUM project record without uploaded artwork'}>
    {work.coverUrl?<img src={work.coverUrl} alt={'Artwork uploaded for '+work.title} loading="lazy" decoding="async" referrerPolicy="same-origin"/>:
     <span className="av010-work-emblem" aria-hidden="true"><i/><i/><i/></span>}

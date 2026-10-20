@@ -777,7 +777,9 @@ export default {
       if(path==="/help/packages"||path==="/help/packages/")return helpScreen();
       if(path==="/staff/packages"||path==="/staff/packages/"||path==="/review/packages") {
         const u=await member(req,env);
-        return u&&staff(env,u.id)?queueScreen(await reviewList(env.DB)):a404();
+        if(!u||!staff(env,u.id))return a404();
+        const [pending,moderation]=await Promise.all([reviewList(env.DB),moderationList(env.DB)]);
+        return queueScreen(pending,moderation);
       }
       const m=path.match(/^\/play\/v3\/([0-9a-f-]{36})\/?$/);
       if(m&&UUID.test(m[1]))return player(req,env,m[1]);

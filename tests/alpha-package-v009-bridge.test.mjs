@@ -198,7 +198,7 @@ function actualControllerFixture(){
      return packageController.fetch(req,stageEnv);
    }
  };
- return {authCalls,stageHits,env:{PACKAGE_CANONICAL_BRIDGE_ENABLED:"true",
+ return {authCalls,stageHits,stageEnv,env:{PACKAGE_CANONICAL_BRIDGE_ENABLED:"true",
    PACKAGE_IDENTITY_BRIDGE_VERIFIED:"true",PACKAGE_CONTROL:service}};
 }
 test("real package controller through V009 bridge preserves owner session and gives private editable uploader",async()=>{
@@ -287,4 +287,152 @@ test("V010 bridge never rewrites untrusted external game URLs into an executable
  const result=await interceptPackageNamespace(get("/upload/v3/api/v1/packages/creators/cosmiccreator/projects"),env);
  assert.equal(result.status,200);
  assert.deepEqual((await result.json()).projects,data.projects);
+});
+
+const PREFLIGHT="/upload/v3/preflight";
+function preflightFixture(){
+ const f=actualControllerFixture();
+ f.env.PACKAGE_IDENTITY_PREFLIGHT_ENABLED="true";
+ f.env.PACKAGE_CANONICAL_BRIDGE_ENABLED="false";
+ f.env.PACKAGE_IDENTITY_BRIDGE_VERIFIED="false";
+ f.stageEnv.PACKAGE_CREATOR_GALLERY_ENABLED="false";
+ f.stageEnv.PACKAGE_RESOURCE_PROTECTION_ENABLED="false";
+ f.dataAccess=[];
+ for(const name of ["DB","MEDIA"]){
+   f.stageEnv[name]=new Proxy({}, {get(_,key){
+     f.dataAccess.push(name+"."+String(key));
+     throw Error("Read-only identity preflight must not access package data");
+   }});
+ }
+ return f;
+}
+test("identity preflight is exact GET-only, has its own default-OFF opt-in and cannot use query overrides",async()=>{
+ assert.deepEqual(packageBridgeRoute(new URL(ORIGIN+PREFLIGHT),"GET"),{preflight:true});
+ const {env,calls}=makeEnv();
+ for(const value of [undefined,false,true,"false","TRUE","true "]){
+   env.PACKAGE_IDENTITY_PREFLIGHT_ENABLED=value;
+   const out=await interceptPackageNamespace(get(PREFLIGHT,{cookie:"session=creator"}),env);
+   assert.equal(out.status,404,String(value));
+ }
+ env.PACKAGE_IDENTITY_PREFLIGHT_ENABLED="true";
+ for(const method of ["POST","PUT","PATCH","DELETE","HEAD","OPTIONS"]){
+   const out=await interceptPackageNamespace(new Request(ORIGIN+PREFLIGHT,{method}),env);
+   assert.equal(out.status,405,method);
+ }
+ for(const path of [PREFLIGHT+"/",PREFLIGHT+"?member=creator-member",
+   PREFLIGHT+"?target=/api/v1/packages/upload","/upload/v3/%70reflight"]){
+   assert.equal((await interceptPackageNamespace(get(path,{cookie:"session=creator"}),env)).status,404,path);
+ }
+ assert.equal(calls.length,0);
+});
+test("preflight uses existing controller canonical AUTH for pilot and reviewer without package DB/R2 access",async()=>{
+ const f=preflightFixture();
+ for(const [cookie,pilot,reviewer] of [["session=creator",true,false],["session=reviewer",false,true]]){
+   const out=await interceptPackageNamespace(get(PREFLIGHT,{cookie,"sec-fetch-site":"same-origin"}),f.env);
+   assert.equal(out.status,200);
+   assert.deepEqual(await out.json(),{
+     contract:"canonical-session-preflight-v001",readOnly:true,authenticated:true,pilot,reviewer,
+     bridgeEnabled:false,identityBridgeVerified:false
+   });
+   assert.equal(out.headers.get("cache-control"),"private,no-store");
+   assert.equal(out.headers.get("vary"),"Cookie");
+   assert.equal(out.headers.get("set-cookie"),null);
+   assert.equal(out.headers.get("access-control-allow-origin"),null);
+   assert.deepEqual(f.authCalls.at(-1),{url:ORIGIN+"/api/v1/member/auth/get-session",cookie});
+   assert.deepEqual(f.stageHits.at(-1),{url:ORIGIN+"/api/v1/packages/me",method:"GET"});
+ }
+ assert.equal(f.authCalls.length,2,"No creator-profile or other identity requests");
+ assert.deepEqual(f.dataAccess,[],"No package read, mutation, preview token or R2 access");
+ assert.equal(f.env.PACKAGE_CANONICAL_BRIDGE_ENABLED,"false");
+ assert.equal(f.env.PACKAGE_IDENTITY_BRIDGE_VERIFIED,"false");
+ for(const flag of ["PACKAGE_PUBLIC_PUBLISH_ENABLED","PACKAGE_CREATOR_GALLERY_ENABLED","PACKAGE_RESOURCE_PROTECTION_ENABLED"])
+   assert.equal(f.stageEnv[flag],"false");
+});
+test("preflight refuses anonymous, revoked, unverified and non-pilot/non-reviewer canonical sessions",async()=>{
+ const f=preflightFixture();
+ assert.equal((await interceptPackageNamespace(get(PREFLIGHT),f.env)).status,401);
+ assert.equal(f.stageHits.length,0);
+ assert.equal((await interceptPackageNamespace(get(PREFLIGHT,{cookie:"session=revoked"}),f.env)).status,401);
+ for(const [session,status] of [
+   [{user:{id:"creator-member",emailVerified:false},session:{id:"current"}},401],
+   [{user:{id:"creator-member",emailVerified:true},session:null},401],
+   [{user:{id:"ordinary-member",emailVerified:true},session:{id:"current"}},403]
+ ]){
+   f.stageEnv.AUTH={async fetch(){return Response.json(session);}};
+   assert.equal((await interceptPackageNamespace(get(PREFLIGHT,{cookie:"session=real-shaped"}),f.env)).status,status);
+ }
+ assert.deepEqual(f.dataAccess,[]);
+});
+test("preflight rejects foreign browser context before resolving a cookie and drops all caller authority headers",async()=>{
+ const {env,calls}=makeEnv(response(JSON.stringify({authenticated:true,pilot:true,reviewer:false,
+   memberId:"must-not-leak",session:"must-not-leak"}),"application/json",200,{
+   "set-cookie":"unrelated=secret","access-control-allow-origin":"*","location":"https://evil.invalid"
+ }));
+ env.PACKAGE_IDENTITY_PREFLIGHT_ENABLED="true";
+ for(const headers of [{origin:"https://evil.invalid"},{origin:"null"},
+   {"sec-fetch-site":"cross-site"},{"sec-fetch-site":"same-site"}]){
+   const out=await interceptPackageNamespace(get(PREFLIGHT,{cookie:"session=creator",...headers}),env);
+   assert.equal(out.status,403);
+ }
+ for(const origin of ["https://evil.invalid","http://anevum.com","https://anevum.com:8443"])
+   assert.equal(await interceptPackageNamespace(new Request(origin+PREFLIGHT,{headers:{cookie:"session=creator"}}),env),null);
+ assert.equal(calls.length,0);
+ const out=await interceptPackageNamespace(get(PREFLIGHT,{cookie:"session=creator",origin:ORIGIN,
+   "sec-fetch-site":"same-origin","user-agent":"Preflight acceptance",
+   authorization:"Bearer forged","x-anevum-member-id":"forged","x-anevum-owner-id":"forged",
+   "x-anevum-staff-id":"forged","x-anevum-verified-user":"true","x-anevum-identity":"forged"}),env);
+ assert.equal(out.status,200);
+ assert.equal(calls.length,1);
+ assert.deepEqual([...calls[0].headers.keys()].sort(),["accept","cookie","user-agent"]);
+ assert.equal(calls[0].url,ORIGIN+"/api/v1/packages/me");
+ assert.equal(calls[0].method,"GET");
+ assert.equal(calls[0].body,null);
+ const body=await out.text();
+ assert.doesNotMatch(body,/creator-member|session=creator|must-not-leak|forged/);
+ for(const key of ["set-cookie","access-control-allow-origin","access-control-allow-credentials","location"])
+   assert.equal(out.headers.get(key),null,key);
+});
+test("preflight refuses unavailable, redirected or malformed controller identity results",async()=>{
+ const replies=[
+   response(null,"text/plain",302,{location:ORIGIN+"/join"}),
+   response("blocked","text/plain",401),response("unavailable","application/json",503),
+   response("{}","text/html"),response("invalid json","application/json"),
+   response("[]","application/json"),response("null","application/json"),
+   response(JSON.stringify({authenticated:"true",pilot:true,reviewer:false}),"application/json"),
+   response(JSON.stringify({authenticated:true,pilot:"true",reviewer:false}),"application/json"),
+   response(JSON.stringify({authenticated:true,pilot:true}),"application/json"),
+   response(" ".repeat(16385)+JSON.stringify({authenticated:true,pilot:true,reviewer:false}),"application/json"),
+   async()=>{throw Error("Service unavailable");},async()=>null
+ ];
+ for(const reply of replies){
+   const {env}=makeEnv(reply);env.PACKAGE_IDENTITY_PREFLIGHT_ENABLED="true";
+   assert.equal((await interceptPackageNamespace(get(PREFLIGHT,{cookie:"session=creator"}),env)).status,503);
+ }
+ const f=preflightFixture();delete f.env.PACKAGE_CONTROL;
+ assert.equal((await interceptPackageNamespace(get(PREFLIGHT,{cookie:"session=creator"}),f.env)).status,503);
+});
+test("read-only preflight opt-in does not open UI, private preview, gallery or any mutation path",async()=>{
+ const paths=[
+   ["GET","/upload/v3"],["GET","/upload/v3/library"],["GET","/upload/v3/review"],
+   ["GET","/upload/v3/play/"+UUID+"?preview=1"],
+   ["GET","/upload/v3/api/v1/packages/me"],["GET","/upload/v3/api/v1/packages/mine"],
+   ["GET","/upload/v3/api/v1/packages/creators/cosmiccreator/projects"],
+   ["POST","/upload/v3/api/v1/packages/upload"],
+   ...["submit","review","delete","discard","moderate","save"].map(action=>
+     ["POST","/upload/v3/api/v1/packages/projects/"+UUID+"/"+action]),
+   ["POST","/upload/v3/api/v1/packages/maintenance/reclaim"]
+ ];
+ const f=preflightFixture();
+ for(const bridgeEnabled of ["false","true"]){
+   f.env.PACKAGE_CANONICAL_BRIDGE_ENABLED=bridgeEnabled;
+   for(const [method,path] of paths){
+     const req=method==="POST"?post(path,"{}",{cookie:"session=creator"}):get(path,{cookie:"session=creator"});
+     const out=await interceptPackageNamespace(req,f.env);
+     assert.equal(out.status,bridgeEnabled==="false"?404:503,method+" "+path);
+   }
+ }
+ assert.equal(f.stageHits.length,0,"Only the exact preflight endpoint may contact the controller");
+ assert.equal(f.authCalls.length,0);
+ assert.deepEqual(f.dataAccess,[]);
+ assert.equal(f.env.PACKAGE_IDENTITY_BRIDGE_VERIFIED,"false");
 });

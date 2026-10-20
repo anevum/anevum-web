@@ -2,6 +2,83 @@
 
 Session: ANEVUM.OPS.UPDATE.2026-10-20.001.RELEASE-CONSOLIDATION
 
+Continuation: ANEVUM.OPS.UPDATE.2026-10-20.002.RELEASE-CONSOLIDATION
+
+## Continuation — final application completion
+
+The continuation resumes existing PR #564. The starting combined source was
+`97bd61b078dea7bfe96c8c81b550729a3cbb8d9e`; all ten workflows, including the
+complete regression suite and responsive Chromium checks, passed on that
+source. Later source changes require fresh results.
+
+Three functional omissions are addressed in this continuation:
+
+- The staff package workspace now retains published and suspended releases.
+  Suspension requires a recorded reason and confirmation; restoration returns
+  the existing approved build and preserves its original independent review.
+  Failed actions remain visible and retryable in the existing dialog.
+- A separately opted-in `GET /upload/v3/preflight` resolves the caller's
+  existing canonical session through the package controller without enabling
+  the uploader. It reports only existing pilot/reviewer capabilities. It cannot
+  write package records, R2 objects, permissions or publication state. Normal
+  canonical authentication session refresh/expiry handling still applies.
+  `PACKAGE_IDENTITY_PREFLIGHT_ENABLED` defaults OFF, and both original bridge
+  activation gates remain mandatory for all normal package paths.
+- Approved public packages join the existing Discover results and search/category
+  filtering through their canonical package catalogue and player URLs. The
+  integration preserves existing legacy results, rejects unsafe links and
+  duplicate IDs/URLs, makes no cross-database project writes, and stays behind
+  the existing default-OFF gallery UI flag. Synthetic flag-ON and ordinary
+  flag-OFF builds are tested separately.
+
+The final application commit is pinned by the separate release-configuration
+commit in `.github/release-evidence/v091-authenticated.json`. Read-only CI
+compares the actual Git changes against the exact static scope and verifies
+that only the five approved release-metadata files differ from that application.
+Updating the source pin and changed-file scope does not mark any authenticated
+acceptance gate as passed. The production guard derives preserved bindings
+from the exact active Worker version and rejects mismatched inactive settings.
+
+### Verified infrastructure distinctions
+
+Cloudflare `/settings` can describe a newer uploaded version. Check the
+**active deployment's exact version** before describing a binding as live.
+The active creation-route owner `3cef3fe8-bb67-4edf-a7f6-9b5ccecb3b7a` has only
+its original `DB` and `UPSTREAM` bindings. The package service binding and two
+bridge guards belong to the inactive V009 candidate; they are not evidence
+that live `/upload` is connected to the package controller.
+
+The canonical staff system has one verified owner and one verified reviewer.
+The V003 package controller's separate allowlists currently include only the
+owner. The existing reviewer must be deliberately included in the package
+pilot before an independent package review can succeed. Do not create a new
+account, fabricate a session, or grant a role to make a test pass.
+
+There is no deployed same-origin full-candidate acceptance path in the current
+38-route inventory. The historical `next.anevum.com/creator/` build and the
+separate `a.anevum.com` identity are not acceptance of this candidate against
+canonical apex accounts. The old "unrouted" apex build workflow now names the
+live apex Worker and must not be used as a preview deployment.
+
+### Remaining activation boundary
+
+Final CI and synthetic browser results establish application regression
+coverage. Actual Founder, independent reviewer, second-account and phone
+acceptance still require a controlled authenticated candidate/pilot rollout.
+The read-only preflight removes the identity-verification circularity without
+turning publication on or self-certifying the release.
+
+Any approved pilot activation must coordinate the canonical proof issuer and
+its separate secret, the existing package controller and isolated runtime,
+package-only migration `0004_resource_protection.sql`, bounded cleanup,
+reviewer allowlist, and public/gallery flags. Preserve the existing legacy
+uploader, published releases and exact rollback versions.
+
+The optional verified-insignia migration on canonical `MEMBER_DB` is distinct
+from the package migration. It is not a prerequisite to releasing the apex
+application with verified-role/reputation display disabled. New public role
+designations still require their existing nomination and independent review.
+
 ## Source inventory
 
 | Work | Canonical location | Consolidation |
@@ -16,7 +93,7 @@ Session: ANEVUM.OPS.UPDATE.2026-10-20.001.RELEASE-CONSOLIDATION
 
 The future phone-first Creator Engine and ANEVUM Sites business are outside this release.
 
-## Verified development
+## Prior development evidence
 
 - Complete combined Node 22 regression suite: 1,305 tests passed, zero failures, skips or cancellations before final source pinning.
 - Package regression suite: 76 tests. Streamed body cap, leases, atomic storage reservations, failed-write cleanup, expiry, submission/discard races, ownership and independent moderation are covered.
@@ -29,8 +106,8 @@ The future phone-first Creator Engine and ANEVUM Sites business are outside this
 ## Activation order and acceptance
 
 1. Finish CI and responsive synthetic browser QA on the exact consolidated source; update the existing #564 PR and close only PRs whose implementation is fully included.
-2. Record real Founder, independent reviewer and second-member sessions against that source. Verify Upload → Preview → Review → Publish → Discover → Play → Member Wall, account switching, private/public visibility, and staff denial for unauthorized accounts. Existing live-founder and synthetic checks do not satisfy these final-source gates.
-3. Review and explicitly approve any production database or binding change separately. The checked-in resource migration is additive and gated OFF. The role migration is `creator-v1/canonical-auth/migrations/0012_verified_designations_v093.sql`; it requires a separately backed-up canonical MEMBER_DB and production change approval. It does not auto-grant roles, and independent nomination/review must remain mandatory.
+2. Review and explicitly approve the controlled acceptance pilot and any database, permission or binding change separately. Establish the consented canonical sessions through the separately opted-in identity preflight before enabling normal package routes.
+3. Record real Founder, independent reviewer and second-member sessions against that source in the controlled pilot. Verify Upload → Preview → Review → Publish → Discover → Play → Member Wall, account switching, private/public visibility, and staff denial for unauthorized accounts. Existing live-founder and synthetic checks do not satisfy these final-source gates. The checked-in resource migration is additive and gated OFF. The role migration is `creator-v1/canonical-auth/migrations/0012_verified_designations_v093.sql`; it requires a separately backed-up canonical MEMBER_DB and production change approval. It does not auto-grant roles, and independent nomination/review must remain mandatory.
 4. Use one canonical package database/controller/runtime and their existing approved rollout procedure. Do not promote the parallel V004 staging controller. Coordinate the resource flag, required migration, cleanup scheduling, ownership proof secret, private runtime, gallery readiness and pilot approval. Never enable only half of the ownership or retention contract.
 5. Enable approved capabilities only after authentic acceptance and storage/permission approvals. Preserve published builds, member progression, original media, private visibility and fail-closed staff auth.
 6. Release the apex only through `.github/workflows/v084-continuance-production.yml` from its approved branch. The acceptance record stays false until evidence is recorded for the pinned source. Preserve exact live routes, databases, variables, secret names and rollback version.

@@ -1197,3 +1197,38 @@ test("failed private erasure remains charged and retryable; history pruning resp
   assert.equal((await env.DB.prepare("SELECT COUNT(*) n FROM anevum_package_rights_receipts").first()).n,0);
  }finally{env.DB.close()}
 });
+
+test("staff can find, suspend and restore an approved package from the review workspace",async()=>{
+ const env=setup();
+ try{
+  env.PACKAGE_CREATOR_GALLERY_ENABLED="true";
+  const project=await (await post(env,"/api/v1/packages/upload",uploadForm(sample()))).json();
+  const base="/api/v1/packages/projects/"+project.id;
+  assert.equal((await post(env,base+"/submit",{})).status,200);
+  assert.equal((await post(env,base+"/review",{action:"publish"},"staff")).status,200);
+  const workspace=await (await getPage(env,"/staff/packages","staff")).text();
+  assert.match(workspace,/id="release-moderation-title"/);
+  assert.match(workspace,new RegExp('data-package-action="suspend" data-project="'+project.id+'"'));
+  assert.match(workspace,/id="review-dialog"/);
+  assert.doesNotMatch(workspace,/data-package-action="restore"/);
+  assert.equal((await getPage(env,"/staff/packages","owner")).status,404);
+  assert.equal((await getPage(env,"/staff/packages","visitor")).status,404);
+  assert.equal((await post(env,base+"/moderate",{action:"suspend",reason:"Recorded safety investigation"},"owner")).status,403);
+  assert.equal((await post(env,base+"/moderate",{action:"suspend",reason:"short"},"staff")).status,422);
+  assert.equal((await post(env,base+"/moderate",{action:"suspend",reason:"Investigate reported <script>content</script>"},"staff")).status,200);
+  const suspended=await (await getPage(env,"/staff/packages","staff")).text();
+  assert.match(suspended,new RegExp('data-package-action="restore" data-project="'+project.id+'"'));
+  assert.match(suspended,/Investigate reported &lt;script&gt;content&lt;\/script&gt;/);
+  assert.equal((await getPage(env,"/play/v3/"+project.id,"visitor")).status,404);
+  assert.equal((await (await getPage(env,"/api/v1/packages/creators/cosmiccreator/projects","visitor")).json()).projects.length,0);
+  assert.equal((await post(env,base+"/moderate",{action:"restore"},"owner")).status,403);
+  assert.equal((await post(env,base+"/moderate",{action:"restore"},"staff")).status,200);
+  const restored=await (await getPage(env,"/staff/packages","staff")).text();
+  assert.match(restored,new RegExp('data-package-action="suspend" data-project="'+project.id+'"'));
+  assert.equal((await getPage(env,"/play/v3/"+project.id,"visitor")).status,200);
+  assert.equal((await (await getPage(env,"/api/v1/packages/creators/cosmiccreator/projects","visitor")).json()).projects[0].id,project.id);
+  const release=await env.DB.prepare("SELECT status,reviewed_by FROM anevum_package_releases WHERE id=?").bind(project.release_id).first();
+  assert.equal(release.status,"published");
+  assert.equal(release.reviewed_by,"staff-id","restoration preserves the original independent release decision");
+ }finally{env.DB.close()}
+});

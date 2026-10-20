@@ -11,6 +11,11 @@
  * PACKAGE_CANONICAL_BRIDGE_ENABLED="true" and the independently tested
  * PACKAGE_IDENTITY_BRIDGE_VERIFIED="true" guard. Both guards default OFF.
  *
+ * A separately opted-in GET /upload/v3/preflight checks the existing
+ * controller's canonical session without activating this namespace. Only
+ * PACKAGE_IDENTITY_PREFLIGHT_ENABLED="true" enables that read-only check;
+ * it grants no upload, preview, gallery, review or publication capability.
+ *
  * The entire executable publishing surface is nested beneath /upload/v3,
  * which is already owned by anevum.com/upload*; no new production routes
  * or overlapping /api/v1/* registrations are needed.
@@ -29,6 +34,7 @@ const ENDPOINTS=new Map([
 ]);
 const SAFE_GET=new Set(["GET"]);
 const SAFE_API=new Set(["GET","POST"]);
+const PREFLIGHT=PACKAGE_NAMESPACE+"/preflight";
 function unavailable(status=404){
   return new Response(status===503?"Creator Uplink is temporarily unavailable.":"Not found",{
     status,headers:{"cache-control":"no-store","content-type":"text/plain; charset=utf-8",
@@ -44,6 +50,8 @@ export function packageBridgeRoute(url,method){
   if(url.pathname!==PACKAGE_NAMESPACE&&!url.pathname.startsWith(PACKAGE_NAMESPACE+"/"))return null;
   if(url.pathname.includes("%")||url.pathname.includes("\\")||
       url.pathname.length>300||url.search.length>700)return {denied:404};
+  if(url.pathname===PREFLIGHT)return method==="GET"&&!url.search?
+    {preflight:true}:{denied:method==="GET"?404:405};
   const canonical=ENDPOINTS.get(url.pathname);
   if(canonical)return SAFE_GET.has(method)?{target:canonical}:{denied:405};
   const play=url.pathname.match(PLAY);
@@ -92,6 +100,47 @@ function responseHeaders(headers){
   h.set("x-anevum-package-namespace","canonical-v009");
   return h;
 }
+async function identityPreflight(request,env){
+  if(env?.PACKAGE_IDENTITY_PREFLIGHT_ENABLED!=="true")return unavailable(404);
+  const origin=request.headers.get("origin"),site=request.headers.get("sec-fetch-site");
+  if((origin!==null&&origin!==ORIGIN)||(site!==null&&!["same-origin","none"].includes(site)))
+    return unavailable(403);
+  const cookie=request.headers.get("cookie");
+  if(!cookie)return unavailable(401);
+  if(typeof env?.PACKAGE_CONTROL?.fetch!=="function")return unavailable(503);
+  // This existing endpoint performs only canonical AUTH session resolution and
+  // PILOT_IDS / STAFF_IDS membership checks. Never forward caller identity,
+  // Authorization, path/query overrides or executable-runtime credentials.
+  const headers=new Headers({cookie,accept:"application/json"});
+  if(request.headers.has("user-agent"))headers.set("user-agent",request.headers.get("user-agent"));
+  let session;
+  try{
+    const reply=await env.PACKAGE_CONTROL.fetch(new Request(ORIGIN+"/api/v1/packages/me",{
+      method:"GET",headers,redirect:"manual"
+    }));
+    if(!(reply instanceof Response)||reply.status!==200||
+        !reply.headers.get("content-type")?.toLowerCase().includes("application/json"))
+      return unavailable(503);
+    const body=await reply.text();
+    if(body.length>16384)return unavailable(503);
+    session=JSON.parse(body);
+  }catch{return unavailable(503);}
+  if(!session||typeof session.authenticated!=="boolean"||
+      typeof session.pilot!=="boolean"||typeof session.reviewer!=="boolean")
+    return unavailable(503);
+  if(!session.authenticated)return unavailable(401);
+  if(!session.pilot&&!session.reviewer)return unavailable(403);
+  // Return only the session's existing capabilities. This is evidence for a
+  // future review, never a self-approval or a mutation of either release guard.
+  const h=responseHeaders();
+  h.set("content-type","application/json; charset=utf-8");
+  return new Response(JSON.stringify({
+    contract:"canonical-session-preflight-v001",readOnly:true,
+    authenticated:true,pilot:session.pilot,reviewer:session.reviewer,
+    bridgeEnabled:env.PACKAGE_CANONICAL_BRIDGE_ENABLED==="true",
+    identityBridgeVerified:env.PACKAGE_IDENTITY_BRIDGE_VERIFIED==="true"
+  }),{status:200,headers:h});
+}
 /** Service-bound proxy only. Caller provides the canonical request and
  * existing route owner env; this function never reads secrets or grants roles.
  */
@@ -99,6 +148,7 @@ export async function interceptPackageNamespace(request,env){
   const url=new URL(request.url),route=packageBridgeRoute(url,request.method);
   if(route===null)return null;
   if(route.denied)return unavailable(route.denied===405?405:404);
+  if(route.preflight)return identityPreflight(request,env);
   if(env?.PACKAGE_CANONICAL_BRIDGE_ENABLED!=="true")return unavailable(404);
   if(env?.PACKAGE_IDENTITY_BRIDGE_VERIFIED!=="true"||typeof env?.PACKAGE_CONTROL?.fetch!=="function")
     return unavailable(503);

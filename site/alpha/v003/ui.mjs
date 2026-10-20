@@ -219,21 +219,27 @@ export const SCRIPT = String.raw`
   function modalAction(btn){
     const d=q("review-dialog"),kind=btn.dataset.packageAction;
     if(!d||!d.showModal)return false;
+    const decisions={
+      publish:{title:"Approve this build?",copy:"Approve only after reviewing the actual playable build and its safety, rights and device compatibility. Publication makes it accessible to everyone.",accept:"Approve and publish",confirm:"I reviewed this actual build and I am independently authorized to approve it."},
+      reject:{title:"Request changes",copy:"Explain what the creator should fix. The current approved release, if any, will remain playable.",accept:"Send changes request",confirm:"I reviewed this build and explained a specific actionable change.",reason:true},
+      suspend:{title:"Suspend this release?",copy:"The public player, artwork and creator gallery will become unavailable. The approved build stays stored so it can be restored after the issue is resolved.",accept:"Suspend release",confirm:"I am authorized to suspend this release and have recorded the reason.",reason:true},
+      restore:{title:"Restore this release?",copy:"Restore only after resolving the recorded suspension reason. This makes the previously approved build public again; it does not approve a new version.",accept:"Restore approved release",confirm:"I resolved the suspension and verified that this approved release can return."}
+    };
+    const decision=decisions[kind];
+    if(!decision)return false;
     d.dataset.project=btn.dataset.project;
     d.dataset.action=kind;
-    q("review-title").textContent=kind==="publish"?"Approve this build?":"Request changes";
-    q("review-copy").textContent=kind==="publish"
-      ?"Approve only after reviewing the actual playable build and its safety, rights and device compatibility. Publication makes it accessible to everyone."
-      :"Explain what the creator should fix. The current approved release, if any, will remain playable.";
-    q("decision-reason-wrap").hidden=kind!=="reject";
-    q("decision-reason").required=kind==="reject";
+    q("review-title").textContent=decision.title;
+    q("review-copy").textContent=decision.copy;
+    q("decision-reason-wrap").hidden=!decision.reason;
+    q("decision-reason-label").textContent=kind==="suspend"?"Why is this release being suspended?":"What needs to change?";
+    q("decision-reason").required=!!decision.reason;
     q("decision-reason").value="";
     q("decision-confirm").checked=false;
-    q("review-accept").textContent=kind==="publish"?"Approve and publish":"Send changes request";
-    q("review-accept").classList.toggle("danger",kind==="reject");
-    q("decision-confirm-label").textContent=kind==="publish"
-      ?"I reviewed this actual build and I am independently authorized to approve it."
-      :"I reviewed this build and explained a specific actionable change.";
+    q("review-accept").textContent=decision.accept;
+    q("review-accept").disabled=false;
+    q("review-accept").classList.toggle("danger",!!decision.reason);
+    q("decision-confirm-label").textContent=decision.confirm;
     q("review-error").textContent="";
     d.showModal();
     return true;
@@ -243,10 +249,11 @@ export const SCRIPT = String.raw`
     e.preventDefault();
     const id=modal.dataset.project,action=modal.dataset.action,reason=q("decision-reason").value.trim();
     if(!q("decision-confirm").checked){q("review-error").textContent="Confirm the review before continuing.";return;}
-    if(action==="reject"&&(reason.length<10||reason.length>1000)){q("review-error").textContent="Give the creator a reason of 10–1000 characters.";return;}
+    if((action==="reject"||action==="suspend")&&(reason.length<10||reason.length>1000)){q("review-error").textContent="Record a reason of 10–1000 characters.";return;}
     const accept=q("review-accept");accept.disabled=true;
     q("review-error").textContent="Recording your review…";
-    try{await post("/api/v1/packages/projects/"+id+"/review",{action,reason},false);location.reload();}
+    const endpoint=action==="suspend"||action==="restore"?"moderate":"review";
+    try{await post("/api/v1/packages/projects/"+id+"/"+endpoint,{action,reason},false);location.reload();}
     catch(err){q("review-error").textContent=err.message;accept.disabled=false;}
   });
   document.addEventListener("click",async e=>{
@@ -256,7 +263,7 @@ export const SCRIPT = String.raw`
     if(!btn)return;
     const id=btn.dataset.project,action=btn.dataset.packageAction;
     if(!id)return;
-    if(action==="publish"||action==="reject"){modalAction(btn);return;}
+    if(["publish","reject","suspend","restore"].includes(action)){modalAction(btn);return;}
     if(action==="fullscreen"){
       const v=q("game-viewport");if(!v)return;
       if(document.fullscreenElement){await document.exitFullscreen().catch(()=>{});return;}
@@ -321,7 +328,7 @@ const state = value => ({
   published:"Published",pending_review:"In review",ready:"Ready for review",rejected:"Changes requested",
   draft:"Draft",suspended:"Unavailable",deleted:"Deleted"
 })[value] || "Draft";
-const action=(p,verb,label,extra="")=>'<button type="button" class="'+(verb==="delete"||verb==="reject"?"danger":"quiet")+'" data-package-action="'+verb+'" data-project="'+esc(p.id)+'" '+extra+'>'+esc(label)+'</button>';
+const action=(p,verb,label,extra="")=>'<button type="button" class="'+(["delete","reject","suspend"].includes(verb)?"danger":"quiet")+'" data-package-action="'+verb+'" data-project="'+esc(p.id)+'" '+extra+'>'+esc(label)+'</button>';
 const projectURL=id=>"/play/v3/"+encodeURIComponent(id);
 const limited=value=>(String(value??"").length>190?String(value).slice(0,190)+"…":String(value??""));
 const displayDate=seconds=>{
@@ -344,8 +351,8 @@ export function layout(title,body,runner="",status=200){
     "referrer-policy":"no-referrer","x-robots-tag":"noindex",
     "content-security-policy":"default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' data: blob:; "+runnerFrame+" connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'self'"}});
 }
-export function card(p,owner=false,reviewer=false){
-  const hasDraft=!!p.draft_release_id;
+export function card(p,owner=false,reviewer=false,moderation=false){
+  const hasDraft=!moderation&&!!p.draft_release_id;
   const draftState=hasDraft?p.draft_status:p.status;
   const expired=p.draft_mode==="test"&&Number.isFinite(p.draft_expires_at)&&p.draft_expires_at<=Math.floor(Date.now()/1000);
   const isUpdate=!!p.live_release_id;
@@ -353,7 +360,10 @@ export function card(p,owner=false,reviewer=false){
   const version=p.release_version?"Build "+esc(p.release_version):"New project";
   const date=displayDate(p.updated_at);
   let controls="";
-  if(reviewer){
+  if(moderation){
+    controls=p.status==="suspended"?action(p,"restore","Restore approved release"):
+      '<a class="button" href="'+projectURL(p.id)+'">Play approved build</a>'+action(p,"suspend","Suspend release");
+  }else if(reviewer){
     controls='<a class="button primary" href="'+preview+'">Open private review</a>';
   }else if(owner){
     if(hasDraft&&(draftState==="ready"||draftState==="pending_review")){
@@ -371,7 +381,7 @@ export function card(p,owner=false,reviewer=false){
     :"";
   return '<article class="project" aria-label="'+esc(p.title)+'">'+
     '<div class="av-project-plate'+(image?' av-has-cover':'')+'" aria-label="'+(image?'Creator-supplied approved or private project cover':'ANEVUM record; no creator cover uploaded')+'">'+
-    '<span class="av-project-plate-label">'+(owner?'YOUR PROJECT':reviewer?'AWAITING REVIEW':'PLAYABLE RELEASE')+'</span>'+
+    '<span class="av-project-plate-label">'+(moderation?'RELEASE MODERATION':owner?'YOUR PROJECT':reviewer?'AWAITING REVIEW':'PLAYABLE RELEASE')+'</span>'+
     SIGIL+image+'<span class="av-project-index">ANEVUM / '+esc(p.category||"PROJECT").toUpperCase()+'</span></div>'+
     '<span class="chip '+esc(draftState)+'">'+esc(state(draftState))+' / '+esc(p.category||"project")+'</span>'+
     '<h3>'+esc(p.title)+'</h3><p>'+esc(limited(p.summary))+'</p>'+
@@ -468,7 +478,7 @@ export function catalogScreen(projects){
 function reviewDialog(){
   return '<dialog id="review-dialog" aria-labelledby="review-title" aria-describedby="review-copy">'+
   '<form id="review-form"><div class="ey">INDEPENDENT REVIEW</div><h2 id="review-title">Review build</h2><p id="review-copy"></p>'+
-  '<div id="decision-reason-wrap" hidden><label for="decision-reason">What needs to change?</label>'+
+  '<div id="decision-reason-wrap" hidden><label id="decision-reason-label" for="decision-reason">What needs to change?</label>'+
   '<textarea class="field" id="decision-reason" maxlength="1000" minlength="10" rows="4" placeholder="Give the creator a specific reason."></textarea></div>'+
   '<label class="review-confirm" for="decision-confirm"><input id="decision-confirm" type="checkbox" required><span id="decision-confirm-label">I reviewed this build independently.</span></label>'+
   '<p class="status bad" id="review-error" role="alert"></p><div class="dialog-actions">'+
@@ -504,14 +514,18 @@ export function playerScreen(p,release,runnerURL,isPreview,canEdit,isStaff){
     '<p class="inline-note">If this build fails, check that its index.html and all local resources use relative URLs. External APIs and private service credentials are not supported.</p></div>';
   return layout(label,lead+stage+controls+notes+(review?reviewDialog():""),runnerURL?new URL(runnerURL).origin:"");
 }
-export function queueScreen(items){
+export function queueScreen(items,moderation=[]){
   return layout("Package review",hero('CONTINUANCE / REVIEW DIVISION',
     'Review the <em>experience.</em>',
     'Inspect the isolated playable build, confirm independent review and record a clear release decision. Structural ZIP checks alone do not prove safety or content rights.',
     'RESTRICTED / STAFF')+
     '<div class="titlebar"><h2>Pending packages</h2></div>'+
     (items.length?'<div class="queue">'+items.map(p=>card(p,false,true)).join("")+'</div>':
-    '<div class="empty-state">'+SIGIL+'<div><strong>The review queue is clear.</strong><span>New submissions will appear here after the creator completes a private playtest.</span></div></div>'));
+    '<div class="empty-state">'+SIGIL+'<div><strong>The review queue is clear.</strong><span>New submissions will appear here after the creator completes a private playtest.</span></div></div>')+
+    '<section aria-labelledby="release-moderation-title"><div class="titlebar"><div><h2 id="release-moderation-title">Published and suspended releases</h2>'+
+    '<p>Suspend a release while an issue is investigated, then restore the approved build when resolved.</p></div></div>'+
+    (moderation.length?'<div class="project-grid">'+moderation.map(p=>card(p,false,false,true)).join("")+'</div>':
+      '<div class="notice"><p>No published or suspended package releases.</p></div>')+'</section>'+reviewDialog());
 }
 export function helpScreen(){
   const copy='Build the project as a static browser app. Export the finished web build with an index.html entry point and relative CSS/JS/assets. ZIP the contents of the build folder, not the enclosing folder. Do not include node_modules, secrets, external CDNs or server code.';

@@ -74,3 +74,24 @@
  .av010-work-card:hover{transform:translateY(-3px);border-color:#8bc9d9}
 }
 @media(prefers-reduced-motion:reduce){.av010-work-card{transition:none}}
+
+/* The same approved package cards participate in Discover's existing filters
+ * and grid/list switch. Member-wall and owner-library presentation is retained. */
+.av73-discover .av010-work-card{min-width:0;margin:0}
+.av73-discover .av010-work-card a{text-decoration:none}
+.av73-discover .av010-work-card a:focus-visible{outline:2px solid #d0fdff;outline-offset:3px}
+.av73-discover .av010-work-card a:hover{text-decoration:underline}
+.av73-discover .av010-work-body h3{overflow-wrap:anywhere}
+.av73-discover .av010-discovery-status{font:400 12px/1.6 system-ui,sans-serif;color:#bdcddd;margin:0}
+.av73-discover .av010-work-card--compact .av010-work-cover{display:none}
+.av73-discover .av010-work-card--compact .av010-work-body{padding:17px 22px}
+@media(min-width:701px){
+ .av73-discover .av010-work-card--compact .av010-work-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(160px,210px);column-gap:24px}
+ .av73-discover .av010-work-card--compact .av010-work-readout,
+ .av73-discover .av010-work-card--compact h3,
+ .av73-discover .av010-work-card--compact p{grid-column:1}
+ .av73-discover .av010-work-card--compact h3{margin:7px 0;font-size:23px}
+ .av73-discover .av010-work-card--compact p{margin-bottom:0;-webkit-line-clamp:2;line-clamp:2}
+ .av73-discover .av010-work-card--compact .av010-work-actions{grid-column:2;grid-row:1/4;align-self:center;justify-content:flex-end}
+ .av73-discover .av010-work-card--compact .av010-work-published{grid-column:1/-1}
+}

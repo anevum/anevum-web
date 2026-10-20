@@ -9,7 +9,7 @@ import {tmpdir} from "node:os";
 import {resolve,join} from "node:path";
 import {pathToFileURL} from "node:url";
 import {setTimeout as sleep} from "node:timers/promises";
-import {uploadScreen,playerScreen,helpScreen} from "../site/alpha/v003/ui.mjs";
+import {uploadScreen,playerScreen,queueScreen,helpScreen} from "../site/alpha/v003/ui.mjs";
 const chromeBin=()=>{
  for(const file of [process.env.CHROME_BIN,"/usr/bin/google-chrome","/usr/bin/chromium","/usr/bin/chromium-browser"])
    if(file&&existsSync(file))return file;
@@ -99,6 +99,10 @@ async function main(){
   guest:await (await uploadScreen([],false,false,"")).text(),
   player:await (await playerScreen(project,release,runner,true,true,false)).text(),
   review:await (await playerScreen(project,{...release,status:"pending_review"},runner,true,false,true)).text(),
+  moderation:await (await queueScreen([], [
+    {...project,draft_release_id:null,release_version:1},
+    {...project,id:"44444444-4444-4444-8444-444444444444",title:"Suspended QA release",status:"suspended",draft_release_id:null,release_version:1,review_reason:"Investigate the reported issue before restoring this release."}
+  ])).text(),
   guide:await (await helpScreen()).text()
  };
  for(const [name,html] of Object.entries(pages))await writeFile(join(tmp,name+".html"),html);
@@ -204,7 +208,58 @@ async function main(){
   const modal=await evalJS(c,"(()=>{document.querySelector('[data-package-action=\"publish\"]').click();return {open:document.querySelector('#review-dialog').open,checked:document.querySelector('#decision-confirm').checked};})()");
   assert.equal(modal.open,true);assert.equal(modal.checked,false);
   await image(c,join(out,"review-390.png"));
-  const result={pass:true,viewports:[320,390,1440],images:10,coverPreview:true,coverCard:true,
+  for(const w of [320,390,1440]){
+   await visit(c,join(tmp,"moderation.html"),w,w===1440?900:844);
+   const ready=await evalJS(c,`(()=>{
+    const buttons=[...document.querySelectorAll('[data-package-action="suspend"],[data-package-action="restore"]')];
+    return {overflow:document.documentElement.scrollWidth>innerWidth,count:buttons.length,targets:buttons.every(b=>b.getBoundingClientRect().height>=44)};
+   })()`);
+   assert.equal(ready.overflow,false,'Moderation workspace overflow at '+w);
+   assert.equal(ready.count,2);assert.equal(ready.targets,true);
+   await evalJS(c,`document.querySelector('#release-moderation-title').scrollIntoView({block:'start',behavior:'instant'})`);
+   await image(c,join(out,'moderation-'+w+'.png'));
+  }
+  await visit(c,join(tmp,"moderation.html"),390,844);
+  const suspendDialog=await evalJS(c,`(()=>{
+   window.__moderationCalls=[];
+   window.fetch=async(url,options)=>{window.__moderationCalls.push({url,body:JSON.parse(options.body),credentials:options.credentials});return {ok:false,status:409,json:async()=>({error:'Synthetic concurrent change; reload before retrying.'})};};
+   document.querySelector('[data-package-action="suspend"]').click();
+   const form=document.querySelector('#review-form');form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
+   return {open:document.querySelector('#review-dialog').open,required:document.querySelector('#decision-reason').required,
+     reasonVisible:!document.querySelector('#decision-reason-wrap').hidden,unchecked:!document.querySelector('#decision-confirm').checked,
+     calls:window.__moderationCalls.length,error:document.querySelector('#review-error').textContent};
+  })()`);
+  assert.equal(suspendDialog.open,true);assert.equal(suspendDialog.required,true);assert.equal(suspendDialog.reasonVisible,true);
+  assert.equal(suspendDialog.unchecked,true);assert.equal(suspendDialog.calls,0);assert.match(suspendDialog.error,/Confirm/);
+  const invalidReason=await evalJS(c,`(()=>{
+   document.querySelector('#decision-confirm').checked=true;document.querySelector('#decision-reason').value='short';
+   document.querySelector('#review-form').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
+   return {calls:window.__moderationCalls.length,error:document.querySelector('#review-error').textContent};
+  })()`);
+  assert.equal(invalidReason.calls,0);assert.match(invalidReason.error,/10–1000/);
+  const suspendCall=await evalJS(c,`(async()=>{
+   document.querySelector('#decision-reason').value='Investigate the reported safety issue.';
+   document.querySelector('#review-form').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
+   await new Promise(resolve=>setTimeout(resolve,0));
+   return {call:window.__moderationCalls[0],open:document.querySelector('#review-dialog').open,disabled:document.querySelector('#review-accept').disabled,error:document.querySelector('#review-error').textContent};
+  })()`);
+  assert.equal(suspendCall.call.url,'/api/v1/packages/projects/'+project.id+'/moderate');
+  assert.equal(suspendCall.call.body.action,'suspend');assert.equal(suspendCall.call.body.reason,'Investigate the reported safety issue.');
+  assert.equal(suspendCall.call.credentials,'same-origin');assert.equal(suspendCall.open,true);assert.equal(suspendCall.disabled,false);
+  assert.match(suspendCall.error,/concurrent change/);
+  await image(c,join(out,'suspend-dialog-390.png'));
+  const restoreCall=await evalJS(c,`(async()=>{
+   document.querySelector('[data-review-close]').click();document.querySelector('[data-package-action="restore"]').click();
+   const before={checked:document.querySelector('#decision-confirm').checked,reasonVisible:!document.querySelector('#decision-reason-wrap').hidden,title:document.querySelector('#review-title').textContent};
+   document.querySelector('#decision-confirm').checked=true;
+   document.querySelector('#review-form').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
+   await new Promise(resolve=>setTimeout(resolve,0));
+   return {before,call:window.__moderationCalls[1]};
+  })()`);
+  assert.equal(restoreCall.before.checked,false);assert.equal(restoreCall.before.reasonVisible,false);assert.match(restoreCall.before.title,/Restore/);
+  assert.equal(restoreCall.call.url,'/api/v1/packages/projects/44444444-4444-4444-8444-444444444444/moderate');
+  assert.equal(restoreCall.call.body.action,'restore');assert.equal(restoreCall.call.body.reason,'');
+  const result={pass:true,viewports:[320,390,1440],images:17,coverPreview:true,coverCard:true,moderationDialogs:true,
    scope:"synthetic headless Chromium UI/interaction acceptance only; real authenticated Safari and rollout still required"};
   await writeFile(join(out,"result.json"),JSON.stringify(result,null,2));
   console.log(JSON.stringify(result));
