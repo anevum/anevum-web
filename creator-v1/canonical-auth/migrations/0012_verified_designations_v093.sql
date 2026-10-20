@@ -42,6 +42,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS member_role_requests_one_pending
  ON member_role_requests(member_id,role) WHERE state='pending';
 CREATE INDEX IF NOT EXISTS member_role_requests_queue
  ON member_role_requests(state,nominated_at DESC);
+CREATE INDEX IF NOT EXISTS member_role_requests_nominator_hour
+ ON member_role_requests(nominated_by,nominated_at DESC);
 
 -- Append-only issuance/denial/revocation history. A revoked or reissued
 -- designation must retain its prior evidence and decision trail.
@@ -56,3 +58,5 @@ CREATE TABLE IF NOT EXISTS member_role_events (
 );
 CREATE INDEX IF NOT EXISTS member_role_events_member
  ON member_role_events(member_id,happened_at DESC);
+CREATE INDEX IF NOT EXISTS member_role_events_actor_hour
+ ON member_role_events(actor_id,happened_at DESC);
