@@ -1,9 +1,32 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {mkdtempSync,mkdirSync,writeFileSync,rmSync} from 'node:fs';
+import {join} from 'node:path';
+import {tmpdir} from 'node:os';
 import {
  manifest,normalizeRoutes,signatures,plainVars,databaseIds,
- validateBaseline,validateUploadedCandidate
+ validateBaseline,validateUploadedCandidate,verifyCandidateAssets
 } from '../ops/v095-inactive-candidate-gate.mjs';
+
+test('asset manifest refuses the incomplete upload and detects earned media corruption',()=>{
+ const root=mkdtempSync(join(tmpdir(),'anevum-candidate-assets-'));
+ try{
+  mkdirSync(join(root,'evolution/assets'),{recursive:true});
+  writeFileSync(join(root,'index.html'),'x'.repeat(2000));
+  assert.throws(()=>verifyCandidateAssets(root),/152 earned-media/);
+  for(let level=1;level<=30;level++)for(const suffix of ['-scene.gz','-1024.webp','-256.webp','-compact-128.png','-field.svg'])
+   writeFileSync(join(root,'evolution/assets/level-'+String(level).padStart(2,'0')+suffix),'x'.repeat(400));
+  for(const name of ['height.png','albedo.webp'])writeFileSync(join(root,'evolution/assets',name),'x'.repeat(400));
+  writeFileSync(join(root,'evolution/mini-runtime.json'),'x'.repeat(7000));
+  const complete=verifyCandidateAssets(root);
+  assert.equal(complete.earned_media_count,152);
+  assert.equal(complete.assets.length,154);
+  writeFileSync(join(root,'evolution/assets/level-30-scene.gz'),'y'.repeat(400));
+  assert.notEqual(verifyCandidateAssets(root).sha256,complete.sha256);
+  rmSync(join(root,'evolution/assets/level-04-scene.gz'));
+  assert.throws(()=>verifyCandidateAssets(root),/152 earned-media/);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
 
 const publicFlags={
  ANEVUM_ACCESS_AUD:'6efab9f2821297fa4c965f18813d78d7433ebf7823a8e9e6d9ecfb7e4b2ccde1',

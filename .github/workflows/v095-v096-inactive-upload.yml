@@ -13,6 +13,9 @@ concurrency:
   cancel-in-progress: false
 jobs:
   upload-only:
+    env:
+      VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
+      VITE_NATIVE_CREATOR_STUDIO_V095: 'false'
     if: >-
       github.repository == 'anevum/anevum-web' &&
       github.ref == 'refs/heads/release/v084-continuance-approved-20261019' &&
@@ -29,6 +32,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Require exact owner-only authorization marker, source pin and no application edits
         shell: bash
         run: |
@@ -75,6 +81,27 @@ jobs:
           assert.match(app,/path="studio\/alpha"/);
           assert.match(guest,/sandbox=""/);
           assert.doesNotMatch(guest,/sandbox="[^"]*allow-scripts/);
+          JS
+      - name: Rebuild and require all preserved earned media before packaging
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install numpy==2.2.6 scipy==1.15.3 Pillow==11.2.1
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libgl1-mesa-dri
+          (
+            cd design/evolution-v059
+            mkdir -p artwork/{native,textures,vector,masters,web,compact} docs dist previews
+            python src/export_native.py
+            python src/render_web.py
+            python src/build.py
+          )
+          python creator-v1/ops/install-evolution-v060.py
+          VITE_NATIVE_CREATOR_STUDIO_V095=false npm run build:creator-v1-web
+          node --input-type=module <<'JS'
+          import {verifyCandidateAssets} from './creator-v1/ops/v095-inactive-candidate-gate.mjs';
+          const build=verifyCandidateAssets('creator-v1/dist/web');
+          console.log('COMPLETE_CANDIDATE_ASSETS',JSON.stringify({files:build.assets.length,sha256:build.sha256,earned:build.earned_media_count}));
           JS
       - name: Lock live Cloudflare versions, secrets, D1 IDs and all 39 routes before upload
         env:

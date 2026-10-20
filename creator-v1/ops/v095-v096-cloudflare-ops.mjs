@@ -8,7 +8,7 @@ import {readFileSync,writeFileSync,chmodSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {
- manifest,validateBaseline,validateUploadedCandidate,plainVars,databaseIds,signatures
+ manifest,validateBaseline,validateUploadedCandidate,plainVars,databaseIds,signatures,verifyCandidateAssets
 } from './v095-inactive-candidate-gate.mjs';
 
 const PIN='d5af32fd8f04b05e0381f7ac12c59d06c0e836a2';
@@ -32,6 +32,8 @@ function save(file,value){
  chmodSync(file,0o600);
 }
 function checkRepositorySource(){
+ assert.equal(process.env.VITE_PACKAGE_CREATOR_GALLERY_V010,'true','Preserve approved package gallery build');
+ assert.equal(process.env.VITE_NATIVE_CREATOR_STUDIO_V095,'false','Native Studio rollout is separately gated');
  assert.equal(process.env.GITHUB_REPOSITORY,'anevum/anevum-web');
  assert.equal(process.env.CLOUDFLARE_ACCOUNT_ID,manifest.account_id);
  assert.equal(manifest.source_sha,PIN);
@@ -98,6 +100,7 @@ function configForUpload(snapshot){
 }
 async function before(file,configFile){
  const source=checkRepositorySource();
+ const build=verifyCandidateAssets('creator-v1/dist/web');
  const snap=await readSnapshot();
  const result=validateBaseline(snap);
  const versionList=await request(worker+'/versions?per_page=100');
@@ -107,7 +110,7 @@ async function before(file,configFile){
  assert.ok(existing.includes(manifest.prior_inactive_version.id));
  const cfg=configForUpload(snap);
  save(configFile,cfg);
- save(file,{source,baseline:snap,existing});
+ save(file,{source,baseline:snap,existing,build});
  console.log('INACTIVE_PREFLIGHT_PASS',JSON.stringify({
   source:PIN,routeCount:result.routeCount,bindings:result.bindings,
   deploymentId:snap.deployment.id,active:snap.deployment.versions[0].version_id,
@@ -138,6 +141,8 @@ async function after(file,receiptFile){
   status:'UPLOADED_INACTIVE_ONLY',source_sha:PIN,
   workflow_source_sha:source.HEAD,worker:manifest.script,
   version_id:valid.candidateId,
+  script_etag:candidate.resources.script.etag,
+  build:previous.build,
   route_count:39,
   active_version_id:manifest.live_version.id,
   active_traffic_percent:100,candidate_traffic_percent:0,
