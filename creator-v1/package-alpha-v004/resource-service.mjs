@@ -111,10 +111,12 @@ export function jobStatement(db,releaseId,reason,now,notBefore=now){
 export async function findDuplicate(db,media,project,sha,size){
   if(!project||!/^[a-f0-9]{64}$/.test(sha||""))return null;
   const r=await one(db,
-    "SELECT id,status,archive_sha256,archive_bytes,source_key FROM anevum_package_releases "+
-    "WHERE project_id=? AND archive_sha256=? AND archive_bytes=? "+
-    "AND ((id=? AND status='ready') OR (id=? AND status='published')) LIMIT 1",
-    project.id,sha,size,project.draft_release_id||"",project.live_release_id||"");
+    "SELECT r.id,r.status,r.archive_sha256,r.archive_bytes,r.source_key FROM anevum_package_releases r "+
+    "LEFT JOIN anevum_package_build_retention b ON b.release_id=r.id "+
+    "WHERE r.project_id=? AND r.archive_sha256=? AND r.archive_bytes=? "+
+    "AND ((r.id=? AND r.status='ready' AND (b.release_id IS NULL OR b.mode='saved' OR (b.mode='test' AND b.expires_at>?))) "+
+    "OR (r.id=? AND r.status='published')) LIMIT 1",
+    project.id,sha,size,project.draft_release_id||"",Math.floor(Date.now()/1000),project.live_release_id||"");
   if(!r?.source_key)return null;
   const file=await media.head(r.source_key);
   if(!file||file.size!==size||file.customMetadata?.sha256!==sha)return null;
