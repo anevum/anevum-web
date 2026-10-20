@@ -7,6 +7,7 @@ import {canonicalConfigState,permitCanonicalUserCreation,canonicalRequestOrigin}
 import {normalizeWorldUpdate,worldFromRow} from "./worlds.mjs";
 import {awardPublicProfileBadge} from './recognition-issuer.mjs';
 import {boundedText} from "./request-body.mjs";
+import {canonicalPackageProof} from "./package-proof.mjs";
 // ANEVUM Phase 1 / canonical Better Auth creator identity.
 // Does NOT read legacy Creator V1 OTP tables or broker/owner entitlements.
 const HANDLE=/^[a-z][a-z0-9_]{2,29}$/;
@@ -103,13 +104,15 @@ export async function canonicalPublicCreator(req,env,origin,handle){
    return failure(req,503,"Creator profiles unavailable");
  try{
   const row=await env.MEMBER_DB.prepare(
-    "SELECT p.handle,p.display_name,p.bio,p.created_at,p.headline,p.world_theme,p.focus_json "+
+    "SELECT p.user_id,p.handle,p.display_name,p.bio,p.created_at,p.headline,p.world_theme,p.focus_json "+
     "FROM member_creator_profiles p JOIN \"user\" u ON u.id=p.user_id "+
     "WHERE p.handle=? AND p.visibility='public' AND u.emailVerified=1 LIMIT 1"
   ).bind(normalized).first();
   if(!row)return failure(req,404,"Profile not public");
+  const proof=await canonicalPackageProof(env,row.user_id,row.handle,Number(row.created_at));
   return answer(req,{profile:{handle:row.handle,displayName:row.display_name,
-    bio:row.bio,joinedAt:Number(row.created_at),...worldFromRow(row)}});
+    bio:row.bio,joinedAt:Number(row.created_at),...worldFromRow(row),
+    ...(proof?{packageProof:proof}:{})}});
  }catch{return failure(req,503,"Creator profiles unavailable")}
 }
 export async function canonicalCreatorMember(req,env,user,origin,now=Math.floor(Date.now()/1000)){
@@ -121,8 +124,11 @@ export async function canonicalCreatorMember(req,env,user,origin,now=Math.floor(
  const db=env.MEMBER_DB;
  if(!["GET","POST","PATCH"].includes(req.method))return failure(req,405,"Method not allowed");
  try{
-  if(req.method==="GET")
-   return answer(req,{memberId:user.id,profile:privateProfile(await ownProfile(db,user.id))});
+  if(req.method==="GET"){
+   const profile=privateProfile(await ownProfile(db,user.id));
+   const proof=profile?await canonicalPackageProof(env,user.id,profile.handle,profile.createdAt):null;
+   return answer(req,{memberId:user.id,profile:profile&&proof?{...profile,packageProof:proof}:profile});
+  }
   // Authenticated cookie/session and strict Origin are checked upstream.
   // No client-provided member ID, account linking, XP or role assignment.
   let payload;
