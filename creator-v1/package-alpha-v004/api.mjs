@@ -308,7 +308,9 @@ async function review(req,env,u,id) {
     ).bind(...(publish?
       [release.proposed_title,release.proposed_summary,release.proposed_category,release.id,now,now,p.id,release.id]:
       [reason,now,p.id,release.id])),
-    ...(publish?[]:[jobStatement(env.DB,release.id,"rejected",now,now+POLICY.rejectedSeconds)])
+    ...(publish?[
+      env.DB.prepare("DELETE FROM anevum_package_build_retention WHERE release_id=?").bind(release.id)
+    ]:[jobStatement(env.DB,release.id,"rejected",now,now+POLICY.rejectedSeconds)])
   ]);
   return changes[0]?.meta?.changes===1&&changes[1]?.meta?.changes===1
     ?json({status:publish?"published":"rejected"}):fail(409,"Review state changed");
