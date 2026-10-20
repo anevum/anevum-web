@@ -27,6 +27,18 @@ function isolatedHost(env) {
   return /^[a-z0-9][a-z0-9.-]{4,252}$/.test(h)
     && h!=="anevum.com" && !h.endsWith(".anevum.com") ? h : "";
 }
+async function packageSchemaReady(db){
+  if(!db?.prepare)return false;
+  try{
+    const x=await db.prepare(
+      "SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name IN (" +
+      "'anevum_package_projects','anevum_package_releases','anevum_package_files'," +
+      "'anevum_package_preview_tokens','anevum_package_upload_limits','anevum_package_rights_receipts')"
+    ).first();
+    return Number(x?.n)===6;
+  }catch{return false;}
+}
+
 async function member(req,env) {
   const cookie=req.headers.get("cookie");
   if (!cookie || !env.AUTH) return null;
@@ -142,6 +154,10 @@ async function prepareFile(file) {
 }
 async function upload(req,env,u) {
   if(!pilot(env,u.id)) return fail(403,"Creator alpha access required");
+  if(!await packageSchemaReady(env.DB))
+    return fail(503,"Package stage schema is not ready; upload is paused before storing any files");
+  if(!env.MEDIA?.put||!env.MEDIA?.get||!env.MEDIA?.head)
+    return fail(503,"Package storage is not configured; upload is paused");
   const headerSize=Number(req.headers.get("content-length")||0);
   if(headerSize>25*MiB) return fail(413,"Upload exceeds the 20 MiB ZIP plus 3 MiB cover allowance");
   if(!String(req.headers.get("content-type")||"").startsWith("multipart/form-data;"))
@@ -162,7 +178,9 @@ async function upload(req,env,u) {
     if(count.n>=20) return fail(409,"Creator alpha allows up to 20 active projects");
   }
   const usage=await query(env.DB,
-    "SELECT COALESCE(SUM(r.archive_bytes),0) AS bytes FROM anevum_package_releases r JOIN anevum_package_projects p ON r.project_id=p.id WHERE p.owner_id=? AND r.status NOT IN ('failed','revoked') AND p.status!='deleted'",u.id);
+    "SELECT COALESCE(SUM(r.archive_bytes),0) AS bytes FROM anevum_package_releases r JOIN anevum_package_projects p ON r.project_id=p.id WHERE p.owner_id=? " +
+    "AND (r.status NOT IN ('failed','revoked') OR (r.status='revoked' AND r.source_key IS NOT NULL)) " +
+    "AND (p.status!='deleted' OR (r.status='revoked' AND r.source_key IS NOT NULL))",u.id);
   if(!file || typeof file.size !== "number") return fail(422,"Upload a ZIP or HTML project");
   if(coverInput && typeof coverInput.size==="number" && coverInput.size>COVER_LIMIT)
     return fail(413,"Project artwork is limited to a 3 MiB PNG");
@@ -459,8 +477,17 @@ async function api(req,env,path) {
   const coverRoute=path.match(/^\/api\/v1\/packages\/covers\/([0-9a-f-]{36})$/);
   if(coverRoute&&req.method==="GET"&&UUID.test(coverRoute[1]))
     return coverImage(req,env,coverRoute[1]);
-  if(path==="/api/v1/packages/health"&&req.method==="GET")
-    return json({ok:true,version:"003",db:!!env.DB,storage:!!env.MEDIA,runnerConfigured:!!isolatedHost(env)});
+  if(path==="/api/v1/packages/health"&&req.method==="GET") {
+    const db=!!env.DB?.prepare,storage=!!env.MEDIA?.put&&!!env.MEDIA?.get&&!!env.MEDIA?.head;
+    const schemaReady=db&&await packageSchemaReady(env.DB);
+    const runnerConfigured=!!isolatedHost(env);
+    return json({
+      ok:true,version:"003",db,storage,runnerConfigured,schemaReady,
+      uploadReady:!!(schemaReady&&storage),
+      publicPublishingEnabled:env.PACKAGE_PUBLIC_PUBLISH_ENABLED==="true",
+      runtimeLiveVerified:false
+    });
+  }
   if(path==="/api/v1/packages/projects"&&req.method==="GET") {
     const projects=await publicList(env.DB);
     return json({projects:projects.map(p=>({
