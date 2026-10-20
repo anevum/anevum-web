@@ -76,11 +76,12 @@ try{
   assert.equal(state.shell,1,label);assert.equal(state.header,1,label);assert.equal(state.main,1,label);assert.equal(state.overflow,false,label+' overflow');assert.equal(state.tokens,true,label+' shared theme');
   // Mobile nav can scroll horizontally, but its labels must not shrink into
   // overlapping text. Check intrinsic label widths as well as link rectangles.
-  const nav=await evaluate('(()=>{const el=document.querySelector(".av095-navigation");if(!el)return null;const links=[...el.querySelectorAll(":scope > a")];const rects=links.map(link=>link.getBoundingClientRect());return {count:links.length,labelsFit:links.every(link=>link.getBoundingClientRect().width+1>=link.scrollWidth),separate:rects.every((rect,i)=>i===0||rect.left>=rects[i-1].right+2),scrollable:el.scrollWidth>el.clientWidth+4}})()');
+  const nav=await evaluate('(()=>{const el=document.querySelector(".av095-navigation");if(!el)return null;const links=[...el.querySelectorAll(":scope > a")];const rects=links.map(link=>link.getBoundingClientRect());const active=el.querySelector('a[aria-current="page"]'),selected=active?.getBoundingClientRect(),frame=el.getBoundingClientRect();return {count:links.length,labelsFit:links.every(link=>link.getBoundingClientRect().width+1>=link.scrollWidth),separate:rects.every((rect,i)=>i===0||rect.left>=rects[i-1].right+2),scrollable:el.scrollWidth>el.clientWidth+4,activeVisible:!selected||(selected.left>=frame.left-2&&selected.right<=frame.right+2)}})()');
   if(nav){
    assert.ok(nav.count>=4,label+' must retain creator navigation');
    assert.equal(nav.labelsFit,true,label+' navigation labels overlap their link boxes');
    assert.equal(nav.separate,true,label+' navigation links overlap');
+   assert.equal(nav.activeVisible,true,label+' active destination is clipped outside the mobile tab viewport');
    if(width<=390)assert.equal(nav.scrollable,true,label+' mobile tabs must remain horizontally accessible');
   }
   await screenshot(label+'-'+width);results.push({case:label,width,sharedShell:true,noOverflow:true,navVerified:nav!==null,passed:true});
