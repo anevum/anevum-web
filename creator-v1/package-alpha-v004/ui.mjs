@@ -184,6 +184,20 @@ const SCRIPT = String.raw`
    if(action==="restart"){
      const frame=q("game-frame");if(frame)frame.src=frame.getAttribute("src");return;
    }
+   if(action==="attest"){
+     const sha=btn.dataset.sha;
+     if(!/^[a-f0-9]{64}$/.test(sha||"")){note("Build hash unavailable. Reload the review page.",true);return;}
+     if(!confirm("Confirm you personally tested the isolated build, checked asset integrity, reviewed phone behavior on a real device, and reviewed security? This does not certify malware scanning."))return;
+     btn.disabled=true;
+     try{
+       await post("/api/v1/packages/projects/"+id+"/attest",{
+         archiveSha256:sha,checks:{isolatedPreview:true,assetIntegrity:true,mobileReviewed:true,securityReviewed:true}
+       });
+       note("Build verification recorded. Publication still requires a separate approval action.");
+       location.reload();
+     }catch(e){note(e.message||"Verification failed.",true);btn.disabled=false;}
+     return;
+   }
    if(action==="submit"&&!confirm("Submit this private build to staff for review?"))return;
    if(action==="publish"&&!confirm("Make this approved build publicly playable?"))return;
    if(action==="discard"&&!confirm("Discard this private build? Your project identity and any published version stay intact."))return;
@@ -311,13 +325,15 @@ export function catalogScreen(projects) {
   return layout("Playable projects",'<div class="ey">ANEVUM / EXPLORE</div><h1>Created to be experienced.</h1><p class="lead">Real games, apps, interactive stories, and simulations. Every release is verified and published by a creator.</p><div class="actions"><a href="/upload/v3" class="button primary">Publish a project →</a></div><div class="titlebar"><h2>Playable releases</h2></div>'+(projects.length?'<div class="project-grid">'+projects.map(p=>card(p)).join("")+'</div>':'<div class="notice">No projects have cleared review in the new package runtime yet.</div>'));
 }
 export function playerScreen(p, release, runnerURL, isPreview, canEdit, isStaff) {
+  const verify=isStaff&&isPreview&&release.status==="pending_review"
+    ?'<button class="quiet" data-package-action="attest" data-project="'+esc(p.id)+'" data-sha="'+esc(release.archive_sha256||"")+'">Record staff verification</button>':"";
   const actions = (canEdit&&isPreview&&release.status==="ready"?action(p,"submit","Submit for review"):'')+
     (isStaff&&isPreview&&release.status==="pending_review"?action(p,"publish","Approve and publish") +action(p,"reject","Request changes"):'');
   const html='<div class="ey">ANEVUM / '+esc(p.category.toUpperCase())+' / BUILD '+release.version+'</div>'+
     '<div class="player-head"><div><h1>'+esc(p.title)+'</h1><p class="lead">'+esc(p.summary)+'</p><span class="chip '+esc(release.status)+'">'+esc(state(release.status))+(isPreview?' · Private preview':'')+'</span></div><div class="actions"><a class="button quiet" href="/upload/v3">Creator space</a><a class="button quiet" href="/packages">All projects</a></div></div>'+
     (runnerURL?'<section class="viewport" id="game-viewport" aria-label="Interactive experience"><iframe id="game-frame" title="'+esc(p.title)+'" src="'+esc(runnerURL)+'" sandbox="allow-scripts allow-pointer-lock" allow="fullscreen; gamepad" referrerpolicy="no-referrer" loading="eager"></iframe></section>':'<div class="notice">Playable runtime is not configured on this environment.</div>')+
     '<div class="preview-mode" aria-label="Preview viewport"><button type="button" data-package-action="mobile-preview" data-project="'+esc(p.id)+'">Phone view</button><button type="button" data-package-action="desktop-preview" data-project="'+esc(p.id)+'">Desktop view</button><span id="preview-mode-status" class="subtle-note">Desktop viewport</span></div>'+
-    '<div class="player-controls">'+action(p,"restart","Restart")+action(p,"fullscreen","Fullscreen")+actions+'</div>'+
+    '<div class="player-controls">'+action(p,"restart","Restart")+action(p,"fullscreen","Fullscreen")+verify+actions+'</div>'+
     '<p id="activity" class="status" role="status" aria-live="polite"></p>'+
     '<div class="details"><div class="ey">RELEASE DETAILS</div><p>Package v'+release.version+' · '+release.file_count+' assets · '+(release.expanded_bytes/1048576).toFixed(1)+' MiB installed</p>'+
     (isPreview?'<p class="tip">This is a private, short-lived preview link. Refresh this page if it expires. Your build is not public until a reviewer approves it.</p>':'')+
