@@ -1,31 +1,29 @@
 {
   "source_sha": "bdef31c4723634c71174aea5065376f9de8e6348",
   "founder_staff_session": true,
-  "reviewer_staff_session": false,
+  "reviewer_staff_session": true,
   "creator_journey": false,
   "cross_account_identity": false,
   "verified_at": null,
   "evidence": [],
-  "status": "FOUNDER VERIFIED; REVIEWER AND CREATOR ACCEPTANCE PENDING. Approved controlled V003 pilot is active with original apex version at 100% and exact candidate 4b5c5d60-6c8f-431a-a16c-b660c8baf650 at 0%. All 11 workflows passed at release b0ecd978 for pinned application 0116b2ea, including 1,329 complete regression tests and 87 package cases. Package migration 0004, matched controller/runtime resource policy, bounded cleanup, and canonical issuer version pin are deployed. Genuine founder candidate profile/proof, package preflight, Cloudflare Access staff Observatory, signout and founder reauthentication were observed. The subsequent secure sign-in resolved to the founder again, so it supplies no independent reviewer evidence. Normal package bridge, public package publishing and gallery remain OFF. Brandi reviewer scope has not yet been granted so the real pre-grant denial can still be measured. Optional verified-role ledger migration and public role/reputation display remain separate and OFF. No automated result certifies the remaining gates.",
+  "status": "FOUNDER AND REVIEWER STAFF SESSIONS VERIFIED; PRIVATE BRIDGE ACTIVE; CREATOR AND CROSS-ACCOUNT ACCEPTANCE PENDING. Genuine distinct canonical accounts and a fresh independent-reviewer Cloudflare Access flow have been observed. The approved package STAFF_IDS-only grant passed the same-session denial-to-reviewer check while owner-only pilot upload permission was preserved. The reviewer staff interface showed MODERATOR, owner controls were absent, and the owner endpoint returned its denial body. After those checks, exactly the two normal bridge flags were activated with unchanged code and six bindings. The reviewer queue opens and reviewer uploads remain unavailable. The founder signed back in legitimately, and the concrete original pilot ZIP is selected in the live upload form with its rights checkbox unchecked. Public publishing and package gallery remain OFF. Creator rights declaration, actual upload/playtest, independent build approval, public release checks, cross-account ownership/privacy and required phone acceptance remain pending. No automated result certifies the remaining gates.",
   "pilot_state": {
-    "observed_at": "2026-10-20T13:56:40Z",
+    "observed_at": "2026-10-20T14:45:00Z",
     "candidate_build_release_source": "b0ecd978f30e47ec07ab84853a7c86633604866b",
     "candidate_version": "4b5c5d60-6c8f-431a-a16c-b660c8baf650",
     "ordinary_version": "93cc7f07-cf39-457e-af69-c9f6f4c02d25",
     "ordinary_traffic_percent": 100,
     "candidate_traffic_percent": 0,
-    "controller_version": "45adc21c-7a71-4349-b088-82b7febf8869",
+    "controller_version": "fb8dffbb-b101-4f86-a8ee-fe52427baa65",
     "runtime_version": "ffd28035-3de5-4493-83cf-1982a87cb1e1",
     "creation_preflight_version": "f06f3ca7-f684-4028-bc99-e40e080ae6a1",
     "resource_protection_enabled": true,
     "resource_schema_verified": true,
     "cleanup_schedule": "*/30 * * * *",
-    "bridge_enabled": false,
-    "identity_bridge_verified": false,
     "public_publishing_enabled": false,
     "package_gallery_enabled": false,
     "candidate_ui_gallery_compiled": true,
-    "reviewer_scope_granted": false,
+    "reviewer_scope_granted": true,
     "temporary_selection_expires_at": "2026-10-20T15:37:29Z",
     "temporary_selection_cleanup": {
       "request_ruleset": "7a8ccf2e80704acb90de7ad857a2728c",
@@ -69,7 +67,6 @@
       "https://github.com/anevum/anevum-web/actions/runs/39430535833"
     ],
     "remaining": [
-      "Real independent reviewer canonical session and pre-grant denial, then the approved reviewer grant and post-grant access.",
       "Owner rights declaration for the concrete original package and actual private upload/preview/save/revision/submit.",
       "Genuine independent build review and approval, followed by public Discover/Play/member-wall and suspend/restore checks.",
       "Real cross-account ownership/privacy observations and actual required phone acceptance.",
@@ -86,6 +83,118 @@
       "exact_151_file_inventory_preserved": true,
       "exact_five_metadata_exclusions_preserved": true,
       "fresh_gallery_enabled_build_matches_all_four_accepted_asset_hashes": true
+    },
+    "controller_version_observed_at": "2026-10-20T14:31:44Z",
+    "preflight_flags_observation": {
+      "observed_at": "2026-10-20T14:35:00Z",
+      "timestamp_precision": "approximately this minute",
+      "authenticated": true,
+      "pilot": false,
+      "reviewer": true,
+      "bridge_enabled": false,
+      "identity_bridge_verified": false,
+      "scope": "Observed reviewer preflight response only; later approved bridge activation must be recorded separately."
+    },
+    "reviewer_scope_grant": {
+      "applied_at": "2026-10-20T14:31:44Z",
+      "scope": "Add the existing independent canonical reviewer to package STAFF_IDS only.",
+      "controller_version": "fb8dffbb-b101-4f86-a8ee-fe52427baa65",
+      "deployment_id": "4d5e431a-5b00-4615-8def-309a1ba933c8",
+      "binding_count": 12,
+      "module_etag_unchanged": true,
+      "existing_owner_pilot_preserved": true,
+      "pilot_ids_changed": false
+    },
+    "reviewer_session_observation": {
+      "observed_at": "2026-10-20T14:35:00Z",
+      "timestamp_precision": "approximately this minute",
+      "canonical_subject_matches_existing_independent_reviewer": true,
+      "creator_profile": null,
+      "pre_grant_preflight": {
+        "observed_body": "Not found",
+        "browser_http_status_observed": null,
+        "context": "Genuine canonical reviewer session before the package allowlist grant; visible refusal observed without a captured HTTP status."
+      },
+      "canonical_staff_diagnostic": {
+        "path": "/__anevum_iren_staff_session_status_v001",
+        "canonicalSession": "verified",
+        "staffGrant": "reviewer",
+        "staffApi": "http_200",
+        "identityHttp": 200,
+        "http_fields_scope": "These values were reported by the diagnostic for its internal identity and staff API calls."
+      },
+      "cloudflare_access": {
+        "fresh_email_and_otp_flow_completed": true,
+        "visible_account_matched_expected_reviewer": true,
+        "credential_values_recorded": false
+      },
+      "staff_entry_diagnostic": {
+        "path": "/staff?diagnose=1",
+        "access": "verified",
+        "reason": "session_and_grant_valid",
+        "role": "reviewer"
+      },
+      "observatory": {
+        "entry_path": "/staff",
+        "destination": "/staff/observatory",
+        "visible_clearance": "MODERATOR",
+        "visible_workspaces": [
+          "Engagement",
+          "Moderation"
+        ],
+        "owner_members_and_rewards_controls_visible": false
+      },
+      "owner_endpoint_denial": {
+        "path": "/staff/observatory/api/members",
+        "observed_body": {
+          "error": "Owner clearance required"
+        },
+        "browser_http_status_observed": null,
+        "expected_http_status_from_source": 403,
+        "qualification": "The denial body and absence of member records were observed; HTTP 403 is the source-defined response, not a captured browser status."
+      }
+    },
+    "observation_precision": "approximately this minute; individual activation and session timestamps below remain authoritative",
+    "creation_current_version": "f7a104bb-2a65-475e-9d87-8e023b068c38",
+    "normal_bridge_activation": {
+      "deployed_at": "2026-10-20T14:38:31.104275Z",
+      "version": "f7a104bb-2a65-475e-9d87-8e023b068c38",
+      "deployment_id": "bc2e4111-4503-485e-8695-33236b03258b",
+      "rollback_version": "f06f3ca7-f684-4028-bc99-e40e080ae6a1",
+      "changed_bindings": [
+        "PACKAGE_CANONICAL_BRIDGE_ENABLED",
+        "PACKAGE_IDENTITY_BRIDGE_VERIFIED"
+      ],
+      "bridge_enabled": true,
+      "identity_bridge_verified": true,
+      "read_only_preflight_preserved": true,
+      "binding_count": 6,
+      "module_etag_unchanged": true,
+      "deployment_acknowledgement_and_authoritative_readback_verified": true,
+      "scope": "Approved private workflow enabled after genuine founder and independent reviewer identity acceptance. Controller public publishing and gallery remain disabled."
+    },
+    "post_activation_browser_observations": {
+      "observed_at": "2026-10-20T14:43:00Z",
+      "timestamp_precision": "approximately this minute",
+      "reviewer_queue_opened": true,
+      "reviewer_queue_empty": true,
+      "reviewer_upload_form_unavailable": true,
+      "reviewer_upload_message": "Uploading is currently restricted to pilot creators.",
+      "reviewer_profile_setup_showed_moderator_portal": true,
+      "reviewer_profile_created_or_modified": false,
+      "reviewer_product_signout_cleared_member_view": true,
+      "founder_secure_reauthentication_and_canonical_subject_verified": true,
+      "founder_upload_form_available": true,
+      "prepared_upload": {
+        "filename": "anevum-uplink-pilot-v1.zip",
+        "sha256": "913c0188e5ae3efb99e534d0922739f207c9f3756755c28e1ddd490e35861a3d",
+        "title": "ANEVUM Uplink Pilot",
+        "category": "app",
+        "cover_included": false,
+        "rights_declaration_checked": false,
+        "submitted": false
+      },
+      "scope": "The selected ZIP and ordinary metadata were prepared in the live creator form. No rights declaration, private upload, independent build approval or publication is inferred from this preparation."
     }
   }
 }
