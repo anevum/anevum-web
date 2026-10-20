@@ -7,7 +7,7 @@
   "verified_at": null,
   "evidence": [],
   "native_candidate_pending": true,
-  "status": "Replacement V095/V096 immutable candidate uploaded with all 152 earned-media assets and gallery ON. Candidate-specific live verification, real accounts, physical iPhone Safari and owner release approval remain pending.",
+  "status": "Candidate-specific real founder, logged-out and selected live-asset observations recorded. Final acceptance remains pending: independent reviewer and ordinary member, full creator journey, physical iPhone Safari, independent browser, complete linked evidence and owner release approval.",
   "reviewed_file_inventory": 179,
   "release_metadata_exclusions": 19,
   "prior_v091_checkpoint": {
@@ -71,5 +71,18 @@
     "gallery_enabled": true,
     "native_studio_enabled": false,
     "production_promoted": false
+  },
+  "candidate_observations": {
+    "recorded_at": "2026-10-20T23:25:29Z",
+    "certifies_final_acceptance": false,
+    "repository_evidence_pending": true,
+    "observed": [
+      "Real founder session reached the staff workspace and the existing package review queue.",
+      "Guest workspace editing, HTML/CSS preview controls and HTML export worked in a real canonical logged-out browser session.",
+      "Signed-out member API, staff console, package review and private preview routes denied access.",
+      "The existing approved public pilot remained playable.",
+      "Selected live JavaScript, CSS and IREN resources matched the accepted package and approved overlays."
+    ],
+    "qualification": "Descriptive progress only. This does not certify the separate reviewer, ordinary-member, complete creator journey, physical iPhone Safari, independent browser or owner release gates. Native Studio and public designation activation remain outside this candidate."
   }
 }
