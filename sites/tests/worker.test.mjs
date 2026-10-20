@@ -20,7 +20,7 @@ function fakeDb() {
   });
   upsert({
     id: "synthetic-id", slug: "synthetic-business",
-    title: "<script>Untrusted</script>", kind: "local", status: "concept",
+    title: "<script>Untrusted</script>", kind: "local", status: "pitched",
     payload: JSON.stringify({ headline: "<img src=x onerror=alert(1)>", description: "A safe test.", address: "Example & Main", notes: "DO_NOT_SHOW_NOTES" }),
     created_at: "2026-10-19", updated_at: "2026-10-19"
   });
@@ -67,10 +67,10 @@ function fakeDb() {
 
 test("public studio, curated sample and valid health return successfully", async () => {
   const env = { SITES_DB: fakeDb() };
-  for (const url of ["/", "/preview/tobacco-vapor-time", "/health", "/assets/sites.css", "/assets/studio-v2.css", "/assets/studio-v2.js"]) {
+  for (const url of ["/", "/health", "/privacy", "/thanks", "/assets/sites.css", "/assets/studio-v2.css", "/assets/studio-v2.js"]) {
     const r = await studio.fetch(new Request(HOST_PUBLIC + url), env);
     assert.equal(r.status, 200, url);
-    assert.match(r.headers.get("X-Robots-Tag"), /noindex/);
+    assert.match(r.headers.get("X-Content-Type-Options"), /nosniff/);
   }
   const landing = await (await studio.fetch(new Request(HOST_PUBLIC), env)).text();
   assert.match(landing, /ANEVUM/);
@@ -78,10 +78,14 @@ test("public studio, curated sample and valid health return successfully", async
   assert.match(landing, /\$49/);
   assert.match(landing, /better first impression/i);
   assert.match(landing, /Unofficial · not commissioned/);
-  assert.match(landing, /id="sf-email-draft"/);
+  assert.match(landing, /id="sf-inquiry"/);
+  assert.match(landing, /action="\/api\/inquiries"/);
+  assert.match(landing, /name="consent"/);
+  assert.match(landing, /<meta name="robots" content="index,follow">/);
   assert.match(landing, /data-switch="service"/);
-  const sample = await (await studio.fetch(new Request(HOST_PUBLIC + "/preview/tobacco-vapor-time"), env)).text();
-  assert.match(sample, /NOT THE OFFICIAL BUSINESS WEBSITE/);
+  const sample = await studio.fetch(new Request(HOST_PUBLIC + "/preview/tobacco-vapor-time"), env);
+  assert.equal(sample.status, 302);
+  assert.equal(sample.headers.get("Location"), "https://preview.anevum.com/tobacco-vapor-time/");
 });
 
 test("public preview never leaks notes or renders user-supplied markup", async () => {
@@ -211,9 +215,24 @@ test("landing page isolates styling, avoids unconsented storage and honors motio
   assert.match(css,/prefers-reduced-motion/);
   assert.match(css,/sf-scene\[hidden\]/);
   const script=await (await studio.fetch(new Request(HOST_PUBLIC + "/assets/studio-v2.js"),env)).text();
-  assert.match(script,/mailto:devon@anevum.com/);
+  assert.match(script,/data-switch/);
   assert.doesNotMatch(script,/localStorage|sessionStorage|fetch\(/);
   const home=await (await studio.fetch(new Request(HOST_PUBLIC),env)).text();
-  assert.match(home,/not upload or store/i);
-  assert.doesNotMatch(home,/<form[^>]+action=/);
+  assert.match(home,/stored|saved/i);
+  assert.match(home,/<form[^>]+action="\/api\/inquiries"/);
+});
+
+test("public inquiry endpoint is consent-gated, form encoded and same-origin", async () => {
+  const origin=HOST_PUBLIC;
+  const request=(headers,body)=>new Request(origin+"/api/inquiries",{
+    method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded",...headers},
+    body:new URLSearchParams(body)
+  });
+  const valid={name:"Prospect",business:"Sample Shop",email:"contact@example.com",goal:"We need a clear phone-first business website.",package:"undecided",consent:"yes"};
+  const cross=await studio.fetch(request({Origin:"https://evil.example.com"},valid),{SITES_DB:fakeDb()});
+  assert.equal(cross.status,403);
+  const noConsent=await studio.fetch(request({Origin:origin},{...valid,consent:"no"}),{SITES_DB:fakeDb()});
+  assert.equal(noConsent.status,400);
+  const noDatabase=await studio.fetch(request({Origin:origin},valid),{});
+  assert.equal(noDatabase.status,503);
 });
