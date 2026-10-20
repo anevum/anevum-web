@@ -752,3 +752,31 @@ test("isolated runtime CSP permits only pinned staging parent and defaults to pr
     assert.match(notStage.headers.get("content-security-policy"),/frame-ancestors https:\/\/anevum\.com$/);
   }finally{env.DB.close();}
 });
+
+
+test("isolated runtime exposes narrow host-locked readiness with no secrets or credentials",async()=>{
+  const env=setup();
+  try{
+    const endpoint="https://run-tests.example/__anevum_runtime_health_v1";
+    const ok=await runtime.fetch(new Request(endpoint),env);
+    assert.equal(ok.status,200);
+    const body=await ok.json();
+    assert.deepEqual(body,{
+      ok:true,runtime:"package-v003",schemaReady:true,storage:true,
+      independentOrigin:true,cookieless:true
+    });
+    assert.equal(ok.headers.get("cache-control"),"no-store");
+    assert.equal(ok.headers.get("x-robots-tag"),"noindex, nofollow");
+    assert.equal(ok.headers.get("referrer-policy"),"no-referrer");
+    assert.equal((await runtime.fetch(new Request(endpoint.replace("run-tests.example","anevum.com")),env)).status,404);
+    assert.equal((await runtime.fetch(new Request(endpoint,{method:"POST"}),env)).status,404);
+    const media=env.MEDIA;
+    delete env.MEDIA;
+    const down=await runtime.fetch(new Request(endpoint),env);
+    assert.equal(down.status,503);
+    const partial=await down.json();
+    assert.equal(partial.storage,false);
+    assert.equal(partial.ok,false);
+    env.MEDIA=media;
+  }finally{env.DB.close();}
+});
