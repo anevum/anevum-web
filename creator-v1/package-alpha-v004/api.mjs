@@ -142,12 +142,12 @@ async function compatibilityProbe(req,env,u){
   const body=await readBoundedMultipart(req);
   const file=body.get("file");
   if(!file||typeof file.name!=="string"||typeof file.arrayBuffer!=="function"||
-     !/^[^\\/\\x00-\\x1f]{3,160}$/.test(file.name)||file.name.includes("..")||
-     !/\\.(zip|html)$/i.test(file.name)||file.size<1||file.size>POLICY.maxArchiveBytes)
+     !/^[^\/\x00-\x1f]{3,160}$/.test(file.name)||file.name.includes("..")||
+     !/\.(zip|html)$/i.test(file.name)||file.size<1||file.size>POLICY.maxArchiveBytes)
     return fail(422,"Choose a ZIP or HTML file below 20 MiB");
   const bytes=new Uint8Array(await file.arrayBuffer());
   let entries;
-  if(/\\.zip$/i.test(file.name)){
+  if(/\.zip$/i.test(file.name)){
     entries=inspectZip(bytes,{metadataOnly:true}).entries;
   }else{
     validateHtml(bytes);
