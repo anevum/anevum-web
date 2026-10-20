@@ -1,34 +1,51 @@
 {
-  "source_sha": "d7e8d8a2fda4406ba144bfc8dd03d664e48b7b07",
-  "founder_staff_session": true,
-  "reviewer_staff_session": true,
+  "source_sha": "c28bc50922591799ac420790dd061308c98d6210",
+  "founder_staff_session": false,
+  "reviewer_staff_session": false,
   "creator_journey": false,
   "cross_account_identity": false,
   "verified_at": null,
   "evidence": [],
-  "status": "Controlled release verification is in progress; final production acceptance remains incomplete.",
-  "implementation_verification": {
+  "native_candidate_pending": true,
+  "status": "V095 native source integrated. Existing V091 immutable candidate is not this application. Native flags remain OFF; exact-source CI and live activation are tracked separately.",
+  "reviewed_file_inventory": 163,
+  "release_metadata_exclusions": 5,
+  "prior_v091_checkpoint": {
     "source_sha": "d7e8d8a2fda4406ba144bfc8dd03d664e48b7b07",
-    "package_tests": {
-      "passed": 91,
-      "failed": 0,
-      "skipped": 0
-    },
-    "release_acceptance_and_promotion_tests": {
-      "passed": 28,
-      "failed": 0,
-      "skipped": 0,
-      "source_sha": "12b8a1c66b66c5e324c485803682c81ab158b300"
-    },
-    "reviewed_file_inventory": 151,
-    "release_metadata_exclusions": 5,
-    "changes": [
-      "Accept an omitted optional artwork part after multipart parsing while preserving selected-artwork validation.",
-      "Require explicit restoration before reviewing a suspended project and reject conflicting review transactions without partial writes.",
-      "Hide approval and rejection controls from creators reviewing their own build and from suspended projects.",
-      "Map validated package JSON player links to the canonical player path, preserving private-preview queries.",
-      "Give native package revision actions a readable wrapping width within project cards."
-    ],
-    "qualification": "Package tests passed on this source. Release-gate tests and the previous full CI matrix are attributed separately to their tested source. Automated verification does not establish human review, physical-device acceptance or completed authenticated release gates."
+    "founder_staff_session": true,
+    "reviewer_staff_session": true,
+    "creator_journey": false,
+    "cross_account_identity": false,
+    "verified_at": null,
+    "evidence": [],
+    "status": "Controlled release verification is in progress; final production acceptance remains incomplete.",
+    "implementation_verification": {
+      "source_sha": "d7e8d8a2fda4406ba144bfc8dd03d664e48b7b07",
+      "package_tests": {
+        "passed": 91,
+        "failed": 0,
+        "skipped": 0
+      },
+      "release_acceptance_and_promotion_tests": {
+        "passed": 28,
+        "failed": 0,
+        "skipped": 0,
+        "source_sha": "12b8a1c66b66c5e324c485803682c81ab158b300"
+      },
+      "reviewed_file_inventory": 151,
+      "release_metadata_exclusions": 5,
+      "changes": [
+        "Accept an omitted optional artwork part after multipart parsing while preserving selected-artwork validation.",
+        "Require explicit restoration before reviewing a suspended project and reject conflicting review transactions without partial writes.",
+        "Hide approval and rejection controls from creators reviewing their own build and from suspended projects.",
+        "Map validated package JSON player links to the canonical player path, preserving private-preview queries.",
+        "Give native package revision actions a readable wrapping width within project cards."
+      ],
+      "qualification": "Package tests passed on this source. Release-gate tests and the previous full CI matrix are attributed separately to their tested source. Automated verification does not establish human review, physical-device acceptance or completed authenticated release gates."
+    }
+  },
+  "implementation_verification": {
+    "source_sha": "c28bc50922591799ac420790dd061308c98d6210",
+    "state": "Source integrated; use exact-source CI artifacts for verification, not this release-authorization record."
   }
 }
