@@ -2,6 +2,7 @@ import {boundedText} from './request-body.mjs';
 import {readSupporterRewards} from './supporter-rewards.mjs';
 import {publicRecognitionSummary} from './recognition.mjs';
 import {memberReputationMap,publicReputationProjection} from './member-reputation.mjs';
+import {memberVerifiedRoleMap} from './member-verified-roles.mjs';
 
 import {MILESTONES} from './rewards.mjs';
 export {MILESTONES} from './rewards.mjs';
@@ -166,6 +167,12 @@ export async function canonicalSpace(req,env,user,publicHandle=null,now=Math.flo
      const records=await memberReputationMap(db,[id]);
      const earned=records.get(id);
      if(earned)Object.assign(data,isPublic?publicReputationProjection(earned,data.showStats?1:0):earned);
+    }
+    // Public institutional marks are read separately from reputation. Never
+    // infer them from owner emails or staff operational permissions.
+    if(env.CANONICAL_VERIFIED_ROLES_ENABLED==='true'){
+     const roles=await memberVerifiedRoleMap(db,[id]);
+     if(roles.has(id))data.role=roles.get(id);
     }
     if(isPublic){delete data.revision;if(!data.showStats)delete data.stats;data.awards=data.awards.filter(a=>a.earnedAt&&data.featuredAwards.includes(a.id));}
     // Public cosmetics require explicit member opt-in; private previews
