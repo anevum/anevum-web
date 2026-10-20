@@ -51,3 +51,11 @@ Exposed aggregate metrics: physical bytes by account/shared pilot, number of tem
 - This code does **not** authorize public self-service creator uploading, malware-scanned release certification, arbitrary network access in creator apps, or production database changes.
 - R2 prefix cleanup must be proven with a real dedicated test bucket before introducing a TTL lifecycle rule; do **not** apply a generic bucket-wide 48-hour object TTL that would delete published releases.
 - Canonical Studio quarantine is a separate subsystem; integrating its upload UI with the playable package pipeline remains gated on unified authentication, moderation and release proof.
+
+## Expiration and database compaction hardening (V004 follow-up)
+
+- Server-side expiry is enforced when saving a private test, when submitting it, and whenever a creator opens its private player. Delayed cron processing cannot revive an expired temporary build.
+- The creator dashboard labels expired tests explicitly and offers replacement or discard, not misleading Save/Submit controls. The stable project ID and any separately approved live version remain intact.
+- The public unauthenticated health endpoint deliberately performs no D1 table checks. Authenticated storage-usage and staff-operations routes perform schema readiness checks.
+- Scheduled cleanup also prunes old daily and hourly upload limits, expired upload leases, and deleted project tombstones, in bounded batches. Project rows are pruned **only after** all referenced release rows have passed retention and erasure and no upload reservation remains. Published works and current account projects are ineligible.
+- These safeguards are covered by additive disposable-SQLite/fake-R2 regression tests; live staging QA and release approval remain required.
