@@ -373,6 +373,12 @@ test("a creator with staff role cannot approve their own executable project",asy
   try {
     const project=(await (await post(env,"/api/v1/packages/upload",uploadForm(sample()))).json());
     assert.equal((await post(env,"/api/v1/packages/projects/"+project.id+"/submit",{})).status,200);
+    const ownPreview=await (await getPage(env,"/play/v3/"+project.id+"?preview=1","owner")).text();
+    assert.doesNotMatch(ownPreview,/data-package-action="(?:publish|reject)"/);
+    assert.doesNotMatch(ownPreview,/id="review-dialog"/);
+    const reviewerPreview=await (await getPage(env,"/play/v3/"+project.id+"?preview=1","staff")).text();
+    assert.match(reviewerPreview,/data-package-action="publish"/);
+    assert.match(reviewerPreview,/data-package-action="reject"/);
     const denied=await post(env,"/api/v1/packages/projects/"+project.id+"/review",{action:"publish"},"owner");
     assert.equal(denied.status,403);
     assert.match((await denied.json()).error,/independent reviewer/);
@@ -1379,4 +1385,97 @@ test("staff can find, suspend and restore an approved package from the review wo
   assert.equal(release.status,"published");
   assert.equal(release.reviewed_by,"staff-id","restoration preserves the original independent release decision");
  }finally{env.DB.close()}
+});
+
+async function pendingRevision(env){
+ const initial=await createdProtected(env);
+ assert.equal((await post(env,resourcePath(initial,"submit"),{})).status,200);
+ assert.equal((await post(env,resourcePath(initial,"review"),{action:"publish"},"staff")).status,200);
+ const revision=await createdProtected(env,uploadForm(sample(),"Cosmic Racer revision two",initial.id));
+ assert.equal(revision.version,2);
+ assert.equal((await post(env,resourcePath(revision,"submit"),{})).status,200);
+ return {initial,revision};
+}
+async function reviewSnapshot(env,revision){
+ const snapshot={
+  project:await env.DB.prepare("SELECT * FROM anevum_package_projects WHERE id=?").bind(revision.id).first(),
+  release:await env.DB.prepare("SELECT * FROM anevum_package_releases WHERE id=?").bind(revision.release_id).first(),
+  rights:await env.DB.prepare("SELECT * FROM anevum_package_rights_receipts WHERE release_id=?").bind(revision.release_id).first(),
+  objects:env.MEDIA.data.size
+ };
+ if(env.PACKAGE_RESOURCE_PROTECTION_ENABLED==="true"){
+  snapshot.retention=await env.DB.prepare("SELECT * FROM anevum_package_build_retention WHERE release_id=?").bind(revision.release_id).first();
+  snapshot.cleanup=await env.DB.prepare("SELECT * FROM anevum_package_cleanup_jobs WHERE release_id=?").bind(revision.release_id).first();
+ }
+ return snapshot;
+}
+test("a suspended pending revision requires explicit restoration before independent review",async()=>{
+ for(const createEnv of [setup,protectedSetup]){
+  const env=createEnv();
+  try{
+   const {initial,revision}=await pendingRevision(env);
+   const original=await env.DB.prepare("SELECT * FROM anevum_package_releases WHERE id=?").bind(initial.release_id).first();
+   const reason="Investigating a reported safety issue";
+   assert.equal((await post(env,resourcePath(revision,"moderate"),{action:"suspend",reason},"staff")).status,200);
+   const before=await reviewSnapshot(env,revision);
+   assert.equal(before.project.status,"suspended");
+   assert.equal(before.project.live_release_id,initial.release_id);
+   assert.equal(before.release.status,"pending_review");
+   const preview=await (await getPage(env,"/play/v3/"+revision.id+"?preview=1","staff")).text();
+   assert.doesNotMatch(preview,/data-package-action="(?:publish|reject)"/);
+   assert.doesNotMatch(preview,/id="review-dialog"/);
+   assert.equal((await getPage(env,"/play/v3/"+revision.id,"visitor")).status,404);
+   for(const action of ["publish","reject"]){
+    const denied=await post(env,resourcePath(revision,"review"),{action,reason:"A specific requested revision"},"staff");
+    assert.equal(denied.status,409);
+    assert.match((await denied.json()).error,/Restore/);
+    assert.deepEqual(await reviewSnapshot(env,revision),before);
+   }
+   assert.equal((await post(env,resourcePath(revision,"moderate"),{action:"restore"},"staff")).status,200);
+   const restored=await reviewSnapshot(env,revision);
+   assert.equal(restored.project.status,"published");
+   assert.equal(restored.project.live_release_id,initial.release_id,"Restore retains the approved v1 pointer");
+   assert.equal(restored.project.draft_release_id,revision.release_id);
+   assert.equal(restored.release.status,"pending_review");
+   assert.deepEqual(await env.DB.prepare("SELECT * FROM anevum_package_releases WHERE id=?").bind(initial.release_id).first(),original);
+   const restoredPreview=await (await getPage(env,"/play/v3/"+revision.id+"?preview=1","staff")).text();
+   assert.match(restoredPreview,/data-package-action="publish"/);
+   assert.match(restoredPreview,/data-package-action="reject"/);
+   assert.equal((await post(env,resourcePath(revision,"review"),{action:"publish"},"staff")).status,200);
+   const approved=await reviewSnapshot(env,revision);
+   assert.equal(approved.project.live_release_id,revision.release_id);
+   assert.equal(approved.project.draft_release_id,null);
+   assert.equal(approved.release.status,"published");
+   assert.equal(approved.release.reviewed_by,"staff-id");
+   if(env.PACKAGE_RESOURCE_PROTECTION_ENABLED==="true")assert.equal(approved.retention,null);
+  }finally{env.DB.close()}
+ }
+});
+test("a review racing suspension or draft drift cannot partially change release or resource state",async()=>{
+ for(const createEnv of [setup,protectedSetup])for(const action of ["publish","reject"])for(const race of ["suspend","draft"]){
+  const env=createEnv();
+  try{
+   const {initial,revision}=await pendingRevision(env),batch=env.DB.batch.bind(env.DB);
+   let concurrentState=null,reviewChanges=null;
+   env.DB.batch=async commands=>{
+    env.DB.batch=batch;
+    if(race==="suspend"){
+     assert.equal((await post(env,resourcePath(revision,"moderate"),{action:"suspend",reason:"Concurrent safety investigation"},"staff")).status,200);
+    }else{
+     await env.DB.prepare("UPDATE anevum_package_projects SET draft_release_id=NULL WHERE id=? AND draft_release_id=?").bind(revision.id,revision.release_id).run();
+    }
+    concurrentState=await reviewSnapshot(env,revision);
+    const results=await batch(commands);reviewChanges=results.map(result=>result.meta.changes);return results;
+   };
+   const result=await post(env,resourcePath(revision,"review"),{action,reason:"A specific requested revision"},"staff");
+   assert.equal(result.status,409);
+   assert.match((await result.json()).error,/Review state changed/);
+   assert.ok(concurrentState,"The competing write happened after initial review validation");
+   assert.deepEqual(reviewChanges,env.PACKAGE_RESOURCE_PROTECTION_ENABLED==="true"?[0,0,0]:[0,0]);
+   assert.deepEqual(await reviewSnapshot(env,revision),concurrentState);
+   assert.equal(concurrentState.project.live_release_id,initial.release_id);
+   assert.equal(concurrentState.release.status,"pending_review");
+   assert.equal(concurrentState.release.reviewed_by,null);
+  }finally{env.DB.close()}
+ }
 });

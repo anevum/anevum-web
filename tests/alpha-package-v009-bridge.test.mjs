@@ -255,27 +255,38 @@ test("real controller bridged health truthfully reports disabled publication and
 });
 
 
-test("V010 creator gallery, private owner library and new uploads rewrite only validated internal URLs",async()=>{
+test("V010 catalogue, creator gallery, private owner library and uploads produce playable canonical URLs",async()=>{
  const id=UUID,cover="/api/v1/packages/covers/"+id,play="/play/v3/"+id;
+ const canonicalPlay="/upload/v3/play/"+id;
+ async function followsPlayerLink(link,target){
+   const {env,calls}=makeEnv(response("PLAYER","text/plain"));
+   const player=await interceptPackageNamespace(get(link),env);
+   assert.equal(player?.status,200,link);
+   assert.equal(calls.length,1);
+   assert.equal(calls[0].url,ORIGIN+target);
+ }
  const list={handle:"cosmiccreator",projects:[{id,title:"Cosmic Racer",cover_url:cover,play_url:play},
    {id:"second",cover_url:null,play_url:null}]};
  const route="/upload/v3/api/v1/packages/creators/cosmiccreator/projects";
- for(const path of [route,"/upload/v3/api/v1/packages/mine"]){
+ for(const path of ["/upload/v3/api/v1/packages/projects",route,"/upload/v3/api/v1/packages/mine"]){
    const {env}=makeEnv(response(JSON.stringify(list),"application/json"));
    const r=await interceptPackageNamespace(get(path),env);
    assert.equal(r.status,200);
    const data=await r.json();
    assert.equal(data.projects[0].cover_url,"/upload/v3"+cover);
-   assert.equal(data.projects[0].play_url,"/upload/v3"+play);
+   assert.equal(data.projects[0].play_url,canonicalPlay);
    assert.equal(data.projects[1].cover_url,null);
    assert.equal(data.projects[1].play_url,null);
+   await followsPlayerLink(data.projects[0].play_url,play);
  }
  const {env}=makeEnv(response(JSON.stringify({id,release_id:id,status:"ready",play_url:play+"?preview=1"}),
    "application/json",201));
  const uploaded=await interceptPackageNamespace(post("/upload/v3/api/v1/packages/upload",
    JSON.stringify({title:"Cosmic Racer"})),env);
  assert.equal(uploaded.status,201);
- assert.equal((await uploaded.json()).play_url,"/upload/v3"+play+"?preview=1");
+ const uploadData=await uploaded.json();
+ assert.equal(uploadData.play_url,canonicalPlay+"?preview=1");
+ await followsPlayerLink(uploadData.play_url,play+"?preview=1");
 });
 test("V010 bridge never rewrites untrusted external game URLs into an executable same-origin path",async()=>{
  const data={handle:"cosmiccreator",projects:[

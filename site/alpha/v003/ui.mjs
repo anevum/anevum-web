@@ -490,7 +490,7 @@ export function playerScreen(p,release,runnerURL,isPreview,canEdit,isStaff){
   const synopsis=isPreview?release.proposed_summary||p.summary:p.summary;
   const kind=isPreview?release.proposed_category||p.category:p.category;
   const ready=Boolean(runnerURL)&&isPreview&&release.status==="ready";
-  const review=Boolean(runnerURL)&&isStaff&&isPreview&&release.status==="pending_review";
+  const review=Boolean(runnerURL)&&isStaff&&!canEdit&&isPreview&&release.status==="pending_review"&&p.status!=="suspended";
   const controls='<div class="player-controls">'+
     (runnerURL?action(p,"restart","Restart")+action(p,"fullscreen","Expand"): "")+
     (!isPreview?action(p,"share","Share"): "")+

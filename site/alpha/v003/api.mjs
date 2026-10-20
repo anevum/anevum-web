@@ -464,6 +464,8 @@ async function review(req,env,u,id) {
   if(!p||!release||release.status!=="pending_review") return fail(409,"Project not awaiting review");
   // A creator must never independently approve their own executable package.
   if(p.owner_id===u.id) return fail(403,"An independent reviewer must approve this project");
+  if(p.status==="suspended") return fail(409,"Restore the approved release before reviewing this project");
+  if(!["pending_review","published"].includes(p.status)) return fail(409,"Project not awaiting review");
   const input=await req.json().catch(()=>null);
   if(!["publish","reject"].includes(input?.action)) return fail(422,"Choose publish or reject");
   if(input.action==="reject"&&(typeof input.reason!=="string"||input.reason.trim().length<10||input.reason.length>1000))
@@ -485,22 +487,38 @@ async function review(req,env,u,id) {
     if(count.n!==release.file_count) return fail(503,"Build asset inventory is incomplete");
   }
   const now=Math.floor(Date.now()/1000),publish=input.action==="publish",reason=publish?null:input.reason.trim();
+  const expectedProject="id=? AND owner_id=? AND status=? AND status IN ('pending_review','published') "+
+    "AND draft_release_id=? AND live_release_id IS ?";
+  const expectedState=[p.id,p.owner_id,p.status,release.id,p.live_release_id];
+  // D1 batches are atomic. Match the same project snapshot on both writes, then
+  // chain each dependent mutation to the preceding write in this transaction.
+  // A concurrent suspension or draft change must leave every review row intact.
   const changes=await env.DB.batch([
     env.DB.prepare(
       "UPDATE anevum_package_releases SET status=?,review_reason=?,reviewed_by=?,reviewed_at=? " +
-      "WHERE id=? AND status='pending_review'"
-    ).bind(publish?"published":"rejected",reason,u.id,now,release.id),
+      "WHERE id=? AND project_id=? AND status='pending_review' "+
+      "AND EXISTS(SELECT 1 FROM anevum_package_projects WHERE "+expectedProject+")"
+    ).bind(publish?"published":"rejected",reason,u.id,now,release.id,p.id,...expectedState),
     env.DB.prepare(
-      publish?
+      (publish?
         "UPDATE anevum_package_projects SET title=?,summary=?,category=?,status='published'," +
-        "live_release_id=?,draft_release_id=NULL,review_reason=NULL,updated_at=?,published_at=? " +
-        "WHERE id=? AND draft_release_id=?":
+        "live_release_id=?,draft_release_id=NULL,review_reason=NULL,updated_at=?,published_at=? ":
         "UPDATE anevum_package_projects SET status=CASE WHEN live_release_id IS NULL THEN 'rejected' ELSE status END," +
-        "draft_release_id=NULL,review_reason=?,updated_at=? WHERE id=? AND draft_release_id=?"
+        "draft_release_id=NULL,review_reason=?,updated_at=? ")+
+      "WHERE "+expectedProject+" AND changes()=1"
     ).bind(...(publish?
-      [release.proposed_title,release.proposed_summary,release.proposed_category,release.id,now,now,p.id,release.id]:
-      [reason,now,p.id,release.id])),
-    ...(resourceMode(env)?(publish?[env.DB.prepare("DELETE FROM anevum_package_build_retention WHERE release_id=?").bind(release.id)]:[jobStatement(env.DB,release.id,"rejected",now,now+POLICY.rejectedSeconds)]):[])
+      [release.proposed_title,release.proposed_summary,release.proposed_category,release.id,now,now,...expectedState]:
+      [reason,now,...expectedState])),
+    ...(resourceMode(env)?(publish?[
+      env.DB.prepare("DELETE FROM anevum_package_build_retention WHERE release_id=? AND changes()=1").bind(release.id)
+    ]:[
+      env.DB.prepare(
+        "INSERT OR IGNORE INTO anevum_package_cleanup_jobs(release_id,physical_bytes,reason,not_before,created_at,updated_at) "+
+        "SELECT r.id,r.archive_bytes+r.expanded_bytes,'rejected',?,?,? FROM anevum_package_releases r "+
+        "WHERE r.id=? AND r.status='rejected' AND changes()=1 "+
+        "AND NOT EXISTS(SELECT 1 FROM anevum_package_projects p WHERE p.live_release_id=r.id OR p.draft_release_id=r.id)"
+      ).bind(now+POLICY.rejectedSeconds,now,now,release.id)
+    ]):[])
   ]);
   return changes[0]?.meta?.changes===1&&changes[1]?.meta?.changes===1
     ?json({status:publish?"published":"rejected"}):fail(409,"Review state changed");

@@ -78,7 +78,7 @@ function mapProject(p){
     result.cover_url=PACKAGE_NAMESPACE+p.cover_url;
   if(typeof p.play_url==="string"&&
       /^\/play\/v3\/[0-9a-f-]{36}(?:\?preview=1)?$/.test(p.play_url))
-    result.play_url=PACKAGE_NAMESPACE+p.play_url;
+    result.play_url=p.play_url.replace("/play/v3/",PACKAGE_NAMESPACE+"/play/");
   return result;
 }
 function mappedProjectData(data){
