@@ -121,6 +121,30 @@ async function pruneHistory(env,now){
   }
   return {pruned,errors};
 }
+async function pruneStaleBookkeeping(env,now){
+  // Never prune project identity until R2 cleanup and version-metadata retention
+  // are resolved. Prune bounded counters and leases to avoid D1 accumulation.
+  const day=Math.floor(now/86400)*86400;
+  const operations=[
+    env.DB.prepare("DELETE FROM anevum_package_upload_leases WHERE owner_id IN "+
+      "(SELECT owner_id FROM anevum_package_upload_leases WHERE expires_at<? ORDER BY expires_at LIMIT 20)")
+      .bind(now-86400),
+    env.DB.prepare("DELETE FROM anevum_package_daily_limits WHERE owner_id IN "+
+      "(SELECT owner_id FROM anevum_package_daily_limits WHERE window_start<? ORDER BY window_start LIMIT 20)")
+      .bind(day-2*86400),
+    env.DB.prepare("DELETE FROM anevum_package_upload_limits WHERE owner_id IN "+
+      "(SELECT owner_id FROM anevum_package_upload_limits WHERE window_start<? ORDER BY window_start LIMIT 20)")
+      .bind(now-30*86400),
+    env.DB.prepare("DELETE FROM anevum_package_projects WHERE id IN "+
+      "(SELECT p.id FROM anevum_package_projects p WHERE p.status='deleted' AND p.updated_at<? "+
+      "AND NOT EXISTS(SELECT 1 FROM anevum_package_releases r WHERE r.project_id=p.id) "+
+      "AND NOT EXISTS(SELECT 1 FROM anevum_package_upload_reservations u WHERE u.project_id=p.id) "+
+      "ORDER BY p.updated_at LIMIT 10)")
+      .bind(now-POLICY.historySeconds)
+  ];
+  const results=await env.DB.batch(operations);
+  return results.reduce((sum,r)=>sum+Number(r?.meta?.changes||0),0);
+}
 export async function cleanupPackageResources(env,now=Math.floor(Date.now()/1000)){
   if(!env?.DB||!env?.MEDIA||!(await resourcePolicyReady(env.DB)))
     return {processed:0,expired:0,orphans:0,pruned:0,errors:0,paused:true};
@@ -128,8 +152,12 @@ export async function cleanupPackageResources(env,now=Math.floor(Date.now()/1000
   const b=await reapErasureQueue(env,now);
   const c=await reapInterruptedUploads(env,now);
   const d=await pruneHistory(env,now);
+  let bookkeepingPruned=0,bookkeepingErrors=0;
+  try{bookkeepingPruned=await pruneStaleBookkeeping(env,now);}
+  catch{bookkeepingErrors=1;}
   return {expired:a.expired,processed:b.processed,orphans:c.orphans,pruned:d.pruned,
-    protectedCount:b.protectedCount,errors:a.errors+b.errors+c.errors+d.errors,paused:false};
+    bookkeepingPruned,protectedCount:b.protectedCount,
+    errors:a.errors+b.errors+c.errors+d.errors+bookkeepingErrors,paused:false};
 }
 export async function staffMetrics(db,now=Math.floor(Date.now()/1000)){
   const releases=await one(db,"SELECT COUNT(*) n FROM anevum_package_releases WHERE status IN ('ready','pending_review','published','rejected')");
