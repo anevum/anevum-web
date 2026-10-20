@@ -350,7 +350,7 @@ async function deleteUnpublished(env,u,id){
 async function api(req,env,path,ctx){
   if(path==="/api/v1/packages/health"&&req.method==="GET")
     return json({ok:true,version:"004",db:!!env.DB,storage:!!env.MEDIA,
-      runnerConfigured:!!isolatedHost(env),resourcePolicy:await resourcePolicyReady(env.DB)});
+      runnerConfigured:!!isolatedHost(env),resourcePolicy:"authenticated-check-only"});
   if(path==="/api/v1/packages/projects"&&req.method==="GET"){
     const projects=await publicList(env.DB);
     return json({projects:projects.map(p=>({id:p.id,title:p.title,summary:p.summary,category:p.category,version:p.release_version}))});
@@ -402,6 +402,15 @@ async function player(req,env,id) {
     u=await member(req,env);
     if(!u||(p.owner_id!==u.id&&!staff(env,u.id)))return a404();
     release=await getDraft(env.DB,p);
+    if(release?.status==="ready"){
+      const expired=await query(env.DB,
+        "SELECT release_id FROM anevum_package_build_retention WHERE release_id=? AND mode='test' AND expires_at<=?",
+        release.id,Math.floor(Date.now()/1000));
+      if(expired)return layout("Private test expired",
+        '<h1>Your private test expired.</h1><p>Temporary builds last 48 hours unless saved. Your project and any published release are safe.</p>'+
+        '<div class="actions"><a class="button primary" href="/upload/v3?update='+p.id+'">Replace test build</a>'+
+        (p.live_release_id?'<a class="button quiet" href="/play/v3/'+p.id+'">Play published version</a>':'')+'</div>');
+    }
     if(release&&!["ready","pending_review","published"].includes(release.status))release=null;
     if(release)isPreview=true;
   }
