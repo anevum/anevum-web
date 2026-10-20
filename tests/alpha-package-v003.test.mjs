@@ -661,3 +661,64 @@ test("bounded staff GC retries failed discarded-build cleanup without touching p
     assert.equal((await (await getPage(env,"/api/v1/packages/projects","visitor")).json()).projects[0].id,live.id);
   }finally{env.MEDIA.delete=prior;env.DB.close();}
 });
+
+
+test("upload readiness health truthfully reflects intact isolated DB and media",async()=>{
+  const env=setup();
+  try{
+    const ready=await getPage(env,"/api/v1/packages/health","visitor");
+    assert.equal(ready.status,200);
+    const body=await ready.json();
+    assert.equal(body.schemaReady,true);
+    assert.equal(body.uploadReady,true);
+    assert.equal(body.db,true);
+    assert.equal(body.storage,true);
+    assert.equal(body.runnerConfigured,true);
+    assert.equal(body.publicPublishingEnabled,true);
+    assert.equal(body.runtimeLiveVerified,false,"Presence of a configured hostname is not a live runtime acceptance test");
+    const uploader=await (await getPage(env,"/upload/v3")).text();
+    assert.match(uploader,/id="publish-form"/);
+    assert.doesNotMatch(uploader,/New uploads are paused/);
+  }finally{env.DB.close();}
+});
+test("missing rights table halts uploader before touching staging R2 or project metadata",async()=>{
+  const env=setup();
+  try{
+    const actualPrepare=env.DB.prepare.bind(env.DB);
+    env.DB.prepare=(sql)=>{
+      const stmt=actualPrepare(sql);
+      if(!sql.includes("sqlite_master"))return stmt;
+      return {first:async()=>({n:5})};
+    };
+    const status=await (await getPage(env,"/api/v1/packages/health","visitor")).json();
+    assert.equal(status.ok,true);
+    assert.equal(status.schemaReady,false);
+    assert.equal(status.uploadReady,false);
+    const page=await (await getPage(env,"/upload/v3")).text();
+    assert.match(page,/New uploads are paused/);
+    assert.doesNotMatch(page,/id="publish-form"/);
+    assert.match(page,/Your existing approved creations remain unchanged/);
+    const before=env.MEDIA.data.size;
+    const denied=await post(env,"/api/v1/packages/upload",uploadForm(sample()));
+    assert.equal(denied.status,503);
+    assert.match((await denied.json()).error,/schema is not ready/);
+    assert.equal(env.MEDIA.data.size,before,"No archive or cover can be written while the schema is incomplete");
+    const projects=await (await getPage(env,"/api/v1/packages/projects","visitor")).json();
+    assert.deepEqual(projects.projects,[]);
+  }finally{env.DB.close();}
+});
+test("missing R2 binding halts upload and communicates unavailable storage",async()=>{
+  const env=setup(),media=env.MEDIA;
+  try {
+    delete env.MEDIA;
+    const health=await (await getPage(env,"/api/v1/packages/health","visitor")).json();
+    assert.equal(health.schemaReady,true);
+    assert.equal(health.storage,false);
+    assert.equal(health.uploadReady,false);
+    assert.match(await (await getPage(env,"/upload/v3")).text(),/New uploads are paused/);
+    const denied=await post(env,"/api/v1/packages/upload",uploadForm(sample()));
+    assert.equal(denied.status,503);
+    assert.match((await denied.json()).error,/storage is not configured/);
+    assert.equal(media.data.size,0);
+  }finally{env.MEDIA=media;env.DB.close();}
+});
