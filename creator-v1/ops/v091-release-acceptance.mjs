@@ -84,7 +84,7 @@ export function verifyV091Acceptance(record){
   if(typeof record.verified_at!=='string'||!Number.isFinite(Date.parse(record.verified_at))||Date.parse(record.verified_at)>Date.now())
     throw Error('V091 acceptance requires an actual verification timestamp.');
   if(!Array.isArray(record.evidence)||record.evidence.length<1||record.evidence.some(ref=>
-    typeof ref!=='string'||!/^https:\/\/github\.com\/anevum\/anevum-web\/(?:actions\/runs\/\d+(?:\/artifacts\/\d+)?|pull\/554#issuecomment-\d+)$/.test(ref)))
+    typeof ref!=='string'||ref!==ref.trim()||!/^https:\/\/github\.com\/anevum\/anevum-web\/(?:actions\/runs\/\d+(?:\/artifacts\/\d+)?|pull\/(?:554|564)#issuecomment-\d+)$/.test(ref)))
     throw Error('V091 acceptance requires recorded repository evidence, without session credentials.');
   return true;
 }

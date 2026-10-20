@@ -16,14 +16,19 @@ test("current Continuance production authority retains source, acceptance and ro
  assert.match(flow,/cancel-in-progress: false/);
  assert.match(flow,/release\/v084-continuance-approved-20261019/);
  const gates=flow.indexOf("node creator-v1/ops/v091-release-acceptance.mjs");
- const deploy=flow.indexOf("npx wrangler deploy --config creator-v1/wrangler.v089.generated.json --keep-vars");
- assert.ok(gates>0&&deploy>gates,"authenticated acceptance precedes deployment");
+ const prepare=flow.indexOf('node "$RUNNER_TEMP/v091-promotion-guard.mjs" prepare');
+ const promote=flow.indexOf('node "$RUNNER_TEMP/v091-promotion-guard.mjs" promote');
+ assert.ok(gates>0&&prepare>gates&&promote>prepare,"authenticated acceptance precedes guarded candidate promotion");
  assert.match(flow,/git diff --exit-code [a-f0-9]{40} HEAD/);
  assert.match(flow,/v091-staff-transport.mjs --apply/);
  assert.match(flow,/Verify or repair the five pinned staff identity Workers/);
- assert.match(flow,/PREVIOUS_WORKER_ROLLBACK=PASS/);
+ assert.match(flow,/node "\$RUNNER_TEMP\/v091-promotion-guard\.mjs" rollback/);
+ assert.match(flow,/RECORDED_PILOT_RESTORED/);
+ assert.match(flow,/rollback unconfirmed/);
+ assert.match(flow,/node "\$RUNNER_TEMP\/v091-promotion-guard\.mjs" postflight/);
  assert.doesNotMatch(flow,/d1 migrations apply/);
- assert.equal((flow.match(/npx wrangler deploy\b/g)||[]).length,1);
+ assert.doesNotMatch(flow,/npx wrangler (?:deploy|versions upload)\b/);
+ assert.equal((flow.match(/node "\$RUNNER_TEMP\/v091-promotion-guard\.mjs" promote/g)||[]).length,1);
 });
 test("retirement checks reject accidental deployment, credential access and success exits",()=>{
  const retired=read(".github/workflows/deploy-production.yml");

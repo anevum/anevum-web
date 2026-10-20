@@ -30,6 +30,26 @@ test('a different source, future timestamp, missing evidence or credential URL c
   assert.throws(()=>verifyV091Acceptance({...complete(),evidence}),/evidence/);
  assert.equal(verifyV091Acceptance(complete()),true);
 });
+test('repository evidence supports the current release PR without accepting unrelated or credential-bearing URLs',()=>{
+ const accepted=[
+  'https://github.com/anevum/anevum-web/pull/554#issuecomment-123',
+  'https://github.com/anevum/anevum-web/pull/564#issuecomment-456',
+  'https://github.com/anevum/anevum-web/actions/runs/123/artifacts/456'
+ ];
+ for(const ref of accepted){
+  assert.equal(verifyV091Acceptance({...complete(),evidence:[ref]}),true);
+  for(const value of [' '+ref,ref+'\n',ref+'?token=secret',ref+'#extra'])
+   assert.throws(()=>verifyV091Acceptance({...complete(),evidence:[value]}),/evidence/);
+ }
+ for(const ref of [
+  'https://github.com/anevum/anevum-web/pull/565#issuecomment-456',
+  'https://github.com/another/anevum-web/pull/564#issuecomment-456',
+  'https://github.com/anevum/another/pull/564#issuecomment-456',
+  'https://github.com/anevum/anevum-web/pull/564',
+  'https://github.com/anevum/anevum-web/pull/564?token=secret#issuecomment-456'
+ ])assert.throws(()=>verifyV091Acceptance({...complete(),evidence:[ref]}),/evidence/);
+ assert.throws(()=>verifyV091Acceptance({...complete(),reviewer_staff_session:false,evidence:[accepted[1]]}),/unverified: reviewer_staff_session/);
+});
 
 test('guarded V091 release stays pinned to precisely the reviewed integrated files',()=>{
  const release=readFileSync(new URL('../../.github/workflows/v084-continuance-production.yml',import.meta.url),'utf8');
