@@ -17,7 +17,7 @@ let source=null;
 try{source=execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim();}
 catch{if(process.env.GITHUB_ACTIONS==='true')throw Error('Browser evidence must be tied to the exact Git checkout');}
 if(source!==null)assert.match(source,/^[a-f0-9]{40}$/);
-const PORT=4181,URL='http://127.0.0.1:'+PORT;
+const PORT=4181,BASE_URL='http://127.0.0.1:'+PORT;
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(fn,label,timeout=30000){
  const end=Date.now()+timeout;let last;
@@ -59,7 +59,7 @@ const q=s=>evaluate('!!document.querySelector('+JSON.stringify(s)+')');
 const contains=s=>evaluate('document.body.textContent.includes('+JSON.stringify(s)+')');
 async function navigate(path='/studio/alpha'){
  const prior=await evaluate('performance.timeOrigin');
- await c.send('Page.navigate',{url:URL+'/creator'+path});
+ await c.send('Page.navigate',{url:BASE_URL+'/creator'+path});
  await until(()=>evaluate('document.readyState==="complete"&&performance.timeOrigin!=='+prior),'Navigation '+path);
 }
 async function clickText(text,selector='button'){
