@@ -74,6 +74,14 @@ The design is a clean information page only. Avoid selling or promoting restrict
 
 Action: Test the preview on an iPhone, verify tap targets for maps/phone, verify details in person, then pitch the 4-section founding package. Do not give the impression that the code or brand was authorized by the shop.
 
+## October 20 local introduction — Smokebreak St Cloud (unconfirmed prospect)
+
+A shop immediately adjacent to Aldi on Canoe Creek Road appears in public listings as **Smokebreak St Cloud, 3316 Canoe Creek Rd, St. Cloud, FL 34772**. Aldi is listed at 3318. The user's account of speaking to a helpful associate is not confirmation of the owner's identity, authorization to use the business's brand, or an agreed contract. Keep the site marked `concept` and confirm store name, hours, number and ownership before external sharing.
+
+The proof-of-concept is private at `https://sites.anevum.com/preview/smokebreak-st-cloud` after verified owner login. It is an informational storefront study only, does not advertise or sell regulated goods, and is not available on the public Worker.
+
+**Warm introduction and referral policy:** If the associate introduces the owner and a paid site is eventually commissioned, a voluntary referral fee can be discussed. Do not promise a payout amount or imply an approved partner program until terms are written, the employee confirms acceptance is allowed by their employer, and the owner's knowledge of the referral is clear. Prefer payment only after a valid paid client contract and collected fees, with a fixed cap and an amount that preserves project economics. A recommendation or placing ANEVUM flyers alone creates no automatic commission. Do not collect personal identity or payout details through the public form; keep such records in owner-only storage after an agreement exists.
+
 ## Weekly workload and outcome measurements
 
 Pilot cadence should fit parenting and writing priorities. Target **3–5 thoughtfully selected business visits per week**, not a daily campaign of building speculative sites.
