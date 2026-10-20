@@ -9,6 +9,8 @@ import {
  type StudioReviewProject,type StudioReviewHistory,type StudioReviewManifest,type StudioReviewReceipt
 } from '../lib/canonical-studio';
 import './canonical-studio.css';
+import {nativeCreatorEnabled} from '../lib/native-creator-v095';
+import {NativeStudioNavigation} from './NativeCreatorStudio';
 
 const CATEGORY_GUIDE:Record<StudioCategory,string>={
  games:'Upload a browser-game ZIP or link an external HTTPS game. Private Studio ZIPs do not become playable automatically. An approved hosted release has a separate review and publication process.',
@@ -85,7 +87,7 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
   <p>Complete your account profile before creating private projects.</p>
   <Link className="st-action" to="/member">OPEN MEMBER PROFILE ↗</Link>
  </section>;
- return <main className="st-root" aria-label="Creator Studio">
+ return <section className="st-root" aria-label="Creator Studio">
   <header className="st-header">
    <div><Link className="st-back" to="/member">← MEMBER ATLAS</Link>
     <p className="st-kicker">ANEVUM / CONTINUANCE INSTITUTE / CREATOR STUDIO</p>
@@ -94,15 +96,15 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
    </div>
    <div className="st-identity"><span>VERIFIED CREATOR</span><strong>@{identity?.handle}</strong><small>PRIVATE VERIFIED WORKSPACE</small></div>
   </header>
-  <nav className="st-nav" aria-label="Studio navigation">
+  {nativeCreatorEnabled?<NativeStudioNavigation/>:<nav className="st-nav" aria-label="Studio navigation">
    <Link to="/studio" aria-current={mode==='list'?'page':undefined}>MY PROJECTS</Link>
    <Link to="/studio/new" aria-current={mode==='new'?'page':undefined}>NEW PRIVATE DRAFT</Link>
    <a href="/upload">PLAYABLE UPLOAD ↗</a>
    {canReview&&<Link to="/studio/review" aria-current={mode==='review'?'page':undefined}>REVIEW DESK</Link>}
    <Link to="/discover">DISCOVER ↗</Link>
-  </nav>
+  </nav>}
   {mode==='list'?<StudioLibrary/>:mode==='review'?<StudioReview/>:<StudioEditor create={mode==='new'} uploadsReady={uploads}/>}
- </main>;
+ </section>;
 }
 
 function StudioLibrary(){
@@ -133,7 +135,7 @@ function StudioLibrary(){
    <p className="st-muted">Your Studio projects and attachments remain private. Staff review and live publication are separate. Uploading here does not automatically make an app playable or award XP.</p>
    <div className="v091-studio-release-entry">
     <div><strong>Ready for people to play?</strong><p>Use the playable upload flow to preview your build and submit it for staff review. Publication requires approval.</p></div>
-    <a className="st-action" href="/upload">OPEN PLAYABLE UPLOAD ↗</a>
+    <a className="st-action" href={nativeCreatorEnabled?"/studio/packages/new":"/upload"}>OPEN PLAYABLE UPLOAD ↗</a>
    </div>
    {items.length>0&&<div className="st-filters">
     <label className="st-field"><span>SEARCH YOUR PROJECTS</span>

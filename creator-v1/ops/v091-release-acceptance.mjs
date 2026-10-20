@@ -3,7 +3,7 @@
 import {readFileSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath,pathToFileURL} from 'node:url';
-export const V091_APPLICATION_SOURCE='d7e8d8a2fda4406ba144bfc8dd03d664e48b7b07';
+export const V091_APPLICATION_SOURCE='ea1d5e7a402c1e85f9645ea76ced8f8cddbe859f';
 export const V091_SOURCE_BASELINE='db2b8c0f8f79061adf1677986b87077856204267';
 export const V091_RELEASE_METADATA=Object.freeze([
   '.github/workflows/v084-continuance-production.yml',
@@ -78,6 +78,7 @@ export function verifyV091GitSourceScope(){
 }
 export function verifyV091Acceptance(record){
   if(record?.source_sha!==V091_APPLICATION_SOURCE)throw Error('V091 acceptance does not match the pinned application source.');
+  if(record.native_candidate_pending===true)throw Error('V095 native application candidate remains unverified; the previous V091 upload cannot be promoted for changed source.');
   for(const gate of ['founder_staff_session','reviewer_staff_session','creator_journey','cross_account_identity']){
     if(record[gate]!==true)throw Error('V091 authenticated release gate remains unverified: '+gate);
   }

@@ -51,11 +51,13 @@ function mockD1(){
   const db={
     exec(sql){sqlite.exec(sql)},
     prepare(sql){
+      // Map D1 numbered placeholders to equivalent node:sqlite bindings.
+      const bound=args=>/[?][1-9]/.test(sql)?[Object.fromEntries(args.map((v,i)=>["?"+(i+1),v]))]:args;
       const statement=(args=[])=>({
         bind(...values){return statement(values);},
-        first:async()=>sqlite.prepare(sql).get(...args)||null,
-        all:async()=>({results:sqlite.prepare(sql).all(...args)}),
-        run:async()=>{const r=sqlite.prepare(sql).run(...args);return {meta:{changes:r.changes}}}
+        first:async()=>sqlite.prepare(sql).get(...bound(args))||null,
+        all:async()=>({results:sqlite.prepare(sql).all(...bound(args))}),
+        run:async()=>{const r=sqlite.prepare(sql).run(...bound(args));return {meta:{changes:r.changes}}}
       });
       return statement();
     },

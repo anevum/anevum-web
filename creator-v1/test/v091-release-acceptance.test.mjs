@@ -62,7 +62,7 @@ test('guarded V091 release stays pinned to precisely the reviewed integrated fil
  assert.ok(start>=0&&end>start,'A static source-delta allowlist must be present');
  const scope=release.slice(start,end);
  const files=[...scope.matchAll(/^\s*'([^']+)'/gm)].map(match=>match[1]);
- assert.equal(files.length,151,'The candidate contains exactly 151 reviewed source files');
+ assert.equal(files.length,163,'The candidate contains exactly 163 reviewed source files');
  assert.equal(new Set(files).size,files.length,'No duplicated entries');
  assert.deepEqual(files,[...files].sort(),'Source scope must be deterministic');
  for(const required of [
@@ -409,4 +409,8 @@ test('production uses candidate promotion and keeps the acceptance gate before a
  assert.ok(releaseWorkflow.includes('live.subarray(0,candidate.length).equals(candidate)'));
  assert.ok(releaseWorkflow.includes('live-css "$RUNNER_TEMP/v079-live-style.css"'));
  assert.match(releaseWorkflow,/if curl --fail --silent --show-error --max-time 30 --no-keepalive/);
+});
+
+test('new native application cannot reuse the previous immutable deployment candidate',()=>{
+ assert.throws(()=>verifyV091Acceptance({...complete(),native_candidate_pending:true}),/candidate remains unverified/);
 });

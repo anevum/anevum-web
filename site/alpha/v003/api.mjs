@@ -6,6 +6,7 @@
  */
 import { inspectZip, extractEntry, sha256Hex, assetMime, ZIP_LIMITS, PackageError } from "./archive.mjs";
 import { mintPreview } from "./tokens.mjs";
+import {nativeStudioApi} from "./native-ui-api-v095.mjs";
 import { prepareCover, COVER_PATH, COVER_LIMIT } from "./cover.mjs";
 import { layout, uploadScreen, catalogScreen, playerScreen, queueScreen, helpScreen } from "./ui.mjs";
 
@@ -293,6 +294,9 @@ async function upload(req,env,u) {
     if(count.n>=20) return fail(409,"Creator alpha allows up to 20 active projects");
   }
   const old=protectedMode&&project?await getDraft(env.DB,project):null;
+  const expectedDraft=body.get("expected_release_id");
+  if(expectedDraft!==null&&(!UUID.test(expectedDraft)||expectedDraft!==old?.id))
+    return fail(409,"The private build changed. Reopen your project before replacing it.");
   if(old&&(old.status!=="ready"||body.get("replace_draft")!=="1"))return fail(409,"Confirm replacement of the unsubmitted private build before uploading");
   const usage=protectedMode?{bytes:0}:await query(env.DB,
     "SELECT COALESCE(SUM(r.archive_bytes),0) AS bytes FROM anevum_package_releases r JOIN anevum_package_projects p ON r.project_id=p.id WHERE p.owner_id=? " +
@@ -434,12 +438,13 @@ async function retireUnpublished(env,u,id){
 async function expiredDraft(env,id){
   return !!await query(env.DB,"SELECT release_id FROM anevum_package_build_retention WHERE release_id=? AND mode='test' AND expires_at<=?",id,Math.floor(Date.now()/1000));
 }
-async function submit(env,u,id) {
+async function submit(env,u,id,expectedRelease=null) {
   // Never queue an executable that staff cannot actually preview in the isolated runner.
   if(!isolatedHost(env)) return fail(503,"Private playback is not configured; submission is paused");
   const p=await getProject(env.DB,id);
   if(!p||p.owner_id!==u.id||!pilot(env,u.id)) return fail(404,"Project unavailable");
   const release=await getDraft(env.DB,p);
+  if(expectedRelease!==null&&release?.id!==expectedRelease)return fail(409,"The private build changed. Reopen it before submitting.");
   if(!release||release.status!=="ready") return fail(409,"This project has no ready build to submit");
   if(resourceMode(env)&&await expiredDraft(env,release.id))return fail(409,"This temporary build expired; upload a revision");
   const entry=await query(env.DB,"SELECT object_key,bytes,sha256 FROM anevum_package_files WHERE release_id=? AND path='index.html'",release.id);
@@ -466,7 +471,9 @@ async function review(req,env,u,id) {
   if(p.owner_id===u.id) return fail(403,"An independent reviewer must approve this project");
   if(p.status==="suspended") return fail(409,"Restore the approved release before reviewing this project");
   if(!["pending_review","published"].includes(p.status)) return fail(409,"Project not awaiting review");
-  const input=await req.json().catch(()=>null);
+  const input=await readBoundedJson(req,4096);
+  if(input?.expected_release_id!==undefined&&(!UUID.test(input.expected_release_id)||input.expected_release_id!==release.id))
+    return fail(409,"The submitted release changed. Reopen and review the actual build.");
   if(!["publish","reject"].includes(input?.action)) return fail(422,"Choose publish or reject");
   if(input.action==="reject"&&(typeof input.reason!=="string"||input.reason.trim().length<10||input.reason.length>1000))
     return fail(422,"A rejection reason of 10–1000 characters is required");
@@ -527,27 +534,30 @@ async function moderate(req,env,u,id) {
   if(!staff(env,u.id)) return fail(403,"Staff moderation permission required");
   const p=await getProject(env.DB,id);
   if(!p || !p.live_release_id) return fail(404,"Published project not found");
-  const body=await req.json().catch(()=>null);
+  const body=await readBoundedJson(req,4096);
+  if(body?.expected_release_id!==undefined&&(!UUID.test(body.expected_release_id)||body.expected_release_id!==p.live_release_id))
+    return fail(409,"The approved release changed. Reopen the release before moderating it.");
   const action=body?.action;
   if(action!=="suspend" && action!=="restore") return fail(422,"Choose suspend or restore");
   if(action==="suspend" && p.status!=="published") return fail(409,"Project is not published");
   if(action==="restore" && p.status!=="suspended") return fail(409,"Project is not suspended");
-  const reason=action==="suspend"?body.reason?.trim():null;
+  const reason=action==="suspend"&&typeof body.reason==="string"?body.reason.trim():null;
   if(action==="suspend" && (typeof reason!=="string" || reason.length<10 || reason.length>1000))
     return fail(422,"Explain the moderation action in 10–1000 characters");
   const updated=await run(env.DB,
-    "UPDATE anevum_package_projects SET status=?,review_reason=?,updated_at=? WHERE id=? AND status=?",
-    action==="suspend"?"suspended":"published",reason,Math.floor(Date.now()/1000),id,p.status);
+    "UPDATE anevum_package_projects SET status=?,review_reason=?,updated_at=? WHERE id=? AND status=? AND live_release_id=?",
+    action==="suspend"?"suspended":"published",reason,Math.floor(Date.now()/1000),id,p.status,p.live_release_id);
   return updated.meta?.changes===1?json({status:action==="suspend"?"suspended":"published"}):fail(409,"Project status changed");
 }
-async function discardReadyDraft(env,u,id) {
+async function discardReadyDraft(env,u,id,expectedRelease=null) {
   if(resourceMode(env)){
     if(!pilot(env,u.id))return fail(404,"Project unavailable");
-    return json(await discardDraft(env,u.id,id,Math.floor(Date.now()/1000)));
+    return json(await discardDraft(env,u.id,id,Math.floor(Date.now()/1000),expectedRelease));
   }
   const p=await getProject(env.DB,id);
   if(!p||p.owner_id!==u.id||!pilot(env,u.id))return fail(404,"Project unavailable");
   const release=await getDraft(env.DB,p);
+  if(expectedRelease!==null&&release?.id!==expectedRelease)return fail(409,"The private build changed. Reopen it before discarding.");
   if(!release||release.status!=="ready")return fail(409,"Only an unsubmitted private build can be discarded");
   // Keep the asset inventory as a retryable cleanup record until R2 deletion succeeds.
   // Revocation is committed first: an old signed preview stops executing immediately.
@@ -673,6 +683,9 @@ async function reclaimRevokedAssets(req,env,u) {
   return json({scanned:items.length,reclaimed,pending,limited_to:2});
 }
 async function api(req,env,path,ctx) {
+  if(path.startsWith("/api/v1/packages/native/"))return nativeStudioApi(req,env,{
+    member,pilot,staff,ownerList,reviewList,moderationList,getProject,getDraft,isolatedHost,expiredDraft
+  });
   const coverRoute=path.match(/^\/api\/v1\/packages\/covers\/([0-9a-f-]{36})$/);
   if(coverRoute&&req.method==="GET"&&UUID.test(coverRoute[1]))
     return coverImage(req,env,coverRoute[1]);
@@ -732,14 +745,22 @@ async function api(req,env,path,ctx) {
   if(path==="/api/v1/packages/upload")return upload(req,env,u);
   const m=path.match(/^\/api\/v1\/packages\/projects\/([0-9a-f-]{36})\/(submit|review|delete|discard|moderate|save)$/);
   if(!m||!UUID.test(m[1]))return fail(404,"Unknown API route");
+  let expectedRelease=null;
+  if(["save","submit","discard"].includes(m[2])&&req.body){
+    const body=await readBoundedJson(req,4096);
+    if(body?.expected_release_id!==undefined){
+      if(typeof body.expected_release_id!=="string"||!UUID.test(body.expected_release_id))return fail(422,"Invalid release identifier");
+      expectedRelease=body.expected_release_id;
+    }
+  }
   if(m[2]==="save"){
     if(!resourceMode(env))return fail(404,"Unknown API route");
-    return json(await saveDraft(env,u.id,m[1],Math.floor(Date.now()/1000)));
+    return json(await saveDraft(env,u.id,m[1],Math.floor(Date.now()/1000),expectedRelease));
   }
-  if(m[2]==="submit")return submit(env,u,m[1]);
+  if(m[2]==="submit")return submit(env,u,m[1],expectedRelease);
   if(m[2]==="review")return review(req,env,u,m[1]);
   if(m[2]==="moderate")return moderate(req,env,u,m[1]);
-  if(m[2]==="discard")return discardReadyDraft(env,u,m[1]);
+  if(m[2]==="discard")return discardReadyDraft(env,u,m[1],expectedRelease);
   return deleteUnpublished(env,u,m[1]);
 }
 async function player(req,env,id) {

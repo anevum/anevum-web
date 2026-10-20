@@ -141,10 +141,11 @@ export async function findDuplicate(db,media,project,sha,size,metadata=null){
   return {duplicate:true,id:project.id,release_id:r.id,status:r.status,
     play_url:"/play/v3/"+project.id+(r.status==="ready"?"?preview=1":"")};
 }
-export async function saveDraft(env,ownerId,projectId,now){
+export async function saveDraft(env,ownerId,projectId,now,expectedRelease=null){
   const p=await one(env.DB,"SELECT * FROM anevum_package_projects WHERE id=? AND owner_id=? AND status!='deleted'",projectId,ownerId);
   if(!p)throw new ResourceError("Project unavailable",404);
   const r=p.draft_release_id?await one(env.DB,"SELECT * FROM anevum_package_releases WHERE id=? AND project_id=?",p.draft_release_id,p.id):null;
+  if(expectedRelease!==null&&r?.id!==expectedRelease)throw new ResourceError("The private build changed. Reopen it before continuing.",409);
   if(r?.status!=="ready")throw new ResourceError("There is no private test build to save",409);
   // Atomically verify expiry, owner, pointer and status in the same retention write.
   // Previously uploaded V003 ready builds may not have a retention row yet.
@@ -161,10 +162,11 @@ export async function saveDraft(env,ownerId,projectId,now){
   if(!saved?.release_id)throw new ResourceError("This test build expired or changed. Replace the build to continue.",409);
   return {saved:true,id:projectId,release_id:r.id};
 }
-export async function discardDraft(env,ownerId,projectId,now){
+export async function discardDraft(env,ownerId,projectId,now,expectedRelease=null){
   const p=await one(env.DB,"SELECT * FROM anevum_package_projects WHERE id=? AND owner_id=? AND status!='deleted'",projectId,ownerId);
   if(!p)throw new ResourceError("Project unavailable",404);
   const r=p?.draft_release_id?await one(env.DB,"SELECT * FROM anevum_package_releases WHERE id=? AND project_id=?",p.draft_release_id,p.id):null;
+  if(expectedRelease!==null&&r?.id!==expectedRelease)throw new ResourceError("The private build changed. Reopen it before continuing.",409);
   if(r?.status!=="ready")throw new ResourceError("Only an unsubmitted private build can be discarded",409);
   const result=await env.DB.batch([
     env.DB.prepare("UPDATE anevum_package_projects SET draft_release_id=NULL,updated_at=?,status=CASE WHEN live_release_id IS NULL THEN 'draft' ELSE status END WHERE id=? AND owner_id=? AND draft_release_id=? AND EXISTS(SELECT 1 FROM anevum_package_releases WHERE id=? AND status='ready')")

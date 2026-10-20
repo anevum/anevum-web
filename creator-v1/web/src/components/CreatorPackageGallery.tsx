@@ -1,6 +1,7 @@
 import {useEffect,useState} from 'react';
 import {readPackageGallery,type CreatorPackageCard,type PackageGalleryMode,type PackageGalleryResult} from '../lib/creator-package-gallery-v010';
 import './creator-package-gallery-v010.css';
+import {nativeCreatorEnabled,nativePlayerPath,nativeBuildPath} from '../lib/native-creator-v095';
 
 /** This flag is build-time OFF unless the backend, author binding and public
  * identity protections were separately accepted and enabled.
@@ -35,9 +36,9 @@ export function WorkCard({work,mode,compact=false}:{work:CreatorPackageCard;mode
    <h3>{work.title}</h3>
    <p>{work.summary}</p>
    <div className="av010-work-actions">
-    {work.playUrl&&<a href={work.playUrl} className="av010-work-primary">PLAY RELEASE <span aria-hidden="true">↗</span></a>}
-    {mode==='owner'&&work.previewUrl&&<a href={work.previewUrl}>PRIVATE PLAYTEST ↗</a>}
-    {mode==='owner'&&!work.previewUrl&&<a href={'/upload/v3?update='+encodeURIComponent(work.id)}>MANAGE BUILD ↗</a>}
+    {work.playUrl&&<a href={nativeCreatorEnabled?import.meta.env.BASE_URL.replace(/\/$/,'')+nativePlayerPath(work.id):work.playUrl} className="av010-work-primary">PLAY RELEASE <span aria-hidden="true">↗</span></a>}
+    {mode==='owner'&&work.previewUrl&&<a href={nativeCreatorEnabled?import.meta.env.BASE_URL.replace(/\/$/,'')+nativePlayerPath(work.id,true):work.previewUrl}>PRIVATE PLAYTEST ↗</a>}
+    {mode==='owner'&&!work.previewUrl&&<a href={nativeCreatorEnabled?import.meta.env.BASE_URL.replace(/\/$/,'')+nativeBuildPath(work.id):'/upload/v3?update='+encodeURIComponent(work.id)}>MANAGE BUILD ↗</a>}
    </div>
    {publishedLabel&&<small className="av010-work-published">APPROVED · {publishedLabel}</small>}
    {published&&!publishedLabel&&mode==='public'&&<small className="av010-work-published">INDEPENDENTLY REVIEWED</small>}
