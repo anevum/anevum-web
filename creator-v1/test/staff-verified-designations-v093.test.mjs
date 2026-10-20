@@ -174,10 +174,10 @@ test('V093 externally assigned aura resynchronizes the owner player-card studio 
 test('V094 studio save rehydrates the owner world instead of leaving stale aura',()=>{
  const studio=read('web/src/components/PlayerCardStudio.tsx');
  const dashboard=read('web/src/components/MemberSpaceDashboard.tsx');
- assert.match(studio,/onSaved\\?:\\(\\)=>Promise<void>/);
- assert.match(studio,/if\\(onSaved\\)await onSaved\\(\\)/);
- assert.match(dashboard,/onSaved=\\{refresh\\}/);
- assert.match(dashboard,/async function refresh\\(\\)/);
+ assert.ok(studio.includes('onSaved?:()=>Promise<void>'));
+ assert.ok(studio.includes('if(onSaved)await onSaved()'));
+ assert.ok(dashboard.includes('onSaved={refresh}'));
+ assert.ok(dashboard.includes('async function refresh()'));
  assert.doesNotMatch(studio,/other open tabs refresh when revisited/);
 });
 
