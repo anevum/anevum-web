@@ -1,10 +1,10 @@
 {
-  "source_sha": "6c750fa8d3d2b8fd67964fb7c68b8dfdf66d4ccf",
+  "source_sha": "cbef247f13eccb01fe97fe09fc5c86bf751ba84b",
   "founder_staff_session": false,
   "reviewer_staff_session": false,
   "creator_journey": false,
   "cross_account_identity": false,
   "verified_at": null,
   "evidence": [],
-  "status": "BLOCKED: Integrated V091 + IREN V092 + Aura Codex candidate pinned at 6c750fa8. Four real signed-in acceptance gates remain false; guarded production frontend deployment is prohibited."
+  "status": "BLOCKED: V091 / IREN first contact / Aura Codex / member presence candidate pinned at cbef247f. Founder, reviewer, creator-journey and cross-account authenticated acceptance remain unverified. Production release remains prohibited."
 }
