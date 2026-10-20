@@ -16,6 +16,7 @@ import './member-identity-v061.css';
 import './player-card-v065.css';
 import './player-card-premium-v078.css';
 import './player-card-v081.css';
+import '../member-presence-v092.css';
 
 /**
  * Universal player identity, v065.
@@ -93,7 +94,7 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
  const levelTitle=progress&&typeof progress.artifact==='string'&&progress.artifact.length<=96&&progress.artifact.trim()?progress.artifact:null;
  const artworkHandle=href==='/member'?null:member.handle;
  const classNames='av61-identity av61-identity--'+size+' av65-player-card av65-player-card--'+size+
- ' av78-player-card av81-player-card av65-aura--'+aura+
+ ' av78-player-card av81-player-card av92-player-card av65-aura--'+aura+
  ' av81-role--'+(role??'none')+' av81-earned--'+earnedAura+
  (channel?' av65-player-card--channel':'')+(className?' '+className:'');
  const face=<>
@@ -114,6 +115,9 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
   <span className="av61-member-copy">
    {size==='featured'&&<span className="av78-member-kicker">{channel?'CREATOR CHANNEL':'CONTINUANCE INSTITUTE / PLAYER IDENTITY'}</span>}
    <span className="av65-name-line"><strong className="av61-member-name">{member.displayName}</strong>
+    {aura!=='none'&&<span className="av92-aura-compass" role="img"
+      aria-label={'Personal aura: '+describePlayerAura(aura).name}
+      title={describePlayerAura(aura).name+' · '+describePlayerAura(aura).meaning}/>}
     {constellation&&<span className="av65-constellation-flag" title={'Constellation · '+constellation.name} aria-label={'Constellation · '+constellation.name}>
       <svg viewBox="0 0 26 26" aria-hidden="true" focusable="false">
        <path d="M5 3h16v16l-8 5-8-5Z" fill="#242037" stroke="#bdaccd" strokeWidth="1.5"/>
@@ -126,7 +130,8 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
    {size==='featured'&&aura!=='none'&&<span className="av91-aura-signature" title={describePlayerAura(aura).meaning}>
     {describePlayerAura(aura).name} · {describePlayerAura(aura).discipline}
    </span>}
-   {(role||reputation)&&<span className="av81-standing" aria-label="Verified status">
+   {(role||reputation||(!channel&&(size==='featured'||size==='standard')))&&<span className="av81-standing" aria-label="Member status and earned reputation">
+    {!role&&!channel&&(size==='featured'||size==='standard')&&<span className="av92-member-token" title="Continuance member; not a staff role">Member</span>}
     {role&&<span className="av81-role-token" title={'Verified ANEVUM '+ROLE_LABELS[role]+' role'}><RoleInsignia role={role}/>{ROLE_LABELS[role]}</span>}
     {reputation&&<span className="av81-reputation-token" title={'Reputation is based on approved community activity · '+REPUTATION_LABELS[earnedAura]}>
      <span aria-hidden="true">✦</span> {reputation.score.toLocaleString()} REP
