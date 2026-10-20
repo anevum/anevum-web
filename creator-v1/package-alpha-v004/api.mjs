@@ -24,6 +24,12 @@ const run = (db, sql, ...values) => db.prepare(sql).bind(...values).run();
 function listAllowed(value, id) { return !!id && String(value||"").split(",").map(s=>s.trim()).includes(id); }
 function pilot(env,id) { return listAllowed(env.PILOT_IDS,id); }
 function uploadOpen(env,id) { return env.PACKAGE_UPLOADS_ENABLED==="true" && pilot(env,id); }
+async function edgeAdmission(env,binding,id){
+  const limiter=env[binding];
+  if(!limiter?.limit)return true; // Production must configure the binding + WAF; D1 is the exact upload budget.
+  const response=await limiter.limit({key:id});
+  return response?.success===true;
+}
 function staff(env,id) { return listAllowed(env.STAFF_IDS,id); }
 function isolatedHost(env) {
   const h=String(env.RUNTIME_HOST||"").toLowerCase();
@@ -131,6 +137,7 @@ async function prepareFile(file) {
 }
 async function preflight(req,env,u){
   if(!uploadOpen(env,u.id))return fail(403,"Creator uploads are paused or unavailable for this member");
+  if(!await edgeAdmission(env,"PACKAGE_PREFLIGHT_RATE",u.id))return fail(429,"Preflight is temporarily rate-limited. Try again shortly.");
   if(!await resourcePolicyReady(env.DB))return fail(503,"Creator storage setup is incomplete");
   const x=await readBoundedJson(req);
   const size=x?.size,sha=x?.sha256,id=x?.projectId||"",name=x?.filename||"";
@@ -151,6 +158,7 @@ async function preflight(req,env,u){
 }
 async function upload(req,env,u) {
   if(!uploadOpen(env,u.id))return fail(403,"Creator uploads are paused or unavailable for this member");
+  if(!await edgeAdmission(env,"PACKAGE_UPLOAD_RATE",u.id))return fail(429,"Too many upload requests. Try again shortly.");
   if(!env.MEDIA||!await resourcePolicyReady(env.DB))
     return fail(503,"Creator storage setup is incomplete; uploads are safely paused");
   const now=Math.floor(Date.now()/1000),lease=crypto.randomUUID();
