@@ -335,14 +335,15 @@ async function discardReadyDraft(env,u,id) {
   if(!p||p.owner_id!==u.id)return fail(404,"Project unavailable");
   const release=await getDraft(env.DB,p);
   if(!release||release.status!=="ready")return fail(409,"Only an unsubmitted private build can be discarded");
-  // Deauthorize the preview before deleting the underlying R2 objects.
+  // Keep the asset inventory as a retryable cleanup record until R2 deletion succeeds.
+  // Revocation is committed first: an old signed preview stops executing immediately.
   const assets=(await env.DB.prepare(
     "SELECT object_key FROM anevum_package_files WHERE release_id=?"
   ).bind(release.id).all()).results;
   const now=Math.floor(Date.now()/1000);
   const changes=await env.DB.batch([
     env.DB.prepare(
-      "UPDATE anevum_package_releases SET status='revoked',source_key=NULL WHERE id=? AND status='ready'"
+      "UPDATE anevum_package_releases SET status='revoked' WHERE id=? AND status='ready'"
     ).bind(release.id),
     env.DB.prepare(
       "UPDATE anevum_package_projects SET draft_release_id=NULL,review_reason=NULL," +
@@ -351,16 +352,32 @@ async function discardReadyDraft(env,u,id) {
       "AND EXISTS(SELECT 1 FROM anevum_package_releases WHERE id=? AND status='revoked')"
     ).bind(now,id,u.id,release.id,release.id),
     env.DB.prepare(
-      "DELETE FROM anevum_package_files WHERE release_id=? " +
+      "DELETE FROM anevum_package_preview_tokens WHERE release_id=? " +
       "AND EXISTS(SELECT 1 FROM anevum_package_releases WHERE id=? AND status='revoked')"
     ).bind(release.id,release.id)
   ]);
   if(changes[0]?.meta?.changes!==1||changes[1]?.meta?.changes!==1)
     return fail(409,"Private build state changed. Refresh your project before editing");
   const objects=[release.source_key,...assets.map(x=>x.object_key)].filter(Boolean);
-  for(let n=0;n<objects.length;n+=100)
-    await env.MEDIA.delete(objects.slice(n,n+100)).catch(()=>{});
-  return json({discarded:true,project_id:id,live_release_preserved:!!p.live_release_id});
+  let cleanupPending=false;
+  try{
+    for(let n=0;n<objects.length;n+=100)
+      await env.MEDIA.delete(objects.slice(n,n+100));
+    await env.DB.batch([
+      env.DB.prepare(
+        "DELETE FROM anevum_package_files WHERE release_id=? " +
+        "AND EXISTS(SELECT 1 FROM anevum_package_releases WHERE id=? AND status='revoked')"
+      ).bind(release.id,release.id),
+      env.DB.prepare(
+        "UPDATE anevum_package_releases SET source_key=NULL WHERE id=? AND status='revoked'"
+      ).bind(release.id)
+    ]);
+  }catch{
+    // No public or private playback is possible: only physical asset reclamation
+    // remains pending. Preserve the R2 object keys in D1 for a later GC retry.
+    cleanupPending=true;
+  }
+  return json({discarded:true,project_id:id,live_release_preserved:!!p.live_release_id,cleanup_pending:cleanupPending});
 }
 async function deleteUnpublished(env,u,id) {
   const p=await getProject(env.DB,id);
