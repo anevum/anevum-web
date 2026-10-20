@@ -80,7 +80,9 @@ test('only alpha route adds limited frame permission; anonymous APIs remain unav
  assert.match(ordinary.headers.get('content-security-policy'),/frame-ancestors 'none'/);
  assert.equal((await worker.fetch(new Request('https://anevum.com/studio/alpha',{method:'POST'}),env,{})).status,405);
  assert.equal((await fetch('/api/v1/member/studio/projects')).status,404);
- assert.match(stage,/url\.pathname==="\/studio\/alpha"/);
+ const slashAlpha=await fetch('/studio/alpha/');
+ assert.match(slashAlpha.headers.get('content-security-policy'),/frame-src 'self' about: blob:/);
+ assert.match(stage,/PUBLIC_ALPHA\.test\(url\.pathname\)/);
 });
 
 test('native package player CSP survives when both presentation flags are enabled',async()=>{
@@ -104,7 +106,9 @@ test('public apex makes only guest alpha unlisted without altering private Acces
  const gated=await gate.fetch(new Request('https://anevum.com/studio/alpha'),{...env,ANEVUM_PRELAUNCH_MODE:'gated'},{});
  assert.match(await gated.text(),/ANEVUM \/\/ THE TRANSMISSION/);
  assert.equal(gated.headers.get('x-robots-tag'),'noindex, nofollow, noarchive');
- assert.match(gateway,/pathname==="\/studio\/alpha"/);
+ const slashAlpha=await gate.fetch(new Request('https://anevum.com/studio/alpha/'),env,{});
+ assert.equal(slashAlpha.headers.get('x-robots-tag'),'noindex, nofollow, noarchive');
+ assert.match(gateway,/PUBLIC_ALPHA\.test\(pathname\)/);
 });
 
 test('layout keeps mobile source, preview and interactions accessible',()=>{
