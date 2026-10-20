@@ -101,7 +101,19 @@ async function main(){
   guide:await (await helpScreen()).text()
  };
  for(const [name,html] of Object.entries(pages))await writeFile(join(tmp,name+".html"),html);
- const browser=await beginChrome(chromeBin(),await freePort(),join(tmp,"chrome"));
+ // CI Chrome can start before its DevTools endpoint is advertised.
+ // Retry one fresh profile/port after an infrastructure-only startup failure.
+ let browser,launchError;
+ for(let attempt=1;attempt<=2;attempt++){
+  try{
+   browser=await beginChrome(chromeBin(),await freePort(),join(tmp,"chrome-"+attempt));
+   break;
+  }catch(error){
+   launchError=error;
+   if(attempt<2)await sleep(1200);
+  }
+ }
+ if(!browser)throw launchError;
  try{
   const c=browser.call;
   await c("Page.enable");await c("Runtime.enable");
