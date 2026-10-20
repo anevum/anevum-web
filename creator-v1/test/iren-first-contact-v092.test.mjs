@@ -23,7 +23,7 @@ test("Guest first contact is contextual, delayed, remembered and easily dismisse
  assert.match(iren,/pathname!=="\/"\|\|hidden\|\|panelOpen\|\|tourIndex!==null\|\|firstContactSeen\(\)/);
  assert.match(iren,/document\.visibilityState!=="visible"/);
  assert.match(iren,/document\.querySelector\("dialog\[open\]"\)/);
- assert.match(iren,/window\.setTimeout\(\(\)=>\{/);
+ assert.match(iren,/window\.setTimeout\(attempt,1100\)/);
  assert.match(iren,/rememberFirstContact\(\)/);
  assert.match(iren,/window\.localStorage\.setItem\(firstContactStorageKey,"seen"\)/);
  assert.match(iren,/firstContactShownInMemory=true/);
@@ -65,6 +65,8 @@ test("First contact waits for a visible nonediting page, even after backgroundin
  assert.match(iren,/active\.matches\('input,textarea,select,\[contenteditable\],\[role="textbox"\]'\)/);
  assert.match(iren,/active\.closest\('\[contenteditable="true"\]'\)/);
  assert.match(iren,/if\(timer!==undefined\)window\.clearTimeout\(timer\)/);
+ assert.match(iren,/const attempt=\(\)=>\{/);
+ assert.match(iren,/timer=window\.setTimeout\(attempt,650\)/);
  assert.match(iren,/rememberFirstContact\(\);\s*setWelcomeOpen\(true\)/);
 });
 
