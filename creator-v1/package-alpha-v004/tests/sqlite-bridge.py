@@ -43,6 +43,7 @@ try:
  if mode=="init":
   con.executescript(base)
   con.executescript(migration.read_text())
+  con.executescript((migration.parent / "0003_creator_review_attestations.sql").read_text())
   con.commit()
   print(json.dumps({"ok":True}))
  else:
