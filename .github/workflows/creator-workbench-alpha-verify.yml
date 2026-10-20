@@ -1,0 +1,61 @@
+name: Creator Workbench Private Alpha
+
+on:
+  push:
+    branches: [build/creator-workbench-private-alpha-20261020-001]
+  pull_request:
+    paths:
+      - 'creator-v1/**/workbench*'
+      - 'creator-v1/**/Workbench*'
+      - '.github/workflows/creator-workbench-alpha-verify.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: workbench-alpha-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify alpha when implementation is present
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test -f creator-v1/test/workbench-alpha.test.mjs; then
+            node --test creator-v1/test/workbench-alpha.test.mjs
+          else
+            echo 'Bootstrap source checkpoint only; implementation tests not present yet.'
+          fi
+      - name: Package tracked source for reproducible offline review
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p workbench-evidence
+          git rev-parse HEAD > workbench-evidence/source-sha.txt
+          python3 - <<'PY'
+          import pathlib, subprocess, tarfile
+          names = subprocess.check_output(['git', 'ls-files', '-z']).decode().split('\0')
+          allowed = {'.mjs', '.js', '.cjs', '.ts', '.tsx', '.jsx', '.json', '.css', '.html', '.sql', '.yml', '.yaml', '.md'}
+          with tarfile.open('workbench-evidence/tracked-source.tar.gz', 'w:gz') as archive:
+              for name in names:
+                  p = pathlib.Path(name)
+                  if p.is_file() and not p.is_symlink() and p.suffix in allowed and p.stat().st_size < 2000000:
+                      archive.add(p, arcname=name, recursive=False)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: workbench-alpha-source-${{ github.sha }}
+          path: workbench-evidence/
+          retention-days: 3
