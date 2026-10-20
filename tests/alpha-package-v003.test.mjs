@@ -558,3 +558,78 @@ test("unsafe PNG cover or reserved ZIP metadata path fails without uploading ass
     assert.equal(env.MEDIA.data.size,0);
   }finally{env.DB.close();}
 });
+
+
+test("unsubmitted private cover build can be discarded without leaving playable assets",async()=>{
+  const env=setup();
+  try {
+    const created=await (await post(env,"/api/v1/packages/upload",uploadWithCover(makeCover()))).json();
+    const privatePage=await getPage(env,"/play/v3/"+created.id+"?preview=1");
+    const signed=iframeSrc(await privatePage.text());
+    const coverURL="/api/v1/packages/covers/"+created.release_id;
+    assert.equal((await runtime.fetch(new Request(signed),env)).status,200);
+    assert.equal((await getPage(env,coverURL,"owner")).status,200);
+    const failed=await post(env,"/api/v1/packages/projects/"+created.id+"/discard",{},"staff");
+    assert.equal(failed.status,404,"Unrelated reviewer cannot delete a creator's private work");
+    const discarded=await post(env,"/api/v1/packages/projects/"+created.id+"/discard",{});
+    assert.equal(discarded.status,200);
+    const result=await discarded.json();
+    assert.equal(result.discarded,true);
+    assert.equal(result.cleanup_pending,false);
+    assert.equal(result.live_release_preserved,false);
+    assert.equal((await runtime.fetch(new Request(signed),env)).status,404);
+    assert.equal((await getPage(env,coverURL,"owner")).status,404);
+    assert.equal(env.MEDIA.data.size,0);
+    assert.equal((await env.DB.prepare("SELECT COUNT(*) AS n FROM anevum_package_files WHERE release_id=?").bind(created.release_id).first()).n,0);
+    assert.equal((await env.DB.prepare("SELECT COUNT(*) AS n FROM anevum_package_preview_tokens WHERE release_id=?").bind(created.release_id).first()).n,0);
+    const audit=await env.DB.prepare("SELECT status,source_key FROM anevum_package_releases WHERE id=?").bind(created.release_id).first();
+    assert.equal(audit.status,"revoked");
+    assert.equal(audit.source_key,null);
+    assert.doesNotMatch(await (await getPage(env,"/upload/v3")).text(),/Real Artwork Project/);
+  }finally{env.DB.close();}
+});
+test("discarding a private update preserves approved v1 and allows another upload",async()=>{
+  const env=setup();
+  try {
+    const v1=await (await post(env,"/api/v1/packages/upload",uploadWithCover(makeCover()))).json();
+    assert.equal((await post(env,"/api/v1/packages/projects/"+v1.id+"/submit",{})).status,200);
+    assert.equal((await post(env,"/api/v1/packages/projects/"+v1.id+"/review",{action:"publish"},"staff")).status,200);
+    const publicBefore=iframeSrc(await (await getPage(env,"/play/v3/"+v1.id,"visitor")).text());
+    const v2=await (await post(env,"/api/v1/packages/upload",uploadWithCover(makeCover(800,450),v1.id))).json();
+    assert.equal((await post(env,"/api/v1/packages/projects/"+v1.id+"/discard",{})).status,200);
+    assert.equal((await getPage(env,"/api/v1/packages/covers/"+v2.release_id,"owner")).status,404);
+    const publicAfter=iframeSrc(await (await getPage(env,"/play/v3/"+v1.id,"visitor")).text());
+    assert.equal(publicAfter,publicBefore,"Discard must not alter the live version");
+    assert.equal((await getPage(env,"/api/v1/packages/covers/"+v1.release_id,"visitor")).status,200);
+    const v3=await post(env,"/api/v1/packages/upload",uploadForm(sample(),"Fixed upload",v1.id));
+    assert.equal(v3.status,201,await v3.clone().text());
+    assert.equal((await v3.json()).version,3);
+  }finally{env.DB.close();}
+});
+test("discard is denied during staff review and after a live-only publication",async()=>{
+  const env=setup();
+  try{
+    const p=await (await post(env,"/api/v1/packages/upload",uploadForm(sample()))).json();
+    assert.equal((await post(env,"/api/v1/packages/projects/"+p.id+"/submit",{})).status,200);
+    assert.equal((await post(env,"/api/v1/packages/projects/"+p.id+"/discard",{})).status,409);
+    assert.equal((await post(env,"/api/v1/packages/projects/"+p.id+"/review",{action:"publish"},"staff")).status,200);
+    assert.equal((await post(env,"/api/v1/packages/projects/"+p.id+"/discard",{})).status,409);
+  }finally{env.DB.close();}
+});
+test("R2 cleanup failures preserve nonpublic revoked release metadata for later GC",async()=>{
+  const env=setup(),original=env.MEDIA.delete.bind(env.MEDIA);
+  try{
+    const p=await (await post(env,"/api/v1/packages/upload",uploadWithCover(makeCover()))).json();
+    const privatePage=await getPage(env,"/play/v3/"+p.id+"?preview=1");
+    const signed=iframeSrc(await privatePage.text());
+    env.MEDIA.delete=async()=>{throw Error("synthetic R2 outage");};
+    const result=await post(env,"/api/v1/packages/projects/"+p.id+"/discard",{});
+    assert.equal(result.status,200);
+    assert.equal((await result.json()).cleanup_pending,true);
+    assert.equal((await runtime.fetch(new Request(signed),env)).status,404);
+    const audit=await env.DB.prepare("SELECT source_key,status FROM anevum_package_releases WHERE id=?").bind(p.release_id).first();
+    assert.equal(audit.status,"revoked");
+    assert.ok(audit.source_key,"Deferred cleanup retains its source reference");
+    assert.ok((await env.DB.prepare("SELECT COUNT(*) AS n FROM anevum_package_files WHERE release_id=?").bind(p.release_id).first()).n>0);
+  }finally{env.MEDIA.delete=original;env.DB.close();}
+});
