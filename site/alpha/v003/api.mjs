@@ -6,6 +6,7 @@
  */
 import { inspectZip, extractEntry, sha256Hex, assetMime, ZIP_LIMITS, PackageError } from "./archive.mjs";
 import { mintPreview } from "./tokens.mjs";
+import { prepareCover, COVER_PATH, COVER_LIMIT } from "./cover.mjs";
 import { layout, uploadScreen, catalogScreen, playerScreen, queueScreen, helpScreen } from "./ui.mjs";
 
 const A = "https://anevum.com";
@@ -46,13 +47,16 @@ async function ownerList(db,id) {
   return (await db.prepare(
     "SELECT p.*, (SELECT version FROM anevum_package_releases WHERE id=COALESCE(p.draft_release_id,p.live_release_id)) AS release_version, " +
     "(SELECT status FROM anevum_package_releases WHERE id=p.draft_release_id) AS draft_status " +
+    "(SELECT f.release_id FROM anevum_package_files f WHERE f.release_id=COALESCE(p.draft_release_id,p.live_release_id) AND f.path='"+COVER_PATH+"' LIMIT 1) AS cover_release_id " +
     "FROM anevum_package_projects p WHERE p.owner_id=? AND p.status!='deleted' ORDER BY p.updated_at DESC LIMIT 50"
   ).bind(id).all()).results;
 }
 async function publicList(db) {
   return (await db.prepare(
     "SELECT p.id,p.title,p.summary,p.category,p.status,p.updated_at,p.published_at,p.live_release_id,p.draft_release_id, " +
-    "r.version AS release_version FROM anevum_package_projects p " +
+    "r.version AS release_version, " +
+    "(SELECT f.release_id FROM anevum_package_files f WHERE f.release_id=r.id AND f.path='"+COVER_PATH+"' LIMIT 1) AS cover_release_id " +
+    "FROM anevum_package_projects p " +
     "JOIN anevum_package_releases r ON r.id=p.live_release_id AND r.status='published' " +
     "WHERE p.status='published' ORDER BY p.published_at DESC LIMIT 100"
   ).all()).results;
@@ -60,7 +64,8 @@ async function publicList(db) {
 async function reviewList(db) {
   return (await db.prepare(
     "SELECT p.id,p.title,p.summary,p.category,p.status,p.updated_at,p.published_at,p.live_release_id,p.draft_release_id," +
-    "r.version AS release_version,r.status AS draft_status " +
+    "r.version AS release_version,r.status AS draft_status, " +
+    "(SELECT f.release_id FROM anevum_package_files f WHERE f.release_id=r.id AND f.path='"+COVER_PATH+"' LIMIT 1) AS cover_release_id " +
     "FROM anevum_package_projects p JOIN anevum_package_releases r ON r.id=p.draft_release_id " +
     "WHERE r.status='pending_review' AND p.status NOT IN ('suspended','deleted') ORDER BY r.submitted_at ASC LIMIT 100"
   ).all()).results;
@@ -110,6 +115,8 @@ async function prepareFile(file) {
   let entries, extractor, expandedBytes;
   if(extension==="zip") {
     const info=inspectZip(bytes);entries=info.entries;expandedBytes=info.expandedBytes;
+    if(entries.some(entry=>entry.path.startsWith("_anevum/")))
+      throw new PackageError("The _anevum folder is reserved for reviewed project artwork");
     const index=entries.find(x=>x.path==="index.html");
     validateHtml(await extractEntry(bytes,index));
     extractor=e=>extractEntry(bytes,e);
@@ -142,7 +149,7 @@ async function upload(req,env,u) {
   let body;
   try{body=await req.formData();}catch{return fail(400,"Invalid upload form");}
   const details=validatedText(body);
-  const file=body.get("file");
+  const file=body.get("file"), coverInput=body.get("cover");
   const projectParam=body.get("project_id");
   const existingId=typeof projectParam==="string"?projectParam.trim():"";
   if(existingId&&!UUID.test(existingId)) return fail(422,"Invalid project ID");
@@ -157,7 +164,10 @@ async function upload(req,env,u) {
   const usage=await query(env.DB,
     "SELECT COALESCE(SUM(r.archive_bytes),0) AS bytes FROM anevum_package_releases r JOIN anevum_package_projects p ON r.project_id=p.id WHERE p.owner_id=? AND r.status NOT IN ('failed','revoked') AND p.status!='deleted'",u.id);
   if(!file || typeof file.size !== "number") return fail(422,"Upload a ZIP or HTML project");
-  if(usage.bytes+file.size>100*MiB) return fail(409,"Creator alpha has a 100 MiB compressed upload allowance");
+  if(coverInput && typeof coverInput.size==="number" && coverInput.size>COVER_LIMIT)
+    return fail(413,"Project artwork is limited to a 3 MiB PNG");
+  if(usage.bytes+file.size+(coverInput?.size||0)>100*MiB)
+    return fail(409,"Creator alpha has a 100 MiB compressed upload allowance");
   const now=Math.floor(Date.now()/1000);
   const attempts=await query(env.DB,
     "INSERT INTO anevum_package_upload_limits(owner_id,window_start,attempts) VALUES(?,?,1) " +
@@ -165,6 +175,7 @@ async function upload(req,env,u) {
     "window_start=CASE WHEN window_start<? THEN excluded.window_start ELSE window_start END RETURNING attempts",u.id,now,now-3600,now-3600);
   if(attempts.attempts>10) return fail(429,"Too many upload attempts. Try again in an hour");
   const plan=await prepareFile(file);
+  const cover=await prepareCover(coverInput);
   const id=project?.id||crypto.randomUUID(),releaseId=crypto.randomUUID();
   const last=project?await query(env.DB,
     "SELECT MAX(version) AS last FROM anevum_package_releases WHERE project_id=?",id):null;
@@ -187,6 +198,18 @@ async function upload(req,env,u) {
         "INSERT INTO anevum_package_files(release_id,path,object_key,mime,bytes,sha256) VALUES(?,?,?,?,?,?)"
       ).bind(releaseId,entry.path,objectKey,entry.mime,contents.length,sha));
     }
+    if(cover) {
+      const sha=await sha256Hex(cover.bytes);
+      const objectKey=root+"/metadata/"+COVER_PATH;
+      await env.MEDIA.put(objectKey,cover.bytes,{
+        httpMetadata:{contentType:cover.mime},
+        customMetadata:{sha256:sha,width:String(cover.width),height:String(cover.height)}
+      });
+      touched.push(objectKey);
+      fileStatements.push(env.DB.prepare(
+        "INSERT INTO anevum_package_files(release_id,path,object_key,mime,bytes,sha256) VALUES(?,?,?,?,?,?)"
+      ).bind(releaseId,COVER_PATH,objectKey,cover.mime,cover.bytes.length,sha));
+    }
     const statements=[];
     if(!project) statements.push(env.DB.prepare(
       "INSERT INTO anevum_package_projects(id,owner_id,title,summary,category,status,created_at,updated_at,draft_release_id) " +
@@ -202,7 +225,9 @@ async function upload(req,env,u) {
       "SELECT ?,p.id,?,'ready',?,?,?,?,?,?,?,?,?,? FROM anevum_package_projects p " +
       "WHERE p.id=? AND p.owner_id=? AND p.draft_release_id=?"
     ).bind(releaseId,version,file.name,details.title,details.summary,details.category,
-      archiveSHA,plan.bytes.byteLength,plan.expandedBytes,plan.entries.length,sourceKey,now,id,u.id,releaseId));
+      archiveSHA,plan.bytes.byteLength+(cover?.bytes.length||0),
+      plan.expandedBytes+(cover?.bytes.length||0),
+      plan.entries.length+(cover?1:0),sourceKey,now,id,u.id,releaseId));
     statements.push(env.DB.prepare(
       "INSERT INTO anevum_package_rights_receipts(release_id,owner_id,attested_at,statement) VALUES(?,?,?,'creator_has_publication_rights_v1')"
     ).bind(releaseId,u.id,now));
@@ -318,12 +343,47 @@ async function deleteUnpublished(env,u,id) {
   for(let i=0;i<objects.length;i+=100) await env.MEDIA.delete(objects.slice(i,i+100)).catch(()=>{});
   return json({deleted:true});
 }
+async function coverImage(req,env,releaseId) {
+  const unavailable=()=>new Response("Cover unavailable",{status:404,headers:{
+    "cache-control":"private,no-store","x-content-type-options":"nosniff",
+    "referrer-policy":"no-referrer","content-type":"text/plain; charset=utf-8"
+  }});
+  const release=await query(env.DB,
+    "SELECT r.status AS release_status,p.status AS project_status,p.owner_id,p.live_release_id " +
+    "FROM anevum_package_releases r JOIN anevum_package_projects p ON p.id=r.project_id WHERE r.id=?",
+    releaseId);
+  if(!release || ["deleted","suspended"].includes(release.project_status))return unavailable();
+  const live=release.project_status==="published"&&release.release_status==="published"&&release.live_release_id===releaseId;
+  if(!live){
+    if(!["ready","pending_review"].includes(release.release_status))return unavailable();
+    const u=await member(req,env);
+    if(!u||(u.id!==release.owner_id&&!staff(env,u.id)))return unavailable();
+  }
+  const asset=await query(env.DB,
+    "SELECT object_key,mime,bytes,sha256 FROM anevum_package_files WHERE release_id=? AND path=?",
+    releaseId,COVER_PATH);
+  if(!asset||asset.mime!=="image/png")return unavailable();
+  const file=await env.MEDIA.get(asset.object_key);
+  if(!file||file.size!==asset.bytes||file.customMetadata?.sha256!==asset.sha256)return unavailable();
+  return new Response(file.body,{headers:{
+    "content-type":"image/png","content-length":String(asset.bytes),
+    "cache-control":"private,no-store","x-content-type-options":"nosniff",
+    "referrer-policy":"no-referrer","content-security-policy":"default-src 'none'; sandbox",
+    "x-robots-tag":"noindex"
+  }});
+}
 async function api(req,env,path) {
+  const coverRoute=path.match(/^\/api\/v1\/packages\/covers\/([0-9a-f-]{36})$/);
+  if(coverRoute&&req.method==="GET"&&UUID.test(coverRoute[1]))
+    return coverImage(req,env,coverRoute[1]);
   if(path==="/api/v1/packages/health"&&req.method==="GET")
     return json({ok:true,version:"003",db:!!env.DB,storage:!!env.MEDIA,runnerConfigured:!!isolatedHost(env)});
   if(path==="/api/v1/packages/projects"&&req.method==="GET") {
     const projects=await publicList(env.DB);
-    return json({projects:projects.map(p=>({id:p.id,title:p.title,summary:p.summary,category:p.category,version:p.release_version}))});
+    return json({projects:projects.map(p=>({
+      id:p.id,title:p.title,summary:p.summary,category:p.category,version:p.release_version,
+      cover_url:p.cover_release_id?"/api/v1/packages/covers/"+p.cover_release_id:null
+    }))});
   }
   if(path==="/api/v1/packages/me"&&req.method==="GET") {
     const u=await member(req,env);
@@ -368,6 +428,10 @@ async function player(req,env,id) {
       runtime="https://"+host+"/p/"+release.id+"/"+token+"/index.html";
     } else runtime="https://"+host+"/r/"+release.id+"/index.html";
   }
+  const cover=await query(env.DB,
+    "SELECT release_id FROM anevum_package_files WHERE release_id=? AND path=?",
+    release.id,COVER_PATH);
+  release.cover_release_id=cover?.release_id||null;
   return playerScreen(p,release,runtime,isPreview,!!u&&p.owner_id===u.id,!!u&&staff(env,u.id));
 }
 export default {
