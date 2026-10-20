@@ -164,6 +164,11 @@ async function main(){
   })()`);
   assert.equal(art.loaded,960);
   assert.match(art.classes,/av-has-cover/);
+  const buttons=await evalJS(c,"Array.from(document.querySelectorAll('.project .actions>*')).map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y,w:el.getBoundingClientRect().width,h:el.getBoundingClientRect().height}))");
+  assert.equal(buttons.length,4,"Creator with live and draft versions exposes four real actions");
+  assert.ok(buttons[0].w>=120&&buttons[1].w>=120,"Creator actions should be readable at 390px");
+  assert.ok(buttons[2].y>buttons[0].y+30,"Four actions should form two mobile rows");
+  assert.ok(buttons.every(x=>x.h>=44),"All creator actions must meet touch target height");
   await image(c,join(out,"library-with-cover-390.png"));
   await visit(c,join(tmp,"guest.html"),390,844);
   assert.equal(await evalJS(c,"document.querySelector('#publish-form')===null"),true);
