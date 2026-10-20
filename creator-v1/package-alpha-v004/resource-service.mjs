@@ -3,10 +3,13 @@ import {POLICY,ResourceError,sourcePrefix,physicalBytes} from "./resource-policy
 const one=(db,sql,...args)=>db.prepare(sql).bind(...args).first();
 const run=(db,sql,...args)=>db.prepare(sql).bind(...args).run();
 export async function resourcePolicyReady(db){
+  // One zero-row compile-time readiness probe instead of five D1 round trips.
   try{
-    for(const table of ["anevum_package_upload_leases","anevum_package_upload_reservations",
-      "anevum_package_cleanup_jobs","anevum_package_build_retention","anevum_package_daily_limits"])
-      await db.prepare("SELECT * FROM "+table+" LIMIT 0").all();
+    await db.prepare("SELECT l.owner_id FROM anevum_package_upload_leases l "+
+      "CROSS JOIN anevum_package_upload_reservations r "+
+      "CROSS JOIN anevum_package_cleanup_jobs c "+
+      "CROSS JOIN anevum_package_build_retention b "+
+      "CROSS JOIN anevum_package_daily_limits d LIMIT 0").all();
     return true;
   }catch{return false;}
 }
