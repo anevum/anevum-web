@@ -8,7 +8,7 @@ import { inspectZip, extractEntry, sha256Hex, assetMime, ZIP_LIMITS, PackageErro
 import { mintPreview } from "./tokens.mjs";
 import { layout, uploadScreen, catalogScreen, playerScreen, queueScreen, helpScreen } from "./ui.mjs";
 import {POLICY,ResourceError,readBoundedMultipart,readBoundedJson} from "./resource-policy.mjs";
-import {resourcePolicyReady,acquireUploadLease,releaseUploadLease,recordUploadAttempt,getStorageUsage,reserveUpload,markReservationForCleanup,jobStatement,findDuplicate,saveDraft,discardDraft} from "./resource-service.mjs";
+import {resourcePolicyReady,acquireUploadLease,releaseUploadLease,recordUploadAttempt,recordUploadBytes,getStorageUsage,reserveUpload,markReservationForCleanup,jobStatement,findDuplicate,saveDraft,discardDraft} from "./resource-service.mjs";
 import {cleanupPackageResources,staffMetrics} from "./resource-cleanup.mjs";
 
 const A = "https://anevum.com";
@@ -157,6 +157,8 @@ async function upload(req,env,u) {
   if(!await acquireUploadLease(env.DB,u.id,lease,now))
     return fail(429,"Another upload is in progress. Finish it before uploading again.");
   try{
+    // Account-level attempt budget is checked BEFORE streaming any upload bytes.
+    await recordUploadAttempt(env.DB,u.id,now);
     const body=await readBoundedMultipart(req);
     const details=validatedText(body);
     const file=body.get("file"),param=body.get("project_id");
@@ -176,7 +178,7 @@ async function upload(req,env,u) {
       if(count.n>=20)return fail(409,"Creator alpha allows up to 20 active projects");
     }
     if(file.size>POLICY.maxArchiveBytes)return fail(413,"ZIP files are limited to 20 MiB");
-    await recordUploadAttempt(env.DB,u.id,file.size,now);
+    await recordUploadBytes(env.DB,u.id,file.size,now);
     const plan=await prepareFile(file);
     const sha=await sha256Hex(plan.bytes);
     const duplicate=await findDuplicate(env.DB,env.MEDIA,project,sha,plan.bytes.byteLength);
