@@ -1,5 +1,5 @@
 import {useCallback,useEffect,useRef,useState,type FormEvent,type ReactNode} from 'react';
-import {Link,NavLink,useNavigate,useParams,useSearchParams} from 'react-router-dom';
+import {Link,NavLink,useLocation,useNavigate,useParams,useSearchParams} from 'react-router-dom';
 import {canonicalAuthClient} from '../lib/canonical-beta';
 import {IsolatedProjectViewport} from '../components/IsolatedProjectViewport';
 import {
@@ -36,15 +36,27 @@ function Status({title,children,retry}:{title:string;children:ReactNode;retry?:(
  return <section className="st-status av095-status"><p className="st-kicker">CONTINUANCE INSTITUTE / CREATOR STUDIO</p><h1>{title}</h1><div>{children}</div><div className="av095-actions">{retry&&<button className="st-action" type="button" onClick={retry}>Try again</button>}<Link className="st-action" to="/studio">Creator Studio</Link><Link className="st-action" to="/member">My Space</Link></div></section>;
 }
 export function NativeStudioNavigation({capabilities}:{capabilities?:NativeSession}){
- const identity=useIdentity();
+ const identity=useIdentity(),location=useLocation();
+ const navRef=useRef<HTMLElement>(null);
  const own=useRead('nav:'+identity.id,nativeCreatorEnabled&&!capabilities&&!!identity.id,signal=>readNativeSession(identity.id!,signal));
- if(!nativeCreatorEnabled)return null;
  const permissions=capabilities||own.data;
- return <nav className="st-nav av095-navigation" aria-label="Creator Studio navigation">
+ useEffect(()=>{
+  // Keep the active destination wholly visible on narrow screens, without
+  // scrolling the document or stealing keyboard focus. Permissions can arrive
+  // after initial render; recenter when those links become available.
+  const nav=navRef.current;
+  const active=nav?.querySelector<HTMLAnchorElement>('a[aria-current="page"]');
+  if(!nav||!active)return;
+  const bounds=nav.getBoundingClientRect(),item=active.getBoundingClientRect();
+  const x=nav.scrollLeft+(item.left-bounds.left)-(nav.clientWidth-item.width)/2;
+  nav.scrollLeft=Math.max(0,Math.min(nav.scrollWidth-nav.clientWidth,x));
+ },[location.pathname,permissions?.canUpload,permissions?.canReview]);
+ if(!nativeCreatorEnabled)return null;
+ return <nav ref={navRef} className="st-nav av095-navigation" aria-label="Creator Studio navigation">
   <NavLink to="/studio" end>Project records</NavLink><NavLink to="/studio/packages" end>Playable builds</NavLink>
   {(permissions?.canUpload)&&<NavLink to="/studio/packages/new">Upload build</NavLink>}
   {permissions?.canReview&&<NavLink to="/studio/packages/review">Package review</NavLink>}
-  <Link to="/studio/new">New private record</Link><Link to="/discover">Discover</Link>
+  <NavLink to="/studio/new" end>New private record</NavLink><NavLink to="/discover">Discover</NavLink>
  </nav>;
 }
 interface Decision{project:NativeProject;releaseId:string;action:BuildAction;sha?:string|null}

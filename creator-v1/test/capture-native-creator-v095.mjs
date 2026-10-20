@@ -1,14 +1,27 @@
 /** Compiled React + browser interaction QA on loopback synthetic identities.
  * Does NOT certify real account acceptance or physical iPhone Safari behavior. */
 import assert from 'node:assert/strict';
-import {spawn} from 'node:child_process';
+import {spawn,execFileSync} from 'node:child_process';
 import {existsSync,readFileSync,writeFileSync,mkdirSync,mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {createNativeFixture,ids} from './native-creator-fixture-v095.mjs';
 const args=process.argv.slice(2),get=name=>args[args.indexOf(name)+1];
 const chrome=get('--chrome'),output=get('--output'),disabled=args.includes('--disabled');
 assert.ok(chrome&&output,'Pass the installed Chromium and an evidence directory');
+// PR workflows check out the head commit, while GITHUB_SHA may identify a
+// synthetic merge. Attribute captures only to the actual checked-out source.
+let source=null;
+try{
+ source=execFileSync('git',['rev-parse','HEAD'],{
+  cwd:fileURLToPath(new URL('../../',import.meta.url)),
+  encoding:'utf8',stdio:['ignore','pipe','pipe']
+ }).trim();
+}catch{
+ if(process.env.GITHUB_ACTIONS==='true')throw Error('Native browser evidence requires a Git source checkout in CI');
+}
+if(source!==null)assert.match(source,/^[a-f0-9]{40}$/,'Invalid checked-out source commit');
 const base='http://127.0.0.1:4179',delay=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(fn,label,timeout=25000){const stop=Date.now()+timeout;let last;while(Date.now()<stop){try{const x=await fn();if(x)return x;}catch(e){last=e;}await delay(120);}throw Error(label+' timed out'+(last?': '+last.message:''));}
 mkdirSync(output,{recursive:true});
@@ -61,7 +74,17 @@ try{
   await evaluate('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');
   const state=await evaluate('({shell:document.querySelectorAll(".site-shell--cinematic.av9-shell").length,header:document.querySelectorAll(".site-header").length,main:document.querySelectorAll("main#main").length,overflow:document.documentElement.scrollWidth>innerWidth+1,tokens:["--av9-space","--av9-paper","--av9-display","--av9-glass"].every(k=>!!getComputedStyle(document.querySelector(".av9-shell")).getPropertyValue(k).trim())})');
   assert.equal(state.shell,1,label);assert.equal(state.header,1,label);assert.equal(state.main,1,label);assert.equal(state.overflow,false,label+' overflow');assert.equal(state.tokens,true,label+' shared theme');
-  await screenshot(label+'-'+width);results.push({case:label,width,sharedShell:true,noOverflow:true});
+  // Mobile nav can scroll horizontally, but its labels must not shrink into
+  // overlapping text. Check intrinsic label widths as well as link rectangles.
+  const nav=await evaluate('(()=>{const el=document.querySelector(".av095-navigation");if(!el)return null;const links=[...el.querySelectorAll(":scope > a")];const rects=links.map(link=>link.getBoundingClientRect());const active=el.querySelector("a[aria-current=page]"),selected=active?.getBoundingClientRect(),frame=el.getBoundingClientRect();return {count:links.length,labelsFit:links.every(link=>link.getBoundingClientRect().width+1>=link.scrollWidth),separate:rects.every((rect,i)=>i===0||rect.left>=rects[i-1].right+2),scrollable:el.scrollWidth>el.clientWidth+4,activeVisible:!selected||(selected.left>=frame.left-2&&selected.right<=frame.right+2)}})()');
+  if(nav){
+   assert.ok(nav.count>=4,label+' must retain creator navigation');
+   assert.equal(nav.labelsFit,true,label+' navigation labels overlap their link boxes');
+   assert.equal(nav.separate,true,label+' navigation links overlap');
+   assert.equal(nav.activeVisible,true,label+' active destination is clipped outside the mobile tab viewport');
+   if(width<=390)assert.equal(nav.scrollable,true,label+' mobile tabs must remain horizontally accessible');
+  }
+  await screenshot(label+'-'+width);results.push({case:label,width,sharedShell:true,noOverflow:true,navVerified:nav!==null,passed:true});
  };
  await client.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
  // textContent checks semantic copy; CSS text-transform legitimately changes
@@ -70,7 +93,7 @@ try{
   await client.send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
   await navigate('/studio/packages');await until(()=>evaluate('document.body.textContent.includes("not active yet")'),'Flag-off page');await layout('native-disabled',390);
   assert.equal(fixture.control.trace().filter(x=>x.path.includes('/native/')).length,0,'Disabled interface called native API');
-  results.push({case:'flag-off',nativeRequests:0});
+  results.push({case:'flag-off',nativeRequests:0,passed:true});
  }else{
   for(const [width,height] of [[1440,1000],[768,1024],[390,844],[320,720]]){
    fixture.control.set({actor:'owner',mode:'ready',reset:true});await client.send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<641});
@@ -118,7 +141,7 @@ try{
   for(const mode of ['unavailable','html']){fixture.control.set({actor:'owner',mode});await navigate('/studio/packages');await until(()=>visible('.av095-status'),'Unavailable mode');assert.equal(await visible('[data-native-project]'),false);await screenshot('native-'+mode+'-320');results.push({case:'fail-closed-'+mode,passed:true});}
  }
  assert.equal(exceptions.length,0,'Unhandled browser exceptions: '+JSON.stringify(exceptions));
- writeFileSync(join(output,'acceptance.json'),JSON.stringify({source:process.env.GITHUB_SHA||null,status:'PASS',syntheticOnly:true,physicalDeviceAcceptance:false,disabled,cases:results,requests:fixture.control.trace()},null,2));
+ writeFileSync(join(output,'acceptance.json'),JSON.stringify({source,status:'PASS',syntheticOnly:true,physicalDeviceAcceptance:false,disabled,cases:results,requests:fixture.control.trace()},null,2));
  console.log('V095_NATIVE_REACT_BROWSER=PASS '+results.length+' cases; synthetic loopback only');
 }catch(error){
  try{if(evaluate)writeFileSync(join(output,'failure-dom.html'),await evaluate('document.documentElement.outerHTML'));if(screenshot)await screenshot('failure');}catch{}

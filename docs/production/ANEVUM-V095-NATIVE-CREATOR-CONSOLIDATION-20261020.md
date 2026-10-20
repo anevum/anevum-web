@@ -70,3 +70,11 @@ Rollback changes presentation flags and the accepted application deployment, not
 `v095-native-creator-qa.yml` checks the existing and native backend/client contracts, default-OFF and explicitly enabled compiled React, shared Shell and style tokens, 320/390/768/1440 layouts, upload-error recovery, saved drafts, independent decisions, stale-release refusal, separate-member/guest isolation, Discover/member-wall links, private-token expiry, and expand/exit behavior. Screenshots and test traces identify their exact source and are synthetic only.
 
 The existing full Creator V1, auth, staff, aura, gallery, package, source-scope, and browser regressions are still required before merging. No passing result is asserted by this document before those workflows actually finish.
+
+## Completion verification correction
+
+The last native browser run on source `240562b4c48c5544706430837779254c8d45820c` passed 112 backend/client/lifecycle cases, two default-OFF browser cases and 24 native-ON browser cases. Its final source guard correctly refused the stale application pin; the complete Creator verification also found one old assertion that required a literal standalone upload link. The regression now checks the explicit native Studio destination and the retained flag-OFF legacy fallback instead of requiring the superseded presentation.
+
+Browser reports now resolve the actual Git checkout rather than `GITHUB_SHA`, which can refer to a synthetic PR merge even when the workflow checks out the PR head. The workflow checks both reports against the saved checkout SHA and requires every expected case to pass. Previously downloaded reports are historical evidence and are not relabeled. A fresh application pin must include these verification corrections before the final metadata-only checkpoint is accepted.
+
+No live acceptance is inferred from these changes. The existing physical-device confirmation belongs to the prior V003 screen, not to a newly deployed native candidate.
