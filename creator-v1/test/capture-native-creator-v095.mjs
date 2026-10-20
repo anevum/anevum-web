@@ -74,7 +74,16 @@ try{
   await evaluate('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');
   const state=await evaluate('({shell:document.querySelectorAll(".site-shell--cinematic.av9-shell").length,header:document.querySelectorAll(".site-header").length,main:document.querySelectorAll("main#main").length,overflow:document.documentElement.scrollWidth>innerWidth+1,tokens:["--av9-space","--av9-paper","--av9-display","--av9-glass"].every(k=>!!getComputedStyle(document.querySelector(".av9-shell")).getPropertyValue(k).trim())})');
   assert.equal(state.shell,1,label);assert.equal(state.header,1,label);assert.equal(state.main,1,label);assert.equal(state.overflow,false,label+' overflow');assert.equal(state.tokens,true,label+' shared theme');
-  await screenshot(label+'-'+width);results.push({case:label,width,sharedShell:true,noOverflow:true,passed:true});
+  // Mobile nav can scroll horizontally, but its labels must not shrink into
+  // overlapping text. Check intrinsic label widths as well as link rectangles.
+  const nav=await evaluate('(()=>{const el=document.querySelector(".av095-navigation");if(!el)return null;const links=[...el.querySelectorAll(":scope > a")];const rects=links.map(link=>link.getBoundingClientRect());return {count:links.length,labelsFit:links.every(link=>link.getBoundingClientRect().width+1>=link.scrollWidth),separate:rects.every((rect,i)=>i===0||rect.left>=rects[i-1].right+2),scrollable:el.scrollWidth>el.clientWidth+4}})()');
+  if(nav){
+   assert.ok(nav.count>=4,label+' must retain creator navigation');
+   assert.equal(nav.labelsFit,true,label+' navigation labels overlap their link boxes');
+   assert.equal(nav.separate,true,label+' navigation links overlap');
+   if(width<=390)assert.equal(nav.scrollable,true,label+' mobile tabs must remain horizontally accessible');
+  }
+  await screenshot(label+'-'+width);results.push({case:label,width,sharedShell:true,noOverflow:true,navVerified:nav!==null,passed:true});
  };
  await client.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
  // textContent checks semantic copy; CSS text-transform legitimately changes
