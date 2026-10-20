@@ -84,8 +84,37 @@ jobs:
           JS
           echo 'V095_NATIVE_STUDIO=COMPILED_REACT_SYNTHETIC_QA_ONLY' >> "$GITHUB_STEP_SUMMARY"
           echo 'PRODUCTION_DEPLOY=NONE; AUTHENTICATED_LIVE_ACCEPTANCE=NOT_INFERRED' >> "$GITHUB_STEP_SUMMARY"
-      - name: Require the exact reviewed source before accepting this candidate
-        run: node creator-v1/ops/v091-release-acceptance.mjs --source-only
+      - name: Verify release source strictly for the V095 candidate, never imply approval of later frontend changes
+        shell: bash
+        env:
+          QA_SOURCE_BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          set -euo pipefail
+          if [ "$QA_SOURCE_BRANCH" = "build/v095-native-creator-integration-20261020-001" ]; then
+            # The already-reviewed V095 candidate must keep its exact scope.
+            node creator-v1/ops/v091-release-acceptance.mjs --source-only
+            echo 'V095_PINNED_SOURCE_SCOPE=PASS; NOT_A_PRODUCTION_DEPLOY' >> "$GITHUB_STEP_SUMMARY"
+          else
+            # New PRs can verify unchanged V095 functionality without falsely
+            # attesting to the old candidate's exact application source.
+            # The guarded production workflow still invokes the *full*
+            # authenticated release gate, unchanged and fail-closed.
+            node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const evidence=JSON.parse(readFileSync('.github/release-evidence/v091-authenticated.json','utf8'));
+          const production=readFileSync('.github/workflows/v084-continuance-production.yml','utf8');
+          const client=readFileSync('creator-v1/web/src/lib/native-creator-v095.ts','utf8');
+          assert.equal(evidence.native_candidate_pending,true);
+          assert.equal(evidence.verified_at,null);
+          for(const key of ['founder_staff_session','reviewer_staff_session','creator_journey','cross_account_identity'])
+            assert.equal(evidence[key],false,key+' must not be inferred from synthetic QA');
+          assert.match(client,/VITE_NATIVE_CREATOR_STUDIO_V095==='true'/);
+          assert.ok(production.split(/\r?\n/).some(line=>line.trim()==='node creator-v1/ops/v091-release-acceptance.mjs'));
+          assert.ok(!production.split(/\r?\n/).some(line=>line.includes('v091-release-acceptance.mjs --source-only')));
+          JS
+            echo 'V095_FUNCTIONAL_QA_ONLY=PASS; NON_V095_SOURCE_IS_NOT_AN_APPROVED_RELEASE' >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Preserve exact-source screenshots and test results
         if: always()
         uses: actions/upload-artifact@v4

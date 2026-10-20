@@ -21,6 +21,7 @@ import { LoadingState } from "./components/States";
 import { MemberLibraryPage } from "./pages/MemberLibraryPage";
 import {CanonicalSavedWorksPage} from "./pages/CanonicalSavedWorksPage";
 import { CanonicalStudioPage } from "./pages/CanonicalStudioPage";
+import {PublicCreatorAlphaPage} from "./pages/PublicCreatorAlphaPage";
 import {Phase1JoinPage} from "./pages/Phase1JoinPage";
 import {Phase1MemberPage} from "./pages/Phase1MemberPage";
 import {Phase1PublicMemberPage} from "./pages/Phase1PublicMemberPage";
@@ -92,6 +93,7 @@ export default function App(){
     <Route path="create" element={<Navigate to="/studio" replace/>}/>
     <Route path="create/new" element={<Navigate to="/studio/new" replace/>}/>
     <Route path="create/:projectId" element={<LegacyStudioRedirect/>}/>
+    <Route path="studio/alpha" element={<PublicCreatorAlphaPage/>}/>
     <Route path="studio/packages" element={<Suspense fallback={creatorFallback}><NativeCreatorStudioPage/></Suspense>}/>
     <Route path="studio/packages/new" element={<Suspense fallback={creatorFallback}><NativeCreatorStudioPage mode="new"/></Suspense>}/>
     <Route path="studio/packages/review" element={<Suspense fallback={creatorFallback}><NativeCreatorStudioPage mode="review"/></Suspense>}/>

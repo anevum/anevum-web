@@ -1,0 +1,71 @@
+name: ANEVUM V096 Unlisted Public Creator Alpha QA
+on:
+  push:
+    branches: [build/v096-unlisted-public-alpha-20261020-001]
+  pull_request:
+    paths:
+      - creator-v1/web/**
+      - creator-v1/test/public-creator-alpha-v096.test.mjs
+      - creator-v1/apex-prelaunch/gateway.mjs
+      - .github/workflows/v096-public-alpha-qa.yml
+permissions:
+  contents: read
+concurrency:
+  group: anevum-v096-public-guest-alpha-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  guest-alpha:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned frontend toolchain
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Verify guest boundaries and noindex before any browser run
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/v096-guest-alpha"
+          git rev-parse HEAD | tee "$RUNNER_TEMP/v096-guest-alpha/source.txt"
+          node --experimental-strip-types --test creator-v1/test/public-creator-alpha-v096.test.mjs | tee "$RUNNER_TEMP/v096-guest-alpha/contracts.log"
+          npm run check:creator-v1-web
+      - name: Build the canonical React site, not a duplicate product
+        shell: bash
+        run: |
+          set -euo pipefail
+          VITE_NATIVE_CREATOR_STUDIO_V095=false npm run build:creator-v1-web
+          VITE_NATIVE_CREATOR_STUDIO_V095=false npm run build:creator-v1-web:staging
+          cp -R creator-v1/dist/react-staging "$RUNNER_TEMP/v096-guest-alpha/staging-bundle"
+      - name: Browser QA on isolated localhost synthetic origin
+        shell: bash
+        run: |
+          set -euo pipefail
+          ANEVUM_V096_ALPHA_CSP_QA=1 node creator-v1/test/portal-offline-preview.mjs > "$RUNNER_TEMP/v096-guest-alpha/fixture.log" 2>&1 &
+          fixture=$!
+          trap 'kill "$fixture" 2>/dev/null || true' EXIT
+          ready=0
+          for i in $(seq 1 75); do
+            if curl --silent --fail --max-time 3 http://127.0.0.1:4178/__ready >/dev/null; then ready=1; break; fi
+            sleep 0.2
+          done
+          test "$ready" = 1
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          node creator-v1/test/capture-public-creator-alpha-v096.mjs "$chrome" http://127.0.0.1:4178 "$RUNNER_TEMP/v096-guest-alpha/browser"
+          echo 'V096_GUEST_ALPHA=COMPILED_REACT_LOCAL_BROWSER_QA_ONLY' >> "$GITHUB_STEP_SUMMARY"
+          echo 'PRODUCTION_DEPLOY=NONE; PRIVATE_SESSION_ACCEPTANCE=NOT_INFERRED' >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve exact-source browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v096-unlisted-alpha-${{ github.event.pull_request.head.sha || github.sha }}
+          path: ${{ runner.temp }}/v096-guest-alpha/
+          retention-days: 7
+          if-no-files-found: warn
