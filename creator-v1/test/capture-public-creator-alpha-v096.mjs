@@ -87,7 +87,11 @@ try{
   await pause(750);
   const frameAudit=await send('Page.getFrameTree');
   const iframeAudit=await evaluate('(()=>{const f=document.querySelector(".ap96-frame");return {iframePresent:!!f,srcdocSize:f?.srcdoc?.length,rect:f?.getBoundingClientRect()?.toJSON?.(),sandbox:f?.getAttribute("sandbox"),htmlLength:document.documentElement.outerHTML.length}})()');
-  console.log('V096_FRAME_TREE_DIAG '+JSON.stringify({frameTree:frameAudit.frameTree,iframe:iframeAudit,viewport:width}));
+  const iframeStatus=await evaluate('(()=>{const f=document.querySelector(".ap96-frame");let access;try{access=f.contentDocument?.body?.innerHTML?.length??null}catch(e){access=String(e)}return {contentWindow:!!f.contentWindow,bodyAccess:access,srcdoc:f.srcdoc?.slice(0,400)}})()');
+  console.log('V096_FRAME_TREE_DIAG '+JSON.stringify({frameTree:frameAudit.frameTree,iframe:iframeAudit,status:iframeStatus,viewport:width}));
+  await evaluate('document.getElementById("ap96-workspace").scrollIntoView({block:"start"}); true');
+  await pause(300);
+  await capture('debug-alpha-sandbox-'+width);
   await until(async()=>{
     const {frameTree}=await send('Page.getFrameTree');
     return frameTree?.childFrames?.some(x=>['about:srcdoc','about:blank'].includes(x.frame?.url||''));
