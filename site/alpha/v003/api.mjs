@@ -259,7 +259,8 @@ async function submit(env,u,id) {
   const now=Math.floor(Date.now()/1000);
   const changes=await env.DB.batch([
     env.DB.prepare("UPDATE anevum_package_releases SET status='pending_review',submitted_at=? WHERE id=? AND status='ready'").bind(now,release.id),
-    env.DB.prepare("UPDATE anevum_package_projects SET status=CASE WHEN live_release_id IS NULL THEN 'pending_review' ELSE status END,updated_at=?,review_reason=NULL WHERE id=? AND draft_release_id=?").bind(now,id,release.id)
+    env.DB.prepare("UPDATE anevum_package_projects SET status=CASE WHEN live_release_id IS NULL THEN 'pending_review' ELSE status END,updated_at=?,review_reason=NULL " +
+    "WHERE id=? AND draft_release_id=? AND EXISTS(SELECT 1 FROM anevum_package_releases WHERE id=? AND status='pending_review')").bind(now,id,release.id,release.id)
   ]);
   return changes[0]?.meta?.changes===1&&changes[1]?.meta?.changes===1
     ?json({status:"pending_review"}):fail(409,"Release state changed");
@@ -328,6 +329,39 @@ async function moderate(req,env,u,id) {
     action==="suspend"?"suspended":"published",reason,Math.floor(Date.now()/1000),id,p.status);
   return updated.meta?.changes===1?json({status:action==="suspend"?"suspended":"published"}):fail(409,"Project status changed");
 }
+async function discardReadyDraft(env,u,id) {
+  if(!pilot(env,u.id))return fail(403,"Creator alpha access required");
+  const p=await getProject(env.DB,id);
+  if(!p||p.owner_id!==u.id)return fail(404,"Project unavailable");
+  const release=await getDraft(env.DB,p);
+  if(!release||release.status!=="ready")return fail(409,"Only an unsubmitted private build can be discarded");
+  // Deauthorize the preview before deleting the underlying R2 objects.
+  const assets=(await env.DB.prepare(
+    "SELECT object_key FROM anevum_package_files WHERE release_id=?"
+  ).bind(release.id).all()).results;
+  const now=Math.floor(Date.now()/1000);
+  const changes=await env.DB.batch([
+    env.DB.prepare(
+      "UPDATE anevum_package_releases SET status='revoked',source_key=NULL WHERE id=? AND status='ready'"
+    ).bind(release.id),
+    env.DB.prepare(
+      "UPDATE anevum_package_projects SET draft_release_id=NULL,review_reason=NULL," +
+      "status=CASE WHEN live_release_id IS NULL THEN 'deleted' ELSE 'published' END,updated_at=? " +
+      "WHERE id=? AND owner_id=? AND draft_release_id=? " +
+      "AND EXISTS(SELECT 1 FROM anevum_package_releases WHERE id=? AND status='revoked')"
+    ).bind(now,id,u.id,release.id,release.id),
+    env.DB.prepare(
+      "DELETE FROM anevum_package_files WHERE release_id=? " +
+      "AND EXISTS(SELECT 1 FROM anevum_package_releases WHERE id=? AND status='revoked')"
+    ).bind(release.id,release.id)
+  ]);
+  if(changes[0]?.meta?.changes!==1||changes[1]?.meta?.changes!==1)
+    return fail(409,"Private build state changed. Refresh your project before editing");
+  const objects=[release.source_key,...assets.map(x=>x.object_key)].filter(Boolean);
+  for(let n=0;n<objects.length;n+=100)
+    await env.MEDIA.delete(objects.slice(n,n+100)).catch(()=>{});
+  return json({discarded:true,project_id:id,live_release_preserved:!!p.live_release_id});
+}
 async function deleteUnpublished(env,u,id) {
   const p=await getProject(env.DB,id);
   if(!p||p.owner_id!==u.id||!pilot(env,u.id)) return fail(404,"Project unavailable");
@@ -393,11 +427,12 @@ async function api(req,env,path) {
   const u=await member(req,env);
   if(!u)return fail(401,"A verified ANEVUM session is required");
   if(path==="/api/v1/packages/upload")return upload(req,env,u);
-  const m=path.match(/^\/api\/v1\/packages\/projects\/([0-9a-f-]{36})\/(submit|review|delete|moderate)$/);
+  const m=path.match(/^\/api\/v1\/packages\/projects\/([0-9a-f-]{36})\/(submit|review|delete|discard|moderate)$/);
   if(!m||!UUID.test(m[1]))return fail(404,"Unknown API route");
   if(m[2]==="submit")return submit(env,u,m[1]);
   if(m[2]==="review")return review(req,env,u,m[1]);
   if(m[2]==="moderate")return moderate(req,env,u,m[1]);
+  if(m[2]==="discard")return discardReadyDraft(env,u,m[1]);
   return deleteUnpublished(env,u,m[1]);
 }
 async function player(req,env,id) {
