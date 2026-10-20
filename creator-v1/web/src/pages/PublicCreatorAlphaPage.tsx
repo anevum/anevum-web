@@ -75,6 +75,7 @@ export function PublicCreatorAlphaPage(){
     <span className="ap96-tag">PUBLIC EXPERIMENT / ALPHA</span>
     <h1 id="ap96-heading">Your next idea <em>starts here.</em></h1>
     <p className="ap96-intro">No invitation. No extra login. Open the link, make something, and see it take shape. Start with a template or write your own HTML and CSS.</p>
+    <a className="ap96-jump" href="#ap96-workspace">Start creating <span aria-hidden="true">↓</span></a>
     <div className="ap96-access"><span className="ap96-access-dot" aria-hidden="true"/> Public to anyone with the URL · Unlisted · No cloud storage</div>
    </div>
    <aside className="ap96-access-panel">
@@ -96,7 +97,7 @@ export function PublicCreatorAlphaPage(){
    </div>
   </section>
 
-  <section className="ap96-workspace" aria-label="Anonymous creation workspace">
+  <section id="ap96-workspace" className="ap96-workspace" aria-label="Anonymous creation workspace">
    <div className="ap96-workspace-bar">
     <div className="ap96-window-mark"><span/><span/><span/></div>
     <div className="ap96-window-title"><strong>CREATOR / LOCAL WORKSPACE</strong><span>Nothing here is published</span></div>
