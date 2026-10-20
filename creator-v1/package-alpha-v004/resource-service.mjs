@@ -139,12 +139,22 @@ export async function findDuplicate(db,media,project,sha,size){
 }
 export async function saveDraft(env,ownerId,projectId,now){
   const p=await one(env.DB,"SELECT * FROM anevum_package_projects WHERE id=? AND owner_id=? AND status!='deleted'",projectId,ownerId);
-  const r=p?.draft_release_id?await one(env.DB,"SELECT * FROM anevum_package_releases WHERE id=? AND project_id=?",p.draft_release_id,p.id):null;
+  if(!p)throw new ResourceError("Project unavailable",404);
+  const r=p.draft_release_id?await one(env.DB,"SELECT * FROM anevum_package_releases WHERE id=? AND project_id=?",p.draft_release_id,p.id):null;
   if(r?.status!=="ready")throw new ResourceError("There is no private test build to save",409);
-  await run(env.DB,
+  // Atomically verify expiry, owner, pointer and status in the same retention write.
+  // Previously uploaded V003 ready builds may not have a retention row yet.
+  const saved=await one(env.DB,
     "INSERT INTO anevum_package_build_retention(release_id,mode,expires_at,created_at,updated_at) "+
-    "VALUES(?,'saved',NULL,?,?) ON CONFLICT(release_id) DO UPDATE SET mode='saved',expires_at=NULL,updated_at=excluded.updated_at",
-    r.id,now,now);
+    "SELECT r.id,'saved',NULL,?,? FROM anevum_package_releases r "+
+    "JOIN anevum_package_projects p ON p.id=r.project_id "+
+    "LEFT JOIN anevum_package_build_retention b ON b.release_id=r.id "+
+    "WHERE r.id=? AND p.owner_id=? AND p.draft_release_id=r.id AND r.status='ready' "+
+    "AND (b.release_id IS NULL OR b.mode='saved' OR (b.mode='test' AND b.expires_at>?)) "+
+    "ON CONFLICT(release_id) DO UPDATE SET mode='saved',expires_at=NULL,updated_at=excluded.updated_at "+
+    "RETURNING release_id",
+    now,now,r.id,ownerId,now);
+  if(!saved?.release_id)throw new ResourceError("This test build expired or changed. Replace the build to continue.",409);
   return {saved:true,id:projectId,release_id:r.id};
 }
 export async function discardDraft(env,ownerId,projectId,now){
