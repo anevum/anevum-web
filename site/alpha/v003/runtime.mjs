@@ -15,6 +15,17 @@ const common = {
   "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=(), clipboard-read=(), clipboard-write=()",
   "x-robots-tag": "noindex, nofollow"
 };
+// No arbitrary frame-ancestor lists: staging is opt-in and limited to the
+// inventory-verified package control Worker under the same managed account.
+// Production defaults to https://anevum.com only.
+function frameAncestors(env){
+  const parents=["https://anevum.com"];
+  const expected="anevum-package-alpha-v003-control.devonakins.workers.dev";
+  const runtime="anevum-package-alpha-v003-runtime.devonakins.workers.dev";
+  if(env.RUNTIME_HOST===runtime && env.STAGING_CONTROL_HOST===expected)
+    parents.push("https://"+expected);
+  return parents.join(" ");
+}
 const missing = () => new Response("Build unavailable", {
   status: 404, headers: { ...common, "cache-control": "no-store", "content-type": "text/plain; charset=utf-8" }
 });
@@ -95,7 +106,7 @@ export default {
           "font-src " + origin + " data:; media-src " + origin + " data: blob:; " +
           "connect-src " + origin + "; worker-src 'none'; frame-src 'none'; " +
           "object-src 'none'; form-action 'none'; base-uri 'none'; " +
-          "frame-ancestors https://anevum.com");
+          "frame-ancestors " + frameAncestors(env));
       } else if (/\.(?:json|js|mjs|css|txt|glsl|wgsl|vert|frag|webmanifest)$/.test(path)) {
         headers.set("content-security-policy", "default-src 'none'");
       }
