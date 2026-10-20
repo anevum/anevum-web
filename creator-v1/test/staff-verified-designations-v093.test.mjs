@@ -3,21 +3,21 @@ import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 import {Script} from 'node:vm';
-import worker from '../operations/anevum-iren-staff-observatory-v001.mjs';
+import worker from '../operations/anevum-iren-insignias-v093.mjs';
 import {memberVerifiedRoleMap} from '../canonical-auth/member-verified-roles.mjs';
 
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
-const BASE='https://anevum.com/staff/observatory/api/';
+const BASE='https://anevum.com/staff/insignias/api/';
 const CASE='https://github.com/anevum/anevum-web/issues/1234';
 
 function fixture({migrated=true,enabled=true}={}){
  const raw=new DatabaseSync(':memory:');
  raw.exec([
   'PRAGMA foreign_keys=ON;',
-  'CREATE TABLE "user"(id TEXT PRIMARY KEY,name TEXT,emailVerified INTEGER);',
+  'CREATE TABLE "user"(id TEXT PRIMARY KEY,name TEXT,emailVerified INTEGER,createdAt TEXT);',
   'CREATE TABLE staff_access_grants(member_id TEXT PRIMARY KEY,role TEXT,revoked_at INTEGER);',
   'CREATE TABLE member_creator_profiles(user_id TEXT PRIMARY KEY,display_name TEXT,handle TEXT);',
-  "INSERT INTO \"user\" VALUES('owner','Owner',1),('reviewer','Independent reviewer',1),('other','Second moderator',1),('member','Creator',1),('unverified','Not verified',0);",
+  "INSERT INTO \"user\" VALUES('owner','Owner',1,'2026-10-19'),('reviewer','Independent reviewer',1,'2026-10-19'),('other','Second moderator',1,'2026-10-19'),('member','Creator',1,'2026-10-19'),('unverified','Not verified',0,'2026-10-19');",
   "INSERT INTO staff_access_grants VALUES('owner','owner',NULL),('reviewer','reviewer',NULL),('other','reviewer',NULL);",
   "INSERT INTO member_creator_profiles VALUES('member','Creator','creatorqa');"
  ].join('\n'));
@@ -90,6 +90,11 @@ test('V093 enforces independent two-person approval and does not issue staff pri
  assert.equal(queue.body.requests.length,1);
  assert.equal(queue.body.requests[0].memberName,'Creator');
  assert.equal(Object.hasOwn(queue.body.requests[0],'email'),false);
+ const memberDirectory=await f.call('owner','GET','members?q=creator');
+ assert.equal(memberDirectory.status,200);
+ assert.equal(memberDirectory.body.members[0].name,'Creator');
+ assert.equal(Object.hasOwn(memberDirectory.body.members[0],'email'),false);
+ assert.equal((await f.call('reviewer','GET','members?q=creator')).status,403);
  const id=queue.body.requests[0].id;
  assert.equal((await memberVerifiedRoleMap(f.db,['member'])).size,0,'nomination never implies public role');
  assert.equal((await f.call('owner','POST','role-review',{requestId:id,decision:'approved'})).status,403);
@@ -132,16 +137,16 @@ test('V093 rejects self-approval, records denials, safely revokes and audits rei
 });
 
 test('V093 gated member/queue UI is syntax valid and never confuses aura with institutional role',()=>{
- const source=read('operations/anevum-iren-staff-observatory-v001.mjs');
+ const source=read('operations/anevum-iren-insignias-v093.mjs');
  const extract=name=>JSON.parse(source.match(new RegExp('^const '+name+' = (".*");$','m'))[1]);
  const client=extract('CLIENT'),html=extract('PAGE'),styles=extract('STYLES');
  assert.doesNotThrow(()=>new Script(client));
- for(const name of ['roleRequests','roleStatus','insignias','rolesRefresh'])
+ for(const name of ['queue','notice','insignias','memberSearch'])
   assert.match(html,new RegExp(name));
- assert.match(styles,/role-request/);
- assert.match(client,/rolePost\('role-nominate'/);
- assert.match(client,/rolePost\('role-review'/);
- assert.match(client,/rolePost\('role-revoke'/);
+ assert.match(styles,/request-head/);
+ assert.match(client,/post\('nominate'/);
+ assert.match(client,/post\('review'/);
+ assert.match(client,/post\('revoke'/);
  assert.match(source,/ANEVUM_VERIFIED_ROLE_OPERATIONS_ENABLED !== 'true'/);
  assert.match(source,/staff\.role!=='owner'/);
  assert.match(source,/staff\.role!=='reviewer'/);
