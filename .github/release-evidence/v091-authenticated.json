@@ -1,5 +1,5 @@
 {
-  "source_sha": "0116b2eaa63cc1df0530b791a7e30637e4ab5b02",
+  "source_sha": "bdef31c4723634c71174aea5065376f9de8e6348",
   "founder_staff_session": true,
   "reviewer_staff_session": false,
   "creator_journey": false,
@@ -29,9 +29,15 @@
     "temporary_selection_expires_at": "2026-10-20T15:37:29Z",
     "temporary_selection_cleanup": {
       "request_ruleset": "7a8ccf2e80704acb90de7ad857a2728c",
-      "request_rules": ["1279cf299bef404e883c7832c49d42a3", "d2b00ef8a7de4278bf98e66a45d2afcc"],
+      "request_rules": [
+        "1279cf299bef404e883c7832c49d42a3",
+        "d2b00ef8a7de4278bf98e66a45d2afcc"
+      ],
       "response_ruleset": "8aa991fa6ff1404d968dbf80b8743a40",
-      "response_rules": ["d6d4fae0e00b4622acb380228ce5169b", "7602a38056e449fb88c803beb9430441"],
+      "response_rules": [
+        "d6d4fae0e00b4622acb380228ce5169b",
+        "7602a38056e449fb88c803beb9430441"
+      ],
       "instruction": "At pilot close, remove only these recorded temporary rules after checking for unrelated later changes. The selection cookie chooses application code only and supplies no account authentication."
     },
     "promotion_safeguards": {
@@ -68,6 +74,18 @@
       "Genuine independent build review and approval, followed by public Discover/Play/member-wall and suspend/restore checks.",
       "Real cross-account ownership/privacy observations and actual required phone acceptance.",
       "Full authenticated repository evidence and final guarded promotion of the exact accepted candidate."
-    ]
+    ],
+    "founder_observation_application_source": "0116b2eaa63cc1df0530b791a7e30637e4ab5b02",
+    "release_test_source_refresh": {
+      "verified_at": "2026-10-20T14:05:27Z",
+      "candidate_application_source": "0116b2eaa63cc1df0530b791a7e30637e4ab5b02",
+      "reason": "The refreshed pin includes the repaired single-production-authority test and reviewed release metadata only. Deployed application modules and the immutable candidate are unchanged.",
+      "non_metadata_changes": [
+        "tests/single-production-deploy.test.mjs"
+      ],
+      "exact_151_file_inventory_preserved": true,
+      "exact_five_metadata_exclusions_preserved": true,
+      "fresh_gallery_enabled_build_matches_all_four_accepted_asset_hashes": true
+    }
   }
 }
