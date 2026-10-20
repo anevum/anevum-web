@@ -29,3 +29,16 @@ test("server still verifies same-origin and applies OTP throttling",()=>{
  assert.match(auth,/\/email-otp\/send-verification-otp":\{window:600,max:3\}/);
  assert.match(auth,/otpLength:8/);
 });
+
+test("a failed authentication request always releases the join button",()=>{
+ const client=readFileSync(new URL("../web/src/lib/canonical-beta.ts",import.meta.url),"utf8");
+ assert.match(client,/fetchOptions:\\{timeout:15_000\\}/);
+ assert.match(join,/const JOIN_TIMEOUT_MS=15_000/);
+ assert.match(join,/Promise\\.race\\(/);
+ assert.match(join,/finally\\{setBusy\\(false\\)/);
+ assert.match(join,/instanceof AuthRequestTimeout/);
+ assert.match(join,/instanceof AuthRequestRejected&&error\\.status===429/);
+ assert.match(join,/A code may still arrive/);
+ assert.match(join,/withJoinDeadline\\(\\(\\)=>canonicalAuthClient\\.emailOtp\\.sendVerificationOtp/);
+ assert.match(join,/withJoinDeadline\\(\\(\\)=>canonicalAuthClient\\.signIn\\.emailOtp/);
+});
