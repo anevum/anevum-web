@@ -26,7 +26,7 @@ assert.equal(service.storage,true);
 assert.equal(service.runnerConfigured,true);
 const lab=await read("/creator-lab/v004");
 assert.equal(lab.r.status,200);
-assert.match(lab.text,/Create freely\. Keep what works\./);
+assert.match(lab.text,/Create freely\.<br\s*\/?\s*>Keep what works\./);
 assert.match(lab.text,/Member sign-in required/);
 assert.doesNotMatch(lab.text,/id="publish-form"/,"Signed-out visitors should not get an uploader");
 assert.ok(lab.text.includes('href="/creator-lab/v004/help"'));
