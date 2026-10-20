@@ -33,6 +33,23 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url), origin = url.origin;
     if (!env.RUNTIME_HOST || url.hostname !== env.RUNTIME_HOST || url.protocol !== "https:") return missing();
+    if (url.pathname === "/__anevum_runtime_health_v1" && request.method === "GET") {
+      let schemaReady=false;
+      try {
+        const row=await env.DB.prepare(
+          "SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name IN (" +
+          "'anevum_package_projects','anevum_package_releases','anevum_package_files'," +
+          "'anevum_package_preview_tokens')"
+        ).first();
+        schemaReady=Number(row?.n)===4;
+      }catch{}
+      const storage=!!env.MEDIA?.get&&!!env.MEDIA?.head;
+      const ready=schemaReady&&storage;
+      return Response.json({ok:ready,runtime:"package-v003",schemaReady,storage,
+        independentOrigin:true,cookieless:true},{
+        status:ready?200:503,headers:{...common,"cache-control":"no-store"}
+      });
+    }
     if (request.method === "OPTIONS") return new Response(null, {
       status: 204,
       headers: { ...common, "access-control-allow-methods": "GET, HEAD, OPTIONS",
