@@ -92,10 +92,13 @@ try{
   await evaluate('document.getElementById("ap96-workspace").scrollIntoView({block:"start"}); true');
   await pause(300);
   await capture('debug-alpha-sandbox-'+width);
-  await until(async()=>{
-    const {frameTree}=await send('Page.getFrameTree');
-    return frameTree?.childFrames?.some(x=>['about:srcdoc','about:blank'].includes(x.frame?.url||''));
-  },5000);
+  await evaluate('document.querySelector(".ap96-frame").scrollIntoView({block:"center"}); true');
+  await pause(450);
+  await capture('debug-alpha-iframe-'+width);
+  await ensure('frame-window-attached-'+width,'Boolean(document.querySelector(".ap96-frame")?.contentWindow)&&window.frames.length>0');
+  // Opaque-origin frames can be out-of-process and absent from this CDP target
+  // frame tree. Require the host iframe and inspect real rendered screenshots.
+  // Do not mistake a frameTree omission for a CSP denial by itself.
   await capture('public-alpha-first-'+width);
 
   await evaluate('document.querySelectorAll(".ap96-template")[1].click()');
