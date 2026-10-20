@@ -237,3 +237,17 @@ test("a D1 lease serializes same-member uploads and reservations charge physical
   }),e=>e.status===409);
  }finally{await s.close();}
 });
+
+test("an abusive creator reaches 429 before more multipart bodies are parsed",async()=>{
+ const s=setup();
+ try{
+  for(let n=0;n<10;n++){
+   const reply=await result(await s.request("/api/v1/packages/upload","alice",{json:{pretend:"invalid form"}}));
+   assert.equal(reply.httpStatus,415,"invalid attempts are charged to the hourly budget");
+  }
+  const blocked=await result(await s.request("/api/v1/packages/upload","alice",{json:{pretend:"invalid form"}}));
+  assert.equal(blocked.httpStatus,429,"11th attempt is rejected before the multipart parser");
+  assert.equal(s.objects.size,0);
+  assert.equal(s.get("SELECT attempts FROM anevum_package_upload_limits WHERE owner_id=?","alice")[0].attempts,11);
+ }finally{await s.close();}
+});
