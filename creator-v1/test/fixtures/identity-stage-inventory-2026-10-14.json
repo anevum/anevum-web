@@ -1,0 +1,86 @@
+{
+  "observedAt": "2026-10-14",
+  "inventorySource": "Cloudflare API read-only zone routes, Worker bindings and D1 SELECT aggregate; credentials/PII omitted",
+  "environment": "ANEVUM Creator V1 staging (not authorization to deploy)",
+  "routes": [
+    {
+      "pattern": "a.anevum.com/*",
+      "script": "anevum-creator-v1-a-staging"
+    },
+    {
+      "pattern": "anevum.com/*",
+      "script": "anevum-construction-terminal"
+    },
+    {
+      "pattern": "next.anevum.com/api/v1/member/*",
+      "script": "anevum-member-auth-staging"
+    },
+    {
+      "pattern": "next.anevum.com/creator/*",
+      "script": "anevum-creator-v1-react-staging"
+    },
+    {
+      "pattern": "next.anevum.com/join*",
+      "script": "anevum-member-auth-staging"
+    }
+  ],
+  "workers": [
+    {
+      "name": "anevum-creator-v1-a-staging",
+      "bindings": [
+        {
+          "name": "COMMUNITY_DB",
+          "type": "d1",
+          "database_id": "fa96e36d-6257-4883-bf15-074947e11a13"
+        }
+      ]
+    },
+    {
+      "name": "anevum-member-auth-staging",
+      "bindings": [
+        {
+          "name": "COMMUNITY_DB",
+          "type": "d1",
+          "database_id": "fa96e36d-6257-4883-bf15-074947e11a13"
+        }
+      ]
+    },
+    {
+      "name": "anevum-construction-terminal",
+      "bindings": []
+    }
+  ],
+  "databases": [
+    {
+      "role": "creator-staging",
+      "name": "anevum-creator-v1-staging",
+      "id": "fa96e36d-6257-4883-bf15-074947e11a13"
+    },
+    {
+      "role": "production-creator",
+      "name": "anevum-community-preview",
+      "id": "6c7b5f0c-33db-4b6a-9569-0a6af5e07534"
+    },
+    {
+      "role": "legacy-v5-preview",
+      "name": "anevum-v5-beta-members",
+      "id": "b2f9b4ad-4b97-483c-ae78-5dc7c8da76bf"
+    }
+  ],
+  "creatorMigrationVersions": [
+    "0001_initial_creator_platform",
+    "0002_staff_authoring",
+    "0003_member_identity_staging",
+    "0004_member_project_workflow",
+    "0005_voting_progression",
+    "0006_account_privacy"
+  ],
+  "counts": {
+    "creatorMembers": 1,
+    "creatorProfiles": 2,
+    "creatorSessions": 1,
+    "legacyV5PreviewMembers": 1,
+    "legacyV5PreviewSessions": 1
+  },
+  "acceptance": {}
+}

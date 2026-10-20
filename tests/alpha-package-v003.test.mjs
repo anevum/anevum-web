@@ -12,6 +12,8 @@ import runtime from "../site/alpha/v003/runtime.mjs";
 import { inspectZip, extractEntry, crc32, PackageError } from "../site/alpha/v003/archive.mjs";
 import { prepareCover, COVER_PATH } from "../site/alpha/v003/cover.mjs";
 import { mintPreview, verifyPreview } from "../site/alpha/v003/tokens.mjs";
+import {cleanupPackageResources} from "../site/alpha/v003/resource-cleanup.mjs";
+import {getStorageUsage,acquireUploadLease,reserveUpload} from "../site/alpha/v003/resource-service.mjs";
 
 const ROOT=resolve(dirname(fileURLToPath(import.meta.url)),"..");
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -46,6 +48,7 @@ function mockD1(){
   const sqlite=new DatabaseSync(":memory:");
   sqlite.exec(readFileSync(resolve(ROOT,"site/alpha/v003/schema.sql"),"utf8"));
   const db={
+    exec(sql){sqlite.exec(sql)},
     prepare(sql){
       const statement=(args=[])=>({
         bind(...values){return statement(values);},
@@ -82,7 +85,8 @@ function mockR2(){
     },
     async delete(keys){
       for(const k of Array.isArray(keys)?keys:[keys]) data.delete(k);
-    }
+    },
+    async list({prefix,limit=100}){return {objects:[...data.keys()].filter(key=>key.startsWith(prefix)).slice(0,limit).map(key=>({key}))};}
   };
 }
 function setup(){
@@ -1009,4 +1013,187 @@ test("V010 reused handle and timestamp cannot inherit releases without the same 
   assert.equal((await getPage(env,path,"visitor")).status,404,
     "No public issuer proof means the gallery cannot be attributed");
  }finally{env.DB.close();}
+});
+
+function protectedSetup(){
+ const env=setup();env.PACKAGE_RESOURCE_PROTECTION_ENABLED="true";
+ env.DB.exec(readFileSync(resolve(ROOT,"site/alpha/v003/migrations/0004_resource_protection.sql"),"utf8"));
+ return env;
+}
+const resourcePath=(p,action)=>"/api/v1/packages/projects/"+p.id+"/"+action;
+async function createdProtected(env,form=uploadForm(sample())){
+ const r=await post(env,"/api/v1/packages/upload",form);const body=await r.json();
+ assert.equal(r.status,201,JSON.stringify(body));return body;
+}
+function replacing(p,content=sample(),title="Cosmic Racer"){
+ const f=uploadForm(content,title,p.id);f.set("replace_draft","1");return f;
+}
+test("consolidated resources require the explicit flag and migrated storage before any R2 write",async()=>{
+ const env=setup();env.PACKAGE_RESOURCE_PROTECTION_ENABLED="true";
+ try{
+  const r=await post(env,"/api/v1/packages/upload",uploadForm(sample()));assert.equal(r.status,503);
+  assert.equal(env.MEDIA.data.size,0);
+  assert.equal((await env.DB.prepare("SELECT COUNT(*) n FROM anevum_package_projects").first()).n,0);
+ }finally{env.DB.close()}
+});
+test("consolidated upload preserves rights, canonical attribution and PNG covers with bounded physical accounting",async()=>{
+ const env=protectedSetup();
+ try{
+  const cover=makeCover(),p=await createdProtected(env,uploadWithCover(cover));
+  const rights=await env.DB.prepare("SELECT owner_id FROM anevum_package_rights_receipts WHERE release_id=?").bind(p.release_id).first();
+  assert.equal(rights.owner_id,"owner-id");
+  const identity=await env.DB.prepare("SELECT creator_proof FROM anevum_package_creator_links WHERE owner_id='owner-id'").first();
+  assert.equal(identity.creator_proof,"1".repeat(64));
+  assert.equal((await getPage(env,"/api/v1/packages/covers/"+p.release_id)).status,200);
+  assert.equal((await getPage(env,"/api/v1/packages/covers/"+p.release_id,"visitor")).status,404);
+  const usage=await getStorageUsage(env.DB,"owner-id");
+  const actual=[...env.MEDIA.data.values()].reduce((s,x)=>s+x.size,0);
+  assert.equal(usage.memberPhysicalBytes,actual,"cover is counted once in actual physical storage");
+  assert.equal(usage.reservations,0);
+  const retention=await env.DB.prepare("SELECT mode,expires_at FROM anevum_package_build_retention WHERE release_id=?").bind(p.release_id).first();
+  assert.equal(retention.mode,"test");assert.equal(retention.expires_at,p.expires_at);
+ }finally{env.DB.close()}
+});
+test("unchanged uploads are no-ops but changed metadata and artwork create explicit private revisions",async()=>{
+ const env=protectedSetup();
+ try{
+  const p=await createdProtected(env);const oldObjects=env.MEDIA.data.size;
+  const same=await post(env,"/api/v1/packages/upload",replacing(p));assert.equal(same.status,200);
+  const duplicate=await same.json();assert.equal(duplicate.duplicate,true);assert.equal(duplicate.release_id,p.release_id);
+  assert.equal(env.MEDIA.data.size,oldObjects);
+  const next=await createdProtected(env,replacing(p,sample(),"A changed project title"));
+  assert.equal(next.version,2);assert.notEqual(next.release_id,p.release_id);
+  assert.equal((await env.DB.prepare("SELECT status FROM anevum_package_releases WHERE id=?").bind(p.release_id).first()).status,"revoked");
+  const withCover=uploadWithCover(makeCover(),p.id);withCover.set("replace_draft","1");
+  const third=await createdProtected(env,withCover);assert.equal(third.version,3);
+  assert.equal((await cleanupPackageResources(env)).errors,0);
+  assert.equal((await getPage(env,"/api/v1/packages/covers/"+third.release_id)).status,200);
+  assert.equal((await env.DB.prepare("SELECT COUNT(*) n FROM anevum_package_cleanup_jobs").first()).n,0);
+ }finally{env.DB.close()}
+});
+test("failed replacement retains the prior playable build and charged orphan reservation until verified erasure",async()=>{
+ const env=protectedSetup();
+ try{
+  const p=await createdProtected(env);const put=env.MEDIA.put.bind(env.MEDIA);let writes=0;
+  env.MEDIA.put=async(...args)=>{if(++writes===2)throw Error("R2 unavailable");return put(...args)};
+  const r=await post(env,"/api/v1/packages/upload",replacing(p,sample(),"Revised title after failed upload"));assert.equal(r.status,503);
+  const project=await env.DB.prepare("SELECT draft_release_id FROM anevum_package_projects WHERE id=?").bind(p.id).first();assert.equal(project.draft_release_id,p.release_id);
+  assert.equal((await env.DB.prepare("SELECT status FROM anevum_package_releases WHERE id=?").bind(p.release_id).first()).status,"ready");
+  const usage=await getStorageUsage(env.DB,"owner-id");assert.equal(usage.reservations,1);
+  assert.equal((await getPage(env,"/play/v3/"+p.id+"?preview=1")).status,200);
+  const cleaned=await cleanupPackageResources(env);assert.equal(cleaned.orphans,1);assert.equal(cleaned.errors,0);
+  assert.equal((await getStorageUsage(env.DB,"owner-id")).reservations,0);
+ }finally{env.DB.close()}
+});
+test("expiry cannot be bypassed through preview tokens, cover URLs, save or submit; saved builds survive cron",async()=>{
+ const env=protectedSetup();
+ try{
+  const p=await createdProtected(env,uploadWithCover(makeCover()));
+  const page=await getPage(env,"/play/v3/"+p.id+"?preview=1"),src=iframeSrc(await page.text());
+  await env.DB.prepare("UPDATE anevum_package_build_retention SET expires_at=? WHERE release_id=?").bind(Math.floor(Date.now()/1000)-1,p.release_id).run();
+  assert.equal((await getPage(env,"/play/v3/"+p.id+"?preview=1")).status,404);
+  assert.equal((await getPage(env,"/api/v1/packages/covers/"+p.release_id)).status,404);
+  assert.equal((await runtime.fetch(new Request(src),env)).status,404);
+  assert.equal((await post(env,resourcePath(p,"save"),{})).status,409);
+  assert.equal((await post(env,resourcePath(p,"submit"),{})).status,409);
+  const next=await createdProtected(env,replacing(p,sample(),"A saved revision"));
+  assert.equal((await post(env,resourcePath(next,"save"),{})).status,200);
+  assert.equal((await cleanupPackageResources(env,Math.floor(Date.now()/1000)+3*86400)).errors,0);
+  assert.equal((await getPage(env,"/play/v3/"+p.id+"?preview=1")).status,200);
+ }finally{env.DB.close()}
+});
+test("storage leases, atomic quotas, owner isolation and write-free preflight use the canonical controller",async()=>{
+ const env=protectedSetup();
+ try{
+  const now=Math.floor(Date.now()/1000);
+  await acquireUploadLease(env.DB,"owner-id","another-upload",now);
+  assert.equal((await post(env,"/api/v1/packages/upload",uploadForm(sample()))).status,429);
+  await env.DB.prepare("DELETE FROM anevum_package_upload_leases").run();
+  const p=await createdProtected(env);
+  assert.equal((await post(env,resourcePath(p,"save"),{},"staff")).status,404);
+  assert.equal((await post(env,resourcePath(p,"discard"),{},"staff")).status,404);
+  const before=env.MEDIA.data.size;
+  assert.equal((await post(env,"/api/v1/packages/preflight",{size:sample().length,sha256:"a".repeat(64),projectId:p.id})).status,200);
+  assert.equal(env.MEDIA.data.size,before);
+  const reservation=await reserveUpload(env.DB,{ownerId:"owner-id",projectId:crypto.randomUUID(),releaseId:crypto.randomUUID(),archiveBytes:99*1048576,expandedBytes:0,now,prefix:"package-alpha/v003/owner-id/"+crypto.randomUUID()+"/"+crypto.randomUUID()+"/"});
+  assert.ok(reservation);
+  const tooBig=uploadForm(Buffer.from("<!doctype html><html>"+"x".repeat(2*1048576)+"</html>"),"Another upload","","test.html");
+  assert.equal((await post(env,"/api/v1/packages/upload",tooBig)).status,409);
+  assert.equal(env.MEDIA.data.size,before);
+ }finally{env.DB.close()}
+});
+test("consolidated publishing retains independent approval and default-off security gate; cleanup preserves public release",async()=>{
+ const env=protectedSetup();env.STAFF_IDS="owner-id,staff-id";
+ try{
+  const p=await createdProtected(env,uploadWithCover(makeCover()));
+  assert.equal((await post(env,resourcePath(p,"submit"),{})).status,200);
+  assert.equal((await post(env,resourcePath(p,"review"),{action:"publish"})).status,403);
+  env.PACKAGE_PUBLIC_PUBLISH_ENABLED="false";
+  assert.equal((await post(env,resourcePath(p,"review"),{action:"publish"},"staff")).status,503);
+  env.PACKAGE_PUBLIC_PUBLISH_ENABLED="true";
+  assert.equal((await post(env,resourcePath(p,"review"),{action:"publish"},"staff")).status,200);
+  env.PACKAGE_CREATOR_GALLERY_ENABLED="true";
+  const gallery=await (await getPage(env,"/api/v1/packages/creators/cosmiccreator/projects","visitor")).json();
+  assert.equal(gallery.projects.length,1);assert.equal(gallery.projects[0].id,p.id);
+  const next=await createdProtected(env,uploadForm(sample(),"An update awaiting rejection",p.id));
+  assert.equal((await post(env,resourcePath(next,"submit"),{})).status,200);
+  assert.equal((await post(env,resourcePath(next,"review"),{action:"reject",reason:"Fix the controls before publication"},"staff")).status,200);
+  const cleanup=await cleanupPackageResources(env,Math.floor(Date.now()/1000)+8*86400);assert.equal(cleanup.errors,0);
+  assert.equal((await getPage(env,"/api/v1/packages/covers/"+p.release_id,"visitor")).status,200);
+  const published=await env.DB.prepare("SELECT live_release_id FROM anevum_package_projects WHERE id=?").bind(p.id).first();assert.equal(published.live_release_id,p.release_id);
+  assert.equal((await post(env,resourcePath(p,"delete"),{})).status,409);
+ }finally{env.DB.close()}
+});
+
+test("resource migration is additive and idempotent on existing rights-bearing releases",async()=>{
+ const env=setup();
+ try{
+  const original=await (await post(env,"/api/v1/packages/upload",uploadWithCover(makeCover()))).json();
+  const before=await env.DB.prepare("SELECT * FROM anevum_package_releases WHERE id=?").bind(original.release_id).first();
+  const sql=readFileSync(resolve(ROOT,"site/alpha/v003/migrations/0004_resource_protection.sql"),"utf8");
+  env.DB.exec(sql);env.DB.exec(sql);env.PACKAGE_RESOURCE_PROTECTION_ENABLED="true";
+  assert.deepEqual(await env.DB.prepare("SELECT * FROM anevum_package_releases WHERE id=?").bind(original.release_id).first(),before);
+  assert.equal((await getPage(env,"/play/v3/"+original.id+"?preview=1")).status,200);
+  assert.equal((await post(env,resourcePath(original,"save"),{})).status,200);
+  assert.equal((await env.DB.prepare("SELECT COUNT(*) n FROM anevum_package_rights_receipts").first()).n,1);
+ }finally{env.DB.close()}
+});
+test("a submit/expiry race and a discard/review race cannot detach or revive another state",async()=>{
+ const env=protectedSetup();
+ try{
+  const p=await createdProtected(env),batch=env.DB.batch.bind(env.DB);
+  let race="expiry";
+  env.DB.batch=async commands=>{
+   if(race==="expiry"){
+    race=null;await env.DB.prepare("UPDATE anevum_package_build_retention SET expires_at=1 WHERE release_id=?").bind(p.release_id).run();
+   }else if(race==="review"){
+    race=null;await env.DB.prepare("UPDATE anevum_package_releases SET status='pending_review' WHERE id=?").bind(p.release_id).run();
+    await env.DB.prepare("UPDATE anevum_package_projects SET status='pending_review' WHERE id=?").bind(p.id).run();
+   }
+   return batch(commands);
+  };
+  assert.equal((await post(env,resourcePath(p,"submit"),{})).status,409);
+  await env.DB.prepare("UPDATE anevum_package_build_retention SET expires_at=? WHERE release_id=?").bind(Math.floor(Date.now()/1000)+86400,p.release_id).run();
+  race="review";
+  assert.equal((await post(env,resourcePath(p,"discard"),{})).status,409);
+  assert.equal((await env.DB.prepare("SELECT draft_release_id FROM anevum_package_projects WHERE id=?").bind(p.id).first()).draft_release_id,p.release_id);
+  assert.equal((await env.DB.prepare("SELECT status FROM anevum_package_releases WHERE id=?").bind(p.release_id).first()).status,"pending_review");
+ }finally{env.DB.close()}
+});
+test("failed private erasure remains charged and retryable; history pruning respects rights-receipt foreign keys",async()=>{
+ const env=protectedSetup();
+ try{
+  const p=await createdProtected(env),before=(await getStorageUsage(env.DB,"owner-id")).memberPhysicalBytes;
+  assert.equal((await post(env,resourcePath(p,"discard"),{})).status,200);
+  const remove=env.MEDIA.delete.bind(env.MEDIA);env.MEDIA.delete=async()=>{throw Error("R2 unavailable")};
+  assert.ok((await cleanupPackageResources(env)).errors>0);
+  assert.equal((await getStorageUsage(env.DB,"owner-id")).memberPhysicalBytes,before);
+  env.MEDIA.delete=remove;
+  const now=Math.floor(Date.now()/1000);
+  assert.equal((await cleanupPackageResources(env,now+120)).processed,1);
+  assert.equal((await getStorageUsage(env.DB,"owner-id")).memberPhysicalBytes,0);
+  assert.equal((await cleanupPackageResources(env,now+31*86400)).errors,0);
+  assert.equal((await env.DB.prepare("SELECT COUNT(*) n FROM anevum_package_releases").first()).n,0);
+  assert.equal((await env.DB.prepare("SELECT COUNT(*) n FROM anevum_package_rights_receipts").first()).n,0);
+ }finally{env.DB.close()}
 });

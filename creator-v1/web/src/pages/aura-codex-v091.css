@@ -1,0 +1,35 @@
+/* ANEVUM / aura codex: responsive public identity reference, no earned-art spoilers. */
+.av91-codex{max-width:1180px;margin:0 auto;padding:clamp(18px,4vw,52px) clamp(14px,3vw,32px) 80px;color:#eff3fa}
+.av91-codex-kicker,.av91-codex-discipline{font:700 10px/1.5 ui-monospace,monospace;letter-spacing:.19em;color:#cbb794}
+.av91-codex-intro{max-width:790px;margin-bottom:32px}
+.av91-codex-intro h1{font:normal clamp(36px,7vw,72px)/1.1 Georgia,serif;letter-spacing:-.035em;margin:12px 0 15px}
+.av91-codex-lead{font-size:clamp(14px,1.6vw,18px);line-height:1.65;color:#c3d4e4}
+.av91-codex-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.av91-codex-actions a{display:inline-flex;align-items:center;min-height:43px;padding:10px 14px;border:1px solid #7895b0;border-radius:9px;color:#e9f3fc;background:#192a40;text-decoration:none;font:700 10px/1.4 ui-monospace,monospace;letter-spacing:.08em}
+.av91-codex-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.av91-codex-entry{--aura:#7ba9c1;--deep:#182e4d;position:relative;isolation:isolate;min-height:260px;overflow:hidden;display:grid;grid-template-columns:minmax(120px,36%) minmax(0,1fr);align-items:center;border:1px solid #46617d;border-radius:17px;background:radial-gradient(ellipse at 12% 50%,var(--deep),transparent 73%),linear-gradient(130deg,#122037,#091422);box-shadow:inset 0 1px #ffffff15}
+.av91-codex-entry--none{--aura:#8d9bac;--deep:#1a2839}
+.av91-codex-entry--aurora{--aura:#9ddff2;--deep:#174767}
+.av91-codex-entry--eclipse{--aura:#b99cea;--deep:#34214d}
+.av91-codex-entry--ember{--aura:#f9ac7d;--deep:#5a2c33}
+.av91-codex-entry--nebula{--aura:#e5b0dd;--deep:#4d2b59}
+.av91-codex-entry--transcosmic{--aura:#f1b1c5;--deep:#603256}
+.av91-codex-stage{height:100%;min-height:210px;position:relative;display:grid;place-items:center;overflow:hidden}
+.av91-codex-stage:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at center,var(--aura),transparent 58%);opacity:.13}
+.av91-codex-core{width:55px;aspect-ratio:1;border:1px solid var(--aura);border-radius:50%;box-shadow:0 0 22px var(--aura),inset 0 0 24px var(--deep);background:radial-gradient(circle at 30% 30%,#ffffffb0,var(--aura) 12%,var(--deep) 75%);z-index:1}
+.av91-codex-orbit{position:absolute;width:114px;aspect-ratio:1;border:1px solid var(--aura);border-radius:50%;box-shadow:0 0 24px var(--deep);transform:rotateX(55deg) rotate(-18deg);animation:av91-codex-spin 18s linear infinite}
+.av91-codex-axis{position:absolute;width:150px;height:1px;background:linear-gradient(90deg,transparent,var(--aura),transparent);transform:rotate(-35deg);opacity:.65}
+.av91-codex-entry--none .av91-codex-orbit,.av91-codex-entry--none .av91-codex-axis{animation:none;opacity:.22}
+.av91-codex-entry-copy{padding:18px 20px 18px 0;z-index:1}
+.av91-codex-entry-copy h2{font:normal 29px/1.2 Georgia,serif;margin:5px 0 8px;color:#f3f1fa}
+.av91-codex-entry-copy p{font-size:12px;line-height:1.65;color:#c2cfdf;margin:0 0 9px}
+.av91-codex-entry-copy .av91-codex-motto{font-style:italic;color:var(--aura);font-size:13px}
+.av91-codex-entry-copy small{display:block;font:650 9px/1.5 ui-monospace,monospace;letter-spacing:.07em;color:#98aec2}
+.av91-codex-note{margin-top:25px;padding:22px;border:1px solid #52647a;border-radius:12px;background:#111f31}
+.av91-codex-note h2{font:normal 24px/1.2 Georgia,serif;margin:0 0 10px}
+.av91-codex-note p{max-width:83ch;font-size:13px;line-height:1.7;color:#c4d2df;margin:0}
+@keyframes av91-codex-spin{to{transform:rotateX(55deg) rotate(342deg)}}
+@media(max-width:730px){.av91-codex-grid{grid-template-columns:1fr}.av91-codex-entry{min-height:215px}}
+@media(max-width:390px){.av91-codex-entry{grid-template-columns:110px minmax(0,1fr)}.av91-codex-entry-copy{padding:15px 12px 15px 0}.av91-codex-stage{min-height:190px}.av91-codex-entry-copy h2{font-size:24px}}
+@media(prefers-reduced-motion:reduce){.av91-codex-orbit{animation:none!important}}
+@media(forced-colors:active){.av91-codex-entry,.av91-codex-note,.av91-codex-actions a{border-color:CanvasText;background:Canvas;color:CanvasText}}

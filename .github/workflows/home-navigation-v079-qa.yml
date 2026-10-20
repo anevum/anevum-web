@@ -1,0 +1,102 @@
+name: ANEVUM V079 Home and Wayfinder / Real React QA
+
+# Review-only workflow. Never deploys, migrates, writes accounts, or uses secrets.
+on:
+  push:
+    branches:
+      - ux/home-navigation-playercards-v079-20261018
+      - integration/home-wayfinder-v079-reconciled-20261018
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-v079-real-react
+  cancel-in-progress: true
+
+jobs:
+  visual-acceptance:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 26
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install React and test toolchain
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Parse and typecheck the real V079 React app
+        run: |
+          set -euo pipefail
+          node --check creator-v1/test/capture-home-navigation-v079.mjs
+          node --check creator-v1/test/capture-sitewide-v012.mjs
+          node --check creator-v1/test/capture-community-hub-v007.mjs
+          node --check creator-v1/test/capture-canonical-forums-v041.mjs
+          node --experimental-strip-types --test \
+            creator-v1/test/home-navigation-v079.test.mjs \
+            creator-v1/test/v079-reconciled-null-creator.test.mjs \
+            creator-v1/test/react-shell-contract.test.mjs \
+            creator-v1/test/portal-overhaul-contract.test.mjs \
+            creator-v1/test/sitewide-experience-v009.test.mjs \
+            creator-v1/test/module-experience-v073.test.mjs \
+            creator-v1/test/portal-launcher.test.mjs
+          npm run check:creator-v1-web
+          node --experimental-strip-types --test creator-v1/test/null-creator-alpha-release.test.mjs
+      - name: Build actual production and staging-path React bundles
+        run: |
+          set -euo pipefail
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+      - name: Browser proof for approved release without a linked creator
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome"
+          ANEVUM_UNLINKED_ALPHA_VISUAL_TEST=1 node creator-v1/test/portal-offline-preview.mjs > "$RUNNER_TEMP/v079-unlinked.log" 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 65); do
+            if curl -fsS --max-time 3 http://127.0.0.1:4178/__ready >/dev/null; then ready=1; break; fi
+            sleep 0.25
+          done
+          test "$ready" = 1
+          timeout 55 "$chrome" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-background-networking --no-first-run --virtual-time-budget=8000 --dump-dom http://127.0.0.1:4178/creator/ > "$RUNNER_TEMP/v079-unlinked.html"
+          grep -Fq 'UNLINKED ALPHA RELEASE' "$RUNNER_TEMP/v079-unlinked.html"
+          grep -Fq 'Public creator channel not linked.' "$RUNNER_TEMP/v079-unlinked.html"
+          ! grep -Fq '/creators/null' "$RUNNER_TEMP/v079-unlinked.html"
+      - name: Screenshot and exercise home, wayfinder, and verified search
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome" || { echo "::error::Chromium not found"; exit 1; }
+          mkdir -p "$RUNNER_TEMP/v079-visual"
+          node creator-v1/test/portal-offline-preview.mjs > "$RUNNER_TEMP/v079-visual/fixture.log" 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for i in $(seq 1 80); do
+            if curl --fail --silent http://127.0.0.1:4178/__ready >/dev/null; then ready=1; break; fi
+            sleep 0.25
+          done
+          test "$ready" = 1
+          node creator-v1/test/capture-home-navigation-v079.mjs "$chrome" http://127.0.0.1:4178 "$RUNNER_TEMP/v079-visual"
+          test -s "$RUNNER_TEMP/v079-visual/acceptance.json"
+          test -s "$RUNNER_TEMP/v079-visual/home-phone.png"
+          test -s "$RUNNER_TEMP/v079-visual/wayfinder-phone.png"
+          test -s "$RUNNER_TEMP/v079-visual/search-phone.png"
+          echo V079_REAL_REACT_MOBILE_DESKTOP_ACCEPTANCE=PASS >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve screenshot evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v079-home-navigation-visual-qa
+          path: ${{ runner.temp }}/v079-visual/
+          retention-days: 14
+          if-no-files-found: warn

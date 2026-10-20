@@ -1,0 +1,62 @@
+{
+  "session": "ANEVUM.WEB.UPDATE.2026-10-15.001.COMMUNITY-HOME-MODULES",
+  "provenance": "Original full-frame decorative artwork generated with built-in imagegen. No creator-submitted content. Resized/encoded only for web delivery; no synthetic upscaling.",
+  "assets": [
+    {
+      "path": "games-768.webp",
+      "width": 768,
+      "height": 512,
+      "bytes": 149488,
+      "sha256": "728a75e93232ee601706a25f737079a8f0f264267a2f83cf1df8c8f51b7a7e05"
+    },
+    {
+      "path": "games-1536.webp",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 511208,
+      "sha256": "e7304eea020e7357f57452fd12ced1854a8a649982d6e7c15a75fa3c145be518"
+    },
+    {
+      "path": "tools-768.webp",
+      "width": 768,
+      "height": 512,
+      "bytes": 142700,
+      "sha256": "3ee906bb95e6291e19eaa33dc37a2d88eb630ab21921c85672a1b1a748b36129"
+    },
+    {
+      "path": "tools-1536.webp",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 450196,
+      "sha256": "cf5fa97f4921817ff7ac90dbf78f2d28b3f7d6729768c0c30a04cc9d0533fcb0"
+    },
+    {
+      "path": "creative-768.webp",
+      "width": 768,
+      "height": 512,
+      "bytes": 133894,
+      "sha256": "c12e6cf788006872154beecb57761b61acf61bd8a3b21c2830763bdc85f2676d"
+    },
+    {
+      "path": "creative-1536.webp",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 409366,
+      "sha256": "c03c1fc724bc482b6313afe148c2f8d353a888a13f6993cc9d6a198eaaafbc0f"
+    },
+    {
+      "path": "libraries-768.webp",
+      "width": 768,
+      "height": 512,
+      "bytes": 157574,
+      "sha256": "30d5af7a9102c0151ef5f06a079a7b1b530b9fb96f843872b521efd235923fd0"
+    },
+    {
+      "path": "libraries-1536.webp",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 529682,
+      "sha256": "72bca0e9493a3e465ebf0f7feb6de2eaba51663ea1227d3827d559cb54c66c54"
+    }
+  ]
+}

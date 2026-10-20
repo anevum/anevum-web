@@ -206,6 +206,8 @@ export const SCRIPT = String.raw`
     if(error){note(error,true);if(file)file.focus();return;}
     if(coverError){note(coverError,true);cover?.focus();return;}
     if(!form.reportValidity())return;
+    const replacing=q("replace-private-build");
+    if(replacing&&!confirm("Replace the existing private test? The previous build remains available if this upload fails. Any published version stays live."))return;
     b.disabled=true;
     note("Uploading and validating your files. Keep this page open until the private build is ready.");
     try{
@@ -288,7 +290,7 @@ export const SCRIPT = String.raw`
     if(action==="submit"&&!confirm("Submit this exact private build for independent review?"))return;
     if(action==="delete"&&!confirm("Permanently remove this unpublished project and its uploaded files?"))return;
     if(action==="discard"&&!confirm("Discard this unsubmitted build and reclaim its uploaded files? Any approved version will remain live."))return;
-    btn.disabled=true;note(action==="submit"?"Submitting for review…":action==="discard"?"Removing private build and reclaiming assets…":"Removing private project…");
+    btn.disabled=true;note(action==="save"?"Saving private draft…":action==="submit"?"Submitting for review…":action==="discard"?"Removing private build and reclaiming assets…":"Removing private project…");
     try{await post("/api/v1/packages/projects/"+id+"/"+action,{action},false);location.reload();}
     catch(err){note(err.message,true);btn.disabled=false;}
   });
@@ -345,6 +347,7 @@ export function layout(title,body,runner="",status=200){
 export function card(p,owner=false,reviewer=false){
   const hasDraft=!!p.draft_release_id;
   const draftState=hasDraft?p.draft_status:p.status;
+  const expired=p.draft_mode==="test"&&Number.isFinite(p.draft_expires_at)&&p.draft_expires_at<=Math.floor(Date.now()/1000);
   const isUpdate=!!p.live_release_id;
   const preview=(owner||reviewer)&&hasDraft?projectURL(p.id)+"?preview=1":projectURL(p.id);
   const version=p.release_version?"Build "+esc(p.release_version):"New project";
@@ -354,8 +357,9 @@ export function card(p,owner=false,reviewer=false){
     controls='<a class="button primary" href="'+preview+'">Open private review</a>';
   }else if(owner){
     if(hasDraft&&(draftState==="ready"||draftState==="pending_review")){
-      controls='<a class="button" href="'+preview+'">Preview build</a>'+
-        (draftState==="ready"?action(p,"submit","Submit for review")+action(p,"discard","Discard private build"):"");
+      controls=expired?'<a class="button quiet" href="/upload/v3?update='+esc(p.id)+'">Replace expired build</a>'+action(p,"discard","Discard private build"):'<a class="button" href="'+preview+'">Preview build</a>'+
+        (draftState==="ready"?action(p,"submit","Submit for review")+action(p,"discard","Discard private build")+
+          (p.draft_mode?(p.draft_mode==="test"?action(p,"save","Save draft"):"")+'<a class="button quiet" href="/upload/v3?update='+esc(p.id)+'">Replace private build</a>':""):"");
       if(isUpdate)controls+='<a class="button quiet" href="'+projectURL(p.id)+'">Live version</a>';
     }else if(!hasDraft){
       controls+=(p.status==="published"?'<a class="button" href="'+projectURL(p.id)+'">Play live release</a>':"")+
@@ -372,14 +376,15 @@ export function card(p,owner=false,reviewer=false){
     '<span class="chip '+esc(draftState)+'">'+esc(state(draftState))+' / '+esc(p.category||"project")+'</span>'+
     '<h3>'+esc(p.title)+'</h3><p>'+esc(limited(p.summary))+'</p>'+
     '<div class="meta">'+version+(date?" · Updated "+date:"")+'</div>'+
+    (p.draft_mode?'<p class="meta">'+(expired?'Expired private test':p.draft_mode==='saved'?'Saved private draft':'Temporary test · expires '+esc(new Date(p.draft_expires_at*1000).toISOString().slice(0,16).replace('T',' '))+' UTC')+'</p>':"")+
     (p.review_reason?'<p class="status bad">Reviewer note: '+esc(p.review_reason)+'</p>':"")+
     '<div class="actions">'+controls+'</div></article>';
 }
-export function uploadScreen(projects,loggedIn,pilot,updateId,serviceReady=true,stagePreview=false){
+export function uploadScreen(projects,loggedIn,pilot,updateId,serviceReady=true,stagePreview=false,resources=null){
   const selected=projects.find(p=>p.id===updateId)||null;
-  const initialTitle=selected?esc(selected.title):"";
-  const initialSummary=selected?esc(selected.summary):"";
-  const category=selected?.category||"game";
+  const initialTitle=selected?esc(selected.draft_title||selected.title):"";
+  const initialSummary=selected?esc(selected.draft_summary||selected.summary):"";
+  const category=selected?.draft_category||selected?.category||"game";
   const update=!!selected;
   const intro=hero('CONTINUANCE / CREATOR UPLINK',
     'Upload a <em>creation.</em>',
@@ -442,7 +447,9 @@ export function uploadScreen(projects,loggedIn,pilot,updateId,serviceReady=true,
   const shelf=loggedIn?'<div class="titlebar"><div><div class="ey">YOUR LIBRARY</div><h2>Uploaded builds</h2></div><p>Private drafts, reviews and released versions</p></div>'+
     (projects.length?'<div class="project-grid">'+projects.map(p=>card(p,true)).join("")+'</div>':
     '<div class="empty-state">'+SIGIL+'<div><strong>Your first transmission starts here.</strong><span>Your uploaded browser builds, real review statuses and releases will appear in this space. Existing HTML alpha projects remain intact during integration.</span></div></div>'):"";
-  return layout("Upload a creation",intro+'<div class="grid"><section class="panel">'+form+'</section><aside class="panel soft upload-guide">'+guide+'</aside></div>'+shelf);
+  const protection=resources?'<section class="notice" aria-label="Private build storage"><strong>Private test builds last 48 hours.</strong><p>Choose Save draft to keep a build. Replacement keeps the previous build until the new upload succeeds. Published versions remain live.</p><p>'+esc((resources.memberPhysicalBytes/1048576).toFixed(1))+' / '+esc((resources.memberPhysicalLimit/1048576).toFixed(0))+' MiB stored · expired and discarded files are reclaimed in bounded batches.</p></section>':"";
+  const preparedForm=resources&&selected?.draft_release_id?form.replace('<input type="hidden" name="project_id"','<input type="hidden" id="replace-private-build" name="replace_draft" value="1"><input type="hidden" name="project_id"'):form;
+  return layout("Upload a creation",intro+protection+'<div class="grid"><section class="panel">'+preparedForm+'</section><aside class="panel soft upload-guide">'+guide+'</aside></div>'+shelf);
 }
 export function catalogScreen(projects){
   return layout("Playable browser releases",hero('ANEVUM / RELEASE ARCHIVE',

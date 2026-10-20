@@ -1,0 +1,72 @@
+name: ANEVUM V064 Optical Miniature Review
+on:
+  push:
+    branches: [build/evolution-micro-posters-v064-20261017-012]
+    paths:
+      - '.github/workflows/evolution-v064-optical-qa.yml'
+      - 'creator-v1/ops/apply-evolution-micro-v064.py'
+      - 'design/evolution-v059/src/micro.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: anevum-v064-optical-review
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 48
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install local rendering dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install numpy==2.2.6 scipy==1.15.3 Pillow==11.2.1
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libgl1-mesa-dri
+      - name: Rebuild canonical native scenes, micro fallbacks, and online gallery
+        run: |
+          set -euo pipefail
+          cd design/evolution-v059
+          mkdir -p artwork/{native,textures,vector,masters,web,compact,micro} docs dist previews
+          python src/export_native.py
+          python src/render_web.py
+          python src/micro.py
+          python src/build.py
+          cd ../..
+          python creator-v1/ops/install-evolution-v060.py
+          python creator-v1/ops/apply-evolution-micro-v064.py
+          node --check creator-v1/web/public/evolution/app.js
+      - name: Typecheck, build and verify progression/animation regressions
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          node --test creator-v1/test/evolution-v062-native.test.mjs creator-v1/test/evolution-v060-contract.test.mjs creator-v1/test/progression-v031.test.mjs creator-v1/test/member-identity-v061.test.mjs
+          test "$(find creator-v1/dist/web/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+          npx tsc --ignoreConfig creator-v1/web/src/lib/evolution-mini-renderer.ts --target ES2022 --module ES2022 --moduleResolution bundler --lib ES2022,DOM --skipLibCheck --rootDir creator-v1/web/src/lib --outDir creator-v1/dist/native-qa
+          node --check creator-v1/dist/native-qa/evolution-mini-renderer.js
+          node creator-v1/test/evolution-mini-browser-v062.mjs
+          echo V064_OPTICAL_AND_NATIVE_QA=PASS
+      - name: Preserve exact output and visual proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v064-optical-artwork-and-qa
+          path: |
+            design/evolution-v059/docs/V064-OPTICAL-ASSET-QA.json
+            design/evolution-v059/docs/MICRO-QA.json
+            qa-v062-native/
+            creator-v1/dist/web/evolution/assets/*compact-128.png
+          if-no-files-found: warn
+          retention-days: 14

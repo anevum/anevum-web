@@ -1,0 +1,114 @@
+name: ANEVUM V078 Reconciled Release Readiness
+on:
+  push:
+    branches:
+      - release/player-cards-v078-reconciled-20261018
+    paths:
+      - .github/workflows/player-card-v078-reconciled-qa.yml
+      - creator-v1/web/**
+      - creator-v1/test/**
+      - creator-v1/canonical-auth/**
+      - creator-v1/apex-prelaunch/**
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: anevum-v078-reconciled-preflight
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 32
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reconciliation, source and runtime safety
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/release/player-cards-v078-reconciled-20261018"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test -f creator-v1/web/src/lib/public-creator-handle.ts
+          grep -Fq 'public-creator-handle' creator-v1/web/src/components/CommunityHomeFeed.tsx
+          test -f creator-v1/web/src/components/player-card-premium-v078.css
+          grep -Fq 'av78-player-card' creator-v1/web/src/components/CompactMemberIdentity.tsx
+          test -f creator-v1/canonical-auth/evolution-card-art.mjs
+          node --check creator-v1/canonical-auth/reward-media.mjs
+          node --check creator-v1/canonical-auth/evolution-card-art.mjs
+      - name: Install and typecheck production React app
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+      - name: Prove both the production crash fix and earned card permissions
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-strip-types --test creator-v1/test/null-creator-alpha-release.test.mjs
+          node --test \
+            creator-v1/test/player-card-premium-v078.test.mjs \
+            creator-v1/test/evolution-card-illustrations-v077.test.mjs \
+            creator-v1/test/earned-reward-media-v075.test.mjs \
+            creator-v1/test/player-card-recognition-v065.test.mjs \
+            creator-v1/test/level-artwork-preservation-v074.test.mjs \
+            creator-v1/test/apex-prelaunch-gateway.test.mjs
+      - name: Mobile, desktop and hidden-stats real React browser proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome"
+          mkdir -p "$RUNNER_TEMP/v078-reconciled-browser"
+          node creator-v1/test/player-card-v078-live-react-browser.mjs "$chrome" "$RUNNER_TEMP/v078-reconciled-browser"
+          test -s "$RUNNER_TEMP/v078-reconciled-browser/v078-live-react-desktop.png"
+          test -s "$RUNNER_TEMP/v078-reconciled-browser/v078-live-react-mobile.png"
+      - name: Regression for previously crashing unlinked alpha creator
+        shell: bash
+        run: |
+          set -euo pipefail
+          ANEVUM_UNLINKED_ALPHA_VISUAL_TEST=1 node creator-v1/test/portal-offline-preview.mjs > "$RUNNER_TEMP/v078-unlinked-creator.log" 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 50); do
+            if curl -fsS --max-time 3 http://127.0.0.1:4178/__ready >/dev/null; then break; fi
+            sleep .25
+          done
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          test -n "$chrome"
+          mkdir -p "$RUNNER_TEMP/v078-unlinked-chrome-profile"
+          test -s creator-v1/dist/react-staging/index.html || { tail -n 50 "$RUNNER_TEMP/v078-unlinked-creator.log"; exit 1; }
+          if ! timeout 55 "$chrome" --headless=new --no-sandbox --no-first-run --user-data-dir="$RUNNER_TEMP/v078-unlinked-chrome-profile" --disable-dev-shm-usage --disable-gpu --disable-background-networking --virtual-time-budget=8000 --dump-dom http://127.0.0.1:4178/creator/ > "$RUNNER_TEMP/v078-unlinked.html" 2> "$RUNNER_TEMP/v078-unlinked-chrome.log"; then
+            tail -n 90 "$RUNNER_TEMP/v078-unlinked-creator.log" || true
+            tail -n 90 "$RUNNER_TEMP/v078-unlinked-chrome.log" || true
+            exit 1
+          fi
+          grep -Fq 'UNLINKED ALPHA RELEASE' "$RUNNER_TEMP/v078-unlinked.html"
+          grep -Fq 'Public creator channel not linked.' "$RUNNER_TEMP/v078-unlinked.html"
+          ! grep -Fq '/creators/null' "$RUNNER_TEMP/v078-unlinked.html"
+      - name: Enforce unreached art stays off static frontend
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -d creator-v1/dist/web/assets
+          test ! -e creator-v1/web/public/evolution-card-plates.json
+          if grep -rl 'evolution-card-plates' creator-v1/dist/web/assets --include='*.js' >/dev/null; then
+            echo "::error::Private art registry leaked into client build"
+            exit 1
+          fi
+          echo 'ANEVUM_V078_INCIDENT_RECONCILED_REACT_PRIVACY_QA=PASS' >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve desktop and phone acceptance evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v078-reconciled-player-card-visual-qa
+          path: ${{ runner.temp }}/v078-reconciled-browser/
+          if-no-files-found: warn
+          retention-days: 21

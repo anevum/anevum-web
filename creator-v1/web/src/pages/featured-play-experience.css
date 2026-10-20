@@ -1,0 +1,85 @@
+/* ANEVUM / FEATURE EXPERIENCE: focused approved project worlds.
+   Full-width under the existing single header. No arbitrary creator code execution.
+*/
+.fx-focus{--fx-cream:#f4e8d7;--fx-gold:#e9c691;--fx-silver:#b5c8da;--fx-stroke:#9eafbf73;
+  color:var(--fx-cream);font:400 14px/1.6 Inter,ui-sans-serif,system-ui,sans-serif}
+.fx-focus{max-width:1900px;margin:0 auto;padding:0 0 50px;min-width:0;animation:fx-focus-in .64s cubic-bezier(.19,.8,.26,1) both}
+@keyframes fx-focus-in{from{opacity:0;transform:scale(.984) translateY(21px);filter:blur(5px)}to{opacity:1;transform:none;filter:blur(0)}}
+.fx-focus a{text-decoration:none;color:inherit}
+.fx-focus :is(button,a):focus-visible{outline:2px solid #ffdda5;outline-offset:3px}
+.fx-focus-cover{position:relative;isolation:isolate;overflow:hidden;min-height:min(790px,calc(100dvh - 140px));border:1px solid #9dafc477;border-radius:15px;
+  background:#081429;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 26px 80px #0009}
+.fx-focus-art{position:absolute;inset:0;z-index:-3}
+.fx-focus-art .cw-artwork{display:block;width:100%;height:100%}
+.fx-focus-art .cw-artwork-image{width:100%;height:100%;object-fit:cover;object-position:center;
+  filter:contrast(1.07) saturate(1.1) brightness(.78);transform:scale(1.05);animation:fx-scene-pan 14s ease-in-out infinite alternate}
+@keyframes fx-scene-pan{from{transform:scale(1.05) translate3d(-1%,0,0)}to{transform:scale(1.15) translate3d(1%,-1%,0)}}
+.fx-focus-shading{position:absolute;inset:0;z-index:-1;pointer-events:none;
+ background:linear-gradient(0deg,#020813f6 1%,#020713b9 41%,#050c1b71 63%,#030b17b9),
+ linear-gradient(90deg,#030916db,transparent 81%);box-shadow:inset 0 0 0 1px #e8d6b61c}
+.fx-focus-top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:clamp(20px,2.4vw,39px);color:#e0d6c7;
+  font-size:10px;letter-spacing:.12em;font-weight:900}
+.fx-focus-return{border:1px solid #c1cdcf81;border-radius:7px;padding:11px 13px;background:#102039bb;white-space:nowrap}
+.fx-focus-return:hover{background:#273c59}
+.fx-focus-return span{margin-right:7px}
+.fx-focus-intro{padding:50px clamp(22px,5vw,90px) 20px;max-width:1200px}
+.fx-focus-label,.fx-eyebrow{font-size:10px;color:var(--fx-gold);letter-spacing:.2em;font-weight:900}
+.fx-focus-intro h1{font:400 clamp(55px,8vw,124px)/.95 Georgia,serif;letter-spacing:-.065em;margin:21px 0 20px;
+ text-shadow:0 12px 37px #02050aeb;overflow-wrap:anywhere}
+.fx-focus-intro h1 em{font-style:normal;color:var(--fx-gold)}
+.fx-focus-intro>p{color:#d8e1ea;font-size:clamp(17px,1.65vw,24px);line-height:1.55;max-width:770px;margin:0 0 28px;text-shadow:0 3px 14px #000a}
+.fx-focus-cta{display:flex;align-items:center;flex-wrap:wrap;gap:13px}
+.fx-focus-primary,.fx-focus-secondary{display:inline-flex;align-items:center;justify-content:center;gap:18px;min-height:53px;padding:0 24px;border:1px solid #eac792;border-radius:8px;
+ font-size:11px;font-weight:900;letter-spacing:.09em;transition:transform .18s,filter .18s}
+.fx-focus-primary{color:#101727!important;background:linear-gradient(115deg,#f4dcac,#bf9a62);box-shadow:0 8px 0 #3b2c1f8c}
+.fx-focus-secondary{background:#0f2133d2;color:#f7e6cc}
+.fx-focus-primary:hover,.fx-focus-secondary:hover{transform:translateY(-2px);filter:brightness(1.12)}
+.fx-focus-assurance{color:#bbcce0;font-size:12px;line-height:1.6;max-width:800px;margin-top:24px}
+.fx-focus-assurance strong{color:#edd0a5}
+.fx-focus-meta{display:flex;flex-wrap:wrap;align-items:center;gap:20px;padding:18px clamp(20px,2.4vw,39px);margin-top:25px;
+ border-top:1px solid #c3d2dd56;color:#c7d5df;font-size:9px;letter-spacing:.1em;font-weight:900}
+.fx-focus-meta>a{color:#efcea1}
+.fx-focus-about{display:grid;grid-template-columns:minmax(250px,.72fr) minmax(0,1.4fr);gap:clamp(30px,6vw,120px);
+ padding:clamp(40px,5vw,90px) clamp(15px,4vw,63px)}
+.fx-focus-about h2{font:400 clamp(41px,5vw,79px)/.94 Georgia,serif;letter-spacing:-.065em;margin:18px 0}
+.fx-focus-about h2 em{color:#e9c993}
+.fx-focus-about>div:nth-child(2)>p{font-size:clamp(15px,1.3vw,20px);line-height:1.75;color:#d0dce8;margin:0 0 28px}
+.fx-focus-about dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:0}
+.fx-focus-about dl>div{border-top:1px solid #a9bdc36f;padding:16px 0;min-width:0}
+.fx-focus-about dt{font-size:9px;font-weight:900;letter-spacing:.13em;color:#eac894}
+.fx-focus-about dd{font-size:13px;color:#f4e6d5;margin:7px 0 0;overflow-wrap:anywhere}
+.fx-focus-extras{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:20px}
+.fx-focus-extras a{font-size:10px;color:#edcc9d;border:1px solid #b1c8d477;padding:12px 14px;border-radius:7px;background:#0f1e34}
+
+
+
+
+
+.fx-focus-await{padding:65px 30px;min-height:55dvh}
+.fx-focus-await a{display:inline-flex;padding:13px 18px;color:#efce9e;border:1px solid #beccda;border-radius:7px}
+
+
+@media(max-width:950px){.fx-focus-cover{min-height:610px}.fx-focus-about{grid-template-columns:1fr;gap:24px}}
+@media(max-width:640px){
+ .fx-focus{padding-bottom:40px}
+ .fx-focus-cover{min-height:calc(100dvh - var(--atm-nav-height) - 42px);border-radius:10px}
+ .fx-focus-top{padding:16px;align-items:flex-start}
+ .fx-focus-top>span{max-width:138px;text-align:right;font-size:8px}
+ .fx-focus-return{font-size:9px;padding:9px}
+ .fx-focus-intro{padding:50px 17px 12px}
+ .fx-focus-intro h1{font-size:clamp(49px,11.7vw,72px);margin:13px 0 17px}
+ .fx-focus-intro>p{font-size:15px;line-height:1.55}
+ .fx-focus-label{font-size:9px}
+ .fx-focus-cta{gap:10px}
+ .fx-focus-cta a{min-height:47px;padding:0 13px;font-size:9px;letter-spacing:.05em}
+ .fx-focus-meta{padding:12px 16px;gap:10px;font-size:8px}
+ .fx-focus-assurance{font-size:11px;margin-top:15px}
+ .fx-focus-about{padding:45px 14px}
+ .fx-focus-about h2{font-size:45px}
+ .fx-focus-about dl{grid-template-columns:1fr}
+}
+@media(max-width:350px){.fx-focus-intro h1{font-size:43px}.fx-focus-cta{flex-direction:column;align-items:stretch}.fx-focus-cta a{width:100%}}
+@media(prefers-reduced-motion:reduce){
+ .fx-focus,.fx-focus-art .cw-artwork-image{animation:none!important}
+ .fx-focus :is(a,button){transition:none!important}
+}

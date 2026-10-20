@@ -9,6 +9,11 @@ import { mintPreview } from "./tokens.mjs";
 import { prepareCover, COVER_PATH, COVER_LIMIT } from "./cover.mjs";
 import { layout, uploadScreen, catalogScreen, playerScreen, queueScreen, helpScreen } from "./ui.mjs";
 
+import {POLICY,ResourceError,readBoundedJson,readBoundedMultipart} from "./resource-policy.mjs";
+import {resourcePolicyReady,acquireUploadLease,releaseUploadLease,recordUploadAttempt,recordUploadBytes,getStorageUsage,reserveUpload,markReservationForCleanup,jobStatement,findDuplicate,saveDraft,discardDraft} from "./resource-service.mjs";
+import {cleanupPackageResources} from "./resource-cleanup.mjs";
+const resourceMode=env=>env.PACKAGE_RESOURCE_PROTECTION_ENABLED==="true";
+
 const A = "https://anevum.com";
 const MiB = 1048576;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -26,25 +31,12 @@ async function boundedMultipart(req) {
     throw new PackageError("Invalid upload size header",400);
   if(declared && Number(declared)>MAX_MULTIPART_UPLOAD)
     throw new PackageError("Upload request exceeds the ZIP plus cover allowance",413);
-  // The content-length header is optional and cannot be trusted. Guard the
-  // actual incoming multipart bytes BEFORE calling the multipart parser.
-  let received=0;
-  const guard=new TransformStream({
-    transform(chunk,controller) {
-      received+=chunk.byteLength;
-      if(received>MAX_MULTIPART_UPLOAD) {
-        controller.error(new PackageError("Upload request exceeds the ZIP plus cover allowance",413));
-        return;
-      }
-      controller.enqueue(chunk);
-    }
-  });
+  // Bound the incoming stream before parsing, including absent/spoofed lengths.
+  // Reading directly avoids a parser/TransformStream cancellation race.
   try {
-    return await new Response(req.body.pipeThrough(guard),
-      {headers:{"content-type":type}}).formData();
+    return await readBoundedMultipart(req);
   }catch(e) {
-    if(received>MAX_MULTIPART_UPLOAD)
-      throw new PackageError("Upload request exceeds the ZIP plus cover allowance",413);
+    if(e instanceof ResourceError)throw new PackageError(e.status===413?"Upload request exceeds the ZIP plus cover allowance":e.message,e.status);
     if(e instanceof PackageError)throw e;
     throw new PackageError("Invalid upload form",400);
   }
@@ -159,12 +151,13 @@ function csrf(req) {
   return req.headers.get("origin")===A && req.headers.get("x-anevum-package")==="v003" &&
     (sec===null || sec==="same-origin" || sec==="none");
 }
-async function ownerList(db,id) {
+async function ownerList(db,id,resources=false) {
   return (await db.prepare(
     "SELECT p.*, (SELECT version FROM anevum_package_releases WHERE id=COALESCE(p.draft_release_id,p.live_release_id)) AS release_version, " +
     "(SELECT status FROM anevum_package_releases WHERE id=p.draft_release_id) AS draft_status, " +
-    "(SELECT f.release_id FROM anevum_package_files f WHERE f.release_id=COALESCE(p.draft_release_id,p.live_release_id) AND f.path='"+COVER_PATH+"' LIMIT 1) AS cover_release_id " +
-    "FROM anevum_package_projects p WHERE p.owner_id=? AND p.status!='deleted' ORDER BY p.updated_at DESC LIMIT 50"
+    "(SELECT f.release_id FROM anevum_package_files f WHERE f.release_id=COALESCE(p.draft_release_id,p.live_release_id) AND f.path='"+COVER_PATH+"' LIMIT 1) AS cover_release_id, " +
+    (resources?"(SELECT mode FROM anevum_package_build_retention WHERE release_id=p.draft_release_id) AS draft_mode, (SELECT expires_at FROM anevum_package_build_retention WHERE release_id=p.draft_release_id) AS draft_expires_at, "+
+      "(SELECT proposed_title FROM anevum_package_releases WHERE id=p.draft_release_id) AS draft_title, (SELECT proposed_summary FROM anevum_package_releases WHERE id=p.draft_release_id) AS draft_summary, (SELECT proposed_category FROM anevum_package_releases WHERE id=p.draft_release_id) AS draft_category, ":"")+"p.id AS project_id FROM anevum_package_projects p WHERE p.owner_id=? AND p.status!='deleted' ORDER BY p.updated_at DESC LIMIT 50"
   ).bind(id).all()).results;
 }
 async function publicList(db) {
@@ -262,6 +255,13 @@ async function upload(req,env,u) {
     return fail(503,"Package stage schema is not ready; upload is paused before storing any files");
   if(!env.MEDIA?.put||!env.MEDIA?.get||!env.MEDIA?.head)
     return fail(503,"Package storage is not configured; upload is paused");
+  const protectedMode=resourceMode(env),now=Math.floor(Date.now()/1000),lease=crypto.randomUUID();
+  if(protectedMode){
+    if(!env.MEDIA?.list||!env.MEDIA?.delete||!await resourcePolicyReady(env.DB))return fail(503,"Creator resource schema is not ready; uploads are paused");
+    if(!await acquireUploadLease(env.DB,u.id,lease,now))return fail(429,"Another upload is in progress");
+  }
+  try{
+  if(protectedMode)await recordUploadAttempt(env.DB,u.id,now);
   const creatorIdentity=await privateCreatorIdentity(req,env,u);
   const body=await boundedMultipart(req);
   const details=validatedText(body);
@@ -271,13 +271,15 @@ async function upload(req,env,u) {
   if(existingId&&!UUID.test(existingId)) return fail(422,"Invalid project ID");
   const project=existingId?await getProject(env.DB,existingId):null;
   if(existingId&&(!project||project.owner_id!==u.id)) return fail(404,"Project unavailable");
-  if(project&&(project.status==="suspended"||project.draft_release_id)) return fail(409,"Finish or remove the current draft before uploading an update");
+  if(project&&(project.status==="suspended"||(!protectedMode&&project.draft_release_id))) return fail(409,"Finish or remove the current draft before uploading an update");
   if(project && !["published","rejected","draft"].includes(project.status)) return fail(409,"This project cannot accept a revised build");
   if(!project) {
     const count=await query(env.DB,"SELECT COUNT(*) AS n FROM anevum_package_projects WHERE owner_id=? AND status!='deleted'",u.id);
     if(count.n>=20) return fail(409,"Creator alpha allows up to 20 active projects");
   }
-  const usage=await query(env.DB,
+  const old=protectedMode&&project?await getDraft(env.DB,project):null;
+  if(old&&(old.status!=="ready"||body.get("replace_draft")!=="1"))return fail(409,"Confirm replacement of the unsubmitted private build before uploading");
+  const usage=protectedMode?{bytes:0}:await query(env.DB,
     "SELECT COALESCE(SUM(r.archive_bytes),0) AS bytes FROM anevum_package_releases r JOIN anevum_package_projects p ON r.project_id=p.id WHERE p.owner_id=? " +
     "AND (r.status NOT IN ('failed','revoked') OR (r.status='revoked' AND r.source_key IS NOT NULL)) " +
     "AND (p.status!='deleted' OR (r.status='revoked' AND r.source_key IS NOT NULL))",u.id);
@@ -286,14 +288,17 @@ async function upload(req,env,u) {
     return fail(413,"Project artwork is limited to a 3 MiB PNG");
   if(usage.bytes+file.size+(coverInput?.size||0)>100*MiB)
     return fail(409,"Creator alpha has a 100 MiB compressed upload allowance");
-  const now=Math.floor(Date.now()/1000);
-  const attempts=await query(env.DB,
+  const attempts=protectedMode?{attempts:0}:await query(env.DB,
     "INSERT INTO anevum_package_upload_limits(owner_id,window_start,attempts) VALUES(?,?,1) " +
     "ON CONFLICT(owner_id) DO UPDATE SET attempts=CASE WHEN window_start<? THEN 1 ELSE attempts+1 END," +
     "window_start=CASE WHEN window_start<? THEN excluded.window_start ELSE window_start END RETURNING attempts",u.id,now,now-3600,now-3600);
   if(attempts.attempts>10) return fail(429,"Too many upload attempts. Try again in an hour");
   const plan=await prepareFile(file);
   const cover=await prepareCover(coverInput);
+  if(protectedMode)await recordUploadBytes(env.DB,u.id,file.size+(cover?.bytes.length||0),now);
+  const archiveSHA=await sha256Hex(plan.bytes);
+  const duplicate=protectedMode?await findDuplicate(env.DB,env.MEDIA,project,archiveSHA,plan.bytes.length,{...details,coverSha:cover?await sha256Hex(cover.bytes):null}):null;
+  if(duplicate)return json(duplicate);
   const id=project?.id||crypto.randomUUID(),releaseId=crypto.randomUUID();
   const last=project?await query(env.DB,
     "SELECT MAX(version) AS last FROM anevum_package_releases WHERE project_id=?",id):null;
@@ -302,7 +307,9 @@ async function upload(req,env,u) {
   const sourceKey=root+"/source/"+file.name;
   const touched=[];
   const fileStatements=[];
-  const archiveSHA=await sha256Hex(plan.bytes);
+  const reservation=protectedMode?await reserveUpload(env.DB,{ownerId:u.id,projectId:id,releaseId,
+    archiveBytes:plan.bytes.length,expandedBytes:plan.expandedBytes+(cover?.bytes.length||0),now,prefix:root+"/"}):null;
+  let committed=false;
   try {
     await env.MEDIA.put(sourceKey,plan.bytes,{httpMetadata:{contentType:"application/octet-stream"},
       customMetadata:{sha256:archiveSHA}});touched.push(sourceKey);
@@ -335,15 +342,15 @@ async function upload(req,env,u) {
     ).bind(id,u.id,details.title,details.summary,details.category,now,now,releaseId));
     else statements.push(env.DB.prepare(
       "UPDATE anevum_package_projects SET draft_release_id=?,review_reason=NULL,updated_at=? " +
-      "WHERE id=? AND owner_id=? AND draft_release_id IS NULL"
-    ).bind(releaseId,now,id,u.id));
+      "WHERE id=? AND owner_id=? AND status IN ('published','rejected','draft') "+(old?"AND draft_release_id=?":"AND draft_release_id IS NULL")
+    ).bind(...(old?[releaseId,now,id,u.id,old.id]:[releaseId,now,id,u.id])));
     statements.push(env.DB.prepare(
       "INSERT INTO anevum_package_releases(id,project_id,version,status,source_name,proposed_title,proposed_summary,proposed_category," +
       "archive_sha256,archive_bytes,expanded_bytes,file_count,source_key,created_at) " +
       "SELECT ?,p.id,?,'ready',?,?,?,?,?,?,?,?,?,? FROM anevum_package_projects p " +
       "WHERE p.id=? AND p.owner_id=? AND p.draft_release_id=?"
     ).bind(releaseId,version,file.name,details.title,details.summary,details.category,
-      archiveSHA,plan.bytes.byteLength+(cover?.bytes.length||0),
+      archiveSHA,plan.bytes.byteLength+(protectedMode?0:(cover?.bytes.length||0)),
       plan.expandedBytes+(cover?.bytes.length||0),
       plan.entries.length+(cover?1:0),sourceKey,now,id,u.id,releaseId));
     statements.push(env.DB.prepare(
@@ -358,21 +365,59 @@ async function upload(req,env,u) {
       "handle=excluded.handle,profile_created_at=excluded.profile_created_at," +
       "creator_proof=excluded.creator_proof,verified_at=excluded.verified_at"
     ).bind(u.id,creatorIdentity.handle,creatorIdentity.profileCreatedAt,creatorIdentity.creatorProof,now));
+    if(protectedMode){
+      statements.push(env.DB.prepare("INSERT INTO anevum_package_build_retention(release_id,mode,expires_at,created_at,updated_at) VALUES(?,'test',?,?,?)").bind(releaseId,now+POLICY.testSeconds,now,now));
+      if(old){
+        statements.push(env.DB.prepare("UPDATE anevum_package_releases SET status='revoked' WHERE id=? AND status='ready' AND EXISTS(SELECT 1 FROM anevum_package_projects WHERE id=? AND draft_release_id=?)").bind(old.id,id,releaseId));
+        statements.push(jobStatement(env.DB,old.id,"replaced",now));
+      }
+      statements.push(env.DB.prepare("DELETE FROM anevum_package_upload_reservations WHERE id=?").bind(reservation));
+    }
     // Atomic D1 batch: a lost optimistic-update race inserts no release.
     // Dependent asset inserts then fail foreign-key validation and roll back.
     const results=await env.DB.batch([...statements,...fileStatements]);
     if(results[0]?.meta?.changes!==1 || results[1]?.meta?.changes!==1)
       throw new PackageError("Another upload updated this project. Refresh and try again",409);
-    return json({id,release_id:releaseId,version,status:"ready",play_url:"/play/v3/"+id+"?preview=1"},201);
+    committed=true;
+    return json({id,release_id:releaseId,version,status:"ready",...(protectedMode?{expires_at:now+POLICY.testSeconds}:{}),play_url:"/play/v3/"+id+"?preview=1"},201);
   } catch(e) {
-    await env.MEDIA.delete(touched).catch(()=>{});
-    if(e instanceof PackageError) throw e;
+    if(protectedMode&&reservation&&!committed)await markReservationForCleanup(env.DB,reservation,Math.floor(Date.now()/1000)).catch(()=>{});
+    if(!protectedMode)await env.MEDIA.delete(touched).catch(()=>{});
+    if(e instanceof PackageError||e instanceof ResourceError) throw e;
     if(/UNIQUE constraint failed.*anevum_package_creator_links/i.test(String(e?.message||"")))
       return fail(409,"Creator handle ownership requires staff verification");
     if(/UNIQUE constraint failed|FOREIGN KEY constraint failed/i.test(String(e?.message||"")))
       return fail(409,"Another upload updated this project. Refresh and retry");
     return fail(503,"Package storage failed; no project was published");
   }
+  }finally{if(protectedMode)await releaseUploadLease(env.DB,u.id,lease).catch(()=>{});}
+}
+async function preflight(req,env,u){
+  if(!pilot(env,u.id))return fail(403,"Creator alpha access required");
+  const x=await readBoundedJson(req),id=x.projectId||"";
+  if(!Number.isSafeInteger(x.size)||x.size<1||x.size>POLICY.maxArchiveBytes||
+    !/^[a-f0-9]{64}$/.test(x.sha256||"")||(id&&!UUID.test(id)))return fail(422,"Invalid build preflight");
+  const p=id?await getProject(env.DB,id):null;
+  if(id&&(!p||p.owner_id!==u.id))return fail(404,"Project unavailable");
+  const old=p?await getDraft(env.DB,p):null;
+  if(p?.status==="suspended"||(old&&old.status!=="ready"))return fail(409,"Finish the current review before uploading");
+  return json({ready:true,needsReplace:!!old,usage:await getStorageUsage(env.DB,u.id),testLifetimeHours:48});
+}
+async function retireUnpublished(env,u,id){
+  const p=await getProject(env.DB,id);
+  if(!p||p.owner_id!==u.id||!pilot(env,u.id))return fail(404,"Project unavailable");
+  if(p.live_release_id||!["draft","rejected"].includes(p.status))return fail(409,"Published or pending releases cannot be deleted here");
+  const rows=(await env.DB.prepare("SELECT id FROM anevum_package_releases WHERE project_id=?").bind(id).all()).results;
+  const now=Math.floor(Date.now()/1000);
+  const result=await env.DB.batch([
+    env.DB.prepare("UPDATE anevum_package_projects SET status='deleted',draft_release_id=NULL,updated_at=? WHERE id=? AND owner_id=? AND live_release_id IS NULL AND status IN ('draft','rejected')").bind(now,id,u.id),
+    env.DB.prepare("UPDATE anevum_package_releases SET status='revoked' WHERE project_id=? AND status IN ('ready','rejected','failed') AND EXISTS(SELECT 1 FROM anevum_package_projects WHERE id=? AND status='deleted')").bind(id,id),
+    ...rows.map(r=>jobStatement(env.DB,r.id,"deleted",now))
+  ]);
+  return result[0]?.meta?.changes===1?json({deleted:true,cleanupQueued:rows.length}):fail(409,"Project state changed");
+}
+async function expiredDraft(env,id){
+  return !!await query(env.DB,"SELECT release_id FROM anevum_package_build_retention WHERE release_id=? AND mode='test' AND expires_at<=?",id,Math.floor(Date.now()/1000));
 }
 async function submit(env,u,id) {
   // Never queue an executable that staff cannot actually preview in the isolated runner.
@@ -381,13 +426,16 @@ async function submit(env,u,id) {
   if(!p||p.owner_id!==u.id||!pilot(env,u.id)) return fail(404,"Project unavailable");
   const release=await getDraft(env.DB,p);
   if(!release||release.status!=="ready") return fail(409,"This project has no ready build to submit");
+  if(resourceMode(env)&&await expiredDraft(env,release.id))return fail(409,"This temporary build expired; upload a revision");
   const entry=await query(env.DB,"SELECT object_key,bytes,sha256 FROM anevum_package_files WHERE release_id=? AND path='index.html'",release.id);
   const object=entry?await env.MEDIA.head(entry.object_key):null;
   if(!object||object.size!==entry.bytes||object.customMetadata?.sha256!==entry.sha256)
     return fail(503,"Build entry point is unavailable");
   const now=Math.floor(Date.now()/1000);
   const changes=await env.DB.batch([
-    env.DB.prepare("UPDATE anevum_package_releases SET status='pending_review',submitted_at=? WHERE id=? AND status='ready'").bind(now,release.id),
+    env.DB.prepare("UPDATE anevum_package_releases SET status='pending_review',submitted_at=? WHERE id=? AND status='ready'"+
+      (resourceMode(env)?" AND EXISTS(SELECT 1 FROM anevum_package_projects WHERE id=? AND owner_id=? AND draft_release_id=?) AND NOT EXISTS(SELECT 1 FROM anevum_package_build_retention WHERE release_id=? AND mode='test' AND expires_at<=?)":""))
+      .bind(...(resourceMode(env)?[now,release.id,id,u.id,release.id,release.id,now]:[now,release.id])),
     env.DB.prepare("UPDATE anevum_package_projects SET status=CASE WHEN live_release_id IS NULL THEN 'pending_review' ELSE status END,updated_at=?,review_reason=NULL " +
     "WHERE id=? AND draft_release_id=? AND EXISTS(SELECT 1 FROM anevum_package_releases WHERE id=? AND status='pending_review')").bind(now,id,release.id,release.id)
   ]);
@@ -436,7 +484,8 @@ async function review(req,env,u,id) {
         "draft_release_id=NULL,review_reason=?,updated_at=? WHERE id=? AND draft_release_id=?"
     ).bind(...(publish?
       [release.proposed_title,release.proposed_summary,release.proposed_category,release.id,now,now,p.id,release.id]:
-      [reason,now,p.id,release.id]))
+      [reason,now,p.id,release.id])),
+    ...(resourceMode(env)?(publish?[env.DB.prepare("DELETE FROM anevum_package_build_retention WHERE release_id=?").bind(release.id)]:[jobStatement(env.DB,release.id,"rejected",now,now+POLICY.rejectedSeconds)]):[])
   ]);
   return changes[0]?.meta?.changes===1&&changes[1]?.meta?.changes===1
     ?json({status:publish?"published":"rejected"}):fail(409,"Review state changed");
@@ -459,6 +508,10 @@ async function moderate(req,env,u,id) {
   return updated.meta?.changes===1?json({status:action==="suspend"?"suspended":"published"}):fail(409,"Project status changed");
 }
 async function discardReadyDraft(env,u,id) {
+  if(resourceMode(env)){
+    if(!pilot(env,u.id))return fail(404,"Project unavailable");
+    return json(await discardDraft(env,u.id,id,Math.floor(Date.now()/1000)));
+  }
   const p=await getProject(env.DB,id);
   if(!p||p.owner_id!==u.id||!pilot(env,u.id))return fail(404,"Project unavailable");
   const release=await getDraft(env.DB,p);
@@ -508,6 +561,7 @@ async function discardReadyDraft(env,u,id) {
   return json({discarded:true,project_id:id,live_release_preserved:!!p.live_release_id,cleanup_pending:cleanupPending});
 }
 async function deleteUnpublished(env,u,id) {
+  if(resourceMode(env))return retireUnpublished(env,u,id);
   const p=await getProject(env.DB,id);
   if(!p||p.owner_id!==u.id||!pilot(env,u.id)) return fail(404,"Project unavailable");
   if(p.live_release_id||p.status==="pending_review"||p.status==="suspended")
@@ -535,6 +589,7 @@ async function coverImage(req,env,releaseId) {
   const live=release.project_status==="published"&&release.release_status==="published"&&release.live_release_id===releaseId;
   if(!live){
     if(!["ready","pending_review"].includes(release.release_status))return unavailable();
+    if(resourceMode(env)&&release.release_status==="ready"&&await expiredDraft(env,releaseId))return unavailable();
     const u=await member(req,env);
     if(!u||(u.id!==release.owner_id&&!staff(env,u.id)))return unavailable();
   }
@@ -584,17 +639,19 @@ async function reclaimRevokedAssets(req,env,u) {
   }
   return json({scanned:items.length,reclaimed,pending,limited_to:2});
 }
-async function api(req,env,path) {
+async function api(req,env,path,ctx) {
   const coverRoute=path.match(/^\/api\/v1\/packages\/covers\/([0-9a-f-]{36})$/);
   if(coverRoute&&req.method==="GET"&&UUID.test(coverRoute[1]))
     return coverImage(req,env,coverRoute[1]);
   if(path==="/api/v1/packages/health"&&req.method==="GET") {
     const db=!!env.DB?.prepare,storage=!!env.MEDIA?.put&&!!env.MEDIA?.get&&!!env.MEDIA?.head;
     const schemaReady=db&&await packageSchemaReady(env.DB);
+    const resourceSchemaReady=!resourceMode(env)||(db&&await resourcePolicyReady(env.DB));
     const runnerConfigured=!!isolatedHost(env);
     return json({
       ok:true,version:"003",stageContract:"uplink-v007-readiness",db,storage,runnerConfigured,schemaReady,
-      uploadReady:!!(schemaReady&&storage),
+      uploadReady:!!(schemaReady&&storage&&resourceSchemaReady),
+      resourceProtectionEnabled:resourceMode(env),resourceSchemaReady:!!resourceSchemaReady,
       publicPublishingEnabled:env.PACKAGE_PUBLIC_PUBLISH_ENABLED==="true",
       runtimeLiveVerified:false
     });
@@ -615,7 +672,7 @@ async function api(req,env,path) {
   if(path==="/api/v1/packages/mine"&&req.method==="GET"){
     const u=await member(req,env);
     if(!u)return fail(401,"Sign in to view your packages");
-    const projects=await ownerList(env.DB,u.id);
+    const projects=await ownerList(env.DB,u.id,resourceMode(env));
     return json({projects:projects.map(p=>({
       id:p.id,title:p.title,summary:p.summary,category:p.category,status:p.status,
       version:p.release_version,draft_status:p.draft_status,
@@ -623,13 +680,29 @@ async function api(req,env,path) {
       play_url:p.status==="published"&&p.live_release_id?"/play/v3/"+p.id:null
     }))});
   }
+  if(resourceMode(env)&&path==="/api/v1/packages/usage"&&req.method==="GET"){
+    const u=await member(req,env);if(!u)return fail(401,"Member session required");
+    if(!await resourcePolicyReady(env.DB))return fail(503,"Creator resource schema is not ready");
+    return json(await getStorageUsage(env.DB,u.id));
+  }
   if(req.method!=="POST"||!csrf(req))return fail(403,"Origin or method not authorized");
   const u=await member(req,env);
   if(!u)return fail(401,"A verified ANEVUM session is required");
+  if(resourceMode(env)&&!await resourcePolicyReady(env.DB))return fail(503,"Creator resource schema is not ready");
+  if(resourceMode(env)&&path==="/api/v1/packages/preflight")return preflight(req,env,u);
+  if(resourceMode(env)&&path==="/api/v1/packages/maintenance/reclaim"){
+    if(!staff(env,u.id))return fail(403,"Staff operations permission required");
+    const b=await readBoundedJson(req);if(b.confirm!=="reclaim_revoked_v1")return fail(422,"Explicit cleanup confirmation required");
+    return json(await cleanupPackageResources(env));
+  }
   if(path==="/api/v1/packages/maintenance/reclaim")return reclaimRevokedAssets(req,env,u);
   if(path==="/api/v1/packages/upload")return upload(req,env,u);
-  const m=path.match(/^\/api\/v1\/packages\/projects\/([0-9a-f-]{36})\/(submit|review|delete|discard|moderate)$/);
+  const m=path.match(/^\/api\/v1\/packages\/projects\/([0-9a-f-]{36})\/(submit|review|delete|discard|moderate|save)$/);
   if(!m||!UUID.test(m[1]))return fail(404,"Unknown API route");
+  if(m[2]==="save"){
+    if(!resourceMode(env))return fail(404,"Unknown API route");
+    return json(await saveDraft(env,u.id,m[1],Math.floor(Date.now()/1000)));
+  }
   if(m[2]==="submit")return submit(env,u,m[1]);
   if(m[2]==="review")return review(req,env,u,m[1]);
   if(m[2]==="moderate")return moderate(req,env,u,m[1]);
@@ -645,6 +718,7 @@ async function player(req,env,id) {
     u=await member(req,env);
     if(!u||(p.owner_id!==u.id&&!staff(env,u.id)))return a404();
     release=await getDraft(env.DB,p);
+    if(resourceMode(env)&&release?.status==="ready"&&await expiredDraft(env,release.id))return a404();
     if(release&&!["ready","pending_review","published"].includes(release.status))release=null;
     if(release)isPreview=true;
   }
@@ -671,7 +745,7 @@ async function player(req,env,id) {
   return playerScreen(p,release,runtime,isPreview,!!u&&p.owner_id===u.id,!!u&&staff(env,u.id));
 }
 export default {
-  async fetch(req,env) {
+  async fetch(req,env,ctx) {
     const url=new URL(req.url),path=url.pathname;
     const stagingRead = req.method==="GET" && url.protocol==="https:" && url.hostname===env.STAGING_CONTROL_HOST && env.STAGING_CONTROL_HOST?.endsWith(".devonakins.workers.dev");
     if(url.origin!==A && !stagingRead)return fail(404,"Unknown host");
@@ -685,18 +759,19 @@ export default {
       if(stagingRead && (path.startsWith("/staff/") || path.startsWith("/review/") ||
         (path.startsWith("/play/v3/") && url.searchParams.get("preview")==="1")))
         return a404();
-      if(path.startsWith("/api/v1/packages/"))return await api(req,env,path);
+      if(path.startsWith("/api/v1/packages/"))return await api(req,env,path,ctx);
       if(req.method!=="GET")return fail(405,"Method not allowed");
       if(path==="/upload/v3"||path==="/upload/v3/") {
         if(stagingRead)return uploadScreen([],false,false,"",true,true);
         const u=await member(req,env);
         const owner=!!u&&pilot(env,u.id);
-        const projects=owner?await ownerList(env.DB,u.id):[];
+        const resourcesReady=resourceMode(env)&&await resourcePolicyReady(env.DB);
+        const projects=owner?await ownerList(env.DB,u.id,resourcesReady):[];
         const chosen=url.searchParams.get("update");
-        const updateId=owner&&projects.some(x=>x.id===chosen&&["published","rejected"].includes(x.status)&&!x.draft_release_id)?chosen:"";
+        const updateId=owner&&projects.some(x=>x.id===chosen&&["published","rejected",...(resourceMode(env)?["draft"]:[])].includes(x.status)&&(!x.draft_release_id||(resourceMode(env)&&x.draft_status==="ready")))?chosen:"";
         // Do not show an uploader that cannot persist release rights or media.
         const ready=!!env.MEDIA?.put&&!!env.MEDIA?.get&&!!env.MEDIA?.head&&await packageSchemaReady(env.DB);
-        return uploadScreen(projects,!!u,owner,updateId,ready);
+        return uploadScreen(projects,!!u,owner,updateId,ready&&(!resourceMode(env)||resourcesReady),false,owner&&resourcesReady?await getStorageUsage(env.DB,u.id):null);
       }
       if(path==="/packages"||path==="/packages/")return catalogScreen(await publicList(env.DB));
       if(path==="/help/packages"||path==="/help/packages/")return helpScreen();
@@ -708,8 +783,11 @@ export default {
       if(m&&UUID.test(m[1]))return player(req,env,m[1]);
       return a404();
     } catch(e) {
-      if(e instanceof PackageError)return path.startsWith("/api/")?fail(e.status,e.message):a404();
+      if(e instanceof PackageError||e instanceof ResourceError)return path.startsWith("/api/")?fail(e.status,e.message):a404();
       return path.startsWith("/api/")?fail(503,"Package service temporarily unavailable"):layout("Unavailable",'<h1>Temporarily unavailable.</h1><p>Try again later. No public release has been changed.</p>');
     }
+  },
+  async scheduled(event,env,ctx){
+    if(resourceMode(env)&&env.DB&&env.MEDIA&&await resourcePolicyReady(env.DB))ctx.waitUntil(cleanupPackageResources(env));
   }
 };

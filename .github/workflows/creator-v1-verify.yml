@@ -1,0 +1,173 @@
+name: ANEVUM Creator V1 Verify
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [production/creator-v1, build/anevum-v1-foundation-20261011, build/anevum-v1-newyear-overhaul-20261011]
+    paths:
+      - creator-v1/**
+      - site/alpha/v003/**
+      - tests/alpha-package-*.mjs
+      - community-preview/worker.js
+      - docs/production/**
+      - .github/workflows/creator-v1-verify.yml
+  pull_request:
+    paths:
+      - creator-v1/**
+      - site/alpha/v003/**
+      - tests/alpha-package-*.mjs
+      - community-preview/worker.js
+      - docs/production/**
+      - .github/workflows/creator-v1-verify.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: creator-v1-verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Initialize evidence directory
+        run: mkdir -p evidence
+      - name: Install component frontend toolchain
+        shell: bash
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Typecheck and build component Creator V1 frontend
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+          node --test creator-v1/test/react-staging-route.test.mjs
+      - name: Validate cinematic V005 public site contract
+        shell: bash
+        run: node --test tests/creator-v1-cinematic-v005.test.mjs
+      - name: Preserve exact source and pre-production checkpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          git rev-parse HEAD > evidence/source-sha.txt
+          git archive --format=zip --output=evidence/candidate-source.zip HEAD
+          git archive --format=zip --output=evidence/pre-production-source.zip e34faf8ad72d319e469eface8aec7fe26741951f
+          sha256sum evidence/*-source.zip > evidence/source-archives.sha256
+      - name: Build approved identity and run public isolated tests
+        working-directory: creator-v1
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm test 2>&1 | tee ../evidence/public-tests.log
+          npm run test:project-readiness 2>&1 | tee ../evidence/project-readiness-tests.log
+      - name: Verify consolidated package controller and canonical route preservation
+        run: node --test tests/alpha-package-v003.test.mjs tests/alpha-package-v009-bridge.test.mjs tests/alpha-package-v009-owner.test.mjs tests/alpha-package-v009-live-owner.test.mjs tests/alpha-package-v010-migration.test.mjs
+      - name: Guard live public email signup (read-only; never creates accounts)
+        working-directory: creator-v1
+        shell: bash
+        env:
+          ANEVUM_EXPECTED_SOCIAL: ${{ vars.ANEVUM_EXPECTED_SOCIAL || '' }}
+        run: |
+          set -euo pipefail
+          node ops/canonical-live-signup-canary.mjs
+      - name: Build member interface and reject generated brand drift
+        run: |
+          node creator-v1/auth/build.mjs
+          git diff --exit-code -- creator-v1/auth/join.mjs
+      - name: Verify all member, staff, privacy and integrated journey tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test creator-v1/auth/tests/*.test.mjs creator-v1/integration/*.test.mjs 2>&1 | tee evidence/member-integration-tests.log
+      - name: Check deployable Workers and generated browser scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in creator-v1/auth/*.mjs creator-v1/authoring/*.mjs creator-v1/shared/*.mjs creator-v1/site/*.mjs creator-v1/dist/worker.mjs; do
+            node --check "$file"
+          done
+          node --input-type=module -e 'import {Script} from "node:vm"; import {COMMUNITY_CLIENT} from "./creator-v1/auth/community-ui.mjs"; import {VOTE_APP} from "./creator-v1/authoring/vote-moderation-ui.mjs"; import {SOCIAL_CLIENT} from "./creator-v1/auth/social-ui.mjs"; import {PRIVACY_CLIENT} from "./creator-v1/auth/privacy-ui.mjs"; import {PRIVACY_APP} from "./creator-v1/authoring/privacy-queue-ui.mjs"; for (const source of [COMMUNITY_CLIENT,VOTE_APP,SOCIAL_CLIENT,PRIVACY_CLIENT,PRIVACY_APP]) new Script(source);'
+      - name: Require actual V007 Commons browser captures at desktop and phone widths
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/community-v007-review
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+          test -n "$chrome"
+          node creator-v1/test/portal-offline-preview.mjs > evidence/community-v007-review/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for i in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:4178/__ready >/dev/null; then ready=1; break; fi
+            sleep 0.2
+          done
+          test "$ready" = 1
+          node creator-v1/test/capture-community-hub-v007.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/community-v007-review
+      - name: Require canonical V012 page captures at desktop and phone widths
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/sitewide-v012-review
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+          test -n "$chrome"
+          node creator-v1/test/portal-offline-preview.mjs > evidence/sitewide-v012-review/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for i in $(seq 1 70); do
+            if curl --fail --silent http://127.0.0.1:4178/__ready >/dev/null; then ready=1; break; fi
+            sleep 0.2
+          done
+          test "$ready" = 1
+          node creator-v1/test/capture-sitewide-v012.mjs --chrome "$chrome" --base http://127.0.0.1:4178 --output evidence/sitewide-v012-review 2>&1 | tee evidence/sitewide-v012-review/browser-capture.log
+          test -s evidence/sitewide-v012-review/capture-status.txt
+          test -s evidence/sitewide-v012-review/home-1440.png
+          test -s evidence/sitewide-v012-review/discussion-390.png
+          printf '%s\n' 'Offline synthetic screenshots only; not deployed staging content or real members.' > evidence/sitewide-v012-review/README.txt
+
+      - name: Verify V041 canonical forum browser and mobile author cards
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/forum-v041-review
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium || true)"
+          test -n "$chrome"
+          node creator-v1/test/capture-canonical-forums-v041.mjs --chrome "$chrome" --output evidence/forum-v041-review
+          test -s evidence/forum-v041-review/acceptance.json
+          test -s evidence/forum-v041-review/forum-390.png
+          printf '%s\n' 'Synthetic loopback forum fixture; not real member or deployed content.' > evidence/forum-v041-review/README.txt
+
+      - name: Preserve generated public artifact for visual review
+        if: always()
+        shell: bash
+        run: |
+          test ! -f creator-v1/site/generated.mjs || cp creator-v1/site/generated.mjs evidence/site-generated.mjs
+          test ! -f creator-v1/dist/worker.mjs || cp creator-v1/dist/worker.mjs evidence/worker.mjs
+          test ! -f creator-v1/dist/build-manifest.json || cp creator-v1/dist/build-manifest.json evidence/build-manifest.json
+          test ! -d creator-v1/dist/web || cp -R creator-v1/dist/web evidence/react-web
+          test ! -d creator-v1/dist/react-staging || cp -R creator-v1/dist/react-staging evidence/react-staging
+      - name: Upload reproducible source, test logs and public build
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: creator-v1-build-${{ github.run_id }}
+          path: evidence/
+          retention-days: 14
+          if-no-files-found: error
+
+# No Cloudflare secrets, deployment, migrations, account or broker access.

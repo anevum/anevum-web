@@ -1,0 +1,50 @@
+name: ANEVUM V062 Native Release Verification
+# V062 is already promoted through an explicit Cloudflare Workers Versions deployment.
+# This workflow intentionally cannot upload or deploy Worker code or alter secrets.
+on:
+  push:
+    branches: [build/evolution-miniature-native-webgl-v062-20261017-011]
+    paths: [.github/workflows/evolution-v062-native-candidate.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: anevum-v062-native-readonly
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Read-only native production code checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check creator-v1/test/evolution-mini-live-browser-v062.mjs
+          node --check creator-v1/test/evolution-mini-browser-v062.mjs
+          node --check creator-v1/test/evolution-v062-native.test.mjs
+          test -s creator-v1/web/src/lib/evolution-mini-renderer.ts
+          test -s creator-v1/web/src/components/LevelEmblem.tsx
+          grep -q 'registerAnimatedSpecimen' creator-v1/web/src/components/LevelEmblem.tsx
+          echo V062_NATIVE_SOURCE=PASS
+      - name: Test live native WebGL animation and 390px mobile layout
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/google-chrome --version
+          node creator-v1/test/evolution-mini-live-browser-v062.mjs
+      - name: Retain live browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v062-native-production-evidence
+          path: qa-v062-live-member/
+          if-no-files-found: warn
+          retention-days: 14

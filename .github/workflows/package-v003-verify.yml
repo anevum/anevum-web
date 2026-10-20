@@ -42,6 +42,9 @@ jobs:
           node --check site/alpha/v003/cover.mjs
           node --check site/alpha/v003/continuance-visuals.mjs
           node --check site/alpha/v003/api.mjs
+          node --check site/alpha/v003/resource-policy.mjs
+          node --check site/alpha/v003/resource-service.mjs
+          node --check site/alpha/v003/resource-cleanup.mjs
           node --check site/alpha/v003/ui.mjs
           node --check site/alpha/v003/unified-creation-bridge-v009.mjs
           node --check site/alpha/v003/unified-creation-owner-v009.mjs

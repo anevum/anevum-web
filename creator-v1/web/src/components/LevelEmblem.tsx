@@ -1,0 +1,46 @@
+import {useState} from 'react';
+import {BadgeInsignia} from './BadgeInsignia';
+import {BADGE_CATALOG} from '../lib/player-recognition';
+
+
+// The member server owns earned XP and badge state. Keep the existing
+// high-resolution V059/V064 level artwork at every inline size. The former
+// shared WebGL miniature renderer is intentionally retired from member cards,
+// forums, and level grids; its independent full-screen /evolution/ archive
+// remains untouched. Inline icons never create a canvas or hide their poster.
+export function LevelEmblem({level,size=64,handle=null,artwork='card'}:{level:number;size?:number;handle?:string|null;artwork?:'original'|'card'}){
+ const safe=Number.isSafeInteger(level)&&level>0?Math.min(30,level):1;
+ // Remount the image request state with its identity. An old image's failure
+ // must not consume another member's attempts or leave that member in fallback.
+ return <EarnedLevelImage key={JSON.stringify([safe,size,handle,artwork])}
+  safe={safe} size={size} handle={handle} artwork={artwork}/>;
+}
+function EarnedLevelImage({safe,size,handle,artwork}:{safe:number;size:number;handle:string|null;artwork:'original'|'card'}){
+ const [assetIndex,setAssetIndex]=useState(0);
+ const validHandle=handle&&/^[a-z][a-z0-9_]{2,29}$/.test(handle)?handle:null;
+
+ // Originals stay unchanged. The owner/public route checks XP and public
+ // consent on every request before exposing even a compact specimen image.
+ const kinds=artwork==='card'?['card']:size>=68?['preview','poster','icon']:['icon','preview','poster'];
+ if((handle!==null&&!validHandle)||assetIndex>=kinds.length)return <span
+  className="level-emblem level-emblem-beyond av73-static-level-fallback av76-asset-error v091-level-safe-fallback"
+  style={{width:size,height:size}} role="img"
+  title={'Earned level '+safe+' — artwork temporarily unavailable'}
+  aria-label={'Earned Evolution level '+safe+'. Artwork temporarily unavailable.'}>
+    <span className="v091-level-glyph" aria-hidden="true"><small>LVL</small><strong>{String(safe).padStart(2,'0')}</strong></span>
+    <small className="av76-artwork-unavailable v091-sr-only">ARTWORK UNAVAILABLE</small>
+   </span>;
+ const base=validHandle?'/api/v1/members/'+validHandle+'/rewards/levels/'+safe:
+   '/api/v1/member/rewards/levels/'+safe;
+ const src=base+'/'+kinds[assetIndex];
+ return <span className="level-emblem is-illustrated av62-native-host av73-static-level-icon"
+  style={{width:size,height:size}} role="img" aria-label={'Earned Evolution level '+safe}
+  data-artwork="v081-hd-emblem" data-presentation={artwork==='card'?'v077-front-facing-illustration':'original-optical'} data-visual={artwork==='card'?'v081-vector-sigil':'v074-preserved-optical'} data-level={safe}>
+  <img className="av62-native-poster" src={src} width={size} height={size}
+   alt="" loading={size>=104?'lazy':'eager'} decoding="async" draggable={false}
+   onError={()=>setAssetIndex(i=>i+1)}/>
+ </span>;
+}
+export function AwardEmblem({award,earned=true}:{award?:string;earned?:boolean}){
+ return <BadgeInsignia badge={award||'first_signal'} size="small" state={earned?'earned':'locked'} title={award&&BADGE_CATALOG[award]?.name||'Recognition badge'}/>;
+}

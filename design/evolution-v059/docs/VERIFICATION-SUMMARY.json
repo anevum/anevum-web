@@ -1,0 +1,42 @@
+{
+  "session": "ANEVUM.WEB.BUILD.2026-10-17.008.EVOLUTION-HYPERRES-ARTWORK",
+  "status": "passed",
+  "artifactChecks": {
+    "passed": 1669,
+    "total": 1669
+  },
+  "browserChecks": {
+    "passed": 58,
+    "total": 58,
+    "errors": [],
+    "testedCommit": "a8fc5fa720562c61659cd1ea3ae93492beb32796",
+    "run": "https://github.com/anevum/anevum-web/actions/runs/39049425037"
+  },
+  "staticWebReferences": 152,
+  "viewports": [
+    "1440x1000",
+    "390x844",
+    "320x844"
+  ],
+  "accessibility": [
+    "Labeled controls and images",
+    "Native modal / Escape / focus return",
+    "Reduced motion freezes timeline",
+    "Skip link",
+    "Primary text contrast >=4.5:1"
+  ],
+  "performance": {
+    "environment": "448px headless Mesa llvmpipe; not physical-device performance",
+    "meanMs": 17.63,
+    "worstP95Ms": 48.33
+  },
+  "accountWrites": false,
+  "deployed": false,
+  "limits": [
+    "Native iPhone Safari and assistive-technology testing not performed",
+    "Physical mobile GPU/battery/60fps targets not certified",
+    "Artistic final photoreal standard remains unapproved; some specimens are stylized",
+    "Gas, plasma, refraction and fluids use authored real-time approximations"
+  ],
+  "initialRun": "Initial timing assertions were replaced with event/frame-based acceptance; initial failed report is preserved separately in the source workspace."
+}

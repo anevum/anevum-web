@@ -1,0 +1,40 @@
+import {Link,useParams} from 'react-router-dom';
+import {canonicalPublic,spaceRequest,FOCUS_OPTIONS,type MemberSpace,type WallEntry} from '../lib/canonical-beta';
+import {useResource} from '../lib/useResource';
+import {useMemberRevalidation} from '../lib/useMemberRevalidation';
+
+import {MemberWall} from '../components/MemberWall';
+import {CompactMemberIdentity} from '../components/CompactMemberIdentity';
+import {SpaceProgress} from '../components/MemberSpaceDashboard';
+import {EarnedRewardVault} from '../components/EarnedRewardVault';
+import {safePlayerAura,safeVerifiedRole} from '../lib/player-recognition';
+
+
+const HANDLE=/^[a-z][a-z0-9_]{2,29}$/;
+export function Phase1PublicMemberPage(){
+ const {memberHandle=''}=useParams<{memberHandle:string}>();
+ return <PublicMemberWorld key={memberHandle} memberHandle={memberHandle}/>;
+}
+function PublicMemberWorld({memberHandle}:{memberHandle:string}){
+ const handle=memberHandle.startsWith('@')?memberHandle.slice(1):'';
+ const valid=HANDLE.test(handle),base='/api/v1/members/'+handle;
+ const revalidation=useMemberRevalidation();
+ const resource=useResource(async signal=>{
+  if(!valid)return null;
+  const result=await canonicalPublic(handle,signal);
+  const [space,wall]=await Promise.all([spaceRequest<MemberSpace>(base+'/space','GET',undefined,signal),spaceRequest<{posts:WallEntry[]}>(base+'/wall','GET',undefined,signal)]);
+  return {profile:result.profile,space,posts:wall.posts};
+ },[handle,revalidation]);
+ const data=resource.state==='ready'?resource.data:null;
+ if(!data)return <section className="av12-public-world"><h1 id="av12-world-heading">{resource.state==='loading'&&valid?'OPENING THIS WORLD…':'A PRIVATE WORLD.'}</h1><p role={resource.state==='loading'?'status':undefined}>{resource.state==='loading'&&valid?'Finding this member’s public world…':'This profile is not published, does not exist, or cannot be viewed right now. We never reveal which of those is the reason.'}</p><Link className="av12-world-back" to="/discover">EXPLORE OTHER WORLDS ↗</Link></section>;
+ const {profile,space,posts}=data;
+ return <section className={'ms-public av18-world-'+profile.worldTheme} aria-labelledby="av12-world-heading"><header className={'ms-cover av92-presence-cover av92-presence-cover--'+safePlayerAura(space.aura)+
+  ' av92-presence-role--'+(safeVerifiedRole(space.role)??'none')+
+  (space.supporterAppearance?' av34-aura av34-aura-'+space.supporterAppearance.aura:'')}>{space.media.banner&&<img className="ms-cover-art" src={base+'/media/banner?v='+space.media.banner} alt={profile.displayName+'’s wall banner'}/>}<div className="ms-cover-shade"/><div className="ms-cover-meta"><span className="kicker">ANEVUM / MEMBER WORLD</span><span className="ms-visibility">PUBLIC WORLD</span></div><div className="ms-identity av65-public-identity"><div className="av65-public-dossier"><h1 id="av12-world-heading" className="av65-visually-hidden">{profile.displayName}</h1><CompactMemberIdentity size="featured" href={"/@"+profile.handle} member={{handle:profile.handle,displayName:profile.displayName,avatar:Boolean(space.media.avatar),avatarVersion:space.media.avatar,level:space.stats?.level??null,featuredAwards:space.featuredAwards,earnedBadges:space.earnedBadges,badgeDisplay:space.badgeDisplay,distinctions:space.distinctions,aura:space.aura,role:space.role,reputation:space.reputation,earnedAura:space.earnedAura,constellation:space.constellation,supporterAppearance:space.supporterAppearance,progress:space.stats}}/>{profile.headline&&<p>{profile.headline}</p>}</div></div></header><div className="ms-public-body"><div><MemberWall posts={posts} owner={false} identity={{handle:profile.handle,displayName:profile.displayName,avatar:Boolean(space.media.avatar),avatarVersion:space.media.avatar,level:space.stats?.level??null,featuredAwards:space.featuredAwards,earnedBadges:space.earnedBadges,badgeDisplay:space.badgeDisplay,distinctions:space.distinctions,aura:space.aura,role:space.role,reputation:space.reputation,earnedAura:space.earnedAura,constellation:space.constellation,supporterAppearance:space.supporterAppearance}}/></div><aside><section className="ms-card"><span className="kicker">ABOUT THIS MEMBER</span><h2>An introduction.</h2><p className="ms-public-bio">{profile.bio||'This member has not written an introduction yet.'}</p>{profile.focus.length>0&&<div className="av18-public-focus" aria-label="Creative interests">{profile.focus.map(id=><span key={id}>{FOCUS_OPTIONS.find(f=>f.id===id)?.label}</span>)}</div>}<small>Member since {new Date(profile.joinedAt*1000).toLocaleDateString(undefined,{month:'long',year:'numeric'})}</small></section>{space.stats&&<SpaceProgress space={space} handle={profile.handle}/>}</aside></div><EarnedRewardVault
+ level={space.stats?.level??null}
+ handle={profile.handle}
+ badges={space.earnedBadges?.map(item=>item.id)??space.featuredAwards}
+ distinctions={space.distinctions}
+ title={profile.displayName+' · Earned discoveries'}/>
+ <Link className="ms-public-back" to="/discover">EXPLORE OTHER WORLDS ↗</Link></section>;
+}

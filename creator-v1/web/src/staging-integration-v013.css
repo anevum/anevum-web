@@ -1,0 +1,47 @@
+/* ANEVUM V013 / closed-by-default canonical signup and private Studio surface.
+ * V012 is the design authority; this layer affects presentation only. */
+.av9-shell :is(.join-experience,.av12-account,.av12-public-world,.av12-account-await) {
+  color:var(--av9-paper);font-family:var(--av9-body);min-width:0;
+}
+.av9-shell :is(.join-experience,.av12-account,.av12-public-world) :is(h1,h2,h3) {
+  font-family:var(--av10-editorial,var(--av9-display));font-weight:400;letter-spacing:-.035em;
+}
+.av9-shell :is(.join-panel,.join-method,.av12-editor-panel,.av12-profile-preview,.av12-world-sections section,.creator-asset-uploader) {
+  border:1px solid var(--av9-border);border-radius:18px;background:var(--av9-glass);box-shadow:var(--av9-glass-line);
+}
+.av9-shell :is(.join-method-open,.av12-save-button,.av12-account button,.av12-account a,.asset-uploader-drop input,.asset-uploader-queue button) {
+  min-height:44px;border-radius:12px;
+}
+.av9-shell :is(.join-experience,.av12-account,.av12-public-world,.creator-asset-uploader) :is(a,button,input,textarea):focus-visible {
+  outline:3px solid var(--av9-cyan);outline-offset:3px;
+}
+.av9-shell :is(.join-experience,.av12-account,.av12-public-world) .kicker {
+  font-family:var(--av10-register,var(--av9-label));font-variant-numeric:tabular-nums;
+}
+.av9-shell .creator-asset-uploader{margin-top:18px;padding:clamp(16px,2vw,26px)}
+.av9-shell .asset-uploader-heading{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px}
+.av9-shell .creator-asset-uploader h2{font:400 clamp(26px,3vw,40px)/1.08 var(--av10-editorial,var(--av9-display));margin:8px 0}
+.av9-shell .asset-uploader-drop{padding:20px;border:2px dashed var(--av9-border);border-radius:15px;background:#10152b;margin:15px 0}
+.av9-shell .asset-uploader-drop label{display:block;margin-bottom:12px;font-weight:700}
+.av9-shell .asset-uploader-drop input{display:block;width:100%;max-width:100%}
+.av9-shell .asset-uploader-drop p,.av9-shell .asset-uploader-queue p{font-size:13px;color:var(--av9-secondary)}
+.av9-shell .asset-uploader-dragging{border-color:var(--av9-cyan);background:#1c2446}
+.av9-shell .asset-uploader-queue,.av9-shell .asset-uploader-list{border-top:1px solid var(--av9-border);padding:14px 0}
+.av9-shell .asset-uploader-item{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--av9-border);padding:12px 0}
+.av9-shell .asset-uploader-item :is(strong,span){display:block;overflow-wrap:anywhere}
+.av9-shell .asset-uploader-item span{font-size:11px;color:var(--av9-secondary)}
+.av9-shell .asset-uploader-item-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.av9-shell .asset-uploader-previews{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin:12px 0}
+.av9-shell .asset-uploader-preview{border:1px solid var(--av9-border);border-radius:12px;padding:10px;min-width:0}
+.av9-shell .asset-uploader-preview img{width:100%;height:125px;object-fit:contain}
+.av9-shell .asset-uploader-preview audio{max-width:100%}
+.av9-shell .asset-uploader-preview small{display:block;margin-top:8px;overflow-wrap:anywhere;color:var(--av9-secondary)}
+.av9-shell .member-account-hub .member-actions{display:flex;flex-wrap:wrap;gap:10px}
+.av9-shell .member-account-hub-note{margin-top:14px}
+@media(max-width:700px){
+  .av9-shell .asset-uploader-item{display:block}
+  .av9-shell .asset-uploader-item-actions{justify-content:flex-start;margin-top:10px}
+  .av9-shell :is(.join-panel,.av12-editor-panel,.av12-profile-preview,.creator-asset-uploader){border-radius:16px}
+}
+@media(prefers-reduced-motion:reduce){.av9-shell .creator-asset-uploader *{animation:none;transition:none}}
+@media(forced-colors:active){.av9-shell :is(.join-panel,.av12-editor-panel,.creator-asset-uploader){border:1px solid CanvasText;box-shadow:none}}

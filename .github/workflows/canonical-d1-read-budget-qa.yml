@@ -1,0 +1,40 @@
+name: ANEVUM Canonical D1 Read Budget / Source-Only QA
+# Does not call Cloudflare, run live signup canaries, migrate DB, or deploy.
+on:
+  push:
+    branches: [patch/canonical-d1-read-budget-20261019]
+  pull_request:
+    paths:
+      - 'creator-v1/canonical-auth/policy.mjs'
+      - 'creator-v1/test/canonical-schema-read-budget.test.mjs'
+      - '.github/workflows/canonical-d1-read-budget-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: canonical-d1-read-budget-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install without lifecycle scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Verify SQL source and schema gates without remote requests
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check creator-v1/canonical-auth/policy.mjs
+          node --test \
+            creator-v1/test/canonical-schema-read-budget.test.mjs \
+            creator-v1/test/canonical-auth-worker-v013.test.mjs \
+            creator-v1/test/canonical-email-signup-v016.test.mjs \
+            creator-v1/test/canonical-live-signup-canary.test.mjs
+      - name: Check compiled member frontend
+        run: npm run check:creator-v1-web

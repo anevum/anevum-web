@@ -1,0 +1,107 @@
+name: ANEVUM A Subdomain Public Staging Release
+
+# Only an explicit, isolated release marker can start this pipeline.
+# It NEVER routes anevum.com, touches production D1, or enables member auth.
+on:
+  push:
+    branches:
+      - release/a-staging-community-v006-20261014
+    paths:
+      - docs/creator-platform/A-STAGING-DEPLOY-REQUEST-20261014.txt
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-a-staging-release
+  cancel-in-progress: false
+
+jobs:
+  package:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Confirm pinned branch, deployment marker and no apex route in config
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/release/a-staging-community-v006-20261014"
+          grep -Fxq 'APPROVED=STAGING_ASSET_DEPLOY_ONLY' docs/creator-platform/A-STAGING-DEPLOY-REQUEST-20261014.txt
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          import assert from "node:assert/strict";
+          const c=JSON.parse(fs.readFileSync("creator-v1/wrangler.a-staging.jsonc","utf8"));
+          assert.equal(c.name,"anevum-creator-v1-a-staging");
+          assert.equal(c.routes,undefined);
+          assert.equal(c.workers_dev,false);
+          assert.equal(c.preview_urls,false);
+          assert.equal(c.d1_databases?.length,1);
+          assert.equal(c.d1_databases[0].database_id,"fa96e36d-6257-4883-bf15-074947e11a13");
+          assert.equal(c.assets.directory,"./dist/web");
+          console.log("STAGING_CONFIG_SCOPE=PASS");
+          NODE
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install tools, typecheck and build the real React frontend
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+      - name: Exact-head public UI, privacy, and staging Worker contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test tests/creator-v1-cinematic-v005.test.mjs tests/creator-v1-a-staging.test.mjs
+          (cd creator-v1 && npm test && npm run test:project-readiness)
+          node --test creator-v1/auth/tests/*.test.mjs creator-v1/integration/*.test.mjs
+          node --check creator-v1/web/a-staging-worker.mjs
+          test -f creator-v1/dist/web/index.html
+          grep -q 'id="root"' creator-v1/dist/web/index.html
+          test -d creator-v1/dist/web/assets
+      - name: Verify Cloudflare scope and existing routes before any Worker write
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          umask 077
+          url=https://api.cloudflare.com/client/v4
+          curl --fail --silent --show-error --max-time 20 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$url/zones?name=anevum.com" > "$RUNNER_TEMP/a-zones.json"
+          zone="$(jq -r '.result[] | select(.name == "anevum.com" and .status == "active") | .id' "$RUNNER_TEMP/a-zones.json" | head -1)"
+          test -n "$zone"
+          curl --fail --silent --show-error --max-time 20 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$url/zones/$zone/workers/routes" > "$RUNNER_TEMP/a-routes.json"
+          jq -e '.success == true and ([.result[] | select(.pattern=="a.anevum.com/*" and (.script=="anevum-a-archive-adapter" or .script=="anevum-creator-v1-a-staging"))] | length)==1' "$RUNNER_TEMP/a-routes.json" >/dev/null
+          jq -e '.success == true and ([.result[] | select(.pattern=="anevum.com/*" and .script=="anevum-construction-terminal")] | length)==1' "$RUNNER_TEMP/a-routes.json" >/dev/null
+          jq -e '.success == true and ([.result[] | select(.pattern=="next.anevum.com/api/v1/member/*" and .script=="anevum-member-auth-staging")] | length)==1' "$RUNNER_TEMP/a-routes.json" >/dev/null
+          printf 'STAGING_ROUTES_ISOLATED=PASS\n'
+      - name: Deploy new read-only staging Worker and React assets WITHOUT changing any hostname route
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler deploy --config creator-v1/wrangler.a-staging.jsonc
+      - name: Verify newly uploaded Worker binds only staging D1 and assets
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --max-time 20 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-creator-v1-a-staging/settings" > "$RUNNER_TEMP/a-worker-settings.json"
+          jq -e '.success == true and ([.result.bindings[]|select(.type=="d1" and .name=="COMMUNITY_DB" and .database_id=="fa96e36d-6257-4883-bf15-074947e11a13")]|length)==1 and ([.result.bindings[]|select(.type=="assets" and .name=="ASSETS")]|length)==1 and ([.result.bindings[]|select(.type!="assets" and .type!="d1")]|length)==0' "$RUNNER_TEMP/a-worker-settings.json" >/dev/null
+          echo "READ_ONLY_STAGE_WORKER_READY=PASS" >> "$GITHUB_STEP_SUMMARY"
+          echo "Reviewed HEAD: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "The existing a.anevum.com route was not changed. Perform explicit route switch only after this pass." >> "$GITHUB_STEP_SUMMARY"

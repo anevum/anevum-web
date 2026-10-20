@@ -1,0 +1,73 @@
+name: ANEVUM V081 / Earned Emblems, Auras and Reputation
+# Source verification only. No production deployment, D1 migrations,
+# protected secrets, badge grants, XP updates, or user-role mutations.
+on:
+  push:
+    branches:
+      - build/v081-emblems-auras-reputation-20261018
+  pull_request:
+    paths:
+      - 'creator-v1/**'
+      - '.github/workflows/player-identity-v081-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: anevum-v081-identity-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  emblem-and-reputation:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies without lifecycle scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Unit, earned gates, anti-spoiler and privacy tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          node --check creator-v1/canonical-auth/member-reputation.mjs
+          node --check creator-v1/canonical-auth/evolution-card-art.mjs
+          node --test \
+            creator-v1/test/player-reputation-v081.test.mjs \
+            creator-v1/test/player-card-premium-v078.test.mjs \
+            creator-v1/test/evolution-card-illustrations-v077.test.mjs \
+            creator-v1/test/earned-reward-media-v075.test.mjs \
+            creator-v1/test/level-artwork-preservation-v074.test.mjs \
+            creator-v1/test/player-card-recognition-v065.test.mjs
+      - name: Compile and production-render React
+        run: |
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+      - name: Browser-check old identity fixtures on mobile and desktop
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome" || { echo "::error::Chromium unavailable"; exit 1; }
+          mkdir -p "$RUNNER_TEMP/v081-card"
+          node creator-v1/test/player-card-v078-live-react-browser.mjs "$chrome" "$RUNNER_TEMP/v081-card"
+      - name: Ensure hidden artwork is not in the public JS bundle
+        run: |
+          set -euo pipefail
+          test -d creator-v1/dist/web/assets
+          test ! -e creator-v1/web/public/evolution-card-plates.json
+          if grep -r -l 'M128 20 165 78 128 128' creator-v1/dist/web/assets --include='*.js' >/dev/null; then
+            echo "::error::Private artwork leaked into client JS"
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v081-card-visual-qa
+          path: ${{ runner.temp }}/v081-card/
+          if-no-files-found: warn
+          retention-days: 14

@@ -1,0 +1,111 @@
+name: ANEVUM V061 Live Identity Smoke
+# Verification-only replacement for the original secret-dropping Wrangler upload job.
+# This workflow cannot deploy, mutate D1, secrets, account state, or routes.
+on:
+  push:
+    branches: [build/member-identity-evolution-cards-v061-20261017-010]
+    paths: [.github/workflows/member-identity-v061-live-release.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: anevum-v061-live-smoke-readonly
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify V061 source and route invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check creator-v1/canonical-auth/public-member-card.mjs
+          node --check creator-v1/canonical-auth/forums.mjs
+          node --check creator-v1/canonical-auth/community.mjs
+          node --check creator-v1/test/member-identity-v061.test.mjs
+          test -s creator-v1/web/src/components/CompactMemberIdentity.tsx
+          test -s creator-v1/web/src/components/member-identity-v061.css
+          echo V061_SOURCE=PASS
+      - name: Read-only public and privacy smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          const base='https://anevum.com';
+          async function get(path){
+            const response=await fetch(base+path,{
+              headers:{'Accept':'*/*','User-Agent':'ANEVUM-V061-Live-Verification'},
+              cache:'no-store',redirect:'error',signal:AbortSignal.timeout(15000)
+            });
+            return response;
+          }
+          async function text(path,status=200){
+            const response=await get(path);
+            assert.equal(response.status,status,path+' status');
+            return response.text();
+          }
+          async function data(path){
+            const response=await get(path);
+            assert.equal(response.status,200,path);
+            assert.match(response.headers.get('content-type')||'',/application\/json/,path+' type');
+            return response.json();
+          }
+          const html=await text('/levels');
+          assert.match(html,/id="root"/);
+          const jsPath=html.match(/src="(\/assets\/index-[^"]+\.js)"/)?.[1];
+          const cssPath=html.match(/href="(\/assets\/index-[^"]+\.css)"/)?.[1];
+          assert.ok(jsPath&&cssPath,'Compiled React assets must be present');
+          const script=await text(jsPath);
+          const css=await text(cssPath);
+          assert.match(script,/av61-identity/,'New shared identity card is in live JS bundle');
+          for(const className of ['.av61-identity','.av61-specimen','.av61-level-label','.av61-award-list'])
+            assert.ok(css.includes(className),'Missing live style '+className);
+          assert.ok(css.includes('prefers-reduced-motion'),'Reduced motion styles');
+          assert.match(await text('/community'),/id="root"/);
+          const archive=await text('/evolution/');
+          assert.match(archive,/id="workshop-data"/);
+          const img=await get('/evolution/assets/level-02-compact-128.png');
+          assert.equal(img.status,200);
+          assert.match(img.headers.get('content-type')||'',/image\/png/);
+          const bytes=Buffer.from(await img.arrayBuffer());
+          assert.ok(bytes.subarray(0,8).equals(Buffer.from('89504e470d0a1a0a','hex')));
+          assert.ok(bytes.length>300,'3D specimen preview must not be empty');
+          const auth=await data('/api/v1/member/auth-methods');
+          assert.equal(auth.registration,'open');
+          assert.equal(auth.methods.email.available,true,'Email sign-in must remain enabled');
+          assert.equal((await get('/api/v1/member/progression')).status,401,'Private progression must remain private');
+          for(const path of ['/api/v1/community/members','/api/v1/community/activity']){
+            const payload=await data(path);
+            assert.ok(Array.isArray(payload.items),path+' items');
+            for(const item of payload.items){
+              assert.ok(typeof item.handle==='string'&&typeof item.displayName==='string');
+              assert.ok(typeof item.avatar==='boolean');
+              assert.ok(item.level===null||(Number.isInteger(item.level)&&item.level>=1&&item.level<=30),'Valid Evolution level');
+              assert.ok(Array.isArray(item.featuredAwards)&&item.featuredAwards.length<=3);
+              for(const privateField of ['email','userId','user_id','member_user_id','member_xp','password','token']){
+                assert.equal(Object.hasOwn(item,privateField),false,'Private field appeared: '+privateField);
+              }
+            }
+          }
+          const forum=await get('/api/v1/community/threads');
+          assert.ok([200,404].includes(forum.status),'Forum must either be enabled or fail closed');
+          if(forum.status===200){
+            const payload=await forum.json();
+            assert.ok(Array.isArray(payload.items));
+            for(const item of payload.items)if(item.author)assert.ok(item.author.level===null||Number.isInteger(item.author.level));
+          }
+          console.log(JSON.stringify({
+            result:'PASS',publicPaths:3,clientBundle:'V061',levelArtwork:'V060 native render',
+            memberCards:'SAFE',emailSignup:'AVAILABLE',unsignedProgression:'401',
+            forumStatus:forum.status
+          }));
+          NODE

@@ -78,6 +78,11 @@ export default {
       if (publicMatch && !isLive) return missing();
       if (previewMatch) {
         if (!["ready", "pending_review", "published"].includes(release.release_status)) return missing();
+        if(env.PACKAGE_RESOURCE_PROTECTION_ENABLED==="true"&&release.release_status==="ready"){
+          const expired=await env.DB.prepare("SELECT release_id FROM anevum_package_build_retention WHERE release_id=? AND mode='test' AND expires_at<=?")
+            .bind(releaseId,Math.floor(Date.now()/1000)).first();
+          if(expired)return missing();
+        }
         if (!await verifyPreview(env.DB, releaseId, previewMatch[2])) return missing();
       }
       const asset = await env.DB.prepare(

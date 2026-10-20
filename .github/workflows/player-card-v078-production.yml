@@ -1,0 +1,249 @@
+name: ANEVUM V078 Guarded Premium Player Cards Production
+on:
+  push:
+    branches:
+      - release/player-cards-v078-reconciled-20261018
+    paths:
+      - .github/workflows/player-card-v078-production.yml
+permissions:
+  contents: read
+concurrency:
+  group: anevum-v078-guarded-apex-production
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Rebuild exact preserved V059 native 3D collection assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install numpy==2.2.6 scipy==1.15.3 Pillow==11.2.1
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libgl1-mesa-dri
+          (
+            cd design/evolution-v059
+            mkdir -p artwork/{native,textures,vector,masters,web,compact} docs dist previews
+            python src/export_native.py
+            python src/render_web.py
+            python src/build.py
+          )
+          python creator-v1/ops/install-evolution-v060.py
+          test "$(find creator-v1/web/public/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+          test -s creator-v1/web/public/evolution/assets/level-04-scene.gz
+          test -s creator-v1/web/public/evolution/assets/level-30-scene.gz
+          test -s creator-v1/web/public/evolution/mini-runtime.json
+      - name: Install dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Verify and compile both frontend variants
+        run: |
+          set -euo pipefail
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+          node --experimental-strip-types --test creator-v1/test/null-creator-alpha-release.test.mjs
+          node --test \
+            creator-v1/test/player-card-premium-v078.test.mjs \
+            creator-v1/test/evolution-card-illustrations-v077.test.mjs \
+            creator-v1/test/earned-reward-media-v075.test.mjs \
+            creator-v1/test/player-card-recognition-v065.test.mjs \
+            creator-v1/test/level-artwork-preservation-v074.test.mjs \
+            creator-v1/test/apex-prelaunch-gateway.test.mjs \
+            creator-v1/test/progression-v031.test.mjs
+          test "$(find creator-v1/dist/web/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+          test -s creator-v1/dist/web/evolution/assets/level-04-scene.gz
+          test -s creator-v1/dist/web/evolution/assets/level-30-scene.gz
+          test -s creator-v1/dist/web/index.html
+          test ! -e creator-v1/web/public/evolution-card-plates.json
+          if grep -rl 'evolution-card-plates' creator-v1/dist/web/assets --include='*.js' >/dev/null; then
+            echo "::error::Private earned card artwork registry leaked into public client build"
+            exit 1
+          fi
+      - name: Browser regression using a local synthetic unlinked creator
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium-browser || command -v chromium)"
+          test -n "$chrome"
+          ANEVUM_UNLINKED_ALPHA_VISUAL_TEST=1 node creator-v1/test/portal-offline-preview.mjs > /tmp/anevum-incident-fixture.log 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 50); do
+            if curl --fail --silent http://127.0.0.1:4178/__ready >/dev/null; then break; fi
+            sleep 0.25
+          done
+          curl --fail --silent http://127.0.0.1:4178/__ready > /dev/null
+          timeout 50 "$chrome" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-background-networking --virtual-time-budget=8000 --dump-dom http://127.0.0.1:4178/creator/ > /tmp/anevum-unlinked-home.html 2>/tmp/anevum-chrome-errors.log
+          grep -Fq 'UNLINKED ALPHA RELEASE' /tmp/anevum-unlinked-home.html
+          grep -Fq 'Public creator channel not linked.' /tmp/anevum-unlinked-home.html
+          if grep -Fq '/creators/null' /tmp/anevum-unlinked-home.html; then
+            echo "ERROR: An invented creator channel leaked to the DOM"
+            exit 1
+          fi
+          echo "PASS: compiled frontend remains mounted and renders the project with an unlinked creator"
+      - name: Deploy browser-verified premium cards without changing routes, owner access or live flags
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          trap 'echo "SECURE DEPLOY PREFLIGHT stopped at shell line $LINENO before altering production" >&2' ERR
+          echo "Checking repository/ref, Cloudflare account, and the exact reviewed source..."
+          test "$GITHUB_REPOSITORY" = "anevum/anevum-web"
+          test "$GITHUB_REF" = "refs/heads/release/player-cards-v078-reconciled-20261018"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$CLOUDFLARE_ACCOUNT_ID" = "2f7ee83107240152097efd956a4e8335"
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -s creator-v1/dist/web/index.html
+          cf_api="https://api.cloudflare.com/client/v4"
+          cf() { curl --fail --silent --show-error --retry 2 --max-time 25 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$1"; }
+          echo "Reading live gateway settings..."
+          cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/settings" > "$RUNNER_TEMP/pre-settings.json"
+          jq -e '
+            .success and
+            any(.result.bindings[]; .type=="assets" and .name=="ASSETS") and
+            any(.result.bindings[]; .type=="d1" and .name=="MEMBER_DB" and .database_id=="e1d29049-c83b-4534-8355-dc1fa36ba6d8") and
+            any(.result.bindings[]; .type=="plain_text" and .name=="ANEVUM_PRELAUNCH_MODE" and .text=="public") and
+            any(.result.bindings[]; .type=="plain_text" and .name=="ANEVUM_LAUNCH_APPROVED" and .text=="true") and
+            any(.result.bindings[]; .type=="plain_text" and .name=="CANONICAL_EMAIL_ENABLED" and .text=="true") and
+            any(.result.bindings[]; .type=="secret_text" and .name=="CANONICAL_BETTER_AUTH_SECRET")
+          ' "$RUNNER_TEMP/pre-settings.json" > /dev/null
+          echo "Production flags and binding checks passed. Checking deployed Worker version..."
+          cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" > "$RUNNER_TEMP/pre-deployments.json"
+          pre_version="$(jq -r '(.result.deployments // .result)[0].versions[0].version_id' "$RUNNER_TEMP/pre-deployments.json")"
+          test "$pre_version" = "a5277bda-9389-4d28-8de5-25f67afbe04a"
+          echo "Deployed version matches expected baseline. Checking routes..."
+          cf "$cf_api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/pre-routes.json"
+          jq -e '.success and any(.result[]; .pattern=="anevum.com/*" and .script=="anevum-native-frame-policy-v001") and ([.result[]|select(.pattern=="anevum.com/assets/index-*")|.script]==["anevum-native-project-player-v005"])' "$RUNNER_TEMP/pre-routes.json" > /dev/null
+          echo "Routes verified. Preparing config from current production settings..."
+          jq -e '.success and
+           any(.result[]; .pattern=="anevum.com/evolution/vectors/*" and .script=="anevum-apex-prelaunch-gateway") and
+           any(.result[]; .pattern=="anevum.com/play/*" and .script=="anevum-unified-creation-routes-v002") and
+           any(.result[]; .pattern=="anevum.com/upload*" and .script=="anevum-unified-creation-routes-v002") and
+           any(.result[]; .pattern=="anevum.com/staff*" and .script=="anevum-staff-review-navigation-v001")' "$RUNNER_TEMP/pre-routes.json" >/dev/null
+          jq -S '[.result[]|{pattern,script}]|sort_by(.pattern)' "$RUNNER_TEMP/pre-routes.json" > "$RUNNER_TEMP/routes.lock.json"
+          jq -e '.success and (.result.bindings|length)==24 and
+           any(.result.bindings[]; .type=="assets" and .name=="ASSETS") and
+           any(.result.bindings[]; .type=="d1" and .name=="MEMBER_DB" and ((.database_id//.id)=="e1d29049-c83b-4534-8355-dc1fa36ba6d8")) and
+           any(.result.bindings[]; .type=="d1" and .name=="COMMUNITY_DB" and ((.database_id//.id)=="fa96e36d-6257-4883-bf15-074947e11a13")) and
+           any(.result.bindings[]; .type=="secret_text" and .name=="CANONICAL_RESEND_API_KEY") and
+           any(.result.bindings[]; .type=="secret_text" and .name=="CANONICAL_PROTECTED_EMAILS") and
+           any(.result.bindings[]; .type=="plain_text" and .name=="CANONICAL_RECOGNITION_ENABLED" and .text=="true")' "$RUNNER_TEMP/pre-settings.json" >/dev/null
+          jq -S '[.result.bindings[]|{name,type}]|sort_by(.name)' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/bindings.lock.json"
+          jq -S '[.result.bindings[]|select(.type=="d1")|{name,database:(.database_id//.id)}]|sort_by(.name)' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/db.lock.json"
+          node --input-type=module <<'NODE'
+          import {readFileSync,writeFileSync} from "node:fs";
+          const config=JSON.parse(readFileSync("creator-v1/wrangler.apex-prelaunch.jsonc","utf8"));
+          const live=JSON.parse(readFileSync(process.env.RUNNER_TEMP+"/pre-settings.json","utf8"));
+          if(config.name!=="anevum-apex-prelaunch-gateway"||config.routes.length!==0||config.assets?.binding!=="ASSETS"||config.assets?.run_worker_first!==true)throw Error("Unexpected candidate deployment scope");
+          const vars=Object.fromEntries(live.result.bindings.filter(x=>x.type==="plain_text").map(x=>[x.name,x.text]));
+          if(vars.ANEVUM_PRELAUNCH_MODE!=="public"||vars.ANEVUM_LAUNCH_APPROVED!=="true"||vars.ANEVUM_CANONICAL_APEX_ENABLED!=="true"||vars.CANONICAL_SCHEMA_APPROVED!=="true")throw Error("Live launch flags did not match the authorized public state");
+          config.vars=vars;
+          writeFileSync("creator-v1/wrangler.v078.generated.json",JSON.stringify(config,null,2));
+          console.log("Preserving all live plain-text Worker variables and existing secret bindings.");
+          NODE
+          jq -S '[.result.bindings[]|select(.type=="plain_text")|{name,text}]|sort_by(.name)' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/pre-vars.json"
+          jq -S '[.result.bindings[]|select(.type=="secret_text")|.name]|sort' "$RUNNER_TEMP/pre-settings.json" > "$RUNNER_TEMP/pre-secrets.json"
+          deployed=0
+          accepted=0
+          revert() {
+            if test "$deployed" = "1" && test "$accepted" != "1"; then
+              echo "Post-deploy verification failed; restoring recorded previous Worker version."
+              printf '{"strategy":"percentage","versions":[{"percentage":100,"version_id":"%s"}]}' "$pre_version" > "$RUNNER_TEMP/revert.json"
+              curl --fail --silent --show-error --max-time 35 -X POST -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" -d @"$RUNNER_TEMP/revert.json" "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments"
+            fi
+          }
+          trap revert EXIT
+          npx wrangler deploy --config creator-v1/wrangler.v078.generated.json --keep-vars
+          deployed=1
+          cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/settings" > "$RUNNER_TEMP/post-settings.json"
+          cf "$cf_api/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" > "$RUNNER_TEMP/post-routes.json"
+          jq -S '[.result[]|{pattern,script}]|sort_by(.pattern)' "$RUNNER_TEMP/post-routes.json" > "$RUNNER_TEMP/post-route.lock.json"
+          cmp "$RUNNER_TEMP/routes.lock.json" "$RUNNER_TEMP/post-route.lock.json"
+          jq -S '[.result.bindings[]|{name,type}]|sort_by(.name)' "$RUNNER_TEMP/post-settings.json" > "$RUNNER_TEMP/post-bindings.lock.json"
+          cmp "$RUNNER_TEMP/bindings.lock.json" "$RUNNER_TEMP/post-bindings.lock.json"
+          jq -S '[.result.bindings[]|select(.type=="d1")|{name,database:(.database_id//.id)}]|sort_by(.name)' "$RUNNER_TEMP/post-settings.json" > "$RUNNER_TEMP/post-db.lock.json"
+          cmp "$RUNNER_TEMP/db.lock.json" "$RUNNER_TEMP/post-db.lock.json"
+          jq -S '[.result.bindings[]|select(.type=="plain_text")|{name,text}]|sort_by(.name)' "$RUNNER_TEMP/post-settings.json" > "$RUNNER_TEMP/post-vars.json"
+          jq -S '[.result.bindings[]|select(.type=="secret_text")|.name]|sort' "$RUNNER_TEMP/post-settings.json" > "$RUNNER_TEMP/post-secrets.json"
+          diff -u "$RUNNER_TEMP/pre-vars.json" "$RUNNER_TEMP/post-vars.json"
+          diff -u "$RUNNER_TEMP/pre-secrets.json" "$RUNNER_TEMP/post-secrets.json"
+          jq -e '.success and any(.result.bindings[]; .type=="assets" and .name=="ASSETS") and any(.result.bindings[]; .type=="d1" and .name=="MEMBER_DB" and .database_id=="e1d29049-c83b-4534-8355-dc1fa36ba6d8")' "$RUNNER_TEMP/post-settings.json" >/dev/null
+          echo "All live flags, secrets, account/database bindings remain unchanged."
+          bundle="$(node --input-type=module -e 'import{readFileSync}from"node:fs";let s=readFileSync("creator-v1/dist/web/index.html","utf8");console.log(s.match(/src="(\/assets\/index-[^"]+\.js)"/)?.[1]||"")')"
+          test -n "$bundle"
+          ready=0
+          for attempt in $(seq 1 16); do
+            if curl --fail --silent --show-error --max-time 20 -o "$RUNNER_TEMP/live-asset.js" "https://anevum.com$bundle"; then
+              # A separately authorized native-player Worker appends scoped enhancements.
+              # Verify the entire compiled application as an unchanged prefix.
+              if node --input-type=module - "$RUNNER_TEMP/live-asset.js" "creator-v1/dist/web$bundle" <<'NODE'
+          import {readFileSync} from "node:fs";
+          const live=readFileSync(process.argv[2]),candidate=readFileSync(process.argv[3]);
+          process.exit(live.length>=candidate.length&&live.subarray(0,candidate.length).equals(candidate)?0:1);
+          NODE
+              then
+                ready=1
+                break
+              fi
+            fi
+            sleep 4
+          done
+          test "$ready" = 1
+          echo "PASS: production serves the exact approved V078 JavaScript asset."
+          style="$(node --input-type=module -e 'import{readFileSync}from"node:fs";const s=readFileSync("creator-v1/dist/web/index.html","utf8");console.log(s.match(/href="(\/assets\/index-[^"]+\.css)"/)?.[1]||"")')"
+          test -n "$style"
+          curl -fsS --max-time 30 "https://anevum.com$style" -o "$RUNNER_TEMP/v078-live-style.css"
+          grep -Fq '.av78-player-card' "$RUNNER_TEMP/v078-live-style.css"
+          for page in / /discover /recognition /join /community /@devon; do
+            curl -fsSL --max-time 30 "https://anevum.com$page" -o "$RUNNER_TEMP/v078-live-page.html"
+            grep -Fq 'id="root"' "$RUNNER_TEMP/v078-live-page.html"
+          done
+          curl -fsS --max-time 30 https://anevum.com/api/v1/member/auth-methods | jq -e '.methods.email.available==true' >/dev/null
+          curl -fsS --max-time 30 -D "$RUNNER_TEMP/v078-level04.headers" -o "$RUNNER_TEMP/v078-level04.svg" https://anevum.com/api/v1/members/devon/rewards/levels/4/card
+          grep -qi '^content-type: image/svg+xml' "$RUNNER_TEMP/v078-level04.headers"
+          grep -Fq 'Symmetry Field' "$RUNNER_TEMP/v078-level04.svg"
+          test "$(curl -sS --max-time 25 -o /dev/null -w '%{http_code}' https://anevum.com/api/v1/members/devon/rewards/levels/1/card)" = "404"
+          curl -fsS --max-time 35 -o "$RUNNER_TEMP/v078-original-scene.gz" https://anevum.com/api/v1/members/devon/rewards/levels/4/scene
+          test "$(wc -c < "$RUNNER_TEMP/v078-original-scene.gz")" -gt 1000
+          test "$(curl -sS --max-time 25 -o /dev/null -w '%{http_code}' https://anevum.com/api/v1/member/rewards/inventory)" = "401"
+          test "$(curl -sS --max-time 20 -o /dev/null -w '%{http_code}' https://anevum.com/evolution/assets/level-04-1024.webp)" = "404"
+          echo "V078_PUBLIC_EARNED_SVG_PRIVATE_LOCK_AND_NATIVE_3D=PASS"
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          test -n "$chrome"
+          rendered=0
+          for attempt in 1 2 3; do
+            mkdir -p "$RUNNER_TEMP/v078-chrome-$attempt"
+            if timeout 65 "$chrome" --headless=new --no-sandbox --no-first-run --disable-dev-shm-usage --disable-gpu --disable-background-networking --user-data-dir="$RUNNER_TEMP/v078-chrome-$attempt" --virtual-time-budget=12000 --dump-dom https://anevum.com/@devon > "$RUNNER_TEMP/v078-live-member.html" 2> "$RUNNER_TEMP/v078-live-chrome.log"; then
+              if grep -Fq 'data-player-card="v078"' "$RUNNER_TEMP/v078-live-member.html" &&
+                 grep -Fq 'Symmetry Field' "$RUNNER_TEMP/v078-live-member.html"; then
+                rendered=1
+                break
+              fi
+            fi
+            sleep 3
+          done
+          test "$rendered" = 1 || { echo "::error::Live Chromium did not display earned V078 player cards"; tail -n 35 "$RUNNER_TEMP/v078-live-chrome.log" || true; exit 1; }
+          cf "$cf_api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments?per_page=1" > "$RUNNER_TEMP/v078-live-deployments.json"
+          jq -e --arg old "$pre_version" '.success and .result.deployments[0].versions[0].version_id!=$old and .result.deployments[0].versions[0].percentage==100' "$RUNNER_TEMP/v078-live-deployments.json" >/dev/null
+          accepted=1
+          trap - EXIT
+          echo "ANEVUM_V078_GUARDED_PREMIUM_PLAYER_CARDS_LIVE=PASS" >> "$GITHUB_STEP_SUMMARY"
+          echo "ANEVUM_V078_ORIGINAL_EVOLUTION_3D_AND_AUTH_INTACT=PASS" >> "$GITHUB_STEP_SUMMARY"
+          echo "ANEVUM_V078_PRODUCTION_ROUTES_DATABASES_SECRETS_UNCHANGED=PASS" >> "$GITHUB_STEP_SUMMARY"
+          echo "SOURCE_SHA=$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          jq -r '.result.deployments[0].versions[0].version_id' "$RUNNER_TEMP/v078-live-deployments.json" | sed 's/^/WORKER_VERSION=/' >> "$GITHUB_STEP_SUMMARY"

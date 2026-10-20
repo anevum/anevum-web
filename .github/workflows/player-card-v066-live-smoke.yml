@@ -1,0 +1,78 @@
+name: ANEVUM V066 Live Recognition and Signup Smoke
+# Read-only real production acceptance test. No secret, D1 or deployment edits.
+on:
+  push:
+    branches: [build/player-card-v065-v064-integrate-20261017-014]
+    paths: [.github/workflows/player-card-v066-live-smoke.yml]
+permissions:
+  contents: read
+jobs:
+  live-verify:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 11
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check canonical public routes, real signup and authenticated privacy
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p qa-v066-live
+          for page in /recognition /levels /join /member /community /creators; do
+            key="$(printf '%s' "$page" | tr -d '/')"
+            curl -fLsS --retry 2 --connect-timeout 12 --max-time 35 \
+              "https://anevum.com$page" -o "qa-v066-live/$key.html"
+            grep -q 'id="root"' "qa-v066-live/$key.html"
+          done
+          curl -fLsS --retry 2 --connect-timeout 12 --max-time 35 \
+            https://anevum.com/api/v1/member/auth-methods \
+            -o qa-v066-live/auth-methods.json
+          jq -e '.registration=="open" and .methods.email.available==true' qa-v066-live/auth-methods.json >/dev/null
+          code="$(curl -sS --connect-timeout 12 --max-time 25 -o qa-v066-live/private-recognition.json -w '%{http_code}' \
+            https://anevum.com/api/v1/member/recognition)"
+          test "$code" = 401 || { echo "Unexpected anonymous recognition status: $code"; exit 1; }
+          code="$(curl -sS --connect-timeout 12 --max-time 25 -o /dev/null -w '%{http_code}' \
+            https://anevum.com/api/v1/member/progression)"
+          test "$code" = 401 || { echo "Private XP boundary failed: $code"; exit 1; }
+          curl -fLsS --retry 2 --connect-timeout 12 --max-time 35 \
+            https://anevum.com/api/v1/community/members \
+            -o qa-v066-live/community-members.json
+          jq -e '.items and (.items|type=="array")' qa-v066-live/community-members.json >/dev/null
+          echo "V066_PRODUCTION_PUBLIC_SIGNUP_AND_PRIVATE_RECOGNITION=PASS"
+      - name: Capture real deployed recognition page at desktop and mobile sizes
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium-browser || true)"
+          test -n "$chrome"
+          "$chrome" --headless=new --no-sandbox --disable-dev-shm-usage --hide-scrollbars \
+            --window-size=1440,900 --virtual-time-budget=2800 \
+            --screenshot=qa-v066-live/recognition-1440.png https://anevum.com/recognition \
+            >qa-v066-live/desktop-chrome.log 2>&1
+          "$chrome" --headless=new --no-sandbox --disable-dev-shm-usage --hide-scrollbars \
+            --window-size=390,844 --virtual-time-budget=2800 \
+            --screenshot=qa-v066-live/recognition-390.png https://anevum.com/recognition \
+            >qa-v066-live/mobile-chrome.log 2>&1
+          test "$(wc -c < qa-v066-live/recognition-1440.png)" -gt 10000
+          test "$(wc -c < qa-v066-live/recognition-390.png)" -gt 10000
+          echo "V066_REAL_BROWSER_SCREENSHOTS=PASS"
+      - name: Verify the prior V064 native specimen animation still loads on production
+        shell: bash
+        run: |
+          set -euo pipefail
+          node creator-v1/test/evolution-mini-live-browser-v062.mjs
+      - name: Upload read-only live evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v066-real-live-recognition-smoke
+          path: |
+            qa-v066-live/
+            qa-v062-live-member/
+          if-no-files-found: warn
+          retention-days: 14

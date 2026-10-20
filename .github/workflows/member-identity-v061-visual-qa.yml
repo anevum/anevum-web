@@ -1,0 +1,36 @@
+# Browser teardown is best-effort; successful image decoding must not fail on Chromium profile cleanup races.
+name: ANEVUM V061 Mini Specimen Browser QA
+on:
+  push:
+    branches: [build/member-identity-evolution-cards-v061-20261017-010]
+    paths: [.github/workflows/member-identity-v061-visual-qa.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm Chrome available
+        run: |
+          set -euo pipefail
+          /usr/bin/google-chrome --version
+          node --check creator-v1/test/live-member-card-browser-v061.mjs
+      - name: Test live miniature image load and mobile composition
+        run: node creator-v1/test/live-member-card-browser-v061.mjs
+      - name: Store screenshots and QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v061-member-card-visual-evidence
+          path: qa-v061-member-card/
+          if-no-files-found: warn
+          retention-days: 7

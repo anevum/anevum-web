@@ -1,0 +1,17 @@
+name: ANEVUM V078 Production Release Completed — Archive
+# Successfully deployed by GitHub Actions run 39165180412.
+# Live apex Worker v26: 50d33296-cee0-4565-93c6-a81777f23c85.
+# Original v25: a5277bda-9389-4d28-8de5-25f67afbe04a.
+# This duplicate candidate workflow is deliberately retired to prevent replay.
+on:
+  workflow_dispatch:
+permissions: {}
+jobs:
+  archived:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Release already completed; refuse duplicate deployment
+        run: |
+          echo "V078 is already live. See GitHub Actions run 39165180412."
+          echo "No Cloudflare mutation is permitted from this archived workflow."

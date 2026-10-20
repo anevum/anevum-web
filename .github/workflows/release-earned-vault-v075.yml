@@ -1,0 +1,190 @@
+name: ANEVUM V075 Earned Vault Production Release
+# Release test fix: verify the live gateway protection marker literally.
+on:
+  push:
+    branches: [release/earned-vault-v075-20261018-001]
+    paths: [.github/workflows/release-earned-vault-v075.yml]
+permissions:
+  contents: read
+concurrency:
+  group: anevum-apex-earned-v075-live
+  cancel-in-progress: true
+
+jobs:
+  release:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      CF_ACCOUNT: "2f7ee83107240152097efd956a4e8335"
+      CF_ZONE: "8abe27259b5436af5966d3b40d9a3760"
+      CF_WORKER: "anevum-apex-prelaunch-gateway"
+      EXPECTED_WORKER_VERSION: "2d967044-e3ac-4d8d-97bd-99625afe0b6d"
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Assert exact live target and reversible routing
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/release/earned-vault-v075-20261018-001"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$CLOUDFLARE_ACCOUNT_ID" = "$CF_ACCOUNT"
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -f creator-v1/canonical-auth/reward-media.mjs
+          test -f creator-v1/web/src/components/RewardInspector.tsx
+          test -f design/evolution-v059/src/export_native.py
+          auth="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+          api="https://api.cloudflare.com/client/v4"
+          curl -fsS --max-time 30 -H "$auth" "$api/accounts/$CF_ACCOUNT/workers/scripts/$CF_WORKER/settings" > "$RUNNER_TEMP/settings.before.json"
+          jq -e '.success and
+            ([.result.bindings[]|select(.type=="d1" and .name=="MEMBER_DB" and ((.id//.database_id)=="e1d29049-c83b-4534-8355-dc1fa36ba6d8"))]|length)==1 and
+            ([.result.bindings[]|select(.type=="d1" and .name=="COMMUNITY_DB" and ((.id//.database_id)=="fa96e36d-6257-4883-bf15-074947e11a13"))]|length)==1 and
+            ([.result.bindings[]|select(.type=="secret_text" and .name=="CANONICAL_RESEND_API_KEY")]|length)==1 and
+            ([.result.bindings[]|select(.type=="secret_text" and .name=="CANONICAL_BETTER_AUTH_SECRET")]|length)==1 and
+            ([.result.bindings[]|select(.type=="assets" and .name=="ASSETS")]|length)==1 and
+            ([.result.bindings[]|select(.type=="plain_text" and .name=="ANEVUM_PRELAUNCH_MODE" and .text=="public")]|length)==1 and
+            ([.result.bindings[]|select(.type=="plain_text" and .name=="ANEVUM_LAUNCH_APPROVED" and .text=="true")]|length)==1 and
+            ([.result.bindings[]|select(.type=="plain_text" and .name=="CANONICAL_RECOGNITION_ENABLED" and .text=="true")]|length)==1' "$RUNNER_TEMP/settings.before.json" >/dev/null
+          curl -fsS --max-time 30 -H "$auth" "$api/accounts/$CF_ACCOUNT/workers/scripts/$CF_WORKER/deployments?per_page=1" > "$RUNNER_TEMP/deploy.before.json"
+          jq -er '.result.deployments[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/deploy.before.json" > "$RUNNER_TEMP/version.before"
+          test "$(cat "$RUNNER_TEMP/version.before")" = "$EXPECTED_WORKER_VERSION" || { echo "::error::Production Worker version drift. Nothing changed."; exit 1; }
+          curl -fsS --max-time 30 -H "$auth" "$api/zones/$CF_ZONE/workers/routes" > "$RUNNER_TEMP/routes.before.json"
+          jq -e '([.result[]|select(.pattern=="anevum.com/*" and .script=="anevum-apex-prelaunch-gateway")]|length)==1 and
+           ([.result[]|select(.pattern=="anevum.com/assets/index-*" and .script=="anevum-discovery-ux-v069-20261018")]|length)==1 and
+           ([.result[]|select(.pattern=="anevum.com/evolution/vectors/*" and .script=="anevum-evolution-vectors-v067-20261018")]|length)==1' "$RUNNER_TEMP/routes.before.json" >/dev/null
+          jq -er '.result[]|select(.pattern=="anevum.com/assets/index-*")|.id' "$RUNNER_TEMP/routes.before.json" > "$RUNNER_TEMP/index-route-id"
+          jq -er '.result[]|select(.pattern=="anevum.com/evolution/vectors/*")|.id' "$RUNNER_TEMP/routes.before.json" > "$RUNNER_TEMP/vector-route-id"
+
+      - name: Rebuild approved optical and full native Evolution artwork
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install numpy==2.2.6 scipy==1.15.3 Pillow==11.2.1
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libgl1-mesa-dri
+          cd design/evolution-v059
+          mkdir -p artwork/{native,textures,vector,masters,web,compact} docs dist previews
+          python src/export_native.py
+          python src/render_web.py
+          python src/build.py
+          cd ../..
+          python creator-v1/ops/install-evolution-v060.py
+          test "$(find creator-v1/web/public/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+          test -s creator-v1/web/public/evolution/assets/level-01-scene.gz
+          test -s creator-v1/web/public/evolution/assets/level-30-scene.gz
+          test -s creator-v1/web/public/evolution/mini-runtime.json
+
+      - name: Build and verify exactly the earned-only UI
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          node --test creator-v1/test/protected-email-approval-v075.test.mjs
+          node --test creator-v1/test/earned-reward-media-v075.test.mjs creator-v1/test/level-artwork-preservation-v074.test.mjs creator-v1/test/evolution-v060-contract.test.mjs creator-v1/test/progression-v031.test.mjs creator-v1/test/apex-prelaunch-gateway.test.mjs creator-v1/test/canonical-otp-resend-v023.test.mjs
+          test "$(find creator-v1/dist/web/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+          test -s creator-v1/dist/web/evolution/mini-runtime.json
+          test -s creator-v1/dist/web/evolution/assets/level-30-scene.gz
+          node -e 'const fs=require("node:fs");const html=fs.readFileSync("creator-v1/dist/web/index.html","utf8");if(!/id="root"/.test(html))throw Error("Missing React root");'
+          echo V075_ASSET_AND_TYPECHECK_GATES=PASS
+
+      - name: Deploy exact Worker and reroute legacy bypasses, rollback if verification fails
+        shell: bash
+        run: |
+          set -euo pipefail
+          auth="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+          api="https://api.cloudflare.com/client/v4"
+          old="$(cat "$RUNNER_TEMP/version.before")"
+          curl -fsS --max-time 30 -H "$auth" "$api/accounts/$CF_ACCOUNT/workers/scripts/$CF_WORKER/deployments?per_page=1" > "$RUNNER_TEMP/deploy.recheck.json"
+          test "$(jq -er '.result.deployments[0].versions[]|select(.percentage==100)|.version_id' "$RUNNER_TEMP/deploy.recheck.json")" = "$old"
+          curl -fsS --max-time 30 -H "$auth" "$api/zones/$CF_ZONE/workers/routes" > "$RUNNER_TEMP/routes.recheck.json"
+          jq -e '([.result[]|select(.pattern=="anevum.com/assets/index-*" and .script=="anevum-discovery-ux-v069-20261018")]|length)==1 and ([.result[]|select(.pattern=="anevum.com/evolution/vectors/*" and .script=="anevum-evolution-vectors-v067-20261018")]|length)==1' "$RUNNER_TEMP/routes.recheck.json" >/dev/null
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const path='creator-v1/wrangler.apex-prelaunch.jsonc';
+          const config=JSON.parse(fs.readFileSync(path,'utf8'));
+          if(config.name!=='anevum-apex-prelaunch-gateway'||config.routes.length!==0||config.assets?.binding!=='ASSETS'||config.assets.run_worker_first!==true)throw Error('Unrecognized release target');
+          config.vars.ANEVUM_PRELAUNCH_MODE='public';
+          config.vars.ANEVUM_LAUNCH_APPROVED='true';
+          config.vars.CANONICAL_PUBLIC_SIGNUP_ENABLED='true';
+          config.vars.CANONICAL_RECOGNITION_ENABLED='true';
+          // Preserve existing XP test for legacy canary progression until a separate migration.
+          config.vars.CANONICAL_XP_TEST_ENABLED='true';
+          fs.writeFileSync('creator-v1/wrangler.apex-earned-v075.jsonc',JSON.stringify(config,null,2));
+          NODE
+          deployed=0
+          changed_index=0
+          changed_vectors=0
+          validated=0
+          rollback() {
+            if [ "$validated" = 1 ]; then return; fi
+            if [ "$changed_vectors" = 1 ]; then
+              curl -fsS --max-time 30 -X PUT -H "$auth" -H 'Content-Type: application/json' --data '{"pattern":"anevum.com/evolution/vectors/*","script":"anevum-evolution-vectors-v067-20261018"}' "$api/zones/$CF_ZONE/workers/routes/$(cat "$RUNNER_TEMP/vector-route-id")" > /dev/null || true
+            fi
+            if [ "$changed_index" = 1 ]; then
+              curl -fsS --max-time 30 -X PUT -H "$auth" -H 'Content-Type: application/json' --data '{"pattern":"anevum.com/assets/index-*","script":"anevum-discovery-ux-v069-20261018"}' "$api/zones/$CF_ZONE/workers/routes/$(cat "$RUNNER_TEMP/index-route-id")" > /dev/null || true
+            fi
+            if [ "$deployed" = 1 ]; then
+              echo "::error::Live verification failed; rolling back apex Worker and path routes."
+              jq -nc --arg id "$old" '{strategy:"percentage",versions:[{version_id:$id,percentage:100}],annotations:{"workers/message":"ANEVUM V075 guarded rollback"}}' > "$RUNNER_TEMP/rollback.json"
+              curl -fsS --max-time 30 -X POST -H "$auth" -H 'Content-Type: application/json' --data-binary @"$RUNNER_TEMP/rollback.json" "$api/accounts/$CF_ACCOUNT/workers/scripts/$CF_WORKER/deployments" > "$RUNNER_TEMP/rollback-result.json" || true
+            fi
+          }
+          trap rollback EXIT
+          npx wrangler deploy --config creator-v1/wrangler.apex-earned-v075.jsonc --keep-vars
+          deployed=1
+          jq -nc '{pattern:"anevum.com/assets/index-*",script:"anevum-apex-prelaunch-gateway"}' > "$RUNNER_TEMP/index-route.json"
+          jq -nc '{pattern:"anevum.com/evolution/vectors/*",script:"anevum-apex-prelaunch-gateway"}' > "$RUNNER_TEMP/vector-route.json"
+          curl -fsS --max-time 30 -X PUT -H "$auth" -H 'Content-Type: application/json' --data-binary @"$RUNNER_TEMP/index-route.json" "$api/zones/$CF_ZONE/workers/routes/$(cat "$RUNNER_TEMP/index-route-id")" > "$RUNNER_TEMP/index-update.json"
+          jq -e '.success' "$RUNNER_TEMP/index-update.json" > /dev/null
+          changed_index=1
+          curl -fsS --max-time 30 -X PUT -H "$auth" -H 'Content-Type: application/json' --data-binary @"$RUNNER_TEMP/vector-route.json" "$api/zones/$CF_ZONE/workers/routes/$(cat "$RUNNER_TEMP/vector-route-id")" > "$RUNNER_TEMP/vector-update.json"
+          jq -e '.success' "$RUNNER_TEMP/vector-update.json" > /dev/null
+          changed_vectors=1
+          curl -fsS --retry 3 --retry-delay 2 --max-time 30 https://anevum.com/api/v1/member/auth-methods | jq -e '.methods.email.available==true' >/dev/null
+          test "$(curl -sS --max-time 20 -o /dev/null -w '%{http_code}' https://anevum.com/api/v1/member/rewards/inventory)" = 401
+          test "$(curl -sS --max-time 20 -o /dev/null -w '%{http_code}' https://anevum.com/api/v1/member/rewards/levels/1/icon)" = 401
+          test "$(curl -sS --max-time 20 -o /dev/null -w '%{http_code}' https://anevum.com/evolution/assets/level-01-compact-128.png)" = 404
+          test "$(curl -sS --max-time 20 -o /dev/null -w '%{http_code}' https://anevum.com/evolution/)" = 404
+          test "$(curl -sS --max-time 20 -o /dev/null -w '%{http_code}' https://anevum.com/evolution/vectors/level-01.svg)" = 404
+          curl -fsS --max-time 20 https://anevum.com/levels -o "$RUNNER_TEMP/levels-live.html"
+          grep -q 'id="root"' "$RUNNER_TEMP/levels-live.html"
+          curl -fsS --max-time 20 https://anevum.com/recognition -o "$RUNNER_TEMP/recognition-live.html"
+          grep -q 'id="root"' "$RUNNER_TEMP/recognition-live.html"
+          filename="$(find creator-v1/dist/web/assets -maxdepth 1 -type f -name 'index-*.js' | head -n 1)"
+          test -s "$filename"
+          curl -fsS --max-time 30 "https://anevum.com/assets/$(basename "$filename")" -o "$RUNNER_TEMP/live-index.js"
+          cmp -s "$filename" "$RUNNER_TEMP/live-index.js" || { echo "::error::Live frontend hash differs from uploaded V075 bundle"; exit 1; }
+          curl -fsS --max-time 30 -H "$auth" "$api/accounts/$CF_ACCOUNT/workers/scripts/$CF_WORKER/settings" > "$RUNNER_TEMP/settings.after.json"
+          jq -e '.success and
+           ([.result.bindings[]|select(.type=="secret_text" and .name=="CANONICAL_BETTER_AUTH_SECRET")]|length)==1 and
+           ([.result.bindings[]|select(.type=="secret_text" and .name=="CANONICAL_RESEND_API_KEY")]|length)==1 and
+           ([.result.bindings[]|select(.type=="d1")]|length)==2 and
+           ([.result.bindings[]|select(.type=="assets" and .name=="ASSETS")]|length)==1 and
+           ([.result.bindings[]|select(.type=="plain_text" and .name=="CANONICAL_RECOGNITION_ENABLED" and .text=="true")]|length)==1' "$RUNNER_TEMP/settings.after.json" >/dev/null
+          validated=1
+          echo "ANEVUM_V075_EARNED_REWARD_RELEASE=PASS" >> "$GITHUB_STEP_SUMMARY"
+          echo "Release SHA: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "Live site: https://anevum.com/levels" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: earned-vault-v075-release-evidence
+          path: |
+            creator-v1/shared/level-artifacts.json
+            creator-v1/dist/web/index.html
+          if-no-files-found: warn
+          retention-days: 14

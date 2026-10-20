@@ -1,0 +1,36 @@
+{
+  // REVIEW ONLY: not routed or deployed. Actual a.anevum.com stays V006.
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "anevum-creator-v1-canonical-review-unrouted",
+  "main": "./web/a-canonical-stage.review.mjs",
+  "compatibility_date": "2026-10-14",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [],
+  "assets": {
+    "directory": "./dist/web",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "not_found_handling": "single-page-application"
+  },
+  "d1_databases": [
+    {
+      "binding": "COMMUNITY_DB",
+      "database_name": "anevum-creator-v1-staging",
+      "database_id": "fa96e36d-6257-4883-bf15-074947e11a13"
+    },
+    {
+      "binding": "MEMBER_DB",
+      "database_name": "anevum-canonical-member-staging",
+      "database_id": "e1d29049-c83b-4534-8355-dc1fa36ba6d8"
+    }
+  ],
+  "vars": {
+    "ANEVUM_CANONICAL_STAGE_ENABLED": "false",
+    "CANONICAL_SCHEMA_APPROVED": "false",
+    "CANONICAL_GOOGLE_ENABLED": "false",
+    "CANONICAL_INVITED_SIGNUP_ENABLED": "false",
+    "CANONICAL_EMAIL_ENABLED": "false"
+  }
+}

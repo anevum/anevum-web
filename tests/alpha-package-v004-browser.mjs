@@ -95,6 +95,7 @@ async function main(){
  const pages={
   uploader:await (await uploadScreen([],true,true,"")).text(),
   library:await (await uploadScreen([{...project,cover_release_id:"22222222-2222-4222-8222-222222222222"}],true,true,"")).text(),
+  protected:await (await uploadScreen([{...project,draft_mode:"test",draft_expires_at:Math.floor(Date.now()/1000)+86400}],true,true,project.id,true,false,{memberPhysicalBytes:1048576,memberPhysicalLimit:200*1048576})).text(),
   guest:await (await uploadScreen([],false,false,"")).text(),
   player:await (await playerScreen(project,release,runner,true,true,false)).text(),
   review:await (await playerScreen(project,{...release,status:"pending_review"},runner,true,false,true)).text(),
@@ -130,6 +131,13 @@ async function main(){
     assert.ok(dims.dropTop<770,"Upload selector should be visible in the first mobile screen");
    }
    await image(c,join(out,"upload-"+w+".png"));
+  }
+  for(const w of [320,390,1440]){
+   await visit(c,join(tmp,"protected.html"),w,w===1440?900:844);
+   const protectedUI=await evalJS(c,"({overflow:document.documentElement.scrollWidth>innerWidth,storage:!!document.querySelector('[aria-label=\"Private build storage\"]'),replacement:document.querySelector('#replace-private-build')?.value,save:[...document.querySelectorAll('button')].some(b=>b.textContent==='Save draft'),replace:[...document.querySelectorAll('a')].some(a=>a.textContent==='Replace private build')})");
+   assert.equal(protectedUI.overflow,false,'Protected uploader overflow at '+w);
+   assert.equal(protectedUI.storage,true);assert.equal(protectedUI.replacement,'1');assert.equal(protectedUI.save,true);assert.equal(protectedUI.replace,true);
+   await image(c,join(out,'protected-upload-'+w+'.png'));
   }
   await visit(c,join(tmp,"uploader.html"),390,844);
   const selection=await evalJS(c,"(()=>{const input=document.querySelector('#bundle');const data=new DataTransfer();data.items.add(new File(['<!doctype html><html><body>Ready</body></html>'],'example.html',{type:'text/html'}));input.files=data.files;input.dispatchEvent(new Event('change',{bubbles:true}));return {name:document.querySelector('#file-label').textContent,status:document.querySelector('#activity').textContent};})()");

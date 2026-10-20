@@ -1,0 +1,213 @@
+/* ANEVUM / CONTINUANCE INSTITUTE — Universal Player Card v065
+ * Builds on existing V061/V062 player/portrait/level styling rather than
+ * replacing native Evolution geometry. All assets are local, no network fonts.
+ */
+.av65-player-card{
+ --av65-glow:rgba(173,149,222,.19);
+ --av65-trim:rgba(242,196,181,.26);
+ position:relative;isolation:isolate;align-items:center;min-width:0;
+ gap:10px;padding:7px 9px;border:1px solid transparent;
+ border-radius:14px;overflow:visible;
+ color:#f5e9e7;text-decoration:none;
+ transition:background .2s ease,border-color .2s ease,box-shadow .2s ease;
+}
+.av65-player-card:hover,.av65-player-card:focus-visible{
+ background:linear-gradient(120deg,rgba(43,31,59,.58),rgba(24,23,40,.36));
+ border-color:var(--av65-trim);
+ box-shadow:inset 0 1px rgba(255,245,240,.06),0 8px 26px rgba(0,0,0,.19);
+}
+.av65-player-card:focus-visible{outline:2px solid #ffd2d6;outline-offset:3px}
+.av65-player-card .av61-portrait-zone,.av65-player-card .av61-member-copy{z-index:1}
+.av65-player-card .av61-member-copy{min-width:0}
+.av65-player-card .av61-member-name{
+ font-family:inherit!important;font-weight:750!important;
+ font-size:clamp(12px,1.08vw,15px)!important;
+ letter-spacing:.018em;line-height:1.2!important;
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.av65-player-card .av61-member-handle{font-size:10px!important;letter-spacing:.028em}
+.av65-name-line{display:flex;align-items:center;gap:6px;min-width:0;width:100%}
+.av65-name-line .av61-member-name{min-width:0}
+.av65-constellation-flag{
+ display:inline-flex;flex:none;width:19px;height:20px;
+ align-items:center;justify-content:center;
+ filter:drop-shadow(0 2px 2px #000b);
+}
+.av65-constellation-flag svg{width:100%;height:100%}
+.av65-aura-field{
+ position:absolute;pointer-events:none;inset:-9px -4px;
+ border-radius:18px;opacity:.72;z-index:0;
+ background:radial-gradient(ellipse at 18% 50%,var(--av65-glow),transparent 64%);
+ filter:blur(7px);
+ animation:av65-aura-pulse 8s ease-in-out infinite;
+}
+.av65-aura--aurora{--av65-glow:rgba(137,196,226,.25);--av65-trim:rgba(140,215,234,.4)}
+.av65-aura--eclipse{--av65-glow:rgba(159,126,219,.23);--av65-trim:rgba(164,139,224,.39)}
+.av65-aura--ember{--av65-glow:rgba(252,150,109,.23);--av65-trim:rgba(241,151,125,.4)}
+.av65-aura--nebula{--av65-glow:rgba(214,126,208,.27);--av65-trim:rgba(218,151,217,.4)}
+.av65-aura--transcosmic{--av65-glow:rgba(234,165,193,.26);--av65-trim:rgba(194,151,249,.43)}
+.av65-aura--none .av65-aura-field{display:none}
+.av65-badge-rack{gap:3px!important;flex-wrap:nowrap;min-width:0}
+.av65-badge{width:22px!important;height:22px!important;flex:none;position:relative}
+.av65-badge .celestial-emblem{max-width:22px!important;max-height:22px!important}
+.av65-badge--origin{--av65-badge-tint:#f4c9ad}
+.av65-badge--community{--av65-badge-tint:#a8dcef}
+.av65-badge--creation{--av65-badge-tint:#dab7f0}
+.av65-badge--discovery{--av65-badge-tint:#e3cd93}
+.av65-badge--collaboration{--av65-badge-tint:#efb3ce}
+.av65-badge--craft{--av65-badge-tint:#bbcafa}
+.av65-badge--stewardship{--av65-badge-tint:#a8d7bd}
+.av65-badge--continuance{--av65-badge-tint:#ead3b8}
+.av65-badge::after{
+ content:"";position:absolute;inset:4px;z-index:-1;border-radius:50%;
+ background:var(--av65-badge-tint);opacity:.14;filter:blur(4px);
+}
+.av65-medal-slot,.av65-ribbon-rack{display:inline-flex;align-items:center;flex:none;gap:3px}
+.av65-honor{position:relative;display:inline-grid;place-items:center;vertical-align:middle;flex:none;overflow:visible}
+.av65-medal{width:30px;height:36px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.65))}
+.av65-medal svg{width:100%;height:100%;display:block}
+.av65-medal.is-compact{width:24px;height:29px}
+.av65-ribbon{
+ --av65-ribbon-primary:#849ab5;
+ width:31px;height:13px;border:1px solid #d5c8b9;
+ border-radius:2px;overflow:hidden;
+ background:
+  linear-gradient(90deg,transparent 0 20%,rgba(255,234,197,.83) 20% 26%,transparent 26% 74%,rgba(255,234,197,.83) 74% 80%,transparent 80%),
+  linear-gradient(110deg,rgba(255,255,255,.35),transparent 27%,rgba(0,0,0,.28) 68%,rgba(255,255,255,.1)),
+  var(--av65-ribbon-primary);
+ box-shadow:inset 0 1px #fff9,inset 0 -2px #110d28a8,0 1px 3px #0008;
+}
+.av65-ribbon.is-compact{width:24px;height:11px}
+.av65-ribbon-edge{position:absolute;inset:0;border-left:2px solid #cfb7ab;border-right:2px solid #cfb7ab;opacity:.75}
+.av65-ribbon-weave{
+ position:absolute;inset:0;pointer-events:none;
+ background:repeating-linear-gradient(0deg,transparent 0 1px,#fff2 1px 2px);opacity:.5;
+}
+.av65-ribbon-core{position:relative;font:900 8px/1 system-ui,sans-serif;color:#ffeed9;text-shadow:0 1px 2px #141020}
+.av65-tone-copper{--av65-ribbon-primary:#b47452}
+.av65-tone-silver{--av65-ribbon-primary:#839caf}
+.av65-tone-violet{--av65-ribbon-primary:#9875bc}
+.av65-tone-gold{--av65-ribbon-primary:#c2a066}
+.av65-tone-coral{--av65-ribbon-primary:#c9798c}
+.av65-player-card .av61-member-rewards{gap:5px!important;row-gap:3px!important}
+.av65-player-card .av61-supporter{opacity:.92}
+.av65-player-card--inline{padding:2px 3px;gap:5px;border-radius:8px}
+.av65-player-card--inline .av61-photo .ms-portrait{width:31px!important;height:31px!important;border-radius:9px!important}
+.av65-player-card--inline .av61-specimen{width:31px;height:32px;margin-left:-6px}
+.av65-player-card--inline .av61-specimen .level-emblem{width:30px!important;height:30px!important}
+.av65-player-card--inline .av61-member-name{font-size:12px!important}
+.av65-player-card--inline .av61-specimen-name,.av65-player-card--inline .av61-supporter{display:none!important}
+.av65-player-card--inline .av65-badge{width:18px!important;height:18px!important}
+.av65-player-card--inline .av65-badge .celestial-emblem{max-width:18px!important;max-height:18px!important}
+.av65-player-card--compact{padding:4px 6px;gap:7px}
+.av65-player-card--featured{padding:14px 16px;border-color:#e9bfc22b;background:linear-gradient(125deg,#1a2034b8,#24182eb0)}
+.av65-player-card--featured .av61-photo .ms-portrait{width:64px!important;height:64px!important;border-radius:18px!important}
+.av65-player-card--featured .av61-specimen{width:61px;height:62px;margin-left:-10px}
+.av65-player-card--featured .av61-specimen .level-emblem{width:60px!important;height:60px!important}
+.av65-player-card--featured .av61-member-name{font-size:19px!important}
+.av65-player-card--featured .av61-member-handle{font-size:12px!important}
+@keyframes av65-aura-pulse{0%,100%{opacity:.55;transform:scale(.99)}50%{opacity:.88;transform:scale(1.025)}}
+@media(max-width:640px){
+ .av65-player-card{gap:6px;padding:5px 6px}
+ .av65-player-card .av61-member-copy{flex:1 1 0}
+ .av65-player-card .av61-member-rewards{flex-wrap:wrap;min-height:17px}
+ .av65-player-card .av61-level-label{font-size:8px!important}
+ .av65-badge{width:20px!important;height:20px!important}
+ .av65-badge .celestial-emblem{max-width:20px!important;max-height:20px!important}
+ .av65-player-card--featured .av61-member-name{font-size:17px!important}
+ .av65-player-card--inline .av61-level-label{display:none!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .av65-player-card,.av65-aura-field{animation:none!important;transition:none!important;transform:none!important}
+}
+@media(forced-colors:active){
+ .av65-player-card{border-color:CanvasText}
+ .av65-ribbon,.av65-medal{forced-color-adjust:auto}
+ .av65-player-card:focus-visible{outline-color:Highlight}
+}
+
+/* Unified canonical member world header. One visible identity, one semantic H1. */
+.av65-visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.av65-public-identity{width:100%;align-items:stretch!important;position:relative}
+.av65-public-dossier{min-width:0;width:min(100%,620px)}
+.av65-public-dossier>.av65-player-card{max-width:100%;width:max-content;min-width:min(100%,300px)}
+.av65-public-dossier>p{margin:8px 0 0;color:#e0cfdc;font-size:clamp(12px,1.1vw,15px);line-height:1.5}
+@media(max-width:640px){.av65-public-dossier>.av65-player-card{width:100%;min-width:0}.av65-public-identity{padding:0!important}}
+
+/* The same visual contract wraps legacy creator channels without asserting
+ * that an unrelated creator handle is a verified canonical member identity. */
+.av65-player-card--channel{background:linear-gradient(110deg,#171d31a9,#211a30b3);border-color:#c5a9c13b}
+.av65-channel-label{display:inline-flex;align-items:center;white-space:nowrap;border:1px solid #c2adc059;background:#272539a8;color:#d6c4d7;font:750 9px/1.2 ui-monospace,monospace;letter-spacing:.07em;border-radius:5px;padding:3px 6px}
+.av65-channel-identity{width:100%;max-width:100%;min-width:0}
+.av65-channel-identity .av61-photo .ms-portrait{border:1px solid #ab8ba95e}
+.av7-author .av65-channel-identity .av61-member-copy{min-width:0}
+
+/* The same bounded face is usable inside an existing navigation link.
+ * It must never introduce an invalid nested anchor on project/directory cards. */
+.avp-project .avp-creator-credit>.av65-project-channel{flex:1;min-width:0;max-width:100%}
+.avp-project .avp-creator-credit>.av65-project-channel strong{line-height:1.3!important}
+.avp-project .avp-creator-credit>.av65-project-channel .av61-member-rewards{font-size:9px}
+.avp-project .avp-creator-credit>span:last-child:not(.av65-project-channel){flex:none}
+.portal-creator-tile .av65-directory-channel{width:100%;max-width:100%;min-width:0;margin:6px 0 9px;text-align:left}
+.av6-maker-list .av65-maker-index{width:auto;max-width:100%;min-width:0;flex:1 1 0}
+.av6-maker-list .av65-maker-index .av61-photo .ms-portrait{width:28px!important;height:28px!important}
+.discussion-identity>.av65-player-card,.discussion-identity>div>.av65-player-card{width:max-content;max-width:100%;min-width:0}
+.discussion-identity>div>small{display:block;margin:4px 0 0;color:#b6acc0;font:650 10px/1.3 ui-monospace,monospace}
+@media(max-width:640px){.avp-project .avp-creator-credit{max-width:100%}.portal-creator-tile .av65-directory-channel{margin-block:5px}}
+
+/* True per-badge miniature engravings replace the retired shared motif discs. */
+.av65-badge .av66-badge-insignia{max-width:22px;max-height:22px}
+.av65-player-card--inline .av65-badge .av66-badge-insignia{width:18px!important;height:18px!important}
+.av65-player-card--inline .av65-badge .av66-badge-insignia svg{width:100%;height:100%}
+.av65-player-card--compact .av65-badge{width:20px!important;height:20px!important}
+.av65-player-card--compact .av65-badge .av66-badge-insignia{width:20px!important;height:20px!important}
+.av65-player-card--compact .av65-badge .av66-badge-insignia svg{width:100%;height:100%}
+@media(max-width:640px){.av65-badge .av66-badge-insignia{width:20px!important;height:20px!important}.av65-badge .av66-badge-insignia svg{width:100%;height:100%}}
+
+
+/* V077 / Front-facing earned Evolution identity artwork.
+ * Keep card art fixed and sharp at 30-60px. Never re-enable WebGL miniature
+ * canvases or transform the image into an angled model silhouette.
+ */
+.av65-player-card .av61-specimen:has([data-presentation="v077-front-facing-illustration"]) {
+ filter:none;
+ perspective:none!important;
+ isolation:isolate;
+}
+.av65-player-card .av61-specimen:has([data-presentation="v077-front-facing-illustration"])::after {
+ content:none!important;
+}
+.av65-player-card .level-emblem[data-presentation="v077-front-facing-illustration"] {
+ box-sizing:border-box;
+ padding:1px;
+ border-radius:11px;
+ border:1px solid rgba(231,211,191,.31);
+ background:linear-gradient(142deg,#253147 0%,#151e31 49%,#101725 100%);
+ box-shadow:inset 0 1px 1px rgba(255,248,233,.17),0 4px 8px rgba(0,0,0,.45);
+ animation:none!important;
+ transform:none!important;
+ transition:border-color .18s ease,box-shadow .18s ease;
+}
+.av65-player-card:hover .level-emblem[data-presentation="v077-front-facing-illustration"],
+.av65-player-card:focus-visible .level-emblem[data-presentation="v077-front-facing-illustration"] {
+ border-color:rgba(241,221,204,.6);
+ box-shadow:inset 0 1px 1px rgba(255,248,233,.22),0 5px 11px rgba(0,0,0,.6);
+}
+.av65-player-card .level-emblem[data-presentation="v077-front-facing-illustration"] > .av62-native-poster {
+ padding:0!important;
+ border-radius:10px;
+ width:100%!important;
+ height:100%!important;
+ object-fit:contain;
+ object-position:center;
+ image-rendering:auto;
+ filter:none!important;
+}
+.av65-player-card--inline .level-emblem[data-presentation="v077-front-facing-illustration"] {
+ border-radius:8px;
+}
+@media(prefers-reduced-motion:reduce) {
+ .av65-player-card .level-emblem[data-presentation="v077-front-facing-illustration"] {
+  transition:none!important;
+ }
+}

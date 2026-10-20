@@ -1,0 +1,94 @@
+name: ANEVUM Old Subdomain Unrouted Retirement
+
+# Builds the *future* a.anevum.com retirement Worker with NO route.
+# Current public a.anevum.com and apex countdown must stay unchanged.
+on:
+  push:
+    branches: [build/apex-prelaunch-gateway-20261017-001]
+    paths: [.github/workflows/apex-retirement-unrouted-release.yml]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-old-subdomain-unrouted
+  cancel-in-progress: false
+
+jobs:
+  build_unrouted:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Validate exact unrouted Worker and source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/build/apex-prelaunch-gateway-20261017-001"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          import assert from 'node:assert/strict';
+          const config=JSON.parse(readFileSync('creator-v1/wrangler.a-retirement.jsonc','utf8'));
+          assert.equal(config.name,'anevum-a-community-retirement');
+          assert.equal(config.account_id,'2f7ee83107240152097efd956a4e8335');
+          assert.equal(config.main,'./apex-prelaunch/a-retirement.mjs');
+          assert.deepEqual(config.routes,[]);
+          assert.equal(config.workers_dev,false);
+          assert.equal(config.preview_urls,false);
+          assert.equal(config.assets,undefined);
+          assert.equal(config.d1_databases,undefined);
+          assert.equal(config.vars,undefined);
+          NODE
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test old-host API denial and safe redirect boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          node --check creator-v1/apex-prelaunch/a-retirement.mjs
+          node --test creator-v1/test/apex-retirement.test.mjs
+      - name: Verify original live routes remain intact
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test "$CLOUDFLARE_ACCOUNT_ID" = "2f7ee83107240152097efd956a4e8335"
+          route_url="https://api.cloudflare.com/client/v4/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes"
+          curl --fail --silent --show-error --max-time 25 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$route_url" | jq -e '
+            .success and
+            ([.result[]|select(.pattern=="anevum.com/*" and .script=="anevum-construction-terminal")]|length)==1 and
+            ([.result[]|select(.pattern=="a.anevum.com/*" and .script=="anevum-creator-v1-a-staging")]|length)==1 and
+            ([.result[]|select(.script=="anevum-a-community-retirement")]|length)==0
+          ' >/dev/null
+      - name: Upload only an unrouted script
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler deploy --config creator-v1/wrangler.a-retirement.jsonc
+      - name: Verify no active route was modified
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="https://api.cloudflare.com/client/v4"
+          cf(){ curl --fail --silent --show-error --max-time 25 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$1"; }
+          cf "$url/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-a-community-retirement/settings" | jq -e '
+            .success and ([.result.bindings|length] | .[0]) == 0
+          ' >/dev/null
+          cf "$url/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes" | jq -e '
+            .success and
+            ([.result[]|select(.pattern=="anevum.com/*" and .script=="anevum-construction-terminal")]|length)==1 and
+            ([.result[]|select(.pattern=="a.anevum.com/*" and .script=="anevum-creator-v1-a-staging")]|length)==1 and
+            ([.result[]|select(.script=="anevum-a-community-retirement")]|length)==0
+          ' >/dev/null
+          echo "Old-host retirement code is uploaded but UNROUTED." >> "$GITHUB_STEP_SUMMARY"

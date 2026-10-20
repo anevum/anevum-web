@@ -1,0 +1,45 @@
+name: ANEVUM V076 Live Earned-Model Browser QA
+# Follow-up desktop inspector camera framing regression: canvas must be square and centered.
+# Verifies original Level 4 WebGL popup without masking success on Chrome teardown.
+on:
+  push:
+    branches: [fix/evolution-of-everything-media-v076]
+    paths: [.github/workflows/evolution-v076-live-viewer-qa.yml]
+permissions:
+  contents: read
+concurrency:
+  group: anevum-v076-live-viewer-qa
+  cancel-in-progress: false
+jobs:
+  live-viewer:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify actual live original Level 4 native 3D in desktop and phone Chrome
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = refs/heads/fix/evolution-of-everything-media-v076
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome" || { echo "::error::Chrome not available on runner"; exit 1; }
+          mkdir -p "$RUNNER_TEMP/v076-live-viewer"
+          node creator-v1/test/evolution-v076-live-viewer.mjs "$chrome" "$RUNNER_TEMP/v076-live-viewer"
+          test -s "$RUNNER_TEMP/v076-live-viewer/v076-native-model-level4-desktop.png"
+          test -s "$RUNNER_TEMP/v076-live-viewer/v076-native-model-level4-mobile.png"
+          test -s "$RUNNER_TEMP/v076-live-viewer/result.json"
+          echo 'V076_LIVE_POPUP_NATIVE_WEBGL=PASS' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Live site: https://anevum.com/@devon' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v076-live-earned-model-desktop-mobile-qa
+          path: ${{ runner.temp }}/v076-live-viewer
+          if-no-files-found: warn
+          retention-days: 14

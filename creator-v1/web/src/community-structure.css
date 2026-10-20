@@ -1,0 +1,77 @@
+/* ANEVUM V1 IA only: reuse current cinematic tokens, art and tactile controls. */
+.site-shell .menu-button{
+  display:inline-flex;align-items:center;justify-content:center;flex:0 0 42px;
+  width:42px;height:42px;border:1px solid var(--line,#49506b);
+  border-radius:13px;background:var(--panel,#101526);color:inherit;
+}
+.site-shell .menu-button:hover{border-color:currentColor}
+.site-shell .mobile-drawer{
+  position:fixed;top:72px;right:12px;left:auto;
+  width:min(340px,calc(100vw - 24px));max-height:calc(100dvh - 84px);
+  overflow-y:auto;padding:9px;border-radius:18px;
+  background:var(--panel,#101526);border:1px solid var(--line,#535a88);
+  box-shadow:0 22px 60px #000a;z-index:90;
+}
+.site-shell .mobile-drawer .nav-drawer-heading{
+  display:block;padding:10px 12px 5px;font-size:10px;
+  letter-spacing:.13em;font-weight:800;text-transform:uppercase;
+  color:var(--bone-dim,#b7afa6);
+}
+.site-shell .mobile-drawer .nav-drawer-group+ .nav-drawer-group{
+  border-top:1px solid var(--line-soft,#282427);margin-top:8px;padding-top:5px;
+}
+.site-shell .mobile-drawer .nav-drawer-entry{
+  display:flex;align-items:center;gap:10px;min-height:44px;padding:10px 12px;
+  border:0;border-radius:11px;color:inherit;text-decoration:none;
+  font-weight:700;letter-spacing:.02em;text-transform:none;font-size:13px;
+}
+.site-shell .mobile-drawer .nav-drawer-entry small{
+  display:none;
+}
+.site-shell .mobile-drawer .nav-drawer-entry[aria-current="page"]{
+  background:rgba(180,150,220,.14);
+}
+.site-shell .mobile-drawer .nav-drawer-entry:focus-visible{
+  outline:2px solid currentColor;outline-offset:2px;
+}
+.site-shell .mobile-drawer .nav-drawer-more{
+  border-top:1px solid var(--line-soft,#282427);margin-top:8px;padding-top:5px;
+}
+.site-shell .mobile-drawer .nav-drawer-more summary{
+  cursor:pointer;display:list-item;list-style-position:inside;padding:10px 12px;
+  min-height:44px;border-radius:11px;font-size:12px;font-weight:750;
+  color:var(--bone,#eee7dd);
+}
+.site-shell .mobile-drawer .nav-drawer-more summary:focus-visible{
+  outline:2px solid currentColor;outline-offset:2px;
+}
+.site-shell .mobile-drawer .nav-drawer-more .nav-drawer-group{
+  border-top:1px solid var(--line-soft,#282427);padding-top:6px;
+}
+.site-shell .mobile-drawer .nav-drawer-footer{
+  margin-top:9px;padding:9px 12px 5px;
+  color:var(--bone-dim,#b7afa6);font-size:11px;line-height:1.5;
+}
+.site-shell .member-account-hub .member-actions{gap:10px;flex-wrap:wrap}
+.site-shell .member-account-hub .member-account-hub-note{margin-top:14px}
+@media(max-width:640px){
+  .site-shell .mobile-drawer{top:59px;max-height:calc(100dvh - 68px)}
+  .site-shell .menu-button{flex-basis:42px;min-width:42px}
+}
+@media(prefers-reduced-motion:reduce){
+  .site-shell .mobile-drawer *{scroll-behavior:auto!important}
+}
+
+/* One mobile/laptop search affordance works on every route, not only Home.
+   The full input remains on large desktop; the accessible quick finder is reusable. */
+@media(max-width:1200px){
+  .site-shell .header-search,.site-shell .header-launcher{display:none}
+  .site-shell .cinema-mobile-search{
+    display:grid;place-items:center;flex:none;width:44px;height:44px;
+    margin-left:auto;padding:0;border:1px solid #877193;border-radius:50%;
+    background:linear-gradient(140deg,#151729,#090e1e);
+    color:#f0dbcc;box-shadow:inset 0 1px 0 #fff2db1d;
+  }
+  .site-shell .cw-account-link{display:grid;place-items:center;flex:none;min-width:44px;min-height:44px}
+}
+@media(min-width:1201px){.site-shell .header-launcher,.site-shell .cinema-mobile-search{display:none}}

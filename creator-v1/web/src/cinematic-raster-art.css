@@ -1,0 +1,41 @@
+/* High-fidelity raster artwork, original SVG fallbacks, responsive optical treatments. */
+.cw-artwork{display:block;position:relative;width:100%;height:100%;min-height:0;overflow:hidden;isolation:isolate;background:linear-gradient(145deg,#0b1b38,#071021)}
+.cw-artwork-image,.cw-artwork-vector{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover;object-position:center center}
+.cw-artwork-vector{z-index:0}
+.cw-artwork-glaze{position:absolute;z-index:1;inset:0;pointer-events:none;background:linear-gradient(0deg,#030b1b3d,transparent 45%,#0509161a),radial-gradient(ellipse at 55% 44%,transparent 30%,#02071928 100%)}
+.cw-hero-art .cw-artwork{height:100%;width:100%;overflow:hidden}
+.cw-hero-art .cw-artwork-image{object-position:57% center}
+.cw-hero-feature-art .cw-artwork,.cw-world-preview-art .cw-artwork,.cw-small-world-image .cw-artwork{width:100%;height:100%}
+.cw-hero-feature-art .cw-artwork{transform:scale(1.14);transition:transform .8s ease}
+.cw-hero-feature:hover .cw-artwork{transform:scale(1.24)}
+.cw-world-preview-art .cw-artwork{transform:scale(1.01);transition:transform .6s cubic-bezier(.18,.8,.19,1)}
+.cw-world-preview:hover .cw-artwork{transform:scale(1.07)}
+.cw-small-world-image .cw-artwork{transform:scale(1.03);transition:transform .6s ease}
+.cw-small-world:hover .cw-artwork{transform:scale(1.12)}
+.project-art .cw-artwork{height:100%;width:100%;transform:scale(1.015);transition:transform .55s ease}
+.project-card:hover .project-art .cw-artwork{transform:scale(1.075)}
+.portal-project-art>.cw-artwork{position:absolute;inset:0;z-index:-1;width:100%;height:100%}
+.portal-project-art>.cw-artwork .cw-artwork-image{object-position:62% center}
+.cw-heading-cosmos>.cw-artwork,.cw-channel-scene>.cw-artwork,.cw-room-world>.cw-artwork{position:absolute;inset:0;width:100%;height:100%}
+.cw-room-world>.cw-artwork .cw-artwork-image{filter:saturate(1.05)}
+.cw-start-portal-art{position:absolute;inset:0;overflow:hidden;z-index:0;opacity:.37;pointer-events:none;border-radius:inherit}
+.cw-start-portal-art:after{content:"";position:absolute;inset:0;z-index:2;background:linear-gradient(0deg,#09172cf0 0%,#081526b0 60%,#0c162a4f)}
+.start-portal{position:relative;isolation:isolate;overflow:hidden;min-height:185px}
+.start-portal>*:not(.cw-start-portal-art){position:relative;z-index:2}
+.start-portal:hover .cw-start-portal-art{opacity:.55}
+.start-portal .cw-start-portal-art>.cw-artwork{transition:transform .7s ease}
+.start-portal:hover .cw-start-portal-art>.cw-artwork{transform:scale(1.08)}
+@media (max-width:820px){
+ .cw-hero-art .cw-artwork-image{object-position:60% center}
+ .cw-world-preview-art .cw-artwork-image{object-position:55% center}
+}
+@media (max-width:600px){
+ .cw-hero-art .cw-artwork-image{object-position:60% center}
+ .cw-hero-art .cw-artwork-glaze{background:linear-gradient(90deg,#04102388,#04102338),linear-gradient(0deg,#01061291,transparent 65%)}
+ .start-portal{min-height:152px}
+ .cw-start-portal-art{opacity:.26}
+}
+@media (prefers-reduced-motion:reduce){
+ .cw-artwork,.cw-artwork-image,.cw-hero-feature-art .cw-artwork,.cw-world-preview-art .cw-artwork,.cw-small-world-image .cw-artwork,.project-art .cw-artwork,.start-portal .cw-artwork{animation:none!important;transition:none!important}
+}
+@media (forced-colors:active){.cw-artwork-image{opacity:.18}.start-portal{border:1px solid CanvasText}}

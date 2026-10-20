@@ -1,0 +1,234 @@
+name: ANEVUM A Staging Member Spaces V028
+
+# Task-authorized staging-only member spaces release. Never deploy the apex countdown.
+on:
+  push:
+    branches: [build/member-walls-dashboard-20261016]
+    paths: [.github/workflows/a-staging-v028-member-spaces-release.yml]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-a-canonical-v028-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.repository == 'anevum/anevum-web' && github.ref == 'refs/heads/build/member-walls-dashboard-20261016'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CANDIDATE_SHA: ${{ github.sha }}
+      SOURCE_BRANCH: build/member-walls-dashboard-20261016
+      CF_WORKER: anevum-creator-v1-a-staging
+      CF_ZONE: 8abe27259b5436af5966d3b40d9a3760
+      CF_ACCOUNT_EXPECTED: 2f7ee83107240152097efd956a4e8335
+    steps:
+      - name: Checkout exact reviewed code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify pinned source, Worker configuration and closed public signup
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          head="$(curl --fail --silent --show-error --max-time 25 -H "Authorization: Bearer $GH_TOKEN" "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/git/ref/heads/$SOURCE_BRANCH" | jq -r '.object.sha')"
+          test "$head" = "$CANDIDATE_SHA"
+          node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";
+          import {readFileSync} from "node:fs";
+          const c=JSON.parse(readFileSync("creator-v1/wrangler.a-canonical-invited-v024.jsonc","utf8"));
+          assert.equal(c.name,"anevum-creator-v1-a-staging");
+          assert.equal(c.account_id,"2f7ee83107240152097efd956a4e8335");
+          assert.equal(c.main,"./web/a-canonical-stage.review.mjs");
+          assert.deepEqual(c.routes,[]);
+          assert.equal(c.workers_dev,false);
+          assert.equal(c.preview_urls,false);
+          assert.equal(c.assets?.directory,"./dist/web");
+          assert.equal(c.assets?.binding,"ASSETS");
+          assert.equal(c.assets?.run_worker_first,true);
+          assert.deepEqual(c.d1_databases?.map(x=>[x.binding,x.database_id]),[
+            ["COMMUNITY_DB","fa96e36d-6257-4883-bf15-074947e11a13"],
+            ["MEMBER_DB","e1d29049-c83b-4534-8355-dc1fa36ba6d8"]
+          ]);
+          assert.deepEqual(c.vars,{
+            ANEVUM_CANONICAL_STAGE_ENABLED:"true",
+            CANONICAL_SCHEMA_APPROVED:"true",
+            CANONICAL_EMAIL_ENABLED:"true",
+            CANONICAL_INVITED_SIGNUP_ENABLED:"true",
+            CANONICAL_PUBLIC_SIGNUP_ENABLED:"false",
+            CANONICAL_GOOGLE_ENABLED:"false",
+            CANONICAL_GITHUB_ENABLED:"false",
+            CANONICAL_APPLE_ENABLED:"false",
+            CANONICAL_MICROSOFT_ENABLED:"false"
+          });
+          NODE
+          echo SOURCE_CONFIG_AND_SIGNUP_SCOPE=PASS
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build and run complete Creator V1 verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          (cd creator-v1 && npm test)
+          node --check creator-v1/web/a-canonical-stage.review.mjs
+          node --check creator-v1/canonical-auth/worker.mjs
+          test -s creator-v1/dist/web/index.html
+          test -n "$(grep -oE '/assets/index-[^"]+\.js' creator-v1/dist/web/index.html | head -1)"
+          echo SOURCE_COMPILED_AND_TESTS=PASS
+
+      - name: Protect current routes, secrets, databases and previous Worker version
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test "$CLOUDFLARE_ACCOUNT_ID" = "$CF_ACCOUNT_EXPECTED"
+          umask 077
+          cf() { curl --fail --silent --show-error --max-time 30 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$1"; }
+          api="https://api.cloudflare.com/client/v4"
+          cf "$api/zones/$CF_ZONE/workers/routes" > "$RUNNER_TEMP/routes-before.json"
+          jq -e '
+            .success and
+            ([.result[]|select(.pattern=="anevum.com/*" and .script=="anevum-construction-terminal")]|length)==1 and
+            ([.result[]|select(.pattern=="a.anevum.com/*" and .script=="anevum-creator-v1-a-staging")]|length)==1 and
+            ([.result[]|select(.pattern=="next.anevum.com/api/v1/member/*" and .script=="anevum-member-auth-staging")]|length)==1
+          ' "$RUNNER_TEMP/routes-before.json" >/dev/null
+          cf "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$CF_WORKER/settings" > "$RUNNER_TEMP/stage-settings-before.json"
+          jq -e '
+            .success and
+            ([.result.bindings[]|select(.type=="d1")]|length)==2 and
+            ([.result.bindings[]|select(.type=="d1" and .name=="COMMUNITY_DB" and ((.id//.database_id)=="fa96e36d-6257-4883-bf15-074947e11a13"))]|length)==1 and
+            ([.result.bindings[]|select(.type=="d1" and .name=="MEMBER_DB" and ((.id//.database_id)=="e1d29049-c83b-4534-8355-dc1fa36ba6d8"))]|length)==1 and
+            ([.result.bindings[]|select(.type=="assets" and .name=="ASSETS")]|length)==1 and
+            ([.result.bindings[]|select(.type=="secret_text" and .name=="CANONICAL_BETTER_AUTH_SECRET")]|length)==1 and
+            ([.result.bindings[]|select(.type=="secret_text" and .name=="CANONICAL_RESEND_API_KEY")]|length)==1 and
+            ([.result.bindings[]|select(.type=="secret_text" and .name=="CANONICAL_INVITE_EMAILS")]|length)==1 and
+            ([.result.bindings[]|select(.type=="secret_text" and .name=="CANONICAL_PROTECTED_EMAILS")]|length)==1 and
+            ([.result.bindings[]|select(.type=="plain_text" and .name=="ANEVUM_CANONICAL_STAGE_ENABLED" and .text=="true")]|length)==1 and
+            ([.result.bindings[]|select(.type=="plain_text" and .name=="CANONICAL_INVITED_SIGNUP_ENABLED" and .text=="true")]|length)==1 and
+            ([.result.bindings[]|select(.type=="plain_text" and .name=="CANONICAL_PUBLIC_SIGNUP_ENABLED" and .text=="false")]|length)==1
+          ' "$RUNNER_TEMP/stage-settings-before.json" >/dev/null
+          cf "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$CF_WORKER/deployments?per_page=1" > "$RUNNER_TEMP/stage-deployments-before.json"
+          jq -er '.result.deployments[0].versions[] | select(.percentage==100) | .version_id' "$RUNNER_TEMP/stage-deployments-before.json" > "$RUNNER_TEMP/rollback-version.txt"
+          echo EXISTING_SECRETS_D1_ROUTES_AND_ROLLBACK=PASS
+
+      - name: Require expected V028 signup staging version
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="38a55eae-0032-4e43-baea-ced5155d24f6"
+          actual="$(cat "$RUNNER_TEMP/rollback-version.txt")"
+          test "$actual" = "$expected" || { echo "::error::Staging version drifted. Refusing to overwrite another release."; exit 1; }
+
+      - name: Apply additive canonical member spaces schema only
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test "$CLOUDFLARE_ACCOUNT_ID" = "$CF_ACCOUNT_EXPECTED"
+          npx wrangler d1 execute anevum-canonical-member-staging --remote --config creator-v1/wrangler.a-canonical-invited-v024.jsonc --command 'SELECT issuer,migration FROM canonical_identity_manifest WHERE id=1' --json > "$RUNNER_TEMP/canonical-issuer.json"
+          jq -e '[.[]|.results[]|select(.issuer=="anevum-better-auth-staging-v1" and .migration=="0001_canonical_better_auth_core")]|length==1' "$RUNNER_TEMP/canonical-issuer.json" >/dev/null
+          npx wrangler d1 execute anevum-canonical-member-staging --remote --config creator-v1/wrangler.a-canonical-invited-v024.jsonc --file creator-v1/canonical-auth/migrations/0004_member_spaces.sql --yes
+          echo ADDITIVE_CANONICAL_MEMBER_SPACES_SCHEMA=PASS
+
+      - name: Deploy only a.anevum.com Worker and validate with automatic rollback
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          api="https://api.cloudflare.com/client/v4"
+          cf() { curl --fail --silent --show-error --max-time 30 -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$1"; }
+          old_version="$(cat "$RUNNER_TEMP/rollback-version.txt")"
+          deployed=0
+          validated=0
+          rollback() {
+            if [ "$deployed" != 1 ] || [ "$validated" = 1 ]; then return; fi
+            echo "::error::V028 validation failed, restoring the previously active staging Worker version."
+            jq -nc --arg id "$old_version" '{strategy:"percentage",versions:[{version_id:$id,percentage:100}],annotations:{"workers/message":"ANEVUM.WEB.PATCH.2026-10-16.001 safe rollback"}}' > "$RUNNER_TEMP/rollback-request.json"
+            curl --fail --silent --show-error --max-time 30 -X POST -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" --data-binary @"$RUNNER_TEMP/rollback-request.json" "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$CF_WORKER/deployments" > "$RUNNER_TEMP/rollback-response.json" || true
+            if jq -e '.success' "$RUNNER_TEMP/rollback-response.json" >/dev/null 2>&1; then echo ROLLBACK_REQUESTED=PASS; else echo "::error::Rollback requires manual intervention"; fi
+          }
+          trap rollback EXIT
+          deployed=1
+          npx wrangler deploy --config creator-v1/wrangler.a-canonical-invited-v024.jsonc --keep-vars
+          cf "$api/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$CF_WORKER/settings" > "$RUNNER_TEMP/stage-settings-after.json"
+          jq -e '
+            .success and
+            ([.result.bindings[]|select(.type=="d1")]|length)==2 and
+            ([.result.bindings[]|select(.type=="d1" and .name=="MEMBER_DB" and ((.id//.database_id)=="e1d29049-c83b-4534-8355-dc1fa36ba6d8"))]|length)==1 and
+            ([.result.bindings[]|select(.type=="d1" and .name=="COMMUNITY_DB" and ((.id//.database_id)=="fa96e36d-6257-4883-bf15-074947e11a13"))]|length)==1 and
+            ([.result.bindings[]|select(.type=="secret_text")]|length)>=4 and
+            ([.result.bindings[]|select(.type=="plain_text" and .name=="CANONICAL_INVITED_SIGNUP_ENABLED" and .text=="true")]|length)==1 and
+            ([.result.bindings[]|select(.type=="plain_text" and .name=="CANONICAL_PUBLIC_SIGNUP_ENABLED" and .text=="false")]|length)==1
+          ' "$RUNNER_TEMP/stage-settings-after.json" >/dev/null
+          cf "$api/zones/$CF_ZONE/workers/routes" > "$RUNNER_TEMP/routes-after.json"
+          jq -e '
+            .success and
+            ([.result[]|select(.pattern=="anevum.com/*" and .script=="anevum-construction-terminal")]|length)==1 and
+            ([.result[]|select(.pattern=="a.anevum.com/*" and .script=="anevum-creator-v1-a-staging")]|length)==1 and
+            ([.result[]|select(.pattern=="next.anevum.com/api/v1/member/*" and .script=="anevum-member-auth-staging")]|length)==1
+          ' "$RUNNER_TEMP/routes-after.json" >/dev/null
+          ready=0
+          for i in $(seq 1 12); do
+            if curl --fail --silent --show-error --max-time 15 https://a.anevum.com/api/v1/member/health | jq -e '.status=="ready" and .registration=="invite-only"' >/dev/null 2>&1 &&
+               curl --fail --silent --show-error --max-time 15 https://a.anevum.com/api/v1/member/auth-methods | jq -e '.registration=="invite-only" and .methods.email.available==true and .methods.google.available==false and .methods.github.available==false' >/dev/null 2>&1; then
+              ready=1; break
+            fi
+            sleep 3
+          done
+          test "$ready" = 1
+          curl --fail --silent --show-error --max-time 20 https://a.anevum.com/join -o "$RUNNER_TEMP/hosted-join.html"
+          grep -q 'id="root"' "$RUNNER_TEMP/hosted-join.html"
+          test "$(curl --silent --show-error --max-time 20 -o /dev/null -w '%{http_code}' https://a.anevum.com/api/v1/member/creator-profile)" = 401
+          # Diagnose the owner-reported failure without sending user secrets
+          # or creating a real profile: a valid Origin with absent optional
+          # Fetch Metadata must reach session auth (401), never CSRF 403.
+          profile='https://a.anevum.com/api/v1/member/creator-profile'
+          status="$(curl --silent --show-error --max-time 20 -o /dev/null -w '%{http_code}' -X POST \
+            -H 'Origin: https://a.anevum.com' -H 'Content-Type: application/json' \
+            --data-binary '{"handle":"fixture_only","displayName":"Unauthenticated Probe","bio":""}' "$profile")"
+          test "$status" = 401 || { echo "::error::Expected 401 for same-Origin metadata-free anonymous profile claim; got $status"; exit 1; }
+          foreign="$(curl --silent --show-error --max-time 20 -o /dev/null -w '%{http_code}' -X POST \
+            -H 'Origin: https://untrusted.invalid' -H 'Content-Type: application/json' \
+            --data-binary '{"handle":"fixture_only","displayName":"Unauthenticated Probe","bio":""}' "$profile")"
+          test "$foreign" = 403 || { echo "::error::Foreign-Origin mutation boundary failed: $foreign"; exit 1; }
+          for route in space wall media/avatar media/banner; do
+            test "$(curl --silent --show-error --max-time 20 -o /dev/null -w '%{http_code}' "https://a.anevum.com/api/v1/member/$route")" = 401
+          done
+          echo "PROFILE_ORIGIN_COMPATIBILITY_AND_SPACE_ISOLATION=PASS"
+          curl --fail --silent --show-error --max-time 20 https://a.anevum.com/api/v1/member/auth/get-session | jq -e '. == null' >/dev/null
+          index_js="$(grep -oE '/assets/index-[^"]+\.js' creator-v1/dist/web/index.html | head -1)"
+          test -n "$index_js"
+          curl --fail --silent --show-error --max-time 20 "https://a.anevum.com$index_js" -o "$RUNNER_TEMP/hosted-index.js"
+          cmp "creator-v1/dist/web$index_js" "$RUNNER_TEMP/hosted-index.js"
+          curl --fail --silent --show-error --max-time 20 https://anevum.com/ -o "$RUNNER_TEMP/apex.html"
+          grep -q 'THE TRANSMISSION' "$RUNNER_TEMP/apex.html"
+          validated=1
+          echo "ANEVUM V028 STAGING RELEASE PASS: $CANDIDATE_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "Live: https://a.anevum.com/join — invite-only; public registration remains OFF." >> "$GITHUB_STEP_SUMMARY"
+          echo "Unchanged: https://anevum.com/ countdown, production routes, and existing staging D1 IDs." >> "$GITHUB_STEP_SUMMARY"

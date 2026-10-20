@@ -1,0 +1,14 @@
+dist/
+site/generated.mjs
+.wrangler/
+node_modules/
+*.db
+*.db-*
+*.pem
+.dev.vars*
+.env*
+# V038: private expense receipts and Stripe reconciliation input are NEVER source artifacts
+finance/private/
+finance/*.private.json
+private-ledgers/
+*.anevum-private-ledger.json

@@ -1,0 +1,93 @@
+name: ANEVUM Atlas Isolated Preview
+
+# Deploys only an isolated read-only workers.dev owner-review site.
+# Does not change anevum.com, next.anevum.com, RHEN, or member data.
+on:
+  push:
+    branches: [design/atlas-spatial-navigation-20261013]
+    paths:
+      - creator-v1/web/**
+      - creator-v1/test/atlas-spatial-navigation.test.mjs
+      - creator-v1/test/atlas-morph-navigation.test.mjs
+      - creator-v1/test/cinematic-worlds.test.mjs
+      - creator-v1/test/capture-atlas-morph.mjs
+      - creator-v1/wrangler.atlas-review.jsonc
+      - creator-v1/package.json
+      - .github/workflows/atlas-isolated-preview.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-atlas-isolated-review
+  cancel-in-progress: true
+
+jobs:
+  isolated-review:
+    if: github.ref == 'refs/heads/design/atlas-spatial-navigation-20261013'
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - name: Checkout exact review source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify review Worker isolation and no private bindings
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const c=JSON.parse(fs.readFileSync("creator-v1/wrangler.atlas-review.jsonc","utf8"));
+            if(c.name!=="anevum-atlas-review-20261013"||c.workers_dev!==true||c.preview_urls!==false)throw Error("Unexpected review deployment");
+            for(const key of ["routes","route","d1_databases","r2_buckets","kv_namespaces","vars","unsafe","services","durable_objects","send_email"]){
+              if(Object.hasOwn(c,key))throw Error("Unexpected binding: "+key);
+            }
+            if(c.main!=="./web/atlas-review-worker.mjs"||c.assets?.binding!=="ASSETS"||c.assets?.directory!=="./dist/web")throw Error("Unexpected runtime");
+            const w=fs.readFileSync("creator-v1/web/atlas-review-worker.mjs","utf8");
+            if(/CLOUDFLARE_API_TOKEN|api[_-]?key|private_key|bearer/i.test(w))throw Error("Credential reference in review runtime");
+          '
+          node --check creator-v1/web/atlas-review-worker.mjs
+      - name: Build and test without Cloudflare credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          (cd creator-v1 && npm test)
+          node --experimental-strip-types --test creator-v1/test/atlas-spatial-navigation.test.mjs
+          test -f creator-v1/dist/web/index.html
+          ! find creator-v1/dist/web -name '*.map' | grep -q .
+      - name: Publish isolated workers.dev review Worker only
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          npx wrangler deploy --config creator-v1/wrangler.atlas-review.jsonc
+      - name: Smoke test isolated review link
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://anevum-atlas-review-20261013.devonakins.workers.dev"
+          ready=0
+          for attempt in $(seq 1 18); do
+            code="$(curl --silent --show-error --max-time 15 -o "$RUNNER_TEMP/atlas-review.html" -w '%{http_code}' "$base/atlas" || true)"
+            if [ "$code" = 200 ] && grep -q 'id="root"' "$RUNNER_TEMP/atlas-review.html"; then ready=1; break; fi
+            sleep 2
+          done
+          test "$ready" = 1
+          test "$(curl --silent --show-error --max-time 15 -o /dev/null -w '%{http_code}' "$base/api/v1/member/me")" = 404
+          test "$(curl --silent --show-error --max-time 15 -X POST -o /dev/null -w '%{http_code}' "$base/api/v1/status")" = 405
+          curl --fail --silent --show-error --max-time 15 "$base/__review" | jq -e '.status == "DESIGN PREVIEW" and .database == false and .memberAccess == false' >/dev/null
+          curl --fail --silent --show-error --max-time 15 "$base/api/v1/status" | jq -e '.counts.publishedProjects >= 0' >/dev/null
+          curl --fail --silent --show-error --max-time 15 -I "$base/atlas" | grep -qi 'x-robots-tag: noindex'
+          echo "ATLAS_ISOLATED_READ_ONLY_SMOKE=PASS"
+          echo "REVIEW_LINK=$base/atlas"

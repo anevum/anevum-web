@@ -1,0 +1,41 @@
+name: ANEVUM V083 Combined Auth + D1 Recovery Safety
+on:
+  push:
+    branches: [integration/anevum-v083-d1-signup-20261019]
+  pull_request:
+    paths:
+      - 'creator-v1/**'
+      - '.github/workflows/v083-auth-d1-integration.yml'
+permissions:
+  contents: read
+concurrency:
+  group: v083-auth-d1-integrated-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install codebase dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Typecheck and compile both web frontends
+        run: |
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+      - name: Run D1 economy, OTP regression and studio safety in combination
+        working-directory: creator-v1
+        run: |
+          npm run test:d1-efficiency-v081
+          npm run test:entry-v082
+          npm run test:signup-activation
+          npm run test:staff-v080
+      - name: Confirm exact source SHA
+        run: git rev-parse HEAD
+# Source-only. No secrets, migrations, deployments, D1 writes, role changes or cloud API mutation.

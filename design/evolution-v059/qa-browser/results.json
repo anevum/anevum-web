@@ -1,0 +1,966 @@
+{
+  "status": "passed",
+  "assertions": [
+    {
+      "name": "WebGL initialized",
+      "pass": true
+    },
+    {
+      "name": "Static fallback hidden while live renderer is active",
+      "pass": true
+    },
+    {
+      "name": "30 gallery specimens",
+      "pass": true
+    },
+    {
+      "name": "Level 30 threshold preserved",
+      "pass": true
+    },
+    {
+      "name": "Level 1 loads and animates",
+      "pass": true,
+      "parts": 3
+    },
+    {
+      "name": "Level 2 loads and animates",
+      "pass": true,
+      "parts": 7
+    },
+    {
+      "name": "Level 3 loads and animates",
+      "pass": true,
+      "parts": 14
+    },
+    {
+      "name": "Level 4 loads and animates",
+      "pass": true,
+      "parts": 3
+    },
+    {
+      "name": "Level 5 loads and animates",
+      "pass": true,
+      "parts": 2
+    },
+    {
+      "name": "Level 6 loads and animates",
+      "pass": true,
+      "parts": 12
+    },
+    {
+      "name": "Level 7 loads and animates",
+      "pass": true,
+      "parts": 6
+    },
+    {
+      "name": "Level 8 loads and animates",
+      "pass": true,
+      "parts": 11
+    },
+    {
+      "name": "Level 9 loads and animates",
+      "pass": true,
+      "parts": 7
+    },
+    {
+      "name": "Level 10 loads and animates",
+      "pass": true,
+      "parts": 10
+    },
+    {
+      "name": "Level 11 loads and animates",
+      "pass": true,
+      "parts": 5
+    },
+    {
+      "name": "Level 12 loads and animates",
+      "pass": true,
+      "parts": 12
+    },
+    {
+      "name": "Level 13 loads and animates",
+      "pass": true,
+      "parts": 48
+    },
+    {
+      "name": "Level 14 loads and animates",
+      "pass": true,
+      "parts": 7
+    },
+    {
+      "name": "Level 15 loads and animates",
+      "pass": true,
+      "parts": 8
+    },
+    {
+      "name": "Level 16 loads and animates",
+      "pass": true,
+      "parts": 16
+    },
+    {
+      "name": "Level 17 loads and animates",
+      "pass": true,
+      "parts": 7
+    },
+    {
+      "name": "Level 18 loads and animates",
+      "pass": true,
+      "parts": 9
+    },
+    {
+      "name": "Level 19 loads and animates",
+      "pass": true,
+      "parts": 29
+    },
+    {
+      "name": "Level 20 loads and animates",
+      "pass": true,
+      "parts": 10
+    },
+    {
+      "name": "Level 21 loads and animates",
+      "pass": true,
+      "parts": 19
+    },
+    {
+      "name": "Level 22 loads and animates",
+      "pass": true,
+      "parts": 8
+    },
+    {
+      "name": "Level 23 loads and animates",
+      "pass": true,
+      "parts": 43
+    },
+    {
+      "name": "Level 24 loads and animates",
+      "pass": true,
+      "parts": 5
+    },
+    {
+      "name": "Level 25 loads and animates",
+      "pass": true,
+      "parts": 19
+    },
+    {
+      "name": "Level 26 loads and animates",
+      "pass": true,
+      "parts": 56
+    },
+    {
+      "name": "Level 27 loads and animates",
+      "pass": true,
+      "parts": 8
+    },
+    {
+      "name": "Level 28 loads and animates",
+      "pass": true,
+      "parts": 159
+    },
+    {
+      "name": "Level 29 loads and animates",
+      "pass": true,
+      "parts": 16
+    },
+    {
+      "name": "Level 30 loads and animates",
+      "pass": true,
+      "parts": 16
+    },
+    {
+      "name": "Pause freezes animation",
+      "pass": true
+    },
+    {
+      "name": "Chapter 1 has 5 specimens",
+      "pass": true
+    },
+    {
+      "name": "Chapter 2 has 5 specimens",
+      "pass": true
+    },
+    {
+      "name": "Chapter 3 has 5 specimens",
+      "pass": true
+    },
+    {
+      "name": "Chapter 4 has 5 specimens",
+      "pass": true
+    },
+    {
+      "name": "Chapter 5 has 5 specimens",
+      "pass": true
+    },
+    {
+      "name": "Chapter 6 has 5 specimens",
+      "pass": true
+    },
+    {
+      "name": "Search narrows collection",
+      "pass": true
+    },
+    {
+      "name": "Inspection opens",
+      "pass": true
+    },
+    {
+      "name": "Live canvas moved into inspection",
+      "pass": true
+    },
+    {
+      "name": "Escape closes inspection",
+      "pass": true
+    },
+    {
+      "name": "Focus returns to inspection trigger",
+      "pass": true
+    },
+    {
+      "name": "Recognition preview populated",
+      "pass": true
+    },
+    {
+      "name": "No horizontal overflow at 390px",
+      "pass": true
+    },
+    {
+      "name": "No horizontal overflow at 320px",
+      "pass": true
+    },
+    {
+      "name": "Reduced motion freezes timeline",
+      "pass": true
+    },
+    {
+      "name": "Reduced-motion control communicated",
+      "pass": true
+    },
+    {
+      "name": "Skip link destination",
+      "pass": true
+    },
+    {
+      "name": "Labeled native modal",
+      "pass": true
+    },
+    {
+      "name": "All buttons named",
+      "pass": true
+    },
+    {
+      "name": "Image alternatives specified",
+      "pass": true
+    },
+    {
+      "name": "Static fallback with WebGL unavailable",
+      "pass": true
+    },
+    {
+      "name": "No JavaScript exceptions",
+      "pass": true,
+      "errors": []
+    },
+    {
+      "name": "Offline review makes no network requests",
+      "pass": true
+    }
+  ],
+  "pass": 58,
+  "total": 58,
+  "errors": [],
+  "observations": [
+    {
+      "selected": 1,
+      "currentLevel": 1,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.5333000000000002,
+      "frames": 8,
+      "webgl": true,
+      "error": null,
+      "parts": 3,
+      "drawCostMs": 0.187500000001819,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 1
+    },
+    {
+      "selected": 2,
+      "currentLevel": 2,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.6166999999999998,
+      "frames": 8,
+      "webgl": true,
+      "error": null,
+      "parts": 7,
+      "drawCostMs": 0.437499999998181,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 2
+    },
+    {
+      "selected": 3,
+      "currentLevel": 3,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.45000000000000184,
+      "frames": 8,
+      "webgl": true,
+      "error": null,
+      "parts": 14,
+      "drawCostMs": 0.3875000000007276,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 3
+    },
+    {
+      "selected": 4,
+      "currentLevel": 4,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.6498999999999996,
+      "frames": 9,
+      "webgl": true,
+      "error": null,
+      "parts": 3,
+      "drawCostMs": 0.35555555555684903,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 4
+    },
+    {
+      "selected": 5,
+      "currentLevel": 5,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.6667000000000007,
+      "frames": 9,
+      "webgl": true,
+      "error": null,
+      "parts": 2,
+      "drawCostMs": 0.1555555555549088,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 5
+    },
+    {
+      "selected": 6,
+      "currentLevel": 6,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.48320000000000074,
+      "frames": 6,
+      "webgl": true,
+      "error": null,
+      "parts": 12,
+      "drawCostMs": 0.21666666666957704,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 6
+    },
+    {
+      "selected": 7,
+      "currentLevel": 7,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.6665999999999985,
+      "frames": 9,
+      "webgl": true,
+      "error": null,
+      "parts": 6,
+      "drawCostMs": 0.19999999999708962,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 7
+    },
+    {
+      "selected": 8,
+      "currentLevel": 8,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.6333000000000029,
+      "frames": 9,
+      "webgl": true,
+      "error": null,
+      "parts": 11,
+      "drawCostMs": 0.12222222222448585,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 8
+    },
+    {
+      "selected": 9,
+      "currentLevel": 9,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.6333000000000029,
+      "frames": 9,
+      "webgl": true,
+      "error": null,
+      "parts": 7,
+      "drawCostMs": 0.1444444444447678,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 9
+    },
+    {
+      "selected": 10,
+      "currentLevel": 10,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.6335000000000036,
+      "frames": 9,
+      "webgl": true,
+      "error": null,
+      "parts": 10,
+      "drawCostMs": 0.4888888888914759,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 10
+    },
+    {
+      "selected": 11,
+      "currentLevel": 11,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.7333999999999905,
+      "frames": 11,
+      "webgl": true,
+      "error": null,
+      "parts": 5,
+      "drawCostMs": 0.17272727272938937,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 11
+    },
+    {
+      "selected": 12,
+      "currentLevel": 12,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.616600000000013,
+      "frames": 9,
+      "webgl": true,
+      "error": null,
+      "parts": 12,
+      "drawCostMs": 0.2666666666660199,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 12
+    },
+    {
+      "selected": 13,
+      "currentLevel": 13,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.5334000000000015,
+      "frames": 8,
+      "webgl": true,
+      "error": null,
+      "parts": 48,
+      "drawCostMs": 0.7375000000010914,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 13
+    },
+    {
+      "selected": 14,
+      "currentLevel": 14,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.6333999999999942,
+      "frames": 9,
+      "webgl": true,
+      "error": null,
+      "parts": 7,
+      "drawCostMs": 0.1444444444399172,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 14
+    },
+    {
+      "selected": 15,
+      "currentLevel": 15,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.6334000000000087,
+      "frames": 9,
+      "webgl": true,
+      "error": null,
+      "parts": 8,
+      "drawCostMs": 0.18888888888371488,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 15
+    },
+    {
+      "selected": 16,
+      "currentLevel": 16,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.766799999999981,
+      "frames": 12,
+      "webgl": true,
+      "error": null,
+      "parts": 16,
+      "drawCostMs": 0.2499999999975747,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 16
+    },
+    {
+      "selected": 17,
+      "currentLevel": 17,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.6333999999999942,
+      "frames": 10,
+      "webgl": true,
+      "error": null,
+      "parts": 7,
+      "drawCostMs": 0.19000000000814907,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 17
+    },
+    {
+      "selected": 18,
+      "currentLevel": 18,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.5497999999999956,
+      "frames": 9,
+      "webgl": true,
+      "error": null,
+      "parts": 9,
+      "drawCostMs": 0.2111111111072306,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 18
+    },
+    {
+      "selected": 19,
+      "currentLevel": 19,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.5168000000000029,
+      "frames": 7,
+      "webgl": true,
+      "error": null,
+      "parts": 29,
+      "drawCostMs": 0.5714285714244137,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 19
+    },
+    {
+      "selected": 20,
+      "currentLevel": 20,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.6,
+      "frames": 8,
+      "webgl": true,
+      "error": null,
+      "parts": 10,
+      "drawCostMs": 0.16249999999490683,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 20
+    },
+    {
+      "selected": 21,
+      "currentLevel": 21,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.6,
+      "frames": 8,
+      "webgl": true,
+      "error": null,
+      "parts": 19,
+      "drawCostMs": 0.23749999999563443,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 21
+    },
+    {
+      "selected": 22,
+      "currentLevel": 22,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.6333999999999942,
+      "frames": 9,
+      "webgl": true,
+      "error": null,
+      "parts": 8,
+      "drawCostMs": 0.4333333333391541,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 22
+    },
+    {
+      "selected": 23,
+      "currentLevel": 23,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.5833999999999941,
+      "frames": 10,
+      "webgl": true,
+      "error": null,
+      "parts": 43,
+      "drawCostMs": 0.3199999999953434,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 23
+    },
+    {
+      "selected": 24,
+      "currentLevel": 24,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.599800000000003,
+      "frames": 8,
+      "webgl": true,
+      "error": null,
+      "parts": 5,
+      "drawCostMs": 0.11250000000654836,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 24
+    },
+    {
+      "selected": 25,
+      "currentLevel": 25,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.6500999999999914,
+      "frames": 9,
+      "webgl": true,
+      "error": null,
+      "parts": 19,
+      "drawCostMs": 0.4000000000006467,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 25
+    },
+    {
+      "selected": 26,
+      "currentLevel": 26,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.6333999999999942,
+      "frames": 8,
+      "webgl": true,
+      "error": null,
+      "parts": 56,
+      "drawCostMs": 0.24999999999636202,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 26
+    },
+    {
+      "selected": 27,
+      "currentLevel": 27,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.6166999999999971,
+      "frames": 8,
+      "webgl": true,
+      "error": null,
+      "parts": 8,
+      "drawCostMs": 0.19999999999708962,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 27
+    },
+    {
+      "selected": 28,
+      "currentLevel": 28,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.5166999999999825,
+      "frames": 7,
+      "webgl": true,
+      "error": null,
+      "parts": 159,
+      "drawCostMs": 1.457142857148678,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 28
+    },
+    {
+      "selected": 29,
+      "currentLevel": 29,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.6,
+      "frames": 9,
+      "webgl": true,
+      "error": null,
+      "parts": 16,
+      "drawCostMs": 0.5111111111085241,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 29
+    },
+    {
+      "selected": 30,
+      "currentLevel": 30,
+      "chapter": 0,
+      "paused": false,
+      "reducedMotion": false,
+      "expressive": false,
+      "time": 0.6166000000000058,
+      "frames": 8,
+      "webgl": true,
+      "error": null,
+      "parts": 16,
+      "drawCostMs": 0.3875000000007276,
+      "framebuffer": [
+        520,
+        520
+      ],
+      "quality": 1,
+      "levelCount": 30,
+      "xp30": 63075,
+      "networkWrites": 0,
+      "level": 30
+    }
+  ],
+  "requests": [],
+  "environment": "GitHub-hosted Linux Chromium / ANGLE SwiftShader; simulated mobile viewports, not native Safari",
+  "performanceLimit": "CPU draw submission timing is diagnostic only; no physical mobile GPU performance certification."
+}

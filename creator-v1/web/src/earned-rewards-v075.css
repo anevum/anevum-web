@@ -1,0 +1,525 @@
+/* ANEVUM / V075 — earned revelation, never a public gallery.
+ * 30 original optical specimens and V059 geometry are preserved. Only
+ * server-verified earned items render in personal and public reward vaults.
+ */
+.av9-shell .av75-levels-page{
+ width:min(100%,1240px);min-width:0;margin:0 auto;
+ color:#f1edf3;isolation:isolate;
+}
+.av9-shell .av75-page-heading{
+ max-width:920px;
+ padding:clamp(18px,3vw,45px) 0 clamp(24px,3vw,36px);
+}
+.av9-shell .av75-page-heading>span,
+.av9-shell .av75-vault-eyebrow{
+ display:block;margin:0 0 13px;
+ font:700 10px/1.4 var(--av9-label,Consolas,monospace);
+ letter-spacing:.12em;color:#ccb0db;
+}
+.av9-shell .av75-page-heading h1{
+ margin:0 0 14px;color:#fcf7f1;
+ font:450 clamp(38px,5vw,76px)/1.03 var(--av9-display,Georgia,serif)!important;
+ letter-spacing:-.048em!important;text-transform:none!important;
+}
+.av9-shell .av75-page-heading>p{
+ margin:0;max-width:760px;color:#c8d0dd;
+ font:450 clamp(13px,1.25vw,16px)/1.7 var(--av9-body,system-ui,sans-serif);
+}
+.av9-shell .av75-page-actions{
+ display:flex;align-items:center;flex-wrap:wrap;
+ gap:8px 22px;margin-top:22px;
+}
+.av9-shell .av75-page-actions a,
+.av9-shell .av75-vault-empty>a{
+ display:inline-flex;align-items:center;min-height:44px;
+ padding:10px 14px;border-radius:7px;border:1px solid #879bb5;
+ background:#17263a;color:#e6edf8;
+ font:650 12px/1.3 var(--av9-body,system-ui,sans-serif);
+ text-decoration:none;
+}
+.av9-shell .av75-page-actions a:hover,
+.av9-shell .av75-vault-empty>a:hover{
+ background:#27384c;border-color:#b9d3e3;color:#fff;
+}
+.av9-shell .av75-current-level{
+ display:grid;grid-template-columns:110px minmax(0,1fr);
+ align-items:center;gap:clamp(14px,2.2vw,30px);
+ padding:clamp(17px,2.3vw,30px);
+ border:1px solid #8b819d;border-radius:14px;
+ background:linear-gradient(125deg,#252337,#10192a 80%);
+}
+.av9-shell .av75-current-level>.level-emblem{
+ max-width:100%;max-height:110px;justify-self:center;
+}
+.av9-shell .av75-current-level>div{min-width:0}
+.av9-shell .av75-current-level>div>span{
+ display:block;color:#c2b6d7;letter-spacing:.09em;
+ font:700 10px/1.4 var(--av9-label,Consolas,monospace);
+}
+.av9-shell .av75-current-level h2{
+ margin:6px 0 2px;color:#f7ecdd;
+ font:500 clamp(29px,3vw,43px)/1.12 var(--av9-display,Georgia,serif)!important;
+ letter-spacing:-.026em!important;text-transform:none;
+}
+.av9-shell .av75-current-level p{margin:0 0 10px;color:#d7d2de;font-size:14px}
+.av9-shell .av75-current-level progress{
+ appearance:none;display:block;max-width:560px;width:100%;height:7px;
+ margin:8px 0 9px;overflow:hidden;border:0;border-radius:30px;
+ background:#32394c;
+}
+.av9-shell .av75-current-level progress::-webkit-progress-bar{background:#32394c}
+.av9-shell .av75-current-level progress::-webkit-progress-value{
+ background:linear-gradient(90deg,#b8a6d5,#a9cfda);border-radius:30px;
+}
+.av9-shell .av75-current-level progress::-moz-progress-bar{background:#b8a6d5}
+.av9-shell .av75-current-level small{color:#bfc9d9;font-size:11px;line-height:1.5}
+.av9-shell .av75-earned-vault{
+ width:100%;min-width:0;margin:clamp(18px,2.5vw,30px) 0;
+ padding:clamp(17px,2.3vw,30px);
+ background:#111929;border:1px solid #606e86;border-radius:14px;
+}
+.av9-shell .av75-vault-intro{
+ display:flex;align-items:start;justify-content:space-between;
+ flex-wrap:wrap;gap:12px 25px;margin:0 0 18px;
+}
+.av9-shell .av75-vault-intro>div{min-width:0;flex:1 1 320px}
+.av9-shell .av75-vault-intro h2{
+ margin:0 0 7px;color:#f6f1ed;
+ font:500 clamp(25px,2.8vw,38px)/1.14 var(--av9-display,Georgia,serif)!important;
+ letter-spacing:-.028em!important;text-transform:none;
+}
+.av9-shell .av75-vault-intro p{
+ margin:0;max-width:690px;
+ color:#bfcede;font:450 12px/1.65 var(--av9-body,system-ui,sans-serif);
+}
+.av9-shell .av75-vault-current{
+ align-self:flex-start;border:1px solid #827896;
+ padding:8px 11px;border-radius:6px;background:#25273c;
+ color:#eedcc4;letter-spacing:.05em;
+ font:650 10px/1.5 var(--av9-label,Consolas,monospace);
+}
+.av9-shell .av75-vault-section{padding:15px 0 6px;border-top:1px solid #47536c}
+.av9-shell .av75-vault-section h3{
+ color:#d7d5e6;margin:0 0 12px;
+ font:650 14px/1.4 var(--av9-body,system-ui,sans-serif)!important;
+ letter-spacing:.015em;text-transform:none;
+}
+.av9-shell .av75-levels-earned{
+ display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;
+}
+.av9-shell .av75-earned-level,
+.av9-shell .av75-earned-honor{
+ appearance:none;display:flex;position:relative;align-items:center;
+ gap:13px;min-width:0;width:100%;
+ border:1px solid #596782;border-radius:10px;
+ padding:13px;background:#1b2638;color:#f1f3f7;
+ box-shadow:none;text-align:left;cursor:pointer;
+ transition:background-color .15s ease,border-color .15s ease;
+}
+.av9-shell .av75-earned-level{
+ flex-direction:column;align-items:flex-start;min-height:193px;
+}
+.av9-shell .av75-earned-level>.level-emblem{
+ flex:none;align-self:center;max-width:100%!important;
+}
+.av9-shell .av75-earned-level.is-current{
+ border-color:#d4bbdf;background:#2b2a42;
+}
+.av9-shell .av75-earned-level>span:nth-of-type(2),
+.av9-shell .av75-earned-honor>span:nth-of-type(1){
+ display:grid;gap:5px;min-width:0;
+}
+.av9-shell .av75-earned-level small,
+.av9-shell .av75-earned-honor small{
+ color:#c7b5d7;letter-spacing:.05em;
+ font:650 10px/1.35 var(--av9-label,Consolas,monospace);
+}
+.av9-shell .av75-earned-level strong,
+.av9-shell .av75-earned-honor strong{
+ color:#f6f2f7;overflow-wrap:anywhere;
+ font:650 14px/1.35 var(--av9-body,system-ui,sans-serif);
+}
+.av9-shell .av75-earned-cta{
+ margin-top:auto;color:#c6ddec;
+ font:650 11px/1.4 var(--av9-body,system-ui,sans-serif);
+}
+.av9-shell .av75-honors-earned{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;
+}
+.av9-shell .av75-earned-honor{min-height:98px}
+.av9-shell .av75-earned-honor>.av75-earned-cta{margin-left:auto;flex:none}
+.av9-shell .av75-earned-honor>.av66-badge,
+.av9-shell .av75-earned-honor>.av65-medal,
+.av9-shell .av75-earned-honor>.av65-ribbon{flex:none}
+.av9-shell .av75-earned-level:hover,
+.av9-shell .av75-earned-honor:hover{
+ border-color:#b9c9df;background:#28364b;
+}
+.av9-shell .av75-earned-level:focus-visible,
+.av9-shell .av75-earned-honor:focus-visible,
+.av9-shell .av75-reward-dialog :is(button,input):focus-visible{
+ outline:2px solid #b5ecf9;outline-offset:2px;
+}
+.av9-shell .av75-vault-empty{
+ padding:clamp(18px,3vw,30px);
+ border:1px solid #56657e;border-radius:10px;
+ background:#131e2f;
+}
+.av9-shell .av75-vault-empty strong{display:block;margin-bottom:9px;color:#e9e7f2;font-size:16px}
+.av9-shell .av75-vault-empty p{max-width:65ch;color:#bdcadd;line-height:1.6;margin:0 0 13px}
+.av9-shell .av75-vault-ledger-note,
+.av9-shell .av75-vault-principles{
+ padding:14px 0 0;margin:0 0 10px;
+ color:#bdc8d6;font:450 11px/1.6 var(--av9-body,system-ui,sans-serif);
+}
+/* Dialog is deliberately local to one reward, not a page-wide WebGL overlay. */
+.av75-reward-dialog{
+ width:min(94vw,850px);max-width:850px;
+ max-height:min(92dvh,1000px);margin:auto;padding:0;
+ border:1px solid #a0a4c3;border-radius:15px;
+ background:#0e1626;color:#f2eff5;
+ box-shadow:0 28px 92px #000d;overflow:auto;
+ overscroll-behavior:contain;
+}
+.av75-reward-dialog::backdrop{background:#030711db;backdrop-filter:blur(6px)}
+.av75-reward-inspector{padding:clamp(14px,2.5vw,28px);min-width:0}
+.av75-reward-header{
+ display:flex;align-items:start;justify-content:space-between;
+ gap:10px 18px;margin-bottom:15px;
+}
+.av75-reward-header>div{min-width:0;flex:1}
+.av75-reward-eyebrow{
+ display:block;color:#c6b4d9;letter-spacing:.09em;
+ font:700 10px/1.45 Consolas,monospace;
+}
+.av75-reward-header h2{
+ margin:6px 0 5px;color:#f5efe8;
+ font:500 clamp(27px,3.8vw,44px)/1.12 Georgia,serif;
+ letter-spacing:-.02em;overflow-wrap:anywhere;
+}
+.av75-reward-header p{margin:0;color:#becbdc;font-size:11px}
+.av75-reward-dismiss,.av75-reward-controls button{
+ min-height:43px;border:1px solid #7b8ba7;border-radius:7px;
+ background:#1d2a3d;color:#edf2f8;cursor:pointer;
+ padding:9px 14px;font:650 12px/1.3 system-ui,sans-serif;
+}
+.av75-reward-dismiss{flex:none}
+.av75-reward-dismiss:hover,.av75-reward-controls button:hover:not(:disabled){
+ border-color:#b8cddd;background:#304358;
+}
+.av75-reward-stage{
+ display:grid;place-items:center;min-height:220px;
+ overflow:hidden;border:1px solid #52627a;border-radius:12px;
+ background:radial-gradient(ellipse at 50% 48%,#303248,#0c1425 65%);
+}
+.av75-model-stage{
+ display:grid;position:relative;place-items:center;
+ width:100%;height:min(55dvh,540px);min-height:220px;
+ overflow:hidden;isolation:isolate;
+}
+.av75-model-canvas{
+ display:block;position:relative;z-index:2;
+ /* V076: native V059 models use square camera projection. Never stretch
+  * the full 3D canvas across a wide desktop inspector: that crops specimens. */
+ width:min(100%,55dvh,540px);height:auto;aspect-ratio:1;
+ max-width:100%;max-height:100%;
+ justify-self:center;align-self:center;
+ touch-action:none;cursor:grab;
+}
+.av75-model-canvas:active{cursor:grabbing}
+.av75-model-poster{
+ display:grid;place-items:center;align-content:center;gap:9px;
+ position:absolute;inset:0;z-index:3;
+ background:#101929;color:#bbcce0;text-align:center;
+ pointer-events:none;
+}
+.av75-model-poster img{
+ width:min(100%,440px);height:min(72%,380px);max-height:72%;
+ object-fit:contain;
+}
+.av75-model-poster span{padding:0 14px;color:#becddf;font-size:12px}
+.av75-insignia-stage{
+ display:grid;place-items:center;width:100%;
+ min-height:230px;padding:24px;
+}
+.av75-insignia-stage>*{
+ max-width:min(70vw,280px);
+ filter:drop-shadow(0 13px 32px #0008);
+}
+.av75-reward-description{
+ padding:12px 0;color:#d7dce8;font-size:13px;line-height:1.6;
+}
+.av75-reward-controls{
+ display:flex;align-items:center;flex-wrap:wrap;gap:9px;
+ padding:13px 0 0;border-top:1px solid #49566f;
+}
+.av75-reward-controls button{min-height:44px}
+.av75-reward-controls button:disabled{opacity:.48;cursor:not-allowed}
+.av75-reward-controls label{
+ display:flex;align-items:center;gap:7px;color:#cad4e2;
+ font:650 12px/1.3 system-ui,sans-serif;
+}
+.av75-reward-controls input[type="range"]{
+ min-width:90px;width:120px;accent-color:#c0a7e8;
+}
+.av75-reward-footer{
+ margin-top:14px;color:#b4c0d2;
+ font:450 11px/1.6 system-ui,sans-serif;
+}
+@media(max-width:900px){
+ .av9-shell .av75-levels-earned{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:650px){
+ .av9-shell .av75-levels-earned{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .av9-shell .av75-honors-earned{grid-template-columns:minmax(0,1fr)}
+ .av9-shell .av75-current-level{grid-template-columns:85px minmax(0,1fr);padding:14px}
+ .av9-shell .av75-current-level>.level-emblem{width:78px!important;height:78px!important}
+ .av9-shell .av75-earned-level{padding:10px;min-height:174px;gap:7px}
+ .av9-shell .av75-earned-level strong{font-size:13px}
+ .av9-shell .av75-earned-honor{padding:10px}
+ .av75-reward-dialog{width:calc(100vw - 14px);max-height:calc(100dvh - 22px)}
+ .av75-reward-header h2{font-size:25px}
+ .av75-model-stage{height:min(47dvh,410px)}
+ .av75-model-canvas{width:min(100%,47dvh,410px)}
+ .av75-reward-controls button{flex:1 1 112px}
+}
+@media(max-width:350px){
+ .av9-shell .av75-levels-earned{gap:6px}
+ .av9-shell .av75-current-level{grid-template-columns:65px minmax(0,1fr);gap:9px}
+ .av9-shell .av75-current-level>.level-emblem{width:64px!important;height:64px!important}
+ .av9-shell .av75-earned-level{padding:8px}
+ .av9-shell .av75-earned-level>.level-emblem{width:63px!important;height:63px!important}
+ .av75-reward-dialog{width:calc(100vw - 8px)}
+}
+@media(prefers-reduced-motion:reduce){
+ .av75-reward-dialog,
+ .av75-reward-dialog *, .av9-shell .av75-earned-level,.av9-shell .av75-earned-honor{
+ animation:none!important;transition:none!important;scroll-behavior:auto!important;
+ }
+ .av75-reward-dialog::backdrop{backdrop-filter:none}
+}
+@media(forced-colors:active){
+ .av9-shell .av75-current-level,.av9-shell .av75-earned-vault,
+ .av9-shell .av75-earned-level,.av9-shell .av75-earned-honor,
+ .av75-reward-dialog,.av75-reward-stage{
+ border-color:CanvasText;background:Canvas;color:CanvasText;
+ }
+ .av75-reward-dialog::backdrop{background:Canvas}
+}
+
+/* V078 / premium earned collectible stage.
+ * The viewer remains the exact original V059 native WebGL scene with the
+ * existing verified media loading, rotation, zoom and animation controls.
+ */
+.av75-reward-dialog:has(.av78-reward-inspector--model){
+ width:min(96vw,990px);
+ max-width:990px;
+ border:1px solid rgba(157,200,245,.58);
+ border-radius:18px;
+ background:linear-gradient(130deg,#0b1424,#131e34 62%,#0b1527);
+ box-shadow:0 35px 110px #000e,0 0 40px #87aeef1d;
+}
+.av78-reward-inspector--model{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) 126px;
+ gap:0 15px;
+ padding:clamp(14px,2.4vw,25px);
+}
+.av78-reward-inspector--model .av75-reward-header{
+ grid-column:1/-1;
+ padding-bottom:12px;
+ border-bottom:1px solid #607d985d;
+}
+.av78-reward-inspector--model .av75-reward-eyebrow{
+ color:#a8d7ff;letter-spacing:.16em;
+}
+.av78-reward-inspector--model .av75-reward-header h2{
+ font-family:Georgia,serif;
+ font-size:clamp(28px,3.4vw,42px);
+ color:#f7f9fc;
+}
+.av78-reward-inspector--model .av75-reward-stage{
+ grid-column:1;
+ grid-row:2;
+ min-height:min(52dvh,530px);
+ align-self:stretch;
+ border:1px solid #779bc569;
+ border-radius:14px;
+ background:
+  radial-gradient(ellipse at 48% 50%,#31476b 0%,#1a2841 38%,#080f20 79%);
+ box-shadow:inset 0 0 70px #020714a6;
+}
+.av78-reward-inspector--model .av75-model-stage{
+ height:min(56dvh,545px);
+ min-height:240px;
+}
+.av78-reward-inspector--model .av75-model-canvas{
+ width:min(100%,56dvh,545px);
+ max-height:100%;
+}
+.av78-reward-inspector--model .av75-reward-controls{
+ grid-column:2;
+ grid-row:2;
+ display:flex;
+ flex-direction:column;
+ justify-content:center;
+ align-items:stretch;
+ align-self:stretch;
+ gap:9px;
+ padding:12px 0 12px 12px;
+ border-top:0;
+ border-left:1px solid #68839e69;
+}
+.av78-reward-inspector--model .av75-reward-controls button{
+ width:100%;
+ min-height:44px;
+ padding:9px 8px;
+ font-size:11px;
+ text-align:center;
+ border:1px solid #7c9fc4a8;
+ border-radius:9px;
+ background:linear-gradient(155deg,#233651,#17253e);
+ color:#e9f2ff;
+}
+.av78-reward-inspector--model .av75-reward-controls button:not(:disabled):hover{
+ border-color:#b9defb;
+ background:#2c4366;
+}
+.av78-reward-inspector--model .av75-reward-controls label{
+ display:grid;
+ gap:10px;
+ text-align:center;
+ justify-items:stretch;
+ padding:10px 2px;
+ font-size:11px;
+}
+.av78-reward-inspector--model .av75-reward-controls input[type="range"]{
+ width:100%;
+ min-width:0;
+ accent-color:#9dbefa;
+}
+.av78-reward-inspector--model .av75-reward-description{
+ grid-column:1/-1;
+ grid-row:3;
+ margin:10px 0 0;
+ padding:12px 2px;
+ border-bottom:1px solid #687f9a40;
+ color:#d5deed;
+}
+.av78-reward-inspector--model .av75-reward-footer{
+ grid-column:1/-1;
+ grid-row:4;
+ margin:9px 0 0;
+ color:#9fb0c8;
+}
+@media(max-width:690px){
+ .av75-reward-dialog:has(.av78-reward-inspector--model){
+  max-height:calc(100dvh - 18px);
+  width:calc(100vw - 12px);
+ }
+ .av78-reward-inspector--model{
+  grid-template-columns:minmax(0,1fr);
+  gap:0;
+  padding:12px;
+ }
+ .av78-reward-inspector--model .av75-reward-header{
+  grid-column:1;grid-row:1;
+ }
+ .av78-reward-inspector--model .av75-reward-stage{
+  grid-column:1;grid-row:2;
+  min-height:220px;
+ }
+ .av78-reward-inspector--model .av75-model-stage{
+  height:min(46dvh,410px);min-height:220px;
+ }
+ .av78-reward-inspector--model .av75-model-canvas{
+  width:min(100%,46dvh,410px);
+ }
+ .av78-reward-inspector--model .av75-reward-description{
+  grid-column:1;grid-row:3;
+ }
+ .av78-reward-inspector--model .av75-reward-controls{
+  grid-column:1;grid-row:4;
+  flex-direction:row;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:7px;
+  padding:12px 0;
+  border-left:0;
+  border-top:1px solid #68839e69;
+ }
+ .av78-reward-inspector--model .av75-reward-controls button{
+  flex:1 1 106px;
+  width:auto;
+ }
+ .av78-reward-inspector--model .av75-reward-controls label{
+  flex:1 1 125px;
+ }
+ .av78-reward-inspector--model .av75-reward-footer{
+  grid-column:1;grid-row:5;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ .av75-reward-dialog:has(.av78-reward-inspector--model){
+  backdrop-filter:none;
+  animation:none;
+ }
+}
+@media(forced-colors:active){
+ .av75-reward-dialog:has(.av78-reward-inspector--model),
+ .av78-reward-inspector--model .av75-reward-controls{
+  background:Canvas;border-color:CanvasText;
+ }
+}
+
+/* V081 / premium inspectable SVG sigil, no native 3D viewer */
+.av75-reward-dialog:has(.av81-reward-inspector--sigil){width:min(96vw,780px);max-height:min(94dvh,900px);padding:0;
+ background:#0d192c;border:1px solid #9bb7d65f;box-shadow:0 20px 90px #020711f2,inset 0 1px #d4e7ff25}
+.av81-reward-inspector--sigil .av75-reward-header{padding:22px 26px 14px}
+.av81-reward-inspector--sigil .av75-reward-stage{position:relative;display:grid;place-items:center;overflow:hidden;
+ min-height:380px;margin:0 16px;border-radius:15px;border:1px solid #9eb9de44;
+ background:radial-gradient(circle at 50% 48%,#344666 0%,#162540 42%,#071323 78%)}
+.av81-sigil-stage{position:relative;width:100%;height:380px;display:grid;place-items:center;overflow:hidden}
+.av81-sigil-rim{position:absolute;left:50%;top:50%;width:344px;height:344px;max-width:85%;
+ transform:translate(-50%,-50%);border-radius:50%;
+ background:repeating-conic-gradient(from -2deg,#e3cdab00 0deg 4deg,#e3cdab4a 5deg,#e3cdab00 7.5deg);
+ mask:radial-gradient(circle,transparent 0 75%,#000 76% 77%,transparent 79%);
+ -webkit-mask:radial-gradient(circle,transparent 0 75%,#000 76% 77%,transparent 79%)}
+.av81-sigil-inspected{position:relative;z-index:1;display:grid;place-items:center;width:320px;height:320px;
+ max-width:min(74vw,320px);transition:transform .3s cubic-bezier(.2,.75,.2,1);transform-origin:center}
+.av81-sigil-inspected .level-emblem{width:100%!important;height:100%!important;max-width:100%;max-height:100%;
+ border-radius:50%;background:none!important;border:0;box-shadow:0 15px 55px #0106109c}
+.av81-sigil-inspected .av62-native-poster{width:100%;height:100%;object-fit:contain}
+.av81-sigil-stage.is-animated .av81-sigil-inspected::after{
+ content:"";position:absolute;inset:-7px;z-index:-1;border-radius:50%;
+ background:conic-gradient(from 10deg,transparent,#d7e8ff48,transparent,#d2affc5e,transparent);
+ animation:av81-inspector-halo 18s linear infinite;filter:blur(6px);pointer-events:none}
+.av81-sigil-caption{position:absolute;bottom:12px;left:10px;right:10px;text-align:center;
+ color:#a6c4e0;font:750 9px/1.4 ui-monospace,monospace;letter-spacing:.13em}
+.av81-reward-controls{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;
+ gap:8px;margin:12px 20px;padding:10px;border:1px solid #97b4d042;border-radius:12px;background:#101f36}
+.av81-reward-controls button{color:#e1edfc;background:#1a2d49;border:1px solid #a3c4e663;
+ border-radius:7px;padding:9px 12px;min-height:39px;cursor:pointer;font:750 10px/1.4 ui-monospace,monospace}
+.av81-reward-controls button:hover{border-color:#d8f0ff;background:#263b5a}
+.av81-reward-controls label{display:flex;align-items:center;gap:9px;color:#d1e6ff;
+ font:750 10px/1.4 ui-monospace,monospace}
+.av81-reward-controls input{width:116px;accent-color:#a9dafa}
+.av81-reward-inspector--sigil .av75-reward-description{margin:14px 26px;color:#cdddf1;line-height:1.65}
+.av81-reward-inspector--sigil .av75-reward-footer{margin:12px 26px 22px;color:#a6bbd3}
+@keyframes av81-inspector-halo{to{transform:rotate(360deg)}}
+@media(max-width:620px){
+ .av75-reward-dialog:has(.av81-reward-inspector--sigil){width:calc(100vw - 12px)}
+ .av81-reward-inspector--sigil .av75-reward-header{padding:15px}
+ .av81-reward-inspector--sigil .av75-reward-stage{min-height:290px;margin:0 9px}
+ .av81-sigil-stage{height:min(47dvh,330px)}
+ .av81-sigil-inspected{width:clamp(160px,63vw,285px);height:clamp(160px,63vw,285px)}
+ .av81-reward-controls{margin:10px 9px;padding:7px;gap:6px}
+ .av81-reward-controls button{padding:7px 8px}
+ .av81-reward-inspector--sigil .av75-reward-description{margin:12px 15px}
+ .av81-reward-inspector--sigil .av75-reward-footer{margin:12px 15px}}
+@media(prefers-reduced-motion:reduce){
+ .av81-sigil-stage.is-animated .av81-sigil-inspected::after{animation:none!important}
+ .av81-sigil-inspected{transition:none!important}}
+@media(forced-colors:active){
+ .av81-reward-controls button{color:ButtonText;background:ButtonFace;border:1px solid ButtonText}
+ .av81-reward-inspector--sigil .av75-reward-stage{border-color:CanvasText;background:Canvas}}

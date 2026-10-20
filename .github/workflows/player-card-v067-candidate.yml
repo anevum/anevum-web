@@ -1,0 +1,123 @@
+name: ANEVUM V067 Recognition Masthead Patch Candidate
+# Only upload an unrouted Worker version after source, privacy, asset, and D1 QA.
+# Never directly deploy or mutate secret bindings, member state, or routes.
+on:
+  push:
+    branches:
+      - build/player-card-v065-v064-integrate-20261017-014
+    paths:
+      - .github/workflows/player-card-v067-candidate.yml
+permissions:
+  contents: read
+concurrency:
+  group: anevum-v067-unrouted-candidate
+  cancel-in-progress: false
+jobs:
+  candidate:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      EXPECTED_ACCOUNT: '2f7ee83107240152097efd956a4e8335'
+      LIVE_V064: '80c6f0d1-c35b-4524-b97d-7cffdd4063d5'
+      WORKER: anevum-apex-prelaunch-gateway
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify repository, branch, secret presence, and live Worker before any build
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = 'refs/heads/build/player-card-v065-v064-integrate-20261017-014'
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test "$CLOUDFLARE_ACCOUNT_ID" = "$EXPECTED_ACCOUNT"
+          echo "LOCAL_EXACT_SOURCE_SHA_VERIFIED=PASS"
+          echo "V067_GITHUB_SOURCE_AND_CLOUDFLARE_SECRET_PRESENT=PASS"
+          echo "Independent live V064 binding and D1 schema preflight is performed through the connected Cloudflare API before invocation."
+      - name: Build V064 native and optical artwork from canonical sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet numpy==2.2.6 scipy==1.15.3 Pillow==11.2.1
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libgl1-mesa-dri
+          cd design/evolution-v059
+          mkdir -p artwork/{native,textures,vector,masters,web,compact,micro} docs dist previews
+          python src/export_native.py
+          python src/render_web.py
+          python src/micro.py
+          python src/build.py
+          cd ../..
+          python creator-v1/ops/install-evolution-v060.py
+          python creator-v1/ops/apply-evolution-micro-v064.py
+          test -s creator-v1/web/public/evolution/mini-runtime.json
+          test "$(find creator-v1/web/public/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+      - name: Validate identity, badge ledger, Worker modules, and native posters
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          for f in creator-v1/canonical-auth/*.mjs; do node --check "$f"; done
+          node --experimental-sqlite --test \
+            creator-v1/test/player-card-recognition-v065.test.mjs \
+            creator-v1/test/player-recognition-issuance-v067.test.mjs \
+            creator-v1/test/member-identity-v061.test.mjs
+          node --test creator-v1/test/evolution-v060-contract.test.mjs creator-v1/test/evolution-v062-native.test.mjs
+          test "$(find creator-v1/dist/web/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+      - name: Create a source-local candidate config; preserve production routing
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const base=JSON.parse(fs.readFileSync('creator-v1/wrangler.apex-prelaunch.jsonc','utf8'));
+          if(base.name!=='anevum-apex-prelaunch-gateway'||
+             base.main!=='./apex-prelaunch/gateway.mjs'||
+             !Array.isArray(base.routes)||base.routes.length!==0||
+             base.assets?.binding!=='ASSETS'||base.assets?.run_worker_first!==true||
+             base.compatibility_flags?.join(',')!=='nodejs_compat'||
+             base.d1_databases?.length!==2||
+             base.d1_databases.find(x=>x.binding==='MEMBER_DB')?.database_id!=='e1d29049-c83b-4534-8355-dc1fa36ba6d8'||
+             base.d1_databases.find(x=>x.binding==='COMMUNITY_DB')?.database_id!=='fa96e36d-6257-4883-bf15-074947e11a13')
+             throw Error('Unexpected production config. Abort candidate.');
+          base.vars.ANEVUM_PRELAUNCH_MODE='public';
+          base.vars.ANEVUM_LAUNCH_APPROVED='true';
+          base.vars.CANONICAL_PUBLIC_SIGNUP_ENABLED='true';
+          base.vars.CANONICAL_RECOGNITION_ENABLED='true';
+          fs.writeFileSync('creator-v1/wrangler.player-v067.jsonc',JSON.stringify(base,null,2));
+          NODE
+      - name: Upload an UNROUTED candidate Worker version (no live traffic)
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          # The repository's existing Cloudflare token does not have Worker
+          # deployment-read permission. Do not bypass that with a script deploy.
+          # Upload only an unrouted version; separately inspect via the trusted
+          # Cloudflare API connector before any live promotion.
+          npx wrangler versions upload --config creator-v1/wrangler.player-v067.jsonc --keep-vars             --message 'ANEVUM V067 responsive Recognition Registry masthead patch; protected unrouted candidate'
+          echo "V067_SOURCE_SHA=$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "V067_CANDIDATE_UPLOAD_ONLY=REPORTED_SUCCESS" >> "$GITHUB_STEP_SUMMARY"
+          echo "V067_INDEPENDENT_BINDING_REVIEW=REQUIRED_BEFORE_PROMOTION" >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve read-only candidate identifiers and source evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v067-unrouted-candidate
+          path: |
+            ${{ runner.temp }}/v067-candidate-id.txt
+          if-no-files-found: warn
+          retention-days: 7

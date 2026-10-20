@@ -1,0 +1,56 @@
+/* ANEVUM Continuance Institute V061 / 3D specimen identity. */
+.av61-identity{display:flex!important;align-items:center;gap:11px;min-width:0;max-width:100%;text-decoration:none;color:#f4e6df;isolation:isolate}
+.av61-portrait-zone{display:flex!important;align-items:center;flex:none;position:relative;min-width:0}
+.av61-photo{display:block!important;position:relative;z-index:1;flex:none}
+.av61-photo .ms-portrait{width:47px!important;height:47px!important;border-radius:14px!important;overflow:hidden;box-shadow:0 5px 13px #0007,inset 0 1px #fff3}
+.av61-photo .ms-portrait img{width:100%;height:100%;object-fit:cover}
+.av61-specimen{display:grid!important;place-items:center;flex:none;position:relative;z-index:2;width:45px;height:48px;margin-left:-8px;perspective:400px;filter:drop-shadow(0 6px 8px #000b)}
+.av61-specimen .level-emblem{width:44px!important;height:44px!important;object-fit:contain;transform-origin:50% 58%;animation:av61-orbit-specimen 7.4s ease-in-out infinite;will-change:transform}
+.av61-specimen::after{content:"";position:absolute;inset:7px 5px;border-radius:50%;z-index:-1;pointer-events:none;background:radial-gradient(ellipse,#e3a7ca48,transparent 67%);filter:blur(8px)}
+.av61-member-copy{display:flex!important;flex-direction:column;gap:3px;min-width:0;flex:1}
+.av61-member-name{font:700 clamp(12px,1.1vw,15px)/1.22 system-ui,sans-serif!important;letter-spacing:.005em;color:#f7e9de!important;overflow-wrap:anywhere}
+.av61-member-handle{font:500 11px/1.3 ui-monospace,monospace!important;color:#b6adbe!important;margin:0!important;overflow-wrap:anywhere}
+.av61-member-rewards{display:flex!important;align-items:center;gap:6px;flex-wrap:wrap;margin-top:1px!important;min-height:21px}
+.av61-level-label{display:inline-flex!important;align-items:center;border:1px solid #deb69f63;background:linear-gradient(120deg,#6e485135,#301e3e65);padding:3px 6px;border-radius:6px;font:800 9px/1.2 ui-monospace,monospace!important;letter-spacing:.045em;color:#ffd9bd!important;margin:0!important;white-space:nowrap}
+.av61-specimen-name{font-weight:500!important;color:#e4c4ce!important;margin:0!important}
+.av61-award-list{display:inline-flex!important;align-items:center;gap:4px;margin:0!important}
+.av61-award{display:grid!important;place-items:center;width:21px;height:21px;overflow:visible!important;margin:0!important;filter:drop-shadow(0 2px 3px #0009)}
+.av61-award .celestial-emblem{max-width:21px;max-height:21px}
+.av61-supporter{display:inline-flex!important;align-items:center;margin:0!important}
+.av61-identity:hover .av61-member-name,.av61-identity:focus-visible .av61-member-name{color:#ffdbc4!important}
+.av61-identity:focus-visible{outline:2px solid #f5c9cb;outline-offset:5px;border-radius:10px}
+.av61-identity:hover .av61-specimen .level-emblem{animation-duration:3.6s}
+.av61-identity--compact{gap:7px}
+.av61-identity--compact .av61-photo .ms-portrait{width:41px!important;height:41px!important;border-radius:12px!important}
+.av61-identity--compact .av61-specimen{width:39px;height:41px;margin-left:-6px}
+.av61-identity--compact .av61-specimen .level-emblem{width:38px!important;height:38px!important}
+.av61-identity--compact .av61-member-name{font-size:13px!important}
+.av61-identity--compact .av61-specimen-name{display:none!important}
+.av61-identity--compact .av61-level-label{font-size:9px!important}
+@keyframes av61-orbit-specimen{0%,100%{transform:translate3d(0,1px,0) rotateY(-8deg) rotateZ(-2deg)}50%{transform:translate3d(0,-3px,0) rotateY(8deg) rotateZ(2deg)}}
+@media(max-width:640px){.av61-identity{gap:8px}.av61-specimen-name{display:none!important}.av61-member-rewards{gap:5px}.av61-member-name{font-size:13px!important}}
+@media(prefers-reduced-motion:reduce){.av61-specimen .level-emblem{animation:none!important;will-change:auto}}
+
+/* Post author identity: the real specimen render sits beside the chosen avatar. */
+.av61-post-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 13px}
+.av61-post-heading .av61-identity{flex:1 1 180px;max-width:100%}
+.av61-post-heading time{margin:0!important;flex:none;font-size:10px;opacity:.75}
+.av61-profile-level{display:grid;place-items:center;flex:none;width:66px;height:66px;margin-left:-13px;filter:drop-shadow(0 12px 14px rgba(0,0,0,.55));animation:av61-orbit-specimen 8s ease-in-out infinite}
+.av61-profile-level .level-emblem{width:64px;height:64px;object-fit:contain}
+.av7-level-crest .level-emblem{width:46px!important;height:46px!important;object-fit:contain}
+.av7-item-face .level-emblem{width:36px!important;height:36px!important;object-fit:contain}
+@media(prefers-reduced-motion:reduce){.av61-profile-level{animation:none}}
+
+/* V062 native mesh: the inline still image is a fallback only. Its true
+   animated geometry and per-specimen lighting are composited in one canvas. */
+.av62-native-host{display:inline-grid!important;place-items:center;position:relative;vertical-align:middle;flex:none;overflow:visible;transform:none!important;animation:none!important;will-change:auto!important}
+.av62-native-poster{display:block;width:100%;height:100%;object-fit:contain;max-width:100%;filter:inherit;pointer-events:none;transition:none}
+.av62-native-host[data-live="true"]>.av62-native-poster{visibility:hidden}
+.av61-specimen .av62-native-host,.av61-identity:hover .av61-specimen .av62-native-host,
+.an-series-v060 .level-emblem.av62-native-host,.av61-profile-level .av62-native-host{
+ transform:none!important;animation:none!important;mix-blend-mode:normal!important;
+}
+.av61-profile-level:has(.av62-native-host){animation:none!important}
+.an-series-v060 .an-artifact-visual .av62-native-host{filter:none!important}
+.an-series-v060 .an-artifact-card-v034:not(.is-earned) .av62-native-host{filter:none!important}
+@media(prefers-reduced-motion:reduce){.av62-native-host,.av62-native-host>.av62-native-poster{animation:none!important;transition:none!important}}

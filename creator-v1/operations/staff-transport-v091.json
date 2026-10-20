@@ -1,0 +1,77 @@
+{
+  "account_id": "2f7ee83107240152097efd956a4e8335",
+  "zone_id": "8abe27259b5436af5966d3b40d9a3760",
+  "workers": [
+    {
+      "name": "anevum-iren-staff-entry-v003",
+      "baseline_version": "8eff294b-eac9-4bb2-b514-04f8b7b7ebbd",
+      "baseline_sha256": "f3924009bfaa30540352201c99c1e982e8d97c4c111d629b8c68db5631fa71e1",
+      "candidate_sha256": "736f62a493cef7545dcf88b3b4b84893fed41b311c1068ae477cc0049445026f",
+      "source_edits": [
+        {
+          "offset": 4467,
+          "before": "redirect:\"error\"",
+          "after": "redirect:\"manual\""
+        }
+      ]
+    },
+    {
+      "name": "anevum-profile-staff-access-v001",
+      "baseline_version": "923b200f-8247-4cd1-abad-58fb50ea0587",
+      "baseline_sha256": "37af01123d0a69ae5d87e694ed92d3d32ffc989fd99fa0e8e149340208754b66",
+      "candidate_sha256": "29a7a457a60d2b887e2ef8496d37711452f9648ca6acecb2db5e6fedd5345896",
+      "source_edits": [
+        {
+          "offset": 11762,
+          "before": "redirect:\"error\"",
+          "after": "redirect:\"manual\""
+        }
+      ]
+    },
+    {
+      "name": "anevum-iren-staff-session-status-v001",
+      "baseline_version": "ec29df5d-53a1-4ea8-bb0d-fe37a9c6ed7c",
+      "baseline_sha256": "a63829442445b38761500cc8ef454db2d08cf9baa14ecf3407f4bb0e83c68771",
+      "candidate_sha256": "a5231a45bf7cc12e2c0631bbb3754e3e4c47c4f4281f0028885e86dc19f23bab",
+      "source_edits": [
+        {
+          "offset": 1654,
+          "before": "redirect:\"error\"",
+          "after": "redirect:\"manual\""
+        },
+        {
+          "offset": 2953,
+          "before": "redirect:\"error\"",
+          "after": "redirect:\"manual\""
+        }
+      ]
+    },
+    {
+      "name": "anevum-iren-apex-staff-v002",
+      "baseline_version": "06fd21f9-0411-432a-b91c-cf4585efbe0f",
+      "baseline_sha256": "56e8216fe7b87be533ae4132c221451b6451c5c61725bb0af63a49a867545f5c",
+      "candidate_sha256": "83f3fc722c17e4013ff5348cc84fba518a469b06867f718582496fee79e150bd",
+      "source_edits": [
+        {
+          "offset": 55388,
+          "before": "redirect: \"error\"",
+          "after": "redirect:\"manual\""
+        }
+      ],
+      "module_file": "worker.js"
+    },
+    {
+      "name": "anevum-iren-staff-observatory-v001",
+      "baseline_version": "9ddccf29-adaf-4e2b-a93a-7168ed4acc84",
+      "baseline_sha256": "23973a9b070a239f5fcf06fa41f428ac6452fd39540649eaa83b3c72977d9186",
+      "candidate_sha256": "c7e715dba5d0a110706324dd37ad891a53bc124f88be768b1c3a9c3d730d549a",
+      "source_edits": [
+        {
+          "offset": 36177,
+          "before": "redirect: 'error'",
+          "after": "redirect:\"manual\""
+        }
+      ]
+    }
+  ]
+}

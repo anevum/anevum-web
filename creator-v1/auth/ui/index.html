@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Join ANEVUM / Creator Identity</title>
+<meta name="description" content="A creator identity for sharing AI-assisted software on ANEVUM.">
+<link rel="stylesheet" href="/api/v1/member/join.css">
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<script type="module" src="/api/v1/member/join.js"></script>
+</head>
+<body>
+<header class="top"><a class="brand" href="/" aria-label="ANEVUM home"><!-- ANEVUM_BRAND_MARK -->ANEVUM</a><a class="back" href="/">Discover software <span aria-hidden="true">↗</span></a></header>
+<main class="content">
+<section class="intro"><div class="eyebrow">ANEVUM / MEMBERSHIP</div><h1>Make something.<br><em>Make it yours.</em></h1><p>One identity for publishing your work, finding collaborators, discovering remarkable tools, and helping other creators improve theirs.</p><div class="pillrow"><span>01 · Build</span><span>02 · Share</span><span>03 · Participate</span></div></section>
+<section class="account" aria-labelledby="account-heading"><span class="smallcap">CREATOR ACCESS</span><h2 id="account-heading">Join the community</h2><div id="status" role="status" aria-live="polite" class="status">Checking account availability…</div>
+<form id="email-form" hidden><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" maxlength="254" required><div id="turnstile" class="cf-turnstile" data-sitekey="0x4AAAAAAFUPr86b6UW8tGqo" data-theme="dark"></div><button class="primary" type="submit" id="send-button">Send sign-in code <span aria-hidden="true">↗</span></button><p class="hint">No password. A one-time code is sent to your inbox. Never share it with anyone.</p></form>
+<form id="code-form" hidden><label for="code">8-digit sign-in code</label><input id="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{8}" maxlength="8" placeholder="00000000" required><button class="primary" type="submit">Verify and continue</button><button type="button" id="restart" class="plain">Use another email</button></form>
+<form id="profile-form" hidden><div id="welcome" class="welcome"></div><label for="handle">Creator handle</label><input id="handle" autocomplete="username" pattern="[a-z][a-z0-9_]{2,29}" maxlength="30" required placeholder="your_creator_name"><label for="display">Display name</label><input id="display" autocomplete="nickname" maxlength="80" required placeholder="Your display name"><label for="bio">About your work <span class="optional">optional</span></label><textarea id="bio" maxlength="1200" rows="3" placeholder="What do you love building?"></textarea><button class="primary" type="submit">Save creator profile</button><a class="primary action-link" id="myProjects" href="/api/v1/member/projects/manage">Manage my projects <span aria-hidden="true">&rarr;</span></a><button class="plain" type="button" id="signout">Sign out</button></form>
+<div id="disabled" hidden><p class="state-head">Creator accounts are in private testing.</p><p class="hint">The site and public project gallery are live. Member registration is limited to invited testers while we verify security and email delivery.</p><a href="/" class="primary action-link">Explore ANEVUM <span aria-hidden="true">↗</span></a></div></section>
+</main>
+<footer><span>ANEVUM · Independent software made together</span><span>Creator identity — staged development</span></footer>
+</body>
+</html>

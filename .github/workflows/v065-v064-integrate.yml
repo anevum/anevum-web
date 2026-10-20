@@ -1,0 +1,106 @@
+name: V065 V064 Source Integration
+# One-time source integration on an isolated branch. No Cloudflare credentials,
+# database writes, production releases, account changes or publication.
+on:
+  push:
+    branches:
+      - build/player-card-v065-v064-integrate-20261017-014
+    paths:
+      - .github/workflows/v065-v064-integrate.yml
+permissions:
+  contents: write
+concurrency:
+  group: anevum-v065-v064-source-integration
+  cancel-in-progress: false
+jobs:
+  reconcile:
+    if: github.repository == 'anevum/anevum-web' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Merge exact reviewed V065 source onto pinned V064 optical foundation
+        shell: bash
+        env:
+          SOURCE_SHA: 9ba30baafa9174d476ddba7d2efd50552bd78fe1
+          BASE_SHA: 90283589a309d3b72a4e7a5e718b05dba92ebe93
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor "$BASE_SHA" HEAD || { echo "V064 optical foundation is missing. Abort."; exit 1; }
+          test "$(git rev-list --count "$BASE_SHA"..HEAD)" -le 12 || { echo "Unexpected integration branch drift. Abort."; exit 1; }
+          git fetch origin build/player-card-recognition-v065-20261017-013
+          test "$(git rev-parse FETCH_HEAD)" = "$SOURCE_SHA" || { echo "Integration source changed. Abort."; exit 1; }
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if ! git merge --squash -s ort -X theirs "$SOURCE_SHA"; then
+            echo "Conflicts remain, refusing any push."
+            git diff --name-only --diff-filter=U
+            exit 1
+          fi
+          # Protect the exact V064 optical poster reproduction and hash contracts.
+          git restore --source="$BASE_SHA" --staged --worktree -- \
+            docs/evolution-v064-sha256.txt \
+            design/evolution-v059/src/micro.py \
+            creator-v1/ops/apply-evolution-micro-v064.py \
+            .github/workflows/evolution-v064-optical-qa.yml \
+            .github/workflows/evolution-v064-live-smoke.yml \
+            .github/workflows/evolution-v064-safe-candidate.yml
+          # The installation GitHub App cannot author .github/workflows.
+          # Retain this branch's own workflows exactly and integrate application
+          # source only. The source V065 workflow checks already ran separately.
+          git restore --source=HEAD --staged --worktree -- .github/workflows
+          test -z "$(git diff --name-only HEAD -- .github/workflows)"
+          git diff --quiet "$BASE_SHA" -- docs/evolution-v064-sha256.txt design/evolution-v059/src/micro.py creator-v1/ops/apply-evolution-micro-v064.py
+          test -s docs/evolution-v064-sha256.txt
+          test "$(wc -l < docs/evolution-v064-sha256.txt)" -eq 30
+          test -s creator-v1/web/src/components/CompactMemberIdentity.tsx
+          test -s creator-v1/canonical-auth/recognition-issuer.mjs
+          test -s creator-v1/web/src/components/BadgeInsignia.tsx
+          test -s creator-v1/web/src/pages/RecognitionRegistryPage.tsx
+      - name: Install source-only frontend tools
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Rebuild unchanged V064 optical and V062 native artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet numpy==2.2.6 scipy==1.15.3 Pillow==11.2.1
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libgl1-mesa-dri
+          cd design/evolution-v059
+          mkdir -p artwork/{native,textures,vector,masters,web,compact,micro} docs dist previews
+          python3 src/export_native.py
+          python3 src/render_web.py
+          python3 src/micro.py
+          python3 src/build.py
+          cd ../..
+          python3 creator-v1/ops/install-evolution-v060.py
+          python3 creator-v1/ops/apply-evolution-micro-v064.py
+      - name: Validate integrated React app, award ledger and optical lineage
+        run: |
+          set -euo pipefail
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          for f in creator-v1/canonical-auth/*.mjs; do node --check "$f"; done
+          node --experimental-sqlite --test creator-v1/test/player-card-recognition-v065.test.mjs creator-v1/test/player-recognition-issuance-v066.test.mjs creator-v1/test/member-identity-v061.test.mjs
+          node --test creator-v1/test/evolution-v060-contract.test.mjs creator-v1/test/evolution-v062-native.test.mjs
+          test "$(find creator-v1/dist/web/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+      - name: Commit source-only integration to the isolated branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -f .git/MERGE_HEAD
+          # A squash merge already stages reviewed source. Never stage generated
+          # native textures, optical posters or build artifacts.
+          test -n "$(git diff --cached --name-only)"
+          test -z "$(git diff --cached --name-only -- .github/workflows)" || { echo "GitHub App cannot push workflow changes. Abort."; exit 1; }
+          git status --short > "$RUNNER_TEMP/source-status.txt"
+          sed -n "1,45p" "$RUNNER_TEMP/source-status.txt"
+          git commit -m "merge(identity): preserve V064 optical assets with V065 player recognition"
+          git push origin HEAD:build/player-card-v065-v064-integrate-20261017-014
+          echo "INTEGRATION_ONLY=PASS; no deployment or database migration"
