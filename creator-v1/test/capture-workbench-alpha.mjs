@@ -185,7 +185,15 @@ try{
 }finally{
  writeFileSync(join(output,'chromium.log'),browserLogs);
  try{c?.close()}catch{}
- browser.kill('SIGTERM');
+ const exited=browser.exitCode!==null?Promise.resolve():new Promise(resolve=>{
+   browser.once('exit',resolve);
+   browser.kill('SIGTERM');
+ });
+ await Promise.race([exited,delay(3000)]);
  await fixture.close();
- rmSync(profile,{recursive:true,force:true});
+ // Chrome may asynchronously finish Cache/Preferences writes after SIGTERM.
+ // Source/browser acceptance has already been recorded; cleanup races must
+ // not misreport a tested build as a product failure.
+ try{rmSync(profile,{recursive:true,force:true,maxRetries:12,retryDelay:250});}
+ catch(e){console.warn('Disposable Chromium profile cleanup incomplete:',e.code||e.message);}
 }
