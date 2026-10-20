@@ -108,8 +108,8 @@ function initInquiry(){
  const submit=$('button[type="submit"]',form);submit.disabled=true;status.textContent="Transmitting your inquiry...";
  const data=Object.fromEntries(new FormData(form).entries());
  // Preserve existing API contract. Server validates consent, honeypot, and fields.
- const payload={name:data.name,business_name:data.business,email:data.email,phone:data.phone||"",website:data.website||"",package:data.package||"undecided",project_description:data.goal,consent:data.consent==="yes",fax_number:data.fax_number||""};
- try{const response=await fetch("/api/inquiries",{method:"POST",headers:{"content-type":"application/json","accept":"application/json"},body:JSON.stringify(payload)});let result={};try{result=await response.json();}catch{}if(!response.ok||result.ok===false)throw Error(result.error||"Inquiry could not be submitted. Please email devon@anevum.com.");form.reset();status.textContent="Inquiry received. We will review your project and reply by email.";}
+ const payload=new URLSearchParams({name:data.name||"",business:data.business||"",email:data.email||"",phone:data.phone||"",website:data.website||"",package:data.package||"undecided",goal:data.goal||"",consent:data.consent||"",fax_number:data.fax_number||""});
+ try{const response=await fetch("/api/inquiries",{method:"POST",headers:{"content-type":"application/x-www-form-urlencoded","accept":"application/json"},body:payload.toString()});let result={};try{result=await response.json();}catch{}if(!response.ok||result.ok===false)throw Error(result.error||"Inquiry could not be submitted. Please email devon@anevum.com.");form.reset();status.textContent="Inquiry received. We will review your project and reply by email.";}
  catch(err){status.textContent=err.message||"Submission failed. Please email devon@anevum.com.";}
  finally{submit.disabled=false;}
  });
