@@ -193,3 +193,56 @@
 @media(forced-colors:active){
  .av92-presence-level,.av92-presence-marks{background:Canvas;color:CanvasText;border-color:CanvasText}
 }
+
+/* V092 / phone-first hierarchy, based on real 320/390 Chromium captures.
+ * Preserve earned art in the level seal; remove the duplicated giant
+ * watermark where it interferes with readable standing and XP. */
+@media(max-width:430px){
+ .av92-presence-cover .ms-identity{margin-top:90px}
+ .av92-player-card.av65-player-card--featured{
+  min-height:0!important;padding:15px 12px!important;
+ }
+ .av92-player-card.av65-player-card--featured .av78-featured-art{display:none!important}
+ .av92-player-card.av65-player-card--featured .av61-member-copy{
+  padding-right:0!important;gap:5px;
+ }
+ .av92-player-card.av65-player-card--featured .av61-member-name{
+  font-size:clamp(19px,5.5vw,23px)!important;line-height:1.25!important;
+ }
+ .av92-player-card.av65-player-card--featured .av78-member-kicker{
+  font-size:8px;line-height:1.4;letter-spacing:.08em;
+ }
+ .av92-player-card.av65-player-card--featured .av61-member-handle{font-size:11px!important}
+ .av92-player-card.av65-player-card--featured .av91-aura-signature{
+  font-size:9px;padding:4px 7px;line-height:1.5;
+ }
+ .av92-player-card.av65-player-card--featured .av81-role-token,
+ .av92-player-card.av65-player-card--featured .av81-reputation-token{
+  font-size:9px!important;padding:4px 7px!important;
+ }
+ .av92-player-card.av65-player-card--featured .av81-reputation-dossier{
+  width:100%;max-width:100%;margin-top:8px;padding-top:8px;
+  border-top:1px solid rgba(175,205,232,.16);
+ }
+ .av92-player-card.av65-player-card--featured .av81-reputation-line strong{
+  font-size:9px;letter-spacing:.055em;
+ }
+ .av92-player-card.av65-player-card--featured .av81-reputation-line small{
+  font-size:9px!important;line-height:1.35;
+ }
+ .av92-player-card.av65-player-card--featured .av81-contribution-stats{
+  font-size:9px;gap:5px 9px;line-height:1.55;
+ }
+ .av92-player-card.av65-player-card--featured .av78-player-progress{width:100%;margin-top:8px}
+ .av92-player-card.av65-player-card--featured .av78-progress-caption small{
+  font-size:9px!important;line-height:1.4;
+ }
+ .av92-player-card.av65-player-card--featured .av61-level-label{font-size:9px!important}
+}
+@media(max-width:360px){
+ .av92-player-card.av65-player-card--featured .av81-contribution-stats{display:none}
+ .av92-player-card.av65-player-card--featured .av81-reputation-line{gap:3px 7px}
+ .av92-player-card.av65-player-card--featured .av78-progress-caption{gap:4px 8px}
+ .av92-player-card.av65-player-card--featured .av78-progress-caption strong{font-size:11px}
+ .av92-player-card.av65-player-card--featured .av78-progress-caption small{font-size:9px!important}
+}
