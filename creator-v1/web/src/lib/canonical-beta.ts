@@ -7,6 +7,9 @@ import {createAuthClient} from "better-auth/react";
 import {emailOTPClient} from "better-auth/client/plugins";
 export const canonicalAuthClient=createAuthClient({
   basePath:"/api/v1/member/auth",
+  // Prevent a stalled network request from blocking the join form indefinitely.
+  // This aborts the underlying fetch, in addition to the join page's UI deadline.
+  fetchOptions:{timeout:15_000},
   plugins:[emailOTPClient()]
 });
 
