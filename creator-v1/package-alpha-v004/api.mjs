@@ -261,6 +261,9 @@ async function submit(env,u,id) {
   if(!p||p.owner_id!==u.id||!pilot(env,u.id)) return fail(404,"Project unavailable");
   const release=await getDraft(env.DB,p);
   if(!release||release.status!=="ready") return fail(409,"This project has no ready build to submit");
+  const retention=await query(env.DB,"SELECT mode,expires_at FROM anevum_package_build_retention WHERE release_id=?",release.id);
+  if(retention?.mode==="test"&&retention.expires_at<=Math.floor(Date.now()/1000))
+    return fail(409,"This private test build expired. Upload a revised build.");
   const entry=await query(env.DB,"SELECT object_key,bytes,sha256 FROM anevum_package_files WHERE release_id=? AND path='index.html'",release.id);
   const object=entry?await env.MEDIA.head(entry.object_key):null;
   if(!object||object.size!==entry.bytes||object.customMetadata?.sha256!==entry.sha256)
@@ -305,46 +308,81 @@ async function review(req,env,u,id) {
         "draft_release_id=NULL,review_reason=?,updated_at=? WHERE id=? AND draft_release_id=?"
     ).bind(...(publish?
       [release.proposed_title,release.proposed_summary,release.proposed_category,release.id,now,now,p.id,release.id]:
-      [reason,now,p.id,release.id]))
+      [reason,now,p.id,release.id])),
+    ...(publish?[]:[jobStatement(env.DB,release.id,"rejected",now,now+POLICY.rejectedSeconds)])
   ]);
   return changes[0]?.meta?.changes===1&&changes[1]?.meta?.changes===1
     ?json({status:publish?"published":"rejected"}):fail(409,"Review state changed");
 }
-async function deleteUnpublished(env,u,id) {
+async function deleteUnpublished(env,u,id){
   const p=await getProject(env.DB,id);
-  if(!p||p.owner_id!==u.id||!pilot(env,u.id)) return fail(404,"Project unavailable");
+  if(!p||p.owner_id!==u.id||!pilot(env,u.id))return fail(404,"Project unavailable");
   if(p.live_release_id||p.status==="pending_review"||p.status==="suspended")
-    return fail(409,"Published or pending releases cannot be deleted here");
-  const r=await env.DB.prepare(
-    "SELECT f.object_key FROM anevum_package_files f JOIN anevum_package_releases r ON f.release_id=r.id WHERE r.project_id=?"
-  ).bind(id).all();
-  const sources=await env.DB.prepare("SELECT source_key FROM anevum_package_releases WHERE project_id=?").bind(id).all();
-  await run(env.DB,"UPDATE anevum_package_projects SET status='deleted',draft_release_id=NULL,updated_at=? WHERE id=? AND owner_id=?",
-    Math.floor(Date.now()/1000),id,u.id);
-  const objects=[...r.results.map(x=>x.object_key),...sources.results.map(x=>x.source_key)].filter(Boolean);
-  for(let i=0;i<objects.length;i+=100) await env.MEDIA.delete(objects.slice(i,i+100)).catch(()=>{});
-  return json({deleted:true});
+    return fail(409,"Published and pending-review projects cannot be erased here");
+  const rows=(await env.DB.prepare(
+    "SELECT id FROM anevum_package_releases WHERE project_id=? AND source_key IS NOT NULL"
+  ).bind(id).all()).results||[];
+  const now=Math.floor(Date.now()/1000);
+  const ops=[
+    env.DB.prepare("UPDATE anevum_package_projects SET status='deleted',draft_release_id=NULL,updated_at=? "+
+      "WHERE id=? AND owner_id=? AND live_release_id IS NULL AND status IN ('draft','rejected')")
+      .bind(now,id,u.id),
+    env.DB.prepare("UPDATE anevum_package_releases SET status='revoked' WHERE project_id=? "+
+      "AND status IN ('ready','rejected','failed')").bind(id),
+    ...rows.map(r=>jobStatement(env.DB,r.id,"deleted",now))
+  ];
+  const result=await env.DB.batch(ops);
+  if(result[0]?.meta?.changes!==1)
+    return fail(409,"This project changed during deletion");
+  return json({deleted:true,cleanupQueued:rows.length});
 }
-async function api(req,env,path) {
+async function api(req,env,path,ctx){
   if(path==="/api/v1/packages/health"&&req.method==="GET")
-    return json({ok:true,version:"003",db:!!env.DB,storage:!!env.MEDIA,runnerConfigured:!!isolatedHost(env)});
-  if(path==="/api/v1/packages/projects"&&req.method==="GET") {
+    return json({ok:true,version:"004",db:!!env.DB,storage:!!env.MEDIA,
+      runnerConfigured:!!isolatedHost(env),resourcePolicy:await resourcePolicyReady(env.DB)});
+  if(path==="/api/v1/packages/projects"&&req.method==="GET"){
     const projects=await publicList(env.DB);
     return json({projects:projects.map(p=>({id:p.id,title:p.title,summary:p.summary,category:p.category,version:p.release_version}))});
   }
-  if(path==="/api/v1/packages/me"&&req.method==="GET") {
+  if(path==="/api/v1/packages/me"&&req.method==="GET"){
     const u=await member(req,env);
     return json({authenticated:!!u,pilot:!!u&&pilot(env,u.id),reviewer:!!u&&staff(env,u.id)});
+  }
+  if(path==="/api/v1/packages/usage"&&req.method==="GET"){
+    const u=await member(req,env);
+    if(!u)return fail(401,"Member session required");
+    if(!await resourcePolicyReady(env.DB))return fail(503,"Creator storage is not ready");
+    return json(await getStorageUsage(env.DB,u.id));
+  }
+  if(path==="/api/v1/packages/staff/metrics"&&req.method==="GET"){
+    const u=await member(req,env);
+    if(!u||!staff(env,u.id))return fail(404,"Unavailable");
+    if(!await resourcePolicyReady(env.DB))return fail(503,"Creator storage is not ready");
+    return json({...(await staffMetrics(env.DB)),...(await getStorageUsage(env.DB,""))});
   }
   if(req.method!=="POST"||!csrf(req))return fail(403,"Origin or method not authorized");
   const u=await member(req,env);
   if(!u)return fail(401,"A verified ANEVUM session is required");
+  if(!await resourcePolicyReady(env.DB))return fail(503,"Creator storage setup is incomplete");
+  if(path==="/api/v1/packages/preflight")return preflight(req,env,u);
   if(path==="/api/v1/packages/upload")return upload(req,env,u);
-  const m=path.match(/^\/api\/v1\/packages\/projects\/([0-9a-f-]{36})\/(submit|review|delete)$/);
+  const m=path.match(/^\/api\/v1\/packages\/projects\/([0-9a-f-]{36})\/(submit|review|delete|save|discard)$/);
   if(!m||!UUID.test(m[1]))return fail(404,"Unknown API route");
   if(m[2]==="submit")return submit(env,u,m[1]);
   if(m[2]==="review")return review(req,env,u,m[1]);
-  return deleteUnpublished(env,u,m[1]);
+  if(m[2]==="save"){
+    if(!pilot(env,u.id))return fail(403,"Creator alpha permission required");
+    return json(await saveDraft(env,u.id,m[1],Math.floor(Date.now()/1000)));
+  }
+  if(m[2]==="discard"){
+    if(!pilot(env,u.id))return fail(403,"Creator alpha permission required");
+    const result=await discardDraft(env,u.id,m[1],Math.floor(Date.now()/1000));
+    ctx?.waitUntil?.(cleanupPackageResources(env));
+    return json(result);
+  }
+  const result=await deleteUnpublished(env,u,m[1]);
+  if(result.ok)ctx?.waitUntil?.(cleanupPackageResources(env));
+  return result;
 }
 async function player(req,env,id) {
   const p=await getProject(env.DB,id);
@@ -377,20 +415,21 @@ async function player(req,env,id) {
   return playerScreen(p,release,runtime,isPreview,!!u&&p.owner_id===u.id,!!u&&staff(env,u.id));
 }
 export default {
-  async fetch(req,env) {
+  async fetch(req,env,ctx) {
     const url=new URL(req.url),path=url.pathname;
     const stagingRead = req.method==="GET" && url.protocol==="https:" && url.hostname===env.STAGING_CONTROL_HOST && env.STAGING_CONTROL_HOST?.endsWith(".devonakins.workers.dev");
     if(url.origin!==A && !stagingRead)return fail(404,"Unknown host");
     try {
-      if(path.startsWith("/api/v1/packages/"))return await api(req,env,path);
+      if(path.startsWith("/api/v1/packages/"))return await api(req,env,path,ctx);
       if(req.method!=="GET")return fail(405,"Method not allowed");
       if(path==="/upload/v3"||path==="/upload/v3/") {
         const u=await member(req,env);
         const owner=!!u&&pilot(env,u.id);
         const projects=owner?await ownerList(env.DB,u.id):[];
         const chosen=url.searchParams.get("update");
-        const updateId=owner&&projects.some(x=>x.id===chosen&&["published","rejected"].includes(x.status)&&!x.draft_release_id)?chosen:"";
-        return uploadScreen(projects,!!u,owner,updateId);
+        const updateId=owner&&projects.some(x=>x.id===chosen&&["published","rejected","draft"].includes(x.status)&&(!x.draft_release_id||x.draft_status==="ready"))?chosen:"";
+        const usage=owner&&await resourcePolicyReady(env.DB)?await getStorageUsage(env.DB,u.id):null;
+        return uploadScreen(projects,!!u,owner,updateId,usage);
       }
       if(path==="/packages"||path==="/packages/")return catalogScreen(await publicList(env.DB));
       if(path==="/help/packages"||path==="/help/packages/")return helpScreen();
@@ -402,8 +441,12 @@ export default {
       if(m&&UUID.test(m[1]))return player(req,env,m[1]);
       return a404();
     } catch(e) {
-      if(e instanceof PackageError)return path.startsWith("/api/")?fail(e.status,e.message):a404();
+      if(e instanceof PackageError||e instanceof ResourceError)return path.startsWith("/api/")?fail(e.status,e.message):a404();
       return path.startsWith("/api/")?fail(503,"Package service temporarily unavailable"):layout("Unavailable",'<h1>Temporarily unavailable.</h1><p>Try again later. No public release has been changed.</p>');
     }
+  },
+  async scheduled(event,env,ctx){
+    if(env?.DB&&env?.MEDIA&&await resourcePolicyReady(env.DB))
+      ctx.waitUntil(cleanupPackageResources(env));
   }
 };
