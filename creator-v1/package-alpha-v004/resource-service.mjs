@@ -103,7 +103,9 @@ export async function markReservationForCleanup(db,id,now){
 export function jobStatement(db,releaseId,reason,now,notBefore=now){
   return db.prepare(
     "INSERT OR IGNORE INTO anevum_package_cleanup_jobs(release_id,physical_bytes,reason,not_before,created_at,updated_at) "+
-    "SELECT id,archive_bytes+expanded_bytes,?,?,?,? FROM anevum_package_releases WHERE id=?"
+    "SELECT r.id,r.archive_bytes+r.expanded_bytes,?,?,?,? FROM anevum_package_releases r WHERE r.id=? "+
+    "AND r.status IN ('revoked','rejected','failed') "+
+    "AND NOT EXISTS(SELECT 1 FROM anevum_package_projects p WHERE p.live_release_id=r.id OR p.draft_release_id=r.id)"
   ).bind(reason,notBefore,now,now,releaseId);
 }
 export async function findDuplicate(db,media,project,sha,size){
