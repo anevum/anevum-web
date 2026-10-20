@@ -222,20 +222,28 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
         Boolean(active.matches('input,textarea,select,[contenteditable],[role="textbox"]')||
           active.closest('[contenteditable="true"]'));
     };
+    const attempt=()=>{
+      timer=undefined;
+      if(document.visibilityState!=="visible"||firstContactSeen())return;
+      if(document.querySelector("dialog[open]")||
+         document.querySelector('[role="dialog"][aria-modal="true"]')||editing()){
+        // Losing keyboard focus is not reliable in every embedded webview.
+        // Retry quietly until the field/dialog is no longer active, without
+        // ever consuming the one-time greeting or stealing focus.
+        timer=window.setTimeout(attempt,650);
+        return;
+      }
+      rememberFirstContact();
+      setWelcomeOpen(true);
+      setActiveView("help");
+      setMood("greet");
+      setPanelOpen(true);
+    };
     const schedule=()=>{
       if(timer!==undefined)window.clearTimeout(timer);
       timer=undefined;
       if(document.visibilityState!=="visible"||firstContactSeen())return;
-      timer=window.setTimeout(()=>{
-        if(document.visibilityState!=="visible"||firstContactSeen()||
-           document.querySelector("dialog[open]")||
-           document.querySelector('[role="dialog"][aria-modal="true"]')||editing())return;
-        rememberFirstContact();
-        setWelcomeOpen(true);
-        setActiveView("help");
-        setMood("greet");
-        setPanelOpen(true);
-      },1100);
+      timer=window.setTimeout(attempt,1100);
     };
     schedule();
     document.addEventListener("visibilitychange",schedule);
