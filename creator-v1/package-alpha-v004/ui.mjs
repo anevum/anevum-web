@@ -41,6 +41,51 @@ const SCRIPT = String.raw`
    if(!r.ok)throw Error(payload.error||("Request failed ("+r.status+")"));
    return payload;
  }
+ async function localStructureCheck(f){
+   const ext=f.name.split(".").pop().toLowerCase();
+   if(ext==="html"){
+     const start=await f.slice(0,4096).text();
+     if(!/<(?:!doctype\s+html|html\b|head\b|body\b|script\b|div\b)/i.test(start))
+       throw Error("This HTML file does not look like a playable web page.");
+     return;
+   }
+   if(ext!=="zip")throw Error("Choose a .zip or .html build.");
+   const b=new Uint8Array(await f.arrayBuffer());
+   if(b.length<22)throw Error("This ZIP is empty or incomplete.");
+   const v=new DataView(b.buffer,b.byteOffset,b.byteLength);
+   let end=-1;
+   for(let p=b.length-22;p>=Math.max(0,b.length-65557);p--){
+     if(v.getUint32(p,true)===0x06054b50&&p+22+v.getUint16(p+20,true)===b.length){end=p;break;}
+   }
+   if(end<0)throw Error("ZIP is incomplete. Export the finished project and ZIP its contents.");
+   const count=v.getUint16(end+10,true);
+   const total=v.getUint16(end+8,true);
+   const at=v.getUint32(end+16,true),size=v.getUint32(end+12,true);
+   if(count<1||count>180||total!==count||at+size!==end)
+     throw Error("ZIP has an invalid file directory or exceeds 180 entries.");
+   let found=false,expanded=0,p=at;
+   const decode=new TextDecoder("utf-8",{fatal:true});
+   for(let i=0;i<count;i++){
+     if(p+46>end||v.getUint32(p,true)!==0x02014b50)
+       throw Error("ZIP file list is corrupt. Re-export your build.");
+     const len=v.getUint16(p+28,true),extra=v.getUint16(p+30,true),
+       comment=v.getUint16(p+32,true),unpacked=v.getUint32(p+24,true);
+     const next=p+46+len+extra+comment;
+     if(!len||next>end)throw Error("ZIP has an invalid file name.");
+     let name;
+     try{name=decode.decode(b.subarray(p+46,p+46+len));}
+     catch{throw Error("ZIP contains an invalid UTF-8 file name.");}
+     if(name==="index.html")found=true;
+     if(!name.endsWith("/")){
+       if(unpacked>12*1048576)throw Error("A file inside the ZIP exceeds the 12 MiB limit.");
+       expanded+=unpacked;
+       if(expanded>48*1048576)throw Error("Your ZIP expands beyond 48 MiB. Optimize assets before upload.");
+     }
+     p=next;
+   }
+   if(!found)
+     throw Error("Your ZIP needs index.html at its root. ZIP the contents of your built dist folder, not the folder itself.");
+ }
  async function digest(f){
    if(!globalThis.crypto||!crypto.subtle)return null;
    const b=await f.arrayBuffer(),hash=await crypto.subtle.digest("SHA-256",b);
@@ -56,6 +101,8 @@ const SCRIPT = String.raw`
      const ext=chosen.name.split(".").pop().toLowerCase();
      if(!["zip","html"].includes(ext)||chosen.size<1||chosen.size>20*1048576)
        throw Error("Choose a ZIP or HTML build under 20 MiB.");
+     note("Checking entry point, ZIP structure and expanded size on your device…",false,true);
+     await localStructureCheck(chosen);
      const hash=await digest(chosen);
      if(hash){
        note("Checking whether this project already has the same build…",false,true);
