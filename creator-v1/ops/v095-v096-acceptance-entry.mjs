@@ -8,9 +8,24 @@ export const QA_COOKIE='__Host-anevum-v095-v096-qa';
 const ROOT='/__enter/v095-v096';
 const headers={'cache-control':'private, no-store','x-robots-tag':'noindex, nofollow, noarchive',
  'content-security-policy':"default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
- 'referrer-policy':'no-referrer','x-content-type-options':'nosniff','x-frame-options':'DENY'};
+ 'referrer-policy':'same-origin','x-content-type-options':'nosniff','x-frame-options':'DENY'};
 const response=(body,status=200,extra={})=>new Response(body,{status,headers:{...headers,...extra}});
-export function createAcceptanceEntry({identity=verifiedPreviewIdentity,now=()=>Math.floor(Date.now()/1000)}={}){
+/** Access can deliver its signed application JWT in the assertion header
+ * without forwarding its browser cookie. Both transports receive exactly the
+ * same signature, issuer, audience, expiry and approved-email validation. */
+export async function acceptanceIdentity(request,env,options){
+ // Workers rejects fetch redirect='error'. Manual mode refuses redirects via
+ // the existing verifier's response.ok check, without following a location.
+ const transport=options?.fetchImpl||fetch;
+ const checked={...options,fetchImpl:(url,init)=>transport(url,{...init,redirect:'manual'})};
+ const cookieIdentity=await verifiedPreviewIdentity(request,env,checked);
+ if(cookieIdentity)return cookieIdentity;
+ const token=request.headers.get('cf-access-jwt-assertion');
+ if(!token||token.length>8192)return null;
+ const h=new Headers();h.set('cookie','CF_Authorization='+token);
+ return verifiedPreviewIdentity(new Request(request.url,{headers:h}),env,checked);
+}
+export function createAcceptanceEntry({identity=acceptanceIdentity,now=()=>Math.floor(Date.now()/1000)}={}){
  return {async fetch(request,env){
   const url=new URL(request.url);
   if(url.origin!=='https://anevum.com'||url.search||![ROOT,ROOT+'/enable',ROOT+'/leave'].includes(url.pathname))
