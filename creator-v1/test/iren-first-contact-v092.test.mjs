@@ -27,7 +27,7 @@ test("Guest first contact is contextual, delayed, remembered and easily dismisse
  assert.match(iren,/rememberFirstContact\(\)/);
  assert.match(iren,/window\.localStorage\.setItem\(firstContactStorageKey,"seen"\)/);
  assert.match(iren,/firstContactShownInMemory=true/);
- assert.match(iren,/className="ir92-not-now" onClick=\{closeWelcome\}/);
+ assert.match(iren,/className="ir92-not-now" onClick=\{closePanel\}/);
  assert.match(iren,/if\(welcomeOpen&&pathname!=="\/"\)/);
  assert.match(iren,/event\.key==="Escape"/);
  assert.match(iren,/setWelcomeOpen\(false\)/);
@@ -53,4 +53,29 @@ test("Compact first-contact choices work at phone widths and in accessibility mo
  assert.match(styles,/\.ir92-first-contact :is\(a,button\):focus-visible/);
  assert.match(styles,/@media\(forced-colors:active\)/);
  assert.match(styles,/min-height:70px/);
+});
+
+test("First contact waits for a visible nonediting page, even after backgrounding",()=>{
+ assert.match(iren,/document\.addEventListener\("visibilitychange",schedule\)/);
+ assert.match(iren,/document\.removeEventListener\("visibilitychange",schedule\)/);
+ assert.match(iren,/document\.addEventListener\("focusout",schedule,true\)/);
+ assert.match(iren,/document\.removeEventListener\("focusout",schedule,true\)/);
+ assert.match(iren,/document\.visibilityState!=="visible"/);
+ assert.match(iren,/document\.querySelector\('\[role="dialog"\]\[aria-modal="true"\]'\)/);
+ assert.match(iren,/active\.matches\('input,textarea,select,\[contenteditable\],\[role="textbox"\]'\)/);
+ assert.match(iren,/active\.closest\('\[contenteditable="true"\]'\)/);
+ assert.match(iren,/if\(timer!==undefined\)window\.clearTimeout\(timer\)/);
+ assert.match(iren,/rememberFirstContact\(\);\s*setWelcomeOpen\(true\)/);
+});
+
+test("Automatic arrival announces without focus theft; explicit help can receive keyboard focus",()=>{
+ assert.match(iren,/className="ir92-voice" role="status" aria-live="polite"/);
+ assert.match(iren,/const focusRequested=useRef\(false\)/);
+ assert.match(iren,/if\(panelOpen&&focusRequested\.current\)/);
+ assert.match(iren,/closePanelRef\.current\?\.focus\(\{preventScroll:true\}\)/);
+ assert.match(iren,/if\(!panelOpen\)focusRequested\.current=true/);
+ assert.match(iren,/ref=\{closePanelRef\} className="ir80-icon-button"/);
+ assert.match(iren,/onClick=\{closePanel\}>Not now/);
+ assert.match(iren,/window\.requestAnimationFrame\(\(\)=>dockRef\.current\?\.focus\(\{preventScroll:true\}\)\)/);
+ assert.doesNotMatch(iren,/setWelcomeOpen\(true\);\s*focusRequested\.current=true/);
 });
