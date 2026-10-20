@@ -30,6 +30,8 @@ test('guarded V091 release stays pinned to precisely the reviewed integrated fil
  const release=readFileSync(new URL('../../.github/workflows/v084-continuance-production.yml',import.meta.url),'utf8');
  assert.ok(release.includes('git merge-base --is-ancestor '+V091_APPLICATION_SOURCE+' HEAD'));
  assert.ok(release.includes('git diff --exit-code '+V091_APPLICATION_SOURCE+' HEAD'));
+ assert.ok(release.includes("':(exclude).github/workflows/v091-live-readonly-qa.yml'"),'Only the reviewed read-only QA workflow may differ as release configuration');
+ assert.ok(release.includes("':(exclude).github/workflows/v084-continuance-production.yml'"),'Guard changes must remain separate from reviewed app source');
  const start=release.indexOf("diff -u <(printf '%s\\n' \\");
  const end=release.indexOf('<(git diff --name-only db2b8c0f8f79061adf1677986b87077856204267 HEAD)',start);
  assert.ok(start>=0&&end>start,'A static source-delta allowlist must be present');
