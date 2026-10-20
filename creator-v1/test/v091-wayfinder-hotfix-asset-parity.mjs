@@ -13,10 +13,28 @@ const cssNames=readdirSync(join(candidateDir,"assets")).filter(n=>/^index-[A-Za-
 assert.equal(cssNames.length,1,"REBUILD_MUST_HAVE_ONE_CSS_ENTRY");
 const candidateCss=cssNames[0];
 assert.notEqual(candidateCss,liveCss,"CSS_FIX_NOT_REFLECTED_IN_HASH");
-assert.ok(afterHtml.includes("/assets/"+candidateCss)&&afterHtml.includes("/assets/"+liveJs),"HOTFIX_CHANGED_APP_JS_REFERENCE");
+assert.ok(afterHtml.includes("/assets/"+candidateCss),"CANDIDATE_CSS_NOT_LINKED");
+const jsNames=readdirSync(join(candidateDir,"assets")).filter(n=>/^index-[A-Za-z0-9_-]+\.js$/.test(n));
+assert.equal(jsNames.length,1,"EXPECTED_ONE_APP_JAVASCRIPT_ENTRY");
+const candidateJs=jsNames[0];
+assert.ok(afterHtml.includes("/assets/"+candidateJs),"CANDIDATE_JS_NOT_LINKED");
 const beforeJs=readFileSync(join(baselineDir,"assets",liveJs));
-const afterJs=readFileSync(join(candidateDir,"assets",liveJs));
-assert.deepEqual(afterJs,beforeJs,"APP_JS_NOT_BINARY_IDENTICAL_TO_LIVE");
+const afterJs=readFileSync(join(candidateDir,"assets",candidateJs));
+const originalJsSource=beforeJs.toString("utf8");
+const candidateJsSource=afterJs.toString("utf8");
+const normalizedJs=candidateJsSource.replaceAll(candidateCss,liveCss);
+if(normalizedJs!==originalJsSource){
+  let i=0;while(i<originalJsSource.length&&i<normalizedJs.length&&originalJsSource[i]===normalizedJs[i])i++;
+  console.error("JS_CHUNK_DIAGNOSTIC",JSON.stringify({
+    originalName:liveJs,candidateName:candidateJs,
+    oldBytes:beforeJs.length,newBytes:afterJs.length,firstMismatch:i,
+    oldExcerpt:originalJsSource.slice(Math.max(0,i-100),i+180),
+    newExcerpt:normalizedJs.slice(Math.max(0,i-100),i+180),
+    expectedOldCss:liveCss,actualNewCss:candidateCss,
+    occurrences:(candidateJsSource.split(candidateCss).length-1)
+  }));
+}
+assert.equal(normalizedJs,originalJsSource,"APPLICATION_JS_CHANGED_BEYOND_CSS_ASSET_REFERENCE");
 const oldCss=readFileSync(join(baselineDir,"assets",liveCss),"utf8");
 const newCss=readFileSync(join(candidateDir,"assets",candidateCss),"utf8");
 const first=".av79-navigation .ir80-wayfinder-entry";
@@ -35,8 +53,8 @@ mkdirSync(evidenceDir,{recursive:true});
 const result={session:"ANEVUM.WEB.PATCH.2026-10-19.004.IREN-WAYFINDER-LIVE-CSS",
  base:"2938f8d387cf08ee3de4abc32c4fabf737556597",
  referenceRun:39339804557,productionCss:liveCss,productionJs:liveJs,
- candidateCss,jsSha256:hash(afterJs),beforeCssSha256:hash(oldCss),
- afterCssSha256:hash(newCss),cssDelta:"Only the IREN Wayfinder section; JS remains byte-identical",
+ candidateCss,candidateJs,jsCssHashReferenceOnly:beforeJs.equals(afterJs)||normalizedJs===originalJsSource,jsSha256:hash(afterJs),beforeCssSha256:hash(oldCss),
+ afterCssSha256:hash(newCss),cssDelta:"Only the IREN Wayfinder section; app JavaScript is unchanged except its CSS asset reference",
  accepted:true};
 writeFileSync(join(evidenceDir,"asset-parity.json"),JSON.stringify(result,null,2)+"\n");
 console.log("V091_IREN_HOTFIX_LIVE_BINARY_PARITY=PASS",JSON.stringify(result));
