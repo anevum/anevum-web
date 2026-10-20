@@ -7,6 +7,9 @@
 import { inspectZip, extractEntry, sha256Hex, assetMime, ZIP_LIMITS, PackageError } from "./archive.mjs";
 import { mintPreview } from "./tokens.mjs";
 import { layout, uploadScreen, catalogScreen, playerScreen, queueScreen, helpScreen } from "./ui.mjs";
+import {POLICY,ResourceError,readBoundedMultipart} from "./resource-policy.mjs";
+import {resourcePolicyReady,acquireUploadLease,releaseUploadLease,recordUploadAttempt,getStorageUsage,reserveUpload,markReservationForCleanup,jobStatement,findDuplicate,saveDraft,discardDraft} from "./resource-service.mjs";
+import {cleanupPackageResources,staffMetrics} from "./resource-cleanup.mjs";
 
 const A = "https://anevum.com";
 const MiB = 1048576;
@@ -45,7 +48,9 @@ function csrf(req) {
 async function ownerList(db,id) {
   return (await db.prepare(
     "SELECT p.*, (SELECT version FROM anevum_package_releases WHERE id=COALESCE(p.draft_release_id,p.live_release_id)) AS release_version, " +
-    "(SELECT status FROM anevum_package_releases WHERE id=p.draft_release_id) AS draft_status " +
+    "(SELECT status FROM anevum_package_releases WHERE id=p.draft_release_id) AS draft_status, " +
+    "(SELECT mode FROM anevum_package_build_retention WHERE release_id=p.draft_release_id) AS draft_mode, " +
+    "(SELECT expires_at FROM anevum_package_build_retention WHERE release_id=p.draft_release_id) AS draft_expires_at " +
     "FROM anevum_package_projects p WHERE p.owner_id=? AND p.status!='deleted' ORDER BY p.updated_at DESC LIMIT 50"
   ).bind(id).all()).results;
 }
@@ -123,81 +128,132 @@ async function prepareFile(file) {
   }
   return {bytes,entries,expandedBytes,extractor};
 }
+async function preflight(req,env,u){
+  if(!pilot(env,u.id))return fail(403,"Creator alpha access required");
+  if(!await resourcePolicyReady(env.DB))return fail(503,"Creator storage setup is incomplete");
+  const raw=await req.text();
+  if(raw.length>2048)return fail(413,"Preflight request exceeds limit");
+  let x;try{x=JSON.parse(raw);}catch{return fail(400,"Invalid preflight request");}
+  const size=x?.size,sha=x?.sha256,id=x?.projectId||"",name=x?.filename||"";
+  if(!Number.isSafeInteger(size)||size<1||size>POLICY.maxArchiveBytes||
+    !/^[a-f0-9]{64}$/.test(sha||"")||
+    typeof name!=="string"||!/^[^\\/\\x00-\\x1f]{3,160}\.(zip|html)$/.test(name)||
+    (id&&!UUID.test(id)))return fail(422,"Choose a ZIP/HTML build below 20 MiB");
+  const project=id?await getProject(env.DB,id):null;
+  if(id&&(!project||project.owner_id!==u.id))return fail(404,"Project unavailable");
+  const duplicate=await findDuplicate(env.DB,env.MEDIA,project,sha,size);
+  if(duplicate)return json(duplicate);
+  if(project?.status==="suspended")return fail(409,"This project cannot accept revisions");
+  const draft=project?.draft_release_id?await getDraft(env.DB,project):null;
+  if(draft&&draft.status!=="ready")return fail(409,"A submitted revision must finish review before another upload");
+  const usage=await getStorageUsage(env.DB,u.id);
+  return json({ready:true,duplicate:false,needsReplace:!!draft,
+    usage,maxArchiveBytes:POLICY.maxArchiveBytes,testLifetimeHours:48});
+}
 async function upload(req,env,u) {
-  if(!pilot(env,u.id)) return fail(403,"Creator alpha access required");
-  const headerSize=Number(req.headers.get("content-length")||0);
-  if(headerSize>22*MiB) return fail(413,"Upload exceeds the 20 MiB ZIP limit");
-  if(!String(req.headers.get("content-type")||"").startsWith("multipart/form-data;"))
-    return fail(415,"Upload a multipart form");
-  let body;
-  try{body=await req.formData();}catch{return fail(400,"Invalid upload form");}
-  const details=validatedText(body);
-  const file=body.get("file");
-  const projectParam=body.get("project_id");
-  const existingId=typeof projectParam==="string"?projectParam.trim():"";
-  if(existingId&&!UUID.test(existingId)) return fail(422,"Invalid project ID");
-  const project=existingId?await getProject(env.DB,existingId):null;
-  if(existingId&&(!project||project.owner_id!==u.id)) return fail(404,"Project unavailable");
-  if(project&&(project.status==="suspended"||project.draft_release_id)) return fail(409,"Finish or remove the current draft before uploading an update");
-  if(project && !["published","rejected","draft"].includes(project.status)) return fail(409,"This project cannot accept a revised build");
-  if(!project) {
-    const count=await query(env.DB,"SELECT COUNT(*) AS n FROM anevum_package_projects WHERE owner_id=? AND status!='deleted'",u.id);
-    if(count.n>=20) return fail(409,"Creator alpha allows up to 20 active projects");
-  }
-  const usage=await query(env.DB,
-    "SELECT COALESCE(SUM(r.archive_bytes),0) AS bytes FROM anevum_package_releases r JOIN anevum_package_projects p ON r.project_id=p.id WHERE p.owner_id=? AND r.status NOT IN ('failed','revoked') AND p.status!='deleted'",u.id);
-  if(!file || typeof file.size !== "number") return fail(422,"Upload a ZIP or HTML project");
-  if(usage.bytes+file.size>100*MiB) return fail(409,"Creator alpha has a 100 MiB compressed upload allowance");
-  const now=Math.floor(Date.now()/1000);
-  const attempts=await query(env.DB,
-    "INSERT INTO anevum_package_upload_limits(owner_id,window_start,attempts) VALUES(?,?,1) " +
-    "ON CONFLICT(owner_id) DO UPDATE SET attempts=CASE WHEN window_start<? THEN 1 ELSE attempts+1 END," +
-    "window_start=CASE WHEN window_start<? THEN excluded.window_start ELSE window_start END RETURNING attempts",u.id,now,now-3600,now-3600);
-  if(attempts.attempts>10) return fail(429,"Too many upload attempts. Try again in an hour");
-  const plan=await prepareFile(file);
-  const id=project?.id||crypto.randomUUID(),releaseId=crypto.randomUUID();
-  const last=project?await query(env.DB,
-    "SELECT MAX(version) AS last FROM anevum_package_releases WHERE project_id=?",id):null;
-  const version=(last?.last||0)+1;
-  const root="package-alpha/v003/"+u.id+"/"+id+"/"+releaseId;
-  const sourceKey=root+"/source/"+file.name;
-  const touched=[];
-  const fileStatements=[];
-  const archiveSHA=await sha256Hex(plan.bytes);
-  try {
-    await env.MEDIA.put(sourceKey,plan.bytes,{httpMetadata:{contentType:"application/octet-stream"},
-      customMetadata:{sha256:archiveSHA}});touched.push(sourceKey);
-    for(const entry of plan.entries) {
-      const contents=await plan.extractor(entry);
-      const sha=await sha256Hex(contents);
-      const objectKey=root+"/assets/"+entry.path;
-      await env.MEDIA.put(objectKey,contents,{httpMetadata:{contentType:entry.mime},customMetadata:{sha256:sha}});
-      touched.push(objectKey);
-      fileStatements.push(env.DB.prepare(
-        "INSERT INTO anevum_package_files(release_id,path,object_key,mime,bytes,sha256) VALUES(?,?,?,?,?,?)"
-      ).bind(releaseId,entry.path,objectKey,entry.mime,contents.length,sha));
+  if(!pilot(env,u.id))return fail(403,"Creator alpha access required");
+  if(!env.MEDIA||!await resourcePolicyReady(env.DB))
+    return fail(503,"Creator storage setup is incomplete; uploads are safely paused");
+  const now=Math.floor(Date.now()/1000),lease=crypto.randomUUID();
+  if(!await acquireUploadLease(env.DB,u.id,lease,now))
+    return fail(429,"Another upload is in progress. Finish it before uploading again.");
+  try{
+    const body=await readBoundedMultipart(req);
+    const details=validatedText(body);
+    const file=body.get("file"),param=body.get("project_id");
+    const existingId=typeof param==="string"?param.trim():"";
+    if(existingId&&!UUID.test(existingId))return fail(422,"Invalid project ID");
+    if(!file||typeof file.size!=="number")return fail(422,"Choose a ZIP or HTML package");
+    const project=existingId?await getProject(env.DB,existingId):null;
+    if(existingId&&(!project||project.owner_id!==u.id))return fail(404,"Project unavailable");
+    if(project&&!["published","rejected","draft"].includes(project.status))
+      return fail(409,"This project cannot accept revised builds");
+    const old=project?.draft_release_id?await getDraft(env.DB,project):null;
+    if(old&&old.status!=="ready")return fail(409,"Review the current submitted build first");
+    if(old&&body.get("replace_draft")!=="1")
+      return fail(409,"Confirm replacement of the existing private build");
+    if(!project){
+      const count=await query(env.DB,"SELECT COUNT(*) AS n FROM anevum_package_projects WHERE owner_id=? AND status!='deleted'",u.id);
+      if(count.n>=20)return fail(409,"Creator alpha allows up to 20 active projects");
     }
-    const statements=[];
-    if(!project) statements.push(env.DB.prepare(
-      "INSERT INTO anevum_package_projects(id,owner_id,title,summary,category,status,created_at,updated_at,draft_release_id) " +
-      "VALUES(?,?,?,?,?,'draft',?,?,?)"
-    ).bind(id,u.id,details.title,details.summary,details.category,now,now,releaseId));
-    else statements.push(env.DB.prepare(
-      "UPDATE anevum_package_projects SET draft_release_id=?,review_reason=NULL,updated_at=? " +
-      "WHERE id=? AND owner_id=? AND draft_release_id IS NULL"
-    ).bind(releaseId,now,id,u.id));
-    statements.push(env.DB.prepare(
-      "INSERT INTO anevum_package_releases(id,project_id,version,status,source_name,proposed_title,proposed_summary,proposed_category," +
-      "archive_sha256,archive_bytes,expanded_bytes,file_count,source_key,created_at) " +
-      "VALUES(?,?,?,'ready',?,?,?,?,?,?,?,?,?,?)"
-    ).bind(releaseId,id,version,file.name,details.title,details.summary,details.category,
-      archiveSHA,plan.bytes.byteLength,plan.expandedBytes,plan.entries.length,sourceKey,now));
-    await env.DB.batch([...statements,...fileStatements]);
-    return json({id,release_id:releaseId,version,status:"ready",play_url:"/play/v3/"+id+"?preview=1"},201);
-  } catch(e) {
-    await env.MEDIA.delete(touched).catch(()=>{});
-    if(e instanceof PackageError) throw e;
-    return fail(503,"Package storage failed; no project was published");
+    if(file.size>POLICY.maxArchiveBytes)return fail(413,"ZIP files are limited to 20 MiB");
+    await recordUploadAttempt(env.DB,u.id,file.size,now);
+    const plan=await prepareFile(file);
+    const sha=await sha256Hex(plan.bytes);
+    const duplicate=await findDuplicate(env.DB,env.MEDIA,project,sha,plan.bytes.byteLength);
+    if(duplicate)return json(duplicate);
+    const id=project?.id||crypto.randomUUID(),releaseId=crypto.randomUUID();
+    const prior=project?await query(env.DB,"SELECT MAX(version) last FROM anevum_package_releases WHERE project_id=?",id):null;
+    const version=(prior?.last||0)+1;
+    const root="package-alpha/v004/"+u.id+"/"+id+"/"+releaseId;
+    const key=root+"/source/"+file.name;
+    const reservation=await reserveUpload(env.DB,{
+      ownerId:u.id,projectId:id,releaseId,
+      archiveBytes:plan.bytes.byteLength,expandedBytes:plan.expandedBytes,now,prefix:root+"/"
+    });
+    let committed=false;
+    try{
+      await env.MEDIA.put(key,plan.bytes,{
+        httpMetadata:{contentType:"application/octet-stream"},customMetadata:{sha256:sha}
+      });
+      const fileStatements=[];
+      for(const entry of plan.entries){
+        const bytes=await plan.extractor(entry),fileSha=await sha256Hex(bytes);
+        const objectKey=root+"/assets/"+entry.path;
+        await env.MEDIA.put(objectKey,bytes,{
+          httpMetadata:{contentType:entry.mime},customMetadata:{sha256:fileSha}
+        });
+        fileStatements.push(env.DB.prepare(
+          "INSERT INTO anevum_package_files(release_id,path,object_key,mime,bytes,sha256) VALUES(?,?,?,?,?,?)"
+        ).bind(releaseId,entry.path,objectKey,entry.mime,bytes.length,fileSha));
+      }
+      const statements=[];
+      if(!project){
+        statements.push(env.DB.prepare(
+          "INSERT INTO anevum_package_projects(id,owner_id,title,summary,category,status,created_at,updated_at,draft_release_id) "+
+          "VALUES(?,?,?,?,?,'draft',?,?,?)"
+        ).bind(id,u.id,details.title,details.summary,details.category,now,now,releaseId));
+      }else{
+        statements.push(env.DB.prepare(
+          "UPDATE anevum_package_projects SET draft_release_id=?,review_reason=NULL,updated_at=? "+
+          "WHERE id=? AND owner_id=? AND status IN ('published','rejected','draft') "+
+          (old?"AND draft_release_id=?":"AND draft_release_id IS NULL")
+        ).bind(...(old?[releaseId,now,id,u.id,old.id]:[releaseId,now,id,u.id])));
+      }
+      // The previous private build stays playable until after all new R2 objects exist.
+      if(old){
+        statements.push(env.DB.prepare(
+          "UPDATE anevum_package_releases SET status='revoked' WHERE id=? AND status='ready'"
+        ).bind(old.id));
+        statements.push(jobStatement(env.DB,old.id,"replaced",now));
+      }
+      statements.push(env.DB.prepare(
+        "INSERT INTO anevum_package_releases(id,project_id,version,status,source_name,proposed_title,proposed_summary,proposed_category,"+
+        "archive_sha256,archive_bytes,expanded_bytes,file_count,source_key,created_at) "+
+        "SELECT ?,?,?,'ready',?,?,?,?,?,?,?,?,?,? FROM anevum_package_projects WHERE id=? AND draft_release_id=?"
+      ).bind(releaseId,id,version,file.name,details.title,details.summary,details.category,
+        sha,plan.bytes.byteLength,plan.expandedBytes,plan.entries.length,key,now,id,releaseId));
+      statements.push(env.DB.prepare(
+        "INSERT INTO anevum_package_build_retention(release_id,mode,expires_at,created_at,updated_at) "+
+        "VALUES(?,'test',?,?,?)"
+      ).bind(releaseId,now+POLICY.testSeconds,now,now));
+      statements.push(...fileStatements);
+      statements.push(env.DB.prepare("DELETE FROM anevum_package_upload_reservations WHERE id=?").bind(reservation));
+      const results=await env.DB.batch(statements);
+      committed=true;
+      if(results[0]?.meta?.changes!==1)
+        return fail(409,"The project changed during upload; reload your Creator space");
+      return json({id,release_id:releaseId,version,status:"ready",
+        expires_at:now+POLICY.testSeconds,play_url:"/play/v3/"+id+"?preview=1"},201);
+    }catch(e){
+      // Do not release the reserved bytes until private R2 prefix erasure succeeds.
+      // A timed worker crash similarly leaves the reservation for scheduled reaping.
+      if(!committed)await markReservationForCleanup(env.DB,reservation,Math.floor(Date.now()/1000)).catch(()=>{});
+      if(e instanceof PackageError||e instanceof ResourceError)throw e;
+      return fail(503,"Build upload could not finish. Your previous project release is unchanged.");
+    }
+  }finally{
+    await releaseUploadLease(env.DB,u.id,lease).catch(()=>{});
   }
 }
 async function submit(env,u,id) {
