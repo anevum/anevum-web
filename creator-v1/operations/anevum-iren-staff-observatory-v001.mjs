@@ -99,7 +99,7 @@ async function overview(db, staff) {
   });
 }
 
-async function members(db, staff, url) {
+async function members(db, staff, url, env) {
   if (staff.role !== 'owner') return error(403, 'Owner clearance required');
   const allowed = new Set(['q', 'page']);
   const params = url.searchParams;
@@ -139,8 +139,27 @@ async function members(db, staff, url) {
       FROM member_xp_events GROUP BY user_id) x ON x.user_id=u.id
     ${where} ORDER BY u.createdAt DESC, u.id DESC LIMIT ? OFFSET ?`)
     .bind(...filter,pageSize,resolvedPage*pageSize).all();
-  return json({ members: result.results || [], total, page:resolvedPage, pageSize,
-    hasNext: (page+1)*pageSize < total });
+  const rows=result.results||[];
+  const designationsEnabled=await roleOpsReady(db,env);
+  let membersWithRoles=rows;
+  if(designationsEnabled&&rows.length){
+    const ids=rows.map(row=>row.id);
+    const grants=await db.prepare(
+      'SELECT user_id,role FROM member_role_grants WHERE revoked_at IS NULL AND user_id IN ('+
+       ids.map(()=>'?').join(',')+') LIMIT 200'
+    ).bind(...ids).all();
+    if(grants.success===false)return error(503,'Verified role directory unavailable');
+    const byMember=new Map();
+    for(const grant of grants.results||[]){
+      if(!Object.hasOwn(DESIGNATION_PRIORITY,grant.role))continue;
+      const current=byMember.get(grant.user_id);
+      if(!current||DESIGNATION_PRIORITY[grant.role]>DESIGNATION_PRIORITY[current])
+        byMember.set(grant.user_id,grant.role);
+    }
+    membersWithRoles=rows.map(row=>({...row,designation:byMember.get(row.id)||null}));
+  }
+  return json({members:membersWithRoles,total,page:resolvedPage,pageSize,
+    designationsEnabled,hasNext:(page+1)*pageSize<total});
 }
 
 async function rewards(db, staff) {
@@ -430,7 +449,7 @@ export default {
       try {
         switch(url.pathname) {
           case `${BASE}/api/overview`: return await overview(env.MEMBER_DB, staff);
-          case `${BASE}/api/members`: return await members(env.MEMBER_DB, staff, url);
+          case `${BASE}/api/members`: return await members(env.MEMBER_DB, staff, url, env);
           case `${BASE}/api/rewards`: return await rewards(env.MEMBER_DB, staff);
           case `${BASE}/api/audit`: return await audits(env.MEMBER_DB, staff);
           case `${BASE}/api/roles`: return await roleQueue(env.MEMBER_DB,staff,env);
