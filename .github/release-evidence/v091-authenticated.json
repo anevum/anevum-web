@@ -1,10 +1,10 @@
 {
-  "source_sha": "cbef247f13eccb01fe97fe09fc5c86bf751ba84b",
+  "source_sha": "743e81762754fd0805be60294f68a120b4d491e9",
   "founder_staff_session": false,
   "reviewer_staff_session": false,
   "creator_journey": false,
   "cross_account_identity": false,
   "verified_at": null,
   "evidence": [],
-  "status": "BLOCKED: V091 / IREN first contact / Aura Codex / member presence candidate pinned at cbef247f. Founder, reviewer, creator-journey and cross-account authenticated acceptance remain unverified. Production release remains prohibited."
+  "status": "BLOCKED: V091 and V092 audited-role display source 743e8176 pinned; all four authenticated acceptance gates remain unverified. Live reputation and verified-role flags remain disabled; migration and role grants require separate approval."
 }
