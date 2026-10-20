@@ -89,8 +89,22 @@ function setup(){
   const env={DB:mockD1(),MEDIA:mockR2(),RUNTIME_HOST:"run-tests.example",PACKAGE_PREVIEW_KEY:"a".repeat(48),PACKAGE_PUBLIC_PUBLISH_ENABLED:"true",
     PILOT_IDS:"owner-id",STAFF_IDS:"staff-id",
     AUTH:{async fetch(req){
+      const path=new URL(req.url).pathname;
       const v=req.headers.get("cookie")||"";
       const id=v.includes("session=owner")?"owner-id":v.includes("session=staff")?"staff-id":null;
+      const handle=id==="owner-id"?"cosmiccreator":"trustedreviewer";
+      const joinedAt=id==="owner-id"?1760000000:1760000001;
+      if(path==="/api/v1/member/creator-profile"){
+        return id?Response.json({memberId:id,profile:{handle,createdAt:joinedAt,visibility:"public"}})
+          :Response.json({error:"Sign-in required"},{status:401});
+      }
+      if(path.startsWith("/api/v1/members/")){
+        const asked=path.slice("/api/v1/members/".length);
+        const profile=asked==="cosmiccreator"?{handle:"cosmiccreator",joinedAt:1760000000,
+          displayName:"Test Creator"}:asked==="trustedreviewer"?{handle:"trustedreviewer",joinedAt:1760000001,
+          displayName:"Synthetic Reviewer"}:null;
+        return profile?Response.json({profile}):Response.json({error:"Profile not public"},{status:404});
+      }
       return Response.json(id?{user:{id,emailVerified:true},session:{id:"valid"}}:{user:null,session:null});
     }}};
   return env;
