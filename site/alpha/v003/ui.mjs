@@ -1,3 +1,5 @@
+import {CREST,SIGIL,ORBITAL_ART,V005_CSS} from "./continuance-visuals.mjs";
+
 /* ANEVUM / Continuance Institute / Package Creator 003
  * Focused UI with functional affordances instead of ornamental effects.
  */
@@ -266,6 +268,14 @@ export const SCRIPT = String.raw`
 `;
 
 export const esc = value => String(value ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function hero(kicker,title,description,meta="ZIP / HTML",compact=false){
+  return '<section class="av-scene-lead'+(compact?' av-scene-compact':'')+'" aria-label="'+esc(kicker)+'">'+
+    '<div class="av-hero-copy"><div class="ey av-ey-line">'+esc(kicker)+'</div>'+
+    '<h1>'+title+'</h1><p class="lead">'+description+'</p>'+
+    '<div class="av-meta-strand"><span>'+esc(meta)+'</span><span>PRIVATE PREVIEW</span><span>REVIEWED RELEASES</span></div></div>'+
+    ORBITAL_ART+'</section>';
+}
+
 const state = value => ({
   published:"Published",pending_review:"In review",ready:"Ready for review",rejected:"Changes requested",
   draft:"Draft",suspended:"Unavailable",deleted:"Deleted"
@@ -281,9 +291,10 @@ export function layout(title,body,runner=""){
   const runnerFrame=runner?"frame-src "+runner+"; ":"frame-src 'none'; ";
   const html='<!doctype html><html lang="en"><head><meta charset="utf-8">'+
     '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'+
-    '<meta name="theme-color" content="#071020"><title>'+esc(title)+' · ANEVUM</title><style>'+CSS+'</style></head><body>'+
-    '<header><div class="top"><a class="brand" href="/">ANEVUM<small>CONTINUANCE INSTITUTE</small></a>'+
-    '<nav aria-label="Primary"><a href="/discover">Discover</a><a href="/upload/v3" aria-label="Upload a creation">Upload</a><a href="/member">My Space</a><a href="/help/packages">Guide</a></nav></div></header>'+
+    '<meta name="theme-color" content="#071020"><title>'+esc(title)+' · ANEVUM</title><style>'+CSS+V005_CSS+'</style></head><body>'+
+    '<header><div class="top"><a class="brand" href="/"><span class="brand-mark">'+CREST+'</span><span class="brand-words"><strong>ANEVUM</strong><small>CONTINUANCE INSTITUTE</small></span></a>'+
+    '<nav aria-label="Primary"><a href="/discover">Discover</a><a href="/upload/v3" aria-current="page" aria-label="Upload a creation">Upload</a><a href="/member">My Space</a><a href="/help/packages">Guide</a></nav>'+
+    '<span class="header-readout" aria-hidden="true"><i></i> CREATOR / UPLINK</span></div></header>'+
     '<main id="main-content">'+body+'</main><footer class="foot">ANEVUM / Creator uplink · <a href="/help/packages">Upload guide</a> · Every playable release requires independent review.</footer>'+
     '<script>'+SCRIPT+'</script></body></html>';
   return new Response(html,{headers:{"content-type":"text/html; charset=utf-8",
@@ -312,6 +323,9 @@ export function card(p,owner=false,reviewer=false){
     }
   }else controls='<a class="button primary" href="'+projectURL(p.id)+'">Open project</a>';
   return '<article class="project" aria-label="'+esc(p.title)+'">'+
+    '<div class="av-project-plate" aria-label="ANEVUM project record, not a creator screenshot">'+
+    '<span class="av-project-plate-label">'+(owner?'YOUR PROJECT':reviewer?'AWAITING REVIEW':'PLAYABLE RELEASE')+'</span>'+
+    SIGIL+'<span class="av-project-index">ANEVUM / '+esc(p.category||"PROJECT").toUpperCase()+'</span></div>'+
     '<span class="chip '+esc(draftState)+'">'+esc(state(draftState))+' / '+esc(p.category||"project")+'</span>'+
     '<h3>'+esc(p.title)+'</h3><p>'+esc(limited(p.summary))+'</p>'+
     '<div class="meta">'+version+(date?" · Updated "+date:"")+'</div>'+
@@ -324,9 +338,10 @@ export function uploadScreen(projects,loggedIn,pilot,updateId){
   const initialSummary=selected?esc(selected.summary):"";
   const category=selected?.category||"game";
   const update=!!selected;
-  const intro='<div class="ey">ANEVUM / CREATOR UPLINK</div>'+
-    '<h1>Upload a creation.</h1>'+
-    '<p class="lead">Made a game or app somewhere else? Upload a finished browser build. Test it privately, submit it for review, and let people play it here.</p>';
+  const intro=hero('CONTINUANCE / CREATOR UPLINK',
+    'Upload a <em>creation.</em>',
+    'You built it. Now give it a place in the Continuance. Upload your finished browser game or app, playtest privately, then submit it for an independent release review.',
+    'ZIP / HTML · BROWSER BUILDS');
   const format='<div class="subheading">Accepted browser builds</div><div class="format-options">'+
     '<div class="format-option"><strong>ZIP · Complete project</strong><span>HTML, CSS, JavaScript, images and audio. The ZIP must contain index.html at its root.</span></div>'+
     '<div class="format-option"><strong>HTML · Single file</strong><span>One self-contained .html experience with no external dependencies.</span></div></div>';
@@ -337,8 +352,9 @@ export function uploadScreen(projects,loggedIn,pilot,updateId){
     :!pilot
       ?'<div class="notice"><strong>Uploading is currently restricted to pilot creators.</strong><p>You can explore published projects while the independent player and security review are completed. No additional account is needed.</p><div class="actions"><a class="button" href="/discover">Discover</a></div></div>'
       :'<form id="publish-form" enctype="multipart/form-data"><input type="hidden" name="project_id" id="existing-project" value="'+esc(updateId)+'">'+
-        '<div class="ey" id="project-version">'+(update?"UPDATE A RELEASE":"NEW CREATION")+'</div>'+
-        '<h2>'+(update?"Upload a new version":"Prepare your playable build")+'</h2>'+
+        '<div class="av-block-hd"><div class="ey" id="project-version">'+(update?"RELEASE REVISION":"NEW TRANSMISSION")+'</div>'+
+        '<span class="av-section-no" aria-hidden="true">01</span></div>'+
+        '<h2>'+(update?"Transmit a new version":"Package your creation")+'</h2>'+
         '<p class="small">'+(update?"Your current approved version stays live until the replacement passes review.":"Nothing goes public when you upload. You can test the exact build first.")+'</p>'+
         stepper+
         '<label class="drop" id="drop" for="bundle" aria-invalid="false">'+
@@ -358,7 +374,10 @@ export function uploadScreen(projects,loggedIn,pilot,updateId){
         '<p class="file-form-note">A creator rights declaration is required for every version. This does not replace independent moderation or security review.</p>'+
         '<div class="actions"><button type="submit" class="primary" id="upload-button">Prepare private playtest →</button></div>'+
         '<p class="status" id="activity" role="status" aria-live="polite" aria-atomic="true"></p></form>';
-  const guide='<div class="ey">EXPORT INSTRUCTIONS</div><h2>Build once. Share here.</h2>'+
+  const guide='<div class="ey">THE CREATOR PROTOCOL</div><h2>Build elsewhere.<br>Belong here.</h2>'+
+    '<div class="av-guide-art">'+SIGIL+'<div class="ey">CONTINUANCE / FORMAT CONTRACT</div>'+
+    '<strong>One build.<br>One playable experience.</strong>'+
+    '<p>ANEVUM hosts your approved browser build and gives it a place to be played. You keep your source and creative tools.</p></div>'+
     '<div class="help-quick">'+
     '<article><strong>1 / Export</strong><p>Use your AI coding tool or game engine to produce a static browser build. React/Vite users: build with relative asset paths.</p></article>'+
     '<article><strong>2 / Package</strong><p>ZIP the <em>contents</em> of your build directory, not its enclosing folder. index.html must be at the ZIP root.</p></article>'+
@@ -367,16 +386,18 @@ export function uploadScreen(projects,loggedIn,pilot,updateId){
     '<a class="bordered-link" href="/help/packages">See supported files and limits →</a>';
   const shelf=loggedIn?'<div class="titlebar"><div><div class="ey">YOUR LIBRARY</div><h2>Uploaded builds</h2></div><p>Private drafts, reviews and released versions</p></div>'+
     (projects.length?'<div class="project-grid">'+projects.map(p=>card(p,true)).join("")+'</div>':
-    '<div class="empty-state"><strong>No package builds yet.</strong><span>Your uploaded files and release statuses will appear here. Existing standalone HTML alpha projects remain in the previous upload system until integration.</span></div>'):"";
+    '<div class="empty-state">'+SIGIL+'<div><strong>Your first transmission starts here.</strong><span>Your uploaded browser builds, real review statuses and releases will appear in this space. Existing HTML alpha projects remain intact during integration.</span></div></div>'):"";
   return layout("Upload a creation",intro+'<div class="grid"><section class="panel">'+form+'</section><aside class="panel soft upload-guide">'+guide+'</aside></div>'+shelf);
 }
 export function catalogScreen(projects){
-  return layout("Playable browser releases",'<div class="ey">ANEVUM / PLAYABLE BUILDS</div><h1>Made to be played.</h1>'+
-    '<p class="lead">Games and apps shared by independent creators. Only releases that cleared review appear here.</p>'+
+  return layout("Playable browser releases",hero('ANEVUM / RELEASE ARCHIVE',
+    'Made to be <em>played.</em>',
+    'Real browser games and applications, shared by creators and independently reviewed before release.',
+    'VERIFIED / PUBLISHED')+
     '<div class="actions"><a href="/upload/v3" class="button primary">Upload a creation →</a><a class="button quiet" href="/discover">All discoveries</a></div>'+
     '<div class="titlebar"><h2>Published builds</h2></div>'+
     (projects.length?'<div class="project-grid">'+projects.map(p=>card(p)).join("")+'</div>':
-    '<div class="empty-state"><strong>No ZIP packages have been approved yet.</strong><span>When a real project passes review, it appears here automatically.</span></div>'));
+    '<div class="empty-state">'+SIGIL+'<div><strong>The release archive is awaiting its first entry.</strong><span>Approved ZIP and HTML creations appear here when they exist. No fabricated games or activity.</span></div></div>'));
 }
 function reviewDialog(){
   return '<dialog id="review-dialog" aria-labelledby="review-title" aria-describedby="review-copy">'+
@@ -400,9 +421,10 @@ export function playerScreen(p,release,runnerURL,isPreview,canEdit,isStaff){
     (ready&&canEdit?action(p,"submit","Submit for review"): "")+
     (review?action(p,"publish","Approve and publish")+action(p,"reject","Request changes"):"")+
     '</div><p id="activity" class="status" role="status" aria-live="polite"></p>';
-  const lead='<div class="ey">ANEVUM / '+esc(kind||"CREATION")+' / BUILD '+esc(release.version)+'</div>'+
+  const lead='<div class="ey">ANEVUM / '+esc(kind||"CREATION").toUpperCase()+' / BUILD '+esc(release.version)+'</div>'+
     '<div class="player-head"><div><h1>'+esc(label)+'</h1><span class="chip '+esc(release.status)+'">'+esc(state(release.status))+
-    (isPreview?" · Private preview":"")+'</span></div></div>';
+    (isPreview?" · Private preview":"")+'</span></div></div>'+
+    '<div class="av-stage-toolbar"><span>CONTINUANCE / PLAYER</span><span>'+(isPreview?'ISOLATED PRIVATE PLAYTEST':'PUBLIC EXPERIENCE')+'</span></div>';
   const stage=runnerURL?'<section class="viewport" id="game-viewport" aria-label="Playable project">'+
     '<iframe id="game-frame" title="'+esc(label)+'" src="'+esc(runnerURL)+'" sandbox="allow-scripts allow-pointer-lock" allow="fullscreen; gamepad" referrerpolicy="no-referrer" loading="eager"></iframe>'+
     '<button type="button" class="exit-immersive" id="exit-immersive" data-package-action="exit-immersive" data-project="'+esc(p.id)+'">Exit player</button></section>':
@@ -414,16 +436,20 @@ export function playerScreen(p,release,runnerURL,isPreview,canEdit,isStaff){
   return layout(label,lead+stage+controls+notes+(review?reviewDialog():""),runnerURL?new URL(runnerURL).origin:"");
 }
 export function queueScreen(items){
-  return layout("Package review",'<div class="ey">ANEVUM / STAFF</div><h1>Package review queue.</h1>'+
-    '<p class="lead">Inspect the actual isolated preview before deciding. Approval requires an independent authorized reviewer. Structural ZIP validation is not proof that content is safe or properly licensed.</p>'+
+  return layout("Package review",hero('CONTINUANCE / REVIEW DIVISION',
+    'Review the <em>experience.</em>',
+    'Inspect the isolated playable build, confirm independent review and record a clear release decision. Structural ZIP checks alone do not prove safety or content rights.',
+    'RESTRICTED / STAFF')+
     '<div class="titlebar"><h2>Pending packages</h2></div>'+
     (items.length?'<div class="queue">'+items.map(p=>card(p,false,true)).join("")+'</div>':
-    '<div class="empty-state"><strong>No pending package reviews.</strong><span>Incoming submissions will appear here after creators complete private playtesting.</span></div>'));
+    '<div class="empty-state">'+SIGIL+'<div><strong>The review queue is clear.</strong><span>New submissions will appear here after the creator completes a private playtest.</span></div></div>'));
 }
 export function helpScreen(){
   const copy='Build the project as a static browser app. Export the finished web build with an index.html entry point and relative CSS/JS/assets. ZIP the contents of the build folder, not the enclosing folder. Do not include node_modules, secrets, external CDNs or server code.';
-  return layout("Upload format guide",'<div class="ey">ANEVUM / UPLOAD FORMAT CONTRACT</div><h1>One build. One file.</h1>'+
-    '<p class="lead">Already made your game or app in an AI coding tool? Export it for the browser, then upload a ZIP or self-contained HTML file.</p>'+
+  return layout("Upload format guide",hero('CONTINUANCE / FILE PROTOCOL',
+    'Build it there. <em>Play it here.</em>',
+    'Export a finished browser game or application from the creative tool you already use. ANEVUM accepts a ZIP package or a standalone HTML file.',
+    'COMPATIBILITY / WEB BUILDS')+
     '<div class="grid"><section class="panel"><h2>Option A / Complete ZIP</h2><p>Best for games and apps that use multiple HTML, CSS, JavaScript, image, audio, font or supported WebAssembly files.</p>'+
     '<pre aria-label="Example project layout">my-project.zip\n  index.html\n  game.js\n  style.css\n  assets/\n    background.webp\n    music.ogg</pre>'+
     '<p class="tip">Put index.html at the root of the ZIP. For Vite-based apps, build with relative asset URLs (for example, Vite base ./), then ZIP the <strong>contents</strong> of dist.</p>'+
