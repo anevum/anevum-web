@@ -97,6 +97,8 @@ jobs:
           else
             echo "Chromium missing; mobile screenshot gate remains outstanding."
           fi
+      - name: Verify real deployed V004 routes without accounts or writes
+        run: node creator-v1/ops/v004-live-smoke.mjs
       - name: Publish visual and test evidence
         if: always()
         uses: actions/upload-artifact@v4
