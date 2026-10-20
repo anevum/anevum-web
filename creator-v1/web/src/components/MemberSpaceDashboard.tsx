@@ -8,6 +8,8 @@ import {PlayerCardStudio} from './PlayerCardStudio';
 
 import {LevelEmblem,AwardEmblem} from './LevelEmblem';
 import {SupporterIdentity} from './SupporterSeal';
+import {MemberPresenceStatus} from './MemberPresenceStatus';
+import {safePlayerAura,safeVerifiedRole} from '../lib/player-recognition';
 import {EarnedRewardVault} from './EarnedRewardVault';
 import {useMemberRevalidation} from '../lib/useMemberRevalidation';
 
@@ -36,10 +38,13 @@ export function MemberSpaceDashboard({profile,editor}:{profile:CanonicalProfile;
  const avatar=space?.media.avatar?'/api/v1/member/media/avatar?v='+space.media.avatar:undefined;
  const banner=space?.media.banner?'/api/v1/member/media/banner?v='+space.media.banner:undefined;
  return <section className={'ms-dashboard av18-world-'+profile.worldTheme} aria-labelledby="ms-title">
-  <header data-iren-anchor="identity" className={'ms-cover'+(space?.supporterAppearance?' av34-aura av34-aura-'+space.supporterAppearance.aura:'')}>{banner&&<img className="ms-cover-art" src={banner} key={space?.media.banner} alt="Your wall banner"/>}<div className="ms-cover-shade"/>
+  <header data-iren-anchor="identity" className={'ms-cover av92-presence-cover av92-presence-cover--'+safePlayerAura(space?.aura)+
+   ' av92-presence-role--'+(safeVerifiedRole(space?.role)??'none')+
+   (space?.supporterAppearance?' av34-aura av34-aura-'+space.supporterAppearance.aura:'')}>{banner&&<img className="ms-cover-art" src={banner} key={space?.media.banner} alt="Your wall banner"/>}<div className="ms-cover-shade"/>
    <div className="ms-cover-meta"><span className="kicker">ANEVUM / PERSONAL CONTINUANCE</span><span className="ms-visibility">{profile.visibility==='public'?'PUBLIC WORLD':'PRIVATE WORLD'}</span></div>
    <button className="ms-cover-edit" onClick={()=>setTab('appearance')}>EDIT BANNER ↗</button>
-   <div className="ms-identity"><button className="ms-avatar-button" onClick={()=>setTab('appearance')} aria-label="Change profile picture"><MemberPortrait src={avatar} key={space?.media.avatar} name={profile.displayName} supporterFrame={space?.supporterAppearance?.frame}/><span>EDIT</span></button><div><p className="ms-handle">@{profile.handle}</p>{space?.supporterAppearance&&<SupporterIdentity appearance={space.supporterAppearance} compact/>}<h1 id="ms-title" tabIndex={-1}>{profile.displayName}</h1><p>{profile.headline||'Your place in the continuance.'}</p></div></div>
+   <div className="ms-identity"><button className="ms-avatar-button" onClick={()=>setTab('appearance')} aria-label="Change profile picture"><MemberPortrait src={avatar} key={space?.media.avatar} name={profile.displayName} supporterFrame={space?.supporterAppearance?.frame}/><span>EDIT</span></button><div><p className="ms-handle">@{profile.handle}</p>{space?.supporterAppearance&&<SupporterIdentity appearance={space.supporterAppearance} compact/>}<h1 id="ms-title" tabIndex={-1}>{profile.displayName}</h1><p>{profile.headline||'Your place in the continuance.'}</p>
+    {space&&<MemberPresenceStatus aura={space.aura} role={space.role} reputation={space.showStats?space.reputation:undefined}/>}</div></div>
   </header>
   <div className="ms-toolbar"><nav aria-label="My space sections">{([['overview','Dashboard'],['wall','My wall'],['profile','Edit profile'],['appearance','Appearance'],['awards','Awards & stats']] as [Tab,string][]).map(([key,label])=><button key={key} data-iren-anchor={key==='awards'?"awards":undefined} aria-current={tab===key?'page':undefined} onClick={()=>{setTab(key);setNotice('')}}>{label}</button>)}</nav><div className="ms-toolbar-links"><Link to="/community">COMMUNITY ↗</Link> <Link data-iren-anchor="studio" to="/studio">CREATOR STUDIO ↗</Link> <Link to="/support">SUPPORT ANEVUM ↗</Link> {profile.visibility==='public'?<Link to={'/@'+profile.handle}>VIEW PUBLIC WALL ↗</Link>:<button onClick={()=>setTab('profile')}>VISIBILITY SETTINGS</button>}</div></div>
 
