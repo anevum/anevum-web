@@ -1,6 +1,6 @@
 {
   "session": "ANEVUM.OPS.UPDATE.2026-10-20.001.RELEASE-CONSOLIDATION",
-  "purpose": "V095 + V096 native creator and unlisted public alpha inactive candidate preflight only. Route snapshot includes family.anevum.com; no production routing changes authorized.",
+  "purpose": "V095 + V096 public alpha inactive-candidate preflight, preserving the current 39 Cloudflare routes including family.anevum.com/* -> anevum-family-link-v004; never authorize a live promotion.",
   "repository": "anevum/anevum-web",
   "source_sha": "d5af32fd8f04b05e0381f7ac12c59d06c0e836a2",
   "release_parent_sha": "d5af32fd8f04b05e0381f7ac12c59d06c0e836a2",
@@ -334,7 +334,7 @@
     },
     {
       "pattern": "family.anevum.com/*",
-      "script": "anevum-family-holiday-v001",
+      "script": "anevum-family-link-v004",
       "request_limit_fail_open": false
     },
     {
@@ -394,5 +394,6 @@
   "prohibited_worker_route_prefixes": [
     "anevum.com/studio/alpha",
     "anevum.com/studio/alpha/"
-  ]
+  ],
+  "baseline_revision": "2026-10-20 family route changed independently from anevum-family-holiday-v001 to anevum-family-link-v004; verified live via Cloudflare API; other 38 routes unchanged."
 }
