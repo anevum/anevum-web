@@ -141,6 +141,8 @@ try{
   assert.equal(await q('.wb-preview script'),false,'Native text preview cannot execute HTML');
   await screenshot('alpha-branching-story-320');
   evidence.push({case:'scene-branching-playtest',passed:true});
+  await clickText('Restart story');
+  await until(()=>contains('The First Signal'),'Story restart before editing');
   await clickText('Visual editor');
   await until(()=>q('.wb-inspector textarea'),'Scene inspector');
   await changeField('.wb-inspector textarea','The First Signal <script>alert(1)</script>');
