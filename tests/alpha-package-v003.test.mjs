@@ -94,14 +94,16 @@ function setup(){
       const id=v.includes("session=owner")?"owner-id":v.includes("session=staff")?"staff-id":null;
       const handle=id==="owner-id"?"cosmiccreator":"trustedreviewer";
       const joinedAt=id==="owner-id"?1760000000:1760000001;
+      const ownerProof="1".repeat(64),staffProof="2".repeat(64);
+      const proof=id==="owner-id"?ownerProof:staffProof;
       if(path==="/api/v1/member/creator-profile"){
-        return id?Response.json({memberId:id,profile:{handle,createdAt:joinedAt,visibility:"public"}})
+        return id?Response.json({memberId:id,profile:{handle,createdAt:joinedAt,visibility:"public",packageProof:proof}})
           :Response.json({error:"Sign-in required"},{status:401});
       }
       if(path.startsWith("/api/v1/members/")){
         const asked=path.slice("/api/v1/members/".length);
-        const profile=asked==="cosmiccreator"?{handle:"cosmiccreator",joinedAt:1760000000,
-          displayName:"Test Creator"}:asked==="trustedreviewer"?{handle:"trustedreviewer",joinedAt:1760000001,
+        const profile=asked==="cosmiccreator"?{handle:"cosmiccreator",joinedAt:1760000000,packageProof:ownerProof,
+          displayName:"Test Creator"}:asked==="trustedreviewer"?{handle:"trustedreviewer",joinedAt:1760000001,packageProof:staffProof,
           displayName:"Synthetic Reviewer"}:null;
         return profile?Response.json({profile}):Response.json({error:"Profile not public"},{status:404});
       }
@@ -869,11 +871,12 @@ test("V010 package ownership is linked only to verified canonical member ID and 
     assert.equal(created.status,201,await created.clone().text());
     const project=await created.json();
     const mapping=await env.DB.prepare(
-      "SELECT owner_id,handle,profile_created_at,verified_at FROM anevum_package_creator_links WHERE owner_id=?"
+      "SELECT owner_id,handle,profile_created_at,creator_proof,verified_at FROM anevum_package_creator_links WHERE owner_id=?"
     ).bind("owner-id").first();
     assert.equal(mapping.owner_id,"owner-id");
     assert.equal(mapping.handle,"cosmiccreator");
     assert.equal(mapping.profile_created_at,1760000000);
+    assert.equal(mapping.creator_proof,"1".repeat(64));
     assert.ok(mapping.verified_at>0);
     const owner=await getPage(env,"/api/v1/packages/mine");
     assert.equal(owner.status,200);
@@ -942,7 +945,7 @@ test("V010 gallery is disabled by default and revalidates canonical privacy and 
    assert.equal((await getPage(env,path,"visitor")).status,404,"Profile made private hides its wall");
    env.AUTH.fetch=async req=>{
      if(new URL(req.url).pathname==="/api/v1/members/cosmiccreator")
-       return Response.json({profile:{handle:"cosmiccreator",joinedAt:1760000011}});
+       return Response.json({profile:{handle:"cosmiccreator",joinedAt:1760000011,packageProof:"1".repeat(64)}});
      return original(req);
    };
    const reused=await getPage(env,path,"visitor");
@@ -973,5 +976,37 @@ test("V010 upload fails closed without verified canonical profile and does not w
    env.AUTH.fetch=req=>new URL(req.url).pathname==="/api/v1/member/creator-profile"
      ?Response.json({error:"Canonical service down"},{status:503}):original(req);
    assert.equal((await post(env,"/api/v1/packages/upload",uploadForm(sample()))).status,503);
+ }finally{env.DB.close();}
+});
+
+
+test("V010 reused handle and timestamp cannot inherit releases without the same issuer account proof",async()=>{
+ const env=setup();env.PACKAGE_CREATOR_GALLERY_ENABLED="true";
+ try{
+  const up=await post(env,"/api/v1/packages/upload",uploadForm(sample()));
+  assert.equal(up.status,201);
+  const project=await up.json();
+  assert.equal((await post(env,"/api/v1/packages/projects/"+project.id+"/submit",{})).status,200);
+  assert.equal((await post(env,"/api/v1/packages/projects/"+project.id+"/review",{action:"publish"},"staff")).status,200);
+  const path="/api/v1/packages/creators/cosmiccreator/projects";
+  assert.equal((await (await getPage(env,path,"visitor")).json()).projects.length,1);
+  const prior=env.AUTH.fetch.bind(env.AUTH);
+  env.AUTH.fetch=async req=>{
+   if(new URL(req.url).pathname==="/api/v1/members/cosmiccreator")
+     return Response.json({profile:{handle:"cosmiccreator",joinedAt:1760000000,
+       packageProof:"2".repeat(64)}});
+   return prior(req);
+  };
+  const replay=await getPage(env,path,"visitor");
+  assert.equal(replay.status,200);
+  assert.deepEqual((await replay.json()).projects,[],
+    "Another member created in the same second cannot inherit a recycled handle's releases");
+  env.AUTH.fetch=async req=>{
+   if(new URL(req.url).pathname==="/api/v1/members/cosmiccreator")
+     return Response.json({profile:{handle:"cosmiccreator",joinedAt:1760000000}});
+   return prior(req);
+  };
+  assert.equal((await getPage(env,path,"visitor")).status,404,
+    "No public issuer proof means the gallery cannot be attributed");
  }finally{env.DB.close();}
 });
