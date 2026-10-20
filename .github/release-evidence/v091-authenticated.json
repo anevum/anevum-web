@@ -1,5 +1,5 @@
 {
-  "source_sha": "c28bc50922591799ac420790dd061308c98d6210",
+  "source_sha": "09ba1e77263ed2beb62b56d9b023c0b4dd3ff07f",
   "founder_staff_session": false,
   "reviewer_staff_session": false,
   "creator_journey": false,
@@ -45,7 +45,7 @@
     }
   },
   "implementation_verification": {
-    "source_sha": "c28bc50922591799ac420790dd061308c98d6210",
+    "source_sha": "09ba1e77263ed2beb62b56d9b023c0b4dd3ff07f",
     "state": "Source integrated; use exact-source CI artifacts for verification, not this release-authorization record."
   }
 }
