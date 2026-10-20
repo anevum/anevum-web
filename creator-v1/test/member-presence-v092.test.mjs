@@ -16,7 +16,7 @@ test('V092 presentation parses and is attached to the existing member surfaces',
   assert.doesNotThrow(()=>parse(code,{sourceType:'module',plugins:['typescript','jsx']}));
  assert.match(card,/av92-player-card/);
  assert.match(card,/av92-aura-compass/);
- assert.match(card,/import '..\\/member-presence-v092\\.css'/);
+ assert.ok(card.includes("import '../member-presence-v092.css'"));
  assert.match(privateSpace,/<MemberPresenceStatus aura=\{space\.aura\}/);
  assert.match(privateSpace,/featuredAwards=\{space\.featuredAwards\}/);
  assert.match(publicSpace,/ms-cover av92-presence-cover/);
