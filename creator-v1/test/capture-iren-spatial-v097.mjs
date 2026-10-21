@@ -133,6 +133,7 @@ try{
   if(width===320){
     await evaluate('document.querySelector(".ir97-invite-actions button:first-child").click()');
     await until(()=>evaluate('!!document.querySelector(".ir97-speech-bubble")&&location.pathname.endsWith("/discover")'));
+    await until(()=>evaluate('!!document.querySelector(".ir97-target-halo")'));
     await check("first-contact-tour-opt-in",'document.querySelector(".ir97-bubble-line")?.textContent.includes("Find real, approved")');
     await evaluate('document.querySelector(".ir97-subtle").click()');
     await until(()=>evaluate('!document.querySelector(".ir97-speech-bubble")'));
@@ -190,7 +191,7 @@ try{
   await check("tour-step-"+width,'document.querySelector(".ir97-bubble-line")?.textContent.includes("Find real, approved")');
   await check("non-blocking-guide-"+width,'(()=>{const e=document.querySelector(".ir97-guide-layer");return !!e&&getComputedStyle(e).pointerEvents==="none"&&!document.querySelector(".ir80-shade")&&!document.querySelector(".ir80-guide-card");})()');
   await check("guide-bubble-and-robot-visible-"+width,'(()=>{const b=document.querySelector(".ir97-speech-bubble"),r=document.querySelector(".ir97-floating-bot");return !!b&&!!r&&b.getBoundingClientRect().height>50&&r.getBoundingClientRect().height>30;})()');
-  await check("real-target-uncovered-"+width,'(()=>{const target=document.querySelector("[data-iren-anchor=discover]");const bubble=document.querySelector(".ir97-speech-bubble"),bot=document.querySelector(".ir97-floating-bot");if(!target||!bubble||!bot)return false;const a=target.getBoundingClientRect(),b=bubble.getBoundingClientRect(),r=bot.getBoundingClientRect();const hit=(x,y)=>Math.max(0,Math.min(a.right,x.right)-Math.max(a.left,x.left))*Math.max(0,Math.min(a.bottom,x.bottom)-Math.max(a.top,x.top));return hit(b,r)===0&&hit(r,b)===0;})()');
+  await check("real-target-uncovered-"+width,'(()=>{const target=document.querySelector(".ir97-target-halo");const bubble=document.querySelector(".ir97-speech-bubble"),bot=document.querySelector(".ir97-floating-bot");if(!target||!bubble||!bot)return false;const a=target.getBoundingClientRect(),b=bubble.getBoundingClientRect(),r=bot.getBoundingClientRect();const hit=(x,y)=>Math.max(0,Math.min(a.right,x.right)-Math.max(a.left,x.left))*Math.max(0,Math.min(a.bottom,x.bottom)-Math.max(a.top,x.top));return hit(b,r)===0&&hit(r,b)===0;})()');
   await check("guide-no-focus-trap-"+width,'document.querySelector(".ir97-speech-bubble").getAttribute("role")==="region"');
   await check("tour-nonmodal-"+width,'document.querySelector(".ir97-speech-bubble").getAttribute("aria-modal")===null');
   await check("tour-inside-"+width,'(()=>{const r=document.querySelector(".ir97-speech-bubble").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1&&r.top>=0&&r.bottom<=innerHeight+1;})()');
