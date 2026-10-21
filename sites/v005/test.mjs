@@ -6,6 +6,13 @@ const dir=dirname(new URL(import.meta.url).pathname);
 for(const[name,data,source]of[["html",html,"site.html"],["css",css,"site.css"],["js",js,"site.js"],["sw",sw,"sw.js"],["manifest",manifest,"site.webmanifest"],["icon",icon,"icon.svg"],["immersive",immersive,"immersive-engine.js"]]){assert.equal(data,await readFile(resolve(dir,source),"utf8"),name+" bundle drift");}
 for(const route of["/assets/sites-v005.css","/assets/sites-v005.js","/site.webmanifest","/sw.js","/assets/sites-v005-icon.svg","/assets/sites-v005-immersive.js"]){assert.ok(html.includes(route)||js.includes(route),"Missing asset "+route);}
 assert.ok(html.includes('action="/api/inquiries"'));
+assert.ok(html.includes('id="local-services"'),"Local-business directions exist in public storefront source");
+for (const label of ["DETAILING &amp; AUTO CARE","GROOMING &amp; CARE","LAWN &amp; PROPERTY","FICTIONAL DESIGN STUDY"]) {
+  assert.ok(html.includes(label),"Missing honest industry-study label "+label);
+}
+assert.ok(css.includes(".field-studies")&&css.includes(".field-grid"),"Responsive industry-study styles included");
+assert.ok(css.includes("@media(prefers-reduced-motion:reduce)"),"Reduced-motion handling retained");
+assert.ok(!html.includes('href="/concepts"')&&!html.includes('href="/concepts/'),"Private concept routes never linked from public storefront");
 assert.ok(js.includes("application/x-www-form-urlencoded"),"Preserve inquiry API media type");
 assert.ok(js.includes("new URLSearchParams({name:"),"Preserve inquiry field contract");
 assert.ok(html.includes("independent")&&html.includes("uncommissioned"),"Honest prototype disclaimer");
