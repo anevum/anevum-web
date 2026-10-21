@@ -2,6 +2,7 @@ import {useState} from 'react';
 import {Link} from 'react-router-dom';
 import {canonicalAuthClient} from '../lib/canonical-beta';
 import {useResource} from '../lib/useResource';
+import {requestForumReview,describeForumReviewError} from '../lib/forum-review-transport-v100';
 import './forums.css';
 
 type PendingThread={id:string;topic:string;title:string;body:string;created_at:number;handle:string;display_name:string};
@@ -11,28 +12,18 @@ type Queue={threads:PendingThread[];replies:PendingReply[];reports:OpenReport[]}
 type Kind='thread'|'reply'|'report';
 type Action='publish'|'reject'|'hide'|'dismiss_report';
 
-async function call<T>(method:'GET'|'POST',body?:unknown,signal?:AbortSignal):Promise<T>{
- const response=await fetch('/api/v1/member/forum-review',{
-  method,mode:'same-origin',credentials:'same-origin',redirect:'error',
-  cache:'no-store',referrerPolicy:'same-origin',signal,
-  headers:body?{Accept:'application/json','Content-Type':'application/json'}:{Accept:'application/json'},
-  body:body?JSON.stringify(body):undefined
- });
- const result=await response.json().catch(()=>({error:'Review service unavailable'}));
- if(!response.ok)throw Error(response.status===403?'Reviewer authorization required':result?.error||'Review service unavailable');
- return result as T;
-}
 function formatted(at:number){return new Date(at*1000).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'})}
 function ReviewWorkspace({memberId}:{memberId:string}){
  const [revision,setRevision]=useState(0),[busy,setBusy]=useState<string|null>(null);
  const [failure,setFailure]=useState(''),[notice,setNotice]=useState('');
- const queue=useResource(signal=>call<Queue>('GET',undefined,signal),[memberId,revision]);
+ const queue=useResource(signal=>requestForumReview<Queue>('GET',undefined,signal),[memberId,revision]);
+ const issue=queue.state==='error'?describeForumReviewError(queue.error):null;
  async function act(targetKind:Kind,targetId:string,action:Action){
   if(busy)return;
   if((action==='reject'||action==='hide')&&!window.confirm(action==='hide'?'Hide this already published content?':'Reject this pending submission?'))return;
   setBusy(targetId);setFailure('');setNotice('');
   try{
-   await call('POST',{targetKind,targetId,action});
+   await requestForumReview('POST',{targetKind,targetId,action});
    setRevision(v=>v+1);
    setNotice(action==='publish'?'Approved and published.':action==='hide'?'Content hidden from public views.':action==='reject'?'Submission rejected.':'Report dismissed with an audit record.');
   }catch(error){setFailure(error instanceof Error?error.message:'Review was not saved.');}
@@ -46,9 +37,16 @@ function ReviewWorkspace({memberId}:{memberId:string}){
   {failure&&<p role="alert" className="cf-error">{failure}</p>}
   {notice&&<p role="status" className="cf-notice">{notice}</p>}
   {queue.state==='loading'&&<p role="status">Checking authorization and review queue…</p>}
-  {queue.state==='error'&&<div className="cf-note" role="alert"><h2>Review access unavailable.</h2>
-   <p>Only explicitly authorized reviewers can see the private moderation queue. No submissions have been changed.</p>
-   <button type="button" onClick={()=>setRevision(v=>v+1)}>RETRY AUTHORIZATION</button></div>}
+  {queue.state==='error'&&issue&&<div className="cf-note" role="alert" data-review-error={issue.kind}>
+   <h2>{issue.title}</h2>
+   <p>{issue.description}</p>
+   {issue.showAccessLink&&<>
+    <a className="cf-primary" href="/api/v1/member/forum-review/access-check" target="_blank" rel="noopener noreferrer">VERIFY PROTECTED ACCESS IN A NEW TAB ↗</a>
+    <p className="cf-disclosure">This opens the existing Access sign-in through a read-only request that cannot display the private review queue. After verification, the new tab may show an expected Not Found or authorization message. Close that tab, return here and retry. Do not share access codes.</p>
+   </>}
+   {issue.kind==='member-session'&&<Link to="/join">ANEVUM SIGN IN</Link>}
+   <button type="button" onClick={()=>setRevision(v=>v+1)}>RETRY AUTHORIZATION</button>
+  </div>}
   {queue.state==='ready'&&<>
    <div className="cf-review-totals" aria-label="Pending review totals">
     <span><strong>{queue.data.threads.length}</strong> THREADS</span>
