@@ -106,6 +106,10 @@ export async function inventory(read){
  }catch(e){out.snippetsReadable=false;out.snippetsNotFound=e.status===404;out.snippetsAuthorizationDenied=[401,403].includes(e.status);}
  // This is routing readiness only, NOT human, device, data-write or production acceptance.
  out.featureOnProtectedRoutingReady=featureOnRoutingReady(out);
+ // A GitHub token may read Worker versions but lack zone Rulesets access.
+ // Never conflate a successful read-only workflow with full rule verification.
+ out.featureOnRoutingAuditStatus=out.featureOnProtectedRoutingReady?'READ_ONLY_READY':
+  out.http_request_late_transform?.authorizationDenied===true?'ZONE_RULES_READ_PERMISSION_REQUIRED':'NOT_READY';
  out.featureOnAuthenticatedAcceptance=false;
  out.featureOnPhysicalDeviceAcceptance=false;
  out.featureOnProductionApproved=false;
