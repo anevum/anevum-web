@@ -41,8 +41,8 @@ function ReviewWorkspace({memberId}:{memberId:string}){
    <h2>{issue.title}</h2>
    <p>{issue.description}</p>
    {issue.showAccessLink&&<>
-    <a className="cf-primary" href="/api/v1/member/forum-review?access_check=1" target="_blank" rel="noopener noreferrer">VERIFY PROTECTED ACCESS IN A NEW TAB ↗</a>
-    <p className="cf-disclosure">This opens the existing Access sign-in through a read-only request that cannot display the private review queue. After verification, the new tab may show an expected request-filter or authorization message. Close that tab, return here and retry. Do not share access codes.</p>
+    <a className="cf-primary" href="/api/v1/member/forum-review/access-check" target="_blank" rel="noopener noreferrer">VERIFY PROTECTED ACCESS IN A NEW TAB ↗</a>
+    <p className="cf-disclosure">This opens the existing Access sign-in through a read-only request that cannot display the private review queue. After verification, the new tab may show an expected Not Found or authorization message. Close that tab, return here and retry. Do not share access codes.</p>
    </>}
    {issue.kind==='member-session'&&<Link to="/join">ANEVUM SIGN IN</Link>}
    <button type="button" onClick={()=>setRevision(v=>v+1)}>RETRY AUTHORIZATION</button>
