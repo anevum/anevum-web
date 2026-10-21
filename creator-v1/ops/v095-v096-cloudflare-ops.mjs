@@ -177,7 +177,7 @@ async function before(file,configFile){
  await requireIntegratedChecks();
  const build=verifyCandidateAssets('creator-v1/dist/web');
  const testedBuild=FEATURE_ON?verifyTestedFeatureOnBuild('creator-v1/dist/web',readJson(process.env.ANEVUM_FEATURE_ON_BUILD_RECORD)):null;
- if(FEATURE_ON)assert.equal(testedBuild.manifest_sha256,'f6ad9655bbdb1c1ff4a8761c5bca1ff8dc166f0f543da8fcae311743181605b9','Immutable tested build manifest changed');
+ if(FEATURE_ON)assert.equal(testedBuild.manifest_sha256,'d7330fb1d19f4c7ec76456208a419485e1738a87b9225173e6c2dac76acb1f67','Immutable tested build manifest changed');
  const snap=await readSnapshot();
  const result=FEATURE_ON?validateFeatureOnBaseline(snap):validateBaseline(snap,BASELINE,{allowAcceptanceEntry:INTEGRATED});
  const versionList=await request(worker+'/versions?per_page=100');
