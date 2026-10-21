@@ -71,7 +71,7 @@ jobs:
           const expected=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
           assert.match(expected,/^[a-f0-9]{40}$/);
           assert.equal(readFileSync(join(process.argv[2],'source-sha.txt'),'utf8').trim(),expected);
-          for(const [mode,count] of [['disabled',2],['enabled',24]]){
+          for(const [mode,count] of [['disabled',6],['enabled',24]]){
             const r=JSON.parse(readFileSync(join(process.argv[2],mode,'acceptance.json'),'utf8'));
             assert.equal(r.source,expected,'Browser evidence must identify the checked-out commit');
             assert.equal(r.status,'PASS');

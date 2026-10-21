@@ -13,7 +13,13 @@ export async function audit(read){
  const root='/accounts/'+ACCOUNT,expectedDatabases=baseline.database_ids;
  const routes=await read('/zones/'+ZONE+'/workers/routes');
  if(!Array.isArray(routes))throw Error('Incomplete route inventory');
+ const sameRoute=(a,b)=>routeLock([a])===routeLock([b]);
+ const unchanged=baseline.routes.every(b=>routes.some(r=>sameRoute(r,b)));
+ const added=routes.filter(r=>!baseline.routes.some(b=>sameRoute(r,b)));
  const out={readOnly:true,productionChanged:false,routeInventoryMatchesPinned:routeLock(routes)===routeLock(baseline.routes),
+  pinnedRoutesRetained:unchanged,
+  onlyAddedAcceptanceRoute:unchanged&&added.length===1&&/^anevum\.com\/__enter\/v095-v096\*?$/.test(added[0].pattern),
+  staffRoutesMatchPinned:routeLock(routes.filter(r=>r.pattern.startsWith('anevum.com/staff')))===routeLock(baseline.routes.filter(r=>r.pattern.startsWith('anevum.com/staff'))),
   activeApexMatchesRecorded:false,recordedCandidateExists:false,recordedCandidateHasZeroTraffic:false,
   activeDatabasesMatchPinned:false,candidateDatabasesMatchPinned:false,candidateUploadsRemainDisabled:false,
   staffBindingsPresent:true,staffDatabasesMatchPinned:true,staffRollbacksAvailable:true,

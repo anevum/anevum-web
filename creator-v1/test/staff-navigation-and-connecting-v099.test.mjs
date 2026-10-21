@@ -71,7 +71,7 @@ async function runCase(fetchResponse){
  const map=new Map();
  const element=id=>{
   if(!map.has(id)){
-   map.set(id,{textContent:"",innerHTML:"",hidden:false,disabled:false,dataset:{},
+   map.set(id,{textContent:"",innerHTML:"stale staff snapshot",hidden:false,disabled:false,dataset:{},
     addEventListener(){},querySelectorAll(){return []},querySelector(){return null}});
   }
   return map.get(id);
@@ -94,6 +94,9 @@ async function runCase(fetchResponse){
  assert.equal(element("refresh").disabled,false);
  assert.match(element("refresh").innerHTML,/Refresh/);
  assert.equal(element("lastSync").textContent,"Connection unavailable");
+ assert.equal(element("role").textContent,"UNVERIFIED");
+ for(const id of ["memberRows","memberPagerStatus","rewardList","auraList","auditLog","interactions","xpSignal"])
+  assert.equal(element(id).innerHTML,"","failed refresh must clear stale staff data: "+id);
  return {alert:element("alert").textContent,html:element("metrics").innerHTML};
 }
 test("401 auth failure exits Connecting and shows sign-in guidance",async()=>{
@@ -122,4 +125,14 @@ test("hung API is aborted and displays finite retry guidance",async()=>{
   signal.addEventListener("abort",()=>reject(new Error("AbortError")),{once:true});
  }));
  assert.match(result.alert,/did not respond within 12 seconds/);
+});
+test("HTTP 200 invalid JSON cannot become a verified live snapshot",async()=>{
+ const result=await runCase(async()=>({status:200,ok:true,headers:{get:()=>"application/json"},
+  json:async()=>{throw Error("Truncated JSON")}}));
+ assert.match(result.alert,/invalid JSON payload/);
+});
+test("HTTP 200 without a server role and counts cannot become a verified live snapshot",async()=>{
+ const result=await runCase(async()=>({status:200,ok:true,headers:{get:()=>"application/json"},
+  json:async()=>({})}));
+ assert.match(result.alert,/could not be verified/);
 });

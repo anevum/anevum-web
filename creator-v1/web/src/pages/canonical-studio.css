@@ -23,8 +23,10 @@
 .st-identity>span,.st-identity>small{font-size:.63rem;letter-spacing:.13em;color:var(--st-muted)}
 .st-identity>strong{font-size:1.25rem;color:var(--st-rose);font-weight:500}
 .st-nav{display:flex;align-items:center;gap:clamp(12px,3vw,35px);padding:23px 0 28px;
- overflow-x:auto;border-bottom:1px solid var(--st-line)}
-.st-nav a{white-space:nowrap;font-size:.68rem;letter-spacing:.12em;
+ overflow-x:auto;max-width:100%;overscroll-behavior-inline:contain;scrollbar-width:thin;
+ scrollbar-color:var(--st-muted) transparent;border-bottom:1px solid var(--st-line)}
+.st-nav a{display:inline-flex;align-items:center;flex:0 0 auto;min-width:max-content;min-height:44px;
+ white-space:nowrap;font-size:.68rem;letter-spacing:.12em;line-height:1.5;
  color:var(--st-muted);font-weight:650;padding:4px 0 11px;border-bottom:2px solid transparent}
 .st-nav a:hover,.st-nav a:focus-visible,.st-nav a[aria-current=page]{color:var(--st-text);
  border-color:var(--st-rose)}
@@ -177,7 +179,9 @@
  .st-root{padding:14px}
  .st-header{gap:16px;padding:12px 3px 22px}
  .st-header h1{font-size:clamp(2.2rem,10.5vw,3.3rem)}
- .st-nav{gap:21px;padding:20px 0}
+ .st-nav{gap:18px;padding:12px 0}
+ .st-nav a{font-size:.75rem;letter-spacing:.05em}
+ .st-metrics :is(span,strong){overflow-wrap:anywhere;line-height:1.4}
  .st-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:16px 0}
  .st-filters{grid-template-columns:1fr;gap:10px}
  .st-filter-count{grid-column:auto;padding:0 0 8px}
