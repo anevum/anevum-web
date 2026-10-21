@@ -6,6 +6,8 @@ import {readFileSync} from 'node:fs';
 import {moduleSource} from './v091-staff-transport.mjs';
 const ACCOUNT='2f7ee83107240152097efd956a4e8335',ZONE='8abe27259b5436af5966d3b40d9a3760';
 const OLD='3ba8602c-6616-49a4-af29-1efe60ad164a',NEXT='8ed503b6-5df6-42a5-a536-63ccf928d25d';
+// Uploaded feature-ON candidate: not yet in the current deployment or protected route.
+const FEATURE_ON='71a305df-a769-4fb1-9a20-527e0f7f1664';
 const COOKIE='__Host-anevum-v095-v096-qa';
 export async function inventory(read){
  const root='/accounts/'+ACCOUNT+'/workers/scripts/',zone='/zones/'+ZONE;
@@ -18,10 +20,13 @@ export async function inventory(read){
  // Only deployment IDs and percentages leave this audit; discard provider annotations.
  out.apexDeployment={id:out.apexDeployment?.id,versions:out.apexDeployment?.versions};
  out.newCandidateExists=(await read(root+'anevum-apex-prelaunch-gateway/versions/'+NEXT)).id===NEXT;
+ out.featureOnCandidateUploaded=(await read(root+'anevum-apex-prelaunch-gateway/versions/'+FEATURE_ON)).id===FEATURE_ON;
+ out.featureOnAtZeroPercentInCurrentDeployment=(out.apexDeployment.versions||[]).some(x=>x.version_id===FEATURE_ON&&x.percentage===0);
  const es=await read(root+entry[0].script+'/settings');
  const vars=Object.fromEntries((es.bindings||[]).filter(b=>b.type==='plain_text').map(b=>[b.name,b.text]));
  out.entryHasOnlyPlainOrSecretBindings=(es.bindings||[]).every(b=>['plain_text','secret_text'].includes(b.type));
  out.entryCandidateMatchesOld=vars.QA_CANDIDATE===OLD;
+ out.entryCandidateMatchesFeatureOn=vars.QA_CANDIDATE===FEATURE_ON;
  out.entryTokenWellFormed=/^[a-f0-9]{64}$/.test(vars.QA_ROUTING_TOKEN||'');
  out.entryHasRoutingSecret=(es.bindings||[]).some(b=>b.type==='secret_text'&&b.name==='QA_ROUTING_TOKEN');
  out.entryExpiryValid=Number(vars.QA_EXPIRES_AT)>Date.now()/1000&&Number(vars.QA_EXPIRES_AT)<Date.now()/1000+86400;
@@ -30,7 +35,7 @@ export async function inventory(read){
   const d=await read(root+name+'/deployments');
   out[label]={deployment:{id:d.deployments?.[0]?.id,versions:d.deployments?.[0]?.versions},
    sourceDigest:createHash('sha256').update(source.startsWith('--')?source.split(source.split(/\r?\n/,1)[0]).join('--BOUNDARY'):source).digest('hex'),
-   hasRoutingCookie:source.includes(COOKIE),hasOldCandidate:source.includes(OLD),hasNextCandidate:source.includes(NEXT),
+   hasRoutingCookie:source.includes(COOKIE),hasOldCandidate:source.includes(OLD),hasNextCandidate:source.includes(NEXT),hasFeatureOnCandidate:source.includes(FEATURE_ON),
    hasVersionOverride:source.toLowerCase().includes('cloudflare-workers-version-overrides'),
    hasTimedGate:source.includes('QA_EXPIRES_AT'),hasAccessIdentity:source.includes('ANEVUM_PREVIEW_ALLOWED_EMAILS'),
    oldCandidateOccurrences:source.split(OLD).length-1,
@@ -50,7 +55,7 @@ export async function inventory(read){
  for(const phase of ['http_request_late_transform','http_request_transform']){
   try{
    const ruleset=await read(zone+'/rulesets/phases/'+phase+'/entrypoint');
-   out[phase]={exists:true,hasRoutingCookie:JSON.stringify(ruleset).includes(COOKIE),hasOldCandidate:JSON.stringify(ruleset).includes(OLD),hasVersionOverride:JSON.stringify(ruleset).toLowerCase().includes('cloudflare-workers-version-overrides')};
+   out[phase]={exists:true,hasRoutingCookie:JSON.stringify(ruleset).includes(COOKIE),hasOldCandidate:JSON.stringify(ruleset).includes(OLD),hasFeatureOnCandidate:JSON.stringify(ruleset).includes(FEATURE_ON),hasVersionOverride:JSON.stringify(ruleset).toLowerCase().includes('cloudflare-workers-version-overrides')};
   }catch(e){out[phase]={readable:false,notFound:e.status===404,authorizationDenied:[401,403].includes(e.status)};}
  }
  try{
@@ -67,6 +72,13 @@ export async function inventory(read){
     hasTokenLiteral:/[a-f0-9]{64}/.test(source)});
   }
  }catch(e){out.snippetsReadable=false;out.snippetsNotFound=e.status===404;out.snippetsAuthorizationDenied=[401,403].includes(e.status);}
+ // This is routing readiness only, NOT human, device, data-write or production acceptance.
+ out.featureOnProtectedRoutingReady=Boolean(out.featureOnCandidateUploaded&&out.featureOnAtZeroPercentInCurrentDeployment&&
+  out.entryCandidateMatchesFeatureOn&&out.entry?.hasFeatureOnCandidate&&
+  out.http_request_late_transform?.hasFeatureOnCandidate&&out.http_request_late_transform?.hasVersionOverride&&out.entryExpiryValid);
+ out.featureOnAuthenticatedAcceptance=false;
+ out.featureOnPhysicalDeviceAcceptance=false;
+ out.featureOnProductionApproved=false;
  return out;
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
