@@ -99,16 +99,16 @@ test('unexpected manual POST redirect still fails closed',async()=>{
 
 test('Access verification probe is read-only and cannot reveal the private reviewer queue',async()=>{
  const page=readFileSync(new URL('../web/src/pages/ForumReviewPage.tsx',import.meta.url),'utf8');
- assert.match(page,/href="\/api\/v1\/member\/forum-review\?access_check=1"/);
+ assert.match(page,/href="\/api\/v1\/member\/forum-review\/access-check"/);
  assert.doesNotMatch(page,/href="\/api\/v1\/member\/forum-review"/);
  const f=fixture();
  try{
   f.db.exec(readFileSync(new URL('../canonical-auth/migrations/0006_member_community_forums.sql',import.meta.url),'utf8'));
   const env={...f.env,CANONICAL_FORUM_ENABLED:'true',CANONICAL_FORUM_REVIEWER_IDS:'synthetic-reviewer'};
   const reviewer={id:'synthetic-reviewer',emailVerified:true};
-  const probe=await canonicalForums(new Request('https://a.anevum.com/api/v1/member/forum-review?access_check=1',
+  const probe=await canonicalForums(new Request('https://a.anevum.com/api/v1/member/forum-review/access-check',
    {method:'GET'}),env,reviewer,1000);
-  assert.equal(probe.status,400);
-  assert.deepEqual(await probe.json(),{error:'Invalid filters'});
+  assert.equal(probe.status,404);
+  assert.deepEqual(await probe.json(),{error:'Not found'});
  }finally{f.db.close();}
 });
