@@ -3,15 +3,9 @@ on:
   push:
     branches:
       - design/iren-spatial-guide-20261020-001
-  pull_request:
-    paths:
-      - 'creator-v1/web/src/components/IrenGuidedContinuance.tsx'
-      - 'creator-v1/web/src/components/IrenSpatialTour.tsx'
-      - 'creator-v1/web/src/lib/iren-spatial-placement-v097.ts'
-      - 'creator-v1/web/src/iren-spatial-v097.css'
-      - 'creator-v1/test/iren-spatial-v097.test.mjs'
-      - 'creator-v1/test/capture-iren-spatial-v097.mjs'
-      - '.github/workflows/iren-spatial-v097-qa.yml'
+  # This isolated branch is tested on push. The PR uses the same commit checks;
+  # triggering both events duplicated memory-heavy Chromium jobs and caused
+  # a reproducible runner contention / startup timeout without a source change.
 permissions:
   contents: read
 concurrency:
