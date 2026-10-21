@@ -30,6 +30,7 @@ jobs:
       - name: Identify existing opt-in transport without publishing configuration
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCESS_API_TOKEN: ${{ secrets.CLOUDFLARE_ACCESS_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: node creator-v1/ops/v100-acceptance-inventory.mjs
 # No provider configuration artifact, data writes, deployment or routing mutation.

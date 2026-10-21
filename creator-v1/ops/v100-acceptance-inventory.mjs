@@ -42,6 +42,9 @@ export async function inventory(read){
     const suffix=s=>s.slice(s.indexOf('const ORIGIN =')).trim();
     out.observatory.backendSuffixMatchesCandidate=live.includes('const ORIGIN =')&&suffix(live)===suffix(candidate);
    }catch{out.observatory.backendSuffixMatchesCandidate=false;}
+   out.observatory.hasConstOrigin=source.includes('const ORIGIN =');
+   out.observatory.hasVarOrigin=/var ORIGIN\s*=/.test(source);
+   out.observatory.hasUiDeclarations=['PAGE','STYLES','CLIENT'].every(name=>new RegExp('(?:const|var|let) '+name+'\\s*=').test(source));
   }
  }
  for(const phase of ['http_request_late_transform','http_request_transform']){
@@ -74,7 +77,9 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
  assert.equal(process.env.CLOUDFLARE_ACCOUNT_ID,ACCOUNT);
  assert.ok(process.env.CLOUDFLARE_API_TOKEN);
  const read=async(path,json=true)=>{
-  const r=await fetch('https://api.cloudflare.com/client/v4'+path,{method:'GET',headers:{authorization:'Bearer '+process.env.CLOUDFLARE_API_TOKEN},redirect:'error',signal:AbortSignal.timeout(20000)});
+  const request=token=>fetch('https://api.cloudflare.com/client/v4'+path,{method:'GET',headers:{authorization:'Bearer '+token},redirect:'error',signal:AbortSignal.timeout(20000)});
+  let r=await request(process.env.CLOUDFLARE_API_TOKEN);
+  if([401,403].includes(r.status)&&path.includes('/zones/')&&process.env.CLOUDFLARE_ACCESS_API_TOKEN)r=await request(process.env.CLOUDFLARE_ACCESS_API_TOKEN);
   if(!r.ok){const error=new Error('Cloudflare read failed');error.status=r.status;throw error;}
   if(!json)return r.text();
   const data=await r.json();assert.equal(data.success,true);return data.result;
