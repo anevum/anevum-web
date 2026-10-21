@@ -6,14 +6,20 @@ import {readFileSync} from 'node:fs';
 import {moduleSource} from './v091-staff-transport.mjs';
 const ACCOUNT='2f7ee83107240152097efd956a4e8335',ZONE='8abe27259b5436af5966d3b40d9a3760';
 const OLD='3ba8602c-6616-49a4-af29-1efe60ad164a',NEXT='8ed503b6-5df6-42a5-a536-63ccf928d25d';
-// Uploaded feature-ON candidate: not yet in the current deployment or protected route.
-const FEATURE_ON='71a305df-a769-4fb1-9a20-527e0f7f1664';
+// The original feature-ON candidate failed physical iPhone Safari due to /creator/ assets.
+// Only the root-tested replacement may satisfy the protected acceptance readiness audit.
+const FAILED_FEATURE_ON='71a305df-a769-4fb1-9a20-527e0f7f1664';
+const PUBLIC='93cc7f07-cf39-457e-af69-c9f6f4c02d25';
+const FEATURE_ON='94446397-e87d-4e5b-943b-b70a8a1a8fd2';
 const COOKIE='__Host-anevum-v095-v096-qa';
 /** Read-only readiness of the existing opt-in entry, not permission to deploy. */
 export function featureOnRoutingReady(s){
  return Boolean(
   s.featureOnCandidateUploaded && s.featureOnAtZeroPercentInCurrentDeployment &&
-  s.entryCandidateMatchesFeatureOn && s.entryHasRoutingSecret && s.entryHasOnlyPlainOrSecretBindings &&
+  s.publicVersion100AndExactTwoVersions && s.failedFeatureOnNotSelected &&
+  s.featureOnRootAssetBase && s.featureOnCreatorUploadsDisabled &&
+  s.entryCandidateMatchesFeatureOn && s.entryDeployedCandidateMatchesFeatureOn &&
+  s.entryHasRoutingSecret && s.entryHasOnlyPlainOrSecretBindings &&
   s.entryExpiryValid && s.entry?.hasFeatureOnCandidate && s.entry?.hasRoutingCookie &&
   s.entry?.hasTimedGate && s.entry?.hasAccessIdentity &&
   s.http_request_late_transform?.qaRuleCount===1 &&
@@ -33,8 +39,14 @@ export async function inventory(read){
  // Only deployment IDs and percentages leave this audit; discard provider annotations.
  out.apexDeployment={id:out.apexDeployment?.id,versions:out.apexDeployment?.versions};
  out.newCandidateExists=(await read(root+'anevum-apex-prelaunch-gateway/versions/'+NEXT)).id===NEXT;
- out.featureOnCandidateUploaded=(await read(root+'anevum-apex-prelaunch-gateway/versions/'+FEATURE_ON)).id===FEATURE_ON;
- out.featureOnAtZeroPercentInCurrentDeployment=(out.apexDeployment.versions||[]).some(x=>x.version_id===FEATURE_ON&&x.percentage===0);
+ const featureOn=await read(root+'anevum-apex-prelaunch-gateway/versions/'+FEATURE_ON);
+ out.featureOnCandidateUploaded=featureOn.id===FEATURE_ON;
+ out.featureOnRootAssetBase=featureOn.resources?.script_runtime?.assets?.base_path==='/';
+ out.featureOnCreatorUploadsDisabled=(featureOn.resources?.bindings||[]).some(b=>b.name==='CANONICAL_CREATOR_UPLOADS_ENABLED'&&b.type==='plain_text'&&b.text==='false');
+ const selected=out.apexDeployment.versions||[];
+ out.publicVersion100AndExactTwoVersions=selected.length===2&&selected.some(x=>x.version_id===PUBLIC&&x.percentage===100);
+ out.failedFeatureOnNotSelected=!selected.some(x=>x.version_id===FAILED_FEATURE_ON);
+ out.featureOnAtZeroPercentInCurrentDeployment=selected.some(x=>x.version_id===FEATURE_ON&&x.percentage===0);
  const es=await read(root+entry[0].script+'/settings');
  const vars=Object.fromEntries((es.bindings||[]).filter(b=>b.type==='plain_text').map(b=>[b.name,b.text]));
  out.entryHasOnlyPlainOrSecretBindings=(es.bindings||[]).every(b=>['plain_text','secret_text'].includes(b.type));
@@ -64,6 +76,20 @@ export async function inventory(read){
    out.observatory.hasVarOrigin=/var ORIGIN\s*=/.test(source);
    out.observatory.hasUiDeclarations=['PAGE','STYLES','CLIENT'].every(name=>new RegExp('(?:const|var|let) '+name+'\\s*=').test(source));
   }
+ }
+ // Cloudflare's script code/settings endpoint can describe the latest uploaded
+ // version, not necessarily the version actually serving requests. Verify the
+ // selected deployed entry version independently before reporting QA readiness.
+ const liveEntryVersions=out.entry?.deployment?.versions||[];
+ const liveEntry=liveEntryVersions.length===1?liveEntryVersions[0]:null;
+ out.entryDeployedCandidateMatchesFeatureOn=false;
+ if(liveEntry?.percentage===100&&/^[a-f0-9-]{36}$/i.test(liveEntry.version_id||'')){
+  try{
+   const liveVersion=await read(root+entry[0].script+'/versions/'+liveEntry.version_id);
+   out.entryDeployedCandidateMatchesFeatureOn=liveVersion.id===liveEntry.version_id&&
+    (liveVersion.resources?.bindings||[]).some(b=>b.name==='QA_CANDIDATE'&&b.type==='plain_text'&&b.text===FEATURE_ON)&&
+    (liveVersion.resources?.bindings||[]).some(b=>b.name==='QA_ROUTING_TOKEN'&&b.type==='secret_text');
+  }catch{out.entryDeployedCandidateMatchesFeatureOn=false;}
  }
  for(const phase of ['http_request_late_transform','http_request_transform']){
   try{
@@ -95,6 +121,10 @@ export async function inventory(read){
  }catch(e){out.snippetsReadable=false;out.snippetsNotFound=e.status===404;out.snippetsAuthorizationDenied=[401,403].includes(e.status);}
  // This is routing readiness only, NOT human, device, data-write or production acceptance.
  out.featureOnProtectedRoutingReady=featureOnRoutingReady(out);
+ // A GitHub token may read Worker versions but lack zone Rulesets access.
+ // Never conflate a successful read-only workflow with full rule verification.
+ out.featureOnRoutingAuditStatus=out.featureOnProtectedRoutingReady?'READ_ONLY_READY':
+  out.http_request_late_transform?.authorizationDenied===true?'ZONE_RULES_READ_PERMISSION_REQUIRED':'NOT_READY';
  out.featureOnAuthenticatedAcceptance=false;
  out.featureOnPhysicalDeviceAcceptance=false;
  out.featureOnProductionApproved=false;
@@ -102,7 +132,7 @@ export async function inventory(read){
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
  assert.equal(process.env.GITHUB_REPOSITORY,'anevum/anevum-web');
- assert.equal(process.env.GITHUB_REF,'refs/heads/ops/v100-candidate-acceptance-20261021-001');
+ assert.ok(['refs/heads/ops/v100-candidate-acceptance-20261021-001','refs/heads/ops/v100-corrected-acceptance-20261021-001'].includes(process.env.GITHUB_REF),'Unreviewed QA audit branch');
  assert.equal(process.env.GITHUB_EVENT_NAME,'push');
  assert.equal(process.env.GITHUB_ACTOR,'anevum');
  assert.equal(process.env.CLOUDFLARE_ACCOUNT_ID,ACCOUNT);
