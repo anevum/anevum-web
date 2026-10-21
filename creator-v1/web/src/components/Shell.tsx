@@ -10,6 +10,7 @@ import { canonicalAuthClient } from "../lib/canonical-beta";
 import { CompactMemberIdentity } from "./CompactMemberIdentity";
 import { useOwnPlayerCard } from "../lib/useOwnPlayerCard";
 import {IrenGuidedContinuance} from "./IrenGuidedContinuance";
+import {VerifiedStaffShortcut} from "./VerifiedStaffShortcut";
 
 /** ANEVUM V009 — one public navigation system across every Creator V1 page.
  * This component is presentation only. Private routes remain MemberGate-owned;
@@ -144,6 +145,7 @@ export function Shell(){
           <div className="av79-navigation-label"><span>YOUR PLAYER CARD</span><Link to="/member" onClick={()=>setMenuOpen(false)}>MY SPACE <Icon name="arrow" size={13}/></Link></div>
           {ownCard?<CompactMemberIdentity member={ownCard} href="/member" size="compact" className="av79-my-card"/>:
             <Link className="av79-identity-loading" to="/member" onClick={()=>setMenuOpen(false)}>Open your verified member space <Icon name="arrow" size={16}/></Link>}
+          <VerifiedStaffShortcut location="wayfinder"/>
         </section>:<Link to="/join" className="av79-navigation-join" onClick={()=>setMenuOpen(false)}>
           <span><strong>Become part of ANEVUM</strong><small>Your identity, creations and earned recognition start here.</small></span>
           <Icon name="arrow" size={18}/>

@@ -7,6 +7,7 @@ import {OrbitalMark} from "../components/OrbitalMark";
 import {MemberSpaceDashboard} from "../components/MemberSpaceDashboard";
 import {MemberExperienceMap} from "../components/MemberExperienceMap";
 import {MemberClosurePanel} from "../components/MemberClosurePanel";
+import {VerifiedStaffShortcut} from "../components/VerifiedStaffShortcut";
 
 const HANDLE=/^[a-z][a-z0-9_]{2,29}$/;
 const CONTROL=/[\u0000-\u001f\u007f]/;
@@ -188,6 +189,7 @@ function MemberEditor({memberId,memberName,memberEmail}:{memberId:string;memberN
         {claimed&&<a href="/api/v1/member/account-export" download="anevum-member-export.json">
           DOWNLOAD MY DATA ↓
         </a>}
+        <VerifiedStaffShortcut location="profile"/>
         <button type="button" onClick={()=>void signOut()} disabled={busy}>SIGN OUT</button></div>
     </div>
     {ready&&claimed&&<MemberExperienceMap profile={persisted}/>}

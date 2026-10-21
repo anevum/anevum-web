@@ -13,6 +13,7 @@ import {safePlayerAura,safeVerifiedRole} from '../lib/player-recognition';
 import {EarnedRewardVault} from './EarnedRewardVault';
 import {useMemberRevalidation} from '../lib/useMemberRevalidation';
 import {CreatorPackageGallery,packageGalleryUIEnabled} from './CreatorPackageGallery';
+import {VerifiedStaffShortcut} from './VerifiedStaffShortcut';
 
 type Tab='overview'|'profile'|'appearance'|'awards'|'wall'|'creations';
 export function SpaceProgress({space,handle=null}:{space:MemberSpace;handle?:string|null}){
@@ -49,7 +50,7 @@ export function MemberSpaceDashboard({profile,editor}:{profile:CanonicalProfile;
       level={space.stats?.level} featuredAwards={space.featuredAwards}
       earnedBadges={space.earnedBadges} badgeDisplay={space.badgeDisplay}/>}</div></div>
   </header>
-  <div className="ms-toolbar"><nav aria-label="My space sections">{([['overview','Dashboard'],['wall','My wall'],...(packageGalleryUIEnabled?[['creations','Creations']]:[]),['profile','Edit profile'],['appearance','Appearance'],['awards','Awards & stats']] as [Tab,string][]).map(([key,label])=><button key={key} data-iren-anchor={key==='awards'?"awards":undefined} aria-current={tab===key?'page':undefined} onClick={()=>{setTab(key);setNotice('')}}>{label}</button>)}</nav><div className="ms-toolbar-links"><Link to="/community">COMMUNITY ↗</Link> <Link data-iren-anchor="studio" to="/studio">CREATOR STUDIO ↗</Link> <Link to="/support">SUPPORT ANEVUM ↗</Link> {profile.visibility==='public'?<Link to={'/@'+profile.handle}>VIEW PUBLIC WALL ↗</Link>:<button onClick={()=>setTab('profile')}>VISIBILITY SETTINGS</button>}</div></div>
+  <div className="ms-toolbar"><nav aria-label="My space sections">{([['overview','Dashboard'],['wall','My wall'],...(packageGalleryUIEnabled?[['creations','Creations']]:[]),['profile','Edit profile'],['appearance','Appearance'],['awards','Awards & stats']] as [Tab,string][]).map(([key,label])=><button key={key} data-iren-anchor={key==='awards'?"awards":undefined} aria-current={tab===key?'page':undefined} onClick={()=>{setTab(key);setNotice('')}}>{label}</button>)}</nav><div className="ms-toolbar-links"><Link to="/community">COMMUNITY ↗</Link> <Link data-iren-anchor="studio" to="/studio">CREATOR STUDIO ↗</Link> <Link to="/support">SUPPORT ANEVUM ↗</Link> {profile.visibility==='public'?<Link to={'/@'+profile.handle}>VIEW PUBLIC WALL ↗</Link>:<button onClick={()=>setTab('profile')}>VISIBILITY SETTINGS</button>} <VerifiedStaffShortcut location="profile"/></div></div>
 
   <div className="ms-body">
    {loading&&<p role="status">Opening your space…</p>}

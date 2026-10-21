@@ -67,7 +67,7 @@ function fixture(role='owner'){
   if(isPost){
    posts.push({url,payload:JSON.parse(options.body)});
    savedAura=JSON.parse(options.body).aura;revision++;
-   return {ok:true,json:async()=>({ok:true,aura:savedAura})};
+   return {status:200,ok:true,headers:{get:()=> 'application/json'},json:async()=>({ok:true,aura:savedAura})};
   }
   reads.push(url);
   const resource=url.split('/api/')[1]||'';
@@ -77,7 +77,7 @@ function fixture(role='owner'){
   else if(resource==='rewards')payload={auras:[{aura:savedAura,members:1}],awards:[]};
   else if(resource==='audit')payload={entries:[]};
   else throw new Error('Unexpected GET '+url);
-  return {ok:true,json:async()=>payload};
+  return {status:200,ok:true,headers:{get:()=> 'application/json'},json:async()=>payload};
  }
  const window={confirm:(message)=>{confirmations.push(message);return true;}};
  runInNewContext(CLIENT,{document,fetch,window,setTimeout,clearTimeout},{timeout:2500});

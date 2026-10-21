@@ -1,0 +1,23 @@
+/* Native server-verified Founder/Reviewer entry; no identity inferred from CSS. */
+.av99-native-staff-link{display:inline-flex;align-items:center;gap:9px;min-width:0;min-height:45px;box-sizing:border-box;border:1px solid #b69a6e;border-radius:11px;background:linear-gradient(112deg,#3e3d39,#182f44 72%);color:#f6e5c5;text-decoration:none;padding:9px 13px;box-shadow:0 6px 20px #040d1980,inset 0 1px #efd3a82a;overflow-wrap:anywhere}
+.av99-native-staff-link:hover{border-color:#dfc8a1;background:linear-gradient(112deg,#4d483d,#234057 72%);color:#ffefd0}
+.av99-native-staff-link:focus-visible{outline:3px solid #a6e5ff;outline-offset:3px}
+.av99-native-staff-mark{flex:none;width:26px;height:26px;display:grid;place-items:center;border:1px solid #cbb089a6;border-radius:50%;font:20px/1 Georgia,serif;color:#f5d6a1}
+.av99-native-staff-copy{display:flex;flex:1;flex-direction:column;gap:2px;min-width:0}
+.av99-native-staff-copy strong{font:750 11px/1.2 system-ui,-apple-system,sans-serif;letter-spacing:.09em;color:#ffebc9}
+.av99-native-staff-copy small{font:450 11px/1.35 system-ui,-apple-system,sans-serif;letter-spacing:0;color:#c2d4e3}
+.av99-native-staff-arrow{margin-left:auto;flex:none;font:700 15px/1 system-ui,sans-serif;color:#e2c79b}
+.ms-toolbar-links>.av99-native-staff-link{min-width:min(100%,208px);align-self:center}
+.av12-account-banner-links>.av99-native-staff-link{max-width:100%}
+.av79-navigation-identity>.av99-native-staff-link{display:flex;width:100%;min-width:0;margin-top:11px}
+:is(.ms-toolbar-links,.av12-account-banner-links,.av79-navigation-identity):has(> .av99-native-staff-link)> .anevum-account-staff-link{display:none!important}
+@media(max-width:650px){
+ .ms-toolbar-links>.av99-native-staff-link{width:100%;min-width:0;justify-content:center}
+ .av12-account-banner-links>.av99-native-staff-link{width:100%}
+}
+@media(prefers-reduced-motion:reduce){.av99-native-staff-link{transition:none}}
+@media(forced-colors:active){
+ .av99-native-staff-link{background:Canvas;color:LinkText;border:2px solid LinkText}
+ .av99-native-staff-copy strong,.av99-native-staff-mark,.av99-native-staff-arrow{color:LinkText}
+ .av99-native-staff-copy small{color:CanvasText}
+}
