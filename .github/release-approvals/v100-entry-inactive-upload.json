@@ -1,0 +1,12 @@
+{
+  "session": "ANEVUM V100 protected entry release",
+  "approval": "upload-inactive-only",
+  "repository": "anevum/anevum-web",
+  "reference": "release/v084-continuance-approved-20261019",
+  "source_sha": "28f163a0015631b1d8eb58922c03596ae8febd22",
+  "candidate_version": "8ed503b6-5df6-42a5-a536-63ccf928d25d",
+  "protected_entry": "anevum-v095-v096-acceptance-entry",
+  "retained_entry_version": "0c936727-e34b-43ae-8a0a-4522713f005f",
+  "scope": "create version at zero traffic; no deployment, no route or policy mutation, no public promotion",
+  "production_authorized": false
+}
