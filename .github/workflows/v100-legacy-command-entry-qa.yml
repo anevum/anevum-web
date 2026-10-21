@@ -52,7 +52,7 @@ jobs:
           const source=readFileSync('creator-v1/operations/anevum-iren-staff-entry-v003.mjs','utf8');
           assert.match(source,/resolveAccess\(request,env\)/);
           assert.match(source,/access.status==="verified"/);
-          assert.match(source,/url.search==="?view=command"/);
+          assert.ok(source.includes('url.search==="?view=command"'));
           assert.match(source,/env.COMMAND.fetch/);
           assert.match(source,/staff_access_grants/);
           const redirect=readFileSync('creator-v1/operations/anevum-iren-legacy-command-entry-v002.mjs','utf8');
