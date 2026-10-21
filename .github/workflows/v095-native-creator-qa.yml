@@ -65,7 +65,7 @@ jobs:
           node creator-v1/test/capture-native-creator-v095.mjs --chrome "$chrome" --output "$RUNNER_TEMP/native-v095-evidence/enabled"
           node --input-type=module - "$RUNNER_TEMP/native-v095-evidence" <<'JS'
           import assert from 'node:assert/strict';
-          import {readFileSync} from 'node:fs';
+          import {readFileSync,existsSync} from 'node:fs';
           import {execFileSync} from 'node:child_process';
           import {join} from 'node:path';
           const expected=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
@@ -78,7 +78,13 @@ jobs:
             assert.equal(r.syntheticOnly,true);
             assert.equal(r.physicalDeviceAcceptance,false);
             assert.equal(r.disabled,mode==='disabled');
-            assert.equal(r.cases.length,count);
+            const hasV101=existsSync('creator-v1/web/src/lib/native-compatibility-v101.ts');
+            const requiredCase='local-v005-compatibility-with-no-upload';
+            const caseCount=mode==='enabled'&&hasV101?count+1:count;
+            assert.equal(r.cases.length,caseCount);
+            if(mode==='enabled'&&hasV101)
+              assert.equal(r.cases.filter(item=>item.case===requiredCase&&item.passed===true).length,1,
+                'V101 local compatibility must be observed without an upload');
             assert.ok(r.cases.every(item=>item.passed===true));
             if(mode==='enabled')
               assert.ok(r.cases.some(item=>item.case==='local-v005-compatibility-with-no-upload'),
