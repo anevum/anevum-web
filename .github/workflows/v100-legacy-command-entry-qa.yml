@@ -1,0 +1,69 @@
+# V100 incident source-only QA; never deploys or changes Access or role grants.
+name: ANEVUM V100 Legacy Command Canonical Entry QA
+on:
+  pull_request:
+    paths:
+      - .github/workflows/v100-legacy-command-entry-qa.yml
+      - creator-v1/operations/anevum-iren-legacy-command-entry-v002.mjs
+      - creator-v1/test/v100-legacy-command-entry.test.mjs
+  push:
+    branches:
+      - fix/v100-legacy-command-canonical-entry-20261021-001
+permissions:
+  contents: read
+jobs:
+  canonical-entry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reject unreviewed application or security policy modifications
+        shell: bash
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || '' }}
+        run: |
+          set -euo pipefail
+          if [ -n "$BASE" ]; then
+            git diff --name-only "$BASE" HEAD > /tmp/v100-command-changed-paths.txt
+            while IFS= read -r path; do
+              case "$path" in
+                .github/workflows/v100-legacy-command-entry-qa.yml|creator-v1/operations/anevum-iren-legacy-command-entry-v002.mjs|creator-v1/test/v100-legacy-command-entry.test.mjs) ;;
+                *) echo "Unreviewed file change: $path"; exit 1 ;;
+              esac
+            done < /tmp/v100-command-changed-paths.txt
+          fi
+      - name: Check exact standalone redirect logic and deny fixtures
+        run: |
+          set -euo pipefail
+          node --check creator-v1/operations/anevum-iren-legacy-command-entry-v002.mjs
+          node --test creator-v1/test/v100-legacy-command-entry.test.mjs
+      - name: Preserve the upstream native staff verification route
+        run: |
+          node --input-type=module <<'JS'
+          import {readFileSync} from 'node:fs';
+          import assert from 'node:assert/strict';
+          const source=readFileSync('creator-v1/operations/anevum-iren-staff-entry-v003.mjs','utf8');
+          assert.match(source,/resolveAccess\(request,env\)/);
+          assert.match(source,/access.status==="verified"/);
+          assert.match(source,/url.search==="?view=command"/);
+          assert.match(source,/env.COMMAND.fetch/);
+          assert.match(source,/staff_access_grants/);
+          const redirect=readFileSync('creator-v1/operations/anevum-iren-legacy-command-entry-v002.mjs','utf8');
+          assert.match(redirect,/\/staff\?view=command/);
+          assert.doesNotMatch(redirect,/\.fetch\(/);
+          console.log('CANONICAL_STAFF_ROUTE_STATIC_GUARD_PASS');
+          JS
+      - name: Record non-deployment status
+        run: |
+          echo 'CODE_ONLY=true' >> "$GITHUB_STEP_SUMMARY"
+          echo 'CLOUDFLARE_MUTATIONS=0' >> "$GITHUB_STEP_SUMMARY"
+          echo 'LIVE_ROUTE_UNCHANGED=true' >> "$GITHUB_STEP_SUMMARY"
+          echo 'PHYSICAL_SAFARI_ACCEPTANCE=NOT_RUN' >> "$GITHUB_STEP_SUMMARY"
+          echo 'PUBLIC_PROMOTION=NOT_AUTHORIZED' >> "$GITHUB_STEP_SUMMARY"
