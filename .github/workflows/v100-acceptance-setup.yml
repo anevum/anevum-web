@@ -1,17 +1,56 @@
 name: ANEVUM V100 Isolated Acceptance Setup
 on:
   push:
-    branches: [ops/v100-candidate-acceptance-20261021-001]
+    branches: [ops/v100-candidate-acceptance-20261021-001, release/v084-continuance-approved-20261019]
     paths:
       - .github/workflows/v100-acceptance-setup.yml
       - creator-v1/ops/v100-acceptance-inventory.mjs
       - creator-v1/test/v100-acceptance-inventory.test.mjs
+      - creator-v1/ops/v100-observatory-ui-candidate.mjs
+      - creator-v1/test/v100-observatory-ui-candidate.test.mjs
+      - .github/release-approvals/v100-observatory-inactive-upload.json
+  pull_request:
+    paths:
+      - .github/workflows/v100-acceptance-setup.yml
+      - creator-v1/ops/v100-acceptance-inventory.mjs
+      - creator-v1/test/v100-acceptance-inventory.test.mjs
+      - creator-v1/ops/v100-observatory-ui-candidate.mjs
+      - creator-v1/test/v100-observatory-ui-candidate.test.mjs
 permissions:
   contents: read
 concurrency:
-  group: anevum-v100-acceptance-setup
+  group: anevum-v100-acceptance-setup-${{ github.ref }}
   cancel-in-progress: false
 jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Verify UI-only preservation and authorization regressions
+        run: |
+          node --test creator-v1/test/v100-acceptance-inventory.test.mjs creator-v1/test/v100-observatory-ui-candidate.test.mjs creator-v1/test/staff-navigation-and-connecting-v099.test.mjs creator-v1/test/staff-observatory-ux-v091.test.mjs creator-v1/test/staff-observatory-aura-v092.test.mjs creator-v1/test/staff-session-transport-v091.test.mjs
+      - name: Synthetic desktop and phone Observatory browser acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$chrome"
+          node creator-v1/test/capture-staff-observatory-v092.mjs "$chrome" evidence/staff-v100
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v100-observatory-synthetic-qa
+          path: evidence/staff-v100/
+          if-no-files-found: ignore
+          retention-days: 14
   inventory:
     if: github.repository == 'anevum/anevum-web' && github.actor == 'anevum' && github.ref == 'refs/heads/ops/v100-candidate-acceptance-20261021-001'
     runs-on: ubuntu-latest
@@ -33,4 +72,59 @@ jobs:
           CLOUDFLARE_ACCESS_API_TOKEN: ${{ secrets.CLOUDFLARE_ACCESS_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: node creator-v1/ops/v100-acceptance-inventory.mjs
-# No provider configuration artifact, data writes, deployment or routing mutation.
+  observatory-check:
+    needs: source
+    if: github.repository == 'anevum/anevum-web' && github.actor == 'anevum' && github.event_name == 'push' && github.ref == 'refs/heads/ops/v100-candidate-acceptance-20261021-001'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Check actual live UI assembly without uploading
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node creator-v1/ops/v100-observatory-ui-candidate.mjs --check
+  observatory-inactive-upload:
+    needs: source
+    if: >-
+      github.repository == 'anevum/anevum-web' && github.actor == 'anevum' &&
+      github.event_name == 'push' && github.ref == 'refs/heads/release/v084-continuance-approved-20261019' &&
+      github.event.head_commit.message == 'release(v100): upload inactive Observatory UI only'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - name: Require marker-only authorization on approved release branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git diff-tree --no-commit-id --name-only -r HEAD)" = '.github/release-approvals/v100-observatory-inactive-upload.json'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Upload only the reviewed UI literals with the exact live server retained
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GITHUB_HEAD_MESSAGE: ${{ github.event.head_commit.message }}
+          RECEIPT_FILE: ${{ runner.temp }}/observatory-inactive-receipt.json
+        run: node creator-v1/ops/v100-observatory-ui-candidate.mjs --upload-inactive
+      - uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v100-observatory-inactive-receipt
+          path: ${{ runner.temp }}/observatory-inactive-receipt.json
+          if-no-files-found: error
+          retention-days: 14
+# Only the explicit owner marker permits a versions upload. No deployments,
+# route/policy changes, data writes or provider configuration artifacts.

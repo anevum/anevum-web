@@ -51,7 +51,7 @@ export async function inventory(read){
   try{
    const ruleset=await read(zone+'/rulesets/phases/'+phase+'/entrypoint');
    out[phase]={exists:true,hasRoutingCookie:JSON.stringify(ruleset).includes(COOKIE),hasOldCandidate:JSON.stringify(ruleset).includes(OLD),hasVersionOverride:JSON.stringify(ruleset).toLowerCase().includes('cloudflare-workers-version-overrides')};
-  }catch(e){out[phase]={readable:false,notFound:e.status===404};}
+  }catch(e){out[phase]={readable:false,notFound:e.status===404,authorizationDenied:[401,403].includes(e.status)};}
  }
  try{
   const rules=await read(zone+'/snippets/snippet_rules');
@@ -66,7 +66,7 @@ export async function inventory(read){
     hasEntryExpiry:source.includes(String(vars.QA_EXPIRES_AT)),hashesToken:source.includes('SHA-256'),
     hasTokenLiteral:/[a-f0-9]{64}/.test(source)});
   }
- }catch(e){out.snippetsReadable=false;out.snippetsNotFound=e.status===404;}
+ }catch(e){out.snippetsReadable=false;out.snippetsNotFound=e.status===404;out.snippetsAuthorizationDenied=[401,403].includes(e.status);}
  return out;
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
