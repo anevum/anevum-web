@@ -109,6 +109,6 @@ test('Access verification probe is read-only and cannot reveal the private revie
   const probe=await canonicalForums(new Request('https://a.anevum.com/api/v1/member/forum-review?access_check=1',
    {method:'GET'}),env,reviewer,1000);
   assert.equal(probe.status,400);
-  assert.deepEqual(await probe.json(),{error:'Unexpected filters'});
+  assert.deepEqual(await probe.json(),{error:'Invalid filters'});
  }finally{f.db.close();}
 });
