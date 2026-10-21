@@ -95,6 +95,7 @@ test('feature-ON route is ready only after the exact version is in deployment, e
  };
  const ready=await inventory(live);
  assert.equal(ready.featureOnProtectedRoutingReady,true);
+ assert.equal(ready.featureOnRoutingAuditStatus,'READ_ONLY_READY');
  assert.equal(ready.publicVersion100AndExactTwoVersions,true);
  assert.equal(ready.failedFeatureOnNotSelected,true);
  assert.equal(ready.featureOnRootAssetBase,true);
@@ -131,4 +132,10 @@ test('feature-ON route is ready only after the exact version is in deployment, e
   return live(path,json);
  });
  assert.equal(withoutRule.featureOnProtectedRoutingReady,false);
+ const deniedRules=await inventory(async(path,json=true)=>{
+  if(path.includes('/rulesets/phases/http_request_late_transform'))throw Object.assign(new Error('Rulesets permission denied'),{status:403});
+  return live(path,json);
+ });
+ assert.equal(deniedRules.featureOnProtectedRoutingReady,false);
+ assert.equal(deniedRules.featureOnRoutingAuditStatus,'ZONE_RULES_READ_PERMISSION_REQUIRED');
 });
