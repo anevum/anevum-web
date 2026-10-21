@@ -44,7 +44,7 @@ export function IrenSpatialTour({
   const [reduced,setReduced]=useState(()=>window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const [visibleRect,setVisibleRect]=useState<IrenRect>(()=>viewportRect());
   const mobile=visibleRect.width<=650;
-  const botWidth=mobile?64:90,botHeight=mobile?80:105;
+  const botWidth=mobile?76:90,botHeight=mobile?94:105;
   useEffect(()=>setMore(false),[step.id]);
   useEffect(()=>{
     const mq=window.matchMedia("(prefers-reduced-motion: reduce)");
