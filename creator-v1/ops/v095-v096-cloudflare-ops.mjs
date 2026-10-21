@@ -69,7 +69,7 @@ function save(file,value){
  writeFileSync(file,JSON.stringify(value,null,2)+'\n',{mode:0o600});
  chmodSync(file,0o600);
 }
-function checkRepositorySource(){
+function checkRepositorySource(expectedHead=process.env.GITHUB_SHA){
  assert.equal(process.env.VITE_PACKAGE_CREATOR_GALLERY_V010,'true','Preserve approved package gallery build');
  if(FEATURE_ON)verifyFeatureOnFlags(process.env);
  else assert.equal(process.env.VITE_NATIVE_CREATOR_STUDIO_V095,'false','Native Studio rollout is separately gated');
@@ -78,7 +78,7 @@ function checkRepositorySource(){
  assert.equal(manifest.source_sha,ORIGINAL,'Preserve frozen V095/V096 record');
  assert.equal(manifest.release_parent_sha,ORIGINAL);
  if(INTEGRATED&&!FEATURE_ON)assert.equal(process.env.VITE_IREN_SPATIAL_GUIDE,'false','IREN activation remains separately gated');
- assert.equal(git('rev-parse','HEAD'),process.env.GITHUB_SHA);
+ assert.equal(git('rev-parse','HEAD'),expectedHead);
  git('merge-base','--is-ancestor',PIN,'HEAD');
  const changed=git('diff','--name-only',PIN,'HEAD','--','.').split('\n').filter(Boolean);
  const unexpected=changed.filter(x=>!ALLOWED_META.includes(x));
@@ -97,7 +97,7 @@ function checkRepositorySource(){
  assert.equal(evidence.verified_at,null);
  for(const x of ['founder_staff_session','reviewer_staff_session','creator_journey','cross_account_identity'])
    assert.equal(evidence[x],false,'Do not infer human acceptance from source CI: '+x);
- return {HEAD:process.env.GITHUB_SHA,SOURCE:PIN,changed:changed.sort()};
+ return {HEAD:expectedHead,SOURCE:PIN,changed:changed.sort()};
 }
 async function requireIntegratedChecks(){
  if(!INTEGRATED)return;
@@ -236,7 +236,7 @@ async function after(file,receiptFile){
 }
 const [mode,arg1,arg2]=process.argv.slice(2);
 if(mode==='verify-source'&&process.argv.length===3){
- console.log(JSON.stringify(checkRepositorySource()));
+ console.log(JSON.stringify(checkRepositorySource(process.env.ANEVUM_SOURCE_SHA||process.env.GITHUB_SHA)));
 }else if(mode==='audit'&&process.argv.length===3){
  checkRepositorySource();
  const snap=await readSnapshot();
