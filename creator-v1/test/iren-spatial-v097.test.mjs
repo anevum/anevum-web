@@ -91,7 +91,7 @@ test("edge and obstacle layout accepts zero-sized invalid anchors without throwi
 });
 test("legacy tour data and privacy gates stay intact in default-off release",()=>{
  const source=read("web/src/components/IrenGuidedContinuance.tsx");
- for(const key of ['identity','progress','privacy','studio','discover','community','navigation']){
+ for(const key of ['identity','progress','privacy','studio','discover','community','wayfinder']){
   assert.ok(source.includes('id:"'+key+'"'));
  }
  for(const token of ['storagePrefix','status:"paused"','finish("skipped")','memberId||"visitor"','useIrenSignals','LevelEmblem','AwardEmblem','hiddenInStorage','setStoredHidden','readPaused','readPosition']){
