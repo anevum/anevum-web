@@ -1,7 +1,7 @@
 name: ANEVUM V100 Isolated Acceptance Setup
 on:
   push:
-    branches: [ops/v100-candidate-acceptance-20261021-001, release/v084-continuance-approved-20261019]
+    branches: [ops/v100-candidate-acceptance-20261021-001, ops/v100-corrected-acceptance-20261021-001, release/v084-continuance-approved-20261019]
     paths:
       - .github/workflows/v100-acceptance-setup.yml
       - creator-v1/ops/v100-acceptance-inventory.mjs
@@ -57,7 +57,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
   inventory:
-    if: github.repository == 'anevum/anevum-web' && github.actor == 'anevum' && github.ref == 'refs/heads/ops/v100-candidate-acceptance-20261021-001'
+    if: github.repository == 'anevum/anevum-web' && github.actor == 'anevum' && (github.ref == 'refs/heads/ops/v100-candidate-acceptance-20261021-001' || github.ref == 'refs/heads/ops/v100-corrected-acceptance-20261021-001')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
