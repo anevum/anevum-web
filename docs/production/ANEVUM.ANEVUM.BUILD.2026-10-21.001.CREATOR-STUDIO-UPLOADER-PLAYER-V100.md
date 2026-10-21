@@ -184,3 +184,5 @@ original public versions only: controller deployment
 `bc151f5f-f2bd-44c1-bdfe-ad8b178f5838`. Restore version selections with the
 existing API/workflow; do not delete versions or data. No schema rollback is
 needed because no live schema change occurred.
+
+Independent GitHub readback also passed: [run 39691447879](https://github.com/anevum/anevum-web/actions/runs/39691447879), owner QA head `48c6dd229e71b7bca0675378fab7959e062a7399`. It retested the merged source and verified the matching apex, entry, legacy Command and three native backend selections using GET-only Cloudflare calls. This run performed zero provider writes and does not imply human acceptance.

@@ -98,5 +98,12 @@
   },
   "live_schema_writes": 0,
   "live_grant_writes": 0,
-  "moderation_writes": 0
+  "moderation_writes": 0,
+  "independent_github_readback": {
+    "run_id": 39691447879,
+    "head": "48c6dd229e71b7bca0675378fab7959e062a7399",
+    "conclusion": "success",
+    "provider_writes": 0,
+    "authenticated_human_acceptance": false
+  }
 }
