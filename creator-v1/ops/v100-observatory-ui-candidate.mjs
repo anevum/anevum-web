@@ -7,7 +7,7 @@ const ACCOUNT='2f7ee83107240152097efd956a4e8335',ZONE='8abe27259b5436af5966d3b40
 export const STAFF='anevum-iren-staff-observatory-v001';
 const BASE='/accounts/'+ACCOUNT+'/workers/scripts/'+STAFF;
 const PRIOR='03b731d4-be7f-480c-80ad-c50683a2dc8f';
-const EXPECTED_DOWNLOAD='6776b686d7832f2146cd2d2a871d04d79826e44ae9a0f3bdc45e41b7d943c4a5';
+const EXPECTED_RETAINED_MODULE='856fe98d1fefc3be22b73732a7276402b2b6fd7600a6135251ede153e2690301';
 const EXPECTED_UI_SOURCE='2d5cb865963310ff620be057763802891117ab108499275cd926400ccffb8795';
 const names=['PAGE','STYLES','CLIENT'];
 const hash=s=>createHash('sha256').update(s).digest('hex');
@@ -32,6 +32,20 @@ export function parseModules(download){
  assert.ok(modules.length>0&&modules.length<=4,'Unexpected module inventory');
  assert.equal(new Set(modules.map(m=>m.name)).size,modules.length,'Duplicate modules');
  return modules;
+}
+export function decodeVersionModules(version){
+ assert.ok(Array.isArray(version.modules)&&version.modules.length>0&&version.modules.length<=4,'Unexpected module inventory');
+ const modules=version.modules.map(m=>{
+  assert.ok(typeof m.name==='string'&&/^[A-Za-z0-9_.-]+\.m?js$/.test(m.name)&&!m.name.includes('..'),'Unexpected module name');
+  assert.ok(/^(?:application|text)\/(?:javascript|ecmascript)(?:\+module)?$/i.test(m.content_type),'Unexpected module type');
+  assert.ok(typeof m.content_base64==='string'&&/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(m.content_base64),'Invalid module encoding');
+  const bytes=Buffer.from(m.content_base64,'base64');
+  const source=new TextDecoder('utf-8',{fatal:true}).decode(bytes);
+  assert.ok(Buffer.from(source).equals(bytes),'Module is not exact UTF-8');
+  return {name:m.name,source};
+ });
+ assert.ok(new Set(modules.map(m=>m.name)).size===modules.length,'Duplicate modules');
+ return modules.toSorted((a,b)=>a.name.localeCompare(b.name));
 }
 async function uiLiterals(source){
  const {parse}=await import('@babel/parser');
@@ -93,44 +107,61 @@ export async function uploadMetadata(settings,modules,runtime={}){
  return metadata;
 }
 const stable=x=>JSON.stringify(x,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b))):v);
-const bindingLock=bindings=>stable(bindings.map(({id,...b})=>b.type==='d1'?{name:b.name,type:b.type,database_id:b.database_id||id}:b).sort((a,b)=>a.name.localeCompare(b.name)));
+const bindingLock=bindings=>stable(bindings.map(({id,...b})=>b.type==='d1'?{...b,database_id:b.database_id||id}:b).sort((a,b)=>a.name.localeCompare(b.name)));
+export function postUploadState(before,after){
+ // The generic source and /settings views describe the latest saved version.
+ // Pin serving code by immutable version and shared settings by their own API.
+ const fields=['deployment','scriptSettings','routes','exposure','apex','retained','retainedSource'];
+ const changed_fields=fields.filter(key=>!(key in before)||!(key in after)||stable(before[key])!==stable(after[key]));
+ return {preserved:changed_fields.length===0,changed_fields};
+}
 export async function prepareInactive(api,{candidate,apply=false}={}){
  assert.equal(hash(candidate.trimEnd()+'\n'),EXPECTED_UI_SOURCE,'Reviewed UI source changed');
  const snapshot=async()=>{
-  const [deployment,settings,source,routes,exposure,versions,apex,retained]=await Promise.all([
+  const [deployment,settings,source,routes,exposure,versions,apex,retained,scriptSettings,retainedSource]=await Promise.all([
    api('GET',BASE+'/deployments'),api('GET',BASE+'/settings'),api('GET',BASE,false),
    api('GET','/zones/'+ZONE+'/workers/routes'),api('GET',BASE+'/subdomain'),api('GET',BASE+'/versions?per_page=100'),
-   api('GET','/accounts/'+ACCOUNT+'/workers/scripts/anevum-apex-prelaunch-gateway/deployments'),api('GET',BASE+'/versions/'+PRIOR)]);
-  return {deployment,settings,source,routes,exposure,versions,apex,retained};
+   api('GET','/accounts/'+ACCOUNT+'/workers/scripts/anevum-apex-prelaunch-gateway/deployments'),api('GET',BASE+'/versions/'+PRIOR),
+   api('GET',BASE+'/script-settings'),api('GET','/accounts/'+ACCOUNT+'/workers/workers/'+STAFF+'/versions/'+PRIOR+'?include=modules')]);
+  return {deployment,settings,source,routes,exposure,versions,apex,retained,scriptSettings,retainedSource};
  };
  const before=await snapshot();
  assert.deepEqual(before.deployment.deployments?.[0]?.versions,[{version_id:PRIOR,percentage:100}],'Live staff version changed');
- assert.equal(downloadDigest(before.source),EXPECTED_DOWNLOAD,'Retained live source changed');
+ assert.ok(before.retainedSource.id===PRIOR,'Retained source version changed');
+ const retainedModules=decodeVersionModules(before.retainedSource);
+ assert.ok(retainedModules.length===1&&retainedModules[0].name===before.retainedSource.main_module&&hash(retainedModules[0].source)===EXPECTED_RETAINED_MODULE,'Retained live source changed');
  assert.equal(before.exposure.enabled,false);assert.equal(before.exposure.previews_enabled,false);
- const b=before.settings.bindings;
+ const b=before.retained.resources.bindings;
  assert.ok(Array.isArray(b)&&b.every(x=>['service','d1','plain_text'].includes(x.type)),'Unexpected staff bindings');
  assert.ok(b.some(x=>x.type==='service'&&x.name==='APEX_AUTH'&&x.service==='anevum-apex-prelaunch-gateway'));
  assert.ok(b.some(x=>x.type==='d1'&&x.name==='MEMBER_DB'&&(x.database_id||x.id)==='e1d29049-c83b-4534-8355-dc1fa36ba6d8'));
- const modules=await patchUi(parseModules(before.source),candidate);
+ const modules=await patchUi(retainedModules,candidate);
  assert.equal(before.retained.id,PRIOR,'Retained version identity changed');
  assert.ok(before.retained.resources?.script_runtime,'Missing retained runtime');
- const metadata=await uploadMetadata(before.settings,modules,before.retained.resources.script_runtime);
+ const metadata=await uploadMetadata({bindings:b,...before.retained.resources.script_runtime},modules,before.retained.resources.script_runtime);
  const receipt={readOnly:!apply,source_sha:'28f163a0015631b1d8eb58922c03596ae8febd22',prior_version:PRIOR,
   ui_source_sha256:EXPECTED_UI_SOURCE,server_bytes_preserved:true,ui_literals_replaced:3,production_activated:false,physical_iphone_tested:false};
  if(!apply)return receipt;
+ assert.ok(before.versions.items?.[0]?.id===PRIOR,'A saved version already exists; reconcile it instead of repeating the upload');
  const immediate=await snapshot();
  const lock=s=>stable({...s,source:downloadDigest(s.source)});
  assert.ok(lock(immediate)===lock(before),'Live configuration changed before upload');
  const version=await api('POST',BASE+'/versions',{metadata,modules});
  assert.match(version.id||'',/^[a-f0-9-]{36}$/);
+ // Persist the identity immediately so a later verification failure cannot
+ // hide a successful upload or encourage an unsafe duplicate retry.
+ const pending={...receipt,status:'UPLOADED_RECONCILIATION_REQUIRED',version_id:version.id};
+ if(process.env.RECEIPT_FILE)writeFileSync(process.env.RECEIPT_FILE,JSON.stringify(pending,null,2)+'\n',{mode:0o600});
+ console.log(JSON.stringify(pending));
  const uploaded=await api('GET',BASE+'/versions/'+version.id);
  assert.ok(bindingLock(uploaded.resources.bindings)===bindingLock(b),'Uploaded binding drift');
  assert.ok(stable(uploaded.resources.script_runtime)===stable(before.retained.resources.script_runtime),'Uploaded runtime drift');
+ const uploadedSource=await api('GET','/accounts/'+ACCOUNT+'/workers/workers/'+STAFF+'/versions/'+version.id+'?include=modules');
+ assert.ok(uploadedSource.id===version.id&&uploadedSource.main_module===metadata.main_module,'Uploaded source identity drift');
+ assert.ok(stable(decodeVersionModules(uploadedSource))===stable(modules.toSorted((a,b)=>a.name.localeCompare(b.name))),'Uploaded module bytes drift');
  const after=await snapshot();
- for(const key of ['deployment','settings','source','routes','exposure','apex']){
-  if(key==='source')assert.equal(downloadDigest(after.source),downloadDigest(before.source));
-  else assert.ok(stable(after[key])===stable(before[key]),'Inactive upload changed '+key);
- }
+ const comparison=postUploadState(before,after);
+ assert.ok(comparison.preserved,'Inactive upload changed protected fields: '+comparison.changed_fields.join(','));
  const added=(after.versions.items||[]).filter(x=>!(before.versions.items||[]).some(y=>x.id===y.id));
  assert.deepEqual(added.map(x=>x.id),[version.id],'Expected exactly one inactive version');
  return {...receipt,status:'UPLOADED_INACTIVE_ONLY',version_id:version.id,active_traffic_percent:100,candidate_traffic_percent:0};

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {readFileSync,writeFileSync} from 'node:fs';
 import {pathToFileURL} from 'node:url';
-import {downloadDigest,parseModules,patchUi,STAFF} from './v100-observatory-ui-candidate.mjs';
+import {downloadDigest,parseModules,patchUi,decodeVersionModules,STAFF} from './v100-observatory-ui-candidate.mjs';
 const ACCOUNT='2f7ee83107240152097efd956a4e8335',ZONE='8abe27259b5436af5966d3b40d9a3760';
 const BASE='/accounts/'+ACCOUNT+'/workers/scripts/'+STAFF;
 const PRIOR='03b731d4-be7f-480c-80ad-c50683a2dc8f';
@@ -16,20 +16,7 @@ const sortBindings=b=>b.toSorted((a,b)=>a.name.localeCompare(b.name));
 const bindings=b=>sortBindings(b.map(({id,...v})=>v.type==='d1'?{...v,database_id:v.database_id||id}:v));
 const differences=(a,b,keys)=>keys.filter(k=>!equal(a[k],b[k]));
 const annotationKeys=['workers/message','workers/tag','workers/triggered_by'];
-export function decodeModules(version){
- assert.ok(Array.isArray(version.modules)&&version.modules.length>0&&version.modules.length<=4,'Unexpected module inventory');
- const modules=version.modules.map(m=>{
-  assert.ok(typeof m.name==='string'&&/^[A-Za-z0-9_.-]+\.m?js$/.test(m.name)&&!m.name.includes('..'),'Unexpected module name');
-  assert.ok(/^(?:application|text)\/(?:javascript|ecmascript)(?:\+module)?$/i.test(m.content_type),'Unexpected module type');
-  assert.ok(typeof m.content_base64==='string'&&/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(m.content_base64),'Invalid module encoding');
-  const bytes=Buffer.from(m.content_base64,'base64');
-  const source=new TextDecoder('utf-8',{fatal:true}).decode(bytes);
-  assert.ok(Buffer.from(source).equals(bytes),'Module is not exact UTF-8');
-  return {name:m.name,source};
- });
- assert.ok(new Set(modules.map(m=>m.name)).size===modules.length,'Duplicate modules');
- return modules.toSorted((a,b)=>a.name.localeCompare(b.name));
-}
+export const decodeModules=decodeVersionModules;
 export async function reconcile(read,candidate){
  assert.ok(HASH(candidate.trimEnd()+'\n')===EXPECTED_UI,'Reviewed UI source changed');
  const paths={deployment:BASE+'/deployments',settings:BASE+'/settings',source:BASE,
@@ -60,7 +47,6 @@ export async function reconcile(read,candidate){
   settings_bindings_normalized_equal_prior:equal(bindings(before.settings.bindings),bindings(retained.bindings)),
   settings_runtime_changed_fields:differences(before.settings,retained.script_runtime,Object.keys(retained.script_runtime)),
   settings_shared_fields_differ_from_script_endpoint:differences(before.settings,before.scriptSettings,Object.keys(before.scriptSettings)),
-  settings_annotations_differ_from_prior:differences(before.settings.annotations||{},before.retained.annotations||{},annotationKeys),
   routes_digest:HASH(stable(before.routes)),
   staff_route_matches_recorded_release:equal(before.routes.filter(r=>r.script===STAFF).map(r=>({pattern:r.pattern,script:r.script,request_limit_fail_open:r.request_limit_fail_open})),[{pattern:'anevum.com/staff/observatory*',script:STAFF,request_limit_fail_open:false}]),
   production_activated:false,physical_iphone_tested:false};
@@ -69,8 +55,6 @@ export async function reconcile(read,candidate){
   const uploaded=await read(BASE+'/versions/'+id);
   out.candidate_bindings_match_prior=equal(bindings(uploaded.resources.bindings),bindings(retained.bindings));
   out.candidate_runtime_matches_prior=equal(uploaded.resources.script_runtime,retained.script_runtime);
-  out.candidate_annotations_changed_fields=differences(uploaded.annotations||{},before.retained.annotations||{},annotationKeys);
-  out.settings_annotations_match_candidate=equal(before.settings.annotations||{},uploaded.annotations||{});
   try{
    const versionPath=id=>'/accounts/'+ACCOUNT+'/workers/workers/'+STAFF+'/versions/'+id+'?include=modules';
    const [oldVersion,newVersion]=await Promise.all([read(versionPath(PRIOR)),read(versionPath(id))]);
@@ -79,7 +63,10 @@ export async function reconcile(read,candidate){
    const expected=(await patchUi(oldModules,candidate)).toSorted((a,b)=>a.name.localeCompare(b.name));
    out.version_source_readable=true;
    out.candidate_modules_exactly_match_ui_patch=equal(newModules,expected);
-   out.main_module_preserved=oldVersion.main_module===newVersion.main_module;
+   out.main_module_preserved=typeof oldVersion.main_module==='string'&&oldVersion.main_module.length>0&&oldVersion.main_module===newVersion.main_module&&oldModules.some(m=>m.name===oldVersion.main_module)&&newModules.some(m=>m.name===newVersion.main_module);
+   out.settings_annotations_differ_from_prior=differences(before.settings.annotations||{},oldVersion.annotations||{},annotationKeys);
+   out.candidate_annotations_changed_fields=differences(newVersion.annotations||{},oldVersion.annotations||{},annotationKeys);
+   out.settings_annotations_match_candidate=equal(before.settings.annotations||{},newVersion.annotations||{});
    out.retained_module_digests=oldModules.map(m=>({name:m.name,sha256:HASH(m.source)}));
    out.retained_source_matches_recorded_release=oldModules.length===1&&HASH(oldModules[0].source.trimEnd()+'\n')==='856fe98d1fefc3be22b73732a7276402b2b6fd7600a6135251ede153e2690301';
    out.candidate_module_digests=newModules.map(m=>({name:m.name,sha256:HASH(m.source)}));

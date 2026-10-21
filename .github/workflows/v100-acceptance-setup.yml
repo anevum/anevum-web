@@ -151,6 +151,7 @@ jobs:
           RECEIPT_FILE: ${{ runner.temp }}/observatory-inactive-receipt.json
         run: node creator-v1/ops/v100-observatory-ui-candidate.mjs --upload-inactive
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: anevum-v100-observatory-inactive-receipt
           path: ${{ runner.temp }}/observatory-inactive-receipt.json
