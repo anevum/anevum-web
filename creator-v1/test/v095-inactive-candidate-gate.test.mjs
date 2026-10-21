@@ -162,3 +162,17 @@ test('reject manifest-level fabricated approval or stale source SHA',()=>{
  const stale=clone(manifest);stale.source_sha='ea1d5e7a402c1e85f9645ea76ced8f8cddbe859f';
  assert.throws(()=>validateBaseline(b,stale),/Unreviewed application source/);
 });
+test('integrated inactive packaging retains only the existing fail-closed acceptance entry',()=>{
+ const b=base();b.routes.push({pattern:'anevum.com/__enter/v095-v096*',script:'synthetic-existing-entry',request_limit_fail_open:false});
+ assert.throws(()=>validateBaseline(b),/route inventory drift/,'old profile remains frozen');
+ assert.equal(validateBaseline(b,manifest,{allowAcceptanceEntry:true}).routeCount,40);
+ assert.equal(validateUploadedCandidate({before:b,after:clone(b),candidate:candidate(),allowAcceptanceEntry:true}).status,'INACTIVE_CANDIDATE_PASS');
+ const failOpen=clone(b);failOpen.routes.at(-1).request_limit_fail_open=true;
+ assert.throws(()=>validateBaseline(failOpen,manifest,{allowAcceptanceEntry:true}),/must fail closed/);
+ const wrong=clone(b);wrong.routes.at(-1).pattern='anevum.com/studio/alpha*';
+ assert.throws(()=>validateBaseline(wrong,manifest,{allowAcceptanceEntry:true}),/Unexpected additional route/);
+ const retarget=clone(b);retarget.routes[0].script='unexpected';
+ assert.throws(()=>validateBaseline(retarget,manifest,{allowAcceptanceEntry:true}),/route inventory drift/);
+ const after=clone(b);after.routes.at(-1).script='retargeted-after-upload';
+ assert.throws(()=>validateUploadedCandidate({before:b,after,candidate:candidate(),allowAcceptanceEntry:true}),/Version upload changed routes/);
+});

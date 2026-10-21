@@ -11,7 +11,11 @@ import {
  manifest,validateBaseline,validateUploadedCandidate,plainVars,databaseIds,signatures,verifyCandidateAssets
 } from './v095-inactive-candidate-gate.mjs';
 
-const PIN='d5af32fd8f04b05e0381f7ac12c59d06c0e836a2';
+const PROFILE=process.env.ANEVUM_INACTIVE_PROFILE||'v095-v096';
+assert.ok(['v095-v096','v100'].includes(PROFILE),'Unknown inactive release profile');
+const INTEGRATED=PROFILE==='v100';
+const ORIGINAL='d5af32fd8f04b05e0381f7ac12c59d06c0e836a2';
+const PIN=INTEGRATED?'28f163a0015631b1d8eb58922c03596ae8febd22':ORIGINAL;
 const ALLOWED_META=[
  'creator-v1/ops/v091-controlled-pilot-upload.mjs',
  'tests/single-production-deploy.test.mjs',
@@ -33,6 +37,7 @@ const ALLOWED_META=[
  'creator-v1/ops/v095-v096-cloudflare-ops.mjs',
  'creator-v1/test/v095-inactive-candidate-gate.test.mjs'
 ];
+if(INTEGRATED)ALLOWED_META.push('.github/release-approvals/v100-inactive-upload.json');
 const CF='https://api.cloudflare.com/client/v4';
 const worker='/accounts/'+manifest.account_id+'/workers/scripts/'+manifest.script;
 const routePath='/zones/'+manifest.zone_id+'/workers/routes';
@@ -48,9 +53,11 @@ function checkRepositorySource(){
  assert.equal(process.env.VITE_NATIVE_CREATOR_STUDIO_V095,'false','Native Studio rollout is separately gated');
  assert.equal(process.env.GITHUB_REPOSITORY,'anevum/anevum-web');
  assert.equal(process.env.CLOUDFLARE_ACCOUNT_ID,manifest.account_id);
- assert.equal(manifest.source_sha,PIN);
- assert.equal(manifest.release_parent_sha,PIN);
+ assert.equal(manifest.source_sha,ORIGINAL,'Preserve frozen V095/V096 record');
+ assert.equal(manifest.release_parent_sha,ORIGINAL);
+ if(INTEGRATED)assert.equal(process.env.VITE_IREN_SPATIAL_GUIDE,'false','IREN activation remains separately gated');
  assert.equal(git('rev-parse','HEAD'),process.env.GITHUB_SHA);
+ git('merge-base','--is-ancestor',PIN,'HEAD');
  const changed=git('diff','--name-only',PIN,'HEAD','--','.').split('\n').filter(Boolean);
  const unexpected=changed.filter(x=>!ALLOWED_META.includes(x));
  if(unexpected.length)fail('Application code differs from reviewed source: '+unexpected.join(', '));
@@ -63,6 +70,20 @@ function checkRepositorySource(){
  for(const x of ['founder_staff_session','reviewer_staff_session','creator_journey','cross_account_identity'])
    assert.equal(evidence[x],false,'Do not infer human acceptance from source CI: '+x);
  return {HEAD:process.env.GITHUB_SHA,SOURCE:PIN,changed:changed.sort()};
+}
+async function requireIntegratedChecks(){
+ if(!INTEGRATED)return;
+ const r=await fetch('https://api.github.com/repos/anevum/anevum-web/actions/runs?head_sha='+PIN+'&per_page=100',{
+  headers:{Accept:'application/vnd.github+json',...(process.env.GH_TOKEN?{Authorization:'Bearer '+process.env.GH_TOKEN}:{})},
+  signal:AbortSignal.timeout(20000),redirect:'error'});
+ if(!r.ok)fail('Unable to verify exact integrated source CI');
+ const runs=(await r.json()).workflow_runs||[];
+ for(const name of ['ANEVUM Creator V1 Verify','ANEVUM V095 Native Creator Integration QA',
+  'ANEVUM V096 Unlisted Public Creator Alpha QA','ANEVUM V084 Continuance Integrated Release QA',
+  'ANEVUM V091 / Aura Codex Real React Browser QA','ANEVUM V081 / Earned Emblems, Auras and Reputation',
+  'ANEVUM V083 Combined Auth + D1 Recovery Safety','IREN V097 Spatial Companion Isolated QA'])
+  assert.ok(runs.some(x=>x.head_sha===PIN&&x.name===name&&x.status==='completed'&&x.conclusion==='success'),'Integrated source CI not successful: '+name);
+ console.log('INTEGRATED_EXACT_SOURCE_CI=PASS');
 }
 async function request(path){
  const token=process.env.CLOUDFLARE_API_TOKEN;
@@ -112,9 +133,10 @@ function configForUpload(snapshot){
 }
 async function before(file,configFile){
  const source=checkRepositorySource();
+ await requireIntegratedChecks();
  const build=verifyCandidateAssets('creator-v1/dist/web');
  const snap=await readSnapshot();
- const result=validateBaseline(snap);
+ const result=validateBaseline(snap,manifest,{allowAcceptanceEntry:INTEGRATED});
  const versionList=await request(worker+'/versions?per_page=100');
  const existing=versionList.items?.map(x=>x.id);
  if(!Array.isArray(existing)||existing.length<2)fail('Version inventory incomplete');
@@ -133,20 +155,20 @@ async function after(file,receiptFile){
  const source=checkRepositorySource();
  const previous=readJson(file),beforeSnapshot=previous.baseline;
  assert.equal(previous.source.SOURCE,PIN);
- validateBaseline(beforeSnapshot);
+ validateBaseline(beforeSnapshot,manifest,{allowAcceptanceEntry:INTEGRATED});
  const current=await readSnapshot();
  const items=(await request(worker+'/versions?per_page=100')).items||[];
  const newVersions=items.filter(x=>!previous.existing.includes(x.id));
  if(newVersions.length!==1)fail('Expected exactly one newly uploaded inactive Worker version, got '+newVersions.length);
  const candidate=await request(worker+'/versions/'+newVersions[0].id);
  const valid=validateUploadedCandidate({
-  before:beforeSnapshot,after:current,candidate
+  before:beforeSnapshot,after:current,candidate,allowAcceptanceEntry:INTEGRATED
  });
  const beforeSettings=beforeSnapshot.settings,afterSettings=current.settings;
  for(const k of ['placement','compatibility_date','compatibility_flags','usage_model','tags','tail_consumers','logpush'])
    assert.deepEqual(afterSettings[k],beforeSettings[k],'Global Worker setting changed: '+k);
  assert.deepEqual(current.deployment.versions,manifest.deployment.versions);
- assert.equal(current.routes.length,39);
+ assert.equal(current.routes.length,INTEGRATED?40:39);
  assert.equal(current.exposure.enabled,false);
  assert.equal(current.exposure.previews_enabled,false);
  const receipt={
@@ -155,7 +177,7 @@ async function after(file,receiptFile){
   version_id:valid.candidateId,
   script_etag:candidate.resources.script.etag,
   build:previous.build,
-  route_count:39,
+  route_count:current.routes.length,
   active_version_id:manifest.live_version.id,
   active_traffic_percent:100,candidate_traffic_percent:0,
   current_deployment_id:current.deployment.id,
@@ -165,8 +187,9 @@ async function after(file,receiptFile){
   production_activated:false,authenticated_acceptance:false,
   physical_iphone_tested:false,version_urls_enabled:false
  };
+ if(INTEGRATED){delete receipt.binding_signatures;delete receipt.bound_databases;}
  save(receiptFile,receipt);
- console.log('INACTIVE_UPLOAD_VERIFIED',JSON.stringify({source:PIN,version:valid.candidateId,routeCount:39,productionTrafficChanged:false,unverifiedHumanGates:true}));
+ console.log('INACTIVE_UPLOAD_VERIFIED',JSON.stringify({source:PIN,version:valid.candidateId,routeCount:current.routes.length,productionTrafficChanged:false,unverifiedHumanGates:true}));
 }
 const [mode,arg1,arg2]=process.argv.slice(2);
 if(!['before','after'].includes(mode)||!arg1||!arg2||process.argv.length!==5)

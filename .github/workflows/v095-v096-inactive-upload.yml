@@ -6,8 +6,10 @@ on:
     branches: [release/v084-continuance-approved-20261019]
     paths:
       - .github/release-approvals/v095-v096-inactive-upload.json
+      - .github/release-approvals/v100-inactive-upload.json
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: anevum-v095-v096-inactive-version-upload
   cancel-in-progress: false
@@ -16,11 +18,15 @@ jobs:
     env:
       VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
       VITE_NATIVE_CREATOR_STUDIO_V095: 'false'
+      VITE_IREN_SPATIAL_GUIDE: 'false'
+      ANEVUM_INACTIVE_PROFILE: >-
+        ${{ github.event.head_commit.message == 'release(v100): upload inactive candidate only' && 'v100' || 'v095-v096' }}
     if: >-
       github.repository == 'anevum/anevum-web' &&
       github.ref == 'refs/heads/release/v084-continuance-approved-20261019' &&
       github.actor == 'anevum' &&
-      github.event.head_commit.message == 'release(v095-v096): upload inactive candidate only'
+      (github.event.head_commit.message == 'release(v095-v096): upload inactive candidate only' ||
+       github.event.head_commit.message == 'release(v100): upload inactive candidate only')
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -43,15 +49,17 @@ jobs:
           test "$GITHUB_ACTOR" = 'anevum'
           test "$GITHUB_REF" = 'refs/heads/release/v084-continuance-approved-20261019'
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          test "$(git show -s --format=%s HEAD)" = 'release(v095-v096): upload inactive candidate only'
-          marker='.github/release-approvals/v095-v096-inactive-upload.json'
+          test "$(git show -s --format=%s HEAD)" = "release($ANEVUM_INACTIVE_PROFILE): upload inactive candidate only"
+          marker=".github/release-approvals/$ANEVUM_INACTIVE_PROFILE-inactive-upload.json"
           test "$(git diff-tree --no-commit-id --name-only -r HEAD)" = "$marker"
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
           import {readFileSync} from 'node:fs';
-          const a=JSON.parse(readFileSync('.github/release-approvals/v095-v096-inactive-upload.json','utf8'));
+          const profile=process.env.ANEVUM_INACTIVE_PROFILE;
+          assert.ok(['v095-v096','v100'].includes(profile));
+          const a=JSON.parse(readFileSync('.github/release-approvals/'+profile+'-inactive-upload.json','utf8'));
           assert.deepEqual(a,{
-            source_sha:'d5af32fd8f04b05e0381f7ac12c59d06c0e836a2',
+            source_sha:profile==='v100'?'28f163a0015631b1d8eb58922c03596ae8febd22':'d5af32fd8f04b05e0381f7ac12c59d06c0e836a2',
             release_branch:'release/v084-continuance-approved-20261019',
             worker:'anevum-apex-prelaunch-gateway',
             allow_inactive_version_upload:true,
@@ -105,6 +113,7 @@ jobs:
           JS
       - name: Lock live Cloudflare versions, secrets, D1 IDs and all 39 routes before upload
         env:
+          GH_TOKEN: ${{ github.token }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         shell: bash
@@ -131,7 +140,7 @@ jobs:
             --config "$RUNNER_TEMP/v095-v096-inactive/wrangler.upload.json" \
             --keep-vars \
             --strict \
-            --message "ANEVUM V095/V096 inactive only, merged source d5af32fd; no traffic promotion"
+            --message "ANEVUM inactive only, reviewed profile $ANEVUM_INACTIVE_PROFILE; no traffic promotion"
       - name: Fail closed unless Cloudflare confirms 100% previous release and 0% new candidate
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
