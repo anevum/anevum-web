@@ -8,15 +8,16 @@ import {readFileSync,writeFileSync,chmodSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {
- manifest,integratedBaseline,validateBaseline,validateUploadedCandidate,plainVars,databaseIds,signatures,verifyCandidateAssets
+ manifest,integratedBaseline,featureOnBaseline,FEATURE_ON_QA_HEAD,FEATURE_ON_QA_RUN,verifyFeatureOnFlags,verifyFeatureOnQa,verifyTestedFeatureOnBuild,validateFeatureOnBaseline,validateBaseline,validateUploadedCandidate,plainVars,databaseIds,signatures,verifyCandidateAssets
 } from './v095-inactive-candidate-gate.mjs';
 
 const PROFILE=process.env.ANEVUM_INACTIVE_PROFILE||'v095-v096';
-assert.ok(['v095-v096','v100'].includes(PROFILE),'Unknown inactive release profile');
-const INTEGRATED=PROFILE==='v100';
+assert.ok(['v095-v096','v100','v100-feature-on'].includes(PROFILE),'Unknown inactive release profile');
+const FEATURE_ON=PROFILE==='v100-feature-on';
+const INTEGRATED=PROFILE==='v100'||FEATURE_ON;
 const ORIGINAL='d5af32fd8f04b05e0381f7ac12c59d06c0e836a2';
 const PIN=INTEGRATED?'28f163a0015631b1d8eb58922c03596ae8febd22':ORIGINAL;
-const BASELINE=INTEGRATED?integratedBaseline:manifest;
+const BASELINE=FEATURE_ON?featureOnBaseline:INTEGRATED?integratedBaseline:manifest;
 const ALLOWED_META=[
  'creator-v1/ops/v091-controlled-pilot-upload.mjs',
  'tests/single-production-deploy.test.mjs',
@@ -39,6 +40,25 @@ const ALLOWED_META=[
  'creator-v1/test/v095-inactive-candidate-gate.test.mjs'
 ];
 if(INTEGRATED)ALLOWED_META.push('.github/release-approvals/v100-inactive-upload.json');
+if(FEATURE_ON)ALLOWED_META.push(
+ '.github/release-approvals/v100-feature-on-inactive-upload.json',
+ '.github/release-approvals/v100-entry-inactive-upload.json',
+ '.github/release-approvals/v100-observatory-inactive-upload.json',
+ '.github/release-evidence/v100-protected-entry-20261021.json',
+ '.github/workflows/iren-spatial-v097-qa.yml',
+ '.github/workflows/v100-acceptance-setup.yml',
+ '.github/workflows/v100-entry-inactive.yml',
+ 'creator-v1/ops/v100-acceptance-inventory.mjs',
+ 'creator-v1/ops/v100-entry-inactive.mjs',
+ 'creator-v1/ops/v100-observatory-reconcile.mjs',
+ 'creator-v1/ops/v100-observatory-ui-candidate.mjs',
+ 'creator-v1/test/capture-iren-spatial-v097.mjs',
+ 'creator-v1/test/capture-native-creator-v095.mjs',
+ 'creator-v1/test/v100-acceptance-inventory.test.mjs',
+ 'creator-v1/test/v100-entry-inactive.test.mjs',
+ 'creator-v1/test/v100-observatory-reconcile.test.mjs',
+ 'creator-v1/test/v100-observatory-ui-candidate.test.mjs'
+);
 const CF='https://api.cloudflare.com/client/v4';
 const worker='/accounts/'+manifest.account_id+'/workers/scripts/'+manifest.script;
 const routePath='/zones/'+manifest.zone_id+'/workers/routes';
@@ -49,19 +69,26 @@ function save(file,value){
  writeFileSync(file,JSON.stringify(value,null,2)+'\n',{mode:0o600});
  chmodSync(file,0o600);
 }
-function checkRepositorySource(){
+function checkRepositorySource(expectedHead=process.env.GITHUB_SHA){
  assert.equal(process.env.VITE_PACKAGE_CREATOR_GALLERY_V010,'true','Preserve approved package gallery build');
- assert.equal(process.env.VITE_NATIVE_CREATOR_STUDIO_V095,'false','Native Studio rollout is separately gated');
+ if(FEATURE_ON)verifyFeatureOnFlags(process.env);
+ else assert.equal(process.env.VITE_NATIVE_CREATOR_STUDIO_V095,'false','Native Studio rollout is separately gated');
  assert.equal(process.env.GITHUB_REPOSITORY,'anevum/anevum-web');
  assert.equal(process.env.CLOUDFLARE_ACCOUNT_ID,manifest.account_id);
  assert.equal(manifest.source_sha,ORIGINAL,'Preserve frozen V095/V096 record');
  assert.equal(manifest.release_parent_sha,ORIGINAL);
- if(INTEGRATED)assert.equal(process.env.VITE_IREN_SPATIAL_GUIDE,'false','IREN activation remains separately gated');
- assert.equal(git('rev-parse','HEAD'),process.env.GITHUB_SHA);
+ if(INTEGRATED&&!FEATURE_ON)assert.equal(process.env.VITE_IREN_SPATIAL_GUIDE,'false','IREN activation remains separately gated');
+ assert.equal(git('rev-parse','HEAD'),expectedHead);
  git('merge-base','--is-ancestor',PIN,'HEAD');
  const changed=git('diff','--name-only',PIN,'HEAD','--','.').split('\n').filter(Boolean);
  const unexpected=changed.filter(x=>!ALLOWED_META.includes(x));
  if(unexpected.length)fail('Application code differs from reviewed source: '+unexpected.join(', '));
+ if(FEATURE_ON){
+  git('merge-base','--is-ancestor',FEATURE_ON_QA_HEAD,'HEAD');
+  // Combined browser evidence is reusable only while every application byte
+  // remains identical. Only reviewed packaging/test metadata may differ.
+  git('diff','--exit-code',FEATURE_ON_QA_HEAD,'HEAD','--','creator-v1/web','creator-v1/apex-prelaunch','creator-v1/canonical-auth','site/alpha/v003');
+ }
  const production=readFileSync('.github/workflows/v084-continuance-production.yml','utf8');
  assert.ok(production.split(/\r?\n/).some(x=>x.trim()==='node creator-v1/ops/v091-release-acceptance.mjs'));
  assert.ok(!production.includes('node creator-v1/ops/v091-release-acceptance.mjs --source-only'));
@@ -70,7 +97,7 @@ function checkRepositorySource(){
  assert.equal(evidence.verified_at,null);
  for(const x of ['founder_staff_session','reviewer_staff_session','creator_journey','cross_account_identity'])
    assert.equal(evidence[x],false,'Do not infer human acceptance from source CI: '+x);
- return {HEAD:process.env.GITHUB_SHA,SOURCE:PIN,changed:changed.sort()};
+ return {HEAD:expectedHead,SOURCE:PIN,changed:changed.sort()};
 }
 async function requireIntegratedChecks(){
  if(!INTEGRATED)return;
@@ -85,6 +112,14 @@ async function requireIntegratedChecks(){
   'ANEVUM V083 Combined Auth + D1 Recovery Safety','IREN V097 Spatial Companion Isolated QA'])
   assert.ok(runs.some(x=>x.head_sha===PIN&&x.name===name&&x.status==='completed'&&x.conclusion==='success'),'Integrated source CI not successful: '+name);
  console.log('INTEGRATED_EXACT_SOURCE_CI=PASS');
+ if(FEATURE_ON){
+  const q=await fetch('https://api.github.com/repos/anevum/anevum-web/actions/runs/'+FEATURE_ON_QA_RUN,{
+   headers:{Accept:'application/vnd.github+json',...(process.env.GH_TOKEN?{Authorization:'Bearer '+process.env.GH_TOKEN}:{})},
+   signal:AbortSignal.timeout(20000),redirect:'error'});
+  if(!q.ok)fail('Unable to verify combined feature-ON QA');
+  verifyFeatureOnQa(await q.json());
+  console.log('COMBINED_FEATURE_ON_QA=PASS');
+ }
 }
 async function request(path){
  const token=process.env.CLOUDFLARE_API_TOKEN;
@@ -136,8 +171,10 @@ async function before(file,configFile){
  const source=checkRepositorySource();
  await requireIntegratedChecks();
  const build=verifyCandidateAssets('creator-v1/dist/web');
+ const testedBuild=FEATURE_ON?verifyTestedFeatureOnBuild('creator-v1/dist/web',readJson(process.env.ANEVUM_FEATURE_ON_BUILD_RECORD)):null;
+ if(FEATURE_ON)assert.equal(testedBuild.manifest_sha256,'f6ad9655bbdb1c1ff4a8761c5bca1ff8dc166f0f543da8fcae311743181605b9','Immutable tested build manifest changed');
  const snap=await readSnapshot();
- const result=validateBaseline(snap,BASELINE,{allowAcceptanceEntry:INTEGRATED});
+ const result=FEATURE_ON?validateFeatureOnBaseline(snap):validateBaseline(snap,BASELINE,{allowAcceptanceEntry:INTEGRATED});
  const versionList=await request(worker+'/versions?per_page=100');
  const existing=versionList.items?.map(x=>x.id);
  if(!Array.isArray(existing)||existing.length<2)fail('Version inventory incomplete');
@@ -145,7 +182,7 @@ async function before(file,configFile){
  assert.ok(existing.includes(manifest.prior_inactive_version.id));
  const cfg=configForUpload(snap);
  save(configFile,cfg);
- save(file,{source,baseline:snap,existing,build});
+ save(file,{source,baseline:snap,existing,build,...(FEATURE_ON?{testedBuild}:{})});
  console.log('INACTIVE_PREFLIGHT_PASS',JSON.stringify({
   source:PIN,routeCount:result.routeCount,bindings:result.bindings,
   deploymentId:snap.deployment.id,active:snap.deployment.versions[0].version_id,
@@ -157,6 +194,7 @@ async function after(file,receiptFile){
  const previous=readJson(file),beforeSnapshot=previous.baseline;
  assert.equal(previous.source.SOURCE,PIN);
  validateBaseline(beforeSnapshot,BASELINE,{allowAcceptanceEntry:INTEGRATED});
+ if(FEATURE_ON)validateFeatureOnBaseline(beforeSnapshot);
  const current=await readSnapshot();
  const items=(await request(worker+'/versions?per_page=100')).items||[];
  const newVersions=items.filter(x=>!previous.existing.includes(x.id));
@@ -188,12 +226,21 @@ async function after(file,receiptFile){
   production_activated:false,authenticated_acceptance:false,
   physical_iphone_tested:false,version_urls_enabled:false
  };
+ if(FEATURE_ON){
+  receipt.feature_flags=verifyFeatureOnFlags(process.env);
+  receipt.combined_qa_head=FEATURE_ON_QA_HEAD;
+  receipt.combined_qa_run=FEATURE_ON_QA_RUN;
+  receipt.profile=PROFILE;
+  receipt.tested_build=previous.testedBuild;
+ }
  if(INTEGRATED){delete receipt.binding_signatures;delete receipt.bound_databases;}
  save(receiptFile,receipt);
  console.log('INACTIVE_UPLOAD_VERIFIED',JSON.stringify({source:PIN,version:valid.candidateId,routeCount:current.routes.length,productionTrafficChanged:false,unverifiedHumanGates:true}));
 }
 const [mode,arg1,arg2]=process.argv.slice(2);
-if(mode==='audit'&&process.argv.length===3){
+if(mode==='verify-source'&&process.argv.length===3){
+ console.log(JSON.stringify(checkRepositorySource(process.env.ANEVUM_SOURCE_SHA||process.env.GITHUB_SHA)));
+}else if(mode==='audit'&&process.argv.length===3){
  checkRepositorySource();
  const snap=await readSnapshot();
  // Read-only reconciliation: report the actual deployment separately from

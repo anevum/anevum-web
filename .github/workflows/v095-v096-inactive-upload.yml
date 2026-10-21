@@ -7,6 +7,7 @@ on:
     paths:
       - .github/release-approvals/v095-v096-inactive-upload.json
       - .github/release-approvals/v100-inactive-upload.json
+      - .github/release-approvals/v100-feature-on-inactive-upload.json
 permissions:
   contents: read
   actions: read
@@ -17,16 +18,19 @@ jobs:
   upload-only:
     env:
       VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
-      VITE_NATIVE_CREATOR_STUDIO_V095: 'false'
-      VITE_IREN_SPATIAL_GUIDE: 'false'
+      VITE_NATIVE_CREATOR_STUDIO_V095: >-
+        ${{ github.event.head_commit.message == 'release(v100-feature-on): upload inactive candidate only' && 'true' || 'false' }}
+      VITE_IREN_SPATIAL_GUIDE: >-
+        ${{ github.event.head_commit.message == 'release(v100-feature-on): upload inactive candidate only' && 'true' || 'false' }}
       ANEVUM_INACTIVE_PROFILE: >-
-        ${{ github.event.head_commit.message == 'release(v100): upload inactive candidate only' && 'v100' || 'v095-v096' }}
+        ${{ github.event.head_commit.message == 'release(v100-feature-on): upload inactive candidate only' && 'v100-feature-on' || github.event.head_commit.message == 'release(v100): upload inactive candidate only' && 'v100' || 'v095-v096' }}
     if: >-
       github.repository == 'anevum/anevum-web' &&
       github.ref == 'refs/heads/release/v084-continuance-approved-20261019' &&
       github.actor == 'anevum' &&
       (github.event.head_commit.message == 'release(v095-v096): upload inactive candidate only' ||
-       github.event.head_commit.message == 'release(v100): upload inactive candidate only')
+       github.event.head_commit.message == 'release(v100): upload inactive candidate only' ||
+       github.event.head_commit.message == 'release(v100-feature-on): upload inactive candidate only')
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -56,17 +60,21 @@ jobs:
           import assert from 'node:assert/strict';
           import {readFileSync} from 'node:fs';
           const profile=process.env.ANEVUM_INACTIVE_PROFILE;
-          assert.ok(['v095-v096','v100'].includes(profile));
+          assert.ok(['v095-v096','v100','v100-feature-on'].includes(profile));
           const a=JSON.parse(readFileSync('.github/release-approvals/'+profile+'-inactive-upload.json','utf8'));
           assert.deepEqual(a,{
-            source_sha:profile==='v100'?'28f163a0015631b1d8eb58922c03596ae8febd22':'d5af32fd8f04b05e0381f7ac12c59d06c0e836a2',
+            source_sha:profile!=='v095-v096'?'28f163a0015631b1d8eb58922c03596ae8febd22':'d5af32fd8f04b05e0381f7ac12c59d06c0e836a2',
             release_branch:'release/v084-continuance-approved-20261019',
             worker:'anevum-apex-prelaunch-gateway',
             allow_inactive_version_upload:true,
             allow_route_changes:false,
             allow_traffic_promotion:false,
             allow_preview_urls:false,
-            confirmed_by:'anevum'
+            confirmed_by:'anevum',
+            ...(profile==='v100-feature-on'?{
+              build_flags:{VITE_IREN_SPATIAL_GUIDE:true,VITE_NATIVE_CREATOR_STUDIO_V095:true,VITE_PACKAGE_CREATOR_GALLERY_V010:true},
+              combined_qa_head:'9606760a1f04376b20cb86be18ee384cad862b8e',combined_qa_run:39613686430
+            }:{})
           });
           JS
           echo 'EXACT_OWNER_MARKER=PASS; NO_PRODUCTION_DEPLOYMENT_AUTHORIZED' >> "$GITHUB_STEP_SUMMARY"
@@ -78,7 +86,7 @@ jobs:
           node --check creator-v1/ops/v095-v096-cloudflare-ops.mjs
           node --test creator-v1/test/v095-inactive-candidate-gate.test.mjs creator-v1/test/v095-v096-acceptance-entry.test.mjs
           npm run check:creator-v1-web
-          VITE_NATIVE_CREATOR_STUDIO_V095=false npm run build:creator-v1-web
+          npm run build:creator-v1-web
           test -s creator-v1/dist/web/index.html
           test -z "$(find creator-v1/dist/web -name '*.map' -print -quit)"
           node --input-type=module <<'JS'
@@ -105,17 +113,41 @@ jobs:
             python src/build.py
           )
           python creator-v1/ops/install-evolution-v060.py
-          VITE_NATIVE_CREATOR_STUDIO_V095=false npm run build:creator-v1-web
+          npm run build:creator-v1-web
           node --input-type=module <<'JS'
           import {verifyCandidateAssets} from './creator-v1/ops/v095-inactive-candidate-gate.mjs';
           const build=verifyCandidateAssets('creator-v1/dist/web');
           console.log('COMPLETE_CANDIDATE_ASSETS',JSON.stringify({files:build.assets.length,sha256:build.sha256,earned:build.earned_media_count}));
           JS
-      - name: Lock live Cloudflare versions, secrets, D1 IDs and all 39 routes before upload
+      - name: Retrieve the immutable combined feature-ON QA artifact
+        if: env.ANEVUM_INACTIVE_PROFILE == 'v100-feature-on'
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12351188264'
+          run-id: 39613686430
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v100-feature-on-qa
+      - name: Package exactly the tested application bytes with preserved earned media
+        if: env.ANEVUM_INACTIVE_PROFILE == 'v100-feature-on'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp -a creator-v1/dist/web/evolution "$RUNNER_TEMP/v100-earned-media"
+          rm -rf creator-v1/dist/web
+          cp -a "$RUNNER_TEMP/v100-feature-on-qa/compiled-feature-on" creator-v1/dist/web
+          cp -a "$RUNNER_TEMP/v100-earned-media" creator-v1/dist/web/evolution
+          ANEVUM_FEATURE_ON_BUILD_RECORD="$RUNNER_TEMP/v100-feature-on-qa/build.json" node --input-type=module <<'JS'
+          import {readFileSync} from 'node:fs';
+          import {verifyTestedFeatureOnBuild,verifyCandidateAssets} from './creator-v1/ops/v095-inactive-candidate-gate.mjs';
+          console.log('EXACT_TESTED_FEATURE_ON_BUILD',JSON.stringify(verifyTestedFeatureOnBuild('creator-v1/dist/web',JSON.parse(readFileSync(process.env.ANEVUM_FEATURE_ON_BUILD_RECORD,'utf8')))));
+          verifyCandidateAssets('creator-v1/dist/web');
+          JS
+      - name: Lock live Cloudflare versions, secrets, D1 IDs and all existing routes before upload
         env:
           GH_TOKEN: ${{ github.token }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          ANEVUM_FEATURE_ON_BUILD_RECORD: ${{ runner.temp }}/v100-feature-on-qa/build.json
         shell: bash
         run: |
           set -euo pipefail

@@ -1,7 +1,7 @@
 name: ANEVUM V095/V096 Inactive Candidate Preflight
 on:
   push:
-    branches: [ops/v095-inactive-candidate-20261020-001, ops/v100-integrated-inactive-20261020-001]
+    branches: [ops/v095-inactive-candidate-20261020-001, ops/v100-integrated-inactive-20261020-001, ops/v100-feature-on-inactive-20261021-001]
     paths:
       - creator-v1/operations/v095-inactive-baseline-20261020.json
       - creator-v1/ops/v095-inactive-candidate-gate.mjs
@@ -26,9 +26,9 @@ jobs:
   validate:
     env:
       VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
-      VITE_NATIVE_CREATOR_STUDIO_V095: 'false'
-      VITE_IREN_SPATIAL_GUIDE: 'false'
-      ANEVUM_INACTIVE_PROFILE: ${{ (github.head_ref || github.ref_name) == 'ops/v100-integrated-inactive-20261020-001' && 'v100' || 'v095-v096' }}
+      VITE_NATIVE_CREATOR_STUDIO_V095: ${{ (github.head_ref || github.ref_name) == 'ops/v100-feature-on-inactive-20261021-001' && 'true' || 'false' }}
+      VITE_IREN_SPATIAL_GUIDE: ${{ (github.head_ref || github.ref_name) == 'ops/v100-feature-on-inactive-20261021-001' && 'true' || 'false' }}
+      ANEVUM_INACTIVE_PROFILE: ${{ (github.head_ref || github.ref_name) == 'ops/v100-feature-on-inactive-20261021-001' && 'v100-feature-on' || (github.head_ref || github.ref_name) == 'ops/v100-integrated-inactive-20261020-001' && 'v100' || 'v095-v096' }}
     if: github.repository == 'anevum/anevum-web'
     runs-on: ubuntu-latest
     timeout-minutes: 8
@@ -42,6 +42,8 @@ jobs:
         with:
           node-version: '22'
       - name: Verify application source remains the merged V095 + V096 revision
+        env:
+          ANEVUM_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         shell: bash
         run: |
           set -euo pipefail
@@ -63,8 +65,11 @@ jobs:
           assert.doesNotMatch(production,/node creator-v1\/ops\/v091-release-acceptance\.mjs --source-only/);
           JS
           source_pin='d5af32fd8f04b05e0381f7ac12c59d06c0e836a2'
-          if [ "$ANEVUM_INACTIVE_PROFILE" = 'v100' ]; then source_pin='28f163a0015631b1d8eb58922c03596ae8febd22'; fi
+          if [ "$ANEVUM_INACTIVE_PROFILE" != 'v095-v096' ]; then source_pin='28f163a0015631b1d8eb58922c03596ae8febd22'; fi
           git merge-base --is-ancestor "$source_pin" HEAD
+          if [ "$ANEVUM_INACTIVE_PROFILE" = 'v100-feature-on' ]; then
+            CLOUDFLARE_ACCOUNT_ID=2f7ee83107240152097efd956a4e8335 node creator-v1/ops/v095-v096-cloudflare-ops.mjs verify-source
+          else
           git diff --exit-code "$source_pin" HEAD -- . \
             ':(exclude)creator-v1/operations/v095-inactive-baseline-20261020.json' \
             ':(exclude)creator-v1/ops/v095-inactive-candidate-gate.mjs' \
@@ -86,6 +91,7 @@ jobs:
             ':(exclude).github/workflows/v096-public-alpha-qa.yml' \
             ':(exclude)creator-v1/ops/v091-controlled-pilot-upload.mjs' \
             ':(exclude)tests/single-production-deploy.test.mjs'
+          fi
           echo 'APP_SOURCE_STILL_MERGED_V095_V096=PASS' >> "$GITHUB_STEP_SUMMARY"
       - name: Run positive and negative inactive candidate preflight tests
         run: |
@@ -101,7 +107,7 @@ jobs:
           set -euo pipefail
           npm install --ignore-scripts --no-audit --no-fund
           npm run check:creator-v1-web
-          VITE_NATIVE_CREATOR_STUDIO_V095=false npm run build:creator-v1-web
+          npm run build:creator-v1-web
           test -s creator-v1/dist/web/index.html
           npx wrangler versions upload --dry-run \
             --config creator-v1/wrangler.apex-prelaunch.jsonc \

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {readFileSync,readdirSync,statSync} from 'node:fs';
+import {readFileSync,readdirSync,statSync,lstatSync} from 'node:fs';
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
 
@@ -39,6 +39,57 @@ export const integratedBaseline={...manifest,deployment:{
     {version_id:'3ba8602c-6616-49a4-af29-1efe60ad164a',percentage:0}
   ]
 }};
+// Independently re-read before preparing the feature-ON variant. Neither
+// historical profile is changed; this pins the current 100% public / 0% V100 pair.
+export const featureOnBaseline={...manifest,deployment:{
+ id:'d43ac90d-a3a0-49b9-8215-61581decb035',
+ versions:[
+  {version_id:'93cc7f07-cf39-457e-af69-c9f6f4c02d25',percentage:100},
+  {version_id:'8ed503b6-5df6-42a5-a536-63ccf928d25d',percentage:0}
+ ]
+}};
+export const FEATURE_ON_QA_HEAD='9606760a1f04376b20cb86be18ee384cad862b8e';
+export const FEATURE_ON_QA_RUN=39613686430;
+export function verifyTestedFeatureOnBuild(root,record){
+ assert.equal(record.application_source,'28f163a0015631b1d8eb58922c03596ae8febd22');
+ assert.equal(record.harness_source,FEATURE_ON_QA_HEAD);
+ assert.deepEqual(record.flags,{VITE_IREN_SPATIAL_GUIDE:true,VITE_NATIVE_CREATOR_STUDIO_V095:true,VITE_PACKAGE_CREATOR_GALLERY_V010:true});
+ assert.equal(record.syntheticOnly,true);
+ assert.equal(record.authenticatedAcceptance,false);
+ assert.equal(record.physicalDeviceAcceptance,false);
+ assert.equal(record.cloudflareCandidate,null);
+ assert.ok(Array.isArray(record.assets)&&record.assets.length>0);
+ const seen=new Set();
+ for(const asset of record.assets){
+  assert.ok(typeof asset.path==='string'&&/^[a-zA-Z0-9_./-]+$/.test(asset.path)&&!asset.path.startsWith('/')&&!asset.path.split('/').some(x=>x==='..'||x==='.'||!x),'Unsafe tested asset path');
+  assert.ok(!seen.has(asset.path),'Duplicate tested asset path');seen.add(asset.path);
+  let prefix=root;
+  for(const part of asset.path.split('/')){prefix=join(prefix,part);assert.ok(!lstatSync(prefix).isSymbolicLink(),'Tested asset symlink');}
+  assert.match(asset.sha256,/^[a-f0-9]{64}$/);
+  assert.equal(createHash('sha256').update(readFileSync(join(root,asset.path))).digest('hex'),asset.sha256,'Tested asset bytes changed: '+asset.path);
+ }
+ assert.ok(seen.has('index.html'),'Tested entry document missing');
+ return {qa_run:FEATURE_ON_QA_RUN,harness_source:FEATURE_ON_QA_HEAD,files:seen.size,manifest_sha256:createHash('sha256').update(JSON.stringify(record)).digest('hex')};
+}
+export function verifyFeatureOnFlags(env){
+ for(const name of ['VITE_PACKAGE_CREATOR_GALLERY_V010','VITE_NATIVE_CREATOR_STUDIO_V095','VITE_IREN_SPATIAL_GUIDE'])
+  assert.equal(env[name],'true','Feature-ON candidate flag mismatch: '+name);
+ return {VITE_PACKAGE_CREATOR_GALLERY_V010:true,VITE_NATIVE_CREATOR_STUDIO_V095:true,VITE_IREN_SPATIAL_GUIDE:true};
+}
+export function verifyFeatureOnQa(run){
+ assert.equal(run.id,FEATURE_ON_QA_RUN,'Unreviewed combined QA run');
+ assert.equal(run.head_sha,FEATURE_ON_QA_HEAD,'Combined QA source changed');
+ assert.equal(run.name,'IREN V097 Spatial Companion Isolated QA');
+ assert.equal(run.status,'completed');
+ assert.equal(run.conclusion,'success','Combined feature-ON QA must pass');
+}
+export function validateFeatureOnBaseline(snapshot){
+ const result=validateBaseline(snapshot,featureOnBaseline,{allowAcceptanceEntry:true});
+ const entry=snapshot.routes.filter(x=>x.pattern==='anevum.com/__enter/v095-v096*');
+ assert.equal(entry.length,1,'Feature-ON profile requires the existing protected entry');
+ assert.equal(entry[0].script,'anevum-v095-v096-acceptance-entry','Protected entry target drift');
+ return result;
+}
 export const normalizeRoutes=routes=>routes.map(({pattern,script,request_limit_fail_open})=>({pattern,script,request_limit_fail_open:request_limit_fail_open===true})).sort((a,b)=>a.pattern.localeCompare(b.pattern));
 export const signatures=bindings=>bindings.map(({name,type})=>({name,type})).sort((a,b)=>a.name.localeCompare(b.name));
 export const databaseIds=bindings=>Object.fromEntries(bindings.filter(x=>x.type==='d1').map(x=>[x.name,x.database_id]));
