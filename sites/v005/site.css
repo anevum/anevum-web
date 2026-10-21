@@ -46,3 +46,37 @@ body.v5 .cinematic-fallback .chamber-grain{inset:0;opacity:.24;background-image:
 @media(max-width:950px){body.v5 .hero{display:flex;min-height:820px;align-items:flex-start;padding-top:90px;padding-bottom:95px}body.v5 .hero-copy{max-width:740px}body.v5 .hero-visual{left:calc((100% - 100vw)/2);right:calc((100% - 100vw)/2);height:100%}body.v5 .hero-react-root{top:26%;bottom:-10%}body.v5 .hero-visual:before{background:linear-gradient(180deg,#080b10 0%,#080b10e8 24%,#080b1033 60%,transparent 87%),linear-gradient(90deg,#080b10d3,transparent 52%)}body.v5 .hero-visual:after{background:linear-gradient(0deg,#080b10 0%,transparent 17%)}body.v5 .hero-visual-top{top:auto;bottom:105px;right:25px;width:55%}body.v5 .hero-visual-bottom{bottom:68px;right:25px;width:50%}body.v5 .hero-footer{bottom:17px}}
 @media(max-width:650px){body.v5 .hero{min-height:860px;padding-top:55px;padding-bottom:88px}body.v5 .hero-copy{max-width:100%}body.v5 .hero h1{font-size:clamp(43px,11vw,66px);margin:21px 0 17px}body.v5 .hero-lead{font-size:14px;line-height:1.73;color:#d1ddd6}body.v5 .hero-copy .hero-actions{margin-top:24px}body.v5 .hero-labline{margin-top:21px}body.v5 .hero-visual{left:-17px;right:-17px}body.v5 .hero-react-root{top:32%;bottom:3%}body.v5 .hero-visual:before{background:linear-gradient(180deg,#080b10 0%,#080b10f7 23%,#080b1078 44%,#080b100d 69%,transparent 86%)}body.v5 .hero-visual-top{top:auto;bottom:94px;left:19px;right:19px;width:auto;font-size:8px}body.v5 .hero-visual-bottom{right:19px;left:19px;width:auto;bottom:61px;font-size:8px}body.v5 .hero-footer{bottom:22px}body.v5 .hero-footer span:first-child{font-size:8px}body.v5 .cinematic-fallback .chamber-portal{width:590px;height:590px;left:calc(55% - 295px);top:55%}body.v5 .cinematic-fallback .chamber-halo{left:calc(53% - 310px);top:calc(55% - 310px)}body.v5 .cinematic-fallback .artifact-shell{left:calc(53% - 180px);top:calc(53% - 180px)}body.v5 .cinematic-fallback .artifact-shell.shell-two{left:calc(53% - 211px);top:calc(53% - 211px)}body.v5 .cinematic-fallback .artifact-core{left:calc(53% - 116px);top:calc(53% - 116px)}body.v5 .cinematic-fallback .artifact-aperture{left:calc(53% - 137px);top:calc(53% - 137px)}body.v5 .cinematic-fallback .artifact-glow{left:calc(53% - 155px);top:calc(53% - 155px)}body.v5 .cinematic-fallback .chamber-dais{left:calc(53% - 380px);top:82%}body.v5 .demo-3d-stage{min-height:450px}body.v5 .cinematic-controls{left:10px;right:10px;gap:5px}body.v5 .cinematic-controls button{padding:8px;font-size:8px}}
 @media(prefers-reduced-motion:reduce){body.v5 .cinematic-fallback .artifact-shell{animation:none!important}body.v5 .cinematic-canvas{cursor:default}}
+
+/* V005.2: local business study directions. No client names, scripts or private previews. */
+body.v5 .field-studies{background:linear-gradient(180deg,#0e1319,#10171b 62%,#0c1016)}
+body.v5 .field-studies .section-intro{max-width:460px;color:#aab7b4}
+body.v5 .field-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:42px}
+body.v5 .field-card{border:1px solid #3b4948;background:linear-gradient(155deg,#182326,#0c1218);overflow:hidden;min-width:0;transition:transform .25s ease,border-color .25s ease}
+body.v5 .field-card:hover{transform:translateY(-4px);border-color:#93b5a4}
+body.v5 .field-visual{height:235px;position:relative;overflow:hidden;isolation:isolate;border-bottom:1px solid #ffffff20;background:radial-gradient(ellipse at 65% 35%,#b58f7950,transparent 55%),linear-gradient(135deg,#2c3439,#101922)}
+body.v5 .field-visual::before{content:"";position:absolute;inset:12% 22%;border:1px solid #ffffff38;border-radius:50%;transform:rotate(-28deg) scaleY(.42)}
+body.v5 .field-visual::after{content:"";position:absolute;inset:25% 29%;border:1px solid #ffffff25;border-radius:50%;transform:rotate(32deg) scaleY(.6)}
+body.v5 .field-visual-grid{position:absolute;inset:0;opacity:.5;background:repeating-linear-gradient(90deg,transparent 0 42px,#ffffff0a 43px),repeating-linear-gradient(0deg,transparent 0 42px,#ffffff0a 43px)}
+body.v5 .field-visual .field-object{position:absolute;top:26%;left:34%;width:34%;aspect-ratio:1;z-index:1;background:linear-gradient(145deg,#e9d1b0,#a27561 38%,#253239 78%);border-radius:30% 40% 28% 38%;transform:rotate(29deg);box-shadow:inset 0 0 25px #ffffff53,0 24px 75px #0008;animation:field-breathe 9s ease-in-out infinite alternate}
+body.v5 .field-visual .field-scan{position:absolute;z-index:2;inset:-40% 0 auto;height:60%;opacity:.2;transform:rotate(17deg);background:linear-gradient(transparent,#eafff5,transparent);animation:field-scan 13s ease-in-out infinite}
+body.v5 .field-visual .field-corner{position:absolute;bottom:18px;left:20px;font:600 10px "IBM Plex Mono",monospace;letter-spacing:.1em;color:#f5e9d6;z-index:3}
+body.v5 .field-pet .field-visual{background:radial-gradient(ellipse at 50% 47%,#d1b99e80,transparent 55%),linear-gradient(125deg,#566b59,#1c302c)}
+body.v5 .field-pet .field-visual .field-object{background:linear-gradient(140deg,#f4d6b7,#c39b78 50%,#556c5b);border-radius:51% 49% 39% 44%;transform:rotate(-14deg)}
+body.v5 .field-home .field-visual{background:radial-gradient(ellipse at 47% 30%,#cfe2ac67,transparent 50%),linear-gradient(130deg,#426349,#152d26)}
+body.v5 .field-home .field-visual .field-object{background:linear-gradient(125deg,#c2dbb1,#78957e 46%,#173e33 77%);clip-path:polygon(50% 0,100% 40%,100% 100%,0 100%,0 40%);border-radius:0;transform:rotate(-9deg)}
+body.v5 .field-copy{padding:28px;display:flex;flex-direction:column;min-height:247px}
+body.v5 .field-index{font:600 10px "IBM Plex Mono",monospace;letter-spacing:.13em;color:#cde8b3}
+body.v5 .field-copy h3{margin:22px 0 8px;font:600 clamp(19px,2vw,29px)/1.15 "Space Grotesk",sans-serif;letter-spacing:-.035em}
+body.v5 .field-copy p{font-size:13px;line-height:1.75;color:#adbcb7;margin:0 0 27px}
+body.v5 .field-status{font:500 9px "IBM Plex Mono",monospace;letter-spacing:.12em;color:#95ada7;margin-top:auto}
+body.v5 .field-status::before{content:"";display:inline-block;width:5px;height:5px;background:#d3dfbf;border-radius:50%;margin-right:9px;vertical-align:middle}
+body.v5 .field-footer{border-top:1px solid #344746;margin-top:28px;padding-top:25px;display:flex;justify-content:space-between;align-items:center;gap:35px}
+body.v5 .field-footer p{max-width:720px;font-size:12px;line-height:1.75;color:#a0afac}
+body.v5 .field-footer strong{color:#dde9dc;font-weight:600}
+body.v5 .field-footer .text-button{white-space:nowrap}
+@keyframes field-breathe{to{transform:translateY(-8px) rotate(40deg);filter:brightness(1.12)}}
+@keyframes field-scan{50%{transform:translateY(410px) rotate(17deg)}100%{transform:translateY(0) rotate(17deg)}}
+@media(max-width:990px){body.v5 .field-grid{grid-template-columns:repeat(2,minmax(0,1fr))}body.v5 .field-footer{display:block}body.v5 .field-footer .text-button{display:inline-flex;margin-top:12px}}
+@media(max-width:630px){body.v5 .field-grid{grid-template-columns:1fr;gap:13px;margin-top:24px}body.v5 .field-visual{height:210px}body.v5 .field-copy{min-height:180px;padding:20px}body.v5 .field-copy h3{margin-top:12px;font-size:24px}body.v5 .field-footer{padding-top:17px}}
+@media(prefers-reduced-motion:reduce){body.v5 .field-card{transition:none}body.v5 .field-card:hover{transform:none}body.v5 .field-visual .field-object,body.v5 .field-visual .field-scan{animation:none}}
+
