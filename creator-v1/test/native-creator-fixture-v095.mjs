@@ -85,5 +85,10 @@ export function createNativeFixture(){
    res.writeHead(upstreamResponse.status,h);res.end(Buffer.from(await upstreamResponse.arrayBuffer()));
   }catch(e){json(res,{error:'Synthetic fixture error: '+e.message},500);}
  });
- return {control,async start(){await new Promise((ok,fail)=>{server.once('error',fail);server.listen(4179,'127.0.0.1',ok);});},async close(){await new Promise(resolve=>server.close(resolve));server.closeAllConnections();}};
+ return {control,async start(){await new Promise((ok,fail)=>{server.once('error',fail);server.listen(4179,'127.0.0.1',ok);});},async close(){
+  const closed=new Promise(resolve=>server.close(resolve));
+  // Hung-read tests intentionally leave a socket open. Close it before waiting
+  // for shutdown, otherwise a successful recovery test never exits.
+  server.closeAllConnections();await closed;
+ }};
 }

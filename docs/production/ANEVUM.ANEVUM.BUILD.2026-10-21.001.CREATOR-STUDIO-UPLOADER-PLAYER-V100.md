@@ -59,10 +59,15 @@ export; that harness defect is repaired. Chromium fixture cleanup now waits for
 process exit and retries directory cleanup rather than failing on a timed race.
 
 Validation is tracked in the source-linked PR checks and V103 evidence artifact.
-Initial local checks: TypeScript passed; 91 integrated privacy/auth/Studio/
+Initial local checks: TypeScript passed; 92 integrated privacy/auth/Studio/
 compatibility tests passed. Additional compiled-browser evidence must identify
 the checked-out source and remain marked synthetic. Local dirty-tree captures
-are diagnostic only and are not an immutable release attestation.
+are diagnostic only and are not an immutable release attestation. A disposable
+SQLite backup/restore rehearsal also verifies 0012 and 0013 independently:
+existing accounts/projects/assets/receipts are preserved, migration retries are
+idempotent, no grants are issued, integrity and foreign keys pass, invitation
+and audit writes roll back together, and a pre-migration backup restores the
+original schema and data. This does not certify a live Cloudflare D1 restore.
 
 ## Migration and release boundaries
 

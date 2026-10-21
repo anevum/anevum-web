@@ -20,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
+      QA_SOURCE_BRANCH: ${{ github.head_ref || github.ref_name }}
       VITE_IREN_SPATIAL_GUIDE: 'true'
       VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
       VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
@@ -32,11 +33,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Pin reviewed V100 application source without rewriting application
+      - name: Preserve historical candidate pin and distinguish new-source regression evidence
         run: |
           set -euo pipefail
-          git merge-base --is-ancestor 28f163a0015631b1d8eb58922c03596ae8febd22 HEAD
-          git diff --exit-code 28f163a0015631b1d8eb58922c03596ae8febd22 HEAD -- creator-v1/web creator-v1/apex-prelaunch creator-v1/canonical-auth site/alpha/v003
+          if [ "$QA_SOURCE_BRANCH" = 'ops/v100-apex-root-qa-20261021-001' ]; then
+            git merge-base --is-ancestor 28f163a0015631b1d8eb58922c03596ae8febd22 HEAD
+            git diff --exit-code 28f163a0015631b1d8eb58922c03596ae8febd22 HEAD -- creator-v1/web creator-v1/apex-prelaunch creator-v1/canonical-auth site/alpha/v003
+          else
+            echo 'NEW_SOURCE_ROOT_REGRESSION_ONLY=true; HISTORICAL_UPLOAD_PIN_UNCHANGED=true' >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Install fixed toolchain and build site-root feature-ON bundle
         run: |
           set -euo pipefail
@@ -91,7 +96,7 @@ jobs:
           const browser=JSON.parse(readFileSync('evidence/v100-apex-root/acceptance.json','utf8'));
           if(browser.status!=='PASS'||!browser.results?.some(x=>x.width===390))throw Error('Missing actual root render');
           writeFileSync('evidence/v100-apex-root/build.json',JSON.stringify({
-            application_source:'28f163a0015631b1d8eb58922c03596ae8febd22',
+            application_source:process.env.QA_SOURCE_BRANCH==='ops/v100-apex-root-qa-20261021-001'?'28f163a0015631b1d8eb58922c03596ae8febd22':head,
             harness_source:head,asset_base:'/',runtime_path:'/',entry:'index.html',
             flags:{VITE_IREN_SPATIAL_GUIDE:true,VITE_NATIVE_CREATOR_STUDIO_V095:true,VITE_PACKAGE_CREATOR_GALLERY_V010:true},
             syntheticOnly:true,authenticatedAcceptance:false,physicalDeviceAcceptance:false,
