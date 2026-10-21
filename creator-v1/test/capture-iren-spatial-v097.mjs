@@ -68,7 +68,7 @@ try{
  const check=async (label,expr)=>{
   const result=await evaluate(expr);
   if(!result){
-   const geometry=label.includes("inside-")?await evaluate('(()=>{const e=document.querySelector(".ir80-help");if(!e)return "no-panel";const r=e.getBoundingClientRect(),p=e.parentElement?.getBoundingClientRect(),s=getComputedStyle(e);return JSON.stringify({viewport:[innerWidth,innerHeight],panel:[r.left,r.top,r.right,r.bottom,r.width,r.height],parent:p?[p.left,p.top,p.right,p.bottom,p.width,p.height]:null,computed:{width:s.width,maxHeight:s.maxHeight,right:s.right,bottom:s.bottom,boxSizing:s.boxSizing},className:e.className,outer:document.querySelector(".ir88-companion")?.className});})()'):"";
+   const geometry=(label.includes("inside-")||label.includes("docked-"))?await evaluate('(()=>{const e=document.querySelector(".ir80-help");if(!e)return "no-panel";const r=e.getBoundingClientRect(),p=e.parentElement?.getBoundingClientRect(),s=getComputedStyle(e);return JSON.stringify({viewport:[innerWidth,innerHeight],panel:[r.left,r.top,r.right,r.bottom,r.width,r.height],parent:p?[p.left,p.top,p.right,p.bottom,p.width,p.height]:null,computed:{width:s.width,maxHeight:s.maxHeight,right:s.right,bottom:s.bottom,boxSizing:s.boxSizing},className:e.className,outer:document.querySelector(".ir88-companion")?.className});})()'):"";
    throw Error("IREN_V097_FAILED_"+label+(geometry?" / "+geometry:""));
   }
  };
@@ -135,7 +135,7 @@ try{
     await evaluate('document.querySelector(".ir97-invite-actions button:first-child").click()');
     await until(()=>evaluate('!!document.querySelector(".ir97-speech-bubble")&&location.pathname.endsWith("/discover")'));
     await until(()=>evaluate('!!document.querySelector(".ir97-target-halo")'));
-    await check("first-contact-tour-opt-in",'document.querySelector(".ir97-bubble-line")?.textContent.includes("Find real, approved")');
+    await check("first-contact-tour-opt-in",'document.querySelector(".ir97-bubble-line")?.textContent.includes("Find approved")');
     await evaluate('document.querySelector(".ir97-subtle").click()');
     await until(()=>evaluate('!document.querySelector(".ir97-speech-bubble")'));
     await send("Page.navigate",{url:base+"/creator/"});
@@ -189,11 +189,12 @@ try{
   await until(()=>evaluate('!!document.querySelector(".ir97-target-halo")'));
   await until(()=>evaluate('!!document.querySelector(".ir97-guide-layer .ir88-figure.is-rendering")'),16000);
   await check("guide-single-real-webgl-"+width,'document.querySelectorAll(".ir88-3d-canvas").length===1');
-  await check("tour-step-"+width,'document.querySelector(".ir97-bubble-line")?.textContent.includes("Find real, approved")');
+  await check("tour-step-"+width,'document.querySelector(".ir97-bubble-line")?.textContent.includes("Find approved")');
   await check("non-blocking-guide-"+width,'(()=>{const e=document.querySelector(".ir97-guide-layer");return !!e&&getComputedStyle(e).pointerEvents==="none"&&!document.querySelector(".ir80-shade")&&!document.querySelector(".ir80-guide-card");})()');
   await check("guide-bubble-and-robot-visible-"+width,'(()=>{const b=document.querySelector(".ir97-speech-bubble"),r=document.querySelector(".ir97-floating-bot");return !!b&&!!r&&b.getBoundingClientRect().height>50&&r.getBoundingClientRect().height>30;})()');
   await check("real-target-uncovered-"+width,'(()=>{const target=document.querySelector(".ir97-target-halo");const bubble=document.querySelector(".ir97-speech-bubble"),bot=document.querySelector(".ir97-floating-bot");if(!target||!bubble||!bot)return false;const a=target.getBoundingClientRect(),b=bubble.getBoundingClientRect(),r=bot.getBoundingClientRect();const hit=(x,y)=>Math.max(0,Math.min(a.right,x.right)-Math.max(a.left,x.left))*Math.max(0,Math.min(a.bottom,x.bottom)-Math.max(a.top,x.top));return hit(b,r)===0&&hit(r,b)===0;})()');
   await check("animated-webgl-motion-enabled-"+width,'(()=>{const e=document.querySelector(".ir97-floating-bot");return !!e&&!matchMedia("(prefers-reduced-motion: reduce)").matches&&parseFloat(getComputedStyle(e).transitionDuration)>0;})()');
+  await check("search-and-community-controls-uncovered-"+width,'(()=>{const b=document.querySelector(".ir97-speech-bubble")?.getBoundingClientRect(),bot=document.querySelector(".ir97-floating-bot")?.getBoundingClientRect();if(!b||!bot)return false;const q=location.pathname.endsWith("/discover")?document.querySelector("#portal-project-query"):document.querySelector(".ch7-hero-actions a");if(!q)return false;const a=q.getBoundingClientRect();const overlap=x=>Math.max(0,Math.min(a.right,x.right)-Math.max(a.left,x.left))*Math.max(0,Math.min(a.bottom,x.bottom)-Math.max(a.top,x.top));return overlap(b)===0&&overlap(bot)===0;})()');
   await check("guide-no-focus-trap-"+width,'document.querySelector(".ir97-speech-bubble").getAttribute("role")==="region"');
   await check("tour-nonmodal-"+width,'document.querySelector(".ir97-speech-bubble").getAttribute("aria-modal")===null');
   await check("tour-inside-"+width,'(()=>{const r=document.querySelector(".ir97-speech-bubble").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1&&r.top>=0&&r.bottom<=innerHeight+1;})()');
@@ -231,6 +232,7 @@ try{
    await until(()=>evaluate('!!document.querySelector(".ir80-help")'));
    // Motion is enabled in V097 acceptance; measure AFTER dock/panel transitions settle.
    await pause(950);
+   await until(()=>evaluate('(()=>{const e=document.querySelector(".ir80-help");if(!e)return false;const r=e.getBoundingClientRect();return r.top>=0&&r.left>=0&&r.bottom<=innerHeight+1&&r.right<=innerWidth+1;})()'),4500);
    await check("docked-top-panel-bounds",'(()=>{const e=document.querySelector(".ir80-help"),r=e.getBoundingClientRect();return r.top>=0&&r.left>=0&&r.bottom<=innerHeight+1&&r.right<=innerWidth+1;})()');
    await check("docked-top-panel-flipped",'(()=>{const b=document.querySelector(".ir80-dock").getBoundingClientRect(),h=document.querySelector(".ir80-help").getBoundingClientRect();return h.top>=b.bottom-1;})()');
    await check("docked-clear-navigation",'(()=>{const b=document.querySelector(".ir80-dock").getBoundingClientRect(),h=document.querySelector(".av9-brand").getBoundingClientRect();return b.top>=h.bottom+2;})()');
