@@ -30,6 +30,15 @@ export function verifyCandidateAssets(root){
 }
 
 export const manifest=JSON.parse(readFileSync(new URL('../operations/v095-inactive-baseline-20261020.json',import.meta.url),'utf8'));
+// Independently read by reconciliation run 39542451154. Preserve the frozen
+// historical manifest; the integrated profile pins this exact later split.
+export const integratedBaseline={...manifest,deployment:{
+  id:'d4476123-1819-4379-8c59-d035b2841c04',
+  versions:[
+    {version_id:'93cc7f07-cf39-457e-af69-c9f6f4c02d25',percentage:100},
+    {version_id:'3ba8602c-6616-49a4-af29-1efe60ad164a',percentage:0}
+  ]
+}};
 export const normalizeRoutes=routes=>routes.map(({pattern,script,request_limit_fail_open})=>({pattern,script,request_limit_fail_open:request_limit_fail_open===true})).sort((a,b)=>a.pattern.localeCompare(b.pattern));
 export const signatures=bindings=>bindings.map(({name,type})=>({name,type})).sort((a,b)=>a.name.localeCompare(b.name));
 export const databaseIds=bindings=>Object.fromEntries(bindings.filter(x=>x.type==='d1').map(x=>[x.name,x.database_id]));

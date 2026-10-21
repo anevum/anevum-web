@@ -73,6 +73,7 @@ jobs:
             ':(exclude).github/workflows/v095-v096-inactive-preflight.yml' \
             ':(exclude).github/workflows/v095-v096-inactive-upload.yml' \
             ':(exclude).github/release-approvals/v095-v096-inactive-upload.json' \
+            ':(exclude).github/release-approvals/v100-inactive-upload.json' \
             ':(exclude).github/workflows/v084-continuance-production.yml' \
             ':(exclude).github/workflows/v091-live-readonly-qa.yml' \
             ':(exclude).github/release-evidence/v091-authenticated.json' \
