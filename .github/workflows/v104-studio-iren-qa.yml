@@ -1,0 +1,55 @@
+name: ANEVUM V104 Studio Front Door and IREN Frame QA
+on:
+  pull_request:
+    paths:
+      - creator-v1/web/src/App.tsx
+      - creator-v1/web/src/pages/CanonicalStudioPage.tsx
+      - creator-v1/web/src/pages/NativeCreatorStudio.tsx
+      - creator-v1/web/src/components/IrenLivingCanvas.tsx
+      - creator-v1/web/src/lib/iren-living-rig-v088.ts
+      - creator-v1/test/capture-iren-frame-v104.mjs
+      - creator-v1/test/capture-native-creator-v095.mjs
+      - .github/workflows/v104-studio-iren-qa.yml
+permissions:
+  contents: read
+jobs:
+  integrated-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VITE_IREN_SPATIAL_GUIDE: 'true'
+      VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
+      VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
+      VITE_CREATOR_WORKBENCH_ALPHA: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Check source and preserved private access contracts
+        run: |
+          npm run check:creator-v1-web
+          node --test creator-v1/test/iren-living-v088.test.mjs creator-v1/test/iren-spatial-v097.test.mjs creator-v1/test/private-read-recovery-v103.test.mjs
+          node --experimental-strip-types --test tests/native-creator-client-v095.test.mjs creator-v1/test/v100-forum-review-access-transport.test.mjs
+          npm run build:creator-v1-web:staging
+      - name: Verify real pixels, blank GPU recovery, entry routes and account isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/v104
+          node creator-v1/test/portal-offline-preview.mjs > evidence/v104/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          node creator-v1/test/capture-iren-frame-v104.mjs "$chrome" http://127.0.0.1:4178 evidence/v104/iren
+          node creator-v1/test/capture-native-creator-v095.mjs --chrome "$chrome" --output evidence/v104/studio --recovery
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v104-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/v104/
+          if-no-files-found: error

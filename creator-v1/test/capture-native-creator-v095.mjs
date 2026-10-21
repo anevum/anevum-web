@@ -166,9 +166,26 @@ try{
   fixture.control.set({actor:'owner',mode:'expiry',reset:true});await navigate('/projects/package/'+ids.project+'?preview=1');await until(()=>evaluate('!!document.querySelector("[data-native-player] iframe")||document.body.textContent.toLowerCase().includes("private playtest expired")'),'Expiring preview or immediate expiry');await until(()=>evaluate('document.body.textContent.toLowerCase().includes("private playtest expired")'),'Private capability expiry',10000);assert.equal(await visible('[data-native-player] iframe'),false);results.push({case:'expired-private-frame-removed',passed:true});
   for(const mode of ['unavailable','html']){fixture.control.set({actor:'owner',mode});await navigate('/studio/packages');await until(()=>visible('.av095-status'),'Unavailable mode');assert.equal(await visible('[data-native-project]'),false);await screenshot('native-'+mode+'-320');results.push({case:'fail-closed-'+mode,passed:true});}
  }
+ if(!disabled){
+  for(const [width,height] of [[1440,1000],[320,720]]){
+   fixture.control.set({actor:'owner',mode:'ready',reset:true});
+   await client.send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<641});
+   for(const path of ['/studio','/account/studio','/create']){
+    await navigate(path);await until(()=>visible('[data-native-creator] [data-native-project]'),'Unified Studio '+path);
+    assert.equal(await evaluate('location.pathname'),'/creator/studio');
+    assert.equal(await evaluate(`!!document.querySelector('.st-nav a[href="/creator/studio/records"]')`),true);
+   }
+   await layout('unified-studio-frontdoor',width);
+  }
+  fixture.control.set({actor:'other',mode:'ready'});await navigate('/studio');
+  await until(()=>evaluate('document.body.textContent.includes("limited to pilot creators")'),'Ordinary member Studio');
+  assert.equal(await visible('[data-native-project]'),false);
+  assert.equal(await evaluate(`!!document.querySelector('.st-panel a[href="/creator/studio/records"]')`),true);
+  results.push({case:'unified-studio-retains-member-record-access-without-upload-grant',passed:true});
+ }
  if(args.includes('--recovery')){
   fixture.control.set({actor:'owner',mode:'hang-canonical'});
-  await navigate('/studio');
+  await navigate('/studio/records');
   await until(()=>evaluate('document.body.textContent.includes("did not respond within 15 seconds")'),'Bounded canonical Studio read',22000);
   await screenshot('canonical-studio-timeout-320');
   fixture.control.set({mode:'canonical-records'});

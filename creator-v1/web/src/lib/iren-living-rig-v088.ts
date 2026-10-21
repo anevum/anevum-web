@@ -167,7 +167,7 @@ export class IrenLivingRig{
  private lightPulse=0;
  private view=I();
  private initialized=false;
- constructor(private readonly canvas:HTMLCanvasElement){
+ constructor(private readonly canvas:HTMLCanvasElement,private readonly onFailure:()=>void=()=>{}){
   const gl=canvas.getContext("webgl",{alpha:true,antialias:true,depth:true,
    premultipliedAlpha:false,desynchronized:true,powerPreference:"low-power"});
   if(!gl)throw Error("WebGL is unavailable");
@@ -197,6 +197,19 @@ export class IrenLivingRig{
   gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
   this.initialized=true;
   this.render();
+ }
+ /** A linked shader and draw call do not prove that a GPU produced a frame.
+  * Verify once while the drawing buffer is current, before hiding the vector.
+  * No readback is performed in the animation loop. */
+ verifyVisibleFrame(){
+  this.render();
+  const gl=this.gl;
+  if(gl.isContextLost()||gl.getError()!==gl.NO_ERROR)throw Error("IREN frame unavailable");
+  const pixels=new Uint8Array(this.canvas.width*this.canvas.height*4);
+  gl.readPixels(0,0,this.canvas.width,this.canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+  if(gl.getError()!==gl.NO_ERROR)throw Error("IREN frame readback unavailable");
+  for(let i=3;i<pixels.length;i+=4)if(pixels[i]>0)return;
+  throw Error("IREN frame is empty");
  }
  setMood(mood:IrenMood){if(this.mood!==mood){this.mood=mood;this.moodEnergy=1;this.lightPulse=1;this.render()}}
  setLook(x:number,y:number){
@@ -234,7 +247,7 @@ export class IrenLivingRig{
   this.look[1]=mix(this.look[1],this.lookTarget[1],smooth);
   this.moodEnergy=Math.max(0,this.moodEnergy-delta*.9);
   this.lightPulse=Math.max(0,this.lightPulse-delta*.6);
-  this.render();
+  try{this.render()}catch{this.dispose();this.onFailure();return}
   this.request=requestAnimationFrame(this.frame);
  };
  play(){
