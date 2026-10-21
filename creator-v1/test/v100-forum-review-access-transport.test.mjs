@@ -1,6 +1,9 @@
 /** Access handoff cannot grant permissions. These tests use local fetch stubs. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {fixture} from './helpers/canonical-fixture.mjs';
+import {canonicalForums} from '../canonical-auth/forums.mjs';
 import {ReviewTransportError,requestForumReview,describeForumReviewError}
  from '../web/src/lib/forum-review-transport-v100.ts';
 
@@ -92,4 +95,20 @@ test('unexpected manual POST redirect still fails closed',async()=>{
  const req=make(new Response(null,{status:302,headers:{location:'/other'}}));
  await kind(()=>requestForumReview('POST',{action:'reject'},undefined,req.fetcher),'access-verification');
  assert.equal(req.count(),1);
+});
+
+test('Access verification probe is read-only and cannot reveal the private reviewer queue',async()=>{
+ const page=readFileSync(new URL('../web/src/pages/ForumReviewPage.tsx',import.meta.url),'utf8');
+ assert.match(page,/href="\/api\/v1\/member\/forum-review\?access_check=1"/);
+ assert.doesNotMatch(page,/href="\/api\/v1\/member\/forum-review"/);
+ const f=fixture();
+ try{
+  f.db.exec(readFileSync(new URL('../canonical-auth/migrations/0006_member_community_forums.sql',import.meta.url),'utf8'));
+  const env={...f.env,CANONICAL_FORUM_ENABLED:'true',CANONICAL_FORUM_REVIEWER_IDS:'synthetic-reviewer'};
+  const reviewer={id:'synthetic-reviewer',emailVerified:true};
+  const probe=await canonicalForums(new Request('https://a.anevum.com/api/v1/member/forum-review?access_check=1',
+   {method:'GET'}),env,reviewer,1000);
+  assert.equal(probe.status,400);
+  assert.deepEqual(await probe.json(),{error:'Unexpected filters'});
+ }finally{f.db.close();}
 });
