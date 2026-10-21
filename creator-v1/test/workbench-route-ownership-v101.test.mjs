@@ -15,7 +15,8 @@ test('guest V096 /studio/alpha remains public and cannot become private Workbenc
  assert.match(app,/path="studio\/workbench" element=\{<Suspense fallback=\{creatorFallback\}><WorkbenchAlphaPage\/><\/Suspense>\}/);
  assert.doesNotMatch(workbench,/to="\/studio\/alpha"/);
  assert.match(workbench,/to="\/studio\/workbench"/);
- assert.match(app,/path="studio" element=\{<CanonicalStudioPage\/>\}/);
+ assert.match(app,/path="studio" element=\{nativeCreatorEnabled\?<Suspense/);
+ assert.match(app,/path="studio\/records" element=\{<CanonicalStudioPage\/>\}/);
 });
 
 test('private Workbench entry loads only behind Vite feature flag and server access',()=>{

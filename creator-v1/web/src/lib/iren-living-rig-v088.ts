@@ -387,9 +387,14 @@ export class IrenLivingRig{
   gl.depthMask(true);
  }
  dispose(){
+  if(this.stopped)return;
   this.stopped=true;this.pause();
-  for(const m of Object.values(this.meshes))this.gl.deleteBuffer(m.buffer);
-  this.gl.deleteProgram(this.program);
+  // Lost contexts already invalidated their resources. Do not issue driver
+  // deletion calls while handling the loss event.
+  if(!this.gl.isContextLost()){
+   for(const m of Object.values(this.meshes))this.gl.deleteBuffer(m.buffer);
+   this.gl.deleteProgram(this.program);
+  }
   this.meshes={} as Record<Primitive,Geometry>;
  }
 }
