@@ -127,11 +127,14 @@ jobs:
           run-id: 39613686430
           github-token: ${{ github.token }}
           path: ${{ runner.temp }}/v100-feature-on-qa
+          merge-multiple: true
       - name: Package exactly the tested application bytes with preserved earned media
         if: env.ANEVUM_INACTIVE_PROFILE == 'v100-feature-on'
         shell: bash
         run: |
           set -euo pipefail
+          test -s "$RUNNER_TEMP/v100-feature-on-qa/build.json"
+          test -s "$RUNNER_TEMP/v100-feature-on-qa/compiled-feature-on/index.html"
           cp -a creator-v1/dist/web/evolution "$RUNNER_TEMP/v100-earned-media"
           rm -rf creator-v1/dist/web
           cp -a "$RUNNER_TEMP/v100-feature-on-qa/compiled-feature-on" creator-v1/dist/web
