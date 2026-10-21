@@ -1,4 +1,4 @@
-import {type DragEvent,type FormEvent,useEffect,useRef,useState} from 'react';
+import {lazy,Suspense,type DragEvent,type FormEvent,useEffect,useRef,useState} from 'react';
 import {Link,useNavigate,useParams} from 'react-router-dom';
 import {canonicalAuthClient,canonicalMe,type CanonicalProfile} from '../lib/canonical-beta';
 import {
@@ -10,7 +10,9 @@ import {
 } from '../lib/canonical-studio';
 import './canonical-studio.css';
 import {nativeCreatorEnabled} from '../lib/native-creator-v095';
+import {workbenchAlphaEnabled} from '../lib/workbench-alpha';
 import {NativeStudioNavigation} from './NativeCreatorStudio';
+const WorkbenchAlphaEntryGate=lazy(()=>import('./WorkbenchAlpha').then(m=>({default:m.WorkbenchAlphaEntryGate})));
 
 const CATEGORY_GUIDE:Record<StudioCategory,string>={
  games:'Upload a browser-game ZIP or link an external HTTPS game. Private Studio ZIPs do not become playable automatically. An approved hosted release has a separate review and publication process.',
@@ -103,6 +105,7 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
    {canReview&&<Link to="/studio/review" aria-current={mode==='review'?'page':undefined}>REVIEW DESK</Link>}
    <Link to="/discover">DISCOVER ↗</Link>
   </nav>}
+  {workbenchAlphaEnabled&&<Suspense fallback={null}><WorkbenchAlphaEntryGate/></Suspense>}
   {mode==='list'&&<section className="st-panel st-create-paths" aria-label="Choose your creation workflow">
    <div className="st-section-head"><div><p className="st-kicker">CREATOR STUDIO / START HERE</p>
     <h2>One identity. Three ways to begin.</h2></div></div>
