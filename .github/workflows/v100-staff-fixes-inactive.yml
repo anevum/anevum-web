@@ -153,11 +153,11 @@ jobs:
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      V100_COMPILED_ROOT: ${{ runner.temp }}/candidate
-      V100_BUILD_RECORD: ${{ runner.temp }}/evidence/build.json
-      V100_BEFORE_FILE: ${{ runner.temp }}/before.json
-      V100_WRANGLER_FILE: ${{ runner.temp }}/wrangler-inactive.json
-      V100_RECEIPT_FILE: ${{ runner.temp }}/inactive-receipt.json
+      V100_COMPILED_ROOT: /tmp/anevum-v100/candidate
+      V100_BUILD_RECORD: /tmp/anevum-v100/evidence/build.json
+      V100_BEFORE_FILE: /tmp/anevum-v100/before.json
+      V100_WRANGLER_FILE: /tmp/anevum-v100/wrangler-inactive.json
+      V100_RECEIPT_FILE: /tmp/anevum-v100/inactive-receipt.json
     steps:
       - uses: actions/checkout@v4
         with:
@@ -194,11 +194,11 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: anevum-v100-staff-fixes-apex-root
-          path: ${{ runner.temp }}/candidate
+          path: /tmp/anevum-v100/candidate
       - uses: actions/download-artifact@v4
         with:
           name: anevum-v100-staff-fixes-qa-evidence
-          path: ${{ runner.temp }}/evidence
+          path: /tmp/anevum-v100/evidence
       - name: Validate exact browser-tested files and pinned Cloudflare state
         shell: bash
         run: |
@@ -206,7 +206,7 @@ jobs:
           npm install --ignore-scripts --no-audit --no-fund
           test -s "$V100_COMPILED_ROOT/index.html"
           test -s "$V100_BUILD_RECORD"
-          test -s "$RUNNER_TEMP/evidence/acceptance.json"
+          test -s "/tmp/anevum-v100/evidence/acceptance.json"
           node --check creator-v1/ops/v100-staff-fixes-inactive.mjs
           node creator-v1/ops/v100-staff-fixes-inactive.mjs before
       - name: Upload one immutable INACTIVE apex version without public deployment
@@ -229,6 +229,6 @@ jobs:
         if: always()
         with:
           name: anevum-v100-staff-fixes-inactive-receipt
-          path: ${{ runner.temp }}/inactive-receipt.json
+          path: /tmp/anevum-v100/inactive-receipt.json
           if-no-files-found: ignore
           retention-days: 14
