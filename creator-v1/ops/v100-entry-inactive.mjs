@@ -2,6 +2,8 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {writeFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import {pathToFileURL} from 'node:url';
 const ACCOUNT='2f7ee83107240152097efd956a4e8335';
 const ZONE='8abe27259b5436af5966d3b40d9a3760';
 const WORKER='anevum-v095-v096-acceptance-entry';
@@ -36,6 +38,7 @@ export function parseSource(download){
 }
 function same(a,b){return JSON.stringify(a)===JSON.stringify(b);}
 function deploymentVersions(a){return a?.deployments?.[0]?.versions;}
+function routesLock(routes){return [...routes].map(({pattern,script,request_limit_fail_open})=>({pattern,script,request_limit_fail_open})).sort((a,b)=>a.pattern.localeCompare(b.pattern));}
 function verifyState(s){
  assert.equal(s.apex.deployments?.[0]?.id,APEX,'Apex deployment drift');
  assert.ok(same(deploymentVersions(s.apex),[{version_id:'93cc7f07-cf39-457e-af69-c9f6f4c02d25',percentage:100},{version_id:NEXT,percentage:0}]),'Apex traffic drift');
@@ -100,10 +103,12 @@ export async function run({get,post,mode='check'}){
  const after=await snapshot(get);
  assert.deepEqual(deploymentVersions(after.entry),deploymentVersions(before.entry),'Entry traffic changed unexpectedly');
  assert.deepEqual(deploymentVersions(after.apex),deploymentVersions(before.apex),'Apex traffic changed unexpectedly');
- assert.equal(after.routes.length,before.routes.length,'Routes changed unexpectedly');
+ assert.deepEqual(routesLock(after.routes),routesLock(before.routes),'Routes changed unexpectedly');
  assert.equal(after.exposure.enabled,false);
  assert.equal(after.exposure.previews_enabled,false);
  assert.equal(after.versions.items?.[0]?.id,id);
+ assert.deepEqual(after.entry.deployments?.[0]?.id,before.entry.deployments?.[0]?.id,'Entry deployment replaced');
+ assert.deepEqual(after.apex.deployments?.[0]?.id,before.apex.deployments?.[0]?.id,'Apex deployment replaced');
  const candidate=await get(BASE+'/versions/'+id);
  const binds=candidate.resources?.bindings||[];
  assert.deepEqual(binds.map(x=>[x.name,x.type]).sort((a,b)=>a[0].localeCompare(b[0])),
@@ -113,7 +118,7 @@ export async function run({get,post,mode='check'}){
  if(process.env.RECEIPT_FILE)writeFileSync(process.env.RECEIPT_FILE,JSON.stringify(done)+'\n',{mode:0o600});
  return done;
 }
-if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
+if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){
  const mode=process.argv[2]||'check';
  assert.ok(['check','upload-inactive'].includes(mode));
  assert.equal(process.env.CLOUDFLARE_ACCOUNT_ID,ACCOUNT);
