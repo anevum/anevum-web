@@ -67,13 +67,17 @@ test("local canonical staff guards require sessions, active grants, explicit den
 test("remote inventory auditor makes read-only network calls and never promotes production",async ()=>{
  const original=globalThis.fetch;
  const calls=[];
- const account=JSON.parse(readFileSync("creator-v1/operations/staff-transport-v091.json","utf8")).account_id;
+ const manifest=JSON.parse(readFileSync("creator-v1/operations/staff-transport-v091.json","utf8"));
+ const account=manifest.account_id, zone=manifest.zone_id;
  globalThis.fetch=async (url,init={})=>{
   calls.push({url:String(url),method:init.method});
   if(String(url).includes("/accounts/"+account+"/access/apps?")){
    return new Response(JSON.stringify({success:true,result:[
     {id:"private-access-id",type:"self_hosted",domain:"anevum.com/staff*"}
    ],result_info:{total_pages:1}}),{status:200,headers:{"content-type":"application/json"}});
+  }
+  if(String(url).includes("/zones/"+zone+"/access/apps?")){
+   return new Response(JSON.stringify({success:true,result:[],result_info:{total_pages:1}}),{status:200,headers:{"content-type":"application/json"}});
   }
   if(String(url).startsWith("https://anevum.com/")){
    return new Response(null,{status:403,headers:{"cache-control":"private, no-store"}});
@@ -85,6 +89,7 @@ test("remote inventory auditor makes read-only network calls and never promotes 
   assert.equal(result.status,"READ_ONLY_AUDIT_COMPLETE");
   assert.equal(result.localGuards.allPassed,true);
   assert.equal(result.coverage.staffProtected,true);
+  assert.deepEqual(result.inventoryCounts,{account:1,zone:0});
   assert.equal(result.productionPromotion,false);
   assert.equal(result.cloudflarePolicyMutation,false);
   assert.equal(result.cloudflareWorkerMutation,false);
@@ -100,5 +105,19 @@ test("remote inventory errors and wrong account fail closed",async()=>{
  const old=globalThis.fetch;
  globalThis.fetch=async()=>new Response(JSON.stringify({success:false,errors:[{message:"Denied"}]}),{status:403});
  try{await assert.rejects(()=>audit({token:"test",account}),/CLOUDFLARE_ACCESS_API_HTTP_403/)}
+ finally{globalThis.fetch=old;}
+});
+
+test("a live staff Cloudflare challenge with no inventoried application fails closed",async()=>{
+ const m=JSON.parse(readFileSync("creator-v1/operations/staff-transport-v091.json","utf8"));
+ const old=globalThis.fetch;
+ globalThis.fetch=async (url,init={})=>{
+  if(String(url).includes("/access/apps?"))
+   return new Response(JSON.stringify({success:true,result:[],result_info:{total_pages:1}}),{status:200});
+  if(String(url).startsWith("https://anevum.com/staff"))
+   return new Response(null,{status:302,headers:{location:"https://example.cloudflareaccess.com/cdn-cgi/access/login"}});
+  return new Response(null,{status:401});
+ };
+ try{await assert.rejects(()=>audit({token:"test",account:m.account_id}),/CLOUDFLARE_ACCESS_COVERAGE_UNRESOLVED_/);}
  finally{globalThis.fetch=old;}
 });
