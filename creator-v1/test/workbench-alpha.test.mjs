@@ -134,7 +134,7 @@ test('audit failure rolls back the grant instead of granting unaudited access',a
 });
 test('canonical Worker wiring retains session resolution and independent feature gate',()=>{
  const source=readFileSync(new URL('../canonical-auth/worker.mjs',import.meta.url),'utf8');
- assert.match(source,/ownWorkbench&&env.CANONICAL_WORKBENCH_ALPHA_ENABLED!=="true"/);
+ assert.match(source,/ownWorkbench&&env\?\.CANONICAL_WORKBENCH_ALPHA_ENABLED!=="true"/);
  assert.match(source,/canonicalWorkbench\(clean,env,session.user\)/);
  assert.match(source,/sameOriginMutation\(request,env\)/);
  assert.doesNotMatch(source,/WORKBENCH_ALPHA_ENABLED\s*:\s*['"]true/);
