@@ -31,8 +31,8 @@ test("native founder link is present in all three React account navigation surfa
  assert.match(shortcut,/credentials:"same-origin"/);
  assert.match(shortcut,/data-native-staff-shortcut=/);
  assert.match(shortcut,/verified\?\.memberId!==memberId/);
- assert.match(shortcut,/data\?\.role==="owner"/);
- assert.match(shortcut,/data\?\.role==="reviewer"/);
+ assert.match(shortcut,/data\.role==="owner"/);
+ assert.match(shortcut,/data\.role==="reviewer"/);
  assert.doesNotMatch(shortcut,/(?:window\.)?localStorage\.(?:getItem|setItem)|sessionStorage\.(?:getItem|setItem)|role\s*=\s*['"]owner['"]|OWNER_EMAIL/);
 });
 test("native link stays hidden without a verified server-granted staff role",()=>{
