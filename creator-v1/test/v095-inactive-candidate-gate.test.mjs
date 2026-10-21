@@ -4,7 +4,7 @@ import {mkdtempSync,mkdirSync,writeFileSync,rmSync} from 'node:fs';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {
- manifest,integratedBaseline,normalizeRoutes,signatures,plainVars,databaseIds,
+ manifest,integratedBaseline,featureOnBaseline,verifyFeatureOnFlags,verifyFeatureOnQa,validateFeatureOnBaseline,normalizeRoutes,signatures,plainVars,databaseIds,
  validateBaseline,validateUploadedCandidate,verifyCandidateAssets
 } from '../ops/v095-inactive-candidate-gate.mjs';
 
@@ -188,4 +188,25 @@ test('integrated deployment reconciliation pins the observed split without weake
  assert.throws(()=>validateBaseline(changed,integratedBaseline,{allowAcceptanceEntry:true}),/Deployment changed/);
  const traffic=clone(b);traffic.deployment.versions[1].percentage=1;
  assert.throws(()=>validateBaseline(traffic,integratedBaseline,{allowAcceptanceEntry:true}),/Traffic distribution changed/);
+});
+test('feature-ON packaging requires its independently read current split and exact protected entry',()=>{
+ const b=base();b.deployment=clone(featureOnBaseline.deployment);
+ b.routes.push({pattern:'anevum.com/__enter/v095-v096*',script:'anevum-v095-v096-acceptance-entry',request_limit_fail_open:false});
+ assert.equal(validateFeatureOnBaseline(b).status,'BASELINE_PASS');
+ assert.throws(()=>validateBaseline(b,integratedBaseline,{allowAcceptanceEntry:true}),/Deployment changed/);
+ const wrong=clone(b);wrong.routes.at(-1).script='unreviewed-entry';
+ assert.throws(()=>validateFeatureOnBaseline(wrong),/Protected entry target drift/);
+ const traffic=clone(b);traffic.deployment.versions[0].percentage=99;
+ assert.throws(()=>validateFeatureOnBaseline(traffic),/Traffic distribution changed/);
+ const after=clone(b);after.exposure.previews_enabled=true;
+ assert.throws(()=>validateUploadedCandidate({before:b,after,candidate:candidate(),baseline:featureOnBaseline,allowAcceptanceEntry:true}),/Version upload changed preview exposure/);
+});
+test('feature-ON flags and successful combined evidence cannot be substituted with default-OFF or another source',()=>{
+ const flags={VITE_IREN_SPATIAL_GUIDE:'true',VITE_NATIVE_CREATOR_STUDIO_V095:'true',VITE_PACKAGE_CREATOR_GALLERY_V010:'true'};
+ assert.equal(verifyFeatureOnFlags(flags).VITE_IREN_SPATIAL_GUIDE,true);
+ for(const key of Object.keys(flags))assert.throws(()=>verifyFeatureOnFlags({...flags,[key]:'false'}),/flag mismatch/);
+ const run={id:39613686430,head_sha:'9606760a1f04376b20cb86be18ee384cad862b8e',name:'IREN V097 Spatial Companion Isolated QA',status:'completed',conclusion:'success'};
+ assert.doesNotThrow(()=>verifyFeatureOnQa(run));
+ for(const delta of [{id:39609857711},{head_sha:'28f163a0015631b1d8eb58922c03596ae8febd22'},{conclusion:'failure'},{status:'in_progress'}])
+  assert.throws(()=>verifyFeatureOnQa({...run,...delta}));
 });
