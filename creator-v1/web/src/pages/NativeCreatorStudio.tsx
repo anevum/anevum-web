@@ -7,6 +7,7 @@ import {
  readNativeQueue,readNativePlayback,uploadNativeBuild,nativeBuildAction,checkNativeFile,
  type NativeSession,type NativeProject,type NativePlayback,type BuildAction,type PackageCategory
 } from '../lib/native-creator-v095';
+import {inspectLocalBrowserBuild,type LocalCompatibilityReport} from '../lib/native-compatibility-v101';
 import './canonical-studio.css';
 import './native-creator-v095.css';
 const message=(e:unknown)=>e instanceof Error?e.message:'Creator Studio is temporarily unavailable.';
@@ -141,9 +142,24 @@ function BuildUpload({memberId,projectId}:{memberId:string;projectId?:string}){
  const [file,setFile]=useState<File|null>(null),[cover,setCover]=useState<File|null>(null),[coverUrl,setCoverUrl]=useState<string|null>(null);
  const [title,setTitle]=useState(''),[summary,setSummary]=useState(''),[category,setCategory]=useState<PackageCategory>('game');
  const [rights,setRights]=useState(false),[replace,setReplace]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ const [compatibility,setCompatibility]=useState<LocalCompatibilityReport|null>(null);
+ const [compatibilityError,setCompatibilityError]=useState(''),[checkingCompatibility,setCheckingCompatibility]=useState(false);
+ const compatibilityVersion=useRef(0);
  const initialized=useRef<string|null>(null);
  useEffect(()=>{if(project&&initialized.current!==project.id){initialized.current=project.id;setTitle(project.draftTitle||project.title);setSummary(project.draftSummary||project.summary);setCategory(project.draftCategory||project.category);}},[project]);
  useEffect(()=>{if(!cover){setCoverUrl(null);return;}const url=URL.createObjectURL(cover);setCoverUrl(url);return()=>URL.revokeObjectURL(url);},[cover]);
+ useEffect(()=>{
+  const version=++compatibilityVersion.current;
+  setCompatibility(null);setCompatibilityError('');
+  if(!file){setCheckingCompatibility(false);return;}
+  setCheckingCompatibility(true);
+  void inspectLocalBrowserBuild(file).then(result=>{
+   if(version===compatibilityVersion.current)setCompatibility(result);
+  }).catch(()=>{
+   if(version===compatibilityVersion.current)setCompatibilityError('The local file could not be inspected. Select a new browser export and retry.');
+  }).finally(()=>{if(version===compatibilityVersion.current)setCheckingCompatibility(false);});
+  return()=>{compatibilityVersion.current++;};
+ },[file]);
  const dirty=!!file||!!cover||rights;
  useEffect(()=>{if(!dirty)return;const warn=(e:BeforeUnloadEvent)=>{e.preventDefault();e.returnValue='';};addEventListener('beforeunload',warn);return()=>removeEventListener('beforeunload',warn);},[dirty]);
  async function submit(e:FormEvent<HTMLFormElement>){
@@ -152,6 +168,8 @@ function BuildUpload({memberId,projectId}:{memberId:string;projectId?:string}){
   if(cover&&(!/\.png$/i.test(cover.name)||cover.size<70||cover.size>3*1048576)){setError('Cover artwork must be a PNG between 70 bytes and 3 MiB.');return;}
   if(!rights){setError('Confirm your publication rights for this exact uploaded version.');return;}
   if(project?.draftReleaseId&&!replace){setError('Confirm replacement of the existing unsubmitted private build.');return;}
+  if(checkingCompatibility||!compatibility){setError('Complete the local compatibility check before uploading.');return;}
+  if(!compatibility.playableCandidate){setError('This file needs a browser-ready export before uploading. Review the local findings.');return;}
   if(!e.currentTarget.reportValidity())return;
   busyRef.current=true;setBusy(true);setError('');
   const form=new FormData();form.set('file',file!);form.set('title',title.trim());form.set('summary',summary.trim());form.set('category',category);form.set('rights_ack','yes');
@@ -169,6 +187,19 @@ function BuildUpload({memberId,projectId}:{memberId:string;projectId?:string}){
   <form onSubmit={e=>void submit(e)} aria-busy={busy}>
    <fieldset disabled={busy} className="av095-fields">
     <label className="av095-drop"><span className="st-kicker">01 / EXPORTED BROWSER BUILD</span><strong>{file?file.name:'Choose a ZIP or HTML file'}</strong><span>{file?bytes(file.size):'ZIP up to 20 MiB · HTML up to 5 MiB'}</span><input type="file" accept=".zip,.html,application/zip,text/html" required onChange={e=>{setFile(e.target.files?.[0]||null);setRights(false);setError('');}}/></label>
+    {file&&<section className="av095-preflight" aria-label="Local compatibility findings" aria-live="polite">
+     <p className="st-kicker">LOCAL COMPATIBILITY / ADVISORY</p>
+     {checkingCompatibility&&<p role="status">Inspecting browser package structure on this device…</p>}
+     {compatibilityError&&<p role="alert" className="st-error">{compatibilityError}</p>}
+     {compatibility&&<>
+      <strong>{compatibility.playableCandidate?'Browser build candidate':'Not ready for playable upload'}</strong>
+      <p>Detected runtime: {pretty(compatibility.runtime)} · Entry: {compatibility.entrypoint||'Not detected'}</p>
+      {compatibility.issues.length>0&&<ul>{compatibility.issues.map((issue,index)=><li key={issue.code+index}>
+       <strong>{issue.severity.toUpperCase()} / {issue.code}</strong><span>{issue.message}</span><small>{issue.fix}</small>
+      </li>)}</ul>}
+      <small>Local inspection only. No data is uploaded until you submit. This is not security review, malware scanning, mobile certification or publication approval.</small>
+     </>}
+    </section>}
     <div className="av095-form-grid"><label className="st-field"><span>Project title</span><input required minLength={3} maxLength={100} value={title} onChange={e=>setTitle(e.target.value)}/></label><label className="st-field"><span>Type</span><select value={category} onChange={e=>setCategory(e.target.value as PackageCategory)}><option value="game">Game</option><option value="app">Application</option><option value="simulation">Simulation</option><option value="story">Interactive story</option></select></label></div>
     <label className="st-field"><span>What can someone do in it?</span><textarea required minLength={10} maxLength={500} value={summary} onChange={e=>setSummary(e.target.value)}/></label>
     <label className="st-field"><span>Cover artwork — optional</span><input type="file" accept=".png,image/png" onChange={e=>{setCover(e.target.files?.[0]||null);setRights(false);}}/><small>Original PNG. Up to 3 MiB. At least 640 × 360 pixels. The server verifies image structure.</small></label>
@@ -176,7 +207,7 @@ function BuildUpload({memberId,projectId}:{memberId:string;projectId?:string}){
     {project?.draftReleaseId&&<label className="av095-confirm"><input type="checkbox" checked={replace} required onChange={e=>setReplace(e.target.checked)}/><span>Replace the existing unsubmitted private build. It remains available if this upload fails; the approved public version remains live.</span></label>}
     <label className="av095-confirm"><input type="checkbox" checked={rights} required onChange={e=>setRights(e.target.checked)}/><span>I own this project or have permission to publish its code, artwork, audio and other included files.</span></label>
     <p className="st-muted">Rights are confirmed separately for every version. This does not replace independent content and security review.</p>
-    <button className="st-action av095-primary" type="submit" disabled={!file||!rights||busy}>{busy?'Uploading and validating…':'Prepare private playtest'}</button>
+    <button className="st-action av095-primary" type="submit" disabled={!file||!rights||busy||checkingCompatibility||!compatibility?.playableCandidate}>{busy?'Uploading and validating…':checkingCompatibility?'Checking local build…':'Prepare private playtest'}</button>
    </fieldset>
    {busy&&<p role="status">Keep this page open. The server is checking the archive and storing the complete private revision.</p>}
    {error&&<div role="alert" className="st-error"><p>{error}</p><Link to="/studio/packages">Check your existing builds before retrying</Link></div>}

@@ -9,3 +9,18 @@
 @media(max-width:800px){.av095-upload-grid{grid-template-columns:1fr}.av095-library-head{align-items:flex-start;flex-direction:column}.av095-player iframe{height:62dvh;min-height:300px}}
 @media(max-width:500px){.av095-form-grid{grid-template-columns:1fr;gap:0}.av095-card-body{padding:1rem}.av095-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.av095-actions>*{min-width:0;width:100%;padding:.7rem}.av095-actions>:only-child,.av095-actions>:last-child:nth-child(odd){grid-column:1/-1}.av095-drop{padding:1rem}.av095-native .st-header h1{font-size:clamp(1.8rem,8vw,2.7rem)}.av095-player-controls>button{flex:1}.av095-player iframe{height:59dvh}.av095-decision .av095-actions{display:flex}.av095-decision .av095-actions>*{flex:1}}
 @media(prefers-reduced-motion:reduce){.av095-native *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* V101 / local-only V005 compatibility advisory: no file content ever sent
+   to a service until the creator explicitly submits their private build. */
+.av095-preflight{border:1px solid rgba(138,197,211,.37);border-radius:12px;
+ padding:clamp(13px,2.5vw,22px);margin:10px 0 21px;
+ background:linear-gradient(148deg,rgba(51,86,108,.17),rgba(12,22,39,.64))}
+.av095-preflight>strong{display:block;color:var(--st-cyan);font-size:1.05rem;margin:9px 0}
+.av095-preflight>p:not(.st-kicker),.av095-preflight>small{color:var(--st-muted);line-height:1.6}
+.av095-preflight ul{margin:15px 0;padding:0;list-style:none;display:grid;gap:10px}
+.av095-preflight li{display:grid;gap:5px;padding:12px;background:rgba(6,13,26,.55);
+ border-left:3px solid rgba(140,197,215,.55);border-radius:5px;overflow-wrap:anywhere}
+.av095-preflight li strong{font-size:.7rem;letter-spacing:.1em;color:var(--st-rose)}
+.av095-preflight li span{font-size:.88rem;line-height:1.45;color:var(--st-text)}
+.av095-preflight li small{font-size:.78rem;line-height:1.4;color:var(--st-muted)}
+@media(max-width:540px){.av095-preflight{padding:14px}.av095-preflight li{padding:10px}}

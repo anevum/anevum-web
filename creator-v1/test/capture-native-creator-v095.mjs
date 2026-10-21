@@ -132,6 +132,15 @@ try{
   fixture.control.set({mode:'upload-error'});await navigate('/studio/packages/new');await until(()=>visible('.av095-upload-grid'),'Upload form');
   const uploadPath=join(output,'synthetic-upload.html');writeFileSync(uploadPath,'<!doctype html><html><body><button>SYNTHETIC UPLOAD</button></body></html>');
   await client.send('DOM.enable');const {root}=await client.send('DOM.getDocument');const {nodeId}=await client.send('DOM.querySelector',{nodeId:root.nodeId,selector:'.av095-drop input'});await client.send('DOM.setFileInputFiles',{nodeId,files:[uploadPath]});
+  const beforeLocalProbe=fixture.control.trace().filter(x=>x.path.endsWith('/upload')).length;
+  await until(()=>evaluate('document.querySelector(".av095-preflight strong")?.textContent==="Browser build candidate"'),
+    'Local HTML compatibility findings');
+  assert.equal(await evaluate('document.body.textContent.includes("AEP_HTML_DEPENDENCIES_UNVERIFIED")'),true,
+    'Standalone HTML must warn about unverified dependencies');
+  assert.equal(fixture.control.trace().filter(x=>x.path.endsWith('/upload')).length,beforeLocalProbe,
+    'Choosing a file must not upload project bytes');
+  await screenshot('native-local-compatibility-320');
+  results.push({case:'local-v005-compatibility-with-no-upload',passed:true});
   await formValue('.av095-form-grid input','NATIVE UPLOAD SYNTHETIC QA');await formValue('.av095-upload-grid textarea','A disposable browser fixture for this integration test.');
   await evaluate('document.querySelector(".av095-upload-grid .av095-confirm input").click()');await clickText('Prepare private playtest');
   await until(()=>evaluate('document.body.textContent.includes("Synthetic upload quota")'),'Upload failure');
