@@ -73,7 +73,7 @@ try{
   }
  };
  await send("Page.enable");await send("Runtime.enable");
- await send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:"reduce"}]});
+ await send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:"no-preference"}]});
  for(const [width,height] of [[320,720],[390,844],[768,1024],[1440,900]]){
   await send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:1,mobile:width<700});
   // Each viewport exercises a genuinely fresh visitor. Prior viewport history
@@ -129,6 +129,7 @@ try{
   await check("first-contact-one-companion-"+width,'document.querySelectorAll(".ir87-scout").length===1');
   await check("first-contact-no-modal-"+width,'!document.querySelector(".ir97-speech-bubble")');
   await check("first-contact-inside-viewport-"+width,'(()=>{const r=document.querySelector(".ir97-invite").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1&&r.top>=0&&r.bottom<=innerHeight+1;})()');
+  await check("first-contact-robot-visible-above-chrome-"+width,'(()=>{const r=document.querySelector(".ir97-invite-active .ir80-dock")?.getBoundingClientRect();return !!r&&r.width>=78&&r.bottom<=innerHeight-66;})()');
   await capture("iren-first-contact-"+width);
   if(width===320){
     await evaluate('document.querySelector(".ir97-invite-actions button:first-child").click()');
@@ -192,6 +193,7 @@ try{
   await check("non-blocking-guide-"+width,'(()=>{const e=document.querySelector(".ir97-guide-layer");return !!e&&getComputedStyle(e).pointerEvents==="none"&&!document.querySelector(".ir80-shade")&&!document.querySelector(".ir80-guide-card");})()');
   await check("guide-bubble-and-robot-visible-"+width,'(()=>{const b=document.querySelector(".ir97-speech-bubble"),r=document.querySelector(".ir97-floating-bot");return !!b&&!!r&&b.getBoundingClientRect().height>50&&r.getBoundingClientRect().height>30;})()');
   await check("real-target-uncovered-"+width,'(()=>{const target=document.querySelector(".ir97-target-halo");const bubble=document.querySelector(".ir97-speech-bubble"),bot=document.querySelector(".ir97-floating-bot");if(!target||!bubble||!bot)return false;const a=target.getBoundingClientRect(),b=bubble.getBoundingClientRect(),r=bot.getBoundingClientRect();const hit=(x,y)=>Math.max(0,Math.min(a.right,x.right)-Math.max(a.left,x.left))*Math.max(0,Math.min(a.bottom,x.bottom)-Math.max(a.top,x.top));return hit(b,r)===0&&hit(r,b)===0;})()');
+  await check("animated-webgl-motion-enabled-"+width,'(()=>{const e=document.querySelector(".ir97-floating-bot");return !!e&&!matchMedia("(prefers-reduced-motion: reduce)").matches&&parseFloat(getComputedStyle(e).transitionDuration)>0;})()');
   await check("guide-no-focus-trap-"+width,'document.querySelector(".ir97-speech-bubble").getAttribute("role")==="region"');
   await check("tour-nonmodal-"+width,'document.querySelector(".ir97-speech-bubble").getAttribute("aria-modal")===null');
   await check("tour-inside-"+width,'(()=>{const r=document.querySelector(".ir97-speech-bubble").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1&&r.top>=0&&r.bottom<=innerHeight+1;})()');
