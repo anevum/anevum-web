@@ -91,7 +91,7 @@ export function placeIrenSpatialGuide(
       const obstacleOverlap=(options.obstacles??[]).reduce((sum,item)=>finiteRect(item)?
         sum+intersection(bubbleRect,item)*1.3+intersection(botRect,item):sum,0);
       const distance=target?Math.hypot(botLeft+botWidth/2-centerX,botTop+botHeight/2-centerY):0;
-      const score=targetOverlap*45+obstacleOverlap*18+overflow*1.5+
+      const score=(targetOverlap>0?1_000_000_000+targetOverlap*45:0)+obstacleOverlap*18+overflow*1.5+
         distance*.045+proposal.order*.2;
       if(!best||score<best.score){
         best={bubbleLeft,botLeft,top:y,score,side,overlap:targetOverlap+obstacleOverlap};
