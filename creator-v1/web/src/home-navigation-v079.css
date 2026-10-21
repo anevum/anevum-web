@@ -354,4 +354,8 @@
     font-size:11px;line-height:1.55;
   }
   .av9-shell .av9-footer a{font-size:12px}
+  /* Keep the closing navigation readable above the fixed IREN scout. */
+  .av9-shell .site-footer.av9-footer{
+    padding-bottom:calc(102px + env(safe-area-inset-bottom));
+  }
 }
