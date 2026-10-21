@@ -1,5 +1,4 @@
 import {useEffect,useState} from "react";
-import {Link} from "react-router-dom";
 import {canonicalAuthClient} from "../lib/canonical-beta";
 
 /**
@@ -81,12 +80,14 @@ export function VerifiedStaffShortcut({location="profile"}:{location?:"profile"|
   const label=verified.role==="reviewer"?"MODERATOR PORTAL":
     verified.designation==="founder"?"FOUNDER CONSOLE":"OWNER CONSOLE";
   const destination=verified.role==="reviewer"?"/staff":"/staff/observatory";
-  return <Link className={"av99-native-staff-link av99-native-staff-link--"+location}
-    to={destination} data-native-staff-shortcut={verified.role}
+  // Staff pages belong to separately routed Workers, outside the React app.
+  // A document navigation is required to reach their server authorization gate.
+  return <a className={"av99-native-staff-link av99-native-staff-link--"+location}
+    href={destination} data-native-staff-shortcut={verified.role}
     aria-label={label+" — staff operations and analytics"}>
     <span className="av99-native-staff-mark" aria-hidden="true">◇</span>
     <span className="av99-native-staff-copy"><strong>{label}</strong>
       <small>{verified.role==="owner"?"Staff operations and analytics":"Authorized review operations"}</small></span>
     <span aria-hidden="true" className="av99-native-staff-arrow">↗</span>
-  </Link>;
+  </a>;
 }

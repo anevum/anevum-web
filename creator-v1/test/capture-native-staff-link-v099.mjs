@@ -32,6 +32,7 @@ const stub=[
 const out=await build({
  stdin:{contents:entry,resolveDir:process.cwd(),sourcefile:"v099-qa-entry.tsx",loader:"tsx"},
  bundle:true,platform:"browser",target:["chrome120"],format:"iife",write:false,logLevel:"silent",
+ outfile:"v099-qa.js",jsx:"automatic",
  define:{"process.env.NODE_ENV":'"production"'},
  plugins:[{name:"replace-auth",setup(x){
    x.onResolve({filter:/^\.\.\/lib\/canonical-beta$/},()=>({path:"qa-canonical-beta",namespace:"qa"}));
@@ -42,7 +43,13 @@ const js=out.outputFiles.find(x=>x.path.endsWith(".js"))?.text;
 if(!js||js.length<3000)throw Error("V099_BUNDLE_MISSING");
 const css=readFileSync("creator-v1/web/src/staff-verified-shortcut-v099.css","utf8");
 const page='<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">'+
- '<link href="/qa.css" rel="stylesheet"></head><body><div id="root"></div><script src="/qa.js" defer></script></body></html>';
+ '<link href="/qa.css" rel="stylesheet"></head><body><div id="root"></div><script src="/qa.js" defer></script><script>'+
+ // Click the actual mounted anchor inside BrowserRouter. An href-only assertion
+ // cannot detect client interception of a separately routed Worker document.
+ 'const slot=new URLSearchParams(location.search).get("click");if(slot){'+
+ 'const attempt=()=>{const a=document.querySelector("[data-qa-slot="+slot+"] a");'+
+ 'if(a)a.click();else setTimeout(attempt,50)};setTimeout(attempt,50)}'+
+ '</script></body></html>';
 const style='body{background:#07111f;color:#edf3f5;font:14px system-ui;margin:0}main{padding:24px;margin:auto;max-width:780px}'+
  'main>div,main>section{margin:18px 0;padding:14px;border:1px solid #576c81;border-radius:12px}\n'+css;
 let mode="guest",hits=[];
@@ -55,6 +62,10 @@ const server=createServer((req,res)=>{
  if(u.pathname==="/qa")return send(200,page,"text/html");
  if(u.pathname==="/qa.js")return send(200,js,"application/javascript");
  if(u.pathname==="/qa.css")return send(200,style,"text/css");
+ if((u.pathname==="/staff"&&!u.search)||u.pathname==="/staff/observatory"){
+   hits.push(mode+":document:"+u.pathname);
+   return send(200,'<!doctype html><title>Isolated staff Worker</title><h1>STAFF_WORKER_DOCUMENT_LOADED</h1>',"text/html");
+ }
  if(u.pathname==="/__anevum_profile_staff_role_v001"){
    hits.push(mode+":primary");
    if(mode==="founder")return send(200,JSON.stringify({role:"owner",designation:"founder"}));
@@ -121,9 +132,24 @@ try{
   }
   console.log("V099_NATIVE_CHROME_"+id.toUpperCase().replaceAll("-","_")+"=PASS");
  }
+ const navigation=[];
+ for(const scenario of ["founder","reviewer"]){
+  mode=scenario;
+  for(const slot of ["toolbar","atlas","menu"]){
+   const path=scenario==="founder"?"/staff/observatory":"/staff";
+   const before=hits.length;
+   const dom=(await launch(chrome,["--headless=new","--no-sandbox","--disable-dev-shm-usage","--disable-gpu",
+     "--disable-background-networking","--no-first-run","--disable-extensions","--virtual-time-budget=5200",
+     "--user-data-dir="+join(tmp,scenario+"-click-"+slot),"--dump-dom",
+     base+"/qa?scenario="+scenario+"&click="+slot],{timeout:25000,maxBuffer:5_000_000})).stdout;
+   test.ok(dom.includes("STAFF_WORKER_DOCUMENT_LOADED"),"V099_CLICK_DID_NOT_LOAD_STAFF_WORKER_"+scenario+"_"+slot);
+   test.ok(hits.slice(before).includes(scenario+":document:"+path),"V099_NO_SERVER_DOCUMENT_REQUEST_"+scenario+"_"+slot);
+   navigation.push({scenario,slot,path,documentLoaded:true,passed:true});
+  }
+ }
  writeFileSync(join(destination,"native-link-acceptance.json"),JSON.stringify({
    source:"isolated loopback React + real Chrome, synthetic role/grant fixtures",
-   pass:true,productionRequests:0,productionWrites:0,evidence
+   pass:true,productionRequests:0,productionWrites:0,evidence,navigation
  },null,2));
  console.log("V099_VERIFIED_STAFF_LINK_REAL_BROWSER=PASS");
 }finally{

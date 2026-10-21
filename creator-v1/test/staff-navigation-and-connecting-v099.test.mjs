@@ -30,6 +30,9 @@ test("native founder link is present in all three React account navigation surfa
  assert.match(shortcut,/__anevum_profile_staff_role_v001/);
  assert.match(shortcut,/credentials:"same-origin"/);
  assert.match(shortcut,/data-native-staff-shortcut=/);
+ assert.match(shortcut,/return <a className=/);
+ assert.match(shortcut,/href=\{destination\}/);
+ assert.doesNotMatch(shortcut,/import \{Link\}|<Link\b/);
  assert.match(shortcut,/verified\?\.memberId!==memberId/);
  assert.match(shortcut,/data\.role==="owner"/);
  assert.match(shortcut,/data\.role==="reviewer"/);

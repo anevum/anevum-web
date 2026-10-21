@@ -12,6 +12,7 @@ on:
       - 'creator-v1/web/src/staff-verified-shortcut-v099.css'
       - 'creator-v1/operations/anevum-iren-staff-observatory-v092.mjs'
       - 'creator-v1/test/staff-navigation-and-connecting-v099.test.mjs'
+      - 'creator-v1/test/capture-native-staff-link-v099.mjs'
       - '.github/workflows/staff-console-v099-qa.yml'
 permissions:
   contents: read
