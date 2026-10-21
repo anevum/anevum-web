@@ -192,7 +192,18 @@ async function after(file,receiptFile){
  console.log('INACTIVE_UPLOAD_VERIFIED',JSON.stringify({source:PIN,version:valid.candidateId,routeCount:current.routes.length,productionTrafficChanged:false,unverifiedHumanGates:true}));
 }
 const [mode,arg1,arg2]=process.argv.slice(2);
+if(mode==='audit'&&process.argv.length===3){
+ checkRepositorySource();
+ const snap=await readSnapshot();
+ // Read-only reconciliation: report the actual deployment separately from
+ // other pinned resources. This baseline is NEVER passed to upload modes.
+ let otherPinnedResourcesMatch=false;
+ try{validateBaseline(snap,{...manifest,deployment:snap.deployment},{allowAcceptanceEntry:INTEGRATED});otherPinnedResourcesMatch=true;}catch{}
+ console.log(JSON.stringify({readOnly:true,otherPinnedResourcesMatch,
+  deployment:{id:snap.deployment?.id,versions:snap.deployment?.versions}}));
+}else{
 if(!['before','after'].includes(mode)||!arg1||!arg2||process.argv.length!==5)
  fail('Usage: node v095-v096-cloudflare-ops.mjs before snapshot.json config.json | after snapshot.json receipt.json');
 if(mode==='before')await before(arg1,arg2);
 else await after(arg1,arg2);
+}
