@@ -1,0 +1,32 @@
+/* V102 isolated player: responsive simulation and honest startup status.
+   The untrusted iframe stays on the existing sandboxed runtime origin. */
+.av095-player[data-player-viewport="phone"]:not(:fullscreen):not(.av095-player--expanded){
+ background:radial-gradient(ellipse at center,#1b2a42 0%,#02060c 74%);
+}
+.av095-player[data-player-viewport="phone"]:not(:fullscreen):not(.av095-player--expanded) iframe{
+ width:min(390px,100%);height:min(78dvh,760px);min-height:440px;
+ max-width:100%;margin-inline:auto;
+ box-shadow:0 0 0 1px rgba(191,211,231,.36),0 14px 50px rgba(0,0,0,.38);
+}
+.av095-player-controls .av102-phone-toggle[aria-pressed="true"]{
+ border-color:rgba(227,194,137,.85);background:rgba(50,65,80,.85);
+ color:#ffe4b9;
+}
+.av102-player-status,.av102-player-note{
+ margin:.65rem 0 0;line-height:1.55;font-size:.83rem;
+ color:var(--st-muted,#bfcddd);
+}
+.av102-player-status{padding:.65rem .85rem;border:1px solid rgba(141,172,197,.35);
+ border-radius:8px;background:rgba(10,23,38,.64)}
+.av102-player-status[data-player-frame-state="slow"],
+.av102-player-status[data-player-frame-state="error"]{
+ color:#ffe2b9;border-color:rgba(215,169,112,.55)
+}
+.av102-player-note{color:#c5cbd4}
+@media(max-width:500px){
+ .av095-player-controls .av102-phone-toggle{flex:1 1 100%}
+ .av102-player-status{font-size:.79rem}
+}
+@media(prefers-reduced-motion:reduce){
+ .av095-player[data-player-viewport="phone"] iframe{transition:none!important}
+}
