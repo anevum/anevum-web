@@ -246,6 +246,35 @@ try{
   evidence.push({width,height,guestTour:"PASS",help:"PASS",spotlight:"PASS",skipResume:"PASS",completed:"PASS",navCount:4,overflow:false});
   console.log("IREN_V097_BROWSER_PASS_"+width);
  }
+ // Isolated local synthetic member: this cookie is not a real login.
+ await send("Emulation.setDeviceMetricsOverride",{width:390,height:844,deviceScaleFactor:1,mobile:true});
+ await send("Page.navigate",{url:base+"/creator/account"});
+ try{
+   await until(()=>evaluate('!!document.querySelector(".ms-dashboard")&&!!document.querySelector(".ir80-dock")'),18000);
+ }catch(error){
+   const state=await evaluate('JSON.stringify({route:location.pathname,body:document.body.innerText.slice(0,380),syntheticCookie:document.cookie.includes("anevum_offline_visual_fixture")})');
+   throw Error("IREN_SYNTHETIC_MEMBER_DASHBOARD_NOT_READY / "+state+" / "+String(error));
+ }
+ await check("member-private-space",'(()=>{const text=document.querySelector(".ms-dashboard")?.textContent||"";return text.includes("Synthetic Creator Preview")&&text.includes("PRIVATE")})()');
+ await check("member-anchors",'!!document.querySelector(\'[data-iren-anchor="identity"]\')&&!!document.querySelector(\'[data-iren-anchor="privacy"]\')&&!!document.querySelector(\'[data-iren-anchor="studio"]\')');
+ await capture("iren-member-overview-390");
+ await check("separate-tour-before-member",'!localStorage.getItem("anevum.iren.guided-continuance.v080.00000000000000000000000000000099")');
+ await evaluate('window.dispatchEvent(new Event("anevum:iren-tour"))');
+ const lines=["Your ANEVUM identity and profile","Your levels and awards","Your wall starts private","Create privately here","Find approved games","Meet the makers","The Wayfinder takes"];
+ for(let i=0;i<lines.length;i++){
+   await until(()=>evaluate('document.querySelector(".ir97-bubble-line")?.textContent.includes('+JSON.stringify(lines[i])+')'),14000);
+   await until(()=>evaluate('!!document.querySelector(".ir97-target-halo")'),6000);
+   await pause(800);
+   await check("member-guide-no-modal-"+i,'(()=>{const p=document.querySelector(".ir97-guide-layer"),b=document.querySelector(".ir97-speech-bubble");return !!p&&!!b&&getComputedStyle(p).pointerEvents==="none"&&b.getAttribute("aria-modal")===null})()');
+   await check("member-bubble-bounds-"+i,'(()=>{const r=document.querySelector(".ir97-speech-bubble")?.getBoundingClientRect();return !!r&&r.left>=0&&r.top>=0&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1})()');
+   if([0,3,6].includes(i))await capture("iren-member-"+(i+1)+"-390");
+   await evaluate('document.querySelector("[data-iren-next]").click()');
+ }
+ await until(()=>evaluate('!document.querySelector(".ir97-speech-bubble")'));
+ await check("member-seven-step-completion",'(()=>{const k="anevum.iren.guided-continuance.v080.00000000000000000000000000000099";const p=JSON.parse(localStorage.getItem(k)||"null");return p?.status==="completed"&&p.index===7})()');
+ await check("guest-progress-preserved",'JSON.parse(localStorage.getItem("anevum.iren.guided-continuance.v080.visitor")||"null")?.status==="completed"');
+ evidence.push({width:390,height:844,syntheticMemberTour:"PASS",memberSteps:7,privateWorld:"PASS",separateTourProgress:"PASS",offlineFixtureOnly:true});
+ console.log("IREN_V097_SYNTHETIC_MEMBER_7_STEP_PASS_390");
  writeFileSync(join(output,"acceptance.json"),JSON.stringify({source:"OFFLINE SYNTHETIC",version:"V097",results:evidence},null,2));
 }finally{
  try{if(socket?.readyState===1)socket.close();}catch{}
