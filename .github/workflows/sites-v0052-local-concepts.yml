@@ -55,6 +55,20 @@ jobs:
             "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --no-first-run --window-size=390,844 --screenshot="/tmp/anevum-sites-local-review/$slug-mobile.png" "file:///tmp/anevum-sites-local-review/$slug.html"
           done
           test "$(find /tmp/anevum-sites-local-review -maxdepth 1 -name '*.png' -size +0c | wc -l)" -eq 6
+      - name: Capture local-business section from V005 public candidate (offline)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/anevum-sites-v0052-public
+          node sites/v005/build.mjs /tmp/anevum-sites-v0052-public
+          node sites/v005/preview.mjs /tmp/anevum-sites-v0052-public
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          test -n "$CHROME"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --no-first-run --virtual-time-budget=4000 --window-size=1440,1000 --screenshot="/tmp/anevum-sites-local-review/public-field-studies-desktop.png" "file:///tmp/anevum-sites-v0052-public/interactive-preview.html#local-services"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --no-first-run --virtual-time-budget=4000 --window-size=390,844 --screenshot="/tmp/anevum-sites-local-review/public-field-studies-mobile.png" "file:///tmp/anevum-sites-v0052-public/interactive-preview.html#local-services"
+          test -s /tmp/anevum-sites-local-review/public-field-studies-desktop.png
+          test -s /tmp/anevum-sites-local-review/public-field-studies-mobile.png
+          cp /tmp/anevum-sites-v0052-public/interactive-preview.html /tmp/anevum-sites-local-review/public-storefront-review.html
       - name: Attach private static review package
         uses: actions/upload-artifact@v4
         with:
