@@ -1,0 +1,76 @@
+name: ANEVUM V100 Protected Entry Inactive Preparation
+on:
+  pull_request:
+    paths:
+      - creator-v1/ops/v100-entry-inactive.mjs
+      - creator-v1/test/v100-entry-inactive.test.mjs
+      - .github/workflows/v100-entry-inactive.yml
+  push:
+    branches: [release/v084-continuance-approved-20261019]
+    paths:
+      - creator-v1/ops/v100-entry-inactive.mjs
+      - creator-v1/test/v100-entry-inactive.test.mjs
+      - .github/workflows/v100-entry-inactive.yml
+      - .github/release-approvals/v100-entry-inactive-upload.json
+permissions:
+  contents: read
+concurrency:
+  group: anevum-v100-entry-inactive-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run source and access gate regressions
+        run: |
+          node --check creator-v1/ops/v100-entry-inactive.mjs
+          node --test creator-v1/test/v100-entry-inactive.test.mjs creator-v1/test/v095-v096-acceptance-entry.test.mjs
+  inactive-upload:
+    needs: source
+    if: >-
+      github.repository == 'anevum/anevum-web' &&
+      github.actor == 'anevum' && github.event_name == 'push' &&
+      github.ref == 'refs/heads/release/v084-continuance-approved-20261019' &&
+      github.event.head_commit.message == 'release(v100): upload protected entry inactive only'
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - name: Require exact owner marker-only commit
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git diff-tree --no-commit-id --name-only -r HEAD)" = '.github/release-approvals/v100-entry-inactive-upload.json'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check live preconditions and existing Access behavior
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node creator-v1/ops/v100-entry-inactive.mjs check
+      - name: Save only an inactive version, preserving all secrets
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GITHUB_HEAD_MESSAGE: ${{ github.event.head_commit.message }}
+          RECEIPT_FILE: ${{ runner.temp }}/v100-entry-upload.json
+        run: node creator-v1/ops/v100-entry-inactive.mjs upload-inactive
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v100-entry-inactive-receipt
+          path: ${{ runner.temp }}/v100-entry-upload.json
+          if-no-files-found: ignore
+          retention-days: 14
+# No active deployment, no changed routes or Access policies, no public rollout.
