@@ -7,7 +7,7 @@ const read=async(path,json=true)=>{
  if(path.endsWith('/workers/routes'))return [{pattern:'anevum.com/__enter/v095-v096*',script:'fixture'}];
  if(path.endsWith('/settings'))return {bindings:[{name:'QA_ROUTING_TOKEN',type:'plain_text',text:secret},{name:secret,type:'secret_text'}]};
  if(path.endsWith('/deployments'))return {deployments:[{id:'fixture-deployment',versions:[{version_id:'fixture-version',percentage:100}],annotations:secret}]};
- if(path.includes('/versions/'))return {id:path.split('/').at(-1)};
+ if(path.includes('/versions/'))return {id:path.split('/').at(-1),resources:{script_runtime:{assets:{base_path:'/'}},bindings:[{name:'CANONICAL_CREATOR_UPLOADS_ENABLED',type:'plain_text',text:'false'}]}};
  if(path.includes('/rulesets/'))return {rules:[{expression:secret}]};
  if(path.endsWith('/snippets/snippet_rules'))return [{enabled:true,snippet_name:secret,expression:secret}];
  throw Error('Unexpected request');
@@ -38,13 +38,15 @@ test('missing or duplicate entry routes stop before inspecting any Worker',async
 
 const ready={
  featureOnCandidateUploaded:true,featureOnAtZeroPercentInCurrentDeployment:true,
+ publicVersion100AndExactTwoVersions:true,failedFeatureOnNotSelected:true,
+ featureOnRootAssetBase:true,featureOnCreatorUploadsDisabled:true,
  entryCandidateMatchesFeatureOn:true,entryHasRoutingSecret:true,entryHasOnlyPlainOrSecretBindings:true,
  entryExpiryValid:true,entry:{hasFeatureOnCandidate:true,hasRoutingCookie:true,hasTimedGate:true,hasAccessIdentity:true},
  http_request_late_transform:{qaRuleCount:1,hasFeatureOnCandidate:true,hasRoutingCookie:true,hasVersionOverride:true}
 };
 test('feature-ON routing readiness requires the exact staged 0 percent version and the protected entry',()=>{
  assert.equal(featureOnRoutingReady(ready),true);
- for(const name of ['featureOnCandidateUploaded','featureOnAtZeroPercentInCurrentDeployment','entryCandidateMatchesFeatureOn','entryHasRoutingSecret','entryHasOnlyPlainOrSecretBindings','entryExpiryValid']){
+ for(const name of ['featureOnCandidateUploaded','featureOnAtZeroPercentInCurrentDeployment','publicVersion100AndExactTwoVersions','failedFeatureOnNotSelected','featureOnRootAssetBase','featureOnCreatorUploadsDisabled','entryCandidateMatchesFeatureOn','entryHasRoutingSecret','entryHasOnlyPlainOrSecretBindings','entryExpiryValid']){
   assert.equal(featureOnRoutingReady({...ready,[name]:false}),false,'must refuse missing '+name);
  }
  for(const name of ['hasFeatureOnCandidate','hasRoutingCookie','hasTimedGate','hasAccessIdentity']){
@@ -69,7 +71,7 @@ test('current historical-route fixture remains not feature-ON and never implies 
 });
 
 test('feature-ON route is ready only after the exact version is in deployment, entry and transform',async()=>{
- const feature='71a305df-a769-4fb1-9a20-527e0f7f1664';
+ const feature='94446397-e87d-4e5b-943b-b70a8a1a8fd2';
  const live=async(path,json=true)=>{
   if(!json)return '--fixed-boundary\\n'+feature+'\\n__Host-anevum-v095-v096-qa\\nQA_EXPIRES_AT\\nANEVUM_PREVIEW_ALLOWED_EMAILS\\n--fixed-boundary--';
   if(path.endsWith('/workers/routes'))return [{pattern:'anevum.com/__enter/v095-v096*',script:'anevum-v095-v096-acceptance-entry'}];
@@ -83,7 +85,7 @@ test('feature-ON route is ready only after the exact version is in deployment, e
     {version_id:'93cc7f07-cf39-457e-af69-c9f6f4c02d25',percentage:100},
     {version_id:feature,percentage:0}
   ]}]};
-  if(path.includes('/versions/'))return {id:path.split('/').at(-1)};
+  if(path.includes('/versions/'))return {id:path.split('/').at(-1),resources:{script_runtime:{assets:{base_path:'/'}},bindings:[{name:'CANONICAL_CREATOR_UPLOADS_ENABLED',type:'plain_text',text:'false'}]}};
   if(path.includes('/rulesets/phases/http_request_late_transform'))return {rules:[{
    expression:'__Host-anevum-v095-v096-qa',action_parameters:{headers:{'cloudflare-workers-version-overrides':{operation:'set',value:'anevum-apex-prelaunch-gateway="'+feature+'"'}}}
   }]};
@@ -93,12 +95,37 @@ test('feature-ON route is ready only after the exact version is in deployment, e
  };
  const ready=await inventory(live);
  assert.equal(ready.featureOnProtectedRoutingReady,true);
+ assert.equal(ready.publicVersion100AndExactTwoVersions,true);
+ assert.equal(ready.failedFeatureOnNotSelected,true);
+ assert.equal(ready.featureOnRootAssetBase,true);
+ assert.equal(ready.featureOnCreatorUploadsDisabled,true);
  const withoutDeployment=await inventory(async(path,json=true)=>{
   const value=await live(path,json);
   if(path.endsWith('/deployments'))return {deployments:[{id:'deployment',versions:[{version_id:'93cc7f07-cf39-457e-af69-c9f6f4c02d25',percentage:100}]}]};
   return value;
  });
  assert.equal(withoutDeployment.featureOnProtectedRoutingReady,false);
+ const brokenSelected=await inventory(async(path,json=true)=>{
+  if(path.endsWith('/deployments'))return {deployments:[{id:'deployment',versions:[
+   {version_id:'93cc7f07-cf39-457e-af69-c9f6f4c02d25',percentage:100},
+   {version_id:'71a305df-a769-4fb1-9a20-527e0f7f1664',percentage:0}
+  ]}]};
+  return live(path,json);
+ });
+ assert.equal(brokenSelected.featureOnProtectedRoutingReady,false);
+ assert.equal(brokenSelected.failedFeatureOnNotSelected,false);
+ const brokenAssets=await inventory(async(path,json=true)=>{
+  if(path.endsWith('/versions/'+feature))return {id:feature,resources:{script_runtime:{assets:{base_path:'/creator/'}},bindings:[{name:'CANONICAL_CREATOR_UPLOADS_ENABLED',type:'plain_text',text:'false'}]}};
+  return live(path,json);
+ });
+ assert.equal(brokenAssets.featureOnProtectedRoutingReady,false);
+ assert.equal(brokenAssets.featureOnRootAssetBase,false);
+ const uploadsEnabled=await inventory(async(path,json=true)=>{
+  if(path.endsWith('/versions/'+feature))return {id:feature,resources:{script_runtime:{assets:{base_path:'/'}},bindings:[{name:'CANONICAL_CREATOR_UPLOADS_ENABLED',type:'plain_text',text:'true'}]}};
+  return live(path,json);
+ });
+ assert.equal(uploadsEnabled.featureOnProtectedRoutingReady,false);
+ assert.equal(uploadsEnabled.featureOnCreatorUploadsDisabled,false);
  const withoutRule=await inventory(async(path,json=true)=>{
   if(path.includes('/rulesets/phases/http_request_late_transform'))return {rules:[]};
   return live(path,json);
