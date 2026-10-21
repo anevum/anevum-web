@@ -61,6 +61,8 @@ test("Observatory server staff, D1, and access logic remains byte-for-byte uncha
  assert.match(style,/staff-connect-error/);
  assert.match(html,/id="lastSync"/);
  assert.match(html,/id="syncState"/);
+ assert.match(html,/staff-bootstrap-link/);
+ assert.match(html,/If this stays here, check your staff session/);
 });
 async function runCase(fetchResponse){
  const map=new Map();
