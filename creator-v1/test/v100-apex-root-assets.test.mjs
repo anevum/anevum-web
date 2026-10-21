@@ -55,8 +55,7 @@ test('reject missing JavaScript module while preserving document shell',()=>{
  try{assert.throws(()=>verifyApexRootAssets(folder),/Compiled asset not found/);}
  finally{rmSync(folder,{recursive:true,force:true});}
 });
-if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){
+if(process.argv[1]&&process.argv[2]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){
  const folder=process.argv[2];
- assert.ok(folder,'Pass root-built dist/web path');
  console.log(JSON.stringify(verifyApexRootAssets(folder)));
 }
