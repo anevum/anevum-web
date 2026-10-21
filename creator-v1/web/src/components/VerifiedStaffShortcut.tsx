@@ -30,8 +30,16 @@ export function VerifiedStaffShortcut({location="profile"}:{location?:"profile"|
       try{
         const options:RequestInit={method:"GET",credentials:"same-origin",mode:"same-origin",
           cache:"no-store",redirect:"manual",headers:{accept:"application/json"},signal:request.signal};
+        // An unresponsive link Worker cannot hide a verified founder indefinitely.
+        // Give the primary a short independent deadline, retaining the total 10s
+        // deadline for the separately deployed staff-entry fallback.
+        const primaryController=new AbortController();
+        request.signal.addEventListener("abort",()=>primaryController.abort(),{once:true});
+        const primaryTimer=window.setTimeout(()=>primaryController.abort(),3500);
+        const primary=await fetch(endpoint,{...options,signal:primaryController.signal}).catch(()=>null);
+        window.clearTimeout(primaryTimer);
+        if(request.signal.aborted)return;
         // Authoritative dedicated role endpoint; an explicit nonstaff role is final.
-        const primary=await fetch(endpoint,options).catch(()=>null);
         if(primary?.status===200&&primary.headers.get("content-type")?.includes("application/json")){
           const data=await primary.json().catch(()=>null) as {role?:unknown;designation?:unknown}|null;
           if(data){
