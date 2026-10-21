@@ -36,7 +36,9 @@ test('member views revalidate and version photos without fake client progression
  assert.match(own,/\[enabled,memberId,revision\]/);
  assert.match(community,/useMemberRevalidation/);
  assert.match(forums,/useMemberRevalidation/);
- assert.match(publicWorld,/\[handle,revalidation\]/);
+ // Both independent public reads must revalidate on member changes; retries are explicit.
+ assert.match(publicWorld,/\[handle,revalidation,profileRetry\]/);
+ assert.match(publicWorld,/\[handle,revalidation,profileRetry,wallRetry,resource\.state\]/);
  assert.match(dashboard,/\[profile.handle,profile.revision,revalidation\]/);
  assert.match(recognition,/memberChanged\(owner\)/);
  assert.match(card,/avatarVersion/);
