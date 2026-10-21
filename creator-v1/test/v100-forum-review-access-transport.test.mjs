@@ -46,9 +46,15 @@ test('Safari opaque manual redirect is treated as Access challenge',async()=>{
  const opaque={type:'opaqueredirect',status:0};
  await kind(()=>requestForumReview('GET',undefined,undefined,async()=>opaque),'access-verification');
 });
-test('separate member session 401 and reviewer role 403 are never conflated with Access',async()=>{
- await kind(()=>requestForumReview('GET',undefined,undefined,make(new Response(null,{status:401})).fetcher),'member-session');
- await kind(()=>requestForumReview('GET',undefined,undefined,make(new Response(null,{status:403})).fetcher),'reviewer-role');
+test('only exact app-auth JSON distinguishes member 401 and reviewer 403 from Access',async()=>{
+ await kind(()=>requestForumReview('GET',undefined,undefined,
+   make(Response.json({error:'Verified apex session required'},{status:401})).fetcher),'member-session');
+ await kind(()=>requestForumReview('GET',undefined,undefined,
+   make(Response.json({error:'Reviewer access required'},{status:403})).fetcher),'reviewer-role');
+ for(const status of [401,403]){
+  await kind(()=>requestForumReview('GET',undefined,undefined,
+   make(new Response('<html>Cloudflare Access</html>',{status,headers:{'content-type':'text/html'}})).fetcher),'access-verification');
+ }
  assert.equal(describeForumReviewError(new ReviewTransportError('reviewer-role','denied')).showAccessLink,false);
  assert.equal(describeForumReviewError(new ReviewTransportError('member-session','expired')).showAccessLink,false);
 });
