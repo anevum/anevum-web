@@ -40,13 +40,14 @@ const ready={
  featureOnCandidateUploaded:true,featureOnAtZeroPercentInCurrentDeployment:true,
  publicVersion100AndExactTwoVersions:true,failedFeatureOnNotSelected:true,
  featureOnRootAssetBase:true,featureOnCreatorUploadsDisabled:true,
+ entryDeployedCandidateMatchesFeatureOn:true,
  entryCandidateMatchesFeatureOn:true,entryHasRoutingSecret:true,entryHasOnlyPlainOrSecretBindings:true,
  entryExpiryValid:true,entry:{hasFeatureOnCandidate:true,hasRoutingCookie:true,hasTimedGate:true,hasAccessIdentity:true},
  http_request_late_transform:{qaRuleCount:1,hasFeatureOnCandidate:true,hasRoutingCookie:true,hasVersionOverride:true}
 };
 test('feature-ON routing readiness requires the exact staged 0 percent version and the protected entry',()=>{
  assert.equal(featureOnRoutingReady(ready),true);
- for(const name of ['featureOnCandidateUploaded','featureOnAtZeroPercentInCurrentDeployment','publicVersion100AndExactTwoVersions','failedFeatureOnNotSelected','featureOnRootAssetBase','featureOnCreatorUploadsDisabled','entryCandidateMatchesFeatureOn','entryHasRoutingSecret','entryHasOnlyPlainOrSecretBindings','entryExpiryValid']){
+ for(const name of ['featureOnCandidateUploaded','featureOnAtZeroPercentInCurrentDeployment','publicVersion100AndExactTwoVersions','failedFeatureOnNotSelected','featureOnRootAssetBase','featureOnCreatorUploadsDisabled','entryCandidateMatchesFeatureOn','entryDeployedCandidateMatchesFeatureOn','entryHasRoutingSecret','entryHasOnlyPlainOrSecretBindings','entryExpiryValid']){
   assert.equal(featureOnRoutingReady({...ready,[name]:false}),false,'must refuse missing '+name);
  }
  for(const name of ['hasFeatureOnCandidate','hasRoutingCookie','hasTimedGate','hasAccessIdentity']){
@@ -72,7 +73,10 @@ test('current historical-route fixture remains not feature-ON and never implies 
 
 test('feature-ON route is ready only after the exact version is in deployment, entry and transform',async()=>{
  const feature='94446397-e87d-4e5b-943b-b70a8a1a8fd2';
+ const entryVersion='9cd665c0-c5fe-4ec1-8d91-a6d3e4131f83';
  const live=async(path,json=true)=>{
+  if(path.endsWith('/anevum-v095-v096-acceptance-entry/deployments'))return {deployments:[{id:'entry-deployment',versions:[{version_id:entryVersion,percentage:100}]}]};
+  if(path.endsWith('/anevum-v095-v096-acceptance-entry/versions/'+entryVersion))return {id:entryVersion,resources:{bindings:[{name:'QA_CANDIDATE',type:'plain_text',text:feature},{name:'QA_ROUTING_TOKEN',type:'secret_text'}]}};
   if(!json)return '--fixed-boundary\\n'+feature+'\\n__Host-anevum-v095-v096-qa\\nQA_EXPIRES_AT\\nANEVUM_PREVIEW_ALLOWED_EMAILS\\n--fixed-boundary--';
   if(path.endsWith('/workers/routes'))return [{pattern:'anevum.com/__enter/v095-v096*',script:'anevum-v095-v096-acceptance-entry'}];
   if(path.endsWith('/settings'))return {bindings:[
@@ -100,6 +104,7 @@ test('feature-ON route is ready only after the exact version is in deployment, e
  assert.equal(ready.failedFeatureOnNotSelected,true);
  assert.equal(ready.featureOnRootAssetBase,true);
  assert.equal(ready.featureOnCreatorUploadsDisabled,true);
+ assert.equal(ready.entryDeployedCandidateMatchesFeatureOn,true);
  const withoutDeployment=await inventory(async(path,json=true)=>{
   const value=await live(path,json);
   if(path.endsWith('/deployments'))return {deployments:[{id:'deployment',versions:[{version_id:'93cc7f07-cf39-457e-af69-c9f6f4c02d25',percentage:100}]}]};
@@ -114,6 +119,12 @@ test('feature-ON route is ready only after the exact version is in deployment, e
   return live(path,json);
  });
  assert.equal(brokenSelected.featureOnProtectedRoutingReady,false);
+ const staleLiveEntry=await inventory(async(path,json=true)=>{
+  if(path.endsWith('/anevum-v095-v096-acceptance-entry/versions/'+entryVersion))return {id:entryVersion,resources:{bindings:[{name:'QA_CANDIDATE',type:'plain_text',text:'8ed503b6-5df6-42a5-a536-63ccf928d25d'},{name:'QA_ROUTING_TOKEN',type:'secret_text'}]}};
+  return live(path,json);
+ });
+ assert.equal(staleLiveEntry.featureOnProtectedRoutingReady,false);
+ assert.equal(staleLiveEntry.entryDeployedCandidateMatchesFeatureOn,false);
  assert.equal(brokenSelected.failedFeatureOnNotSelected,false);
  const brokenAssets=await inventory(async(path,json=true)=>{
   if(path.endsWith('/versions/'+feature))return {id:feature,resources:{script_runtime:{assets:{base_path:'/creator/'}},bindings:[{name:'CANONICAL_CREATOR_UPLOADS_ENABLED',type:'plain_text',text:'false'}]}};
