@@ -2,6 +2,8 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {pathToFileURL} from 'node:url';
+import {readFileSync} from 'node:fs';
+import {moduleSource} from './v091-staff-transport.mjs';
 const ACCOUNT='2f7ee83107240152097efd956a4e8335',ZONE='8abe27259b5436af5966d3b40d9a3760';
 const OLD='3ba8602c-6616-49a4-af29-1efe60ad164a',NEXT='8ed503b6-5df6-42a5-a536-63ccf928d25d';
 const COOKIE='__Host-anevum-v095-v096-qa';
@@ -21,6 +23,7 @@ export async function inventory(read){
  out.entryHasOnlyPlainOrSecretBindings=(es.bindings||[]).every(b=>['plain_text','secret_text'].includes(b.type));
  out.entryCandidateMatchesOld=vars.QA_CANDIDATE===OLD;
  out.entryTokenWellFormed=/^[a-f0-9]{64}$/.test(vars.QA_ROUTING_TOKEN||'');
+ out.entryHasRoutingSecret=(es.bindings||[]).some(b=>b.type==='secret_text'&&b.name==='QA_ROUTING_TOKEN');
  out.entryExpiryValid=Number(vars.QA_EXPIRES_AT)>Date.now()/1000&&Number(vars.QA_EXPIRES_AT)<Date.now()/1000+86400;
  for(const [label,name] of [['entry',entry[0].script],['frame','anevum-native-frame-policy-v001'],['profile','anevum-profile-staff-access-v001'],['assets','anevum-native-project-community-v002'],['unified','anevum-unified-creation-routes-v002'],['observatory','anevum-iren-staff-observatory-v001']]){
   const source=await read(root+name,false);
@@ -32,13 +35,35 @@ export async function inventory(read){
    hasTimedGate:source.includes('QA_EXPIRES_AT'),hasAccessIdentity:source.includes('ANEVUM_PREVIEW_ALLOWED_EMAILS'),
    oldCandidateOccurrences:source.split(OLD).length-1,
    hasRecoveryTimeout:source.includes('12000')&&source.includes('AbortController')};
+  if(label==='observatory'){
+   try{
+    const live=moduleSource(source,source.match(/name="(index\.mjs|worker\.js)"/)?.[1]||'index.mjs').source;
+    const candidate=readFileSync(new URL('../operations/anevum-iren-staff-observatory-v092.mjs',import.meta.url),'utf8');
+    const suffix=s=>s.slice(s.indexOf('const ORIGIN =')).trim();
+    out.observatory.backendSuffixMatchesCandidate=live.includes('const ORIGIN =')&&suffix(live)===suffix(candidate);
+   }catch{out.observatory.backendSuffixMatchesCandidate=false;}
+  }
  }
  for(const phase of ['http_request_late_transform','http_request_transform']){
   try{
    const ruleset=await read(zone+'/rulesets/phases/'+phase+'/entrypoint');
    out[phase]={exists:true,hasRoutingCookie:JSON.stringify(ruleset).includes(COOKIE),hasOldCandidate:JSON.stringify(ruleset).includes(OLD),hasVersionOverride:JSON.stringify(ruleset).toLowerCase().includes('cloudflare-workers-version-overrides')};
-  }catch{out[phase]={exists:false};}
+  }catch(e){out[phase]={readable:false,notFound:e.status===404};}
  }
+ try{
+  const rules=await read(zone+'/snippets/snippet_rules');
+  out.snippetsReadable=true;out.routingSnippets=[];
+  for(const rule of rules){
+   if(!rule.enabled)continue;
+   const source=await read(zone+'/snippets/'+rule.snippet_name+'/content',false);
+   if(!source.includes(COOKIE)&&!source.includes(OLD))continue;
+   out.routingSnippets.push({sourceDigest:createHash('sha256').update(source.startsWith('--')?source.split(source.split(/\r?\n/,1)[0]).join('--BOUNDARY'):source).digest('hex'),
+    hasRoutingCookie:source.includes(COOKIE),hasOldCandidate:source.includes(OLD),oldCandidateOccurrences:source.split(OLD).length-1,
+    hasVersionOverride:source.toLowerCase().includes('cloudflare-workers-version-overrides'),
+    hasEntryExpiry:source.includes(String(vars.QA_EXPIRES_AT)),hashesToken:source.includes('SHA-256'),
+    hasTokenLiteral:/[a-f0-9]{64}/.test(source)});
+  }
+ }catch(e){out.snippetsReadable=false;out.snippetsNotFound=e.status===404;}
  return out;
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
@@ -50,7 +75,7 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
  assert.ok(process.env.CLOUDFLARE_API_TOKEN);
  const read=async(path,json=true)=>{
   const r=await fetch('https://api.cloudflare.com/client/v4'+path,{method:'GET',headers:{authorization:'Bearer '+process.env.CLOUDFLARE_API_TOKEN},redirect:'error',signal:AbortSignal.timeout(20000)});
-  assert.ok(r.ok,'Cloudflare read failed');
+  if(!r.ok){const error=new Error('Cloudflare read failed');error.status=r.status;throw error;}
   if(!json)return r.text();
   const data=await r.json();assert.equal(data.success,true);return data.result;
  };
