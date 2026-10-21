@@ -1,0 +1,64 @@
+name: ANEVUM V099 Staff Console Recovery QA
+on:
+  push:
+    branches:
+      - fix/observatory-connecting-recovery-20261020-001
+    paths:
+      - 'creator-v1/web/src/components/VerifiedStaffShortcut.tsx'
+      - 'creator-v1/web/src/components/Shell.tsx'
+      - 'creator-v1/web/src/components/MemberSpaceDashboard.tsx'
+      - 'creator-v1/web/src/pages/Phase1MemberPage.tsx'
+      - 'creator-v1/web/src/main.tsx'
+      - 'creator-v1/web/src/staff-verified-shortcut-v099.css'
+      - 'creator-v1/operations/anevum-iren-staff-observatory-v092.mjs'
+      - 'creator-v1/test/staff-navigation-and-connecting-v099.test.mjs'
+      - '.github/workflows/staff-console-v099-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: anevum-staff-console-v099-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  staff-console-recovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install existing repository dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Verify React type safety
+        run: npm run check:creator-v1-web
+      - name: Verify read-only native role links and finite Observatory failures
+        run: node --test creator-v1/test/staff-navigation-and-connecting-v099.test.mjs creator-v1/test/staff-observatory-ux-v091.test.mjs creator-v1/test/staff-observatory-aura-v092.test.mjs creator-v1/test/staff-session-transport-v091.test.mjs
+      - name: Compile staging frontend without deploying
+        run: npm run build:creator-v1-web:staging
+      - name: Real Chromium synthetic owner/reviewer mobile and desktop acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$chrome"
+          mkdir -p evidence/staff-v099
+          node creator-v1/test/capture-staff-observatory-v092.mjs "$chrome" evidence/staff-v099
+          test -s evidence/staff-v099/acceptance.json
+          test -s evidence/staff-v099/owner-phone.png
+          test -s evidence/staff-v099/owner-small-phone.png
+          test -s evidence/staff-v099/reviewer-phone.png
+      - name: Evidence and source SHA
+        if: always()
+        shell: bash
+        run: git rev-parse HEAD
+      - name: Archive synthetic screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-staff-v099-browser-evidence
+          path: evidence/staff-v099/
+          if-no-files-found: ignore
+          retention-days: 14
+# No Cloudflare token, staff grant mutation, or deployment authority.
