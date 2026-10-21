@@ -1,0 +1,35 @@
+name: ANEVUM V100 Isolated Acceptance Setup
+on:
+  push:
+    branches: [ops/v100-candidate-acceptance-20261021-001]
+    paths:
+      - .github/workflows/v100-acceptance-setup.yml
+      - creator-v1/ops/v100-acceptance-inventory.mjs
+      - creator-v1/test/v100-acceptance-inventory.test.mjs
+permissions:
+  contents: read
+concurrency:
+  group: anevum-v100-acceptance-setup
+  cancel-in-progress: false
+jobs:
+  inventory:
+    if: github.repository == 'anevum/anevum-web' && github.actor == 'anevum' && github.ref == 'refs/heads/ops/v100-candidate-acceptance-20261021-001'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate read-only audit syntax
+        run: |
+          node --check creator-v1/ops/v100-acceptance-inventory.mjs
+          node --test creator-v1/test/v100-acceptance-inventory.test.mjs
+      - name: Identify existing opt-in transport without publishing configuration
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node creator-v1/ops/v100-acceptance-inventory.mjs
+# No provider configuration artifact, data writes, deployment or routing mutation.
