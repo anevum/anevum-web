@@ -27,6 +27,8 @@ jobs:
     env:
       VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
       VITE_NATIVE_CREATOR_STUDIO_V095: 'false'
+      VITE_IREN_SPATIAL_GUIDE: 'false'
+      ANEVUM_INACTIVE_PROFILE: ${{ github.head_ref == 'ops/v100-integrated-inactive-20261020-001' && 'v100' || 'v095-v096' }}
     if: github.repository == 'anevum/anevum-web'
     runs-on: ubuntu-latest
     timeout-minutes: 8
@@ -60,7 +62,10 @@ jobs:
           assert.match(production,/node creator-v1\/ops\/v091-release-acceptance\.mjs\s*\n/);
           assert.doesNotMatch(production,/node creator-v1\/ops\/v091-release-acceptance\.mjs --source-only/);
           JS
-          git diff --exit-code d5af32fd8f04b05e0381f7ac12c59d06c0e836a2 HEAD -- . \
+          source_pin='d5af32fd8f04b05e0381f7ac12c59d06c0e836a2'
+          if [ "$ANEVUM_INACTIVE_PROFILE" = 'v100' ]; then source_pin='28f163a0015631b1d8eb58922c03596ae8febd22'; fi
+          git merge-base --is-ancestor "$source_pin" HEAD
+          git diff --exit-code "$source_pin" HEAD -- . \
             ':(exclude)creator-v1/operations/v095-inactive-baseline-20261020.json' \
             ':(exclude)creator-v1/ops/v095-inactive-candidate-gate.mjs' \
             ':(exclude)creator-v1/ops/v095-v096-cloudflare-ops.mjs' \

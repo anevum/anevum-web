@@ -42,7 +42,7 @@ export function assertPinnedResources(resources,baseline=manifest){
   return vars;
 }
 
-export function validateBaseline({deployment,routes,settings,live,pilot,exposure},baseline=manifest){
+export function validateBaseline({deployment,routes,settings,live,pilot,exposure},baseline=manifest,{allowAcceptanceEntry=false}={}){
   assert.equal(baseline.source_sha,'d5af32fd8f04b05e0381f7ac12c59d06c0e836a2','Unreviewed application source');
   assert.equal(baseline.approval.production,false,'No production approval may be inferred');
   assert.equal(baseline.approval.live_traffic_promotion,false,'No traffic promotion permitted');
@@ -50,7 +50,16 @@ export function validateBaseline({deployment,routes,settings,live,pilot,exposure
   assert.equal(baseline.routes.filter(x=>x.pattern==='family.anevum.com/*'&&x.script==='anevum-family-link-v004').length,1);
   assert.equal(deployment?.id,baseline.deployment.id,'Deployment changed; review before uploading');
   assert.deepEqual(deployment.versions,baseline.deployment.versions,'Traffic distribution changed');
-  assert.deepEqual(normalizeRoutes(routes),baseline.routes,'Cloudflare route inventory drift');
+  // V100 preserves the existing, Access-protected opt-in acceptance entry.
+  // It may already exist; this permission never creates or retargets a route.
+  const extra=routes.filter(r=>!baseline.routes.some(b=>b.pattern===r.pattern));
+  if(allowAcceptanceEntry){
+    assert.equal(extra.length,1,'Expected only the existing acceptance entry');
+    assert.match(extra[0].pattern,/^anevum\.com\/__enter\/v095-v096\*?$/,'Unexpected additional route');
+    assert.ok(typeof extra[0].script==='string'&&extra[0].script,'Acceptance route target missing');
+    assert.notEqual(extra[0].request_limit_fail_open,true,'Acceptance route must fail closed');
+  }
+  assert.deepEqual(normalizeRoutes(allowAcceptanceEntry?routes.filter(r=>!extra.includes(r)):routes),baseline.routes,'Cloudflare route inventory drift');
   assert.equal(routes.filter(x=>x.pattern.startsWith('anevum.com/studio/alpha')).length,0,'Existing public alpha route must be reviewed independently');
   assert.deepEqual(signatures(settings.bindings),baseline.required_binding_signatures,'Current bindings drift');
   assert.equal(live.id,baseline.live_version.id);
@@ -70,8 +79,8 @@ export function validateBaseline({deployment,routes,settings,live,pilot,exposure
   assert.deepEqual(live.resources.script_runtime,pilot.resources.script_runtime);
   return {status:'BASELINE_PASS',routeCount:routes.length,bindings:settings.bindings.length};
 }
-export function validateUploadedCandidate({before,after,candidate,baseline=manifest}){
-  validateBaseline(before,baseline);
+export function validateUploadedCandidate({before,after,candidate,baseline=manifest,allowAcceptanceEntry=false}){
+  validateBaseline(before,baseline,{allowAcceptanceEntry});
   assert.deepEqual(after.deployment,before.deployment,'Version upload changed traffic');
   assert.deepEqual(normalizeRoutes(after.routes),normalizeRoutes(before.routes),'Version upload changed routes');
   assert.deepEqual(signatures(after.settings.bindings),signatures(before.settings.bindings),'Version upload changed bindings');
