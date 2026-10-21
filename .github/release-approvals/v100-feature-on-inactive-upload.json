@@ -1,1 +1,17 @@
-{"source_sha":"28f163a0015631b1d8eb58922c03596ae8febd22","release_branch":"release/v084-continuance-approved-20261019","worker":"anevum-apex-prelaunch-gateway","allow_inactive_version_upload":true,"allow_route_changes":false,"allow_traffic_promotion":false,"allow_preview_urls":false,"confirmed_by":"anevum","build_flags":{"VITE_IREN_SPATIAL_GUIDE":true,"VITE_NATIVE_CREATOR_STUDIO_V095":true,"VITE_PACKAGE_CREATOR_GALLERY_V010":true},"combined_qa_head":"9606760a1f04376b20cb86be18ee384cad862b8e","combined_qa_run":39613686430}
+{
+  "source_sha": "28f163a0015631b1d8eb58922c03596ae8febd22",
+  "release_branch": "release/v084-continuance-approved-20261019",
+  "worker": "anevum-apex-prelaunch-gateway",
+  "allow_inactive_version_upload": true,
+  "allow_route_changes": false,
+  "allow_traffic_promotion": false,
+  "allow_preview_urls": false,
+  "confirmed_by": "anevum",
+  "build_flags": {
+    "VITE_IREN_SPATIAL_GUIDE": true,
+    "VITE_NATIVE_CREATOR_STUDIO_V095": true,
+    "VITE_PACKAGE_CREATOR_GALLERY_V010": true
+  },
+  "combined_qa_head": "dec7db94d75240b57341c4357078fc3b1bc3be4e",
+  "combined_qa_run": 39641767946
+}
