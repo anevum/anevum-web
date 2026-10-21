@@ -166,6 +166,30 @@ try{
   fixture.control.set({actor:'owner',mode:'expiry',reset:true});await navigate('/projects/package/'+ids.project+'?preview=1');await until(()=>evaluate('!!document.querySelector("[data-native-player] iframe")||document.body.textContent.toLowerCase().includes("private playtest expired")'),'Expiring preview or immediate expiry');await until(()=>evaluate('document.body.textContent.toLowerCase().includes("private playtest expired")'),'Private capability expiry',10000);assert.equal(await visible('[data-native-player] iframe'),false);results.push({case:'expired-private-frame-removed',passed:true});
   for(const mode of ['unavailable','html']){fixture.control.set({actor:'owner',mode});await navigate('/studio/packages');await until(()=>visible('.av095-status'),'Unavailable mode');assert.equal(await visible('[data-native-project]'),false);await screenshot('native-'+mode+'-320');results.push({case:'fail-closed-'+mode,passed:true});}
  }
+ if(args.includes('--recovery')){
+  fixture.control.set({actor:'owner',mode:'hang-canonical'});
+  await navigate('/studio');
+  await until(()=>evaluate('document.body.textContent.includes("did not respond within 15 seconds")'),'Bounded canonical Studio read',22000);
+  await screenshot('canonical-studio-timeout-320');
+  fixture.control.set({mode:'canonical-records'});
+  await clickText('RETRY STUDIO ACCESS');
+  await until(()=>evaluate('document.body.textContent.includes("OWNER PRIVATE RECORD")'),'Explicit Studio retry');
+  results.push({case:'canonical-studio-read-deadline-and-explicit-retry',passed:true});
+  fixture.control.set({actor:'other',mode:'canonical-records'});
+  await delay(5200); // Better Auth focus refresh is intentionally throttled.
+  await evaluate('document.dispatchEvent(new Event("visibilitychange"))');
+  await until(()=>evaluate('document.querySelector(".st-identity")?.textContent.includes("@v103_other")'),'Same-document canonical identity switch');
+  assert.equal(await evaluate('document.body.textContent.includes("OWNER PRIVATE RECORD")'),false,'Previous private records survived an account switch');
+  assert.equal(await visible('.st-project'),false);
+  await screenshot('canonical-other-member-320');
+  results.push({case:'same-document-studio-account-switch-hides-old-private-records',passed:true});
+  fixture.control.set({actor:'owner',mode:'hang-native'});
+  await navigate('/studio/packages');
+  await until(()=>evaluate('document.body.textContent.includes("did not respond within 15 seconds")'),'Bounded native capability read',22000);
+  fixture.control.set({mode:'ready'});await clickText('Try again');
+  await until(()=>visible('[data-native-project]'),'Explicit native retry');
+  results.push({case:'native-read-deadline-and-explicit-retry',passed:true});
+ }
  assert.equal(exceptions.length,0,'Unhandled browser exceptions: '+JSON.stringify(exceptions));
  writeFileSync(join(output,'acceptance.json'),JSON.stringify({source,status:'PASS',syntheticOnly:true,physicalDeviceAcceptance:false,disabled,cases:results,requests:fixture.control.trace()},null,2));
  console.log('V095_NATIVE_REACT_BROWSER=PASS '+results.length+' cases; synthetic loopback only');

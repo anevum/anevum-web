@@ -9,6 +9,7 @@ import {
  type StudioReviewProject,type StudioReviewHistory,type StudioReviewManifest,type StudioReviewReceipt
 } from '../lib/canonical-studio';
 import './canonical-studio.css';
+import {readWithDeadline} from '../../../shared/read-deadline.mjs';
 import {nativeCreatorEnabled} from '../lib/native-creator-v095';
 import {workbenchAlphaEnabled} from '../lib/workbench-alpha';
 import {NativeStudioNavigation} from './NativeCreatorStudio';
@@ -48,40 +49,48 @@ type Mode='list'|'new'|'edit'|'review';
 
 export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
  const {data:session,isPending}=canonicalAuthClient.useSession();
+ const {projectId}=useParams();
  const id=session?.user?.id;
- const [identity,setIdentity]=useState<CanonicalProfile|null>(null);
- const [phase,setPhase]=useState<'loading'|'ready'|'unavailable'|'incomplete'>('loading');
- const [message,setMessage]=useState('');
- const [uploads,setUploads]=useState(false);
- const [canReview,setCanReview]=useState(false);
- useEffect(()=>{
-  if(!id||session?.user?.emailVerified!==true)return;
-  let live=true;const controller=new AbortController();
-  setPhase('loading');setMessage('');
-  Promise.all([studioHealth(controller.signal),canonicalMe(controller.signal)]).then(async([health,profile])=>{
-   if(!live)return;
-   if(profile.memberId!==id)throw Error('Member identity changed. Sign in again.');
-   if(!health.studioReady){setPhase('unavailable');return;}
-   if(!profile.profile?.handle){setPhase('incomplete');return;}
-   // Health reports the environment capability; only this signed-in user's
-   // canonical API response can grant upload pilot access.
-   const memberStudio=await studioList(controller.signal);
-   if(!live)return;
-   setIdentity(profile.profile);setUploads(memberStudio.uploadsReady===true);
-   setCanReview(memberStudio.canReview===true);setPhase('ready');
-  }).catch(e=>{if(live){setMessage(showError(e));setPhase('unavailable')}});
-  return()=>{live=false;controller.abort();};
- },[id,session?.user?.emailVerified]);
  if(isPending)return <section className="st-status" role="status">VERIFYING CANONICAL MEMBER SESSION…</section>;
  if(!id||session?.user?.emailVerified!==true)return <section className="st-status">
   <span className="st-kicker">CONTINUANCE INSTITUTE / CREATOR STUDIO</span>
   <h1>SIGN IN TO CREATE.</h1><p>Private drafts belong to your verified ANEVUM account.</p>
   <Link className="st-action" to="/join">MEMBER SIGN-IN ↗</Link>
  </section>;
+ // Remount before rendering another member or project. Private records,
+ // file queues, review decisions and in-flight completions stay with that view.
+ return <SessionStudio key={id+':'+mode+':'+(projectId||'')} id={id} mode={mode}/>;
+}
+function SessionStudio({id,mode}:{id:string;mode:Mode}){
+ const [attempt,setAttempt]=useState(0);
+ const [identity,setIdentity]=useState<CanonicalProfile|null>(null);
+ const [phase,setPhase]=useState<'loading'|'ready'|'unavailable'|'incomplete'>('loading');
+ const [message,setMessage]=useState('');
+ const [uploads,setUploads]=useState(false);
+ const [canReview,setCanReview]=useState(false);
+ useEffect(()=>{
+  let live=true;const controller=new AbortController();
+  setPhase('loading');setMessage('');
+  readWithDeadline(async signal=>{
+   const [health,profile]=await Promise.all([studioHealth(signal),canonicalMe(signal)]);
+   if(profile.memberId!==id)throw Error('Member identity changed. Sign in again.');
+   const memberStudio=health.studioReady&&profile.profile?.handle?await studioList(signal):null;
+   return {health,profile,memberStudio};
+  },controller.signal).then(({health,profile,memberStudio})=>{
+   if(!live)return;
+   if(!health.studioReady){setPhase('unavailable');return;}
+   if(!profile.profile?.handle){setPhase('incomplete');return;}
+   // Only this account's canonical response grants upload or review capability.
+   setIdentity(profile.profile);setUploads(memberStudio?.uploadsReady===true);
+   setCanReview(memberStudio?.canReview===true);setPhase('ready');
+  }).catch(e=>{if(live){setMessage(showError(e));setPhase('unavailable')}});
+  return()=>{live=false;controller.abort();};
+ },[id,attempt]);
  if(phase==='loading')return <section className="st-status" role="status">OPENING PRIVATE CREATOR STUDIO…</section>;
  if(phase==='unavailable')return <section className="st-status">
   <span className="st-kicker">CREATOR STUDIO / SERVICE STATUS</span><h1>STUDIO ACCESS UNAVAILABLE.</h1>
   <p>{message||'The Studio service is disabled or temporarily unavailable. No project information has been changed.'}</p>
+  <button className="st-action" type="button" onClick={()=>setAttempt(n=>n+1)}>RETRY STUDIO ACCESS</button>
   <Link className="st-action" to="/member">RETURN TO MY SPACE ↗</Link>
  </section>;
  if(phase==='incomplete')return <section className="st-status">
@@ -124,13 +133,14 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
 function StudioLibrary(){
  const [items,setItems]=useState<StudioProject[]>([]),[error,setError]=useState(''),[loading,setLoading]=useState(true);
  const [search,setSearch]=useState('');
+ const [attempt,setAttempt]=useState(0);
  const [statusFilter,setStatusFilter]=useState<'all'|'draft'|'pending_review'|'changes_requested'|'rejected'>('all');
  useEffect(()=>{
-  const ac=new AbortController();
-  studioList(ac.signal).then(r=>setItems(r.projects)).catch(e=>{if(!ac.signal.aborted)setError(showError(e))})
+  const ac=new AbortController();setLoading(true);setError('');
+  readWithDeadline(signal=>studioList(signal),ac.signal).then(r=>{if(!ac.signal.aborted)setItems(r.projects)}).catch(e=>{if(!ac.signal.aborted)setError(showError(e))})
    .finally(()=>{if(!ac.signal.aborted)setLoading(false)});
   return()=>ac.abort();
- },[]);
+ },[attempt]);
  const drafts=items.filter(p=>p.status==='draft'||p.status==='changes_requested').length;
  const pending=items.filter(p=>p.status==='pending_review').length;
  const needle=search.trim().toLocaleLowerCase();
@@ -166,7 +176,7 @@ function StudioLibrary(){
     <span className="st-filter-count">{visible.length} OF {items.length} WORKS</span>
    </div>}
    {loading&&<p role="status">Retrieving private projects…</p>}
-   {error&&<p role="alert" className="st-error">{error}</p>}
+   {error&&<div role="alert" className="st-error"><p>{error}</p><button className="st-action" type="button" onClick={()=>setAttempt(n=>n+1)}>RETRY PROJECTS</button></div>}
    {!loading&&!error&&items.length===0&&<div className="st-empty">
     <span aria-hidden="true" className="st-orb">◎</span><h3>NO CREATIONS IN THE ARCHIVE.</h3>
     <p>Your first draft starts here. Try SIGNAL 001 or something entirely your own.</p>
@@ -200,7 +210,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
   if(create||!id)return;
   if(!uuid.test(id)){setError('Invalid project identifier');setLoading(false);return;}
   const ac=new AbortController();setLoading(true);setError('');
-  studioGet(id,ac.signal).then(({project:p,reviewHistory})=>{if(!ac.signal.aborted){setProject(p);setHistory(reviewHistory);const fields=editForm(p);setDraft(fields);setSaved(fields);}})
+  readWithDeadline(signal=>studioGet(id,signal),ac.signal).then(({project:p,reviewHistory})=>{if(!ac.signal.aborted){setProject(p);setHistory(reviewHistory);const fields=editForm(p);setDraft(fields);setSaved(fields);}})
    .catch(e=>{if(!ac.signal.aborted)setError(showError(e))})
    .finally(()=>{if(!ac.signal.aborted)setLoading(false)});
   return()=>ac.abort();
@@ -400,12 +410,12 @@ function StudioUploader({project,uploadsReady,onAssetsChanged,onProjectChanged}:
  useEffect(()=>{
   let alive=true;
   // Existing assets remain visible even when new uploads are paused.
-  studioAssets(project.id).then(r=>{if(alive){setAssets(r.assets);setStorageReady(r.storageReady);
+  readWithDeadline(signal=>studioAssets(project.id,signal)).then(r=>{if(alive){setAssets(r.assets);setStorageReady(r.storageReady);
    setMemberBytes(r.memberUsedBytes);setProjectBytes(r.projectUsedBytes);
    setGlobalBytes(r.globalUsedBytes);setGlobalCap(r.globalQuotaBytes);onAssetsChanged(r.assets)}}).catch(e=>{if(alive)setError(showError(e))});
   return()=>{alive=false;controller.current?.abort();};
  },[project.id,onAssetsChanged]);
- async function refresh(){const r=await studioAssets(project.id);setAssets(r.assets);
+ async function refresh(){const r=await readWithDeadline(signal=>studioAssets(project.id,signal));setAssets(r.assets);
   setStorageReady(r.storageReady);setMemberBytes(r.memberUsedBytes);
   setProjectBytes(r.projectUsedBytes);setGlobalBytes(r.globalUsedBytes);
    setGlobalCap(r.globalQuotaBytes);onAssetsChanged(r.assets);}
@@ -507,15 +517,17 @@ function StudioReview(){
  const [reason,setReason]=useState<Record<string,string>>({}),[busy,setBusy]=useState('');
  const [manifests,setManifests]=useState<Record<string,StudioReviewManifest>>({});
  const [inspection,setInspection]=useState('');
- async function refresh(){const r=await studioReviewQueue();setProjects(r.projects);}
- useEffect(()=>{const ac=new AbortController();studioReviewQueue(ac.signal).then(r=>setProjects(r.projects))
+ const [attempt,setAttempt]=useState(0);
+ async function refresh(){const r=await readWithDeadline(signal=>studioReviewQueue(signal));setProjects(r.projects);}
+ useEffect(()=>{const ac=new AbortController();setLoading(true);setError('');
+  readWithDeadline(signal=>studioReviewQueue(signal),ac.signal).then(r=>{if(!ac.signal.aborted)setProjects(r.projects)})
   .catch(e=>{if(!ac.signal.aborted)setError(showError(e))})
   .finally(()=>{if(!ac.signal.aborted)setLoading(false)});
-  return()=>ac.abort();},[]);
+  return()=>ac.abort();},[attempt]);
  async function inspect(p:StudioReviewProject){
   if(inspection)return;
   setInspection(p.id);setError('');
-  try{const manifest=await studioReviewManifest(p.id);setManifests(v=>({...v,[p.id]:manifest}));}
+  try{const manifest=await readWithDeadline(signal=>studioReviewManifest(p.id,signal));setManifests(v=>({...v,[p.id]:manifest}));}
   catch(e){setError(showError(e));}finally{setInspection('');}
  }
  async function decide(p:StudioReviewProject,action:'changes_requested'|'rejected'){
@@ -530,7 +542,7 @@ function StudioReview(){
   <div className="st-section-head"><div><p className="st-kicker">STAFF-ONLY / CANONICAL REVIEW</p><h2>AWAITING A DECISION.</h2></div></div>
   <p className="st-muted">This desk can request changes or reject a private submission. Publication and approval remain intentionally disabled until file scanning and the public release pipeline exist.</p>
   {loading&&<p role="status">Checking staff permission and review queue…</p>}
-  {error&&<p role="alert" className="st-error">{error}</p>}
+  {error&&<div role="alert" className="st-error"><p>{error}</p><button className="st-action" type="button" onClick={()=>setAttempt(n=>n+1)}>RETRY REVIEW QUEUE</button></div>}
   {!loading&&!error&&projects.length===0&&<p>No pending private project records.</p>}
   <div className="st-review-list">{projects.map(p=><article className="st-review" key={p.id}>
    <p className="st-kicker">@{p.handle} / {p.category.toUpperCase()} / REV {p.revision}</p>

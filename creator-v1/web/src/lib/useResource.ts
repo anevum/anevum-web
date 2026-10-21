@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import {readWithDeadline} from '../../../shared/read-deadline.mjs';
 
 export type Resource<T> =
   | { state: "loading"; data: null; error: null }
@@ -6,12 +7,16 @@ export type Resource<T> =
   | { state: "error"; data: null; error: Error };
 
 export function useResource<T>(loader: (signal: AbortSignal) => Promise<T>, deps: readonly unknown[] = []): Resource<T> {
-  const [resource, setResource] = useState<Resource<T>>({ state: "loading", data: null, error: null });
+  const [snapshot, setSnapshot] = useState<{deps:readonly unknown[];resource:Resource<T>}>(()=>({
+    deps:[...deps],resource:{ state: "loading", data: null, error: null }
+  }));
 
   useEffect(() => {
     const controller = new AbortController();
+    const currentDeps=[...deps];
+    const setResource=(resource:Resource<T>)=>setSnapshot({deps:currentDeps,resource});
     setResource({ state: "loading", data: null, error: null });
-    loader(controller.signal)
+    readWithDeadline(loader, controller.signal)
       .then((data) => { if (!controller.signal.aborted) setResource({ state: "ready", data, error: null }); })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
@@ -22,5 +27,8 @@ export function useResource<T>(loader: (signal: AbortSignal) => Promise<T>, deps
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
-  return resource;
+  // Effects run after render. Hide old private data in the render that changes
+  // identity or route dependencies, before the replacement effect can run.
+  return snapshot.deps.length===deps.length&&snapshot.deps.every((value,index)=>Object.is(value,deps[index]))
+    ?snapshot.resource:{state:'loading',data:null,error:null};
 }

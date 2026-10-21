@@ -7,7 +7,6 @@ import {spawn} from 'node:child_process';
 import {existsSync,readFileSync,writeFileSync,mkdirSync,mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {pathToFileURL,resolve} from 'node:url';
 
 const [chrome,origin,output]=process.argv.slice(2);
 assert.ok(chrome&&origin==='http://127.0.0.1:4180'&&output,'Use local 4180 apex root fixture only');

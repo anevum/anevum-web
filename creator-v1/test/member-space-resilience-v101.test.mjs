@@ -13,9 +13,9 @@ test('private My Space has independent wall and space requests with no coupled f
  assert.match(member,/async function reloadWall\(\)/);
  const spaceFn=member.split('async function reloadSpace()')[1].split('async function reloadWall()')[0];
  const wallFn=member.split('async function reloadWall()')[1].split('async function refresh()')[0];
- assert.match(spaceFn,/await canonicalSpace\(\)/);
+ assert.match(spaceFn,/await readWithDeadline\(signal=>canonicalSpace\(signal\)\)/);
  assert.doesNotMatch(spaceFn,/canonicalWall\(/);
- assert.match(wallFn,/await canonicalWall\(\)/);
+ assert.match(wallFn,/await readWithDeadline\(signal=>canonicalWall\(signal\)\)/);
  assert.doesNotMatch(wallFn,/canonicalSpace\(/);
  assert.doesNotMatch(member,/Promise\.all\(\[canonicalSpace\(\),canonicalWall\(\)\]\)/);
  assert.match(member,/Promise\.all\(\[reloadSpace\(\),reloadWall\(\)\]\)/);

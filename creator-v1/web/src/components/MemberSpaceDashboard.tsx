@@ -1,6 +1,7 @@
 import {type ReactNode,useEffect,useRef,useState} from 'react';
 import {Link,useSearchParams} from 'react-router-dom';
 import {canonicalAuthClient,canonicalSpace,canonicalWall,spaceRequest,type CanonicalProfile,type MemberSpace,type WallEntry} from '../lib/canonical-beta';
+import {readWithDeadline} from '../../../shared/read-deadline.mjs';
 import {MemberPortrait} from './MemberPortrait';
 import {ProfileImageEditor} from './ProfileImageEditor';
 import {MemberWall} from './MemberWall';
@@ -45,7 +46,7 @@ function MemberSpaceDashboardView({profile,editor}:{profile:CanonicalProfile;edi
   const version=++spaceRequestVersion.current;
   setLoading(true);setError('');
   try{
-   const next=await canonicalSpace();
+   const next=await readWithDeadline(signal=>canonicalSpace(signal));
    if(version!==spaceRequestVersion.current)return;
    setSpace(next);setFeatured(next.featuredAwards);setShowStats(next.showStats);
   }catch(e){
@@ -59,7 +60,7 @@ function MemberSpaceDashboardView({profile,editor}:{profile:CanonicalProfile;edi
   const version=++wallRequestVersion.current;
   setWallLoading(true);setWallError('');
   try{
-   const next=await canonicalWall();
+   const next=await readWithDeadline(signal=>canonicalWall(signal));
    if(version!==wallRequestVersion.current)return;
    setPosts(next.posts);setWallReady(true);
   }catch(e){
