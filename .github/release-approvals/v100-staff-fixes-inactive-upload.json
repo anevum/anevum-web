@@ -1,0 +1,14 @@
+{
+  "reviewed_merge": "857e2acb67df6737975c6dcec02e9b860697688a",
+  "release_branch": "release/v084-continuance-approved-20261019",
+  "worker": "anevum-apex-prelaunch-gateway",
+  "old_public_version": "93cc7f07-cf39-457e-af69-c9f6f4c02d25",
+  "old_protected_version": "94446397-e87d-4e5b-943b-b70a8a1a8fd2",
+  "allow_inactive_upload": true,
+  "allow_public_promotion": false,
+  "allow_route_changes": false,
+  "allow_policy_changes": false,
+  "allow_database_writes": false,
+  "allow_creator_uploads": false,
+  "founder_authorization": "approved protected test candidate only"
+}
