@@ -4,7 +4,11 @@ import {readFileSync,existsSync} from "node:fs";
 import {resolve,extname} from "node:path";
 import {fileURLToPath} from "node:url";
 import {createPackageDiscoveryFixture} from "./package-discovery-fixture-v011.mjs";
-const dist=resolve(fileURLToPath(new URL("../dist/react-staging/",import.meta.url)));
+// Root-mode is a test-only fixture for the actual apex / asset contract.
+// The default staging-path behavior remains byte-for-byte equivalent.
+const APEX_ROOT_QA=process.env.ANEVUM_APEX_ROOT_QA==="1";
+const dist=resolve(fileURLToPath(new URL(APEX_ROOT_QA?"../dist/web/":"../dist/react-staging/",import.meta.url)));
+const port=APEX_ROOT_QA?4180:4178;
 const packageDiscoveryFixture=createPackageDiscoveryFixture();
 const people=[["nova_demo","Nova Studio"],["moss_demo","Moss Workshop"],["oxide_demo","Oxide Collective"],["relay_demo","Relay Lab"]].map(([handle,displayName])=>({handle,displayName,publishedProjects:2}));
 const seeds=[
@@ -294,6 +298,20 @@ createServer((req,res)=>{
     }));
   }
   if(u.pathname==="/__ready")return json(res,{ready:existsSync(resolve(dist,"index.html"))});
+  if(APEX_ROOT_QA&&u.pathname.startsWith("/assets/")){
+    const rel=u.pathname.slice(1);
+    if(!/^assets\/[a-zA-Z0-9._/-]+$/.test(rel)||rel.split("/").includes(".."))return json(res,{error:"not-found"},404);
+    const path=resolve(dist,rel);
+    if(!path.startsWith(dist+"/")||!existsSync(path))return json(res,{error:"not-found"},404);
+    res.writeHead(200,{"content-type":mime[extname(path)]||"application/octet-stream","x-content-type-options":"nosniff","cache-control":"no-store"});
+    return res.end(readFileSync(path));
+  }
+  if(APEX_ROOT_QA&&u.pathname==="/"){
+    res.writeHead(200,{"content-type":"text/html; charset=utf-8","cache-control":"no-store",
+      "x-content-type-options":"nosniff",
+      "content-security-policy":"default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'"});
+    return res.end(readFileSync(resolve(dist,"index.html"),"utf8").replace("</head>",overlay+"</head>"));
+  }
   if(u.pathname.startsWith("/creator/api/v1/"))return api(res,u);
   if(u.pathname.startsWith("/api/v1/member/")||u.pathname.startsWith("/api/v1/members/"))return offlineMember(req,res,u);
   if(u.pathname.startsWith("/creator/assets/")){
@@ -327,4 +345,4 @@ createServer((req,res)=>{
   }
   return json(res,{error:"not-found"},404);
  }catch(e){console.error(e);return json(res,{error:"fixture-error"},500);}
-}).listen(4178,"127.0.0.1",()=>console.log("ANEVUM_VISUAL_FIXTURE_READY"));
+}).listen(port,"127.0.0.1",()=>console.log("ANEVUM_VISUAL_FIXTURE_READY_"+(APEX_ROOT_QA?"APEX_ROOT":"STAGING")));

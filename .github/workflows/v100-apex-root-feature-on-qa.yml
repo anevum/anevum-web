@@ -1,0 +1,107 @@
+# Test the actual apex / build, not the /creator/ staging artifact.
+# This workflow never writes Cloudflare or production accounts.
+name: ANEVUM V100 Apex Root Feature-ON Browser QA
+on:
+  push:
+    branches: [ops/v100-apex-root-qa-20261021-001]
+  pull_request:
+    paths:
+      - .github/workflows/v100-apex-root-feature-on-qa.yml
+      - creator-v1/test/portal-offline-preview.mjs
+      - creator-v1/test/capture-v100-apex-root.mjs
+      - creator-v1/test/v100-apex-root-assets.test.mjs
+permissions:
+  contents: read
+concurrency:
+  group: anevum-v100-apex-root-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      VITE_IREN_SPATIAL_GUIDE: 'true'
+      VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
+      VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pin reviewed V100 application source without rewriting application
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor 28f163a0015631b1d8eb58922c03596ae8febd22 HEAD
+          git diff --exit-code 28f163a0015631b1d8eb58922c03596ae8febd22 HEAD -- creator-v1/web creator-v1/apex-prelaunch creator-v1/canonical-auth site/alpha/v003
+      - name: Install fixed toolchain and build site-root feature-ON bundle
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          test -s creator-v1/dist/web/index.html
+          test -z "$(find creator-v1/dist/web -name '*.map' -print -quit)"
+      - name: Test root-path and missing-asset regressions
+        run: |
+          set -euo pipefail
+          node --check creator-v1/test/portal-offline-preview.mjs
+          node --check creator-v1/test/capture-v100-apex-root.mjs
+          node --test creator-v1/test/v100-apex-root-assets.test.mjs
+          node creator-v1/test/v100-apex-root-assets.test.mjs creator-v1/dist/web
+      - name: Render actual feature-ON root build on mobile and desktop
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$chrome"
+          mkdir -p evidence/v100-apex-root
+          ANEVUM_APEX_ROOT_QA=1 node creator-v1/test/portal-offline-preview.mjs > evidence/v100-apex-root/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 80); do
+            if curl --fail --silent --max-time 3 http://127.0.0.1:4180/__ready > /dev/null; then ready=1; break; fi
+            sleep 0.3
+          done
+          test "$ready" = 1
+          node creator-v1/test/capture-v100-apex-root.mjs "$chrome" http://127.0.0.1:4180 evidence/v100-apex-root
+          test -s evidence/v100-apex-root/acceptance.json
+          test -s evidence/v100-apex-root/apex-root-320.png
+          test -s evidence/v100-apex-root/apex-root-390.png
+          test -s evidence/v100-apex-root/apex-root-1440.png
+      - name: Archive exactly tested apex-root bytes and immutable manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp -a creator-v1/dist/web evidence/v100-apex-root/compiled-apex-root
+          node --input-type=module <<'JS'
+          import {readFileSync,readdirSync,writeFileSync} from 'node:fs';
+          import {createHash} from 'node:crypto';
+          import {execFileSync} from 'node:child_process';
+          const root='creator-v1/dist/web';
+          const files=readdirSync(root,{recursive:true,withFileTypes:true}).filter(x=>x.isFile()).map(x=>{
+            const path=x.parentPath+'/'+x.name;
+            return {path:path.slice(root.length+1),sha256:createHash('sha256').update(readFileSync(path)).digest('hex')};
+          }).sort((a,b)=>a.path.localeCompare(b.path));
+          const head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+          const browser=JSON.parse(readFileSync('evidence/v100-apex-root/acceptance.json','utf8'));
+          if(browser.status!=='PASS'||!browser.results?.some(x=>x.width===390))throw Error('Missing actual root render');
+          writeFileSync('evidence/v100-apex-root/build.json',JSON.stringify({
+            application_source:'28f163a0015631b1d8eb58922c03596ae8febd22',
+            harness_source:head,asset_base:'/',runtime_path:'/',entry:'index.html',
+            flags:{VITE_IREN_SPATIAL_GUIDE:true,VITE_NATIVE_CREATOR_STUDIO_V095:true,VITE_PACKAGE_CREATOR_GALLERY_V010:true},
+            syntheticOnly:true,authenticatedAcceptance:false,physicalDeviceAcceptance:false,
+            cloudflareCandidate:null,productionActivated:false,assets:files
+          },null,2)+'\n');
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v100-apex-root-feature-on-evidence
+          path: evidence/v100-apex-root/
+          if-no-files-found: error
+          retention-days: 14
