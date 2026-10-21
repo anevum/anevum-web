@@ -8,6 +8,8 @@ on:
       - creator-v1/test/v100-acceptance-inventory.test.mjs
       - creator-v1/ops/v100-observatory-ui-candidate.mjs
       - creator-v1/test/v100-observatory-ui-candidate.test.mjs
+      - creator-v1/ops/v100-observatory-reconcile.mjs
+      - creator-v1/test/v100-observatory-reconcile.test.mjs
       - .github/release-approvals/v100-observatory-inactive-upload.json
   pull_request:
     paths:
@@ -16,6 +18,8 @@ on:
       - creator-v1/test/v100-acceptance-inventory.test.mjs
       - creator-v1/ops/v100-observatory-ui-candidate.mjs
       - creator-v1/test/v100-observatory-ui-candidate.test.mjs
+      - creator-v1/ops/v100-observatory-reconcile.mjs
+      - creator-v1/test/v100-observatory-reconcile.test.mjs
 permissions:
   contents: read
 concurrency:
@@ -37,6 +41,7 @@ jobs:
       - name: Verify UI-only preservation and authorization regressions
         run: |
           node --test creator-v1/test/v100-acceptance-inventory.test.mjs creator-v1/test/v100-observatory-ui-candidate.test.mjs creator-v1/test/staff-navigation-and-connecting-v099.test.mjs creator-v1/test/staff-observatory-ux-v091.test.mjs creator-v1/test/staff-observatory-aura-v092.test.mjs creator-v1/test/staff-session-transport-v091.test.mjs
+          node --test creator-v1/test/v100-observatory-reconcile.test.mjs
       - name: Synthetic desktop and phone Observatory browser acceptance
         shell: bash
         run: |
@@ -90,6 +95,31 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: node creator-v1/ops/v100-observatory-ui-candidate.mjs --check
+  observatory-reconciliation:
+    if: github.repository == 'anevum/anevum-web' && github.actor == 'anevum' && github.event_name == 'push' && github.ref == 'refs/heads/ops/v100-candidate-acceptance-20261021-001'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: node --test creator-v1/test/v100-observatory-reconcile.test.mjs
+      - name: Identify and verify the existing upload using read-only requests
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          RECEIPT_FILE: ${{ runner.temp }}/observatory-reconciliation.json
+        run: node creator-v1/ops/v100-observatory-reconcile.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v100-observatory-reconciliation
+          path: ${{ runner.temp }}/observatory-reconciliation.json
+          if-no-files-found: error
+          retention-days: 14
   observatory-inactive-upload:
     needs: source
     if: >-
