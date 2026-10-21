@@ -63,3 +63,4 @@ import "./iren-guided-v080.css";
 import "./continuance-entry-v052.css";
 import "./iren-living-v088.css";
 import "./continuance-experience-v091.css";
+import "./staff-verified-shortcut-v099.css";
