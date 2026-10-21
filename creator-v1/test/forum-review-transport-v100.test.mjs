@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import ts from 'typescript';
+import * as ts from 'typescript';
 const file=new URL('../web/src/lib/forum-review-transport-v100.ts',import.meta.url);
 const js=ts.transpileModule(readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
 const {requestForumReview,describeForumReviewError}=await import('data:text/javascript;base64,'+Buffer.from(js).toString('base64'));
