@@ -43,8 +43,8 @@ jobs:
           test "$GITHUB_REPOSITORY" = 'anevum/anevum-web'
           test "$GITHUB_REF" = 'refs/heads/ops/v100-staff-fixes-inactive-20261021-001'
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          git merge-base --is-ancestor f3655792b3c6621699ae1fb38eeeac7bc887f9f6 HEAD
-          git diff --name-only f3655792b3c6621699ae1fb38eeeac7bc887f9f6 HEAD > /tmp/anevum-approved-changes.txt
+          git merge-base --is-ancestor 66e63df451d9f802d8f21d98d8ae9b235abdb969 HEAD
+          git diff --name-only 66e63df451d9f802d8f21d98d8ae9b235abdb969 HEAD > /tmp/anevum-approved-changes.txt
           while IFS= read -r path; do
             case "$path" in
               .github/workflows/v100-staff-fixes-inactive.yml|creator-v1/ops/v100-staff-fixes-inactive.mjs|.github/release-approvals/v100-staff-fixes-inactive-upload.json) ;;
@@ -121,7 +121,7 @@ jobs:
             throw Error('Root browser or static asset acceptance failed');
           const head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
           const manifest={
-            release_source:'f3655792b3c6621699ae1fb38eeeac7bc887f9f6',
+            release_source:'66e63df451d9f802d8f21d98d8ae9b235abdb969',
             qa_workflow_head:head,asset_base:'/',entry:'index.html',
             flags:{VITE_IREN_SPATIAL_GUIDE:true,VITE_NATIVE_CREATOR_STUDIO_V095:true,
               VITE_PACKAGE_CREATOR_GALLERY_V010:true},
@@ -182,7 +182,7 @@ jobs:
           import {readFileSync} from 'node:fs';
           const a=JSON.parse(readFileSync('.github/release-approvals/v100-staff-fixes-inactive-upload.json','utf8'));
           assert.deepEqual(a,{
-            reviewed_merge:'f3655792b3c6621699ae1fb38eeeac7bc887f9f6',
+            reviewed_merge:'66e63df451d9f802d8f21d98d8ae9b235abdb969',
             release_branch:'release/v084-continuance-approved-20261019',
             worker:'anevum-apex-prelaunch-gateway',
             old_public_version:'93cc7f07-cf39-457e-af69-c9f6f4c02d25',
@@ -260,8 +260,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git merge-base --is-ancestor f3655792b3c6621699ae1fb38eeeac7bc887f9f6 HEAD
-          git diff --exit-code f3655792b3c6621699ae1fb38eeeac7bc887f9f6 HEAD -- creator-v1/web creator-v1/apex-prelaunch creator-v1/canonical-auth site/alpha/v003
+          git merge-base --is-ancestor 66e63df451d9f802d8f21d98d8ae9b235abdb969 HEAD
+          git diff --exit-code 66e63df451d9f802d8f21d98d8ae9b235abdb969 HEAD -- creator-v1/web creator-v1/apex-prelaunch creator-v1/canonical-auth site/alpha/v003
           node --check creator-v1/ops/v100-staff-fixes-inactive.mjs
           node --experimental-strip-types --test creator-v1/test/v100-forum-review-access-transport.test.mjs
           node --test creator-v1/test/v100-legacy-command-entry.test.mjs creator-v1/test/private-read-recovery-v103.test.mjs creator-v1/test/studio-migration-rehearsal-v103.test.mjs

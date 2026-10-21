@@ -40,8 +40,8 @@ test("Tour teaches actual page elements, supports dismissal and never exposes lo
 });
 
 test("Compact member landing retains real server-authoritative stats and account controls",()=>{
- assert.match(member,/canonicalSpace\(\)/);
- assert.match(member,/canonicalWall\(\)/);
+ assert.match(member,/readWithDeadline\(signal=>canonicalSpace\(signal\)\)/);
+ assert.match(member,/readWithDeadline\(signal=>canonicalWall\(signal\)\)/);
  assert.match(member,/data-iren-anchor=\{space\?\.stats\?"progress":undefined\}/);
  assert.match(member,/SpaceProgress space=\{space\}/);
  assert.match(member,/profile\.visibility==='public'/);

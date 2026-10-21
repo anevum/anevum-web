@@ -13,7 +13,7 @@ import {verifyCandidateAssets} from './v095-inactive-candidate-gate.mjs';
 import {verifyApexRootAssets} from '../test/v100-apex-root-assets.test.mjs';
 
 const REPO='anevum/anevum-web';
-const SOURCE='f3655792b3c6621699ae1fb38eeeac7bc887f9f6';
+const SOURCE='66e63df451d9f802d8f21d98d8ae9b235abdb969';
 const ACCOUNT='2f7ee83107240152097efd956a4e8335';
 const ZONE='8abe27259b5436af5966d3b40d9a3760';
 const WORKER='anevum-apex-prelaunch-gateway';
