@@ -70,7 +70,8 @@ try{
   if(!result){
    const geometry=(label.includes("inside-")||label.includes("docked-"))?await evaluate('(()=>{const e=document.querySelector(".ir80-help");if(!e)return "no-panel";const r=e.getBoundingClientRect(),p=e.parentElement?.getBoundingClientRect(),s=getComputedStyle(e);return JSON.stringify({viewport:[innerWidth,innerHeight],panel:[r.left,r.top,r.right,r.bottom,r.width,r.height],parent:p?[p.left,p.top,p.right,p.bottom,p.width,p.height]:null,computed:{width:s.width,maxHeight:s.maxHeight,right:s.right,bottom:s.bottom,boxSizing:s.boxSizing},className:e.className,outer:document.querySelector(".ir88-companion")?.className});})()'):"";
    const placement=label.includes("real-target-uncovered")?await evaluate('(()=>{const names=[".ir97-target-halo",".ir97-speech-bubble",".ir97-floating-bot","#portal-project-query"];return JSON.stringify(Object.fromEntries(names.map(name=>{const e=document.querySelector(name),r=e?.getBoundingClientRect();return [name,r?{left:r.left,top:r.top,right:r.right,bottom:r.bottom}:null]})));})()'):"";
-   throw Error("IREN_V097_FAILED_"+label+(geometry?" / "+geometry:"")+(placement?" / "+placement:""));
+   const invite=label.includes("first-contact-robot")?await evaluate('(()=>{const e=document.querySelector(".ir97-invite-active .ir80-dock"),p=e?.parentElement,r=e?.getBoundingClientRect();return JSON.stringify({height:innerHeight,width:innerWidth,rect:r?[r.left,r.top,r.right,r.bottom,r.width,r.height]:null,companion:p?.getAttribute("class"),parentStyle:p?.getAttribute("style"),style:e?{width:getComputedStyle(e).width,bottom:getComputedStyle(p).bottom}:null});})()'):"";
+   throw Error("IREN_V097_FAILED_"+label+(geometry?" / "+geometry:"")+(placement?" / "+placement:"")+(invite?" / "+invite:""));
   }
  };
  await send("Page.enable");await send("Runtime.enable");
