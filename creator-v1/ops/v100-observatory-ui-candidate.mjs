@@ -22,7 +22,11 @@ export function parseModules(download){
   const headers=part.slice(0,separator.index);
   const name=/^content-disposition:[^\r\n]*\bname="([A-Za-z0-9_.-]+\.m?js)"/im.exec(headers)?.[1];
   assert.ok(name&&!name.includes('..'),'Unexpected module name');
-  assert.match(headers,/^content-type:\s*(?:application|text)\/(?:javascript|ecmascript)(?:[;+\s]|$)/im);
+  // Cloudflare's retained module download may omit this optional header.
+  // Names remain restricted to JS and patchUi parses every module as JS.
+  const types=[...headers.matchAll(/^content-type:([^\r\n]*)/gim)].map(match=>match[1].trim());
+  assert.ok(types.length<=1,'Duplicate module content type');
+  if(types.length)assert.ok(/^(?:application|text)\/(?:javascript|ecmascript)(?:\+module)?(?:\s*;[^\r\n]*)?$/i.test(types[0]),'Unexpected module content type');
   return {name,source:part.slice(separator.index+separator[0].length).replace(/\r?\n$/,'')};
  });
  assert.ok(modules.length>0&&modules.length<=4,'Unexpected module inventory');
@@ -61,19 +65,43 @@ export async function patchUi(modules,candidate){
   for(const field of fields.sort((a,b)=>b.start-a.start))source=source.slice(0,field.start)+'"UI_'+field.name+'"'+source.slice(field.end);
   return source;
  };
- for(let i=0;i<modules.length;i++)assert.equal(await erase(result[i].source),await erase(modules[i].source),'Non-UI byte changed');
+ for(let i=0;i<modules.length;i++)assert.ok(await erase(result[i].source)===await erase(modules[i].source),'Non-UI byte changed');
  return result;
+}
+export async function uploadMetadata(settings,modules,runtime={}){
+ const {parse}=await import('@babel/parser');
+ const entrypoints=modules.filter(module=>parse(module.source,{sourceType:'module'}).program.body.some(statement=>
+  statement.type==='ExportDefaultDeclaration'||statement.type==='ExportNamedDeclaration'&&(statement.specifiers||[]).some(specifier=>
+   specifier.exported?.name==='default'||specifier.exported?.value==='default')));
+ assert.equal(entrypoints.length,1,'Expected exactly one module entrypoint');
+ const bindings=settings.bindings.map(({id,...binding})=>{
+  if(binding.type!=='d1')return binding;
+  const database_id=binding.database_id||id;
+  assert.ok(typeof database_id==='string'&&database_id.length>0,'Missing database binding identifier');
+  return {...binding,database_id};
+ });
+ const metadata={main_module:entrypoints[0].name,bindings};
+ const runtimeKeys=['compatibility_date','compatibility_flags','usage_model'];
+ assert.ok(Object.keys(runtime).every(key=>runtimeKeys.includes(key)||runtime[key]==null),'Retained runtime needs an unsupported upload setting');
+ // Version uploads do not accept nonversioned script settings. The snapshot
+ // comparison verifies that those settings are preserved without rewriting them.
+ for(const key of runtimeKeys){
+  if(key in runtime&&key in settings)assert.ok(stable(runtime[key])===stable(settings[key]),'Retained runtime disagrees with live settings');
+  if(key in runtime)metadata[key]=runtime[key];
+  else if(key in settings)metadata[key]=settings[key];
+ }
+ return metadata;
 }
 const stable=x=>JSON.stringify(x,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b))):v);
 const bindingLock=bindings=>stable(bindings.map(({id,...b})=>b.type==='d1'?{name:b.name,type:b.type,database_id:b.database_id||id}:b).sort((a,b)=>a.name.localeCompare(b.name)));
 export async function prepareInactive(api,{candidate,apply=false}={}){
  assert.equal(hash(candidate.trimEnd()+'\n'),EXPECTED_UI_SOURCE,'Reviewed UI source changed');
  const snapshot=async()=>{
-  const [deployment,settings,source,routes,exposure,versions,apex]=await Promise.all([
+  const [deployment,settings,source,routes,exposure,versions,apex,retained]=await Promise.all([
    api('GET',BASE+'/deployments'),api('GET',BASE+'/settings'),api('GET',BASE,false),
    api('GET','/zones/'+ZONE+'/workers/routes'),api('GET',BASE+'/subdomain'),api('GET',BASE+'/versions?per_page=100'),
-   api('GET','/accounts/'+ACCOUNT+'/workers/scripts/anevum-apex-prelaunch-gateway/deployments')]);
-  return {deployment,settings,source,routes,exposure,versions,apex};
+   api('GET','/accounts/'+ACCOUNT+'/workers/scripts/anevum-apex-prelaunch-gateway/deployments'),api('GET',BASE+'/versions/'+PRIOR)]);
+  return {deployment,settings,source,routes,exposure,versions,apex,retained};
  };
  const before=await snapshot();
  assert.deepEqual(before.deployment.deployments?.[0]?.versions,[{version_id:PRIOR,percentage:100}],'Live staff version changed');
@@ -84,25 +112,24 @@ export async function prepareInactive(api,{candidate,apply=false}={}){
  assert.ok(b.some(x=>x.type==='service'&&x.name==='APEX_AUTH'&&x.service==='anevum-apex-prelaunch-gateway'));
  assert.ok(b.some(x=>x.type==='d1'&&x.name==='MEMBER_DB'&&(x.database_id||x.id)==='e1d29049-c83b-4534-8355-dc1fa36ba6d8'));
  const modules=await patchUi(parseModules(before.source),candidate);
- const main=modules.find(m=>/export\s+default\s/.test(m.source))?.name;
- assert.ok(main,'Missing module entrypoint');
- const metadata={main_module:main,bindings:b.map(({id,...binding})=>binding)};
- for(const key of ['compatibility_date','compatibility_flags','usage_model','tags','tail_consumers','logpush','placement','observability'])if(key in before.settings)metadata[key]=before.settings[key];
+ assert.equal(before.retained.id,PRIOR,'Retained version identity changed');
+ assert.ok(before.retained.resources?.script_runtime,'Missing retained runtime');
+ const metadata=await uploadMetadata(before.settings,modules,before.retained.resources.script_runtime);
  const receipt={readOnly:!apply,source_sha:'28f163a0015631b1d8eb58922c03596ae8febd22',prior_version:PRIOR,
   ui_source_sha256:EXPECTED_UI_SOURCE,server_bytes_preserved:true,ui_literals_replaced:3,production_activated:false,physical_iphone_tested:false};
  if(!apply)return receipt;
  const immediate=await snapshot();
  const lock=s=>stable({...s,source:downloadDigest(s.source)});
- assert.equal(lock(immediate),lock(before),'Live configuration changed before upload');
+ assert.ok(lock(immediate)===lock(before),'Live configuration changed before upload');
  const version=await api('POST',BASE+'/versions',{metadata,modules});
  assert.match(version.id||'',/^[a-f0-9-]{36}$/);
- const [uploaded,retained]=await Promise.all([api('GET',BASE+'/versions/'+version.id),api('GET',BASE+'/versions/'+PRIOR)]);
- assert.equal(bindingLock(uploaded.resources.bindings),bindingLock(b),'Uploaded binding drift');
- assert.equal(stable(uploaded.resources.script_runtime),stable(retained.resources.script_runtime),'Uploaded runtime drift');
+ const uploaded=await api('GET',BASE+'/versions/'+version.id);
+ assert.ok(bindingLock(uploaded.resources.bindings)===bindingLock(b),'Uploaded binding drift');
+ assert.ok(stable(uploaded.resources.script_runtime)===stable(before.retained.resources.script_runtime),'Uploaded runtime drift');
  const after=await snapshot();
  for(const key of ['deployment','settings','source','routes','exposure','apex']){
   if(key==='source')assert.equal(downloadDigest(after.source),downloadDigest(before.source));
-  else assert.equal(stable(after[key]),stable(before[key]),'Inactive upload changed '+key);
+  else assert.ok(stable(after[key])===stable(before[key]),'Inactive upload changed '+key);
  }
  const added=(after.versions.items||[]).filter(x=>!(before.versions.items||[]).some(y=>x.id===y.id));
  assert.deepEqual(added.map(x=>x.id),[version.id],'Expected exactly one inactive version');
