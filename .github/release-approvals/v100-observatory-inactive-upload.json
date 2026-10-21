@@ -1,0 +1,9 @@
+{
+  "source_sha": "28f163a0015631b1d8eb58922c03596ae8febd22",
+  "ui_source_sha256": "2d5cb865963310ff620be057763802891117ab108499275cd926400ccffb8795",
+  "baseline_version": "03b731d4-be7f-480c-80ad-c50683a2dc8f",
+  "allow_inactive_version_upload": true,
+  "allow_traffic_promotion": false,
+  "allow_route_changes": false,
+  "confirmed_by": "anevum"
+}
