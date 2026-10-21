@@ -42,17 +42,21 @@ export const integratedBaseline={...manifest,deployment:{
 // Independently re-read before preparing the feature-ON variant. Neither
 // historical profile is changed; this pins the current 100% public / 0% V100 pair.
 export const featureOnBaseline={...manifest,deployment:{
- id:'d43ac90d-a3a0-49b9-8215-61581decb035',
+ id:'a2c6bff7-0541-4caf-bdaa-393966d8ca5d',
  versions:[
   {version_id:'93cc7f07-cf39-457e-af69-c9f6f4c02d25',percentage:100},
   {version_id:'8ed503b6-5df6-42a5-a536-63ccf928d25d',percentage:0}
  ]
 }};
-export const FEATURE_ON_QA_HEAD='9606760a1f04376b20cb86be18ee384cad862b8e';
-export const FEATURE_ON_QA_RUN=39613686430;
+// The earlier 39613686430 bundle was staging-path-only and failed on real iPhone.
+// Require the new exact apex-root artifact and synthetic root browser evidence.
+export const FEATURE_ON_QA_HEAD='dec7db94d75240b57341c4357078fc3b1bc3be4e';
+export const FEATURE_ON_QA_RUN=39641767946;
 export function verifyTestedFeatureOnBuild(root,record){
  assert.equal(record.application_source,'28f163a0015631b1d8eb58922c03596ae8febd22');
  assert.equal(record.harness_source,FEATURE_ON_QA_HEAD);
+ assert.equal(record.asset_base,'/','Reject staging-path /creator/ QA artifacts');
+ assert.equal(record.runtime_path,'/','Root-route bundle required');
  assert.deepEqual(record.flags,{VITE_IREN_SPATIAL_GUIDE:true,VITE_NATIVE_CREATOR_STUDIO_V095:true,VITE_PACKAGE_CREATOR_GALLERY_V010:true});
  assert.equal(record.syntheticOnly,true);
  assert.equal(record.authenticatedAcceptance,false);
@@ -69,6 +73,16 @@ export function verifyTestedFeatureOnBuild(root,record){
   assert.equal(createHash('sha256').update(readFileSync(join(root,asset.path))).digest('hex'),asset.sha256,'Tested asset bytes changed: '+asset.path);
  }
  assert.ok(seen.has('index.html'),'Tested entry document missing');
+ // Staging `/creator/assets/*.js` references left React blank on actual Safari.
+ // Test the exact HTML copied into the Cloudflare apex assets directory.
+ const html=readFileSync(join(root,'index.html'),'utf8');
+ const referenced=[...html.matchAll(/(?:src|href)="(\/[^"?#]+\.(?:js|css))"/g)].map(x=>x[1]);
+ assert.ok(referenced.some(x=>x.endsWith('.js'))&&referenced.some(x=>x.endsWith('.css')),
+   'Root candidate missing compiled JS or CSS');
+ for(const path of referenced){
+  assert.match(path,/^\/assets\/[a-zA-Z0-9._/-]+\.(?:js|css)$/,'Staging-path assets forbidden in apex root build');
+  assert.ok(seen.has(path.slice(1)),'Referenced asset missing in exact QA evidence: '+path);
+ }
  return {qa_run:FEATURE_ON_QA_RUN,harness_source:FEATURE_ON_QA_HEAD,files:seen.size,manifest_sha256:createHash('sha256').update(JSON.stringify(record)).digest('hex')};
 }
 export function verifyFeatureOnFlags(env){
@@ -79,7 +93,7 @@ export function verifyFeatureOnFlags(env){
 export function verifyFeatureOnQa(run){
  assert.equal(run.id,FEATURE_ON_QA_RUN,'Unreviewed combined QA run');
  assert.equal(run.head_sha,FEATURE_ON_QA_HEAD,'Combined QA source changed');
- assert.equal(run.name,'IREN V097 Spatial Companion Isolated QA');
+ assert.equal(run.name,'ANEVUM V100 Apex Root Feature-ON Browser QA');
  assert.equal(run.status,'completed');
  assert.equal(run.conclusion,'success','Combined feature-ON QA must pass');
 }
