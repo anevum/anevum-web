@@ -99,6 +99,30 @@ function offlineMember(req,res,url){
         updatedAt:"2026-10-12T00:00:00.000Z"}
     }:null);
   }
+  // Synthetic member-space browser scenario. This is read-only and strictly
+  // loopback; it cannot authenticate, alter accounts, grant roles or publish.
+  const hasSyntheticSession=(req.headers.cookie||"").split(";")
+    .some(x=>x.trim()===LOCAL_REVIEW_COOKIE);
+  if(url.pathname==="/api/v1/member/auth-methods"&&req.method==="GET")
+    return json(res,{registration:"invite-only",availability:"ready",linking:"disabled",
+      methods:{email:{available:true},google:{available:false},
+        github:{available:false},apple:{available:false},
+        microsoft:{available:false},passkey:{available:false}}});
+  if(url.pathname==="/api/v1/member/creator-profile"&&req.method==="GET")
+    return hasSyntheticSession?json(res,{memberId:FAKE_MEMBER.id,
+      profile:{handle:"offline_artist",displayName:"Synthetic Creator Preview",
+        bio:FAKE_MEMBER.bio,headline:"OFFLINE / TEST ONLY",worldTheme:"continuance",
+        focus:["games"],visibility:"private",revision:1,
+        createdAt:1791763200,updatedAt:1791763200}})
+      :json(res,{error:"Sign-in required"},401);
+  if(url.pathname==="/api/v1/member/space"&&req.method==="GET")
+    return hasSyntheticSession?json(res,{media:{},awards:[],
+      featuredAwards:[],showStats:false,revision:1,
+      stats:{wallPosts:0,awards:0,xp:0,level:1,levelStart:0,nextLevel:100}})
+      :json(res,{error:"Sign-in required"},401);
+  if(url.pathname==="/api/v1/member/wall"&&req.method==="GET")
+    return hasSyntheticSession?json(res,{posts:[]})
+      :json(res,{error:"Sign-in required"},401);
   if(url.pathname==="/api/v1/member/project-saves"&&req.method==="GET"){
     if(playerMemberHealthMode!=="canonical-saves")
       return json(res,{error:"not-available"},404);

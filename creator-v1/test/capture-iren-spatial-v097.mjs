@@ -1,0 +1,283 @@
+/**
+ * ANEVUM IREN V097 browser acceptance.
+ * Tests only a local loopback synthetic fixture, never production accounts.
+ * The browser exercises the real compiled React bundle at 320/390/768/1440px.
+ */
+import {spawn} from "node:child_process";
+import {existsSync,readFileSync,writeFileSync,mkdirSync,mkdtempSync,rmSync} from "node:fs";
+import {tmpdir} from "node:os";
+import {join} from "node:path";
+
+const [chrome,base,output]=process.argv.slice(2);
+if(!chrome||!/^http:\/\/127\.0\.0\.1:\d+$/.test(base||"")||!output)throw Error("IREN_V097_LOCAL_CHROME_REQUIRED");
+const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+async function until(fn,timeout=26000){
+ const deadline=Date.now()+timeout,last=[];
+ while(Date.now()<deadline){
+  try{const result=await fn();if(result)return result;}catch(e){last.push(String(e))}
+  await pause(130);
+ }
+ throw Error("IREN_V097_BROWSER_TIMEOUT: "+last.slice(-2).join(" / "));
+}
+mkdirSync(output,{recursive:true});
+const profile=mkdtempSync(join(tmpdir(),"anevum-iren-v097-"));
+const browser=spawn(chrome,[
+ "--headless=new","--no-sandbox","--disable-dev-shm-usage","--disable-gpu",
+ "--disable-background-networking","--remote-allow-origins=*","--no-first-run",
+ "--remote-debugging-port=0","--user-data-dir="+profile,"about:blank"
+],{stdio:"ignore"});
+let socket=null;
+const evidence=[];
+try{
+ const port=await until(()=>{
+  const file=join(profile,"DevToolsActivePort");
+  return existsSync(file)?readFileSync(file,"utf8").split("\n")[0]:null;
+ });
+ const url=await until(async()=>{
+  const response=await fetch("http://127.0.0.1:"+port+"/json/list");
+  return response.ok?(await response.json()).find(page=>page.type==="page")?.webSocketDebuggerUrl:null;
+ });
+ socket=new WebSocket(url);
+ const pending=new Map();let n=0;
+ socket.addEventListener("message",({data})=>{
+  const reply=JSON.parse(String(data));
+  if(typeof reply.id!=="number")return;
+  const task=pending.get(reply.id);
+  if(!task)return;
+  pending.delete(reply.id);
+  reply.error?task.reject(Error(reply.error.message)):task.resolve(reply.result||{});
+ });
+ await new Promise((res,rej)=>{
+  socket.addEventListener("open",res,{once:true});
+  socket.addEventListener("error",rej,{once:true});
+ });
+ const send=(method,params={})=>new Promise((resolve,reject)=>{
+  const id=++n;pending.set(id,{resolve,reject});
+  socket.send(JSON.stringify({id,method,params}));
+ });
+ const evaluate=async expr=>{
+  const result=await send("Runtime.evaluate",{expression:expr,returnByValue:true,awaitPromise:true});
+  if(result.exceptionDetails)throw Error(result.exceptionDetails.exception?.description||result.exceptionDetails.text);
+  return result.result?.value;
+ };
+ const capture=async name=>{
+  const data=(await send("Page.captureScreenshot",{format:"png",fromSurface:true})).data;
+  if(!data||data.length<4000)throw Error("IREN_SCREENSHOT_MISSING_"+name);
+  writeFileSync(join(output,name+".png"),Buffer.from(data,"base64"));
+ };
+ const check=async (label,expr)=>{
+  const result=await evaluate(expr);
+  if(!result){
+   const geometry=(label.includes("inside-")||label.includes("docked-"))?await evaluate('(()=>{const e=document.querySelector(".ir80-help");if(!e)return "no-panel";const r=e.getBoundingClientRect(),p=e.parentElement?.getBoundingClientRect(),s=getComputedStyle(e);return JSON.stringify({viewport:[innerWidth,innerHeight],panel:[r.left,r.top,r.right,r.bottom,r.width,r.height],parent:p?[p.left,p.top,p.right,p.bottom,p.width,p.height]:null,computed:{width:s.width,maxHeight:s.maxHeight,right:s.right,bottom:s.bottom,boxSizing:s.boxSizing},className:e.className,outer:document.querySelector(".ir88-companion")?.className});})()'):"";
+   const placement=label.includes("real-target-uncovered")?await evaluate('(()=>{const names=[".ir97-target-halo",".ir97-speech-bubble",".ir97-floating-bot","#portal-project-query"];return JSON.stringify(Object.fromEntries(names.map(name=>{const e=document.querySelector(name),r=e?.getBoundingClientRect();return [name,r?{left:r.left,top:r.top,right:r.right,bottom:r.bottom}:null]})));})()'):"";
+   const invite=label.includes("first-contact-robot")?await evaluate('(()=>{const e=document.querySelector(".ir97-invite-active .ir80-dock"),p=e?.parentElement,r=e?.getBoundingClientRect();return JSON.stringify({height:innerHeight,width:innerWidth,rect:r?[r.left,r.top,r.right,r.bottom,r.width,r.height]:null,companion:p?.getAttribute("class"),parentStyle:p?.getAttribute("style"),style:e?{width:getComputedStyle(e).width,bottom:getComputedStyle(p).bottom}:null});})()'):"";
+   throw Error("IREN_V097_FAILED_"+label+(geometry?" / "+geometry:"")+(placement?" / "+placement:"")+(invite?" / "+invite:""));
+  }
+ };
+ await send("Page.enable");await send("Runtime.enable");
+ await send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:"no-preference"}]});
+ for(const [width,height] of [[320,720],[390,844],[768,1024],[1440,900]]){
+  await send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:1,mobile:width<700});
+  // Each viewport exercises a genuinely fresh visitor. Prior viewport history
+  // is removed before the next navigation, never while the first page is blank.
+  if(width!==320)await evaluate('localStorage.removeItem("anevum.iren.first-contact.v092")');
+  // A background tab must not consume first contact. Install the visibility
+  // probe before any React JS executes, instead of racing the 1100ms timer.
+  let visibilityProbeId=null;
+  if(width===320){
+    const probe=await send("Page.addScriptToEvaluateOnNewDocument",{
+      source:'Object.defineProperty(document,"visibilityState",{configurable:true,get(){return window.__irenQAVisibility||"hidden"}});window.__irenQAVisibility="hidden";'
+    });
+    visibilityProbeId=probe.identifier;
+    if(!visibilityProbeId)throw Error("IREN_VISIBILITY_PROBE_NOT_INSTALLED");
+  }
+  await send("Page.navigate",{url:base+"/creator/"});
+  await until(()=>evaluate('!!document.querySelector(".ir80-dock")&&!!document.querySelector(".av79-home")'));
+  if(width===320){
+    await pause(1430);
+    await check("hidden-tab-does-not-consume-greeting",'document.visibilityState==="hidden"&&!document.querySelector(".ir97-invite")&&localStorage.getItem("anevum.iren.first-contact.v092")!=="seen"');
+    await check("visible-but-editing-stays-undisturbed",`(()=>{
+      const input=document.createElement("input");
+      input.id="qa-iren-editing-probe";
+      input.setAttribute("aria-label","Temporary typing safety probe");
+      document.body.appendChild(input);input.focus();
+      window.__irenQAVisibility="visible";
+      document.dispatchEvent(new Event("visibilitychange"));
+      return document.visibilityState==="visible"&&document.activeElement===input;
+    })()`);
+    await pause(1450);
+    await check("typing-does-not-consume-greeting",'!document.querySelector(".ir97-invite")&&localStorage.getItem("anevum.iren.first-contact.v092")!=="seen"');
+    await evaluate('(()=>{const input=document.getElementById("qa-iren-editing-probe");input.blur();input.remove();return true})()');
+    await send("Page.removeScriptToEvaluateOnNewDocument",{identifier:visibilityProbeId});
+  }
+  try{
+    await until(()=>evaluate('!!document.querySelector(".ir97-invite")'),10000);
+  }catch(error){
+    const diagnostic=await evaluate(`JSON.stringify({
+      visibility:document.visibilityState,
+      active:document.activeElement?.outerHTML?.slice(0,220),
+      seen:localStorage.getItem("anevum.iren.first-contact.v092"),
+      companion:!!document.querySelector(".ir80-dock"),
+      modal:!!document.querySelector('dialog[open],[role="dialog"][aria-modal="true"]'),
+      helperPanel:!!document.querySelector(".ir80-help"),
+      route:location.pathname
+    })`);
+    throw Error("IREN_FIRST_CONTACT_RESUME_FAILED_"+width+": "+diagnostic+" / "+String(error));
+  }
+  await check("automatic-arrival-does-not-steal-focus-"+width,'document.activeElement?.getAttribute("aria-label")!=="Close IREN"');
+  await check("welcome-live-region-"+width,'document.querySelector(".ir97-invite-voice")?.getAttribute("role")==="status"');
+  await check("first-contact-compact-choices-"+width,'document.querySelectorAll(".ir97-invite-actions > button").length===3');
+  await check("first-contact-guidance-choices-"+width,'(()=>{const text=document.querySelector(".ir97-invite-actions")?.textContent||"";return text.includes("Show me")&&text.includes("Not now")&&text.includes("More choices");})()');
+  await check("first-contact-one-companion-"+width,'document.querySelectorAll(".ir87-scout").length===1');
+  await check("first-contact-no-modal-"+width,'!document.querySelector(".ir97-speech-bubble")');
+  await check("first-contact-inside-viewport-"+width,'(()=>{const r=document.querySelector(".ir97-invite").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1&&r.top>=0&&r.bottom<=innerHeight+1;})()');
+  await until(()=>evaluate('(()=>{const r=document.querySelector(".ir97-invite-active .ir80-dock")?.getBoundingClientRect();return !!r&&r.width>=78&&r.bottom<=innerHeight-66;})()'),1500); // Await the genuine floating entrance transition.
+  await check("first-contact-robot-visible-above-chrome-"+width,'(()=>{const r=document.querySelector(".ir97-invite-active .ir80-dock")?.getBoundingClientRect();return !!r&&r.width>=78&&r.bottom<=innerHeight-66;})()');
+  await capture("iren-first-contact-"+width);
+  if(width===320){
+    await evaluate('document.querySelector(".ir97-invite-actions button:first-child").click()');
+    await until(()=>evaluate('!!document.querySelector(".ir97-speech-bubble")&&location.pathname.endsWith("/discover")'));
+    await until(()=>evaluate('!!document.querySelector(".ir97-target-halo")'));
+    await check("first-contact-tour-opt-in",'document.querySelector(".ir97-bubble-line")?.textContent.includes("Find approved")');
+    await evaluate('document.querySelector(".ir97-subtle").click()');
+    await until(()=>evaluate('!document.querySelector(".ir97-speech-bubble")'));
+    await send("Page.navigate",{url:base+"/creator/"});
+    await until(()=>evaluate('!!document.querySelector(".ir80-dock")&&!!document.querySelector(".av79-home")'));
+    await pause(1400);
+    await check("first-contact-does-not-repeat",'!document.querySelector(".ir97-invite")');
+  }else if(width===390){
+    await send("Input.dispatchKeyEvent",{type:"keyDown",key:"Escape",code:"Escape",windowsVirtualKeyCode:27});
+    await send("Input.dispatchKeyEvent",{type:"keyUp",key:"Escape",code:"Escape",windowsVirtualKeyCode:27});
+    await until(()=>evaluate('!document.querySelector(".ir97-invite")'));
+    await check("escape-restores-dock-focus",'document.activeElement?.classList.contains("ir87-scout")');
+  }else if(width===768){
+    await evaluate('document.querySelector(".ir97-invite-actions button:nth-child(3)").click()');
+    await until(()=>evaluate('!!document.querySelector(".ir92-intent-grid a")'));
+    await evaluate('document.querySelector(".ir92-intent-grid a").click()');
+    await until(()=>evaluate('location.pathname.endsWith("/discover")&&!document.querySelector(".ir97-invite")'));
+    await send("Page.navigate",{url:base+"/creator/"});
+    await until(()=>evaluate('!!document.querySelector(".ir80-dock")&&!!document.querySelector(".av79-home")'));
+    await pause(1450);
+    await check("destination-is-not-an-invitation-loop",'!document.querySelector(".ir97-invite")');
+  }else{
+    await evaluate('document.querySelector(".ir97-invite-actions button:nth-child(2)").click()');
+    await until(()=>evaluate('!document.querySelector(".ir97-invite")'));
+    await until(()=>evaluate('document.activeElement?.classList.contains("ir87-scout")'));
+    await check("not-now-restores-dock-focus",'document.activeElement?.classList.contains("ir87-scout")');
+  }
+  await check("first-contact-remembered-"+width,'localStorage.getItem("anevum.iren.first-contact.v092")==="seen"');
+  await check("one-compact-helper-"+width,'(()=>{const buttons=document.querySelectorAll(".ir87-scout");if(buttons.length!==1||document.querySelector(".an-notification-center"))return false;const r=buttons[0].getBoundingClientRect();return r.width>=48&&r.width<=58&&r.height>=48&&r.height<=58;})()');
+  // The 3D WebGL scene must actually render in Chromium. Parsing source or
+  // showing the SVG fallback alone is insufficient acceptance evidence.
+  await until(()=>evaluate('!!document.querySelector(".ir88-figure.is-rendering")'),16000);
+  await check("one-real-webgl-"+width,'document.querySelectorAll(".ir88-3d-canvas").length===1');
+  await capture("iren-scout-"+width);
+  await evaluate('document.querySelector(".ir80-dock").click()');
+  await until(()=>evaluate('!!document.querySelector(".ir80-help")'));
+  await until(()=>evaluate('document.activeElement?.getAttribute("aria-label")==="Close IREN"'));
+  await check("explicit-help-focuses-panel-"+width,'document.activeElement===document.querySelector(".ir80-help .ir80-icon-button")');
+  await check("help-accessible-"+width,'document.querySelector(".ir80-help").getAttribute("aria-label")==="IREN companion"');
+  await check("home-station-"+width,'document.querySelector(".ir88-station")?.textContent.includes("THE WAYFINDER")');
+  await check("home-dialogue-"+width,'document.querySelector(".ir88-voice-line")?.textContent.includes("Welcome, explorer")');
+  await check("help-inside-"+width,'(()=>{const r=document.querySelector(".ir80-help").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1;})()');
+  await check("expanded-real-webgl-"+width,'document.querySelectorAll(".ir88-figure.is-rendering").length===1');
+  await capture("iren-help-"+width);
+  await evaluate('document.querySelector("#ir87-updates-tab").click()');
+  await until(()=>evaluate('!!document.querySelector("#ir87-updates-body")'));
+  await check("signals-guest-boundary-"+width,'document.querySelector("#ir87-updates-body").textContent.includes("Sign in")');
+  await capture("iren-signals-"+width);
+  await evaluate('document.querySelector("#ir87-help-tab").click()');
+  await evaluate('document.querySelector(".ir80-tour-launch").click()');
+  await until(()=>evaluate('!!document.querySelector(".ir97-speech-bubble")&&location.pathname.endsWith("/discover")'));
+  await until(()=>evaluate('!!document.querySelector(".ir97-target-halo")'));
+  await until(()=>evaluate('!!document.querySelector(".ir97-guide-layer .ir88-figure.is-rendering")'),16000);
+  await check("guide-single-real-webgl-"+width,'document.querySelectorAll(".ir88-3d-canvas").length===1');
+  await check("tour-step-"+width,'document.querySelector(".ir97-bubble-line")?.textContent.includes("Find approved")');
+  await check("non-blocking-guide-"+width,'(()=>{const e=document.querySelector(".ir97-guide-layer");return !!e&&getComputedStyle(e).pointerEvents==="none"&&!document.querySelector(".ir80-shade")&&!document.querySelector(".ir80-guide-card");})()');
+  await check("guide-bubble-and-robot-visible-"+width,'(()=>{const b=document.querySelector(".ir97-speech-bubble"),r=document.querySelector(".ir97-floating-bot");return !!b&&!!r&&b.getBoundingClientRect().height>50&&r.getBoundingClientRect().height>30;})()');
+  await pause(750); // Await character travel; confirm settled final geometry, not mid-flight.\n  await check("real-target-uncovered-"+width,'(()=>{const target=document.querySelector(".ir97-target-halo");const bubble=document.querySelector(".ir97-speech-bubble"),bot=document.querySelector(".ir97-floating-bot");if(!target||!bubble||!bot)return false;const a=target.getBoundingClientRect(),b=bubble.getBoundingClientRect(),r=bot.getBoundingClientRect();const hit=(x,y)=>Math.max(0,Math.min(a.right,x.right)-Math.max(a.left,x.left))*Math.max(0,Math.min(a.bottom,x.bottom)-Math.max(a.top,x.top));return hit(b,r)===0&&hit(r,b)===0;})()');
+  await check("animated-webgl-motion-enabled-"+width,'(()=>{const e=document.querySelector(".ir97-floating-bot");return !!e&&!matchMedia("(prefers-reduced-motion: reduce)").matches&&parseFloat(getComputedStyle(e).transitionDuration)>0;})()');
+  await check("search-and-community-controls-uncovered-"+width,'(()=>{const b=document.querySelector(".ir97-speech-bubble")?.getBoundingClientRect(),bot=document.querySelector(".ir97-floating-bot")?.getBoundingClientRect();if(!b||!bot)return false;const q=location.pathname.endsWith("/discover")?document.querySelector("#portal-project-query"):document.querySelector(".ch7-hero-actions a");if(!q)return false;const a=q.getBoundingClientRect();const overlap=x=>Math.max(0,Math.min(a.right,x.right)-Math.max(a.left,x.left))*Math.max(0,Math.min(a.bottom,x.bottom)-Math.max(a.top,x.top));return overlap(b)===0&&overlap(bot)===0;})()');
+  await check("guide-no-focus-trap-"+width,'document.querySelector(".ir97-speech-bubble").getAttribute("role")==="region"');
+  await check("tour-nonmodal-"+width,'document.querySelector(".ir97-speech-bubble").getAttribute("aria-modal")===null');
+  await check("tour-inside-"+width,'(()=>{const r=document.querySelector(".ir97-speech-bubble").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1&&r.top>=0&&r.bottom<=innerHeight+1;})()');
+  await capture("iren-discover-"+width);
+  await evaluate('document.querySelector("[data-iren-next]").click()');
+  await until(()=>evaluate('location.pathname.endsWith("/community")&&!!document.querySelector(".ir97-speech-bubble")&&document.querySelector(".ir97-bubble-line")?.textContent.includes("Meet the makers")'));
+  await capture("iren-community-"+width);
+  await send("Input.dispatchKeyEvent",{type:"keyDown",key:"Escape",code:"Escape",windowsVirtualKeyCode:27});
+  await send("Input.dispatchKeyEvent",{type:"keyUp",key:"Escape",code:"Escape",windowsVirtualKeyCode:27});
+  await until(()=>evaluate('!document.querySelector(".ir97-speech-bubble")'));
+  await check("paused-"+width,'(()=>{const k=Object.keys(localStorage).find(k=>k.startsWith("anevum.iren.guided-continuance.v080."));return k&&JSON.parse(localStorage.getItem(k)).status==="paused";})()');
+  await evaluate('document.querySelector(".av9-menu-trigger").click()');
+  await until(()=>evaluate('!!document.querySelector(".av79-navigation[open]")'));
+  await check("four-routes-"+width,'document.querySelectorAll(".av79-navigation[open] .av79-navigation-primary .av79-destination").length===4');
+  await check("help-route-"+width,'!!document.querySelector(".av79-navigation[open] .ir80-wayfinder-entry")');
+  await evaluate('document.querySelector(".ir80-wayfinder-entry").click()');
+  await until(()=>evaluate('!!document.querySelector(".ir80-help")&&!document.querySelector(".av79-navigation[open]")'));
+  await check("community-station-"+width,'document.querySelector(".ir88-station")?.textContent.includes("THE COMMONS")');
+  await check("community-topic-"+width,'document.querySelector(".ir80-topic-grid button[aria-pressed=true]")?.textContent.includes("Meet people")');
+  await evaluate('document.querySelector(".ir80-tour-launch").click()');
+  await until(()=>evaluate('document.querySelector(".ir97-bubble-line")?.textContent.includes("Meet the makers")'));
+  await evaluate('document.querySelector("[data-iren-next]").click()');
+  await until(()=>evaluate('document.querySelector(".ir97-bubble-line")?.textContent.includes("The Wayfinder")'));
+  await evaluate('document.querySelector("[data-iren-next]").click()');
+  await until(()=>evaluate('!document.querySelector(".ir97-speech-bubble")'));
+  await check("finished-"+width,'(()=>{const k=Object.keys(localStorage).find(k=>k.startsWith("anevum.iren.guided-continuance.v080."));return k&&JSON.parse(localStorage.getItem(k)).status==="completed";})()');
+  // A user can drag the helper all the way to the top edge. Check its expanded
+  // panel stays inside the 320px viewport and flips below the character.
+  if(width===320){
+   const key="anevum.iren.living.position.v088.anevum.iren.guided-continuance.v080.visitor";
+   await evaluate('localStorage.setItem('+JSON.stringify(key)+',JSON.stringify({right:254,bottom:654}))');
+   await send("Page.navigate",{url:base+"/creator/"});
+   await until(()=>evaluate('!!document.querySelector(".ir80-dock")&&!!document.querySelector(".av79-home")'));
+   await evaluate('document.querySelector(".ir80-dock").click()');
+   await until(()=>evaluate('!!document.querySelector(".ir80-help")'));
+   // Motion is enabled in V097 acceptance; measure AFTER dock/panel transitions settle.
+   await pause(950);
+   await until(()=>evaluate('(()=>{const e=document.querySelector(".ir80-help");if(!e)return false;const r=e.getBoundingClientRect();return r.top>=0&&r.left>=0&&r.bottom<=innerHeight+1&&r.right<=innerWidth+1;})()'),4500);
+   await check("docked-top-panel-bounds",'(()=>{const e=document.querySelector(".ir80-help"),r=e.getBoundingClientRect();return r.top>=0&&r.left>=0&&r.bottom<=innerHeight+1&&r.right<=innerWidth+1;})()');
+   await check("docked-top-panel-flipped",'(()=>{const b=document.querySelector(".ir80-dock").getBoundingClientRect(),h=document.querySelector(".ir80-help").getBoundingClientRect();return h.top>=b.bottom-1;})()');
+   await check("docked-clear-navigation",'(()=>{const b=document.querySelector(".ir80-dock").getBoundingClientRect(),h=document.querySelector(".av9-brand").getBoundingClientRect();return b.top>=h.bottom+2;})()');
+   await capture("iren-docked-top-320");
+   await evaluate('localStorage.removeItem('+JSON.stringify(key)+')');
+  }
+  await check("overflow-"+width,'document.documentElement.scrollWidth<=innerWidth+1');
+  evidence.push({width,height,guestTour:"PASS",help:"PASS",spotlight:"PASS",skipResume:"PASS",completed:"PASS",navCount:4,overflow:false});
+  console.log("IREN_V097_BROWSER_PASS_"+width);
+ }
+ // Isolated local synthetic member: this cookie is not a real login.
+ await send("Emulation.setDeviceMetricsOverride",{width:390,height:844,deviceScaleFactor:1,mobile:true});
+ await send("Page.navigate",{url:base+"/creator/account"});
+ try{
+   await until(()=>evaluate('!!document.querySelector(".ms-dashboard")&&!!document.querySelector(".ir80-dock")'),18000);
+ }catch(error){
+   const state=await evaluate('JSON.stringify({route:location.pathname,body:document.body.innerText.slice(0,380),syntheticCookie:document.cookie.includes("anevum_offline_visual_fixture")})');
+   throw Error("IREN_SYNTHETIC_MEMBER_DASHBOARD_NOT_READY / "+state+" / "+String(error));
+ }
+ await check("member-private-space",'(()=>{const text=document.querySelector(".ms-dashboard")?.textContent||"";return text.includes("Synthetic Creator Preview")&&text.includes("PRIVATE")})()');
+ await check("member-anchors",'!!document.querySelector(\'[data-iren-anchor="identity"]\')&&!!document.querySelector(\'[data-iren-anchor="privacy"]\')&&!!document.querySelector(\'[data-iren-anchor="studio"]\')');
+ await capture("iren-member-overview-390");
+ await check("separate-tour-before-member",'!localStorage.getItem("anevum.iren.guided-continuance.v080.00000000000000000000000000000099")');
+ await evaluate('window.dispatchEvent(new Event("anevum:iren-tour"))');
+ const lines=["Your ANEVUM identity and profile","Your levels and awards","Your wall starts private","Create privately here","Find approved games","Meet the makers","The Wayfinder takes"];
+ for(let i=0;i<lines.length;i++){
+   await until(()=>evaluate('document.querySelector(".ir97-bubble-line")?.textContent.includes('+JSON.stringify(lines[i])+')'),14000);
+   await until(()=>evaluate('!!document.querySelector(".ir97-target-halo")'),6000);
+   await pause(800);
+   await check("member-guide-no-modal-"+i,'(()=>{const p=document.querySelector(".ir97-guide-layer"),b=document.querySelector(".ir97-speech-bubble");return !!p&&!!b&&getComputedStyle(p).pointerEvents==="none"&&b.getAttribute("aria-modal")===null})()');
+   await check("member-bubble-bounds-"+i,'(()=>{const r=document.querySelector(".ir97-speech-bubble")?.getBoundingClientRect();return !!r&&r.left>=0&&r.top>=0&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1})()');
+   if([0,3,6].includes(i))await capture("iren-member-"+(i+1)+"-390");
+   await evaluate('document.querySelector("[data-iren-next]").click()');
+ }
+ await until(()=>evaluate('!document.querySelector(".ir97-speech-bubble")'));
+ await check("member-seven-step-completion",'(()=>{const k="anevum.iren.guided-continuance.v080.00000000000000000000000000000099";const p=JSON.parse(localStorage.getItem(k)||"null");return p?.status==="completed"&&p.index===7})()');
+ await check("guest-progress-preserved",'JSON.parse(localStorage.getItem("anevum.iren.guided-continuance.v080.visitor")||"null")?.status==="completed"');
+ evidence.push({width:390,height:844,syntheticMemberTour:"PASS",memberSteps:7,privateWorld:"PASS",separateTourProgress:"PASS",offlineFixtureOnly:true});
+ console.log("IREN_V097_SYNTHETIC_MEMBER_7_STEP_PASS_390");
+ writeFileSync(join(output,"acceptance.json"),JSON.stringify({source:"OFFLINE SYNTHETIC",version:"V097",results:evidence},null,2));
+}finally{
+ try{if(socket?.readyState===1)socket.close();}catch{}
+ if(browser.exitCode===null){browser.kill("SIGTERM");await pause(800);}
+ try{rmSync(profile,{recursive:true,force:true,maxRetries:4,retryDelay:200});}catch{}
+}

@@ -28,7 +28,7 @@ test("Guest first contact is contextual, delayed, remembered and easily dismisse
  assert.match(iren,/window\.localStorage\.setItem\(firstContactStorageKey,"seen"\)/);
  assert.match(iren,/firstContactShownInMemory=true/);
  assert.match(iren,/className="ir92-not-now" onClick=\{closePanel\}/);
- assert.match(iren,/if\(welcomeOpen&&pathname!=="\/"\)/);
+ assert.match(iren,/if\(welcomeOpen&&pathname!=="\/"&&!\(spatialTourEnabled&&memberId&&pathname==="\/member"\)\)/);
  assert.match(iren,/event\.key==="Escape"/);
  assert.match(iren,/setWelcomeOpen\(false\)/);
  assert.match(iren,/setStoredHidden\(storageKey,true\)/);

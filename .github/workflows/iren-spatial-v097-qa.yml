@@ -1,0 +1,86 @@
+name: IREN V097 Spatial Companion Isolated QA
+on:
+  push:
+    branches:
+      - design/iren-spatial-guide-20261020-001
+  # This isolated branch is tested on push. The PR uses the same commit checks;
+  # triggering both events duplicated memory-heavy Chromium jobs and caused
+  # a reproducible runner contention / startup timeout without a source change.
+permissions:
+  contents: read
+concurrency:
+  group: iren-spatial-v097-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Check canonical React TypeScript
+        run: npm run check:creator-v1-web
+      - name: Spatial placement and source boundary tests
+        run: node --experimental-strip-types --test creator-v1/test/iren-spatial-v097.test.mjs
+      - name: Existing guided/companion/first-contact regressions
+        working-directory: creator-v1
+        run: |
+          npm run test:iren-v080
+          npm run test:iren-v088
+      - name: Compile default-OFF and explicitly enabled builds
+        run: |
+          npm run build:creator-v1-web
+          VITE_IREN_SPATIAL_GUIDE=true npm run build:creator-v1-web:staging
+      - name: Source identity
+        run: git rev-parse HEAD
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Real Chromium desktop/mobile synthetic acceptance for both variants
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$chrome"
+          mkdir -p evidence/iren-v097/legacy evidence/iren-v097/spatial
+          npm run build:creator-v1-web:staging
+          node creator-v1/test/portal-offline-preview.mjs > evidence/iren-v097/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 70); do
+            if curl -fsS http://127.0.0.1:4178/__ready > /dev/null; then ready=1; break; fi
+            sleep 0.25
+          done
+          test "$ready" = 1
+          node creator-v1/test/capture-iren-guided-v080.mjs "$chrome" http://127.0.0.1:4178 evidence/iren-v097/legacy
+          test -s evidence/iren-v097/legacy/acceptance.json
+          VITE_IREN_SPATIAL_GUIDE=true npm run build:creator-v1-web:staging
+          node creator-v1/test/capture-iren-spatial-v097.mjs "$chrome" http://127.0.0.1:4178 evidence/iren-v097/spatial
+          test -s evidence/iren-v097/spatial/acceptance.json
+          test -s evidence/iren-v097/spatial/iren-discover-320.png
+          test -s evidence/iren-v097/spatial/iren-help-390.png
+      - name: Archive screenshot and acceptance artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: iren-spatial-v097-browser-evidence
+          path: evidence/iren-v097/
+          retention-days: 14
+          if-no-files-found: warn
+# QA only: no Cloudflare credentials, live account mutation, or production deployment.

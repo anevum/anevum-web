@@ -5,6 +5,7 @@ import {Icon} from "./Icons";
 import {useIrenSignals} from "./AnevumNotifications";
 import {LevelEmblem,AwardEmblem} from "./LevelEmblem";
 import {IrenLivingCanvas} from "./IrenLivingCanvas";
+import {IrenSpatialTour} from "./IrenSpatialTour";
 import type {IrenMood} from "../lib/iren-living-rig-v088";
 import {irenStationForPath} from "../lib/iren-companion-context-v089";
 
@@ -71,6 +72,8 @@ const topics:readonly Topic[]=[
   {id:"safety",label:"Privacy & safety",detail:"Your wall is private until you publish it. Protect personal information, use account visibility controls and review the community rules before sharing.",href:"/guide",action:"Read the field guide"}
 ];
 const storagePrefix="anevum.iren.guided-continuance.v080.";
+// Opt-in only on an independently reviewed build. Legacy release unchanged.
+const spatialTourEnabled=import.meta.env.VITE_IREN_SPATIAL_GUIDE==="true";
 // First contact is a presentation preference, not a member/account flag.
 // A module fallback suppresses repeats when persistent browser storage is unavailable.
 const firstContactStorageKey="anevum.iren.first-contact.v092";
@@ -166,6 +169,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   const [tourIndex,setTourIndex]=useState<number|null>(null);
   const [panelOpen,setPanelOpen]=useState(false);
   const [welcomeOpen,setWelcomeOpen]=useState(false);
+  const [welcomeExpanded,setWelcomeExpanded]=useState(false);
   const [activeView,setActiveView]=useState<"help"|"updates">("help");
   const [activeTopic,setActiveTopic]=useState("discover");
   const [hidden,setHidden]=useState(()=>hiddenInStorage(storageKey));
@@ -193,6 +197,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     setTourIndex(null);
     setPanelOpen(false);
     setWelcomeOpen(false);
+    setWelcomeExpanded(false);
     setActiveView("help");
     setMood("idle");
     setMotionPaused(readPaused(storageKey));
@@ -235,6 +240,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
       }
       rememberFirstContact();
       setWelcomeOpen(true);
+      setWelcomeExpanded(false);
       setActiveView("help");
       setMood("greet");
       setPanelOpen(true);
@@ -265,11 +271,11 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   },[panelOpen]);
 
   useEffect(()=>{
-    if(welcomeOpen&&pathname!=="/"){
+    if(welcomeOpen&&pathname!=="/"&&!(spatialTourEnabled&&memberId&&pathname==="/member")){
       setWelcomeOpen(false);
       setPanelOpen(false);
     }
-  },[pathname,welcomeOpen]);
+  },[pathname,welcomeOpen,memberId]);
 
   const pause=useCallback((restoreFocus=true)=>{
     setTourIndex(index=>{
@@ -295,6 +301,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     setHidden(false);
     setPanelOpen(false);
     setWelcomeOpen(false);
+    setWelcomeExpanded(false);
     rememberFirstContact();
     setTourIndex(fresh?0:resume);
   },[storageKey,steps.length]);
@@ -304,11 +311,15 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
       const detail=(event as CustomEvent<{memberId:string}>).detail;
       if(!memberId||detail?.memberId!==memberId||readProgress(storageKey).status)return;
       rememberFirstContact();
-      start(true);
+      if(spatialTourEnabled){
+        setWelcomeOpen(true);setWelcomeExpanded(false);setActiveView("help");
+        setMood("greet");setPanelOpen(true);
+      }else start(true);
     };
     const onOpen=()=>{
       rememberFirstContact();
       setWelcomeOpen(false);
+      setWelcomeExpanded(false);
       setStoredHidden(storageKey,false);
       setHidden(false);
       setTourIndex(null);
@@ -429,8 +440,16 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     const findTarget=()=>document.querySelector<HTMLElement>(step.anchor)
       ||(step.fallback?document.querySelector<HTMLElement>(step.fallback):null);
     const measure=()=>{
-      const target=findTarget();
-      if(!target){setSpotlight(null);return;}
+      const container=findTarget();
+      if(!container){setSpotlight(null);return;}
+      // Spatial guidance highlights the meaningful control/heading rather than
+      // treating an entire scrolled page section as a phone-sized spotlight.
+      const outer=container.getBoundingClientRect();
+      const large=spatialTourEnabled&&(outer.height>window.innerHeight*.42||
+        outer.width>window.innerWidth*.86);
+      const target=large
+        ?container.querySelector<HTMLElement>('h1,h2,h3,[role="heading"]')||container
+        :container;
       const rect=target.getBoundingClientRect();
       if(!scrolled){
         scrolled=true;
@@ -461,6 +480,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   },[step?.id,step?.route,pathname,search]);
 
   useEffect(()=>{
+    if(spatialTourEnabled)return; // No autofocus after spatial tour transitions.
     if(tourIndex!==null)dialogRef.current?.querySelector<HTMLButtonElement>("[data-iren-next]")?.focus({preventScroll:true});
   },[tourIndex]);
 
@@ -468,8 +488,8 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     if(tourIndex===null)return;
     const onKey=(event:KeyboardEvent)=>{
       if(event.key==="Escape"){event.preventDefault();event.stopPropagation();pause();}
-      if(event.key==="Tab"){
-        // The spotlight is a modal teaching moment, but highlighted page
+      if(event.key==="Tab"&&!spatialTourEnabled){
+        // Only the legacy modal traps focus, not the non-modal guide., but highlighted page
         // controls remain available via an explicit pointer click to pause.
         const buttons=[...(dialogRef.current?.querySelectorAll<HTMLButtonElement>("button:not([disabled])")||[])];
         const first=buttons[0],last=buttons[buttons.length-1];
@@ -513,6 +533,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   };
   const closeWelcome=()=>{
     setWelcomeOpen(false);
+    setWelcomeExpanded(false);
     setPanelOpen(false);
   };
   const closePanel=()=>{
@@ -521,7 +542,8 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   };
   const currentTopic=topics.find(topic=>topic.id===activeTopic)||topics[0];
   const isMobile=viewport.width<=650;
-  const spriteSize=panelOpen?(isMobile?130:164):54;
+  const floatingInvite=spatialTourEnabled&&panelOpen&&welcomeOpen&&!welcomeExpanded;
+  const spriteSize=floatingInvite?82:panelOpen?(isMobile?130:164):54;
   // Keep IREN clear of fixed Wayfinder/header controls even if dragged
   // directly against the top of the viewport or restored from old storage.
   const topClearance=isMobile?74:88;
@@ -689,11 +711,19 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
 
   return <>
     {tourIndex===null&&!hidden&&<div ref={companionRef}
-      className={"ir80-companion ir87-companion ir88-companion"+(panelOpen?" ir88-companion-expanded":"")}
+      className={"ir80-companion ir87-companion ir88-companion"+(panelOpen&&!floatingInvite?" ir88-companion-expanded":"")+(floatingInvite?" ir97-invite-active":"")}
       style={companionStyle}
       onPointerMove={attendPointer} onFocusCapture={attendFocus}
       onPointerLeave={()=>setLook([0,0])}>
-      {panelOpen&&<section id="ir87-panel" className="ir80-help ir87-panel" style={helpStyle} aria-label="IREN companion">
+      {panelOpen&&(floatingInvite?<section id="ir87-panel" className="ir97-invite" style={helpStyle} aria-label="IREN first visit">
+        <span className="ir97-invite-label">IREN / FIELD COMPANION</span>
+        <p className="ir97-invite-voice" role="status" aria-live="polite">I'm IREN. Want a quick look around?</p>
+        <div className="ir97-invite-actions">
+          <button type="button" onClick={()=>start(true)}>Show me</button>
+          <button type="button" onClick={closePanel}>Not now</button>
+          <button type="button" onClick={()=>setWelcomeExpanded(true)}>More choices</button>
+        </div>
+      </section>:<section id="ir87-panel" className="ir80-help ir87-panel" style={helpStyle} aria-label="IREN companion">
         <header className="ir80-help-head">
           <span className="ir80-code">IREN / CONTINUANCE COMPANION
             <small className="ir88-station">{station.code}</small></span>
@@ -763,7 +793,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
           <button type="button" className="ir87-back-help" onClick={()=>{setActiveView("help");setMood("curious")}}>Back to guidance</button>
         </div>}
         </>}
-      </section>}
+      </section>)}
       <button type="button" ref={dockRef} className="ir80-dock ir87-scout" aria-label={panelOpen?"Close IREN companion":"Open IREN companion"+(unreadCount>0?", "+unreadCount+" new signals":"")}
         aria-controls="ir87-panel" aria-expanded={panelOpen} title="IREN companion"
         onPointerDown={beginDrag} onPointerMove={moveDrag} onPointerUp={finishDrag}
@@ -779,12 +809,19 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
           if(!panelOpen)focusRequested.current=true;
           setPanelOpen(open=>!open);
         }}>
-        <IrenLivingCanvas mood={mood} expanded={panelOpen} paused={motionPaused}
+        <IrenLivingCanvas mood={mood} expanded={panelOpen&&!floatingInvite} paused={motionPaused}
           look={look} fallback={<IrenScout/>}/>
         {unreadCount>0&&<span className="ir87-unread" aria-hidden="true">{unreadCount>9?"9+":unreadCount}</span>}
       </button>
     </div>}
-    {step&&<div className="ir80-guide-layer" aria-label="IREN guided website tour">
+    {step&&(spatialTourEnabled?<IrenSpatialTour step={step} index={tourIndex!} total={steps.length}
+      target={spotlight} travelling={guideTravelling} paused={motionPaused}
+      fallback={<IrenScout/>} onPause={()=>pause()} onSkip={()=>finish("skipped")}
+      onNext={next} onBack={()=>{
+        const previous=Math.max(0,tourIndex!-1);
+        writeProgress(storageKey,{status:"paused",index:previous});
+        setTourIndex(previous);
+      }}/>:<div className="ir80-guide-layer" aria-label="IREN guided website tour">
       {!embeddedGuideBot&&<div className="ir88-guide-bot" style={guideBotStyle} aria-hidden="true">
         <IrenLivingCanvas mood={guideTravelling?"travel":"guide"} expanded paused={motionPaused}
           look={guideLook} fallback={<IrenScout/>}/>
@@ -832,6 +869,6 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
           </button>
         </footer>
       </div>
-    </div>}
+    </div>)}
   </>;
 }
