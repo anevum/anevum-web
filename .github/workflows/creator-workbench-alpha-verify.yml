@@ -1,0 +1,144 @@
+name: Creator Workbench Private Alpha
+
+on:
+  push:
+    branches: [build/creator-workbench-canonical-v101-20261021-001]
+  pull_request:
+    paths:
+      - 'creator-v1/test/*workbench-alpha*.mjs'
+      - 'creator-v1/**/workbench*'
+      - 'creator-v1/**/Workbench*'
+      - 'creator-v1/workbench-alpha/**'
+      - 'creator-v1/canonical-auth/worker.mjs'
+      - 'creator-v1/canonical-auth/migrations/0013_workbench_alpha_access.sql'
+      - 'creator-v1/web/src/App.tsx'
+      - 'creator-v1/web/src/pages/CanonicalStudioPage.tsx'
+      - '.github/workflows/creator-workbench-alpha-verify.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: workbench-alpha-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install retained project dependencies without lifecycle scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Verify private access, persistence, transport and retained Studio
+        run: |
+          node --check creator-v1/canonical-auth/worker.mjs
+          node --check creator-v1/test/workbench-alpha-browser-fixture.mjs
+          node --check creator-v1/test/capture-workbench-alpha.mjs
+          node --test creator-v1/workbench-alpha/test.mjs creator-v1/test/workbench-alpha.test.mjs creator-v1/test/workbench-alpha-transport.test.mjs
+          node --test creator-v1/test/canonical-studio-v043.test.mjs creator-v1/test/canonical-auth-worker-v013.test.mjs
+          node --test creator-v1/test/workbench-route-ownership-v101.test.mjs
+      - name: Typecheck canonical React application
+        run: npm run check:creator-v1-web
+      - name: Compile default-OFF application
+        env:
+          VITE_CREATOR_WORKBENCH_ALPHA: 'false'
+        run: |
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+      - name: Chromium default-OFF guest and request-denial acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p workbench-evidence/browser-off
+          node creator-v1/test/portal-offline-preview.mjs > workbench-evidence/offline-fixture-off.log 2>&1 &
+          fixture=$!
+          trap 'kill "$fixture" 2>/dev/null || true' EXIT
+          ready=0
+          for _ in $(seq 1 75); do
+            if curl --fail --silent http://127.0.0.1:4178/__ready > /dev/null; then ready=1; break; fi
+            sleep .2
+          done
+          test "$ready" -eq 1
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          timeout 150 node creator-v1/test/capture-workbench-alpha.mjs --chrome "$chrome" --output workbench-evidence/browser-off --disabled
+          test -s workbench-evidence/browser-off/acceptance.json
+      - name: Compile opt-in alpha for synthetic testing only
+        env:
+          VITE_CREATOR_WORKBENCH_ALPHA: 'true'
+        run: npm run build:creator-v1-web:staging
+      - name: Chromium invited-member and private creation acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p workbench-evidence/browser-on
+          node creator-v1/test/portal-offline-preview.mjs > workbench-evidence/offline-fixture-on.log 2>&1 &
+          fixture=$!
+          trap 'kill "$fixture" 2>/dev/null || true' EXIT
+          ready=0
+          for _ in $(seq 1 75); do
+            if curl --fail --silent http://127.0.0.1:4178/__ready > /dev/null; then ready=1; break; fi
+            sleep .2
+          done
+          test "$ready" -eq 1
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          timeout 180 node creator-v1/test/capture-workbench-alpha.mjs --chrome "$chrome" --output workbench-evidence/browser-on
+          test -s workbench-evidence/browser-on/acceptance.json
+      - name: Verify browser evidence matches exact source and remains synthetic
+        shell: bash
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import {execFileSync} from 'node:child_process';
+          import {readFileSync} from 'node:fs';
+          const source=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+          for(const [name,disabled,minCases] of [['off',true,1],['on',false,10]]){
+            const report=JSON.parse(readFileSync('workbench-evidence/browser-'+name+'/acceptance.json','utf8'));
+            assert.equal(report.source,source);
+            assert.equal(report.status,'PASS');
+            assert.equal(report.disabled,disabled);
+            assert.equal(report.syntheticOnly,true);
+            assert.equal(report.physicalDeviceAcceptance,false);
+            assert.equal(report.onProduction,false);
+            assert.equal(report.realAIPowered,false);
+            assert.ok(report.cases.length>=minCases);
+            assert.ok(report.cases.every(c=>c.passed===true));
+          }
+          JS
+          echo 'WORKBENCH_ALPHA=COMPILED_REACT_SYNTHETIC_QA_ONLY' >> "$GITHUB_STEP_SUMMARY"
+          echo 'LIVE_ACCOUNT_ACCEPTANCE=NOT_ATTESTED; PRODUCTION_DEPLOY=NONE' >> "$GITHUB_STEP_SUMMARY"
+      - name: Package exact source and compiled code for independent review
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p workbench-evidence
+          git rev-parse HEAD > workbench-evidence/source-sha.txt
+          python3 - <<'PY'
+          import pathlib, subprocess, tarfile
+          names = subprocess.check_output(['git', 'ls-files', '-z']).decode().split('\0')
+          allowed = {'.mjs', '.js', '.cjs', '.ts', '.tsx', '.jsx', '.json', '.jsonc', '.mts', '.css', '.html', '.sql', '.yml', '.yaml', '.md'}
+          with tarfile.open('workbench-evidence/tracked-source.tar.gz', 'w:gz') as archive:
+              for name in names:
+                  p = pathlib.Path(name)
+                  if p.is_file() and not p.is_symlink() and p.suffix in allowed and p.stat().st_size < 2000000:
+                      archive.add(p, arcname=name, recursive=False)
+          with tarfile.open('workbench-evidence/compiled-code.tar.gz', 'w:gz') as archive:
+              for folder in ['creator-v1/dist/web', 'creator-v1/dist/react-staging']:
+                  for p in pathlib.Path(folder).rglob('*'):
+                      if p.is_file() and p.suffix in {'.js', '.css', '.html'}:
+                          archive.add(p, arcname=str(p), recursive=False)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: workbench-alpha-source-${{ github.sha }}
+          path: workbench-evidence/
+          retention-days: 3
