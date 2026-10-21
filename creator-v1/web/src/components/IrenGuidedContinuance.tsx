@@ -543,7 +543,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   const currentTopic=topics.find(topic=>topic.id===activeTopic)||topics[0];
   const isMobile=viewport.width<=650;
   const floatingInvite=spatialTourEnabled&&panelOpen&&welcomeOpen&&!welcomeExpanded;
-  const spriteSize=panelOpen&&!floatingInvite?(isMobile?130:164):54;
+  const spriteSize=floatingInvite?82:panelOpen?(isMobile?130:164):54;
   // Keep IREN clear of fixed Wayfinder/header controls even if dragged
   // directly against the top of the viewport or restored from old storage.
   const topClearance=isMobile?74:88;
@@ -711,7 +711,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
 
   return <>
     {tourIndex===null&&!hidden&&<div ref={companionRef}
-      className={"ir80-companion ir87-companion ir88-companion"+(panelOpen&&!floatingInvite?" ir88-companion-expanded":"")}
+      className={"ir80-companion ir87-companion ir88-companion"+(panelOpen&&!floatingInvite?" ir88-companion-expanded":"")+(floatingInvite?" ir97-invite-active":"")}
       style={companionStyle}
       onPointerMove={attendPointer} onFocusCapture={attendFocus}
       onPointerLeave={()=>setLook([0,0])}>
@@ -720,7 +720,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
         <p className="ir97-invite-voice" role="status" aria-live="polite">I'm IREN. Want a quick look around?</p>
         <div className="ir97-invite-actions">
           <button type="button" onClick={()=>start(true)}>Show me</button>
-          <button type="button" onClick={closeWelcome}>Not now</button>
+          <button type="button" onClick={closePanel}>Not now</button>
           <button type="button" onClick={()=>setWelcomeExpanded(true)}>More choices</button>
         </div>
       </section>:<section id="ir87-panel" className="ir80-help ir87-panel" style={helpStyle} aria-label="IREN companion">
