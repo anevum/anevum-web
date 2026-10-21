@@ -22,7 +22,7 @@ test("extracts Cloudflare self-hosted domains and public destinations",()=>{
     domain:"https://anevum.com/staff*",
     self_hosted_domains:["anevum.com/staff/observatory*"],
     destinations:[{type:"public",uri:"https://anevum.com/member"},{type:"private",uri:"private.example"}]
-  }),["https://anevum.com/staff*","anevum.com/staff/observatory*","https://anevum.com/member"]);
+  }),["https://anevum.com/staff*","https://anevum.com/member","anevum.com/staff/observatory*"]);
 });
 test("scoped protection is reported without exposing application ids",()=>{
  const apps=[{id:"audit-secret-id",type:"self_hosted",domain:"anevum.com/staff*"}];
