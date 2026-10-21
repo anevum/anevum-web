@@ -42,6 +42,8 @@ jobs:
         with:
           node-version: '22'
       - name: Verify application source remains the merged V095 + V096 revision
+        env:
+          GITHUB_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         shell: bash
         run: |
           set -euo pipefail
