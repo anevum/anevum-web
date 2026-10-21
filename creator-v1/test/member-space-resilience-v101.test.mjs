@@ -46,3 +46,14 @@ test('Creator Studio navigation obtains the native signed-in capability independ
  assert.match(native,/permissions\?\.canUpload/);
  assert.match(native,/permissions\?\.canReview/);
 });
+
+test('canonical Studio has three truthful entry paths and never publishes on open',()=>{
+ assert.match(project,/aria-label="Choose your creation workflow"/);
+ assert.match(project,/to="\/studio\/new"/);
+ assert.match(project,/to="\/studio\/packages"/);
+ assert.match(project,/href="\/upload\/v3"/);
+ assert.match(project,/to="\/studio\/alpha"/);
+ assert.match(project,/neither saving a private record nor preparing a playable build publishes it automatically/i);
+ assert.match(project,/nativeCreatorEnabled\?<Link/);
+ assert.doesNotMatch(project,/CANONICAL_CREATOR_UPLOADS_ENABLED\s*[:=]\s*['"]true['"]/);
+});
