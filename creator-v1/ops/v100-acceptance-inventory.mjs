@@ -18,7 +18,8 @@ export function featureOnRoutingReady(s){
   s.featureOnCandidateUploaded && s.featureOnAtZeroPercentInCurrentDeployment &&
   s.publicVersion100AndExactTwoVersions && s.failedFeatureOnNotSelected &&
   s.featureOnRootAssetBase && s.featureOnCreatorUploadsDisabled &&
-  s.entryCandidateMatchesFeatureOn && s.entryHasRoutingSecret && s.entryHasOnlyPlainOrSecretBindings &&
+  s.entryCandidateMatchesFeatureOn && s.entryDeployedCandidateMatchesFeatureOn &&
+  s.entryHasRoutingSecret && s.entryHasOnlyPlainOrSecretBindings &&
   s.entryExpiryValid && s.entry?.hasFeatureOnCandidate && s.entry?.hasRoutingCookie &&
   s.entry?.hasTimedGate && s.entry?.hasAccessIdentity &&
   s.http_request_late_transform?.qaRuleCount===1 &&
@@ -75,6 +76,20 @@ export async function inventory(read){
    out.observatory.hasVarOrigin=/var ORIGIN\s*=/.test(source);
    out.observatory.hasUiDeclarations=['PAGE','STYLES','CLIENT'].every(name=>new RegExp('(?:const|var|let) '+name+'\\s*=').test(source));
   }
+ }
+ // Cloudflare's script code/settings endpoint can describe the latest uploaded
+ // version, not necessarily the version actually serving requests. Verify the
+ // selected deployed entry version independently before reporting QA readiness.
+ const liveEntryVersions=out.entry?.deployment?.versions||[];
+ const liveEntry=liveEntryVersions.length===1?liveEntryVersions[0]:null;
+ out.entryDeployedCandidateMatchesFeatureOn=false;
+ if(liveEntry?.percentage===100&&/^[a-f0-9-]{36}$/i.test(liveEntry.version_id||'')){
+  try{
+   const liveVersion=await read(root+entry[0].script+'/versions/'+liveEntry.version_id);
+   out.entryDeployedCandidateMatchesFeatureOn=liveVersion.id===liveEntry.version_id&&
+    (liveVersion.resources?.bindings||[]).some(b=>b.name==='QA_CANDIDATE'&&b.type==='plain_text'&&b.text===FEATURE_ON)&&
+    (liveVersion.resources?.bindings||[]).some(b=>b.name==='QA_ROUTING_TOKEN'&&b.type==='secret_text');
+  }catch{out.entryDeployedCandidateMatchesFeatureOn=false;}
  }
  for(const phase of ['http_request_late_transform','http_request_transform']){
   try{
