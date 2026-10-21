@@ -71,7 +71,7 @@ test('current historical-route fixture remains not feature-ON and never implies 
 test('feature-ON route is ready only after the exact version is in deployment, entry and transform',async()=>{
  const feature='71a305df-a769-4fb1-9a20-527e0f7f1664';
  const live=async(path,json=true)=>{
-  if(!json)return '--fixed-boundary\\n'+feature+'\\n__Host-anevum-v095-v096-qa\\n--fixed-boundary--';
+  if(!json)return '--fixed-boundary\\n'+feature+'\\n__Host-anevum-v095-v096-qa\\nQA_EXPIRES_AT\\nANEVUM_PREVIEW_ALLOWED_EMAILS\\n--fixed-boundary--';
   if(path.endsWith('/workers/routes'))return [{pattern:'anevum.com/__enter/v095-v096*',script:'anevum-v095-v096-acceptance-entry'}];
   if(path.endsWith('/settings'))return {bindings:[
    {name:'QA_CANDIDATE',type:'plain_text',text:feature},
@@ -85,7 +85,7 @@ test('feature-ON route is ready only after the exact version is in deployment, e
   ]}]};
   if(path.includes('/versions/'))return {id:path.split('/').at(-1)};
   if(path.includes('/rulesets/phases/http_request_late_transform'))return {rules:[{
-   expression:'__Host-anevum-v095-v096-qa',action_parameters:{headers:{'cloudflare-workers-version-overrides':{value:feature}}}
+   expression:'__Host-anevum-v095-v096-qa',action_parameters:{headers:{'cloudflare-workers-version-overrides':{operation:'set',value:'anevum-apex-prelaunch-gateway="'+feature+'"'}}}
   }]};
   if(path.includes('/rulesets/'))throw Object.assign(Error('Absent transform phase'),{status:404});
   if(path.endsWith('/snippets/snippet_rules'))throw Object.assign(Error('Absent snippets phase'),{status:404});
