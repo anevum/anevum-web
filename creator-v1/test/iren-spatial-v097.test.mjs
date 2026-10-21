@@ -69,6 +69,23 @@ test("visual viewport offsets preserve visible bounds",()=>{
  const p=placeIrenSpatialGuide(v,anchor,bubble,bot,{headerBottom:135,safeBottom:8});
  bounds(p,v);
 });
+test("avoids the real Search field while keeping the selected heading visible",()=>{
+ const v=view(390,844);
+ const heading={left:12,top:110,width:366,height:55};
+ const search={left:12,top:235,width:366,height:72};
+ const filters={left:12,top:315,width:366,height:52};
+ const actualBubble={width:245,height:135};
+ const actualBot={width:76,height:94};
+ const p=placeIrenSpatialGuide(v,heading,actualBubble,actualBot,{
+  headerBottom:76,obstacles:[search,filters]
+ });
+ assert.equal(isIrenTargetUnobscured(heading,p,actualBubble,actualBot),true);
+ const box={left:p.bubbleLeft,top:p.bubbleTop,width:p.bubbleWidth,height:actualBubble.height};
+ const robot={left:p.botLeft,top:p.botTop,...actualBot};
+ const overlap=(a,b)=>Math.max(0,Math.min(a.left+a.width,b.left+b.width)-Math.max(a.left,b.left))*
+   Math.max(0,Math.min(a.top+a.height,b.top+b.height)-Math.max(a.top,b.top));
+ assert.equal(overlap(search,box)+overlap(search,robot),0);
+});
 test("absence of a private or delayed target is truthful and safe",()=>{
  const v=view(390,844);
  const p=placeIrenSpatialGuide(v,null,bubble,bot,{headerBottom:74});
