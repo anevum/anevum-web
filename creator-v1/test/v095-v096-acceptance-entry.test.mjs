@@ -1,11 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createAcceptanceEntry,acceptanceIdentity,QA_CANDIDATE,QA_COOKIE} from '../ops/v095-v096-acceptance-entry.mjs';
+import {createAcceptanceEntry,acceptanceIdentity,QA_SOURCE,QA_CANDIDATE,QA_COOKIE} from '../ops/v095-v096-acceptance-entry.mjs';
 import {ACCESS_ISSUER,resetPreviewKeyCacheForTests} from '../apex-prelaunch/preview-access.mjs';
 const now=1792533600,env={QA_CANDIDATE,QA_ROUTING_TOKEN:'a'.repeat(64),QA_EXPIRES_AT:String(now+3600)};
 const entry=(authorized=true)=>createAcceptanceEntry({identity:async()=>authorized?{email:'synthetic@example.invalid'}:null,now:()=>now});
 const request=(path='',options={})=>new Request('https://anevum.com/__enter/v095-v096'+path,options);
 const post={method:'POST',headers:{origin:'https://anevum.com','sec-fetch-site':'same-origin'}};
+test('protected V100 entry binds the reviewed source and zero-percent candidate without changing cookie or route',async()=>{
+ assert.equal(QA_SOURCE,'28f163a0015631b1d8eb58922c03596ae8febd22');
+ assert.equal(QA_CANDIDATE,'8ed503b6-5df6-42a5-a536-63ccf928d25d');
+ assert.equal(QA_COOKIE,'__Host-anevum-v095-v096-qa');
+ const r=await entry().fetch(request(),env);
+ assert.equal(r.status,200);
+ const html=await r.text();
+ assert.match(html,/Test integrated V100 on this device/);
+ assert.ok(html.includes(QA_CANDIDATE));
+ assert.ok(html.includes(QA_SOURCE));
+ assert.equal(r.headers.get('set-cookie'),null);
+});
 test('real Access validation is required by default; no caller header or cookie enrolls a guest',async()=>{
  const worker=createAcceptanceEntry({now:()=>now});
  for(const headers of [{},{'cf-access-authenticated-user-email':'devon@anevum.com'},{cookie:'CF_Authorization=unsigned'},{'cf-access-jwt-assertion':'unsigned.jwt.assertion'}]){
