@@ -440,8 +440,16 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     const findTarget=()=>document.querySelector<HTMLElement>(step.anchor)
       ||(step.fallback?document.querySelector<HTMLElement>(step.fallback):null);
     const measure=()=>{
-      const target=findTarget();
-      if(!target){setSpotlight(null);return;}
+      const container=findTarget();
+      if(!container){setSpotlight(null);return;}
+      // Spatial guidance highlights the meaningful control/heading rather than
+      // treating an entire scrolled page section as a phone-sized spotlight.
+      const outer=container.getBoundingClientRect();
+      const large=spatialTourEnabled&&(outer.height>window.innerHeight*.42||
+        outer.width>window.innerWidth*.86);
+      const target=large
+        ?container.querySelector<HTMLElement>('h1,h2,h3,[role="heading"]')||container
+        :container;
       const rect=target.getBoundingClientRect();
       if(!scrolled){
         scrolled=true;
