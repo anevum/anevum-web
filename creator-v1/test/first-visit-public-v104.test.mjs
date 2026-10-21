@@ -8,6 +8,7 @@ const publicPage=read('web/src/pages/Phase1PublicMemberPage.tsx');
 const home=read('web/src/home-navigation-v079.css');
 const recovery=read('web/src/continuance-experience-v091.css');
 const app=read('web/src/App.tsx');
+const memberDashboard=read('web/src/components/MemberSpaceDashboard.tsx');
 
 test('V104 public member page parses and never couples wall failure to verified public identity',()=>{
   assert.doesNotThrow(()=>parse(publicPage,{sourceType:'module',plugins:['typescript','jsx']}));
@@ -50,4 +51,9 @@ test('V104 is a narrowly scoped, readable mobile treatment with nondecorative re
   assert.match(recovery,/min-height:44px/);
   assert.match(recovery,/\.ms-public \.ms-public-bio/);
   assert.doesNotMatch(home+recovery,/image-rendering:\s*pixelated|url\(https?:/);
+});
+
+test('V104 displays core milestones without implying this is the newer badge count',()=>{
+  assert.match(memberDashboard,/<dt>Milestones earned<\/dt><dd>\{s\.awards\}<\/dd>/);
+  assert.doesNotMatch(memberDashboard,/<dt>Awards earned<\/dt><dd>\{s\.awards\}<\/dd>/);
 });
