@@ -164,8 +164,15 @@ export async function signedOutHostedPerimeter(request=fetch){
   const response=await read(path);
   assert.ok([302,303,307,308,401,403].includes(response.status),
    'Sensitive staff API must be Access-protected or deny anonymous GET: '+path+' HTTP '+response.status);
-  if([302,303,307,308].includes(response.status))
-   assert.ok(response.headers.get('location'),'Access denial redirect without location: '+path);
+  if([302,303,307,308].includes(response.status)){
+   const location=response.headers.get('location');
+   assert.ok(location,'Access denial redirect without location: '+path);
+   const next=new URL(location,base);
+   assert.equal(next.protocol,'https:','Access denial redirect must use HTTPS: '+path);
+   assert.ok((next.hostname==='anevum.com'&&next.pathname.startsWith('/cdn-cgi/access/'))||
+    (next.hostname.endsWith('.cloudflareaccess.com')&&next.pathname.startsWith('/cdn-cgi/access/')),
+    'Access denial redirect must target Cloudflare Access login: '+path);
+  }
   await response.body?.cancel().catch(()=>{});
   report.checks.push({path,status:response.status,denied:true});
  }
