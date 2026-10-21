@@ -16,6 +16,7 @@ export function featureOnRoutingReady(s){
   s.entryCandidateMatchesFeatureOn && s.entryHasRoutingSecret && s.entryHasOnlyPlainOrSecretBindings &&
   s.entryExpiryValid && s.entry?.hasFeatureOnCandidate && s.entry?.hasRoutingCookie &&
   s.entry?.hasTimedGate && s.entry?.hasAccessIdentity &&
+  s.http_request_late_transform?.qaRuleCount===1 &&
   s.http_request_late_transform?.hasFeatureOnCandidate &&
   s.http_request_late_transform?.hasRoutingCookie &&
   s.http_request_late_transform?.hasVersionOverride
@@ -67,7 +68,15 @@ export async function inventory(read){
  for(const phase of ['http_request_late_transform','http_request_transform']){
   try{
    const ruleset=await read(zone+'/rulesets/phases/'+phase+'/entrypoint');
-   out[phase]={exists:true,hasRoutingCookie:JSON.stringify(ruleset).includes(COOKIE),hasOldCandidate:JSON.stringify(ruleset).includes(OLD),hasFeatureOnCandidate:JSON.stringify(ruleset).includes(FEATURE_ON),hasVersionOverride:JSON.stringify(ruleset).toLowerCase().includes('cloudflare-workers-version-overrides')};
+   // A disabled/unrelated rule does not constitute an active QA route.
+   const qaRules=(ruleset.rules||[]).filter(rule=>rule.enabled!==false&&JSON.stringify(rule).includes(COOKIE));
+   const rule=qaRules.length===1?qaRules[0]:null;
+   const override=rule?.action_parameters?.headers?.['cloudflare-workers-version-overrides'];
+   out[phase]={exists:true,qaRuleCount:qaRules.length,
+    hasRoutingCookie:!!rule&&JSON.stringify(rule.expression||'').includes(COOKIE),
+    hasOldCandidate:JSON.stringify(qaRules).includes(OLD),
+    hasFeatureOnCandidate:override?.operation==='set'&&String(override.value||'').includes('anevum-apex-prelaunch-gateway="'+FEATURE_ON+'"'),
+    hasVersionOverride:override?.operation==='set'};
   }catch(e){out[phase]={readable:false,notFound:e.status===404,authorizationDenied:[401,403].includes(e.status)};}
  }
  try{
