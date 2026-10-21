@@ -131,6 +131,7 @@ try{
   await check("first-contact-one-companion-"+width,'document.querySelectorAll(".ir87-scout").length===1');
   await check("first-contact-no-modal-"+width,'!document.querySelector(".ir97-speech-bubble")');
   await check("first-contact-inside-viewport-"+width,'(()=>{const r=document.querySelector(".ir97-invite").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1&&r.top>=0&&r.bottom<=innerHeight+1;})()');
+  await until(()=>evaluate('(()=>{const r=document.querySelector(".ir97-invite-active .ir80-dock")?.getBoundingClientRect();return !!r&&r.width>=78&&r.bottom<=innerHeight-66;})()'),1500); // Await the genuine floating entrance transition.
   await check("first-contact-robot-visible-above-chrome-"+width,'(()=>{const r=document.querySelector(".ir97-invite-active .ir80-dock")?.getBoundingClientRect();return !!r&&r.width>=78&&r.bottom<=innerHeight-66;})()');
   await capture("iren-first-contact-"+width);
   if(width===320){
