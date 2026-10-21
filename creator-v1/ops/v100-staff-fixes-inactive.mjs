@@ -187,8 +187,8 @@ async function after(){
  */
 async function auditInactive(){
  requireEnv();
- const next='ed44a70c-2adb-4048-a7a5-82e7a457528d';
- const newEntry='d7bb6c81-30e0-480f-b9a8-2f12f7a69ab5';
+ const next='7b9dbcdf-0fbd-4cbc-8e98-184724324553';
+ const newEntry='27befdc9-5238-40e7-b9de-3c2acd542309';
  const newLegacy='4699cfd9-d9d0-44f2-b1b2-f56a4627f429';
  const [d,previous,candidate,settings,routes,ex,entry,entryV,legacy,legacyV]=await Promise.all([
   get(ROOT+'/deployments'),get(ROOT+'/versions/'+CORRECTED),
@@ -230,11 +230,31 @@ async function auditInactive(){
  assert.equal(legacyV.id,newLegacy);
  assert.equal(legacyV.resources?.bindings?.find(x=>x.name==='LEGACY_STAFF')?.service,
   'anevum-iren-apex-staff-v002');
+ const nativeBackends=[];
+ for(const [name,liveId,privateId] of [
+  ['anevum-package-alpha-v003-control','9851d9c5-6270-4c4e-a70e-1b82451b170d','2720ea00-2030-43ff-84fc-8d6faf4d003b'],
+  ['anevum-unified-creation-routes-v002','e5109c55-ec2b-419c-8ac7-ce4eaeac1e7b','7e281e4e-893c-4f59-977d-895c7ee616b4'],
+  ['anevum-native-frame-policy-v001','3703ace1-745f-41f3-8fac-8eba45c99ce8','20652959-0acb-4a53-bf59-1b80da1c0a55']
+ ]){
+  const base='/accounts/'+ACCOUNT+'/workers/scripts/'+name;
+  const [d,p,n,e]=await Promise.all([get(base+'/deployments'),get(base+'/versions/'+liveId),get(base+'/versions/'+privateId),get(base+'/subdomain')]);
+  assert.deepEqual(d.deployments?.[0]?.versions,[{version_id:liveId,percentage:100},{version_id:privateId,percentage:0}]);
+  assert.equal(e.previews_enabled,false);
+  const pb=p.resources.bindings,nb=n.resources.bindings;
+  assert.equal(nb.length,pb.length+1);
+  assert.equal(plain(pb).PACKAGE_NATIVE_STUDIO_ENABLED,undefined);
+  assert.equal(plain(nb).PACKAGE_NATIVE_STUDIO_ENABLED,'true');
+  for(const b of pb){
+   const found=nb.find(x=>x.name===b.name);assert.ok(found);
+   for(const [key,value] of Object.entries(b))if(!(key==='id'&&b.type==='d1'))assert.deepEqual(found[key],value,'Inherited '+name+'/'+b.name+'/'+key);
+  }
+  nativeBackends.push({worker:name,public_version:liveId,public_percent:100,private_version:privateId,private_percent:0,bindings_preserved:true});
+ }
  const output={status:'PROTECTED_CANDIDATE_READBACK_PASS',reviewed_source:SOURCE,
   apex_immutable_version:next,public_percent:100,private_percent:0,
   legacy_immutable_version:newLegacy,legacy_public_percent:100,legacy_private_percent:0,
   protected_entry:newEntry,all_40_routes_preserved:true,d1_and_secret_binding_types_preserved:true,
-  creator_uploads_enabled:false,root_base:'/',provider_write_operations:0,
+  creator_uploads_enabled:false,root_base:'/',provider_write_operations:0,native_backends:nativeBackends,
   human_authenticated_acceptance:false,physical_safari_retest:false,production_approved:false};
  console.log(JSON.stringify(output));
 }
