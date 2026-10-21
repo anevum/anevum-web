@@ -1,6 +1,7 @@
 /** Compiled React + browser interaction QA on loopback synthetic identities.
  * Does NOT certify real account acceptance or physical iPhone Safari behavior. */
 import assert from 'node:assert/strict';
+import {once} from 'node:events';
 import {spawn,execFileSync} from 'node:child_process';
 import {existsSync,readFileSync,writeFileSync,mkdirSync,mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
@@ -171,4 +172,13 @@ try{
 }catch(error){
  try{if(evaluate)writeFileSync(join(output,'failure-dom.html'),await evaluate('document.documentElement.outerHTML'));if(screenshot)await screenshot('failure');}catch{}
  writeFileSync(join(output,'failure.json'),JSON.stringify({error:error.stack,exceptions,cases:results},null,2));throw error;
-}finally{writeFileSync(log,chromeLog);client?.close();child.kill();await fixture.close();setTimeout(()=>rmSync(profile,{recursive:true,force:true}),250).unref();}
+}finally{
+ writeFileSync(log,chromeLog);client?.close();
+ if(child.exitCode===null&&child.signalCode===null){
+  const exited=once(child,'exit');child.kill();await Promise.race([exited,delay(3000)]);
+ }
+ await fixture.close();
+ // Chromium can still flush its profile during shutdown. Wait for exit and
+ // retry filesystem cleanup instead of throwing from an untracked timer.
+ rmSync(profile,{recursive:true,force:true,maxRetries:5,retryDelay:100});
+}
