@@ -57,7 +57,12 @@ if(FEATURE_ON)ALLOWED_META.push(
  'creator-v1/test/v100-acceptance-inventory.test.mjs',
  'creator-v1/test/v100-entry-inactive.test.mjs',
  'creator-v1/test/v100-observatory-reconcile.test.mjs',
- 'creator-v1/test/v100-observatory-ui-candidate.test.mjs'
+ 'creator-v1/test/v100-observatory-ui-candidate.test.mjs',
+ // Read-only browser proof for real apex / assets; app implementation frozen.
+ '.github/workflows/v100-apex-root-feature-on-qa.yml',
+ 'creator-v1/test/portal-offline-preview.mjs',
+ 'creator-v1/test/v100-apex-root-assets.test.mjs',
+ 'creator-v1/test/capture-v100-apex-root.mjs'
 );
 const CF='https://api.cloudflare.com/client/v4';
 const worker='/accounts/'+manifest.account_id+'/workers/scripts/'+manifest.script;
