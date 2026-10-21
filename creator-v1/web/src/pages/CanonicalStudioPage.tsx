@@ -103,6 +103,17 @@ export function CanonicalStudioPage({mode='list'}:{mode?:Mode}){
    {canReview&&<Link to="/studio/review" aria-current={mode==='review'?'page':undefined}>REVIEW DESK</Link>}
    <Link to="/discover">DISCOVER ↗</Link>
   </nav>}
+  {mode==='list'&&<section className="st-panel st-create-paths" aria-label="Choose your creation workflow">
+   <div className="st-section-head"><div><p className="st-kicker">CREATOR STUDIO / START HERE</p>
+    <h2>One identity. Three ways to begin.</h2></div></div>
+   <div className="st-create-path-grid">
+    <Link to="/studio/new"><strong>01 / PROJECT RECORD</strong><span>Describe and organize work privately. Attach eligible files when your account's upload capability is enabled.</span><small>PRIVATE DRAFT ↗</small></Link>
+    {nativeCreatorEnabled?<Link to="/studio/packages"><strong>02 / PLAYABLE BUILD</strong><span>Prepare a browser-ready ZIP or standalone HTML file. Playtest the isolated build, then submit the exact revision for independent review.</span><small>OPEN PLAYABLE LIBRARY ↗</small></Link>:
+     <a href="/upload/v3"><strong>02 / PLAYABLE BUILD</strong><span>Open the existing separate Creator Uplink. Native integration is not active in this release.</span><small>OPEN EXISTING UPLINK ↗</small></a>}
+    <Link to="/studio/alpha"><strong>03 / LOCAL LAB</strong><span>Experiment with HTML and CSS without a cloud upload. Export one HTML file to your device when you are ready.</span><small>OPEN GUEST PLAYGROUND ↗</small></Link>
+   </div>
+   <p className="st-muted">These are different stages of one creation lifecycle. Neither saving a private record nor preparing a playable build publishes it automatically. Live uploads and publishing depend on server permissions and independent review.</p>
+  </section>}
   {mode==='list'?<StudioLibrary/>:mode==='review'?<StudioReview/>:<StudioEditor create={mode==='new'} uploadsReady={uploads}/>}
  </section>;
 }
