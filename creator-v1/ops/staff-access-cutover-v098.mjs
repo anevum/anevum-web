@@ -57,8 +57,8 @@ export function summarizeApps(apps){
     routeCoverage:routes,matchingApplicationCount:relevant.length,
     matches:relevant.map(app=>({
       fingerprint:hash(app.id||app.name||app.domain),
-      patterns:appPatterns(app).filter(x=>x.startsWith('anevum.com/')||x==='anevum.com'),
-      type:app.type||'unknown'
+      patterns:appPatterns(app).filter(x=>x.includes('anevum.com')),
+      type:app.type||'unknown',auditScope:app.auditScope||'unknown'
     })),
     staffProtected,broadPublicProtection:broad,
     removalCandidateType:broad?'OVERLAPPING_BROAD_APP_REQUIRES_MANUAL_REVIEW':
@@ -93,7 +93,7 @@ function localGuards(){
     tests:readFileSync('creator-v1/test/staff-session-transport-v091.test.mjs','utf8')
   });
   if(!guards.allPassed)throw Error('ANEVUM_STAFF_GUARD_SOURCE_FAILED');
-  return {account:manifest.account_id,guards,routeCount:manifest.routes.length};
+  return {account:manifest.account_id,zone:manifest.zone_id,guards,routeCount:manifest.routes.length};
 }
 async function fetchJson(token,path){
   let result;
@@ -107,10 +107,11 @@ async function fetchJson(token,path){
   if(!json?.success||!Array.isArray(json.result))throw Error('CLOUDFLARE_ACCESS_API_BAD_ENVELOPE');
   return json;
 }
-async function listAll(token,account){
+async function listAll(token,scope,id){
+  if(!['accounts','zones'].includes(scope))throw Error('Unknown Cloudflare application scope');
   const all=[];
   for(let page=1;page<=LIMIT;page++){
-    const response=await fetchJson(token,'/accounts/'+account+'/access/apps?per_page=100&page='+page);
+    const response=await fetchJson(token,'/'+scope+'/'+id+'/access/apps?per_page=100&page='+page);
     all.push(...response.result);
     if(all.length>700)throw Error('CLOUDFLARE_ACCESS_AUDIT_TOO_MANY_APPS');
     const pages=response.result_info?.total_pages;
@@ -138,14 +139,25 @@ export async function audit({token,account}){
   assert.ok(token&&typeof token==='string','No valid authorized Cloudflare token');
   const local=localGuards();
   assert.equal(account,local.account,'Cloudflare account not matching locked manifest');
-  const apps=await listAll(token,account);
+  // Account and legacy zone-scoped Access applications are distinct.
+  // Failing to query both can wrongly label a live Cloudflare challenge unprotected.
+  const [accountApps,zoneApps]=await Promise.all([
+    listAll(token,'accounts',account),
+    listAll(token,'zones',local.zone)
+  ]);
+  const apps=[...accountApps.map(app=>({...app,auditScope:'account'})),
+    ...zoneApps.map(app=>({...app,auditScope:'zone'}))];
   const coverage=summarizeApps(apps);
   const live=Object.fromEntries(await Promise.all(ROUTES.map(async path=>[path,await checkLive(path)])));
+  const uncovered=ROUTES.filter(path=>live[path]?.redirectCategory==='cloudflare_access' &&
+    !(coverage.routeCoverage[path]||[]).length);
+  if(uncovered.length)throw Error('CLOUDFLARE_ACCESS_COVERAGE_UNRESOLVED_'+uncovered.join(',').replaceAll('/','_'));
   return {
     session:'ANEVUM.OPS.PATCH.2026-10-20.001.STAFF-ACCESS-SIMPLIFICATION',
     status:'READ_ONLY_AUDIT_COMPLETE',currentSource:'V095_V096_NOT_MODIFIED',
     localGuards:local.guards,routeCount:local.routeCount,
     coverage,live,
+    inventoryCounts:{account:accountApps.length,zone:zoneApps.length},
     cloudflarePolicyMutation:false,cloudflareWorkerMutation:false,productionPromotion:false,
     requiresBeforeAccessRemoval:[
       'Inspect the exact matched Cloudflare Access policy and overlapping paths',
