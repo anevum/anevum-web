@@ -158,7 +158,7 @@ export async function audit({token,account}){
 }
 if(process.argv[1]&&process.argv[1].endsWith('staff-access-cutover-v098.mjs')){
   const mode=process.argv[2];
-  if(mode!=='audit'||process.argv.length!==5)throw Error('Usage: audit <output.json> <guard-token-placeholder>');
+  if(mode!=='audit'||process.argv.length!==4)throw Error('Usage: audit <output.json>');
   const out=process.argv[3];
   const token=process.env.CLOUDFLARE_API_TOKEN,account=process.env.CLOUDFLARE_ACCOUNT_ID;
   try{
