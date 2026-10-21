@@ -28,20 +28,31 @@ export function VerifiedStaffShortcut({location="profile"}:{location?:"profile"|
       const request=controller;
       const timer=window.setTimeout(()=>request.abort(),10000);
       try{
-        const response=await fetch(endpoint,{
-          method:"GET",credentials:"same-origin",mode:"same-origin",cache:"no-store",
-          redirect:"manual",headers:{accept:"application/json"},signal:request.signal
-        });
-        if(response.status!==200||!response.headers.get("content-type")?.includes("application/json")){
-          if(active&&current===nonce)setVerified({memberId,role:null,designation:null});
-          return;
+        const options:RequestInit={method:"GET",credentials:"same-origin",mode:"same-origin",
+          cache:"no-store",redirect:"manual",headers:{accept:"application/json"},signal:request.signal};
+        // Authoritative dedicated role endpoint; an explicit nonstaff role is final.
+        const primary=await fetch(endpoint,options).catch(()=>null);
+        if(primary?.status===200&&primary.headers.get("content-type")?.includes("application/json")){
+          const data=await primary.json().catch(()=>null) as {role?:unknown;designation?:unknown}|null;
+          if(data){
+            const role:StaffRole|null=data.role==="owner"||data.role==="reviewer"?data.role:null;
+            if(active&&current===nonce)
+              setVerified({memberId,role,designation:role==="owner"&&data.designation==="founder"?"founder":null});
+            return;
+          }
         }
-        const data=await response.json() as {role?:unknown;designation?:unknown};
-        const role:StaffRole|null=data?.role==="owner"||data?.role==="reviewer"?data.role:null;
-        if(active&&current===nonce)
-          setVerified({memberId,role,designation:role==="owner"&&data.designation==="founder"?"founder":null});
+        // If the profile-link Worker is unavailable, the separately deployed
+        // Staff Entry Worker's read-only diagnosis can verify the SAME session
+        // and nonrevoked DB grant. It cannot create or elevate a staff role.
+        const backup=await fetch("/staff?diagnose=1",options);
+        if(backup.status!==200||!backup.headers.get("content-type")?.includes("application/json"))
+          throw new Error("Staff clearance unavailable");
+        const status=await backup.json() as {access?:unknown;reason?:unknown;role?:unknown};
+        const verified=status?.access==="verified"&&status.reason==="session_and_grant_valid";
+        const role:StaffRole|null=verified&&(status.role==="owner"||status.role==="reviewer")?status.role:null;
+        if(active&&current===nonce)setVerified({memberId,role,designation:null});
       }catch{
-        // Fail closed: no staff shortcut when the session service is unavailable.
+        // Fail closed when BOTH server-authoritative checks are unavailable.
         if(active&&current===nonce)setVerified({memberId,role:null,designation:null});
       }finally{window.clearTimeout(timer);}
     };
