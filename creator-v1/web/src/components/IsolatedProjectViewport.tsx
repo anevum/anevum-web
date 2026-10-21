@@ -1,6 +1,7 @@
 import {useEffect,useRef,useState} from 'react';
 import {validRuntimeURL} from '../lib/native-creator-v095';
 import './project-player-shell.css';
+import './native-player-v102.css';
 
 type PlayerFrameState='opening'|'frame-loaded'|'slow'|'error';
 type PlayerViewport='fit'|'phone';
