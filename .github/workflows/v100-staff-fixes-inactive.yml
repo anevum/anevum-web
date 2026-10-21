@@ -256,6 +256,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install source-test dependencies without lifecycle scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
       - name: Verify the reviewed merged application remains unmodified
         shell: bash
         run: |
