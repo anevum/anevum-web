@@ -1,0 +1,10 @@
+{
+  "source_sha": "28f163a0015631b1d8eb58922c03596ae8febd22",
+  "release_branch": "release/v084-continuance-approved-20261019",
+  "worker": "anevum-apex-prelaunch-gateway",
+  "allow_inactive_version_upload": true,
+  "allow_route_changes": false,
+  "allow_traffic_promotion": false,
+  "allow_preview_urls": false,
+  "confirmed_by": "anevum"
+}
