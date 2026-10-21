@@ -199,3 +199,20 @@
 @media(prefers-reduced-motion:reduce){
  .st-project,.st-drop{transition:none}
 }
+
+/* V101 / One canonical creation entry. Each destination describes an actual
+   permission/runtime boundary, without masquerading as a second Studio. */
+.st-create-paths{margin-block:22px 26px}
+.st-create-path-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:17px 0 14px}
+.st-create-path-grid>a{display:flex;flex-direction:column;justify-content:space-between;gap:12px;
+ min-width:0;min-height:154px;padding:20px;border:1px solid rgba(154,202,218,.24);
+ border-radius:12px;background:linear-gradient(160deg,rgba(64,84,114,.22),rgba(12,21,37,.45));
+ color:var(--st-text);text-decoration:none;transition:border-color .15s,background .15s,transform .15s}
+.st-create-path-grid>a strong{font-size:.83rem;letter-spacing:.1em;color:var(--st-cyan)}
+.st-create-path-grid>a span{font-size:.9rem;line-height:1.5;color:var(--st-muted)}
+.st-create-path-grid>a small{font-size:.7rem;letter-spacing:.1em;color:var(--st-rose)}
+.st-create-path-grid>a:hover,.st-create-path-grid>a:focus-visible{border-color:var(--st-cyan);
+ background:rgba(76,120,141,.23);outline-offset:3px}
+@media(max-width:760px){.st-create-path-grid{grid-template-columns:1fr}
+ .st-create-path-grid>a{min-height:0;padding:16px;gap:9px}}
+@media(prefers-reduced-motion:reduce){.st-create-path-grid>a{transition:none}}

@@ -13,15 +13,15 @@ import {verifyCandidateAssets} from './v095-inactive-candidate-gate.mjs';
 import {verifyApexRootAssets} from '../test/v100-apex-root-assets.test.mjs';
 
 const REPO='anevum/anevum-web';
-const SOURCE='857e2acb67df6737975c6dcec02e9b860697688a';
+const SOURCE='f3655792b3c6621699ae1fb38eeeac7bc887f9f6';
 const ACCOUNT='2f7ee83107240152097efd956a4e8335';
 const ZONE='8abe27259b5436af5966d3b40d9a3760';
 const WORKER='anevum-apex-prelaunch-gateway';
 const PUBLIC='93cc7f07-cf39-457e-af69-c9f6f4c02d25';
-const CORRECTED='94446397-e87d-4e5b-943b-b70a8a1a8fd2';
-const BASELINE_DEPLOYMENT='00c314cf-899b-4b2d-8540-51300bee3f7d';
+const CORRECTED='ed44a70c-2adb-4048-a7a5-82e7a457528d';
+const BASELINE_DEPLOYMENT='46b2baba-1622-4b91-b27e-a0446ab92720';
 const QA_ENTRY='anevum-v095-v096-acceptance-entry';
-const QA_ENTRY_VERSION='9cd665c0-c5fe-4ec1-8d91-a6d3e4131f83';
+const QA_ENTRY_VERSION='d7bb6c81-30e0-480f-b9a8-2f12f7a69ab5';
 const ROOT='/accounts/'+ACCOUNT+'/workers/scripts/'+WORKER;
 const sha256=data=>createHash('sha256').update(data).digest('hex');
 const stable=x=>JSON.stringify(x,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?

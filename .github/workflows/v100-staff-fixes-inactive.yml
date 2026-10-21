@@ -23,6 +23,7 @@ jobs:
       VITE_IREN_SPATIAL_GUIDE: 'true'
       VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
       VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
+      VITE_CREATOR_WORKBENCH_ALPHA: 'false'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -42,8 +43,8 @@ jobs:
           test "$GITHUB_REPOSITORY" = 'anevum/anevum-web'
           test "$GITHUB_REF" = 'refs/heads/ops/v100-staff-fixes-inactive-20261021-001'
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          git merge-base --is-ancestor 857e2acb67df6737975c6dcec02e9b860697688a HEAD
-          git diff --name-only 857e2acb67df6737975c6dcec02e9b860697688a HEAD > /tmp/anevum-approved-changes.txt
+          git merge-base --is-ancestor f3655792b3c6621699ae1fb38eeeac7bc887f9f6 HEAD
+          git diff --name-only f3655792b3c6621699ae1fb38eeeac7bc887f9f6 HEAD > /tmp/anevum-approved-changes.txt
           while IFS= read -r path; do
             case "$path" in
               .github/workflows/v100-staff-fixes-inactive.yml|creator-v1/ops/v100-staff-fixes-inactive.mjs|.github/release-approvals/v100-staff-fixes-inactive-upload.json) ;;
@@ -57,7 +58,7 @@ jobs:
           npm install --ignore-scripts --no-audit --no-fund
           node --check creator-v1/ops/v100-staff-fixes-inactive.mjs
           node --experimental-strip-types --test creator-v1/test/v100-forum-review-access-transport.test.mjs
-          node --test creator-v1/test/v100-legacy-command-entry.test.mjs
+          node --test creator-v1/test/v100-legacy-command-entry.test.mjs creator-v1/test/private-read-recovery-v103.test.mjs creator-v1/test/studio-migration-rehearsal-v103.test.mjs
           npm run check:creator-v1-web
           npm run build:creator-v1-web
           test -s creator-v1/dist/web/index.html
@@ -120,7 +121,7 @@ jobs:
             throw Error('Root browser or static asset acceptance failed');
           const head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
           const manifest={
-            release_source:'857e2acb67df6737975c6dcec02e9b860697688a',
+            release_source:'f3655792b3c6621699ae1fb38eeeac7bc887f9f6',
             qa_workflow_head:head,asset_base:'/',entry:'index.html',
             flags:{VITE_IREN_SPATIAL_GUIDE:true,VITE_NATIVE_CREATOR_STUDIO_V095:true,
               VITE_PACKAGE_CREATOR_GALLERY_V010:true},
@@ -181,11 +182,11 @@ jobs:
           import {readFileSync} from 'node:fs';
           const a=JSON.parse(readFileSync('.github/release-approvals/v100-staff-fixes-inactive-upload.json','utf8'));
           assert.deepEqual(a,{
-            reviewed_merge:'857e2acb67df6737975c6dcec02e9b860697688a',
+            reviewed_merge:'f3655792b3c6621699ae1fb38eeeac7bc887f9f6',
             release_branch:'release/v084-continuance-approved-20261019',
             worker:'anevum-apex-prelaunch-gateway',
             old_public_version:'93cc7f07-cf39-457e-af69-c9f6f4c02d25',
-            old_protected_version:'94446397-e87d-4e5b-943b-b70a8a1a8fd2',
+            old_protected_version:'ed44a70c-2adb-4048-a7a5-82e7a457528d',
             allow_inactive_upload:true,allow_public_promotion:false,
             allow_route_changes:false,allow_policy_changes:false,
             allow_database_writes:false,allow_creator_uploads:false,
@@ -223,7 +224,7 @@ jobs:
             --config "$V100_WRANGLER_FILE" \
             --keep-vars \
             --strict \
-            --message "ANEVUM V100 merged staff fixes; immutable protected candidate only, zero public traffic"
+            --message "ANEVUM integrated V103 Studio recovery and uploader/player; private inactive candidate only, zero public traffic"
       - name: Verify existing public 100 percent, old QA 0 percent and new 0 percent
         shell: bash
         run: |
@@ -259,11 +260,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git merge-base --is-ancestor 857e2acb67df6737975c6dcec02e9b860697688a HEAD
-          git diff --exit-code 857e2acb67df6737975c6dcec02e9b860697688a HEAD -- creator-v1/web creator-v1/apex-prelaunch creator-v1/canonical-auth site/alpha/v003
+          git merge-base --is-ancestor f3655792b3c6621699ae1fb38eeeac7bc887f9f6 HEAD
+          git diff --exit-code f3655792b3c6621699ae1fb38eeeac7bc887f9f6 HEAD -- creator-v1/web creator-v1/apex-prelaunch creator-v1/canonical-auth site/alpha/v003
           node --check creator-v1/ops/v100-staff-fixes-inactive.mjs
           node --experimental-strip-types --test creator-v1/test/v100-forum-review-access-transport.test.mjs
-          node --test creator-v1/test/v100-legacy-command-entry.test.mjs
+          node --test creator-v1/test/v100-legacy-command-entry.test.mjs creator-v1/test/private-read-recovery-v103.test.mjs creator-v1/test/studio-migration-rehearsal-v103.test.mjs
       - name: Independently reconcile uploaded private versions with no provider writes
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

@@ -1,0 +1,49 @@
+# Port of existing V005 detector into canonical V095 uploader, no publishing writes.
+name: ANEVUM V101 Canonical Creator Compatibility QA
+on:
+  pull_request:
+    paths:
+      - site/alpha/v003/compatibility-v005.mjs
+      - site/alpha/v003/compatibility-v005.d.mts
+      - site/alpha/v003/archive.d.mts
+      - creator-v1/web/src/lib/native-compatibility-v101.ts
+      - creator-v1/web/src/pages/NativeCreatorStudio.tsx
+      - creator-v1/web/src/pages/native-creator-v095.css
+      - creator-v1/test/native-compatibility-v101.test.mjs
+      - .github/workflows/v101-canonical-compatibility-qa.yml
+  push:
+    branches:
+      - build/creator-compatibility-canonical-v101-20261021-001
+permissions:
+  contents: read
+jobs:
+  locally-inspected-private-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: No-script dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Advisory ZIP/HTML browser validation and existing package safety
+        run: |
+          node --check site/alpha/v003/compatibility-v005.mjs
+          node --experimental-strip-types --test creator-v1/test/native-compatibility-v101.test.mjs
+          node --test creator-v1/test/v095-inactive-candidate-gate.test.mjs
+          node --test creator-v1/test/package-discovery-v011.test.mjs
+          node --test tests/v5-legacy-page-retention.test.mjs tests/v5-source-reachability.test.mjs
+      - name: TypeScript and React production compilation
+        run: |
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+      - name: Preserve private-only status
+        run: |
+          echo 'UPLOAD_SUBMISSION=UNCHANGED' >> "$GITHUB_STEP_SUMMARY"
+          echo 'CLIENT_PROBE_BYTES_UPLOAD=NONE' >> "$GITHUB_STEP_SUMMARY"
+          echo 'COMPATIBILITY_IS_NOT_SECURITY_CERTIFICATION=true' >> "$GITHUB_STEP_SUMMARY"
+          echo 'PUBLIC_DEPLOYMENT=NOT_AUTHORIZED' >> "$GITHUB_STEP_SUMMARY"

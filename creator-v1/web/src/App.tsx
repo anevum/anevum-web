@@ -32,6 +32,7 @@ import {SupporterPage} from './pages/SupporterPage';
 import SupporterTransparencyPage from './pages/SupporterTransparencyPage';
 import SupporterCollectionPage from './pages/SupporterCollectionPage';
 
+const WorkbenchAlphaPage=lazy(()=>import("./pages/WorkbenchAlpha").then(m=>({default:m.WorkbenchAlphaPage})));
 const NativeCreatorStudioPage=lazy(()=>import("./pages/NativeCreatorStudio").then(m=>({default:m.NativeCreatorStudioPage})));
 const NativePackagePlayerPage=lazy(()=>import("./pages/NativeCreatorStudio").then(m=>({default:m.NativePackagePlayerPage})));
 const creatorFallback=<LoadingState label="Opening Creator Studio"/>;
@@ -94,6 +95,7 @@ export default function App(){
     <Route path="create/new" element={<Navigate to="/studio/new" replace/>}/>
     <Route path="create/:projectId" element={<LegacyStudioRedirect/>}/>
     <Route path="studio/alpha" element={<PublicCreatorAlphaPage/>}/>
+    <Route path="studio/workbench" element={<Suspense fallback={creatorFallback}><WorkbenchAlphaPage/></Suspense>}/>
     <Route path="studio/packages" element={<Suspense fallback={creatorFallback}><NativeCreatorStudioPage/></Suspense>}/>
     <Route path="studio/packages/new" element={<Suspense fallback={creatorFallback}><NativeCreatorStudioPage mode="new"/></Suspense>}/>
     <Route path="studio/packages/review" element={<Suspense fallback={creatorFallback}><NativeCreatorStudioPage mode="review"/></Suspense>}/>

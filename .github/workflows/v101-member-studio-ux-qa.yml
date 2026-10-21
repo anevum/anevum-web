@@ -1,0 +1,48 @@
+# Source-only My Space / Studio UX resilience; no provider deployment or database writes.
+name: ANEVUM V101 Member and Creator Entry UX QA
+on:
+  pull_request:
+    paths:
+      - creator-v1/web/src/components/MemberSpaceDashboard.tsx
+      - creator-v1/web/src/pages/CanonicalStudioPage.tsx
+      - creator-v1/web/src/pages/canonical-studio.css
+      - creator-v1/test/member-space-resilience-v101.test.mjs
+      - .github/workflows/v101-member-studio-ux-qa.yml
+  push:
+    branches:
+      - patch/member-studio-resilience-20261021-001
+permissions:
+  contents: read
+jobs:
+  private-space-and-creator-entry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install reproducible no-script dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Private session UX resilience and permissions regression
+        run: |
+          node --test creator-v1/test/member-space-resilience-v101.test.mjs
+          node --test creator-v1/test/member-spaces-v028.test.mjs
+          node --test creator-v1/test/verified-roles-v092.test.mjs
+          node --test creator-v1/test/staff-navigation-and-connecting-v099.test.mjs
+          node --test creator-v1/test/canonical-studio-v043.test.mjs
+          node --test creator-v1/test/native-creator-fixture-v095.mjs
+      - name: Real React/TypeScript typecheck and production bundle
+        run: |
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+      - name: Prove no Cloudflare, role, database or publishing change
+        run: |
+          echo 'NO_PROVIDER_WRITES=true' >> "$GITHUB_STEP_SUMMARY"
+          echo 'PUBLIC_V100_PROMOTION=NOT_AUTHORIZED' >> "$GITHUB_STEP_SUMMARY"
+          echo 'CREATOR_UPLOADS=UNCHANGED' >> "$GITHUB_STEP_SUMMARY"
+          echo 'STAFF_GRANTS=UNCHANGED' >> "$GITHUB_STEP_SUMMARY"
+          echo 'INDEPENDENT_SAFARI_ACCEPTANCE=PENDING' >> "$GITHUB_STEP_SUMMARY"

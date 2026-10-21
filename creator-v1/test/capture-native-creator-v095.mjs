@@ -1,6 +1,7 @@
 /** Compiled React + browser interaction QA on loopback synthetic identities.
  * Does NOT certify real account acceptance or physical iPhone Safari behavior. */
 import assert from 'node:assert/strict';
+import {once} from 'node:events';
 import {spawn,execFileSync} from 'node:child_process';
 import {existsSync,readFileSync,writeFileSync,mkdirSync,mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
@@ -108,6 +109,16 @@ try{
    await navigate('/projects/package/'+ids.project+'?preview=1');await until(()=>visible('[data-native-player] iframe'),'Private native player');await layout('native-private-player',width);
    assert.equal(await evaluate('[...document.querySelectorAll("button")].some(x=>x.textContent.includes("Approve and publish"))'),false,'Creator cannot self-approve');
   }
+  const frameStatus=await evaluate('document.querySelector(".av102-player-status")?.dataset.playerFrameState');
+  assert.ok(['opening','frame-loaded','slow'].includes(frameStatus),'Player status must describe frame loading without claiming runtime health');
+  const original=await evaluate('document.querySelector(".av095-player iframe").src');
+  await clickText('Phone width');
+  await until(()=>evaluate('document.querySelector(".av095-player").dataset.playerViewport==="phone"'),'Simulated phone stage');
+  assert.equal(await evaluate('document.querySelector(".av095-player iframe").src'),original,'Resizing must not reload the untrusted frame');
+  assert.equal(await evaluate('document.querySelector(".av102-player-note")?.textContent.includes("not physical Safari")'),true);
+  await clickText('Full width');
+  await until(()=>evaluate('document.querySelector(".av095-player").dataset.playerViewport==="fit"'),'Restored responsive stage');
+  assert.equal(await evaluate('document.querySelector(".av095-player iframe").src'),original);
   await evaluate('HTMLElement.prototype.requestFullscreen=undefined');const before=await evaluate('document.querySelector(".av095-player iframe").src');
   await clickText('Expand player');await until(()=>visible('.av095-player--expanded'),'Immersive fallback');await screenshot('native-iphone-expand-320');
   assert.equal(await evaluate('document.querySelector(".av095-player iframe").src'),before);
@@ -122,6 +133,15 @@ try{
   fixture.control.set({mode:'upload-error'});await navigate('/studio/packages/new');await until(()=>visible('.av095-upload-grid'),'Upload form');
   const uploadPath=join(output,'synthetic-upload.html');writeFileSync(uploadPath,'<!doctype html><html><body><button>SYNTHETIC UPLOAD</button></body></html>');
   await client.send('DOM.enable');const {root}=await client.send('DOM.getDocument');const {nodeId}=await client.send('DOM.querySelector',{nodeId:root.nodeId,selector:'.av095-drop input'});await client.send('DOM.setFileInputFiles',{nodeId,files:[uploadPath]});
+  const beforeLocalProbe=fixture.control.trace().filter(x=>x.path.endsWith('/upload')).length;
+  await until(()=>evaluate('document.querySelector(".av095-preflight strong")?.textContent==="Browser build candidate"'),
+    'Local HTML compatibility findings');
+  assert.equal(await evaluate('document.body.textContent.includes("AEP_HTML_DEPENDENCIES_UNVERIFIED")'),true,
+    'Standalone HTML must warn about unverified dependencies');
+  assert.equal(fixture.control.trace().filter(x=>x.path.endsWith('/upload')).length,beforeLocalProbe,
+    'Choosing a file must not upload project bytes');
+  await screenshot('native-local-compatibility-320');
+  results.push({case:'local-v005-compatibility-with-no-upload',passed:true});
   await formValue('.av095-form-grid input','NATIVE UPLOAD SYNTHETIC QA');await formValue('.av095-upload-grid textarea','A disposable browser fixture for this integration test.');
   await evaluate('document.querySelector(".av095-upload-grid .av095-confirm input").click()');await clickText('Prepare private playtest');
   await until(()=>evaluate('document.body.textContent.includes("Synthetic upload quota")'),'Upload failure');
@@ -146,10 +166,43 @@ try{
   fixture.control.set({actor:'owner',mode:'expiry',reset:true});await navigate('/projects/package/'+ids.project+'?preview=1');await until(()=>evaluate('!!document.querySelector("[data-native-player] iframe")||document.body.textContent.toLowerCase().includes("private playtest expired")'),'Expiring preview or immediate expiry');await until(()=>evaluate('document.body.textContent.toLowerCase().includes("private playtest expired")'),'Private capability expiry',10000);assert.equal(await visible('[data-native-player] iframe'),false);results.push({case:'expired-private-frame-removed',passed:true});
   for(const mode of ['unavailable','html']){fixture.control.set({actor:'owner',mode});await navigate('/studio/packages');await until(()=>visible('.av095-status'),'Unavailable mode');assert.equal(await visible('[data-native-project]'),false);await screenshot('native-'+mode+'-320');results.push({case:'fail-closed-'+mode,passed:true});}
  }
+ if(args.includes('--recovery')){
+  fixture.control.set({actor:'owner',mode:'hang-canonical'});
+  await navigate('/studio');
+  await until(()=>evaluate('document.body.textContent.includes("did not respond within 15 seconds")'),'Bounded canonical Studio read',22000);
+  await screenshot('canonical-studio-timeout-320');
+  fixture.control.set({mode:'canonical-records'});
+  await clickText('RETRY STUDIO ACCESS');
+  await until(()=>evaluate('document.body.textContent.includes("OWNER PRIVATE RECORD")'),'Explicit Studio retry');
+  results.push({case:'canonical-studio-read-deadline-and-explicit-retry',passed:true});
+  fixture.control.set({actor:'other',mode:'canonical-records'});
+  await delay(5200); // Better Auth focus refresh is intentionally throttled.
+  await evaluate('document.dispatchEvent(new Event("visibilitychange"))');
+  await until(()=>evaluate('document.querySelector(".st-identity")?.textContent.includes("@v103_other")'),'Same-document canonical identity switch');
+  assert.equal(await evaluate('document.body.textContent.includes("OWNER PRIVATE RECORD")'),false,'Previous private records survived an account switch');
+  assert.equal(await visible('.st-project'),false);
+  await screenshot('canonical-other-member-320');
+  results.push({case:'same-document-studio-account-switch-hides-old-private-records',passed:true});
+  fixture.control.set({actor:'owner',mode:'hang-native'});
+  await navigate('/studio/packages');
+  await until(()=>evaluate('document.body.textContent.includes("did not respond within 15 seconds")'),'Bounded native capability read',22000);
+  fixture.control.set({mode:'ready'});await clickText('Try again');
+  await until(()=>visible('[data-native-project]'),'Explicit native retry');
+  results.push({case:'native-read-deadline-and-explicit-retry',passed:true});
+ }
  assert.equal(exceptions.length,0,'Unhandled browser exceptions: '+JSON.stringify(exceptions));
  writeFileSync(join(output,'acceptance.json'),JSON.stringify({source,status:'PASS',syntheticOnly:true,physicalDeviceAcceptance:false,disabled,cases:results,requests:fixture.control.trace()},null,2));
  console.log('V095_NATIVE_REACT_BROWSER=PASS '+results.length+' cases; synthetic loopback only');
 }catch(error){
  try{if(evaluate)writeFileSync(join(output,'failure-dom.html'),await evaluate('document.documentElement.outerHTML'));if(screenshot)await screenshot('failure');}catch{}
  writeFileSync(join(output,'failure.json'),JSON.stringify({error:error.stack,exceptions,cases:results},null,2));throw error;
-}finally{writeFileSync(log,chromeLog);client?.close();child.kill();await fixture.close();setTimeout(()=>rmSync(profile,{recursive:true,force:true}),250).unref();}
+}finally{
+ writeFileSync(log,chromeLog);client?.close();
+ if(child.exitCode===null&&child.signalCode===null){
+  const exited=once(child,'exit');child.kill();await Promise.race([exited,delay(3000)]);
+ }
+ await fixture.close();
+ // Chromium can still flush its profile during shutdown. Wait for exit and
+ // retry filesystem cleanup instead of throwing from an untracked timer.
+ rmSync(profile,{recursive:true,force:true,maxRetries:5,retryDelay:100});
+}
