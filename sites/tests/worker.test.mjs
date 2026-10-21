@@ -182,7 +182,7 @@ test("private workbench validates real RS256-style JWT, scopes origin, and recor
       assert.match(markup, /PRIVATE DESIGN STUDY/);
       assert.match(markup, /NOT COMMISSIONED/);
       assert.match(markup, /NO REAL CONTACT, BOOKING OR TRANSACTION/);
-      assert.doesNotMatch(markup, /<form\\b|checkout|tel:|mailto:/i);
+      assert.doesNotMatch(markup, /<form\b|checkout|tel:|mailto:/i);
     }
     assert.equal((await workshop.fetch(new Request(HOST_PRIVATE + "/concepts/nonexistent", { headers }), { SITES_DB: db })).status, 404);
     const conceptAsset = await workshop.fetch(new Request(HOST_PRIVATE + "/assets/local-concepts.js", { headers }), { SITES_DB: db });
