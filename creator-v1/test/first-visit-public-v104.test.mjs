@@ -24,6 +24,7 @@ test('V104 public member page parses and never couples wall failure to verified 
   assert.match(publicPage,/posts!==null\?<MemberWall/);
   assert.match(publicPage,/wallResource\.state==='error'\?<div className="ms-public-wall-feedback"/);
   assert.match(publicPage,/Opening public wall…/);
+  assert.match(publicPage,/<CompactMemberIdentity size="featured" interactive=\{false\} member=/);
   assert.match(publicPage,/setWallRetry\(value=>value\+1\)/);
 });
 
