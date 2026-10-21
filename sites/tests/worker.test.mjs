@@ -123,6 +123,10 @@ test("public worker rejects mismatched host and unsafe method", async () => {
 
 test("private workbench refuses unauthorized and mismatched hosts", async () => {
   assert.equal((await workshop.fetch(new Request(HOST_PRIVATE))).status, 401);
+  for (const path of ["/concepts", "/concepts/auto-detail", "/concepts/pet-grooming", "/concepts/home-services", "/assets/local-concepts.js"]) {
+    assert.equal((await workshop.fetch(new Request(HOST_PRIVATE + path))).status, 401, path);
+    assert.equal((await studio.fetch(new Request(HOST_PUBLIC + path), { SITES_DB: fakeDb() })).status, 404, path);
+  }
   assert.equal((await workshop.fetch(new Request("https://web.anevum.com/"))).status, 421);
 });
 
@@ -164,6 +168,28 @@ test("private workbench validates real RS256-style JWT, scopes origin, and recor
     assert.match(privateMarkup, /3316 Canoe Creek Road/);
     assert.match(privateMarkup, /NOT AN OFFICIAL SHOP WEBSITE/);
     assert.doesNotMatch(privateMarkup, /buy now|checkout|product catalogue/i);
+    const index = await workshop.fetch(new Request(HOST_PRIVATE + "/concepts", { headers }), { SITES_DB: db });
+    assert.equal(index.status, 200);
+    assert.match(index.headers.get("X-Robots-Tag"), /noindex/);
+    const indexHtml = await index.text();
+    assert.match(indexHtml, /Three industries/);
+    for (const slug of ["auto-detail", "pet-grooming", "home-services"]) {
+      const preview = await workshop.fetch(new Request(HOST_PRIVATE + "/concepts/" + slug, { headers }), { SITES_DB: db });
+      assert.equal(preview.status, 200, slug);
+      assert.match(preview.headers.get("X-Robots-Tag"), /noindex/);
+      assert.match(preview.headers.get("Content-Security-Policy"), /script-src 'self'/);
+      const markup = await preview.text();
+      assert.match(markup, /PRIVATE DESIGN STUDY/);
+      assert.match(markup, /NOT COMMISSIONED/);
+      assert.match(markup, /NO REAL CONTACT, BOOKING OR TRANSACTION/);
+      assert.doesNotMatch(markup, /<form\\b|checkout|tel:|mailto:/i);
+    }
+    assert.equal((await workshop.fetch(new Request(HOST_PRIVATE + "/concepts/nonexistent", { headers }), { SITES_DB: db })).status, 404);
+    const conceptAsset = await workshop.fetch(new Request(HOST_PRIVATE + "/assets/local-concepts.js", { headers }), { SITES_DB: db });
+    assert.equal(conceptAsset.status, 200);
+    assert.match(await conceptAsset.text(), /data-choice/);
+    assert.match((await page.text()), /Local study library/);
+
     const previewHead = await workshop.fetch(new Request(HOST_PRIVATE + "/preview/smokebreak-st-cloud", { method: "HEAD", headers }), { SITES_DB: db });
     assert.equal(previewHead.status, 200);
     assert.equal(await previewHead.text(), "");
