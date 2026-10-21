@@ -130,7 +130,86 @@ export async function inventory(read){
  out.featureOnProductionApproved=false;
  return out;
 }
+/** No-cookie hosted staff perimeter. GET only; never follows redirects or logs response bodies.
+ * Checks the real public production staff routes (not the 0% feature-on app).
+ * A PASS is only anonymous denial/redaction, never authenticated role acceptance.
+ */
+export async function signedOutHostedPerimeter(request=fetch){
+ const base='https://anevum.com';
+ const report={status:'PASS_ANONYMOUS_ONLY',origin:base,checks:[],authenticatedFounder:false,
+  authenticatedReviewer:false,authenticatedOrdinaryMember:false,creatorPublishingApproved:false,
+  productionReleaseApproved:false,mutations:0};
+ const read=async path=>{
+  const url=new URL(path,base);
+  assert.equal(url.origin,base,'Only first-party hosted GETs permitted');
+  const response=await request(url.toString(),{method:'GET',redirect:'manual',credentials:'omit',cache:'no-store',
+   headers:{accept:'application/json','cache-control':'no-store'},
+   signal:AbortSignal.timeout(12000)});
+  assert.ok(response&&Number.isInteger(response.status),'Missing HTTP response for '+path);
+  return response;
+ };
+ const secured=[
+  '/staff','/staff/observatory','/staff/observatory/api/overview',
+  '/staff/observatory/app.js','/staff/observatory/styles.css',
+  '/__anevum_profile_staff_role_v001'
+ ];
+ for(const path of secured){
+  const response=await read(path);
+  assert.ok([401,403].includes(response.status),
+   'Signed-out native staff route must deny access: '+path+' HTTP '+response.status);
+  await response.body?.cancel().catch(()=>{});
+  report.checks.push({path,status:response.status,denied:true});
+ }
+ for(const path of ['/api/v1/member/staff-ops','/api/v1/member/forum-review']){
+  const response=await read(path);
+  assert.ok([302,303,307,308,401,403].includes(response.status),
+   'Sensitive staff API must be Access-protected or deny anonymous GET: '+path+' HTTP '+response.status);
+  if([302,303,307,308].includes(response.status)){
+   const location=response.headers.get('location');
+   assert.ok(location,'Access denial redirect without location: '+path);
+   const next=new URL(location,base);
+   assert.equal(next.protocol,'https:','Access denial redirect must use HTTPS: '+path);
+   assert.ok((next.hostname==='anevum.com'&&next.pathname.startsWith('/cdn-cgi/access/'))||
+    (next.hostname.endsWith('.cloudflareaccess.com')&&next.pathname.startsWith('/cdn-cgi/access/')),
+    'Access denial redirect must target Cloudflare Access login: '+path);
+  }
+  await response.body?.cancel().catch(()=>{});
+  report.checks.push({path,status:response.status,denied:true});
+ }
+ const json=async path=>{
+  const response=await read(path);
+  assert.equal(response.status,200,'Redacted diagnostic status: '+path);
+  assert.match(response.headers.get('content-type')||'',/application\/json/i,'Diagnostic JSON required: '+path);
+  const size=Number(response.headers.get('content-length')||0);
+  assert.ok(size<2048,'Oversized diagnostic: '+path);
+  const raw=await response.text();
+  assert.ok(raw.length<2048,'Diagnostic body too large: '+path);
+  return JSON.parse(raw);
+ };
+ const gate=await json('/staff?diagnose=1');
+ assert.deepEqual(Object.keys(gate).sort(),['access','expectedCookiePresent','expiryType','reason','role'].sort());
+ assert.equal(gate.access,'signed_out');
+ assert.equal(gate.expectedCookiePresent,false);
+ assert.equal(gate.role,null);
+ report.checks.push({path:'/staff?diagnose=1',status:200,redacted:true});
+ const session=await json('/__anevum_iren_staff_session_status_v001');
+ assert.deepEqual(Object.keys(session).sort(),['apexCookiePresent','canonicalSession','endpoint','staffApi','staffGrant'].sort());
+ assert.equal(session.apexCookiePresent,false);
+ assert.equal(session.canonicalSession,'not_signed_in');
+ assert.equal(session.staffGrant,'not_checked');
+ assert.equal(session.staffApi,'not_checked');
+ report.checks.push({path:'/__anevum_iren_staff_session_status_v001',status:200,redacted:true});
+ return report;
+}
+
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
+ if(process.argv.includes('--signed-out-live')){
+  assert.equal(process.env.GITHUB_REPOSITORY,'anevum/anevum-web');
+  assert.equal(process.env.GITHUB_REF,'refs/heads/ops/v100-anonymous-perimeter-20261021-001');
+  assert.equal(process.env.GITHUB_EVENT_NAME,'push');
+  assert.equal(process.env.GITHUB_ACTOR,'anevum');
+  console.log(JSON.stringify(await signedOutHostedPerimeter()));
+ } else {
  assert.equal(process.env.GITHUB_REPOSITORY,'anevum/anevum-web');
  assert.ok(['refs/heads/ops/v100-candidate-acceptance-20261021-001','refs/heads/ops/v100-corrected-acceptance-20261021-001'].includes(process.env.GITHUB_REF),'Unreviewed QA audit branch');
  assert.equal(process.env.GITHUB_EVENT_NAME,'push');
@@ -146,4 +225,5 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
   const data=await r.json();assert.equal(data.success,true);return data.result;
  };
  console.log(JSON.stringify(await inventory(read)));
+ }
 }
