@@ -197,12 +197,15 @@ try{
  try{if(evaluate)writeFileSync(join(output,'failure-dom.html'),await evaluate('document.documentElement.outerHTML'));if(screenshot)await screenshot('failure');}catch{}
  writeFileSync(join(output,'failure.json'),JSON.stringify({error:error.stack,exceptions,cases:results},null,2));throw error;
 }finally{
- writeFileSync(log,chromeLog);client?.close();
+ writeFileSync(log,chromeLog);
+ // Close Chromium's children through CDP before waiting on the launcher.
+ await client?.send('Browser.close').catch(()=>{});client?.close();
  if(child.exitCode===null&&child.signalCode===null){
   const exited=once(child,'exit');child.kill();await Promise.race([exited,delay(3000)]);
  }
  await fixture.close();
  // Chromium can still flush its profile during shutdown. Wait for exit and
  // retry filesystem cleanup instead of throwing from an untracked timer.
- rmSync(profile,{recursive:true,force:true,maxRetries:5,retryDelay:100});
+ try{rmSync(profile,{recursive:true,force:true,maxRetries:5,retryDelay:100});}
+ catch{console.warn('Synthetic Chromium profile cleanup deferred to disposable runner cleanup.');}
 }

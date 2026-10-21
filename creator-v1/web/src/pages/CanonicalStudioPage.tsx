@@ -80,9 +80,10 @@ function SessionStudio({id,mode}:{id:string;mode:Mode}){
    if(!live)return;
    if(!health.studioReady){setPhase('unavailable');return;}
    if(!profile.profile?.handle){setPhase('incomplete');return;}
+   if(!memberStudio)throw Error('Creator Studio capability verification did not complete. Retry access.');
    // Only this account's canonical response grants upload or review capability.
-   setIdentity(profile.profile);setUploads(memberStudio?.uploadsReady===true);
-   setCanReview(memberStudio?.canReview===true);setPhase('ready');
+   setIdentity(profile.profile);setUploads(memberStudio.uploadsReady===true);
+   setCanReview(memberStudio.canReview===true);setPhase('ready');
   }).catch(e=>{if(live){setMessage(showError(e));setPhase('unavailable')}});
   return()=>{live=false;controller.abort();};
  },[id,attempt]);
