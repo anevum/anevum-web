@@ -17,8 +17,8 @@ const shortLines:Record<string,string>={
   progress:"Your levels and awards come from real activity.",
   privacy:"Your wall starts private. You choose what others see.",
   studio:"Create privately here. Publishing requires review.",
-  discover:"Find real, approved games, apps, art and more.",
-  community:"Meet the makers and explore real conversations.",
+  discover:"Find approved games, apps, art and more.",
+  community:"Meet the makers and explore conversations.",
   wayfinder:"The Wayfinder takes you around ANEVUM."
 };
 function viewportRect():IrenRect{
@@ -64,11 +64,26 @@ export function IrenSpatialTour({
         const topBlock=headerBox&&headerBox.bottom>v.top&&headerBox.top<v.top+130
           ?headerBox.bottom+9:0;
         const width=Math.min(mobile?245:296,Math.max(170,v.width-88));
-        const height=bubbleBounds?.height||148;
+        const height=bubbleBounds?.height||138;
+        // Read positions only. Never inspect the content of form fields or
+        // private account data. This avoids hiding real Search/CTA controls.
+        const obstacles:IrenRect[]=[];
+        const interactive=document.querySelectorAll<HTMLElement>(
+          'a,button,input,select,textarea,[role="button"],[role="searchbox"]');
+        for(const element of Array.from(interactive).slice(0,200)){
+          if(element.closest(".ir97-guide-layer"))continue;
+          if(!element.getClientRects().length)continue;
+          const rect=element.getBoundingClientRect();
+          if(rect.width<18||rect.height<18||rect.right<v.left||
+             rect.left>v.left+v.width||rect.bottom<v.top||
+             rect.top>v.top+v.height)continue;
+          obstacles.push(area(rect));
+        }
         const result=placeIrenSpatialGuide(v,target,{width,height},{width:botWidth,height:botHeight},{
           headerBottom:topBlock,
           safeSides:12,
-          safeBottom:mobile?12:8
+          safeBottom:mobile?12:8,
+          obstacles
         });
         setVisibleRect(prev=>prev.left===v.left&&prev.top===v.top&&prev.width===v.width&&prev.height===v.height?prev:v);
         setPlacement(prev=>{
