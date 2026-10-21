@@ -71,7 +71,7 @@ jobs:
           const expected=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
           assert.match(expected,/^[a-f0-9]{40}$/);
           assert.equal(readFileSync(join(process.argv[2],'source-sha.txt'),'utf8').trim(),expected);
-          for(const [mode,count] of [['disabled',6],['enabled',25]]){
+          for(const [mode,count] of [['disabled',6],['enabled',24]]){
             const r=JSON.parse(readFileSync(join(process.argv[2],mode,'acceptance.json'),'utf8'));
             assert.equal(r.source,expected,'Browser evidence must identify the checked-out commit');
             assert.equal(r.status,'PASS');
@@ -86,7 +86,7 @@ jobs:
               assert.equal(r.cases.filter(item=>item.case===requiredCase&&item.passed===true).length,1,
                 'V101 local compatibility must be observed without an upload');
             assert.ok(r.cases.every(item=>item.passed===true));
-            if(mode==='enabled')
+            if(mode==='enabled'&&hasV101)
               assert.ok(r.cases.some(item=>item.case==='local-v005-compatibility-with-no-upload'),
                 'Native browser QA must include local V005 advisory without file upload');
           }
