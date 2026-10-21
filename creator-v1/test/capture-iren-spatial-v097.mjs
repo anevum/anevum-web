@@ -128,7 +128,7 @@ try{
   await check("first-contact-guidance-choices-"+width,'(()=>{const text=document.querySelector(".ir97-invite-actions")?.textContent||"";return text.includes("Show me")&&text.includes("Not now")&&text.includes("More choices");})()');
   await check("first-contact-one-companion-"+width,'document.querySelectorAll(".ir87-scout").length===1');
   await check("first-contact-no-modal-"+width,'!document.querySelector(".ir97-speech-bubble")');
-  await check("first-contact-inside-viewport-"+width,'(()=>{const r=document.querySelector(".ir80-help").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1&&r.top>=0&&r.bottom<=innerHeight+1;})()');
+  await check("first-contact-inside-viewport-"+width,'(()=>{const r=document.querySelector(".ir97-invite").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1&&r.top>=0&&r.bottom<=innerHeight+1;})()');
   await capture("iren-first-contact-"+width);
   if(width===320){
     await evaluate('document.querySelector(".ir97-invite-actions button:first-child").click()');
