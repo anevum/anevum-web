@@ -3,13 +3,16 @@ on:
   push:
     branches:
       - design/iren-spatial-guide-20261020-001
-  # This isolated branch is tested on push. The PR uses the same commit checks;
-  # triggering both events duplicated memory-heavy Chromium jobs and caused
-  # a reproducible runner contention / startup timeout without a source change.
+      - ops/v100-feature-on-acceptance-20261021-001
+  pull_request:
+    paths:
+      - creator-v1/test/capture-iren-spatial-v097.mjs
+      - .github/workflows/iren-spatial-v097-qa.yml
+# Push and PR runs share a branch concurrency key to avoid duplicate Chromium.
 permissions:
   contents: read
 concurrency:
-  group: iren-spatial-v097-${{ github.ref }}
+  group: iren-spatial-v097-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 jobs:
   source:
@@ -18,7 +21,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -28,6 +33,11 @@ jobs:
         run: npm run check:creator-v1-web
       - name: Spatial placement and source boundary tests
         run: node --experimental-strip-types --test creator-v1/test/iren-spatial-v097.test.mjs
+      - name: Pin the integrated V100 application without changing its implementation
+        if: startsWith(github.head_ref || github.ref_name, 'ops/v100-feature-on-acceptance-')
+        run: |
+          git merge-base --is-ancestor 28f163a0015631b1d8eb58922c03596ae8febd22 HEAD
+          git diff --exit-code 28f163a0015631b1d8eb58922c03596ae8febd22 HEAD -- creator-v1/web creator-v1/apex-prelaunch creator-v1/canonical-auth site/alpha/v003
       - name: Existing guided/companion/first-contact regressions
         working-directory: creator-v1
         run: |
@@ -42,10 +52,14 @@ jobs:
   browser:
     runs-on: ubuntu-latest
     timeout-minutes: 35
+    env:
+      QA_BRANCH: ${{ github.head_ref || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -59,7 +73,7 @@ jobs:
           test -n "$chrome"
           mkdir -p evidence/iren-v097/legacy evidence/iren-v097/spatial
           npm run build:creator-v1-web:staging
-          node creator-v1/test/portal-offline-preview.mjs > evidence/iren-v097/fixture.log 2>&1 &
+          ANEVUM_V096_ALPHA_CSP_QA=1 node creator-v1/test/portal-offline-preview.mjs > evidence/iren-v097/fixture.log 2>&1 &
           fixture_pid=$!
           trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
           ready=0
@@ -70,11 +84,38 @@ jobs:
           test "$ready" = 1
           node creator-v1/test/capture-iren-guided-v080.mjs "$chrome" http://127.0.0.1:4178 evidence/iren-v097/legacy
           test -s evidence/iren-v097/legacy/acceptance.json
-          VITE_IREN_SPATIAL_GUIDE=true npm run build:creator-v1-web:staging
+          if [[ "$QA_BRANCH" == ops/v100-feature-on-acceptance-* ]]; then
+            git diff --exit-code 28f163a0015631b1d8eb58922c03596ae8febd22 HEAD -- creator-v1/web creator-v1/apex-prelaunch creator-v1/canonical-auth site/alpha/v003
+            VITE_IREN_SPATIAL_GUIDE=true VITE_NATIVE_CREATOR_STUDIO_V095=true VITE_PACKAGE_CREATOR_GALLERY_V010=true npm run build:creator-v1-web:staging
+          else
+            VITE_IREN_SPATIAL_GUIDE=true npm run build:creator-v1-web:staging
+          fi
           node creator-v1/test/capture-iren-spatial-v097.mjs "$chrome" http://127.0.0.1:4178 evidence/iren-v097/spatial
           test -s evidence/iren-v097/spatial/acceptance.json
           test -s evidence/iren-v097/spatial/iren-discover-320.png
           test -s evidence/iren-v097/spatial/iren-help-390.png
+          if [[ "$QA_BRANCH" == ops/v100-feature-on-acceptance-* ]]; then
+            node creator-v1/test/capture-native-creator-v095.mjs --chrome "$chrome" --output evidence/iren-v097/native-enabled
+            node creator-v1/test/capture-public-creator-alpha-v096.mjs "$chrome" http://127.0.0.1:4178 evidence/iren-v097/guest-enabled
+            cp -R creator-v1/dist/react-staging evidence/iren-v097/compiled-feature-on
+            node --input-type=module <<'JS'
+          import {writeFileSync,readFileSync,readdirSync} from 'node:fs';
+          import {createHash} from 'node:crypto';
+          import {execFileSync} from 'node:child_process';
+          const sha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+          const root='creator-v1/dist/react-staging';
+          const assets=readdirSync(root,{recursive:true,withFileTypes:true}).filter(x=>x.isFile()).map(x=>{
+            const path=x.parentPath+'/'+x.name;
+            return {path:path.slice(root.length+1),sha256:createHash('sha256').update(readFileSync(path)).digest('hex')};
+          }).sort((a,b)=>a.path.localeCompare(b.path));
+          writeFileSync('evidence/iren-v097/build.json',JSON.stringify({
+            application_source:'28f163a0015631b1d8eb58922c03596ae8febd22',harness_source:sha,
+            flags:{VITE_IREN_SPATIAL_GUIDE:true,VITE_NATIVE_CREATOR_STUDIO_V095:true,VITE_PACKAGE_CREATOR_GALLERY_V010:true},
+            syntheticOnly:true,authenticatedAcceptance:false,physicalDeviceAcceptance:false,
+            cloudflareCandidate:null,productionActivated:false,assets
+          },null,2));
+          JS
+          fi
       - name: Archive screenshot and acceptance artifacts
         if: always()
         uses: actions/upload-artifact@v4
