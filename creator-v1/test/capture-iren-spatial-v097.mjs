@@ -3,13 +3,18 @@
  * Tests only a local loopback synthetic fixture, never production accounts.
  * The browser exercises the real compiled React bundle at 320/390/768/1440px.
  */
-import {spawn} from "node:child_process";
+import {spawn,execFileSync} from "node:child_process";
+import {createHash} from "node:crypto";
+import {fileURLToPath} from "node:url";
 import {existsSync,readFileSync,writeFileSync,mkdirSync,mkdtempSync,rmSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 
 const [chrome,base,output]=process.argv.slice(2);
 if(!chrome||!/^http:\/\/127\.0\.0\.1:\d+$/.test(base||"")||!output)throw Error("IREN_V097_LOCAL_CHROME_REQUIRED");
+const repository=fileURLToPath(new URL('../../',import.meta.url));
+const source=execFileSync('git',['rev-parse','HEAD'],{cwd:repository,encoding:'utf8'}).trim();
+const harnessSha256=createHash('sha256').update(readFileSync(fileURLToPath(import.meta.url))).digest('hex');
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(fn,timeout=26000){
  const deadline=Date.now()+timeout,last=[];
@@ -178,7 +183,7 @@ try{
   await check("explicit-help-focuses-panel-"+width,'document.activeElement===document.querySelector(".ir80-help .ir80-icon-button")');
   await check("help-accessible-"+width,'document.querySelector(".ir80-help").getAttribute("aria-label")==="IREN companion"');
   await check("home-station-"+width,'document.querySelector(".ir88-station")?.textContent.includes("THE WAYFINDER")');
-  await check("home-dialogue-"+width,'document.querySelector(".ir88-voice-line")?.textContent.includes("Welcome, explorer")');
+  await check("home-dialogue-"+width,'(()=>{const text=document.querySelector(".ir88-voice-line")?.textContent;return text==="Welcome, explorer. I\'m IREN. Shall we find our way?"||text==="The Institute is open. Tell me where you\'d like to begin."})()');
   await check("help-inside-"+width,'(()=>{const r=document.querySelector(".ir80-help").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1;})()');
   await check("expanded-real-webgl-"+width,'document.querySelectorAll(".ir88-figure.is-rendering").length===1');
   await capture("iren-help-"+width);
@@ -275,7 +280,29 @@ try{
  await check("guest-progress-preserved",'JSON.parse(localStorage.getItem("anevum.iren.guided-continuance.v080.visitor")||"null")?.status==="completed"');
  evidence.push({width:390,height:844,syntheticMemberTour:"PASS",memberSteps:7,privateWorld:"PASS",separateTourProgress:"PASS",offlineFixtureOnly:true});
  console.log("IREN_V097_SYNTHETIC_MEMBER_7_STEP_PASS_390");
- writeFileSync(join(output,"acceptance.json"),JSON.stringify({source:"OFFLINE SYNTHETIC",version:"V097",results:evidence},null,2));
+ // Exercise the actual compiled renderer with the OS motion preference and
+ // with WebGL unavailable. These remain loopback synthetic evidence only.
+ await send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:"reduce"}]});
+ await send("Page.navigate",{url:base+"/creator/"});
+ await until(()=>evaluate('!!document.querySelector(".ir80-dock")&&!!document.querySelector(".ir88-figure.is-rendering")'));
+ await evaluate('window.dispatchEvent(new Event("anevum:iren-tour"))');
+ await until(()=>evaluate('!!document.querySelector(".ir97-speech-bubble")'));
+ await check("reduced-motion-no-travel",'(()=>{const e=document.querySelector(".ir97-floating-bot");return matchMedia("(prefers-reduced-motion: reduce)").matches&&!!e&&parseFloat(getComputedStyle(e).transitionDuration)===0})()');
+ await check("reduced-motion-controls-accessible",'!!document.querySelector("[data-iren-next]")&&document.querySelector(".ir97-speech-bubble").getAttribute("aria-modal")===null');
+ await capture("iren-reduced-motion-390");
+ evidence.push({case:"reduced-motion",passed:true,syntheticOnly:true});
+ const fallbackProbe=await send("Page.addScriptToEvaluateOnNewDocument",{source:'(()=>{const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){if(/^(webgl2?|experimental-webgl)$/.test(type))return null;return original.call(this,type,...args)}})()'});
+ await send("Page.navigate",{url:base+"/creator/"});
+ await until(()=>evaluate('!!document.querySelector(".ir88-figure.has-fallback")'));
+ await check("webgl-failure-visible-svg",'(()=>{const f=document.querySelector(".ir88-figure.has-fallback .ir88-svg-fallback"),r=f?.getBoundingClientRect();return !!f?.querySelector("svg")&&!!r&&r.width>0&&r.height>0&&getComputedStyle(f).opacity!=="0"})()');
+ await check("webgl-failure-canvas-removed",'document.querySelectorAll(".ir88-3d-canvas").length===0');
+ await evaluate('window.dispatchEvent(new Event("anevum:iren-tour"))');
+ await until(()=>evaluate('!!document.querySelector(".ir97-speech-bubble")&&!!document.querySelector(".ir97-guide-layer .ir88-figure.has-fallback")'));
+ await check("fallback-tour-accessible",'!!document.querySelector("[data-iren-next]")&&!document.querySelector(".ir80-shade")');
+ await capture("iren-svg-fallback-390");
+ await send("Page.removeScriptToEvaluateOnNewDocument",{identifier:fallbackProbe.identifier});
+ evidence.push({case:"webgl-unavailable-svg-fallback",passed:true,syntheticOnly:true});
+ writeFileSync(join(output,"acceptance.json"),JSON.stringify({source,harnessSha256,version:"V097",status:"PASS",syntheticOnly:true,authenticatedAcceptance:false,physicalDeviceAcceptance:false,featureFlags:{VITE_IREN_SPATIAL_GUIDE:true},verifiedAt:new Date().toISOString(),results:evidence},null,2));
 }finally{
  try{if(socket?.readyState===1)socket.close();}catch{}
  if(browser.exitCode===null){browser.kill("SIGTERM");await pause(800);}
