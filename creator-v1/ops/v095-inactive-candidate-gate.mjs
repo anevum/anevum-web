@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {readFileSync,readdirSync,statSync} from 'node:fs';
+import {readFileSync,readdirSync,statSync,lstatSync} from 'node:fs';
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
 
@@ -50,6 +50,27 @@ export const featureOnBaseline={...manifest,deployment:{
 }};
 export const FEATURE_ON_QA_HEAD='9606760a1f04376b20cb86be18ee384cad862b8e';
 export const FEATURE_ON_QA_RUN=39613686430;
+export function verifyTestedFeatureOnBuild(root,record){
+ assert.equal(record.application_source,'28f163a0015631b1d8eb58922c03596ae8febd22');
+ assert.equal(record.harness_source,FEATURE_ON_QA_HEAD);
+ assert.deepEqual(record.flags,{VITE_IREN_SPATIAL_GUIDE:true,VITE_NATIVE_CREATOR_STUDIO_V095:true,VITE_PACKAGE_CREATOR_GALLERY_V010:true});
+ assert.equal(record.syntheticOnly,true);
+ assert.equal(record.authenticatedAcceptance,false);
+ assert.equal(record.physicalDeviceAcceptance,false);
+ assert.equal(record.cloudflareCandidate,null);
+ assert.ok(Array.isArray(record.assets)&&record.assets.length>0);
+ const seen=new Set();
+ for(const asset of record.assets){
+  assert.ok(typeof asset.path==='string'&&/^[a-zA-Z0-9_./-]+$/.test(asset.path)&&!asset.path.startsWith('/')&&!asset.path.split('/').some(x=>x==='..'||x==='.'||!x),'Unsafe tested asset path');
+  assert.ok(!seen.has(asset.path),'Duplicate tested asset path');seen.add(asset.path);
+  let prefix=root;
+  for(const part of asset.path.split('/')){prefix=join(prefix,part);assert.ok(!lstatSync(prefix).isSymbolicLink(),'Tested asset symlink');}
+  assert.match(asset.sha256,/^[a-f0-9]{64}$/);
+  assert.equal(createHash('sha256').update(readFileSync(join(root,asset.path))).digest('hex'),asset.sha256,'Tested asset bytes changed: '+asset.path);
+ }
+ assert.ok(seen.has('index.html'),'Tested entry document missing');
+ return {qa_run:FEATURE_ON_QA_RUN,harness_source:FEATURE_ON_QA_HEAD,files:seen.size,manifest_sha256:createHash('sha256').update(JSON.stringify(record)).digest('hex')};
+}
 export function verifyFeatureOnFlags(env){
  for(const name of ['VITE_PACKAGE_CREATOR_GALLERY_V010','VITE_NATIVE_CREATOR_STUDIO_V095','VITE_IREN_SPATIAL_GUIDE'])
   assert.equal(env[name],'true','Feature-ON candidate flag mismatch: '+name);

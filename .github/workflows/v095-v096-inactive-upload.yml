@@ -119,11 +119,35 @@ jobs:
           const build=verifyCandidateAssets('creator-v1/dist/web');
           console.log('COMPLETE_CANDIDATE_ASSETS',JSON.stringify({files:build.assets.length,sha256:build.sha256,earned:build.earned_media_count}));
           JS
-      - name: Lock live Cloudflare versions, secrets, D1 IDs and all 39 routes before upload
+      - name: Retrieve the immutable combined feature-ON QA artifact
+        if: env.ANEVUM_INACTIVE_PROFILE == 'v100-feature-on'
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12351188264'
+          run-id: 39613686430
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v100-feature-on-qa
+      - name: Package exactly the tested application bytes with preserved earned media
+        if: env.ANEVUM_INACTIVE_PROFILE == 'v100-feature-on'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp -a creator-v1/dist/web/evolution "$RUNNER_TEMP/v100-earned-media"
+          rm -rf creator-v1/dist/web
+          cp -a "$RUNNER_TEMP/v100-feature-on-qa/compiled-feature-on" creator-v1/dist/web
+          cp -a "$RUNNER_TEMP/v100-earned-media" creator-v1/dist/web/evolution
+          ANEVUM_FEATURE_ON_BUILD_RECORD="$RUNNER_TEMP/v100-feature-on-qa/build.json" node --input-type=module <<'JS'
+          import {readFileSync} from 'node:fs';
+          import {verifyTestedFeatureOnBuild,verifyCandidateAssets} from './creator-v1/ops/v095-inactive-candidate-gate.mjs';
+          console.log('EXACT_TESTED_FEATURE_ON_BUILD',JSON.stringify(verifyTestedFeatureOnBuild('creator-v1/dist/web',JSON.parse(readFileSync(process.env.ANEVUM_FEATURE_ON_BUILD_RECORD,'utf8')))));
+          verifyCandidateAssets('creator-v1/dist/web');
+          JS
+      - name: Lock live Cloudflare versions, secrets, D1 IDs and all existing routes before upload
         env:
           GH_TOKEN: ${{ github.token }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          ANEVUM_FEATURE_ON_BUILD_RECORD: ${{ runner.temp }}/v100-feature-on-qa/build.json
         shell: bash
         run: |
           set -euo pipefail

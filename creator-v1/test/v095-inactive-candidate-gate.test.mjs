@@ -1,11 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync,mkdirSync,writeFileSync,rmSync} from 'node:fs';
+import {mkdtempSync,mkdirSync,writeFileSync,rmSync,symlinkSync} from 'node:fs';
+import {createHash} from 'node:crypto';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {
  manifest,integratedBaseline,featureOnBaseline,verifyFeatureOnFlags,verifyFeatureOnQa,validateFeatureOnBaseline,normalizeRoutes,signatures,plainVars,databaseIds,
- validateBaseline,validateUploadedCandidate,verifyCandidateAssets
+ validateBaseline,validateUploadedCandidate,verifyCandidateAssets,verifyTestedFeatureOnBuild
 } from '../ops/v095-inactive-candidate-gate.mjs';
 
 test('asset manifest refuses the incomplete upload and detects earned media corruption',()=>{
@@ -209,4 +210,22 @@ test('feature-ON flags and successful combined evidence cannot be substituted wi
  assert.doesNotThrow(()=>verifyFeatureOnQa(run));
  for(const delta of [{id:39609857711},{head_sha:'28f163a0015631b1d8eb58922c03596ae8febd22'},{conclusion:'failure'},{status:'in_progress'}])
   assert.throws(()=>verifyFeatureOnQa({...run,...delta}));
+});
+test('feature-ON packaging preserves tested compiled bytes and rejects substituted evidence or unsafe paths',()=>{
+ const root=mkdtempSync(join(tmpdir(),'anevum-tested-build-'));
+ try{
+  writeFileSync(join(root,'index.html'),'tested feature-on build');
+  const record={application_source:'28f163a0015631b1d8eb58922c03596ae8febd22',harness_source:'9606760a1f04376b20cb86be18ee384cad862b8e',
+   flags:{VITE_IREN_SPATIAL_GUIDE:true,VITE_NATIVE_CREATOR_STUDIO_V095:true,VITE_PACKAGE_CREATOR_GALLERY_V010:true},
+   syntheticOnly:true,authenticatedAcceptance:false,physicalDeviceAcceptance:false,cloudflareCandidate:null,
+   assets:[{path:'index.html',sha256:createHash('sha256').update('tested feature-on build').digest('hex')}]};
+  assert.equal(verifyTestedFeatureOnBuild(root,record).files,1);
+  for(const delta of [{application_source:'new-source'},{authenticatedAcceptance:true},{physicalDeviceAcceptance:true},{harness_source:'wrong-head'},
+    {assets:[...record.assets,...record.assets]},{assets:[{...record.assets[0],path:'../index.html'}]}])
+   assert.throws(()=>verifyTestedFeatureOnBuild(root,{...record,...delta}));
+  writeFileSync(join(root,'index.html'),'rebuilt bytes');
+  assert.throws(()=>verifyTestedFeatureOnBuild(root,record),/Tested asset bytes changed/);
+  rmSync(join(root,'index.html'));symlinkSync('/etc/hosts',join(root,'index.html'));
+  assert.throws(()=>verifyTestedFeatureOnBuild(root,record),/symlink/);
+ }finally{rmSync(root,{recursive:true,force:true});}
 });

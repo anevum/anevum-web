@@ -8,7 +8,7 @@ import {readFileSync,writeFileSync,chmodSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {
- manifest,integratedBaseline,featureOnBaseline,FEATURE_ON_QA_HEAD,FEATURE_ON_QA_RUN,verifyFeatureOnFlags,verifyFeatureOnQa,validateFeatureOnBaseline,validateBaseline,validateUploadedCandidate,plainVars,databaseIds,signatures,verifyCandidateAssets
+ manifest,integratedBaseline,featureOnBaseline,FEATURE_ON_QA_HEAD,FEATURE_ON_QA_RUN,verifyFeatureOnFlags,verifyFeatureOnQa,verifyTestedFeatureOnBuild,validateFeatureOnBaseline,validateBaseline,validateUploadedCandidate,plainVars,databaseIds,signatures,verifyCandidateAssets
 } from './v095-inactive-candidate-gate.mjs';
 
 const PROFILE=process.env.ANEVUM_INACTIVE_PROFILE||'v095-v096';
@@ -171,6 +171,8 @@ async function before(file,configFile){
  const source=checkRepositorySource();
  await requireIntegratedChecks();
  const build=verifyCandidateAssets('creator-v1/dist/web');
+ const testedBuild=FEATURE_ON?verifyTestedFeatureOnBuild('creator-v1/dist/web',readJson(process.env.ANEVUM_FEATURE_ON_BUILD_RECORD)):null;
+ if(FEATURE_ON)assert.equal(testedBuild.manifest_sha256,'f6ad9655bbdb1c1ff4a8761c5bca1ff8dc166f0f543da8fcae311743181605b9','Immutable tested build manifest changed');
  const snap=await readSnapshot();
  const result=FEATURE_ON?validateFeatureOnBaseline(snap):validateBaseline(snap,BASELINE,{allowAcceptanceEntry:INTEGRATED});
  const versionList=await request(worker+'/versions?per_page=100');
@@ -180,7 +182,7 @@ async function before(file,configFile){
  assert.ok(existing.includes(manifest.prior_inactive_version.id));
  const cfg=configForUpload(snap);
  save(configFile,cfg);
- save(file,{source,baseline:snap,existing,build});
+ save(file,{source,baseline:snap,existing,build,...(FEATURE_ON?{testedBuild}:{})});
  console.log('INACTIVE_PREFLIGHT_PASS',JSON.stringify({
   source:PIN,routeCount:result.routeCount,bindings:result.bindings,
   deploymentId:snap.deployment.id,active:snap.deployment.versions[0].version_id,
@@ -229,6 +231,7 @@ async function after(file,receiptFile){
   receipt.combined_qa_head=FEATURE_ON_QA_HEAD;
   receipt.combined_qa_run=FEATURE_ON_QA_RUN;
   receipt.profile=PROFILE;
+  receipt.tested_build=previous.testedBuild;
  }
  if(INTEGRATED){delete receipt.binding_signatures;delete receipt.bound_databases;}
  save(receiptFile,receipt);
