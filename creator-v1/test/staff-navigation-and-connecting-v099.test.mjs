@@ -37,7 +37,10 @@ test("native founder link is present in all three React account navigation surfa
 });
 test("native link stays hidden without a verified server-granted staff role",()=>{
  assert.match(shortcut,/if\(!memberId\|\|verified\?\.memberId!==memberId\|\|!verified\.role\)return null/);
- assert.match(shortcut,/if\(response\.status!==200\|\|!response\.headers\.get/);
+  assert.match(shortcut,/if\(primary\?\.status===200&&primary\.headers\.get/);
+  assert.match(shortcut,/fetch\("\/staff\?diagnose=1",options\)/);
+  assert.match(shortcut,/status\?\.access==="verified"&&status\.reason==="session_and_grant_valid"/);
+  assert.match(shortcut,/window\.setTimeout\(\(\)=>primaryController\.abort\(\),3500\)/);
  assert.match(shortcut,/setVerified\(\{memberId,role:null,designation:null\}\)/);
  assert.match(shortcut,/window\.setTimeout\(\(\)=>request\.abort\(\),10000\)/);
  const css=load("web/src/staff-verified-shortcut-v099.css");
