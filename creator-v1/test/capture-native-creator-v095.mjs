@@ -76,10 +76,11 @@ try{
   assert.equal(state.shell,1,label);assert.equal(state.header,1,label);assert.equal(state.main,1,label);assert.equal(state.overflow,false,label+' overflow');assert.equal(state.tokens,true,label+' shared theme');
   // Mobile nav can scroll horizontally, but its labels must not shrink into
   // overlapping text. Check intrinsic label widths as well as link rectangles.
-  const nav=await evaluate('(()=>{const el=document.querySelector(".av095-navigation");if(!el)return null;const links=[...el.querySelectorAll(":scope > a")];const rects=links.map(link=>link.getBoundingClientRect());const active=el.querySelector("a[aria-current=page]"),selected=active?.getBoundingClientRect(),frame=el.getBoundingClientRect();return {count:links.length,labelsFit:links.every(link=>link.getBoundingClientRect().width+1>=link.scrollWidth),separate:rects.every((rect,i)=>i===0||rect.left>=rects[i-1].right+2),scrollable:el.scrollWidth>el.clientWidth+4,activeVisible:!selected||(selected.left>=frame.left-2&&selected.right<=frame.right+2)}})()');
+  const nav=await evaluate('(()=>{const el=document.querySelector(".st-nav");if(!el)return null;const links=[...el.querySelectorAll(":scope > a")];const rects=links.map(link=>link.getBoundingClientRect());const active=el.querySelector("a[aria-current=page]"),selected=active?.getBoundingClientRect(),frame=el.getBoundingClientRect();return {count:links.length,targets:rects.every(r=>r.height>=44),labelsFit:links.every(link=>link.getBoundingClientRect().width+1>=link.scrollWidth),separate:rects.every((rect,i)=>i===0||rect.left>=rects[i-1].right+2),scrollable:el.scrollWidth>el.clientWidth+4,activeVisible:!selected||(selected.left>=frame.left-2&&selected.right<=frame.right+2)}})()');
   if(nav){
    assert.ok(nav.count>=4,label+' must retain creator navigation');
    assert.equal(nav.labelsFit,true,label+' navigation labels overlap their link boxes');
+   assert.equal(nav.targets,true,label+' navigation touch targets are too short');
    assert.equal(nav.separate,true,label+' navigation links overlap');
    assert.equal(nav.activeVisible,true,label+' active destination is clipped outside the mobile tab viewport');
    if(width<=390)assert.equal(nav.scrollable,true,label+' mobile tabs must remain horizontally accessible');
@@ -94,6 +95,11 @@ try{
   await navigate('/studio/packages');await until(()=>evaluate('document.body.textContent.includes("not active yet")'),'Flag-off page');await layout('native-disabled',390);
   assert.equal(fixture.control.trace().filter(x=>x.path.includes('/native/')).length,0,'Disabled interface called native API');
   results.push({case:'flag-off',nativeRequests:0,passed:true});
+  for(const [width,height] of [[1440,1000],[768,1024],[390,844],[320,720]]){
+   await client.send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<641});
+   await navigate('/studio');await until(()=>visible('.st-nav'),'Canonical Studio navigation');
+   await layout('canonical-studio-navigation',width);
+  }
  }else{
   for(const [width,height] of [[1440,1000],[768,1024],[390,844],[320,720]]){
    fixture.control.set({actor:'owner',mode:'ready',reset:true});await client.send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<641});

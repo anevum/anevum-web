@@ -21,6 +21,10 @@ export function createNativeFixture(){
   try{
    if(req.headers.host!=='127.0.0.1:4179')return json(res,{error:'Loopback test only'},403);
    const url=new URL(req.url,origin),path=url.pathname;
+   // Existing canonical Studio layout, with no real accounts or project writes.
+   if(path==='/api/v1/member/health')return json(res,{status:'ready',studioReady:true,studioUploadsReady:false});
+   if(path==='/api/v1/member/creator-profile')return actor==='guest'?json(res,{error:'Sign in'},401):json(res,{memberId:members[actor],profile:{handle:'v099_layout',displayName:'Synthetic Studio Layout',bio:'',headline:'',worldTheme:'continuance',focus:[],visibility:'private',revision:0,createdAt:now(),updatedAt:now()}});
+   if(path==='/api/v1/member/studio/projects'&&req.method==='GET')return actor==='guest'?json(res,{error:'Sign in'},401):json(res,{projects:[],uploadsReady:false,canReview:actor==='reviewer'});
    if(path==='/api/v1/member/auth/get-session')return json(res,actor==='guest'?null:{user:{id:members[actor],name:'SYNTHETIC '+actor,email:actor+'@anevum.invalid',emailVerified:true,createdAt:'2026-10-20T00:00:00Z',updatedAt:'2026-10-20T00:00:00Z'},session:{id:'synthetic-v095-not-an-authentication-token',userId:members[actor],expiresAt:'2030-01-01T00:00:00Z',createdAt:'2026-10-20T00:00:00Z',updatedAt:'2026-10-20T00:00:00Z'}});
    if(path.startsWith('/upload/v3/api/v1/packages/')){
     const sub=path.slice('/upload/v3/api/v1/packages/'.length);
