@@ -8,7 +8,7 @@ import {readFileSync,writeFileSync,chmodSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {
- manifest,validateBaseline,validateUploadedCandidate,plainVars,databaseIds,signatures,verifyCandidateAssets
+ manifest,integratedBaseline,validateBaseline,validateUploadedCandidate,plainVars,databaseIds,signatures,verifyCandidateAssets
 } from './v095-inactive-candidate-gate.mjs';
 
 const PROFILE=process.env.ANEVUM_INACTIVE_PROFILE||'v095-v096';
@@ -16,6 +16,7 @@ assert.ok(['v095-v096','v100'].includes(PROFILE),'Unknown inactive release profi
 const INTEGRATED=PROFILE==='v100';
 const ORIGINAL='d5af32fd8f04b05e0381f7ac12c59d06c0e836a2';
 const PIN=INTEGRATED?'28f163a0015631b1d8eb58922c03596ae8febd22':ORIGINAL;
+const BASELINE=INTEGRATED?integratedBaseline:manifest;
 const ALLOWED_META=[
  'creator-v1/ops/v091-controlled-pilot-upload.mjs',
  'tests/single-production-deploy.test.mjs',
@@ -136,7 +137,7 @@ async function before(file,configFile){
  await requireIntegratedChecks();
  const build=verifyCandidateAssets('creator-v1/dist/web');
  const snap=await readSnapshot();
- const result=validateBaseline(snap,manifest,{allowAcceptanceEntry:INTEGRATED});
+ const result=validateBaseline(snap,BASELINE,{allowAcceptanceEntry:INTEGRATED});
  const versionList=await request(worker+'/versions?per_page=100');
  const existing=versionList.items?.map(x=>x.id);
  if(!Array.isArray(existing)||existing.length<2)fail('Version inventory incomplete');
@@ -155,19 +156,19 @@ async function after(file,receiptFile){
  const source=checkRepositorySource();
  const previous=readJson(file),beforeSnapshot=previous.baseline;
  assert.equal(previous.source.SOURCE,PIN);
- validateBaseline(beforeSnapshot,manifest,{allowAcceptanceEntry:INTEGRATED});
+ validateBaseline(beforeSnapshot,BASELINE,{allowAcceptanceEntry:INTEGRATED});
  const current=await readSnapshot();
  const items=(await request(worker+'/versions?per_page=100')).items||[];
  const newVersions=items.filter(x=>!previous.existing.includes(x.id));
  if(newVersions.length!==1)fail('Expected exactly one newly uploaded inactive Worker version, got '+newVersions.length);
  const candidate=await request(worker+'/versions/'+newVersions[0].id);
  const valid=validateUploadedCandidate({
-  before:beforeSnapshot,after:current,candidate,allowAcceptanceEntry:INTEGRATED
+  before:beforeSnapshot,after:current,candidate,baseline:BASELINE,allowAcceptanceEntry:INTEGRATED
  });
  const beforeSettings=beforeSnapshot.settings,afterSettings=current.settings;
  for(const k of ['placement','compatibility_date','compatibility_flags','usage_model','tags','tail_consumers','logpush'])
    assert.deepEqual(afterSettings[k],beforeSettings[k],'Global Worker setting changed: '+k);
- assert.deepEqual(current.deployment.versions,manifest.deployment.versions);
+ assert.deepEqual(current.deployment.versions,BASELINE.deployment.versions);
  assert.equal(current.routes.length,INTEGRATED?40:39);
  assert.equal(current.exposure.enabled,false);
  assert.equal(current.exposure.previews_enabled,false);
@@ -192,7 +193,18 @@ async function after(file,receiptFile){
  console.log('INACTIVE_UPLOAD_VERIFIED',JSON.stringify({source:PIN,version:valid.candidateId,routeCount:current.routes.length,productionTrafficChanged:false,unverifiedHumanGates:true}));
 }
 const [mode,arg1,arg2]=process.argv.slice(2);
+if(mode==='audit'&&process.argv.length===3){
+ checkRepositorySource();
+ const snap=await readSnapshot();
+ // Read-only reconciliation: report the actual deployment separately from
+ // other pinned resources. This baseline is NEVER passed to upload modes.
+ let otherPinnedResourcesMatch=false;
+ try{validateBaseline(snap,{...manifest,deployment:snap.deployment},{allowAcceptanceEntry:INTEGRATED});otherPinnedResourcesMatch=true;}catch{}
+ console.log(JSON.stringify({readOnly:true,otherPinnedResourcesMatch,
+  deployment:{id:snap.deployment?.id,versions:snap.deployment?.versions}}));
+}else{
 if(!['before','after'].includes(mode)||!arg1||!arg2||process.argv.length!==5)
  fail('Usage: node v095-v096-cloudflare-ops.mjs before snapshot.json config.json | after snapshot.json receipt.json');
 if(mode==='before')await before(arg1,arg2);
 else await after(arg1,arg2);
+}

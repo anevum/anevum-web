@@ -4,7 +4,7 @@ import {mkdtempSync,mkdirSync,writeFileSync,rmSync} from 'node:fs';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {
- manifest,normalizeRoutes,signatures,plainVars,databaseIds,
+ manifest,integratedBaseline,normalizeRoutes,signatures,plainVars,databaseIds,
  validateBaseline,validateUploadedCandidate,verifyCandidateAssets
 } from '../ops/v095-inactive-candidate-gate.mjs';
 
@@ -175,4 +175,17 @@ test('integrated inactive packaging retains only the existing fail-closed accept
  assert.throws(()=>validateBaseline(retarget,manifest,{allowAcceptanceEntry:true}),/route inventory drift/);
  const after=clone(b);after.routes.at(-1).script='retargeted-after-upload';
  assert.throws(()=>validateUploadedCandidate({before:b,after,candidate:candidate(),allowAcceptanceEntry:true}),/Version upload changed routes/);
+});
+test('integrated deployment reconciliation pins the observed split without weakening the historical lock',()=>{
+ assert.equal(manifest.deployment.id,'b0cb3602-6b4d-451f-be7d-57576558c6e6');
+ assert.equal(integratedBaseline.deployment.id,'d4476123-1819-4379-8c59-d035b2841c04');
+ const b=base();b.deployment=clone(integratedBaseline.deployment);
+ b.routes.push({pattern:'anevum.com/__enter/v095-v096*',script:'synthetic-existing-entry',request_limit_fail_open:false});
+ assert.throws(()=>validateBaseline(b),/Deployment changed/);
+ assert.equal(validateBaseline(b,integratedBaseline,{allowAcceptanceEntry:true}).status,'BASELINE_PASS');
+ assert.equal(validateUploadedCandidate({before:b,after:clone(b),candidate:candidate(),baseline:integratedBaseline,allowAcceptanceEntry:true}).status,'INACTIVE_CANDIDATE_PASS');
+ const changed=clone(b);changed.deployment.id='unreviewed';
+ assert.throws(()=>validateBaseline(changed,integratedBaseline,{allowAcceptanceEntry:true}),/Deployment changed/);
+ const traffic=clone(b);traffic.deployment.versions[1].percentage=1;
+ assert.throws(()=>validateBaseline(traffic,integratedBaseline,{allowAcceptanceEntry:true}),/Traffic distribution changed/);
 });

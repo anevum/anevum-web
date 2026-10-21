@@ -1,7 +1,7 @@
 name: ANEVUM V095/V096 Inactive Candidate Preflight
 on:
   push:
-    branches: [ops/v095-inactive-candidate-20261020-001]
+    branches: [ops/v095-inactive-candidate-20261020-001, ops/v100-integrated-inactive-20261020-001]
     paths:
       - creator-v1/operations/v095-inactive-baseline-20261020.json
       - creator-v1/ops/v095-inactive-candidate-gate.mjs
@@ -28,7 +28,7 @@ jobs:
       VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
       VITE_NATIVE_CREATOR_STUDIO_V095: 'false'
       VITE_IREN_SPATIAL_GUIDE: 'false'
-      ANEVUM_INACTIVE_PROFILE: ${{ github.head_ref == 'ops/v100-integrated-inactive-20261020-001' && 'v100' || 'v095-v096' }}
+      ANEVUM_INACTIVE_PROFILE: ${{ (github.head_ref || github.ref_name) == 'ops/v100-integrated-inactive-20261020-001' && 'v100' || 'v095-v096' }}
     if: github.repository == 'anevum/anevum-web'
     runs-on: ubuntu-latest
     timeout-minutes: 8
@@ -73,6 +73,7 @@ jobs:
             ':(exclude).github/workflows/v095-v096-inactive-preflight.yml' \
             ':(exclude).github/workflows/v095-v096-inactive-upload.yml' \
             ':(exclude).github/release-approvals/v095-v096-inactive-upload.json' \
+            ':(exclude).github/release-approvals/v100-inactive-upload.json' \
             ':(exclude).github/workflows/v084-continuance-production.yml' \
             ':(exclude).github/workflows/v091-live-readonly-qa.yml' \
             ':(exclude).github/release-evidence/v091-authenticated.json' \
@@ -107,4 +108,26 @@ jobs:
             --keep-vars --strict \
             --outdir "$RUNNER_TEMP/v095-v096-wrangler-dryrun"
           echo 'WRANGLER_BUNDLE_DRY_RUN=PASS; NO_TOKEN_OR_UPLOAD_USED' >> "$GITHUB_STEP_SUMMARY"
+  deployment-reconciliation:
+    if: github.repository == 'anevum/anevum-web' && github.event_name == 'push' && github.ref == 'refs/heads/ops/v100-integrated-inactive-20261020-001' && github.actor == 'anevum'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Read deployment identifiers and pinned resource checks only
+        env:
+          VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
+          VITE_NATIVE_CREATOR_STUDIO_V095: 'false'
+          VITE_IREN_SPATIAL_GUIDE: 'false'
+          ANEVUM_INACTIVE_PROFILE: 'v100'
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node creator-v1/ops/v095-v096-cloudflare-ops.mjs audit
+# No provider configuration artifact or mutation is allowed by reconciliation.
 
