@@ -6,7 +6,7 @@
 .ir97-floating-bot .ir88-svg-fallback svg{width:75%;height:75%}
 .ir97-floating-bot.is-travelling{filter:drop-shadow(0 3px 11px #0008) drop-shadow(0 0 14px #60bdec88)}
 .ir97-tether{position:fixed;height:2px;z-index:1;transform-origin:left center;background:linear-gradient(90deg,#77d8ffac,#d9c5a48c,transparent);box-shadow:0 0 9px #7acfff55;pointer-events:none}
-.ir97-speech-bubble{position:fixed;z-index:3;box-sizing:border-box;padding:10px 10px 9px;border:1px solid #8eb4e49c;border-radius:15px;background:linear-gradient(142deg,#172949f5,#121a31f8 75%,#18233fee);box-shadow:0 8px 36px #000c,inset 0 1px #e3f5ff2e,0 0 17px #417bba1f;max-height:min(33dvh,228px);overflow-y:auto;overscroll-behavior:contain;pointer-events:auto;overflow-wrap:anywhere;transition:left .65s cubic-bezier(.25,.8,.22,1),top .65s cubic-bezier(.25,.8,.22,1)}
+.ir97-speech-bubble{position:fixed;z-index:3;box-sizing:border-box;padding:10px 10px 9px;border:1px solid #8eb4e49c;border-radius:15px;background:linear-gradient(142deg,#172949f5,#121a31f8 75%,#18233fee);box-shadow:0 8px 36px #000c,inset 0 1px #e3f5ff2e,0 0 17px #417bba1f;max-height:min(33dvh,228px);overflow-y:auto;overscroll-behavior:contain;pointer-events:auto;overflow-wrap:anywhere;transition:opacity .18s ease,box-shadow .18s ease}
 .ir97-speech-bubble.is-expanded{max-height:min(59dvh,410px)}
 .ir97-bubble-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-bottom:5px;color:#aac7ec;font:700 10px/1.4 ui-monospace,SFMono-Regular,monospace;letter-spacing:.09em}
 .ir97-bubble-heading strong{color:#edf6ff;letter-spacing:.13em}
