@@ -36,6 +36,7 @@ jobs:
           node --experimental-strip-types --test creator-v1/test/native-compatibility-v101.test.mjs
           node --test creator-v1/test/v095-inactive-candidate-gate.test.mjs
           node --test creator-v1/test/package-discovery-v011.test.mjs
+          node --test tests/v5-legacy-page-retention.test.mjs tests/v5-source-reachability.test.mjs
       - name: TypeScript and React production compilation
         run: |
           npm run check:creator-v1-web
