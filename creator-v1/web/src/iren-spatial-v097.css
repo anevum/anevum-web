@@ -22,6 +22,11 @@
 .ir97-bubble-details small{display:block;border-left:2px solid #edd4af;padding-left:9px;color:#c4cad7;font:400 11px/1.5 system-ui,sans-serif}
 .ir97-speech-bubble :is(button,a):focus-visible{outline:3px solid #86e5ef;outline-offset:2px}
 .ir97-speech-bubble.is-compact .ir97-bubble-line{font-size:12px!important}
+/* First contact keeps the expressive character above phone browser chrome. */
+.ir97-invite-active.ir80-companion{bottom:max(98px,calc(env(safe-area-inset-bottom) + 74px))}
+.ir97-invite-active .ir87-scout.ir80-dock{width:82px;height:82px;min-width:82px;min-height:82px;padding:0;border:0;border-radius:18px;background:transparent;box-shadow:none;filter:drop-shadow(0 10px 15px #0008)}
+.ir97-invite-active .ir87-scout.ir80-dock .ir88-3d-canvas{border-radius:0}
+.ir97-invite-active .ir97-invite{bottom:92px}
 .ir97-invite{position:absolute;right:0;bottom:65px;width:min(278px,calc(100vw - 22px));box-sizing:border-box;padding:13px;border:1px solid #b9d6ef9c;border-radius:15px;color:#eaf2ff;background:linear-gradient(145deg,#1b2c4af5,#0d1931fa);box-shadow:0 16px 42px #000b;max-height:min(38dvh,224px);overflow:auto;z-index:2}
 .ir97-invite p{margin:2px 0 10px;color:#ebf3ff;font:500 13px/1.48 system-ui,sans-serif}
 .ir97-invite span.ir97-invite-label{display:block;font:700 10px/1.5 ui-monospace,monospace;letter-spacing:.16em;color:#a8c9f5;margin-bottom:3px}
