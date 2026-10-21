@@ -49,10 +49,23 @@ export async function requestForumReview<T>(
   throw new ReviewTransportError('access-verification',
    'Additional Cloudflare Access verification is required for this protected review API.');
  }
- if(response.status===401)throw new ReviewTransportError('member-session',
-  'A current ANEVUM member session is required.');
- if(response.status===403)throw new ReviewTransportError('reviewer-role',
-  'This account was not authorized to read the review queue.');
+ // Both Cloudflare Access and the application may return 401/403.
+ // Only exact server-authored JSON errors can distinguish a missing ANEVUM
+ // session from a real reviewer-role denial. Access HTML/opaque errors do not
+ // prove which member role the viewer has.
+ if(response.status===401||response.status===403){
+  let cause:unknown=null;
+  if(/application\/json/i.test(response.headers.get('content-type')||'')){
+   const body=await response.json().catch(()=>null) as {error?:unknown}|null;
+   cause=body&&typeof body==='object'?body.error:null;
+  }
+  if(response.status===401&&cause==='Verified apex session required')
+   throw new ReviewTransportError('member-session','A current ANEVUM member session is required.');
+  if(response.status===403&&cause==='Reviewer access required')
+   throw new ReviewTransportError('reviewer-role','This account was not authorized to read the review queue.');
+  throw new ReviewTransportError('access-verification',
+   'The protected review endpoint denied access; the Cloudflare Access session or server permission must be checked.');
+ }
  if(!response.ok)throw new ReviewTransportError('service',
   'The protected review service returned HTTP '+response.status+'.');
  if(!/application\/json/i.test(response.headers.get('content-type')||'')){
