@@ -50,7 +50,7 @@ try{
     errors.push(String(message.params?.exceptionDetails?.exception?.description||message.params?.exceptionDetails?.text||'unknown JS exception'));
   if(message.method==='Network.responseReceived'){
     const u=message.params?.response?.url||'';
-    if(u.startsWith(origin+'/assets/'))assets.push({
+    if(u.startsWith(origin+'/assets/')&&/\.(?:js|css)(?:[?#]|$)/.test(u))assets.push({
       url:new URL(u).pathname,status:message.params?.response?.status,
       mime:message.params?.response?.mimeType
     });
