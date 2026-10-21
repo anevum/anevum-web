@@ -8,11 +8,15 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: anevum-v100-staff-fixes-inactive
+  group: anevum-v100-staff-fixes-inactive-${{ github.sha }}
   cancel-in-progress: false
 jobs:
   build-and-qa:
-    if: github.repository == 'anevum/anevum-web' && github.actor == 'anevum'
+    if: >-
+      github.repository == 'anevum/anevum-web' &&
+      github.actor == 'anevum' &&
+      github.event.head_commit.message != 'ci(v100): add read-only private candidate audit' &&
+      github.event.head_commit.message != 'audit(v100-staff-fixes): verify uploaded private candidate'
     runs-on: ubuntu-latest
     timeout-minutes: 55
     env:
@@ -232,3 +236,43 @@ jobs:
           path: /tmp/anevum-v100/inactive-receipt.json
           if-no-files-found: ignore
           retention-days: 14
+
+  private-readback:
+    if: >-
+      github.repository == 'anevum/anevum-web' &&
+      github.actor == 'anevum' &&
+      github.ref == 'refs/heads/ops/v100-staff-fixes-inactive-20261021-001' &&
+      (github.event.head_commit.message == 'ci(v100): add read-only private candidate audit' ||
+       github.event.head_commit.message == 'audit(v100-staff-fixes): verify uploaded private candidate')
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify the reviewed merged application remains unmodified
+        shell: bash
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor 857e2acb67df6737975c6dcec02e9b860697688a HEAD
+          git diff --exit-code 857e2acb67df6737975c6dcec02e9b860697688a HEAD -- creator-v1/web creator-v1/apex-prelaunch creator-v1/canonical-auth site/alpha/v003
+          node --check creator-v1/ops/v100-staff-fixes-inactive.mjs
+          node --experimental-strip-types --test creator-v1/test/v100-forum-review-access-transport.test.mjs
+          node --test creator-v1/test/v100-legacy-command-entry.test.mjs
+      - name: Independently reconcile uploaded private versions with no provider writes
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node creator-v1/ops/v100-staff-fixes-inactive.mjs audit-inactive
+      - name: Preserve hold on any public release
+        run: |
+          echo 'NEW_PUBLIC_TRAFFIC=0' >> "$GITHUB_STEP_SUMMARY"
+          echo 'ORIGINAL_PUBLIC_DEPLOYMENTS=100_PERCENT' >> "$GITHUB_STEP_SUMMARY"
+          echo 'CLOUDFLARE_WRITES=0' >> "$GITHUB_STEP_SUMMARY"
+          echo 'PHYSICAL_SAFARI_RETEST=REQUIRED' >> "$GITHUB_STEP_SUMMARY"
+          echo 'PRODUCTION_RELEASE_APPROVAL=NOT_GRANTED' >> "$GITHUB_STEP_SUMMARY"
