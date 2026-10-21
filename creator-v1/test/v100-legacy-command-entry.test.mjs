@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {legacyCommandEntry} from '../operations/anevum-iren-legacy-command-entry-v002.mjs';
+import nativeStaffEntry from '../operations/anevum-iren-staff-entry-v003.mjs';
 
 const origin='https://anevum.com';
 const req=(url,method='GET',headers={})=>new Request(url,{method,headers});
@@ -65,4 +66,45 @@ test('legacy adapter does not accept env, binding or request cookies for forward
  assert.equal(JSON.stringify(headers).includes('private-jwt'),false);
  assert.equal(JSON.stringify(headers).includes('must-not-leak'),false);
  assert.equal(response.headers.get('location'),'/staff?view=command');
+});
+
+test('verified owner and reviewer follow legacy path through the real native staff-grant gate',async()=>{
+ const sessionCookie='__Host-anevum_can_apex.session_token=synthetic';
+ for(const role of ['owner','reviewer']){
+  let forwarded=0,roleLookups=0;
+  const env={
+   APEX_AUTH:{fetch:async()=>Response.json({
+    user:{id:'synthetic-member',emailVerified:true},
+    session:{id:'synthetic-session',userId:'synthetic-member',
+     expiresAt:new Date(Date.now()+60000).toISOString()}
+   })},
+   MEMBER_DB:{prepare:()=>({bind:()=>({first:async()=>{roleLookups++;return {role};}})})},
+   COMMAND:{fetch:async request=>{forwarded++;assert.equal(new URL(request.url).pathname,'/staff');
+    return new Response('<main>Command</main>',{status:200,headers:{'content-type':'text/html'}});}}
+  };
+  const canonical=legacyCommandEntry(req(origin+'/staff/command','GET',{cookie:sessionCookie}));
+  assert.equal(canonical.status,302);
+  const redirected=new URL(canonical.headers.get('location'),origin);
+  assert.equal(redirected.pathname,'/staff');
+  assert.equal(redirected.search,'?view=command');
+  const result=await nativeStaffEntry.fetch(req(redirected.href,'GET',{cookie:sessionCookie}),env);
+  assert.equal(result.status,200);
+  assert.match(await result.text(),/Command/);
+  assert.equal(forwarded,1);
+  assert.equal(roleLookups,1);
+ }
+});
+test('native staff gateway refuses unsigned and unauthorized legacy visitors before Command',async()=>{
+ let forwarded=0;
+ const env={
+  APEX_AUTH:{fetch:async()=>Response.json({user:{id:'member',emailVerified:true},
+   session:{id:'session',userId:'member',expiresAt:new Date(Date.now()+60000).toISOString()}})},
+  MEMBER_DB:{prepare:()=>({bind:()=>({first:async()=>null})})},
+  COMMAND:{fetch:async()=>{forwarded++;return new Response('private staff UI');}}
+ };
+ for(const [cookie,status] of [['',401],['__Host-anevum_can_apex.session_token=synthetic',403]]){
+  const response=await nativeStaffEntry.fetch(req(origin+'/staff?view=command','GET',cookie?{cookie}:{}),env);
+  assert.equal(response.status,status);
+  assert.equal(forwarded,0);
+ }
 });
