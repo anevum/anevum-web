@@ -271,11 +271,11 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   },[panelOpen]);
 
   useEffect(()=>{
-    if(welcomeOpen&&pathname!=="/"){
+    if(welcomeOpen&&pathname!=="/"&&!(spatialTourEnabled&&memberId&&pathname==="/member")){
       setWelcomeOpen(false);
       setPanelOpen(false);
     }
-  },[pathname,welcomeOpen]);
+  },[pathname,welcomeOpen,memberId]);
 
   const pause=useCallback((restoreFocus=true)=>{
     setTourIndex(index=>{
