@@ -5,5 +5,5 @@ export type CompatibilityReport={
  entrypoint:'index.html'|null;playableCandidate:boolean;securityReviewed:false;mobileVerified:false;publicationApproved:false;
  issues:CompatibilityIssue[];
 };
-export function detectCompatibility(entries:ReadonlyArray<{path:string;unpacked?:number}>,
+export declare function detectCompatibility(entries:ReadonlyArray<{path:string;unpacked?:number}>,
  options?:{sourceName?:string}):CompatibilityReport;
