@@ -50,42 +50,61 @@ export function placeIrenSpatialGuide(
   const target=validAnchor?anchor:null;
   const centerX=target?target.left+target.width/2:viewport.left+viewport.width/2;
   const centerY=target?target.top+target.height/2:viewport.top+viewport.height/2;
-  const nearRight=target?target.left+target.width/2<viewport.left+viewport.width/2:true;
-  const proposals=target?[
-    {x:centerX-groupWidth/2,y:target.top-groupHeight-space,order:0},
-    {x:centerX-groupWidth/2,y:target.top+target.height+space,order:1},
-    {x:target.left-groupWidth-space,y:centerY-groupHeight/2,order:2},
-    {x:target.left+target.width+space,y:centerY-groupHeight/2,order:3},
-    {x:viewport.left+viewport.width-groupWidth-margin,y:maxY-groupHeight,order:4},
-    {x:minX,y:minY,order:5}
-  ]:[
-    {x:viewport.left+viewport.width-groupWidth-margin,y:maxY-groupHeight,order:0}
-  ];
-  let best:{left:number;top:number;score:number;order:number}|null=null;
-  for(const proposal of proposals){
-    const x=clamp(proposal.x,minX,Math.max(minX,maxX-groupWidth));
-    const y=clamp(proposal.y,minY,Math.max(minY,maxY-groupHeight));
-    const region={left:x,top:y,width:groupWidth,height:groupHeight};
-    const overflow=Math.abs(x-proposal.x)+Math.abs(y-proposal.y);
-    const targetOverlap=target?intersection(region,target):0;
-    const obstacleOverlap=(options.obstacles??[]).reduce((sum,item)=>sum+(finiteRect(item)?intersection(region,item):0),0);
-    const distance=target?Math.hypot((x+groupWidth/2)-centerX,(y+groupHeight/2)-centerY):0;
-    const score=targetOverlap*14+obstacleOverlap*7+overflow*2.4+distance*.06+proposal.order*.7;
-    if(!best||score<best.score)best={left:x,top:y,score,order:proposal.order};
+  // Test nearby, corner and intermediate placements. On a narrow phone there
+  // may be no free space immediately next to an anchor, but a short companion
+  // bubble can often fit elsewhere without covering Search or primary actions.
+  const maxTop=Math.max(minY,maxY-groupHeight);
+  const maxLeft=Math.max(minX,maxX-groupWidth);
+  const proposals:{x:number;y:number;order:number}[]=[];
+  if(target){
+    proposals.push(
+      {x:centerX-groupWidth/2,y:target.top-groupHeight-space,order:0},
+      {x:centerX-groupWidth/2,y:target.top+target.height+space,order:1},
+      {x:target.left-groupWidth-space,y:centerY-groupHeight/2,order:2},
+      {x:target.left+target.width+space,y:centerY-groupHeight/2,order:3}
+    );
   }
-  const chosen=best??{left:minX,top:minY,score:0,order:0};
-  const region={left:chosen.left,top:chosen.top,width:groupWidth,height:groupHeight};
-  const overlap=target?intersection(region,target):0;
-  const compact=Boolean(target&&overlap>groupWidth*groupHeight*.09);
-  const botOnRight=target?(chosen.left+groupWidth/2)<centerX:!nearRight;
-  const botLeft=botOnRight?chosen.left+bubbleWidth+gap:chosen.left;
-  const bubbleLeft=botOnRight?chosen.left:chosen.left+botWidth+gap;
+  // Scan unoccupied content bands rather than blindly putting the bubble
+  // directly below the heading (which commonly covers the mobile Search box).
+  const bands=Math.max(1,Math.ceil((maxTop-minY)/24));
+  for(let band=0;band<=bands;band++){
+    const y=minY+(maxTop-minY)*band/bands;
+    proposals.push({x:minX,y,order:4+band});
+    if(maxLeft>minX+4)proposals.push({x:maxLeft,y,order:4+band});
+    if(maxLeft>minX+28)proposals.push({x:(minX+maxLeft)/2,y,order:4+band});
+  }
+  let best:{
+    bubbleLeft:number;botLeft:number;top:number;score:number;
+    side:"left"|"right";overlap:number
+  }|null=null;
+  for(const proposal of proposals){
+    const x=clamp(proposal.x,minX,maxLeft);
+    const y=clamp(proposal.y,minY,maxTop);
+    const overflow=Math.abs(x-proposal.x)+Math.abs(y-proposal.y);
+    for(const side of ["left","right"] as const){
+      const botLeft=side==="right"?x:x+bubbleWidth+gap;
+      const bubbleLeft=side==="right"?x+botWidth+gap:x;
+      const botTop=y+(groupHeight-botHeight)/2;
+      const bubbleRect={left:bubbleLeft,top:y,width:bubbleWidth,height:bubbleHeight};
+      const botRect={left:botLeft,top:botTop,width:botWidth,height:botHeight};
+      const targetOverlap=target?intersection(bubbleRect,target)+intersection(botRect,target):0;
+      const obstacleOverlap=(options.obstacles??[]).reduce((sum,item)=>finiteRect(item)?
+        sum+intersection(bubbleRect,item)*1.3+intersection(botRect,item):sum,0);
+      const distance=target?Math.hypot(botLeft+botWidth/2-centerX,botTop+botHeight/2-centerY):0;
+      const score=targetOverlap*45+obstacleOverlap*18+overflow*1.5+
+        distance*.045+proposal.order*.2;
+      if(!best||score<best.score){
+        best={bubbleLeft,botLeft,top:y,score,side,overlap:targetOverlap+obstacleOverlap};
+      }
+    }
+  }
+  const chosen=best??{bubbleLeft:minX+botWidth+gap,botLeft:minX,top:minY,
+    score:0,side:"right" as const,overlap:0};
   return {
-    botLeft,botTop:chosen.top+(groupHeight-botHeight)/2,
-    bubbleLeft,bubbleTop:chosen.top,
-    bubbleWidth,
-    side:botOnRight?"left":"right",
-    compact,
+    botLeft:chosen.botLeft,botTop:chosen.top+(groupHeight-botHeight)/2,
+    bubbleLeft:chosen.bubbleLeft,bubbleTop:chosen.top,
+    bubbleWidth,side:chosen.side,
+    compact:chosen.overlap>800,
     targetVisible:Boolean(target),
     score:chosen.score
   };
