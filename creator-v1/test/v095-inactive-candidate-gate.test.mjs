@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync,mkdirSync,writeFileSync,rmSync,symlinkSync} from 'node:fs';
+import {mkdtempSync,mkdirSync,readFileSync,writeFileSync,rmSync,symlinkSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
@@ -206,7 +206,7 @@ test('feature-ON flags and successful combined evidence cannot be substituted wi
  const flags={VITE_IREN_SPATIAL_GUIDE:'true',VITE_NATIVE_CREATOR_STUDIO_V095:'true',VITE_PACKAGE_CREATOR_GALLERY_V010:'true'};
  assert.equal(verifyFeatureOnFlags(flags).VITE_IREN_SPATIAL_GUIDE,true);
  for(const key of Object.keys(flags))assert.throws(()=>verifyFeatureOnFlags({...flags,[key]:'false'}),/flag mismatch/);
- const run={id:39613686430,head_sha:'9606760a1f04376b20cb86be18ee384cad862b8e',name:'IREN V097 Spatial Companion Isolated QA',status:'completed',conclusion:'success'};
+ const run={id:39641767946,head_sha:'dec7db94d75240b57341c4357078fc3b1bc3be4e',name:'ANEVUM V100 Apex Root Feature-ON Browser QA',status:'completed',conclusion:'success'};
  assert.doesNotThrow(()=>verifyFeatureOnQa(run));
  for(const delta of [{id:39609857711},{head_sha:'28f163a0015631b1d8eb58922c03596ae8febd22'},{conclusion:'failure'},{status:'in_progress'}])
   assert.throws(()=>verifyFeatureOnQa({...run,...delta}));
@@ -214,15 +214,23 @@ test('feature-ON flags and successful combined evidence cannot be substituted wi
 test('feature-ON packaging preserves tested compiled bytes and rejects substituted evidence or unsafe paths',()=>{
  const root=mkdtempSync(join(tmpdir(),'anevum-tested-build-'));
  try{
-  writeFileSync(join(root,'index.html'),'tested feature-on build');
-  const record={application_source:'28f163a0015631b1d8eb58922c03596ae8febd22',harness_source:'9606760a1f04376b20cb86be18ee384cad862b8e',
+  const html='<!doctype html><html><head><link rel="stylesheet" href="/assets/index.css"><script type="module" src="/assets/index.js"></script></head><body><div id="root"></div></body></html>';
+  mkdirSync(join(root,'assets'));writeFileSync(join(root,'index.html'),html);
+  writeFileSync(join(root,'assets/index.js'),'console.log("root QA")');
+  writeFileSync(join(root,'assets/index.css'),'body{color: white}');
+  const tested=(path)=>({path,sha256:createHash('sha256').update(readFileSync(join(root,path))).digest('hex')});
+  const record={application_source:'28f163a0015631b1d8eb58922c03596ae8febd22',harness_source:'dec7db94d75240b57341c4357078fc3b1bc3be4e',
+   asset_base:'/',runtime_path:'/',
    flags:{VITE_IREN_SPATIAL_GUIDE:true,VITE_NATIVE_CREATOR_STUDIO_V095:true,VITE_PACKAGE_CREATOR_GALLERY_V010:true},
    syntheticOnly:true,authenticatedAcceptance:false,physicalDeviceAcceptance:false,cloudflareCandidate:null,
-   assets:[{path:'index.html',sha256:createHash('sha256').update('tested feature-on build').digest('hex')}]};
-  assert.equal(verifyTestedFeatureOnBuild(root,record).files,1);
-  for(const delta of [{application_source:'new-source'},{authenticatedAcceptance:true},{physicalDeviceAcceptance:true},{harness_source:'wrong-head'},
+   assets:[tested('index.html'),tested('assets/index.js'),tested('assets/index.css')]};
+  assert.equal(verifyTestedFeatureOnBuild(root,record).files,3);
+  for(const delta of [{application_source:'new-source'},{authenticatedAcceptance:true},{physicalDeviceAcceptance:true},{harness_source:'wrong-head'},{asset_base:'/creator/'},{runtime_path:'/creator/'},
     {assets:[...record.assets,...record.assets]},{assets:[{...record.assets[0],path:'../index.html'}]}])
    assert.throws(()=>verifyTestedFeatureOnBuild(root,{...record,...delta}));
+  const staging=html.replace('/assets/index.js','/creator/assets/index.js');
+  writeFileSync(join(root,'index.html'),staging);
+  assert.throws(()=>verifyTestedFeatureOnBuild(root,{...record,assets:[tested('index.html'),...record.assets.slice(1)]}),/Staging-path assets forbidden/);
   writeFileSync(join(root,'index.html'),'rebuilt bytes');
   assert.throws(()=>verifyTestedFeatureOnBuild(root,record),/Tested asset bytes changed/);
   rmSync(join(root,'index.html'));symlinkSync('/etc/hosts',join(root,'index.html'));

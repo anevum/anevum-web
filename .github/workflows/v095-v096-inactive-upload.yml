@@ -73,7 +73,7 @@ jobs:
             confirmed_by:'anevum',
             ...(profile==='v100-feature-on'?{
               build_flags:{VITE_IREN_SPATIAL_GUIDE:true,VITE_NATIVE_CREATOR_STUDIO_V095:true,VITE_PACKAGE_CREATOR_GALLERY_V010:true},
-              combined_qa_head:'9606760a1f04376b20cb86be18ee384cad862b8e',combined_qa_run:39613686430
+              combined_qa_head:'dec7db94d75240b57341c4357078fc3b1bc3be4e',combined_qa_run:39641767946
             }:{})
           });
           JS
@@ -119,12 +119,12 @@ jobs:
           const build=verifyCandidateAssets('creator-v1/dist/web');
           console.log('COMPLETE_CANDIDATE_ASSETS',JSON.stringify({files:build.assets.length,sha256:build.sha256,earned:build.earned_media_count}));
           JS
-      - name: Retrieve the immutable combined feature-ON QA artifact
+      - name: Retrieve the immutable apex-root feature-ON browser QA artifact
         if: env.ANEVUM_INACTIVE_PROFILE == 'v100-feature-on'
         uses: actions/download-artifact@v4
         with:
-          artifact-ids: '12351188264'
-          run-id: 39613686430
+          artifact-ids: '12365860758'
+          run-id: 39641767946
           github-token: ${{ github.token }}
           path: ${{ runner.temp }}/v100-feature-on-qa
           merge-multiple: true
@@ -134,10 +134,10 @@ jobs:
         run: |
           set -euo pipefail
           test -s "$RUNNER_TEMP/v100-feature-on-qa/build.json"
-          test -s "$RUNNER_TEMP/v100-feature-on-qa/compiled-feature-on/index.html"
+          test -s "$RUNNER_TEMP/v100-feature-on-qa/compiled-apex-root/index.html"
           cp -a creator-v1/dist/web/evolution "$RUNNER_TEMP/v100-earned-media"
           rm -rf creator-v1/dist/web
-          cp -a "$RUNNER_TEMP/v100-feature-on-qa/compiled-feature-on" creator-v1/dist/web
+          cp -a "$RUNNER_TEMP/v100-feature-on-qa/compiled-apex-root" creator-v1/dist/web
           cp -a "$RUNNER_TEMP/v100-earned-media" creator-v1/dist/web/evolution
           ANEVUM_FEATURE_ON_BUILD_RECORD="$RUNNER_TEMP/v100-feature-on-qa/build.json" node --input-type=module <<'JS'
           import {readFileSync} from 'node:fs';
@@ -145,6 +145,7 @@ jobs:
           console.log('EXACT_TESTED_FEATURE_ON_BUILD',JSON.stringify(verifyTestedFeatureOnBuild('creator-v1/dist/web',JSON.parse(readFileSync(process.env.ANEVUM_FEATURE_ON_BUILD_RECORD,'utf8')))));
           verifyCandidateAssets('creator-v1/dist/web');
           JS
+          node creator-v1/test/v100-apex-root-assets.test.mjs creator-v1/dist/web
       - name: Lock live Cloudflare versions, secrets, D1 IDs and all existing routes before upload
         env:
           GH_TOKEN: ${{ github.token }}
