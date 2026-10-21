@@ -10,11 +10,11 @@ const privateValue='PRIVATE_BINDING_AND_ANNOTATION_DO_NOT_OUTPUT';
 const b=[{name:'MEMBER_DB',type:'d1',database_id:'same-db'},{name:'PRIVATE',type:'plain_text',text:privateValue}];
 const runtime={compatibility_date:'2026-01-01',compatibility_flags:[],usage_model:'standard'};
 const modules=s=>[{name:'index.mjs',content_type:'application/javascript+module',content_base64:Buffer.from(s).toString('base64')}];
-async function fixture(tamper=false){
+async function fixture(tamper=false,extra={}){
  const [patched]=await patchUi([{name:'index.mjs',source:original}],candidate);
  return async(path,json=true)=>{
   if(!json)return original;
-  if(path.includes('?include=modules'))return {id:path.includes(prior)?prior:id,main_module:'index.mjs',bindings:b,...runtime,modules:modules(path.includes(prior)?original:patched.source+(tamper?'\n// unexpected server byte':''))};
+  if(path.includes('?include=modules'))return {id:path.includes(prior)?prior:id,main_module:'index.mjs',bindings:b,...runtime,modules:modules(path.includes(prior)?original:patched.source+(tamper?'\n// unexpected server byte':'')),...path.includes(prior)?{}:extra};
   if(path.endsWith('/script-settings'))return {logpush:false,observability:{enabled:true},tags:[],tail_consumers:[]};
   if(path.endsWith('/settings'))return {bindings:b,...runtime,annotations:{'workers/message':privateValue}};
   if(path.endsWith('/versions?per_page=100'))return {items:[{id,metadata:{created_on:'2026-10-21T10:50:43Z'}},{id:prior,metadata:{created_on:'2026-10-20T01:00:00Z'}}]};
@@ -37,6 +37,10 @@ test('read-only recovery proves exact modules and does not publish private setti
 test('any unexpected server byte in the already-uploaded candidate fails the source proof',async()=>{
  const out=await reconcile(await fixture(true),candidate);
  assert.equal(out.candidate_modules_exactly_match_ui_patch,false);
+});
+test('a new candidate-only configuration field is reported as a difference',async()=>{
+ const out=await reconcile(await fixture(false,{limits:{cpu_ms:50}}),candidate);
+ assert.deepEqual(out.candidate_version_fields_differ_from_prior,['limits']);
 });
 test('module recovery rejects noncanonical base64, unsafe names, duplicate modules and invalid UTF-8',()=>{
  for(const bad of [

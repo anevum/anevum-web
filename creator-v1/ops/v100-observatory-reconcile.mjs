@@ -68,14 +68,14 @@ export async function reconcile(read,candidate){
    out.candidate_annotations_changed_fields=differences(newVersion.annotations||{},oldVersion.annotations||{},annotationKeys);
    out.settings_annotations_match_candidate=equal(before.settings.annotations||{},newVersion.annotations||{});
    out.retained_module_digests=oldModules.map(m=>({name:m.name,sha256:HASH(m.source)}));
-   out.retained_source_matches_recorded_release=oldModules.length===1&&HASH(oldModules[0].source.trimEnd()+'\n')==='856fe98d1fefc3be22b73732a7276402b2b6fd7600a6135251ede153e2690301';
+   out.retained_source_matches_recorded_release=oldModules.length===1&&HASH(oldModules[0].source)==='856fe98d1fefc3be22b73732a7276402b2b6fd7600a6135251ede153e2690301';
    out.candidate_module_digests=newModules.map(m=>({name:m.name,sha256:HASH(m.source)}));
    out.download_matches_retained_modules=equal(parseModules(before.source).toSorted((a,b)=>a.name.localeCompare(b.name)),oldModules);
    out.download_matches_candidate_modules=equal(parseModules(before.source).toSorted((a,b)=>a.name.localeCompare(b.name)),newModules);
    const settingsKeys=Object.keys(before.settings).filter(k=>k!=='annotations'&&k!=='bindings'&&k in oldVersion);
    out.settings_version_fields_compared=settingsKeys;
    out.settings_version_fields_differ_from_prior=differences(before.settings,oldVersion,settingsKeys);
-   const versionKeys=Object.keys(oldVersion).filter(k=>!['id','created_on','number','urls','annotations','author_email','author_id','source','startup_time_ms','modules'].includes(k));
+   const versionKeys=[...new Set([...Object.keys(oldVersion),...Object.keys(newVersion)])].filter(k=>!['id','created_on','number','urls','annotations','author_email','author_id','source','startup_time_ms','modules'].includes(k));
    out.candidate_version_fields_differ_from_prior=differences(newVersion,oldVersion,versionKeys);
   }catch(error){
    out.version_source_readable=false;out.version_source_check_failed=true;
