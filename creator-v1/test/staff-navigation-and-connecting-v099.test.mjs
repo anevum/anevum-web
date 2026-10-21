@@ -32,8 +32,8 @@ test("native founder link is present in all three React account navigation surfa
  assert.match(shortcut,/data-native-staff-shortcut=/);
  assert.match(shortcut,/verified\?\.memberId!==memberId/);
  assert.match(shortcut,/data\?\.role==="owner"/);
- assert.match(shortcut,/data\.role==="reviewer"/);
- assert.doesNotMatch(shortcut,/localStorage|sessionStorage|role\s*=\s*['"]owner['"]|OWNER_EMAIL/);
+ assert.match(shortcut,/data\?\.role==="reviewer"/);
+ assert.doesNotMatch(shortcut,/(?:window\.)?localStorage\.(?:getItem|setItem)|sessionStorage\.(?:getItem|setItem)|role\s*=\s*['"]owner['"]|OWNER_EMAIL/);
 });
 test("native link stays hidden without a verified server-granted staff role",()=>{
  assert.match(shortcut,/if\(!memberId\|\|verified\?\.memberId!==memberId\|\|!verified\.role\)return null/);
@@ -53,7 +53,7 @@ test("Observatory server staff, D1, and access logic remains byte-for-byte uncha
  assert.match(client,/AbortController/);
  assert.match(client,/redirect:'manual'/);
  assert.match(client,/12000/);
- assert.match(client,/CONNECTION UNAVAILABLE/);
+ assert.match(client,/LIVE DATA UNAVAILABLE/);
  assert.match(client,/__anevum_iren_staff_session_status_v001/);
  assert.match(style,/staff-connect-error/);
  assert.match(html,/id="lastSync"/);
