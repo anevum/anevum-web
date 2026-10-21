@@ -108,6 +108,16 @@ try{
    await navigate('/projects/package/'+ids.project+'?preview=1');await until(()=>visible('[data-native-player] iframe'),'Private native player');await layout('native-private-player',width);
    assert.equal(await evaluate('[...document.querySelectorAll("button")].some(x=>x.textContent.includes("Approve and publish"))'),false,'Creator cannot self-approve');
   }
+  const frameStatus=await evaluate('document.querySelector(".av102-player-status")?.dataset.playerFrameState');
+  assert.ok(['opening','frame-loaded','slow'].includes(frameStatus),'Player status must describe frame loading without claiming runtime health');
+  const original=await evaluate('document.querySelector(".av095-player iframe").src');
+  await clickText('Phone width');
+  await until(()=>evaluate('document.querySelector(".av095-player").dataset.playerViewport==="phone"'),'Simulated phone stage');
+  assert.equal(await evaluate('document.querySelector(".av095-player iframe").src'),original,'Resizing must not reload the untrusted frame');
+  assert.equal(await evaluate('document.querySelector(".av102-player-note")?.textContent.includes("not physical Safari")'),true);
+  await clickText('Full width');
+  await until(()=>evaluate('document.querySelector(".av095-player").dataset.playerViewport==="fit"'),'Restored responsive stage');
+  assert.equal(await evaluate('document.querySelector(".av095-player iframe").src'),original);
   await evaluate('HTMLElement.prototype.requestFullscreen=undefined');const before=await evaluate('document.querySelector(".av095-player iframe").src');
   await clickText('Expand player');await until(()=>visible('.av095-player--expanded'),'Immersive fallback');await screenshot('native-iphone-expand-320');
   assert.equal(await evaluate('document.querySelector(".av095-player iframe").src'),before);
