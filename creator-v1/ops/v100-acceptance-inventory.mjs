@@ -9,6 +9,18 @@ const OLD='3ba8602c-6616-49a4-af29-1efe60ad164a',NEXT='8ed503b6-5df6-42a5-a536-6
 // Uploaded feature-ON candidate: not yet in the current deployment or protected route.
 const FEATURE_ON='71a305df-a769-4fb1-9a20-527e0f7f1664';
 const COOKIE='__Host-anevum-v095-v096-qa';
+/** Read-only readiness of the existing opt-in entry, not permission to deploy. */
+export function featureOnRoutingReady(s){
+ return Boolean(
+  s.featureOnCandidateUploaded && s.featureOnAtZeroPercentInCurrentDeployment &&
+  s.entryCandidateMatchesFeatureOn && s.entryHasRoutingSecret && s.entryHasOnlyPlainOrSecretBindings &&
+  s.entryExpiryValid && s.entry?.hasFeatureOnCandidate && s.entry?.hasRoutingCookie &&
+  s.entry?.hasTimedGate && s.entry?.hasAccessIdentity &&
+  s.http_request_late_transform?.hasFeatureOnCandidate &&
+  s.http_request_late_transform?.hasRoutingCookie &&
+  s.http_request_late_transform?.hasVersionOverride
+ );
+}
 export async function inventory(read){
  const root='/accounts/'+ACCOUNT+'/workers/scripts/',zone='/zones/'+ZONE;
  const routes=await read(zone+'/workers/routes');
@@ -73,9 +85,7 @@ export async function inventory(read){
   }
  }catch(e){out.snippetsReadable=false;out.snippetsNotFound=e.status===404;out.snippetsAuthorizationDenied=[401,403].includes(e.status);}
  // This is routing readiness only, NOT human, device, data-write or production acceptance.
- out.featureOnProtectedRoutingReady=Boolean(out.featureOnCandidateUploaded&&out.featureOnAtZeroPercentInCurrentDeployment&&
-  out.entryCandidateMatchesFeatureOn&&out.entry?.hasFeatureOnCandidate&&
-  out.http_request_late_transform?.hasFeatureOnCandidate&&out.http_request_late_transform?.hasVersionOverride&&out.entryExpiryValid);
+ out.featureOnProtectedRoutingReady=featureOnRoutingReady(out);
  out.featureOnAuthenticatedAcceptance=false;
  out.featureOnPhysicalDeviceAcceptance=false;
  out.featureOnProductionApproved=false;
