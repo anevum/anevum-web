@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {parseModules,patchUi,downloadDigest,prepareInactive,uploadMetadata} from '../ops/v100-observatory-ui-candidate.mjs';
+import {parseModules,patchUi,downloadDigest,prepareInactive,uploadMetadata,postUploadState} from '../ops/v100-observatory-ui-candidate.mjs';
 const approved=readFileSync(new URL('../operations/anevum-iren-staff-observatory-v092.mjs',import.meta.url),'utf8');
 const old=readFileSync(new URL('../operations/anevum-iren-staff-observatory-v001.mjs',import.meta.url),'utf8');
 test('UI patch preserves every original server byte even when the server differs from the candidate',async()=>{
@@ -71,4 +71,14 @@ test('unreviewed candidate or changed live version cannot make any provider writ
  await assert.rejects(()=>prepareInactive(api,{candidate:approved+'\n// drift',apply:true}));
  await assert.rejects(()=>prepareInactive(api,{candidate:approved,apply:true}));
  assert.equal(writes,0);
+});
+test('latest saved source metadata may change while every serving and script-wide protection remains fixed',()=>{
+ const before={deployment:{id:'retained'},scriptSettings:{observability:{enabled:true},tags:['tag']},routes:[{pattern:'staff',fail_open:false}],exposure:{enabled:false,previews_enabled:false},apex:{id:'retained-apex'},retained:{resources:{bindings:[{name:'PRIVATE',text:'do-not-log'}]}},retainedSource:{modules:[{source:'private-source'}]},settings:{annotations:{'workers/message':'prior'}},source:'old'};
+ const after={...structuredClone(before),source:'new saved candidate',settings:{annotations:{}}};
+ assert.equal(postUploadState(before,after).preserved,true);
+ for(const field of ['deployment','scriptSettings','routes','exposure','apex','retained','retainedSource']){
+  const changed={...after,[field]:null},result=postUploadState(before,changed);
+  assert.equal(result.preserved,false);assert.deepEqual(result.changed_fields,[field]);
+  assert.ok(!JSON.stringify(result).includes('do-not-log'));assert.ok(!JSON.stringify(result).includes('private-source'));
+ }
 });
