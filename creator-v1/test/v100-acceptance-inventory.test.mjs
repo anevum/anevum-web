@@ -15,6 +15,12 @@ const read=async(path,json=true)=>{
 test('only booleans, code digests and deployment IDs leave the audit',async()=>{
  const out=await inventory(read),encoded=JSON.stringify(out);
  assert.equal(out.readOnly,true);assert.equal(out.newCandidateExists,true);
+ assert.equal(out.featureOnCandidateUploaded,true);
+ assert.equal(out.featureOnAtZeroPercentInCurrentDeployment,false);
+ assert.equal(out.featureOnProtectedRoutingReady,false);
+ assert.equal(out.featureOnAuthenticatedAcceptance,false);
+ assert.equal(out.featureOnPhysicalDeviceAcceptance,false);
+ assert.equal(out.featureOnProductionApproved,false);
  assert.equal(out.snippetsReadable,true);assert.equal(out.routingSnippets.length,1);
  assert.ok(!encoded.includes(secret));assert.ok(!encoded.includes('random-boundary'));
  assert.ok(!encoded.includes('bindings'));assert.ok(!encoded.includes('annotations'));
@@ -60,4 +66,42 @@ test('current historical-route fixture remains not feature-ON and never implies 
  assert.equal(out.featureOnAuthenticatedAcceptance,false);
  assert.equal(out.featureOnPhysicalDeviceAcceptance,false);
  assert.equal(out.featureOnProductionApproved,false);
+});
+
+test('feature-ON route is ready only after the exact version is in deployment, entry and transform',async()=>{
+ const feature='71a305df-a769-4fb1-9a20-527e0f7f1664';
+ const live=async(path,json=true)=>{
+  if(!json)return '--fixed-boundary\\n'+feature+'\\n__Host-anevum-v095-v096-qa\\nQA_EXPIRES_AT\\nANEVUM_PREVIEW_ALLOWED_EMAILS\\n--fixed-boundary--';
+  if(path.endsWith('/workers/routes'))return [{pattern:'anevum.com/__enter/v095-v096*',script:'anevum-v095-v096-acceptance-entry'}];
+  if(path.endsWith('/settings'))return {bindings:[
+   {name:'QA_CANDIDATE',type:'plain_text',text:feature},
+   {name:'QA_EXPIRES_AT',type:'plain_text',text:String(Math.floor(Date.now()/1000)+3600)},
+   {name:'QA_ROUTING_TOKEN',type:'secret_text'},
+   {name:'ANEVUM_PREVIEW_ALLOWED_EMAILS',type:'secret_text'}
+  ]};
+  if(path.endsWith('/deployments'))return {deployments:[{id:'deployment',versions:[
+    {version_id:'93cc7f07-cf39-457e-af69-c9f6f4c02d25',percentage:100},
+    {version_id:feature,percentage:0}
+  ]}]};
+  if(path.includes('/versions/'))return {id:path.split('/').at(-1)};
+  if(path.includes('/rulesets/phases/http_request_late_transform'))return {rules:[{
+   expression:'__Host-anevum-v095-v096-qa',action_parameters:{headers:{'cloudflare-workers-version-overrides':{operation:'set',value:'anevum-apex-prelaunch-gateway="'+feature+'"'}}}
+  }]};
+  if(path.includes('/rulesets/'))throw Object.assign(Error('Absent transform phase'),{status:404});
+  if(path.endsWith('/snippets/snippet_rules'))throw Object.assign(Error('Absent snippets phase'),{status:404});
+  throw Error('Unexpected request '+path);
+ };
+ const ready=await inventory(live);
+ assert.equal(ready.featureOnProtectedRoutingReady,true);
+ const withoutDeployment=await inventory(async(path,json=true)=>{
+  const value=await live(path,json);
+  if(path.endsWith('/deployments'))return {deployments:[{id:'deployment',versions:[{version_id:'93cc7f07-cf39-457e-af69-c9f6f4c02d25',percentage:100}]}]};
+  return value;
+ });
+ assert.equal(withoutDeployment.featureOnProtectedRoutingReady,false);
+ const withoutRule=await inventory(async(path,json=true)=>{
+  if(path.includes('/rulesets/phases/http_request_late_transform'))return {rules:[]};
+  return live(path,json);
+ });
+ assert.equal(withoutRule.featureOnProtectedRoutingReady,false);
 });
