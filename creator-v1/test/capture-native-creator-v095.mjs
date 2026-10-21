@@ -4,11 +4,11 @@ import assert from 'node:assert/strict';
 import {spawn,execFileSync} from 'node:child_process';
 import {existsSync,readFileSync,writeFileSync,mkdirSync,mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
-import {join} from 'node:path';
+import {join,resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createNativeFixture,ids} from './native-creator-fixture-v095.mjs';
 const args=process.argv.slice(2),get=name=>args[args.indexOf(name)+1];
-const chrome=get('--chrome'),output=get('--output'),disabled=args.includes('--disabled');
+const chrome=get('--chrome'),destination=get('--output'),output=destination?resolve(destination):null,disabled=args.includes('--disabled');
 assert.ok(chrome&&output,'Pass the installed Chromium and an evidence directory');
 // PR workflows check out the head commit, while GITHUB_SHA may identify a
 // synthetic merge. Attribute captures only to the actual checked-out source.
