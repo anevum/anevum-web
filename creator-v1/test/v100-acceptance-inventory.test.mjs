@@ -34,7 +34,7 @@ const ready={
  featureOnCandidateUploaded:true,featureOnAtZeroPercentInCurrentDeployment:true,
  entryCandidateMatchesFeatureOn:true,entryHasRoutingSecret:true,entryHasOnlyPlainOrSecretBindings:true,
  entryExpiryValid:true,entry:{hasFeatureOnCandidate:true,hasRoutingCookie:true,hasTimedGate:true,hasAccessIdentity:true},
- http_request_late_transform:{hasFeatureOnCandidate:true,hasRoutingCookie:true,hasVersionOverride:true}
+ http_request_late_transform:{qaRuleCount:1,hasFeatureOnCandidate:true,hasRoutingCookie:true,hasVersionOverride:true}
 };
 test('feature-ON routing readiness requires the exact staged 0 percent version and the protected entry',()=>{
  assert.equal(featureOnRoutingReady(ready),true);
@@ -44,6 +44,8 @@ test('feature-ON routing readiness requires the exact staged 0 percent version a
  for(const name of ['hasFeatureOnCandidate','hasRoutingCookie','hasTimedGate','hasAccessIdentity']){
   assert.equal(featureOnRoutingReady({...ready,entry:{...ready.entry,[name]:false}}),false,'must refuse missing entry '+name);
  }
+ assert.equal(featureOnRoutingReady({...ready,http_request_late_transform:{...ready.http_request_late_transform,qaRuleCount:0}}),false);
+ assert.equal(featureOnRoutingReady({...ready,http_request_late_transform:{...ready.http_request_late_transform,qaRuleCount:2}}),false);
  for(const name of ['hasFeatureOnCandidate','hasRoutingCookie','hasVersionOverride']){
   assert.equal(featureOnRoutingReady({...ready,http_request_late_transform:{...ready.http_request_late_transform,[name]:false}}),false,'must refuse missing rule '+name);
  }
