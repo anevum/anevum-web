@@ -42,7 +42,10 @@ test('no anonymous or malicious API route is proxied',async()=>{
 test('untrusted origin, scheme, host and embedded credentials never redirect',async()=>{
  for(const url of ['https://evil.example/staff/command','https://anevum.com.evil.example/staff/command',
   'https://user:pass@anevum.com/staff/command','http://anevum.com/staff/command']){
-  assert.equal(legacyCommandEntry(req(url)).status,404,url);
+  // WHATWG Request refuses credential-bearing URLs before the Worker can
+  // validate them. Feed that malformed URL as a minimal request stub instead.
+  const request=url.includes('@')?{url,method:'GET'}:req(url);
+  assert.equal(legacyCommandEntry(request).status,404,url);
  }
 });
 test('GET and HEAD only; no writes or API calls can occur',async()=>{
