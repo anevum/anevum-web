@@ -26,6 +26,9 @@ const ROOT='/accounts/'+ACCOUNT+'/workers/scripts/'+WORKER;
 const sha256=data=>createHash('sha256').update(data).digest('hex');
 const stable=x=>JSON.stringify(x,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?
  Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b))):v);
+// Wrangler versions upload legitimately updates immutable upload annotations;
+// operational settings and bindings must not drift, but attribution may change.
+const operationalSettings=s=>Object.fromEntries(Object.entries(s||{}).filter(([key])=>key!=='annotations'));
 const routeLock=x=>stable(x.map(r=>({pattern:r.pattern,script:r.script,request_limit_fail_open:r.request_limit_fail_open===true})).sort((a,b)=>a.pattern.localeCompare(b.pattern)));
 const signatures=b=>(b||[]).map(x=>({name:x.name,type:x.type})).sort((a,b)=>a.name.localeCompare(b.name));
 const d1ids=b=>Object.fromEntries((b||[]).filter(x=>x.type==='d1').map(x=>[x.name,x.database_id]));
@@ -136,7 +139,7 @@ async function before(){
  const config=createConfig(s,build.dir);
  const result={
   deployment_id:s.deployment.id,selected:s.deployment.versions,route_lock:routeLock(s.routes),
-  global_settings_hash:sha256(stable(s.settings)),version_ids:s.versions.map(x=>x.id),
+  global_settings_hash:sha256(stable(operationalSettings(s.settings))),version_ids:s.versions.map(x=>x.id),
   binding_signatures:signatures(s.priorVersion.resources.bindings),
   prior_plain_vars:plain(s.priorVersion.resources.bindings),
   prior_d1_ids:d1ids(s.priorVersion.resources.bindings),
@@ -157,7 +160,7 @@ async function after(){
  assert.equal(stable(s.deployment.versions),stable(prior.selected),'Traffic changed during upload');
  assert.equal(s.deployment.id,prior.deployment_id,'Active deployment replaced');
  assert.equal(routeLock(s.routes),prior.route_lock,'Existing 40 routes changed');
- assert.equal(sha256(stable(s.settings)),prior.global_settings_hash,'Global Worker settings changed');
+ assert.equal(sha256(stable(operationalSettings(s.settings))),prior.global_settings_hash,'Operational Worker settings changed');
  assert.equal(build.assets.sha256,prior.asset_manifest_sha256,'Post-upload assets differ');
  const introduced=s.versions.filter(x=>!prior.version_ids.includes(x.id));
  assert.equal(introduced.length,1,'Exactly one new inactive Worker version required');
@@ -179,6 +182,64 @@ async function after(){
  console.log(JSON.stringify({status:result.status,version_id:id,public_traffic:100,new_traffic:0,
   routes_unchanged:true,bindings_unchanged:true,release_approved:false}));
 }
+/** Read-only independent receipt for the already uploaded + protected
+ * merged source. Does not need a prior runner temp snapshot and cannot reupload.
+ */
+async function auditInactive(){
+ requireEnv();
+ const next='ed44a70c-2adb-4048-a7a5-82e7a457528d';
+ const newEntry='d7bb6c81-30e0-480f-b9a8-2f12f7a69ab5';
+ const newLegacy='4699cfd9-d9d0-44f2-b1b2-f56a4627f429';
+ const [d,previous,candidate,settings,routes,ex,entry,entryV,legacy,legacyV]=await Promise.all([
+  get(ROOT+'/deployments'),get(ROOT+'/versions/'+CORRECTED),
+  get(ROOT+'/versions/'+next),get(ROOT+'/settings'),
+  get('/zones/'+ZONE+'/workers/routes'),get(ROOT+'/subdomain'),
+  get('/accounts/'+ACCOUNT+'/workers/scripts/'+QA_ENTRY+'/deployments'),
+  get('/accounts/'+ACCOUNT+'/workers/scripts/'+QA_ENTRY+'/versions/'+newEntry),
+  get('/accounts/'+ACCOUNT+'/workers/scripts/anevum-iren-legacy-command-entry-v001/deployments'),
+  get('/accounts/'+ACCOUNT+'/workers/scripts/anevum-iren-legacy-command-entry-v001/versions/'+newLegacy)
+ ]);
+ const versions=d.deployments?.[0]?.versions||[];
+ assert.deepEqual(versions,[{version_id:PUBLIC,percentage:100},{version_id:next,percentage:0}],
+  'New candidate must remain completely inactive');
+ assert.equal(candidate.id,next);
+ assert.deepEqual(signatures(candidate.resources?.bindings),signatures(previous.resources?.bindings));
+ assert.deepEqual(plain(candidate.resources?.bindings),plain(previous.resources?.bindings));
+ assert.deepEqual(d1ids(candidate.resources?.bindings),d1ids(previous.resources?.bindings));
+ assert.deepEqual(candidate.resources?.script_runtime,previous.resources?.script_runtime);
+ assert.equal(candidate.resources.script_runtime.assets.base_path,'/');
+ assert.equal(plain(candidate.resources.bindings).CANONICAL_CREATOR_UPLOADS_ENABLED,'false');
+ assert.deepEqual(signatures(settings.bindings),signatures(candidate.resources.bindings));
+ assert.equal(settings.compatibility_date,'2026-10-17');
+ assert.deepEqual(settings.compatibility_flags,['nodejs_compat']);
+ assert.equal(ex.enabled,false);
+ assert.equal(ex.previews_enabled,false);
+ assert.equal(routes.length,40);
+ assert.equal(routes.filter(x=>x.pattern==='anevum.com/__enter/v095-v096*'&&x.script===QA_ENTRY).length,1);
+ assert.deepEqual(entry.deployments?.[0]?.versions,[{version_id:newEntry,percentage:100}]);
+ assert.equal(entryV.id,newEntry);
+ const binds=entryV.resources?.bindings||[];
+ assert.equal(binds.find(x=>x.name==='QA_CANDIDATE')?.text,next);
+ assert.ok(Number(binds.find(x=>x.name==='QA_EXPIRES_AT')?.text)>Date.now()/1000,'Private QA expired');
+ assert.deepEqual(binds.filter(x=>x.type==='secret_text').map(x=>x.name).sort(),
+  ['ANEVUM_PREVIEW_ALLOWED_EMAILS','QA_ROUTING_TOKEN']);
+ assert.deepEqual(legacy.deployments?.[0]?.versions,[
+  {version_id:'62692eef-e7fb-479d-88fe-62c5fcaff5f9',percentage:100},
+  {version_id:newLegacy,percentage:0}
+ ]);
+ assert.equal(legacyV.id,newLegacy);
+ assert.equal(legacyV.resources?.bindings?.find(x=>x.name==='LEGACY_STAFF')?.service,
+  'anevum-iren-apex-staff-v002');
+ const output={status:'PROTECTED_CANDIDATE_READBACK_PASS',reviewed_source:SOURCE,
+  apex_immutable_version:next,public_percent:100,private_percent:0,
+  legacy_immutable_version:newLegacy,legacy_public_percent:100,legacy_private_percent:0,
+  protected_entry:newEntry,all_40_routes_preserved:true,d1_and_secret_binding_types_preserved:true,
+  creator_uploads_enabled:false,root_base:'/',provider_write_operations:0,
+  human_authenticated_acceptance:false,physical_safari_retest:false,production_approved:false};
+ console.log(JSON.stringify(output));
+}
 const cmd=process.argv[2];
-if(!['before','after'].includes(cmd))throw Error('Use before or after only');
-if(cmd==='before')await before();else await after();
+if(!['before','after','audit-inactive'].includes(cmd))throw Error('Use before/after/audit-inactive only');
+if(cmd==='before')await before();
+else if(cmd==='after')await after();
+else await auditInactive();
