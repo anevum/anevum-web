@@ -1,10 +1,12 @@
 import type {StudioDraft,StudioProject} from './canonical-studio';
+import {readWithDeadline} from '../../../shared/read-deadline.mjs';
 export const workbenchAlphaEnabled=import.meta.env.VITE_CREATOR_WORKBENCH_ALPHA==='true';
 const ROOT='/api/v1/member/workbench';
 export interface Access {memberId:string;allowed:boolean;canManage:boolean;level:'owner'|'tester'|'none';expiresAt:number|null;pilotCap:number;capabilities:{ai:false;publish:false;codeExecution:false}}
 export interface Pilot {memberId:string;handle:string;displayName?:string;revision:number;enabled:number;expiresAt:number|null}
 export class WorkbenchError extends Error {constructor(public status:number,message:string){super(message);this.name='WorkbenchError';}}
-async function request<T>(path:string,method='GET',body?:unknown,signal?:AbortSignal):Promise<T>{
+async function request<T>(path:string,method='GET',body?:unknown,signal?:AbortSignal,bounded=false):Promise<T>{
+ if(method==='GET'&&!bounded)return readWithDeadline(next=>request<T>(path,method,body,next,true),signal);
  const r=await fetch(ROOT+path,{method,signal,credentials:'same-origin',mode:'same-origin',redirect:'error',cache:'no-store',
   headers:{accept:'application/json',...(body===undefined?{}:{'content-type':'application/json'})},...(body===undefined?{}:{body:JSON.stringify(body)})});
  let data:unknown;

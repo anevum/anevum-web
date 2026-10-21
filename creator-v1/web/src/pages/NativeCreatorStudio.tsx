@@ -1,6 +1,7 @@
 import {useCallback,useEffect,useRef,useState,type FormEvent,type ReactNode} from 'react';
 import {Link,NavLink,useLocation,useNavigate,useParams,useSearchParams} from 'react-router-dom';
 import {canonicalAuthClient} from '../lib/canonical-beta';
+import {readWithDeadline} from '../../../shared/read-deadline.mjs';
 import {IsolatedProjectViewport} from '../components/IsolatedProjectViewport';
 import {
  nativeCreatorEnabled,packageId,nativePlayerPath,nativeBuildPath,readNativeSession,readNativeLibrary,
@@ -20,7 +21,7 @@ function useRead<T>(key:string,enabled:boolean,loader:(signal:AbortSignal)=>Prom
   if(!enabled)return;
   const ac=new AbortController();let current=true;
   setState({key,data:null,error:'',loading:true});
-  load.current(ac.signal).then(data=>{if(current)setState({key,data,error:'',loading:false});})
+  readWithDeadline(signal=>load.current(signal),ac.signal).then(data=>{if(current)setState({key,data,error:'',loading:false});})
    .catch(e=>{if(current)setState({key,data:null,error:message(e),loading:false});});
   return()=>{current=false;ac.abort();};
  },[key,enabled,revision]);
