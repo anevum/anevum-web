@@ -1,0 +1,167 @@
+/* ANEVUM V111 / First-contact entry rail
+   Clear membership and guided discovery on the existing verified public home.
+   No invented release counts, privileges, rewards or social proof. */
+.av9-shell .av79-home .av111-onramp{
+  position:relative;
+  isolation:isolate;
+  display:grid;
+  grid-template-columns:92px minmax(0,1fr) auto;
+  align-items:center;
+  gap:clamp(16px,2.2vw,26px);
+  padding:clamp(18px,2.5vw,25px);
+  margin:0 0 31px;
+  border:1px solid #a5b6d677;
+  border-radius:18px;
+  background:
+    radial-gradient(ellipse at 12% 12%,#7b6fac26,transparent 33%),
+    radial-gradient(ellipse at 92% 90%,#6099bd20,transparent 45%),
+    linear-gradient(115deg,#202d47,#131d31 64%,#171e32);
+  box-shadow:inset 0 1px #ffffff1e,0 10px 34px #060b1b55;
+  overflow:hidden;
+  color:#f5ebf7;
+}
+.av111-onramp::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  opacity:.18;
+  background:linear-gradient(118deg,transparent 35%,#b8d5ed28 50%,transparent 67%);
+  background-size:200% 100%;
+  animation:av111-scan 16s linear infinite;
+}
+.av111-onramp-art{
+  position:relative;
+  display:grid;
+  place-items:center;
+  width:88px;
+  height:88px;
+  border:1px solid #a6c7e455;
+  border-radius:50%;
+  background:radial-gradient(circle,#68719c2c,#132039ad 68%);
+  box-shadow:inset 0 1px #fff2,0 0 27px #8ba9de1c;
+}
+.av111-onramp-core{
+  width:29px;
+  height:29px;
+  border:1px solid #f1dec9b5;
+  border-radius:50%;
+  background:radial-gradient(circle at 31% 31%,#f5e5dd,#99adc8 27%,#3e5a80 58%,#172945);
+  box-shadow:0 0 21px #c9d7f4a6,0 0 37px #92a5e457;
+}
+.av111-onramp-orbit{
+  position:absolute;
+  display:block;
+  inset:14px;
+  border:1px solid #accce295;
+  border-radius:50%;
+  transform:rotate(-25deg) scaleX(.65);
+}
+.av111-onramp-orbit-a{animation:av111-orbit 12s linear infinite}
+.av111-onramp-orbit-b{inset:7px;border-color:#bf9ece80;transform:rotate(43deg) scaleX(.43);animation:av111-orbit-b 18s linear infinite reverse}
+.av111-onramp-copy{min-width:0}
+.av111-onramp-label{
+  display:block;
+  margin-bottom:8px;
+  color:#c5c0df;
+  font:700 9px/1.5 ui-monospace,monospace;
+  letter-spacing:.12em;
+}
+.av9-shell .av79-home .av111-onramp h2{
+  margin:0 0 7px!important;
+  font:450 clamp(21px,2.3vw,29px)/1.1 Georgia,serif!important;
+  letter-spacing:-.015em;
+  color:#fff1e4;
+}
+.av9-shell .av79-home .av111-onramp p{
+  margin:0!important;
+  max-width:590px;
+  font:450 12px/1.6 system-ui,sans-serif;
+  color:#bfccde;
+}
+.av111-onramp-actions{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:8px;
+  width:min(260px,26vw);
+}
+.av9-shell .av79-home .av111-onramp-actions :is(a,button){
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  min-height:46px;
+  gap:11px;
+  padding:11px 13px;
+  border-radius:10px;
+  font:700 10px/1.3 ui-monospace,monospace;
+  letter-spacing:.05em;
+  text-decoration:none;
+  text-align:left;
+  cursor:pointer;
+  transition:background .2s,border-color .2s,transform .2s;
+}
+.av9-shell .av79-home .av111-onramp-primary{
+  border:1px solid #edc8aa;
+  color:#1b253b;
+  background:linear-gradient(135deg,#f0d6be,#d3d2e6);
+  box-shadow:inset 0 1px #fff8;
+}
+.av9-shell .av79-home .av111-onramp-guide{
+  border:1px solid #c9d6e25c;
+  color:#e8e8fa;
+  background:#f1f3ff0a;
+}
+.av9-shell .av79-home .av111-onramp-actions :is(a,button):hover{
+  transform:translateY(-2px);
+  border-color:#c5eeff;
+}
+.av9-shell .av79-home .av111-onramp-actions :is(a,button):focus-visible{
+  outline:3px solid #96e8f1;
+  outline-offset:3px;
+}
+@keyframes av111-scan{to{background-position:-200% 0}}
+@keyframes av111-orbit{to{rotate:360deg}}
+@keyframes av111-orbit-b{to{rotate:360deg}}
+@media(max-width:920px){
+  .av9-shell .av79-home .av111-onramp{grid-template-columns:72px minmax(0,1fr);gap:14px 17px}
+  .av111-onramp-art{width:70px;height:70px}
+  .av111-onramp-actions{grid-column:2;width:auto;flex-direction:row;flex-wrap:wrap}
+  .av9-shell .av79-home .av111-onramp-actions :is(a,button){flex:1;min-width:170px}
+}
+@media(max-width:650px){
+  .av9-shell .av79-home .av111-onramp{
+    grid-template-columns:52px minmax(0,1fr);
+    gap:10px 14px;
+    padding:15px 14px;
+    margin:0 0 25px;
+    border-radius:15px;
+  }
+  .av111-onramp-art{width:50px;height:50px}
+  .av111-onramp-core{width:18px;height:18px}
+  .av111-onramp-orbit{inset:9px}
+  .av111-onramp-orbit-b{inset:4px}
+  .av111-onramp-label{font-size:8px;letter-spacing:.08em;margin-bottom:5px}
+  .av9-shell .av79-home .av111-onramp h2{font-size:22px!important}
+  .av9-shell .av79-home .av111-onramp p{font-size:12px;line-height:1.6}
+  .av111-onramp-actions{grid-column:1 / -1;display:grid;grid-template-columns:1fr;gap:8px}
+  .av9-shell .av79-home .av111-onramp-actions :is(a,button){min-width:0;min-height:46px}
+}
+@media(prefers-reduced-motion:reduce){
+  .av111-onramp::before,.av111-onramp-orbit{animation:none!important}
+  .av9-shell .av79-home .av111-onramp-actions :is(a,button){transition:none!important;transform:none!important}
+}
+@media(forced-colors:active){
+  .av9-shell .av79-home .av111-onramp{
+    background:Canvas;
+    border:2px solid CanvasText;
+    color:CanvasText;
+  }
+  .av111-onramp-art,.av111-onramp-core,.av111-onramp-orbit{border-color:CanvasText;box-shadow:none}
+  .av9-shell .av79-home .av111-onramp-actions :is(a,button){
+    background:ButtonFace;
+    color:ButtonText;
+    border:1px solid ButtonText;
+  }
+}
