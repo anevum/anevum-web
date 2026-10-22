@@ -140,7 +140,9 @@ async function before(){
  const config=createConfig(s,build.dir);
  const result={
   deployment_id:s.deployment.id,selected:s.deployment.versions,route_lock:routeLock(s.routes),
-  global_settings_hash:sha256(stable(operationalSettings(s.settings))),version_ids:s.versions.map(x=>x.id),
+  global_settings_hash:sha256(stable(operationalSettings(s.settings))),
+  planned_settings_hash:sha256(stable(operationalSettings({...s.settings,bindings:s.settings.bindings.map(b=>b.type==='plain_text'&&b.name==='CANONICAL_XP_TEST_ENABLED'?{...b,text:'false'}:b)}))),
+  version_ids:s.versions.map(x=>x.id),
   binding_signatures:signatures(s.priorVersion.resources.bindings),
   prior_plain_vars:plain(s.priorVersion.resources.bindings),
   candidate_plain_vars:config.vars,
@@ -162,7 +164,7 @@ async function after(){
  assert.equal(stable(s.deployment.versions),stable(prior.selected),'Traffic changed during upload');
  assert.equal(s.deployment.id,prior.deployment_id,'Active deployment replaced');
  assert.equal(routeLock(s.routes),prior.route_lock,'Existing 40 routes changed');
- assert.equal(sha256(stable(operationalSettings(s.settings))),prior.global_settings_hash,'Operational Worker settings changed');
+ assert.ok([prior.global_settings_hash,prior.planned_settings_hash].includes(sha256(stable(operationalSettings(s.settings)))),'Operational Worker settings changed outside the approved retired XP flag');
  assert.equal(build.assets.sha256,prior.asset_manifest_sha256,'Post-upload assets differ');
  const introduced=s.versions.filter(x=>!prior.version_ids.includes(x.id));
  assert.equal(introduced.length,1,'Exactly one new inactive Worker version required');
