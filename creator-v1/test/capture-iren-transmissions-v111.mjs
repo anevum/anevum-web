@@ -61,8 +61,10 @@ try{
  await delay(220);
  await evaluate(trigger("qa-reduced","Reduced motion preview"));
  await until(()=>evaluate('!!document.querySelector(".ir111-transmission")'));
- const reduced=await evaluate('(()=>{const e=document.querySelector(".ir111-transmission"),s=getComputedStyle(e);return s.transitionDuration==="0s"&&s.animationName==="none"})()');
- if(!reduced)throw Error("V111_REDUCED_MOTION_NOT_HONORED");
+ const reduced=await evaluate('(()=>{const e=document.querySelector(".ir111-transmission"),s=getComputedStyle(e);return {media:matchMedia("(prefers-reduced-motion: reduce)").matches,transition:s.transitionDuration,animation:s.animationName,animationDuration:s.animationDuration}})()');
+ const durationZero=value=>value.split(",").every(item=>Number.parseFloat(item)===0);
+ if(!reduced.media||!durationZero(reduced.transition)||!durationZero(reduced.animationDuration)||reduced.animation!=="none")
+  throw Error("V111_REDUCED_MOTION_NOT_HONORED "+JSON.stringify(reduced));
  writeFileSync(join(output,"acceptance.json"),JSON.stringify({pass:true,syntheticOnly:true,productionChanges:0,checks:["desktop","phone","small-phone","hidden-helper","reduced-motion"],evidence},null,2));
  console.log("IREN_V111_REACT_VISUAL_ACCEPTANCE=PASS");
 }finally{
