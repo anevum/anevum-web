@@ -45,6 +45,7 @@ test("V111 does not steal focus or force visuals during tours, hidden IREN or re
  assert.match(guide,/ir111-motion-paused/);
  assert.match(guide,/aria-label="Dismiss IREN transmission"/);
  assert.match(guide,/dismissTransmission\(activeTransmission\)/);
+ assert.match(guide,/previous==="guide"\?"idle":previous/);
  assert.match(css,/@media\(max-width:700px\)/);
  assert.match(css,/@media\(max-height:460px\)/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);

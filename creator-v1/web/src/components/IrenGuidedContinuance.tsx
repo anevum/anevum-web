@@ -390,7 +390,12 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   },[recent,memberId,unreadCount]);
 
   useEffect(()=>{
-    if(!activeTransmission||hidden||tourIndex!==null)return;
+    if(!activeTransmission||hidden||tourIndex!==null){
+      // Release the transient pointing pose when the signal is dismissed;
+      // ordinary IREN moods, member tours and earned recognition stay intact.
+      setMood(previous=>previous==="guide"?"idle":previous);
+      return;
+    }
     setMood(activeTransmission.kind==="level"||activeTransmission.kind==="award"?"celebrate":"guide");
   },[activeTransmission?.key,hidden,tourIndex]);
 
