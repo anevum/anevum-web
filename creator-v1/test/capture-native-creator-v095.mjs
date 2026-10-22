@@ -8,6 +8,7 @@ import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createNativeFixture,ids} from './native-creator-fixture-v095.mjs';
+import {legacyFixtureResponse,verifyLegacyPlayerContinuity} from './legacy-player-continuity-v095.mjs';
 const args=process.argv.slice(2),get=name=>args[args.indexOf(name)+1];
 const chrome=get('--chrome'),destination=get('--output'),output=destination?resolve(destination):null,disabled=args.includes('--disabled');
 assert.ok(chrome&&output,'Pass the installed Chromium and an evidence directory');
@@ -26,7 +27,8 @@ if(source!==null)assert.match(source,/^[a-f0-9]{40}$/,'Invalid checked-out sourc
 const base='http://127.0.0.1:4179',delay=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(fn,label,timeout=25000){const stop=Date.now()+timeout;let last;while(Date.now()<stop){try{const x=await fn();if(x)return x;}catch(e){last=e;}await delay(120);}throw Error(label+' timed out'+(last?': '+last.message:''));}
 mkdirSync(output,{recursive:true});
-const fixture=createNativeFixture();await fixture.start();
+let demo='';
+const fixture=createNativeFixture({responseFor:args.includes('--legacy-player-only')?url=>legacyFixtureResponse(url,base,demo):null});await fixture.start();
 const profile=mkdtempSync(join(tmpdir(),'anevum-v095-'));
 const log=join(output,'chromium.log');
 const child=spawn(chrome,['--headless=new','--no-sandbox','--no-first-run','--disable-dev-shm-usage','--disable-background-networking','--remote-debugging-port=0','--remote-allow-origins=*','--use-angle=swiftshader','--enable-unsafe-swiftshader','--user-data-dir='+profile,'about:blank'],{stdio:['ignore','ignore','pipe']});
@@ -48,7 +50,7 @@ try{
  client=await connect(target.webSocketDebuggerUrl);
  await client.send('Page.enable');await client.send('Runtime.enable');await client.send('Network.enable');
  client.on('Runtime.exceptionThrown',p=>exceptions.push(p.exceptionDetails?.exception?.description||p.exceptionDetails?.text||'Browser exception'));
- const demo='<!doctype html><html><head><style>body{background:#09182c;color:#edf4ff;font:18px system-ui;padding:30px}button{padding:16px;margin:8px}</style></head><body><p>OFFLINE SYNTHETIC EXECUTION FIXTURE</p><h1>Uplink playtest</h1><p id="count">0</p><button id="send">Send signal</button><button id="reset">Reset counter</button><script>let n=0;document.getElementById("send").onclick=()=>document.getElementById("count").textContent=++n;document.getElementById("reset").onclick=()=>{n=0;document.getElementById("count").textContent=n;};</script></body></html>';
+ demo='<!doctype html><html><head><style>body{background:#09182c;color:#edf4ff;font:18px system-ui;padding:30px}button{padding:16px;margin:8px}</style></head><body><p>OFFLINE SYNTHETIC EXECUTION FIXTURE</p><h1>Uplink playtest</h1><p id="count">0</p><button id="send">Send signal</button><button id="reset">Reset counter</button><script>let n=0;document.getElementById("send").onclick=()=>document.getElementById("count").textContent=++n;document.getElementById("reset").onclick=()=>{n=0;document.getElementById("count").textContent=n;};</script></body></html>';
  client.on('Fetch.requestPaused',async p=>{
   try{
    const u=new URL(p.request.url);
@@ -95,7 +97,9 @@ try{
  await client.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
  // textContent checks semantic copy; CSS text-transform legitimately changes
  // innerText in the established Continuance heading treatment.
- if(disabled){
+ if(args.includes('--legacy-player-only')){
+  results.push(...await verifyLegacyPlayerContinuity({client,evaluate,screenshot,until,clickText,base,simulateReload:args.includes('--simulate-player-reload')}));
+ }else if(disabled){
   await client.send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
   await navigate('/studio/packages');await until(()=>evaluate('document.body.textContent.includes("not active yet")'),'Flag-off page');await layout('native-disabled',390);
   assert.equal(fixture.control.trace().filter(x=>x.path.includes('/native/')).length,0,'Disabled interface called native API');
@@ -202,7 +206,7 @@ try{
   fixture.control.set({actor:'owner',mode:'expiry',reset:true});await navigate('/projects/package/'+ids.project+'?preview=1');await until(()=>evaluate('!!document.querySelector("[data-native-player] iframe")||document.body.textContent.toLowerCase().includes("private playtest expired")'),'Expiring preview or immediate expiry');await until(()=>evaluate('document.body.textContent.toLowerCase().includes("private playtest expired")'),'Private capability expiry',10000);assert.equal(await visible('[data-native-player] iframe'),false);results.push({case:'expired-private-frame-removed',passed:true});
   for(const mode of ['unavailable','html']){fixture.control.set({actor:'owner',mode});await navigate('/studio/packages');await until(()=>visible('.av095-status'),'Unavailable mode');assert.equal(await visible('[data-native-project]'),false);await screenshot('native-'+mode+'-320');results.push({case:'fail-closed-'+mode,passed:true});}
  }
- if(!disabled){
+ if(!disabled&&!args.includes('--legacy-player-only')){
   for(const [width,height] of [[1440,1000],[320,720]]){
    fixture.control.set({actor:'owner',mode:'ready',reset:true});
    await client.send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<641});
@@ -244,7 +248,7 @@ try{
   results.push({case:'native-read-deadline-and-explicit-retry',passed:true});
  }
  assert.equal(exceptions.length,0,'Unhandled browser exceptions: '+JSON.stringify(exceptions));
- writeFileSync(join(output,'acceptance.json'),JSON.stringify({source,status:'PASS',syntheticOnly:true,physicalDeviceAcceptance:false,disabled,cases:results,requests:fixture.control.trace()},null,2));
+ writeFileSync(join(output,'acceptance.json'),JSON.stringify({source,status:'PASS',syntheticOnly:true,physicalDeviceAcceptance:false,disabled,legacyPlayerOnly:args.includes('--legacy-player-only'),cases:results,requests:fixture.control.trace()},null,2));
  console.log('V095_NATIVE_REACT_BROWSER=PASS '+results.length+' cases; synthetic loopback only');
 }catch(error){
  try{if(evaluate)writeFileSync(join(output,'failure-dom.html'),await evaluate('document.documentElement.outerHTML'));if(screenshot)await screenshot('failure');}catch{}

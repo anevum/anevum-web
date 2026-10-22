@@ -10,7 +10,7 @@ const now=()=>Math.floor(Date.now()/1000);
 const sample=()=>({id:ids.project,title:'SIGNAL ATLAS / SYNTHETIC QA',summary:'An offline interaction fixture for the native ANEVUM Creator Studio. Not a real published project.',category:'app',status:'published',version:2,updatedAt:now(),publishedAt:now()-86400,coverUrl:null,liveReleaseId:ids.live,draftReleaseId:ids.draft,draftStatus:'ready',draftTitle:'SIGNAL ATLAS / PRIVATE REVISION',draftSummary:'A synthetic private update for testing the complete creator workflow.',draftCategory:'app',retention:'test',expiresAt:now()+172800,reviewReason:null});
 const publicProject=p=>({id:p.id,title:p.title,summary:p.summary,category:p.category,status:p.status,version:1,updatedAt:p.updatedAt,publishedAt:p.publishedAt,coverUrl:null,liveReleaseId:p.liveReleaseId});
 function json(res,data,status=200){res.writeHead(status,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify(data));}
-export function createNativeFixture(){
+export function createNativeFixture({responseFor=null}={}){
  let actor='owner',mode='ready',projects=[sample()];const requests=[];
  const control={
   set(next){actor=next.actor??actor;mode=next.mode??'ready';if(next.reset)projects=[sample()];if(mode==='pending')projects[0].draftStatus='pending_review';if(mode==='stale')projects[0].draftReleaseId=ids.otherRelease;},
@@ -21,6 +21,12 @@ export function createNativeFixture(){
   try{
    if(req.headers.host!=='127.0.0.1:4179')return json(res,{error:'Loopback test only'},403);
    const url=new URL(req.url,origin),path=url.pathname;
+   const document=responseFor?.(url);
+   if(document){
+    if(req.method!=='GET')return json(res,{error:'Synthetic document is read-only'},405);
+    res.writeHead(200,{'content-type':document.type+'; charset=utf-8','cache-control':'no-store','x-anevum-test-fixture':'synthetic-only'});
+    return res.end(document.body);
+   }
    // Existing canonical Studio layout, with no real accounts or project writes.
    if(path==='/api/v1/member/health'){
     if(mode==='hang-canonical')return; // request abort closes the disposable connection

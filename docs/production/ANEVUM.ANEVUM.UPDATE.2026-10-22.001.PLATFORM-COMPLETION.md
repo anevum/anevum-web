@@ -1,8 +1,10 @@
 # ANEVUM platform completion and alpha release record
 
 Session: `ANEVUM.ANEVUM.UPDATE.2026-10-22.001.PLATFORM-COMPLETION`  
-Target: January 1, 2027 alpha. Current state: **protected candidate available; public release hold**, October 22, 2026.  
+Target: January 1, 2027 alpha. Current state: **candidate uploaded; protected review window expired; public release hold**, October 22, 2026.  
 Operational record: [issue #622](https://github.com/anevum/anevum-web/issues/622).
+
+Latest Cloudflare check at `2026-10-22T18:55:08Z`: the protected window expired at `18:53:43Z`; original public apex remains 100%, recovery candidate remains 0%, and the existing legacy player version is unchanged. Secure sign-in and a renewed bounded review window are required before authenticated candidate acceptance.
 
 ## Verified checkpoint
 
@@ -40,6 +42,18 @@ The checked-in entry bundle is the existing tested acceptance handler with only 
 
 A further compiled-browser regression on the packaging branch exercises a one-time wall HTTP 503 and successful manual retry at 1440/390/320. It verifies that identity remains visible and successful profile/space reads are not repeated. Hosted Creator V1 run [39800486308](https://github.com/anevum/anevum-web/actions/runs/39800486308) passed this regression. The broader synthetic recovery artifact contains 31 passing cases, including saved drafts, private playback, account switching, permission isolation, independent review and bounded retries. These results are separate from genuine account/device acceptance.
 
+## Player continuity follow-up — October 22, 2026
+
+[PR #624](https://github.com/anevum/anevum-web/pull/624) merged as `12dd1e77f713a8d163f74be6607a35aa80683cdf` after seven checks passed. Native browser acceptance now seeds running project state and checks both the original iframe element and the loaded document after width changes and expansion/exit. Comparing URLs alone could silently accept a reset.
+
+Direct desktop review of the current public release confirmed that the existing published game loads, starts, accepts keyboard input and explicitly restarts inside `sandbox="allow-scripts"`, with `no-referrer`. It also exposed a separate defect: starting a game in immersive mode and exiting returns it to its title screen. No ratings, saved projects, publication, permissions or recognition were changed during these checks.
+
+The source was recovered from the existing `anevum-native-project-player-v006-immersive` Worker, public version `5c6d809e-25eb-43a0-bb2b-92c3ab064daf`, deployment `e3ba8624-0b84-4146-a4a0-30c2e784a530`. Its only binding is `UPSTREAM` to the existing apex. The existing community asset Worker calls it; the defect is outside the canonical React player. The recovered baseline is retained in Git commit `69c827dea97edda5f9301f76f7922a466e8af411`.
+
+The prepared source patch keeps one connected player host throughout expansion and exit. Modern browsers use the top layer; older browsers temporarily remove ancestor clipping and restore the prior styles on exit. Sandbox and request/response scope remain unchanged. Browser regression coverage exercises 1440/390/320, both presentation paths, a full-size creator viewport, visible controls, exit button, Escape, Back, focus restoration and explicit restart. A deliberate same-URL reload must fail on lost project state. These are isolated synthetic checks; hosted results belong to the PR and do not establish live release acceptance.
+
+This legacy patch has **not been uploaded or deployed**. The public Worker and all existing release gates remain unchanged. The protected apex entry still requires Cloudflare Access sign-in, and the earlier secure sign-in request was rejected by automatic approval review because the workspace was out of credits. No retry or bypass was used.
+
 ## Release-readiness checklist
 
 A source test is not live acceptance. Every live result must record source, immutable version, account role, browser/device, time, evidence and outcome.
@@ -58,6 +72,7 @@ A source test is not live acceptance. Every live result must record source, immu
 | Signup | New independent tester receives OTP, completes onboarding, signs out/in and recovers access | Live health ready/open; full journey pending |
 | Creator lifecycle | Private upload -> exact playtest -> save/reload -> submit -> independent review -> founder-approved publication | Synthetic lifecycle passed; genuine acceptance pending |
 | Player/discovery | Approved exact release plays on isolated origin and appears in Discover/profile; private/rejected/expired content does not | Source tested; final live journey pending |
+| Player continuity | Expanding/exiting preserves the actual running document and state; only explicit restart resets it | Native regression strengthened; legacy public defect patched in source, undeployed |
 | Data recovery | Reviewed backup/restore and version rollback retain projects, originals, receipts, purchases, recognition and entitlements | Prior evidence retained; final-release reconciliation pending |
 | Content | Replace public test copy/artwork with founder-approved accurate material; verify ownership/rights | Founder editorial decision required |
 | Alpha communications | Final live capability list, deep links, screenshots, feedback route and founder go/no-go | Drafts only |

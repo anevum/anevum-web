@@ -99,6 +99,35 @@ jobs:
           JS
           echo 'V095_NATIVE_STUDIO=COMPILED_REACT_SYNTHETIC_QA_ONLY' >> "$GITHUB_STEP_SUMMARY"
           echo 'PRODUCTION_DEPLOY=NONE; AUTHENTICATED_LIVE_ACCEPTANCE=NOT_INFERRED' >> "$GITHUB_STEP_SUMMARY"
+      - name: Verify existing legacy player preserves live state and detects same-URL reloads
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check creator-v1/operations/anevum-native-project-player-v006.mjs
+          node --test creator-v1/test/legacy-player-worker-v095.test.mjs
+          node creator-v1/test/portal-offline-preview.mjs > "$RUNNER_TEMP/native-v095-evidence/legacy-fixture.log" 2>&1 &
+          fixture=$!
+          trap 'kill "$fixture" 2>/dev/null || true' EXIT
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          if node creator-v1/test/capture-native-creator-v095.mjs --chrome "$chrome" --output "$RUNNER_TEMP/native-v095-evidence/legacy-negative" --legacy-player-only --simulate-player-reload; then
+            echo 'Same-URL reload incorrectly passed the continuity test'; exit 1
+          fi
+          node --input-type=module - "$RUNNER_TEMP/native-v095-evidence/legacy-negative/failure.json" <<'JS'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const result=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          assert.ok(result.error.includes('LEGACY_PLAYER_STATE_LOST'),'Negative control must fail on lost project state');
+          JS
+          node creator-v1/test/capture-native-creator-v095.mjs --chrome "$chrome" --output "$RUNNER_TEMP/native-v095-evidence/legacy" --legacy-player-only
+          node --input-type=module - "$RUNNER_TEMP/native-v095-evidence/legacy/acceptance.json" <<'JS'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const result=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          assert.equal(result.status,'PASS');assert.equal(result.syntheticOnly,true);
+          assert.equal(result.physicalDeviceAcceptance,false);assert.equal(result.legacyPlayerOnly,true);
+          assert.equal(result.cases.length,6);
+          assert.ok(result.cases.every(x=>x.passed&&x.frameAndStatePreserved&&x.escape&&x.back&&x.restart));
+          JS
       - name: Verify release source strictly for the V095 candidate, never imply approval of later frontend changes
         shell: bash
         env:
