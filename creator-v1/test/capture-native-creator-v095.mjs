@@ -54,7 +54,11 @@ try{
    const u=new URL(p.request.url);
    if(u.origin==='https://anevum-package-alpha-v003-runtime.devonakins.workers.dev')await client.send('Fetch.fulfillRequest',{requestId:p.requestId,responseCode:200,responseHeaders:[{name:'content-type',value:'text/html'},{name:'content-security-policy',value:"sandbox allow-scripts allow-pointer-lock; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'"}],body:Buffer.from(demo).toString('base64')});
    else await client.send('Fetch.failRequest',{requestId:p.requestId,errorReason:'BlockedByClient'});
-  }catch(e){exceptions.push('Interception: '+e.message);}
+   }catch(e){
+  // Chromium can cancel a paused request during navigation. A late CDP
+  // response cannot use its now-invalid interception ID; fail closed.
+  if(!/Invalid InterceptionId/.test(String(e?.message||e)))exceptions.push('Interception: '+e.message);
+ }
  });
  await client.send('Fetch.enable',{patterns:[{urlPattern:'https://*',requestStage:'Request'}]});
  evaluate=async(expression,sessionId)=>{const value=await client.send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true,userGesture:true},sessionId);if(value.exceptionDetails)throw Error(value.exceptionDetails.exception?.description||value.exceptionDetails.text);return value.result?.value;};
