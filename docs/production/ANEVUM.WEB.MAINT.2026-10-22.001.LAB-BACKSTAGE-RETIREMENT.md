@@ -26,6 +26,17 @@ The Lab is an owner-only project sandbox. The deployed Backstage case desk is a 
 5. Updates the visible directory count, console help, responsive list rows and Worker `/health` project count.
 6. Fails closed on missing route/host invariants, ambiguous anchors and repeated application. No database writes, staff mutations, policy changes or public release are included.
 
+## Inactive Cloudflare candidate — October 22, 2026
+
+A **new private Lab Worker version has been uploaded but not deployed**:
+
+- Candidate version: `782ee14c-3dfc-4864-ae03-0ee9eda24205` (V11), created 19:02 UTC.
+- Existing live V7: `3e3b94de-3b7f-473b-9f59-18a27b3eff61` remains at **100%**, and its previous deployment ID is unchanged. The new version receives no traffic.
+- Rebuilt from the **full current 14-module deployed bundle**, rather than the stale GitHub V4 branch. The deterministic transform applied only to the private Worker/terminal modules. Retained Fold, RHEN, Transcosmic, Cadets, old case export/restore and moderator archive.
+- Compile/version upload passed, with 0 bindings and existing compatibility date `2026-10-13`. No route, Access-policy or public-site change.
+- Full source-only safety workflow [39836124989](https://github.com/anevum/anevum-web/actions/runs/39836124989), previous private Lab source verification [39836125065](https://github.com/anevum/anevum-web/actions/runs/39836125065) and Creator V1 verification [39836124950](https://github.com/anevum/anevum-web/actions/runs/39836124950) completed successfully.
+- This does **not** constitute founder visual approval on a real iPhone or desktop, and is not authorization for a 100% Lab promotion. The old browser-local case data is not in this Worker or the repo.
+
 ## Required next verification and promotion gates
 
 - Verify transform output on the **exact current deployed Worker module pair**, not only an older Git branch.
