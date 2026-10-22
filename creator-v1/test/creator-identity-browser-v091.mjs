@@ -15,6 +15,19 @@ export async function captureCreatorIdentityV091({client,base,evaluate,until,scr
     })`);
     assert.equal(state.level,'05');assert.equal(state.overflow,false);
     assert.equal(state.privateRewardRequests,0,'Public identity requested owner rewards');
+
+    // V104 first-visit regression: on real compiled React, the public member
+    // display name must wrap on phones instead of reducing identity to "...".
+    if(width<=390){
+      const name=await evaluate('(()=>{const el=document.querySelector(".ms-public .av65-player-card--featured .av65-name-line .av61-member-name");if(!el)return null;const css=getComputedStyle(el);return {text:el.textContent,whiteSpace:css.whiteSpace,lineClamp:css.webkitLineClamp,clientWidth:el.clientWidth,scrollWidth:el.scrollWidth,height:el.getBoundingClientRect().height}})()');
+      assert.ok(name,'Featured public identity name must exist');
+      assert.equal(name.text,'SYNTHETIC / v091_public');
+      assert.equal(name.whiteSpace,'normal','Public identity must wrap on a narrow phone');
+      assert.equal(name.lineClamp,'2','Public identity may use two legible lines');
+      assert.ok(name.scrollWidth<=name.clientWidth+2,'Public identity text overflows mobile card');
+      assert.ok(name.height>=36,'Public identity remains collapsed to a single clipped line');
+    }
+
     await screenshot('v091-public-art-fallback-'+width);
 
     // Client-side navigation deliberately reuses the public-world route. A
