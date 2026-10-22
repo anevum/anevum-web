@@ -15,7 +15,7 @@ export interface StudioEntryDependencies {
 }
 
 /**
- * The list route verifies identity once and lets StudioLibrary load its own
+ * The list route verifies identity and service readiness, then lets StudioLibrary load its own
  * protected inventory, so one stalled list request cannot hide the entire hub.
  * Editor and reviewer routes retain the existing health+capability gate.
  * Deadline, cancellation and account remount remain the caller's responsibility.
@@ -24,11 +24,10 @@ export async function resolveStudioEntry(
  memberId:string,mode:StudioEntryMode,signal:AbortSignal,deps:StudioEntryDependencies
 ):Promise<StudioEntryResult>{
  const [profile,health]=await Promise.all([
-  deps.profile(signal),
-  mode==='list'?Promise.resolve(null):deps.health(signal)
+  deps.profile(signal),deps.health(signal)
  ]);
  if(profile.memberId!==memberId)throw Error('Member identity changed. Sign in again.');
- if(mode!=='list'&&!health?.studioReady)return {phase:'unavailable'};
+ if(!health.studioReady)return {phase:'unavailable'};
  if(!profile.profile?.handle)return {phase:'incomplete'};
  if(mode==='list')return {phase:'ready',identity:profile.profile,uploads:false,canReview:false};
  const capabilities=await deps.list(signal);
