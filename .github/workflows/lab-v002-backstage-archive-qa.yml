@@ -1,0 +1,33 @@
+name: ANEVUM Lab V002 Backstage Archive Safety
+on:
+  pull_request:
+    paths:
+      - 'lab/operations/v002-archive-backstage.mjs'
+      - 'lab/operations/v002-archive-backstage.test.mjs'
+      - '.github/workflows/lab-v002-backstage-archive-qa.yml'
+  push:
+    branches:
+      - 'ops/lab-backstage-archive-20261022-001'
+    paths:
+      - 'lab/operations/v002-archive-backstage.mjs'
+      - 'lab/operations/v002-archive-backstage.test.mjs'
+      - '.github/workflows/lab-v002-backstage-archive-qa.yml'
+permissions:
+  contents: read
+jobs:
+  isolated-lab-archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check deterministic Lab patch and test syntax
+        run: |
+          node --check lab/operations/v002-archive-backstage.mjs
+          node --check lab/operations/v002-archive-backstage.test.mjs
+      - name: Execute actual-module archived-workspace and fail-closed checks
+        run: node --test lab/operations/v002-archive-backstage.test.mjs
