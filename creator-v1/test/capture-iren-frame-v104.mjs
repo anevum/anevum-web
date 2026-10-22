@@ -8,7 +8,7 @@ import {join} from 'node:path';
 const [chrome,base,output]=process.argv.slice(2);
 assert.ok(chrome&&/^http:\/\/127\.0\.0\.1:\d+$/.test(base||'')&&output);
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
-async function until(fn,label){for(let i=0;i<180;i++){if(await fn())return;await delay(100);}throw Error(label);}
+async function until(fn,label,maxAttempts=180){for(let i=0;i<maxAttempts;i++){if(await fn())return;await delay(100);}throw Error(label);}
 mkdirSync(output,{recursive:true});
 const profile=mkdtempSync(join(tmpdir(),'iren-v104-'));
 const child=spawn(chrome,['--headless=new','--no-sandbox','--no-first-run','--disable-dev-shm-usage','--disable-background-networking','--use-angle=swiftshader','--enable-unsafe-swiftshader','--remote-debugging-port=0','--remote-allow-origins=*','--user-data-dir='+profile,'about:blank'],{stdio:['ignore','ignore','pipe']});
@@ -17,7 +17,13 @@ child.stderr.on('data',v=>{log+=v});
 const cases=[],exceptions=[];
 try{
  await until(async()=>{try{return (await fetch(base+'/__ready')).ok}catch{return false}},'Fixture unavailable');
- const file=join(profile,'DevToolsActivePort');await until(()=>existsSync(file),'Browser unavailable');
+ const file=join(profile,'DevToolsActivePort');
+ // A loaded CI runner may need longer to expose DevTools; do not weaken any
+ // frame, GPU, fallback, responsive or screenshot assertion below.
+ try{await until(()=>existsSync(file),'Browser unavailable',600)}
+ catch(error){throw Error('V104_CHROMIUM_STARTUP: '+
+  (child.exitCode!==null?'exit='+child.exitCode:'missing DevTools port')+
+  ' / stderr='+log.slice(-1600),{cause:error});}
  const port=readFileSync(file,'utf8').split('\n')[0];
  const target=(await (await fetch('http://127.0.0.1:'+port+'/json/list')).json()).find(x=>x.type==='page');
  socket=new WebSocket(target.webSocketDebuggerUrl);
