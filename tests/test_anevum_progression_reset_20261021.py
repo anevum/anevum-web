@@ -3,6 +3,7 @@ import importlib.util
 from pathlib import Path
 import sqlite3
 import unittest
+from unittest.mock import patch
 
 TARGET = Path(__file__).resolve().parents[1] / 'scripts/ops/anevum-progression-reset-20261021.py'
 spec = importlib.util.spec_from_file_location('xp_reset', TARGET)
@@ -54,6 +55,44 @@ def sql_export(d):
 
 
 class ResetTests(unittest.TestCase):
+    def worker_fixture(self, flag='false'):
+        return {
+            '/deployments': {'deployments':[{'versions':[{'version_id':ops.ACTIVE_APEX_VERSION,'percentage':100}]}]},
+            '/versions/'+ops.ACTIVE_APEX_VERSION: {'id':ops.ACTIVE_APEX_VERSION,'resources':{'bindings':[
+                {'name':'MEMBER_DB','type':'d1','id':ops.CANONICAL_DB},
+                {'name':'COMMUNITY_DB','type':'d1','id':ops.COMMUNITY_DB},
+                {'name':'CANONICAL_XP_TEST_ENABLED','type':'plain_text','text':flag}]}},
+            '/database/'+ops.CANONICAL_DB: {'uuid':ops.CANONICAL_DB,'name':ops.NAME},
+            '/database/'+ops.COMMUNITY_DB: {'uuid':ops.COMMUNITY_DB,'name':'anevum-creator-v1-staging'},
+        }
+
+    def check_worker(self, responses, **kwargs):
+        def fake_api(path, **_):
+            for suffix, value in responses.items():
+                if path.endswith(suffix):
+                    return value
+            self.fail('unexpected endpoint: '+path)
+        context={'GITHUB_REPOSITORY':'anevum/anevum-web','GITHUB_REF':'refs/heads/main',
+                 'GITHUB_ACTOR':'anevum','GITHUB_SHA':'a'*40}
+        with patch.dict(ops.os.environ,context), patch.object(ops,'api',side_effect=fake_api), \
+             patch.object(ops,'query',return_value=[{'n':0}]):
+            return ops.check_worker_and_database(**kwargs)
+
+    def test_checks_live_version_bindings_without_latest_settings(self):
+        self.assertTrue(self.check_worker(self.worker_fixture())['public_version_verified'])
+
+    def test_active_binding_drift_blocks_even_if_other_settings_are_valid(self):
+        responses=self.worker_fixture()
+        responses['/versions/'+ops.ACTIVE_APEX_VERSION]['resources']['bindings'][0]['id']='wrong-database'
+        with self.assertRaises(ops.Blocked):
+            self.check_worker(responses)
+
+    def test_prepare_can_inventory_enabled_test_but_execution_requires_disabled(self):
+        self.assertTrue(self.check_worker(self.worker_fixture('true'))['xp_test_config_enabled_before_reset'])
+        with self.assertRaisesRegex(ops.Blocked,'disable the live XP test endpoint'):
+            self.check_worker(self.worker_fixture('true'),require_test_disabled=True)
+        self.assertFalse(self.check_worker(self.worker_fixture(),require_test_disabled=True)['xp_test_config_enabled_before_reset'])
+
     def test_restore_snapshot_and_simulated_reset_preserve_recognition_and_entitlements(self):
         d=fixture()
         raw=sql_export(d)
