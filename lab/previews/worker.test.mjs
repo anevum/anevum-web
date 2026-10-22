@@ -29,6 +29,9 @@ test('actual release-candidate handoff is explicit, signed-in and outside the sy
   requiresLogin:true,requiresActiveWindow:true,
   availability:'TIME_LIMITED_NOT_ASSERTED',builtInThisWorker:false,productionWrites:false
  });
+ assert.equal(json.release,'V001.1');
+ const health=await(await req('/previews/health')).json();
+ assert.equal(health.version,'v001.1');
  assert.equal((await req('/__enter/v095-v096')).status,404);
  assert.equal((await req('/previews/__enter/v095-v096')).status,404);
 });
