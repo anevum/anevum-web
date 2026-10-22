@@ -17,6 +17,19 @@ const response=(body,status=200)=>Response.json(body,{status,headers:{
  'content-security-policy':"default-src 'none'; frame-ancestors 'none'"
 }});
 const error=(status,message)=>response({error:message},status);
+// The controller-to-canonical session hop must settle before the browser's
+// existing 15s Studio read deadline. Aborting is best-effort; the race also
+// bounds mocked or remote service bindings that ignore AbortSignal.
+export async function nativeMemberWithDeadline(read,ms=9000){
+ if(!Number.isSafeInteger(ms)||ms<1||ms>9000)throw Error('Invalid native identity deadline');
+ const controller=new AbortController();
+ let timer;
+ const deadline=new Promise((_,reject)=>{
+  timer=setTimeout(()=>{controller.abort();reject(Error('NATIVE_AUTH_DEADLINE'));},ms);
+ });
+ try{return await Promise.race([Promise.resolve().then(()=>read(controller.signal)),deadline]);}
+ finally{clearTimeout(timer);}
+}
 function coverURL(id){return safeId(id)?'/upload/v3/api/v1/packages/covers/'+id:null;}
 export function nativeProjectRecord(p,privateFields=false){
  const result={id:safeId(p.id),title:text(p.title,100),summary:text(p.summary,500),
@@ -47,7 +60,17 @@ export async function nativeStudioApi(req,env,h){
  if(isProject&&!safeId(id))return error(404,'Project unavailable.');
  // No caller-supplied owner or reviewer ID is accepted. The shared controller
  // resolves its real canonical session through the AUTH service binding.
- const user=await h.member(req,env);
+ // Public release details may degrade to guest if identity is unavailable,
+ // but private session/library/review and preview requests must fail closed.
+ const privateIdentity=!isProject||url.search==='?preview=1';
+ let user;
+ try{
+  user=await nativeMemberWithDeadline(signal=>
+   h.member(req,env,{strictAvailability:privateIdentity,signal}));
+ }catch{
+  if(privateIdentity)return error(503,'Member verification is temporarily unavailable. Retry; no permissions were changed.');
+  user=null;
+ }
  const canUpload=!!user&&h.pilot(env,user.id),canReview=!!user&&h.staff(env,user.id);
  if(!isProject&&!user)return error(401,'Sign in with your existing ANEVUM account.');
  if(resource==='session')return response({contract:'native-creator-v095',memberId:user.id,
