@@ -50,9 +50,12 @@ export async function recognitionReady(db){
  }catch{return false}
 }
 export async function memberRecognitionState(db,userId){
+ const reset=await progressionReset(db);
  const [pref,milestones,issued]=await Promise.all([
   db.prepare('SELECT badge_mode,badge_ids_json,medal_id,ribbon_ids_json,aura,revision FROM member_recognition_preferences WHERE user_id=?').bind(userId).first(),
-  getRows(db,'SELECT milestone,earned_at FROM member_space_milestones WHERE user_id=?',userId),
+  getRows(db,reset?
+   'SELECT milestone,earned_at FROM member_progression_epoch_milestones WHERE epoch=1 AND user_id=?':
+   'SELECT milestone,earned_at FROM member_space_milestones WHERE user_id=?',userId),
   getRows(db,'SELECT kind,recognition_id,earned_at FROM member_recognition_grants WHERE user_id=? AND revoked_at IS NULL ORDER BY earned_at DESC',userId)
  ]);
  return buildRecognitionState(pref,milestones,issued);
@@ -121,9 +124,12 @@ export async function publicRecognitionMap(db,ownerIds){
  const ids=uniq(ownerIds.filter(id=>typeof id==='string'&&id.length>=1)).slice(0,25);
  if(!ids.length||!await recognitionReady(db))return new Map();
  const marks=ids.map(()=>'?').join(',');
+ const reset=await progressionReset(db);
  const [prefs,milestones,grants]=await Promise.all([
   getRows(db,'SELECT user_id,badge_mode,badge_ids_json,medal_id,ribbon_ids_json,aura,revision FROM member_recognition_preferences WHERE user_id IN ('+marks+')',...ids),
-  getRows(db,'SELECT user_id,milestone,earned_at FROM member_space_milestones WHERE user_id IN ('+marks+')',...ids),
+  getRows(db,(reset?
+   'SELECT user_id,milestone,earned_at FROM member_progression_epoch_milestones WHERE epoch=1 AND user_id IN (':
+   'SELECT user_id,milestone,earned_at FROM member_space_milestones WHERE user_id IN (')+marks+')',...ids),
   getRows(db,'SELECT user_id,kind,recognition_id,earned_at FROM member_recognition_grants WHERE revoked_at IS NULL AND user_id IN ('+marks+')',...ids)
  ]);
  const group=items=>{
