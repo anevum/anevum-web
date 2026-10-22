@@ -50,6 +50,9 @@ test('V104 is a narrowly scoped, readable mobile treatment with nondecorative re
   assert.match(recovery,/\.ms-public-wall-feedback button:focus-visible/);
   assert.match(recovery,/min-height:44px/);
   assert.match(recovery,/\.ms-public \.ms-public-bio/);
+  assert.match(recovery,/\.ms-public \.av92-player-card\.av65-player-card--featured \.av65-name-line \.av61-member-name/);
+  assert.match(recovery,/white-space:normal!important/);
+  assert.match(recovery,/-webkit-line-clamp:2/);
   assert.doesNotMatch(home+recovery,/image-rendering:\s*pixelated|url\(https?:/);
 });
 
