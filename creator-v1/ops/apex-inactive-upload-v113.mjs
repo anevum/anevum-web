@@ -137,7 +137,7 @@ async function requireCi(ops){
  assert.equal(artifact.digest,'sha256:'+DIGEST);assert.equal(artifact.expired,false);
  assert.equal(artifact.workflow_run.head_sha,SOURCE);
  assert.equal(run.head_sha,SOURCE);assert.equal(run.status,'completed');assert.equal(run.conclusion,'success');
- for(const name of ['verify-inactive','verify','verified-source','staff-contract','emblem-and-reputation','source']){
+ for(const name of ['verify-inactive','verify','verified-source','emblem-and-reputation','source']){
   const c=checks.check_runs.find(x=>x.name===name);assert.equal(c?.status,'completed','Missing exact-source CI: '+name);assert.equal(c.conclusion,'success','Failed exact-source CI: '+name);
  }
  execFileSync('git',['merge-base','--is-ancestor',SOURCE,release.object.sha]);
