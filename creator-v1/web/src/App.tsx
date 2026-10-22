@@ -28,7 +28,7 @@ import {Phase1MemberPage} from "./pages/Phase1MemberPage";
 import {Phase1PublicMemberPage} from "./pages/Phase1PublicMemberPage";
 
 import {AnevumNotifications} from './components/AnevumNotifications';
-import {TheButtonPage} from './pages/TheButtonPage';
+// Retired test XP calibration remains disabled.
 import {SupporterPage} from './pages/SupporterPage';
 import SupporterTransparencyPage from './pages/SupporterTransparencyPage';
 import SupporterCollectionPage from './pages/SupporterCollectionPage';
@@ -112,7 +112,7 @@ export default function App(){
       <Route path="library" element={<MemberLibraryPage/>}/>
 
     </Route>
-    <Route path="thebutton" element={<TheButtonPage/>}/>
+    <Route path="thebutton" element={<Navigate to="/levels" replace/>}/>
     <Route path="levels" element={<LevelsPage/>}/>
     <Route path="recognition" element={<RecognitionRegistryPage/>}/>
     <Route path="auras" element={<AuraCodexPage/>}/>
