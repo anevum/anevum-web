@@ -45,6 +45,23 @@ export async function captureCreatorIdentityV091({client,base,evaluate,until,scr
       assert.equal(await evaluate('!!document.querySelector(".ms-public,.level-emblem")'),false,'Private/unavailable identity leaked public card details');
     }
     await screenshot('v091-profile-outage-recovery-'+width);
+    // A failing wall must not hide the public identity or force a reload of
+    // its successful profile/space requests. Retry only the failed read.
+    const recoveryHandle='v091_wall_'+width;
+    const publicPath='/api/v1/members/'+recoveryHandle;
+    await client.send('Page.navigate',{url:base+'/creator/@'+recoveryHandle});
+    await until(()=>evaluate('!!document.querySelector(".ms-public-wall-feedback button")'));
+    assert.equal(await evaluate('document.querySelector("#av12-world-heading")?.textContent'),'SYNTHETIC / '+recoveryHandle);
+    assert.equal(await evaluate('!!document.querySelector(".ms-public-bio,.ms-public .ms-card")'),true);
+    const successfulCoreReads=()=>evaluate(`performance.getEntriesByType('resource').filter(e=>[${JSON.stringify(publicPath)},${JSON.stringify(publicPath+'/space')}].includes(new URL(e.name).pathname)).length`);
+    const beforeRetry=await successfulCoreReads();
+    assert.equal(beforeRetry,2,'One successful profile and space read each');
+    await screenshot('v104-public-wall-unavailable-'+width);
+    await evaluate('document.querySelector(".ms-public-wall-feedback button").click()');
+    await until(()=>evaluate('!!document.querySelector(".ms-public .ms-wall")&&!document.querySelector(".ms-public-wall-feedback")'));
+    assert.equal(await successfulCoreReads(),beforeRetry,'Wall retry must not refetch successful public identity');
+    assert.equal(await evaluate('document.documentElement.scrollWidth>innerWidth+1'),false);
+    await screenshot('v104-public-wall-recovered-'+width);
     console.log('V091_CREATOR_IDENTITY_AND_ART_'+width+'=PASS');
   }
 }

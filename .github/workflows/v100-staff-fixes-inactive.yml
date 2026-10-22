@@ -1,0 +1,266 @@
+# Owner-authorized protected V100 staff-fix candidate. It does not deploy to
+# production traffic or modify routes, cookies, Access, D1 or member records.
+name: ANEVUM Integrated Platform Protected Candidate
+on:
+  push:
+    branches:
+      - ops/platform-candidate-20261022-001
+permissions:
+  contents: read
+concurrency:
+  group: anevum-v100-staff-fixes-inactive-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  build-and-qa:
+    if: >-
+      github.repository == 'anevum/anevum-web' &&
+      github.actor == 'anevum' &&
+      github.event.head_commit.message == 'release(v100-staff-fixes): upload inactive only'
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      VITE_IREN_SPATIAL_GUIDE: 'true'
+      VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
+      VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
+      VITE_CREATOR_WORKBENCH_ALPHA: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check immutable reviewed merge and forbid app or release-policy changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = 'anevum/anevum-web'
+          test "$GITHUB_REF" = 'refs/heads/ops/platform-candidate-20261022-001'
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git merge-base --is-ancestor 7630a8b2fef77571862a51417499021d4c162bd2 HEAD
+          git diff --name-only 7630a8b2fef77571862a51417499021d4c162bd2 HEAD > /tmp/anevum-approved-changes.txt
+          while IFS= read -r path; do
+            case "$path" in
+              .github/workflows/v100-staff-fixes-inactive.yml|creator-v1/ops/v100-staff-fixes-inactive.mjs|.github/release-approvals/v100-staff-fixes-inactive-upload.json|docs/production/ANEVUM.ANEVUM.UPDATE.2026-10-22.001.PLATFORM-COMPLETION.md|creator-v1/test/portal-offline-preview.mjs|creator-v1/test/creator-identity-browser-v091.mjs|.github/release-evidence/platform-recovery-protected-20261022.json|creator-v1/operations/platform-acceptance-entry-20261022.mjs) ;;
+              *) echo "Unreviewed change in protected candidate: $path"; exit 1 ;;
+            esac
+          done < /tmp/anevum-approved-changes.txt
+      - name: Build verified V100 React/IREN source and test sensitive auth routes
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          node --check creator-v1/ops/v100-staff-fixes-inactive.mjs
+          node --experimental-strip-types --test creator-v1/test/v100-forum-review-access-transport.test.mjs
+          node --test creator-v1/test/v100-legacy-command-entry.test.mjs creator-v1/test/private-read-recovery-v103.test.mjs creator-v1/test/studio-migration-rehearsal-v103.test.mjs
+          node --test creator-v1/test/retire-xp-test-page-v105.test.mjs creator-v1/test/progression-v031.test.mjs creator-v1/test/first-visit-public-v104.test.mjs creator-v1/test/iren-living-v088.test.mjs creator-v1/test/iren-spatial-v097.test.mjs creator-v1/test/staff-observatory-cleanup-v104.test.mjs
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          test -s creator-v1/dist/web/index.html
+          test -z "$(find creator-v1/dist/web -name '*.map' -print -quit)"
+      - name: Build all 152 original earned Evolution assets without substitutions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install numpy==2.2.6 scipy==1.15.3 Pillow==11.2.1
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libgl1-mesa-dri
+          (
+            cd design/evolution-v059
+            mkdir -p artwork/{native,textures,vector,masters,web,compact} docs dist previews
+            python src/export_native.py
+            python src/render_web.py
+            python src/build.py
+          )
+          python creator-v1/ops/install-evolution-v060.py
+          npm run build:creator-v1-web
+          node --test creator-v1/test/v100-apex-root-assets.test.mjs
+          node creator-v1/test/v100-apex-root-assets.test.mjs creator-v1/dist/web
+          test -z "$(find creator-v1/dist/web -name '*.map' -print -quit)"
+      - name: Run real root-path browser checks at 320, 390 and 1440 pixels
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$chrome"
+          mkdir -p evidence/v100-staff-fixes
+          ANEVUM_APEX_ROOT_QA=1 node creator-v1/test/portal-offline-preview.mjs > evidence/v100-staff-fixes/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 80); do
+            if curl --fail --silent --max-time 3 http://127.0.0.1:4180/__ready > /dev/null; then ready=1; break; fi
+            sleep 0.3
+          done
+          test "$ready" = 1
+          node creator-v1/test/capture-v100-apex-root.mjs "$chrome" http://127.0.0.1:4180 evidence/v100-staff-fixes
+          test -s evidence/v100-staff-fixes/acceptance.json
+          test -s evidence/v100-staff-fixes/apex-root-320.png
+          test -s evidence/v100-staff-fixes/apex-root-390.png
+          test -s evidence/v100-staff-fixes/apex-root-1440.png
+      - name: Test compiled Studio recovery and silent IREN GPU failure before upload
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run build:creator-v1-web:staging
+          node creator-v1/test/portal-offline-preview.mjs > evidence/v100-staff-fixes/studio-fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          node creator-v1/test/capture-iren-frame-v104.mjs "$chrome" http://127.0.0.1:4178 evidence/v100-staff-fixes/iren
+          node creator-v1/test/capture-native-creator-v095.mjs --chrome "$chrome" --output evidence/v100-staff-fixes/studio --recovery
+      - name: Hash the exact tested immutable apex-root asset tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'JS'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          import {execFileSync} from 'node:child_process';
+          import {verifyCandidateAssets} from './creator-v1/ops/v095-inactive-candidate-gate.mjs';
+          import {verifyApexRootAssets} from './creator-v1/test/v100-apex-root-assets.test.mjs';
+          const build=verifyCandidateAssets('creator-v1/dist/web');
+          const root=verifyApexRootAssets('creator-v1/dist/web');
+          const browser=JSON.parse(readFileSync('evidence/v100-staff-fixes/acceptance.json','utf8'));
+          if(root.status!=='APEX_ROOT_ASSETS_PASS'||browser.status!=='PASS'||
+            browser.results?.map(x=>x.width).join(',')!=='320,390,1440'||
+            browser.results?.some(x=>!x.rootMounted||!x.cssLoaded||!x.cssJsHttp200))
+            throw Error('Root browser or static asset acceptance failed');
+          const head=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+          const manifest={
+            release_source:'7630a8b2fef77571862a51417499021d4c162bd2',
+            qa_workflow_head:head,asset_base:'/',entry:'index.html',
+            flags:{VITE_IREN_SPATIAL_GUIDE:true,VITE_NATIVE_CREATOR_STUDIO_V095:true,
+              VITE_PACKAGE_CREATOR_GALLERY_V010:true},
+            asset_manifest_sha256:build.sha256,asset_count:build.assets.length,earned_media_count:152,
+            syntheticOnly:true,authenticatedAcceptance:false,physicalSafariAcceptance:false,
+            productionActivated:false,cloudflareCandidate:null
+          };
+          writeFileSync('evidence/v100-staff-fixes/build.json',JSON.stringify(manifest,null,2)+'\n');
+          console.log(JSON.stringify({status:'ROOT_COMPILED_ASSETS_PASS',files:build.assets.length,
+            manifest_sha256:build.sha256,root_base:'/',synthetic:true}));
+          JS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v100-staff-fixes-apex-root
+          path: creator-v1/dist/web/
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v100-staff-fixes-qa-evidence
+          path: evidence/v100-staff-fixes/
+          if-no-files-found: error
+          retention-days: 7
+  inactive-upload:
+    needs: build-and-qa
+    if: >-
+      github.repository == 'anevum/anevum-web' &&
+      github.actor == 'anevum' &&
+      github.ref == 'refs/heads/ops/platform-candidate-20261022-001' &&
+      github.event.head_commit.message == 'release(v100-staff-fixes): upload inactive only'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      V100_COMPILED_ROOT: /tmp/anevum-v100/candidate
+      V100_BUILD_RECORD: /tmp/anevum-v100/evidence/build.json
+      V100_BEFORE_FILE: /tmp/anevum-v100/before.json
+      V100_WRANGLER_FILE: /tmp/anevum-v100/wrangler-inactive.json
+      V100_RECEIPT_FILE: /tmp/anevum-v100/inactive-receipt.json
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Require exact owner marker-only authorization commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_ACTOR" = 'anevum'
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git show -s --format=%s HEAD)" = 'release(v100-staff-fixes): upload inactive only'
+          test "$(git diff-tree --no-commit-id --name-only -r HEAD)" = '.github/release-approvals/v100-staff-fixes-inactive-upload.json'
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const a=JSON.parse(readFileSync('.github/release-approvals/v100-staff-fixes-inactive-upload.json','utf8'));
+          assert.deepEqual(a,{
+            reviewed_merge:'7630a8b2fef77571862a51417499021d4c162bd2',
+            release_branch:'release/v084-continuance-approved-20261019',
+            worker:'anevum-apex-prelaunch-gateway',
+            old_public_version:'93cc7f07-cf39-457e-af69-c9f6f4c02d25',
+            old_protected_version:'7b9dbcdf-0fbd-4cbc-8e98-184724324553',
+            allow_inactive_upload:true,allow_public_promotion:false,
+            allow_route_changes:false,allow_policy_changes:false,
+            allow_database_writes:false,allow_creator_uploads:false,
+            founder_authorization:'approved protected test candidate only'
+          });
+          JS
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: anevum-v100-staff-fixes-apex-root
+          path: /tmp/anevum-v100/candidate
+      - uses: actions/download-artifact@v4
+        with:
+          name: anevum-v100-staff-fixes-qa-evidence
+          path: /tmp/anevum-v100/evidence
+      - name: Require successful exact application source CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          const source='7630a8b2fef77571862a51417499021d4c162bd2';
+          const response=await fetch('https://api.github.com/repos/anevum/anevum-web/actions/runs?head_sha='+source+'&per_page=100',{headers:{authorization:'Bearer '+process.env.GH_TOKEN,accept:'application/vnd.github+json'},signal:AbortSignal.timeout(30000)});
+          assert.equal(response.ok,true);
+          const runs=(await response.json()).workflow_runs;
+          for(const name of ['ANEVUM Creator V1 Verify','ANEVUM V095 Native Creator Integration QA','ANEVUM V096 Unlisted Public Creator Alpha QA','ANEVUM V103 Private Studio Recovery QA','ANEVUM V084 Continuance Integrated Release QA','ANEVUM V083 Combined Auth + D1 Recovery Safety','ANEVUM V091 / Aura Codex Real React Browser QA']){
+            assert.ok(runs.some(x=>x.head_sha===source&&x.name===name&&x.status==='completed'&&x.conclusion==='success'),'Exact source CI incomplete or failing: '+name);
+          }
+          JS
+      - name: Validate exact browser-tested files and pinned Cloudflare state
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          test -s "$V100_COMPILED_ROOT/index.html"
+          test -s "$V100_BUILD_RECORD"
+          test -s "/tmp/anevum-v100/evidence/acceptance.json"
+          node --check creator-v1/ops/v100-staff-fixes-inactive.mjs
+          node creator-v1/ops/v100-staff-fixes-inactive.mjs before
+      - name: Upload one immutable INACTIVE apex version without public deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s "$V100_BEFORE_FILE"
+          test -s "$V100_WRANGLER_FILE"
+          npx wrangler versions upload \
+            --config "$V100_WRANGLER_FILE" \
+            --keep-vars \
+            --strict \
+            --message "ANEVUM XP retirement, V104 Studio IREN and public profile recovery; inactive only; public unchanged"
+      - name: Verify existing public 100 percent, old QA 0 percent and new 0 percent
+        shell: bash
+        run: |
+          set -euo pipefail
+          node creator-v1/ops/v100-staff-fixes-inactive.mjs after
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v100-staff-fixes-inactive-receipt
+          path: /tmp/anevum-v100/inactive-receipt.json
+          if-no-files-found: ignore
+          retention-days: 14

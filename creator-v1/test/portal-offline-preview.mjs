@@ -68,10 +68,11 @@ const FAKE_MEMBER=Object.freeze({
  bio:"An illustrative account for testing layout only. Not a real ANEVUM member."
 });
 const LOCAL_REVIEW_COOKIE="anevum_offline_visual_fixture=1";
+const publicWallFailures=new Set();
 function offlineMember(req,res,url){
   // V091 anonymous public identity fixtures. These are loopback-only records,
   // not authentication, actual members, earned specimens or production data.
-  const publicFixture=/^\/api\/v1\/members\/(v091_public|v091_other|v091_private|v091_offline)(\/.*)?$/.exec(url.pathname);
+  const publicFixture=/^\/api\/v1\/members\/(v091_public|v091_other|v091_private|v091_offline|v091_wall_(?:1440|390|320))(\/.*)?$/.exec(url.pathname);
   if(publicFixture){
     const [,handle,tail='']=publicFixture;
     if(req.method!=='GET')return json(res,{error:'Read-only synthetic fixture'},405);
@@ -82,7 +83,13 @@ function offlineMember(req,res,url){
       headline:'Synthetic public identity',worldTheme:'nocturne',focus:['games']}});
     if(tail==='/space')return json(res,{media:{},awards:[],featuredAwards:[],showStats:true,revision:1,
       stats:{level:5,xp:900,levelStart:750,nextLevel:1200}});
-    if(tail==='/wall')return json(res,{posts:[]});
+    if(tail==='/wall'){
+      if(handle.startsWith('v091_wall_')&&!publicWallFailures.has(handle)){
+        publicWallFailures.add(handle);
+        return json(res,{error:'Synthetic one-time public wall outage'},503);
+      }
+      return json(res,{posts:[]});
+    }
     if(tail==='/rewards/levels/5/card'){
       if(handle==='v091_public')return json(res,{error:'Synthetic media outage'},503);
       res.writeHead(200,{'content-type':'image/svg+xml','cache-control':'no-store'});
