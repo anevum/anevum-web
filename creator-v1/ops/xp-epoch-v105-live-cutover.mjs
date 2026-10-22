@@ -161,20 +161,18 @@ export function patchLiveBundle(input){
  return {source:code,prior_sha256:sha(input),candidate_sha256:sha(code),patched_regions:changes,prior_bytes:Buffer.byteLength(input),candidate_bytes:Buffer.byteLength(code)};
 }
 
-async function api(token,method,path,body){
- const response=await fetch('https://api.cloudflare.com/client/v4'+path,{
-  method,headers:{Authorization:'Bearer '+token,...(body instanceof FormData?{}:body?{'content-type':'application/json'}:{})},
-  ...(body?{body:body instanceof FormData?body:JSON.stringify(body)}:{})
- });
+async function api(token,method,path){
+ assert.equal(method,'GET','Read-only preflight may not write to Cloudflare');
+ const response=await fetch('https://api.cloudflare.com/client/v4'+path,{method:'GET',headers:{Authorization:'Bearer '+token}});
  const data=await response.json();
- assert.ok(response.ok&&data.success!==false,'Cloudflare '+method+' '+path+' failed '+response.status+': '+JSON.stringify(data.errors||[]));
+ assert.ok(response.ok&&data.success!==false,'Cloudflare GET '+path+' failed '+response.status+': '+JSON.stringify(data.errors||[]));
  return data.result;
 }
 function lockBindings(bindings){
  return bindings.map(b=>({name:b.name,type:b.type,value:b.type==='plain_text'?b.text:b.type==='d1'?(b.database_id||b.id):undefined})).sort((a,b)=>a.name.localeCompare(b.name));
 }
 export async function run(mode,token){
- assert.ok(['check','upload-inactive'].includes(mode));
+ assert.equal(mode,'check','This source pin is read-only: deployment must use the pinned original 407-file Wrangler asset manifest');
  assert.ok(typeof token==='string'&&token.length>30,'Missing Cloudflare token');
  const dep=await api(token,'GET',BASE+'/deployments?per_page=1');
  const baseline=dep.deployments?.[0];
@@ -202,52 +200,11 @@ export async function run(mode,token){
  assert.deepEqual(v.resources.script_runtime?.compatibility_flags,['nodejs_compat']);
  const prior=Buffer.from(source.modules[0].content_base64,'base64').toString('utf8');
  const result=patchLiveBundle(prior);
- const meta={
-  main_module:'gateway.js',
-  compatibility_date:'2026-10-17',
-  compatibility_flags:['nodejs_compat'],
-  usage_model:'standard',
-  keep_assets:true,
-  bindings:v.resources.bindings.map(b=>{
-    if(b.type==='secret_text')return {name:b.name,type:'inherit'};
-    if(b.type==='d1')return {name:b.name,type:'d1',database_id:b.database_id||b.id};
-    if(b.type==='assets')return {name:b.name,type:'assets'};
-    if(b.type==='plain_text')return {name:b.name,type:'plain_text',text:b.name==='CANONICAL_XP_TEST_ENABLED'?'false':b.text};
-    throw Error('Unsupported binding type: '+b.name);
-  }),
-  annotations:{'workers/message':'ANEVUM V105 XP epoch reset; protected inactive, preserved production code + assets'}
- };
- assert.equal(meta.bindings.find(b=>b.name==='CANONICAL_XP_TEST_ENABLED')?.text,'false');
- assert.ok(meta.bindings.some(b=>b.name==='MEMBER_DB'&&b.database_id==='e1d29049-c83b-4534-8355-dc1fa36ba6d8'));
  const receipt={mode,source_pr:618,approved_merge:SOURCE,baseline_deployment:baseline.id,live_version:LIVE,
   ...Object.fromEntries(Object.entries(result).filter(([k])=>k!=='source'))};
- if(mode==='check'){
-  if(process.env.REVIEW_CANDIDATE_FILE)writeFileSync(process.env.REVIEW_CANDIDATE_FILE,result.source,{mode:0o600});
-  return {...receipt,read_only:true};
- }
- assert.equal(process.env.GITHUB_REPOSITORY,'anevum/anevum-web');
- assert.equal(process.env.GITHUB_ACTOR,'anevum');
- assert.equal(process.env.GITHUB_REF,'refs/heads/release/v084-continuance-approved-20261019');
- assert.equal(process.env.GITHUB_HEAD_MESSAGE,'release(v105): upload non-destructive XP epoch candidate inactive');
- assert.ok(process.env.GITHUB_SHA);
- const immediate=await api(token,'GET',BASE+'/deployments?per_page=1');
- assert.deepEqual(immediate.deployments?.[0]?.versions,baseline.versions,'Concurrent deployment drift');
- assert.equal(immediate.deployments?.[0]?.id,baseline.id,'Deployment ID changed');
- const form=new FormData();
- form.append('metadata',new Blob([JSON.stringify(meta)],{type:'application/json'}));
- form.append('gateway.js',new Blob([result.source],{type:'application/javascript+module'}),'gateway.js');
- const created=await api(token,'POST',BASE+'/versions?bindings_inherit=strict',form);
- assert.ok(typeof created?.id==='string'&&created.id.length===36,'Upload unacknowledged');
- const after=await api(token,'GET',BASE+'/deployments?per_page=1');
- assert.equal(after.deployments?.[0]?.id,baseline.id,'Traffic deployment changed after upload');
- assert.deepEqual(after.deployments?.[0]?.versions,baseline.versions,'Production traffic changed after upload');
- const candidate=await api(token,'GET',BASE+'/versions/'+created.id);
- const expected=lockBindings(v.resources.bindings).map(x=>x.name==='CANONICAL_XP_TEST_ENABLED'?{...x,value:'false'}:x);
- assert.deepEqual(lockBindings(candidate.resources.bindings),expected,'Candidate binding mismatch');
- assert.deepEqual(candidate.resources.script_runtime,v.resources.script_runtime,'Candidate runtime/asset configuration drift');
- const done={...receipt,status:'UPLOADED_INACTIVE_ONLY',candidate_version:created.id,traffic_changed:false};
- if(process.env.RECEIPT_FILE)writeFileSync(process.env.RECEIPT_FILE,JSON.stringify(done,null,2)+'\n',{mode:0o600});
- return done;
+ if(process.env.REVIEW_CANDIDATE_FILE)writeFileSync(process.env.REVIEW_CANDIDATE_FILE,result.source,{mode:0o600});
+ return {...receipt,read_only:true};
+
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
  const mode=process.argv[2]||'check';
