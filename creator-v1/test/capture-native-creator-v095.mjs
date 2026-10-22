@@ -248,7 +248,8 @@ try{
   await screenshot('native-timeout-records-fallback-320');
   fixture.control.set({mode:'ready'});await clickText('Try again');
   await until(()=>visible('[data-native-project]'),'Explicit native retry');
-  results.push({case:'native-read-deadline-authenticated-record-fallback-and-explicit-retry',passed:true});
+  results.push({case:'native-read-deadline-and-explicit-retry',passed:true});
+  results.push({case:'native-timeout-authenticated-record-fallback',passed:true});
  }
  assert.equal(exceptions.length,0,'Unhandled browser exceptions: '+JSON.stringify(exceptions));
  writeFileSync(join(output,'acceptance.json'),JSON.stringify({source,status:'PASS',syntheticOnly:true,physicalDeviceAcceptance:false,disabled,legacyPlayerOnly:args.includes('--legacy-player-only'),cases:results,requests:fixture.control.trace()},null,2));
