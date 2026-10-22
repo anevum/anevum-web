@@ -27,7 +27,8 @@ if(source!==null)assert.match(source,/^[a-f0-9]{40}$/,'Invalid checked-out sourc
 const base='http://127.0.0.1:4179',delay=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(fn,label,timeout=25000){const stop=Date.now()+timeout;let last;while(Date.now()<stop){try{const x=await fn();if(x)return x;}catch(e){last=e;}await delay(120);}throw Error(label+' timed out'+(last?': '+last.message:''));}
 mkdirSync(output,{recursive:true});
-const fixture=createNativeFixture();await fixture.start();
+let demo='';
+const fixture=createNativeFixture({responseFor:args.includes('--legacy-player-only')?url=>legacyFixtureResponse(url,base,demo):null});await fixture.start();
 const profile=mkdtempSync(join(tmpdir(),'anevum-v095-'));
 const log=join(output,'chromium.log');
 const child=spawn(chrome,['--headless=new','--no-sandbox','--no-first-run','--disable-dev-shm-usage','--disable-background-networking','--remote-debugging-port=0','--remote-allow-origins=*','--use-angle=swiftshader','--enable-unsafe-swiftshader','--user-data-dir='+profile,'about:blank'],{stdio:['ignore','ignore','pipe']});
@@ -49,13 +50,11 @@ try{
  client=await connect(target.webSocketDebuggerUrl);
  await client.send('Page.enable');await client.send('Runtime.enable');await client.send('Network.enable');
  client.on('Runtime.exceptionThrown',p=>exceptions.push(p.exceptionDetails?.exception?.description||p.exceptionDetails?.text||'Browser exception'));
- const demo='<!doctype html><html><head><style>body{background:#09182c;color:#edf4ff;font:18px system-ui;padding:30px}button{padding:16px;margin:8px}</style></head><body><p>OFFLINE SYNTHETIC EXECUTION FIXTURE</p><h1>Uplink playtest</h1><p id="count">0</p><button id="send">Send signal</button><button id="reset">Reset counter</button><script>let n=0;document.getElementById("send").onclick=()=>document.getElementById("count").textContent=++n;document.getElementById("reset").onclick=()=>{n=0;document.getElementById("count").textContent=n;};</script></body></html>';
+ demo='<!doctype html><html><head><style>body{background:#09182c;color:#edf4ff;font:18px system-ui;padding:30px}button{padding:16px;margin:8px}</style></head><body><p>OFFLINE SYNTHETIC EXECUTION FIXTURE</p><h1>Uplink playtest</h1><p id="count">0</p><button id="send">Send signal</button><button id="reset">Reset counter</button><script>let n=0;document.getElementById("send").onclick=()=>document.getElementById("count").textContent=++n;document.getElementById("reset").onclick=()=>{n=0;document.getElementById("count").textContent=n;};</script></body></html>';
  client.on('Fetch.requestPaused',async p=>{
   try{
    const u=new URL(p.request.url);
-   const legacy=args.includes('--legacy-player-only')?legacyFixtureResponse(u,base,demo):null;
-   if(legacy)await client.send('Fetch.fulfillRequest',{requestId:p.requestId,responseCode:200,responseHeaders:[{name:'content-type',value:legacy.type},{name:'cache-control',value:'no-store'},{name:'x-anevum-test-fixture',value:'synthetic-only'}],body:Buffer.from(legacy.body).toString('base64')});
-   else if(u.origin==='https://anevum-package-alpha-v003-runtime.devonakins.workers.dev')await client.send('Fetch.fulfillRequest',{requestId:p.requestId,responseCode:200,responseHeaders:[{name:'content-type',value:'text/html'},{name:'content-security-policy',value:"sandbox allow-scripts allow-pointer-lock; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'"}],body:Buffer.from(demo).toString('base64')});
+   if(u.origin==='https://anevum-package-alpha-v003-runtime.devonakins.workers.dev')await client.send('Fetch.fulfillRequest',{requestId:p.requestId,responseCode:200,responseHeaders:[{name:'content-type',value:'text/html'},{name:'content-security-policy',value:"sandbox allow-scripts allow-pointer-lock; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'"}],body:Buffer.from(demo).toString('base64')});
    else await client.send('Fetch.failRequest',{requestId:p.requestId,errorReason:'BlockedByClient'});
    }catch(e){
   // Chromium can cancel a paused request during navigation. A late CDP
@@ -63,7 +62,7 @@ try{
   if(!/Invalid InterceptionId/.test(String(e?.message||e)))exceptions.push('Interception: '+e.message);
  }
  });
- await client.send('Fetch.enable',{patterns:[{urlPattern:'https://*',requestStage:'Request'},...args.includes('--legacy-player-only')?[{urlPattern:base+'/projects/alpha_*',requestStage:'Request'},{urlPattern:base+'/api/v1/alpha/projects*',requestStage:'Request'}]:[]]});
+ await client.send('Fetch.enable',{patterns:[{urlPattern:'https://*',requestStage:'Request'}]});
  evaluate=async(expression,sessionId)=>{const value=await client.send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true,userGesture:true},sessionId);if(value.exceptionDetails)throw Error(value.exceptionDetails.exception?.description||value.exceptionDetails.text);return value.result?.value;};
  screenshot=async name=>{const image=await client.send('Page.captureScreenshot',{format:'png',fromSurface:true});assert.ok(image.data);writeFileSync(join(output,name+'.png'),Buffer.from(image.data,'base64'));};
  const navigate=async path=>{const time=await evaluate('performance.timeOrigin');await client.send('Page.navigate',{url:base+'/creator'+path});await until(()=>evaluate('document.readyState==="complete"&&performance.timeOrigin!=='+time),'Navigation '+path);};
