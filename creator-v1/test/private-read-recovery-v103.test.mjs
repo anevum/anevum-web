@@ -37,8 +37,8 @@ test('canonical Studio isolates account, mode and project before rendering priva
  assert.doesNotThrow(()=>parse(studio,{sourceType:'module',plugins:['jsx','typescript']}));
  assert.match(studio,/<SessionStudio key=\{id\+':\'\+mode\+':\'\+\(projectId\|\|''\)\}/);
  for(const retry of ['RETRY STUDIO ACCESS','RETRY PROJECTS','RETRY REVIEW QUEUE'])assert.ok(studio.includes(retry));
- assert.match(studio,/readWithDeadline\(async signal=>/);
- assert.match(studio,/profile.memberId!==id/);
+ assert.match(studio,/readWithDeadline\(signal=>resolveStudioEntry\(id,mode,signal,/);
+ assert.match(entry,/profile\.memberId!==memberId/);
  assert.doesNotMatch(studio,/setInterval\(|localStorage|sessionStorage/);
  const hook=readFileSync(new URL('../web/src/lib/useResource.ts',import.meta.url),'utf8');
  assert.match(hook,/Object.is\(value,deps\[index\]\)/);
