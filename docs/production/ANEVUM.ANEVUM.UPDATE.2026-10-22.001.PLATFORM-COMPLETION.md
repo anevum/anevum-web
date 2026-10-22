@@ -1,14 +1,21 @@
 # ANEVUM platform completion and alpha release record
 
 Session: `ANEVUM.ANEVUM.UPDATE.2026-10-22.001.PLATFORM-COMPLETION`  
-Target: January 1, 2027 alpha. Current state: **candidate uploaded; protected review window expired; public release hold**, October 22, 2026.  
+Target: January 1, 2027 alpha. Current state: **candidate uploaded; authenticated protected review active; public release hold**, October 22, 2026.  
 Operational record: [issue #622](https://github.com/anevum/anevum-web/issues/622).
 
-Latest Cloudflare check at `2026-10-22T18:55:08Z`: the protected window expired at `18:53:43Z`; original public apex remains 100%, recovery candidate remains 0%, and the existing legacy player version is unchanged. Secure sign-in and a renewed bounded review window are required before authenticated candidate acceptance.
+Latest protected review: founder Cloudflare Access email verification succeeded. The identical entry source was renewed as `406ef0ca-cfaa-411f-812d-1fb390b91ffc`, deployment `984dd104-3642-47f8-8983-0fde8a337ce9`; ruleset version 12 changes only expiry to `2026-10-22T23:33:15Z` (7:33 p.m. Eastern). The browser displayed the exact reviewed source/candidate and entered testing. Public apex remains 100% original / 0% recovery. This verifies sign-in and enrollment, not complete release acceptance.
+
+## Live review follow-up — October 22, 2026
+
+- PR #625 merged as `72d0bbb498aca3b83b923ecafddb66947c62ce0c` after all eight checks passed. Six legacy player browser cases and the negative reload control passed. The player patch remains source only.
+- `/thebutton` still reaches `/member` even in the protected session. The separate existing `anevum-xp-test-retirement-v001` edge Worker owns both retired routes, ahead of the apex. Its public version is `aaf335ac-f8ff-4c8d-8a52-d62209701599`, deployment `64fc8eff-2aae-4b80-99f3-e4a226f1ed25`; its source directly redirects to `/member`. It has no bindings. The recovered implementation now targets `/levels`; every method remains 404 on the retired API without auth, body consumption, D1 or cookies. Not uploaded or deployed at this checkpoint.
+- Genuine `/studio` review reached the canonical front door and displayed the bounded 15-second service failure; retry was initiated. Do not infer a complete creator journey from synthetic tests. Public deployment remains on hold.
+
 
 ## Verified checkpoint
 
-Production apex remains `93cc7f07-cf39-457e-af69-c9f6f4c02d25` at 100%; the verified recovery candidate `6f26f0cc-6eee-483d-9f07-329e45bd5e76` is selected at 0% in deployment `6372ee35-8c7d-468c-9486-536d9c4b0a0d`. The existing Access-protected opt-in path was renewed for four hours. All 40 routes, Access policies, database records, entitlements, purchases, recognition and public traffic remain unchanged.
+Production apex remains `93cc7f07-cf39-457e-af69-c9f6f4c02d25` at 100%; the verified recovery candidate `6f26f0cc-6eee-483d-9f07-329e45bd5e76` is selected at 0% in deployment `6372ee35-8c7d-468c-9486-536d9c4b0a0d`. The existing Access-protected opt-in path was renewed for four hours after genuine founder sign-in. All 40 routes, Access policies, database records, entitlements, purchases, recognition and public traffic remain unchanged.
 
 The genuine founder browser loads the existing homepage, older Creator Studio and Observatory with owner clearance. Observatory has no test-XP counters or controls. Homepage still features Single Drift with the description “This is a test game.” This is an editorial blocker, not permission to silently publish replacement content.
 
