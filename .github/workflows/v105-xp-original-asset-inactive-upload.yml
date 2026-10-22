@@ -1,0 +1,130 @@
+name: ANEVUM V105 Upload Original Assets XP Candidate
+on:
+  push:
+    branches: [release/v084-continuance-approved-20261019]
+    paths: [.github/release-approvals/v105-xp-epoch-inactive.json]
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: anevum-v084-guarded-apex-production
+  cancel-in-progress: false
+jobs:
+  inactive:
+    if: >-
+      github.repository == 'anevum/anevum-web' &&
+      github.actor == 'anevum' &&
+      github.event.head_commit.message == 'release(v105): upload verified XP epoch candidate inactive'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - name: Require exact marker-only authorized commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git diff-tree --no-commit-id --name-only -r HEAD)" = '.github/release-approvals/v105-xp-epoch-inactive.json'
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          assert.deepEqual(JSON.parse(readFileSync('.github/release-approvals/v105-xp-epoch-inactive.json','utf8')),{
+            reviewed_pr:620,
+            xp_reset_pr:618,
+            required_source:'a0483173eef35077bbcf04123438d6d34c5f409b',
+            worker:'anevum-apex-prelaunch-gateway',
+            existing_live_version:'93cc7f07-cf39-457e-af69-c9f6f4c02d25',
+            original_asset_artifact:12233454370,
+            permission:'inactive-upload-only',
+            change_traffic:false,
+            activate_xp_reset:false,
+            preserve_historical_xp:true,
+            confirmed_by:'anevum'
+          });
+          JS
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Retrieve exact successful public asset binary
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(gh api repos/anevum/anevum-web/actions/runs/39352363391 --jq '.head_sha+" "+.conclusion+" "+.status')" = 'ddd68f09ee2e9c83f2e24bfd0b9620840eccbb06 success completed'
+          test "$(gh api repos/anevum/anevum-web/actions/artifacts/12233454370 --jq '.digest')" = 'sha256:11f451dbb57dc4856bdfa50614aef212605d4c08f564bc8b170fb01b2383f925'
+          gh run download 39352363391 -R anevum/anevum-web -n anevum-v091-iren-binary-css-qa -D .
+          test -s creator-v1/dist/web/index.html
+          echo '09063ce69dbe6aaa992c2e25429f03ae6cd08165e0b4cffb53be29ab423e772f  creator-v1/dist/web/assets/index-AsGe25lN.js' | sha256sum -c -
+          echo '17edd74201ac4e897e378acf357d8ed3db81fb1af1a2d024e6955e2960aa42e7  creator-v1/dist/web/assets/index-iren-wayfinder-17edd74201ac4e89.css' | sha256sum -c -
+          grep -Fq '/assets/index-AsGe25lN.js' creator-v1/dist/web/index.html
+          grep -Fq '/assets/index-iren-wayfinder-17edd74201ac4e89.css' creator-v1/dist/web/index.html
+          ! grep -Fq '/assets/index-DU9BE5mP.css' creator-v1/dist/web/index.html
+      - name: Recreate original earned V059 artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install numpy==2.2.6 scipy==1.15.3 Pillow==11.2.1
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1-mesa-dri
+          (
+            cd design/evolution-v059
+            mkdir -p artwork/{native,textures,vector,masters,web,compact} docs dist previews
+            python src/export_native.py
+            python src/render_web.py
+            python src/build.py
+          )
+          python creator-v1/ops/install-evolution-v060.py
+          test "$(find creator-v1/web/public/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+          mkdir -p creator-v1/dist/web/evolution
+          cp -a creator-v1/web/public/evolution/. creator-v1/dist/web/evolution/
+          test "$(find creator-v1/dist/web/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+          test "$(find creator-v1/dist/web -type f | wc -l)" -eq 407
+          test ! -e creator-v1/dist/web/evolution-card-plates.json
+      - name: Generate verified XP-aware Worker and preserve actual production settings
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          REVIEW_CANDIDATE_FILE: ${{ runner.temp }}/gateway-v105.js
+        run: |
+          set -euo pipefail
+          umask 077
+          test "$CLOUDFLARE_ACCOUNT_ID" = '2f7ee83107240152097efd956a4e8335'
+          test -n "$CLOUDFLARE_API_TOKEN"
+          node creator-v1/ops/xp-epoch-v105-live-cutover.mjs check > "$RUNNER_TEMP/v105-preflight.json"
+          node --check "$REVIEW_CANDIDATE_FILE"
+          node creator-v1/ops/xp-epoch-v105-protected-upload.mjs prepare
+          test -s "$RUNNER_TEMP/v105-config.json"
+      - name: Upload only inactive Worker with complete pinned original public assets
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npx wrangler versions upload --config "$RUNNER_TEMP/v105-config.json" --keep-vars --strict --message 'V105 original public assets; guarded epoch XP reset; inactive only'
+      - name: Confirm production remains unchanged
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          node creator-v1/ops/xp-epoch-v105-protected-upload.mjs verify
+          test -s "$RUNNER_TEMP/v105-receipt.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v105-inactive-original-asset-receipt
+          path: ${{ runner.temp }}/v105-receipt.json
+          retention-days: 14
+          if-no-files-found: ignore
+# No XP reset activation, traffic promotion, or D1 record deletion.
