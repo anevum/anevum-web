@@ -27,6 +27,9 @@ test('editor/reviewer continue server capability verification and list retries i
  assert.match(studio,/RETRY STUDIO ACCESS/);
  assert.match(studio,/RETRY PROJECTS/);
  assert.match(studio,/readWithDeadline\(signal=>studioList\(signal\),ac\.signal\)/);
+ assert.match(studio,/onCapabilities\(r\)/);
+ assert.match(studio,/setCanReview\(capabilities\.canReview===true\)/);
+ assert.match(studio,/onCapabilities\(\{canReview:false,uploadsReady:false\}\)/);
  assert.match(studio,/return\(\)=>\{live=false;controller\.abort\(\);\}/);
  assert.match(studio,/SessionStudio key=\{id\+':\'\+mode/);
 });
