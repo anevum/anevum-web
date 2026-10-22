@@ -1,3 +1,4 @@
+import {assertRetiredProductionWorkflow} from "./helpers/retired-production-contract.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -117,7 +118,7 @@ test("Command deployment config has no retired Foundation or Vercel runtime path
     assert.doesNotMatch(source, /IREN_COMMAND_URL/);
     assert.doesNotMatch(source, /vercel/i);
   }
-  assert.match(deploy, /Deploy to Cloudflare Workers/);
+  assertRetiredProductionWorkflow(deploy);
 });
 
 
