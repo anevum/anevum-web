@@ -27,6 +27,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Test maintenance preview boundary
+        run: python -m unittest discover -s tests -p test_anevum_maintenance_ci_scope.py -v
+      - name: Determine whether application inputs changed
+        id: scope
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python scripts/ops/anevum-maintenance-ci-scope.py "$BASE_SHA" "$HEAD_SHA" >> "$GITHUB_OUTPUT"
       - name: Install PDF renderer
         run: pip install "weasyprint==68.0" "Pillow==11.3.0" "cryptography==45.0.7"
       - name: Synchronize RHEN release artifacts
@@ -105,7 +114,7 @@ jobs:
           PY
 
       - id: preview
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
         name: Create or update Cloudflare Preview
         shell: bash
         run: |
@@ -122,7 +131,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Probe routes, SEO, PDF, and public privacy contract
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
         shell: bash
         run: |
           set -euxo pipefail
@@ -183,7 +192,7 @@ jobs:
           curl --fail --show-error --silent --head "$base/command" | grep -qi 'x-robots-tag:.*noindex'
 
       - name: Verify browser runtime and horizontal overflow
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
         env:
           BASE_URL: ${{ steps.preview.outputs.preview_url }}
         run: |
@@ -197,11 +206,11 @@ jobs:
           node scripts/discussion-lifecycle-browser-qa.mjs
           node scripts/private-rhen-browser-qa.mjs
       - name: Visual review contact sheets
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
         run: python scripts/visual-ops-contact-sheet.py
 
       - name: Verify captured browser QA
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -256,7 +265,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload browser QA
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: anevum-preview-visuals
