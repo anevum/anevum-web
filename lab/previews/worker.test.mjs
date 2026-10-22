@@ -12,6 +12,27 @@ test('real host and exact preview routes remain separate from existing Lab and s
  assert.equal((await req('/api/v1/member/health')).status,404);
  assert.equal((await req('/staff')).status,404);
 });
+test('actual release-candidate handoff is explicit, signed-in and outside the synthetic preview Worker',async()=>{
+ const r=await req('/previews/'),html=await r.text();
+ assert.match(html,/REVIEW ACTUAL ANEVUM BUILD/);
+ assert.match(html,/Separate from these simulated scenes/);
+ assert.match(html,/active, time-limited acceptance window/);
+ assert.match(html,/OPEN PROTECTED CANDIDATE/);
+ assert.match(html,/href="https:\/\/anevum\.com\/__enter\/v095-v096"/);
+ assert.match(html,/target="_blank" rel="nofollow noopener noreferrer"/);
+ const css=await(await req('/previews/ui.css')).text();
+ assert.match(css,/\.build-handoff/);
+ assert.match(css,/@media\(max-width:600px\)/);
+ const json=await(await req('/previews/manifest.json')).json();
+ assert.deepEqual(json.realBuildHandoff,{
+  url:'https://anevum.com/__enter/v095-v096',
+  requiresLogin:true,requiresActiveWindow:true,
+  availability:'TIME_LIMITED_NOT_ASSERTED',builtInThisWorker:false,productionWrites:false
+ });
+ assert.equal((await req('/__enter/v095-v096')).status,404);
+ assert.equal((await req('/previews/__enter/v095-v096')).status,404);
+});
+
 test('no other host including workers.dev may display preview content',async()=>{
  for(const host of ['https://malicious.example','https://anevum.com','https://anevum-lab-previews-v001.devonakins.workers.dev','http://lab.anevum.com']){
   const r=await req('/previews/',{},host);assert.equal(r.status,404,host);
