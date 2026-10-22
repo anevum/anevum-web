@@ -55,7 +55,7 @@ export function NativeStudioNavigation({capabilities}:{capabilities?:NativeSessi
  },[location.pathname,permissions?.canUpload,permissions?.canReview]);
  if(!nativeCreatorEnabled)return null;
  return <nav ref={navRef} className="st-nav av095-navigation" aria-label="Creator Studio navigation">
-  <NavLink to="/studio" end>Project records</NavLink><NavLink to="/studio/packages" end>Playable builds</NavLink>
+  <NavLink to="/studio" end>Studio home</NavLink><NavLink to="/studio/packages" end>Playable builds</NavLink><NavLink to="/studio/records" end>Project records</NavLink>
   {(permissions?.canUpload)&&<NavLink to="/studio/packages/new">Upload build</NavLink>}
   {permissions?.canReview&&<NavLink to="/studio/packages/review">Package review</NavLink>}
   <NavLink to="/studio/new" end>New private record</NavLink><NavLink to="/discover">Discover</NavLink>
@@ -237,9 +237,9 @@ export function NativeCreatorStudioPage({mode='list'}:{mode?:'list'|'new'|'edit'
  if(access.error||!access.data)return <Status title="Creator Studio could not be opened." retry={access.reload}><p>{access.error}</p></Status>;
  const allowed=mode==='review'?access.data.canReview:access.data.canUpload;
  return <section className="st-root av095-native" data-native-creator="v095">
-  <header className="st-header"><div><Link className="st-back" to="/member">← My Space</Link><p className="st-kicker">ANEVUM / CONTINUANCE INSTITUTE / CREATOR STUDIO</p><h1>{mode==='review'?'Release review.':mode==='new'?'Transmit a creation.':mode==='edit'?'Build the next version.':'Your creative archive.'}</h1><p>One account. One Studio. Your work, from private draft to reviewed release.</p></div><div className="st-identity"><span>CANONICAL WORKSPACE</span><strong>{mode==='review'?'REVIEW DESK':'CREATOR ARCHIVE'}</strong><small>SERVER-VERIFIED ACCESS</small></div></header>
+  <header className="st-header"><div><Link className="st-back" to="/member">← My Space</Link><p className="st-kicker">ANEVUM / CONTINUANCE INSTITUTE / CREATOR STUDIO</p><h1>{mode==='review'?'Release review.':mode==='new'?'Transmit a creation.':mode==='edit'?'Build the next version.':'Creator Studio.'}</h1><p>One account. One Studio. Your work, from private draft to reviewed release.</p></div><div className="st-identity"><span>CANONICAL WORKSPACE</span><strong>{mode==='review'?'REVIEW DESK':'CREATOR ARCHIVE'}</strong><small>SERVER-VERIFIED ACCESS</small></div></header>
   <NativeStudioNavigation capabilities={access.data}/>
-  {!allowed?<section className="st-panel"><h2>{mode==='review'?'Reviewer access required.':'Playable uploading is limited to pilot creators.'}</h2><p>Your account has not been granted this capability. No permissions have changed.</p></section>:
+  {!allowed?<section className="st-panel"><h2>{mode==='review'?'Reviewer access required.':'Playable uploading is limited to pilot creators.'}</h2><p>Private project records remain available to your verified member account. Playable uploads require a separate creator pilot grant.</p><Link className="st-action" to="/studio/records">Open private project records</Link></section>:
    mode==='review'?<ReviewQueue key={identity.id} memberId={identity.id}/>:mode==='list'?<BuildLibrary key={identity.id} memberId={identity.id}/>:<BuildUpload key={identity.id+':'+mode+':'+(projectId||'')} memberId={identity.id} projectId={mode==='edit'?projectId:undefined}/>}
  </section>;
 }

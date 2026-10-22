@@ -20,6 +20,7 @@ import { MemberGate } from "./components/MemberGate";
 import { LoadingState } from "./components/States";
 import { MemberLibraryPage } from "./pages/MemberLibraryPage";
 import {CanonicalSavedWorksPage} from "./pages/CanonicalSavedWorksPage";
+import {nativeCreatorEnabled} from "./lib/native-creator-v095";
 import { CanonicalStudioPage } from "./pages/CanonicalStudioPage";
 import {PublicCreatorAlphaPage} from "./pages/PublicCreatorAlphaPage";
 import {Phase1JoinPage} from "./pages/Phase1JoinPage";
@@ -27,7 +28,7 @@ import {Phase1MemberPage} from "./pages/Phase1MemberPage";
 import {Phase1PublicMemberPage} from "./pages/Phase1PublicMemberPage";
 
 import {AnevumNotifications} from './components/AnevumNotifications';
-// Retired test XP calibration: no production route mounts its awarding UI.
+// Retired test XP calibration remains disabled.
 import {SupporterPage} from './pages/SupporterPage';
 import SupporterTransparencyPage from './pages/SupporterTransparencyPage';
 import SupporterCollectionPage from './pages/SupporterCollectionPage';
@@ -101,7 +102,8 @@ export default function App(){
     <Route path="studio/packages/review" element={<Suspense fallback={creatorFallback}><NativeCreatorStudioPage mode="review"/></Suspense>}/>
     <Route path="studio/packages/:projectId" element={<Suspense fallback={creatorFallback}><NativeCreatorStudioPage mode="edit"/></Suspense>}/>
     <Route path="projects/package/:projectId" element={<Suspense fallback={creatorFallback}><NativePackagePlayerPage/></Suspense>}/>
-    <Route path="studio" element={<CanonicalStudioPage/>}/>
+    <Route path="studio" element={nativeCreatorEnabled?<Suspense fallback={creatorFallback}><NativeCreatorStudioPage/></Suspense>:<CanonicalStudioPage/>}/>
+    <Route path="studio/records" element={<CanonicalStudioPage/>}/>
     <Route path="studio/new" element={<CanonicalStudioPage mode="new"/>}/>
     <Route path="studio/review" element={<CanonicalStudioPage mode="review"/>}/>
     <Route path="studio/:projectId" element={<CanonicalStudioPage mode="edit"/>}/>

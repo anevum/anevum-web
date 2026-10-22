@@ -25,13 +25,14 @@ export function IrenLivingCanvas({
   const el=canvas.current;
   if(!el)return;
   let dead=false;
-  const lost=(event:Event)=>{event.preventDefault();rig.current?.dispose();rig.current=null;setReady(false);setFailed(true)};
+  const fail=()=>{rig.current?.dispose();rig.current=null;if(!dead){setReady(false);setFailed(true)}};
+  const lost=(event:Event)=>{event.preventDefault();fail()};
   el.addEventListener("webglcontextlost",lost);
   const start=async()=>{
    try{
     const {IrenLivingRig}=await import("../lib/iren-living-rig-v088");
     if(dead)return;
-    const instance=new IrenLivingRig(el);
+    const instance=new IrenLivingRig(el,fail);
     if(dead){instance.dispose();return}
     rig.current=instance;
     const state=initial.current;
@@ -40,13 +41,18 @@ export function IrenLivingCanvas({
     instance.setLook(state.look[0],state.look[1]);
     instance.setReducedMotion(state.paused||window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     instance.setVisible(document.visibilityState==="visible");
+    instance.verifyVisibleFrame();
     instance.play();
     setReady(true);
    }catch{
-    if(!dead){setFailed(true);setReady(false)}
+    fail();
    }
   };
   void start();
+  const resize=new ResizeObserver(()=>{
+   try{rig.current?.render()}catch{fail()}
+  });
+  resize.observe(el);
   const visibility=()=>rig.current?.setVisible(document.visibilityState==="visible");
   const media=window.matchMedia("(prefers-reduced-motion: reduce)");
   const motion=()=>rig.current?.setReducedMotion(initial.current.paused||media.matches);
@@ -54,6 +60,7 @@ export function IrenLivingCanvas({
   media.addEventListener("change",motion);
   return()=>{
    dead=true;
+   resize.disconnect();
    el.removeEventListener("webglcontextlost",lost);
    document.removeEventListener("visibilitychange",visibility);
    media.removeEventListener("change",motion);

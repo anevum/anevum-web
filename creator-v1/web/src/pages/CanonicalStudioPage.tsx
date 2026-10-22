@@ -109,7 +109,7 @@ function SessionStudio({id,mode}:{id:string;mode:Mode}){
    <div className="st-identity"><span>VERIFIED CREATOR</span><strong>@{identity?.handle}</strong><small>PRIVATE VERIFIED WORKSPACE</small></div>
   </header>
   {nativeCreatorEnabled?<NativeStudioNavigation/>:<nav className="st-nav" aria-label="Studio navigation">
-   <Link to="/studio" aria-current={mode==='list'?'page':undefined}>MY PROJECTS</Link>
+   <Link to="/studio/records" aria-current={mode==='list'?'page':undefined}>MY PROJECTS</Link>
    <Link to="/studio/new" aria-current={mode==='new'?'page':undefined}>NEW PRIVATE DRAFT</Link>
    <a href="/upload">PLAYABLE UPLOAD ↗</a>
    {canReview&&<Link to="/studio/review" aria-current={mode==='review'?'page':undefined}>REVIEW DESK</Link>}
@@ -263,7 +263,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
   if(!project||busy||project.status==='pending_review')return;
   if(!window.confirm('Permanently remove this private project record? Remove its private files first. This cannot be undone.'))return;
   setBusy(true);setError('');setNotice('');
-  try{await studioDeleteProject(project.id,project.revision);navigate('/studio',{replace:true});}
+  try{await studioDeleteProject(project.id,project.revision);navigate('/studio/records',{replace:true});}
   catch(e){setError(showError(e));setMustReload(true);}finally{setBusy(false);}
  }
  const input=(name:'title'|'slug'|'summary'|'description'|'license'|'aiDisclosure'|'humanContribution',
@@ -311,7 +311,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
     <div className="st-actions">
      <button className="st-action" type="submit" disabled={locked||!dirty}>
       {busy?'SAVING PRIVATE REVISION…':project?'SAVE CHANGES':'CREATE PRIVATE DRAFT'}</button>
-     <Link className="st-link" to="/studio">RETURN TO PROJECTS ↗</Link>
+     <Link className="st-link" to="/studio/records">RETURN TO PROJECTS ↗</Link>
     </div>
     {notice&&<p role="status" className="st-success">{notice}</p>}
    </form>
