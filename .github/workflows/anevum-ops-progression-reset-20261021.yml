@@ -1,0 +1,280 @@
+name: ANEVUM OPS One-Time XP Reset (Owner Manual)
+
+# Must be merged into the default branch before a Run workflow control exists.
+# A pull request gets ONLY synthetic/offline tests; never secrets or Cloudflare access.
+on:
+  pull_request:
+    paths:
+      - .github/workflows/anevum-ops-progression-reset-20261021.yml
+      - scripts/ops/anevum-progression-reset-20261021.py
+      - tests/test_anevum_progression_reset_20261021.py
+      - docs/ANEVUM.OPS.MAINT.2026-10-21.002.MANUAL-RESET-RUNBOOK.md
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: "prepare = encrypted read-only backup; execute = guarded destructive reset"
+        required: true
+        type: choice
+        options: [prepare, execute]
+      reviewed_head_sha:
+        description: "Paste the exact reviewed 40-character main commit SHA"
+        required: true
+        type: string
+      confirmation:
+        description: "PREPARE_20261021_XP_RESET or EXECUTE_20261021_XP_RESET"
+        required: true
+        type: string
+      preflight_run_id:
+        description: "Execute only: successful prepare workflow run ID"
+        required: false
+        default: ""
+        type: string
+      expected_ledger_sha256:
+        description: "Execute only: 64-character ledger digest from prepare report"
+        required: false
+        default: ""
+        type: string
+      preserve_entitlements_ack:
+        description: "Execute only: type PRESERVE_PAID_AND_RECOGNITION_ENTITLEMENTS"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: anevum-production-xp-reset-${{ github.event_name == 'workflow_dispatch' && 'manual' || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  synthetic-safety:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile and run isolated negative/positive reset tests
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/ops/anevum-progression-reset-20261021.py
+          python -m unittest discover -s tests -p test_anevum_progression_reset_20261021.py -v
+          echo 'No network or production database accessed by synthetic tests.' >> "$GITHUB_STEP_SUMMARY"
+
+  prepare:
+    needs: synthetic-safety
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.repository == 'anevum/anevum-web' &&
+      github.ref == 'refs/heads/main' &&
+      github.actor == 'anevum' &&
+      inputs.operation == 'prepare' &&
+      inputs.confirmation == 'PREPARE_20261021_XP_RESET' &&
+      inputs.reviewed_head_sha == github.sha
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify approved, unmoved default-branch commit
+        env:
+          REVIEWED_SHA: ${{ inputs.reviewed_head_sha }}
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$REVIEWED_SHA"
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$REVIEWED_SHA"
+      - name: Install pinned crypto library
+        run: python -m pip install --no-cache-dir 'cryptography==45.0.7'
+      - name: Verify production Worker/D1 IDs; export, restore-test, encrypt
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          ANEVUM_XP_RESET_BACKUP_FERNET_KEY: ${{ secrets.ANEVUM_XP_RESET_BACKUP_FERNET_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          test "$CLOUDFLARE_ACCOUNT_ID" = '2f7ee83107240152097efd956a4e8335'
+          python scripts/ops/anevum-progression-reset-20261021.py prepare \
+            --archive "$RUNNER_TEMP/anevum-xp-preflight.sql.fernet" \
+            --report "$RUNNER_TEMP/preflight-report.json"
+          jq -e '.status == "ENCRYPTED_PREPARE_SQLITE_RESTORE_VERIFIED" and .reset_performed == false' "$RUNNER_TEMP/preflight-report.json" >/dev/null
+      - uses: actions/upload-artifact@v4
+        with:
+          name: anevum-xp-preflight-${{ github.run_id }}
+          path: ${{ runner.temp }}/anevum-xp-preflight.sql.fernet
+          retention-days: 30
+          compression-level: 0
+          if-no-files-found: error
+      - uses: actions/download-artifact@v4
+        with:
+          name: anevum-xp-preflight-${{ github.run_id }}
+          path: ${{ runner.temp }}/preflight-recovery-check
+      - name: Independently restore downloaded encrypted artifact
+        env:
+          ANEVUM_XP_RESET_BACKUP_FERNET_KEY: ${{ secrets.ANEVUM_XP_RESET_BACKUP_FERNET_KEY }}
+        run: |
+          set -euo pipefail
+          python scripts/ops/anevum-progression-reset-20261021.py verify-archive \
+            --archive "$RUNNER_TEMP/preflight-recovery-check/anevum-xp-preflight.sql.fernet" \
+            > "$RUNNER_TEMP/verified-preflight.json"
+          jq -e '.status=="ENCRYPTED_D1_ARCHIVE_RESTORED"' "$RUNNER_TEMP/verified-preflight.json" >/dev/null
+          jq -e --slurpfile verified "$RUNNER_TEMP/verified-preflight.json" \
+            '.ledger_sha256==$verified[0].counts.ledger_sha256' "$RUNNER_TEMP/preflight-report.json" >/dev/null
+      - name: Publish redacted verification report (never the full backup)
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo '## ANEVUM canonical XP reset — PREPARE ONLY'
+            echo 'Protected D1 identity and active public Worker binding verified.'
+            echo 'Complete D1 SQL exported, encrypted, archived, re-downloaded and restore-tested.'
+            echo 'No production XP, level, notification or recognition record was modified.'
+            echo 'Copy the following ledger SHA into a separate reviewed Execute dispatch:'
+            jq -r '.ledger_sha256' "$RUNNER_TEMP/preflight-report.json"
+            echo 'Backup retention: 30 days. Store the Fernet decryption key separately.'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  execute:
+    needs: synthetic-safety
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.repository == 'anevum/anevum-web' &&
+      github.ref == 'refs/heads/main' &&
+      github.actor == 'anevum' &&
+      inputs.operation == 'execute' &&
+      inputs.confirmation == 'EXECUTE_20261021_XP_RESET' &&
+      inputs.preserve_entitlements_ack == 'PRESERVE_PAID_AND_RECOGNITION_ENTITLEMENTS' &&
+      inputs.reviewed_head_sha == github.sha &&
+      inputs.preflight_run_id != '' &&
+      inputs.expected_ledger_sha256 != ''
+    # Configure REQUIRED REVIEWERS and main-only branch protection for this
+    # environment in GitHub Settings BEFORE the first Execute dispatch.
+    environment:
+      name: production-progression-reset
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify pinned reviewed SHA, owner and successful prepare run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REVIEWED_SHA: ${{ inputs.reviewed_head_sha }}
+          PREP_RUN: ${{ inputs.preflight_run_id }}
+          REVIEWED_DIGEST: ${{ inputs.expected_ledger_sha256 }}
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$PREP_RUN" =~ ^[0-9]{8,12}$ ]]
+          [[ "$REVIEWED_DIGEST" =~ ^[a-f0-9]{64}$ ]]
+          test "$(git rev-parse HEAD)" = "$REVIEWED_SHA"
+          test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$REVIEWED_SHA"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$PREP_RUN" > "$RUNNER_TEMP/preflight-run.json"
+          jq -e --arg sha "$REVIEWED_SHA" '
+            .name=="ANEVUM OPS One-Time XP Reset (Owner Manual)" and
+            .event=="workflow_dispatch" and .head_branch=="main" and
+            .head_sha==$sha and .actor.login=="anevum" and
+            .status=="completed" and .conclusion=="success"' "$RUNNER_TEMP/preflight-run.json" >/dev/null
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$PREP_RUN/artifacts" > "$RUNNER_TEMP/preflight-artifacts.json"
+          jq -e --arg name "anevum-xp-preflight-$PREP_RUN" '
+            any(.artifacts[]; .name==$name and .expired==false and .size_in_bytes > 512)' "$RUNNER_TEMP/preflight-artifacts.json" >/dev/null
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ inputs.preflight_run_id }}
+          name: anevum-xp-preflight-${{ inputs.preflight_run_id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/preflight-input
+      - name: Install pinned crypto dependency
+        run: python -m pip install --no-cache-dir 'cryptography==45.0.7'
+      - name: Recheck source, live binding and prepared ledger; make fresh encrypted backup
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          ANEVUM_XP_RESET_BACKUP_FERNET_KEY: ${{ secrets.ANEVUM_XP_RESET_BACKUP_FERNET_KEY }}
+          REVIEWED_DIGEST: ${{ inputs.expected_ledger_sha256 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          test "$CLOUDFLARE_ACCOUNT_ID" = '2f7ee83107240152097efd956a4e8335'
+          python scripts/ops/anevum-progression-reset-20261021.py stage \
+            --previous-backup "$RUNNER_TEMP/preflight-input/anevum-xp-preflight.sql.fernet" \
+            --archive "$RUNNER_TEMP/anevum-xp-current.sql.fernet" \
+            --report "$RUNNER_TEMP/fresh-report.json" \
+            --expected-digest "$REVIEWED_DIGEST" \
+            > "$RUNNER_TEMP/stage-safe-output.json"
+          jq -e '.status=="EXECUTION_SNAPSHOT_RESTORE_TESTED" and .reset_performed==false' "$RUNNER_TEMP/fresh-report.json" >/dev/null
+      - name: ARCHIVE recovery point before any destructive write
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-xp-execute-recovery-${{ github.run_id }}
+          path: ${{ runner.temp }}/anevum-xp-current.sql.fernet
+          retention-days: 30
+          compression-level: 0
+          if-no-files-found: error
+      - uses: actions/download-artifact@v4
+        with:
+          name: anevum-xp-execute-recovery-${{ github.run_id }}
+          path: ${{ runner.temp }}/recovery-verified
+      - name: Verify fresh archive before execution
+        env:
+          ANEVUM_XP_RESET_BACKUP_FERNET_KEY: ${{ secrets.ANEVUM_XP_RESET_BACKUP_FERNET_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/ops/anevum-progression-reset-20261021.py verify-archive \
+            --archive "$RUNNER_TEMP/recovery-verified/anevum-xp-current.sql.fernet" \
+            > "$RUNNER_TEMP/verified-current.json"
+          jq -e --slurpfile verified "$RUNNER_TEMP/verified-current.json" \
+            '.ledger_sha256==$verified[0].counts.ledger_sha256' "$RUNNER_TEMP/fresh-report.json" >/dev/null
+      - name: EXECUTE — one-time guarded D1 batch and post-readback
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_D1_TOKEN: ${{ secrets.CLOUDFLARE_D1_TOKEN }}
+          ANEVUM_XP_RESET_BACKUP_FERNET_KEY: ${{ secrets.ANEVUM_XP_RESET_BACKUP_FERNET_KEY }}
+          REVIEWED_DIGEST: ${{ inputs.expected_ledger_sha256 }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          python scripts/ops/anevum-progression-reset-20261021.py execute \
+            --previous-backup "$RUNNER_TEMP/preflight-input/anevum-xp-preflight.sql.fernet" \
+            --archive "$RUNNER_TEMP/recovery-verified/anevum-xp-current.sql.fernet" \
+            --report "$RUNNER_TEMP/execute-postreadback.json" \
+            --expected-digest "$REVIEWED_DIGEST"
+          jq -e '.status=="CANONICAL_PROGRESSION_RESET_CONFIRMED" and .reset_performed==true and .legacy_test_writes_blocked==true and .xp_events==0 and .test_xp==0 and .milestones==0 and .level_notifications==0' "$RUNNER_TEMP/execute-postreadback.json" >/dev/null
+      - name: Non-sensitive execution record
+        if: success()
+        run: |
+          {
+            echo '## ANEVUM progression reset — verified'
+            echo 'Production canonical XP = 0; all current member levels derive to Level 1.'
+            echo 'Old XP test inserts are blocked by a permanent guarded D1 trigger.'
+            echo 'Milestone-derived progression and level announcements cleared.'
+            echo 'Recognition grants, supporter/payment records, and user accounts preserved.'
+            echo 'Encrypted, restore-tested D1 recovery artifact exists for 30 days.'
+            echo 'A separate UI release is still needed to retire the public XP test button.'
+          } >> "$GITHUB_STEP_SUMMARY"
