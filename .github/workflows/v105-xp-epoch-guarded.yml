@@ -33,6 +33,7 @@ jobs:
         run: |
           set -euo pipefail
           node --check creator-v1/ops/xp-epoch-v105-live-cutover.mjs
+          node --check creator-v1/ops/xp-epoch-v105-protected-upload.mjs
           node --test creator-v1/test/xp-epoch-v105-guarded.test.mjs
           (cd creator-v1 && node --test test/progression-epoch-reset-v105.test.mjs)
       - name: Verify exact live bundle and preserved configuration without uploading
