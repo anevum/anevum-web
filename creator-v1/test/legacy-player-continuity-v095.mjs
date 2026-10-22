@@ -68,9 +68,10 @@ export async function verifyLegacyPlayerContinuity({client,evaluate,screenshot,u
    await clickText('Expand','button[data-action="expand"]');
    await until(()=>evaluate('!!document.querySelector(".anp-immersive-host")'),'Legacy immersive view');
    await evaluate('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');
-   const layout=await evaluate('(()=>{const h=document.querySelector(".anp-immersive-host"),r=h.getBoundingClientRect(),b=h.querySelector("button[data-action=expand]").getBoundingClientRect();return {width:r.width,height:r.height,x:r.x,y:r.y,buttonVisible:b.width>0&&b.height>0&&b.left>=0&&b.right<=innerWidth+1&&b.top>=0&&b.bottom<=innerHeight+1,topLayer:h.matches(":popover-open")};})()');
+   const layout=await evaluate('(()=>{const h=document.querySelector(".anp-immersive-host"),r=h.getBoundingClientRect(),f=h.querySelector("iframe").getBoundingClientRect();return {width:r.width,height:r.height,x:r.x,y:r.y,frameWidth:f.width,frameHeight:f.height,controlsVisible:[...h.querySelectorAll(".anp-controls button")].every(x=>{const b=x.getBoundingClientRect();return b.width>0&&b.height>0&&b.left>=0&&b.right<=innerWidth+1&&b.top>=0&&b.bottom<=innerHeight+1;}),topLayer:h.matches(":popover-open")};})()');
    assert.ok(layout.width>=width-1&&layout.height>=height-1&&Math.abs(layout.x)<=1&&Math.abs(layout.y)<=1,JSON.stringify(layout));
-   assert.equal(layout.buttonVisible,true,'Exit control must stay visible');
+   assert.ok(layout.frameWidth>=width-1&&layout.frameHeight>=height-1,'Creator viewport must fill the expanded player: '+JSON.stringify(layout));
+   assert.equal(layout.controlsVisible,true,'Every player control must stay visible');
    assert.equal(layout.topLayer,topLayer,'Exercise both top-layer and older-browser fallback');
   };
   await enter();

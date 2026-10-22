@@ -40,7 +40,7 @@
   "physical_safari_acceptance": false,
   "founder_visual_acceptance": false,
   "public_promotion": false,
-  "blocker": "Secure Cloudflare Access sign-in request rejected by automatic approval review: workspace out of credits. No sign-in executed; genuine candidate/account/device acceptance remains open.",
+  "blocker": "Protected review window expired. Secure Cloudflare Access sign-in was previously rejected by automatic approval review because workspace credits were exhausted. No sign-in executed; genuine candidate/account/device acceptance remains open.",
   "last_preservation_readback_at": "2026-10-22T17:57:15Z",
   "wall_outage_retry_browser": {
     "run": 39800486308,
@@ -52,5 +52,7 @@
     ],
     "production_requests": 0
   },
-  "synthetic_recovery_cases": 31
+  "synthetic_recovery_cases": 31,
+  "review_window_expired": true,
+  "review_window_checked_at": "2026-10-22T18:55:08Z"
 }

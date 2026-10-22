@@ -6,7 +6,7 @@
   "upstream_service": "anevum-apex-prelaunch-gateway",
   "recovered_baseline_commit": "69c827dea97edda5f9301f76f7922a466e8af411",
   "baseline_source_sha256_with_trailing_newline": "c7b73b9a56abf108062445de71dcb7a80cbded9c082ff88dd6ba51873bde6bcd",
-  "prepared_source_sha256": "a1054ecb20f375f72977c3f4ff471f5db221008baf847837ec642cfd5f814cef",
+  "prepared_source_sha256": "e8bf1e084ff47ad6dc5e1ced132b3d78ec18a6ca6d694a61cd0f86ee1cbc0a77",
   "native_regression_pr": 624,
   "native_regression_merge": "12dd1e77f713a8d163f74be6607a35aa80683cdf",
   "source_only": true,

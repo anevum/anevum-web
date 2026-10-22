@@ -1,8 +1,10 @@
 # ANEVUM platform completion and alpha release record
 
 Session: `ANEVUM.ANEVUM.UPDATE.2026-10-22.001.PLATFORM-COMPLETION`  
-Target: January 1, 2027 alpha. Current state: **protected candidate available; public release hold**, October 22, 2026.  
+Target: January 1, 2027 alpha. Current state: **candidate uploaded; protected review window expired; public release hold**, October 22, 2026.  
 Operational record: [issue #622](https://github.com/anevum/anevum-web/issues/622).
+
+Latest Cloudflare check at `2026-10-22T18:55:08Z`: the protected window expired at `18:53:43Z`; original public apex remains 100%, recovery candidate remains 0%, and the existing legacy player version is unchanged. Secure sign-in and a renewed bounded review window are required before authenticated candidate acceptance.
 
 ## Verified checkpoint
 
@@ -48,7 +50,7 @@ Direct desktop review of the current public release confirmed that the existing 
 
 The source was recovered from the existing `anevum-native-project-player-v006-immersive` Worker, public version `5c6d809e-25eb-43a0-bb2b-92c3ab064daf`, deployment `e3ba8624-0b84-4146-a4a0-30c2e784a530`. Its only binding is `UPSTREAM` to the existing apex. The existing community asset Worker calls it; the defect is outside the canonical React player. The recovered baseline is retained in Git commit `69c827dea97edda5f9301f76f7922a466e8af411`.
 
-The prepared source patch keeps one connected player host throughout expansion and exit. Modern browsers use the top layer; older browsers temporarily remove ancestor clipping and restore the prior styles on exit. Sandbox and request/response scope remain unchanged. Browser regression coverage exercises 1440/390/320, both presentation paths, exit button, Escape, Back, focus restoration and explicit restart. A deliberate same-URL reload must fail on lost project state. These are isolated synthetic checks; hosted results belong to the PR and do not establish live release acceptance.
+The prepared source patch keeps one connected player host throughout expansion and exit. Modern browsers use the top layer; older browsers temporarily remove ancestor clipping and restore the prior styles on exit. Sandbox and request/response scope remain unchanged. Browser regression coverage exercises 1440/390/320, both presentation paths, a full-size creator viewport, visible controls, exit button, Escape, Back, focus restoration and explicit restart. A deliberate same-URL reload must fail on lost project state. These are isolated synthetic checks; hosted results belong to the PR and do not establish live release acceptance.
 
 This legacy patch has **not been uploaded or deployed**. The public Worker and all existing release gates remain unchanged. The protected apex entry still requires Cloudflare Access sign-in, and the earlier secure sign-in request was rejected by automatic approval review because the workspace was out of credits. No retry or bypass was used.
 
