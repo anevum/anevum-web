@@ -15,6 +15,11 @@ test("V111 extends the existing authenticated queue and IREN rig, without a seco
  assert.match(queue,/progressionRequest<RewardInbox>\('notifications'/);
  assert.match(queue,/progressionRequest\('notifications\/ack',\{id:item\.serverId\}\)/);
  assert.match(queue,/activeTransmission:active\|\|null/);
+ assert.match(queue,/document\.fullscreenElement/);
+ assert.match(queue,/classList\.contains\("av095-expanded"\)/);
+ assert.match(queue,/new MutationObserver\(onVisible\)/);
+ assert.match(queue,/document\.addEventListener\('fullscreenchange',onVisible\)/);
+ assert.match(queue,/if\(!active\|\|!visible\)return/);
  assert.match(queue,/dismissTransmission:\(item\)=>\{void finish\(item\)\}/);
  assert.doesNotMatch(queue,/className=\{'an-toast/);
  assert.equal((guide.match(/className="ir80-dock ir87-scout"/g)||[]).length,1);

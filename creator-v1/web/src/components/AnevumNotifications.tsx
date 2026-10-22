@@ -22,6 +22,11 @@ export const useIrenSignals=()=>{
  return {recent,unreadCount,markSignalsSeen,activeTransmission,transmissionPhase,dismissTransmission};
 };
 const signalSeenKey=(id:string)=>"anevum.iren.signals.seen."+id;
+/** Keep verified signals queued while immersive playback hides the IREN layer. */
+function presentationAvailable(){
+ return document.visibilityState==="visible"&&!document.fullscreenElement&&
+  !document.body.classList.contains("av095-expanded");
+}
 function lastSeenSignal(id?:string){
  if(!id)return 0;
  try{return Number(window.localStorage.getItem(signalSeenKey(id))||0)||0}
@@ -32,7 +37,7 @@ export function AnevumNotifications({children}:{children:ReactNode}){
  return <NotificationSession key={session?.user?.id||'guest'} id={session?.user?.id}>{children}</NotificationSession>;
 }
 function NotificationSession({id,children}:{id?:string;children:ReactNode}){
- const [progression,setProgression]=useState<MemberProgression|null>(null),[queue,setQueue]=useState<AnevumAlert[]>([]),[recent,setRecent]=useState<RewardNotice[]>([]),[unreadCount,setUnreadCount]=useState(0),[phase,setPhase]=useState('mark'),[visible,setVisible]=useState(document.visibilityState==='visible');
+ const [progression,setProgression]=useState<MemberProgression|null>(null),[queue,setQueue]=useState<AnevumAlert[]>([]),[recent,setRecent]=useState<RewardNotice[]>([]),[unreadCount,setUnreadCount]=useState(0),[phase,setPhase]=useState('mark'),[visible,setVisible]=useState(presentationAvailable);
  const alive=useRef(true),seen=useRef(new Set<number>()),loading=useRef(false),dirty=useRef(false),abort=useRef<AbortController|null>(null);
  const lastSeenRef=useRef(lastSeenSignal(id));
  const active=queue[0];
@@ -64,10 +69,23 @@ function NotificationSession({id,children}:{id?:string;children:ReactNode}){
  useEffect(()=>{alive.current=true;bindAlertAccount(id);void refresh();
   const onChange=(event:Event)=>{if((event as CustomEvent).detail?.owner===id)void refresh()};
   const onAlert=(event:Event)=>{const data=(event as CustomEvent).detail;if(data?.owner===id)enqueue(data.alert)};
-  const onVisible=()=>{const shown=document.visibilityState==='visible';setVisible(shown);if(shown)void refresh()};
-  window.addEventListener('anevum:alert',onAlert);window.addEventListener('anevum:member-change',onChange);window.addEventListener('focus',onVisible);document.addEventListener('visibilitychange',onVisible);
+  const onVisible=()=>{const shown=presentationAvailable();setVisible(shown);if(shown)void refresh()};
+  window.addEventListener('anevum:alert',onAlert);window.addEventListener('anevum:member-change',onChange);
+  window.addEventListener('focus',onVisible);
+  document.addEventListener('visibilitychange',onVisible);
+  document.addEventListener('fullscreenchange',onVisible);
+  // iPhone immersive fallback uses the existing body's av095-expanded class;
+  // no iframe reload, fake notification ACK or new player overlay is needed.
+  const immersive=new MutationObserver(onVisible);
+  immersive.observe(document.body,{attributes:true,attributeFilter:['class']});
   const interval=window.setInterval(onVisible,15000);
-  return()=>{alive.current=false;abort.current?.abort();bindAlertAccount(undefined);clearInterval(interval);window.removeEventListener('anevum:alert',onAlert);window.removeEventListener('anevum:member-change',onChange);window.removeEventListener('focus',onVisible);document.removeEventListener('visibilitychange',onVisible)};
+  return()=>{alive.current=false;abort.current?.abort();bindAlertAccount(undefined);
+   immersive.disconnect();clearInterval(interval);
+   window.removeEventListener('anevum:alert',onAlert);window.removeEventListener('anevum:member-change',onChange);
+   window.removeEventListener('focus',onVisible);
+   document.removeEventListener('visibilitychange',onVisible);
+   document.removeEventListener('fullscreenchange',onVisible)};
+
  },[id]);
  async function finish(item:AnevumAlert){
   setQueue(old=>old.filter(x=>x.key!==item.key));

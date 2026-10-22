@@ -65,7 +65,22 @@ try{
  const durationZero=value=>value.split(",").every(item=>Number.parseFloat(item)===0);
  if(!reduced.media||!durationZero(reduced.transition)||!durationZero(reduced.animationDuration)||reduced.animation!=="none")
   throw Error("V111_REDUCED_MOTION_NOT_HONORED "+JSON.stringify(reduced));
- writeFileSync(join(output,"acceptance.json"),JSON.stringify({pass:true,syntheticOnly:true,productionChanges:0,checks:["desktop","phone","small-phone","hidden-helper","reduced-motion"],evidence},null,2));
+ await evaluate('document.querySelector(".ir111-transmission button").click()');
+ await until(()=>evaluate('!document.querySelector(".ir111-transmission")'));
+ // The active immersive player is top-layer/fixed and conceals the helper.
+ // Keep signals in the one queue until the user returns to the page chrome.
+ await evaluate('document.body.classList.add("av095-expanded")');
+ await delay(200);
+ await evaluate(trigger("qa-immersive","Immersive queued preview"));
+ await until(()=>evaluate('document.querySelector(".an-live")?.textContent?.includes("Immersive queued preview")'));
+ await delay(6200);
+ const preserved=await evaluate('document.querySelector(".an-live")?.textContent?.includes("Immersive queued preview")');
+ if(!preserved)throw Error("V111_IMMERSIVE_SIGNAL_DISMISSED_WITHOUT_PRESENTATION");
+ await evaluate('document.body.classList.remove("av095-expanded")');
+ await until(()=>evaluate('!!document.querySelector(".ir111-phase-open .ir111-transmission")'));
+ await evaluate('document.querySelector(".ir111-transmission button").click()');
+ await until(()=>evaluate('!document.querySelector(".ir111-transmission")'));
+ writeFileSync(join(output,"acceptance.json"),JSON.stringify({pass:true,syntheticOnly:true,productionChanges:0,checks:["desktop","phone","small-phone","hidden-helper","reduced-motion","immersive-playback-queue"],evidence},null,2));
  console.log("IREN_V111_REACT_VISUAL_ACCEPTANCE=PASS");
 }finally{
  try{ws?.close()}catch{}
