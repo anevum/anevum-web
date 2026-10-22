@@ -206,7 +206,7 @@ try{
   fixture.control.set({actor:'owner',mode:'expiry',reset:true});await navigate('/projects/package/'+ids.project+'?preview=1');await until(()=>evaluate('!!document.querySelector("[data-native-player] iframe")||document.body.textContent.toLowerCase().includes("private playtest expired")'),'Expiring preview or immediate expiry');await until(()=>evaluate('document.body.textContent.toLowerCase().includes("private playtest expired")'),'Private capability expiry',10000);assert.equal(await visible('[data-native-player] iframe'),false);results.push({case:'expired-private-frame-removed',passed:true});
   for(const mode of ['unavailable','html']){fixture.control.set({actor:'owner',mode});await navigate('/studio/packages');await until(()=>visible('.av095-status'),'Unavailable mode');assert.equal(await visible('[data-native-project]'),false);await screenshot('native-'+mode+'-320');results.push({case:'fail-closed-'+mode,passed:true});}
  }
- if(!disabled){
+ if(!disabled&&!args.includes('--legacy-player-only')){
   for(const [width,height] of [[1440,1000],[320,720]]){
    fixture.control.set({actor:'owner',mode:'ready',reset:true});
    await client.send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<641});
