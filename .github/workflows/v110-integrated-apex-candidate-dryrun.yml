@@ -1,0 +1,144 @@
+# Build and preserve exact approved-source candidate bytes without Cloudflare writes.
+# Does not replace source-bound human acceptance or the guarded production workflow.
+name: ANEVUM V110 Integrated Apex Candidate Dry Run
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/v110-integrated-apex-candidate-dryrun.yml"
+  push:
+    branches:
+      - "release/v084-continuance-approved-20261019"
+    paths:
+      - ".github/workflows/v110-integrated-apex-candidate-dryrun.yml"
+      - "creator-v1/web/**"
+      - "creator-v1/apex-prelaunch/**"
+      - "creator-v1/canonical-auth/**"
+      - "site/alpha/v003/**"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: anevum-v110-apex-dryrun-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  candidate:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      VITE_IREN_SPATIAL_GUIDE: 'true'
+      VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
+      VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reconstruct required canonical evolution assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install numpy==2.2.6 scipy==1.15.3 Pillow==11.2.1
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libgl1-mesa-dri
+          (
+            cd design/evolution-v059
+            mkdir -p artwork/{native,textures,vector,masters,web,compact} docs dist previews
+            python src/export_native.py
+            python src/render_web.py
+            python src/build.py
+          )
+          python creator-v1/ops/install-evolution-v060.py
+          test "$(find creator-v1/web/public/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+      - name: Compile exact feature-on source, never deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          test -s creator-v1/dist/web/index.html
+          test -s creator-v1/dist/web/evolution/assets/level-04-scene.gz
+          test -s creator-v1/dist/web/evolution/assets/level-30-scene.gz
+          test "$(find creator-v1/dist/web/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+          test -z "$(find creator-v1/dist/web -name '*.map' -print -quit)"
+          node --test creator-v1/test/studio-entry-isolation-v106.test.mjs
+          node --test tests/native-creator-v095.test.mjs
+      - name: Render real site-root feature-on bundle at phone and desktop widths
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$chrome"
+          mkdir -p evidence/v110-integrated-apex
+          ANEVUM_APEX_ROOT_QA=1 node creator-v1/test/portal-offline-preview.mjs > evidence/v110-integrated-apex/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 80); do
+            if curl --fail --silent --max-time 3 http://127.0.0.1:4180/__ready >/dev/null; then ready=1; break; fi
+            sleep 0.3
+          done
+          test "$ready" = 1
+          node creator-v1/test/capture-v100-apex-root.mjs "$chrome" http://127.0.0.1:4180 evidence/v110-integrated-apex
+          test -s evidence/v110-integrated-apex/apex-root-320.png
+          test -s evidence/v110-integrated-apex/apex-root-390.png
+          test -s evidence/v110-integrated-apex/apex-root-1440.png
+      - name: Hash and retain exact candidate frontend, explicitly without release authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'JS'
+          import {readFileSync,readdirSync,mkdirSync,writeFileSync,cpSync,statSync} from 'node:fs';
+          import {join,relative} from 'node:path';
+          import {createHash} from 'node:crypto';
+          import {execFileSync} from 'node:child_process';
+          const root='creator-v1/dist/web',out='evidence/v110-integrated-apex';
+          const sha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+          if(!/^[a-f0-9]{40}$/.test(sha))throw Error('Unknown source SHA');
+          const walk=dir=>readdirSync(dir,{withFileTypes:true}).flatMap(entry=>{
+           const full=join(dir,entry.name);
+           return entry.isDirectory()?walk(full):entry.isFile()?[full]:[];
+          });
+          const files=walk(root).map(file=>({
+           path:relative(root,file).replaceAll('\\','/'),
+           sha256:createHash('sha256').update(readFileSync(file)).digest('hex'),
+           bytes:statSync(file).size
+          })).sort((a,b)=>a.path.localeCompare(b.path));
+          if(files.some(f=>f.path.startsWith('..')||f.path.endsWith('.map')))throw Error('Unexpected asset');
+          const browser=JSON.parse(readFileSync(join(out,'acceptance.json'),'utf8'));
+          if(browser.status!=='PASS'||![320,390,1440].every(w=>browser.results?.some(x=>x.width===w)))
+           throw Error('Missing exact root browser evidence');
+          const flags=['VITE_IREN_SPATIAL_GUIDE','VITE_NATIVE_CREATOR_STUDIO_V095','VITE_PACKAGE_CREATOR_GALLERY_V010'];
+          if(flags.some(name=>process.env[name]!=='true'))throw Error('Feature-on flags missing');
+          const report={
+           session:'ANEVUM.ANEVUM.UPDATE.2026-10-22.001.PLATFORM-COMPLETION',
+           status:'EXACT_SOURCE_FRONTEND_DRY_RUN',
+           sourceSha:sha,clientFlags:Object.fromEntries(flags.map(name=>[name,true])),
+           assetBase:'/',runtimePath:'/',entry:'index.html',
+           files,assetCount:files.length,
+           cloudflareVersion:null,workerBundleVerified:false,
+           uploadedToCloudflare:false,publicTrafficChanged:false,
+           databaseModified:false,bindingsReconciled:false,
+           authenticatedFounderReviewerAndMemberAcceptance:false,
+           physicalSafariAcceptance:false,productionReleaseApproved:false
+          };
+          mkdirSync(out,{recursive:true});
+          writeFileSync(join(out,'candidate-manifest.json'),JSON.stringify(report,null,2)+'\n');
+          cpSync(root,join(out,'compiled-web'),{recursive:true});
+          JS
+          echo 'V110_EXACT_SOURCE_ASSET_BUILD=PASS; CLOUDFARE_UPLOAD=NONE; RELEASE_APPROVAL=NONE' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v110-integrated-apex-dryrun-${{ github.sha }}
+          path: evidence/v110-integrated-apex/
+          retention-days: 7
+          if-no-files-found: warn
