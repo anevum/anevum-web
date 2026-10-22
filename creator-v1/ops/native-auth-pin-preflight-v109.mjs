@@ -35,8 +35,13 @@ export function assessNativeAuthVersionRouting(input){
  const apexVersions=validateDeployment(x.apexDeployment);
  if(!controllerVersions)reasons.push('CONTROLLER_DEPLOYMENT_UNVERIFIED');
  if(!apexVersions)reasons.push('APEX_DEPLOYMENT_UNVERIFIED');
- const active=controllerVersions?.find(v=>v.percentage===100);
- if(!active||controllerVersions.length!==1)reasons.push('CONTROLLER_VERSION_NOT_EXCLUSIVE');
+ // A 100% controller with an optional 0% inactive candidate is normal.
+ // Only the immutable 100%-serving version establishes live AUTH bindings.
+ // Mixed percentages (including canaries) are not sufficient for this gate.
+ const activeVersions=controllerVersions?.filter(v=>v.percentage===100)||[];
+ const active=activeVersions[0];
+ if(activeVersions.length!==1||controllerVersions?.some(v=>v.percentage!==0&&v.percentage!==100))
+  reasons.push('CONTROLLER_VERSION_NOT_EXCLUSIVE');
  const version=plain(x.controllerVersion);
  if(!validVersion(version.id)||!active||active.version_id!==version.id)
   reasons.push('CONTROLLER_VERSION_NOT_CURRENT');
