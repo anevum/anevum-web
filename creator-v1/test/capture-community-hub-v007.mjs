@@ -56,15 +56,27 @@ const child = spawn(chrome, [
   "--disable-background-networking", "--remote-allow-origins=*",
   "--remote-debugging-port=0", "--no-first-run", "--user-data-dir=" + profile,
   "about:blank"
-], { stdio: "ignore" });
+], { stdio: ["ignore","ignore","pipe"] });
+let chromeStderr="", chromeSpawnError=null;
+child.stderr?.on("data", chunk => { chromeStderr=(chromeStderr+String(chunk)).slice(-8192); });
+child.on("error", error => { chromeSpawnError=error; });
 let client = null;
 try {
-  const port = await until(() => {
-    const file = join(profile, "DevToolsActivePort");
-    if (!existsSync(file)) return null;
-    const text = readFileSync(file, "utf8").split("\n")[0];
-    return /^\d+$/.test(text) ? text : null;
-  });
+  // Browser startup receives a larger budget on heavily loaded hosted runners.
+  // All viewport, screenshot and interaction assertions retain their limits.
+  let port;
+  try {
+    port=await until(()=>{
+      const file=join(profile,"DevToolsActivePort");
+      if (!existsSync(file)) return null;
+      const value=readFileSync(file,"utf8").split("\n")[0];
+      return /^\d+$/.test(value)?value:null;
+    },60000);
+  } catch(error) {
+    throw Error("V007_CHROMIUM_STARTUP: "+(chromeSpawnError?.message||
+      (child.exitCode!==null?"exit="+child.exitCode:"missing DevTools port"))+
+      " / stderr="+chromeStderr.slice(-1600),{cause:error});
+  }
   const debuggerUrl = await until(async () => {
     const response = await fetch("http://127.0.0.1:" + port + "/json/list");
     if (!response.ok) return null;
@@ -145,6 +157,8 @@ try {
   writeFileSync(join(output, "capture-status.txt"),
     "COMMUNITY_V007_BROWSER_CAPTURE=PASS\nAll records in these screenshots are offline synthetic review fixtures, not live user activity. No staff, member, D1 or production mutations.\n");
 } finally {
+  // Preserve the actual Chrome launch error without relaxing QA assertions.
+  writeFileSync(join(output,"chromium-startup.log"),chromeStderr.slice(-8192));
   try{if(client)await client.send("Browser.close");}catch{}
   client?.close();
   if(child.exitCode===null){

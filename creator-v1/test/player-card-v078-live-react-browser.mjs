@@ -96,7 +96,7 @@ async function until(fn,timeout=38000){
 }
 mkdirSync(output,{recursive:true});
 const profileDir=mkdtempSync(join(tmpdir(),'anevum-v078-react-'));
-let browser=null,socket=null;
+let browser=null,socket=null,browserLog='';
 try{
  await new Promise((resolve,reject)=>server.listen(0,'127.0.0.1',e=>e?reject(e):resolve()));
  const origin='http://127.0.0.1:'+server.address().port;
@@ -105,12 +105,22 @@ try{
   '--disable-background-networking','--no-first-run',
   '--remote-debugging-port=0','--remote-allow-origins=*',
   '--user-data-dir='+profileDir,'about:blank'
- ],{stdio:'ignore'});
- const port=await until(()=>{
-  const p=join(profileDir,'DevToolsActivePort');
-  if(!existsSync(p))return null;
-  return readFileSync(p,'utf8').split('\n')[0];
- },20000);
+ ],{stdio:['ignore','ignore','pipe']});
+ browser.stderr?.on('data',chunk=>{browserLog=(browserLog+String(chunk)).slice(-8192)});
+ // Hosted Chromium can initialize slowly after the earned-media build.
+ // Preserve all React, privacy, viewport and screenshot assertions below.
+ let port;
+ try{
+  port=await until(()=>{
+   const p=join(profileDir,'DevToolsActivePort');
+   if(!existsSync(p))return null;
+   return readFileSync(p,'utf8').split('\n')[0];
+  },60000);
+ }catch(error){
+  throw Error('V078_CHROMIUM_STARTUP: '+
+   (browser.exitCode!==null?'exit='+browser.exitCode:'missing DevTools port')+
+   ' / stderr='+browserLog.slice(-1600),{cause:error});
+ }
  const ws=await until(async()=>{
   const r=await fetch('http://127.0.0.1:'+port+'/json/list');
   return r.ok?(await r.json()).find(x=>x.type==='page')?.webSocketDebuggerUrl:null;
@@ -285,6 +295,7 @@ try{
  },null,2));
  console.log('ANEVUM_V078_REACT_PUBLIC_PRIVATE_RESPONSIVE_VISUAL=PASS');
 }finally{
+ writeFileSync(join(output,'chromium-startup.log'),browserLog.slice(-8192));
  try{socket?.close()}catch{}
  browser?.kill('SIGTERM');
  server.close();

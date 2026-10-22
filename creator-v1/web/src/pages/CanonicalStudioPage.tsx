@@ -13,6 +13,7 @@ import {readWithDeadline} from '../../../shared/read-deadline.mjs';
 import {nativeCreatorEnabled} from '../lib/native-creator-v095';
 import {workbenchAlphaEnabled} from '../lib/workbench-alpha';
 import {NativeStudioNavigation} from './NativeCreatorStudio';
+import {resolveStudioEntry} from '../lib/studio-entry-read';
 const WorkbenchAlphaEntryGate=lazy(()=>import('./WorkbenchAlpha').then(m=>({default:m.WorkbenchAlphaEntryGate})));
 
 const CATEGORY_GUIDE:Record<StudioCategory,string>={
@@ -71,19 +72,15 @@ function SessionStudio({id,mode}:{id:string;mode:Mode}){
  useEffect(()=>{
   let live=true;const controller=new AbortController();
   setPhase('loading');setMessage('');
-  readWithDeadline(async signal=>{
-   const [health,profile]=await Promise.all([studioHealth(signal),canonicalMe(signal)]);
-   if(profile.memberId!==id)throw Error('Member identity changed. Sign in again.');
-   const memberStudio=health.studioReady&&profile.profile?.handle?await studioList(signal):null;
-   return {health,profile,memberStudio};
-  },controller.signal).then(({health,profile,memberStudio})=>{
+  readWithDeadline(signal=>resolveStudioEntry(id,mode,signal,{
+   profile:canonicalMe,health:studioHealth,list:studioList
+  }),controller.signal).then(result=>{
    if(!live)return;
-   if(!health.studioReady){setPhase('unavailable');return;}
-   if(!profile.profile?.handle){setPhase('incomplete');return;}
-   if(!memberStudio)throw Error('Creator Studio capability verification did not complete. Retry access.');
-   // Only this account's canonical response grants upload or review capability.
-   setIdentity(profile.profile);setUploads(memberStudio.uploadsReady===true);
-   setCanReview(memberStudio.canReview===true);setPhase('ready');
+   if(result.phase!=='ready'){setPhase(result.phase);return;}
+   // A list failure belongs to StudioLibrary, not to the authenticated hub.
+   // Editor/reviewer capabilities remain independently server-verified.
+   setIdentity(result.identity);setUploads(result.uploads);
+   setCanReview(result.canReview);setPhase('ready');
   }).catch(e=>{if(live){setMessage(showError(e));setPhase('unavailable')}});
   return()=>{live=false;controller.abort();};
  },[id,attempt]);
@@ -127,18 +124,19 @@ function SessionStudio({id,mode}:{id:string;mode:Mode}){
    </div>
    <p className="st-muted">These are different stages of one creation lifecycle. Neither saving a private record nor preparing a playable build publishes it automatically. Live uploads and publishing depend on server permissions and independent review.</p>
   </section>}
-  {mode==='list'?<StudioLibrary/>:mode==='review'?<StudioReview/>:<StudioEditor create={mode==='new'} uploadsReady={uploads}/>}
+  {mode==='list'?<StudioLibrary onCapabilities={capabilities=>{setCanReview(capabilities.canReview===true);setUploads(capabilities.uploadsReady===true);}}/>:mode==='review'?<StudioReview/>:<StudioEditor create={mode==='new'} uploadsReady={uploads}/>}
  </section>;
 }
 
-function StudioLibrary(){
+function StudioLibrary({onCapabilities}:{onCapabilities:(value:{canReview:boolean;uploadsReady:boolean})=>void}){
  const [items,setItems]=useState<StudioProject[]>([]),[error,setError]=useState(''),[loading,setLoading]=useState(true);
  const [search,setSearch]=useState('');
  const [attempt,setAttempt]=useState(0);
  const [statusFilter,setStatusFilter]=useState<'all'|'draft'|'pending_review'|'changes_requested'|'rejected'>('all');
  useEffect(()=>{
   const ac=new AbortController();setLoading(true);setError('');
-  readWithDeadline(signal=>studioList(signal),ac.signal).then(r=>{if(!ac.signal.aborted)setItems(r.projects)}).catch(e=>{if(!ac.signal.aborted)setError(showError(e))})
+  onCapabilities({canReview:false,uploadsReady:false});
+  readWithDeadline(signal=>studioList(signal),ac.signal).then(r=>{if(!ac.signal.aborted){setItems(r.projects);onCapabilities(r);}}).catch(e=>{if(!ac.signal.aborted)setError(showError(e))})
    .finally(()=>{if(!ac.signal.aborted)setLoading(false)});
   return()=>ac.abort();
  },[attempt]);
