@@ -115,19 +115,51 @@ try{
   }
   const frameStatus=await evaluate('document.querySelector(".av102-player-status")?.dataset.playerFrameState');
   assert.ok(['opening','frame-loaded','slow'].includes(frameStatus),'Player status must describe frame loading without claiming runtime health');
+  // A stable URL alone cannot detect an iframe remount or same-URL reload.
+  // Seed actual project state, then read it through a fresh CDP context after
+  // each view change. Reloading the fixture loses both the marker and counter.
+  const runtimeEvaluate=async expression=>{
+   const targets=await client.send('Target.getTargets');
+   const target=targets.targetInfos.find(x=>x.type==='iframe'&&x.url.includes('anevum-package-alpha-v003-runtime'));
+   if(target){
+    const {sessionId}=await client.send('Target.attachToTarget',{targetId:target.targetId,flatten:true});
+    try{return await evaluate(expression,sessionId);}
+    finally{await client.send('Target.detachFromTarget',{sessionId});}
+   }
+   const frames=await client.send('Page.getFrameTree');
+   const frame=frames.frameTree.childFrames?.find(x=>x.frame.url.includes('anevum-package-alpha-v003-runtime'));
+   assert.ok(frame,'A real isolated execution frame must exist');
+   const world=await client.send('Page.createIsolatedWorld',{frameId:frame.frame.id,worldName:'v095-synthetic-probe'});
+   const reply=await client.send('Runtime.evaluate',{contextId:world.executionContextId,expression,returnByValue:true});
+   if(reply.exceptionDetails)throw Error(reply.exceptionDetails.exception?.description||reply.exceptionDetails.text);
+   return reply.result?.value;
+  };
+  await until(()=>runtimeEvaluate('!!document.getElementById("send")'),'Isolated runtime ready');
+  assert.equal(await runtimeEvaluate('document.documentElement.dataset.acceptanceSession="in-progress";document.getElementById("send").click();document.getElementById("count").textContent'),'1');
+  await evaluate('window.__v095PlayerFrame=document.querySelector(".av095-player iframe");true');
+  const assertPlayerContinues=async action=>{
+   assert.equal(await evaluate('document.querySelector(".av095-player iframe")===window.__v095PlayerFrame'),true,action+' must retain the iframe element');
+   assert.equal(await runtimeEvaluate('document.documentElement.dataset.acceptanceSession+":"+document.getElementById("count")?.textContent'),'in-progress:1',action+' must preserve the loaded project state');
+  };
   const original=await evaluate('document.querySelector(".av095-player iframe").src');
   await clickText('Phone width');
   await until(()=>evaluate('document.querySelector(".av095-player").dataset.playerViewport==="phone"'),'Simulated phone stage');
   assert.equal(await evaluate('document.querySelector(".av095-player iframe").src'),original,'Resizing must not reload the untrusted frame');
+  await assertPlayerContinues('Phone width');
   assert.equal(await evaluate('document.querySelector(".av102-player-note")?.textContent.includes("not physical Safari")'),true);
   await clickText('Full width');
   await until(()=>evaluate('document.querySelector(".av095-player").dataset.playerViewport==="fit"'),'Restored responsive stage');
   assert.equal(await evaluate('document.querySelector(".av095-player iframe").src'),original);
+  await assertPlayerContinues('Full width');
   await evaluate('HTMLElement.prototype.requestFullscreen=undefined');const before=await evaluate('document.querySelector(".av095-player iframe").src');
   await clickText('Expand player');await until(()=>visible('.av095-player--expanded'),'Immersive fallback');await screenshot('native-iphone-expand-320');
   assert.equal(await evaluate('document.querySelector(".av095-player iframe").src'),before);
+  await assertPlayerContinues('Expand player');
   await clickText('Exit player');await until(async()=>!await visible('.av095-player--expanded'),'Exit player');
-  assert.equal(await evaluate('document.activeElement.textContent'),'Expand player');results.push({case:'same-frame-iphone-expand-exit',passed:true});
+  assert.equal(await evaluate('document.activeElement.textContent'),'Expand player');
+  await assertPlayerContinues('Exit player');
+  assert.equal(await runtimeEvaluate('document.getElementById("reset").click();document.getElementById("count").textContent'),'0');
+  results.push({case:'same-frame-iphone-expand-exit',statePreserved:true,passed:true});
   const sandbox=await evaluate('document.querySelector(".av095-player iframe").getAttribute("sandbox")');assert.equal(sandbox,'allow-scripts allow-pointer-lock');
   const targets=await client.send('Target.getTargets');const frameTarget=targets.targetInfos.find(x=>x.type==='iframe'&&x.url.includes('anevum-package-alpha-v003-runtime'));
   if(frameTarget){const {sessionId}=await client.send('Target.attachToTarget',{targetId:frameTarget.targetId,flatten:true});await evaluate('document.getElementById("send").click()',sessionId);assert.equal(await evaluate('document.getElementById("count").textContent',sessionId),'1');await evaluate('document.getElementById("reset").click()',sessionId);assert.equal(await evaluate('document.getElementById("count").textContent',sessionId),'0');results.push({case:'isolated-runtime-buttons',passed:true});}
