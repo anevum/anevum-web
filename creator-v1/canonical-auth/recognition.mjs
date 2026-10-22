@@ -2,6 +2,7 @@
 // This module never grants achievements. No client mutation awards XP, medals or
 // ribbons; every public claim must resolve from canonical saved evidence.
 import {MILESTONES} from './rewards.mjs';
+import {progressionReset} from './progression-epoch.mjs';
 import {boundedText} from './request-body.mjs';
 
 const BADGE_IDS=new Set([
