@@ -1,0 +1,110 @@
+# One-use exact-bundle inactive upload. Never creates a deployment or changes routes.
+name: ANEVUM V113 Exact Apex Inactive Upload
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v113-apex-inactive-upload.yml'
+      - 'creator-v1/ops/apex-inactive-upload-v113.mjs'
+      - 'creator-v1/test/apex-inactive-upload-v113.test.mjs'
+  push:
+    branches: ['ops/platform-inactive-v113-20261022-001']
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: anevum-v113-exact-inactive-upload
+  cancel-in-progress: false
+jobs:
+  verify-inactive:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+      CLOUDFLARE_API_TOKEN: ''
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test inactive upload invariants without provider credentials
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+          node --check creator-v1/ops/apex-inactive-upload-v113.mjs
+          node --test creator-v1/test/apex-inactive-upload-v113.test.mjs creator-v1/test/apex-worker-bundle-v112.test.mjs creator-v1/test/native-auth-pin-preflight-v109.test.mjs
+      - uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12466999553'
+          run-id: 39874021110
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v113-package
+          merge-multiple: true
+      - name: Require exact retained V112 Worker bytes and test no-bundle upload offline
+        run: |
+          node creator-v1/ops/apex-inactive-upload-v113.mjs config "$RUNNER_TEMP/v113-package" "$RUNNER_TEMP/v113-offline-upload.json"
+          npx --no-install wrangler versions upload --dry-run --no-bundle --no-upload-source-maps --config "$RUNNER_TEMP/v113-offline-upload.json"
+          echo 'EXACT_V112_PRECOMPILED_UPLOAD_DRYRUN=PASS; PROVIDER_WRITES=NONE' >> "$GITHUB_STEP_SUMMARY"
+  inactive-upload:
+    needs: verify-inactive
+    if: >-
+      github.repository == 'anevum/anevum-web' &&
+      github.actor == 'anevum' && github.event_name == 'push' &&
+      github.ref == 'refs/heads/ops/platform-inactive-v113-20261022-001' &&
+      github.event.head_commit.message == 'release(v113): upload exact inactive apex only'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install reviewed upload tooling, without rebuilding the Worker
+        run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12466999553'
+          run-id: 39874021110
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v113-package
+          merge-multiple: true
+      - name: Require reviewed source CI, exact marker and fresh live provider snapshot
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node creator-v1/ops/apex-inactive-upload-v113.mjs before "$RUNNER_TEMP/v113-package" "$RUNNER_TEMP/v113-before.json" "$RUNNER_TEMP/v113-upload.json"
+      - name: Upload one immutable inactive version, with no bundle transformation
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          test -s "$RUNNER_TEMP/v113-before.json"
+          test -s "$RUNNER_TEMP/v113-upload.json"
+          npx --no-install wrangler versions upload --no-bundle --no-upload-source-maps --keep-vars --strict \
+            --config "$RUNNER_TEMP/v113-upload.json" \
+            --message 'V113 inactive only; source bb5893b6890d5a6d3f64412730053b6ca0816b02; bundle 1884ff0dd3c8aa3d38711167af0b4552c9b200b3148e72d9ba6d90d23171ef99'
+      - name: Verify immutable bindings and unchanged public deployment, settings and routes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          node creator-v1/ops/apex-inactive-upload-v113.mjs after "$RUNNER_TEMP/v113-package" "$RUNNER_TEMP/v113-before.json" "$RUNNER_TEMP/v113-inactive-receipt.json"
+          echo 'EXACT_APEX_VERSION_UPLOADED=INACTIVE_ONLY; PUBLIC_DEPLOYMENT=UNCHANGED; ACCEPTANCE=OUTSTANDING' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v113-inactive-upload-receipt-${{ github.sha }}
+          path: ${{ runner.temp }}/v113-inactive-receipt.json
+          retention-days: 14
+          if-no-files-found: ignore
