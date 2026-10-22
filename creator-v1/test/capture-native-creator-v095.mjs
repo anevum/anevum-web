@@ -243,9 +243,12 @@ try{
   fixture.control.set({actor:'owner',mode:'hang-native'});
   await navigate('/studio/packages');
   await until(()=>evaluate('document.body.textContent.includes("did not respond within 15 seconds")'),'Bounded native capability read',22000);
+  assert.equal(await evaluate('!!document.querySelector(\'.av095-status a[href="/creator/studio/records"]\')'),true,'Native outage must offer the existing canonical private-record route');
+  assert.equal(await visible('[data-native-project]'),false,'No private native project may remain visible after the access failure');
+  await screenshot('native-timeout-records-fallback-320');
   fixture.control.set({mode:'ready'});await clickText('Try again');
   await until(()=>visible('[data-native-project]'),'Explicit native retry');
-  results.push({case:'native-read-deadline-and-explicit-retry',passed:true});
+  results.push({case:'native-read-deadline-authenticated-record-fallback-and-explicit-retry',passed:true});
  }
  assert.equal(exceptions.length,0,'Unhandled browser exceptions: '+JSON.stringify(exceptions));
  writeFileSync(join(output,'acceptance.json'),JSON.stringify({source,status:'PASS',syntheticOnly:true,physicalDeviceAcceptance:false,disabled,legacyPlayerOnly:args.includes('--legacy-player-only'),cases:results,requests:fixture.control.trace()},null,2));
