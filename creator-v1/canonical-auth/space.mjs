@@ -6,7 +6,7 @@ import {memberVerifiedRoleMap} from './member-verified-roles.mjs';
 
 import {MILESTONES} from './rewards.mjs';
 export {MILESTONES} from './rewards.mjs';
-import {progressionReady,readProgression,syncRewardNotifications,levelProgress} from './progression.mjs';
+import {progressionReady,readProgression,syncRewardNotifications,progressionReset,levelProgress} from './progression.mjs';
 const HEADERS={'cache-control':'private, no-store','content-type':'application/json; charset=utf-8','x-content-type-options':'nosniff','cross-origin-resource-policy':'same-origin'};
 const json=(value,status=200)=>Response.json(value,{status,headers:HEADERS});
 const error=(status,message)=>json({error:message},status);
@@ -43,7 +43,8 @@ export async function grantMilestones(db,id,now){
 }
 export async function spaceSnapshot(db,id){
  const mediaRows=await rows(db,'SELECT slot,version FROM member_space_media WHERE user_id=?',id);
- const earned=await rows(db,'SELECT milestone,earned_at FROM member_space_milestones WHERE user_id=?',id);
+ const reset=await progressionReset(db);
+ const earned=await rows(db,'SELECT milestone,earned_at FROM member_space_milestones WHERE user_id=?',id).then(items=>items.filter(row=>!reset||Number(row.earned_at)>reset.cutoffAt));
  const settings=await db.prepare('SELECT featured_json,show_stats,revision FROM member_space_settings WHERE user_id=?').bind(id).first();
  const count=await db.prepare('SELECT COUNT(*) AS count FROM member_wall_posts WHERE user_id=?').bind(id).first();
  const awards=MILESTONES.map(item=>({...item,earnedAt:Number(earned.find(e=>e.milestone===item.id)?.earned_at)||null}));
