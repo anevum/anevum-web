@@ -1,0 +1,43 @@
+name: ANEVUM V111 IREN Transmission Presentation QA
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/web/src/components/AnevumNotifications.tsx'
+      - 'creator-v1/web/src/components/IrenGuidedContinuance.tsx'
+      - 'creator-v1/web/src/lib/ui-events.ts'
+      - 'creator-v1/web/src/iren-transmissions-v111.css'
+      - 'creator-v1/test/iren-scout-v087.test.mjs'
+      - 'creator-v1/test/iren-transmissions-v111.test.mjs'
+      - 'creator-v1/package.json'
+      - '.github/workflows/iren-transmissions-v111-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: iren-v111-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source-and-presentation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned project dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Typecheck canonical Creator V1 React shell
+        run: npm run check:creator-v1-web
+      - name: Build canonical Creator V1 production application
+        run: npm run build:creator-v1-web
+      - name: Verify one queue, one IREN and authentic recognition boundaries
+        working-directory: creator-v1
+        run: |
+          npm run test:iren-v111
+          npm run test:iren-v080
+          npm run test:iren-v088
+      - name: Identify exact verified source
+        run: git rev-parse HEAD
+# Source-only; no Cloudflare credentials, sign-in, D1 or deployment writes.

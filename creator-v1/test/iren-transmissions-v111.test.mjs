@@ -1,0 +1,55 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {parse} from "@babel/parser";
+
+const read=path=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
+const queue=read("web/src/components/AnevumNotifications.tsx");
+const guide=read("web/src/components/IrenGuidedContinuance.tsx");
+const events=read("web/src/lib/ui-events.ts");
+const css=read("web/src/iren-transmissions-v111.css");
+
+test("V111 extends the existing authenticated queue and IREN rig, without a second overlay backend",()=>{
+ for(const source of [queue,guide,events])
+  assert.doesNotThrow(()=>parse(source,{sourceType:"module",plugins:["typescript","jsx"]}));
+ assert.match(queue,/progressionRequest<RewardInbox>\('notifications'/);
+ assert.match(queue,/progressionRequest\('notifications\/ack',\{id:item\.serverId\}\)/);
+ assert.match(queue,/activeTransmission:active\|\|null/);
+ assert.match(queue,/dismissTransmission:\(item\)=>\{void finish\(item\)\}/);
+ assert.doesNotMatch(queue,/className=\{'an-toast/);
+ assert.equal((guide.match(/className="ir80-dock ir87-scout"/g)||[]).length,1);
+ assert.match(guide,/IrenLivingCanvas mood=\{mood\}/);
+ assert.match(guide,/broadcast\?\[-0\.85,-0\.18\]:look/);
+ assert.doesNotMatch(guide,/fetch\(|dangerouslySetInnerHTML/);
+});
+
+test("V111 presents verified rewards and all app signals, without inventing achievements",()=>{
+ for(const kind of ["success","error","info","update","xp","level","award"])
+  assert.ok(events.includes("'"+kind+"'"),kind);
+ assert.match(guide,/activeTransmission\.kind==="level"/);
+ assert.match(guide,/typeof activeTransmission\.level==="number"/);
+ assert.match(guide,/LevelEmblem level=\{activeTransmission\.level\}/);
+ assert.match(guide,/activeTransmission\.kind==="award"&&activeTransmission\.award/);
+ assert.match(guide,/AwardEmblem award=\{activeTransmission\.award\}/);
+ assert.match(guide,/activeTransmission\.preview/);
+ assert.match(guide,/no XP or award was granted/);
+ assert.match(queue,/A transient read failure must not invent or erase earned progress/);
+ assert.match(guide,/Published system availability is tracked separately/);
+ assert.match(guide,/Link to="\/status"/);
+});
+
+test("V111 does not steal focus or force visuals during tours, hidden IREN or reduced motion",()=>{
+ assert.match(guide,/!hidden&&!panelOpen&&tourIndex===null/);
+ assert.match(guide,/hidden&&activeTransmission&&<aside className="ir111-quiet"/);
+ assert.match(guide,/className="ir111-inline"/);
+ assert.match(guide,/ir111-motion-paused/);
+ assert.match(guide,/aria-label="Dismiss IREN transmission"/);
+ assert.match(guide,/dismissTransmission\(activeTransmission\)/);
+ assert.match(css,/@media\(max-width:700px\)/);
+ assert.match(css,/@media\(max-height:460px\)/);
+ assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+ assert.match(css,/@media\(forced-colors:active\)/);
+ assert.match(css,/ir111-arrive/);
+ assert.match(css,/ir111-motion-paused/);
+ assert.match(guide,/import "\.\.\/iren-transmissions-v111\.css"/);
+});

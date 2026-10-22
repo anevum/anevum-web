@@ -1,4 +1,4 @@
-export type AlertKind='success'|'error'|'info'|'xp'|'level'|'award';
+export type AlertKind='success'|'error'|'info'|'update'|'xp'|'level'|'award';
 export type AnevumAlert={key:string;kind:AlertKind;title:string;detail?:string;level?:number;award?:string;serverId?:number;xp?:number;preview?:boolean};
 let account:string|undefined;
 export const alertAccount=()=>account;
