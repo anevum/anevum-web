@@ -18,6 +18,21 @@ export async function progressionReady(db){
   return ready;
  }catch{return false}
 }
+/** One reversible operational cutover: existing event and milestone rows remain untouched. */
+export async function progressionReset(db){
+ try{
+  const row=await db.prepare('SELECT cutoff_event_id,cutoff_at FROM member_progression_reset_epoch WHERE epoch=1').first();
+  if(!row)return null;
+  const cutoffEventId=Number(row.cutoff_event_id),cutoffAt=Number(row.cutoff_at);
+  if(!Number.isSafeInteger(cutoffEventId)||cutoffEventId<0||!Number.isSafeInteger(cutoffAt)||cutoffAt<=0)
+   throw Error('Invalid progression reset baseline');
+  return {cutoffEventId,cutoffAt};
+ }catch(err){
+  // Permit rollout before the additive table is provisioned; never hide other storage errors.
+  if(/no such table:\s*member_progression_reset_epoch/i.test(String(err?.message||err)))return null;
+  throw err;
+ }
+}
 export function levelProgress(raw){
  const xp=Number.isSafeInteger(raw)&&raw>=0?raw:0;
  const level=Math.min(30,1+Math.floor(Math.sqrt(xp/75)));
@@ -25,23 +40,31 @@ export function levelProgress(raw){
 }
 export async function readProgression(db,id){
  const earned=await rows(db,'SELECT milestone,earned_at FROM member_space_milestones WHERE user_id=?',id);
+ const reset=await progressionReset(db);
  // Once migration 0011 is installed, XP reads are O(1) per member.
  // The ledger remains the source of truth and triggers maintain its total.
  // Until that migration is deployed, retain the exact legacy behavior.
  let total;
- try{total=await db.prepare('SELECT xp FROM member_xp_totals WHERE user_id=?').bind(id).first();}
- catch(err){
-  if(!/no such table:\s*member_xp_totals/i.test(String(err?.message||err)))throw err;
-  total=await db.prepare('SELECT COALESCE(SUM(amount),0) AS xp FROM member_xp_events WHERE user_id=?').bind(id).first();
+ if(reset){
+  // Reset affects current calculations only; complete XP history stays in D1.
+  total=await db.prepare('SELECT COALESCE(SUM(amount),0) AS xp FROM member_xp_events WHERE user_id=? AND id>?').bind(id,reset.cutoffEventId).first();
+ }else{
+  try{total=await db.prepare('SELECT xp FROM member_xp_totals WHERE user_id=?').bind(id).first();}
+  catch(err){
+   if(!/no such table:\s*member_xp_totals/i.test(String(err?.message||err)))throw err;
+   total=await db.prepare('SELECT COALESCE(SUM(amount),0) AS xp FROM member_xp_events WHERE user_id=?').bind(id).first();
+  }
  }
- const milestoneXp=MILESTONES.reduce((n,a)=>n+(earned.some(e=>e.milestone===a.id)?a.xp:0),0),testXp=Number(total?.xp)||0;
+ const milestoneXp=MILESTONES.reduce((n,a)=>n+(earned.some(e=>e.milestone===a.id&&(!reset||Number(e.earned_at)>reset.cutoffAt))?a.xp:0),0),testXp=Number(total?.xp)||0;
  return {...levelProgress(milestoneXp+testXp),testXp,milestoneXp,awards:MILESTONES.map(a=>({...a,earnedAt:earned.find(e=>e.milestone===a.id)?.earned_at??null}))};
 }
 export async function syncRewardNotifications(db,id,now){
  const p=await readProgression(db,id);
- const last=await db.prepare("SELECT COALESCE(MAX(level),1) AS level FROM member_reward_notifications WHERE user_id=? AND kind='level' AND reference LIKE 'evo60-%' AND level<=?").bind(id,p.level).first();
+ const reset=await progressionReset(db);
+ const prefix=reset?'evo60-e1-':'evo60-';
+ const last=await db.prepare("SELECT COALESCE(MAX(level),1) AS level FROM member_reward_notifications WHERE user_id=? AND kind='level' AND reference LIKE ? AND level<=? AND created_at>?").bind(id,prefix+'%',p.level,reset?.cutoffAt??0).first();
  const statements=p.awards.filter(a=>a.earnedAt!==null).map(a=>db.prepare("INSERT OR IGNORE INTO member_reward_notifications(user_id,kind,reference,created_at) VALUES(?,'award',?,?)").bind(id,a.id,a.earnedAt));
- for(let level=Number(last?.level||1)+1;level<=p.level;level++)statements.push(db.prepare("INSERT OR IGNORE INTO member_reward_notifications(user_id,kind,reference,level,created_at) VALUES(?,'level',?,?,?)").bind(id,'evo60-'+level,level,now));
+ for(let level=Number(last?.level||1)+1;level<=p.level;level++)statements.push(db.prepare("INSERT OR IGNORE INTO member_reward_notifications(user_id,kind,reference,level,created_at) VALUES(?,'level',?,?,?)").bind(id,prefix+level,level,now));
  if(statements.length){const results=await db.batch(statements);if(results.some(r=>r.success===false))throw Error('Notification save unavailable')}
  return p;
 }
@@ -57,8 +80,11 @@ export async function canonicalProgression(req,env,user,now=Math.floor(Date.now(
  if(new URL(req.url).search)return error(400,'Query not supported');
  if(!await progressionReady(db))return error(503,'Progression is being prepared. Try again shortly.');
  try{
+  const reset=await progressionReset(db);
+  // The discontinued +5 calibration route cannot repopulate a reset XP balance.
+  if(path.endsWith('/xp-test')&&reset)return error(404,'Not found');
   if(!await db.prepare('SELECT handle FROM member_creator_profiles WHERE user_id=?').bind(user.id).first())return error(409,'Create your member space first.');
-  if(path.endsWith('/progression')&&req.method==='GET')return json({progression:await readProgression(db,user.id),testButtonEnabled:test});
+  if(path.endsWith('/progression')&&req.method==='GET')return json({progression:await readProgression(db,user.id),testButtonEnabled:test&&!reset});
   if(path.endsWith('/notifications')&&req.method==='GET'){
    await syncRewardNotifications(db,user.id,now);
    // Repair a notification if a committed badge grant outlived an interrupted
@@ -69,8 +95,8 @@ export async function canonicalProgression(req,env,user,now=Math.floor(Date.now(
      "WHERE user_id=? AND kind='badge' AND revoked_at IS NULL").bind(user.id).run();
    const receipt=await db.prepare('SELECT through_id FROM member_notification_receipts WHERE user_id=?').bind(user.id).first();
    const after=Number(receipt?.through_id)||0;
-   const items=await rows(db,`SELECT id,kind,reference,level,created_at FROM member_reward_notifications WHERE user_id=? AND id>? AND (kind!='level' OR (reference LIKE 'evo60-%' AND level<=30)) ORDER BY id LIMIT 24`,user.id,after);
-   const recent=await rows(db,`SELECT id,kind,reference,level,created_at FROM member_reward_notifications WHERE user_id=? AND (kind!='level' OR (reference LIKE 'evo60-%' AND level<=30)) ORDER BY id DESC LIMIT 12`,user.id);
+   const items=await rows(db,`SELECT id,kind,reference,level,created_at FROM member_reward_notifications WHERE user_id=? AND id>? AND (kind!='level' OR (reference LIKE 'evo60-%' AND level<=30 AND created_at>?)) ORDER BY id LIMIT 24`,user.id,after,reset?.cutoffAt??0);
+   const recent=await rows(db,`SELECT id,kind,reference,level,created_at FROM member_reward_notifications WHERE user_id=? AND (kind!='level' OR (reference LIKE 'evo60-%' AND level<=30 AND created_at>?)) ORDER BY id DESC LIMIT 12`,user.id,reset?.cutoffAt??0);
    return json({items:items.map(notification),recent:recent.map(notification)});
   }
   if(path.endsWith('/notifications/ack')&&req.method==='POST'){
