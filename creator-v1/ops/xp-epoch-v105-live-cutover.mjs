@@ -214,7 +214,10 @@ export async function run(mode,token){
  assert.ok(meta.bindings.some(b=>b.name==='MEMBER_DB'&&b.database_id==='e1d29049-c83b-4534-8355-dc1fa36ba6d8'));
  const receipt={mode,source_pr:618,approved_merge:SOURCE,baseline_deployment:baseline.id,live_version:LIVE,
   ...Object.fromEntries(Object.entries(result).filter(([k])=>k!=='source'))};
- if(mode==='check')return {...receipt,read_only:true};
+ if(mode==='check'){
+  if(process.env.REVIEW_CANDIDATE_FILE)writeFileSync(process.env.REVIEW_CANDIDATE_FILE,result.source,{mode:0o600});
+  return {...receipt,read_only:true};
+ }
  assert.equal(process.env.GITHUB_REPOSITORY,'anevum/anevum-web');
  assert.equal(process.env.GITHUB_ACTOR,'anevum');
  assert.equal(process.env.GITHUB_REF,'refs/heads/release/v084-continuance-approved-20261019');
