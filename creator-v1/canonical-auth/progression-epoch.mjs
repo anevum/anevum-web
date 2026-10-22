@@ -2,7 +2,7 @@
 /** One reversible operational cutover: existing event and milestone rows remain untouched. */
 export async function progressionReset(db){
  try{
-  const row=await db.prepare('SELECT cutoff_event_id,cutoff_at FROM member_progression_reset_epoch WHERE epoch=1').first();
+  const row=await db.prepare('SELECT cutoff_event_id,cutoff_at FROM member_progression_reset_epoch WHERE epoch=1').bind().first();
   if(!row)return null;
   const cutoffEventId=Number(row.cutoff_event_id),cutoffAt=Number(row.cutoff_at);
   if(!Number.isSafeInteger(cutoffEventId)||cutoffEventId<0||!Number.isSafeInteger(cutoffAt)||cutoffAt<=0)
