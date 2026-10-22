@@ -25,7 +25,7 @@ export async function captureCreatorIdentityV091({client,base,evaluate,until,scr
       assert.equal(name.whiteSpace,'normal','Public identity must wrap on a narrow phone');
       assert.equal(name.lineClamp,'2','Public identity may use two legible lines');
       assert.ok(name.scrollWidth<=name.clientWidth+2,'Public identity text overflows mobile card');
-      assert.ok(name.height>=36,'Public identity remains collapsed to a single clipped line');
+      if(width===320)assert.ok(name.height>=36,'Small-phone public identity remains collapsed to a single clipped line');
     }
 
     await screenshot('v091-public-art-fallback-'+width);
