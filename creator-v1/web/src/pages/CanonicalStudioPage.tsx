@@ -13,6 +13,7 @@ import {readWithDeadline} from '../../../shared/read-deadline.mjs';
 import {nativeCreatorEnabled} from '../lib/native-creator-v095';
 import {workbenchAlphaEnabled} from '../lib/workbench-alpha';
 import {NativeStudioNavigation} from './NativeCreatorStudio';
+import {resolveStudioEntry} from '../lib/studio-entry-read';
 const WorkbenchAlphaEntryGate=lazy(()=>import('./WorkbenchAlpha').then(m=>({default:m.WorkbenchAlphaEntryGate})));
 
 const CATEGORY_GUIDE:Record<StudioCategory,string>={
@@ -71,19 +72,15 @@ function SessionStudio({id,mode}:{id:string;mode:Mode}){
  useEffect(()=>{
   let live=true;const controller=new AbortController();
   setPhase('loading');setMessage('');
-  readWithDeadline(async signal=>{
-   const [health,profile]=await Promise.all([studioHealth(signal),canonicalMe(signal)]);
-   if(profile.memberId!==id)throw Error('Member identity changed. Sign in again.');
-   const memberStudio=health.studioReady&&profile.profile?.handle?await studioList(signal):null;
-   return {health,profile,memberStudio};
-  },controller.signal).then(({health,profile,memberStudio})=>{
+  readWithDeadline(signal=>resolveStudioEntry(id,mode,signal,{
+   profile:canonicalMe,health:studioHealth,list:studioList
+  }),controller.signal).then(result=>{
    if(!live)return;
-   if(!health.studioReady){setPhase('unavailable');return;}
-   if(!profile.profile?.handle){setPhase('incomplete');return;}
-   if(!memberStudio)throw Error('Creator Studio capability verification did not complete. Retry access.');
-   // Only this account's canonical response grants upload or review capability.
-   setIdentity(profile.profile);setUploads(memberStudio.uploadsReady===true);
-   setCanReview(memberStudio.canReview===true);setPhase('ready');
+   if(result.phase!=='ready'){setPhase(result.phase);return;}
+   // A list failure belongs to StudioLibrary, not to the authenticated hub.
+   // Editor/reviewer capabilities remain independently server-verified.
+   setIdentity(result.identity);setUploads(result.uploads);
+   setCanReview(result.canReview);setPhase('ready');
   }).catch(e=>{if(live){setMessage(showError(e));setPhase('unavailable')}});
   return()=>{live=false;controller.abort();};
  },[id,attempt]);
