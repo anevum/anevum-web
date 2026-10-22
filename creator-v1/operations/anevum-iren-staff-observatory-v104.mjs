@@ -65,8 +65,7 @@ async function overview(db, staff) {
       (SELECT COUNT(*) FROM "user" WHERE emailVerified=1) AS verified,
       (SELECT COUNT(*) FROM "user" WHERE julianday(createdAt)>=julianday('now','-7 days')) AS new7d,
       (SELECT COUNT(DISTINCT userId) FROM session) AS sessionMembers,
-      (SELECT COUNT(*) FROM member_xp_events) AS xpEvents,
-      (SELECT COUNT(DISTINCT user_id) FROM member_xp_events) AS xpTesters,
+
       (SELECT COUNT(*) FROM member_forum_threads) AS threads,
       (SELECT COUNT(*) FROM member_forum_replies) AS replies,
       (SELECT COUNT(*) FROM member_wall_posts) AS wallPosts,
@@ -126,15 +125,14 @@ async function members(db, staff, url) {
     COALESCE(ap.revision,0) AS auraRevision,
     (SELECT MAX(s.updatedAt) FROM session s WHERE s.userId=u.id) AS lastSessionUpdate,
     (SELECT COUNT(*) FROM session s WHERE s.userId=u.id) AS sessionCount,
-    COALESCE(x.testEvents,0) AS testEvents,COALESCE(x.testXp,0) AS testXp,
+
     COALESCE((SELECT GROUP_CONCAT(r.recognition_id,', ') FROM member_recognition_grants r
       WHERE r.user_id=u.id AND r.revoked_at IS NULL),'') AS recognitions
     FROM "user" u
     LEFT JOIN member_creator_profiles p ON p.user_id=u.id
     LEFT JOIN staff_access_grants g ON g.member_id=u.id AND g.revoked_at IS NULL
     LEFT JOIN member_recognition_preferences ap ON ap.user_id=u.id
-    LEFT JOIN (SELECT user_id, COUNT(*) AS testEvents, SUM(amount) AS testXp
-      FROM member_xp_events GROUP BY user_id) x ON x.user_id=u.id
+
     ${where} ORDER BY u.createdAt DESC, u.id DESC LIMIT ? OFFSET ?`)
     .bind(...filter,pageSize,resolvedPage*pageSize).all();
   return json({ members: result.results || [], total, page:resolvedPage, pageSize,
