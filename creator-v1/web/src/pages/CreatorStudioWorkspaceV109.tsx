@@ -165,17 +165,23 @@ function MemberWorkspace({memberId}:{memberId:string}){
   setActiveKey(k);setNotice('');
  }
  function close(k:string){
+  if(tabs.find(tab=>keyOf(tab)===k)?.pinned){setNotice('Unpin the document before closing it.');return;}
   const next=tabs.filter(tab=>keyOf(tab)!==k);
   setTabs(next);
   if(selectedTab&&keyOf(selectedTab)===k)setActiveKey(next.length?keyOf(next[next.length-1]):'');
+  setNotice('');
  }
  function pin(k:string){
-  setTabs(old=>old.map(tab=>keyOf(tab)===k?{...tab,pinned:!tab.pinned}:tab));
+  setTabs(old=>{
+   const next=old.map(tab=>keyOf(tab)===k?{...tab,pinned:!tab.pinned}:tab);
+   return [...next.filter(tab=>tab.pinned),...next.filter(tab=>!tab.pinned)];
+  });
+  setNotice('');
  }
  function move(k:string,direction:-1|1){
   setTabs(old=>{
    const from=old.findIndex(tab=>keyOf(tab)===k),to=from+direction;
-   if(from<0||to<0||to>=old.length)return old;
+   if(from<0||to<0||to>=old.length||old[from].pinned!==old[to].pinned)return old;
    const next=[...old];[next[from],next[to]]=[next[to],next[from]];return next;
   });
  }
@@ -183,7 +189,7 @@ function MemberWorkspace({memberId}:{memberId:string}){
   if(source===target)return;
   setTabs(old=>{
    const from=old.findIndex(tab=>keyOf(tab)===source),to=old.findIndex(tab=>keyOf(tab)===target);
-   if(from<0||to<0)return old;
+   if(from<0||to<0||old[from].pinned!==old[to].pinned)return old;
    const next=[...old],item=next.splice(from,1)[0];next.splice(to,0,item);return next;
   });
  }
@@ -248,7 +254,7 @@ function MemberWorkspace({memberId}:{memberId:string}){
        key={k} draggable onDragStart={e=>e.dataTransfer.setData('text/plain',k)}
        onDragOver={e=>e.preventDefault()}
        onDrop={e=>{e.preventDefault();dropped(e.dataTransfer.getData('text/plain'),k);}}>
-       <button type="button" role="tab" aria-selected={selected&&keyOf(selected)===k}
+       <button type="button" role="tab" aria-selected={!!selected&&keyOf(selected)===k}
         onClick={()=>setActiveKey(k)}
         onKeyDown={e=>{if(e.altKey&&e.key==='ArrowLeft'){e.preventDefault();move(k,-1);}
          if(e.altKey&&e.key==='ArrowRight'){e.preventDefault();move(k,1);}}}>
