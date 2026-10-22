@@ -16,12 +16,12 @@
     "worker_etag": "1a5997a5b7de4d6c0c702595b9d648e891e00f298fb266a5df0e9ce6590b82dd"
   },
   "entry": {
-    "version": "f1fd80b0-9121-4dc8-a0b8-b35161c2b726",
-    "deployment": "9c0312b8-4356-40bd-8419-d9bc6158f2e9",
-    "expires_at": "2026-10-22T18:53:43.000Z",
+    "version": "406ef0ca-cfaa-411f-812d-1fb390b91ffc",
+    "deployment": "984dd104-3642-47f8-8983-0fde8a337ce9",
+    "expires_at": "2026-10-22T23:33:15.000Z",
     "source_sha256": "8523c9572da29d8732a497f18a43712b8eb26785255e5f77dbee86fd3afc64ab"
   },
-  "ruleset_version": "11",
+  "ruleset_version": "12",
   "observatory_version": "372d62ef-086b-4640-b7d2-35a7d0e98fe8",
   "routes": 40,
   "access_policy_changes": 0,
@@ -40,7 +40,7 @@
   "physical_safari_acceptance": false,
   "founder_visual_acceptance": false,
   "public_promotion": false,
-  "blocker": "Protected review window expired. Secure Cloudflare Access sign-in was previously rejected by automatic approval review because workspace credits were exhausted. No sign-in executed; genuine candidate/account/device acceptance remains open.",
+  "blocker": "Protected candidate review is active after genuine founder Cloudflare Access sign-in. The separate existing XP retirement edge Worker still redirects /thebutton to /member; canonical Studio service timed out during live review. Public promotion and full account/device acceptance remain open.",
   "last_preservation_readback_at": "2026-10-22T17:57:15Z",
   "wall_outage_retry_browser": {
     "run": 39800486308,
@@ -53,6 +53,7 @@
     "production_requests": 0
   },
   "synthetic_recovery_cases": 31,
-  "review_window_expired": true,
-  "review_window_checked_at": "2026-10-22T18:55:08Z"
+  "review_window_expired": false,
+  "review_window_checked_at": "2026-10-22T19:34:37Z",
+  "secure_access_sign_in_verified": true
 }
