@@ -26,7 +26,8 @@ test("legacy project routes lead to the verified canonical Studio",()=>{
  assert.match(app,/path="create" element={<Navigate to="\/studio" replace\/>}/);
  assert.match(app,/path="create\/new" element={<Navigate to="\/studio\/new" replace\/>}/);
  assert.match(app,/path="create\/:projectId" element={<LegacyStudioRedirect\/>}/);
- assert.match(app,/path="studio" element={<CanonicalStudioPage\/>}/);
+ assert.match(app,/path="studio" element=\{nativeCreatorEnabled\?/);
+ assert.match(app,/path="studio\/records" element=\{<CanonicalStudioPage\/>\}/);
  assert.match(studio,/canonicalAuthClient\.useSession\(\)/);
  assert.match(studio,/session\?\.user\?\.emailVerified!==true/);
  assert.match(studio,/profile\.memberId!==id/);
