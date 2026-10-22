@@ -5,8 +5,8 @@ import {bindAlertAccount,notify,type AnevumAlert} from '../lib/ui-events';
 import {OrbitalMark} from './OrbitalMark';
 import {LevelEmblem,AwardEmblem} from './LevelEmblem';
 import '../progression.css';
-type ProgressionContext={progression:MemberProgression|null;testEnabled:boolean;refresh:()=>Promise<void>;recent:RewardNotice[];unreadCount:number;markSignalsSeen:()=>void};
-const Context=createContext<ProgressionContext>({progression:null,testEnabled:false,refresh:async()=>{},recent:[],unreadCount:0,markSignalsSeen:()=>{}});
+type ProgressionContext={progression:MemberProgression|null;refresh:()=>Promise<void>;recent:RewardNotice[];unreadCount:number;markSignalsSeen:()=>void};
+const Context=createContext<ProgressionContext>({progression:null,refresh:async()=>{},recent:[],unreadCount:0,markSignalsSeen:()=>{}});
 export const useMemberProgression=()=>useContext(Context);
 /** Read-only recognition history, shared with the single IREN companion. */
 export const useIrenSignals=()=>{
@@ -24,7 +24,7 @@ export function AnevumNotifications({children}:{children:ReactNode}){
  return <NotificationSession key={session?.user?.id||'guest'} id={session?.user?.id}>{children}</NotificationSession>;
 }
 function NotificationSession({id,children}:{id?:string;children:ReactNode}){
- const [progression,setProgression]=useState<MemberProgression|null>(null),[testEnabled,setTestEnabled]=useState(false),[queue,setQueue]=useState<AnevumAlert[]>([]),[recent,setRecent]=useState<RewardNotice[]>([]),[unreadCount,setUnreadCount]=useState(0),[phase,setPhase]=useState('mark'),[visible,setVisible]=useState(document.visibilityState==='visible');
+ const [progression,setProgression]=useState<MemberProgression|null>(null),[queue,setQueue]=useState<AnevumAlert[]>([]),[recent,setRecent]=useState<RewardNotice[]>([]),[unreadCount,setUnreadCount]=useState(0),[phase,setPhase]=useState('mark'),[visible,setVisible]=useState(document.visibilityState==='visible');
  const alive=useRef(true),seen=useRef(new Set<number>()),loading=useRef(false),dirty=useRef(false),abort=useRef<AbortController|null>(null);
  const lastSeenRef=useRef(lastSeenSignal(id));
  const active=queue[0];
@@ -48,8 +48,8 @@ function NotificationSession({id,children}:{id?:string;children:ReactNode}){
   if(!id)return;if(loading.current){dirty.current=true;return}loading.current=true;
   const controller=new AbortController();abort.current=controller;
   try{
-   const [p,inbox]=await Promise.all([progressionRequest<{progression:MemberProgression;testButtonEnabled:boolean}>('progression',undefined,controller.signal),progressionRequest<RewardInbox>('notifications',undefined,controller.signal)]);
-   if(!alive.current)return;setProgression(p.progression);setTestEnabled(p.testButtonEnabled);setRecent(inbox.recent);setUnreadCount(inbox.recent.filter(item=>item.id>lastSeenRef.current).length);
+   const [p,inbox]=await Promise.all([progressionRequest<{progression:MemberProgression}>('progression',undefined,controller.signal),progressionRequest<RewardInbox>('notifications',undefined,controller.signal)]);
+   if(!alive.current)return;setProgression(p.progression);setRecent(inbox.recent);setUnreadCount(inbox.recent.filter(item=>item.id>lastSeenRef.current).length);
    for(const item of inbox.items)if(!seen.current.has(item.id)){seen.current.add(item.id);enqueue({...item,key:'server-'+item.id,serverId:item.id})}
   }catch{/* A transient read failure must not invent or erase earned progress. */}finally{loading.current=false;if(dirty.current&&alive.current){dirty.current=false;void refresh()}}
  }
@@ -66,7 +66,7 @@ function NotificationSession({id,children}:{id?:string;children:ReactNode}){
   if(item.serverId)try{await progressionRequest('notifications/ack',{id:item.serverId});void refresh()}catch{/* Remains unread on the server and will be offered next visit. */}
  }
  useEffect(()=>{if(!active||!visible)return;setPhase('mark');const timers=[setTimeout(()=>setPhase('open'),450),setTimeout(()=>setPhase('close'),5200),setTimeout(()=>void finish(active),5850)];return()=>timers.forEach(clearTimeout)},[active?.key,visible]);
- return <Context.Provider value={{progression,testEnabled,refresh,recent,unreadCount,markSignalsSeen}}>{children}
+ return <Context.Provider value={{progression,refresh,recent,unreadCount,markSignalsSeen}}>{children}
   <div className="an-live" role="status" aria-live="polite" aria-atomic="true">{active?(active.preview?'Preview. ':'')+active.title+(active.detail?'. '+active.detail:''):''}</div>
   {active&&<aside key={active.key} className={'an-toast an-toast-'+phase+' an-toast-'+active.kind} data-notification-kind={active.kind} aria-label="ANEVUM notification"><div className="an-toast-mark" aria-hidden="true"><OrbitalMark/></div><div className="an-toast-body"><div className="an-toast-symbol" aria-hidden="true">{active.kind==='level'?<LevelEmblem level={active.level!} size={56}/>:active.kind==='award'?<AwardEmblem award={active.award}/>:<span>{active.kind==='error'?'!':active.kind==='xp'?'+':'✦'}</span>}</div><div className="an-toast-copy"><small>{active.preview?'ANIMATION PREVIEW':active.kind==='level'?'CONTINUANCE / LEVEL UP':active.kind==='award'?'BADGE / RECOGNITION':'ANEVUM / SIGNAL'}</small><strong>{active.title}</strong>{active.detail&&<p>{active.detail}</p>}</div><button onClick={()=>void finish(active)} aria-label="Dismiss notification">×</button></div></aside>}
  </Context.Provider>;
