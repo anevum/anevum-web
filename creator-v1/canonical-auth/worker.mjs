@@ -154,7 +154,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     const ownSpace=OWN_SPACE.test(path),publicSpace=path.match(PUBLIC_SPACE);
      const ownRecognition=path===CANONICAL_PREFIX+'/recognition';
      if(ownRecognition&&env.CANONICAL_RECOGNITION_ENABLED!=='true')return fail(request,404);
-    const ownProgression=/^\/api\/v1\/member\/(?:progression|notifications(?:\/ack)?|xp-test)$/.test(path);
+    const ownProgression=/^\/api\/v1\/member\/(?:progression|notifications(?:\/ack)?)$/.test(path);
     const ownSupporter=/^\/api\/v1\/member\/supporter(?:\/(?:checkout|portal|webhook|rewards))?$/.test(path);
     const supporterHook=path===CANONICAL_PREFIX+"/supporter/webhook";
     const ownProfile=path===PROFILE;

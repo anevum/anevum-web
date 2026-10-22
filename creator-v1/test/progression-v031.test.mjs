@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import {fixture} from './helpers/canonical-fixture.mjs';
 import worker from '../web/a-canonical-stage.review.mjs';
 import {canonicalProgression,levelProgress,readProgression,syncRewardNotifications} from '../canonical-auth/progression.mjs';
+import {createCanonicalStageWorker} from '../canonical-auth/worker.mjs';
 const base='https://a.anevum.com';
 function seed(db,id){
  db.prepare('INSERT INTO user(id,name,email,emailVerified,createdAt,updatedAt) VALUES(?,?,?,1,0,0)').run(id,id,id+'@fixture.invalid');
@@ -25,8 +26,18 @@ test('retired calibration endpoint never awards XP even with its old flag enable
   assert.equal(payload.progression.level,1);
   assert.equal(payload.testButtonEnabled,false);
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM member_xp_events').get().n,0);
-  assert.equal((await worker.fetch(req('xp-test',{requestId:crypto.randomUUID()}),env)).status,401);
+  assert.equal((await worker.fetch(req('xp-test',{requestId:crypto.randomUUID()}),env)).status,404);
  }finally{db.close();}
+});
+test('retired route returns 404 before authentication and database readiness',async()=>{
+ let authCalls=0,dbCalls=0;
+ const stage=createCanonicalStageWorker({authFactory:()=>{authCalls++;throw Error('Retired route must not initialize auth')}});
+ const env={MEMBER_DB:{prepare(){dbCalls++;throw Error('Retired route must not query D1')}},CANONICAL_XP_TEST_ENABLED:'true'};
+ for(const method of ['GET','HEAD','POST','PUT','DELETE']){
+  const r=await stage.fetch(new Request(base+'/api/v1/member/xp-test',{method}),env);
+  assert.equal(r.status,404,method);
+ }
+ assert.equal(authCalls,0);assert.equal(dbCalls,0);
 });
 test('legitimate earned milestones and notifications remain independent of removed test button',async()=>{
  const {db,env}=fixture();try{
