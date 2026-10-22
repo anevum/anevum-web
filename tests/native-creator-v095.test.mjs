@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {DatabaseSync} from 'node:sqlite';
 import api from '../site/alpha/v003/api.mjs';
+import {nativeMemberWithDeadline} from '../site/alpha/v003/native-ui-api-v095.mjs';
 import runtime from '../site/alpha/v003/runtime.mjs';
 import {interceptPackageNamespace} from '../site/alpha/v003/unified-creation-bridge-v009.mjs';
 const ORIGIN='https://anevum.com';
@@ -57,6 +58,49 @@ test('native session resolves canonical IDs, not claimed headers, and cannot gra
   assert.equal((await call(env,N+'mine',{actor:'reviewer'})).status,403);
   const other=req(N+'review',{actor:'other'});other.headers.set('x-anevum-staff-id','reviewer-id');assert.equal((await api.fetch(other,env,{})).status,403);
  }finally{env.DB.close();}
+});
+test('native AUTH outage is 503 rather than false sign-out and never grants private access',async()=>{
+ const {env,sqlite}=setup();
+ try{
+  const original=env.AUTH;
+  const project=await published(env);
+  const prior=sqlite.prepare('SELECT COUNT(*) AS count FROM anevum_package_projects').get().count;
+  env.AUTH={async fetch(){return Response.json({error:'Synthetic upstream unavailable'},{status:503})}};
+  for(const route of ['session','mine','review','projects/'+project.id+'?preview=1']){
+   const response=await call(env,N+route);
+   assert.equal(response.status,503,route);
+   assert.match((await response.json()).error,/Member verification is temporarily unavailable/);
+  }
+  // A public approved project remains guest-readable, without owner/reviewer
+  // privilege or a private preview, even if the cookie issuer is unavailable.
+  const publicResponse=await call(env,N+'projects/'+project.id);
+  assert.equal(publicResponse.status,200);
+  const publicRecord=await publicResponse.json();
+  assert.equal(publicRecord.memberId,null);
+  assert.equal(publicRecord.canReview,false);
+  assert.equal(publicRecord.canEdit,false);
+  assert.equal((await call(env,N+'session',{actor:null})).status,401);
+  env.AUTH={async fetch(){return new Response('<html>Sign in</html>',{status:200,headers:{'content-type':'text/html'}})}};
+  assert.equal((await call(env,N+'session')).status,503);
+  env.AUTH={async fetch(){return Response.json(null)}};
+  assert.equal((await call(env,N+'session')).status,401);
+  delete env.AUTH;
+  assert.equal((await call(env,N+'session')).status,503);
+  assert.equal((await call(env,N+'session',{actor:null})).status,401);
+  env.AUTH=original;
+  assert.equal((await call(env,N+'session')).status,200);
+  assert.equal(sqlite.prepare('SELECT COUNT(*) AS count FROM anevum_package_projects').get().count,prior);
+ }finally{env.DB.close();}
+});
+test('native identity lookup deadline aborts a hung upstream without reclassifying it as authorization',async()=>{
+ let signal;
+ await assert.rejects(nativeMemberWithDeadline(value=>{
+  signal=value;return new Promise(()=>{});
+ },12),/NATIVE_AUTH_DEADLINE/);
+ assert.equal(signal.aborted,true,'Best-effort upstream cancellation');
+ const permitted=await nativeMemberWithDeadline(async()=>({id:'synthetic-verified-member'}),50);
+ assert.equal(permitted.id,'synthetic-verified-member');
+ await assert.rejects(nativeMemberWithDeadline(async()=>null,9001),/Invalid native identity deadline/);
 });
 test('saved library, native private playtest, independent review and public view use one existing lifecycle',async()=>{
  const {env}=setup();try{

@@ -86,15 +86,32 @@ async function packageSchemaReady(db){
   }catch{return false;}
 }
 
-async function member(req,env) {
+async function member(req,env,{strictAvailability=false,signal}={}) {
   const cookie=req.headers.get("cookie");
-  if (!cookie || !env.AUTH) return null;
+  if(!cookie)return null;
+  // Existing legacy callers retain anonymous fallback semantics. Only the
+  // native private session uses strict mode to distinguish a broken AUTH hop
+  // from a genuine guest or expired session; neither condition grants access.
+  if(!env.AUTH?.fetch){
+    if(strictAvailability)throw new PackageError("Member verification is temporarily unavailable",503);
+    return null;
+  }
   const headers=canonicalAuthHeaders(env,req);
-  try {
-    const r=await env.AUTH.fetch(new Request(A+"/api/v1/member/auth/get-session",{headers,redirect:"manual"}));
-    const x=r.ok?await r.json():null;
-    return x?.user?.emailVerified===true && x?.session && typeof x.user.id==="string" ? {id:x.user.id} : null;
-  } catch { return null; }
+  try{
+    const r=await env.AUTH.fetch(new Request(A+"/api/v1/member/auth/get-session",{
+      headers,redirect:"manual",...(signal?{signal}:{})
+    }));
+    // 401/403 represent absent or rejected session. 5xx, missing routes,
+    // challenges and unexpected HTML must never masquerade as sign-out.
+    if(strictAvailability&&(!r||(!r.ok&&r.status!==401&&r.status!==403)||
+      (r.ok&&!r.headers.get("content-type")?.toLowerCase().includes("application/json"))))
+      throw new PackageError("Member verification is temporarily unavailable",503);
+    const x=r?.ok?await r.json():null;
+    return x?.user?.emailVerified===true&&x?.session&&typeof x.user.id==="string"?{id:x.user.id}:null;
+  }catch{
+    if(strictAvailability)throw new PackageError("Member verification is temporarily unavailable",503);
+    return null;
+  }
 }
 async function privateCreatorIdentity(req,env,user) {
   const cookie=req.headers.get("cookie");
