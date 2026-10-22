@@ -124,18 +124,19 @@ function SessionStudio({id,mode}:{id:string;mode:Mode}){
    </div>
    <p className="st-muted">These are different stages of one creation lifecycle. Neither saving a private record nor preparing a playable build publishes it automatically. Live uploads and publishing depend on server permissions and independent review.</p>
   </section>}
-  {mode==='list'?<StudioLibrary/>:mode==='review'?<StudioReview/>:<StudioEditor create={mode==='new'} uploadsReady={uploads}/>}
+  {mode==='list'?<StudioLibrary onCapabilities={capabilities=>{setCanReview(capabilities.canReview===true);setUploads(capabilities.uploadsReady===true);}}/>:mode==='review'?<StudioReview/>:<StudioEditor create={mode==='new'} uploadsReady={uploads}/>}
  </section>;
 }
 
-function StudioLibrary(){
+function StudioLibrary({onCapabilities}:{onCapabilities:(value:{canReview:boolean;uploadsReady:boolean})=>void}){
  const [items,setItems]=useState<StudioProject[]>([]),[error,setError]=useState(''),[loading,setLoading]=useState(true);
  const [search,setSearch]=useState('');
  const [attempt,setAttempt]=useState(0);
  const [statusFilter,setStatusFilter]=useState<'all'|'draft'|'pending_review'|'changes_requested'|'rejected'>('all');
  useEffect(()=>{
   const ac=new AbortController();setLoading(true);setError('');
-  readWithDeadline(signal=>studioList(signal),ac.signal).then(r=>{if(!ac.signal.aborted)setItems(r.projects)}).catch(e=>{if(!ac.signal.aborted)setError(showError(e))})
+  onCapabilities({canReview:false,uploadsReady:false});
+  readWithDeadline(signal=>studioList(signal),ac.signal).then(r=>{if(!ac.signal.aborted){setItems(r.projects);onCapabilities(r);}}).catch(e=>{if(!ac.signal.aborted)setError(showError(e))})
    .finally(()=>{if(!ac.signal.aborted)setLoading(false)});
   return()=>ac.abort();
  },[attempt]);
