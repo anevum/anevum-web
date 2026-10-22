@@ -57,6 +57,19 @@ test('an outdated controller version snapshot must never validate current bindin
  assert.ok(result.reasons.includes('CONTROLLER_VERSION_NOT_CURRENT'));
  assert.equal(result.protectedReviewCandidate,false);
 });
+test('an inactive 0%-traffic controller candidate does not invalidate the live AUTH readback',()=>{
+ const withInactive=inventory();
+ withInactive.controllerDeployment.versions.push({version_id:STALE_ID,percentage:0});
+ const result=assessNativeAuthVersionRouting(withInactive);
+ assert.equal(result.status,'protected_review_candidate');
+ assert.deepEqual(result.reasons,[]);
+ assert.equal(result.controllerVersionPrefix,'11111111');
+ const mismatched=inventory();
+ mismatched.controllerDeployment.versions.push({version_id:STALE_ID,percentage:0});
+ mismatched.controllerVersion.id=STALE_ID;
+ assert.ok(assessNativeAuthVersionRouting(mismatched).reasons.includes('CONTROLLER_VERSION_NOT_CURRENT'),
+  'Never certify bindings read from inactive candidate as the live controller');
+});
 test('nonexclusive or malformed controller deployment blocks evaluation',()=>{
  const data=inventory();
  data.controllerDeployment.versions=[
