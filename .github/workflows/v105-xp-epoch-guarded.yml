@@ -1,0 +1,122 @@
+name: ANEVUM V105 XP Epoch Guarded Inactive Release
+on:
+  pull_request:
+    paths:
+      - .github/workflows/v105-xp-epoch-guarded.yml
+      - creator-v1/ops/xp-epoch-v105-live-cutover.mjs
+      - creator-v1/test/xp-epoch-v105-guarded.test.mjs
+  push:
+    branches: [release/v084-continuance-approved-20261019]
+    paths:
+      - .github/release-approvals/v105-xp-epoch-inactive.json
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: anevum-v105-xp-epoch-inactive-release
+  cancel-in-progress: false
+jobs:
+  verify-live-bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify operations source, existing progression tests, and intended live cutover
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check creator-v1/ops/xp-epoch-v105-live-cutover.mjs
+          node --test creator-v1/test/xp-epoch-v105-guarded.test.mjs
+          (cd creator-v1 && node --test test/progression-epoch-reset-v105.test.mjs)
+      - name: Verify exact live bundle and preserved configuration without uploading
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          REVIEW_CANDIDATE_FILE: ${{ runner.temp }}/xp-v105-reviewed-gateway.js
+        run: |
+          set -euo pipefail
+          umask 077
+          test -n "$CLOUDFLARE_API_TOKEN"
+          node creator-v1/ops/xp-epoch-v105-live-cutover.mjs check > "$RUNNER_TEMP/v105-readonly-report.json"
+          test -s "$REVIEW_CANDIDATE_FILE"
+          node --check "$REVIEW_CANDIDATE_FILE"
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const x=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/v105-readonly-report.json','utf8'));
+          assert.equal(x.mode,'check');
+          assert.equal(x.read_only,true);
+          assert.equal(x.source_pr,618);
+          assert.equal(x.live_version,'93cc7f07-cf39-457e-af69-c9f6f4c02d25');
+          assert.deepEqual(x.patched_regions,['epoch helper','readProgression','syncRewardNotifications','notification','canonicalProgression','grantMilestones','spaceSnapshot','memberRecognitionState','publicRecognitionMap','publicMemberColumns']);
+          console.log('PASS: exact live source patched; syntax valid; no Cloudflare version uploaded or D1 changed');
+          JS
+      - name: Record read-only proof only
+        run: |
+          echo 'V105_XP_EPOCH_READ_ONLY_PREFLIGHT=PASS' >> "$GITHUB_STEP_SUMMARY"
+          echo 'PRODUCTION_XP_RESET=NOT_ACTIVATED' >> "$GITHUB_STEP_SUMMARY"
+          echo 'PUBLIC_TRAFFIC=UNMODIFIED' >> "$GITHUB_STEP_SUMMARY"
+  upload-inactive:
+    needs: verify-live-bundle
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'anevum/anevum-web' &&
+      github.actor == 'anevum' &&
+      github.ref == 'refs/heads/release/v084-continuance-approved-20261019' &&
+      github.event.head_commit.message == 'release(v105): upload non-destructive XP epoch candidate inactive'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - name: Require exclusive owner marker-only authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git show --pretty='' --name-only HEAD | sed '/^$/d')" = '.github/release-approvals/v105-xp-epoch-inactive.json'
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const a=JSON.parse(readFileSync('.github/release-approvals/v105-xp-epoch-inactive.json','utf8'));
+          assert.deepEqual(a,{
+            approved_merge:'a0483173eef35077bbcf04123438d6d34c5f409b',
+            source_pr:618,
+            worker:'anevum-apex-prelaunch-gateway',
+            allowed_action:'upload-inactive-only',
+            allow_traffic_promotion:false,
+            allow_d1_reset:false,
+            historical_xp_deletions:false,
+            confirmed_by:'anevum'
+          });
+          JS
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Upload inactive reviewed Worker version with current production data unchanged
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          GITHUB_HEAD_MESSAGE: ${{ github.event.head_commit.message }}
+          RECEIPT_FILE: ${{ runner.temp }}/xp-v105-inactive.json
+        run: |
+          set -euo pipefail
+          umask 077
+          test -n "$CLOUDFLARE_API_TOKEN"
+          node creator-v1/ops/xp-epoch-v105-live-cutover.mjs upload-inactive
+          test -s "$RECEIPT_FILE"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v105-xp-epoch-inactive-receipt
+          path: ${{ runner.temp }}/xp-v105-inactive.json
+          retention-days: 14
+          if-no-files-found: ignore
+# No public promotion, D1 reset activation or direct production deployment in this workflow.
