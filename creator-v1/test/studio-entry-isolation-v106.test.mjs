@@ -11,7 +11,7 @@ test('entry helper and Studio page parse as TS and JSX',()=>{
  assert.doesNotThrow(()=>parse(studio,{sourceType:'module',plugins:['typescript','jsx']}));
 });
 test('list entry authenticates without a duplicate Studio inventory request',()=>{
- assert.match(entry,/mode==='list'\?Promise\.resolve\(null\):deps\.health\(signal\)/);
+ assert.match(entry,/deps\.profile\(signal\),deps\.health\(signal\)/);
  assert.match(entry,/if\(mode==='list'\)return \{phase:'ready'/);
  assert.match(entry,/profile\.memberId!==memberId/);
  assert.match(entry,/!profile\.profile\?\.handle/);
@@ -21,7 +21,7 @@ test('list entry authenticates without a duplicate Studio inventory request',()=
  assert.doesNotMatch(section,/studioList\(signal\)/);
 });
 test('editor/reviewer continue server capability verification and list retries independently',()=>{
- assert.match(entry,/if\(mode!=='list'&&!health\?\.studioReady\)/);
+ assert.match(entry,/if\(!health\.studioReady\)/);
  assert.match(entry,/const capabilities=await deps\.list\(signal\)/);
  assert.match(entry,/canReview:capabilities\.canReview===true/);
  assert.match(studio,/RETRY STUDIO ACCESS/);
