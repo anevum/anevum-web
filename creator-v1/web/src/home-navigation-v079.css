@@ -327,3 +327,35 @@
 .av79-unlinked-creator strong{font-weight:650}
 .av79-unlinked-project{font-size:11px;line-height:1.4;color:#bdcbe1;overflow-wrap:anywhere}
 .av79-unlinked-project strong{color:#e6ebf8;font-weight:650}
+
+/* V104 first-visit legibility repair, scoped to narrow screens. Preserve the
+   founder-selected orbital identity and existing verified public content. */
+@media(max-width:650px){
+  .av9-shell .av79-home .av79-kicker{
+    font-size:11px;line-height:1.48;letter-spacing:.065em;
+  }
+  .av9-shell .av79-home .av79-hero p{
+    font-size:14px!important;line-height:1.65!important;
+  }
+  .av9-shell .av79-home .av79-gateway{min-height:80px}
+  .av9-shell .av79-home .av79-gateway small{
+    font-size:11.5px;line-height:1.4;
+  }
+  .av9-shell .av79-home .av79-feature-status{
+    font-size:11px;line-height:1.45;
+  }
+  .av9-shell .av79-home .av79-feature-copy>p{
+    font-size:14px;line-height:1.6;-webkit-line-clamp:unset;
+  }
+  .av9-shell .av79-home .av79-home-end{
+    font-size:11px;line-height:1.5;
+  }
+  .av9-shell .av9-footer{
+    font-size:11px;line-height:1.55;
+  }
+  .av9-shell .av9-footer a{font-size:12px}
+  /* Keep the closing navigation readable above the fixed IREN scout. */
+  .av9-shell .site-footer.av9-footer{
+    padding-bottom:calc(102px + env(safe-area-inset-bottom));
+  }
+}
