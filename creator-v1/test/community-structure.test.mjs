@@ -22,6 +22,7 @@ test("current four-destination navigation retains canonical member identity and 
 test("legacy project routes lead to the verified canonical Studio",()=>{
  const app=read("web/src/App.tsx");
  const studio=read("web/src/pages/CanonicalStudioPage.tsx");
+ const entry=read("web/src/lib/studio-entry-read.ts");
  assert.match(app,/path="account\/studio" element={<Navigate to="\/studio" replace\/>}/);
  assert.match(app,/path="create" element={<Navigate to="\/studio" replace\/>}/);
  assert.match(app,/path="create\/new" element={<Navigate to="\/studio\/new" replace\/>}/);
@@ -30,8 +31,10 @@ test("legacy project routes lead to the verified canonical Studio",()=>{
  assert.match(app,/path="studio\/records" element=\{<CanonicalStudioPage\/>\}/);
  assert.match(studio,/canonicalAuthClient\.useSession\(\)/);
  assert.match(studio,/session\?\.user\?\.emailVerified!==true/);
- assert.match(studio,/profile\.memberId!==id/);
- assert.match(studio,/setCanReview\(memberStudio\.canReview===true\)/);
+ assert.match(studio,/resolveStudioEntry\(id,mode,signal,/);
+ assert.match(entry,/profile\.memberId!==memberId/);
+ assert.match(entry,/canReview:capabilities\.canReview===true/);
+ assert.match(studio,/setCanReview\(result\.canReview\)/);
 });
 
 test("Community mounts canonical forums and reads real public records",()=>{
