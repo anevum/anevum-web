@@ -1,0 +1,20 @@
+{
+  "session": "ANEVUM.ANEVUM.UPDATE.2026-10-22.001.PLATFORM-COMPLETION",
+  "worker": "anevum-native-project-player-v006-immersive",
+  "observed_public_version": "5c6d809e-25eb-43a0-bb2b-92c3ab064daf",
+  "observed_public_deployment": "e3ba8624-0b84-4146-a4a0-30c2e784a530",
+  "upstream_service": "anevum-apex-prelaunch-gateway",
+  "recovered_baseline_commit": "69c827dea97edda5f9301f76f7922a466e8af411",
+  "baseline_source_sha256_with_trailing_newline": "c7b73b9a56abf108062445de71dcb7a80cbded9c082ff88dd6ba51873bde6bcd",
+  "prepared_source_sha256": "a1054ecb20f375f72977c3f4ff471f5db221008baf847837ec642cfd5f814cef",
+  "native_regression_pr": 624,
+  "native_regression_merge": "12dd1e77f713a8d163f74be6607a35aa80683cdf",
+  "source_only": true,
+  "uploaded_version": null,
+  "deployed": false,
+  "public_acceptance": false,
+  "physical_device_acceptance": false,
+  "route_changes": 0,
+  "access_policy_changes": 0,
+  "database_migrations": 0
+}

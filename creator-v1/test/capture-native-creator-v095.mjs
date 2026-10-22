@@ -8,6 +8,7 @@ import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createNativeFixture,ids} from './native-creator-fixture-v095.mjs';
+import {legacyFixtureResponse,verifyLegacyPlayerContinuity} from './legacy-player-continuity-v095.mjs';
 const args=process.argv.slice(2),get=name=>args[args.indexOf(name)+1];
 const chrome=get('--chrome'),destination=get('--output'),output=destination?resolve(destination):null,disabled=args.includes('--disabled');
 assert.ok(chrome&&output,'Pass the installed Chromium and an evidence directory');
@@ -52,7 +53,9 @@ try{
  client.on('Fetch.requestPaused',async p=>{
   try{
    const u=new URL(p.request.url);
-   if(u.origin==='https://anevum-package-alpha-v003-runtime.devonakins.workers.dev')await client.send('Fetch.fulfillRequest',{requestId:p.requestId,responseCode:200,responseHeaders:[{name:'content-type',value:'text/html'},{name:'content-security-policy',value:"sandbox allow-scripts allow-pointer-lock; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'"}],body:Buffer.from(demo).toString('base64')});
+   const legacy=args.includes('--legacy-player-only')?legacyFixtureResponse(u,base,demo):null;
+   if(legacy)await client.send('Fetch.fulfillRequest',{requestId:p.requestId,responseCode:200,responseHeaders:[{name:'content-type',value:legacy.type},{name:'cache-control',value:'no-store'},{name:'x-anevum-test-fixture',value:'synthetic-only'}],body:Buffer.from(legacy.body).toString('base64')});
+   else if(u.origin==='https://anevum-package-alpha-v003-runtime.devonakins.workers.dev')await client.send('Fetch.fulfillRequest',{requestId:p.requestId,responseCode:200,responseHeaders:[{name:'content-type',value:'text/html'},{name:'content-security-policy',value:"sandbox allow-scripts allow-pointer-lock; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'"}],body:Buffer.from(demo).toString('base64')});
    else await client.send('Fetch.failRequest',{requestId:p.requestId,errorReason:'BlockedByClient'});
    }catch(e){
   // Chromium can cancel a paused request during navigation. A late CDP
@@ -60,7 +63,7 @@ try{
   if(!/Invalid InterceptionId/.test(String(e?.message||e)))exceptions.push('Interception: '+e.message);
  }
  });
- await client.send('Fetch.enable',{patterns:[{urlPattern:'https://*',requestStage:'Request'}]});
+ await client.send('Fetch.enable',{patterns:[{urlPattern:'https://*',requestStage:'Request'},...args.includes('--legacy-player-only')?[{urlPattern:base+'/projects/alpha_*',requestStage:'Request'},{urlPattern:base+'/api/v1/alpha/projects*',requestStage:'Request'}]:[]]});
  evaluate=async(expression,sessionId)=>{const value=await client.send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true,userGesture:true},sessionId);if(value.exceptionDetails)throw Error(value.exceptionDetails.exception?.description||value.exceptionDetails.text);return value.result?.value;};
  screenshot=async name=>{const image=await client.send('Page.captureScreenshot',{format:'png',fromSurface:true});assert.ok(image.data);writeFileSync(join(output,name+'.png'),Buffer.from(image.data,'base64'));};
  const navigate=async path=>{const time=await evaluate('performance.timeOrigin');await client.send('Page.navigate',{url:base+'/creator'+path});await until(()=>evaluate('document.readyState==="complete"&&performance.timeOrigin!=='+time),'Navigation '+path);};
@@ -95,7 +98,9 @@ try{
  await client.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
  // textContent checks semantic copy; CSS text-transform legitimately changes
  // innerText in the established Continuance heading treatment.
- if(disabled){
+ if(args.includes('--legacy-player-only')){
+  results.push(...await verifyLegacyPlayerContinuity({client,evaluate,screenshot,until,clickText,base,simulateReload:args.includes('--simulate-player-reload')}));
+ }else if(disabled){
   await client.send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
   await navigate('/studio/packages');await until(()=>evaluate('document.body.textContent.includes("not active yet")'),'Flag-off page');await layout('native-disabled',390);
   assert.equal(fixture.control.trace().filter(x=>x.path.includes('/native/')).length,0,'Disabled interface called native API');
@@ -244,7 +249,7 @@ try{
   results.push({case:'native-read-deadline-and-explicit-retry',passed:true});
  }
  assert.equal(exceptions.length,0,'Unhandled browser exceptions: '+JSON.stringify(exceptions));
- writeFileSync(join(output,'acceptance.json'),JSON.stringify({source,status:'PASS',syntheticOnly:true,physicalDeviceAcceptance:false,disabled,cases:results,requests:fixture.control.trace()},null,2));
+ writeFileSync(join(output,'acceptance.json'),JSON.stringify({source,status:'PASS',syntheticOnly:true,physicalDeviceAcceptance:false,disabled,legacyPlayerOnly:args.includes('--legacy-player-only'),cases:results,requests:fixture.control.trace()},null,2));
  console.log('V095_NATIVE_REACT_BROWSER=PASS '+results.length+' cases; synthetic loopback only');
 }catch(error){
  try{if(evaluate)writeFileSync(join(output,'failure-dom.html'),await evaluate('document.documentElement.outerHTML'));if(screenshot)await screenshot('failure');}catch{}
