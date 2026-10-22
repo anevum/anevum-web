@@ -25,11 +25,12 @@ try {
   const callbacks=new Map(),events=[];let next=1;
   ws.addEventListener('message',ev=>{const d=JSON.parse(String(ev.data));if(d.id&&callbacks.has(d.id)){callbacks.get(d.id)(d);callbacks.delete(d.id);}else if(d.method==='Runtime.exceptionThrown'||d.method==='Runtime.consoleAPICalled'){events.push(d);}});
   await new Promise((ok,err)=>{ws.addEventListener('open',ok,{once:true});ws.addEventListener('error',err,{once:true});});
-  function call(method,params={}){const id=next++;return new Promise((ok,err)=>{const t=setTimeout(()=>{callbacks.delete(id);err(Error(`CDP timeout: ${method}`));},12000);callbacks.set(id,res=>{clearTimeout(t);res.error?err(Error(JSON.stringify(res.error))):ok(res.result);});ws.send(JSON.stringify({id,method,params}));});}
+  function call(method,params={},timeoutMs=12000){const id=next++;return new Promise((ok,err)=>{const t=setTimeout(()=>{callbacks.delete(id);err(Error(`CDP timeout: ${method}`));},timeoutMs);callbacks.set(id,res=>{clearTimeout(t);res.error?err(Error(JSON.stringify(res.error))):ok(res.result);});ws.send(JSON.stringify({id,method,params}));});}
   await call('Runtime.enable');await call('Page.enable');
   let status='WAITING';for(let i=0;i<60;i++){const r=await call('Runtime.evaluate',{expression:"String(window.__ANE_GPU_QA||'WAITING')",returnByValue:true});status=r.result?.value||'WAITING';if(status!=='WAITING')break;await wait(350);}
   await wait(status==='RENDERER_READY'?1900:350);
-  const img=await call('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,fromSurface:true});
+  if(status==='WAITING')throw Error('GPU QA did not produce a renderer verdict');
+  const img=await call('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,fromSurface:true},30000);
   await writeFile(output,Buffer.from(img.data,'base64'));
   const report={status,screenshot:output,exceptions:events.filter(e=>e.method==='Runtime.exceptionThrown').map(e=>e.params.exceptionDetails?.text||'exception'),messages:events.filter(e=>e.method==='Runtime.consoleAPICalled').map(e=>e.params.args?.map(a=>a.value||a.description).join(' ')).slice(-8)};
   await writeFile(output.replace(/\.png$/,'.json'),JSON.stringify(report,null,2)+'\n');

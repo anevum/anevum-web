@@ -1,0 +1,77 @@
+name: ANEVUM Sites V005.2 Local Concept Review
+on:
+  pull_request:
+    branches:
+      - build/sites-v0051-continuance-renderer-20261020-001
+    paths:
+      - "sites/**"
+      - ".github/workflows/sites-v0052-local-concepts.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  private-concept-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Syntax check all touched modules
+        run: |
+          node --check sites/local-concepts.mjs
+          node --check sites/local-concepts-render.mjs
+          node --check sites/workshop.mjs
+          node --check sites/tests/worker.test.mjs
+          node --check sites/tests/local-concepts.test.mjs
+      - name: Verify signed owner routes and absence from public Worker
+        run: |
+          node sites/tests/local-concepts.test.mjs
+          node --test sites/tests/worker.test.mjs
+          node sites/v005/test.mjs
+      - name: Wrangler private and public packaging — dry run only
+        run: |
+          npx --yes wrangler@4.135.0 deploy --dry-run --config sites/wrangler.workshop.jsonc --outdir /tmp/anevum-sites-owner-dryrun
+          npx --yes wrangler@4.135.0 deploy --dry-run --config sites/wrangler.jsonc --outdir /tmp/anevum-sites-public-dryrun
+  visual-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Build standalone review files from repository source
+        run: node sites/local-concepts-render.mjs /tmp/anevum-sites-local-review
+      - name: Capture six desktop and mobile concept frames
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          test -n "$CHROME"
+          for slug in auto-detail pet-grooming home-services; do
+            "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --no-first-run --window-size=1440,1000 --screenshot="/tmp/anevum-sites-local-review/$slug-desktop.png" "file:///tmp/anevum-sites-local-review/$slug.html"
+            "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --no-first-run --window-size=390,844 --screenshot="/tmp/anevum-sites-local-review/$slug-mobile.png" "file:///tmp/anevum-sites-local-review/$slug.html"
+          done
+          test "$(find /tmp/anevum-sites-local-review -maxdepth 1 -name '*.png' -size +0c | wc -l)" -eq 6
+      - name: Capture local-business section from V005 public candidate (offline)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/anevum-sites-v0052-public
+          node sites/v005/build.mjs /tmp/anevum-sites-v0052-public
+          node sites/v005/preview.mjs /tmp/anevum-sites-v0052-public
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          test -n "$CHROME"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --no-first-run --virtual-time-budget=4000 --window-size=1440,1000 --screenshot="/tmp/anevum-sites-local-review/public-field-studies-desktop.png" "file:///tmp/anevum-sites-v0052-public/interactive-preview.html#local-services"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --no-first-run --virtual-time-budget=4000 --window-size=390,844 --screenshot="/tmp/anevum-sites-local-review/public-field-studies-mobile.png" "file:///tmp/anevum-sites-v0052-public/interactive-preview.html#local-services"
+          test -s /tmp/anevum-sites-local-review/public-field-studies-desktop.png
+          test -s /tmp/anevum-sites-local-review/public-field-studies-mobile.png
+          cp /tmp/anevum-sites-v0052-public/interactive-preview.html /tmp/anevum-sites-local-review/public-storefront-review.html
+      - name: Attach private static review package
+        uses: actions/upload-artifact@v4
+        with:
+          name: sites-v0052-three-local-concepts
+          path: /tmp/anevum-sites-local-review/
+          retention-days: 14
