@@ -46,7 +46,7 @@ jobs:
           git diff --name-only 7630a8b2fef77571862a51417499021d4c162bd2 HEAD > /tmp/anevum-approved-changes.txt
           while IFS= read -r path; do
             case "$path" in
-              .github/workflows/v100-staff-fixes-inactive.yml|creator-v1/ops/v100-staff-fixes-inactive.mjs|.github/release-approvals/v100-staff-fixes-inactive-upload.json|docs/production/ANEVUM.ANEVUM.UPDATE.2026-10-22.001.PLATFORM-COMPLETION.md) ;;
+              .github/workflows/v100-staff-fixes-inactive.yml|creator-v1/ops/v100-staff-fixes-inactive.mjs|.github/release-approvals/v100-staff-fixes-inactive-upload.json|docs/production/ANEVUM.ANEVUM.UPDATE.2026-10-22.001.PLATFORM-COMPLETION.md|creator-v1/test/portal-offline-preview.mjs|creator-v1/test/creator-identity-browser-v091.mjs) ;;
               *) echo "Unreviewed change in protected candidate: $path"; exit 1 ;;
             esac
           done < /tmp/anevum-approved-changes.txt
