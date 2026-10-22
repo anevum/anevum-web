@@ -26,8 +26,10 @@ export function levelProgress(raw){
  return {xp,level,maxLevel:30,levelStart:75*(level-1)**2,nextLevel:level===30?null:75*level**2,artifact:ARTIFACTS[level-1]?.name??null};
 }
 export async function readProgression(db,id){
- const earned=await rows(db,'SELECT milestone,earned_at FROM member_space_milestones WHERE user_id=?',id);
  const reset=await progressionReset(db);
+ const earned=await rows(db,reset?
+  'SELECT milestone,earned_at FROM member_progression_epoch_milestones WHERE epoch=1 AND user_id=?':
+  'SELECT milestone,earned_at FROM member_space_milestones WHERE user_id=?',id);
  // Once migration 0011 is installed, XP reads are O(1) per member.
  // The ledger remains the source of truth and triggers maintain its total.
  // Until that migration is deployed, retain the exact legacy behavior.
@@ -42,7 +44,7 @@ export async function readProgression(db,id){
    total=await db.prepare('SELECT COALESCE(SUM(amount),0) AS xp FROM member_xp_events WHERE user_id=?').bind(id).first();
   }
  }
- const active=earned.filter(e=>!reset||Number(e.earned_at)>reset.cutoffAt);
+ const active=earned;
  const milestoneXp=MILESTONES.reduce((n,a)=>n+(active.some(e=>e.milestone===a.id)?a.xp:0),0),testXp=Number(total?.xp)||0;
  return {...levelProgress(milestoneXp+testXp),testXp,milestoneXp,awards:MILESTONES.map(a=>({...a,earnedAt:active.find(e=>e.milestone===a.id)?.earned_at??null}))};
 }
@@ -51,14 +53,15 @@ export async function syncRewardNotifications(db,id,now){
  const reset=await progressionReset(db);
  const prefix=reset?'evo60-e1-':'evo60-';
  const last=await db.prepare("SELECT COALESCE(MAX(level),1) AS level FROM member_reward_notifications WHERE user_id=? AND kind='level' AND reference LIKE ? AND level<=? AND created_at>?").bind(id,prefix+'%',p.level,reset?.cutoffAt??0).first();
- const statements=p.awards.filter(a=>a.earnedAt!==null).map(a=>db.prepare("INSERT OR IGNORE INTO member_reward_notifications(user_id,kind,reference,created_at) VALUES(?,'award',?,?)").bind(id,a.id,a.earnedAt));
+ const statements=p.awards.filter(a=>a.earnedAt!==null).map(a=>db.prepare("INSERT OR IGNORE INTO member_reward_notifications(user_id,kind,reference,created_at) VALUES(?,'award',?,?)").bind(id,reset?'epoch1:'+a.id:a.id,a.earnedAt));
  for(let level=Number(last?.level||1)+1;level<=p.level;level++)statements.push(db.prepare("INSERT OR IGNORE INTO member_reward_notifications(user_id,kind,reference,level,created_at) VALUES(?,'level',?,?,?)").bind(id,prefix+level,level,now));
  if(statements.length){const results=await db.batch(statements);if(results.some(r=>r.success===false))throw Error('Notification save unavailable')}
  return p;
 }
 function notification(row){
  if(row.kind==='level')return {id:row.id,kind:'level',level:row.level,title:'Level '+row.level+' reached',detail:ARTIFACTS[row.level-1]?.name??'Your continuance expands.',createdAt:row.created_at};
- const a=MILESTONES.find(a=>a.id===row.reference);return {id:row.id,kind:'award',award:row.reference,title:a?.name??recognitionBadgeName(row.reference)??'Badge earned',detail:a?`Badge earned · +${a.xp} XP`:'Verified achievement recorded · badge earned',createdAt:row.created_at};
+ const awardId=row.reference.startsWith('epoch1:')?row.reference.slice(7):row.reference;
+ const a=MILESTONES.find(a=>a.id===awardId);return {id:row.id,kind:'award',award:awardId,title:a?.name??recognitionBadgeName(awardId)??'Badge earned',detail:a?`Badge earned · +${a.xp} XP`:'Verified achievement recorded · badge earned',createdAt:row.created_at};
 }
 async function body(req){if(!/^application\/json(?:\s*;|$)/i.test(req.headers.get('content-type')||''))return null;const raw=await boundedText(req,200);try{const v=JSON.parse(raw);return v&&typeof v==='object'&&!Array.isArray(v)?v:null}catch{return null}}
 export async function canonicalProgression(req,env,user,now=Math.floor(Date.now()/1000)){
@@ -84,11 +87,13 @@ export async function canonicalProgression(req,env,user,now=Math.floor(Date.now(
    const receipt=await db.prepare('SELECT through_id FROM member_notification_receipts WHERE user_id=?').bind(user.id).first();
    const after=Number(receipt?.through_id)||0;
    // Keep independent recognition messages, but do not resurface old epoch level/milestone notices.
-   const visible="(kind='award' AND reference NOT IN ('first_signal','world_shaper')) OR "+
-    "(created_at>? AND ((kind='award' AND reference IN ('first_signal','world_shaper')) OR "+
-    "(kind='level' AND reference LIKE 'evo60-%' AND level<=30)))";
-   const items=await rows(db,`SELECT id,kind,reference,level,created_at FROM member_reward_notifications WHERE user_id=? AND id>? AND (${visible}) ORDER BY id LIMIT 24`,user.id,after,reset?.cutoffAt??0);
-   const recent=await rows(db,`SELECT id,kind,reference,level,created_at FROM member_reward_notifications WHERE user_id=? AND (${visible}) ORDER BY id DESC LIMIT 12`,user.id,reset?.cutoffAt??0);
+   const visible=reset?
+    "(kind='award' AND reference NOT IN ('first_signal','world_shaper') AND reference NOT LIKE 'epoch1:%') OR "+
+    "(created_at>? AND ((kind='award' AND reference IN ('epoch1:first_signal','epoch1:world_shaper')) OR "+
+    "(kind='level' AND reference LIKE 'evo60-e1-%' AND level<=30)))":
+    "(kind!='level' OR (reference LIKE 'evo60-%' AND level<=30))";
+   const items=await rows(db,`SELECT id,kind,reference,level,created_at FROM member_reward_notifications WHERE user_id=? AND id>? AND (${visible}) ORDER BY id LIMIT 24`,user.id,after,...(reset?[reset.cutoffAt]:[]));
+   const recent=await rows(db,`SELECT id,kind,reference,level,created_at FROM member_reward_notifications WHERE user_id=? AND (${visible}) ORDER BY id DESC LIMIT 12`,user.id,...(reset?[reset.cutoffAt]:[]));
    return json({items:items.map(notification),recent:recent.map(notification)});
   }
   if(path.endsWith('/notifications/ack')&&req.method==='POST'){
