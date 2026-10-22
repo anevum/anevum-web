@@ -20,7 +20,7 @@ This source combines current release code, V104 Studio navigation/IREN frame rec
 
 Local validation: TypeScript and feature-enabled root Vite build passed; 35 integrated recovery tests, 21 progression/auth tests, 134 creator lifecycle/permission tests under Node 22.23.4, and 27 asset/release guard tests passed. Some suites overlap; these counts must not be added into a claimed unique total. Node 24 produced an asynchronous synthetic multipart-stream error; the pinned Node 22 suite passed without altering upload behavior.
 
-Existing inactive-upload tooling is reused on `ops/platform-candidate-20261022-001`, packaging `a7b9f144cc86665b4c4818a5b620f8b288b7733d`. [Candidate run](https://github.com/anevum/anevum-web/actions/runs/39795991977) pins the application bytes, tests root paths and Studio/IREN recovery, retains all 152 earned assets, requires exact-source CI and permits only an inactive upload. The candidate's obsolete XP flag becomes false; public traffic, current versions, all 40 routes, Access, D1 identities, secrets, upload permissions and public-production safeguards remain protected.
+The existing inactive-upload workflow and guard were reused on `ops/platform-candidate-20261022-001`. Exact application bytes remain pinned to `7630a8b2fef77571862a51417499021d4c162bd2`; the successful upload packaging is `e30ab2034cebb0be07d78de59a44bf3d9d8ad85b`. The guarded public-production workflow remains unchanged.
 
 ## Protected deployment checkpoint — October 22, 2026
 
@@ -33,11 +33,12 @@ The first upload attempt stopped at the source-CI dependency while those checks 
 - Both existing Access applications retain explicit founder allow policies and no bypass rules. No Access policy changed.
 - Post-deployment D1 readback again confirmed six members, zero synthetic events, seven milestones, three grants, zero level notices, recovery rows 1,783, and the insert-blocking trigger.
 - The current public /thebutton browser navigation reaches /member, so the required /levels redirect is **not yet publicly released**. A public GET to the retired API returns 404; all-method candidate and authenticated visual verification still require protected sign-in.
-- Fresh Cloudflare Access sign-in blocks the protected browser entry. No real-account, physical Safari, visual or public-promotion gate has been claimed complete.
+- Fresh Cloudflare Access sign-in blocks the protected browser entry. The secure sign-in request was rejected by automatic approval review because the workspace was out of credits; no sign-in action executed. No workaround or Access bypass was used. No real-account, physical Safari, visual or public-promotion gate has been claimed complete.
+- Reverified at `2026-10-22T17:57:15Z`: the same public 100% / candidate 0% deployment, all 40 routes, all preservation counts and the insert-blocking trigger remain intact. D1 readback wrote zero rows.
 
 The checked-in entry bundle is the existing tested acceptance handler with only the immutable source/candidate pins and review-window copy updated. Its SHA-256 is `8523c9572da29d8732a497f18a43712b8eb26785255e5f77dbee86fd3afc64ab`; twelve retained protected-entry tests passed.
 
-A further compiled-browser regression on the packaging branch exercises a one-time wall HTTP 503 and successful manual retry at 1440/390/320. It verifies that identity remains visible and successful profile/space reads are not repeated. Its hosted result is tracked separately from the already accepted application source.
+A further compiled-browser regression on the packaging branch exercises a one-time wall HTTP 503 and successful manual retry at 1440/390/320. It verifies that identity remains visible and successful profile/space reads are not repeated. Hosted Creator V1 run [39800486308](https://github.com/anevum/anevum-web/actions/runs/39800486308) passed this regression. The broader synthetic recovery artifact contains 31 passing cases, including saved drafts, private playback, account switching, permission isolation, independent review and bounded retries. These results are separate from genuine account/device acceptance.
 
 ## Release-readiness checklist
 
@@ -50,9 +51,9 @@ A source test is not live acceptance. Every live result must record source, immu
 | Retired public routes | Selected release: /thebutton reaches /levels; xp-test returns 404 for every method and session state | Source tested; live release pending |
 | Exact build | Complete CI, root assets, private earned media, immutable candidate receipt | Verified; candidate selected at 0% |
 | Studio consolidation | /studio is the single front door; records, builds, upload and review use the existing services | Integrated; live candidate pending |
-| IREN | Visible animated frame, silent-GPU/context-loss fallback, motion preferences, usable controls | Automated tests configured; candidate/device review pending |
+| IREN | Visible animated frame, silent-GPU/context-loss fallback, motion preferences, usable controls | Hosted pixel/GPU fallback tests passed; candidate/device review pending |
 | Public profile | Wall outage/timeout/retry preserves public identity; private and missing profiles stay nonrevealing | Integrated; candidate verification pending |
-| Responsive experience | 320/390/768/1440, keyboard, focus, readable type, touch targets, no overflow or dock obstruction | Hosted checks in progress; founder visual acceptance pending |
+| Responsive experience | 320/390/768/1440, keyboard, focus, readable type, touch targets, no overflow or dock obstruction | Hosted checks passed; founder visual acceptance pending |
 | Identity | Actual owner, independent reviewer and ordinary member; account switch and expiry reveal no stale private data | Source tested; final real-account acceptance open |
 | Signup | New independent tester receives OTP, completes onboarding, signs out/in and recovers access | Live health ready/open; full journey pending |
 | Creator lifecycle | Private upload -> exact playtest -> save/reload -> submit -> independent review -> founder-approved publication | Synthetic lifecycle passed; genuine acceptance pending |
