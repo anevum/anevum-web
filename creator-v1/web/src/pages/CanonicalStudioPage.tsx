@@ -107,6 +107,7 @@ function SessionStudio({id,mode}:{id:string;mode:Mode}){
   </header>
   {nativeCreatorEnabled?<NativeStudioNavigation/>:<nav className="st-nav" aria-label="Studio navigation">
    <Link to="/studio/records" aria-current={mode==='list'?'page':undefined}>MY PROJECTS</Link>
+   {import.meta.env.VITE_CREATOR_WORKSPACE_V109==='true'&&<Link to="/studio/workspace">WORKSPACE</Link>}
    <Link to="/studio/new" aria-current={mode==='new'?'page':undefined}>NEW PRIVATE DRAFT</Link>
    <a href="/upload">PLAYABLE UPLOAD ↗</a>
    {canReview&&<Link to="/studio/review" aria-current={mode==='review'?'page':undefined}>REVIEW DESK</Link>}
