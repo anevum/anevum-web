@@ -1,0 +1,44 @@
+{
+  "session": "ANEVUM.ANEVUM.UPDATE.2026-10-22.001.PLATFORM-COMPLETION",
+  "application_source": "7630a8b2fef77571862a51417499021d4c162bd2",
+  "merged_source": "f14ee877f6aa4c66ce555d43ef23a18572544d88",
+  "merged_pr": 612,
+  "source_workflows_passed": 12,
+  "guarded_upload_run": 39798435382,
+  "packaging_source": "e30ab2034cebb0be07d78de59a44bf3d9d8ad85b",
+  "apex": {
+    "deployment": "6372ee35-8c7d-468c-9486-536d9c4b0a0d",
+    "public_version": "93cc7f07-cf39-457e-af69-c9f6f4c02d25",
+    "public_percent": 100,
+    "candidate": "6f26f0cc-6eee-483d-9f07-329e45bd5e76",
+    "candidate_percent": 0,
+    "xp_test_enabled": false,
+    "worker_etag": "1a5997a5b7de4d6c0c702595b9d648e891e00f298fb266a5df0e9ce6590b82dd"
+  },
+  "entry": {
+    "version": "f1fd80b0-9121-4dc8-a0b8-b35161c2b726",
+    "deployment": "9c0312b8-4356-40bd-8419-d9bc6158f2e9",
+    "expires_at": "2026-10-22T18:53:43.000Z",
+    "source_sha256": "8523c9572da29d8732a497f18a43712b8eb26785255e5f77dbee86fd3afc64ab"
+  },
+  "ruleset_version": "11",
+  "observatory_version": "372d62ef-086b-4640-b7d2-35a7d0e98fe8",
+  "routes": 40,
+  "access_policy_changes": 0,
+  "database_writes": 0,
+  "db_readback": {
+    "members": 6,
+    "synthetic_xp_events": 0,
+    "legitimate_milestones": 7,
+    "independent_recognition": 3,
+    "level_notifications": 0,
+    "recovery_rows": 1783,
+    "insert_guard_present": true
+  },
+  "authenticated_candidate_acceptance": false,
+  "independent_reviewer_acceptance": false,
+  "physical_safari_acceptance": false,
+  "founder_visual_acceptance": false,
+  "public_promotion": false,
+  "blocker": "Fresh Cloudflare Access sign-in required for protected browser verification."
+}

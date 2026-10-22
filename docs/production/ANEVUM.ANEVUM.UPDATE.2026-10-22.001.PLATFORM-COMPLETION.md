@@ -1,12 +1,12 @@
 # ANEVUM platform completion and alpha release record
 
 Session: `ANEVUM.ANEVUM.UPDATE.2026-10-22.001.PLATFORM-COMPLETION`  
-Target: January 1, 2027 alpha. Current state: **release hold**, October 22, 2026.  
+Target: January 1, 2027 alpha. Current state: **protected candidate available; public release hold**, October 22, 2026.  
 Operational record: [issue #622](https://github.com/anevum/anevum-web/issues/622).
 
 ## Verified checkpoint
 
-Production apex remains `93cc7f07-cf39-457e-af69-c9f6f4c02d25` at 100%; protected V103 `7b9dbcdf-0fbd-4cbc-8e98-184724324553` remains at 0%. No deployment, route, Access, database, entitlement, purchase, recognition or publishing changes were made during this checkpoint.
+Production apex remains `93cc7f07-cf39-457e-af69-c9f6f4c02d25` at 100%; the verified recovery candidate `6f26f0cc-6eee-483d-9f07-329e45bd5e76` is selected at 0% in deployment `6372ee35-8c7d-468c-9486-536d9c4b0a0d`. The existing Access-protected opt-in path was renewed for four hours. All 40 routes, Access policies, database records, entitlements, purchases, recognition and public traffic remain unchanged.
 
 The genuine founder browser loads the existing homepage, older Creator Studio and Observatory with owner clearance. Observatory has no test-XP counters or controls. Homepage still features Single Drift with the description “This is a test game.” This is an editorial blocker, not permission to silently publish replacement content.
 
@@ -14,13 +14,30 @@ D1 readback: six members; seven legitimate milestones (115 XP total); three acti
 
 ## Integrated implementation
 
-Continue [PR #612](https://github.com/anevum/anevum-web/pull/612), exact application source `7630a8b2fef77571862a51417499021d4c162bd2`.
+[PR #612](https://github.com/anevum/anevum-web/pull/612) merged as `f14ee877f6aa4c66ce555d43ef23a18572544d88` after all 12 exact-head workflows passed. Exact application source `7630a8b2fef77571862a51417499021d4c162bd2`.
 
 This source combines current release code, V104 Studio navigation/IREN frame recovery, #621 calibration retirement, and public profile/mobile recovery. The retired XP API was additionally removed from the Worker allowlist so guests and all methods receive 404 before authentication or D1. Its inner handler also remains permanently disabled.
 
 Local validation: TypeScript and feature-enabled root Vite build passed; 35 integrated recovery tests, 21 progression/auth tests, 134 creator lifecycle/permission tests under Node 22.23.4, and 27 asset/release guard tests passed. Some suites overlap; these counts must not be added into a claimed unique total. Node 24 produced an asynchronous synthetic multipart-stream error; the pinned Node 22 suite passed without altering upload behavior.
 
 Existing inactive-upload tooling is reused on `ops/platform-candidate-20261022-001`, packaging `a7b9f144cc86665b4c4818a5b620f8b288b7733d`. [Candidate run](https://github.com/anevum/anevum-web/actions/runs/39795991977) pins the application bytes, tests root paths and Studio/IREN recovery, retains all 152 earned assets, requires exact-source CI and permits only an inactive upload. The candidate's obsolete XP flag becomes false; public traffic, current versions, all 40 routes, Access, D1 identities, secrets, upload permissions and public-production safeguards remain protected.
+
+## Protected deployment checkpoint — October 22, 2026
+
+The first upload attempt stopped at the source-CI dependency while those checks were still running and wrote no Cloudflare resources. The successful guarded [upload run 39798435382](https://github.com/anevum/anevum-web/actions/runs/39798435382), packaging `e30ab2034cebb0be07d78de59a44bf3d9d8ad85b`, rebuilt and verified the exact immutable root assets, all 152 earned assets, mobile/desktop root rendering, unified Studio and IREN silent-GPU fallback before uploading. A direct Cloudflare readback independently confirmed the new version, 26 bindings, root asset runtime and retired XP flag false.
+
+- Apex candidate: `6f26f0cc-6eee-483d-9f07-329e45bd5e76` at 0%; original public version remains 100%.
+- Existing entry: `f1fd80b0-9121-4dc8-a0b8-b35161c2b726`, deployment `9c0312b8-4356-40bd-8419-d9bc6158f2e9`.
+- Bounded testing expires October 22 at **2:53:43 p.m. Eastern** (`2026-10-22T18:53:43Z`).
+- Existing Transform Ruleset version 11 still strips caller overrides, preserves the same protected opt-in cookie and the four existing private backend/Command pins, and selects the new apex plus the **currently live V104 Observatory**. This avoids routing testers back to the obsolete V100 Observatory.
+- Both existing Access applications retain explicit founder allow policies and no bypass rules. No Access policy changed.
+- Post-deployment D1 readback again confirmed six members, zero synthetic events, seven milestones, three grants, zero level notices, recovery rows 1,783, and the insert-blocking trigger.
+- The current public /thebutton browser navigation reaches /member, so the required /levels redirect is **not yet publicly released**. A public GET to the retired API returns 404; all-method candidate and authenticated visual verification still require protected sign-in.
+- Fresh Cloudflare Access sign-in blocks the protected browser entry. No real-account, physical Safari, visual or public-promotion gate has been claimed complete.
+
+The checked-in entry bundle is the existing tested acceptance handler with only the immutable source/candidate pins and review-window copy updated. Its SHA-256 is `8523c9572da29d8732a497f18a43712b8eb26785255e5f77dbee86fd3afc64ab`; twelve retained protected-entry tests passed.
+
+A further compiled-browser regression on the packaging branch exercises a one-time wall HTTP 503 and successful manual retry at 1440/390/320. It verifies that identity remains visible and successful profile/space reads are not repeated. Its hosted result is tracked separately from the already accepted application source.
 
 ## Release-readiness checklist
 
@@ -31,7 +48,7 @@ A source test is not live acceptance. Every live result must record source, immu
 | XP data | Rechecked milestone, recognition, recovery and synthetic-event counts | Verified |
 | Observatory retirement | Genuine owner engagement/member views without test controls | Verified live |
 | Retired public routes | Selected release: /thebutton reaches /levels; xp-test returns 404 for every method and session state | Source tested; live release pending |
-| Exact build | Complete CI, root assets, private earned media, immutable candidate receipt | In progress |
+| Exact build | Complete CI, root assets, private earned media, immutable candidate receipt | Verified; candidate selected at 0% |
 | Studio consolidation | /studio is the single front door; records, builds, upload and review use the existing services | Integrated; live candidate pending |
 | IREN | Visible animated frame, silent-GPU/context-loss fallback, motion preferences, usable controls | Automated tests configured; candidate/device review pending |
 | Public profile | Wall outage/timeout/retry preserves public identity; private and missing profiles stay nonrevealing | Integrated; candidate verification pending |
