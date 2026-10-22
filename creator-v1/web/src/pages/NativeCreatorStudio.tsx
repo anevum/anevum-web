@@ -234,7 +234,7 @@ export function NativeCreatorStudioPage({mode='list'}:{mode?:'list'|'new'|'edit'
  if(identity.pending)return <p role="status">Verifying your ANEVUM session…</p>;
  if(!identity.id)return <Status title="Sign in to create."><p>Use your existing ANEVUM account. No separate creator account is required.</p><Link className="st-action av095-primary" to="/join">Sign in</Link></Status>;
  if(access.loading)return <p role="status">Verifying Creator Studio access…</p>;
- if(access.error||!access.data)return <Status title="Creator Studio could not be opened." retry={access.reload}><p>{access.error}</p></Status>;
+ if(access.error||!access.data)return <Status title="Creator Studio could not be opened." retry={access.reload}><p>{access.error}</p><p>Playable builds are temporarily unavailable. Your separate private project records may still be accessible with your verified member account.</p><Link className="st-action" to="/studio/records">Open private project records</Link></Status>;
  const allowed=mode==='review'?access.data.canReview:access.data.canUpload;
  return <section className="st-root av095-native" data-native-creator="v095">
   <header className="st-header"><div><Link className="st-back" to="/member">← My Space</Link><p className="st-kicker">ANEVUM / CONTINUANCE INSTITUTE / CREATOR STUDIO</p><h1>{mode==='review'?'Release review.':mode==='new'?'Transmit a creation.':mode==='edit'?'Build the next version.':'Creator Studio.'}</h1><p>One account. One Studio. Your work, from private draft to reviewed release.</p></div><div className="st-identity"><span>CANONICAL WORKSPACE</span><strong>{mode==='review'?'REVIEW DESK':'CREATOR ARCHIVE'}</strong><small>SERVER-VERIFIED ACCESS</small></div></header>
