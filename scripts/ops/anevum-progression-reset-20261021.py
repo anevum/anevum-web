@@ -93,7 +93,7 @@ def query(sql: str, database=CANONICAL_DB):
     return result[-1].get('results', [])
 
 
-def check_worker_and_database():
+def check_worker_and_database(*, require_test_disabled=False):
     require(os.environ.get('GITHUB_REPOSITORY') == 'anevum/anevum-web' and
             os.environ.get('GITHUB_REF') == 'refs/heads/main' and
             os.environ.get('GITHUB_ACTOR') == 'anevum' and
@@ -107,8 +107,10 @@ def check_worker_and_database():
                  v.get('version_id') == ACTIVE_APEX_VERSION]) == 1 and
             all(v.get('percentage') in (0,100) for v in versions),
             'public apex Worker version drifted; reset paused')
-    settings = api(f'/accounts/{ACCOUNT}/workers/scripts/{APEX}/settings', key='worker')
-    bindings = settings.get('bindings', [])
+    # Settings describes the latest upload, which may be an inactive release.
+    version = api(f'/accounts/{ACCOUNT}/workers/scripts/{APEX}/versions/{ACTIVE_APEX_VERSION}', key='worker')
+    require(version.get('id') == ACTIVE_APEX_VERSION, 'unexpected live Worker identity')
+    bindings = version.get('resources', {}).get('bindings', [])
     for name, identifier in [('MEMBER_DB', CANONICAL_DB), ('COMMUNITY_DB', COMMUNITY_DB)]:
         matches = [v for v in bindings if v.get('name') == name and v.get('type') == 'd1' and
                    (v.get('id') or v.get('database_id')) == identifier]
@@ -116,6 +118,8 @@ def check_worker_and_database():
     flag = [v for v in bindings if v.get('name') == 'CANONICAL_XP_TEST_ENABLED' and v.get('type') == 'plain_text']
     require(len(flag) == 1 and flag[0].get('text') in ('true', 'false'),
             'unrecognized XP test configuration')
+    require(not require_test_disabled or flag[0]['text'] == 'false',
+            'disable the live XP test endpoint before staging or executing reset')
     db = api(d1_path())
     require(db.get('uuid') == CANONICAL_DB and db.get('name') == NAME,
             'unexpected canonical database identity')
@@ -366,7 +370,7 @@ def simulate(db, counts):
 
 def execute(previous_backup: Path, fresh_backup: Path, report_path: Path, expected_digest: str):
     require(re.fullmatch('[a-f0-9]{64}',expected_digest) is not None, 'invalid approved digest')
-    worker=check_worker_and_database()
+    worker=check_worker_and_database(require_test_disabled=True)
     old=sqlite_restore(decrypt(previous_backup))
     try:
         previous=snapshot(old)
@@ -395,7 +399,7 @@ def execute(previous_backup: Path, fresh_backup: Path, report_path: Path, expect
 
 def execute_live(previous_backup: Path, fresh_backup: Path, expected_digest: str, report_path: Path):
     require(re.fullmatch('[a-f0-9]{64}',expected_digest) is not None, 'invalid approved digest')
-    check_worker_and_database()
+    check_worker_and_database(require_test_disabled=True)
     old=sqlite_restore(decrypt(previous_backup))
     fresh_db=sqlite_restore(decrypt(fresh_backup))
     try:
