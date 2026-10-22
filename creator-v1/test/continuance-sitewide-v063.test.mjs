@@ -45,7 +45,8 @@ test('alerts and awards share the canonical 30-level progression',()=>{
   assert.doesNotMatch(alerts,/level:30,title:'Level 30 reached',detail:'ANEVUM'/);
   assert.match(alerts,/Visual notification sample. No award, XP or specimen revealed/);
   assert.doesNotMatch(instrument,/EXPLORE ALL 60 LEVEL ICONS/);
-  assert.match(instrument,/INSPECT MY EARNED LEVELS/);
+  assert.match(instrument,/Navigate to="\/levels" replace/);
+  assert.doesNotMatch(instrument,/\+5 XP|TRANSMIT SIGNAL|SIGN IN TO TEST YOUR XP/);
   assert.match(collection,/Thirty levels\. Your earned emblems/);
   assert.match(collection,/EarnedRewardVault/);
   assert.doesNotMatch(collection,/level-artifacts\.json|LIVING 3D ARCHIVE/);
