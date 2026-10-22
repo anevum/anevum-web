@@ -190,7 +190,14 @@ export async function run(mode,token){
  assert.equal(source.modules?.length,1);
  assert.equal(source.modules[0]?.content_type,'application/javascript+module');
  assert.equal(versions.items?.[0]?.id,INACTIVE,'Latest upload changed; stop and re-review');
- assert.deepEqual(lockBindings(v.resources.bindings),lockBindings(snapshot.bindings),'Live bindings and settings differ');
+ const liveBindings=lockBindings(v.resources.bindings),currentBindings=lockBindings(snapshot.bindings);
+ const existingNames=new Set(liveBindings.map(x=>x.name));
+ const extras=currentBindings.filter(x=>!existingNames.has(x.name)).map(x=>({name:x.name,type:x.type}));
+ assert.deepEqual(extras,[
+  {name:'CANONICAL_PACKAGE_PROOF_ENABLED',type:'plain_text'},
+  {name:'CANONICAL_PACKAGE_PROOF_KEY',type:'secret_text'}
+ ],'Unexpected new settings/bindings beyond the approved live baseline');
+ assert.ok(JSON.stringify(currentBindings.filter(x=>existingNames.has(x.name)))===JSON.stringify(liveBindings),'Live binding values changed since the pinned source');
  assert.equal(v.resources.script_runtime?.compatibility_date,'2026-10-17');
  assert.deepEqual(v.resources.script_runtime?.compatibility_flags,['nodejs_compat']);
  const prior=Buffer.from(source.modules[0].content_base64,'base64').toString('utf8');
