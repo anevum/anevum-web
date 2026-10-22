@@ -34,17 +34,27 @@ async function allowance(db,id,now){
  return r.length===1;
 }
 export async function grantMilestones(db,id,now){
- // Idempotent insert selected from authoritative records, never client XP.
- await db.batch([
-  db.prepare("INSERT OR IGNORE INTO member_space_milestones(user_id,milestone,earned_at) SELECT ?, 'first_signal', ? WHERE EXISTS(SELECT 1 FROM member_wall_posts WHERE user_id=?)").bind(id,now,id),
-  db.prepare("INSERT OR IGNORE INTO member_space_milestones(user_id,milestone,earned_at) SELECT ?, 'world_shaper', ? WHERE EXISTS(SELECT 1 FROM member_creator_profiles WHERE user_id=? AND length(bio)>0) AND (SELECT COUNT(*) FROM member_space_media WHERE user_id=?)=2").bind(id,now,id,id)
- ]);
+ const reset=await progressionReset(db);
+ if(reset){
+  // Old milestones remain immutable. Earn a new-period copy only through NEW activity.
+  await db.batch([
+   db.prepare("INSERT OR IGNORE INTO member_progression_epoch_milestones(epoch,user_id,milestone,earned_at) SELECT 1,?,'first_signal',? WHERE EXISTS(SELECT 1 FROM member_wall_posts WHERE user_id=? AND created_at>?)").bind(id,now,id,reset.cutoffAt),
+   db.prepare("INSERT OR IGNORE INTO member_progression_epoch_milestones(epoch,user_id,milestone,earned_at) SELECT 1,?,'world_shaper',? WHERE EXISTS(SELECT 1 FROM member_creator_profiles WHERE user_id=? AND length(bio)>0 AND updated_at>?) AND (SELECT COUNT(*) FROM member_space_media WHERE user_id=? AND updated_at>?)=2").bind(id,now,id,reset.cutoffAt,id,reset.cutoffAt)
+  ]);
+ }else{
+  await db.batch([
+   db.prepare("INSERT OR IGNORE INTO member_space_milestones(user_id,milestone,earned_at) SELECT ?, 'first_signal', ? WHERE EXISTS(SELECT 1 FROM member_wall_posts WHERE user_id=?)").bind(id,now,id),
+   db.prepare("INSERT OR IGNORE INTO member_space_milestones(user_id,milestone,earned_at) SELECT ?, 'world_shaper', ? WHERE EXISTS(SELECT 1 FROM member_creator_profiles WHERE user_id=? AND length(bio)>0) AND (SELECT COUNT(*) FROM member_space_media WHERE user_id=?)=2").bind(id,now,id,id)
+  ]);
+ }
  if(await progressionReady(db))try{await syncRewardNotifications(db,id,now)}catch{/* Inbox reads repair derived notices without undoing the saved milestone. */}
 }
 export async function spaceSnapshot(db,id){
  const mediaRows=await rows(db,'SELECT slot,version FROM member_space_media WHERE user_id=?',id);
  const reset=await progressionReset(db);
- const earned=await rows(db,'SELECT milestone,earned_at FROM member_space_milestones WHERE user_id=?',id).then(items=>items.filter(row=>!reset||Number(row.earned_at)>reset.cutoffAt));
+ const earned=await rows(db,reset?
+  'SELECT milestone,earned_at FROM member_progression_epoch_milestones WHERE epoch=1 AND user_id=?':
+  'SELECT milestone,earned_at FROM member_space_milestones WHERE user_id=?',id);
  const settings=await db.prepare('SELECT featured_json,show_stats,revision FROM member_space_settings WHERE user_id=?').bind(id).first();
  const count=await db.prepare('SELECT COUNT(*) AS count FROM member_wall_posts WHERE user_id=?').bind(id).first();
  const awards=MILESTONES.map(item=>({...item,earnedAt:Number(earned.find(e=>e.milestone===item.id)?.earned_at)||null}));
