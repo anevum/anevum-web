@@ -41,7 +41,9 @@ try{
  for(const [width,height,label] of [[1440,900,"desktop"],[390,844,"phone"],[320,720,"small-phone"]]){
   await send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:1,mobile:width<700});
   await send("Page.navigate",{url:base+"/creator/"});
-  await until(()=>evaluate('!!document.querySelector(".av111-onramp")&&document.querySelectorAll(".av79-gateway").length===4'));
+  // The canonical featured project is loaded asynchronously from the real
+  // local catalogue fixture, so await it before asserting the first fold.
+  await until(()=>evaluate('!!document.querySelector(".av111-onramp")&&!!document.querySelector(".av79-feature")&&document.querySelectorAll(".av79-gateway").length===4'));
   const entry=await evaluate('(()=>{const rail=document.querySelector(".av111-onramp"),join=rail.querySelector("a.av111-onramp-primary"),tour=rail.querySelector("button.av111-onramp-guide"),r=rail.getBoundingClientRect(),j=join?.getBoundingClientRect(),t=tour?.getBoundingClientRect();return {hero:!!document.querySelector(".av79-hero"),featured:!!document.querySelector(".av79-feature"),gateways:document.querySelectorAll(".av79-gateway").length,join:join?.getAttribute("href"),tour:!!tour,rail:[r.left,r.right,r.width],buttons:[j?.height,t?.height],overflow:document.documentElement.scrollWidth>innerWidth+1,text:rail.textContent}})()');
   if(!entry.hero||!entry.featured||entry.gateways!==4||!entry.join?.endsWith("/join")||!entry.tour||entry.overflow||entry.rail[0]<-1||entry.rail[1]>width+1||entry.buttons.some(h=>h<44)||!entry.text?.includes("Explore first. Join when ready."))
    throw Error("V111_HOME_FIRST_CONTACT_"+label+":"+JSON.stringify(entry));
