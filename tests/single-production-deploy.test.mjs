@@ -1,39 +1,17 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import {readFileSync} from "node:fs";
+import {assertRetiredProductionWorkflow} from "./helpers/retired-production-contract.mjs";
+const read=file=>readFileSync(new URL("../"+file,import.meta.url),"utf8");
 
-const path = file => readFileSync(new URL(file, import.meta.url), "utf8");
-
-test("only guarded production workflow may deploy ANEVUM Worker", () => {
-  const verify = path("../.github/workflows/anevum-verify.yml");
-  const release = path("../.github/workflows/deploy-production.yml");
-  assert.doesNotMatch(verify, /run:\s*npx wrangler deploy\b/);
-  assert.doesNotMatch(verify, /cloudflare\/wrangler-action@/);
-  assert.doesNotMatch(verify, /- name: Deploy production to Cloudflare\b/);
-  assert.match(verify, /Enforce single guarded production Worker deployment/);
-
-  assert.match(release, /name: Deploy ANEVUM Production/);
-  assert.match(release, /concurrency:\s*\n\s+group: anevum-production/);
-  const deployActions = release.match(/uses:\s*cloudflare\/wrangler-action@v3/g) ?? [];
-  assert.equal(deployActions.length, 1, "one guarded Wrangler production deploy");
-  assert.equal((release.match(/command:\s*deploy\b/g) ?? []).length, 1);
-  assert.ok(
-    release.indexOf("Verify production member release prerequisites before deployment") <
-      release.indexOf("Deploy to Cloudflare Workers"),
-    "production member preflight must precede the only deploy"
-  );
-  for (const prerequisite of [
-    "verify-member-bindings.mjs --require-live",
-    "BETTER_AUTH_SECRET", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET",
-    "CLOUDFLARE_API_TOKEN", "MEMBER_DB",
-    "PRAGMA foreign_key_check",
-  ]) assert.ok(release.includes(prerequisite), prerequisite);
+test("legacy verification is read-only and V5 production dispatch always refuses",()=>{
+ const verify=read(".github/workflows/anevum-verify.yml");
+ assert.doesNotMatch(verify,/run:\s*npx wrangler deploy\b|cloudflare\/wrangler-action@/);
+ assert.match(verify,/Enforce single guarded production Worker deployment/);
+ assertRetiredProductionWorkflow(read(".github/workflows/deploy-production.yml"));
 });
-
-test("V5 retirement and member-safe staging tests remain mandatory", () => {
-  const verify = path("../.github/workflows/anevum-verify.yml");
-  const release = path("../.github/workflows/deploy-production.yml");
-  assert.match(verify, /node --test tests\/legacy-rhen-retirement\.test\.mjs/);
-  assert.match(release, /node --test tests\/legacy-rhen-retirement\.test\.mjs/);
-  assert.match(release, /Verify production member launch boundaries/);
+test("retirement checks reject accidental deployment, credential access and success exits",()=>{
+ const retired=read(".github/workflows/deploy-production.yml");
+ for(const unsafe of [retired.replace("exit 1","exit 0"),retired+"\n  deploy:\n    runs-on: ubuntu-latest\n",retired.replace("exit 1","npx wrangler deploy\n          exit 1"),retired.replace("exit 1","echo \"${{ secrets.CLOUDFLARE_API_TOKEN }}\"\n          exit 1")])
+  assert.throws(()=>assertRetiredProductionWorkflow(unsafe));
 });
