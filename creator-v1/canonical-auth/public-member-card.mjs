@@ -13,11 +13,18 @@ export function publicMemberColumns(owner){
  if(!ownerColumns.has(owner))throw Error('Unsafe identity column');
  return `${owner} AS member_identity_key,s.featured_json,s.show_stats,
  COALESCE((SELECT m.version FROM member_space_media m WHERE m.user_id=${owner} AND m.slot='avatar'),0) AS avatar_version,
- (COALESCE((SELECT SUM(amount) FROM member_xp_events x WHERE x.user_id=${owner}),0)+
+ (COALESCE((SELECT SUM(amount) FROM member_xp_events x WHERE x.user_id=${owner} AND x.id>COALESCE((SELECT cutoff_event_id FROM member_progression_reset_epoch WHERE epoch=1),-1)),0)+
   COALESCE((SELECT SUM(CASE milestone WHEN 'first_signal' THEN 10 WHEN 'world_shaper' THEN 25 ELSE 0 END)
-   FROM member_space_milestones z WHERE z.user_id=${owner}),0)) AS member_xp,
- (SELECT GROUP_CONCAT(milestone) FROM member_space_milestones e
-  WHERE e.user_id=${owner} AND e.milestone IN ('first_signal','world_shaper')) AS earned_awards`;
+   FROM member_space_milestones z WHERE z.user_id=${owner} AND NOT EXISTS(SELECT 1 FROM member_progression_reset_epoch WHERE epoch=1)),0)+
+  COALESCE((SELECT SUM(CASE milestone WHEN 'first_signal' THEN 10 WHEN 'world_shaper' THEN 25 ELSE 0 END)
+   FROM member_progression_epoch_milestones z WHERE z.user_id=${owner} AND z.epoch=1),0)) AS member_xp,
+ (SELECT GROUP_CONCAT(milestone) FROM (
+   SELECT milestone FROM member_space_milestones e WHERE e.user_id=${owner} AND NOT EXISTS(SELECT 1 FROM member_progression_reset_epoch WHERE epoch=1)
+    AND e.milestone IN ('first_signal','world_shaper')
+   UNION ALL
+   SELECT milestone FROM member_progression_epoch_milestones e WHERE e.user_id=${owner} AND e.epoch=1
+    AND e.milestone IN ('first_signal','world_shaper')
+ )) AS earned_awards`;
 }
 /** Never expose XP, user IDs, emails, private profile settings, or unearned medals. */
 export function publicMemberCard(row){

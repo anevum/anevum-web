@@ -23,7 +23,8 @@ const fakeEnv=(overrides={})=>{
     },
     async first(){
      // This source fixture represents pre-aggregate member XP data.
-     if(sql.includes("SELECT xp FROM member_xp_totals"))throw Error("no such table: member_xp_totals");
+     if(sql.includes('member_progression_reset_epoch'))return null;
+      if(sql.includes("SELECT xp FROM member_xp_totals"))throw Error("no such table: member_xp_totals");
      if(sql.includes("COALESCE(SUM(amount)"))return {xp:state.xp};
      if(sql.includes('WHERE user_id=?')&&sql.includes('SELECT user_id FROM member_creator_profiles'))
       return {user_id:args[0]};

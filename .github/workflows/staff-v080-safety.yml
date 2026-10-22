@@ -8,6 +8,7 @@ on:
       - "creator-v1/test/staff-session-transport-v091.test.mjs"
       - "creator-v1/test/staff-observatory-ux-v091.test.mjs"
       - "creator-v1/test/staff-observatory-aura-v092.test.mjs"
+      - "creator-v1/test/staff-observatory-cleanup-v104.test.mjs"
       - "creator-v1/test/capture-staff-observatory-v092.mjs"
       - "creator-v1/test/capture-native-staff-link-v099.mjs"
       - "creator-v1/test/staff-navigation-and-connecting-v099.test.mjs"
@@ -37,7 +38,7 @@ jobs:
       - name: Exercise the preserved staff Workers in workerd
         run: node --test creator-v1/test/staff-session-transport-v091.test.mjs creator-v1/test/staff-transport-release-v091.test.mjs
       - name: Check isolated V092 Observatory candidate and unchanged protected V091 staff source
-        run: node --test creator-v1/test/staff-observatory-ux-v091.test.mjs creator-v1/test/staff-observatory-aura-v092.test.mjs
+        run: node --test creator-v1/test/staff-observatory-ux-v091.test.mjs creator-v1/test/staff-observatory-aura-v092.test.mjs creator-v1/test/staff-observatory-cleanup-v104.test.mjs
       - name: Validate V099 authenticated staff shortcut boundaries and finite Observatory failures
         run: node --test creator-v1/test/staff-navigation-and-connecting-v099.test.mjs
       - name: Capture isolated V092 owner and reviewer desktop/phone browser views

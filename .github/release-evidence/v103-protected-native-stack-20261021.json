@@ -1,0 +1,109 @@
+{
+  "status": "PASS_PROTECTED_NATIVE_STACK_READBACK",
+  "checkedAt": "2026-10-21T23:04:18.704Z",
+  "checks": [
+    "apex: exact original public 100/private 0 and previews off",
+    "apex: root assets, 26 bindings, canonical uploads off, Workbench off",
+    "controller: exact original public 100/private 0 and previews off",
+    "controller: native flag exists only in private version",
+    "bridge: exact original public 100/private 0 and previews off",
+    "bridge: native flag exists only in private version",
+    "frame: exact original public 100/private 0 and previews off",
+    "frame: native flag exists only in private version",
+    "legacyCommand: exact original public 100/private 0 and previews off",
+    "entry: protected candidate and bounded expiry match",
+    "all 40 existing routes preserved",
+    "six private pins and caller override stripping match",
+    "both Access gates retain explicit owner allow and no bypass"
+  ],
+  "workers": {
+    "apex": {
+      "worker": "anevum-apex-prelaunch-gateway",
+      "deployment": "a63cfbf0-2217-40c8-b6a9-17e026453094",
+      "publicVersion": "93cc7f07-cf39-457e-af69-c9f6f4c02d25",
+      "publicPercent": 100,
+      "privateVersion": "7b9dbcdf-0fbd-4cbc-8e98-184724324553",
+      "privatePercent": 0
+    },
+    "controller": {
+      "worker": "anevum-package-alpha-v003-control",
+      "deployment": "6306bbbf-7954-4f91-850c-9b0edf89dca4",
+      "publicVersion": "9851d9c5-6270-4c4e-a70e-1b82451b170d",
+      "publicPercent": 100,
+      "privateVersion": "2720ea00-2030-43ff-84fc-8d6faf4d003b",
+      "privatePercent": 0
+    },
+    "bridge": {
+      "worker": "anevum-unified-creation-routes-v002",
+      "deployment": "b4ebd6d9-e77d-4e1e-8843-5f6f7a72f3fa",
+      "publicVersion": "e5109c55-ec2b-419c-8ac7-ce4eaeac1e7b",
+      "publicPercent": 100,
+      "privateVersion": "7e281e4e-893c-4f59-977d-895c7ee616b4",
+      "privatePercent": 0
+    },
+    "frame": {
+      "worker": "anevum-native-frame-policy-v001",
+      "deployment": "4642758c-164d-439e-bc31-c2eb7efd793a",
+      "publicVersion": "3703ace1-745f-41f3-8fac-8eba45c99ce8",
+      "publicPercent": 100,
+      "privateVersion": "20652959-0acb-4a53-bf59-1b80da1c0a55",
+      "privatePercent": 0
+    },
+    "legacyCommand": {
+      "worker": "anevum-iren-legacy-command-entry-v001",
+      "deployment": "78d0afa5-31e7-4b50-8b41-4393667ebf7d",
+      "publicVersion": "62692eef-e7fb-479d-88fe-62c5fcaff5f9",
+      "publicPercent": 100,
+      "privateVersion": "4699cfd9-d9d0-44f2-b1b2-f56a4627f429",
+      "privatePercent": 0
+    }
+  },
+  "entryVersion": "27befdc9-5238-40e7-b9de-3c2acd542309",
+  "entryDeployment": "14e85ac8-b185-44a4-9374-d4c96c1cb898",
+  "expiresAt": "2026-10-22T02:58:05Z",
+  "rulesetVersion": "10",
+  "publicRolloutApproved": false,
+  "authenticatedHumanAcceptance": false,
+  "providerWrites": 0,
+  "session": "ANEVUM.ANEVUM.BUILD.2026-10-21.001.CREATOR-STUDIO-UPLOADER-PLAYER-V100",
+  "integrated_source": "f831375d35f883c0f4a5129750d05e117068c7e5",
+  "frontend_reviewed_source": "04960a1b7540d9e33af1d4e9773f8e6cc9d7c2ba",
+  "frame_reviewed_source": "f1d27cb4d64debed2b282cd2ba17f89e96bedd00",
+  "apex_upload_run": 39689826918,
+  "browser_cases": 28,
+  "merged_prs": [
+    607,
+    608,
+    610,
+    611
+  ],
+  "actual_private_rollback_rehearsal": {
+    "rollback_test": "PASS",
+    "rollback_deployment": "a6d254b4-125d-437b-92f8-bd0a84b828cd",
+    "restored_deployment": "4642758c-164d-439e-bc31-c2eb7efd793a",
+    "versions": [
+      {
+        "version_id": "3703ace1-745f-41f3-8fac-8eba45c99ce8",
+        "percentage": 100
+      },
+      {
+        "version_id": "20652959-0acb-4a53-bf59-1b80da1c0a55",
+        "percentage": 0
+      }
+    ],
+    "public_version_unchanged": true,
+    "public_percent_always": 100,
+    "entry_not_activated_during_rehearsal": true,
+    "database_writes": 0
+  },
+  "live_schema_writes": 0,
+  "live_grant_writes": 0,
+  "moderation_writes": 0,
+  "independent_github_readback": {
+    "run_id": 39691447879,
+    "head": "48c6dd229e71b7bca0675378fab7959e062a7399",
+    "conclusion": "success",
+    "provider_writes": 0,
+    "authenticated_human_acceptance": false
+  }
+}
