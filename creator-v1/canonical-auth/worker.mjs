@@ -165,7 +165,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
       /^\/api\/v1\/member\/project-saves\/[a-f0-9]{32}$/.test(path);
     const ownWorkbench=/^\/api\/v1\/member\/workbench\/(?:status|access|member|projects(?:\/[0-9a-f-]{36})?)$/.test(path);
     if(ownWorkbench&&env?.CANONICAL_WORKBENCH_ALPHA_ENABLED!=="true")return fail(request,404);
-    const ownStudioFiles=/^\/api\/v1\/member\/studio\/projects\/[0-9a-f-]{36}\/files(?:\/[0-9a-f-]{36}(?:\/versions)?)?$/.test(path);
+    const ownStudioFiles=/^\/api\/v1\/member\/studio\/projects\/[0-9a-f-]{36}\/files(?:\/(?:trash|[0-9a-f-]{36}(?:\/(?:versions|restore))?))?$/.test(path);
     if(ownStudioFiles&&env?.CANONICAL_STUDIO_FILE_TREE_V111!=='true')return fail(request,404);
     const ownStudioReview=path===CANONICAL_PREFIX+"/studio/review"||
       /^\/api\/v1\/member\/studio\/review\/[0-9a-f-]{36}\/manifest$/.test(path);
