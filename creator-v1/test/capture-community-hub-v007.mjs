@@ -140,7 +140,7 @@ try {
     await client.send("Page.navigate", {url:base+"/creator/"});
     await until(()=>evaluate('document.readyState==="complete"&&!!document.querySelector(".av79-home .av79-feature")&&!!document.querySelector(".av79-feature [data-player-card=v078]")'));
     const signature=await evaluate('(()=>{const feature=document.querySelector(".av79-feature"),card=feature?.querySelector("[data-player-card=v078]");return {width:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth+1,headline:document.querySelector(".av79-hero h1")?.textContent,featured:feature?.querySelector("h3")?.textContent,creator:card?.querySelector(".av61-member-name")?.textContent,channel:!!card?.classList.contains("av65-player-card--channel"),unearnedLevel:!!card?.querySelector(".av61-specimen,.av61-level-label"),oldModules:document.querySelectorAll(".av73-world-deck,.av11-live-index,.av6-community-index").length,watermark:getComputedStyle(document.body,"::after").content.includes("SYNTHETIC OFFLINE REVIEW")};})()');
-    if(signature.overflow||!signature.headline?.includes("Enter a universe in the making.")||
+    if(signature.overflow||!signature.headline?.replace(/\s+/g," ").includes("Enter a universe in the making.")||
       !signature.featured||!signature.creator||!signature.channel||
       signature.unearnedLevel||signature.oldModules||!signature.watermark)
       throw Error("V079_HOME_CREATOR_CARD_"+width+":"+JSON.stringify(signature));

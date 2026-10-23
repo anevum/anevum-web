@@ -326,7 +326,7 @@ try{
    if(name==="home"){
      await until(()=>evaluate('document.querySelectorAll(".av79-gateway").length===4&&!!document.querySelector(".av79-feature")'));
      const entrance=await evaluate('(()=>({headline:document.querySelector(".av79-hero h1")?.innerText,gateways:[...document.querySelectorAll(".av79-gateway")].map(x=>x.textContent.trim()),featured:document.querySelector(".av79-feature h3")?.textContent,creator:document.querySelector(".av79-feature [data-player-card=v078]")?.textContent,oldPanels:document.querySelectorAll(".av73-world-deck,.av11-live-index,.av6-community-index").length,categoryArt:document.querySelectorAll(".av79-home .cw-artwork,.av79-home img").length,overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
-     if(!entrance.headline?.includes("Enter a universe in the making.")||entrance.gateways.length!==4||!entrance.featured||!entrance.creator||entrance.oldPanels!==0||entrance.categoryArt!==0||entrance.overflow)
+     if(!entrance.headline?.replace(/\s+/g," ").includes("Enter a universe in the making.")||entrance.gateways.length!==4||!entrance.featured||!entrance.creator||entrance.oldPanels!==0||entrance.categoryArt!==0||entrance.overflow)
        throw Error("V079_HOME_ENTRY_"+width+":"+JSON.stringify(entrance));
      await screenshot("home-discovery-"+width);
      await evaluate('document.querySelector(".av9-menu-trigger").click()');
