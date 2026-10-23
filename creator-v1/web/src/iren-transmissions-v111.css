@@ -51,7 +51,7 @@
   padding:19px 20px 13px;
   background:
     radial-gradient(ellipse at 100% 0%,#527da735,transparent 50%),
-    linear-gradient(145deg,#263a56f5,#151e34fa 64%,#241d37f6);
+    linear-gradient(145deg,#263a56,#151e34 64%,#241d37);
   box-shadow:0 20px 65px #000b,inset 0 1px #fff3,0 0 40px #719ccd23;
   color:#f9efe8;
   opacity:0;
