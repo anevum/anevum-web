@@ -13,6 +13,7 @@ import { LoadingState, ErrorState } from "../components/States";
 import "./community-hub-v007.css";
 import {CommunityMemberCard,PublicMemberDirectory,PublicMemberActivity} from "../components/MemberCommunity";
 import {CommunityForums} from "./CanonicalForums";
+import {ContinuanceWorkspaceSwitch} from "../components/ContinuanceWorkspaceSwitchV118";
 
 /**
  * Creator V1 / Community V007.
@@ -172,7 +173,7 @@ export function CommunityPage() {
               behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});}
           }}>READ DISCUSSIONS <Icon name="community" size={15}/></a></div>
       </div>
-      <aside className="ch7-status" aria-label="Verified public community counts"><span className="ch7-kicker">PUBLISHED WORK / VERIFIED</span>
+      <aside className="ch7-status av118-surface" aria-label="Verified public community counts"><span className="ch7-kicker">PUBLISHED WORK / VERIFIED</span>
         <div className="ch7-count-grid">
           <div><strong>{status.state === "ready" ? status.data.counts.publishedProjects : "—"}</strong><span>APPROVED PROJECTS</span></div>
           <div><strong>{status.state === "ready" ? status.data.counts.publishedCreators : "—"}</strong><span>PUBLIC CREATORS</span></div>
@@ -181,6 +182,7 @@ export function CommunityPage() {
       </aside>
     </section>
 
+    <ContinuanceWorkspaceSwitch current="community"/>
     <CommunityMemberCard onPosted={()=>setRevision(value=>value+1)}/>
     <CommunityForums/>
 

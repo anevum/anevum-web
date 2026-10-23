@@ -8,6 +8,7 @@ import {readPackageCatalogue,packageDiscoveryResults} from "../lib/creator-packa
 import { PageNav } from "../components/PageNav";
 import { PortalHeading } from "../components/PortalHeading";
 import { EmptyState, ErrorState, LoadingState } from "../components/States";
+import {ContinuanceWorkspaceSwitch} from "../components/ContinuanceWorkspaceSwitchV118";
 
 const channels: ReadonlyArray<{id:Category;label:string;description:string;mark:string}> = [
   {id:"games",label:"Games",description:"Independent play and interactive experiments",mark:"✦"},
@@ -102,7 +103,7 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
       </header>}
     <div className="portal-browse-layout">
       <div className="portal-browse-main">
-        <section className="portal-box portal-search-hall" aria-label="Search and browse published projects">
+        <section className="portal-box portal-search-hall av118-surface" aria-label="Search and browse published projects">
           <div className="portal-box-header">
             <div><span className="kicker">PUBLIC CATALOGUE</span><h2>{world?.searchTitle||"Browse published work"}</h2></div>
             <span className="portal-hall-stamp">{world?.stamp||"Approved releases only"}</span>
@@ -159,5 +160,6 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
       </div>
 
     </div>
+    <ContinuanceWorkspaceSwitch current="discover"/>
   </div>;
 }
