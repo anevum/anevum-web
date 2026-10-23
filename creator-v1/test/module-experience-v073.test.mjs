@@ -11,15 +11,17 @@ const css=read("web/src/module-experience-v073.css");
 const main=read("web/src/main.tsx");
 const browser=read("test/capture-sitewide-v012.mjs");
 
-test("V079 replaces V073's stacked public modules with a short real-content homepage",()=>{
+test("V115 retains authentic public discovery without promoting a temporary alpha game",()=>{
  for(const source of [home,doors,activity])
   assert.doesNotThrow(()=>parse(source,{sourceType:"module",plugins:["typescript","jsx"]}));
  assert.match(main,/home-navigation-v079\.css/);
- assert.match(home,/<nav className="av79-gateways"/);
+ assert.match(home,/<nav className="av79-gateways av115-gateways"/);
  assert.match(home,/readProjects/);
  assert.match(home,/readCreators/);
  assert.match(home,/readStatus/);
- assert.match(home,/const featured=games\[0\]\|\|projects\[0\]\|\|null/);
+ assert.match(home,/const showcase=projects\.filter\(project=>project\.category!=="games"\)/);
+ assert.match(home,/av115-public-index/);
+ assert.doesNotMatch(home,/Play a game|FEATURED RELEASE/);
  assert.match(home,/useOwnPlayerCard/);
  assert.match(home,/CompactMemberIdentity/);
  assert.doesNotMatch(home,/<WorldGatewayDeck|<LiveSignalModules|<CommunityHomeFeed|<LiveSignalHero/);
@@ -67,12 +69,14 @@ test("V073 both module selectors support accessible keyboard tabs and reduced-mo
   assert.doesNotMatch(css,/animation:\s*[^;]*infinite|image-rendering:\s*pixelated/);
 });
 
-test("V079 browser checks four direct journeys, compact wayfinder and no decorative category gallery",()=>{
+test("V116 browser checks real arrival, four-way navigation and no featured prototype game",()=>{
  for(const check of [
-  "V079_HOME_ENTRY","V079_MENU_ACCESS","av79-gateway",
-  "av79-feature","av79-navigation","av79-destination"
+  "V116_HOME_ENTRY","V079_MENU_ACCESS","av115-gateway",
+  "av115-public-index","av79-navigation","av79-destination",
+  "featuredTestGame"
  ])assert.ok(browser.includes(check),check);
- assert.ok(browser.includes('".av79-home"'));
+ assert.match(browser,/document\.querySelector\("\.av115-arrival h1"\)/);
+ assert.doesNotMatch(browser,/Find your next|\.av79-feature h3/);
  assert.doesNotMatch(browser,/COMMUNITY_PORTAL_ART_OR_LAYOUT/);
 });
 

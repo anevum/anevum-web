@@ -1,0 +1,247 @@
+/* ANEVUM V111 / IREN transmissions
+   Presentation-only. The existing notification queue and authenticated rig
+   remain authoritative; this layer never grants rewards or posts updates. */
+.ir111-transmitting.ir80-companion{
+  right:clamp(20px,calc(50vw - 255px),520px)!important;
+  bottom:clamp(125px,27dvh,300px)!important;
+  z-index:1250;
+  pointer-events:none;
+  transition:right .52s cubic-bezier(.2,.75,.2,1),bottom .52s cubic-bezier(.2,.75,.2,1);
+}
+.ir111-transmitting .ir87-scout.ir80-dock{
+  position:relative;
+  display:grid;
+  place-items:center;
+  width:140px;
+  height:140px;
+  min-width:140px;
+  min-height:140px;
+  padding:0;
+  border:1px solid #97c9e477;
+  border-radius:48%;
+  background:radial-gradient(circle at 46% 40%,#3e78a755,#151f3c66 61%,#10172b99);
+  box-shadow:0 0 0 1px #bfdef222,0 22px 55px #000a,0 0 54px #7ebcf43e,inset 0 0 24px #91c5ff1a;
+  pointer-events:auto;
+  animation:ir111-arrive .9s cubic-bezier(.15,.9,.25,1) both,ir111-hover 4.2s ease-in-out .9s infinite;
+}
+.ir111-transmitting .ir87-scout.ir80-dock .ir88-figure{width:100%;height:100%}
+.ir111-transmitting .ir87-scout.ir80-dock .ir88-3d-canvas{border-radius:30%}
+.ir111-transmitting .ir87-scout.ir80-dock::after{
+  content:"";
+  position:absolute;
+  inset:-9px;
+  border:1px solid #a1d8f15c;
+  border-radius:49%;
+  box-shadow:0 0 32px #83b5fa32;
+  pointer-events:none;
+}
+.ir111-transmitting .ir87-unread{display:none}
+.ir111-transmission{
+  --ir111-edge:#b1c8e2a6;
+  position:absolute;
+  right:calc(100% + 14px);
+  bottom:18px;
+  width:min(450px,calc(100vw - 194px));
+  max-height:min(58dvh,465px);
+  box-sizing:border-box;
+  overflow-x:hidden;
+  overflow-y:auto;
+  border:1px solid var(--ir111-edge);
+  border-radius:20px;
+  padding:19px 20px 13px;
+  background:
+    radial-gradient(ellipse at 100% 0%,#527da735,transparent 50%),
+    linear-gradient(145deg,#263a56,#151e34 64%,#241d37);
+  box-shadow:0 20px 65px #000b,inset 0 1px #fff3,0 0 40px #719ccd23;
+  color:#f9efe8;
+  opacity:0;
+  transform:translate3d(-24px,9px,0) scale(.96);
+  transition:opacity .4s ease,transform .55s cubic-bezier(.2,.9,.22,1);
+  pointer-events:auto;
+  isolation:isolate;
+}
+.ir111-transmission::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  background:repeating-linear-gradient(0deg,transparent 0 7px,#b1d8e908 8px 9px);
+  opacity:.45;
+  pointer-events:none;
+}
+.ir111-transmission::after{
+  content:"";
+  position:absolute;
+  right:0;
+  bottom:57px;
+  width:18px;
+  height:2px;
+  background:linear-gradient(90deg,#b7e8ff,#8fbef200);
+  box-shadow:0 0 16px #a9dafa;
+  pointer-events:none;
+}
+.ir111-phase-open .ir111-transmission{opacity:1;transform:translate3d(0,0,0) scale(1)}
+.ir111-phase-close .ir111-transmission{opacity:0;transform:translate3d(-18px,-4px,0) scale(.98)}
+.ir111-header,.ir111-footer{
+  position:relative;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  font:700 9px/1.5 ui-monospace,monospace;
+  letter-spacing:.095em;
+  color:#b9cfe5;
+}
+.ir111-header{padding-bottom:12px;border-bottom:1px solid #d7e5f129}
+.ir111-header>span:last-child{color:#edd1b8;text-align:right}
+.ir111-transmission-content{position:relative;display:flex;align-items:center;gap:15px;padding:19px 0 18px}
+.ir111-reward,.ir111-symbol{
+  flex:none;
+  width:76px;
+  height:76px;
+  display:grid;
+  place-items:center;
+  border:1px solid #d6c0aa59;
+  border-radius:16px;
+  background:radial-gradient(circle at 42% 38%,#657fa249,#20253e);
+  box-shadow:inset 0 1px #fff2,0 10px 24px #0005;
+  color:#f8dcb5;
+}
+.ir111-symbol{font:400 48px/1 Georgia,serif}
+.ir111-reward .celestial-emblem{max-width:70px;max-height:70px}
+.ir111-message{flex:1;min-width:0;overflow-wrap:anywhere}
+.ir111-message strong{display:block;font:400 clamp(18px,2.2vw,26px)/1.18 Georgia,serif;color:#fff1e1}
+.ir111-message p{margin:8px 0 0;font:400 12px/1.55 system-ui,sans-serif;color:#d0dbea}
+.ir111-message small{display:block;margin-top:9px;font:600 9px/1.5 system-ui,sans-serif;color:#e8c5b6}
+.ir111-kind-error{--ir111-edge:#e7a6ab}
+.ir111-kind-error .ir111-symbol{color:#f5b3bd}
+.ir111-kind-level,.ir111-kind-award{--ir111-edge:#e9c992}
+.ir111-footer{padding-top:11px;border-top:1px solid #d7e5f129}
+.ir111-footer span{max-width:60%;font-size:8px;color:#b5bfd3}
+.ir111-footer button,.ir111-inline button,.ir111-quiet button{
+  display:inline-flex;
+  justify-content:center;
+  align-items:center;
+  gap:6px;
+  min-height:38px;
+  padding:6px 9px;
+  color:#ffe4c4;
+  border:1px solid #ead5ba66;
+  border-radius:9px;
+  background:#ffffff10;
+  font:700 10px/1.4 ui-monospace,monospace;
+  cursor:pointer;
+}
+.ir111-transmission button:focus-visible,.ir111-inline button:focus-visible,
+.ir111-quiet button:focus-visible,.ir111-status-link a:focus-visible{
+  outline:3px solid #91e5ee;
+  outline-offset:3px;
+}
+.ir111-inline,.ir111-quiet{
+  display:grid;
+  gap:7px;
+  border:1px solid #c4d9ec6c;
+  border-radius:12px;
+  padding:12px;
+  background:linear-gradient(145deg,#284365d8,#18213cdd);
+  color:#faf1e5;
+  overflow-wrap:anywhere;
+}
+.ir111-inline{margin:10px 0 12px}
+.ir111-inline span,.ir111-status-link span{font:700 9px/1.5 ui-monospace,monospace;letter-spacing:.1em;color:#d0c1e7}
+.ir111-inline strong,.ir111-quiet strong{font:500 16px/1.3 Georgia,serif}
+.ir111-inline p,.ir111-quiet span{margin:0;font:400 12px/1.5 system-ui,sans-serif;color:#d5deeb}
+.ir111-inline small{font:600 10px/1.5 system-ui,sans-serif;color:#efd2bd}
+.ir111-inline button{justify-self:start}
+.ir111-quiet{
+  position:fixed;
+  right:max(12px,env(safe-area-inset-right));
+  bottom:max(14px,env(safe-area-inset-bottom));
+  z-index:1250;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  max-width:min(430px,calc(100vw - 24px));
+  box-shadow:0 12px 42px #000a;
+}
+.ir111-quiet>strong,.ir111-quiet>span{grid-column:1}
+.ir111-quiet button{grid-column:2;grid-row:1 / span 2}
+.ir111-status-link{
+  display:grid;
+  gap:7px;
+  margin:16px 0 10px;
+  padding:13px;
+  border:1px solid #a8caea55;
+  border-radius:12px;
+  background:#58749b14;
+}
+.ir111-status-link p{margin:0!important}
+.ir111-status-link a{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  color:#f2d2b6;
+  font:700 10px/1.5 ui-monospace,monospace;
+  text-decoration:none;
+}
+@keyframes ir111-arrive{
+  from{opacity:0;transform:translate3d(180px,26px,0) scale(.7) rotate(-10deg)}
+  72%{opacity:1;transform:translate3d(-8px,-5px,0) scale(1.05) rotate(3deg)}
+  to{opacity:1;transform:none}
+}
+@keyframes ir111-hover{
+  0%,100%{translate:0 0}
+  50%{translate:0 -5px}
+}
+@media(max-width:700px){
+  .ir111-transmitting.ir80-companion{
+    right:max(12px,env(safe-area-inset-right))!important;
+    bottom:max(88px,calc(env(safe-area-inset-bottom) + 88px))!important;
+  }
+  .ir111-transmitting .ir87-scout.ir80-dock{
+    width:100px;height:100px;min-width:100px;min-height:100px;
+  }
+  .ir111-transmission{
+    /* Anchor within IREN's right edge. The narrower panel preserves a
+       safe left inset at 320px while avoiding settled right-edge overflow. */
+    right:0;
+    bottom:calc(100% + 9px);
+    width:min(368px,calc(100vw - 42px));
+    max-height:min(53dvh,370px);
+    padding:15px 15px 12px;
+    border-radius:16px;
+  }
+  .ir111-transmission::after{right:35px;bottom:0;width:2px;height:12px}
+  .ir111-header,.ir111-footer{font-size:8px}
+  .ir111-transmission-content{gap:10px;padding:13px 0}
+  .ir111-reward,.ir111-symbol{width:58px;height:58px}
+  .ir111-reward .level-emblem{width:54px!important;height:54px!important}
+  .ir111-reward .celestial-emblem{max-width:54px;max-height:54px}
+  .ir111-message strong{font-size:18px}
+  .ir111-message p{font-size:11px}
+  .ir111-footer span{font-size:7px}
+}
+@media(max-width:390px){
+  .ir111-transmission{width:calc(100vw - 22px);padding:13px}
+  .ir111-message strong{font-size:16px}
+}
+@media(max-height:460px) and (orientation:landscape){
+  .ir111-transmitting.ir80-companion{bottom:max(10px,env(safe-area-inset-bottom))!important}
+  .ir111-transmission{bottom:0;right:calc(100% + 8px);width:min(410px,calc(100vw - 120px));max-height:calc(100dvh - 20px)}
+}
+@media(prefers-reduced-motion:reduce){
+  .ir111-transmitting.ir80-companion,.ir111-transmitting .ir87-scout.ir80-dock,
+  .ir111-transmission{animation:none!important;transition:none!important}
+  .ir111-phase-mark .ir111-transmission{opacity:1;transform:none}
+}
+.ir111-motion-paused.ir111-transmitting.ir80-companion,
+.ir111-motion-paused.ir111-transmitting .ir87-scout.ir80-dock,
+.ir111-motion-paused .ir111-transmission{animation:none!important;transition:none!important}
+.ir111-motion-paused.ir111-phase-mark .ir111-transmission{opacity:1;transform:none}
+@media(forced-colors:active){
+  .ir111-transmission,.ir111-inline,.ir111-quiet,.ir111-status-link,
+  .ir111-transmitting .ir87-scout.ir80-dock{background:Canvas;color:CanvasText;border:2px solid CanvasText;box-shadow:none}
+  .ir111-header,.ir111-footer,.ir111-message p,.ir111-message strong,
+  .ir111-inline span,.ir111-quiet span{color:CanvasText}
+  .ir111-transmitting .ir87-scout.ir80-dock::after,
+  .ir111-transmission::before,.ir111-transmission::after{display:none}
+}

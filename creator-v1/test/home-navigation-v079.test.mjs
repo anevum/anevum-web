@@ -55,22 +55,34 @@ test("V079 owner identity comes solely from verified account-space records",()=>
  assert.match(identity,/artwork="card"/);
 });
 
-test("V079 first fold is four short routes with one verified featured work",()=>{
+test("V115 first visit keeps four actual destinations without promoting an alpha game",()=>{
  for(const token of [
   "readStatus(signal)","readProjects({limit:\"32\"}","readCreators({limit:\"8\"}",
-  "const featured=games[0]||projects[0]||null",
-  "projectDetailPath(featured.id","projectDetailPath(project.id",
-  "useOwnPlayerCard","av79-hero","av79-gateways",
-  "av79-feature","av79-latest","av79-member-section",
+  "projectDetailPath(project.id","useOwnPlayerCard","av79-hero",
+  "av115-wayfinder","av115-gateways","av115-gateway-member",
+  "av115-public-index","av115-public-item","av79-member-section",
   "av79-member-invitation","CompactMemberIdentity"
  ])assert.ok(home.includes(token),"Missing homepage contract: "+token);
  assert.doesNotMatch(home,/<WorldGatewayDeck|<LiveSignalModules|<CommunityHomeFeed|<MemberForumHighlights/);
  assert.doesNotMatch(home,/CosmicArtwork|fakeUser|fakeProject|fakeActivity|sampleProjects|sampleRatings|dangerouslySetInnerHTML/);
+ assert.doesNotMatch(home,/Play a game|FEATURED RELEASE|const firstGame=/);
  const entries=home.slice(home.indexOf("const gateways=["),home.indexOf("] as const;",home.indexOf("const gateways=[")));
- assert.equal((entries.match(/title:"(?:Play|Discover|Connect|Create)"/g)||[]).length,4);
+ assert.equal((entries.match(/title:"(?:Discover|Connect|Create)"/g)||[]).length,3);
+ assert.match(home,/className="av79-gateway av115-gateway av115-gateway-member"/);
  assert.match(home,/source:"creator-channel",avatar:false,level:null,featuredAwards:\[\]/);
  assert.match(project,/<CompactMemberIdentity/);
  assert.match(project,/source:"creator-channel",avatar:false,level:null,featuredAwards:\[\]/);
+});
+
+test("V115 reuses IREN entry and verified member path without an extra homepage panel",()=>{
+ const firstContactCSS=read("web/src/home-first-contact-v111.css");
+ assert.match(home,/className="av115-iren-console"/);
+ assert.match(home,/to={signedIn\?"\/member":"\/join"}/);
+ assert.match(home,/new Event\("anevum:iren-intro"\)/);
+ assert.doesNotMatch(home,/className="av111-onramp"/);
+ assert.match(firstContactCSS,/prefers-reduced-motion:reduce/);
+ assert.match(firstContactCSS,/forced-colors:active/);
+ assert.match(bootstrap,/import "\.\/first-contact-wayfinder-v115\.css"/);
 });
 
 test("V079 native switcher searches real public data on every public route",()=>{
