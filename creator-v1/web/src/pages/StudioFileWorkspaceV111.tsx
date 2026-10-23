@@ -240,7 +240,28 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
      {nodes.length} / 100 entries
      {selectedFolderNode&&<p>Selected folder: {pathLabel(selectedFolderNode,nodes)}</p>}
      {!selectedFolderNode&&<p>Selected location: project root</p>}
+     <button type="button" className="csf-trash-toggle" aria-expanded={trashOpen}
+      onClick={()=>setTrashOpen(open=>!open)}>{trashOpen?'Hide Trash':'View Trash'}</button>
     </div>
+    {trashOpen&&<section className="csf-trash-list" aria-label="Private project Trash">
+     <div className="csf-trash-heading">
+      <h4>Private Trash</h4>
+      <button type="button" onClick={()=>setTrashAttempt(i=>i+1)} disabled={trashLoading||restoringId!==null}>Refresh</button>
+     </div>
+     <p className="csf-muted">Deleted items retain their last saved source and revisions. Restore them to their original folder; no permanent-delete action is available.</p>
+     {trashLoading&&<p className="csf-muted" role="status">Loading deleted project items…</p>}
+     {trashError&&<p className="csf-error" role="alert">{trashError}</p>}
+     {!trashLoading&&!trashError&&trashNodes.length===0&&<p className="csf-muted">Trash is empty.</p>}
+     {!trashLoading&&trashNodes.map(node=><div className="csf-trash-item" key={node.id}>
+      <div><strong>{node.name}</strong>
+       <span>{node.kind==='folder'?'Folder':'Text file'} · Revision {node.revision}</span>
+      </div>
+      <button type="button" disabled={!canEdit||restoringId!==null}
+       aria-label={'Restore '+node.name} onClick={()=>void restore(node)}>
+       {restoringId===node.id?'Restoring…':'Restore'}
+      </button>
+     </div>)}
+    </section>}
     {createKind&&<form className="csf-create" onSubmit={e=>void create(e)}>
      <label htmlFor={'csf-name-'+projectId}>New {createKind==='folder'?'folder':'text file'} in {selectedFolderNode?.name||'project root'}</label>
      <input id={'csf-name-'+projectId} autoFocus required maxLength={80} value={createName}
@@ -273,7 +294,7 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
     </nav>
     {!activeId&&selectedFolderNode&&<FolderInspectorV111 key={selectedFolderNode.id}
      projectId={projectId} folder={selectedFolderNode} nodes={nodes} editable={canEdit}
-     onUpdated={upsert} onMessage={setMessage} onDirty={dirty=>setDirty('folder:'+selectedFolderNode.id,dirty)}/>}
+     onUpdated={upsert} onMessage={setMessage} onDeleted={markedDeleted} onDirty={dirty=>setDirty('folder:'+selectedFolderNode.id,dirty)}/>}
     {!activeId&&!selectedFolderNode&&<div className="csf-welcome">
      <span className="csf-orbit" aria-hidden="true">◇</span>
      <h3>Project source workspace</h3>
@@ -282,7 +303,7 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
     </div>}
     {openIds.map(id=><div key={id} className="csf-editor-mount" hidden={id!==activeId}>
      <SourceEditorV111 projectId={projectId} nodeId={id} nodes={nodes} editable={canEdit}
-      onDirty={dirty=>setDirty(id,dirty)} onUpdated={upsert}/>
+      onDirty={dirty=>setDirty(id,dirty)} onUpdated={upsert} onDeleted={markedDeleted}/>
     </div>)}
 
    </main>
