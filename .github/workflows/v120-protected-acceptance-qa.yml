@@ -1,0 +1,36 @@
+name: ANEVUM V120 V116 Protected Acceptance Preflight
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/ops/v120-protected-acceptance.mjs'
+      - 'creator-v1/test/v120-protected-acceptance.test.mjs'
+      - '.github/workflows/v120-protected-acceptance-qa.yml'
+      - 'docs/production/v120-v116-protected-acceptance-20261023.md'
+permissions:
+  contents: read
+concurrency:
+  group: anevum-v120-protected-preflight-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify-protected:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ''
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate pure provider-readback and fail-closed state planning
+        run: |
+          set -euo pipefail
+          test -z "$CLOUDFLARE_API_TOKEN"
+          node --check creator-v1/ops/v120-protected-acceptance.mjs
+          node --test creator-v1/test/v120-protected-acceptance.test.mjs             creator-v1/test/native-auth-pin-preflight-v109.test.mjs             creator-v1/test/protected-routing-v114.test.mjs
+          echo 'V120_PROTECTED_PLAN=PASS; PUBLIC=UNCHANGED; NO_CLOUDFLARE_WRITES' >> "$GITHUB_STEP_SUMMARY"
