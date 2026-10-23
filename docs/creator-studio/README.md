@@ -8,9 +8,10 @@
 
 ## Read in this order
 
-1. [Product requirements: OpenAI-first connected agents](./CONNECTED-AGENT-SYSTEM-V110.md). What to build, identity separation, connection feasibility, permission ceilings, roles, cost and phased delivery.
-2. [UX design: desktop/mobile workspace and connection flow](./CONNECTED-AGENT-UX-V110.md). Agent dock, consent wizard, project context, streaming conversation, change review and responsive accessibility.
-3. [Engineering design: backend/auth/tooling/data/security](./CONNECTED-AGENT-ENGINEERING-V110.md). Candidate endpoints, schema, trust boundaries, connection state machines, OpenAI Responses tool calling, proposal application and test matrix.
+1. [Master blueprint: the complete browser-based Creator Studio](./CREATOR-STUDIO-NEXT-MASTER-DESIGN-V110.md). Unified files/folders, tabs, visual game/app/web/story builders, code, preview, assets, versioning, publication, mobile and agent roadmap.
+2. [Product requirements: OpenAI-first connected agents](./CONNECTED-AGENT-SYSTEM-V110.md). What to build, identity separation, connection feasibility, permission ceilings, roles, cost and phased delivery.
+3. [UX design: desktop/mobile workspace and connection flow](./CONNECTED-AGENT-UX-V110.md). Agent dock, consent wizard, project context, streaming conversation, change review and responsive accessibility.
+4. [Engineering design: backend/auth/tooling/data/security](./CONNECTED-AGENT-ENGINEERING-V110.md). Candidate endpoints, schema, trust boundaries, connection state machines, OpenAI Responses tool calling, proposal application and test matrix.
 
 ## Locked product intent
 
