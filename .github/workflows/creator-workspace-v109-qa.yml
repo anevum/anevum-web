@@ -1,0 +1,46 @@
+name: Creator Studio V109 Workspace Shell QA
+on:
+  pull_request:
+    paths:
+      - creator-v1/web/src/App.tsx
+      - creator-v1/web/src/pages/CreatorStudioWorkspaceV109.tsx
+      - creator-v1/web/src/pages/creator-workspace-v109.css
+      - creator-v1/web/src/pages/NativeCreatorStudio.tsx
+      - creator-v1/web/src/pages/CanonicalStudioPage.tsx
+      - creator-v1/test/creator-workspace-v109.test.mjs
+      - .github/workflows/creator-workspace-v109-qa.yml
+permissions:
+  contents: read
+concurrency:
+  group: creator-workspace-v109-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install existing dependencies without scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Verify workspace contracts and React typing
+        run: |
+          node --test creator-v1/test/creator-workspace-v109.test.mjs
+          npm run check:creator-v1-web
+      - name: Preserve default-OFF release build
+        env:
+          VITE_CREATOR_WORKSPACE_V109: 'false'
+        run: npm run build:creator-v1-web:staging
+      - name: Compile isolated opt-in workspace
+        env:
+          VITE_CREATOR_WORKSPACE_V109: 'true'
+          VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
+          VITE_CREATOR_WORKBENCH_ALPHA: 'false'
+        run: npm run build:creator-v1-web:staging
+      - name: Record source-only state
+        run: echo 'V109_WORKSPACE=SOURCE_QA_ONLY_NO_LIVE_CREATOR_ACCEPTANCE' >> "$GITHUB_STEP_SUMMARY"

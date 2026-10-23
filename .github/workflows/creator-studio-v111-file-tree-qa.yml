@@ -1,0 +1,81 @@
+name: Creator Studio V111 File Tree QA
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/canonical-auth/studio-file-tree.mjs'
+      - 'creator-v1/canonical-auth/worker.mjs'
+      - 'creator-v1/canonical-auth/migrations/0014_private_studio_file_tree.sql'
+      - 'creator-v1/web/src/lib/studio-files-v111.ts'
+      - 'creator-v1/web/src/pages/StudioFileWorkspaceV111.tsx'
+      - 'creator-v1/web/src/pages/studio-file-workspace-v111.css'
+      - 'creator-v1/web/src/pages/CreatorStudioWorkspaceV109.tsx'
+      - 'creator-v1/test/studio-file-tree-v111.test.mjs'
+      - 'creator-v1/test/studio-file-tree-v111-migration-rehearsal.test.mjs'
+      - 'creator-v1/test/capture-studio-file-workspace-v111.mjs'
+      - '.github/workflows/creator-studio-v111-file-tree-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: creator-studio-v111-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source-and-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Private file-tree contract and cross-member isolation
+        run: node --test creator-v1/test/studio-file-tree-v111.test.mjs
+      - name: Disposable pre-migration independent backup and restore rehearsal
+        run: node --test creator-v1/test/studio-file-tree-v111-migration-rehearsal.test.mjs
+      - name: Existing canonical Studio regression
+        run: node --test creator-v1/test/canonical-studio-v043.test.mjs
+      - name: Browser TypeScript and fixture syntax safety
+        run: |
+          npm run check:creator-v1-web
+          node --check creator-v1/test/capture-studio-file-workspace-v111.mjs
+      - name: Build default-OFF compatibility
+        env:
+          VITE_CREATOR_WORKSPACE_V109: 'false'
+          VITE_CREATOR_AGENT_DOCK_V110: 'false'
+          VITE_CREATOR_FILE_TREE_V111: 'false'
+        run: npm run build:creator-v1-web:staging
+      - name: Build private source editor explicitly ON for offline acceptance
+        env:
+          VITE_CREATOR_WORKSPACE_V109: 'true'
+          VITE_CREATOR_AGENT_DOCK_V110: 'true'
+          VITE_CREATOR_FILE_TREE_V111: 'true'
+          VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
+          VITE_CREATOR_WORKBENCH_ALPHA: 'false'
+        run: npm run build:creator-v1-web:staging
+      - name: Offline Chromium creation / folder / edit / save / history / tabs / mobile
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/studio-v111
+          node creator-v1/test/portal-offline-preview.mjs > evidence/studio-v111/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for _ in $(seq 1 75); do
+            if curl --fail --silent http://127.0.0.1:4178/__ready > /dev/null; then ready=1; break; fi
+            sleep .2
+          done
+          test "$ready" -eq 1
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          node creator-v1/test/capture-studio-file-workspace-v111.mjs --chrome "$chrome" --output evidence/studio-v111
+      - name: Record source-only state
+        run: echo 'V111=OFFLINE_AUTH_FIXTURE_PASS_ONLY; NO_D1_MIGRATION_APPLIED; NO_PRODUCTION_ROLLOUT' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: creator-studio-v111-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/studio-v111/
+          if-no-files-found: ignore
