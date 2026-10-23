@@ -28,11 +28,6 @@
   cursor:pointer;
   font-family:var(--av9-body,system-ui,sans-serif);
 }
-.av9-shell .av79-home .av115-arrival .av115-iren-hero-action{
-  -webkit-appearance:none;
-  appearance:none;
-  min-width:150px;
-}
 .av9-shell .av79-home .av115-arrival .av79-button:focus-visible,
 .av9-shell .av79-home .av115-arrival button:focus-visible{
   outline:3px solid #b4edfc;
@@ -345,4 +340,38 @@
   .av115-iren-pulse i,.av115-console-light{background:CanvasText;box-shadow:none}
   .av9-shell .av79-home .av115-iren-console>button,
   .av115-index-empty>a{background:ButtonFace;color:ButtonText;border:1px solid ButtonText}
+}
+
+/* Small screens get one compact orientation station, not a second stacked
+   call to action. This brings the actual Wayfinder closer to first paint. */
+@media(max-width:650px){
+  .av9-shell .av79-home .av115-iren-console{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(115px,137px);
+    align-items:center;
+    column-gap:11px;
+    row-gap:8px;
+    margin-top:17px;
+    padding:13px;
+  }
+  .av115-iren-console-top{grid-column:1/-1;grid-row:1}
+  .av115-iren-console .av115-iren-pulse{display:none}
+  .av115-iren-console>strong{
+    grid-column:1;
+    grid-row:2;
+    min-width:0;
+    font-size:clamp(17px,4.4vw,20px);
+    line-height:1.2;
+  }
+  .av115-iren-console>p{display:none}
+  .av9-shell .av79-home .av115-iren-console>button{
+    grid-column:2;
+    grid-row:2;
+    min-width:0;
+    width:100%;
+    min-height:48px;
+    padding:8px 10px;
+    font-size:9px;
+    letter-spacing:.025em;
+  }
 }
