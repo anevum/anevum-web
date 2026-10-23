@@ -105,10 +105,6 @@ export function CinematicLandingPage(){
             <Link className="av79-button av79-button--bright" to="/discover">
               Enter ANEVUM <Icon name="arrow" size={18}/>
             </Link>
-            <button className="av79-button av79-button--soft av115-iren-hero-action" type="button"
-              onClick={()=>window.dispatchEvent(new Event("anevum:iren-intro"))}>
-              Meet IREN <Icon name="arrow" size={18}/>
-            </button>
           </div>
           <div className="av114-arrival-clarity" aria-label="Visitor access and creator publishing status">
             <span><i aria-hidden="true"/> Explore freely. No account required.</span>
