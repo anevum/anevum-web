@@ -67,6 +67,8 @@ jobs:
           test -s evidence/home-v114/first-arrival-small-phone.png
           test -s evidence/home-v114/first-contact-iren-tour-phone.png
           test -s evidence/home-v114/first-contact-iren-welcome-phone.png
+          test -s evidence/home-v114/first-contact-iren-signal-inline-phone.png
+          test -s evidence/home-v114/first-contact-iren-post-tour-signal-phone.png
       - name: Retain visual evidence for owner review
         if: always()
         uses: actions/upload-artifact@v4
