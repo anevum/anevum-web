@@ -1,0 +1,75 @@
+name: ANEVUM V118 Shared Public Workspaces QA
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/web/src/components/ContinuanceWorkspaceSwitchV118.tsx'
+      - 'creator-v1/web/src/continuance-public-surfaces-v118.css'
+      - 'creator-v1/web/src/pages/DiscoverPage.tsx'
+      - 'creator-v1/web/src/pages/CommunityPage.tsx'
+      - 'creator-v1/test/continuance-public-surfaces-v118.test.mjs'
+      - 'creator-v1/test/capture-continuance-public-surfaces-v118.mjs'
+      - '.github/workflows/continuance-public-surfaces-v118-qa.yml'
+permissions:
+  contents: read
+jobs:
+  public-surfaces:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install without lifecycle scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Typecheck canonical React application
+        run: npm run check:creator-v1-web
+      - name: Build canonical root and isolated staging-path React assets
+        run: |
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+      - name: Protect public data, accessibility and existing navigation contracts
+        working-directory: creator-v1
+        run: |
+          node --test test/continuance-public-surfaces-v118.test.mjs
+          node --test test/community-hub-v007.test.mjs
+          node --test test/module-experience-v073.test.mjs
+          node --test test/sitewide-experience-v009.test.mjs
+          npm run test:ux-v079
+          node --test test/iren-first-contact-v092.test.mjs
+      - name: Real React desktop and phone browser acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome"
+          mkdir -p evidence/public-surfaces-v118
+          node creator-v1/test/portal-offline-preview.mjs > evidence/public-surfaces-v118/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 70); do
+            if curl -fsS http://127.0.0.1:4178/__ready >/dev/null; then break; fi
+            sleep 0.25
+          done
+          curl -fsS http://127.0.0.1:4178/__ready >/dev/null
+          node creator-v1/test/capture-continuance-public-surfaces-v118.mjs "$chrome" http://127.0.0.1:4178 evidence/public-surfaces-v118
+          test -s evidence/public-surfaces-v118/acceptance.json
+          test -s evidence/public-surfaces-v118/workspace-discover-desktop.png
+          test -s evidence/public-surfaces-v118/workspace-discover-phone.png
+          test -s evidence/public-surfaces-v118/workspace-discover-small-phone.png
+          test -s evidence/public-surfaces-v118/workspace-community-phone.png
+          test -s evidence/public-surfaces-v118/workspace-community-small-phone.png
+          test -s evidence/public-surfaces-v118/workspace-iren-community-phone.png
+      - name: Retain evidence for design and release review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: continuance-v118-real-react-public-workspaces
+          path: evidence/public-surfaces-v118/
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Record reviewed commit
+        run: git rev-parse HEAD
+# Presentation-only source. No Worker deploy, D1 or member actions.
