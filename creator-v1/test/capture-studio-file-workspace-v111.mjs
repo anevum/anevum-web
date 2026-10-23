@@ -30,6 +30,7 @@ const child=spawn(chrome,['--headless=new','--no-sandbox','--no-first-run','--di
  '--user-data-dir='+profile,'about:blank'],{stdio:['ignore','ignore','pipe']});
 let chromeStderr='',socket,sequence=0;
 const pending=new Map(),events=new Map(),failures=[],requests=[],posts=[];
+let acceptNextConfirmation=false;
 child.stderr.on('data',data=>{chromeStderr+=String(data);});
 async function send(method,params={}){
  return new Promise((ok,no)=>{
@@ -60,14 +61,24 @@ try{
  await send('Page.enable');await send('Runtime.enable');await send('Network.enable');
  events.set('Runtime.exceptionThrown',e=>{failures.push(e.exceptionDetails?.exception?.description||e.exceptionDetails?.text||'JavaScript exception');});
  events.set('Network.requestWillBeSent',e=>requests.push(e.request?.url||''));
+ events.set('Page.javascriptDialogOpening',dialog=>{
+  const accept=dialog.type==='confirm'&&acceptNextConfirmation;
+  acceptNextConfirmation=false;
+  void send('Page.handleJavaScriptDialog',{accept}).catch(e=>failures.push('Dialog handling '+String(e)));
+ });
  await send('Network.setCookie',{url:base,name:'anevum_offline_visual_fixture',value:'1',sameSite:'Strict'});
  events.set('Fetch.requestPaused',async e=>{
   try{
    const u=new URL(e.request.url),method=e.request.method;
-   const fileRoute=u.pathname.match(/^\/api\/v1\/member\/studio\/projects\/([0-9a-f-]{36})\/files(?:\/([0-9a-f-]{36})(?:\/(versions))?)?$/);
+   const fileRoute=u.pathname.match(/^\/api\/v1\/member\/studio\/projects\/([0-9a-f-]{36})\/files(?:\/(trash|[0-9a-f-]{36})(?:\/(versions|restore))?)?$/);
    if(fileRoute){
-    const projectId=fileRoute[1],nodeId=fileRoute[2],sub=fileRoute[3];
+    const projectId=fileRoute[1],segment=fileRoute[2],nodeId=segment==='trash'?null:segment,sub=fileRoute[3];
     if(projectId!==seedId&&projectId!==createdId)return await fulfill(e.requestId,{error:'Not found'},404);
+    if(segment==='trash'&&method==='GET'){
+     const nodes=[...fileNodes.values()].filter(n=>n.projectId===projectId&&n.deletedAt!==null)
+      .map(({content,...metadata})=>metadata);
+     return await fulfill(e.requestId,{nodes,maxRetained:250});
+    }
     if(!nodeId&&method==='GET'){
      const nodes=[...fileNodes.values()].filter(n=>n.projectId===projectId&&n.deletedAt===null).map(({content,...metadata})=>metadata);
      return await fulfill(e.requestId,{nodes,maxNodes:100,maxContentBytes:32768,maxProjectContentBytes:524288});
@@ -84,10 +95,26 @@ try{
     const old=fileNodes.get(nodeId);
     if(!old||old.projectId!==projectId)return await fulfill(e.requestId,{error:'Not found'},404);
     if(sub==='versions'&&method==='GET')return await fulfill(e.requestId,{versions:fileVersions.get(nodeId)||[]});
+    if(sub==='restore'&&method==='POST'){
+     const input=JSON.parse(e.request.postData||'{}');
+     if(old.deletedAt===null||old.revision!==input.revision)return await fulfill(e.requestId,{error:'Stale restore'},409);
+     const parent=old.parentId?fileNodes.get(old.parentId):null;
+     if(old.parentId&&(!parent||parent.deletedAt!==null||parent.kind!=='folder'))return await fulfill(e.requestId,{error:'Parent unavailable'},409);
+     if([...fileNodes.values()].some(n=>n.id!==old.id&&n.deletedAt===null&&n.projectId===projectId&&n.parentId===old.parentId&&n.name.toLowerCase()===old.name.toLowerCase()))
+      return await fulfill(e.requestId,{error:'Name conflict'},409);
+     const restored={...old,deletedAt:null,revision:old.revision+1,updatedAt:now+filePatches.length+1};
+     fileNodes.set(nodeId,restored);
+     fileVersions.set(nodeId,[{revision:restored.revision,name:restored.name,parent_id:restored.parentId,content:restored.content||'',deleted_at:null,changed_at:restored.updatedAt},...fileVersions.get(nodeId)]);
+     return await fulfill(e.requestId,{node:restored});
+    }
     if(!sub&&method==='GET')return await fulfill(e.requestId,{node:old});
     if(!sub&&method==='PATCH'){
      const input=JSON.parse(e.request.postData||'{}');filePatches.push(input);
-     if(input.revision!==old.revision)return await fulfill(e.requestId,{error:'Revision changed'},409);
+     if(input.revision!==old.revision||old.deletedAt!==null)return await fulfill(e.requestId,{error:'Revision changed'},409);
+     if(input.deleted&&(input.content!==(old.content||'')||input.name!==old.name||input.parentId!==old.parentId))
+      return await fulfill(e.requestId,{error:'Delete source mismatch'},422);
+     if(input.deleted&&old.kind==='folder'&&[...fileNodes.values()].some(n=>n.parentId===nodeId&&n.deletedAt===null))
+      return await fulfill(e.requestId,{error:'Folder not empty'},409);
      const updated={...old,name:input.name,parentId:input.parentId,content:input.content,
       deletedAt:input.deleted?now:null,revision:old.revision+1,updatedAt:now+filePatches.length};
      fileNodes.set(nodeId,updated);
