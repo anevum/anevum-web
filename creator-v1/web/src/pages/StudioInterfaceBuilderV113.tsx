@@ -148,7 +148,7 @@ export function StudioInterfaceBuilderV113({raw,fileName,resetToken,readOnly,onC
     placeholder={item.text||'Enter text'}
     value={interactive?(preview.inputs[item.id]||''):''} readOnly={!interactive}
     onChange={interactive?e=>setPreview(old=>({...old,inputs:{...old.inputs,[item.id]:e.target.value}})):undefined}/></label>:
-   item.kind==='counter'?<div><strong>{item.title}</strong><output>{preview.counts[item.id]??Number(item.text||0)||0}</output></div>:
+   item.kind==='counter'?<div><strong>{item.title}</strong><output>{preview.counts[item.id]??(Number(item.text||0)||0)}</output></div>:
    item.kind==='notice'?<div><strong>{item.title}</strong><p>{item.text}</p></div>:
    <div><h3>{item.title}</h3><p>{item.text}</p></div>;
   if(item.kind==='notice'&&preview.visible[item.id]===false)return null;
