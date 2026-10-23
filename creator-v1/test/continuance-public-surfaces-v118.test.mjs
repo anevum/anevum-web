@@ -22,6 +22,8 @@ test("V118 shares one typed, real-route workspace component across Discover and 
  assert.match(switcher,/aria-current=\{item\.id===current\?"page":undefined\}/);
  assert.match(switcher,/aria-label="Switch public workspaces"/);
  assert.match(discover,/ContinuanceWorkspaceSwitch current="discover"/);
+ // On phones, verified search and first real results must precede next-destination chrome.
+ assert.ok(discover.indexOf('<ContinuanceWorkspaceSwitch current="discover"/>')>discover.indexOf('className={view==="covers"?"portal-discover-results"'),"Discover next-stop navigation must follow real search results");
  assert.match(community,/ContinuanceWorkspaceSwitch current="community"/);
  assert.equal((discover.match(/<ContinuanceWorkspaceSwitch /g)||[]).length,1);
  assert.equal((community.match(/<ContinuanceWorkspaceSwitch /g)||[]).length,1);
