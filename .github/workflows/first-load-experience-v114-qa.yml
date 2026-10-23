@@ -1,4 +1,4 @@
-name: ANEVUM V115 First-Contact + IREN QA
+name: ANEVUM V116 First-Contact + IREN Integration QA
 on:
   pull_request:
     paths:
@@ -10,6 +10,9 @@ on:
       - 'creator-v1/test/first-load-experience-v114.test.mjs'
       - 'creator-v1/test/iren-first-contact-v092.test.mjs'
       - 'creator-v1/test/iren-home-integration-v116.test.mjs'
+      - 'creator-v1/test/cinematic-depth-v011.test.mjs'
+      - 'creator-v1/test/sitewide-experience-v009.test.mjs'
+      - 'creator-v1/test/capture-community-hub-v007.mjs'
       - 'creator-v1/web/src/iren-transmissions-v111.css'
       - 'creator-v1/web/src/components/AnevumNotifications.tsx'
       - 'creator-v1/test/home-first-contact-v111.test.mjs'
@@ -18,7 +21,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: home-v114-${{ github.ref }}
+  group: home-v116-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   first-load:
@@ -50,6 +53,7 @@ jobs:
           npm run test:iren-v080
           npm run test:iren-v088
           npm run test:ux-v079
+          node --test test/cinematic-depth-v011.test.mjs test/sitewide-experience-v009.test.mjs
       - name: Capture actual React first view and guide on three browser sizes
         shell: bash
         run: |
