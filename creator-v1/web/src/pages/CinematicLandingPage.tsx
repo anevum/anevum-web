@@ -15,7 +15,7 @@ import {publicCreatorHandle} from "../lib/public-creator-handle";
  * projects. The only rewarded player identity is independently server-verified.
  * This page never opens up private submissions or moderation records.
  */
-type PublicSnapshot={status:Status;projects:Project[];creators:Creator[]};
+type PublicSnapshot={status:Status|null;projects:Project[];creators:Creator[]};
 const gateways=[
   {to:"/discover?category=games",title:"Play",detail:"Games & worlds",icon:"star"},
   {to:"/discover",title:"Discover",detail:"Made by people",icon:"explore"},
@@ -57,20 +57,29 @@ export function CinematicLandingPage(){
     document.addEventListener("visibilitychange",refresh);
     return()=>{window.clearInterval(interval);document.removeEventListener("visibilitychange",refresh);};
   },[]);
+  // The primary catalogue should render immediately when available; status
+  // and creator metadata may refresh independently without blocking first paint.
   const portal=useResource(async signal=>{
-    const [status,projectResponse,creatorResponse]=await Promise.all([
+    const projectResponse=await readProjects({limit:"32"},signal);
+    return {status:null,projects:projectResponse.items,creators:[]};
+  },[revision]);
+  const metadata=useResource(async signal=>{
+    const [statusResult,creatorResult]=await Promise.allSettled([
       readStatus(signal),
-      readProjects({limit:"32"},signal),
       readCreators({limit:"8"},signal)
     ]);
-    return {status,projects:projectResponse.items,creators:creatorResponse.items};
+    return {
+      status:statusResult.status==="fulfilled"?statusResult.value:null,
+      creators:creatorResult.status==="fulfilled"?creatorResult.value.items:[]
+    };
   },[revision]);
   useEffect(()=>{
     if(portal.state==="ready")setLastVerified(portal.data);
   },[portal]);
   const snapshot=portal.state==="ready"?portal.data:lastVerified;
   const projects=[...(snapshot?.projects||[])].sort(byPublication);
-  const creators=snapshot?.creators||[];
+  const creators=metadata.state==="ready"?metadata.data.creators:snapshot?.creators||[];
+  const status=metadata.state==="ready"?metadata.data.status:snapshot?.status||null;
   const games=projects.filter(project=>project.category==="games");
   const featured=games[0]||projects[0]||null;
   const remaining=projects.filter(project=>project.id!==featured?.id).slice(0,3);
@@ -80,12 +89,21 @@ export function CinematicLandingPage(){
 
   return <div className="anevum-cinema av9-home av79-home">
     <div className="cinema-content av79-home-content">
-      <section className="av79-hero" aria-labelledby="av79-home-heading">
+      <section className="av79-hero av114-arrival" aria-labelledby="av79-home-heading">
+        <div className="av114-arrival-scene" aria-hidden="true">
+          <span className="av114-arrival-stars"/>
+          <span className="av114-arrival-planet"><i/></span>
+          <span className="av114-arrival-ring av114-arrival-ring--one"/>
+          <span className="av114-arrival-ring av114-arrival-ring--two"/>
+          <span className="av114-arrival-arc"/>
+          <span className="av114-arrival-beacon"/>
+        </div>
         <div className="av79-hero-orbit" aria-hidden="true"><span/><span/><span/></div>
         <div className="av79-hero-content">
           <span className="av79-kicker"><i aria-hidden="true"/> ANEVUM / THE CREATIVE NETWORK</span>
-          <h1 id="av79-home-heading">Find your next <em>obsession.</em></h1>
-          <p>Independent games, ambitious ideas and the people behind them. Play something. Make something. Find your place.</p>
+          <span className="av114-arrival-chapter">THE CONTINUANCE INSTITUTE <span aria-hidden="true">/</span> FIRST SIGNAL</span>
+          <h1 id="av79-home-heading">Create beyond <em>worlds.</em></h1>
+          <p>Play independent games. Discover original apps, art and ambitious ideas. Meet the people making them—and start something of your own.</p>
           <div className="av79-hero-actions">
             <Link className="av79-button av79-button--bright" to={firstGame||"/discover?category=games"}>
               {firstGame?"Play a game":"Explore games"} <Icon name="arrow" size={18}/>
@@ -94,6 +112,13 @@ export function CinematicLandingPage(){
               Explore ANEVUM <Icon name="arrow" size={18}/>
             </Link>
           </div>
+          <div className="av114-arrival-clarity" aria-label="Visitor access and creator publishing status">
+            <span><i aria-hidden="true"/> Explore freely. No account required.</span>
+            <span>Creator publishing is still in testing.</span>
+          </div>
+        </div>
+        <div className="av114-arrival-signature" aria-hidden="true">
+          <span>ANEVUM // 001</span><span>PLAY · DISCOVER · CONNECT · CREATE</span>
         </div>
       </section>
 
@@ -196,7 +221,7 @@ export function CinematicLandingPage(){
       </section>}
 
       <footer className="av79-home-end">
-        <span>{verified&&snapshot?String(snapshot.status.counts.publishedProjects)+" VERIFIED PUBLIC RELEASE"+(snapshot.status.counts.publishedProjects===1?"":"S"):"PUBLIC NETWORK / ANEVUM"}</span>
+        <span>{verified&&status?String(status.counts.publishedProjects)+" VERIFIED PUBLIC RELEASE"+(snapshot.status.counts.publishedProjects===1?"":"S"):"PUBLIC NETWORK / ANEVUM"}</span>
         <Link to="/community">MEET THE PEOPLE MAKING IT <Icon name="arrow" size={14}/></Link>
       </footer>
     </div>

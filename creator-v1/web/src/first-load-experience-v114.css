@@ -1,0 +1,287 @@
+/* ANEVUM.WEB.BUILD.2026-10-22.001.FIRST-LOAD-EXPERIENCE
+ * V114 / Continuance arrival. Enhances the existing V079 + V111 homepage;
+ * does not replace the four gateways, published-project records or IREN.
+ * Pure CSS key art: first paint does not wait for media, fonts or video.
+ */
+.av9-shell .av79-home .av114-arrival{
+  position:relative;
+  isolation:isolate;
+  align-items:center;
+  min-height:clamp(418px,48vw,575px);
+  padding:clamp(30px,5.6vw,72px);
+  margin-bottom:clamp(14px,1.7vw,22px);
+  overflow:hidden;
+  border:1px solid rgba(166,180,223,.5);
+  border-radius:clamp(18px,2.4vw,28px);
+  background:
+    radial-gradient(ellipse 76% 84% at 82% 45%,rgba(58,67,118,.37),transparent 88%),
+    linear-gradient(124deg,#050b19 0%,#101831 48%,#060d1f 100%);
+  box-shadow:inset 0 1px rgba(255,241,236,.14),inset 0 0 90px rgba(2,9,25,.45),0 30px 70px rgba(1,6,20,.34);
+}
+.av9-shell .av79-home .av114-arrival::before{
+  content:"";
+  position:absolute;
+  z-index:1;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(90deg,rgba(3,8,20,.88) 0%,rgba(4,9,24,.6) 39%,rgba(3,9,23,.06) 78%),
+    linear-gradient(0deg,rgba(3,7,16,.53),transparent 34%);
+}
+.av114-arrival-scene{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  overflow:hidden;
+  pointer-events:none;
+  contain:paint;
+  background:
+    radial-gradient(ellipse 60% 88% at 78% 52%,rgba(137,105,211,.14),transparent 77%),
+    radial-gradient(ellipse 53% 62% at 96% 13%,rgba(112,183,222,.15),transparent 82%);
+}
+.av114-arrival-stars{
+  position:absolute;inset:0;opacity:.83;
+  background-image:
+    radial-gradient(circle at 6% 11%,#f7e5f5 0 .7px,transparent 1.7px),
+    radial-gradient(circle at 17% 65%,#92c9ee 0 .75px,transparent 1.7px),
+    radial-gradient(circle at 33% 22%,#e3c8ff 0 .7px,transparent 1.6px),
+    radial-gradient(circle at 59% 13%,#bddaff 0 .7px,transparent 1.6px),
+    radial-gradient(circle at 71% 79%,#f1d8ed 0 1px,transparent 2px),
+    radial-gradient(circle at 88% 7%,#d0e9ff 0 .8px,transparent 2px);
+  background-size:240px 200px,310px 290px,390px 340px,470px 390px,380px 260px,560px 480px;
+}
+.av114-arrival-stars::after{
+  content:"";position:absolute;inset:0;
+  opacity:.37;
+  background:repeating-linear-gradient(90deg,transparent 0 99px,rgba(160,187,241,.08) 100px 101px);
+}
+.av114-arrival-planet{
+  position:absolute;
+  display:block;
+  width:clamp(370px,51vw,720px);
+  aspect-ratio:1;
+  top:-29%;
+  right:-13%;
+  border-radius:50%;
+  transform:rotate(-19deg);
+  border:1px solid rgba(188,210,249,.32);
+  background:
+    radial-gradient(ellipse at 29% 24%,rgba(239,209,214,.72),transparent 21%),
+    radial-gradient(ellipse at 72% 77%,rgba(18,27,67,.98),transparent 47%),
+    repeating-linear-gradient(173deg,transparent 0 33px,rgba(167,181,239,.17) 42px 50px,transparent 56px 93px),
+    radial-gradient(circle at 31% 23%,#9db9d4 0%,#7280aa 13%,#3e548a 34%,#1d2e5c 59%,#0c1534 82%);
+  box-shadow:
+    inset -64px -46px 78px rgba(2,6,22,.86),
+    inset 33px 23px 58px rgba(208,221,255,.12),
+    -19px -13px 64px rgba(156,174,255,.14),
+    0 0 135px rgba(126,133,212,.1);
+}
+.av114-arrival-planet i{
+  position:absolute;inset:0;border-radius:50%;
+  background:
+    radial-gradient(ellipse 57% 22% at 45% 31%,rgba(232,209,218,.16),transparent 90%),
+    radial-gradient(ellipse 30% 70% at 77% 70%,rgba(7,10,30,.6),transparent 90%);
+  mix-blend-mode:screen;
+}
+.av114-arrival-ring{
+  position:absolute;
+  width:clamp(495px,68vw,900px);
+  height:clamp(130px,18vw,240px);
+  right:-21%;
+  top:21%;
+  border:clamp(2px,.28vw,4px) solid rgba(206,189,247,.43);
+  border-left-color:rgba(137,188,243,.12);
+  border-bottom-color:rgba(244,191,206,.18);
+  border-radius:50%;
+  transform:rotate(-24deg);
+  box-shadow:0 0 29px rgba(187,166,255,.13),inset 0 0 26px rgba(134,175,233,.12);
+}
+.av114-arrival-ring--two{
+  top:26%;
+  right:-22%;
+  width:clamp(530px,74vw,975px);
+  height:clamp(162px,24vw,320px);
+  border-width:1px;
+  border-color:rgba(233,192,241,.29);
+  transform:rotate(-19deg);
+}
+.av114-arrival-arc{
+  position:absolute;right:2%;bottom:-71%;width:clamp(490px,61vw,800px);aspect-ratio:1;
+  border-radius:50%;
+  border:1px solid rgba(185,160,232,.22);
+  box-shadow:0 0 0 34px rgba(127,159,221,.025),0 0 0 90px rgba(169,133,228,.021);
+}
+.av114-arrival-beacon{
+  position:absolute;
+  width:8px;height:8px;top:21%;right:15%;
+  border-radius:50%;
+  background:#e6f7ff;
+  box-shadow:0 0 0 5px rgba(189,222,254,.17),0 0 0 16px rgba(189,222,254,.06),0 0 32px 10px rgba(180,205,253,.46);
+}
+.av9-shell .av79-home .av114-arrival .av79-hero-orbit{
+  right:-11%;
+  top:-44%;
+  opacity:.17;
+  width:490px;height:490px;
+}
+.av9-shell .av79-home .av114-arrival .av79-hero-content{
+  position:relative;
+  z-index:2;
+  width:100%;
+  max-width:min(740px,76%);
+  min-width:0;
+}
+.av114-arrival-chapter{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:9px;
+  width:fit-content;
+  margin-top:clamp(28px,4vw,52px);
+  color:#d1c1df;
+  font:700 clamp(10px,1vw,11px)/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+}
+.av114-arrival-chapter span{color:#82c4e1}
+.av9-shell .av79-home .av114-arrival h1{
+  max-width:735px;
+  margin:19px 0 19px!important;
+  color:#fff7f6;
+  font:440 clamp(53px,7.1vw,95px)/.99 var(--av9-display,Georgia,serif)!important;
+  letter-spacing:-.055em!important;
+  text-wrap:balance;
+  text-shadow:0 5px 31px rgba(3,5,19,.4);
+}
+.av9-shell .av79-home .av114-arrival h1 em{
+  color:#f0cfe8;
+  background:linear-gradient(110deg,#ffd9c1 6%,#f0bddd 49%,#c4c8ff 94%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  font-weight:450;
+}
+.av9-shell .av79-home .av114-arrival .av79-hero-content>p{
+  max-width:535px;
+  color:#e0e3f0;
+  font:450 clamp(14px,1.35vw,17px)/1.7 var(--av9-body,system-ui,sans-serif)!important;
+}
+.av9-shell .av79-home .av114-arrival .av79-hero-actions{margin-top:clamp(21px,2.8vw,30px);gap:11px}
+.av9-shell .av79-home .av114-arrival .av79-button{
+  min-height:52px;
+  border-radius:11px;
+  padding:13px 19px;
+  box-shadow:inset 0 1px rgba(255,255,255,.16);
+}
+.av9-shell .av79-home .av114-arrival .av79-button--bright{
+  color:#18213a;
+  border-color:#ffe5d7;
+  background:linear-gradient(130deg,#ffe0c9,#e4d8fa);
+}
+.av9-shell .av79-home .av114-arrival .av79-button--bright:hover{background:#fff0e7}
+.av9-shell .av79-home .av114-arrival .av79-button--soft{
+  color:#f7f1ff;border-color:rgba(198,201,239,.5);
+  background:rgba(21,30,56,.68);
+}
+.av114-arrival-clarity{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px 20px;
+  margin-top:22px;
+  color:#bccde0;
+  font:500 11px/1.5 var(--av9-body,system-ui,sans-serif);
+}
+.av114-arrival-clarity span{display:flex;align-items:center;gap:7px}
+.av114-arrival-clarity i{width:6px;height:6px;border-radius:50%;background:#9cdbc8;box-shadow:0 0 9px #9cdbc888}
+.av114-arrival-signature{
+  position:absolute;
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  right:24px;
+  bottom:23px;
+  z-index:2;
+  color:#d3c6e1;
+  opacity:.84;
+  text-align:right;
+  font:700 10px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;
+  letter-spacing:.14em;
+}
+@media(prefers-reduced-motion:no-preference){
+  .av114-arrival-planet{animation:av114-planet-awaken 1.2s ease-out both,av114-planet-drift 24s ease-in-out 1.2s infinite alternate}
+  .av114-arrival-ring--one{animation:av114-ring-breathe 18s ease-in-out infinite alternate}
+  .av114-arrival-beacon{animation:av114-beacon-pulse 4.8s ease-in-out infinite}
+  .av114-arrival .av79-hero-content{animation:av114-enter .68s cubic-bezier(.18,.7,.24,1) both}
+  @keyframes av114-planet-awaken{from{opacity:.72;transform:translateX(11px) rotate(-18deg)}to{opacity:1;transform:translateX(0) rotate(-19deg)}}
+  @keyframes av114-planet-drift{to{transform:translateY(9px) rotate(-18deg)}}
+  @keyframes av114-ring-breathe{to{opacity:.62;filter:brightness(1.13)}}
+  @keyframes av114-beacon-pulse{50%{opacity:.6;box-shadow:0 0 0 9px rgba(189,222,254,.08),0 0 0 23px rgba(189,222,254,.025),0 0 46px 15px rgba(180,205,253,.23)}}
+  @keyframes av114-enter{from{opacity:.72;transform:translateY(11px)}to{opacity:1;transform:translateY(0)}}
+}
+@media(max-width:900px){
+  .av9-shell .av79-home .av114-arrival{min-height:460px;padding:clamp(25px,4vw,42px)}
+  .av9-shell .av79-home .av114-arrival .av79-hero-content{max-width:84%}
+  .av114-arrival-planet{width:550px;top:-14%;right:-38%}
+  .av114-arrival-ring{right:-38%}
+  .av114-arrival-chapter{margin-top:20px}
+  .av9-shell .av79-home .av114-arrival h1{font-size:clamp(51px,8.2vw,77px)!important}
+  .av114-arrival-signature{font-size:9px;bottom:17px;right:19px}
+}
+@media(max-width:650px){
+  .av9-shell .av79-home .av114-arrival{
+    min-height:480px;
+    padding:25px 20px 27px;
+    border-radius:18px;
+    align-items:center;
+  }
+  .av9-shell .av79-home .av114-arrival::before{
+    background:linear-gradient(90deg,rgba(3,8,20,.91) 0%,rgba(4,9,24,.67) 62%,rgba(3,9,23,.2) 100%),
+               linear-gradient(0deg,rgba(3,7,16,.47),transparent 42%);
+  }
+  .av9-shell .av79-home .av114-arrival .av79-hero-content{max-width:100%}
+  .av114-arrival-chapter{font-size:9px;letter-spacing:.11em;gap:6px;margin-top:25px}
+  .av9-shell .av79-home .av114-arrival h1{
+    max-width:380px;
+    margin:17px 0 16px!important;
+    font-size:clamp(44px,10.8vw,65px)!important;
+    line-height:1.01!important;
+  }
+  .av9-shell .av79-home .av114-arrival .av79-hero-content>p{
+    max-width:355px;font-size:14px!important;line-height:1.63!important
+  }
+  .av114-arrival-planet{width:430px;right:-295px;top:-76px;opacity:.78}
+  .av114-arrival-ring{width:530px;height:170px;right:-365px;top:80px;opacity:.55}
+  .av114-arrival-ring--two{width:590px;height:210px;right:-420px;top:125px}
+  .av114-arrival-beacon{right:12%;top:18%;opacity:.55}
+  .av114-arrival-signature{display:none}
+  .av114-arrival-clarity{margin-top:18px;flex-direction:column;align-items:flex-start;gap:5px;font-size:10.5px}
+  .av9-shell .av79-home .av114-arrival .av79-hero-actions{margin-top:23px;gap:9px}
+  .av9-shell .av79-home .av114-arrival .av79-button{min-height:49px;padding:12px 15px}
+}
+@media(max-width:380px){
+  .av9-shell .av79-home .av114-arrival{min-height:486px;padding:20px 15px 24px}
+  .av9-shell .av79-home .av114-arrival h1{font-size:44px!important}
+  .av114-arrival-chapter{letter-spacing:.07em}
+  .av114-arrival-planet{right:-325px}
+  .av9-shell .av79-home .av114-arrival .av79-hero-actions{flex-direction:column}
+  .av9-shell .av79-home .av114-arrival .av79-hero-actions .av79-button{width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+  .av9-shell .av79-home .av114-arrival *,
+  .av9-shell .av79-home .av114-arrival *::before,
+  .av9-shell .av79-home .av114-arrival *::after{
+    animation:none!important;
+    transition:none!important;
+    scroll-behavior:auto!important;
+  }
+}
+@media(forced-colors:active){
+  .av9-shell .av79-home .av114-arrival{border:2px solid CanvasText;background:Canvas}
+  .av9-shell .av79-home .av114-arrival::before,
+  .av114-arrival-scene,.av114-arrival .av79-hero-orbit{display:none}
+  .av9-shell .av79-home .av114-arrival h1 em{
+    background:none;-webkit-text-fill-color:currentColor;color:CanvasText
+  }
+  .av9-shell .av79-home .av114-arrival :is(a,button){border:1px solid ButtonText}
+}

@@ -52,9 +52,13 @@ try{
    if(!action.width||action.width<82||action.top<action.titleBottom-1||action.right>width+1)
     throw Error("V111_HOME_NARROW_SECTION_ACTION_"+label+":"+JSON.stringify(action));
   }
+  const arrival=await evaluate('(()=>{const hero=document.querySelector(".av114-arrival"),heading=hero?.querySelector("h1"),scene=hero?.querySelector(".av114-arrival-scene"),buttons=[...(hero?.querySelectorAll(".av79-hero-actions a")||[])],r=hero?.getBoundingClientRect();return {exists:!!hero,scene:!!scene,heading:heading?.textContent,buttonCount:buttons.length,buttons:buttons.map(a=>{const b=a.getBoundingClientRect();return {href:a.getAttribute("href"),height:b.height,top:b.top,bottom:b.bottom}}),rect:r?[r.left,r.right,r.top,r.bottom]:null,overflow:document.documentElement.scrollWidth>innerWidth+1}})()');
+  if(!arrival.exists||!arrival.scene||!arrival.heading?.includes("Create beyond")||arrival.buttonCount!==2||arrival.overflow||arrival.buttons.some(b=>b.height<44||b.top<0||b.bottom>height)||arrival.rect[0]<-1||arrival.rect[1]>width+1)
+   throw Error("V114_FIRST_ARRIVAL_"+label+":"+JSON.stringify(arrival));
+  await screenshot("first-arrival-"+label);
   await evaluate('document.querySelector(".av111-onramp")?.scrollIntoView({block:"center",behavior:"instant"})');
   await screenshot("first-contact-"+label);
-  evidence.push({label,width,height,entry});
+  evidence.push({label,width,height,entry,arrival});
   if(label==="phone"){
    await evaluate('document.querySelector(".av111-onramp-guide")?.click()');
    await until(()=>evaluate('!!document.querySelector(".ir80-guide-card")'));
