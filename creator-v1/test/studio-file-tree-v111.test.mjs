@@ -114,3 +114,94 @@ test('W111 aggregate source quota fails closed without corrupting previous conte
   }
  }finally{s.close();}
 });
+
+test('W111 Trash is private metadata-only and a deleted file can be restored at an exact revision',async()=>{
+ const s=setup();
+ try{
+  const created=await s.call(ROOT,'POST',request('draft.md'));
+  assert.equal(created.status,201);
+  const original=(await created.json()).node;
+  const saved=await s.call(ROOT+'/'+original.id,'PATCH',patch(original,{content:'Private, preserved text'}));
+  assert.equal(saved.status,200);
+  const source=(await saved.json()).node;
+  assert.equal((await s.call(ROOT+'/'+source.id,'PATCH',patch(source,{deleted:true,content:'Unapproved overwrite'}))).status,422);
+  const removed=await s.call(ROOT+'/'+source.id,'PATCH',patch(source,{deleted:true}));
+  assert.equal(removed.status,200,await removed.clone().text());
+  const tombstone=(await removed.json()).node;
+  assert.equal(tombstone.deletedAt!==null,true);
+  assert.equal(tombstone.revision,source.revision+1);
+  const active=(await(await s.call()).json()).nodes;
+  assert.equal(active.find(n=>n.id===source.id),undefined);
+  const trash=await s.call(ROOT+'/trash');
+  assert.equal(trash.status,200);
+  const deletedList=(await trash.json()).nodes;
+  assert.equal(deletedList.length,1);
+  assert.equal('content' in deletedList[0],false,'Trash never lists full deleted source bodies');
+  assert.equal(deletedList[0].revision,tombstone.revision);
+  assert.equal((await s.call(ROOT+'/trash','GET',undefined,'bob')).status,404);
+  assert.equal((await s.call(ROOT+'/'+source.id+'/restore','POST',{revision:tombstone.revision},'bob')).status,404);
+  assert.equal((await s.call(ROOT+'/'+source.id,'PATCH',patch(tombstone,{deleted:false}))).status,409,'Cannot rewrite tombstoned files');
+  assert.equal((await s.call(ROOT+'/'+source.id+'/restore','POST',{revision:source.revision})).status,409);
+  assert.equal((await s.call(ROOT+'/'+source.id+'/restore','POST',{revision:-1})).status,422);
+  assert.equal((await s.call(ROOT+'/'+source.id+'/restore','GET')).status,405);
+  const restored=await s.call(ROOT+'/'+source.id+'/restore','POST',{revision:tombstone.revision});
+  assert.equal(restored.status,200,await restored.clone().text());
+  const result=(await restored.json()).node;
+  assert.equal(result.deletedAt,null);
+  assert.equal(result.revision,tombstone.revision+1);
+  assert.equal(result.content,'Private, preserved text');
+  const versions=(await(await s.call(ROOT+'/'+source.id+'/versions')).json()).versions;
+  assert.deepEqual(versions.map(v=>v.revision),[4,3,2,1]);
+  assert.equal((await s.call(ROOT+'/'+source.id+'/restore','POST',{revision:tombstone.revision})).status,409,'A replay cannot change restored content');
+  assert.equal((await(await s.call(ROOT+'/trash')).json()).nodes.length,0);
+  assert.equal((await(await s.call()).json()).nodes.length,1);
+ }finally{s.close();}
+});
+test('W111 folder restore order and active sibling name collisions fail closed',async()=>{
+ const s=setup();
+ try{
+  const folder=(await(await s.call(ROOT,'POST',request('Scenes','folder'))).json()).node;
+  const child=(await(await s.call(ROOT,'POST',request('intro.md','text',folder.id))).json()).node;
+  const childDeleted=(await(await s.call(ROOT+'/'+child.id,'PATCH',patch(child,{deleted:true}))).json()).node;
+  const folderDeleted=(await(await s.call(ROOT+'/'+folder.id,'PATCH',patch(folder,{deleted:true}))).json()).node;
+  assert.equal((await s.call(ROOT+'/'+child.id+'/restore','POST',{revision:childDeleted.revision})).status,409,'Parent must be active to restore child');
+  const parentRestored=await s.call(ROOT+'/'+folder.id+'/restore','POST',{revision:folderDeleted.revision});
+  assert.equal(parentRestored.status,200,await parentRestored.clone().text());
+  const existing=(await(await s.call(ROOT,'POST',request('intro.md','text',folder.id))).json()).node;
+  assert.ok(existing.id!==child.id);
+  assert.equal((await s.call(ROOT+'/'+child.id+'/restore','POST',{revision:childDeleted.revision})).status,409,'Name collision must not overwrite active file');
+  assert.equal((await s.call(ROOT+'/'+existing.id,'PATCH',patch(existing,{deleted:true}))).status,200);
+  const restoredChild=await s.call(ROOT+'/'+child.id+'/restore','POST',{revision:childDeleted.revision});
+  assert.equal(restoredChild.status,200,await restoredChild.clone().text());
+  assert.equal((await restoredChild.json()).node.parentId,folder.id);
+ }finally{s.close();}
+});
+test('W111 Trash deletion and restoration cannot bypass review locks or member ownership',async()=>{
+ const s=setup();
+ try{
+  const file=(await(await s.call(ROOT,'POST',request('protected.md'))).json()).node;
+  s.f.db.prepare("UPDATE member_studio_projects SET status='pending_review' WHERE id=?").run(ID);
+  assert.equal((await s.call(ROOT+'/'+file.id,'PATCH',patch(file,{deleted:true}))).status,409);
+  s.f.db.prepare("UPDATE member_studio_projects SET status='draft' WHERE id=?").run(ID);
+  const deleted=(await(await s.call(ROOT+'/'+file.id,'PATCH',patch(file,{deleted:true}))).json()).node;
+  s.f.db.prepare("UPDATE member_studio_projects SET status='pending_review' WHERE id=?").run(ID);
+  assert.equal((await s.call(ROOT+'/'+file.id+'/restore','POST',{revision:deleted.revision})).status,409);
+  assert.equal((await s.call(ROOT+'/'+file.id+'/restore','POST',{revision:deleted.revision},'bob')).status,404);
+  const verified=await s.call(ROOT+'/'+file.id,'GET');
+  assert.equal((await verified.json()).node.deletedAt!==null,true);
+ }finally{s.close();}
+});
+test('W111 restoring deleted files respects active storage and count quotas',async()=>{
+ const s=setup();
+ try{
+  const first=(await(await s.call(ROOT,'POST',request('to-restore.md'))).json()).node;
+  const withBody=(await(await s.call(ROOT+'/'+first.id,'PATCH',patch(first,{content:'A'.repeat(32768)}))).json()).node;
+  const deleted=(await(await s.call(ROOT+'/'+first.id,'PATCH',patch(withBody,{deleted:true}))).json()).node;
+  for(let i=0;i<16;i++){
+   const file=(await(await s.call(ROOT,'POST',request('active-'+i+'.md'))).json()).node;
+   assert.equal((await s.call(ROOT+'/'+file.id,'PATCH',patch(file,{content:'B'.repeat(32768)}))).status,200);
+  }
+  assert.equal((await s.call(ROOT+'/'+first.id+'/restore','POST',{revision:deleted.revision})).status,413,'Restoring cannot exceed aggregate active source quota');
+  assert.equal((await(await s.call(ROOT+'/trash')).json()).nodes.length,1);
+ }finally{s.close();}
+});
