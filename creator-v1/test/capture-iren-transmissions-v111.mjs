@@ -88,7 +88,21 @@ try{
  await until(()=>evaluate('!!document.querySelector(".ir111-phase-open .ir111-transmission")'));
  await evaluate('document.querySelector(".ir111-transmission button").click()');
  await until(()=>evaluate('!document.querySelector(".ir111-transmission")'));
- writeFileSync(join(output,"acceptance.json"),JSON.stringify({pass:true,syntheticOnly:true,productionChanges:0,checks:["desktop","phone","small-phone","hidden-helper","reduced-motion","immersive-playback-queue"],evidence},null,2));
+ // Guided-tour cards mask the normal transmission. Do not silently ACK a
+ // verified signal after the six-second timer while the tour owns the screen.
+ await evaluate('window.dispatchEvent(new Event("anevum:iren-tour"))');
+ await until(()=>evaluate('!!document.querySelector(".ir80-guide-card")&&document.body.classList.contains("ir80-tour-active")'));
+ await evaluate(trigger("qa-tour-queued","Guided tour queued preview"));
+ await until(()=>evaluate('document.querySelector(".an-live")?.textContent?.includes("Guided tour queued preview")'));
+ await delay(6200);
+ if(!await evaluate('document.querySelector(".an-live")?.textContent?.includes("Guided tour queued preview")'))
+   throw Error("V116_TOUR_SIGNAL_DISMISSED_WITHOUT_PRESENTATION");
+ await evaluate('document.querySelector(".ir80-skip").click()');
+ await until(()=>evaluate('!document.body.classList.contains("ir80-tour-active")'));
+ await until(()=>evaluate('!!document.querySelector(".ir111-phase-open .ir111-transmission")'));
+ await evaluate('document.querySelector(".ir111-transmission button").click()');
+ await until(()=>evaluate('!document.querySelector(".ir111-transmission")'));
+ writeFileSync(join(output,"acceptance.json"),JSON.stringify({pass:true,syntheticOnly:true,productionChanges:0,checks:["desktop","phone","small-phone","hidden-helper","reduced-motion","immersive-playback-queue","guided-tour-queue"],evidence},null,2));
  console.log("IREN_V111_REACT_VISUAL_ACCEPTANCE=PASS");
 }finally{
  try{ws?.close()}catch{}

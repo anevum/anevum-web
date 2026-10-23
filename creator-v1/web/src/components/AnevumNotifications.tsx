@@ -22,10 +22,11 @@ export const useIrenSignals=()=>{
  return {recent,unreadCount,markSignalsSeen,activeTransmission,transmissionPhase,dismissTransmission};
 };
 const signalSeenKey=(id:string)=>"anevum.iren.signals.seen."+id;
-/** Keep verified signals queued while immersive playback hides the IREN layer. */
+/** Preserve queued signals while immersive playback or the tour masks IREN. */
 function presentationAvailable(){
  return document.visibilityState==="visible"&&!document.fullscreenElement&&
-  !document.body.classList.contains("av095-expanded");
+  !document.body.classList.contains("av095-expanded")&&
+  !document.body.classList.contains("ir80-tour-active");
 }
 function lastSeenSignal(id?:string){
  if(!id)return 0;

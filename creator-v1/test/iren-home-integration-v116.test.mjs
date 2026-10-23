@@ -37,6 +37,9 @@ test("V116 starts at genuine ANEVUM arrival; test games never become the first t
  assert.match(home,/Studio publishing is still in testing/);
 });
 test("V116 preserves real IREN signals while guide is open or helper is hidden",()=>{
+ assert.match(guide,/document\.body\.classList\.toggle\("ir80-tour-active",tourIndex!==null\)/);
+ assert.match(guide,/document\.body\.classList\.remove\("ir80-tour-active"\)/);
+ assert.match(queue,/!document\.body\.classList\.contains\("ir80-tour-active"\)/);
  assert.match(guide,/activeTransmission&&<aside className="ir111-inline"/);
  assert.match(guide,/hidden&&activeTransmission&&<aside className="ir111-quiet"/);
  assert.match(guide,/activeTransmission\.preview&&<small>Visual preview only/);

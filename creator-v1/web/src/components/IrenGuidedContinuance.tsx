@@ -219,6 +219,13 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     setHidden(hiddenInStorage(storageKey));
   },[storageKey]);
 
+  // Tour cards mask the main IREN transmission; pause automatic dismissal
+  // until the visitor exits. The existing queue observes body-class changes.
+  useEffect(()=>{
+    document.body.classList.toggle("ir80-tour-active",tourIndex!==null);
+    return()=>document.body.classList.remove("ir80-tour-active");
+  },[tourIndex]);
+
   // Page-specific assistance chooses a relevant topic without reading private
   // route payloads or guessing privileges. First contact is handled separately.
   useEffect(()=>{
