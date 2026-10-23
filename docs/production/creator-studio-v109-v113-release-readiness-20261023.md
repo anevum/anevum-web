@@ -14,7 +14,11 @@ Session: `ANEVUM.WEB.BUILD.2026-10-23.001.CREATOR-STUDIO-INTEGRATION-READINESS`
 - Database `e1d29049-c83b-4534-8355-dc1fa36ba6d8` is named **`anevum-canonical-member-staging`** by the Cloudflare API. Do not claim its name or prior use proves whether production traffic binds to it.
 - Read-only `sqlite_master` query confirmed existing `member_studio_projects`, `member_studio_assets`, `member_studio_submissions` and review support; no V111 `member_studio_file_nodes` / `member_studio_file_versions` tables yet.
 - This DB is **not disposable**; prior operational work established it contains member data. Protect it regardless of its `staging` name.
-- No production Worker binding inventory or independently restored live D1 snapshot has been verified in this task.
+- **Read-only Cloudflare script-settings verification:** `anevum-apex-prelaunch-gateway` has a `MEMBER_DB` D1 binding to `e1d29049-c83b-4534-8355-dc1fa36ba6d8`, and `COMMUNITY_DB` to `fa96e36d-6257-4883-bf15-074947e11a13`. No secret values were requested or logged.
+- `anevum-creator-studio-staging` has `COMMUNITY_DB` bound to `fa96e36d-6257-4883-bf15-074947e11a13`; its listed script settings do **not** establish a canonical `MEMBER_DB` binding.
+- Active zone `anevum.com` has a catch-all route `anevum.com/*` to `anevum-native-frame-policy-v001`, a root route to `anevum-profile-staff-access-v001`, and numerous more-specific routed scripts. In the inspected zone routes, the apex gateway is explicitly associated with `anevum.com/evolution/vectors/*`; it is **not confirmed** as the universal request handler for the public domain. A separate Worker deployment routing/serving map is required.
+- **Critical clarification:** `staging` in the database name is not a safe operating assumption; the canonical member DB is attached to an apex Worker script and may be used by real members. Never apply SQL or run destructive experiments based on its label.
+- Neither the exact served Worker/route graph nor an independently restored copy of actual live-bound D1 has been validated. No Cloudflare changes were performed.
 
 ## Mandatory acceptance before writing any non-disposable D1
 1. Establish the exact worker/account/database binding for currently served `anevum.com` and staging. Distinguish production Worker, inactive deployment packages, Pages assets and canonical D1 by actual bindings, not database labels.
