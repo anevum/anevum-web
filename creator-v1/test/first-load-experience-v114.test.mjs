@@ -12,7 +12,8 @@ const app=read("web/src/App.tsx");
 test("V114 is the existing canonical homepage, not an alternate first-load application",()=>{
  assert.doesNotThrow(()=>parse(home,{sourceType:"module",plugins:["typescript","jsx"]}));
  assert.match(app,/<Route index element={<CinematicLandingPage\/>}\/>/);
- assert.match(home,/className="av79-hero av114-arrival av115-arrival"/);
+ // Preserve the canonical hero while allowing additive classes and motion state.
+ assert.match(home,/<section\b[^>]*className=\{?"av79-hero av114-arrival av115-arrival(?:\s|")/);
  assert.match(home,/className="av114-arrival-scene"/);
  assert.match(home,/THE CONTINUANCE INSTITUTE/);
  assert.match(home,/A universe <em>in the making\.<\/em>/);

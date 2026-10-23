@@ -11,7 +11,8 @@ const guide=read("web/src/components/IrenGuidedContinuance.tsx");
 
 test("V115 supersedes V111 intro rail but keeps public access and genuine member routes",()=>{
  assert.doesNotThrow(()=>parse(home,{sourceType:"module",plugins:["typescript","jsx"]}));
- assert.match(home,/className="av79-hero av114-arrival av115-arrival"/);
+ // Preserve the canonical hero while allowing additive classes and motion state.
+ assert.match(home,/<section\b[^>]*className=\{?"av79-hero av114-arrival av115-arrival(?:\s|")/);
  assert.match(home,/className="av79-gateways av115-gateways"/);
  assert.match(home,/className="av115-iren-console"/);
  assert.match(home,/className="av79-now av115-public-index"/);
