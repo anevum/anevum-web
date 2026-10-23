@@ -90,3 +90,26 @@
  .csf-header-actions .csw-action{flex:1}
 }
 @media(prefers-reduced-motion:reduce){.csf-root *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* W111 recovery: private Trash is metadata-only until a creator opens a file. */
+.csf-root .csw-danger{border-color:#b77d87;color:#ffe2e6;background:rgba(115,44,63,.25)}
+.csf-root .csw-danger:hover:not(:disabled){background:rgba(160,63,84,.35);border-color:#efafbb}
+.csf-trash-toggle{display:block;margin-top:11px;width:100%;padding:9px 12px;min-height:44px;
+ border:1px solid #587b90;border-radius:7px;background:#20384b;color:#d7edf5;
+ font:600 .76rem/1.4 inherit;text-align:left}
+.csf-trash-toggle[aria-expanded=true]{background:#2a4558;border-color:#91c4d0}
+.csf-trash-list{padding:12px 10px 14px;max-height:310px;overflow-y:auto;
+ border-top:1px solid var(--csw-line);background:#13283a;min-width:0}
+.csf-trash-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.csf-trash-heading h4{font-size:.76rem;letter-spacing:.04em;margin:0}
+.csf-trash-heading button,.csf-trash-item button{min-height:40px;padding:8px 10px;
+ border:1px solid #61899b;border-radius:6px;background:#243e53;
+ color:#e2f4f7;font-size:.72rem;cursor:pointer}
+.csf-trash-item{display:flex;align-items:center;justify-content:space-between;gap:10px;
+ padding:11px 3px;border-bottom:1px solid var(--csw-line)}
+.csf-trash-item>div{min-width:0;display:grid;gap:3px}
+.csf-trash-item strong{font-size:.74rem;overflow-wrap:anywhere}
+.csf-trash-item span{font-size:.66rem;color:var(--csw-muted);line-height:1.4}
+.csf-trash-list .csf-error{margin:8px 0}
+.csf-trash-item button:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:730px){.csf-trash-list{max-height:225px}.csf-trash-item button{flex:none}}
