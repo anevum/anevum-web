@@ -1,0 +1,81 @@
+/* Creator Studio V110: private starter workflow + honest offline OpenAI Agent Dock.
+   Layered on top of V109; no provider credentials, model usage or source access. */
+.csw-agent{
+ min-width:0;background:#101d30;border-left:1px solid var(--csw-line);
+ color:var(--csw-ink);padding:13px;overflow:auto;max-height:780px;
+}
+.csw-agent-heading{align-items:flex-start}
+.csw-agent-heading h2{font-size:1.04rem;margin:3px 0}
+.csw-agent-close{background:transparent;border:1px solid var(--csw-line);
+ color:var(--csw-ink);font-size:1.35rem;border-radius:6px;min-width:44px;min-height:44px}
+.csw-agent-connection{display:flex;gap:10px;padding:13px 10px;border:1px solid var(--csw-line);
+ border-radius:8px;background:#17273a}
+.csw-agent-connection>div{display:grid;gap:5px;min-width:0}
+.csw-agent-connection strong{font-size:.78rem;font-weight:650}
+.csw-agent-connection small{font-size:.68rem;line-height:1.5;color:var(--csw-muted)}
+.csw-agent-led{display:inline-block;width:9px;height:9px;border:1px solid #9aaac0;
+ border-radius:50%;background:#56677c;flex:none;margin-top:3px}
+.csw-agent-section{padding:17px 2px;border-bottom:1px solid var(--csw-line)}
+.csw-agent-section h3{font-size:.78rem;color:var(--csw-accent);margin:0 0 9px}
+.csw-agent-section p{font-size:.72rem;color:var(--csw-muted);line-height:1.6;overflow-wrap:anywhere}
+.csw-agent-section strong{color:var(--csw-ink);font-weight:600}
+.csw-agent-section>label:not(.csw-agent-check){display:block;font-size:.7rem;font-weight:600;margin:14px 0 7px}
+.csw-agent-section select,.csw-agent-section textarea,.csw-agent-details textarea{
+ width:100%;max-width:100%;min-width:0;background:#0b1829;color:var(--csw-ink);
+ border:1px solid #486079;border-radius:7px;padding:10px;font-size:.84rem;
+ line-height:1.55;resize:vertical}
+.csw-agent-section select{min-height:44px}
+.csw-agent-check{display:flex;align-items:flex-start;gap:10px;margin:14px 0;line-height:1.55;
+ font-size:.69rem;color:var(--csw-muted);cursor:pointer}
+.csw-agent-check input{width:19px;height:19px;flex:none;accent-color:var(--csw-accent)}
+.csw-agent-section>.csw-action{width:100%}
+.csw-agent-details summary{color:var(--csw-accent);font-size:.74rem;cursor:pointer;min-height:44px;display:flex;align-items:center}
+.csw-agent-details textarea{margin-top:10px;font-size:.72rem}
+.csw-agent-future{background:rgba(120,142,190,.065);border-radius:6px;border-bottom:0;padding:15px;margin-top:12px}
+.csw-create-dialog{
+ border:1px solid #6b88a3;border-radius:14px;box-shadow:0 30px 110px rgba(1,5,13,.85);
+ background:radial-gradient(ellipse at top right,rgba(94,72,155,.22),transparent 65%),#0b1424;
+ color:#f0f5ff;padding:0;width:min(94vw,780px);max-height:min(90dvh,920px);overflow:auto;
+}
+.csw-create-dialog::backdrop{background:rgba(2,6,14,.8);backdrop-filter:blur(4px)}
+.csw-create-dialog form{display:grid;gap:15px;padding:clamp(20px,3vw,34px);font-family:inherit}
+.csw-create-header h2{font-size:clamp(1.5rem,3vw,2.45rem);margin:7px 0;line-height:1.2;letter-spacing:-.03em}
+.csw-create-header>p:not(.csw-eyebrow){font-size:.83rem;line-height:1.6;color:#bccce0;max-width:650px}
+.csw-starters{border:0;padding:0;margin:0}
+.csw-starters legend{font-size:.76rem;margin-bottom:10px;font-weight:650}
+.csw-starter-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.csw-starter{border:1px solid #3b5570;background:#122339;border-radius:9px;
+ padding:13px;display:flex;align-items:flex-start;gap:10px;cursor:pointer;min-height:95px}
+.csw-starter.is-selected{border-color:#a5e5ee;background:#193449;box-shadow:inset 0 0 0 1px rgba(165,229,238,.3)}
+.csw-starter input{margin:3px 0;accent-color:#a5e5ee;flex:none;width:18px;height:18px}
+.csw-starter>span{display:grid;gap:7px}
+.csw-starter strong{font-size:.82rem;line-height:1.3}
+.csw-starter small{font-size:.72rem;color:#b4c6dd;line-height:1.4}
+.csw-create-fields{display:grid;gap:13px}
+.csw-create-fields label{display:grid;gap:7px;font-size:.75rem;font-weight:600}
+.csw-create-fields input,.csw-create-fields textarea{border:1px solid #536b82;background:#091526;
+ color:#f0f5ff;border-radius:7px;width:100%;padding:12px;font-size:1rem;line-height:1.5}
+.csw-create-fields input{min-height:46px}
+.csw-create-fields textarea{resize:vertical;min-height:100px}
+.csw-create-note{font-size:.72rem;color:#bacce0;line-height:1.5}
+.csw-create-dialog .csw-error{padding:13px;border:1px solid #b88ca1;border-radius:7px}
+.csw-create-dialog .csw-error a{color:#c4f0f5;text-decoration:underline}
+.csw-create-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:5px}
+.csw-create-actions button{min-width:150px}
+@media(max-width:1170px){
+ .csw-agent{grid-column:1/-1;border-left:0;border-top:1px solid var(--csw-line);max-height:560px}
+ .csw-layout.csw-no-explorer .csw-agent{grid-column:1}
+}
+@media(max-width:730px){
+ .csw-agent{width:100%;border-left:0;border-top:1px solid var(--csw-line);
+  max-height:none;overflow:visible;padding:16px}
+ .csw-layout.csw-agent-active .csw-explorer,.csw-layout.csw-agent-active .csw-main{display:none}
+ .csw-layout.csw-agent-active .csw-agent{min-height:70dvh}
+ .csw-create-dialog{width:calc(100vw - 16px);max-height:calc(100dvh - 24px)}
+ .csw-starter-grid{grid-template-columns:1fr}
+ .csw-starter{min-height:75px}
+ .csw-create-actions>*{flex:1}
+}
+@media(prefers-reduced-motion:reduce){
+ .csw-create-dialog::backdrop{backdrop-filter:none}
+}
