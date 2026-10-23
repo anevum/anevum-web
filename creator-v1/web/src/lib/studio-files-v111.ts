@@ -100,3 +100,21 @@ export async function studioFileVersions(projectId:string,nodeId:string,signal?:
   throw new StudioFileError(503,'File version history could not be verified.');
  return data.versions as StudioFileVersion[];
 }
+
+/** Metadata only. The server must not return deleted source bodies in bulk. */
+export async function studioFileTrash(projectId:string,signal?:AbortSignal):Promise<StudioFileNode[]>{
+ const data=await api(fileRoot(projectId)+'/trash','GET',undefined,signal);
+ if(!Array.isArray(data.nodes)||data.nodes.length>250||
+  !data.nodes.every(n=>validNode(n)&&n.projectId===projectId&&n.deletedAt!==null&&!('content' in n)))
+  throw new StudioFileError(503,'Private Trash listing could not be verified.');
+ return data.nodes as StudioFileNode[];
+}
+/** Restore a deleted item to its previous name and folder; conflicts fail closed. */
+export async function studioFileRestore(projectId:string,nodeId:string,revision:number):Promise<StudioFileNode>{
+ if(!Number.isSafeInteger(revision)||revision<1)throw new StudioFileError(400,'Invalid restore revision.');
+ const data=await api(nodePath(projectId,nodeId)+'/restore','POST',{revision});
+ if(!validNode(data.node,true)||data.node.projectId!==projectId||data.node.id!==nodeId||
+    data.node.deletedAt!==null||data.node.revision!==revision+1)
+  throw new StudioFileError(503,'Restore response could not be verified. Check your file tree.');
+ return data.node;
+}
