@@ -1,0 +1,109 @@
+name: ANEVUM V119 V116 API-Origin Inactive Upload
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v118-v116-inactive-upload.yml'
+      - 'creator-v1/ops/apex-inactive-upload-v118.mjs'
+      - 'creator-v1/test/apex-inactive-upload-v118.test.mjs'
+      - 'docs/production/v118-v116-inactive-upload-20261023.md'
+      - 'docs/production/v119-api-origin-conflict-20261023.md'
+  push:
+    branches: ['ops/v119-v116-inactive-upload-reconciliation-20261023-001']
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: anevum-v119-v116-inactive
+  cancel-in-progress: false
+jobs:
+  verify-inactive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ''
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - name: Verify exact provenance and inactive-only source contract
+        run: |
+          set -euo pipefail
+          node --check creator-v1/ops/apex-inactive-upload-v118.mjs
+          node --test creator-v1/test/apex-inactive-upload-v118.test.mjs creator-v1/test/apex-worker-bundle-v117.test.mjs creator-v1/test/native-auth-pin-preflight-v109.test.mjs
+      - uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12474282482'
+          run-id: 39889939571
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v118-package
+          merge-multiple: true
+      - name: Check exact precompiled Worker, asset hashes and no-bundle upload syntax
+        run: |
+          set -euo pipefail
+          node creator-v1/ops/apex-inactive-upload-v118.mjs config "$RUNNER_TEMP/v118-package" "$RUNNER_TEMP/v118-config.json"
+          test -z "$CLOUDFLARE_API_TOKEN"
+          npx --no-install wrangler versions upload --dry-run --no-bundle --no-upload-source-maps --config "$RUNNER_TEMP/v118-config.json"
+          echo 'V118_INACTIVE_UPLOAD_DRYRUN=PASS; DEPLOYMENT=NONE' >> "$GITHUB_STEP_SUMMARY"
+  inactive-upload:
+    needs: verify-inactive
+    if: >-
+      github.repository == 'anevum/anevum-web' &&
+      github.event_name == 'push' &&
+      github.actor == 'anevum' &&
+      github.ref == 'refs/heads/ops/v119-v116-inactive-upload-reconciliation-20261023-001' &&
+      github.event.head_commit.message == 'release(v119): reconcile API-origin V116 Worker immutable inactive only'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12474282482'
+          run-id: 39889939571
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v118-package
+          merge-multiple: true
+      - name: Revalidate source CI, approval marker, exact package and fresh Cloudflare snapshot
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node creator-v1/ops/apex-inactive-upload-v118.mjs before "$RUNNER_TEMP/v118-package" "$RUNNER_TEMP/v118-before.json" "$RUNNER_TEMP/v118-upload.json"
+      - name: Upload one immutable inactive version ONLY
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -s "$RUNNER_TEMP/v118-before.json"
+          npx --no-install wrangler versions upload --no-bundle --no-upload-source-maps --keep-vars --config "$RUNNER_TEMP/v118-upload.json" --message 'V118 V116 immutable inactive; frontend a3c94b3ebdc6103347e76f8a5234904978da67e3; package 356112a94575c988c28efcd9ab083277c3838b80; no deployment'
+      - name: Verify deployed traffic unchanged and upload version exact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node creator-v1/ops/apex-inactive-upload-v118.mjs after "$RUNNER_TEMP/v118-package" "$RUNNER_TEMP/v118-before.json" "$RUNNER_TEMP/v118-receipt.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v118-v116-inactive-receipt-${{ github.sha }}
+          path: ${{ runner.temp }}/v118-receipt.json
+          retention-days: 14
+          if-no-files-found: warn

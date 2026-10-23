@@ -1,0 +1,33 @@
+name: ANEVUM V121 V116 Private Controller Offline QA
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v121-v116-controller-offline-qa.yml'
+      - 'creator-v1/ops/v121-controller-bundle.mjs'
+      - 'creator-v1/test/v121-controller-bundle.test.mjs'
+      - 'docs/production/v121-v116-controller-offline-20261023.md'
+permissions:
+  contents: read
+concurrency:
+  group: v121-private-controller-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  controller:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      CLOUDFLARE_API_TOKEN: ''
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate controller module and regressions without credentials
+        run: |
+          set -euo pipefail
+          test -z "$CLOUDFLARE_API_TOKEN"
+          node --check creator-v1/ops/v121-controller-bundle.mjs
+          node --test creator-v1/test/v121-controller-bundle.test.mjs             creator-v1/test/v120-protected-acceptance.test.mjs             creator-v1/test/native-auth-pin-preflight-v109.test.mjs
+          echo 'V121_CONTROLLER_OFFLINE_CONTRACT=PASS; CLOUDFLARE_WRITES=NONE' >> "$GITHUB_STEP_SUMMARY"
