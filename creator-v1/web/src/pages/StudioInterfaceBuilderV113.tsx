@@ -126,7 +126,7 @@ export function StudioInterfaceBuilderV113({raw,fileName,resetToken,readOnly,onC
    case 'decrement':
     if(target&&previewPage.components.some(c=>c.id===target&&c.kind==='counter'))
      setPreview(old=>({...old,counts:{...old.counts,[target]:Math.max(-99999,Math.min(99999,
-      (old.counts[target]??Number(previewPage.components.find(c=>c.id===target)?.text||0)||0)+(item.action==='increment'?1:-1)))}}));
+      (old.counts[target]??(Number(previewPage.components.find(c=>c.id===target)?.text||0)||0))+(item.action==='increment'?1:-1)))}}));
     break;
    case 'toggle':
     if(target&&previewPage.components.some(c=>c.id===target&&c.kind==='notice'))
