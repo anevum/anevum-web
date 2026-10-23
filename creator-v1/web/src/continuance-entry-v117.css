@@ -1,0 +1,104 @@
+/* ANEVUM.WEB.BUILD.2026-10-23.001.CONTINUANCE-ENTRY-V117
+ * Follow the V115 discovery-first arrival into the existing member flow.
+ * Presentation only: no new dependencies, member state, permissions or auth calls.
+ * Keep low-motion, mobile and forced-colors behavior on the same canonical routes.
+ */
+.av9-shell .av79-home .av117-hero-path{
+ display:inline-flex;align-items:center;justify-content:space-between;gap:19px;
+ min-height:44px;margin-top:13px;padding:8px 0;
+ color:#c6dcef;text-decoration:none;
+ font:650 11px/1.4 var(--av9-body,system-ui,sans-serif);
+ letter-spacing:.035em;
+ border-bottom:1px solid rgba(173,204,238,.44);
+ transition:color .2s ease,border-color .2s ease;
+}
+.av9-shell .av79-home .av117-hero-path span:last-child{
+ display:inline-grid;place-items:center;width:26px;height:26px;
+ border:1px solid rgba(178,212,241,.32);border-radius:50%;
+ color:#ecfaff;font-size:17px;
+ transition:transform .2s ease;
+}
+.av9-shell .av79-home .av117-hero-path:hover{color:#f7fbff;border-color:#e2f4ff}
+.av9-shell .av79-home .av117-hero-path:hover span:last-child{transform:translateY(3px)}
+.av9-shell .av79-home .av117-hero-path:focus-visible{
+ outline:3px solid #b4edfc;outline-offset:4px;
+}
+.av115-wayfinder:target{scroll-margin-top:100px}
+.av12-phase1-join .av117-join-progress{margin-bottom:7px}
+.av12-phase1-join .av117-join-progress>span.is-complete{color:#d8c7da}
+.av12-phase1-join .av117-join-progress>span[aria-current="step"]{
+ color:#ffdecb;text-shadow:0 0 13px rgba(246,185,160,.22);
+}
+.av12-phase1-join .av117-join-progress>span.is-complete::before{
+ content:"✓";margin-right:5px;color:#cfebdf;
+}
+.av12-phase1-join .av117-step-context{
+ max-width:49ch;margin:0 0 13px!important;
+ color:#d0c3d7!important;
+ font:500 11px/1.6 var(--av10-register,ui-monospace,monospace)!important;
+}
+.av12-phase1-join .av117-join-guide{
+ display:flex;align-items:center;justify-content:space-between;gap:15px;
+ margin-top:19px;padding:15px;
+ border:1px solid rgba(166,183,223,.33);
+ border-radius:13px;
+ background:radial-gradient(circle at 0 0,rgba(112,151,214,.16),transparent 70%),
+ linear-gradient(145deg,rgba(25,38,63,.86),rgba(15,22,38,.91));
+}
+.av12-phase1-join .av117-join-guide>div{flex:1 1 190px;min-width:0}
+.av12-phase1-join .av117-join-guide-label{
+ display:block;margin-bottom:6px;color:#c3e3f6;
+ font:750 9px/1.4 var(--av10-register,ui-monospace,monospace);
+ letter-spacing:.1em;
+}
+.av12-phase1-join .av117-join-guide p{
+ margin:0!important;color:#d3dceb!important;
+ font:450 12px/1.55 var(--av9-body,system-ui,sans-serif)!important;
+}
+.av12-phase1-join .av117-join-guide button{
+ flex:0 0 auto;display:inline-flex;align-items:center;
+ justify-content:center;gap:12px;min-height:44px;
+ padding:11px 12px;border:1px solid rgba(181,217,244,.58);border-radius:9px;
+ background:rgba(115,163,215,.12);color:#edf9ff;
+ font:750 10px/1.25 var(--av10-register,ui-monospace,monospace);
+ letter-spacing:.055em;white-space:nowrap;cursor:pointer;
+ transition:border-color .2s ease,background .2s ease,transform .2s ease;
+}
+.av12-phase1-join .av117-join-guide button:hover{
+ border-color:#dcf3ff;background:rgba(115,163,215,.23);transform:translateY(-1px);
+}
+.av12-phase1-join .av117-join-guide button:focus-visible{
+ outline:3px solid #b4edfc;outline-offset:3px;
+}
+@media(max-width:650px){
+ .av9-shell .av79-home .av117-hero-path{margin-top:8px}
+}
+@media(max-width:540px){
+ .av12-phase1-join .av117-join-guide{align-items:stretch;flex-wrap:wrap;gap:13px;padding:13px}
+ .av12-phase1-join .av117-join-guide>div{flex-basis:100%}
+ .av12-phase1-join .av117-join-guide button{width:100%;justify-content:space-between}
+}
+@media(max-width:380px){
+ .av12-phase1-join .av117-join-progress{gap:4px}
+ .av12-phase1-join .av117-join-progress>span{font-size:9px}
+ .av12-phase1-join .av117-join-progress small{font-size:7px}
+ .av12-phase1-join .av117-join-progress>i{min-width:5px}
+ .av12-phase1-join .av117-join-guide p{font-size:11px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .av9-shell .av79-home .av117-hero-path,
+ .av9-shell .av79-home .av117-hero-path span:last-child,
+ .av12-phase1-join .av117-join-guide button{
+  animation:none!important;transition:none!important;transform:none!important;
+ }
+}
+@media(forced-colors:active){
+ .av9-shell .av79-home .av117-hero-path{color:LinkText;border-color:LinkText}
+ .av9-shell .av79-home .av117-hero-path span:last-child{color:LinkText;border-color:LinkText}
+ .av12-phase1-join .av117-join-guide{background:Canvas;color:CanvasText;border:2px solid CanvasText}
+ .av12-phase1-join .av117-join-guide-label,
+ .av12-phase1-join .av117-join-guide p,
+ .av12-phase1-join .av117-step-context,
+ .av12-phase1-join .av117-join-progress>span.is-complete{color:CanvasText!important}
+ .av12-phase1-join .av117-join-guide button{background:ButtonFace;color:ButtonText;border:1px solid ButtonText}
+}
