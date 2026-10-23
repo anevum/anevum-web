@@ -105,6 +105,30 @@ export function CinematicLandingPage(){
         </Link>)}
       </nav>
 
+      <section className="av111-onramp" aria-labelledby="av111-onramp-title">
+        <div className="av111-onramp-art" aria-hidden="true">
+          <span className="av111-onramp-core"/>
+          <span className="av111-onramp-orbit av111-onramp-orbit-a"/>
+          <span className="av111-onramp-orbit av111-onramp-orbit-b"/>
+        </div>
+        <div className="av111-onramp-copy">
+          <span className="av111-onramp-label">THE CONTINUANCE INSTITUTE / FIRST CONTACT</span>
+          <h2 id="av111-onramp-title">{signedIn?"Your next signal starts here.":"Explore first. Join when ready."}</h2>
+          <p>{signedIn
+            ?"Your member space, published worlds and community are ready to explore. Studio publishing is still being tested."
+            :"Browse the public network without an account. Join for free when you're ready to create your member identity; publishing tools are still in testing."}</p>
+        </div>
+        <div className="av111-onramp-actions">
+          <Link className="av111-onramp-primary" to={signedIn?"/member":"/join"}>
+            {signedIn?"OPEN MY SPACE":"BECOME A MEMBER"} <Icon name="arrow" size={16}/>
+          </Link>
+          <button className="av111-onramp-guide" type="button"
+            onClick={()=>window.dispatchEvent(new Event("anevum:iren-tour"))}>
+            LET IREN SHOW ME AROUND <Icon name="arrow" size={15}/>
+          </button>
+        </div>
+      </section>
+
       <section className="av79-now" aria-labelledby="av79-now-heading">
         <header className="av79-section-heading">
           <div><span className="av79-kicker">FROM THE PUBLIC NETWORK</span>

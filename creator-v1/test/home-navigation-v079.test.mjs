@@ -73,6 +73,16 @@ test("V079 first fold is four short routes with one verified featured work",()=>
  assert.match(project,/source:"creator-channel",avatar:false,level:null,featuredAwards:\[\]/);
 });
 
+test("V111 first-contact connects real join and IREN tour to the original homepage",()=>{
+ const firstContactCSS=read("web/src/home-first-contact-v111.css");
+ assert.match(home,/className="av111-onramp"/);
+ assert.match(home,/to=\{signedIn\?"\/member":"\/join"\}/);
+ assert.match(home,/new Event\("anevum:iren-tour"\)/);
+ assert.match(firstContactCSS,/prefers-reduced-motion:reduce/);
+ assert.match(firstContactCSS,/forced-colors:active/);
+ assert.match(bootstrap,/import "\.\/home-first-contact-v111\.css"/);
+});
+
 test("V079 native switcher searches real public data on every public route",()=>{
  assert.match(search,/const liveEnabled=open&&liveQuery\.length>=2/);
  assert.match(search,/readProjects\(\{q:liveQuery,limit:"5"\}/);

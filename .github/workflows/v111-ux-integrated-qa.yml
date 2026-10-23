@@ -1,0 +1,80 @@
+name: ANEVUM V111 Integrated IREN and Homepage Browser Acceptance
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/web/src/components/AnevumNotifications.tsx'
+      - 'creator-v1/web/src/components/IrenGuidedContinuance.tsx'
+      - 'creator-v1/web/src/iren-transmissions-v111.css'
+      - 'creator-v1/web/src/home-first-contact-v111.css'
+      - 'creator-v1/web/src/pages/CinematicLandingPage.tsx'
+      - 'creator-v1/test/*v111*'
+      - '.github/workflows/v111-ux-integrated-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: v111-integrated-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  integrated-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 32
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install without lifecycle execution
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Check exact combined React and release/staging assets
+        run: |
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+      - name: Preserve existing and combined source safeguards
+        working-directory: creator-v1
+        run: |
+          node --test test/iren-transmissions-v111.test.mjs test/home-first-contact-v111.test.mjs
+          npm run test:iren-v080
+          npm run test:iren-v088
+          npm run test:ux-v079
+      - name: Verify both experiences within the same built React application
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome"
+          mkdir -p evidence/v111-integrated/iren evidence/v111-integrated/home
+          node creator-v1/test/portal-offline-preview.mjs > evidence/v111-integrated/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 70); do
+            if curl -fsS http://127.0.0.1:4178/__ready >/dev/null; then break; fi
+            sleep 0.25
+          done
+          curl -fsS http://127.0.0.1:4178/__ready >/dev/null
+          node creator-v1/test/capture-iren-transmissions-v111.mjs "$chrome" http://127.0.0.1:4178 evidence/v111-integrated/iren
+          node creator-v1/test/capture-home-first-contact-v111.mjs "$chrome" http://127.0.0.1:4178 evidence/v111-integrated/home
+          test -s evidence/v111-integrated/iren/acceptance.json
+          test -s evidence/v111-integrated/home/acceptance.json
+          test -s evidence/v111-integrated/iren/iren-transmission-1440.png
+          test -s evidence/v111-integrated/iren/iren-transmission-390.png
+          test -s evidence/v111-integrated/iren/iren-transmission-320.png
+          test -s evidence/v111-integrated/home/first-contact-desktop.png
+          test -s evidence/v111-integrated/home/first-contact-phone.png
+          test -s evidence/v111-integrated/home/first-contact-small-phone.png
+      - name: Archive exact integrated responsive evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v111-integrated-visual-review
+          path: evidence/v111-integrated/
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Record reviewed source without deploying it
+        run: |
+          git rev-parse HEAD
+          echo 'V111_SOURCE_INTEGRATED_QA_ONLY' >> "$GITHUB_STEP_SUMMARY"
+          echo 'PRODUCTION_DEPLOY=NOT_AUTHORIZED' >> "$GITHUB_STEP_SUMMARY"
+# No Cloudflare credentials, member account writes, authorizations or production traffic modifications.
