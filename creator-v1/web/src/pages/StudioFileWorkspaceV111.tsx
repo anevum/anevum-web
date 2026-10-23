@@ -2,7 +2,7 @@ import {useEffect,useMemo,useRef,useState,type ReactNode,type FormEvent} from 'r
 import {Link} from 'react-router-dom';
 import {
  studioFileTreeEnabled,studioFileList,studioFileGet,studioFileCreate,
- studioFileUpdate,studioFileVersions,type StudioFileNode,type StudioFileVersion,
+ studioFileUpdate,studioFileVersions,studioFileTrash,studioFileRestore,type StudioFileNode,type StudioFileVersion,
  type StudioNodeKind
 } from '../lib/studio-files-v111';
 import './studio-file-workspace-v111.css';
@@ -46,6 +46,12 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
   id:string;kind:StudioNodeKind;name:string;parentId:string|null
  }|null>(null);
  const [message,setMessage]=useState('');
+ const [trashOpen,setTrashOpen]=useState(false);
+ const [trashNodes,setTrashNodes]=useState<StudioFileNode[]>([]);
+ const [trashLoading,setTrashLoading]=useState(false);
+ const [trashError,setTrashError]=useState('');
+ const [trashAttempt,setTrashAttempt]=useState(0);
+ const [restoringId,setRestoringId]=useState<string|null>(null);
  const canEdit=editable(status);
  const latestDirty=useRef(dirtyIds);
  latestDirty.current=dirtyIds;
@@ -61,6 +67,16 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
    .finally(()=>{if(!controller.signal.aborted)setLoading(false);});
   return()=>controller.abort();
  },[projectId,attempt]);
+ useEffect(()=>{
+  if(!trashOpen)return;
+  const controller=new AbortController();
+  setTrashLoading(true);setTrashError('');
+  studioFileTrash(projectId,controller.signal)
+   .then(result=>{if(!controller.signal.aborted)setTrashNodes(result);})
+   .catch(e=>{if(!controller.signal.aborted)setTrashError(presentError(e));})
+   .finally(()=>{if(!controller.signal.aborted)setTrashLoading(false);});
+  return()=>controller.abort();
+ },[projectId,trashOpen,trashAttempt]);
  useEffect(()=>{dirtyCallback.current(dirtyIds.size>0);},[dirtyIds]);
  useEffect(()=>()=>{dirtyCallback.current(false);},[]);
  useEffect(()=>{
@@ -80,6 +96,31 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
  }
  function upsert(node:StudioFileNode){
   setNodes(old=>[...old.filter(n=>n.id!==node.id),node].filter(n=>n.deletedAt===null));
+ }
+ function markedDeleted(node:StudioFileNode){
+  setNodes(old=>old.filter(n=>n.id!==node.id));
+  if(node.kind==='folder')setSelectedFolder(null);
+  else{
+   const next=openIds.filter(id=>id!==node.id);
+   setOpenIds(next);
+   if(activeId===node.id)setActiveId(next.at(-1)||null);
+  }
+  setTrashNodes(old=>[node,...old.filter(n=>n.id!==node.id)]);
+  setTrashAttempt(n=>n+1);
+  setMessage('Moved '+node.name+' to private Trash. You can restore it while the project remains editable.');
+ }
+ async function restore(item:StudioFileNode){
+  if(!canEdit||restoringId!==null)return;
+  setRestoringId(item.id);setTrashError('');
+  try{
+   const restored=await studioFileRestore(projectId,item.id,item.revision);
+   upsert(restored);
+   setTrashNodes(old=>old.filter(n=>n.id!==item.id));
+   if(restored.parentId)setExpanded(old=>new Set([...old,restored.parentId!]));
+   setMessage('Restored '+restored.name+' as private revision '+restored.revision+'.');
+  }catch(e){
+   setTrashError(presentError(e)+' Check whether its parent folder, original name or storage allowance is still available. Refresh Trash before retrying.');
+  }finally{setRestoringId(null);}
  }
  function setDirty(id:string,dirty:boolean){
   setDirtyIds(old=>{
