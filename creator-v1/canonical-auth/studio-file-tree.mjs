@@ -56,8 +56,8 @@ export async function studioFileTree(req,env,user,now=Math.floor(Date.now()/1000
    }
    const parent=input.parentId?await read(db,"SELECT id FROM member_studio_file_nodes WHERE id=? AND user_id=? AND project_id=? AND kind='folder' AND deleted_at IS NULL",[input.parentId,user.id,projectId]):true;
    if(!parent)return fail(409,'Parent folder unavailable');
-   const result=await db.prepare('INSERT INTO member_studio_file_nodes(id,project_id,user_id,parent_id,parent_key,name,name_key,kind,content,client_request_id,created_at,updated_at) SELECT ?,?,?,?,?,?,?,?,\'\',?,?,? WHERE (SELECT count(*) FROM member_studio_file_nodes WHERE user_id=? AND project_id=? AND deleted_at IS NULL)<100 AND (SELECT count(*) FROM member_studio_file_nodes WHERE user_id=? AND project_id=?)<250 ON CONFLICT DO NOTHING RETURNING *')
-    .bind(crypto.randomUUID(),projectId,user.id,input.parentId,input.parentId||'',name,name.toLowerCase(),input.kind,input.clientRequestId,now,now,user.id,projectId,user.id,projectId).all();
+   const result=await db.prepare('INSERT INTO member_studio_file_nodes(id,project_id,user_id,parent_id,parent_key,name,name_key,kind,content,client_request_id,created_at,updated_at) SELECT ?,?,?,?,?,?,?,?,\'\',?,?,? WHERE (SELECT status FROM member_studio_projects WHERE id=? AND user_id=?) IN (\'draft\',\'changes_requested\') AND (SELECT count(*) FROM member_studio_file_nodes WHERE user_id=? AND project_id=? AND deleted_at IS NULL)<100 AND (SELECT count(*) FROM member_studio_file_nodes WHERE user_id=? AND project_id=?)<250 ON CONFLICT DO NOTHING RETURNING *')
+    .bind(crypto.randomUUID(),projectId,user.id,input.parentId,input.parentId||'',name,name.toLowerCase(),input.kind,input.clientRequestId,now,now,projectId,user.id,user.id,projectId,user.id,projectId).all();
    if(result.results.length)return respond({node:nodeOut(result.results[0]),replayed:false},201);
    return fail(409,'File limit or name conflict');
   }
@@ -85,8 +85,8 @@ export async function studioFileTree(req,env,user,now=Math.floor(Date.now()/1000
   const total=await read(db,'SELECT COALESCE(SUM(length(CAST(content AS BLOB))),0) AS bytes FROM member_studio_file_nodes WHERE project_id=? AND user_id=? AND deleted_at IS NULL',[projectId,user.id]);
   const newSize=BufferByteLength(input.content);
   if(!input.deleted&&Number(total?.bytes||0)-BufferByteLength(node.content)+newSize>524288)return fail(413,'Project text limit of 512 KiB reached');
-  const result=await db.prepare('UPDATE member_studio_file_nodes SET name=?,name_key=?,parent_id=?,parent_key=?,content=?,deleted_at=?,revision=revision+1,updated_at=? WHERE id=? AND project_id=? AND user_id=? AND revision=? AND deleted_at IS NULL AND (?=1 OR (SELECT COALESCE(SUM(length(CAST(content AS BLOB))),0) FROM member_studio_file_nodes WHERE project_id=? AND user_id=? AND deleted_at IS NULL)-length(CAST(member_studio_file_nodes.content AS BLOB))+length(CAST(? AS BLOB))<=524288) RETURNING *')
-   .bind(name,name.toLowerCase(),input.parentId,input.parentId||'',input.content,input.deleted?now:null,now,nodeId,projectId,user.id,input.revision,input.deleted?1:0,projectId,user.id,input.content).all();
+  const result=await db.prepare('UPDATE member_studio_file_nodes SET name=?,name_key=?,parent_id=?,parent_key=?,content=?,deleted_at=?,revision=revision+1,updated_at=? WHERE id=? AND project_id=? AND user_id=? AND revision=? AND deleted_at IS NULL AND (SELECT status FROM member_studio_projects WHERE id=? AND user_id=?) IN (\'draft\',\'changes_requested\') AND (?=1 OR (SELECT COALESCE(SUM(length(CAST(content AS BLOB))),0) FROM member_studio_file_nodes WHERE project_id=? AND user_id=? AND deleted_at IS NULL)-length(CAST(member_studio_file_nodes.content AS BLOB))+length(CAST(? AS BLOB))<=524288) RETURNING *')
+   .bind(name,name.toLowerCase(),input.parentId,input.parentId||'',input.content,input.deleted?now:null,now,nodeId,projectId,user.id,input.revision,projectId,user.id,input.deleted?1:0,projectId,user.id,input.content).all();
   return result.results.length?respond({node:nodeOut(result.results[0])}):fail(409,'File changed or was deleted; reload');
  }catch{return fail(503,'Studio file operation unavailable');}
 }
