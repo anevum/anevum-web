@@ -118,7 +118,8 @@ test('W111 aggregate source quota fails closed without corrupting previous conte
 test('W111 Trash is private metadata-only and a deleted file can be restored at an exact revision',async()=>{
  const s=setup();
  try{
-  const created=await s.call(ROOT,'POST',request('draft.md'));
+  const initialRequest=request('draft.md');
+  const created=await s.call(ROOT,'POST',initialRequest);
   assert.equal(created.status,201);
   const original=(await created.json()).node;
   const saved=await s.call(ROOT+'/'+original.id,'PATCH',patch(original,{content:'Private, preserved text'}));
@@ -130,6 +131,7 @@ test('W111 Trash is private metadata-only and a deleted file can be restored at 
   const tombstone=(await removed.json()).node;
   assert.equal(tombstone.deletedAt!==null,true);
   assert.equal(tombstone.revision,source.revision+1);
+  assert.equal((await s.call(ROOT,'POST',initialRequest)).status,409,'Deleted file cannot be silently recreated through retry');
   const active=(await(await s.call()).json()).nodes;
   assert.equal(active.find(n=>n.id===source.id),undefined);
   const trash=await s.call(ROOT+'/trash');
