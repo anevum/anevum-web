@@ -4,6 +4,7 @@ on:
     paths:
       - 'creator-v1/web/src/pages/CinematicLandingPage.tsx'
       - 'creator-v1/web/src/pages/Phase1JoinPage.tsx'
+      - 'creator-v1/web/src/components/IrenGuidedContinuance.tsx'
       - 'creator-v1/web/src/main.tsx'
       - 'creator-v1/web/src/continuance-entry-v117.css'
       - 'creator-v1/test/continuance-entry-v117.test.mjs'
