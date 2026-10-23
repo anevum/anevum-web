@@ -201,9 +201,9 @@
     width:100px;height:100px;min-width:100px;min-height:100px;
   }
   .ir111-transmission{
-    /* Budget extra clearance for mobile layout viewport scaling and fixed
-       companion right-offsets; do not let a modal-like signal run offscreen. */
-    right:-14px;
+    /* Anchor within IREN's right edge. The narrower panel preserves a
+       safe left inset at 320px while avoiding settled right-edge overflow. */
+    right:0;
     bottom:calc(100% + 9px);
     width:min(368px,calc(100vw - 42px));
     max-height:min(53dvh,370px);
