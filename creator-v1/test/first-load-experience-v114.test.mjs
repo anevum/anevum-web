@@ -30,7 +30,8 @@ test("V114 is the existing canonical homepage, not an alternate first-load appli
 test("V115 first load opens the ANEVUM universe and real IREN, not the alpha game",()=>{
  assert.match(home,/to="\/discover"/);
  assert.match(home,/Enter ANEVUM/);
- assert.match(home,/Meet IREN/);
+ assert.match(home,/BEGIN ORIENTATION/);
+ assert.doesNotMatch(home,/Meet IREN/);
  assert.match(home,/new Event\("anevum:iren-intro"\)/);
  assert.match(home,/Explore freely\. No account required\./);
  assert.match(home,/Studio publishing is still in testing\./);
