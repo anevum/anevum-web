@@ -312,10 +312,10 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
  </section>;
 }
 
-function FolderInspectorV111({projectId,folder,nodes,editable:canEdit,onUpdated,onMessage,onDirty}:{
+function FolderInspectorV111({projectId,folder,nodes,editable:canEdit,onUpdated,onMessage,onDirty,onDeleted}:{
  projectId:string;folder:StudioFileNode;nodes:StudioFileNode[];editable:boolean;
  onUpdated:(node:StudioFileNode)=>void;onMessage:(text:string)=>void;
- onDirty:(dirty:boolean)=>void
+ onDirty:(dirty:boolean)=>void;onDeleted:(node:StudioFileNode)=>void
 }){
  const [name,setName]=useState(folder.name);
  const [parentId,setParentId]=useState<string|null>(folder.parentId);
@@ -332,6 +332,16 @@ function FolderInspectorV111({projectId,folder,nodes,editable:canEdit,onUpdated,
   if(descendants.size===prior)break;
  }
  const parentOptions=nodes.filter(n=>n.kind==='folder'&&!descendants.has(n.id));
+ async function moveToTrash(){
+  if(!canEdit||busy||dirty||children.length>0)return;
+  if(!window.confirm('Move empty folder '+folder.name+' to private Trash? It can be restored later.'))return;
+  setBusy(true);setError('');
+  try{
+   const deleted=await studioFileUpdate(projectId,folder.id,{revision:folder.revision,name:folder.name,parentId:folder.parentId,content:'',deleted:true});
+   onDeleted(deleted);
+  }catch(e){setError(presentError(e)+' The folder remains visible until deletion is confirmed.');}
+  finally{setBusy(false);}
+ }
  async function save(){
   if(!canEdit||busy)return;setBusy(true);setError('');
   try{
@@ -355,8 +365,10 @@ function FolderInspectorV111({projectId,folder,nodes,editable:canEdit,onUpdated,
    <button type="button" className="csw-action csw-strong" disabled={!canEdit||busy||name.trim().length===0||!dirty}
     onClick={()=>void save()}>Save folder changes</button>
    <button type="button" className="csw-action csw-subtle" disabled={busy} onClick={()=>{setName(folder.name);setParentId(folder.parentId);setError('');}}>Discard changes</button>
+   <button type="button" className="csw-action csw-danger" disabled={!canEdit||busy||dirty||children.length>0}
+    onClick={()=>void moveToTrash()}>Move empty folder to Trash</button>
   </div>
-  <p className="csf-muted">File and folder deletion is deferred until a recoverable Trash view is available. Moving a folder into itself or its children is prohibited.</p>
+  <p className="csf-muted">Only empty folders can move to Trash. Restore them before restoring their deleted children. Moving a folder into itself or its children is prohibited.</p>
  </section>;
 }
 
