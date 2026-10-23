@@ -121,7 +121,7 @@ export function CinematicLandingPage(){
           <strong>Not sure where to begin?</strong>
           <p>I'm IREN. I can help you find your way through the network.</p>
           <button type="button" onClick={()=>window.dispatchEvent(new Event("anevum:iren-intro"))}>
-            BEGIN ORIENTATION <Icon name="arrow" size={15}/>
+            MEET IREN <Icon name="arrow" size={15}/>
           </button>
         </aside>
         <div className="av114-arrival-signature" aria-hidden="true">
