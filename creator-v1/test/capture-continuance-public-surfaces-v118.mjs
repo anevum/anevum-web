@@ -75,12 +75,13 @@ try{
   for(const [page,expected] of [["discover","discover"],["community","community"]]){
    await send("Page.navigate",{url:base+"/creator/"+page});
    await until(()=>evaluate('document.querySelectorAll(".av118-workspace-switch .av118-workspace-link").length===3'));
-   const data=await evaluate('(()=>{const shell=document.querySelector(".av118-workspace-switch"),links=[...shell.querySelectorAll(".av118-workspace-link")],active=links.filter(x=>x.getAttribute("aria-current")==="page"),help=shell.querySelector(".av118-workspace-iren"),rect=shell.getBoundingClientRect(),helpRect=help.getBoundingClientRect();return {path:location.pathname,links:links.map(x=>({href:x.getAttribute("href"),height:x.getBoundingClientRect().height})),current:active.map(x=>x.getAttribute("href")),help:!!help,helpHeight:helpRect.height,rect:[rect.left,rect.right],overflow:document.documentElement.scrollWidth>innerWidth+1,componentOverflow:shell.scrollWidth>shell.clientWidth+1,accessibleNav:!!shell.querySelector("nav[aria-label]")};})()');
+   const data=await evaluate('(()=>{const shell=document.querySelector(".av118-workspace-switch"),links=[...shell.querySelectorAll(".av118-workspace-link")],active=links.filter(x=>x.getAttribute("aria-current")==="page"),help=shell.querySelector(".av118-workspace-iren"),rect=shell.getBoundingClientRect(),helpRect=help.getBoundingClientRect();return {path:location.pathname,links:links.map(x=>({href:x.getAttribute("href"),height:x.getBoundingClientRect().height,left:x.getBoundingClientRect().left,right:x.getBoundingClientRect().right})),current:active.map(x=>x.getAttribute("href")),help:!!help,helpHeight:helpRect.height,rect:[rect.left,rect.right],overflow:document.documentElement.scrollWidth>innerWidth+1,componentOverflow:shell.scrollWidth>shell.clientWidth+1,accessibleNav:!!shell.querySelector("nav[aria-label]")};})()');
    if(!data.path.endsWith("/"+expected)||data.links.length!==3||data.current.length!==1||
       !data.current[0].endsWith("/"+expected)||!data.links[0].href.endsWith("/discover")||
       !data.links[1].href.endsWith("/community")||!data.links[2].href.endsWith("/studio")||
       data.links.some(x=>x.height<44)||!data.help||data.helpHeight<44||
-      data.rect[0]<-1||data.rect[1]>width+1||data.overflow||!data.accessibleNav)
+      data.rect[0]<-1||data.rect[1]>width+1||data.overflow||!data.accessibleNav||
+      (width<=480&&data.links.some(x=>x.left<data.rect[0]-1||x.right>data.rect[1]+1)))
     throw Error("V118_WORKSPACE_"+label+"_"+page+":"+JSON.stringify(data));
    await evaluate('document.querySelector(".av118-workspace-switch")?.scrollIntoView({block:"center",behavior:"instant"})');
    await screenshot("workspace-"+page+"-"+label);
