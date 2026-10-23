@@ -279,7 +279,6 @@ try{
  await until(()=>visible('[data-studio-ui-builder="v113"]'),'Versioned ANEVUM UI document initialized locally');
  assert.equal(await evaluate('document.querySelectorAll(".cui-page-row").length'),2,'Two private interface pages initialized');
  assert.ok(await evaluate('document.querySelector(".cui-header h3")?.textContent.includes("Signal Interface")'));
- const initialPageId=await evaluate('document.querySelector(".cui-page-preview")?.getAttribute("data-preview-page")||null');
  const preview=await evaluate('(()=>{const b=[...document.querySelectorAll(".cui-header .cui-actions button")].find(x=>x.textContent==="Interactive preview");if(!b)return false;b.click();return true;})()');
  assert.equal(preview,true);
  await until(()=>visible('.cui-playtest'),'Safe interactive page preview');
@@ -295,7 +294,7 @@ try{
  await snap('desktop-interface-device-preview');
  const design=await evaluate('(()=>{const b=[...document.querySelectorAll(".cui-header .cui-actions button")].find(x=>x.textContent==="Design");if(!b)return false;b.click();return true;})()');
  assert.equal(design,true);
- await click('.cui-item-row:first-of-type');
+ await click('.cui-item-row');
  await until(()=>visible('.cui-fields input'),'Visual Inspector opened');
  assert.equal(await setValue('.cui-fields input','ANEVUM Continuance Portal'),'ANEVUM Continuance Portal');
  await until(()=>evaluate('document.querySelector(".csf-editor h3")?.textContent.includes("Unsaved")'),'Interface Inspector change updates source buffer');
