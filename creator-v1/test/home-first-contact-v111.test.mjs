@@ -41,4 +41,6 @@ test("First-contact styling is responsive, accessible, and stops animation when 
  assert.match(css,/@media\(forced-colors:active\)/);
  assert.match(css,/:focus-visible/);
  assert.match(css,/min-height:46px/);
+ assert.match(css,/@media\(max-width:420px\)/);
+ assert.match(css,/\.av79-section-heading>a/);
 });

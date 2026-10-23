@@ -47,6 +47,11 @@ try{
   const entry=await evaluate('(()=>{const rail=document.querySelector(".av111-onramp"),join=rail.querySelector("a.av111-onramp-primary"),tour=rail.querySelector("button.av111-onramp-guide"),r=rail.getBoundingClientRect(),j=join?.getBoundingClientRect(),t=tour?.getBoundingClientRect();return {hero:!!document.querySelector(".av79-hero"),featured:!!document.querySelector(".av79-feature"),gateways:document.querySelectorAll(".av79-gateway").length,join:join?.getAttribute("href"),tour:!!tour,rail:[r.left,r.right,r.width],buttons:[j?.height,t?.height],overflow:document.documentElement.scrollWidth>innerWidth+1,text:rail.textContent}})()');
   if(!entry.hero||!entry.featured||entry.gateways!==4||!entry.join?.endsWith("/join")||!entry.tour||entry.overflow||entry.rail[0]<-1||entry.rail[1]>width+1||entry.buttons.some(h=>h<44)||!entry.text?.includes("Explore first. Join when ready."))
    throw Error("V111_HOME_FIRST_CONTACT_"+label+":"+JSON.stringify(entry));
+  if(width<=420){
+   const action=await evaluate('(()=>{const head=document.querySelector(".av79-now .av79-section-heading"),link=head?.querySelector("a"),title=head?.querySelector("h2"),r=link?.getBoundingClientRect(),h=title?.getBoundingClientRect();return {width:r?.width,top:r?.top,titleBottom:h?.bottom,right:r?.right}})()');
+   if(!action.width||action.width<82||action.top<action.titleBottom-1||action.right>width+1)
+    throw Error("V111_HOME_NARROW_SECTION_ACTION_"+label+":"+JSON.stringify(action));
+  }
   await evaluate('document.querySelector(".av111-onramp")?.scrollIntoView({block:"center",behavior:"instant"})');
   await screenshot("first-contact-"+label);
   evidence.push({label,width,height,entry});

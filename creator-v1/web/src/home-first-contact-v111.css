@@ -165,3 +165,17 @@
     border:1px solid ButtonText;
   }
 }
+/* Long section headings and small action links must not compete for the
+   same 320px row or hide behind the persistent IREN corner companion. */
+@media(max-width:420px){
+  .av9-shell .av79-home .av79-section-heading{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:5px;
+  }
+  .av9-shell .av79-home .av79-section-heading>a{
+    min-height:44px;
+    padding:6px 0;
+    font-size:11px;
+  }
+}
