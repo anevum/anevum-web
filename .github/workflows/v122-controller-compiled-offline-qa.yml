@@ -1,0 +1,58 @@
+name: ANEVUM V122 Source-Locked V116 Controller Bundle QA
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v122-controller-compiled-offline-qa.yml'
+      - 'creator-v1/ops/v122-controller-compiled-package.mjs'
+      - 'creator-v1/test/v122-controller-compiled-package.test.mjs'
+      - 'docs/production/v122-v116-controller-compiled-20261023.md'
+permissions:
+  contents: read
+concurrency:
+  group: v122-controller-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  compile-and-seal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ''
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned dependencies, no lifecycle scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Validate reviewed source bytes, complete module closure, and V116 pin
+        run: |
+          set -euo pipefail
+          test -z "$CLOUDFLARE_API_TOKEN"
+          node --check creator-v1/ops/v122-controller-compiled-package.mjs
+          node --test creator-v1/test/v122-controller-compiled-package.test.mjs creator-v1/test/v121-controller-bundle.test.mjs creator-v1/test/v120-protected-acceptance.test.mjs
+          node creator-v1/ops/v122-controller-compiled-package.mjs prepare "$RUNNER_TEMP/v122-controller"
+      - name: Compile complete private controller WITHOUT an API token
+        run: |
+          set -euo pipefail
+          npx --no-install wrangler versions upload --dry-run --no-upload-source-maps --config "$RUNNER_TEMP/v122-controller/offline.synthetic.json" --outdir "$RUNNER_TEMP/v122-compiled"
+          test -s "$RUNNER_TEMP/v122-compiled/api.js"
+          node --check "$RUNNER_TEMP/v122-compiled/api.js"
+          node creator-v1/ops/v122-controller-compiled-package.mjs seal "$RUNNER_TEMP/v122-compiled/api.js" "$RUNNER_TEMP/v122-controller"
+          test -s "$RUNNER_TEMP/v122-controller/package-manifest.json"
+          test -s "$RUNNER_TEMP/v122-controller/worker-bundle/api.js"
+          echo 'V122_SOURCE_LOCKED_COMPLETE_OFFLINE_BUNDLE=PASS; CLOUDFLARE_WRITE=NONE' >> "$GITHUB_STEP_SUMMARY"
+      - name: Retain reviewed offline package only
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v122-v116-controller-offline-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/v122-controller/worker-bundle/api.js
+            ${{ runner.temp }}/v122-controller/package-manifest.json
+            ${{ runner.temp }}/v122-controller/plan.json
+          retention-days: 14
+          if-no-files-found: error
+# Not a provider upload or deployment. Live controller bindings are never read here.

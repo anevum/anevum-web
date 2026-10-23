@@ -1,0 +1,32 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {sourceGraph,syntheticSnapshot,offlineConfig,REVIEWED_SOURCE,MAIN,WORKER,BUNDLE_NAME} from '../ops/v122-controller-compiled-package.mjs';
+import {TARGET_AUTH,controllerConfig} from '../ops/v121-controller-bundle.mjs';
+test('V122 authentic V121 source graph is complete and pinned',()=>{
+ const g=sourceGraph();
+ assert.equal(g.sourceBaselineSha,REVIEWED_SOURCE);
+ assert.ok(g.sources.length>=9);
+ assert.equal(g.sources[0].path.startsWith('site/alpha/v003/'),true);
+ assert.ok(g.sources.some(x=>x.path===MAIN));
+ assert.ok(g.sources.some(x=>x.path.endsWith('/ui.mjs')));
+ assert.ok(g.sources.some(x=>x.path.endsWith('/resource-service.mjs')));
+ assert.match(g.graphSha256,/^[0-9a-f]{64}$/);
+ assert.equal(WORKER,'anevum-package-alpha-v003-control');
+ assert.equal(BUNDLE_NAME,'api.js');
+});
+test('V122 synthetic plan preserves real binding names and V116 pin without secrets',()=>{
+ const snapshot=syntheticSnapshot(),config=offlineConfig();
+ assert.equal(snapshot.controllerPrivate.resources.bindings.length,13);
+ assert.equal(config.vars.PACKAGE_CANONICAL_AUTH_VERSION,TARGET_AUTH);
+ assert.equal(config.vars.PACKAGE_PUBLIC_PUBLISH_ENABLED,'false');
+ assert.equal(config.vars.PACKAGE_NATIVE_STUDIO_ENABLED,'true');
+ assert.equal(config.services[0].service,'anevum-apex-prelaunch-gateway');
+ assert.equal(config.d1_databases.length,1);
+ assert.equal(config.r2_buckets.length,1);
+ assert.equal(config.preview_urls,false);
+ assert.deepEqual(config.routes,[]);
+ assert.equal(JSON.stringify(config).includes('PACKAGE_PREVIEW_KEY'),false);
+ const changed=structuredClone(snapshot);
+ changed.controllerPrivate.resources.bindings.find(x=>x.name==='PACKAGE_PUBLIC_PUBLISH_ENABLED').text='true';
+ assert.throws(()=>controllerConfig(changed));
+});
