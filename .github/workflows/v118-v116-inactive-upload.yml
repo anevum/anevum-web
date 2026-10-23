@@ -1,4 +1,4 @@
-name: ANEVUM V118 V116 Immutable Inactive Upload
+name: ANEVUM V119 V116 API-Origin Inactive Upload
 on:
   pull_request:
     paths:
@@ -6,13 +6,14 @@ on:
       - 'creator-v1/ops/apex-inactive-upload-v118.mjs'
       - 'creator-v1/test/apex-inactive-upload-v118.test.mjs'
       - 'docs/production/v118-v116-inactive-upload-20261023.md'
+      - 'docs/production/v119-api-origin-conflict-20261023.md'
   push:
-    branches: ['ops/v118-v116-inactive-upload-20261023-001']
+    branches: ['ops/v119-v116-inactive-upload-reconciliation-20261023-001']
 permissions:
   contents: read
   actions: read
 concurrency:
-  group: anevum-v118-v116-inactive
+  group: anevum-v119-v116-inactive
   cancel-in-progress: false
 jobs:
   verify-inactive:
@@ -56,8 +57,8 @@ jobs:
       github.repository == 'anevum/anevum-web' &&
       github.event_name == 'push' &&
       github.actor == 'anevum' &&
-      github.ref == 'refs/heads/ops/v118-v116-inactive-upload-20261023-001' &&
-      github.event.head_commit.message == 'release(v118): upload V116 Worker immutable inactive only'
+      github.ref == 'refs/heads/ops/v119-v116-inactive-upload-reconciliation-20261023-001' &&
+      github.event.head_commit.message == 'release(v119): reconcile API-origin V116 Worker immutable inactive only'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -92,7 +93,7 @@ jobs:
         run: |
           set -euo pipefail
           test -s "$RUNNER_TEMP/v118-before.json"
-          npx --no-install wrangler versions upload --no-bundle --no-upload-source-maps --keep-vars --strict --config "$RUNNER_TEMP/v118-upload.json" --message 'V118 V116 immutable inactive; frontend a3c94b3ebdc6103347e76f8a5234904978da67e3; package 356112a94575c988c28efcd9ab083277c3838b80; no deployment'
+          npx --no-install wrangler versions upload --no-bundle --no-upload-source-maps --keep-vars --config "$RUNNER_TEMP/v118-upload.json" --message 'V118 V116 immutable inactive; frontend a3c94b3ebdc6103347e76f8a5234904978da67e3; package 356112a94575c988c28efcd9ab083277c3838b80; no deployment'
       - name: Verify deployed traffic unchanged and upload version exact
         env:
           GH_TOKEN: ${{ github.token }}

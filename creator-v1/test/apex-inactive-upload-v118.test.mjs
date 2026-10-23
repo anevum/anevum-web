@@ -9,3 +9,17 @@ test('Inactive new version leaves rollback/public traffic unchanged',()=>{const 
 test('Preflight fails on baseline/route/setting drift',()=>{for(const mutate of [s=>s.deployment.id='changed',s=>s.routes.pop(),s=>s.settings.bindings.pop(),s=>s.exposure.enabled=true]){const s=fixture();mutate(s);assert.throws(()=>verifyBefore(s));}});
 test('Postflight fails on traffic/secret/database change and unexpected upload count',()=>{for(const mutate of [f=>f.s.deployment.versions[0].percentage=99,f=>f.candidate.resources.bindings.pop(),f=>f.candidate.resources.bindings.find(x=>x.type==='d1').database_id='wrong',f=>f.s.versions.push({id:'22222222-3333-4444-8555-666666666666'}),f=>f.candidate.annotations['workers/message']='wrong']){const f=after();mutate(f);assert.throws(()=>verifyAfter(f.prior,f.s,f.candidate));}});
 test('No production write API in verifier',async()=>{const {readFileSync}=await import('node:fs');const source=readFileSync(new URL('../ops/apex-inactive-upload-v118.mjs',import.meta.url),'utf8');assert.doesNotMatch(source,/method:['"](?:POST|PUT|PATCH|DELETE)['"]|\bwrangler\s+deploy\b/);assert.match(source,/allowPublicDeployment:false/);});
+
+test('V119 API-origin recovery requires marker, fresh readback and inactive-only upload',async()=>{
+ const {readFileSync}=await import('node:fs');
+ const source=readFileSync(new URL('../ops/apex-inactive-upload-v118.mjs',import.meta.url),'utf8');
+ const workflow=readFileSync(new URL('../../.github/workflows/v118-v116-inactive-upload.yml',import.meta.url),'utf8');
+ assert.ok(source.includes('release(v119): reconcile API-origin V116 Worker immutable inactive only'));
+ assert.ok(source.includes('.github/release-approvals/v119-v116-inactive-upload.json'));
+ assert.ok(source.includes('allowPublicDeployment:false'));
+ assert.ok(source.includes('assert.equal(now.deployment,before.deployment'));
+ assert.ok(workflow.includes('wrangler versions upload --no-bundle --no-upload-source-maps --keep-vars --config'));
+ assert.ok(!workflow.includes('--keep-vars --strict'));
+ assert.ok(!workflow.includes('wrangler deploy '));
+ assert.ok(workflow.includes("github.actor == 'anevum'"));
+});
