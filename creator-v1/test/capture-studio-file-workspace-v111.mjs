@@ -142,7 +142,15 @@ try{
  await until(()=>evaluate('document.body.textContent.includes("Signal Atlas")'),'Seed project record');
  await click('.csw-file');
  await until(()=>visible('[data-studio-file-tree="v111"]'),'Private source workspace');
- await until(()=>evaluate('document.querySelector(".csf-tree-body")?.textContent.includes("No files yet")'),'Empty server-authorized file tree');
+ try{
+  await until(()=>evaluate('document.querySelector(".csf-tree-body")?.textContent.includes("No files yet")'),'Empty server-authorized file tree',7000);
+ }catch(error){
+  const state=await evaluate('(()=>({workspace:document.querySelector(".csw-work")?.textContent.slice(0,1400),tree:document.querySelector(".csf-tree")?.textContent.slice(0,1200),error:document.querySelector(".csf-error")?.textContent,loading:document.querySelector(".csf-tree-body [role=status]")?.textContent,host:document.querySelector(".csw-file-host:not([hidden])")?.innerHTML.slice(0,900)}))()');
+  const evidence={state,requests:requests.filter(url=>url.includes('/studio/')),fileNodes:fileNodes.size};
+  console.error('W111_EMPTY_TREE_DIAGNOSTICS',JSON.stringify(evidence));
+  writeFileSync(join(output,'empty-tree-debug.json'),JSON.stringify(evidence,null,2));
+  throw error;
+ }
  await click('.csf-tree-actions button[title="Create folder"]');
  await until(()=>visible('.csf-create input'),'Create folder form');
  assert.equal(await setValue('.csf-create input','Scenes'),'Scenes');
