@@ -7,6 +7,9 @@ import {
  type NativeProject
 } from '../lib/native-creator-v095';
 import {workbenchAlphaEnabled} from '../lib/workbench-alpha';
+import {StudioNewProjectDialog} from './StudioNewProjectDialogV110';
+import {AgentDockV110} from './AgentDockV110';
+const agentDockEnabled=import.meta.env.VITE_CREATOR_AGENT_DOCK_V110==='true';
 import {readWithDeadline} from '../../../shared/read-deadline.mjs';
 import './creator-workspace-v109.css';
 
@@ -75,6 +78,8 @@ function MemberWorkspace({memberId}:{memberId:string}){
  const [notice,setNotice]=useState('');
  const [explorerOpen,setExplorerOpen]=useState(true);
  const [inspectorOpen,setInspectorOpen]=useState(true);
+ const [agentOpen,setAgentOpen]=useState(false);
+ const [newProjectOpen,setNewProjectOpen]=useState(false);
  const [diagnosticsOpen,setDiagnosticsOpen]=useState(false);
  const searchRef=useRef<HTMLInputElement>(null);
  const initialDeepLink=useRef(false);
@@ -202,14 +207,16 @@ function MemberWorkspace({memberId}:{memberId:string}){
    </div></div>
    <div className="csw-toolbar" aria-label="Workspace controls">
     <button type="button" className="csw-action csw-subtle" onClick={()=>setExplorerOpen(v=>!v)} aria-pressed={explorerOpen}>Explorer</button>
-    <button type="button" className="csw-action csw-subtle" onClick={()=>setInspectorOpen(v=>!v)} aria-pressed={inspectorOpen}>Inspector</button>
-    <Link to="/studio/new" className="csw-action csw-strong">+ New project</Link>
+    <button type="button" className="csw-action csw-subtle" onClick={()=>{setInspectorOpen(v=>!v);setAgentOpen(false);}} aria-pressed={inspectorOpen}>Inspector</button>
+    {agentDockEnabled&&<button type="button" className="csw-action csw-subtle" onClick={()=>{setAgentOpen(v=>!v);setInspectorOpen(false);}} aria-pressed={agentOpen}>OpenAI Agent</button>}
+    <button type="button" className="csw-action csw-strong" disabled={recordLoading||!!recordError}
+     onClick={()=>setNewProjectOpen(true)}>+ New project</button>
     <Link to="/studio" className="csw-action csw-subtle">Studio home</Link>
    </div>
   </header>
   <div className="csw-boundary"><strong>PRIVATE / VERIFIED MEMBER</strong><span>Project work is saved in its existing editor. Tabs are a workspace preference, not publication.</span></div>
   {notice&&<p role="alert" className="csw-message">{notice}</p>}
-  <div className={'csw-layout'+(!explorerOpen?' csw-no-explorer':'')+(!inspectorOpen?' csw-no-inspector':'')}>
+  <div className={'csw-layout'+(!explorerOpen?' csw-no-explorer':'')+(!inspectorOpen&&!agentOpen?' csw-no-inspector':'')}>
    {explorerOpen&&<aside className="csw-explorer" aria-label="Project explorer">
     <div className="csw-pane-header"><h2>Explorer</h2><span>PRIVATE</span></div>
     <label className="csw-search"><span>Find your projects</span><input ref={searchRef} type="search" maxLength={100}
@@ -273,7 +280,8 @@ function MemberWorkspace({memberId}:{memberId:string}){
       <h2>Make something worth exploring.</h2>
       <p>Open existing creations, keep multiple projects ready, and move directly into their authenticated editors and playtests.</p>
       <div className="csw-welcome-actions">
-       <Link className="csw-action csw-strong" to="/studio/new">Create a project record</Link>
+       <button type="button" className="csw-action csw-strong" disabled={recordLoading||!!recordError}
+        onClick={()=>setNewProjectOpen(true)}>Create a private project</button>
        {canUpload&&<Link className="csw-action" to="/studio/packages/new">Prepare playable build</Link>}
        <Link className="csw-action" to="/studio/alpha">Open local HTML lab</Link>
       </div>
@@ -288,6 +296,9 @@ function MemberWorkspace({memberId}:{memberId:string}){
        {selected.build&&buildPlayable(selected.build)&&<Link className="csw-action" to={nativePlayerPath(selected.id,true)}>Private playtest ↗</Link>}
        {selected.build&&selected.build.status==='published'&&selected.build.liveReleaseId&&
         <Link className="csw-action" to={nativePlayerPath(selected.id)}>Play public release ↗</Link>}
+       {agentDockEnabled&&<button type="button" className="csw-action" onClick={()=>{setAgentOpen(true);setInspectorOpen(false);}}>
+        Prepare an OpenAI task brief
+       </button>}
       </div>
       <div className="csw-document-grid">
        <div><span>Project type</span><strong>{tidy(selected.category)}</strong></div>
@@ -323,7 +334,20 @@ function MemberWorkspace({memberId}:{memberId:string}){
        'Use the existing upload/release flow to review exact builds. A private playtest is not a public release.'}</p></div>
     </>}
    </aside>}
+   {agentDockEnabled&&agentOpen&&<AgentDockV110 project={selected} onClose={()=>{setAgentOpen(false);setInspectorOpen(true);}}/>}
   </div>
-  <footer className="csw-statusbar"><span>CONTINUANCE INSTITUTE / STUDIO WORKSPACE V109</span><span>Private · No automatic publication</span></footer>
+  {newProjectOpen&&<StudioNewProjectDialog onClose={()=>setNewProjectOpen(false)} onCreated={project=>{
+    setRecords(old=>[project,...old.filter(p=>p.id!==project.id)]);
+    if(tabs.length<MAX_TABS){
+     const k='record:'+project.id;
+     setTabs(old=>old.some(tab=>keyOf(tab)===k)?old:[...old,{kind:'record',id:project.id,pinned:false}]);
+     setActiveKey(k);
+     setNotice('Private project created. Continue in the existing editor when ready.');
+    }else{
+     setNotice('Private project created. Close a document tab to open it from Explorer.');
+    }
+    setNewProjectOpen(false);
+   }}/>}
+  <footer className="csw-statusbar"><span>CONTINUANCE INSTITUTE / STUDIO WORKSPACE V109{agentDockEnabled?' + V110':''}</span><span>Private · No automatic publication</span></footer>
  </section>;
 }
