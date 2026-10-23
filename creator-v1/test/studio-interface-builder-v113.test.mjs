@@ -65,7 +65,10 @@ test('V113 component capacity and aggregate byte cap fail before saving',()=>{
  const pages=[...doc.pages];
  while(pages.length<=LIMITS.pages)pages.push(page('More pages'));
  assert.throws(()=>validate({...doc,pages}),/Unsupported interface/);
- const mutated=JSON.parse(JSON.stringify(doc));for(const p of mutated.pages){for(const c of p.components)c.text='X'.repeat(700);}
+ const mutated=JSON.parse(JSON.stringify(doc));
+ for(const pg of mutated.pages)for(const c of pg.components)c.text='X'.repeat(790);
+ while(mutated.pages[0].components.length<24){const item=component('paragraph','Full component','X'.repeat(790));mutated.pages[0].components.push(item);}
+ while(mutated.pages[1].components.length<24){const item=component('paragraph','Full component','X'.repeat(790));mutated.pages[1].components.push(item);}
  assert.throws(()=>encode(mutated),/28 KiB/);
 });
 test('V113 is a default-off document projection of the existing V111 save API',()=>{
