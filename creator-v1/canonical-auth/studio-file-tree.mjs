@@ -1,5 +1,5 @@
 // Private W111 Studio file-tree service. Source-only; no auto-migration or publish.
-const BASE='/api/v1/member/studio/projects/';
+import {boundedText} from './request-body.mjs';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const JSON_HEADERS={'cache-control':'private, no-store','content-type':'application/json; charset=utf-8','x-content-type-options':'nosniff'};
 const respond=(data,status=200)=>Response.json(data,{status,headers:JSON_HEADERS});
@@ -10,7 +10,6 @@ const nodeOut=(r,withContent=true)=>({id:r.id,projectId:r.project_id,parentId:r.
  ...(withContent?{content:r.kind==='text'?r.content:null}:{}),revision:r.revision,deletedAt:r.deleted_at,updatedAt:r.updated_at});
 const read=async(db,sql,params=[])=>db.prepare(sql).bind(...params).first();
 const list=async(db,sql,params=[])=>(await db.prepare(sql).bind(...params).all()).results;
-const write=async(db,sql,params=[])=>db.prepare(sql).bind(...params).run();
 const nameOf=s=>{
  if(typeof s!=='string'||s.length>80||s.trim().length<1||s!==s.trim()||
  CTRL.test(s)||/[\\/]/.test(s)||s==='.'||s==='..'||s.endsWith('.')||s.startsWith('.'))throw Error('Invalid file name');
@@ -18,7 +17,7 @@ const nameOf=s=>{
 };
 async function payload(req){
  if(!/^application\/json(?:\s*;|$)/i.test(req.headers.get('content-type')||''))return null;
- const data=await req.text();if(data.length>36000)return null;
+ const data=await boundedText(req,36000);if(data===null)return null;
  try{const value=JSON.parse(data);return value&&typeof value==='object'&&!Array.isArray(value)?value:null;}catch{return null;}
 }
 export async function studioFileTree(req,env,user,now=Math.floor(Date.now()/1000)){
@@ -50,11 +49,15 @@ export async function studioFileTree(req,env,user,now=Math.floor(Date.now()/1000
    if(!fields(input,['clientRequestId','parentId','name','kind'])||!UUID.test(input.clientRequestId)||!['folder','text'].includes(input.kind)||input.parentId!==null&&!UUID.test(input.parentId))return fail(400,'Invalid file request');
    let name;try{name=nameOf(input.name);}catch(e){return fail(422,e.message);}
    const previous=await read(db,'SELECT * FROM member_studio_file_nodes WHERE project_id=? AND user_id=? AND client_request_id=?',[projectId,user.id,input.clientRequestId]);
-   if(previous)return respond({node:nodeOut(previous),replayed:true});
+   if(previous){
+    if(previous.name!==name||previous.kind!==input.kind||previous.parent_id!==input.parentId)
+     return fail(409,'This request ID already belongs to a different file creation');
+    return respond({node:nodeOut(previous),replayed:true});
+   }
    const parent=input.parentId?await read(db,"SELECT id FROM member_studio_file_nodes WHERE id=? AND user_id=? AND project_id=? AND kind='folder' AND deleted_at IS NULL",[input.parentId,user.id,projectId]):true;
    if(!parent)return fail(409,'Parent folder unavailable');
-   const result=await db.prepare('INSERT INTO member_studio_file_nodes(id,project_id,user_id,parent_id,parent_key,name,name_key,kind,content,client_request_id,created_at,updated_at) SELECT ?,?,?,?,?,?,?,?,\'\',?,?,? WHERE (SELECT count(*) FROM member_studio_file_nodes WHERE user_id=? AND project_id=?)<100 ON CONFLICT DO NOTHING RETURNING *')
-    .bind(crypto.randomUUID(),projectId,user.id,input.parentId,input.parentId||'',name,name.toLowerCase(),input.kind,input.clientRequestId,now,now,user.id,projectId).all();
+   const result=await db.prepare('INSERT INTO member_studio_file_nodes(id,project_id,user_id,parent_id,parent_key,name,name_key,kind,content,client_request_id,created_at,updated_at) SELECT ?,?,?,?,?,?,?,?,\'\',?,?,? WHERE (SELECT count(*) FROM member_studio_file_nodes WHERE user_id=? AND project_id=? AND deleted_at IS NULL)<100 AND (SELECT count(*) FROM member_studio_file_nodes WHERE user_id=? AND project_id=?)<250 ON CONFLICT DO NOTHING RETURNING *')
+    .bind(crypto.randomUUID(),projectId,user.id,input.parentId,input.parentId||'',name,name.toLowerCase(),input.kind,input.clientRequestId,now,now,user.id,projectId,user.id,projectId).all();
    if(result.results.length)return respond({node:nodeOut(result.results[0]),replayed:false},201);
    return fail(409,'File limit or name conflict');
   }
@@ -70,6 +73,10 @@ export async function studioFileTree(req,env,user,now=Math.floor(Date.now()/1000
     const descendants=await list(db,'WITH RECURSIVE descendants(id) AS (SELECT id FROM member_studio_file_nodes WHERE id=? UNION ALL SELECT n.id FROM member_studio_file_nodes n JOIN descendants d ON n.parent_id=d.id) SELECT id FROM descendants LIMIT 101',[nodeId]);
     if(descendants.some(x=>x.id===input.parentId))return fail(409,'Cannot move a folder into its descendant');
    }
+  }
+  if(!input.deleted){
+   const conflict=await read(db,'SELECT id FROM member_studio_file_nodes WHERE project_id=? AND parent_key=? AND name_key=? AND deleted_at IS NULL AND id<>? LIMIT 1',[projectId,input.parentId||'',name.toLowerCase(),nodeId]);
+   if(conflict)return fail(409,'A sibling file or folder already uses that name');
   }
   if(input.deleted&&node.kind==='folder'){
    const children=await read(db,'SELECT id FROM member_studio_file_nodes WHERE parent_id=? AND deleted_at IS NULL LIMIT 1',[nodeId]);
