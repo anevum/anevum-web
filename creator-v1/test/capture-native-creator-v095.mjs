@@ -156,12 +156,35 @@ try{
   assert.equal(await evaluate('document.querySelector(".av095-player iframe").src'),original);
   await assertPlayerContinues('Full width');
   await evaluate('HTMLElement.prototype.requestFullscreen=undefined');const before=await evaluate('document.querySelector(".av095-player iframe").src');
-  await clickText('Expand player');await until(()=>visible('.av095-player--expanded'),'Immersive fallback');await screenshot('native-iphone-expand-320');
+  await clickText('Expand player');await until(()=>visible('.av095-player--expanded'),'Immersive fallback');
+  await until(()=>evaluate('document.activeElement?.classList.contains("av095-exit")&&document.body.classList.contains("av095-expanded")'),'Immersive exit focus and body lock');
+  const immersive=await evaluate(`(()=>{
+   const stage=document.querySelector('.av095-player'),frame=stage.querySelector('iframe'),exit=stage.querySelector('.av095-exit');
+   const r=stage.getBoundingClientRect(),f=frame.getBoundingClientRect(),b=exit?.getBoundingClientRect();
+   return {topLayer:stage.matches(':popover-open'),sameWidth:Math.abs(r.width-innerWidth)<=2,
+    sameHeight:Math.abs(r.height-innerHeight)<=2,origin:Math.abs(r.left)<=2&&Math.abs(r.top)<=2,
+    frameFill:Math.abs(f.width-r.width)<=2&&Math.abs(f.height-r.height)<=2,
+    exitVisible:!!b&&b.width>40&&b.height>=44&&b.left>=0&&b.right<=innerWidth+1&&b.top>=0&&b.bottom<=innerHeight+1,
+    exitOnTop:!!b&&document.elementFromPoint(b.left+b.width/2,b.top+b.height/2)===exit,
+    focusOnExit:document.activeElement===exit,bodyLocked:document.body.classList.contains('av095-expanded')};
+  })()`);
+  assert.deepEqual(immersive,{topLayer:true,sameWidth:true,sameHeight:true,origin:true,frameFill:true,
+   exitVisible:true,exitOnTop:true,focusOnExit:true,bodyLocked:true},'iPhone fallback must occupy the top layer, preserve viewport size and expose Exit');
+  await screenshot('native-iphone-expand-320');
   assert.equal(await evaluate('document.querySelector(".av095-player iframe").src'),before);
   await assertPlayerContinues('Expand player');
   await clickText('Exit player');await until(async()=>!await visible('.av095-player--expanded'),'Exit player');
   assert.equal(await evaluate('document.activeElement.textContent'),'Expand player');
+  assert.equal(await evaluate('document.querySelector(".av095-player").hasAttribute("popover")'),false,
+   'Exiting the immersive player must clear top-layer state');
+  assert.equal(await evaluate('document.body.classList.contains("av095-expanded")'),false,
+   'Exiting the immersive player must unlock the page');
   await assertPlayerContinues('Exit player');
+  await clickText('Expand player');await until(()=>visible('.av095-player--expanded'),'Reopened immersive player');
+  await evaluate('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}))');
+  await until(()=>evaluate('!document.querySelector(".av095-player--expanded")&&!document.body.classList.contains("av095-expanded")'),'Escape restores player page');
+  assert.equal(await evaluate('document.querySelector(".av095-player").hasAttribute("popover")'),false,'Escape must release browser top layer');
+  await assertPlayerContinues('Escape player');
   assert.equal(await runtimeEvaluate('document.getElementById("reset").click();document.getElementById("count").textContent'),'0');
   results.push({case:'same-frame-iphone-expand-exit',statePreserved:true,passed:true});
   const sandbox=await evaluate('document.querySelector(".av095-player iframe").getAttribute("sandbox")');assert.equal(sandbox,'allow-scripts allow-pointer-lock');

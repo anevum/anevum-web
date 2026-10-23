@@ -17,6 +17,15 @@ export function IsolatedProjectViewport({title,src,releaseId,preview,expiresAt,o
  const [frameState,setFrameState]=useState<PlayerFrameState>('opening');
  const [viewport,setViewport]=useState<PlayerViewport>('fit');
  const [expired,setExpired]=useState(false);
+ // A manual popover elevates the same iframe into the browser's top layer on
+ // iPhone Safari. Fixed positioning alone can be clipped by transformed shells.
+ function closeImmersivePopover(){
+  const node=stage.current;
+  if(!node?.hasAttribute('popover'))return;
+  try{if(node.matches(':popover-open'))node.hidePopover();}catch{/* The fallback must still be closable on older engines. */}
+  node.removeAttribute('popover');
+ }
+
  const valid=validRuntimeURL(src,releaseId,preview);
  // Cross-origin iframe load events cannot prove that an untrusted game is running.
  // Keep startup state explicitly informational, never a publication/health verdict.
@@ -46,16 +55,24 @@ export function IsolatedProjectViewport({title,src,releaseId,preview,expiresAt,o
   if(!expanded)return;
   const overflow=document.body.style.overflow;
   document.body.style.overflow='hidden';document.body.classList.add('av095-expanded');
-  const escape=(e:KeyboardEvent)=>{if(e.key==='Escape')setExpanded(false);};
+  const escape=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.preventDefault();setExpanded(false);}};
   document.addEventListener('keydown',escape);
-  return()=>{document.body.style.overflow=overflow;document.body.classList.remove('av095-expanded');document.removeEventListener('keydown',escape);expandButton.current?.focus();};
+  return()=>{closeImmersivePopover();document.body.style.overflow=overflow;document.body.classList.remove('av095-expanded');document.removeEventListener('keydown',escape);expandButton.current?.focus();};
  },[expanded]);
  async function expand(){
   try{if(stage.current?.requestFullscreen){await stage.current.requestFullscreen();return;}}catch{/* iPhone fallback retains the same frame. */}
+  // Prefer the native top layer, preserving the loaded sandboxed iframe and
+  // its in-memory game state. Never portal/remount creator execution here.
+  const node=stage.current;
+  if(node&&typeof node.showPopover==='function'){
+   node.setAttribute('popover','manual');
+   try{node.showPopover();}catch{node.removeAttribute('popover');}
+  }
   setExpanded(true);
  }
  async function exit(){
   if(document.fullscreenElement===stage.current)await document.exitFullscreen().catch(()=>{});
+  closeImmersivePopover();
   setExpanded(false);expandButton.current?.focus();
  }
  return <section className="av095-player-shell" aria-label="ANEVUM project player">
