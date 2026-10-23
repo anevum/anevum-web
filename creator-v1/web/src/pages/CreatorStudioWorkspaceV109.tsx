@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useRef,useState} from 'react';
+import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {Link} from 'react-router-dom';
 import {canonicalAuthClient} from '../lib/canonical-beta';
 import {studioList,type StudioProject} from '../lib/canonical-studio';
@@ -9,6 +9,8 @@ import {
 import {workbenchAlphaEnabled} from '../lib/workbench-alpha';
 import {StudioNewProjectDialog} from './StudioNewProjectDialogV110';
 import {AgentDockV110} from './AgentDockV110';
+import {StudioFileWorkspaceV111} from './StudioFileWorkspaceV111';
+import {studioFileTreeEnabled} from '../lib/studio-files-v111';
 const agentDockEnabled=import.meta.env.VITE_CREATOR_AGENT_DOCK_V110==='true';
 import {readWithDeadline} from '../../../shared/read-deadline.mjs';
 import './creator-workspace-v109.css';
@@ -81,6 +83,8 @@ function MemberWorkspace({memberId}:{memberId:string}){
  const [inspectorOpen,setInspectorOpen]=useState(true);
  const [agentOpen,setAgentOpen]=useState(false);
  const [newProjectOpen,setNewProjectOpen]=useState(false);
+ const [dirtyProjectIds,setDirtyProjectIds]=useState<Set<string>>(()=>new Set());
+ const [visitedRecordIds,setVisitedRecordIds]=useState<Set<string>>(()=>new Set());
  const [diagnosticsOpen,setDiagnosticsOpen]=useState(false);
  const searchRef=useRef<HTMLInputElement>(null);
  const initialDeepLink=useRef(false);
@@ -141,6 +145,17 @@ function MemberWorkspace({memberId}:{memberId:string}){
  const matching=(item:WorkspaceItem)=>!search||[item.title,item.summary,item.category].some(v=>v.toLocaleLowerCase().includes(search));
  const recordItems=items.filter(item=>item.kind==='record'&&matching(item));
  const buildItems=items.filter(item=>item.kind==='build'&&matching(item));
+ const trackDirty=useCallback((projectId:string,dirty:boolean)=>{
+  setDirtyProjectIds(old=>{
+   if(old.has(projectId)===dirty)return old;
+   const next=new Set(old);if(dirty)next.add(projectId);else next.delete(projectId);
+   return next;
+  });
+ },[]);
+ useEffect(()=>{
+  if(!studioFileTreeEnabled||selected?.kind!=='record')return;
+  setVisitedRecordIds(old=>old.has(selected.id)?old:new Set([...old,selected.id]));
+ },[selected?.kind,selected?.id]);
 
  useEffect(()=>{
   // No storage-restored tab can render unless it is confirmed in this
@@ -171,6 +186,8 @@ function MemberWorkspace({memberId}:{memberId:string}){
   setActiveKey(k);setNotice('');
  }
  function close(k:string){
+  if(k.startsWith('record:')&&dirtyProjectIds.has(k.slice(7))&&
+     !window.confirm('This project has unsaved source edits. Discard them and close the project tab?'))return;
   if(tabs.find(tab=>keyOf(tab)===k)?.pinned){setNotice('Unpin the document before closing it.');return;}
   const next=tabs.filter(tab=>keyOf(tab)!==k);
   setTabs(next);
@@ -286,8 +303,8 @@ function MemberWorkspace({memberId}:{memberId:string}){
        {canUpload&&<Link className="csw-action" to="/studio/packages/new">Prepare playable build</Link>}
        <Link className="csw-action" to="/studio/alpha">Open local HTML lab</Link>
       </div>
-      <small>This first workspace slice does not yet provide persistent folders, a source-code editor or general app execution.</small>
-     </div>:<div className="csw-document" role="tabpanel">
+      <small>{studioFileTreeEnabled?'Your private source files are available in opened project records when the server pilot is enabled. Untrusted code is never executed here.':'This first workspace slice does not yet provide persistent folders, a source-code editor or general app execution.'}</small>
+     </div>:(!studioFileTreeEnabled||selected.kind==='build')?<div className="csw-document" role="tabpanel">
       <p className="csw-eyebrow">{selected.kind==='record'?'PROJECT RECORD / CANONICAL':'PLAYABLE BUILD / ISOLATED RELEASE'}</p>
       <h2>{selected.title}</h2>
       <p className="csw-summary">{selected.summary||'No description has been recorded yet.'}</p>
@@ -311,11 +328,20 @@ function MemberWorkspace({memberId}:{memberId:string}){
        <p>The full project editor, uploader, private player and independent publication review still own their respective data and actions. This shell does not silently convert a record into an executable app.</p>
        {workbenchAlphaEnabled&&<p>Invited members can also use the <Link to="/studio/workbench">private branching-story Workbench</Link>, subject to its existing access controls.</p>}
       </div>
-     </div>}
+     </div>:null}
+     {studioFileTreeEnabled&&visibleTabs.filter(t=>t.kind==='record'&&visitedRecordIds.has(t.id)).map(tab=>{
+      const item=allowed.get(keyOf(tab));
+      if(!item)return null;
+      const show=selected?.kind==='record'&&selected.id===tab.id;
+      return <div className="csw-file-host" hidden={!show} key={tab.id} aria-hidden={!show}>
+       <StudioFileWorkspaceV111 projectId={tab.id} projectTitle={item.title} status={item.status}
+        visible={show} onDirtyChange={dirty=>trackDirty(tab.id,dirty)}/>
+      </div>;
+     })}
     </section>
     <div className="csw-bottom">
      <button type="button" onClick={()=>setDiagnosticsOpen(v=>!v)} aria-expanded={diagnosticsOpen}>Workspace diagnostics {diagnosticsOpen?'▾':'▸'}</button>
-     <span>{tabs.length} / {MAX_TABS} tabs · Drag to reorder · Alt + arrows on a tab</span>
+     <span>{tabs.length} / {MAX_TABS} tabs · Drag to reorder · Alt + arrows on a tab{dirtyProjectIds.size?' · Unsaved project source: '+dirtyProjectIds.size:''}</span>
     </div>
     {diagnosticsOpen&&<section className="csw-diagnostics" aria-label="Workspace diagnostics">
      <p><strong>Private records:</strong> {recordLoading?'checking':recordError?'unavailable':records.length+' loaded'}</p>
