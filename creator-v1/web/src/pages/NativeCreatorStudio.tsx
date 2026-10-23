@@ -55,7 +55,7 @@ export function NativeStudioNavigation({capabilities}:{capabilities?:NativeSessi
  },[location.pathname,permissions?.canUpload,permissions?.canReview]);
  if(!nativeCreatorEnabled)return null;
  return <nav ref={navRef} className="st-nav av095-navigation" aria-label="Creator Studio navigation">
-  <NavLink to="/studio" end>Studio home</NavLink><NavLink to="/studio/packages" end>Playable builds</NavLink><NavLink to="/studio/records" end>Project records</NavLink>
+  <NavLink to="/studio" end>Studio home</NavLink>{import.meta.env.VITE_CREATOR_WORKSPACE_V109==='true'&&<NavLink to="/studio/workspace" end>Workspace</NavLink>}<NavLink to="/studio/packages" end>Playable builds</NavLink><NavLink to="/studio/records" end>Project records</NavLink>
   {(permissions?.canUpload)&&<NavLink to="/studio/packages/new">Upload build</NavLink>}
   {permissions?.canReview&&<NavLink to="/studio/packages/review">Package review</NavLink>}
   <NavLink to="/studio/new" end>New private record</NavLink><NavLink to="/discover">Discover</NavLink>
