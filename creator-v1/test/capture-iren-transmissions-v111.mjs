@@ -62,8 +62,14 @@ try{
  await evaluate(trigger("qa-reduced","Reduced motion preview"));
  await until(()=>evaluate('!!document.querySelector(".ir111-transmission")'));
  const reduced=await evaluate('(()=>{const e=document.querySelector(".ir111-transmission"),s=getComputedStyle(e);return {media:matchMedia("(prefers-reduced-motion: reduce)").matches,transition:s.transitionDuration,animation:s.animationName,animationDuration:s.animationDuration}})()');
- const durationZero=value=>value.split(",").every(item=>Number.parseFloat(item)===0);
- if(!reduced.media||!durationZero(reduced.transition)||!durationZero(reduced.animationDuration)||reduced.animation!=="none")
+ // The existing accessibility baseline normalizes zero duration to 0.01ms
+ // in computed styles. A <=1ms upper bound is effectively instantaneous
+ // while still rejecting any meaningful transition or keyframe animation.
+ const durationReduced=value=>value.split(",").every(item=>{
+  const seconds=Number.parseFloat(item);
+  return Number.isFinite(seconds)&&seconds>=0&&seconds<=0.001;
+ });
+ if(!reduced.media||!durationReduced(reduced.transition)||!durationReduced(reduced.animationDuration)||reduced.animation!=="none")
   throw Error("V111_REDUCED_MOTION_NOT_HONORED "+JSON.stringify(reduced));
  await evaluate('document.querySelector(".ir111-transmission button").click()');
  await until(()=>evaluate('!document.querySelector(".ir111-transmission")'));
