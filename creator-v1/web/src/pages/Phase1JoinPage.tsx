@@ -217,10 +217,11 @@ export function Phase1JoinPage(){
        {ready&&!emailReady&&<p role="status" className="join-service-note">Email sign-in is temporarily unavailable.</p>}
        
        {emailReady&&(!requiresEmailVerification||Boolean(sessionEmail))&&<form className="av12-email-entry" onSubmit={event=>void submitEmail(event)}>
-         <label htmlFor="anevum-email">{codeSent?"CODE SENT TO":"YOUR EMAIL ADDRESS"}</label>
-         <input id="anevum-email" type="email" autoComplete="email" placeholder="you@example.com" value={emailForVerification}
+         <label htmlFor={codeSent?undefined:"anevum-email"}>{codeSent?"CODE SENT TO":"YOUR EMAIL ADDRESS"}</label>
+         <input id="anevum-email" className={codeSent?"av125-sent-email-input":undefined} type="email" autoComplete="email" placeholder="you@example.com" value={emailForVerification}
            onChange={event=>{setEmail(event.target.value);if(codeSent)resetCode();}}
            disabled={busy||codeSent} readOnly={requiresEmailVerification} required maxLength={254}/>
+         {codeSent&&<output className="av125-sent-email-recipient" aria-label="Email address receiving the verification code">{emailForVerification}</output>}
          {codeSent&&<>
            <label htmlFor="anevum-otp">Verification code</label>
            <input id="anevum-otp" ref={otpRef} type="text" inputMode="numeric" autoComplete="one-time-code"

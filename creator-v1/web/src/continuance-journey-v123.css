@@ -253,3 +253,13 @@
  .av12-phase1-join .av124-join-progress>span.is-complete,
  .av12-phase1-join .av124-step-context{color:CanvasText!important}
 }
+
+/* V125 short-screen address receipt: do not visually truncate a disabled email input. */
+.av12-phase1-join .av12-email-entry #anevum-email.av125-sent-email-input{display:none}
+.av12-phase1-join .av125-sent-email-recipient{
+ display:block;box-sizing:border-box;width:100%;min-height:54px;
+ padding:13px 16px;border:1px solid #c0929294;border-radius:15px;
+ background:#151622;color:#fff5e7;box-shadow:inset 0 1px 4px #0007;
+ font:500 16px/1.45 var(--av9-body,system-ui,sans-serif);
+ overflow-wrap:anywhere;word-break:break-word;white-space:normal
+}
