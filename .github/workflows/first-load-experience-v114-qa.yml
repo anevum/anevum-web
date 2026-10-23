@@ -42,6 +42,8 @@ jobs:
           node --test test/first-load-experience-v114.test.mjs
           node --test test/iren-first-contact-v092.test.mjs
           node --test test/home-first-contact-v111.test.mjs
+          npm run test:iren-v080
+          npm run test:iren-v088
           npm run test:ux-v079
       - name: Capture actual React first view and guide on three browser sizes
         shell: bash
