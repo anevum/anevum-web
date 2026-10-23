@@ -232,7 +232,7 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
        onClick={()=>{setCreateKind('text');setCreateName('scene.anevum');setMessage('');}}>+ Scene</button>}
       {studioInterfaceBuilderEnabled&&<button type="button" title="Create visual interface" aria-label="Create visual interface"
        disabled={!canEdit||loading||!!error||!!pendingCreate}
-       onClick={()=>{setCreateKind('text');setCreateName('interface.ui.anevum');setMessage('');}}>+ Interface</button>
+       onClick={()=>{setCreateKind('text');setCreateName('interface.ui.anevum');setMessage('');}}>+ Interface</button>}
      </div>
     </div>
     <div className="csf-tree-body">
