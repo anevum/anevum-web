@@ -203,11 +203,9 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   const closePanelRef=useRef<HTMLButtonElement>(null);
   const panelInvokerRef=useRef<HTMLElement|null>(null);
   const restorePanelFocus=useCallback(()=>{
-    window.requestAnimationFrame(()=>{
-      const invoker=panelInvokerRef.current;
-      if(invoker?.isConnected)invoker.focus({preventScroll:true});
-      else dockRef.current?.focus({preventScroll:true});
-    });
+    const invoker=panelInvokerRef.current;
+    if(invoker?.isConnected)invoker.focus({preventScroll:true});
+    else dockRef.current?.focus({preventScroll:true});
   },[]);
   // Only explicit user actions move keyboard focus into the panel.
   // The unsolicited first visit must never steal focus from page content.
