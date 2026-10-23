@@ -88,9 +88,13 @@ try{
     one:document.querySelectorAll(".ir87-scout").length===1,
     station:document.querySelector(".ir88-station")?.textContent,
     help:!!document.querySelector(".ir80-topic-grid"),
+    title:document.querySelector(".ir87-panel h2")?.textContent,
+    intro:document.querySelector(".ir87-panel .ir80-subtitle")?.textContent,
     route:location.pathname
    }))()`);
-   if(!iren.one||!iren.station?.includes("REGISTRATION")||!iren.help||!iren.route.endsWith("/join"))
+   if(!iren.one||!iren.station?.includes("REGISTRATION")||!iren.help||
+    !iren.title?.includes("Joining ANEVUM")||!iren.intro?.includes("eight-digit code")||
+    !iren.route.endsWith("/join"))
     throw Error("V117_IREN_JOIN_"+JSON.stringify(iren));
    await screenshot("join-iren-phone");
    await evaluate('document.querySelector(".ir80-help-head .ir80-icon-button")?.click()');
