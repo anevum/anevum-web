@@ -32,6 +32,17 @@ function setup({enabled=true,migrated=true}={}){
 }
 const request=(name,kind='text',parentId=null)=>({clientRequestId:crypto.randomUUID(),name,kind,parentId});
 const patch=(node,extra={})=>({revision:node.revision,name:node.name,parentId:node.parentId,content:node.content||'',deleted:false,...extra});
+test('W111 browser client uses the same canonical UUID shape as actual Studio project IDs',()=>{
+ const client=readFileSync(new URL('../web/src/lib/studio-files-v111.ts',import.meta.url),'utf8');
+ const raw=client.match(/const UUID=\/(.+)\/;/)?.[1];
+ assert.ok(raw,'Typed source client must declare an ID validator');
+ const pattern=new RegExp(raw);
+ for(const id of [ID,'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','cccccccc-cccc-4ccc-8ccc-ccccccccccc1']){
+  assert.equal(pattern.test(id),true,'V4 private project and source IDs must be accepted: '+id);
+ }
+ assert.equal(pattern.test('record:'+ID),false,'UI tab identifiers are not filesystem IDs');
+ assert.equal(pattern.test('aaa'),false);
+});
 test('W111 is default-OFF and schema-gated before authentication',async()=>{
  const a=setup({enabled:false});try{assert.equal((await a.call()).status,404);}finally{a.close();}
  const b=setup({migrated:false});try{assert.equal((await b.call()).status,503);}finally{b.close();}
