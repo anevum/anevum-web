@@ -74,6 +74,10 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
 
  const folderOptions=useMemo(()=>nodes.filter(n=>n.kind==='folder').sort((a,b)=>pathLabel(a,nodes).localeCompare(pathLabel(b,nodes))),[nodes]);
  const selectedFolderNode=nodes.find(n=>n.id===selectedFolder)||null;
+ function confirmLeavingFolder(){
+  return !selectedFolder||!dirtyIds.has('folder:'+selectedFolder)||
+   window.confirm('Discard unsaved folder property changes before navigating away?');
+ }
  function upsert(node:StudioFileNode){
   setNodes(old=>[...old.filter(n=>n.id!==node.id),node].filter(n=>n.deletedAt===null));
  }
@@ -84,7 +88,7 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
   });
  }
  function openFile(node:StudioFileNode){
-  if(selectedFolder&&dirtyIds.has('folder:'+selectedFolder)&&!window.confirm('Discard unsaved folder changes?'))return;
+  if(!confirmLeavingFolder())return;
   setMessage('');
   setSelectedFolder(node.parentId);
   if(openIds.includes(node.id)){setActiveId(node.id);return;}
@@ -99,13 +103,13 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
   if(activeId===id)setActiveId(next.at(-1)||null);
  }
  function closeAllFiles(){
+  if(!confirmLeavingFolder())return;
   if(openIds.some(id=>dirtyIds.has(id))&&!window.confirm('Discard unsaved source edits in all open file tabs?'))return;
   setOpenIds([]);setActiveId(null);
   setDirtyIds(old=>new Set([...old].filter(id=>id.startsWith('folder:'))));
  }
  function selectFolder(node:StudioFileNode){
-  if(selectedFolder&&selectedFolder!==node.id&&dirtyIds.has('folder:'+selectedFolder)&&
-   !window.confirm('Discard unsaved folder changes?'))return;
+  if(selectedFolder!==node.id&&!confirmLeavingFolder())return;
   setSelectedFolder(node.id);setActiveId(null);
   setExpanded(old=>{
    const next=new Set(old);next.has(node.id)?next.delete(node.id):next.add(node.id);return next;
@@ -123,7 +127,7 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
     onClick={()=>folder?selectFolder(node):openFile(node)}>
     <span aria-hidden="true" className="csf-node-icon">{folder?(isOpen?'▾':'▸'):'◇'}</span>
     <span className="csf-node-name">{node.name}</span>
-    {dirtyIds.has(node.id)&&<span className="csf-unsaved-marker" aria-label="Unsaved edits">●</span>}
+    {(dirtyIds.has(node.id)||dirtyIds.has('folder:'+node.id))&&<span className="csf-unsaved-marker" aria-label="Unsaved edits">●</span>}
    </button>;
    if(!folder||!isOpen)return[row];
    const childTrail=new Set(ancestry);childTrail.add(node.id);
@@ -183,7 +187,7 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
     <div className="csf-tree-body">
      <button type="button" className={'csf-tree-row csf-tree-root'+(selectedFolder===null&&!activeId?' is-active':'')}
       onClick={()=>{
-       if(selectedFolder&&dirtyIds.has('folder:'+selectedFolder)&&!window.confirm('Discard unsaved folder changes?'))return;
+       if(!confirmLeavingFolder())return;
        setSelectedFolder(null);setActiveId(null);
       }}> 
       <span aria-hidden="true">⌂</span><span className="csf-node-name">{projectTitle} / root</span></button>
@@ -215,7 +219,10 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
      {openIds.map(id=>{
       const node=nodes.find(n=>n.id===id);
       return <div className={'csf-tab'+(id===activeId?' is-active':'')} key={id}>
-       <button type="button" aria-current={id===activeId?'page':undefined} onClick={()=>setActiveId(id)}>
+       <button type="button" aria-current={id===activeId?'page':undefined} onClick={()=>{
+        if(!confirmLeavingFolder())return;
+        setActiveId(id);
+       }}>
         {node?.name||'Unavailable file'}{dirtyIds.has(id)?' ●':''}</button>
        <button className="csf-tab-close" type="button" aria-label={'Close '+(node?.name||'source file')}
         onClick={()=>closeFile(id)}>×</button>
@@ -239,7 +246,7 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
 
    </main>
   </div>
-  <footer className="csf-status">PRIVATE DRAFT · {dirtyIds.size} UNSAVED FILE{dirtyIds.size===1?'':'S'} · NO AUTO-PUBLISH · FILE TREE {studioFileTreeEnabled?'ENABLED':'INACTIVE'}{!visible?' · BACKGROUND TAB':''}</footer>
+  <footer className="csf-status">PRIVATE DRAFT · {dirtyIds.size} UNSAVED CHANGE{dirtyIds.size===1?'':'S'} · NO AUTO-PUBLISH · FILE TREE {studioFileTreeEnabled?'ENABLED':'INACTIVE'}{!visible?' · BACKGROUND TAB':''}</footer>
  </section>;
 }
 
@@ -385,6 +392,11 @@ function SourceEditorV111({projectId,nodeId,nodes,editable:canEdit,onDirty,onUpd
    <label className="csf-source-label" htmlFor={'source-'+nodeId}>Text source</label>
    <textarea id={'source-'+nodeId} className="csf-source" spellCheck={false}
     value={content} disabled={!canEdit||busy} onChange={e=>setContent(e.target.value)}
+    onKeyDown={e=>{
+     if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){
+      e.preventDefault();if(canEdit&&!busy&&dirty)void save();
+     }
+    }}
     aria-describedby={'source-status-'+nodeId}/>
    <div className="csf-editor-foot" id={'source-status-'+nodeId}>
     <span>{byteCount.toLocaleString()} / 32,768 UTF-8 bytes</span>
