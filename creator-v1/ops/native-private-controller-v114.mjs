@@ -12,7 +12,7 @@ export const APEX='anevum-apex-prelaunch-gateway';
 export const TARGET='86dc4b9d-4020-432a-8a15-e65606f31316';
 export const PUBLIC='9851d9c5-6270-4c4e-a70e-1b82451b170d';
 export const PRIOR='2720ea00-2030-43ff-84fc-8d6faf4d003b';
-export const BRANCH='ops/private-controller-v114-permission-fix-20261022-001';
+export const BRANCH='ops/private-controller-v114-baseline-fix-20261022-001';
 export const MESSAGE='release(v114): upload private controller inactive only';
 export const NOTE='V114 private controller only; canonical AUTH '+TARGET+'; executable publishing OFF; source '+SOURCE;
 const ROOT='/accounts/'+ACCOUNT+'/workers/scripts/'+WORKER;
@@ -34,7 +34,7 @@ export function plannedBindings(bs){
 }
 export function configuration(bs,main){
  const b=plannedBindings(bs);
- return {name:WORKER,account_id:ACCOUNT,main,compatibility_date:'2026-10-18',workers_dev:false,preview_urls:false,routes:[],upload_source_maps:false,
+ return {name:WORKER,account_id:ACCOUNT,main,compatibility_date:'2026-10-18',workers_dev:true,preview_urls:false,routes:[],upload_source_maps:false,
   vars:vars(b),services:b.filter(x=>x.type==='service').map(x=>({binding:x.name,service:x.service,environment:x.environment})),
   d1_databases:b.filter(x=>x.type==='d1').map(x=>({binding:x.name,database_id:x.database_id})),
   r2_buckets:b.filter(x=>x.type==='r2_bucket').map(x=>({binding:x.name,bucket_name:x.bucket_name}))};
@@ -45,7 +45,8 @@ export function verifyBaseline(s){
  assert.equal(s.live.id,PUBLIC);assert.equal(s.prior.id,PRIOR);
  assert.equal(s.live.resources.script.etag,'1bc2d678522f7eac92a273648db5cb9e36afac88a7813be53cdeebb08d5139e4');
  assert.equal(s.prior.resources.script.etag,'dfae79f4474d1dc905b82d44c647725aabe52b7e8fe0b219bf1c777289ec9870');
- assert.deepEqual(s.exposure,{enabled:false,previews_enabled:false});
+ // Preserve the existing GET-only inspection hostname; it is not a login domain.
+ assert.deepEqual(s.exposure,{enabled:true,previews_enabled:false});
  assert.equal(hash(stable(normalized(s.settings.bindings))),hash(stable(normalized(s.prior.resources.bindings))),'Latest binding baseline changed');
  assert.equal(s.settings.compatibility_date,'2026-10-18');
  assert.equal(s.routes.length,40);

@@ -21,7 +21,7 @@ function fixture(){
  return {deployment:{id:'6306bbbf-7954-4f91-850c-9b0edf89dca4',versions:[{version_id:PUBLIC,percentage:100},{version_id:PRIOR,percentage:0}]},
  live:{id:PUBLIC,resources:{script:{etag:'1bc2d678522f7eac92a273648db5cb9e36afac88a7813be53cdeebb08d5139e4'}}},
  prior:{id:PRIOR,resources:{bindings:bs,script:{etag:'dfae79f4474d1dc905b82d44c647725aabe52b7e8fe0b219bf1c777289ec9870'},script_runtime:runtime}},
- settings:{compatibility_date:'2026-10-18',bindings:structuredClone(bs)},exposure:{enabled:false,previews_enabled:false},
+ settings:{compatibility_date:'2026-10-18',bindings:structuredClone(bs)},exposure:{enabled:true,previews_enabled:false},
  routes:Array.from({length:40},(_,i)=>({pattern:'synthetic/'+i,script:'synthetic-worker'})),versions:[{id:PUBLIC},{id:PRIOR}],
  apexDeployment:{id:'6372ee35-8c7d-468c-9486-536d9c4b0a0d',versions:[{version_id:'93cc7f07-cf39-457e-af69-c9f6f4c02d25',percentage:100},{version_id:'6f26f0cc-6eee-483d-9f07-329e45bd5e76',percentage:0}]},
  apex:{id:TARGET,resources:{script:{etag:'bb20187a20e7174cfdf7451c24f4274a00bfa2c3e2570d29d9f9b3018682acc2'},bindings:[{name:'CANONICAL_CREATOR_UPLOADS_ENABLED',type:'plain_text',text:'false'},{name:'CANONICAL_XP_TEST_ENABLED',type:'plain_text',text:'false'}]}},
@@ -32,11 +32,11 @@ test('private plan repairs only AUTH pin and disables executable publishing, pre
  const bs=fixtureBindings(),planned=plannedBindings(bs),changed=planned.filter((x,i)=>JSON.stringify(x)!==JSON.stringify(bs[i])).map(x=>x.name);
  assert.deepEqual(changed,['PACKAGE_CANONICAL_AUTH_VERSION','PACKAGE_PUBLIC_PUBLISH_ENABLED']);
  assert.equal(planned.find(x=>x.name==='PACKAGE_CANONICAL_AUTH_VERSION').text,TARGET);
- const c=configuration(bs,'/repo/api.mjs');assert.equal(c.vars.PACKAGE_PUBLIC_PUBLISH_ENABLED,'false');assert.equal(c.vars.PACKAGE_NATIVE_STUDIO_ENABLED,'true');assert.ok(!('PACKAGE_PREVIEW_KEY' in c.vars));assert.deepEqual(c.routes,[]);assert.equal(c.workers_dev,false);assert.equal(c.preview_urls,false);
+ const c=configuration(bs,'/repo/api.mjs');assert.equal(c.vars.PACKAGE_PUBLIC_PUBLISH_ENABLED,'false');assert.equal(c.vars.PACKAGE_NATIVE_STUDIO_ENABLED,'true');assert.ok(!('PACKAGE_PREVIEW_KEY' in c.vars));assert.deepEqual(c.routes,[]);assert.equal(c.workers_dev,true);assert.equal(c.preview_urls,false);
 });
 test('current expired-entry baseline is accepted without declaring pin eligibility',()=>assert.equal(verifyBaseline(fixture()),true));
 test('deployment, exposed previews, stale apex and changed entry conditions block preflight',()=>{
- for(const mutate of [s=>s.deployment.versions[0].percentage=99,s=>s.exposure.enabled=true,s=>s.apex.id='wrong',s=>s.entryDeployment.versions[0].version_id='other']){const s=fixture();mutate(s);assert.throws(()=>verifyBaseline(s));}
+ for(const mutate of [s=>s.deployment.versions[0].percentage=99,s=>s.exposure.enabled=false,s=>s.exposure.previews_enabled=true,s=>s.apex.id='wrong',s=>s.entryDeployment.versions[0].version_id='other']){const s=fixture();mutate(s);assert.throws(()=>verifyBaseline(s));}
 });
 test('one new undeployed candidate preserves live controller and keeps publishing off',()=>{const f=uploaded(),r=verifyUploaded(f.before,f.after,f.candidate,'a'.repeat(64));assert.equal(r.routingRulesetVerifiedByUploadJob,false);assert.equal(r.publicPublishingEnabled,false);assert.equal(r.newVersionTrafficPercent,0);assert.equal(r.authPinEligibleInCurrentApexDeployment,false);assert.equal(r.productionReleaseApproved,false);});
 test('secret loss, role expansion, incorrect pin and publishing activation are rejected',()=>{
