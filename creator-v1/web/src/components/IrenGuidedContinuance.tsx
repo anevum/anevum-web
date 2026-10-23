@@ -761,8 +761,10 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
             ?"Welcome, explorer. I'm IREN. Shall we find our way?"
             :mood==="think"?"Let me check the field notes. Here's what I know."
             :station.line}</p>
-          <h2>Where to next?</h2>
-          <p className="ir80-subtitle">Explore ANEVUM or take a guided site tour.</p>
+          <h2>{pathname==="/join"?"Joining ANEVUM":"Where to next?"}</h2>
+          <p className="ir80-subtitle">{pathname==="/join"
+            ?"Choose an available sign-in method. For email, enter the newest eight-digit code in the form—never share it with IREN."
+            :"Explore ANEVUM or take a guided site tour."}</p>
           <div className="ir80-topic-grid" role="group" aria-label="Help topics">
             {topics.map(topic=><button key={topic.id} type="button" aria-pressed={topic.id===activeTopic}
               onClick={()=>{setActiveTopic(topic.id);setMood("think")}}>{topic.label}</button>)}
