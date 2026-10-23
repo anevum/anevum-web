@@ -1,0 +1,66 @@
+/* Creator Studio V112 — Continuance Institute scene composer.
+   Pure text, human-authored choices, and no arbitrary DOM injection/execution. */
+.csx-root{background:#0b1b2d;border:1px solid #38556f;border-radius:9px;
+ color:#e4f3fa;padding:16px;min-width:0;display:grid;gap:14px;width:100%}
+.csx-top{display:flex;gap:14px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
+.csx-top h3{margin:5px 0;font-size:1.08rem;line-height:1.2}
+.csx-muted{font-size:.7rem;line-height:1.55;color:#b4cada;margin:5px 0}
+.csx-actions{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+.csx-root button,.csx-root select,.csx-root textarea{font:inherit;box-sizing:border-box}
+.csx-actions button,.csx-add button,.csx-preview-nav button{background:#1d344a;color:#e7f3fc;
+ border:1px solid #56748a;min-height:42px;padding:9px 12px;border-radius:6px;font-size:.73rem}
+.csx-actions button[aria-pressed=true]{background:#1c4a5b;border-color:#95d9e3;box-shadow:inset 0 -2px 0 #9edce9}
+.csx-root button:disabled{cursor:not-allowed;opacity:.55}
+.csx-root button:focus-visible,.csx-root select:focus-visible,.csx-root textarea:focus-visible{outline:2px solid #a2e9ee;outline-offset:2px}
+.csx-layout{display:grid;grid-template-columns:minmax(170px,235px) minmax(0,1fr);gap:12px;min-height:330px}
+.csx-block-tree{border:1px solid #3a536a;border-radius:7px;background:#10253a;padding:12px;min-width:0}
+.csx-block-tree h4,.csx-inspector h4{font-size:.84rem;margin:0 0 10px}
+.csx-block-tree ol{list-style:none;margin:0 0 14px;padding:0;display:grid;gap:5px;max-height:340px;overflow:auto}
+.csx-block-tree li button{width:100%;min-height:48px;border:1px solid transparent;text-align:left;display:grid;
+ gap:3px;background:#162f43;color:#e4edf7;border-radius:6px;padding:8px}
+.csx-block-tree li button:hover{background:#21455a}
+.csx-block-tree li button.is-selected{background:#285266;border-color:#8ecdd9}
+.csx-block-tree li span{font-size:.62rem;color:#a9d8e6;text-transform:uppercase;letter-spacing:.08em}
+.csx-block-tree li strong{font-size:.74rem;line-height:1.3;overflow-wrap:anywhere}
+.csx-add,.csx-inspector{display:grid;align-content:start;gap:9px}
+.csx-inspector{border:1px solid #3a536a;background:#112238;border-radius:7px;padding:16px;min-width:0}
+.csx-inspector label,.csx-add label,.csx-preview-nav label{display:block;font-size:.72rem;font-weight:600}
+.csx-inspector textarea,.csx-inspector select,.csx-add select,.csx-preview-nav select{
+ width:100%;min-width:0;max-width:100%;border:1px solid #5b8299;border-radius:6px;
+ background:#0b1c2c;color:#f5fbff;padding:10px;font-size:.82rem;line-height:1.5}
+.csx-inspector textarea{resize:vertical;min-height:135px}
+.csx-inspector select,.csx-add select,.csx-preview-nav select{min-height:44px}
+.csx-block-actions{margin-top:8px}
+.csx-actions .csx-danger{border-color:#af7986;color:#ffd5e0}
+.csx-preview{border:1px solid #3e6580;background:radial-gradient(ellipse at 50% 0%,#203d59,#0b1628 75%);
+ border-radius:8px;padding:clamp(15px,3vw,27px);display:grid;gap:16px;min-height:315px;align-content:start}
+.csx-preview-nav{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.csx-preview-nav select{width:auto;max-width:100%;flex:1;min-width:160px}
+.csx-preview-contents{display:grid;gap:12px;align-content:center;max-width:680px;min-height:140px}
+.csx-preview-contents h4{font-size:clamp(1rem,2vw,1.45rem);line-height:1.35;margin:0;letter-spacing:.015em}
+.csx-preview-contents p{font-size:.86rem;line-height:1.7;white-space:pre-wrap;margin:0;color:#dcebf7;overflow-wrap:anywhere}
+.csx-preview-contents hr{width:100%;border:0;border-top:1px solid #648298;margin:7px 0}
+.csx-preview-choice{min-height:46px;text-align:left;border:1px solid #6b9baf;
+ border-radius:7px;background:#17394f;color:#d8f8ff;padding:12px 15px;font-size:.82rem;line-height:1.5}
+.csx-preview-choice:hover:not(:disabled){background:#26566c;border-color:#a7e7ed}
+.csx-foot{font-size:.69rem;color:#bed3e3;border-top:1px solid #34556e;padding-top:12px;line-height:1.6}
+.csx-empty{display:grid;justify-items:start;align-content:center;gap:10px;min-height:260px}
+.csx-empty h3{font-size:1.14rem;margin:0}
+.csx-empty>p:not(.csw-eyebrow){font-size:.83rem;line-height:1.6;color:#c8d8e6;max-width:560px}
+.csf-presentation-switch{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.csf-presentation-switch button{min-height:44px;min-width:100px;border:1px solid #536e85;
+ background:#20374c;color:#e4f3fb;border-radius:6px;font-size:.73rem;padding:8px 13px}
+.csf-presentation-switch button[aria-pressed=true]{border-color:#8dd2dc;background:#21546a}
+@media(max-width:1050px){.csx-layout{grid-template-columns:minmax(150px,195px) minmax(0,1fr)}}
+@media(max-width:730px){
+ .csx-root{padding:12px}
+ .csx-layout{display:flex;flex-direction:column}
+ .csx-block-tree ol{max-height:180px}
+ .csx-inspector{padding:12px}
+ .csx-top .csx-actions{width:100%}
+ .csx-top .csx-actions button{flex:1}
+ .csx-preview-nav{align-items:stretch;flex-direction:column}
+ .csx-preview-nav select{flex:none;min-width:0;width:100%}
+ .csx-preview-contents{min-height:120px}
+}
+@media(prefers-reduced-motion:reduce){.csx-root *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
