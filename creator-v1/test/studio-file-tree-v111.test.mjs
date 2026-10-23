@@ -7,16 +7,21 @@ const ORIGIN='https://a.anevum.com',ID='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const ROOT='/api/v1/member/studio/projects/'+ID+'/files';
 const migration=n=>readFileSync(new URL('../canonical-auth/migrations/'+n,import.meta.url),'utf8');
 const person={id:'w111-alice',name:'Alice',email:'alice@fixture.invalid',emailVerified:true};
+const other={id:'w111-bob',name:'Bob',email:'bob@fixture.invalid',emailVerified:true};
 function setup({enabled=true,migrated=true}={}){
  const f=fixture();f.db.exec(migration('0008_private_creator_studio.sql'));f.db.exec(migration('0009_private_review_snapshots.sql'));
  if(migrated)f.db.exec(migration('0014_private_studio_file_tree.sql'));
- f.db.prepare('INSERT INTO "user"(id,name,email,emailVerified,createdAt,updatedAt) VALUES(?,?,?,1,100,100)').run(person.id,person.name,person.email);
- f.db.prepare('INSERT INTO member_creator_profiles(user_id,handle,display_name,created_at,updated_at) VALUES(?,?,?,?,?)').run(person.id,'alice','Alice',100,100);
+ for(const member of [person,other]){
+  f.db.prepare('INSERT INTO "user"(id,name,email,emailVerified,createdAt,updatedAt) VALUES(?,?,?,1,100,100)').run(member.id,member.name,member.email);
+  f.db.prepare('INSERT INTO member_creator_profiles(user_id,handle,display_name,created_at,updated_at) VALUES(?,?,?,?,?)').run(member.id,member.name.toLowerCase(),member.name,100,100);
+ }
  f.db.prepare("INSERT INTO member_studio_projects(id,user_id,client_request_id,slug,title,summary,description,category,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)")
   .run(ID,person.id,'cccccccc-cccc-4ccc-8ccc-cccccccccccc','w111-project','W111 Project','Private test project for source files','','games',100,100);
  const env={...f.env,CANONICAL_CREATOR_STUDIO_ENABLED:'true',CANONICAL_STUDIO_FILE_TREE_V111:enabled?'true':'false'};
  const worker=createCanonicalStageWorker({authFactory:()=>({api:{getSession:async({headers})=>{
-  const cookie=headers.get('cookie')||'';return cookie.includes('w111-alice')?{user:person,session:{id:'synthetic'}}:null;
+  const cookie=headers.get('cookie')||'';
+  const found=cookie.includes('w111-alice')?person:cookie.includes('w111-bob')?other:null;
+  return found?{user:found,session:{id:'synthetic'}}:null;
  }}})});
  async function call(path=ROOT,method='GET',body,who='alice',headers={}){
   const h=new Headers({'accept':'application/json',...(who?{cookie:'__Secure-anevum_can_stage.session_token=w111-'+who}:{}),
@@ -38,6 +43,7 @@ test('W111 folder/text creation, replay, rename, version and optimistic conflict
   const folderRequest=request('Scenes','folder');
   const first=await s.call(ROOT,'POST',folderRequest);assert.equal(first.status,201,await first.clone().text());const folder=(await first.json()).node;
   const replay=await s.call(ROOT,'POST',folderRequest);assert.equal((await replay.json()).replayed,true);
+  assert.equal((await s.call(ROOT,'POST',{...folderRequest,name:'Different'})).status,409,'Creation idempotency must not silently accept changed request data');
   const created=await s.call(ROOT,'POST',request('intro.md','text',folder.id));assert.equal(created.status,201);
   const file=(await created.json()).node;
   assert.equal((await s.call(ROOT,'POST',request('INTRO.md','text',folder.id))).status,409);
@@ -46,7 +52,9 @@ test('W111 folder/text creation, replay, rename, version and optimistic conflict
   assert.equal((await s.call(ROOT+'/'+file.id,'PATCH',patch(file,{content:'Stale'}))).status,409);
   const versions=await(await s.call(ROOT+'/'+file.id+'/versions')).json();assert.deepEqual(versions.versions.map(v=>v.revision),[2,1]);
   assert.equal((await s.call(ROOT+'/'+folder.id,'PATCH',patch(folder,{deleted:true}))).status,409);
-  assert.equal((await s.call(ROOT,'GET',undefined,'bob')).status,401);
+  assert.equal((await s.call(ROOT,'GET',undefined,'bob')).status,404,'Other verified member cannot list private files');
+  assert.equal((await s.call(ROOT+'/'+file.id,'GET',undefined,'bob')).status,404);
+  assert.equal((await s.call(ROOT+'/'+file.id,'PATCH',patch(file,{content:'Unauthorized'}),'bob')).status,404);
   const listed=await(await s.call()).json();assert.equal(listed.nodes.length,2);
   assert.equal('content' in listed.nodes.find(x=>x.id===file.id),false,'Private file bodies must not appear in a folder listing');
   const individual=await(await s.call(ROOT+'/'+file.id)).json();
@@ -62,5 +70,36 @@ test('W111 disallows cycles, path traversal and edits during review',async()=>{
   s.f.db.prepare("UPDATE member_studio_projects SET status='pending_review' WHERE id=?").run(ID);
   assert.equal((await s.call(ROOT,'POST',request('New'))).status,409);
   assert.equal((await s.call(ROOT+'/'+b.id,'PATCH',patch(b,{name:'Changed'}))).status,409);
+ }finally{s.close();}
+});
+
+test('W111 sibling rename collision is explicit, and parallel revision saves never overwrite',async()=>{
+ const s=setup();try{
+  const one=(await(await s.call(ROOT,'POST',request('intro.md'))).json()).node;
+  const two=(await(await s.call(ROOT,'POST',request('other.md'))).json()).node;
+  assert.equal((await s.call(ROOT+'/'+two.id,'PATCH',patch(two,{name:one.name}))).status,409);
+  const results=await Promise.all([
+   s.call(ROOT+'/'+one.id,'PATCH',patch(one,{content:'First writer'})),
+   s.call(ROOT+'/'+one.id,'PATCH',patch(one,{content:'Second writer'}))
+  ]);
+  assert.deepEqual(results.map(x=>x.status).sort(),[200,409]);
+  const after=(await(await s.call(ROOT+'/'+one.id)).json()).node;
+  assert.equal(after.revision,2);
+  assert.ok(['First writer','Second writer'].includes(after.content));
+ }finally{s.close();}
+});
+test('W111 aggregate source quota fails closed without corrupting previous content',async()=>{
+ const s=setup();try{
+  for(let i=0;i<17;i++){
+   const created=await s.call(ROOT,'POST',request('file-'+i+'.md'));
+   assert.equal(created.status,201,'File created '+i);
+   const node=(await created.json()).node;
+   const saved=await s.call(ROOT+'/'+node.id,'PATCH',patch(node,{content:'X'.repeat(32768)}));
+   assert.equal(saved.status,i===16?413:200,'Aggregate quota enforced at file '+i);
+   if(i===16){
+    const current=(await(await s.call(ROOT+'/'+node.id)).json()).node;
+    assert.equal(current.content,'','Failed save leaves original file untouched');
+   }
+  }
  }finally{s.close();}
 });
