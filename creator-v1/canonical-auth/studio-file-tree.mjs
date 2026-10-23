@@ -6,8 +6,8 @@ const respond=(data,status=200)=>Response.json(data,{status,headers:JSON_HEADERS
 const fail=(status,error)=>respond({error},status);
 const fields=(value,keys)=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).sort().join(',')===keys.slice().sort().join(',');
 const CTRL=/[\u0000-\u001f\u007f]/;
-const nodeOut=r=>({id:r.id,projectId:r.project_id,parentId:r.parent_id,name:r.name,kind:r.kind,
- content:r.kind==='text'?r.content:null,revision:r.revision,deletedAt:r.deleted_at,updatedAt:r.updated_at});
+const nodeOut=(r,withContent=true)=>({id:r.id,projectId:r.project_id,parentId:r.parent_id,name:r.name,kind:r.kind,
+ ...(withContent?{content:r.kind==='text'?r.content:null}:{}),revision:r.revision,deletedAt:r.deleted_at,updatedAt:r.updated_at});
 const read=async(db,sql,params=[])=>db.prepare(sql).bind(...params).first();
 const list=async(db,sql,params=[])=>(await db.prepare(sql).bind(...params).all()).results;
 const write=async(db,sql,params=[])=>db.prepare(sql).bind(...params).run();
@@ -41,8 +41,8 @@ export async function studioFileTree(req,env,user,now=Math.floor(Date.now()/1000
     return respond({versions});
    }
    if(nodeId)return respond({node:nodeOut(node)});
-   const nodes=await list(db,'SELECT * FROM member_studio_file_nodes WHERE user_id=? AND project_id=? ORDER BY parent_key,name_key LIMIT 200',[user.id,projectId]);
-   return respond({nodes:nodes.map(nodeOut),maxNodes:100,maxContentBytes:32768});
+   const nodes=await list(db,'SELECT id,project_id,parent_id,name,kind,revision,deleted_at,updated_at FROM member_studio_file_nodes WHERE user_id=? AND project_id=? AND deleted_at IS NULL ORDER BY parent_key,name_key LIMIT 101',[user.id,projectId]);
+   return respond({nodes:nodes.map(r=>nodeOut(r,false)),maxNodes:100,maxContentBytes:32768,maxProjectContentBytes:524288});
   }
   if(!['draft','changes_requested'].includes(project.status))return fail(409,'Withdraw project from review before editing files');
   const input=await payload(req);if(!input)return fail(400,'Invalid JSON request');
@@ -75,8 +75,11 @@ export async function studioFileTree(req,env,user,now=Math.floor(Date.now()/1000
    const children=await read(db,'SELECT id FROM member_studio_file_nodes WHERE parent_id=? AND deleted_at IS NULL LIMIT 1',[nodeId]);
    if(children)return fail(409,'Empty folder before deleting it');
   }
-  const result=await db.prepare('UPDATE member_studio_file_nodes SET name=?,name_key=?,parent_id=?,parent_key=?,content=?,deleted_at=?,revision=revision+1,updated_at=? WHERE id=? AND project_id=? AND user_id=? AND revision=? AND deleted_at IS NULL RETURNING *')
-   .bind(name,name.toLowerCase(),input.parentId,input.parentId||'',input.content,input.deleted?now:null,now,nodeId,projectId,user.id,input.revision).all();
+  const total=await read(db,'SELECT COALESCE(SUM(length(CAST(content AS BLOB))),0) AS bytes FROM member_studio_file_nodes WHERE project_id=? AND user_id=? AND deleted_at IS NULL',[projectId,user.id]);
+  const newSize=BufferByteLength(input.content);
+  if(!input.deleted&&Number(total?.bytes||0)-BufferByteLength(node.content)+newSize>524288)return fail(413,'Project text limit of 512 KiB reached');
+  const result=await db.prepare('UPDATE member_studio_file_nodes SET name=?,name_key=?,parent_id=?,parent_key=?,content=?,deleted_at=?,revision=revision+1,updated_at=? WHERE id=? AND project_id=? AND user_id=? AND revision=? AND deleted_at IS NULL AND (?=1 OR (SELECT COALESCE(SUM(length(CAST(content AS BLOB))),0) FROM member_studio_file_nodes WHERE project_id=? AND user_id=? AND deleted_at IS NULL)-length(CAST(member_studio_file_nodes.content AS BLOB))+length(CAST(? AS BLOB))<=524288) RETURNING *')
+   .bind(name,name.toLowerCase(),input.parentId,input.parentId||'',input.content,input.deleted?now:null,now,nodeId,projectId,user.id,input.revision,input.deleted?1:0,projectId,user.id,input.content).all();
   return result.results.length?respond({node:nodeOut(result.results[0])}):fail(409,'File changed or was deleted; reload');
  }catch{return fail(503,'Studio file operation unavailable');}
 }
