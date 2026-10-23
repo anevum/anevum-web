@@ -17,8 +17,8 @@ export const REPO='anevum/anevum-web';
 export const BASE='356112a94575c988c28efcd9ab083277c3838b80';
 export const ARTIFACT=12474282482;
 export const RUN=39889939571;
-export const BRANCH='ops/v118-v116-inactive-upload-20261023-001';
-export const MESSAGE='release(v118): upload V116 Worker immutable inactive only';
+export const BRANCH='ops/v119-v116-inactive-upload-reconciliation-20261023-001';
+export const MESSAGE='release(v119): reconcile API-origin V116 Worker immutable inactive only';
 export const UPLOAD_MESSAGE='V118 V116 immutable inactive; frontend a3c94b3ebdc6103347e76f8a5234904978da67e3; package 356112a94575c988c28efcd9ab083277c3838b80; no deployment';
 const ACCOUNT='2f7ee83107240152097efd956a4e8335';
 const ROOT='/accounts/'+ACCOUNT+'/workers/scripts/anevum-apex-prelaunch-gateway';
@@ -147,7 +147,7 @@ function marker(){
  assert.ok(process.env.CLOUDFLARE_API_TOKEN?.length>15&&process.env.GH_TOKEN?.length>15);
  assert.equal(git('rev-parse','HEAD'),process.env.GITHUB_SHA);
  assert.equal(git('log','-1','--format=%B'),MESSAGE);
- const markerPath='.github/release-approvals/v118-v116-inactive-upload.json';
+ const markerPath='.github/release-approvals/v119-v116-inactive-upload.json';
  assert.equal(git('diff-tree','--no-commit-id','--name-only','-r','HEAD'),markerPath);
  const m=load(markerPath);
  const ops=git('rev-parse','HEAD^');
@@ -158,7 +158,11 @@ function marker(){
   '.github/workflows/v118-v116-inactive-upload.yml',
   'creator-v1/ops/apex-inactive-upload-v118.mjs',
   'creator-v1/test/apex-inactive-upload-v118.test.mjs',
-  'docs/production/v118-v116-inactive-upload-20261023.md'
+  'docs/production/v118-v116-inactive-upload-20261023.md',
+  '.github/workflows/v118-v116-inactive-upload.yml',
+  'creator-v1/ops/apex-inactive-upload-v118.mjs',
+  'creator-v1/test/apex-inactive-upload-v118.test.mjs',
+  'docs/production/v119-api-origin-conflict-20261023.md'
  ]);
  const paths=git('diff','--name-only',BASE,ops).split('\n').filter(Boolean);
  assert.ok(paths.every(p=>allowed.has(p)),'Unreviewed modifications before approval marker');
