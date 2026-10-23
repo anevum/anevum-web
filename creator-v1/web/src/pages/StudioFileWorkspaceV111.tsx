@@ -84,6 +84,7 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
   });
  }
  function openFile(node:StudioFileNode){
+  if(selectedFolder&&dirtyIds.has('folder:'+selectedFolder)&&!window.confirm('Discard unsaved folder changes?'))return;
   setMessage('');
   setSelectedFolder(node.parentId);
   if(openIds.includes(node.id)){setActiveId(node.id);return;}
@@ -102,6 +103,8 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
   setOpenIds([]);setActiveId(null);setDirtyIds(new Set());
  }
  function selectFolder(node:StudioFileNode){
+  if(selectedFolder&&selectedFolder!==node.id&&dirtyIds.has('folder:'+selectedFolder)&&
+   !window.confirm('Discard unsaved folder changes?'))return;
   setSelectedFolder(node.id);setActiveId(null);
   setExpanded(old=>{
    const next=new Set(old);next.has(node.id)?next.delete(node.id):next.add(node.id);return next;
@@ -129,6 +132,9 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
  async function create(event:FormEvent<HTMLFormElement>){
   event.preventDefault();
   if(createBusy||!canEdit||!createKind||!createName.trim())return;
+  if(selectedFolder&&dirtyIds.has('folder:'+selectedFolder)){
+   setMessage('Save or discard folder property changes before creating a new item.');return;
+  }
   const command=pendingCreate||{id:crypto.randomUUID(),kind:createKind,name:createName.trim(),parentId:selectedFolder};
   setPendingCreate(command);setCreateBusy(true);setMessage('');
   try{
@@ -175,7 +181,10 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
     </div>
     <div className="csf-tree-body">
      <button type="button" className={'csf-tree-row csf-tree-root'+(selectedFolder===null&&!activeId?' is-active':'')}
-      onClick={()=>{setSelectedFolder(null);setActiveId(null);}}>
+      onClick={()=>{
+       if(selectedFolder&&dirtyIds.has('folder:'+selectedFolder)&&!window.confirm('Discard unsaved folder changes?'))return;
+       setSelectedFolder(null);setActiveId(null);
+      }}> 
       <span aria-hidden="true">⌂</span><span className="csf-node-name">{projectTitle} / root</span></button>
      {loading&&<p role="status" className="csf-muted">Loading your private file tree…</p>}
      {!loading&&!error&&nodes.length===0&&<p className="csf-muted">No files yet. Create a folder or text file to begin.</p>}
@@ -215,7 +224,7 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
     </nav>
     {!activeId&&selectedFolderNode&&<FolderInspectorV111 key={selectedFolderNode.id}
      projectId={projectId} folder={selectedFolderNode} nodes={nodes} editable={canEdit}
-     onUpdated={upsert} onMessage={setMessage}/>}
+     onUpdated={upsert} onMessage={setMessage} onDirty={dirty=>setDirty('folder:'+selectedFolderNode.id,dirty)}/>}
     {!activeId&&!selectedFolderNode&&<div className="csf-welcome">
      <span className="csf-orbit" aria-hidden="true">◇</span>
      <h3>Project source workspace</h3>
@@ -233,14 +242,19 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
  </section>;
 }
 
-function FolderInspectorV111({projectId,folder,nodes,editable:canEdit,onUpdated,onMessage}:{
+function FolderInspectorV111({projectId,folder,nodes,editable:canEdit,onUpdated,onMessage,onDirty}:{
  projectId:string;folder:StudioFileNode;nodes:StudioFileNode[];editable:boolean;
- onUpdated:(node:StudioFileNode)=>void;onMessage:(text:string)=>void
+ onUpdated:(node:StudioFileNode)=>void;onMessage:(text:string)=>void;
+ onDirty:(dirty:boolean)=>void
 }){
  const [name,setName]=useState(folder.name);
  const [parentId,setParentId]=useState<string|null>(folder.parentId);
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState('');
+ const dirty=name!==folder.name||parentId!==folder.parentId;
+ const dirtyCallback=useRef(onDirty);dirtyCallback.current=onDirty;
+ useEffect(()=>{dirtyCallback.current(dirty);},[dirty]);
+ useEffect(()=>()=>{dirtyCallback.current(false);},[]);
  const children=nodes.filter(n=>n.parentId===folder.id);
  const descendants=new Set([folder.id]);
  for(let i=0;i<100;i++){
@@ -268,7 +282,7 @@ function FolderInspectorV111({projectId,folder,nodes,editable:canEdit,onUpdated,
   </label>
   {error&&<p className="csf-error" role="alert">{error}</p>}
   <div className="csf-toolbar">
-   <button type="button" className="csw-action csw-strong" disabled={!canEdit||busy||name.trim().length===0||(name===folder.name&&parentId===folder.parentId)}
+   <button type="button" className="csw-action csw-strong" disabled={!canEdit||busy||name.trim().length===0||!dirty}
     onClick={()=>void save()}>Save folder changes</button>
    <button type="button" className="csw-action csw-subtle" disabled={busy} onClick={()=>{setName(folder.name);setParentId(folder.parentId);setError('');}}>Discard changes</button>
   </div>
