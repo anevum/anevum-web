@@ -119,15 +119,28 @@
 @media(max-width:480px){
   .av9-shell .av118-workspace-switch{padding:13px;border-radius:13px}
   .av9-shell .av118-workspace-intro p{font-size:11px}
-  .av9-shell .av118-workspace-links{display:flex;gap:8px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;padding:3px 3px 8px}
-  .av9-shell .av118-workspace-link{flex:0 0 132px;min-height:54px;padding:10px;scroll-snap-align:start}
-  .av9-shell .av118-workspace-label strong{font-size:12px}
-  .av9-shell .av118-workspace-label small{font-size:10px}
+  /* Every destination remains visible without an invisible horizontal swipe. */
+  .av9-shell .av118-workspace-links{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
+    overflow:visible;scroll-snap-type:none;padding:3px 0 4px;
+  }
+  .av9-shell .av118-workspace-link{
+    flex:none;justify-content:center;min-width:0;min-height:56px;
+    padding:10px 7px;scroll-snap-align:none;
+  }
+  .av9-shell .av118-workspace-label strong{
+    font-size:clamp(10px,2.8vw,12px);line-height:1.18;overflow-wrap:anywhere;
+  }
+  /* Keep descriptive context available to screen readers without cramming text. */
+  .av9-shell .av118-workspace-label small{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);white-space:nowrap;
+  }
   .av118-workspace-number{display:none}
   .av9-shell .av118-workspace-iren{min-height:46px;margin-top:6px}
 }
 @media(max-width:350px){
-  .av9-shell .av118-workspace-link{flex-basis:122px}
+  .av9-shell .av118-workspace-link{padding:10px 5px}
   .av9-shell .av118-workspace-iren{flex-wrap:wrap;gap:7px}
 }
 @media(hover:none){
