@@ -1,7 +1,7 @@
 // W111 source tree: canonical member-session API. No project data is cached in
 // browser storage and no text file can execute in the authenticated Studio origin.
 const BASE='/api/v1/member/studio/projects';
-const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{12}$/;
+const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 export const studioFileTreeEnabled=import.meta.env.VITE_CREATOR_FILE_TREE_V111==='true';
 export type StudioNodeKind='folder'|'text';
 export type StudioFileNode={
@@ -15,7 +15,7 @@ export type StudioFileVersion={
 export class StudioFileError extends Error{
  constructor(readonly status:number,message:string){super(message);this.name='StudioFileError';}
 }
-const validId=(id:string)=>{if(typeof id!=='string'||!UUID.test(id))throw new StudioFileError(400,'Invalid project or file identifier ('+typeof id+', '+String(id??'').length+' characters; groups '+String(id??'').split('-').map(x=>x.length+':'+x.slice(0,1)).join('|')+').');return id;};
+const validId=(id:string)=>{if(typeof id!=='string'||!UUID.test(id))throw new StudioFileError(400,'Invalid project or file identifier.');return id;};
 const fileRoot=(projectId:string)=>BASE+'/'+validId(projectId)+'/files';
 const nodePath=(projectId:string,nodeId:string)=>fileRoot(projectId)+'/'+validId(nodeId);
 function validNode(node:unknown,contentRequired=false):node is StudioFileNode{
