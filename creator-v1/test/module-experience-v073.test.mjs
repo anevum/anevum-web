@@ -69,12 +69,14 @@ test("V073 both module selectors support accessible keyboard tabs and reduced-mo
   assert.doesNotMatch(css,/animation:\s*[^;]*infinite|image-rendering:\s*pixelated/);
 });
 
-test("V079 browser checks four direct journeys, compact wayfinder and no decorative category gallery",()=>{
+test("V116 browser checks real arrival, four-way navigation and no featured prototype game",()=>{
  for(const check of [
-  "V079_HOME_ENTRY","V079_MENU_ACCESS","av79-gateway",
-  "av79-feature","av79-navigation","av79-destination"
+  "V116_HOME_ENTRY","V079_MENU_ACCESS","av115-gateway",
+  "av115-public-index","av79-navigation","av79-destination",
+  "featuredTestGame"
  ])assert.ok(browser.includes(check),check);
- assert.ok(browser.includes('".av79-home"'));
+ assert.match(browser,/document\.querySelector\("\.av115-arrival h1"\)/);
+ assert.doesNotMatch(browser,/Find your next|\.av79-feature h3/);
  assert.doesNotMatch(browser,/COMMUNITY_PORTAL_ART_OR_LAYOUT/);
 });
 
