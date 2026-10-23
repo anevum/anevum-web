@@ -12,6 +12,7 @@ import {AgentDockV110} from './AgentDockV110';
 const agentDockEnabled=import.meta.env.VITE_CREATOR_AGENT_DOCK_V110==='true';
 import {readWithDeadline} from '../../../shared/read-deadline.mjs';
 import './creator-workspace-v109.css';
+import './creator-workspace-v110.css';
 
 // A navigation-only workspace on existing canonical resources. Project source
 // folders and executable editing require separate, reviewed storage/runtime APIs.
@@ -216,7 +217,7 @@ function MemberWorkspace({memberId}:{memberId:string}){
   </header>
   <div className="csw-boundary"><strong>PRIVATE / VERIFIED MEMBER</strong><span>Project work is saved in its existing editor. Tabs are a workspace preference, not publication.</span></div>
   {notice&&<p role="alert" className="csw-message">{notice}</p>}
-  <div className={'csw-layout'+(!explorerOpen?' csw-no-explorer':'')+(!inspectorOpen&&!agentOpen?' csw-no-inspector':'')}>
+  <div className={'csw-layout'+(!explorerOpen?' csw-no-explorer':'')+(!inspectorOpen&&!agentOpen?' csw-no-inspector':'')+(agentOpen?' csw-agent-active':'')}>
    {explorerOpen&&<aside className="csw-explorer" aria-label="Project explorer">
     <div className="csw-pane-header"><h2>Explorer</h2><span>PRIVATE</span></div>
     <label className="csw-search"><span>Find your projects</span><input ref={searchRef} type="search" maxLength={100}
