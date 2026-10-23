@@ -44,7 +44,8 @@
   width:min(450px,calc(100vw - 194px));
   max-height:min(58dvh,465px);
   box-sizing:border-box;
-  overflow:auto;
+  overflow-x:hidden;
+  overflow-y:auto;
   border:1px solid var(--ir111-edge);
   border-radius:20px;
   padding:19px 20px 13px;
@@ -71,7 +72,7 @@
 .ir111-transmission::after{
   content:"";
   position:absolute;
-  right:-17px;
+  right:0;
   bottom:57px;
   width:18px;
   height:2px;
@@ -209,7 +210,7 @@
     padding:15px 15px 12px;
     border-radius:16px;
   }
-  .ir111-transmission::after{right:35px;bottom:-12px;width:2px;height:12px}
+  .ir111-transmission::after{right:35px;bottom:0;width:2px;height:12px}
   .ir111-header,.ir111-footer{font-size:8px}
   .ir111-transmission-content{gap:10px;padding:13px 0}
   .ir111-reward,.ir111-symbol{width:58px;height:58px}

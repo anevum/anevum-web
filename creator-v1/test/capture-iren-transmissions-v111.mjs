@@ -36,6 +36,8 @@ try{
   await delay(220);
   await evaluate(trigger("qa-"+width,"Transmission preview"));
   await until(()=>evaluate('!!document.querySelector(".ir111-phase-open .ir111-transmission")'));
+  // Inspect the settled visual state, not the first transparent transition frame.
+  await delay(650);
   const geometry=await evaluate('(()=>{const e=document.querySelector(".ir111-transmission"),r=e.getBoundingClientRect();return {left:r.left,top:r.top,right:r.right,bottom:r.bottom,text:e.textContent,overflow:document.documentElement.scrollWidth>innerWidth+1,one:document.querySelectorAll(".ir87-scout").length===1,old:!!document.querySelector(".an-toast"),live:document.querySelector(".an-live")?.textContent,dismiss:!!e.querySelector("button")}})()');
   if(!geometry.one||geometry.old||geometry.overflow||!geometry.dismiss||!geometry.live?.includes("Transmission preview")||!geometry.text?.includes("VISUAL PREVIEW")||geometry.left<0||geometry.top<0||geometry.right>width+1||geometry.bottom>height+1)
    throw Error("V111_TRANSMISSION_GEOMETRY_"+width+": "+JSON.stringify(geometry));

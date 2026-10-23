@@ -57,5 +57,6 @@ test("V111 does not steal focus or force visuals during tours, hidden IREN or re
  assert.match(css,/@media\(forced-colors:active\)/);
  assert.match(css,/ir111-arrive/);
  assert.match(css,/ir111-motion-paused/);
+ assert.match(css,/overflow-x:hidden/);
  assert.match(guide,/import "\.\.\/iren-transmissions-v111\.css"/);
 });
