@@ -101,7 +101,6 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
         <h1>{active?"Explore "+active.label:"Find something worth opening."}</h1>
         <p>Search genuine, approved games, apps, art and shared tools. See what's actually published before deciding what to explore.</p>
       </header>}
-    <ContinuanceWorkspaceSwitch current="discover"/>
     <div className="portal-browse-layout">
       <div className="portal-browse-main">
         <section className="portal-box portal-search-hall av118-surface" aria-label="Search and browse published projects">
@@ -161,5 +160,6 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
       </div>
 
     </div>
+    <ContinuanceWorkspaceSwitch current="discover"/>
   </div>;
 }
