@@ -64,13 +64,15 @@ test("V011 emissive motion sleeps when hidden, and has static accessible fallbac
   assert.doesNotMatch(css,/overflow-x:hidden|animation:.*infinite.*glare/i);
 });
 
-test("V079 home presents direct routes and approved public work without duplicated feeds",()=>{
+test("V115 home offers four authentic routes and verified public work without featuring test games",()=>{
  const home=source("web/src/pages/CinematicLandingPage.tsx");
  const signal=source("web/src/components/LiveSignalHero.tsx");
  const deck=source("web/src/components/WorldGatewayDeck.tsx");
- assert.match(home,/<nav className="av79-gateways"/);
- assert.match(home,/const featured=games\[0\]\|\|projects\[0\]\|\|null/);
- assert.match(home,/av79-feature/);
+ assert.match(home,/<nav className="av79-gateways av115-gateways"/);
+ assert.match(home,/const showcase=projects\.filter\(project=>project\.category!=="games"\)/);
+ assert.match(home,/av115-public-index/);
+ assert.match(home,/av115-public-item/);
+ assert.doesNotMatch(home,/Play a game|FEATURED RELEASE|const firstGame=/);
  assert.match(home,/projectDetailPath/);
  assert.match(home,/useOwnPlayerCard/);
  assert.match(home,/CompactMemberIdentity/);

@@ -23,17 +23,18 @@ test("V009 unifies site navigation and retains native route boundaries",()=>{
  assert.match(app,/path="account" element={<Navigate to="\/member" replace\/>}/);
  assert.match(app,/path="community\/write"/);
 });
-test("V079 homepage exposes real approved work and member identity without duplicated modules",()=>{
+test("V115 homepage preserves real public work, identity and unduplicated navigation",()=>{
  const home=read("web/src/pages/CinematicLandingPage.tsx");
  const signal=read("web/src/components/LiveSignalHero.tsx");
  const portals=read("web/src/components/WorldGatewayDeck.tsx");
  const feed=read("web/src/components/CommunityHomeFeed.tsx");
  for(const source of [home,signal,portals])assert.doesNotThrow(()=>parse(source,{sourceType:"module",plugins:["typescript","jsx"]}));
- for(const contract of [/readStatus/,/readProjects/,/readCreators/,/projectDetailPath/,/useOwnPlayerCard/,/CompactMemberIdentity/,/av79-feature/,/av79-gateways/])
+ for(const contract of [/readStatus/,/readProjects/,/readCreators/,/projectDetailPath/,/useOwnPlayerCard/,/CompactMemberIdentity/,/av115-public-index/,/av115-gateways/])
   assert.match(home,contract);
  assert.doesNotMatch(home,/<WorldGatewayDeck|<LiveSignalModules|<CommunityHomeFeed|<CinematicSiteRail/);
- assert.match(home,/projects\.filter\(project=>project\.id!==featured\?\.id\)/);
- assert.match(home,/featured=games\[0\]\|\|projects\[0\]\|\|null/);
+ assert.match(home,/projects\.filter\(project=>project\.category!=="games"\)/);
+ assert.match(home,/showcase\.map\(project=>/);
+ assert.doesNotMatch(home,/featured=games\[0\]|Play a game|FEATURED RELEASE/);
  assert.match(portals,/discover\?category=games/);
  assert.match(signal,/readCommunityPosts/);
  assert.match(feed,/readPublicShowcases/);

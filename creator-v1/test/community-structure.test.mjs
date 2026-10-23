@@ -53,8 +53,9 @@ test("Homepage links approved public work and keeps the premium Continuance pres
  const landing=read("web/src/pages/CinematicLandingPage.tsx");
  const main=read("web/src/main.tsx");
  assert.match(landing,/readProjects\(\{limit:"32"}/);
- assert.match(landing,/APPROVED AND AVAILABLE/);
- assert.match(landing,/featured&&featuredPath/);
+ assert.match(landing,/PUBLIC INDEX \/ VERIFIED WORK/);
+ assert.match(landing,/showcase\.map\(project=>/);
+ assert.doesNotMatch(landing,/Play a game|FEATURED RELEASE/);
  assert.match(landing,/av79-hero-orbit/);
  assert.match(landing,/av79-gateways/);
  assert.doesNotMatch(landing,/fakeProject|sampleProjects/);
