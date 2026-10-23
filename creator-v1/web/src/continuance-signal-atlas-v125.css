@@ -49,9 +49,12 @@
  .av125-motion-toggle{justify-self:end;font-size:10px;letter-spacing:0}
 }
 @media(max-width:380px){
- .av9-shell .av79-home .av125-arrival .av114-arrival-chapter{margin-top:10px;letter-spacing:.07em}
- .av9-shell .av79-home .av125-arrival h1{margin:14px 0!important}
- .av9-shell .av79-home .av125-arrival .av114-arrival-clarity{margin-top:16px}
+ .av9-shell .av79-home .av114-arrival.av115-arrival.av125-arrival{padding:18px 14px 16px}
+ .av9-shell .av79-home .av125-arrival .av114-arrival-chapter{margin-top:6px;letter-spacing:.07em}
+ .av9-shell .av79-home .av125-arrival h1{margin:10px 0!important}
+ .av9-shell .av79-home .av125-arrival .av114-arrival-clarity{margin-top:12px}
+ .av125-arrival-utility{margin-top:4px}
+ .av9-shell .av79-home .av125-arrival .av115-iren-console{margin-top:10px}
  .av9-shell .av79-home .av125-arrival .av79-hero-content>p{line-height:1.55!important}
  .av125-arrival-utility{gap:8px}
  .av125-motion-toggle{gap:6px;font-size:9px}
