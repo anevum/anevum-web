@@ -324,10 +324,15 @@ try{
      if(!reset.ok)throw Error("PLAYER_V005_MEMBER_RESET_FAILED");
    }
    if(name==="home"){
-     await until(()=>evaluate('document.querySelectorAll(".av79-gateway").length===4&&!!document.querySelector(".av79-feature")'));
-     const entrance=await evaluate('(()=>({headline:document.querySelector(".av79-hero h1")?.innerText,gateways:[...document.querySelectorAll(".av79-gateway")].map(x=>x.textContent.trim()),featured:document.querySelector(".av79-feature h3")?.textContent,creator:document.querySelector(".av79-feature [data-player-card=v078]")?.textContent,oldPanels:document.querySelectorAll(".av73-world-deck,.av11-live-index,.av6-community-index").length,categoryArt:document.querySelectorAll(".av79-home .cw-artwork,.av79-home img").length,overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
-     if(!entrance.headline?.includes("Find your next")||entrance.gateways.length!==4||!entrance.featured||!entrance.creator||entrance.oldPanels!==0||entrance.categoryArt!==0||entrance.overflow)
-       throw Error("V079_HOME_ENTRY_"+width+":"+JSON.stringify(entrance));
+     // V116 intentionally removes the prototype game's featured card. Validate
+     // the real first-visit Wayfinder and public index without inventing content.
+     await until(()=>evaluate('document.querySelectorAll(".av115-gateway").length===4&&!!document.querySelector(".av115-public-index")&&!!document.querySelector(".av115-iren-console button")'));
+     const entrance=await evaluate('(()=>({headline:document.querySelector(".av115-arrival h1")?.textContent,primary:document.querySelector(".av115-arrival .av79-hero-actions a")?.getAttribute("href"),gateways:[...document.querySelectorAll(".av115-gateway")].map(x=>x.querySelector("strong")?.textContent?.trim()),join:document.querySelector(".av115-gateway-member")?.getAttribute("href"),iren:!!document.querySelector(".av115-iren-console button"),records:document.querySelectorAll(".av115-public-item").length,featuredTestGame:!!document.querySelector(".av79-feature"),oldPanels:document.querySelectorAll(".av73-world-deck,.av11-live-index,.av6-community-index").length,categoryArt:document.querySelectorAll(".av79-home .cw-artwork,.av79-home img").length,overflow:document.documentElement.scrollWidth>innerWidth+1}))()');
+     if(!entrance.headline?.includes("A universe in the making")||
+       !entrance.primary?.endsWith("/discover")||entrance.gateways.join("|")!=="Discover|Create|Connect|Join"||
+       !entrance.join||!entrance.iren||entrance.featuredTestGame||
+       entrance.oldPanels!==0||entrance.categoryArt!==0||entrance.overflow)
+       throw Error("V116_HOME_ENTRY_"+width+":"+JSON.stringify(entrance));
      await screenshot("home-discovery-"+width);
      await evaluate('document.querySelector(".av9-menu-trigger").click()');
      await until(()=>evaluate('document.querySelector(".av79-navigation[open]")?.querySelectorAll(".av79-destination").length===4'));
