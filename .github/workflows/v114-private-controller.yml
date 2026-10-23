@@ -1,0 +1,103 @@
+name: ANEVUM V114 Private Controller AUTH Candidate
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v114-private-controller.yml'
+      - 'creator-v1/ops/native-private-controller-v114.mjs'
+      - 'creator-v1/test/native-private-controller-v114.test.mjs'
+      - 'creator-v1/ops/protected-routing-v114.mjs'
+      - 'creator-v1/test/protected-routing-v114.test.mjs'
+  push:
+    branches: ['ops/private-controller-v114-upload-recovery-20261022-001']
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: anevum-v114-private-controller
+  cancel-in-progress: false
+jobs:
+  verify-private:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+      CLOUDFLARE_API_TOKEN: ''
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+          node --check creator-v1/ops/native-private-controller-v114.mjs
+          node --test creator-v1/test/native-private-controller-v114.test.mjs creator-v1/test/protected-routing-v114.test.mjs creator-v1/test/native-auth-pin-preflight-v109.test.mjs tests/alpha-package-v003.test.mjs tests/native-creator-v095.test.mjs tests/native-creator-client-v095.test.mjs
+      - name: Compile reviewed existing controller with synthetic configuration only
+        run: |
+          node --input-type=module <<'JS'
+          import {writeFileSync} from 'node:fs';
+          import {resolve} from 'node:path';
+          import {configuration} from './creator-v1/ops/native-private-controller-v114.mjs';
+          import {fixtureBindings} from './creator-v1/test/native-private-controller-v114.test.mjs';
+          writeFileSync(process.env.RUNNER_TEMP+'/v114-offline.json',JSON.stringify(configuration(fixtureBindings(),resolve('site/alpha/v003/api.mjs'))));
+          JS
+          npx --no-install wrangler versions upload --dry-run --config "$RUNNER_TEMP/v114-offline.json" --outdir "$RUNNER_TEMP/v114-compiled"
+          node --check "$RUNNER_TEMP/v114-compiled/api.js"
+  inactive-upload:
+    needs: verify-private
+    if: >-
+      github.repository == 'anevum/anevum-web' && github.actor == 'anevum' &&
+      github.event_name == 'push' && github.ref == 'refs/heads/ops/private-controller-v114-upload-recovery-20261022-001' &&
+      github.event.head_commit.message == 'release(v114): upload private controller inactive only'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - name: Lock reviewed operations, live resources and expired entry
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node creator-v1/ops/native-private-controller-v114.mjs before "$RUNNER_TEMP/v114-upload.json" "$RUNNER_TEMP/v114-before.json"
+      - name: Compile the existing controller without uploading or exposing allowlist values
+        env:
+          CLOUDFLARE_API_TOKEN: ''
+        run: |
+          npx --no-install wrangler versions upload --dry-run --config "$RUNNER_TEMP/v114-upload.json" --outdir "$RUNNER_TEMP/v114-bundle" > "$RUNNER_TEMP/v114-compile.log" 2>&1
+          node --check "$RUNNER_TEMP/v114-bundle/api.js"
+          node creator-v1/ops/native-private-controller-v114.mjs seal "$RUNNER_TEMP/v114-upload.json" "$RUNNER_TEMP/v114-bundle"
+      - name: Upload exactly one inactive private controller version
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx --no-install wrangler versions upload --no-bundle --no-upload-source-maps --keep-vars \
+            --config "$RUNNER_TEMP/v114-upload.json" \
+            --message 'V114 private controller only; canonical AUTH 86dc4b9d-4020-432a-8a15-e65606f31316; executable publishing OFF; source 82fd84cc887be20c2244fe59f4cf72c48ea40f53' > "$RUNNER_TEMP/v114-upload.log" 2>&1
+      - name: Verify new bindings and unchanged serving versions, routes and expired entry
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node creator-v1/ops/native-private-controller-v114.mjs after "$RUNNER_TEMP/v114-before.json" "$RUNNER_TEMP/v114-bundle" "$RUNNER_TEMP/v114-receipt.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v114-private-controller-receipt-${{ github.sha }}
+          path: ${{ runner.temp }}/v114-receipt.json
+          retention-days: 14
+          if-no-files-found: ignore
