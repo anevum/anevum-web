@@ -99,8 +99,9 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
   if(activeId===id)setActiveId(next.at(-1)||null);
  }
  function closeAllFiles(){
-  if(dirtyIds.size>0&&!window.confirm('Discard all unsaved changes in this project?'))return;
-  setOpenIds([]);setActiveId(null);setDirtyIds(new Set());
+  if(openIds.some(id=>dirtyIds.has(id))&&!window.confirm('Discard unsaved source edits in all open file tabs?'))return;
+  setOpenIds([]);setActiveId(null);
+  setDirtyIds(old=>new Set([...old].filter(id=>id.startsWith('folder:'))));
  }
  function selectFolder(node:StudioFileNode){
   if(selectedFolder&&selectedFolder!==node.id&&dirtyIds.has('folder:'+selectedFolder)&&
