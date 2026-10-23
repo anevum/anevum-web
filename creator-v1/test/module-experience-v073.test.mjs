@@ -19,7 +19,9 @@ test("V079 replaces V073's stacked public modules with a short real-content home
  assert.match(home,/readProjects/);
  assert.match(home,/readCreators/);
  assert.match(home,/readStatus/);
- assert.match(home,/const featured=games\[0\]\|\|projects\[0\]\|\|null/);
+ assert.match(home,/const featured=projects\[0\]\|\|null/);
+ assert.match(home,/sort\(byPublication\)/);
+ assert.doesNotMatch(home,/const featured=games\[0\]/);
  assert.match(home,/useOwnPlayerCard/);
  assert.match(home,/CompactMemberIdentity/);
  assert.doesNotMatch(home,/<WorldGatewayDeck|<LiveSignalModules|<CommunityHomeFeed|<LiveSignalHero/);
