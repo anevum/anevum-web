@@ -49,6 +49,8 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
  const canEdit=editable(status);
  const latestDirty=useRef(dirtyIds);
  latestDirty.current=dirtyIds;
+ const dirtyCallback=useRef(onDirtyChange);
+ dirtyCallback.current=onDirtyChange;
 
  useEffect(()=>{
   const controller=new AbortController();
@@ -59,7 +61,8 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
    .finally(()=>{if(!controller.signal.aborted)setLoading(false);});
   return()=>controller.abort();
  },[projectId,attempt]);
- useEffect(()=>{onDirtyChange(dirtyIds.size>0);},[dirtyIds,onDirtyChange]);
+ useEffect(()=>{dirtyCallback.current(dirtyIds.size>0);},[dirtyIds]);
+ useEffect(()=>()=>{dirtyCallback.current(false);},[]);
  useEffect(()=>{
   const handler=(event:BeforeUnloadEvent)=>{
    if(!latestDirty.current.size)return;
@@ -71,7 +74,6 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
 
  const folderOptions=useMemo(()=>nodes.filter(n=>n.kind==='folder').sort((a,b)=>pathLabel(a,nodes).localeCompare(pathLabel(b,nodes))),[nodes]);
  const selectedFolderNode=nodes.find(n=>n.id===selectedFolder)||null;
- const selectedActiveNode=nodes.find(n=>n.id===activeId)||null;
  function upsert(node:StudioFileNode){
   setNodes(old=>[...old.filter(n=>n.id!==node.id),node].filter(n=>n.deletedAt===null));
  }
@@ -211,10 +213,10 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
      })}
      {!!openIds.length&&<button className="csf-close-all" type="button" onClick={closeAllFiles}>Close all</button>}
     </nav>
-    {openIds.length===0&&selectedFolderNode&&<FolderInspectorV111 key={selectedFolderNode.id}
+    {!activeId&&selectedFolderNode&&<FolderInspectorV111 key={selectedFolderNode.id}
      projectId={projectId} folder={selectedFolderNode} nodes={nodes} editable={canEdit}
      onUpdated={upsert} onMessage={setMessage}/>}
-    {openIds.length===0&&!selectedFolderNode&&<div className="csf-welcome">
+    {!activeId&&!selectedFolderNode&&<div className="csf-welcome">
      <span className="csf-orbit" aria-hidden="true">◇</span>
      <h3>Project source workspace</h3>
      <p>Open a text file from Explorer, create a folder, or start a new file. All edits are saved manually to a private revision.</p>
@@ -224,7 +226,7 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
      <SourceEditorV111 projectId={projectId} nodeId={id} nodes={nodes} editable={canEdit}
       onDirty={dirty=>setDirty(id,dirty)} onUpdated={upsert}/>
     </div>)}
-    {openIds.length>0&&!activeId&&<p className="csf-muted">Select an open source tab.</p>}
+
    </main>
   </div>
   <footer className="csf-status">PRIVATE DRAFT · {dirtyIds.size} UNSAVED FILE{dirtyIds.size===1?'':'S'} · NO AUTO-PUBLISH · FILE TREE {studioFileTreeEnabled?'ENABLED':'INACTIVE'}{!visible?' · BACKGROUND TAB':''}</footer>
@@ -292,7 +294,10 @@ function SourceEditorV111({projectId,nodeId,nodes,editable:canEdit,onDirty,onUpd
  const dirty=!!base&&(content!==(base.content||'')||name!==base.name||parentId!==base.parentId);
  const activeDirty=useRef(dirty);
  activeDirty.current=dirty;
- useEffect(()=>{onDirty(dirty);return()=>onDirty(false);},[dirty,onDirty]);
+ const dirtyCallback=useRef(onDirty);
+ dirtyCallback.current=onDirty;
+ useEffect(()=>{dirtyCallback.current(dirty);},[dirty]);
+ useEffect(()=>()=>{dirtyCallback.current(false);},[]);
  useEffect(()=>{
   const controller=new AbortController();setLoading(true);setError('');
   studioFileGet(projectId,nodeId,controller.signal)
