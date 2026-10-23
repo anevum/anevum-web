@@ -69,7 +69,9 @@ test("V079 home presents direct routes and approved public work without duplicat
  const signal=source("web/src/components/LiveSignalHero.tsx");
  const deck=source("web/src/components/WorldGatewayDeck.tsx");
  assert.match(home,/<nav className="av79-gateways"/);
- assert.match(home,/const featured=games\[0\]\|\|projects\[0\]\|\|null/);
+ assert.match(home,/const featured=projects\[0\]\|\|null/);
+ assert.match(home,/sort\(byPublication\)/);
+ assert.doesNotMatch(home,/const featured=games\[0\]/);
  assert.match(home,/av79-feature/);
  assert.match(home,/projectDetailPath/);
  assert.match(home,/useOwnPlayerCard/);
