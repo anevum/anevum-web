@@ -71,27 +71,34 @@ export function CinematicLandingPage(){
   const snapshot=portal.state==="ready"?portal.data:lastVerified;
   const projects=[...(snapshot?.projects||[])].sort(byPublication);
   const creators=snapshot?.creators||[];
-  const games=projects.filter(project=>project.category==="games");
-  const featured=games[0]||projects[0]||null;
+  // Feature actual recent approved work without privileging the pilot game.
+  const featured=projects[0]||null;
   const remaining=projects.filter(project=>project.id!==featured?.id).slice(0,3);
   const verified=Boolean(snapshot);
   const featuredPath=featured?projectDetailPath(featured.id,"/"):null;
-  const firstGame=games[0]?projectDetailPath(games[0].id,"/"):null;
 
   return <div className="anevum-cinema av9-home av79-home">
     <div className="cinema-content av79-home-content">
-      <section className="av79-hero" aria-labelledby="av79-home-heading">
+      <section className="av79-hero av114-hero" aria-labelledby="av79-home-heading">
         <div className="av79-hero-orbit" aria-hidden="true"><span/><span/><span/></div>
+        <div className="av114-portal" aria-hidden="true">
+          <span className="av114-portal-ring av114-portal-ring--outer"/>
+          <span className="av114-portal-ring av114-portal-ring--inner"/>
+          <span className="av114-portal-core"/>
+          <span className="av114-portal-signal av114-portal-signal--a"/>
+          <span className="av114-portal-signal av114-portal-signal--b"/>
+          <span className="av114-portal-signal av114-portal-signal--c"/>
+        </div>
         <div className="av79-hero-content">
-          <span className="av79-kicker"><i aria-hidden="true"/> ANEVUM / THE CREATIVE NETWORK</span>
-          <h1 id="av79-home-heading">Find your next <em>obsession.</em></h1>
-          <p>Independent games, ambitious ideas and the people behind them. Play something. Make something. Find your place.</p>
+          <span className="av79-kicker"><i aria-hidden="true"/> ANEVUM / A CREATIVE UNIVERSE IN THE MAKING</span>
+          <h1 id="av79-home-heading">Enter a universe <em>in the making.</em></h1>
+          <p>A creative network for independent worlds, ideas and the people behind them. Explore what's here today, meet the community, and help shape what comes next.</p>
           <div className="av79-hero-actions">
-            <Link className="av79-button av79-button--bright" to={firstGame||"/discover?category=games"}>
-              {firstGame?"Play a game":"Explore games"} <Icon name="arrow" size={18}/>
+            <Link className="av79-button av79-button--bright" to="/discover">
+              EXPLORE ANEVUM <Icon name="arrow" size={18}/>
             </Link>
-            <Link className="av79-button av79-button--soft" to="/discover">
-              Explore ANEVUM <Icon name="arrow" size={18}/>
+            <Link className="av79-button av79-button--soft" to={signedIn?"/member":"/join"}>
+              {signedIn?"OPEN MY SPACE":"JOIN ANEVUM"} <Icon name="arrow" size={18}/>
             </Link>
           </div>
         </div>

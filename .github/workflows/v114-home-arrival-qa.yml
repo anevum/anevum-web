@@ -1,0 +1,77 @@
+name: ANEVUM V114 Creative Universe First-Load QA
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/web/src/pages/CinematicLandingPage.tsx'
+      - 'creator-v1/web/src/home-arrival-v114.css'
+      - 'creator-v1/web/src/main.tsx'
+      - 'creator-v1/test/home-arrival-v114.test.mjs'
+      - 'creator-v1/test/home-first-contact-v111.test.mjs'
+      - 'creator-v1/test/home-navigation-v079.test.mjs'
+      - 'creator-v1/test/capture-home-arrival-v114.mjs'
+      - 'creator-v1/test/capture-home-navigation-v079.mjs'
+      - '.github/workflows/v114-home-arrival-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: v114-home-arrival-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  homepage-arrival:
+    runs-on: ubuntu-latest
+    timeout-minutes: 32
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install without lifecycle scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Compile actual homepage and staging application
+        run: |
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+      - name: Assert real catalogue, member roles, IREN ownership and homepage copy
+        run: |
+          node --test creator-v1/test/home-arrival-v114.test.mjs creator-v1/test/home-first-contact-v111.test.mjs creator-v1/test/home-navigation-v079.test.mjs
+      - name: Real React responsive first-load, legacy navigation and IREN tour QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome"
+          mkdir -p evidence/v114/home evidence/v114/navigation evidence/v114/first-contact
+          node creator-v1/test/portal-offline-preview.mjs > evidence/v114/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 70); do
+            if curl -fsS http://127.0.0.1:4178/__ready >/dev/null; then break; fi
+            sleep 0.25
+          done
+          curl -fsS http://127.0.0.1:4178/__ready >/dev/null
+          node creator-v1/test/capture-home-arrival-v114.mjs "$chrome" http://127.0.0.1:4178 evidence/v114/home
+          node creator-v1/test/capture-home-navigation-v079.mjs "$chrome" http://127.0.0.1:4178 evidence/v114/navigation
+          node creator-v1/test/capture-home-first-contact-v111.mjs "$chrome" http://127.0.0.1:4178 evidence/v114/first-contact
+          test -s evidence/v114/home/acceptance.json
+          test -s evidence/v114/home/arrival-1440.png
+          test -s evidence/v114/home/arrival-390.png
+          test -s evidence/v114/home/arrival-320.png
+          test -s evidence/v114/navigation/acceptance.json
+          test -s evidence/v114/first-contact/acceptance.json
+      - name: Retain screenshot and geometry QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v114-first-load-review
+          path: evidence/v114/
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Record source-only acceptance
+        run: |
+          git rev-parse HEAD
+          echo 'SOURCE_QA_ONLY=YES' >> "$GITHUB_STEP_SUMMARY"
+          echo 'PRODUCTION_DEPLOY=NOT_AUTHORIZED' >> "$GITHUB_STEP_SUMMARY"
+# No Cloudflare traffic changes, profile writes, reward grants or publishing actions.

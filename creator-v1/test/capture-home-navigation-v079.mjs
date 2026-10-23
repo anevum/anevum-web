@@ -67,7 +67,7 @@ try{
   if(navigation.errorText)throw Error("V079_NAV_"+label+":"+navigation.errorText);
   await until(()=>evaluate('!!document.querySelector(".av79-home .av79-hero")&&!!document.querySelector(".av79-feature")&&document.querySelectorAll(".av79-gateway").length===4'));
   const home=await evaluate('(()=>{const hero=document.querySelector(".av79-hero"),feature=document.querySelector(".av79-feature");return {title:hero?.querySelector("h1")?.textContent,routes:[...document.querySelectorAll(".av79-gateway")].map(x=>x.getAttribute("href")),project:feature?.querySelector("h3")?.textContent,author:!!feature?.querySelector("[data-player-card=v078]"),legacy:document.querySelectorAll(".av73-world-deck,.av11-live-index,.av6-community-index").length,art:document.querySelectorAll(".av79-home img,.av79-home .cw-artwork").length,overflow:document.documentElement.scrollWidth>innerWidth+1,fold:hero?.getBoundingClientRect().top<innerHeight}})()');
-  if(!home.title?.includes("Find your next")||home.routes.length!==4||
+  if(!home.title?.includes("Enter a universe")||home.routes.length!==4||
    !home.project||!home.author||home.legacy||home.art||home.overflow||!home.fold)
    throw Error("V079_HOME_ENTRY_"+label+":"+JSON.stringify(home));
   await screenshot("home-"+label);

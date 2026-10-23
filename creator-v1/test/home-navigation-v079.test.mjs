@@ -58,7 +58,7 @@ test("V079 owner identity comes solely from verified account-space records",()=>
 test("V079 first fold is four short routes with one verified featured work",()=>{
  for(const token of [
   "readStatus(signal)","readProjects({limit:\"32\"}","readCreators({limit:\"8\"}",
-  "const featured=games[0]||projects[0]||null",
+  "const featured=projects[0]||null",
   "projectDetailPath(featured.id","projectDetailPath(project.id",
   "useOwnPlayerCard","av79-hero","av79-gateways",
   "av79-feature","av79-latest","av79-member-section",

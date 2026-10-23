@@ -11,7 +11,7 @@ const guide=read("web/src/components/IrenGuidedContinuance.tsx");
 
 test("V111 first contact retains canonical public home and original four gateways",()=>{
  assert.doesNotThrow(()=>parse(home,{sourceType:"module",plugins:["typescript","jsx"]}));
- assert.match(home,/const featured=games\[0\]\|\|projects\[0\]\|\|null/);
+ assert.match(home,/const featured=projects\[0\]\|\|null/);
  assert.match(home,/av79-hero/);
  assert.match(home,/av79-gateways/);
  assert.match(home,/av79-feature/);

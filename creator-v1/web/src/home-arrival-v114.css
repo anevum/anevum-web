@@ -1,0 +1,211 @@
+/* ANEVUM V114 / The universe begins before the first game.
+   Real content and member routes remain authoritative; orbital visuals are CSS only. */
+.av9-shell .av79-home .av79-hero.av114-hero{
+  position:relative;
+  min-height:clamp(355px,39vw,520px);
+  padding:clamp(28px,5vw,64px);
+  border:1px solid rgba(184,174,211,.54);
+  border-radius:24px;
+  background:
+    radial-gradient(ellipse 52% 75% at 82% 52%,rgba(81,122,169,.28),transparent 90%),
+    radial-gradient(ellipse 58% 90% at 48% 109%,rgba(143,103,184,.15),transparent 80%),
+    linear-gradient(112deg,#0c1429 3%,#141c39 56%,#0b1b32 100%);
+  box-shadow:inset 0 1px rgba(255,255,255,.16),0 22px 65px rgba(0,0,0,.38);
+}
+.av79-hero.av114-hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:0;
+  background:
+    repeating-linear-gradient(0deg,transparent 0 54px,rgba(172,214,246,.025) 55px 56px),
+    repeating-linear-gradient(90deg,transparent 0 55px,rgba(172,214,246,.025) 56px 57px);
+  -webkit-mask-image:linear-gradient(90deg,transparent 3%,#000 50%,#000 100%);
+  mask-image:linear-gradient(90deg,transparent 3%,#000 50%,#000 100%);
+}
+.av114-hero .av79-hero-content{
+  position:relative;
+  z-index:2;
+  max-width:min(630px,63%);
+}
+.av114-hero .av79-kicker{
+  display:inline-flex;
+  align-items:center;
+  max-width:100%;
+  gap:8px;
+  color:#d3d9ed;
+  font-size:10px;
+  line-height:1.5;
+  letter-spacing:.11em;
+}
+.av114-hero .av79-kicker i{
+  flex:none;
+  margin:0;
+  background:#94ccef;
+  box-shadow:0 0 17px #a2d7f0a6;
+}
+.av9-shell .av79-home .av114-hero h1{
+  margin:20px 0 15px!important;
+  font:440 clamp(40px,5.1vw,70px)/1.055 var(--av9-display,Georgia,serif)!important;
+  letter-spacing:-.045em!important;
+  color:#f9f5ff;
+  text-wrap:balance;
+}
+.av9-shell .av79-home .av114-hero h1 em{
+  display:block;
+  color:#f5cde5;
+  font-weight:440;
+  font-style:italic;
+  text-shadow:0 0 40px rgba(206,145,237,.22);
+}
+.av9-shell .av79-home .av114-hero p{
+  max-width:560px;
+  font:450 clamp(14px,1.4vw,16px)/1.7 var(--av9-body,system-ui,sans-serif)!important;
+  color:#dce3f0;
+}
+.av114-hero .av79-hero-actions{
+  margin-top:27px;
+  gap:11px;
+}
+.av9-shell .av79-home .av114-hero .av79-button{
+  min-height:50px;
+  border-radius:10px;
+  font-size:12px;
+  letter-spacing:.055em;
+}
+.av9-shell .av79-home .av114-hero .av79-button--bright{
+  color:#17223b;
+  border-color:#f6e8ee;
+  background:linear-gradient(115deg,#f2e9f5,#dfd8ed 58%,#ddc2e3);
+  box-shadow:0 5px 27px rgba(161,135,203,.18),inset 0 1px #fff;
+}
+.av9-shell .av79-home .av114-hero .av79-button--soft{
+  color:#f0f3ff;
+  border-color:rgba(183,200,224,.62);
+  background:rgba(16,29,55,.8);
+}
+.av114-hero .av79-hero-orbit{
+  width:min(49vw,560px);
+  height:min(49vw,560px);
+  right:-6%;
+  top:50%;
+  opacity:.4;
+  transform-origin:center;
+  animation:av79-orbit-turn 95s linear infinite;
+  margin-top:calc(min(49vw,560px) / -2);
+}
+.av114-portal{
+  position:absolute;
+  right:3%;
+  top:50%;
+  width:clamp(280px,39vw,520px);
+  height:clamp(280px,39vw,520px);
+  transform:translateY(-50%);
+  z-index:1;
+  pointer-events:none;
+  isolation:isolate;
+  filter:drop-shadow(0 0 45px rgba(121,163,225,.18));
+}
+.av114-portal::before{
+  content:"";
+  position:absolute;
+  inset:18%;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(224,194,228,.28) 0%,rgba(103,151,213,.2) 15%,rgba(33,71,128,.22) 39%,transparent 75%);
+  box-shadow:0 0 105px rgba(128,159,218,.24);
+}
+.av114-portal-ring{
+  position:absolute;
+  inset:13%;
+  display:block;
+  border:1px solid rgba(188,221,253,.46);
+  border-radius:50%;
+  box-shadow:inset 0 0 24px rgba(179,216,255,.16),0 0 35px rgba(150,196,247,.17);
+  transform:rotate(32deg) scaleX(.47);
+  animation:av114-ring 30s linear infinite;
+}
+.av114-portal-ring--inner{
+  inset:23%;
+  border-color:rgba(232,181,225,.64);
+  box-shadow:0 0 25px rgba(233,183,233,.19);
+  transform:rotate(-45deg) scaleX(.53);
+  animation-duration:21s;
+  animation-direction:reverse;
+}
+.av114-portal-core{
+  position:absolute;
+  top:50%;
+  left:50%;
+  display:block;
+  width:clamp(80px,11vw,155px);
+  aspect-ratio:1;
+  transform:translate(-50%,-50%);
+  border:1px solid rgba(239,225,240,.69);
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 34% 30%,rgba(255,250,255,.87) 0,rgba(171,189,231,.62) 11%,rgba(61,112,181,.83) 38%,rgba(21,48,98,.9) 68%,#101b3a 100%);
+  box-shadow:0 0 0 14px rgba(137,180,231,.045),0 0 0 42px rgba(127,156,222,.035),0 0 62px rgba(146,180,232,.49),inset -12px -17px 27px rgba(0,6,32,.72);
+  animation:av114-core-breathe 6s ease-in-out infinite;
+}
+.av114-portal-signal{
+  position:absolute;
+  display:block;
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:#f2e4ff;
+  box-shadow:0 0 9px #cfb7f5,0 0 24px #c2c0ff;
+}
+.av114-portal-signal--a{left:13%;top:38%}
+.av114-portal-signal--b{left:70%;top:13%;width:3px;height:3px}
+.av114-portal-signal--c{left:82%;top:78%;width:4px;height:4px}
+@keyframes av114-ring{
+  from{rotate:0deg}
+  to{rotate:360deg}
+}
+@keyframes av114-core-breathe{
+  0%,100%{filter:brightness(.95) saturate(1)}
+  50%{filter:brightness(1.18) saturate(1.1)}
+}
+@media(max-width:920px){
+  .av114-hero .av79-hero-content{max-width:min(660px,70%)}
+  .av114-portal{right:-4%;width:clamp(300px,48vw,470px);height:clamp(300px,48vw,470px);opacity:.72}
+}
+@media(max-width:650px){
+  .av9-shell .av79-home .av79-hero.av114-hero{
+    min-height:360px;
+    padding:31px 20px 29px;
+    border-radius:17px;
+    background:
+      radial-gradient(ellipse 55% 65% at 96% 18%,rgba(105,127,195,.23),transparent 100%),
+      linear-gradient(112deg,#0d152c,#17203b 60%,#121a30);
+  }
+  .av114-hero .av79-hero-content{max-width:100%}
+  .av9-shell .av79-home .av114-hero h1{font-size:clamp(37px,9.6vw,52px)!important;margin:15px 0 12px!important}
+  .av9-shell .av79-home .av114-hero h1 em{display:block}
+  .av9-shell .av79-home .av114-hero p{max-width:410px;font-size:14px!important;line-height:1.63!important}
+  .av114-hero .av79-kicker{font-size:9px;letter-spacing:.06em}
+  .av114-hero .av79-hero-actions{margin-top:20px;gap:8px}
+  .av9-shell .av79-home .av114-hero .av79-button{min-height:47px;font-size:11px;padding:12px 13px}
+  .av114-portal{right:-169px;top:17%;width:360px;height:360px;opacity:.2;filter:none}
+  .av114-hero .av79-hero-orbit{right:-195px;top:45%;opacity:.16}
+}
+@media(max-width:380px){
+  .av9-shell .av79-home .av79-hero.av114-hero{min-height:390px;padding:27px 17px}
+  .av9-shell .av79-home .av114-hero h1{font-size:38px!important}
+  .av114-portal{right:-195px;opacity:.15}
+  .av9-shell .av79-home .av114-hero .av79-hero-actions{display:grid;grid-template-columns:1fr}
+  .av9-shell .av79-home .av114-hero .av79-hero-actions .av79-button{width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+  .av114-hero .av79-hero-orbit,.av114-portal-ring,.av114-portal-core{animation:none!important}
+  .av114-hero .av79-button{transition:none!important}
+}
+@media(forced-colors:active){
+  .av9-shell .av79-home .av79-hero.av114-hero{background:Canvas;color:CanvasText;border:2px solid CanvasText}
+  .av114-hero .av79-kicker,.av9-shell .av79-home .av114-hero h1,
+  .av9-shell .av79-home .av114-hero h1 em,.av9-shell .av79-home .av114-hero p{color:CanvasText}
+  .av114-portal,.av114-hero .av79-hero-orbit{display:none}
+  .av9-shell .av79-home .av114-hero .av79-button{background:ButtonFace;color:ButtonText;border:1px solid ButtonText;box-shadow:none}
+}
