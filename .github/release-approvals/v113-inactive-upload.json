@@ -1,0 +1,11 @@
+{
+  "reviewed_operations_sha": "a04beceec9dae06cf1267cd3c0641594481755f7",
+  "package_source": "bb5893b6890d5a6d3f64412730053b6ca0816b02",
+  "artifact": 12466999553,
+  "worker": "anevum-apex-prelaunch-gateway",
+  "inactive_upload_only": true,
+  "public_promotion": false,
+  "route_changes": false,
+  "access_changes": false,
+  "database_writes": false
+}
