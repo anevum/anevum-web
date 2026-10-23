@@ -227,6 +227,18 @@ try{
  await until(()=>evaluate('document.querySelector(".csf-source")?.value==="# First Signal\\nUnsaved workspace-local change."'),'Saved source reopened from verified server snapshot');
  assert.equal(filePatches.length,2,'Browser reload does not silently write changes');
  await snap('desktop-private-source-reopened');
+ acceptNextConfirmation=true;
+ await click('.csf-editor-title .csw-danger');
+ await until(()=>evaluate('document.querySelector(".csf-message")?.textContent.includes("Moved intro.md")'),'Saved source moved to private Trash');
+ assert.ok(fileNodes.get(sourceId).deletedAt!==null,'Fixture confirms deletion as a tombstone');
+ await click('.csf-trash-toggle');
+ await until(()=>evaluate('document.querySelector(".csf-trash-item")?.textContent.includes("intro.md")'),'Trash shows deleted source metadata');
+ await click('.csf-trash-item button[aria-label="Restore intro.md"]');
+ await until(()=>evaluate('document.querySelector(".csf-message")?.textContent.includes("Restored intro.md")'),'Exact-revision restore confirmed');
+ assert.equal(fileNodes.get(sourceId).deletedAt,null,'Restored file is active again');
+ await click('.csf-tree-row[title="Scenes / intro.md"]');
+ await until(()=>evaluate('document.querySelector(".csf-source")?.value==="# First Signal\\nUnsaved workspace-local change."'),'Restored source retains saved content');
+ await snap('desktop-private-trash-restored');
  const newTab=await evaluate('(()=>{const tab=[...document.querySelectorAll(".csw-tab button[role=tab]")].find(x=>x.textContent.includes("Orbit Garden"));if(!tab)return false;tab.click();return true;})()');
  assert.equal(newTab,true,'New project tab remains available');
  await until(()=>evaluate('document.querySelector(".csw-file-host:not([hidden]) .csf-header h2")?.textContent==="Orbit Garden"'),'New project reopened');
@@ -253,7 +265,7 @@ try{
  assert.equal(failures.length,0,'No synthetic browser runtime exceptions '+failures.join('; '));
  const result={source:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),
   status:'PASS',syntheticOnly:true,realMemberAcceptance:false,providerCalls:0,
-  createdProject:createdId,createdRequests:posts.length,openedTabs:2,foldersCreated:1,sourceFilesCreated:1,sourceSaves:filePatches.length,mobile,guestDenied:true};
+  createdProject:createdId,createdRequests:posts.length,openedTabs:2,foldersCreated:1,sourceFilesCreated:1,sourceSaves:filePatches.filter(x=>!x.deleted).length,trashMoves:filePatches.filter(x=>x.deleted).length,restores:1,mobile,guestDenied:true};
  writeFileSync(join(output,'acceptance.json'),JSON.stringify(result,null,2));
  console.log(JSON.stringify(result));
 }catch(error){
