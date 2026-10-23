@@ -105,6 +105,9 @@ export function CinematicLandingPage(){
             <Link className="av79-button av79-button--bright" to="/discover">
               Enter ANEVUM <Icon name="arrow" size={18}/>
             </Link>
+             <Link className="av123-member-entry" to={signedIn?"/member":"/join"}>
+               {signedIn?"Return to my space":"Create your member space"} <Icon name="arrow" size={16}/>
+             </Link>
           </div>
           <div className="av114-arrival-clarity" aria-label="Visitor access and creator publishing status">
             <span><i aria-hidden="true"/> Explore freely. No account required.</span>
