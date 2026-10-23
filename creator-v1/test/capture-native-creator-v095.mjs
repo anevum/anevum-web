@@ -166,10 +166,14 @@ try{
     frameFill:Math.abs(f.width-r.width)<=2&&Math.abs(f.height-r.height)<=2,
     exitVisible:!!b&&b.width>40&&b.height>=44&&b.left>=0&&b.right<=innerWidth+1&&b.top>=0&&b.bottom<=innerHeight+1,
     exitOnTop:!!b&&document.elementFromPoint(b.left+b.width/2,b.top+b.height/2)===exit,
-    focusOnExit:document.activeElement===exit,bodyLocked:document.body.classList.contains('av095-expanded')};
+    focusOnExit:document.activeElement===exit,bodyLocked:document.body.classList.contains('av095-expanded'),
+    exitBounds:b?{left:b.left,top:b.top,right:b.right,bottom:b.bottom,width:b.width,height:b.height}:null,
+    viewport:{width:innerWidth,height:innerHeight}};
   })()`);
-  assert.deepEqual(immersive,{topLayer:true,sameWidth:true,sameHeight:true,origin:true,frameFill:true,
-   exitVisible:true,exitOnTop:true,focusOnExit:true,bodyLocked:true},'iPhone fallback must occupy the top layer, preserve viewport size and expose Exit');
+  const {exitBounds,viewport:playerViewport,...immersiveFlags}=immersive;
+  assert.deepEqual(immersiveFlags,{topLayer:true,sameWidth:true,sameHeight:true,origin:true,frameFill:true,
+   exitVisible:true,exitOnTop:true,focusOnExit:true,bodyLocked:true},
+   'iPhone immersive geometry or exit control failed: '+JSON.stringify({exitBounds,viewport:playerViewport}));
   await screenshot('native-iphone-expand-320');
   assert.equal(await evaluate('document.querySelector(".av095-player iframe").src'),before);
   await assertPlayerContinues('Expand player');
