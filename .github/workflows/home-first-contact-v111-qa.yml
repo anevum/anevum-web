@@ -1,0 +1,72 @@
+name: ANEVUM V111 Homepage First-Contact QA
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/web/src/pages/CinematicLandingPage.tsx'
+      - 'creator-v1/web/src/home-first-contact-v111.css'
+      - 'creator-v1/web/src/main.tsx'
+      - 'creator-v1/test/home-first-contact-v111.test.mjs'
+      - 'creator-v1/test/home-navigation-v079.test.mjs'
+      - 'creator-v1/test/capture-home-first-contact-v111.mjs'
+      - '.github/workflows/home-first-contact-v111-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: home-v111-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  first-contact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install project dependencies without scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Typecheck canonical web app
+        run: npm run check:creator-v1-web
+      - name: Build actual canonical web app
+        run: npm run build:creator-v1-web
+      - name: Build isolated React staging-path asset
+        run: npm run build:creator-v1-web:staging
+      - name: Verify first contact, IREN tour, and existing homepage
+        working-directory: creator-v1
+        run: |
+          node --test test/home-first-contact-v111.test.mjs
+          npm run test:ux-v079
+      - name: Capture interactive homepage first-contact at three real browser sizes
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome"
+          mkdir -p evidence/home-v111
+          node creator-v1/test/portal-offline-preview.mjs > evidence/home-v111/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 70); do
+            if curl -fsS http://127.0.0.1:4178/__ready >/dev/null; then break; fi
+            sleep 0.25
+          done
+          curl -fsS http://127.0.0.1:4178/__ready >/dev/null
+          node creator-v1/test/capture-home-first-contact-v111.mjs "$chrome" http://127.0.0.1:4178 evidence/home-v111
+          test -s evidence/home-v111/acceptance.json
+          test -s evidence/home-v111/first-contact-desktop.png
+          test -s evidence/home-v111/first-contact-phone.png
+          test -s evidence/home-v111/first-contact-small-phone.png
+          test -s evidence/home-v111/first-contact-iren-tour-phone.png
+      - name: Retain visual acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: home-v111-browser-evidence
+          path: evidence/home-v111/
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Exact source
+        run: git rev-parse HEAD
+# No release, Cloudflare tokens, member writes, or publishing permissions.

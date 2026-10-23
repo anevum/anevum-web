@@ -1,0 +1,51 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {parse} from "@babel/parser";
+const get=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
+const guide=get("web/src/components/IrenGuidedContinuance.tsx");
+const home=get("web/src/pages/CinematicLandingPage.tsx");
+const queue=get("web/src/components/AnevumNotifications.tsx");
+const events=get("web/src/lib/ui-events.ts");
+const transmissions=get("web/src/iren-transmissions-v111.css");
+const wayfinder=get("web/src/first-contact-wayfinder-v115.css");
+
+test("V116 maintains one guide, one companion and a single verified notifications queue",()=>{
+ for(const source of [guide,home,queue,events])assert.doesNotThrow(()=>parse(source,{sourceType:"module",plugins:["typescript","jsx"]}));
+ assert.equal((guide.match(/className="ir80-dock ir87-scout"/g)||[]).length,1);
+ assert.match(queue,/activeTransmission:active\|\|null/);
+ assert.match(queue,/progressionRequest<RewardInbox>\('notifications'/);
+ assert.match(queue,/progressionRequest\('notifications\/ack',\{id:item\.serverId\}\)/);
+ assert.match(guide,/const broadcast=Boolean\(activeTransmission&&!hidden&&!panelOpen&&tourIndex===null\)/);
+ assert.match(guide,/ir111-transmitting ir111-phase-/);
+ assert.match(guide,/dismissTransmission\(activeTransmission\)/);
+ assert.match(guide,/className=\{"ir111-transmission ir111-kind-"\+activeTransmission\.kind\}/);
+ assert.match(guide,/className="ir111-quiet"/);
+ assert.doesNotMatch(queue,/className=\{'an-toast/);
+});
+test("V116 starts at genuine ANEVUM arrival; test games never become the first task",()=>{
+ assert.match(home,/A universe <em>in the making\.<\/em>/);
+ assert.match(home,/const showcase=projects\.filter\(project=>project\.category!=="games"\)/);
+ assert.doesNotMatch(home,/Play a game|FEATURED RELEASE|const firstGame=/);
+ assert.match(home,/new Event\("anevum:iren-intro"\)/);
+ assert.match(guide,/addEventListener\("anevum:iren-intro",onIntro\)/);
+ assert.match(guide,/id:"arrival",route:"\/",anchor:'\[data-iren-anchor="arrival"\]'/);
+ assert.match(guide,/id:"wayfinder-home",route:"\/",anchor:'\[data-iren-anchor="arrival-paths"\]'/);
+ assert.match(guide,/Welcome to the Continuance\./);
+ assert.match(guide,/setWelcomeOpen\(true\)/);
+ assert.doesNotMatch(guide,/window\.setTimeout\(attempt,1100\)/);
+ assert.match(home,/Studio publishing is still in testing/);
+});
+test("V116 preserves real IREN signals while guide is open or helper is hidden",()=>{
+ assert.match(guide,/activeTransmission&&<aside className="ir111-inline"/);
+ assert.match(guide,/hidden&&activeTransmission&&<aside className="ir111-quiet"/);
+ assert.match(guide,/activeTransmission\.preview&&<small>Visual preview only/);
+ assert.match(guide,/activeTransmission\.kind==="level"/);
+ assert.match(guide,/activeTransmission\.kind==="award"/);
+ assert.match(guide,/to="\/status"/);
+ assert.match(events,/type AlertKind=.*'update'/);
+ assert.match(transmissions,/prefers-reduced-motion:reduce/);
+ assert.match(transmissions,/forced-colors:active/);
+ assert.match(wayfinder,/@media\(max-width:650px\)/);
+ assert.doesNotMatch(guide,/SpeechSynthesisUtterance|navigator\.geolocation|dangerouslySetInnerHTML/);
+});

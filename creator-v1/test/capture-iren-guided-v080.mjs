@@ -79,8 +79,8 @@ try{
   // Each viewport exercises a genuinely fresh visitor. Prior viewport history
   // is removed before the next navigation, never while the first page is blank.
   if(width!==320)await evaluate('localStorage.removeItem("anevum.iren.first-contact.v092")');
-  // A background tab must not consume first contact. Install the visibility
-  // probe before any React JS executes, instead of racing the 1100ms timer.
+  // A background tab must not prompt or consume first contact. Keep the
+  // visibility probe even though the welcome is now explicitly user initiated.
   let visibilityProbeId=null;
   if(width===320){
     const probe=await send("Page.addScriptToEvaluateOnNewDocument",{
@@ -108,21 +108,15 @@ try{
     await evaluate('(()=>{const input=document.getElementById("qa-iren-editing-probe");input.blur();input.remove();return true})()');
     await send("Page.removeScriptToEvaluateOnNewDocument",{identifier:visibilityProbeId});
   }
-  try{
-    await until(()=>evaluate('!!document.querySelector(".ir92-first-contact")'),10000);
-  }catch(error){
-    const diagnostic=await evaluate(`JSON.stringify({
-      visibility:document.visibilityState,
-      active:document.activeElement?.outerHTML?.slice(0,220),
-      seen:localStorage.getItem("anevum.iren.first-contact.v092"),
-      companion:!!document.querySelector(".ir80-dock"),
-      modal:!!document.querySelector('dialog[open],[role="dialog"][aria-modal="true"]'),
-      helperPanel:!!document.querySelector(".ir80-help"),
-      route:location.pathname
-    })`);
-    throw Error("IREN_FIRST_CONTACT_RESUME_FAILED_"+width+": "+diagnostic+" / "+String(error));
-  }
-  await check("automatic-arrival-does-not-steal-focus-"+width,'document.activeElement?.getAttribute("aria-label")!=="Close IREN"');
+  // V115 first load deliberately has no unsolicited welcome popup. The
+  // visitor chooses "Meet IREN" inside the arrival console. Keyboard focus
+  // moves to the requested companion panel, never on page load.
+  await pause(1400);
+  await check("no-unsolicited-first-contact-"+width,'!document.querySelector(".ir92-first-contact")&&localStorage.getItem("anevum.iren.first-contact.v092")!=="seen"');
+  await evaluate('document.querySelector(".av115-iren-console button").click()');
+  await until(()=>evaluate('!!document.querySelector(".ir92-first-contact")'),10000);
+  await until(()=>evaluate('document.activeElement?.getAttribute("aria-label")==="Close IREN"'));
+  await check("explicit-arrival-focus-"+width,'document.activeElement?.getAttribute("aria-label")==="Close IREN"');
   await check("welcome-live-region-"+width,'document.querySelector(".ir92-voice")?.getAttribute("role")==="status"');
   await check("first-contact-four-choices-"+width,'document.querySelectorAll(".ir92-intent-grid > a,.ir92-intent-grid > button").length===4');
   await check("first-contact-real-destinations-"+width,'(()=>{const paths=[...document.querySelectorAll(".ir92-intent-grid a")].map(a=>new URL(a.href).pathname);return paths.some(p=>p.endsWith("/discover"))&&paths.some(p=>p.endsWith("/studio"))&&paths.some(p=>p.endsWith("/community"));})()');
@@ -132,8 +126,8 @@ try{
   await capture("iren-first-contact-"+width);
   if(width===320){
     await evaluate('document.querySelector(".ir92-intent-grid button").click()');
-    await until(()=>evaluate('!!document.querySelector(".ir80-guide-card")&&location.pathname.endsWith("/discover")'));
-    await check("first-contact-tour-opt-in",'document.querySelector("#ir80-guide-title")?.textContent.includes("interests you")');
+    await until(()=>evaluate('!!document.querySelector(".ir80-guide-card")&&location.pathname.endsWith("/creator/")'));
+    await check("first-contact-tour-opt-in",'document.querySelector("#ir80-guide-title")?.textContent.includes("ANEVUM")');
     await evaluate('document.querySelector(".ir80-skip").click()');
     await until(()=>evaluate('!document.querySelector(".ir80-guide-card")'));
     await send("Page.navigate",{url:base+"/creator/"});
@@ -181,13 +175,19 @@ try{
   await capture("iren-signals-"+width);
   await evaluate('document.querySelector("#ir87-help-tab").click()');
   await evaluate('document.querySelector(".ir80-tour-launch").click()');
-  await until(()=>evaluate('!!document.querySelector(".ir80-guide-card")&&location.pathname.endsWith("/discover")'));
+  await until(()=>evaluate('!!document.querySelector(".ir80-guide-card")&&location.pathname.endsWith("/creator/")'));
   await until(()=>evaluate('!!document.querySelector(".ir80-spotlight")'));
   await until(()=>evaluate('!!document.querySelector(".ir80-guide-layer .ir88-figure.is-rendering")'),16000);
   await check("guide-single-real-webgl-"+width,'document.querySelectorAll(".ir88-3d-canvas").length===1');
-  await check("tour-step-"+width,'document.querySelector("#ir80-guide-title")?.textContent.includes("interests you")');
+  await check("tour-step-"+width,'document.querySelector("#ir80-guide-title")?.textContent.includes("ANEVUM")');
   await check("tour-modal-"+width,'document.querySelector(".ir80-guide-card").getAttribute("aria-modal")==="true"');
   await check("tour-inside-"+width,'(()=>{const r=document.querySelector(".ir80-guide-card").getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1&&r.top>=0&&r.bottom<=innerHeight+1;})()');
+  await capture("iren-arrival-"+width);
+  await evaluate('document.querySelector("[data-iren-next]").click()');
+  await until(()=>evaluate('location.pathname.endsWith("/creator/")&&document.querySelector("#ir80-guide-title")?.textContent.includes("Choose your direction")'));
+  await capture("iren-wayfinder-"+width);
+  await evaluate('document.querySelector("[data-iren-next]").click()');
+  await until(()=>evaluate('location.pathname.endsWith("/discover")&&document.querySelector("#ir80-guide-title")?.textContent.includes("interests you")'));
   await capture("iren-discover-"+width);
   await evaluate('document.querySelector("[data-iren-next]").click()');
   await until(()=>evaluate('location.pathname.endsWith("/community")&&!!document.querySelector(".ir80-guide-card")&&document.querySelector("#ir80-guide-title")?.textContent.includes("your people")'));

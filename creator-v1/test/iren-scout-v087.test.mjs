@@ -14,7 +14,9 @@ test("Only IREN owns a persistent floating bottom-right control",()=>{
  assert.doesNotThrow(()=>parse(notifications,{sourceType:"module",plugins:["typescript","jsx"]}));
  assert.equal((scout.match(/className="ir80-dock ir87-scout"/g)||[]).length,1);
  assert.doesNotMatch(notifications,/an-notification-center|an-inbox-toggle|an-updates-dialog/);
- assert.match(notifications,/className=\{'an-toast/);
+ assert.doesNotMatch(notifications,/className=\{'an-toast/);
+ assert.match(notifications,/activeTransmission:active\|\|null/);
+ assert.match(scout,/ir111-transmission/);
  assert.match(shell,/<IrenGuidedContinuance /);
 });
 

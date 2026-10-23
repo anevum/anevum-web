@@ -134,24 +134,27 @@ try {
     if (await evaluate('document.documentElement.scrollWidth>innerWidth+1')) throw Error("V007_PEOPLE_OVERFLOW_" + width);
     await screenshot("community-v007-people", width);
 
-    // V079 HOME + SHARED CREATOR IDENTITY — compiled React, synthetic public fixture.
-    // The previous V009 dossier panel is no longer on the homepage. V078
-    // tests separately verify server-earned level art and private award gating.
+    // V115 HOME: inspect the real compiled discovery-first homepage, not
+    // the obsolete game-first V079 featured card. Fixture projects remain
+    // available through Discover, including the unpromoted temporary game.
     await client.send("Page.navigate", {url:base+"/creator/"});
-    await until(()=>evaluate('document.readyState==="complete"&&!!document.querySelector(".av79-home .av79-feature")&&!!document.querySelector(".av79-feature [data-player-card=v078]")'));
-    const signature=await evaluate('(()=>{const feature=document.querySelector(".av79-feature"),card=feature?.querySelector("[data-player-card=v078]");return {width:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth+1,headline:document.querySelector(".av79-hero h1")?.textContent,featured:feature?.querySelector("h3")?.textContent,creator:card?.querySelector(".av61-member-name")?.textContent,channel:!!card?.classList.contains("av65-player-card--channel"),unearnedLevel:!!card?.querySelector(".av61-specimen,.av61-level-label"),oldModules:document.querySelectorAll(".av73-world-deck,.av11-live-index,.av6-community-index").length,watermark:getComputedStyle(document.body,"::after").content.includes("SYNTHETIC OFFLINE REVIEW")};})()');
-    if(signature.overflow||!signature.headline?.includes("Find your next")||
-      !signature.featured||!signature.creator||!signature.channel||
-      signature.unearnedLevel||signature.oldModules||!signature.watermark)
-      throw Error("V079_HOME_CREATOR_CARD_"+width+":"+JSON.stringify(signature));
-    await screenshot("v079-home-creator",width);
+    await until(()=>evaluate('document.readyState==="complete"&&!!document.querySelector(".av115-wayfinder")&&!!document.querySelector(".av115-public-index")&&document.querySelectorAll(".av115-gateway").length===4'));
+    const signature=await evaluate('(()=>{const records=[...document.querySelectorAll(".av115-public-item")],first=records[0],card=first?.querySelector("[data-player-card=v078]"),hero=document.querySelector(".av115-arrival"),member=document.querySelector(".av115-gateway-member");return {width:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth+1,headline:hero?.querySelector("h1")?.textContent,primary:hero?.querySelector(".av79-hero-actions a")?.getAttribute("href"),gateways:document.querySelectorAll(".av115-gateway").length,member:member?.getAttribute("href"),records:records.length,firstTitle:first?.querySelector("h3")?.textContent||null,creator:card?.querySelector(".av61-member-name")?.textContent||null,channel:card?card.classList.contains("av65-player-card--channel"):null,unearnedLevel:!!card?.querySelector(".av61-specimen,.av61-level-label"),featuredGame:!!document.querySelector(".av79-feature"),oldModules:document.querySelectorAll(".av73-world-deck,.av11-live-index,.av6-community-index").length,watermark:getComputedStyle(document.body,"::after").content.includes("SYNTHETIC OFFLINE REVIEW")};})()');
+    if(signature.overflow||!signature.headline?.includes("A universe")||
+       !signature.primary?.endsWith("/discover")||signature.gateways!==4||
+       !signature.member?.endsWith("/join")||signature.featuredGame||
+       signature.unearnedLevel||signature.oldModules||!signature.watermark||
+       (signature.creator&&!signature.channel))
+      throw Error("V115_HOME_DISCOVERY_"+width+":"+JSON.stringify(signature));
+    await screenshot("v079-home-creator",width); // Historical artifact name required by wider CI.
+    await screenshot("v115-home-discovery",width);
     await evaluate('document.querySelector(".av9-menu-trigger").click()');
     await until(()=>evaluate('document.querySelector(".av79-navigation[open]")?.querySelectorAll(".av79-destination").length===4'));
     const navigation=await evaluate('(()=>{const dialog=document.querySelector(".av79-navigation[open]");return {open:!!dialog,links:dialog?.querySelectorAll(".av79-destination").length,categoryArtwork:dialog?.querySelectorAll("img,.cw-artwork,canvas").length,overflow:dialog?.scrollWidth>dialog?.clientWidth+1}})()');
     if(!navigation.open||navigation.links!==4||navigation.categoryArtwork||navigation.overflow)
       throw Error("V079_WAYFINDER_COMMUNITY_"+width+":"+JSON.stringify(navigation));
     await screenshot("v079-wayfinder-community",width);
-    console.log("V079_HOME_CREATOR_CARD_"+width+"="+JSON.stringify(signature));
+    console.log("V115_HOME_DISCOVERY_"+width+"="+JSON.stringify(signature));
     console.log("COMMUNITY_V007_BROWSER_" + width + "=" + JSON.stringify(state));
   }
   writeFileSync(join(output, "capture-status.txt"),

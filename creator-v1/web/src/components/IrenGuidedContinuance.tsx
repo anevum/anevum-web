@@ -7,6 +7,7 @@ import {LevelEmblem,AwardEmblem} from "./LevelEmblem";
 import {IrenLivingCanvas} from "./IrenLivingCanvas";
 import {IrenSpatialTour} from "./IrenSpatialTour";
 import type {IrenMood} from "../lib/iren-living-rig-v088";
+import "../iren-transmissions-v111.css";
 import {irenStationForPath} from "../lib/iren-companion-context-v089";
 
 /**
@@ -59,6 +60,14 @@ const memberSteps:readonly GuideStep[]=[
    hint:"IREN can always be reopened from the small help companion."}
 ];
 const visitorSteps:readonly GuideStep[]=[
+  {id:"arrival",route:"/",anchor:'[data-iren-anchor="arrival"]',
+   eyebrow:"01 / FIRST CONTACT",title:"You've reached ANEVUM.",
+   description:"This is a creative network taking shape: a place to discover original work, meet people, and create. There is no required path and you can look around without signing up.",
+   hint:"The entrance gives you direct access to discovery. The wayfinder below opens the other parts of the network."},
+  {id:"wayfinder-home",route:"/",anchor:'[data-iren-anchor="arrival-paths"]',
+   eyebrow:"02 / THE WAYFINDER",title:"Choose your direction.",
+   description:"Discover real public work, enter Creator Studio while publishing is in testing, connect with the community, or join when you want your own member identity.",
+   hint:"Each direction is an actual part of ANEVUM, not a simulated mission or a temporary test-game showcase."},
   memberSteps[4],
   memberSteps[5],
   memberSteps[6]
@@ -162,7 +171,7 @@ function IrenScout(){
 export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   const {pathname,search}=useLocation();
   const navigate=useNavigate();
-  const {recent,unreadCount,markSignalsSeen}=useIrenSignals();
+  const {recent,unreadCount,markSignalsSeen,activeTransmission,transmissionPhase,dismissTransmission}=useIrenSignals();
   const storageKey=storagePrefix+(memberId||"visitor");
   const steps=memberId?memberSteps:visitorSteps;
   const station=irenStationForPath(pathname,Boolean(memberId));
@@ -181,6 +190,8 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   const [look,setLook]=useState<[number,number]>([0,0]);
   const [wakeCycle,setWakeCycle]=useState(0);
   const [viewport,setViewport]=useState(()=>({width:window.innerWidth,height:window.innerHeight}));
+  // The existing IREN rig presents the queue. No second floating companion mounts.
+  const broadcast=Boolean(activeTransmission&&!hidden&&!panelOpen&&tourIndex===null);
   const dragRef=useRef<{id:number;x:number;y:number;right:number;bottom:number;moved:boolean}|null>(null);
   const suppressClick=useRef(false);
   const pointerStamp=useRef(0);
@@ -215,54 +226,10 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     if(panelOpen&&tourIndex===null)setMood("curious");
   },[pathname,memberId]);
 
-  // First contact is a single invitation, not a page-blocking modal.
-  // Background tabs get the same chance when they become visible. Never
-  // consume the invitation if another dialog is active or a visitor is editing.
-  useEffect(()=>{
-    if(pathname!=="/"||hidden||panelOpen||tourIndex!==null||firstContactSeen())return;
-    let timer:number|undefined;
-    const editing=()=>{
-      const active=document.activeElement;
-      return active instanceof HTMLElement&&
-        Boolean(active.matches('input,textarea,select,[contenteditable],[role="textbox"]')||
-          active.closest('[contenteditable="true"]'));
-    };
-    const attempt=()=>{
-      timer=undefined;
-      if(document.visibilityState!=="visible"||firstContactSeen())return;
-      if(document.querySelector("dialog[open]")||
-         document.querySelector('[role="dialog"][aria-modal="true"]')||editing()){
-        // Losing keyboard focus is not reliable in every embedded webview.
-        // Retry quietly until the field/dialog is no longer active, without
-        // ever consuming the one-time greeting or stealing focus.
-        timer=window.setTimeout(attempt,650);
-        return;
-      }
-      rememberFirstContact();
-      setWelcomeOpen(true);
-      setWelcomeExpanded(false);
-      setActiveView("help");
-      setMood("greet");
-      setPanelOpen(true);
-    };
-    const schedule=()=>{
-      if(timer!==undefined)window.clearTimeout(timer);
-      timer=undefined;
-      if(document.visibilityState!=="visible"||firstContactSeen())return;
-      timer=window.setTimeout(attempt,1100);
-    };
-    schedule();
-    document.addEventListener("visibilitychange",schedule);
-    // An editor that was focused during the first timer can leave normally:
-    // defer the greeting until after editing rather than popping over a form.
-    document.addEventListener("focusout",schedule,true);
-    return()=>{
-      if(timer!==undefined)window.clearTimeout(timer);
-      document.removeEventListener("visibilitychange",schedule);
-      document.removeEventListener("focusout",schedule,true);
-    };
-  },[pathname,hidden,panelOpen,tourIndex]);
-
+  // V115: the visible home wayfinder and IREN console offer first contact
+  // without an unsolicited timed overlay. The one genuine companion in Shell
+  // opens orientation only after a visitor explicitly chooses it. This also
+  // avoids duplicate first-visit surfaces and never steals initial focus.
   useEffect(()=>{
     if(panelOpen&&focusRequested.current){
       focusRequested.current=false;
@@ -334,13 +301,29 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
       });
     };
     const onStart=()=>start();
+    const onIntro=()=>{
+      // Explicit first-contact action from the arrival scene. Reuse this
+      // companion's existing verified welcome, not a second IREN instance.
+      rememberFirstContact();
+      setStoredHidden(storageKey,false);
+      setHidden(false);
+      setTourIndex(null);
+      setWelcomeOpen(true);
+      setWelcomeExpanded(true);
+      setPanelOpen(true);
+      setActiveView("help");
+      setMood("greet");
+      focusRequested.current=true;
+    };
     window.addEventListener("anevum:member-created",onCreated);
     window.addEventListener("anevum:iren-open",onOpen);
     window.addEventListener("anevum:iren-tour",onStart);
+    window.addEventListener("anevum:iren-intro",onIntro);
     return()=>{
       window.removeEventListener("anevum:member-created",onCreated);
       window.removeEventListener("anevum:iren-open",onOpen);
       window.removeEventListener("anevum:iren-tour",onStart);
+      window.removeEventListener("anevum:iren-intro",onIntro);
     };
   },[memberId,storageKey,start]);
 
@@ -385,6 +368,16 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     if(!memberId||unreadCount<1||!arriving)return;
     setMood(arriving.kind==="level"?"celebrate":"notify");
   },[recent,memberId,unreadCount]);
+
+  useEffect(()=>{
+    if(!activeTransmission||hidden||tourIndex!==null){
+      // Release the transient pointing pose when the signal is dismissed;
+      // ordinary IREN moods, member tours and earned recognition stay intact.
+      setMood(previous=>previous==="guide"?"idle":previous);
+      return;
+    }
+    setMood(activeTransmission.kind==="level"||activeTransmission.kind==="award"?"celebrate":"guide");
+  },[activeTransmission?.key,hidden,tourIndex]);
 
   useEffect(()=>{
     const measure=()=>setViewport({width:window.innerWidth,height:window.innerHeight});
@@ -543,7 +536,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   const currentTopic=topics.find(topic=>topic.id===activeTopic)||topics[0];
   const isMobile=viewport.width<=650;
   const floatingInvite=spatialTourEnabled&&panelOpen&&welcomeOpen&&!welcomeExpanded;
-  const spriteSize=floatingInvite?82:panelOpen?(isMobile?130:164):54;
+  const spriteSize=broadcast?(isMobile?100:140):floatingInvite?82:panelOpen?(isMobile?130:164):54;
   // Keep IREN clear of fixed Wayfinder/header controls even if dragged
   // directly against the top of the viewport or restored from old storage.
   const topClearance=isMobile?74:88;
@@ -561,7 +554,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   const layoutWidth=document.documentElement.clientWidth||viewport.width;
   const codexCornerRight=!dockPosition&&pathname==="/auras"
     ?Math.max(10,layoutWidth-spriteSize-(isMobile?10:16)):null;
-  const companionStyle:CSSProperties=safePosition
+  const companionStyle:CSSProperties=broadcast?{}:safePosition
     ?{right:safePosition.right,bottom:safePosition.bottom}
     :codexCornerRight!==null?{right:codexCornerRight}:{};
   const panelWidth=Math.min(isMobile?326:338,layoutWidth-(isMobile?22:24));
@@ -711,13 +704,13 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
 
   return <>
     {tourIndex===null&&!hidden&&<div ref={companionRef}
-      className={"ir80-companion ir87-companion ir88-companion"+(panelOpen&&!floatingInvite?" ir88-companion-expanded":"")+(floatingInvite?" ir97-invite-active":"")}
+      className={"ir80-companion ir87-companion ir88-companion"+(panelOpen&&!floatingInvite?" ir88-companion-expanded":"")+(floatingInvite?" ir97-invite-active":"")+(broadcast?" ir111-transmitting ir111-phase-"+transmissionPhase:"")+(motionPaused?" ir111-motion-paused":"")}
       style={companionStyle}
       onPointerMove={attendPointer} onFocusCapture={attendFocus}
       onPointerLeave={()=>setLook([0,0])}>
       {panelOpen&&(floatingInvite?<section id="ir87-panel" className="ir97-invite" style={helpStyle} aria-label="IREN first visit">
         <span className="ir97-invite-label">IREN / FIELD COMPANION</span>
-        <p className="ir97-invite-voice" role="status" aria-live="polite">I'm IREN. Want a quick look around?</p>
+        <p className="ir97-invite-voice" role="status" aria-live="polite">I'm IREN. Want to explore the Continuance?</p>
         <div className="ir97-invite-actions">
           <button type="button" onClick={()=>start(true)}>Show me</button>
           <button type="button" onClick={closePanel}>Not now</button>
@@ -729,15 +722,22 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
             <small className="ir88-station">{station.code}</small></span>
           <button type="button" ref={closePanelRef} className="ir80-icon-button" aria-label="Close IREN" onClick={closePanel}><Icon name="close" size={17}/></button>
         </header>
+        {activeTransmission&&<aside className="ir111-inline" aria-label="Current IREN transmission">
+          <span>IREN / INCOMING SIGNAL</span>
+          <strong>{activeTransmission.title}</strong>
+          {activeTransmission.detail&&<p>{activeTransmission.detail}</p>}
+          {activeTransmission.preview&&<small>Visual preview only. Nothing was awarded.</small>}
+          <button type="button" onClick={()=>dismissTransmission(activeTransmission)}>Dismiss signal</button>
+        </aside>}
         {welcomeOpen?<div className="ir92-first-contact" aria-label="First visit guidance">
-          <p className="ir92-voice" role="status" aria-live="polite">Welcome to ANEVUM. I'm IREN, your Continuance Institute field assistant.</p>
-          <h2>What brings you here?</h2>
-          <p className="ir92-intro">You can explore without an account. Choose a starting point, or I'll show you around.</p>
+          <p className="ir92-voice" role="status" aria-live="polite">Signal established. I'm IREN, your Continuance Institute field guide.</p>
+          <h2>Welcome to the Continuance.</h2>
+          <p className="ir92-intro">ANEVUM is a growing creative network. Discover original work, meet people, or begin building. You don't need an account just to explore.</p>
           <div className="ir92-intent-grid" aria-label="Choose your first destination">
-            <Link to="/discover" onClick={closeWelcome}><span>01 / DISCOVER</span><strong>Explore creations</strong></Link>
-            <Link to="/studio" onClick={closeWelcome}><span>02 / CREATE</span><strong>Make something</strong></Link>
+            <Link to="/discover" onClick={closeWelcome}><span>01 / DISCOVER</span><strong>Explore the network</strong></Link>
+            <Link to="/studio" onClick={closeWelcome}><span>02 / CREATE</span><strong>Visit Creator Studio</strong></Link>
             <Link to="/community" onClick={closeWelcome}><span>03 / COMMONS</span><strong>Meet the community</strong></Link>
-            <button type="button" onClick={()=>start(true)}><span>04 / GUIDANCE</span><strong>Show me around</strong></button>
+            <button type="button" onClick={()=>start(true)}><span>04 / ORIENTATION</span><strong>Guide me through</strong></button>
           </div>
           <button type="button" className="ir92-not-now" onClick={closePanel}>Not now</button>
         </div>:<>
@@ -790,10 +790,45 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
           <Link className="ir87-signals-link" to={memberId?"/member?tab=awards":"/join"} onClick={()=>setPanelOpen(false)}>
             {memberId?"OPEN AWARDS & STATS":"JOIN OR SIGN IN"} <Icon name="arrow" size={15}/>
           </Link>
+          <div className="ir111-status-link">
+            <span>PLATFORM UPDATES</span>
+            <p>Published system availability is tracked separately from earned personal signals. Unreleased changes are not announcements.</p>
+            <Link to="/status" onClick={()=>setPanelOpen(false)}>VIEW LIVE STATUS <Icon name="arrow" size={15}/></Link>
+          </div>
           <button type="button" className="ir87-back-help" onClick={()=>{setActiveView("help");setMood("curious")}}>Back to guidance</button>
         </div>}
         </>}
       </section>)}
+      {broadcast&&activeTransmission&&<section key={activeTransmission.key}
+        className={"ir111-transmission ir111-kind-"+activeTransmission.kind}
+        aria-label="IREN transmission">
+        <div className="ir111-header">
+          <span>IREN / CONTINUANCE TRANSMISSION</span>
+          <span>{activeTransmission.preview?"VISUAL PREVIEW":activeTransmission.kind==="level"?"LEVEL ATTAINED":
+            activeTransmission.kind==="award"?"RECOGNITION VERIFIED":
+            activeTransmission.kind==="xp"?"PROGRESSION RECORDED":
+            activeTransmission.kind==="error"?"ATTENTION REQUIRED":
+            activeTransmission.kind==="success"?"ACTION CONFIRMED":
+            activeTransmission.kind==="update"?"PLATFORM UPDATE":"INFORMATION SIGNAL"}</span>
+        </div>
+        <div className="ir111-transmission-content">
+          {activeTransmission.kind==="level"&&typeof activeTransmission.level==="number"
+            ?<span className="ir111-reward" aria-hidden="true"><LevelEmblem level={activeTransmission.level} size={68}/></span>:
+           activeTransmission.kind==="award"&&activeTransmission.award
+            ?<span className="ir111-reward" aria-hidden="true"><AwardEmblem award={activeTransmission.award}/></span>:
+            <span className="ir111-symbol" aria-hidden="true">{activeTransmission.kind==="error"?"!":"✦"}</span>}
+          <div className="ir111-message">
+            <strong>{activeTransmission.title}</strong>
+            {activeTransmission.detail&&<p>{activeTransmission.detail}</p>}
+            {activeTransmission.preview&&<small>Presentation preview only; no XP or award was granted.</small>}
+          </div>
+        </div>
+        <div className="ir111-footer">
+          <span>TRANSMITTED BY IREN · ANEVUM</span>
+          <button type="button" onClick={()=>dismissTransmission(activeTransmission)}
+            aria-label="Dismiss IREN transmission"><Icon name="close" size={17}/> DISMISS</button>
+        </div>
+      </section>}
       <button type="button" ref={dockRef} className="ir80-dock ir87-scout" aria-label={panelOpen?"Close IREN companion":"Open IREN companion"+(unreadCount>0?", "+unreadCount+" new signals":"")}
         aria-controls="ir87-panel" aria-expanded={panelOpen} title="IREN companion"
         onPointerDown={beginDrag} onPointerMove={moveDrag} onPointerUp={finishDrag}
@@ -809,11 +844,16 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
           if(!panelOpen)focusRequested.current=true;
           setPanelOpen(open=>!open);
         }}>
-        <IrenLivingCanvas mood={mood} expanded={panelOpen&&!floatingInvite} paused={motionPaused}
-          look={look} fallback={<IrenScout/>}/>
+        <IrenLivingCanvas mood={mood} expanded={(panelOpen&&!floatingInvite)||broadcast} paused={motionPaused}
+          look={broadcast?[-0.85,-0.18]:look} fallback={<IrenScout/>}/>
         {unreadCount>0&&<span className="ir87-unread" aria-hidden="true">{unreadCount>9?"9+":unreadCount}</span>}
       </button>
     </div>}
+    {hidden&&activeTransmission&&<aside className="ir111-quiet" aria-label="Notification with IREN hidden">
+      <strong>{activeTransmission.title}</strong>
+      {activeTransmission.detail&&<span>{activeTransmission.detail}</span>}
+      <button type="button" onClick={()=>dismissTransmission(activeTransmission)} aria-label="Dismiss notification"><Icon name="close" size={16}/></button>
+    </aside>}
     {step&&(spatialTourEnabled?<IrenSpatialTour step={step} index={tourIndex!} total={steps.length}
       target={spotlight} travelling={guideTravelling} paused={motionPaused}
       fallback={<IrenScout/>} onPause={()=>pause()} onSkip={()=>finish("skipped")}
@@ -844,6 +884,12 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
             <Icon name="close" size={18}/>
           </button>
         </div>
+        {activeTransmission&&<aside className="ir111-inline" aria-label="Current IREN transmission">
+          <span>IREN / INCOMING SIGNAL</span><strong>{activeTransmission.title}</strong>
+          {activeTransmission.detail&&<p>{activeTransmission.detail}</p>}
+          {activeTransmission.preview&&<small>Visual preview only; no award was granted.</small>}
+          <button type="button" onClick={()=>dismissTransmission(activeTransmission)}>Dismiss signal</button>
+        </aside>}
         <div className="ir80-guide-body" key={step.id}>
           <span className="ir80-code">{step.eyebrow}</span>
           <h2 id="ir80-guide-title">{step.title}</h2>
