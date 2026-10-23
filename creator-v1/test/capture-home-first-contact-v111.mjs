@@ -64,6 +64,16 @@ try{
    await until(()=>evaluate('!!document.querySelector(".ir92-first-contact")'));
    const welcome=await evaluate('(()=>({title:document.querySelector(".ir92-first-contact h2")?.textContent,choices:document.querySelectorAll(".ir92-intent-grid a,.ir92-intent-grid button").length,one:document.querySelectorAll(".ir87-scout").length<=1}))()');
    if(!welcome.title?.includes("Continuance")||welcome.choices!==4||!welcome.one)throw Error("V115_HOME_IREN_WELCOME_"+JSON.stringify(welcome));
+   // V116: the same IREN surface must present an incoming queue signal
+   // inline while the welcome is open. No second floating bot or fake reward.
+   await evaluate('window.dispatchEvent(new CustomEvent("anevum:alert",{detail:{owner:undefined,alert:{key:"v116-welcome-integration",kind:"info",title:"Welcome signal",detail:"Browser fixture only. No reward granted.",preview:true}}}))');
+   await until(()=>evaluate('!!document.querySelector(".ir111-inline")'));
+   const simultaneous=await evaluate('(()=>({one:document.querySelectorAll(".ir87-scout").length===1,inline:document.querySelector(".ir111-inline")?.textContent,duplicate:!!document.querySelector(".ir111-transmission"),welcome:!!document.querySelector(".ir92-first-contact"),live:document.querySelector(".an-live")?.textContent}))()');
+   if(!simultaneous.one||!simultaneous.welcome||simultaneous.duplicate||!simultaneous.inline?.includes("Welcome signal")||!simultaneous.live?.includes("Welcome signal"))
+    throw Error("V116_SINGLE_IREN_AND_INLINE_SIGNAL_"+JSON.stringify(simultaneous));
+   await screenshot("first-contact-iren-signal-inline-phone");
+   await evaluate('document.querySelector(".ir111-inline button")?.click()');
+   await until(()=>evaluate('!document.querySelector(".ir111-inline")'));
    await screenshot("first-contact-iren-welcome-phone");
    await evaluate('document.querySelector(".ir80-help-head .ir80-icon-button")?.click()');
    await until(()=>evaluate('!document.querySelector(".ir92-first-contact")'));
@@ -72,8 +82,20 @@ try{
    const tour=await evaluate('(()=>({route:location.pathname,title:document.querySelector("#ir80-guide-title")?.textContent,one:document.querySelectorAll(".ir87-scout").length<=1}))()');
    if(!tour.route?.endsWith("/creator/")||!tour.title?.includes("ANEVUM")||!tour.one)throw Error("V115_HOME_IREN_TOUR_"+JSON.stringify(tour));
    await screenshot("first-contact-iren-tour-phone");
+   // While the tour owns the viewport, an incoming verified alert must stay
+   // queued rather than auto-ACKing or disappearing without presentation.
+   await until(()=>evaluate('document.body.classList.contains("ir80-tour-active")'));
+   await evaluate('window.dispatchEvent(new CustomEvent("anevum:alert",{detail:{owner:undefined,alert:{key:"v116-tour-integration",kind:"info",title:"Tour-return signal",detail:"Synthetic browser fixture only.",preview:true}}}))');
+   await until(()=>evaluate('document.querySelector(".an-live")?.textContent?.includes("Tour-return signal")'));
+   await delay(6100);
+   const pending=await evaluate('(()=>({queued:document.querySelector(".an-live")?.textContent?.includes("Tour-return signal"),active:document.body.classList.contains("ir80-tour-active"),broadcast:!!document.querySelector(".ir111-transmission")}))()');
+   if(!pending.queued||!pending.active||pending.broadcast)throw Error("V116_GUIDED_TOUR_DROPPED_SIGNAL_"+JSON.stringify(pending));
    await evaluate('document.querySelector(".ir80-skip")?.click()');
    await until(()=>evaluate('!document.querySelector(".ir80-guide-card")'));
+   await until(()=>evaluate('!!document.querySelector(".ir111-phase-open .ir111-transmission")'));
+   await screenshot("first-contact-iren-post-tour-signal-phone");
+   await evaluate('document.querySelector(".ir111-transmission button")?.click()');
+   await until(()=>evaluate('!document.querySelector(".ir111-transmission")'));
   }
  }
  writeFileSync(join(output,"acceptance.json"),JSON.stringify({pass:true,source:"compiled React local loopback",memberWrites:0,evidence},null,2));
