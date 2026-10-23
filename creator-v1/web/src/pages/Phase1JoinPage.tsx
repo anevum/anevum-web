@@ -183,7 +183,18 @@ export function Phase1JoinPage(){
          <div><strong>{member.name||"ANEVUM MEMBER"}</strong><small>CANONICAL MEMBER SESSION</small></div></div>
        <Link className="button primary join-main-action" to="/member">OPEN MY PROFILE <span aria-hidden="true">↗</span></Link>
      </div>:<>
-       <div className="av52-form-progress" aria-label="Registration progress"><span className="is-current">01 <small>ACCOUNT</small></span><i/><span className={codeSent?"is-current":""}>02 <small>VERIFY</small></span><i/><span>03 <small>ARRIVE</small></span></div>
+       <div className="av52-form-progress av124-join-progress" role="list"
+         aria-label={codeSent?"Membership progress: step 2 of 3, verify":"Membership progress: step 1 of 3, account"}>
+         <span role="listitem" className={codeSent?"is-complete":"is-current"} aria-current={!codeSent?"step":undefined}>01 <small>ACCOUNT</small></span>
+         <i aria-hidden="true"/>
+         <span role="listitem" className={codeSent?"is-current":""} aria-current={codeSent?"step":undefined}>02 <small>VERIFY</small></span>
+         <i aria-hidden="true"/>
+         <span role="listitem">03 <small>ARRIVE</small></span>
+       </div>
+       <p className="av124-step-context" aria-live="polite">{codeSent
+         ?"Step 2 of 3: enter the latest eight-digit email code below."
+         :ready?"Step 1 of 3: choose an available sign-in method to begin."
+         :"Browse freely while we check member access."}</p>
        <h2>{codeSent?"CHECK YOUR INBOX.":requiresEmailVerification?"VERIFY YOUR EMAIL.":"YOUR STORY STARTS HERE."}</h2>
        <p className="join-lead">{codeSent?"Your access code is on its way. Enter all eight digits below to continue.":requiresEmailVerification?"Your sign-in provider did not verify your email. Confirm the email on this session before opening your ANEVUM profile.":"A place to discover, publish and belong. No password. No cost to join."}</p>
        {oauthFeedback&&<p role="alert" className="av12-join-error">{oauthFeedback}</p>}
@@ -204,10 +215,11 @@ export function Phase1JoinPage(){
          {codeSent&&<>
            <label htmlFor="anevum-otp">Verification code</label>
            <input id="anevum-otp" ref={otpRef} type="text" inputMode="numeric" autoComplete="one-time-code"
+             aria-describedby="av124-otp-instructions"
              pattern="[0-9]{8}" minLength={8} maxLength={8} value={otp}
              onChange={event=>setOtp(event.target.value.replace(/\D/g,"").slice(0,8))}
              disabled={busy} placeholder="8-digit code" required/>
-           <small className="av12-email-guidance">Use the latest code. It expires after a short time. We will never ask for it in chat.</small>
+           <small className="av12-email-guidance" id="av124-otp-instructions">Use the latest code. It expires after a short time. We will never ask for it in chat.</small>
            <button type="button" className="av12-email-reset" onClick={()=>void requestReplacementCode()} disabled={busy}>
              {busy?"REQUESTING…":"SEND A NEW CODE"}
            </button>
@@ -218,9 +230,9 @@ export function Phase1JoinPage(){
          </button>
          {notice&&<p role="status">{notice}</p>}
        </form>}
-       {ready&&!requiresEmailVerification&&emailReady&&(["google","github","apple","microsoft"] as const).some(socialReady)&&
+       {ready&&!requiresEmailVerification&&emailReady&&(["google","github","apple","microsoft"] as const).some(socialReady)&&!codeSent&&
          <p className="av123-alternative-label">OR CONTINUE WITH</p>}
-       {ready&&!requiresEmailVerification&&(["google","github","apple","microsoft"] as const).some(socialReady)&&<div className="join-methods" aria-label="Other available sign-in methods">
+       {ready&&!requiresEmailVerification&&(["google","github","apple","microsoft"] as const).some(socialReady)&&!codeSent&&<div className="join-methods" aria-label="Other available sign-in methods">
          {METHODS.filter(method=>method.key!=="email"&&socialReady(method.key)).map(method=><button
            key={method.key} className="join-method join-method-ready" type="button"
            onClick={()=>void startSocial(method.key as "google"|"github"|"apple"|"microsoft")} disabled={busy}>

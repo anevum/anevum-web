@@ -9,6 +9,7 @@ on:
       - 'creator-v1/web/src/continuance-journey-v123.css'
       - 'creator-v1/web/src/main.tsx'
       - 'creator-v1/test/continuance-journey-v123.test.mjs'
+      - 'creator-v1/test/continuance-reconciliation-v124.test.mjs'
       - 'creator-v1/test/capture-continuance-join-v123.mjs'
       - 'creator-v1/test/capture-home-first-contact-v111.mjs'
       - '.github/workflows/continuance-journey-v123-qa.yml'
@@ -39,6 +40,7 @@ jobs:
       - name: Verify homepage signup member and IREN continuity
         run: |
           node --test creator-v1/test/continuance-journey-v123.test.mjs
+          node --test creator-v1/test/continuance-reconciliation-v124.test.mjs
           node --test creator-v1/test/signup-email-first-v026.test.mjs
           node --test creator-v1/test/signup-access-states-v082.test.mjs
           node --test creator-v1/test/iren-guided-v080.test.mjs

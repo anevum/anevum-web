@@ -185,3 +185,63 @@
  .av12-phase1-join .join-panel{padding:14px 12px!important}
  .av12-phase1-join .join-panel h2{font-size:29px!important}
 }
+
+/* V124 reconciliation with accessible Wayfinder / signup step progress.
+ * Original V123 visual and the one existing IREN companion stay intact. */
+.av9-shell .av79-home .av124-hero-wayfinder{
+ display:inline-flex;align-items:center;justify-content:space-between;gap:17px;
+ min-height:44px;margin-top:12px;padding:8px 0;
+ color:#c6dcef;text-decoration:none;
+ font:650 11px/1.4 var(--av9-body,system-ui,sans-serif);
+ letter-spacing:.035em;border-bottom:1px solid rgba(173,204,238,.44);
+ transition:color .2s ease,border-color .2s ease
+}
+.av9-shell .av79-home .av124-hero-wayfinder span:last-child{
+ display:inline-grid;place-items:center;width:27px;height:27px;
+ border:1px solid rgba(178,212,241,.32);border-radius:50%;
+ color:#ecfaff;font-size:17px;transition:transform .2s ease
+}
+.av9-shell .av79-home .av124-hero-wayfinder:hover{color:#f7fbff;border-color:#e2f4ff}
+.av9-shell .av79-home .av124-hero-wayfinder:hover span:last-child{transform:translateY(3px)}
+.av9-shell .av79-home .av124-hero-wayfinder:focus-visible{
+ outline:3px solid #b4edfc;outline-offset:4px
+}
+.av115-wayfinder:target{scroll-margin-top:100px}
+.av12-phase1-join .av124-join-progress{margin-bottom:7px}
+.av12-phase1-join .av124-join-progress>span.is-complete{color:#d8c7da}
+.av12-phase1-join .av124-join-progress>span[aria-current="step"]{
+ color:#ffdecb;text-shadow:0 0 13px rgba(246,185,160,.22)
+}
+.av12-phase1-join .av124-join-progress>span.is-complete::before{
+ content:"✓";margin-right:5px;color:#cfebdf
+}
+.av12-phase1-join .av124-step-context{
+ max-width:49ch;margin:0 0 13px!important;
+ color:#d0c3d7!important;
+ font:500 11px/1.6 ui-monospace,monospace!important
+}
+@media(max-width:650px){
+ .av9-shell .av79-home .av124-hero-wayfinder{margin-top:8px}
+}
+@media(max-width:380px){
+ .av12-phase1-join .av124-join-progress{gap:4px}
+ .av12-phase1-join .av124-join-progress>span{font-size:9px}
+ .av12-phase1-join .av124-join-progress small{font-size:7px}
+ .av12-phase1-join .av124-join-progress>i{min-width:5px}
+}
+@media(prefers-reduced-motion:reduce){
+ .av9-shell .av79-home .av124-hero-wayfinder,
+ .av9-shell .av79-home .av124-hero-wayfinder span:last-child{
+  animation:none!important;transition:none!important;transform:none!important
+ }
+}
+@media(forced-colors:active){
+ .av9-shell .av79-home .av124-hero-wayfinder{
+  color:LinkText!important;border-color:LinkText!important
+ }
+ .av9-shell .av79-home .av124-hero-wayfinder span:last-child{
+  color:LinkText!important;border-color:LinkText!important
+ }
+ .av12-phase1-join .av124-join-progress>span.is-complete,
+ .av12-phase1-join .av124-step-context{color:CanvasText!important}
+}
