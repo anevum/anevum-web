@@ -1,0 +1,13 @@
+{
+  "reviewedOperationsSha": "43afb4b24277b5749b1b2b7d330c1fe4917d245b",
+  "packageSourceSha": "356112a94575c988c28efcd9ab083277c3838b80",
+  "runId": 39889939571,
+  "artifactId": 12474282482,
+  "worker": "anevum-apex-prelaunch-gateway",
+  "allowInactiveUpload": true,
+  "allowPublicDeployment": false,
+  "allowRoutingWrites": false,
+  "allowDataWrites": false,
+  "allowRoleWrites": false,
+  "allowPublicPublishing": false
+}
