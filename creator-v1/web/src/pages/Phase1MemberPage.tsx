@@ -192,6 +192,10 @@ function MemberEditor({memberId,memberName,memberEmail}:{memberId:string;memberN
         <VerifiedStaffShortcut location="profile"/>
         <button type="button" onClick={()=>void signOut()} disabled={busy}>SIGN OUT</button></div>
     </div>
+    {!claimed&&<aside className="av123-first-claim-assist" aria-label="First profile guidance">
+      <p><strong>FIRST SIGNAL / PRIVATE BY DEFAULT</strong> Your handle cannot be changed during this beta. Choose one you want to keep. You can personalize and publish your profile later.</p>
+      <button type="button" onClick={()=>window.dispatchEvent(new Event("anevum:iren-open"))}>ASK IREN ABOUT MY SPACE</button>
+    </aside>}
     {ready&&claimed&&<MemberExperienceMap profile={persisted}/>}
     <div className="av12-account-layout">
       <section className="av12-editor-panel" aria-labelledby="av12-editor-heading">

@@ -1,5 +1,5 @@
 import {Link,useSearchParams} from "react-router-dom";
-import {type FormEvent,useState} from "react";
+import {type FormEvent,useEffect,useRef,useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {canonicalAuthClient,canonicalMethods} from "../lib/canonical-beta";
 import {useResource} from "../lib/useResource";
@@ -62,10 +62,13 @@ export function Phase1JoinPage(){
  const capability=useResource(canonicalMethods,[availabilityAttempt]);
  const [email,setEmail]=useState("");
  const [otp,setOtp]=useState("");
+ const otpRef=useRef<HTMLInputElement>(null);
  const [codeSent,setCodeSent]=useState(false);
  const [notice,setNotice]=useState("");
  const {data:session}=canonicalAuthClient.useSession();
  const [busy,setBusy]=useState(false),[error,setError]=useState("");
+ // Focus after the visitor requests the code, never on page arrival.
+ useEffect(()=>{if(codeSent)otpRef.current?.focus({preventScroll:true});},[codeSent]);
  const ready=capability.state==="ready"&&(capability.data.registration==="invite-only"||capability.data.registration==="open");
  // An unavailable database/auth service is not an intentional registration pause.
  // The server remains authoritative: these labels never unlock signup.
@@ -114,7 +117,7 @@ export function Phase1JoinPage(){
        if(result.error)throw new AuthRequestRejected(result.error.status);
        setEmail(normalized);setCodeSent(true);setNotice("If delivery is available, an 8-digit code has been sent. Check your inbox.");
      }else{
-       if(!/^\d{8}$/.test(otp))throw Error("Invalid code");
+       if(!/^\d{8}$/.test(otp)){setError("Enter the complete eight-digit code from your email.");return;}
        const result=await withJoinDeadline(()=>canonicalAuthClient.signIn.emailOtp({email:normalized,otp,name:"ANEVUM MEMBER"}));
        if(result.error)throw new AuthRequestRejected(result.error.status);
        navigate("/member",{replace:true});
@@ -155,8 +158,15 @@ export function Phase1JoinPage(){
      <div className="join-chapters" aria-label="Three-step membership">
        <div><span>01</span><strong>Join</strong><small>Enter your email.</small></div>
        <div><span>02</span><strong>Verify</strong><small>Confirm your eight-digit code.</small></div>
-       <div><span>03</span><strong>Belong</strong><small>Choose your name and enter the community.</small></div>
+       <div><span>03</span><strong>Belong</strong><small>Choose a permanent handle. Your profile starts private.</small></div>
      </div>
+     <aside className="av123-member-promise" aria-label="What membership offers">
+       <span className="av123-promise-label">ANEVUM / YOUR CONTINUANCE</span>
+       <strong>Explore freely. Join when you're ready.</strong>
+       <p>Your member space gives discoveries and creations a place to return to. Creator publishing requires separate review.</p>
+       <div className="av123-promise-points"><span>Private member identity</span><span>Saved discoveries</span><span>Earned recognition</span></div>
+       <Link to="/guide">Read the field guide <span aria-hidden="true">↗</span></Link>
+     </aside>
    </div>
    <div className="join-panel">
      <div className="join-panel-top"><span className="kicker">ANEVUM / MEMBER ACCESS</span>
@@ -185,14 +195,7 @@ export function Phase1JoinPage(){
          </button>
        </div>}
        {ready&&!emailReady&&<p role="status" className="join-service-note">Email sign-in is temporarily unavailable.</p>}
-       {ready&&!requiresEmailVerification&&(["google","github","apple","microsoft"] as const).some(socialReady)&&<div className="join-methods" aria-label="Other available sign-in methods">
-         {METHODS.filter(method=>method.key!=="email"&&socialReady(method.key)).map(method=><button
-           key={method.key} className="join-method join-method-ready" type="button"
-           onClick={()=>void startSocial(method.key as "google"|"github"|"apple"|"microsoft")} disabled={busy}>
-           <span className="join-method-symbol" aria-hidden="true">{method.initial}</span>
-           <span className="join-method-copy"><strong>Continue with {method.name}</strong></span>
-         </button>)}
-       </div>}
+       
        {emailReady&&(!requiresEmailVerification||Boolean(sessionEmail))&&<form className="av12-email-entry" onSubmit={event=>void submitEmail(event)}>
          <label htmlFor="anevum-email">{codeSent?"CODE SENT TO":"YOUR EMAIL ADDRESS"}</label>
          <input id="anevum-email" type="email" autoComplete="email" placeholder="you@example.com" value={emailForVerification}
@@ -200,7 +203,7 @@ export function Phase1JoinPage(){
            disabled={busy||codeSent} readOnly={requiresEmailVerification} required maxLength={254}/>
          {codeSent&&<>
            <label htmlFor="anevum-otp">Verification code</label>
-           <input id="anevum-otp" type="text" inputMode="numeric" autoComplete="one-time-code"
+           <input id="anevum-otp" ref={otpRef} type="text" inputMode="numeric" autoComplete="one-time-code"
              pattern="[0-9]{8}" minLength={8} maxLength={8} value={otp}
              onChange={event=>setOtp(event.target.value.replace(/\D/g,"").slice(0,8))}
              disabled={busy} placeholder="8-digit code" required/>
@@ -215,6 +218,16 @@ export function Phase1JoinPage(){
          </button>
          {notice&&<p role="status">{notice}</p>}
        </form>}
+       {ready&&!requiresEmailVerification&&emailReady&&(["google","github","apple","microsoft"] as const).some(socialReady)&&
+         <p className="av123-alternative-label">OR CONTINUE WITH</p>}
+       {ready&&!requiresEmailVerification&&(["google","github","apple","microsoft"] as const).some(socialReady)&&<div className="join-methods" aria-label="Other available sign-in methods">
+         {METHODS.filter(method=>method.key!=="email"&&socialReady(method.key)).map(method=><button
+           key={method.key} className="join-method join-method-ready" type="button"
+           onClick={()=>void startSocial(method.key as "google"|"github"|"apple"|"microsoft")} disabled={busy}>
+           <span className="join-method-symbol" aria-hidden="true">{method.initial}</span>
+           <span className="join-method-copy"><strong>Continue with {method.name}</strong></span>
+         </button>)}
+       </div>}
        <p className="join-service-note" role="status">{capability.state==="loading"?
          "Checking whether new member verification is available.":ready?
          capability.data.registration==="open"?"Registration is open.":"Early access is currently limited to invited accounts.":
@@ -230,6 +243,13 @@ export function Phase1JoinPage(){
        <Link className="join-guest-action" to="/discover">EXPLORE AS A GUEST <span aria-hidden="true">↗</span></Link>
      </>}
      <p className="join-security"><span className="av52-privacy-icon" aria-hidden="true">◇</span>Your profile starts private. You decide what becomes public.</p>
+     <aside className="av123-iren-join" aria-label="IREN membership guidance">
+       <div><span>IREN / MEMBER ORIENTATION</span>
+         <p>Need help with verification or your first profile? IREN explains the steps without reading your email or code.</p></div>
+       <button type="button" onClick={()=>window.dispatchEvent(new Event("anevum:iren-open"))}>
+         ASK IREN <span aria-hidden="true">↗</span>
+       </button>
+     </aside>
    </div>
  </section>;
 }
