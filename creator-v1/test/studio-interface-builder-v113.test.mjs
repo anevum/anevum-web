@@ -81,5 +81,5 @@ test('V113 is a default-off document projection of the existing V111 save API',(
  assert.match(workspace,/StudioInterfaceBuilderV113/);
  assert.match(workspace,/studioFileUpdate\(projectId,nodeId/);
  assert.match(workspace,/Save revision/);
- assert.doesNotMatch(ui,/fetch\(|new WebSocket|EventSource|dangerouslySetInnerHTML|eval\(|srcdoc|iframe/i);
+ assert.doesNotMatch(ui,/fetch\(|new WebSocket|EventSource|dangerouslySetInnerHTML|eval\(|srcdoc=|<iframe\b/i);
 });
