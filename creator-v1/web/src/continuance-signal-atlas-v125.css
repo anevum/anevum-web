@@ -14,6 +14,7 @@
 .av125-motion-toggle:focus-visible{outline:3px solid #b4edfc;outline-offset:4px;border-radius:3px}
 .av125-motion-indicator{display:block;width:8px;height:8px;border-radius:2px;border:1px solid #afd8f7;background:#afd8f76b;box-shadow:0 0 11px #afd8f77a}
 .av125-is-paused .av125-motion-indicator{background:transparent;box-shadow:none}
+.av9-shell .av79-home .av125-arrival.av125-is-paused .av79-hero-content{animation:none!important}
 .av125-motion-note{display:none;color:#c2d8ee;font:700 9px/1.4 ui-monospace,monospace;letter-spacing:.04em}
 .av79-home[data-scene-paused="true"] .av125-charter *{animation-play-state:paused!important}
 .av9-shell .av79-home .av125-arrival.av125-is-paused *, .av9-shell .av79-home .av125-arrival.av125-is-paused *::before,.av9-shell .av79-home .av125-arrival.av125-is-paused *::after{animation-play-state:paused!important}
@@ -48,7 +49,9 @@
  .av125-motion-toggle{justify-self:end;font-size:10px;letter-spacing:0}
 }
 @media(max-width:380px){
- .av9-shell .av79-home .av125-arrival .av114-arrival-chapter{margin-top:16px;letter-spacing:.07em}
+ .av9-shell .av79-home .av125-arrival .av114-arrival-chapter{margin-top:10px;letter-spacing:.07em}
+ .av9-shell .av79-home .av125-arrival h1{margin:14px 0!important}
+ .av9-shell .av79-home .av125-arrival .av114-arrival-clarity{margin-top:16px}
  .av9-shell .av79-home .av125-arrival .av79-hero-content>p{line-height:1.55!important}
  .av125-arrival-utility{gap:8px}
  .av125-motion-toggle{gap:6px;font-size:9px}

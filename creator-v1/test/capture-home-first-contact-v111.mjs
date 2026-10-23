@@ -67,6 +67,10 @@ try{
      (two&&(!member.href?.endsWith("/join")||!member.text?.includes("Create your member space")||collision)))
    throw Error("V115_FIRST_ARRIVAL_"+label+":"+JSON.stringify({...arrival,collision}));
   await screenshot("first-arrival-"+label);
+  if(width<=390){
+   const orientation=await evaluate('(()=>{const b=document.querySelector(".av115-iren-console button").getBoundingClientRect(),d=document.querySelector(".ir80-dock").getBoundingClientRect();return {bottom:b.bottom,obstructed:b.left<d.right&&d.left<b.right&&b.top<d.bottom&&d.top<b.bottom}})()');
+   if(orientation.bottom>height||orientation.obstructed)throw Error("V125_ORIENTATION_OBSTRUCTED_"+JSON.stringify(orientation));
+  }
   // V125: exercise the real control, including the OS reduced-motion state.
   const reduced=await evaluate('(()=>({hidden:getComputedStyle(document.querySelector(".av125-motion-toggle")).display==="none",note:getComputedStyle(document.querySelector(".av125-motion-note")).display!=="none",running:document.querySelector(".av114-arrival-scene").getAnimations({subtree:true}).filter(a=>a.playState==="running").length,companions:document.querySelectorAll(".ir80-dock").length}))()');
   if(!reduced.hidden||!reduced.note||reduced.running||reduced.companions!==1)

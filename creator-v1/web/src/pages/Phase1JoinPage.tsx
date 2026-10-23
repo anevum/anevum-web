@@ -73,7 +73,7 @@ export function Phase1JoinPage(){
  // including when the phone keyboard leaves a shorter visible viewport.
  useEffect(()=>{
    if(!codeSent)return;
-   const frame=window.requestAnimationFrame(()=>otpRef.current?.scrollIntoView({block:"center",behavior:"instant"}));
+   const frame=window.requestAnimationFrame(()=>otpRef.current?.scrollIntoView({block:"start",behavior:"instant"}));
    return()=>window.cancelAnimationFrame(frame);
  },[codeSent]);
  const ready=capability.state==="ready"&&(capability.data.registration==="invite-only"||capability.data.registration==="open");

@@ -104,7 +104,7 @@ export function CinematicLandingPage(){
           <span className="av79-kicker"><i aria-hidden="true"/> ANEVUM / THE CREATIVE NETWORK</span>
           <span className="av114-arrival-chapter">THE CONTINUANCE INSTITUTE <span aria-hidden="true">/</span> FIRST CONTACT</span>
           <h1 id="av79-home-heading">A universe <em>in the making.</em></h1>
-          <p>Explore original creations, ambitious ideas and the people behind them. Discover what exists, connect with others, or start building your own.</p>
+          <p>Explore original creations and the people behind them. Discover new worlds, connect with others, or start building your own.</p>
           <div className="av79-hero-actions">
             <Link className="av79-button av79-button--bright" to="/discover">
               Enter ANEVUM <Icon name="arrow" size={18}/>
@@ -138,7 +138,7 @@ export function CinematicLandingPage(){
             <span>01 / ARRIVAL</span>
           </div>
           <div className="av115-iren-pulse" aria-hidden="true"><i/><i/><i/><i/><i/><i/><i/><i/><i/></div>
-          <strong>Not sure where to begin?</strong>
+          <strong>Need a guide?</strong>
           <p>I'm IREN. I can help you find your way through the network.</p>
           <button type="button" onClick={()=>window.dispatchEvent(new Event("anevum:iren-intro"))}>
             MEET IREN <Icon name="arrow" size={15}/>
