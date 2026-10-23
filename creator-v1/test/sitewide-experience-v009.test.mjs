@@ -33,9 +33,9 @@ test("V079 homepage exposes real approved work and member identity without dupli
   assert.match(home,contract);
  assert.doesNotMatch(home,/<WorldGatewayDeck|<LiveSignalModules|<CommunityHomeFeed|<CinematicSiteRail/);
  assert.match(home,/projects\.filter\(project=>project\.id!==featured\?\.id\)/);
- assert.match(home,/const featured=projects\\[0\\]\\|\\|null/);
- assert.match(home,/sort\\(byPublication\\)/);
- assert.doesNotMatch(home,/featured=games\\[0\\]/);
+ assert.match(home,/const featured=projects\[0\]\|\|null/);
+ assert.match(home,/sort\(byPublication\)/);
+ assert.doesNotMatch(home,/featured=games\[0\]/);
  assert.match(portals,/discover\?category=games/);
  assert.match(signal,/readCommunityPosts/);
  assert.match(feed,/readPublicShowcases/);
