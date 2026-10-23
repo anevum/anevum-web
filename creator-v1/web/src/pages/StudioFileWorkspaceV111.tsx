@@ -1,5 +1,7 @@
 import {useEffect,useMemo,useRef,useState,type ReactNode,type FormEvent} from 'react';
 import {Link} from 'react-router-dom';
+import {PREFIX} from '../../../workbench-alpha/document.mjs';
+import {StudioSceneComposerV112,studioVisualScenesEnabled} from './StudioSceneComposerV112';
 import {
  studioFileTreeEnabled,studioFileList,studioFileGet,studioFileCreate,
  studioFileUpdate,studioFileVersions,studioFileTrash,studioFileRestore,type StudioFileNode,type StudioFileVersion,
@@ -223,6 +225,9 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
        onClick={()=>{setCreateKind('folder');setCreateName('');setMessage('');}}>+ Folder</button>
       <button type="button" title="Create text source file" aria-label="Create text source file" disabled={!canEdit||loading||!!error||!!pendingCreate}
        onClick={()=>{setCreateKind('text');setCreateName('');setMessage('');}}>+ File</button>
+      {studioVisualScenesEnabled&&<button type="button" title="Create branching scene" aria-label="Create branching scene"
+       disabled={!canEdit||loading||!!error||!!pendingCreate}
+       onClick={()=>{setCreateKind('text');setCreateName('scene.anevum');setMessage('');}}>+ Scene</button>}
      </div>
     </div>
     <div className="csf-tree-body">
@@ -378,6 +383,7 @@ function SourceEditorV111({projectId,nodeId,nodes,editable:canEdit,onDirty,onUpd
 }){
  const [base,setBase]=useState<StudioFileNode|null>(null);
  const [content,setContent]=useState('');
+ const [presentation,setPresentation]=useState<'text'|'visual'>('text');
  const [name,setName]=useState('');
  const [parentId,setParentId]=useState<string|null>(null);
  const [loading,setLoading]=useState(true);
@@ -401,12 +407,15 @@ function SourceEditorV111({projectId,nodeId,nodes,editable:canEdit,onDirty,onUpd
     if(controller.signal.aborted)return;
     if(node.kind!=='text'||node.deletedAt!==null)throw Error('This file is no longer editable.');
     setBase(node);setContent(node.content||'');setName(node.name);setParentId(node.parentId);
+    setPresentation(studioVisualScenesEnabled&&
+     (node.name.toLowerCase().endsWith('.anevum')||(node.content||'').startsWith(PREFIX))?'visual':'text');
    })
    .catch(e=>{if(!controller.signal.aborted)setError(presentError(e));})
    .finally(()=>{if(!controller.signal.aborted)setLoading(false);});
   return()=>controller.abort();
  },[projectId,nodeId]);
  const byteCount=new TextEncoder().encode(content).length;
+ const canVisual=studioVisualScenesEnabled&&(name.toLowerCase().endsWith('.anevum')||content.startsWith(PREFIX));
  async function save(){
   if(!base||!canEdit||!dirty||busy||byteCount>32768)return;
   setBusy(true);setError('');setMessage('');
@@ -475,6 +484,14 @@ function SourceEditorV111({projectId,nodeId,nodes,editable:canEdit,onDirty,onUpd
      </select>
     </label>
    </div>
+   {canVisual&&<div className="csf-presentation-switch" role="group" aria-label="Source editor presentation">
+    <button type="button" aria-pressed={presentation==='visual'} onClick={()=>setPresentation('visual')}>Visual scene</button>
+    <button type="button" aria-pressed={presentation==='text'} onClick={()=>setPresentation('text')}>Source text</button>
+   </div>}
+   {canVisual&&presentation==='visual'?
+    <StudioSceneComposerV112 raw={content} fileName={name} resetToken={nodeId+':'+base.revision}
+     readOnly={!canEdit||busy} onChange={setContent}/>:
+    <>
    <label className="csf-source-label" htmlFor={'source-'+nodeId}>Text source</label>
    <textarea id={'source-'+nodeId} className="csf-source" spellCheck={false}
     value={content} disabled={!canEdit||busy} onChange={e=>setContent(e.target.value)}
@@ -484,6 +501,7 @@ function SourceEditorV111({projectId,nodeId,nodes,editable:canEdit,onDirty,onUpd
      }
     }}
     aria-describedby={'source-status-'+nodeId}/>
+    </>}
    <div className="csf-editor-foot" id={'source-status-'+nodeId}>
     <span>{byteCount.toLocaleString()} / 32,768 UTF-8 bytes</span>
     <span>{dirty?'Unsaved local draft':'Matches last confirmed saved revision'}</span>
