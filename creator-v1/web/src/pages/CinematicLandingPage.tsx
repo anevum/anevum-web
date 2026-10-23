@@ -17,10 +17,9 @@ import {publicCreatorHandle} from "../lib/public-creator-handle";
  */
 type PublicSnapshot={status:Status|null;projects:Project[];creators:Creator[]};
 const gateways=[
-  {to:"/discover?category=games",title:"Play",detail:"Games & worlds",icon:"star"},
-  {to:"/discover",title:"Discover",detail:"Made by people",icon:"explore"},
-  {to:"/community",title:"Connect",detail:"Find your people",icon:"community"},
-  {to:"/studio",title:"Create",detail:"Make something",icon:"create"}
+  {to:"/discover",title:"Discover",detail:"Find ideas, worlds and original work",icon:"explore",eyebrow:"01 / EXPLORE"},
+  {to:"/studio",title:"Create",detail:"Open the Studio workspace (testing)",icon:"create",eyebrow:"02 / MAKE"},
+  {to:"/community",title:"Connect",detail:"Meet creators and join conversations",icon:"community",eyebrow:"03 / BELONG"}
 ] as const;
 
 const categoryName:Record<Project["category"],string>={
@@ -80,16 +79,14 @@ export function CinematicLandingPage(){
   const projects=[...(snapshot?.projects||[])].sort(byPublication);
   const creators=metadata.state==="ready"?metadata.data.creators:snapshot?.creators||[];
   const status=metadata.state==="ready"?metadata.data.status:snapshot?.status||null;
-  const games=projects.filter(project=>project.category==="games");
-  const featured=games[0]||projects[0]||null;
-  const remaining=projects.filter(project=>project.id!==featured?.id).slice(0,3);
+  // Alpha playables stay discoverable in the public index, but are not
+  // promoted as launch-ready flagship experiences while they are test builds.
+  const showcase=projects.filter(project=>project.category!=="games").slice(0,3);
   const verified=Boolean(snapshot);
-  const featuredPath=featured?projectDetailPath(featured.id,"/"):null;
-  const firstGame=games[0]?projectDetailPath(games[0].id,"/"):null;
 
   return <div className="anevum-cinema av9-home av79-home">
     <div className="cinema-content av79-home-content">
-      <section className="av79-hero av114-arrival" aria-labelledby="av79-home-heading">
+      <section className="av79-hero av114-arrival av115-arrival" data-iren-anchor="arrival" aria-labelledby="av79-home-heading">
         <div className="av114-arrival-scene" aria-hidden="true">
           <span className="av114-arrival-stars"/>
           <span className="av114-arrival-planet"><i/></span>
@@ -101,34 +98,61 @@ export function CinematicLandingPage(){
         <div className="av79-hero-orbit" aria-hidden="true"><span/><span/><span/></div>
         <div className="av79-hero-content">
           <span className="av79-kicker"><i aria-hidden="true"/> ANEVUM / THE CREATIVE NETWORK</span>
-          <span className="av114-arrival-chapter">THE CONTINUANCE INSTITUTE <span aria-hidden="true">/</span> FIRST SIGNAL</span>
-          <h1 id="av79-home-heading">Create beyond <em>worlds.</em></h1>
-          <p>Play independent games. Discover original apps, art and ambitious ideas. Meet the people making them—and start something of your own.</p>
+          <span className="av114-arrival-chapter">THE CONTINUANCE INSTITUTE <span aria-hidden="true">/</span> FIRST CONTACT</span>
+          <h1 id="av79-home-heading">A universe <em>in the making.</em></h1>
+          <p>Explore original creations, ambitious ideas and the people behind them. Discover what exists, connect with others, or start building your own.</p>
           <div className="av79-hero-actions">
-            <Link className="av79-button av79-button--bright" to={firstGame||"/discover?category=games"}>
-              {firstGame?"Play a game":"Explore games"} <Icon name="arrow" size={18}/>
+            <Link className="av79-button av79-button--bright" to="/discover">
+              Enter ANEVUM <Icon name="arrow" size={18}/>
             </Link>
-            <Link className="av79-button av79-button--soft" to="/discover">
-              Explore ANEVUM <Icon name="arrow" size={18}/>
-            </Link>
+            <button className="av79-button av79-button--soft av115-iren-hero-action" type="button"
+              onClick={()=>window.dispatchEvent(new Event("anevum:iren-intro"))}>
+              Meet IREN <Icon name="arrow" size={18}/>
+            </button>
           </div>
           <div className="av114-arrival-clarity" aria-label="Visitor access and creator publishing status">
             <span><i aria-hidden="true"/> Explore freely. No account required.</span>
-            <span>Creator publishing is still in testing.</span>
+            <span>Studio publishing is still in testing.</span>
           </div>
         </div>
+        <aside className="av115-iren-console" aria-label="IREN arrival orientation">
+          <div className="av115-iren-console-top">
+            <span className="av115-console-light" aria-hidden="true"/>
+            <span>IREN / FIELD GUIDE</span>
+            <span>01 / ARRIVAL</span>
+          </div>
+          <div className="av115-iren-pulse" aria-hidden="true"><i/><i/><i/><i/><i/><i/><i/><i/><i/></div>
+          <strong>Not sure where to begin?</strong>
+          <p>I'm IREN. I can help you find your way through the network.</p>
+          <button type="button" onClick={()=>window.dispatchEvent(new Event("anevum:iren-intro"))}>
+            BEGIN ORIENTATION <Icon name="arrow" size={15}/>
+          </button>
+        </aside>
         <div className="av114-arrival-signature" aria-hidden="true">
-          <span>ANEVUM // 001</span><span>PLAY · DISCOVER · CONNECT · CREATE</span>
+          <span>THE CONTINUANCE INSTITUTE</span><span>EXPLORE · CREATE · CONNECT · BELONG</span>
         </div>
       </section>
 
-      <nav className="av79-gateways" aria-label="What would you like to do?">
-        {gateways.map((item,index)=><Link key={item.to} to={item.to} className="av79-gateway">
-          <span className="av79-gateway-icon"><Icon name={item.icon} size={20}/></span>
-          <span className="av79-gateway-copy"><strong>{item.title}</strong><small>{item.detail}</small></span>
-          <span className="av79-gateway-number">0{index+1}</span>
-        </Link>)}
-      </nav>
+      <section className="av115-wayfinder" data-iren-anchor="arrival-paths" aria-labelledby="av115-wayfinder-title">
+        <div className="av115-wayfinder-heading">
+          <span className="av79-kicker">SELECT A DIRECTION / WAYFINDER</span>
+          <h2 id="av115-wayfinder-title">Where will you go?</h2>
+          <p>There's no required path. Start wherever curiosity takes you.</p>
+        </div>
+        <nav className="av79-gateways av115-gateways" aria-label="Choose your way into ANEVUM">
+          {gateways.map(item=><Link key={item.to} to={item.to} className="av79-gateway av115-gateway">
+            <span className="av115-gateway-top"><span>{item.eyebrow}</span><Icon name="arrow" size={18}/></span>
+            <span className="av79-gateway-icon"><Icon name={item.icon} size={23}/></span>
+            <span className="av79-gateway-copy"><strong>{item.title}</strong><small>{item.detail}</small></span>
+          </Link>)}
+          <Link to={signedIn?"/member":"/join"} className="av79-gateway av115-gateway av115-gateway-member">
+            <span className="av115-gateway-top"><span>04 / IDENTITY</span><Icon name="arrow" size={18}/></span>
+            <span className="av79-gateway-icon"><Icon name="people" size={23}/></span>
+            <span className="av79-gateway-copy"><strong>{signedIn?"My Space":"Join"}</strong>
+              <small>{signedIn?"Return to your verified member identity":"Create your member identity when ready"}</small></span>
+          </Link>
+        </nav>
+      </section>
 
       <section className="av111-onramp" aria-labelledby="av111-onramp-title">
         <div className="av111-onramp-art" aria-hidden="true">
@@ -154,55 +178,39 @@ export function CinematicLandingPage(){
         </div>
       </section>
 
-      <section className="av79-now" aria-labelledby="av79-now-heading">
+      <section className="av79-now av115-public-index" aria-labelledby="av79-now-heading">
         <header className="av79-section-heading">
-          <div><span className="av79-kicker">FROM THE PUBLIC NETWORK</span>
-            <h2 id="av79-now-heading">Ready when you are.</h2></div>
-          <Link to="/discover">ALL CREATIONS <Icon name="arrow" size={15}/></Link>
-        </header>
-        {featured&&featuredPath?<article className="av79-feature">
-          <Link to={featuredPath} className="av79-feature-art" aria-label={"Open "+featured.title}>
-            <span className="av79-feature-rings" aria-hidden="true"><i/><i/><i/></span>
-            <span className="av79-feature-serial">ANEVUM / FEATURED RELEASE</span>
-            <span className="av79-feature-wordmark">{featured.title}<span aria-hidden="true"> ↗</span></span>
-            <span className="av79-feature-caption">VISUAL INDEX / {featured.category.toUpperCase()}</span>
-          </Link>
-          <div className="av79-feature-copy">
-            <span className="av79-feature-status"><span aria-hidden="true"/> APPROVED AND AVAILABLE <b> / </b> {categoryName[featured.category]}</span>
-            <h3><Link to={featuredPath}>{featured.title}</Link></h3>
-            <p>{featured.summary}</p>
-            <div className="av79-feature-author">
-              <span>MADE BY</span>
-              <CreatorSignature project={featured} creators={creators}/>
-            </div>
-            <Link className="av79-button av79-button--bright av79-feature-open" to={featuredPath}>
-              {featured.category==="games"?"Open experience":"View creation"} <Icon name="arrow" size={18}/>
-            </Link>
+          <div><span className="av79-kicker">PUBLIC INDEX / VERIFIED WORK</span>
+            <h2 id="av79-now-heading">What people are making.</h2>
+            <p className="av115-index-intro">A window into approved creations, not a showcase for temporary test games.</p>
           </div>
-        </article>:<div className="av79-empty-release" role="status">
-          <span className="av79-kicker">{portal.state==="error"?"INDEX UNAVAILABLE":portal.state==="loading"?"CHECKING THE PUBLIC INDEX":"PUBLIC INDEX / FIRST RELEASE"}</span>
-          <strong>{portal.state==="error"?"The network cannot be reached right now.":portal.state==="loading"?"Looking for approved releases…":"The next discovery is being made."}</strong>
-          <p>{portal.state==="ready"?"As soon as the first project is approved it will appear here.":"Only real published work is shown. No imaginary projects or counts."}</p>
-          <Link to="/discover">Explore the directory <Icon name="arrow" size={15}/></Link>
+          <Link to="/discover">BROWSE THE INDEX <Icon name="arrow" size={15}/></Link>
+        </header>
+        {showcase.length>0?<div className="av115-public-list">
+          {showcase.map(project=><article className="av115-public-item" key={project.id}>
+            <div className="av115-public-item-head">
+              <span>{categoryName[project.category]}</span><span>PUBLIC RECORD</span>
+            </div>
+            <h3><Link to={projectDetailPath(project.id,"/")}>{project.title}</Link></h3>
+            <p>{project.summary}</p>
+            <div className="av115-public-item-footer">
+              <CreatorSignature project={project} creators={creators}/>
+              <Link to={projectDetailPath(project.id,"/")} aria-label={"Open "+project.title}>
+                View work <Icon name="arrow" size={15}/>
+              </Link>
+            </div>
+          </article>)}
+        </div>:<div className="av115-index-empty" role="status">
+          <div><span className="av79-kicker">{portal.state==="error"?"INDEX UNAVAILABLE":portal.state==="loading"?"CHECKING THE PUBLIC INDEX":"THE NETWORK IS GROWING"}</span>
+            <strong>{portal.state==="error"?"The public index is temporarily unavailable.":"More creations are on the way."}</strong>
+            <p>{portal.state==="ready"
+              ?"Experimental games remain in the Discover index; the homepage will spotlight completed, approved work as it arrives."
+              :"Explore the public directory directly, or learn what you can create."}</p>
+          </div>
+          <Link to="/discover">OPEN DISCOVER <Icon name="arrow" size={17}/></Link>
         </div>}
         {portal.state==="error"&&verified&&<p className="av79-stale" role="status">Live refresh is unavailable. Previously verified public records are shown.</p>}
       </section>
-
-      {remaining.length>0&&<section className="av79-latest" aria-labelledby="av79-latest-heading">
-        <header className="av79-section-heading">
-          <div><span className="av79-kicker">LATEST / APPROVED</span><h2 id="av79-latest-heading">Keep exploring.</h2></div>
-          <Link to="/discover">SEE ALL <Icon name="arrow" size={15}/></Link>
-        </header>
-        <div className="av79-latest-list">{remaining.map(project=>
-          <article className="av79-latest-item" key={project.id}>
-            <div><span className="av79-latest-kind">{categoryName[project.category]}</span>
-              <h3><Link to={projectDetailPath(project.id,"/")}>{project.title}</Link></h3>
-              <p>{project.summary}</p>
-              <CreatorSignature project={project} creators={creators}/></div>
-            <Link className="av79-latest-action" to={projectDetailPath(project.id,"/")} aria-label={"Open "+project.title}><Icon name="arrow" size={20}/></Link>
-          </article>
-        )}</div>
-      </section>}
 
       {ownCard?<section className="av79-member-section" aria-labelledby="av79-member-heading">
         <div><span className="av79-kicker">YOUR PLACE IN THE NETWORK</span>
