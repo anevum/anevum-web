@@ -11,15 +11,17 @@ const css=read("web/src/module-experience-v073.css");
 const main=read("web/src/main.tsx");
 const browser=read("test/capture-sitewide-v012.mjs");
 
-test("V079 replaces V073's stacked public modules with a short real-content homepage",()=>{
+test("V115 retains authentic public discovery without promoting a temporary alpha game",()=>{
  for(const source of [home,doors,activity])
   assert.doesNotThrow(()=>parse(source,{sourceType:"module",plugins:["typescript","jsx"]}));
  assert.match(main,/home-navigation-v079\.css/);
- assert.match(home,/<nav className="av79-gateways"/);
+ assert.match(home,/<nav className="av79-gateways av115-gateways"/);
  assert.match(home,/readProjects/);
  assert.match(home,/readCreators/);
  assert.match(home,/readStatus/);
- assert.match(home,/const featured=games\[0\]\|\|projects\[0\]\|\|null/);
+ assert.match(home,/const showcase=projects\.filter\(project=>project\.category!=="games"\)/);
+ assert.match(home,/av115-public-index/);
+ assert.doesNotMatch(home,/Play a game|FEATURED RELEASE/);
  assert.match(home,/useOwnPlayerCard/);
  assert.match(home,/CompactMemberIdentity/);
  assert.doesNotMatch(home,/<WorldGatewayDeck|<LiveSignalModules|<CommunityHomeFeed|<LiveSignalHero/);
