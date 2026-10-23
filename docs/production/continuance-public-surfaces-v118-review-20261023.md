@@ -30,9 +30,10 @@ not another assistant.
   accessible borders and focus, surface elevations and touch targets.
   No image download, custom font, WebGL, motion runtime, external library
   or DOM manipulation is added.
-- `DiscoverPage.tsx` mounts the shared switcher directly below the existing
-  public Discover introduction, leaving search, category filtering,
-  free-only declarations, actual project results and empty states unchanged.
+- `DiscoverPage.tsx` mounts the shared switcher **after the public catalogue** as a next-stop
+  orientation surface. This preserves the verified search, filters and first
+  results within the phone first fold, leaving category filtering, free-only
+  declarations, actual project results and empty states unchanged.
 - `CommunityPage.tsx` mounts the same switcher beneath the existing community
   hero; public creators, moderated discussions, genuine counts and navigation
   remain unchanged.
