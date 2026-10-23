@@ -1,0 +1,642 @@
+{
+  "session": "ANEVUM.WEB.RELEASE.2026-10-22.001.V116-INTEGRATED-FIRST-CONTACT",
+  "readAt": "2026-10-23T01:31:17Z",
+  "accountId": "2f7ee83107240152097efd956a4e8335",
+  "worker": "anevum-apex-prelaunch-gateway",
+  "deployment": {
+    "id": "549f57c4-3d29-4b8b-856f-9554cab437e2",
+    "versions": [
+      {
+        "version_id": "93cc7f07-cf39-457e-af69-c9f6f4c02d25",
+        "percentage": 100
+      },
+      {
+        "version_id": "86dc4b9d-4020-432a-8a15-e65606f31316",
+        "percentage": 0
+      }
+    ]
+  },
+  "publicVersion": {
+    "id": "93cc7f07-cf39-457e-af69-c9f6f4c02d25",
+    "resources": {
+      "script_runtime": {
+        "assets": {
+          "not_found_handling": "single-page-application",
+          "serve_directly": false,
+          "raw_run_worker_first": true,
+          "base_path": "/"
+        },
+        "compatibility_date": "2026-10-17",
+        "compatibility_flags": [
+          "nodejs_compat"
+        ],
+        "usage_model": "standard"
+      },
+      "bindings": [
+        {
+          "name": "ANEVUM_ACCESS_AUD",
+          "text": "6efab9f2821297fa4c965f18813d78d7433ebf7823a8e9e6d9ecfb7e4b2ccde1",
+          "type": "plain_text"
+        },
+        {
+          "name": "ANEVUM_CANONICAL_APEX_ENABLED",
+          "text": "true",
+          "type": "plain_text"
+        },
+        {
+          "name": "ANEVUM_CANONICAL_STAGE_ENABLED",
+          "text": "true",
+          "type": "plain_text"
+        },
+        {
+          "name": "ANEVUM_LAUNCH_APPROVED",
+          "text": "true",
+          "type": "plain_text"
+        },
+        {
+          "name": "ANEVUM_PRELAUNCH_MODE",
+          "text": "public",
+          "type": "plain_text"
+        },
+        {
+          "name": "ANEVUM_PREVIEW_ALLOWED_EMAILS",
+          "type": "secret_text"
+        },
+        {
+          "name": "ASSETS",
+          "type": "assets"
+        },
+        {
+          "name": "CANONICAL_APPLE_ENABLED",
+          "text": "false",
+          "type": "plain_text"
+        },
+        {
+          "name": "CANONICAL_BETTER_AUTH_SECRET",
+          "type": "secret_text"
+        },
+        {
+          "name": "CANONICAL_CREATOR_STUDIO_ENABLED",
+          "text": "true",
+          "type": "plain_text"
+        },
+        {
+          "name": "CANONICAL_CREATOR_UPLOADS_ENABLED",
+          "text": "false",
+          "type": "plain_text"
+        },
+        {
+          "name": "CANONICAL_EMAIL_ENABLED",
+          "text": "true",
+          "type": "plain_text"
+        },
+        {
+          "name": "CANONICAL_GITHUB_ENABLED",
+          "text": "false",
+          "type": "plain_text"
+        },
+        {
+          "name": "CANONICAL_GOOGLE_ENABLED",
+          "text": "false",
+          "type": "plain_text"
+        },
+        {
+          "name": "CANONICAL_INVITED_SIGNUP_ENABLED",
+          "text": "false",
+          "type": "plain_text"
+        },
+        {
+          "name": "CANONICAL_MICROSOFT_ENABLED",
+          "text": "false",
+          "type": "plain_text"
+        },
+        {
+          "name": "CANONICAL_PROTECTED_EMAILS",
+          "type": "secret_text"
+        },
+        {
+          "name": "CANONICAL_PUBLIC_SIGNUP_ENABLED",
+          "text": "true",
+          "type": "plain_text"
+        },
+        {
+          "name": "CANONICAL_RECOGNITION_ENABLED",
+          "text": "true",
+          "type": "plain_text"
+        },
+        {
+          "name": "CANONICAL_RESEND_API_KEY",
+          "type": "secret_text"
+        },
+        {
+          "name": "CANONICAL_SCHEMA_APPROVED",
+          "text": "true",
+          "type": "plain_text"
+        },
+        {
+          "name": "CANONICAL_XP_TEST_ENABLED",
+          "text": "true",
+          "type": "plain_text"
+        },
+        {
+          "database_id": "fa96e36d-6257-4883-bf15-074947e11a13",
+          "id": "fa96e36d-6257-4883-bf15-074947e11a13",
+          "name": "COMMUNITY_DB",
+          "type": "d1"
+        },
+        {
+          "database_id": "e1d29049-c83b-4534-8355-dc1fa36ba6d8",
+          "id": "e1d29049-c83b-4534-8355-dc1fa36ba6d8",
+          "name": "MEMBER_DB",
+          "type": "d1"
+        }
+      ]
+    }
+  },
+  "candidateVersion": {
+    "id": "86dc4b9d-4020-432a-8a15-e65606f31316",
+    "resources": {
+      "script_runtime": {
+        "assets": {
+          "not_found_handling": "single-page-application",
+          "serve_directly": false,
+          "raw_run_worker_first": true,
+          "base_path": "/"
+        },
+        "compatibility_date": "2026-10-17",
+        "compatibility_flags": [
+          "nodejs_compat"
+        ],
+        "usage_model": "standard"
+      },
+      "bindings": [
+        {
+          "name": "ANEVUM_ACCESS_AUD",
+          "text": "6efab9f2821297fa4c965f18813d78d7433ebf7823a8e9e6d9ecfb7e4b2ccde1",
+          "type": "plain_text"
+        },
+        {
+          "name": "ANEVUM_CANONICAL_APEX_ENABLED",
+          "text": "true",
+          "type": "plain_text"
+        },
+        {
+          "name": "ANEVUM_CANONICAL_STAGE_ENABLED",
+          "text": "true",
+          "type": "plain_text"
+        },
+        {
+          "name": "ANEVUM_LAUNCH_APPROVED",
+          "text": "true",
+          "type": "plain_text"
+        },
+        {
+          "name": "ANEVUM_PRELAUNCH_MODE",
+          "text": "public",
+          "type": "plain_text"
+        },
+        {
+          "name": "ANEVUM_PREVIEW_ALLOWED_EMAILS",
+          "type": "secret_text"
+        },
+        {
+          "name": "ASSETS",
+          "type": "assets"
+        },
+        {
+          "name": "CANONICAL_APPLE_ENABLED",
+          "text": "false",
+          "type": "plain_text"
+        },
+        {
+          "name": "CANONICAL_BETTER_AUTH_SECRET",
+          "type": "secret_text"
+        },
+        {
+          "name": "CANONICAL_CREATOR_STUDIO_ENABLED",
+          "text": "true",
+          "type": "plain_text"
+        },
+        {
+          "name": "CANONICAL_CREATOR_UPLOADS_ENABLED",
+          "text": "false",
+          "type": "plain_text"
+        },
+        {
+          "name": "CANONICAL_EMAIL_ENABLED",
+          "text": "true",
+          "type": "plain_text"
+        },
+        {
+          "name": "CANONICAL_GITHUB_ENABLED",
+          "text": "false",
+          "type": "plain_text"
+        },
+        {
+          "name": "CANONICAL_GOOGLE_ENABLED",
+          "text": "false",
+          "type": "plain_text"
+        },
+        {
+          "name": "CANONICAL_INVITED_SIGNUP_ENABLED",
+          "text": "false",
+          "type": "plain_text"
+        },
+        {
+          "name": "CANONICAL_MICROSOFT_ENABLED",
+          "text": "false",
+          "type": "plain_text"
+        },
+        {
+          "name": "CANONICAL_PACKAGE_PROOF_ENABLED",
+          "text": "true",
+          "type": "plain_text"
+        },
+        {
+          "name": "CANONICAL_PACKAGE_PROOF_KEY",
+          "type": "secret_text"
+        },
+        {
+          "name": "CANONICAL_PROTECTED_EMAILS",
+          "type": "secret_text"
+        },
+        {
+          "name": "CANONICAL_PUBLIC_SIGNUP_ENABLED",
+          "text": "true",
+          "type": "plain_text"
+        },
+        {
+          "name": "CANONICAL_RECOGNITION_ENABLED",
+          "text": "true",
+          "type": "plain_text"
+        },
+        {
+          "name": "CANONICAL_RESEND_API_KEY",
+          "type": "secret_text"
+        },
+        {
+          "name": "CANONICAL_SCHEMA_APPROVED",
+          "text": "true",
+          "type": "plain_text"
+        },
+        {
+          "name": "CANONICAL_XP_TEST_ENABLED",
+          "text": "false",
+          "type": "plain_text"
+        },
+        {
+          "database_id": "fa96e36d-6257-4883-bf15-074947e11a13",
+          "id": "fa96e36d-6257-4883-bf15-074947e11a13",
+          "name": "COMMUNITY_DB",
+          "type": "d1"
+        },
+        {
+          "database_id": "e1d29049-c83b-4534-8355-dc1fa36ba6d8",
+          "id": "e1d29049-c83b-4534-8355-dc1fa36ba6d8",
+          "name": "MEMBER_DB",
+          "type": "d1"
+        }
+      ]
+    }
+  },
+  "settings": {
+    "compatibility_date": "2026-10-17",
+    "compatibility_flags": [
+      "nodejs_compat"
+    ],
+    "bindings": [
+      {
+        "name": "ANEVUM_ACCESS_AUD",
+        "text": "6efab9f2821297fa4c965f18813d78d7433ebf7823a8e9e6d9ecfb7e4b2ccde1",
+        "type": "plain_text"
+      },
+      {
+        "name": "ANEVUM_CANONICAL_APEX_ENABLED",
+        "text": "true",
+        "type": "plain_text"
+      },
+      {
+        "name": "ANEVUM_CANONICAL_STAGE_ENABLED",
+        "text": "true",
+        "type": "plain_text"
+      },
+      {
+        "name": "ANEVUM_LAUNCH_APPROVED",
+        "text": "true",
+        "type": "plain_text"
+      },
+      {
+        "name": "ANEVUM_PRELAUNCH_MODE",
+        "text": "public",
+        "type": "plain_text"
+      },
+      {
+        "name": "ANEVUM_PREVIEW_ALLOWED_EMAILS",
+        "type": "secret_text"
+      },
+      {
+        "name": "ASSETS",
+        "type": "assets"
+      },
+      {
+        "name": "CANONICAL_APPLE_ENABLED",
+        "text": "false",
+        "type": "plain_text"
+      },
+      {
+        "name": "CANONICAL_BETTER_AUTH_SECRET",
+        "type": "secret_text"
+      },
+      {
+        "name": "CANONICAL_CREATOR_STUDIO_ENABLED",
+        "text": "true",
+        "type": "plain_text"
+      },
+      {
+        "name": "CANONICAL_CREATOR_UPLOADS_ENABLED",
+        "text": "false",
+        "type": "plain_text"
+      },
+      {
+        "name": "CANONICAL_EMAIL_ENABLED",
+        "text": "true",
+        "type": "plain_text"
+      },
+      {
+        "name": "CANONICAL_GITHUB_ENABLED",
+        "text": "false",
+        "type": "plain_text"
+      },
+      {
+        "name": "CANONICAL_GOOGLE_ENABLED",
+        "text": "false",
+        "type": "plain_text"
+      },
+      {
+        "name": "CANONICAL_INVITED_SIGNUP_ENABLED",
+        "text": "false",
+        "type": "plain_text"
+      },
+      {
+        "name": "CANONICAL_MICROSOFT_ENABLED",
+        "text": "false",
+        "type": "plain_text"
+      },
+      {
+        "name": "CANONICAL_PACKAGE_PROOF_ENABLED",
+        "text": "true",
+        "type": "plain_text"
+      },
+      {
+        "name": "CANONICAL_PACKAGE_PROOF_KEY",
+        "type": "secret_text"
+      },
+      {
+        "name": "CANONICAL_PROTECTED_EMAILS",
+        "type": "secret_text"
+      },
+      {
+        "name": "CANONICAL_PUBLIC_SIGNUP_ENABLED",
+        "text": "true",
+        "type": "plain_text"
+      },
+      {
+        "name": "CANONICAL_RECOGNITION_ENABLED",
+        "text": "true",
+        "type": "plain_text"
+      },
+      {
+        "name": "CANONICAL_RESEND_API_KEY",
+        "type": "secret_text"
+      },
+      {
+        "name": "CANONICAL_SCHEMA_APPROVED",
+        "text": "true",
+        "type": "plain_text"
+      },
+      {
+        "name": "CANONICAL_XP_TEST_ENABLED",
+        "text": "false",
+        "type": "plain_text"
+      },
+      {
+        "database_id": "fa96e36d-6257-4883-bf15-074947e11a13",
+        "id": "fa96e36d-6257-4883-bf15-074947e11a13",
+        "name": "COMMUNITY_DB",
+        "type": "d1"
+      },
+      {
+        "database_id": "e1d29049-c83b-4534-8355-dc1fa36ba6d8",
+        "id": "e1d29049-c83b-4534-8355-dc1fa36ba6d8",
+        "name": "MEMBER_DB",
+        "type": "d1"
+      }
+    ]
+  },
+  "exposure": {
+    "enabled": false,
+    "previews_enabled": false
+  },
+  "routes": [
+    {
+      "pattern": "a.anevum.com/*",
+      "script": "anevum-a-community-retirement",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/",
+      "script": "anevum-profile-staff-access-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/__anevum_iren_staff_session_status_v001",
+      "script": "anevum-iren-staff-session-status-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/__anevum_profile_staff_access_v002.js",
+      "script": "anevum-profile-staff-access-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/__anevum_profile_staff_role_v001",
+      "script": "anevum-profile-staff-access-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/__enter/v095-v096*",
+      "script": "anevum-v095-v096-acceptance-entry",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/*",
+      "script": "anevum-native-frame-policy-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/alpha*",
+      "script": "anevum-unified-creation-routes-v002",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/alpha/test-signal-drift*",
+      "script": "anevum-signal-drift-qa-v002",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/api/v1/alpha/*",
+      "script": "anevum-alpha-uploader-player-v004-staff",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/api/v1/alpha/social*",
+      "script": "anevum-project-engagement-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/api/v1/boards",
+      "script": "anevum-alpha-discovery-adapter-v003",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/api/v1/categories",
+      "script": "anevum-alpha-discovery-adapter-v003",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/api/v1/member/forum-review*",
+      "script": "anevum-iren-apex-staff-v002",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/api/v1/member/staff-ops*",
+      "script": "anevum-iren-apex-staff-v002",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/api/v1/member/xp-test*",
+      "script": "anevum-xp-test-retirement-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/api/v1/packages/v004/*",
+      "script": "anevum-package-alpha-v004-control",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/api/v1/projects*",
+      "script": "anevum-alpha-discovery-adapter-v003",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/api/v1/status",
+      "script": "anevum-alpha-discovery-adapter-v003",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/assets/index-*",
+      "script": "anevum-native-project-community-v002",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/creator-lab/v004*",
+      "script": "anevum-package-alpha-v004-control",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/evolution/vectors/*",
+      "script": "anevum-apex-prelaunch-gateway",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/member*",
+      "script": "anevum-profile-staff-access-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/play/*",
+      "script": "anevum-unified-creation-routes-v002",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/staff",
+      "script": "anevum-iren-staff-entry-v003",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/staff*",
+      "script": "anevum-iren-staff-entry-v003",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/staff/",
+      "script": "anevum-iren-staff-entry-v003",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/staff/command",
+      "script": "anevum-iren-legacy-command-entry-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/staff/command/",
+      "script": "anevum-iren-legacy-command-entry-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/staff/observatory*",
+      "script": "anevum-iren-staff-observatory-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/staff/projects*",
+      "script": "anevum-staff-project-review-v003",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/staff/projects/community*",
+      "script": "anevum-staff-community-review-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/thebutton*",
+      "script": "anevum-xp-test-retirement-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "anevum.com/upload*",
+      "script": "anevum-unified-creation-routes-v002",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "backstage.anevum.com/*",
+      "script": "anevum-legacy-archive",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "family.anevum.com/*",
+      "script": "anevum-family-link-v004",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "lab.anevum.com/previews*",
+      "script": "anevum-lab-previews-v001",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "next.anevum.com/api/v1/member/*",
+      "script": "anevum-member-auth-staging",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "next.anevum.com/creator/*",
+      "script": "anevum-creator-v1-react-staging",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "next.anevum.com/join*",
+      "script": "anevum-member-auth-staging",
+      "request_limit_fail_open": false
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+name: ANEVUM V117 Integrated V116 Offline Apex Worker Package
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/ops/apex-worker-bundle-v117.mjs'
+      - 'creator-v1/operations/apex-bundle-runtime-baseline-v117-20261022.json'
+      - 'creator-v1/test/apex-worker-bundle-v117.test.mjs'
+      - '.github/workflows/v117-integrated-apex-worker-package.yml'
+  push:
+    branches: ['release/v084-continuance-approved-20261019']
+    paths:
+      - 'creator-v1/ops/apex-worker-bundle-v117.mjs'
+      - 'creator-v1/operations/apex-bundle-runtime-baseline-v117-20261022.json'
+      - 'creator-v1/test/apex-worker-bundle-v117.test.mjs'
+      - '.github/workflows/v117-integrated-apex-worker-package.yml'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: anevum-v117-package-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  offline-package:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+      CLOUDFLARE_API_TOKEN: ''
+      CLOUDFLARE_API_KEY: ''
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify runtime snapshots and existing asset protections
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+          node --test creator-v1/test/apex-worker-bundle-v117.test.mjs creator-v1/test/apex-worker-bundle-v112.test.mjs creator-v1/test/apex-prelaunch-gateway.test.mjs creator-v1/test/native-auth-pin-preflight-v109.test.mjs
+      - name: Download exact merged V116 feature-on bundle
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12472563668'
+          run-id: 39887377952
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v117-frontend
+          merge-multiple: true
+      - name: Verify GitHub artifact provenance and immutable digest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          const get=async path=>{const r=await fetch('https://api.github.com/repos/anevum/anevum-web'+path,{headers:{Authorization:'Bearer '+process.env.GH_TOKEN,Accept:'application/vnd.github+json'},signal:AbortSignal.timeout(20000)});if(!r.ok)throw Error('GitHub evidence unavailable: '+r.status);return r.json()};
+          const [a,r]=await Promise.all([get('/actions/artifacts/12472563668'),get('/actions/runs/39887377952')]);
+          assert.equal(a.digest,'sha256:a492024a494bb993af9d1e7921a93266017f3e0e81172745e5bf66c2a5ac40d8');assert.equal(a.expired,false);
+          assert.equal(a.workflow_run.head_sha,'a3c94b3ebdc6103347e76f8a5234904978da67e3');
+          assert.equal(r.head_sha,'a3c94b3ebdc6103347e76f8a5234904978da67e3');assert.equal(r.conclusion,'success');assert.equal(r.status,'completed');
+          JS
+      - name: Validate exact frontend, verified Worker and frozen route bindings
+        run: node creator-v1/ops/apex-worker-bundle-v117.mjs prepare "$RUNNER_TEMP/v117-frontend" "$RUNNER_TEMP/v117-package"
+      - name: Compile complete Worker without uploading
+        run: npx --no-install wrangler deploy --dry-run --config "$RUNNER_TEMP/v117-package/wrangler.offline.json" --outdir "$RUNNER_TEMP/v117-package/worker-bundle"
+      - name: Seal exact-source Worker/asset manifest with release gates closed
+        run: |
+          node creator-v1/ops/apex-worker-bundle-v117.mjs seal "$RUNNER_TEMP/v117-package"
+          echo 'V117_PACKAGE=PASS; PROVIDER_WRITES=NONE; PUBLIC_RELEASE_APPROVAL=NONE' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: anevum-v117-v116-exact-offline-worker-${{ github.event.pull_request.head.sha || github.sha }}
+          path: ${{ runner.temp }}/v117-package/
+          retention-days: 14
+          if-no-files-found: error
