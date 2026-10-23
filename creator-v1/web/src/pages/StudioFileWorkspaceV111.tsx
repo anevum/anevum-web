@@ -2,6 +2,8 @@ import {useEffect,useMemo,useRef,useState,type ReactNode,type FormEvent} from 'r
 import {Link} from 'react-router-dom';
 import {PREFIX} from '../../../workbench-alpha/document.mjs';
 import {StudioSceneComposerV112,studioVisualScenesEnabled} from './StudioSceneComposerV112';
+import {PREFIX as UI_PREFIX} from '../../../interface-builder/document.mjs';
+import {StudioInterfaceBuilderV113,studioInterfaceBuilderEnabled} from './StudioInterfaceBuilderV113';
 import {
  studioFileTreeEnabled,studioFileList,studioFileGet,studioFileCreate,
  studioFileUpdate,studioFileVersions,studioFileTrash,studioFileRestore,type StudioFileNode,type StudioFileVersion,
@@ -228,6 +230,9 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
       {studioVisualScenesEnabled&&<button type="button" title="Create branching scene" aria-label="Create branching scene"
        disabled={!canEdit||loading||!!error||!!pendingCreate}
        onClick={()=>{setCreateKind('text');setCreateName('scene.anevum');setMessage('');}}>+ Scene</button>}
+      {studioInterfaceBuilderEnabled&&<button type="button" title="Create visual interface" aria-label="Create visual interface"
+       disabled={!canEdit||loading||!!error||!!pendingCreate}
+       onClick={()=>{setCreateKind('text');setCreateName('interface.ui.anevum');setMessage('');}}>+ Interface</button>}
      </div>
     </div>
     <div className="csf-tree-body">
@@ -383,7 +388,7 @@ function SourceEditorV111({projectId,nodeId,nodes,editable:canEdit,onDirty,onUpd
 }){
  const [base,setBase]=useState<StudioFileNode|null>(null);
  const [content,setContent]=useState('');
- const [presentation,setPresentation]=useState<'text'|'visual'>('text');
+ const [presentation,setPresentation]=useState<'text'|'visual'|'interface'>('text');
  const [name,setName]=useState('');
  const [parentId,setParentId]=useState<string|null>(null);
  const [loading,setLoading]=useState(true);
@@ -407,15 +412,19 @@ function SourceEditorV111({projectId,nodeId,nodes,editable:canEdit,onDirty,onUpd
     if(controller.signal.aborted)return;
     if(node.kind!=='text'||node.deletedAt!==null)throw Error('This file is no longer editable.');
     setBase(node);setContent(node.content||'');setName(node.name);setParentId(node.parentId);
-    setPresentation(studioVisualScenesEnabled&&
-     (node.name.toLowerCase().endsWith('.anevum')||(node.content||'').startsWith(PREFIX))?'visual':'text');
+    setPresentation(studioInterfaceBuilderEnabled&&
+     (node.name.toLowerCase().endsWith('.ui.anevum')||(node.content||'').startsWith(UI_PREFIX))?'interface':
+     studioVisualScenesEnabled&&(node.name.toLowerCase().endsWith('.anevum')||(node.content||'').startsWith(PREFIX))?'visual':'text');
    })
    .catch(e=>{if(!controller.signal.aborted)setError(presentError(e));})
    .finally(()=>{if(!controller.signal.aborted)setLoading(false);});
   return()=>controller.abort();
  },[projectId,nodeId]);
  const byteCount=new TextEncoder().encode(content).length;
- const canVisual=studioVisualScenesEnabled&&(name.toLowerCase().endsWith('.anevum')||content.startsWith(PREFIX));
+ const canInterface=studioInterfaceBuilderEnabled&&
+  (name.toLowerCase().endsWith('.ui.anevum')||content.startsWith(UI_PREFIX));
+ const canVisual=studioVisualScenesEnabled&&
+  !canInterface&&(name.toLowerCase().endsWith('.anevum')||content.startsWith(PREFIX));
  async function save(){
   if(!base||!canEdit||!dirty||busy||byteCount>32768)return;
   setBusy(true);setError('');setMessage('');
@@ -484,11 +493,15 @@ function SourceEditorV111({projectId,nodeId,nodes,editable:canEdit,onDirty,onUpd
      </select>
     </label>
    </div>
-   {canVisual&&<div className="csf-presentation-switch" role="group" aria-label="Source editor presentation">
-    <button type="button" aria-pressed={presentation==='visual'} onClick={()=>setPresentation('visual')}>Visual scene</button>
+   {(canVisual||canInterface)&&<div className="csf-presentation-switch" role="group" aria-label="Source editor presentation">
+    {canVisual&&<button type="button" aria-pressed={presentation==='visual'} onClick={()=>setPresentation('visual')}>Visual scene</button>}
+    {canInterface&&<button type="button" aria-pressed={presentation==='interface'} onClick={()=>setPresentation('interface')}>Interface builder</button>}
     <button type="button" aria-pressed={presentation==='text'} onClick={()=>setPresentation('text')}>Source text</button>
    </div>}
-   {canVisual&&presentation==='visual'?
+   {canInterface&&presentation==='interface'?
+    <StudioInterfaceBuilderV113 raw={content} fileName={name} resetToken={nodeId+':'+base.revision}
+     readOnly={!canEdit||busy} onChange={setContent}/>:
+    canVisual&&presentation==='visual'?
     <StudioSceneComposerV112 raw={content} fileName={name} resetToken={nodeId+':'+base.revision}
      readOnly={!canEdit||busy} onChange={setContent}/>:
     <>
