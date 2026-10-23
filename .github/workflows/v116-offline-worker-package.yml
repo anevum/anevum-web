@@ -1,0 +1,65 @@
+name: ANEVUM V116 Complete Offline Worker Package
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v116-offline-worker-package.yml'
+      - 'creator-v1/ops/v116-offline-worker-package.mjs'
+      - 'creator-v1/test/v116-offline-worker-package.test.mjs'
+      - 'docs/production/v116-offline-worker-package-20261022.md'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: anevum-v116-offline-worker-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  package:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CLOUDFLARE_API_TOKEN: ''
+      CLOUDFLARE_API_KEY: ''
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install build tooling without lifecycle scripts or lockfile mutation
+        run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - name: Confirm no privileged operation and test strict source contracts
+        run: |
+          set -euo pipefail
+          test -z "$CLOUDFLARE_API_TOKEN"
+          node --check creator-v1/ops/v116-offline-worker-package.mjs
+          node --test creator-v1/test/v116-offline-worker-package.test.mjs
+      - name: Download immutable merged-branch V116 frontend
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12472563668'
+          run-id: 39887377952
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v116-frontend
+          merge-multiple: true
+      - name: Verify every frontend byte and generate isolated offline configuration
+        run: node creator-v1/ops/v116-offline-worker-package.mjs prepare "$RUNNER_TEMP/v116-frontend" "$RUNNER_TEMP/v116-package"
+      - name: Dry-run complete apex Worker compilation with no Cloudflare credentials
+        run: |
+          set -euo pipefail
+          test -z "$CLOUDFLARE_API_TOKEN"
+          npx --no-install wrangler deploy --dry-run --config "$RUNNER_TEMP/v116-package/wrangler.offline.json" --outdir "$RUNNER_TEMP/v116-package/worker-bundle"
+          node creator-v1/ops/v116-offline-worker-package.mjs seal "$RUNNER_TEMP/v116-package"
+          echo 'V116_EXACT_MERGED_WORKER_OFFLINE=PASS; UPLOAD=NONE; TRAFFIC_CHANGE=NONE' >> "$GITHUB_STEP_SUMMARY"
+      - name: Retain hash-locked nonproduction package
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v116-offline-worker-package-${{ github.event.pull_request.head.sha || github.sha }}
+          path: ${{ runner.temp }}/v116-package/
+          retention-days: 14
+          if-no-files-found: warn

@@ -1,0 +1,13 @@
+# V116 source-locked offline Worker package
+
+Session: `ANEVUM.WEB.RELEASE.2026-10-22.001.FIRST-LOAD-IREN-PRODUCTION`
+
+V116 first-contact and IREN integration PR #652 is merged on `release/v084-continuance-approved-20261019` as `a3c94b3ebdc6103347e76f8a5234904978da67e3`. The exact merged frontend/root browser run is `39887377952` with retained artifact `12472563668`. The root feature-on browser ran at 320, 390 and 1440 CSS pixels. This is synthetic browser evidence; it is **not** Cloudflare runtime or authenticated founder/device acceptance.
+
+The V116 offline packaging workflow downloads only that artifact, checks the exact source SHA, flags, every public asset byte and its SHA-256, path/symlink safety, all preserved earned level artwork, absence of source maps, and root browser acceptance. It builds the *complete canonical apex gateway* into a hashed Worker package with a no-credential Wrangler dry run.
+
+The offline binding configuration references the historically checked V112 candidate baseline **for syntax compilation only**. That historical baseline is not fresh authority for upload or production deployment. It contains no secret values. The package manifest explicitly records `cloudflareReadbackFresh:false`, `uploadAuthorized:false`, `authenticatedAcceptance:false`, `physicalSafariAcceptance:false`, and `productionReleaseApproved:false`. No version upload, deployment, traffic, route, D1, member, recognition, XP or publishing write exists in this workflow.
+
+The separate Cloudflare GET read on this work session identified live apex deployment `549f57c4-3d29-4b8b-856f-9554cab437e2`, active original `93cc7f07-cf39-457e-af69-c9f6f4c02d25` at 100%, and V114 protected candidate `86dc4b9d-4020-432a-8a15-e65606f31316` at 0%. This differs from historical V112 deployment `6372ee35-8c7d-468c-9486-536d9c4b0a0d`. Current settings have 26 bindings. Therefore **the V112/V113 upload pins cannot safely deploy V116**, and this offline config must never be passed directly to a credentialed upload.
+
+Before a separately authorized upload, fetch current Cloudflare settings, public and private Worker versions, secret binding names (not values), D1 IDs, all routes, exposure, newest deployment and controller AUTH pin. Reconcile them against a newly approved immutable V116 manifest. Upload only a new inactive version with preserved binding/resource identities and verify that public traffic is unchanged. Then obtain authenticated founder/reviewer/ordinary-member and physical iPhone Safari acceptance; use explicit rollback-aware public promotion only after these gates pass. See issue #655. Test game deletion, member XP changes, Studio publishing permissions and unrelated platform releases are out of scope.
