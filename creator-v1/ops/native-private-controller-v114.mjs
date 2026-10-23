@@ -12,7 +12,7 @@ export const APEX='anevum-apex-prelaunch-gateway';
 export const TARGET='86dc4b9d-4020-432a-8a15-e65606f31316';
 export const PUBLIC='9851d9c5-6270-4c4e-a70e-1b82451b170d';
 export const PRIOR='2720ea00-2030-43ff-84fc-8d6faf4d003b';
-export const BRANCH='ops/native-private-controller-v114-20261022-001';
+export const BRANCH='ops/private-controller-v114-permission-fix-20261022-001';
 export const MESSAGE='release(v114): upload private controller inactive only';
 export const NOTE='V114 private controller only; canonical AUTH '+TARGET+'; executable publishing OFF; source '+SOURCE;
 const ROOT='/accounts/'+ACCOUNT+'/workers/scripts/'+WORKER;
@@ -56,7 +56,6 @@ export function verifyBaseline(s){
  assert.equal(s.entryExpiry,'1792711995');assert.ok(Number(s.entryExpiry)<Date.now()/1000,'Test window must remain closed during inactive preparation');
  assert.equal(s.entryDeployment.id,'984dd104-3642-47f8-8983-0fde8a337ce9');
  assert.deepEqual(s.entryDeployment.versions,[{version_id:'406ef0ca-cfaa-411f-812d-1fb390b91ffc',percentage:100}]);
- assert.equal(s.ruleVersion,'12');assert.equal(s.ruleExpiry,s.entryExpiry);
  plannedBindings(s.prior.resources.bindings);
  return true;
 }
@@ -70,7 +69,7 @@ export function verifyUploaded(before,after,candidate,bundleHash){
  assert.equal(hash(stable(after.live.resources)),hash(stable(before.live.resources)),'Serving controller resources changed');
  assert.equal(hash(stable(after.apexDeployment)),hash(stable(before.apexDeployment)),'Apex deployment changed');
  assert.equal(hash(stable(after.routes)),hash(stable(before.routes)),'Routes changed');
- assert.deepEqual(after.exposure,before.exposure);assert.equal(hash(stable(after.entryDeployment)),hash(stable(before.entryDeployment)));assert.equal(after.entryExpiry,before.entryExpiry);assert.equal(after.ruleVersion,before.ruleVersion);assert.equal(after.ruleExpiry,before.ruleExpiry);
+ assert.deepEqual(after.exposure,before.exposure);assert.equal(hash(stable(after.entryDeployment)),hash(stable(before.entryDeployment)));assert.equal(after.entryExpiry,before.entryExpiry);
  const added=after.versions.filter(x=>!before.versions.some(v=>v.id===x.id));assert.equal(added.length,1);assert.equal(candidate.id,added[0].id);
  assert.ok(!after.deployment.versions.some(x=>x.version_id===candidate.id));
  assert.equal(candidate.annotations?.['workers/message'],NOTE);
@@ -79,7 +78,7 @@ export function verifyUploaded(before,after,candidate,bundleHash){
  return {status:'PRIVATE_CONTROLLER_UPLOADED_INACTIVE',versionId:candidate.id,sourceSha:SOURCE,bundleSha256:bundleHash,authTarget:TARGET,
   publicPublishingEnabled:false,nativeStudioEnabled:true,servingControllerUnchanged:true,apexDeploymentUnchanged:true,
   routesUnchanged:true,secretValuesRetrieved:false,roleAllowlistUnchanged:true,newVersionTrafficPercent:0,
-  protectedRoutingActivated:false,authPinEligibleInCurrentApexDeployment:false,authenticatedAcceptance:false,productionReleaseApproved:false};
+  routingRulesetVerifiedByUploadJob:false,protectedRoutingActivated:false,authPinEligibleInCurrentApexDeployment:false,authenticatedAcceptance:false,productionReleaseApproved:false};
 }
 async function get(path,github=false){
  const r=await fetch((github?'https://api.github.com':'https://api.cloudflare.com/client/v4')+path,{method:'GET',headers:{authorization:'Bearer '+(github?process.env.GH_TOKEN:process.env.CLOUDFLARE_API_TOKEN),accept:'application/json'},redirect:'error',signal:AbortSignal.timeout(30000)});
@@ -87,11 +86,11 @@ async function get(path,github=false){
 }
 async function snapshot(){
  const a='/accounts/'+ACCOUNT+'/workers/scripts/'+APEX;
- const [d,live,prior,settings,exposure,routes,v,ad,apex,entry,rule,ed]=await Promise.all([get(ROOT+'/deployments'),get(ROOT+'/versions/'+PUBLIC),get(ROOT+'/versions/'+PRIOR),get(ROOT+'/settings'),get(ROOT+'/subdomain'),get('/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes'),get(ROOT+'/versions?per_page=100'),get(a+'/deployments'),get(a+'/versions/'+TARGET),get('/accounts/'+ACCOUNT+'/workers/scripts/anevum-v095-v096-acceptance-entry/versions/406ef0ca-cfaa-411f-812d-1fb390b91ffc'),get('/zones/8abe27259b5436af5966d3b40d9a3760/rulesets/phases/http_request_late_transform/entrypoint'),get('/accounts/'+ACCOUNT+'/workers/scripts/anevum-v095-v096-acceptance-entry/deployments')]);
- const q=rule.rules.find(x=>x.ref==='anevum_v091_select_candidate');
- const ruleExpiry=/http\.request\.timestamp\.sec lt (\d{10})/.exec(q?.expression||'')?.[1];
- // Raw cookie-selection expressions can contain a routing secret. Never retain or print them.
- return {deployment:d.deployments[0],live,prior,settings,exposure,routes,versions:v.items,apexDeployment:ad.deployments[0],apex,entryDeployment:ed.deployments[0],entryExpiry:entry.resources.bindings.find(x=>x.name==='QA_EXPIRES_AT')?.text,ruleVersion:rule.version,ruleExpiry};
+ const [d,live,prior,settings,exposure,routes,v,ad,apex,entry,ed]=await Promise.all([get(ROOT+'/deployments'),get(ROOT+'/versions/'+PUBLIC),get(ROOT+'/versions/'+PRIOR),get(ROOT+'/settings'),get(ROOT+'/subdomain'),get('/zones/8abe27259b5436af5966d3b40d9a3760/workers/routes'),get(ROOT+'/versions?per_page=100'),get(a+'/deployments'),get(a+'/versions/'+TARGET),get('/accounts/'+ACCOUNT+'/workers/scripts/anevum-v095-v096-acceptance-entry/versions/406ef0ca-cfaa-411f-812d-1fb390b91ffc'),get('/accounts/'+ACCOUNT+'/workers/scripts/anevum-v095-v096-acceptance-entry/deployments')]);
+ // The CI token has Worker permissions, not Rulesets Read. This inactive-only
+ // operation does not select a version or renew routing. Live ruleset checks
+ // remain mandatory in the separately authorized protected staging operation.
+ return {deployment:d.deployments[0],live,prior,settings,exposure,routes,versions:v.items,apexDeployment:ad.deployments[0],apex,entryDeployment:ed.deployments[0],entryExpiry:entry.resources.bindings.find(x=>x.name==='QA_EXPIRES_AT')?.text};
 }
 async function guard(){
  assert.equal(process.env.GITHUB_REPOSITORY,'anevum/anevum-web');assert.equal(process.env.GITHUB_ACTOR,'anevum');assert.equal(process.env.GITHUB_EVENT_NAME,'push');assert.equal(process.env.GITHUB_REF,'refs/heads/'+BRANCH);assert.equal(process.env.CLOUDFLARE_ACCOUNT_ID,ACCOUNT);
