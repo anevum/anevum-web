@@ -12,7 +12,7 @@ const app=read("web/src/App.tsx");
 test("V114 is the existing canonical homepage, not an alternate first-load application",()=>{
  assert.doesNotThrow(()=>parse(home,{sourceType:"module",plugins:["typescript","jsx"]}));
  assert.match(app,/<Route index element={<CinematicLandingPage\/>}\/>/);
- assert.match(home,/className="av79-hero av114-arrival"/);
+ assert.match(home,/className="av79-hero av114-arrival av115-arrival"/);
  assert.match(home,/className="av114-arrival-scene"/);
  assert.match(home,/THE CONTINUANCE INSTITUTE/);
  assert.match(home,/A universe <em>in the making\.<\/em>/);
@@ -52,7 +52,7 @@ test("V114 paints the catalogue without waiting for optional metadata requests",
  assert.match(home,/creators:creatorResult\.status==="fulfilled"\?creatorResult\.value\.items:\[\]/);
  assert.match(home,/metadata\.state==="ready"\?metadata\.data\.creators/);
  assert.match(home,/verified&&status\?String\(status\.counts\.publishedProjects\)/);
- assert.match(home,/const featured=games\[0\]\|\|projects\[0\]\|\|null/);
+ assert.match(home,/const showcase=projects\.filter\(project=>project\.category!=="games"\)/);
 });
 
 test("V114 is responsive, motion-conscious, accessible and asset-free for fast first paint",()=>{
