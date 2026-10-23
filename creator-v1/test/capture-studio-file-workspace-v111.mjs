@@ -249,14 +249,29 @@ try{
  assert.ok(await evaluate('document.querySelector(".csw-agent").textContent.includes("Orbit Garden")'));
  assert.equal(await evaluate('document.querySelector(".csw-agent select").value'),'Builder');
  assert.ok(await evaluate('document.querySelector(".csw-agent textarea").value.length>0'));
- await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
- await pause(250);
- const mobile=await evaluate('(()=>{const c=document.querySelector(".csw-agent"),r=c.getBoundingClientRect();return {x:r.left,right:r.right,visible:getComputedStyle(c).display!=="none",editorHidden:getComputedStyle(document.querySelector(".csw-main")).display==="none",overflow:document.querySelector(".csw-root").scrollWidth>document.querySelector(".csw-root").clientWidth+2};})()');
- assert.equal(mobile.visible,true,'Mobile Agent Dock visible');
- assert.equal(mobile.editorHidden,true,'Mobile Agent Dock takes focus instead of squeezing editor');
- assert.equal(mobile.overflow,false,'Mobile Studio does not overflow');
- assert.ok(mobile.x>=-1&&mobile.right<=391,'Agent dock within mobile viewport');
- await snap('mobile-agent-dock-disconnected');
+ const mobileLayouts=[];
+ for(const width of [390,360,320]){
+  await send('Emulation.setDeviceMetricsOverride',{width,height:844,deviceScaleFactor:1,mobile:true});
+  await pause(240);
+  const layout=await evaluate('(()=>{const c=document.querySelector(".csw-agent"),r=c.getBoundingClientRect();return {x:r.left,right:r.right,visible:getComputedStyle(c).display!=="none",editorHidden:getComputedStyle(document.querySelector(".csw-main")).display==="none",overflow:document.querySelector(".csw-root").scrollWidth>document.querySelector(".csw-root").clientWidth+2};})()');
+  assert.equal(layout.visible,true,'Agent Dock visible at '+width+'px');
+  assert.equal(layout.editorHidden,true,'Agent Dock focused at '+width+'px');
+  assert.equal(layout.overflow,false,'No Studio horizontal overflow at '+width+'px');
+  assert.ok(layout.x>=-1&&layout.right<=width+1,'Dock within '+width+'px viewport');
+  mobileLayouts.push({width,...layout});
+  await snap('mobile-'+width+'-agent-dock-disconnected');
+ }
+ const mobile=mobileLayouts[0];
+ await click('.csw-agent-close');
+ await until(()=>evaluate('getComputedStyle(document.querySelector(".csw-main")).display!=="none"'),'Mobile editor restored after closing Agent Dock');
+ const returned=await evaluate('(()=>{const tab=[...document.querySelectorAll(".csw-tab button[role=tab]")].find(x=>x.textContent.includes("Signal Atlas"));if(!tab)return false;tab.click();return true;})()');
+ assert.equal(returned,true,'Original private project tab accessible at 320px');
+ await until(()=>evaluate('document.querySelector(".csw-file-host:not([hidden]) .csf-source")?.value.includes("Unsaved workspace-local change.")'),'Saved source accessible at 320px');
+ const sourceMobile=await evaluate('(()=>{const e=document.querySelector(".csw-file-host:not([hidden]) .csf-source"),root=document.querySelector(".csw-root"),r=e.getBoundingClientRect();return {visible:r.width>0&&getComputedStyle(e).display!=="none",left:r.left,right:r.right,overflow:root.scrollWidth>root.clientWidth+2};})()');
+ assert.equal(sourceMobile.visible,true,'Source editor visible at 320px');
+ assert.equal(sourceMobile.overflow,false,'No source workspace horizontal overflow at 320px');
+ assert.ok(sourceMobile.left>=-1&&sourceMobile.right<=321,'Source editor within 320px viewport');
+ await snap('mobile-320-private-source-editor');
  await send('Network.deleteCookies',{url:base,name:'anevum_offline_visual_fixture'});
  await navigate('/studio/workspace');
  await until(()=>evaluate('document.body.textContent.includes("Sign in to open your workspace.")'),'Guest view denies private workspace');
@@ -265,7 +280,7 @@ try{
  assert.equal(failures.length,0,'No synthetic browser runtime exceptions '+failures.join('; '));
  const result={source:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),
   status:'PASS',syntheticOnly:true,realMemberAcceptance:false,providerCalls:0,
-  createdProject:createdId,createdRequests:posts.length,openedTabs:2,foldersCreated:1,sourceFilesCreated:1,sourceSaves:filePatches.filter(x=>!x.deleted).length,trashMoves:filePatches.filter(x=>x.deleted).length,restores:1,mobile,guestDenied:true};
+  createdProject:createdId,createdRequests:posts.length,openedTabs:2,foldersCreated:1,sourceFilesCreated:1,sourceSaves:filePatches.filter(x=>!x.deleted).length,trashMoves:filePatches.filter(x=>x.deleted).length,restores:1,mobile,mobileLayouts,sourceMobile,guestDenied:true};
  writeFileSync(join(output,'acceptance.json'),JSON.stringify(result,null,2));
  console.log(JSON.stringify(result));
 }catch(error){
