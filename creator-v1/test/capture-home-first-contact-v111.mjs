@@ -1,5 +1,5 @@
 /**
- * V111 homepage first-contact browser acceptance of the actual compiled React site
+ * V115 homepage first-contact and IREN browser acceptance of the actual compiled React site
  * using loopback synthetic project fixtures. No real users or production access.
  */
 import {spawn} from "node:child_process";
@@ -8,7 +8,7 @@ import {tmpdir} from "node:os";
 import {join} from "node:path";
 const [chrome,base,output]=process.argv.slice(2);
 if(!chrome||!/^http:\/\/127\.0\.0\.1:\d+$/.test(base||"")||!output)
- throw Error("V111_HOME_LOCAL_BROWSER_REQUIRED");
+ throw Error("V115_HOME_LOCAL_BROWSER_REQUIRED");
 const delay=ms=>new Promise(ok=>setTimeout(ok,ms));
 async function until(fn,timeout=18000){
  let last="";
@@ -34,43 +34,50 @@ try{
  await new Promise((resolve,reject)=>{ws.addEventListener("open",resolve,{once:true});ws.addEventListener("error",reject,{once:true})});
  const send=(method,params={})=>new Promise((resolve,reject)=>{const id=++seq;tasks.set(id,{resolve,reject});ws.send(JSON.stringify({id,method,params}))});
  const evaluate=async expression=>{const r=await send("Runtime.evaluate",{expression,returnByValue:true,awaitPromise:true});if(r.exceptionDetails)throw Error(r.exceptionDetails.exception?.description||r.exceptionDetails.text);return r.result?.value};
- const screenshot=async name=>{const data=(await send("Page.captureScreenshot",{format:"png",fromSurface:true})).data;if(!data||data.length<3500)throw Error("V111_HOME_SCREENSHOT_EMPTY_"+name);writeFileSync(join(output,name+".png"),Buffer.from(data,"base64"))};
+ const screenshot=async name=>{const data=(await send("Page.captureScreenshot",{format:"png",fromSurface:true})).data;if(!data||data.length<3500)throw Error("V115_HOME_SCREENSHOT_EMPTY_"+name);writeFileSync(join(output,name+".png"),Buffer.from(data,"base64"))};
  await send("Page.enable");await send("Runtime.enable");
  await send("Page.addScriptToEvaluateOnNewDocument",{source:'localStorage.setItem("anevum.iren.first-contact.v092","seen");'});
  await send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:"reduce"}]});
  for(const [width,height,label] of [[1440,900,"desktop"],[390,844,"phone"],[320,720,"small-phone"]]){
   await send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:1,mobile:width<700});
   await send("Page.navigate",{url:base+"/creator/"});
-  // The canonical featured project is loaded asynchronously from the real
-  // local catalogue fixture, so await it before asserting the first fold.
-  await until(()=>evaluate('!!document.querySelector(".av111-onramp")&&!!document.querySelector(".av79-feature")&&document.querySelectorAll(".av79-gateway").length===4'));
-  const entry=await evaluate('(()=>{const rail=document.querySelector(".av111-onramp"),join=rail.querySelector("a.av111-onramp-primary"),tour=rail.querySelector("button.av111-onramp-guide"),r=rail.getBoundingClientRect(),j=join?.getBoundingClientRect(),t=tour?.getBoundingClientRect();return {hero:!!document.querySelector(".av79-hero"),featured:!!document.querySelector(".av79-feature"),gateways:document.querySelectorAll(".av79-gateway").length,join:join?.getAttribute("href"),tour:!!tour,rail:[r.left,r.right,r.width],buttons:[j?.height,t?.height],overflow:document.documentElement.scrollWidth>innerWidth+1,text:rail.textContent}})()');
-  if(!entry.hero||!entry.featured||entry.gateways!==4||!entry.join?.endsWith("/join")||!entry.tour||entry.overflow||entry.rail[0]<-1||entry.rail[1]>width+1||entry.buttons.some(h=>h<44)||!entry.text?.includes("Explore first. Join when ready."))
-   throw Error("V111_HOME_FIRST_CONTACT_"+label+":"+JSON.stringify(entry));
+  // First contact is now an ANEVUM world/wayfinder experience, not a game
+  // promotion. The local catalogue fixture remains authentic public data.
+  await until(()=>evaluate('!!document.querySelector(".av115-wayfinder")&&!!document.querySelector(".av115-iren-console")&&!!document.querySelector(".av115-public-index")&&document.querySelectorAll(".av79-gateway").length===4'));
+  const entry=await evaluate('(()=>{const wayfinder=document.querySelector(".av115-wayfinder"),cards=[...wayfinder.querySelectorAll(".av79-gateway")],join=wayfinder.querySelector(".av115-gateway-member"),consoleButton=document.querySelector(".av115-iren-console button"),headline=document.querySelector("#av115-wayfinder-title"),rect=wayfinder.getBoundingClientRect();return {gateways:cards.length,labels:cards.map(x=>x.querySelector("strong")?.textContent),join:join?.getAttribute("href"),intro:!!consoleButton,headline:headline?.textContent,rect:[rect.left,rect.right],overflow:document.documentElement.scrollWidth>innerWidth+1,testGameFeatured:!!document.querySelector(".av79-feature")}})()');
+  if(entry.gateways!==4||!entry.join?.endsWith("/join")||!entry.intro||entry.overflow||entry.rect[0]<-1||entry.rect[1]>width+1||entry.testGameFeatured||!entry.headline?.includes("Where will you go?"))
+   throw Error("V115_HOME_WAYFINDER_"+label+":"+JSON.stringify(entry));
   if(width<=420){
    const action=await evaluate('(()=>{const head=document.querySelector(".av79-now .av79-section-heading"),link=head?.querySelector("a"),title=head?.querySelector("h2"),r=link?.getBoundingClientRect(),h=title?.getBoundingClientRect();return {width:r?.width,top:r?.top,titleBottom:h?.bottom,right:r?.right}})()');
    if(!action.width||action.width<82||action.top<action.titleBottom-1||action.right>width+1)
-    throw Error("V111_HOME_NARROW_SECTION_ACTION_"+label+":"+JSON.stringify(action));
+    throw Error("V115_HOME_NARROW_SECTION_ACTION_"+label+":"+JSON.stringify(action));
   }
-  const arrival=await evaluate('(()=>{const hero=document.querySelector(".av114-arrival"),heading=hero?.querySelector("h1"),scene=hero?.querySelector(".av114-arrival-scene"),buttons=[...(hero?.querySelectorAll(".av79-hero-actions a")||[])],r=hero?.getBoundingClientRect();return {exists:!!hero,scene:!!scene,heading:heading?.textContent,buttonCount:buttons.length,buttons:buttons.map(a=>{const b=a.getBoundingClientRect();return {href:a.getAttribute("href"),height:b.height,top:b.top,bottom:b.bottom}}),rect:r?[r.left,r.right,r.top,r.bottom]:null,overflow:document.documentElement.scrollWidth>innerWidth+1}})()');
-  if(!arrival.exists||!arrival.scene||!arrival.heading?.includes("Create beyond")||arrival.buttonCount!==2||arrival.overflow||arrival.buttons.some(b=>b.height<44||b.top<0||b.bottom>height)||arrival.rect[0]<-1||arrival.rect[1]>width+1)
-   throw Error("V114_FIRST_ARRIVAL_"+label+":"+JSON.stringify(arrival));
+  const arrival=await evaluate('(()=>{const hero=document.querySelector(".av114-arrival"),heading=hero?.querySelector("h1"),scene=hero?.querySelector(".av114-arrival-scene"),actions=[...(hero?.querySelectorAll(".av79-hero-actions :is(a,button)")||[])],r=hero?.getBoundingClientRect();return {exists:!!hero,scene:!!scene,heading:heading?.textContent,actionCount:actions.length,actions:actions.map(a=>{const b=a.getBoundingClientRect();return {text:a.textContent,href:a.getAttribute("href"),height:b.height,top:b.top,bottom:b.bottom}}),rect:r?[r.left,r.right,r.top,r.bottom]:null,overflow:document.documentElement.scrollWidth>innerWidth+1}})()');
+  if(!arrival.exists||!arrival.scene||!arrival.heading?.includes("A universe")||arrival.actionCount!==2||arrival.overflow||arrival.actions.some(b=>b.height<44||b.top<0||b.bottom>height)||arrival.rect[0]<-1||arrival.rect[1]>width+1||!arrival.actions[0].href?.endsWith("/discover")||!arrival.actions[1].text?.includes("Meet IREN"))
+   throw Error("V115_FIRST_ARRIVAL_"+label+":"+JSON.stringify(arrival));
   await screenshot("first-arrival-"+label);
-  await evaluate('document.querySelector(".av111-onramp")?.scrollIntoView({block:"center",behavior:"instant"})');
+  await evaluate('document.querySelector(".av115-wayfinder")?.scrollIntoView({block:"center",behavior:"instant"})');
   await screenshot("first-contact-"+label);
   evidence.push({label,width,height,entry,arrival});
   if(label==="phone"){
-   await evaluate('document.querySelector(".av111-onramp-guide")?.click()');
+   await evaluate('document.querySelector(".av115-iren-console button")?.click()');
+   await until(()=>evaluate('!!document.querySelector(".ir92-first-contact")'));
+   const welcome=await evaluate('(()=>({title:document.querySelector(".ir92-first-contact h2")?.textContent,choices:document.querySelectorAll(".ir92-intent-grid a,.ir92-intent-grid button").length,one:document.querySelectorAll(".ir87-scout").length<=1}))()');
+   if(!welcome.title?.includes("Continuance")||welcome.choices!==4||!welcome.one)throw Error("V115_HOME_IREN_WELCOME_"+JSON.stringify(welcome));
+   await screenshot("first-contact-iren-welcome-phone");
+   await evaluate('document.querySelector(".ir80-help-head .ir80-icon-button")?.click()');
+   await until(()=>evaluate('!document.querySelector(".ir92-first-contact")'));
+   await evaluate('window.dispatchEvent(new Event("anevum:iren-tour"))');
    await until(()=>evaluate('!!document.querySelector(".ir80-guide-card")'));
    const tour=await evaluate('(()=>({route:location.pathname,title:document.querySelector("#ir80-guide-title")?.textContent,one:document.querySelectorAll(".ir87-scout").length<=1}))()');
-   if(!tour.route?.endsWith("/discover")||!tour.title||!tour.one)throw Error("V111_HOME_IREN_TOUR_"+JSON.stringify(tour));
+   if(!tour.route?.endsWith("/creator/")||!tour.title?.includes("ANEVUM")||!tour.one)throw Error("V115_HOME_IREN_TOUR_"+JSON.stringify(tour));
    await screenshot("first-contact-iren-tour-phone");
    await evaluate('document.querySelector(".ir80-skip")?.click()');
    await until(()=>evaluate('!document.querySelector(".ir80-guide-card")'));
   }
  }
  writeFileSync(join(output,"acceptance.json"),JSON.stringify({pass:true,source:"compiled React local loopback",memberWrites:0,evidence},null,2));
- console.log("V111_FIRST_CONTACT_REACT_BROWSER=PASS");
+ console.log("V115_FIRST_CONTACT_REACT_BROWSER=PASS");
 }finally{
  try{ws?.close()}catch{}
  chromeProc.kill("SIGTERM");
