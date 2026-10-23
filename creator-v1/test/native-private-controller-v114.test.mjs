@@ -25,7 +25,7 @@ function fixture(){
  routes:Array.from({length:40},(_,i)=>({pattern:'synthetic/'+i,script:'synthetic-worker'})),versions:[{id:PUBLIC},{id:PRIOR}],
  apexDeployment:{id:'6372ee35-8c7d-468c-9486-536d9c4b0a0d',versions:[{version_id:'93cc7f07-cf39-457e-af69-c9f6f4c02d25',percentage:100},{version_id:'6f26f0cc-6eee-483d-9f07-329e45bd5e76',percentage:0}]},
  apex:{id:TARGET,resources:{script:{etag:'bb20187a20e7174cfdf7451c24f4274a00bfa2c3e2570d29d9f9b3018682acc2'},bindings:[{name:'CANONICAL_CREATOR_UPLOADS_ENABLED',type:'plain_text',text:'false'},{name:'CANONICAL_XP_TEST_ENABLED',type:'plain_text',text:'false'}]}},
- entryDeployment:{id:'984dd104-3642-47f8-8983-0fde8a337ce9',versions:[{version_id:'406ef0ca-cfaa-411f-812d-1fb390b91ffc',percentage:100}]},entryExpiry:'1792711995',ruleVersion:'12',ruleExpiry:'1792711995'};
+ entryDeployment:{id:'984dd104-3642-47f8-8983-0fde8a337ce9',versions:[{version_id:'406ef0ca-cfaa-411f-812d-1fb390b91ffc',percentage:100}]},entryExpiry:'1792711995'};
 }
 function uploaded(){const before=fixture(),after=structuredClone(before),bindings=plannedBindings(before.prior.resources.bindings),id='11111111-2222-4333-8444-555555555555';after.settings.bindings=structuredClone(bindings);after.versions.unshift({id});const candidate={id,annotations:{'workers/message':NOTE},resources:{bindings,script_runtime:before.prior.resources.script_runtime}};return {before,after,candidate};}
 test('private plan repairs only AUTH pin and disables executable publishing, preserving roles and secret name',()=>{
@@ -34,11 +34,11 @@ test('private plan repairs only AUTH pin and disables executable publishing, pre
  assert.equal(planned.find(x=>x.name==='PACKAGE_CANONICAL_AUTH_VERSION').text,TARGET);
  const c=configuration(bs,'/repo/api.mjs');assert.equal(c.vars.PACKAGE_PUBLIC_PUBLISH_ENABLED,'false');assert.equal(c.vars.PACKAGE_NATIVE_STUDIO_ENABLED,'true');assert.ok(!('PACKAGE_PREVIEW_KEY' in c.vars));assert.deepEqual(c.routes,[]);assert.equal(c.workers_dev,false);assert.equal(c.preview_urls,false);
 });
-test('current closed-window baseline is accepted without declaring pin eligibility',()=>assert.equal(verifyBaseline(fixture()),true));
-test('deployment, exposed previews, stale apex and changed closed-window conditions block preflight',()=>{
- for(const mutate of [s=>s.deployment.versions[0].percentage=99,s=>s.exposure.enabled=true,s=>s.apex.id='wrong',s=>s.ruleVersion='13',s=>s.ruleExpiry='1792711996',s=>s.entryDeployment.versions[0].version_id='other']){const s=fixture();mutate(s);assert.throws(()=>verifyBaseline(s));}
+test('current expired-entry baseline is accepted without declaring pin eligibility',()=>assert.equal(verifyBaseline(fixture()),true));
+test('deployment, exposed previews, stale apex and changed entry conditions block preflight',()=>{
+ for(const mutate of [s=>s.deployment.versions[0].percentage=99,s=>s.exposure.enabled=true,s=>s.apex.id='wrong',s=>s.entryDeployment.versions[0].version_id='other']){const s=fixture();mutate(s);assert.throws(()=>verifyBaseline(s));}
 });
-test('one new undeployed candidate preserves live controller and keeps publishing off',()=>{const f=uploaded(),r=verifyUploaded(f.before,f.after,f.candidate,'a'.repeat(64));assert.equal(r.publicPublishingEnabled,false);assert.equal(r.newVersionTrafficPercent,0);assert.equal(r.authPinEligibleInCurrentApexDeployment,false);assert.equal(r.productionReleaseApproved,false);});
+test('one new undeployed candidate preserves live controller and keeps publishing off',()=>{const f=uploaded(),r=verifyUploaded(f.before,f.after,f.candidate,'a'.repeat(64));assert.equal(r.routingRulesetVerifiedByUploadJob,false);assert.equal(r.publicPublishingEnabled,false);assert.equal(r.newVersionTrafficPercent,0);assert.equal(r.authPinEligibleInCurrentApexDeployment,false);assert.equal(r.productionReleaseApproved,false);});
 test('secret loss, role expansion, incorrect pin and publishing activation are rejected',()=>{
  for(const mutate of [c=>c.resources.bindings.pop(),c=>c.resources.bindings.find(x=>x.name==='STAFF_IDS').text='extra-user',c=>c.resources.bindings.find(x=>x.name==='PACKAGE_CANONICAL_AUTH_VERSION').text=PRIOR,c=>c.resources.bindings.find(x=>x.name==='PACKAGE_PUBLIC_PUBLISH_ENABLED').text='true']){const f=uploaded();mutate(f.candidate);assert.throws(()=>verifyUploaded(f.before,f.after,f.candidate,'a'.repeat(64)));}
 });
