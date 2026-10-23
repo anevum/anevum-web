@@ -85,6 +85,7 @@ export async function studioFileTree(req,env,user,now=Math.floor(Date.now()/1000
    let name;try{name=nameOf(input.name);}catch(e){return fail(422,e.message);}
    const previous=await read(db,'SELECT * FROM member_studio_file_nodes WHERE project_id=? AND user_id=? AND client_request_id=?',[projectId,user.id,input.clientRequestId]);
    if(previous){
+    if(previous.deleted_at!==null)return fail(409,'This creation request refers to a deleted file; restore it from Trash');
     if(previous.name!==name||previous.kind!==input.kind||previous.parent_id!==input.parentId)
      return fail(409,'This request ID already belongs to a different file creation');
     return respond({node:nodeOut(previous),replayed:true});
