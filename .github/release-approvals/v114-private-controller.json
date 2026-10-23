@@ -1,0 +1,11 @@
+{
+  "reviewed_operations_sha": "5157296a59bff080f0ca093885b8d9d7c2748f7b",
+  "source": "82fd84cc887be20c2244fe59f4cf72c48ea40f53",
+  "worker": "anevum-package-alpha-v003-control",
+  "authTarget": "86dc4b9d-4020-432a-8a15-e65606f31316",
+  "allowInactiveUpload": true,
+  "allowDeployment": false,
+  "allowRouting": false,
+  "allowDatabaseWrites": false,
+  "allowPublicPublishing": false
+}
