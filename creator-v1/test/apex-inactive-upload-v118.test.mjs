@@ -10,16 +10,16 @@ test('Preflight fails on baseline/route/setting drift',()=>{for(const mutate of 
 test('Postflight fails on traffic/secret/database change and unexpected upload count',()=>{for(const mutate of [f=>f.s.deployment.versions[0].percentage=99,f=>f.candidate.resources.bindings.pop(),f=>f.candidate.resources.bindings.find(x=>x.type==='d1').database_id='wrong',f=>f.s.versions.push({id:'22222222-3333-4444-8555-666666666666'}),f=>f.candidate.annotations['workers/message']='wrong']){const f=after();mutate(f);assert.throws(()=>verifyAfter(f.prior,f.s,f.candidate));}});
 test('No production write API in verifier',async()=>{const {readFileSync}=await import('node:fs');const source=readFileSync(new URL('../ops/apex-inactive-upload-v118.mjs',import.meta.url),'utf8');assert.doesNotMatch(source,/method:['"](?:POST|PUT|PATCH|DELETE)['"]|\bwrangler\s+deploy\b/);assert.match(source,/allowPublicDeployment:false/);});
 
-test('V119 API-origin recovery requires one marker, fresh readback and a non-deploying version upload',async()=>{
+test('V119 API-origin recovery requires marker, fresh readback and inactive-only upload',async()=>{
  const {readFileSync}=await import('node:fs');
  const source=readFileSync(new URL('../ops/apex-inactive-upload-v118.mjs',import.meta.url),'utf8');
  const workflow=readFileSync(new URL('../../.github/workflows/v118-v116-inactive-upload.yml',import.meta.url),'utf8');
- assert.match(source,/release\\(v119\\): reconcile API-origin V116 Worker immutable inactive only/);
- assert.match(source,/\.github\\/release-approvals\\/v119-v116-inactive-upload\.json/);
- assert.match(source,/allowPublicDeployment:false/);
- assert.match(source,/assert\.equal\\(now\.deployment,before\.deployment/);
- assert.match(workflow,/wrangler versions upload --no-bundle --no-upload-source-maps --keep-vars --config/);
- assert.doesNotMatch(workflow,/wrangler versions upload [^\\n]*--strict/);
- assert.doesNotMatch(workflow,/wrangler deploy /);
- assert.match(workflow,/github\.actor == 'anevum'/);
+ assert.ok(source.includes('release(v119): reconcile API-origin V116 Worker immutable inactive only'));
+ assert.ok(source.includes('.github/release-approvals/v119-v116-inactive-upload.json'));
+ assert.ok(source.includes('allowPublicDeployment:false'));
+ assert.ok(source.includes('assert.equal(now.deployment,before.deployment'));
+ assert.ok(workflow.includes('wrangler versions upload --no-bundle --no-upload-source-maps --keep-vars --config'));
+ assert.ok(!workflow.includes('--keep-vars --strict'));
+ assert.ok(!workflow.includes('wrangler deploy '));
+ assert.ok(workflow.includes("github.actor == 'anevum'"));
 });
