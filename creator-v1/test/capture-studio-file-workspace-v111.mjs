@@ -17,6 +17,7 @@ const now=1792700000,identity={id:seedId,title:'Signal Atlas',summary:'Private s
  slug:'signal-atlas',description:'An offline test record.',category:'games',status:'draft',revision:1,
  freeToUse:true,license:'',sourceUrl:null,demoUrl:null,aiDisclosure:'',humanContribution:'',
  createdAt:now,updatedAt:now,submittedAt:null};
+const projectRecords=[identity];
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(f,label,ms=20000){
  const end=Date.now()+ms;let last;
@@ -97,15 +98,17 @@ try{
     return await fulfill(e.requestId,{error:'Unsupported synthetic file request'},405);
    }
    if(u.pathname==='/api/v1/member/studio/projects'){
-    if(method==='GET')return await fulfill(e.requestId,{projects:[identity],uploadsReady:false,canReview:false});
+    if(method==='GET')return await fulfill(e.requestId,{projects:projectRecords,uploadsReady:false,canReview:false});
     if(method==='POST'){
      const input=JSON.parse(e.request.postData||'{}');
      posts.push(input);
      assert.equal(input.clientRequestId.length,36);
      assert.equal(input.draft.title,'Orbit Garden');
      assert.equal(input.draft.category,'games');
-     return await fulfill(e.requestId,{project:{...input.draft,id:createdId,status:'draft',revision:1,
-      createdAt:now+1,updatedAt:now+1,submittedAt:null},replayed:false},201);
+     const project={...input.draft,id:createdId,status:'draft',revision:1,
+      createdAt:now+1,updatedAt:now+1,submittedAt:null};
+     projectRecords.push(project);
+     return await fulfill(e.requestId,{project,replayed:false},201);
     }
    }
    if(u.pathname==='/upload/v3/api/v1/packages/native/session')
@@ -189,6 +192,13 @@ try{
  await click('.csf-editor-title button.csw-strong');
  await until(()=>evaluate('document.querySelector(".csf-editor")?.textContent.includes("Saved private revision 3.")'),'Explicit save after switching tabs');
  assert.equal(filePatches.length,2,'Two explicit saves; switching tabs did not auto-save');
+ await navigate('/studio/workspace');
+ await until(()=>evaluate('document.querySelector(".csw-file-host:not([hidden]) .csf-header h2")?.textContent==="Signal Atlas"'),'Original project restored after full browser reload');
+ await until(()=>evaluate('document.querySelector(".csf-tree-body")?.textContent.includes("intro.md")'),'Folder tree persisted after browser reload');
+ await click('.csf-tree-row[title="Scenes / intro.md"]');
+ await until(()=>evaluate('document.querySelector(".csf-source")?.value==="# First Signal\\nUnsaved workspace-local change."'),'Saved source reopened from verified server snapshot');
+ assert.equal(filePatches.length,2,'Browser reload does not silently write changes');
+ await snap('desktop-private-source-reopened');
  const newTab=await evaluate('(()=>{const tab=[...document.querySelectorAll(".csw-tab button[role=tab]")].find(x=>x.textContent.includes("Orbit Garden"));if(!tab)return false;tab.click();return true;})()');
  assert.equal(newTab,true,'New project tab remains available');
  await until(()=>evaluate('document.querySelector(".csw-file-host:not([hidden]) .csf-header h2")?.textContent==="Orbit Garden"'),'New project reopened');
