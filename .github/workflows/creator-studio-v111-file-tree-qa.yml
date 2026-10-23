@@ -10,6 +10,7 @@ on:
       - 'creator-v1/web/src/pages/studio-file-workspace-v111.css'
       - 'creator-v1/web/src/pages/CreatorStudioWorkspaceV109.tsx'
       - 'creator-v1/test/studio-file-tree-v111.test.mjs'
+      - 'creator-v1/test/studio-file-tree-v111-migration-rehearsal.test.mjs'
       - 'creator-v1/test/capture-studio-file-workspace-v111.mjs'
       - '.github/workflows/creator-studio-v111-file-tree-qa.yml'
 permissions:
@@ -32,6 +33,8 @@ jobs:
       - run: npm install --ignore-scripts --no-audit --no-fund
       - name: Private file-tree contract and cross-member isolation
         run: node --test creator-v1/test/studio-file-tree-v111.test.mjs
+      - name: Disposable pre-migration independent backup and restore rehearsal
+        run: node --test creator-v1/test/studio-file-tree-v111-migration-rehearsal.test.mjs
       - name: Existing canonical Studio regression
         run: node --test creator-v1/test/canonical-studio-v043.test.mjs
       - name: Browser TypeScript and fixture syntax safety
