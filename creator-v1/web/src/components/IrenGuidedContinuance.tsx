@@ -73,6 +73,7 @@ const visitorSteps:readonly GuideStep[]=[
   memberSteps[6]
 ];
 const topics:readonly Topic[]=[
+  {id:"joining",label:"Join & verify",detail:"Choose a sign-in method currently enabled by ANEVUM. An eight-digit code from your inbox belongs only in the official sign-in form. IREN cannot see, request or retrieve it. After verification, choose a permanent handle. Your member space begins private.",href:"/join",action:"Open member access"},
   {id:"profile",label:"My identity",detail:"Your member space contains your wall, images, privacy controls, earned levels and player card. A verified member profile is separate from creator publishing permissions.",href:"/member",action:"Open member space"},
   {id:"discover",label:"Find something",detail:"Discover lists approved published projects. Filter by type or search for a specific project. ANEVUM does not create imaginary releases to fill empty listings.",href:"/discover",action:"Explore projects"},
   {id:"community",label:"Meet people",detail:"Community is where approved conversations, creator channels and public member spaces can be explored. Moderation and public visibility still apply.",href:"/community",action:"Visit community"},
@@ -229,7 +230,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   // Page-specific assistance chooses a relevant topic without reading private
   // route payloads or guessing privileges. First contact is handled separately.
   useEffect(()=>{
-    setActiveTopic(irenStationForPath(pathname,Boolean(memberId)).topic);
+    setActiveTopic(pathname==="/join"?"joining":irenStationForPath(pathname,Boolean(memberId)).topic);
     if(panelOpen&&tourIndex===null)setMood("curious");
   },[pathname,memberId]);
 
@@ -761,8 +762,11 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
             ?"Welcome, explorer. I'm IREN. Shall we find our way?"
             :mood==="think"?"Let me check the field notes. Here's what I know."
             :station.line}</p>
-          <h2>Where to next?</h2>
-          <p className="ir80-subtitle">Explore ANEVUM or take a guided site tour.</p>
+          <h2>{pathname==="/join"?"Your first signal.":"Where to next?"}</h2>
+          <p className="ir80-subtitle">{pathname==="/join"
+            ?"Choose an available method, verify your identity, then create a private member space."
+            :"Explore ANEVUM or take a guided site tour."}</p>
+          {pathname==="/join"&&<p className="ir123-code-boundary">Keep your sign-in code in the official form. IREN does not inspect it or grant access.</p>}
           <div className="ir80-topic-grid" role="group" aria-label="Help topics">
             {topics.map(topic=><button key={topic.id} type="button" aria-pressed={topic.id===activeTopic}
               onClick={()=>{setActiveTopic(topic.id);setMood("think")}}>{topic.label}</button>)}

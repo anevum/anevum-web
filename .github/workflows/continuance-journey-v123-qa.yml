@@ -1,0 +1,81 @@
+name: ANEVUM V123 Homepage Signup IREN Continuity QA
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/web/src/pages/CinematicLandingPage.tsx'
+      - 'creator-v1/web/src/pages/Phase1JoinPage.tsx'
+      - 'creator-v1/web/src/pages/Phase1MemberPage.tsx'
+      - 'creator-v1/web/src/components/IrenGuidedContinuance.tsx'
+      - 'creator-v1/web/src/continuance-journey-v123.css'
+      - 'creator-v1/web/src/main.tsx'
+      - 'creator-v1/test/continuance-journey-v123.test.mjs'
+      - 'creator-v1/test/continuance-reconciliation-v124.test.mjs'
+      - 'creator-v1/test/capture-continuance-join-v123.mjs'
+      - 'creator-v1/test/capture-home-first-contact-v111.mjs'
+      - '.github/workflows/continuance-journey-v123-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: home-join-iren-v123-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source-and-app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies without lifecycle scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Typecheck public Creator V1 application
+        run: npm run check:creator-v1-web
+      - name: Build canonical root and isolated staging path
+        run: |
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+      - name: Verify homepage signup member and IREN continuity
+        run: |
+          node --test creator-v1/test/continuance-journey-v123.test.mjs
+          node --test creator-v1/test/continuance-reconciliation-v124.test.mjs
+          node --test creator-v1/test/signup-email-first-v026.test.mjs
+          node --test creator-v1/test/signup-access-states-v082.test.mjs
+          node --test creator-v1/test/iren-guided-v080.test.mjs
+          node --test creator-v1/test/iren-home-integration-v116.test.mjs
+          node --test creator-v1/test/first-load-experience-v114.test.mjs
+      - name: Capture actual compiled signup and IREN at 1440, 390 and 320px
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome"
+          mkdir -p evidence/continuance-v123
+          node creator-v1/test/portal-offline-preview.mjs > evidence/continuance-v123/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 70); do
+            if curl -fsS http://127.0.0.1:4178/__ready > /dev/null 2>&1; then ready=1; break; fi
+            sleep 0.3
+          done
+          test "$ready" = 1
+          node creator-v1/test/capture-continuance-join-v123.mjs "$chrome" http://127.0.0.1:4178 evidence/continuance-v123
+          test -s evidence/continuance-v123/acceptance.json
+          test -s evidence/continuance-v123/join-v123-1440.png
+          test -s evidence/continuance-v123/join-v123-390.png
+          test -s evidence/continuance-v123/join-v123-320.png
+          test -s evidence/continuance-v123/iren-join-v123-390.png
+      - name: Retain signup and IREN visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: continuance-v123-signup-iren-browser-evidence
+          path: evidence/continuance-v123/
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Preserve exact head commit for review
+        run: git rev-parse HEAD
+# Source-only; no Cloudflare writes, D1 migration, member mutation or public promotion.

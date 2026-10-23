@@ -105,11 +105,17 @@ export function CinematicLandingPage(){
             <Link className="av79-button av79-button--bright" to="/discover">
               Enter ANEVUM <Icon name="arrow" size={18}/>
             </Link>
+             <Link className="av123-member-entry" to={signedIn?"/member":"/join"}>
+               {signedIn?"Return to my space":"Create your member space"} <Icon name="arrow" size={16}/>
+             </Link>
           </div>
           <div className="av114-arrival-clarity" aria-label="Visitor access and creator publishing status">
             <span><i aria-hidden="true"/> Explore freely. No account required.</span>
             <span>Studio publishing is still in testing.</span>
           </div>
+          <a className="av124-hero-wayfinder" href="#wayfinder" aria-label="Jump to the ANEVUM Wayfinder">
+            <span>Find your direction</span><span aria-hidden="true">↓</span>
+          </a>
         </div>
         <aside className="av115-iren-console" aria-label="IREN arrival orientation">
           <div className="av115-iren-console-top">
@@ -129,7 +135,7 @@ export function CinematicLandingPage(){
         </div>
       </section>
 
-      <section className="av115-wayfinder" data-iren-anchor="arrival-paths" aria-labelledby="av115-wayfinder-title">
+      <section id="wayfinder" tabIndex={-1} className="av115-wayfinder" data-iren-anchor="arrival-paths" aria-labelledby="av115-wayfinder-title">
         <div className="av115-wayfinder-heading">
           <span className="av79-kicker">SELECT A DIRECTION / WAYFINDER</span>
           <h2 id="av115-wayfinder-title">Where will you go?</h2>

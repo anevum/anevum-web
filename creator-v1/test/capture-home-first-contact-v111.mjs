@@ -52,9 +52,20 @@ try{
    if(!action.width||action.width<82||action.top<action.titleBottom-1||action.right>width+1)
     throw Error("V115_HOME_NARROW_SECTION_ACTION_"+label+":"+JSON.stringify(action));
   }
-  const arrival=await evaluate('(()=>{const hero=document.querySelector(".av114-arrival"),heading=hero?.querySelector("h1"),scene=hero?.querySelector(".av114-arrival-scene"),actions=[...(hero?.querySelectorAll(".av79-hero-actions :is(a,button)")||[])],r=hero?.getBoundingClientRect();return {exists:!!hero,scene:!!scene,heading:heading?.textContent,actionCount:actions.length,actions:actions.map(a=>{const b=a.getBoundingClientRect();return {text:a.textContent,href:a.getAttribute("href"),height:b.height,top:b.top,bottom:b.bottom}}),rect:r?[r.left,r.right,r.top,r.bottom]:null,overflow:document.documentElement.scrollWidth>innerWidth+1}})()');
-  if(!arrival.exists||!arrival.scene||!arrival.heading?.includes("A universe")||arrival.actionCount!==1||arrival.overflow||arrival.actions.some(b=>b.height<44||b.top<0||b.bottom>height)||arrival.rect[0]<-1||arrival.rect[1]>width+1||!arrival.actions[0].href?.endsWith("/discover"))
-   throw Error("V115_FIRST_ARRIVAL_"+label+":"+JSON.stringify(arrival));
+  const arrival=await evaluate('(()=>{const hero=document.querySelector(".av114-arrival"),heading=hero?.querySelector("h1"),scene=hero?.querySelector(".av114-arrival-scene"),actions=[...(hero?.querySelectorAll(".av79-hero-actions :is(a,button)")||[])],r=hero?.getBoundingClientRect();return {exists:!!hero,scene:!!scene,heading:heading?.textContent,actionCount:actions.length,actions:actions.map(a=>{const b=a.getBoundingClientRect();return {text:a.textContent,href:a.getAttribute("href"),height:b.height,top:b.top,bottom:b.bottom,left:b.left,right:b.right}}),rect:r?[r.left,r.right,r.top,r.bottom]:null,overflow:document.documentElement.scrollWidth>innerWidth+1}})()');
+  // V123 supports one optional member entry without weakening primary
+  // discovery, viewport safety, or a single real IREN helper.
+  const discover=arrival.actions[0],member=arrival.actions[1];
+  const two=arrival.actionCount===2;
+  const collision=two&&discover.left<member.right-1&&member.left<discover.right-1&&
+    discover.top<member.bottom-1&&member.top<discover.bottom-1;
+  if(!arrival.exists||!arrival.scene||!arrival.heading?.includes("A universe")||
+     ![1,2].includes(arrival.actionCount)||arrival.overflow||
+     arrival.actions.some(b=>b.height<44||b.top<0||b.bottom>height)||
+     arrival.rect[0]<-1||arrival.rect[1]>width+1||
+     !discover.href?.endsWith("/discover")||
+     (two&&(!member.href?.endsWith("/join")||!member.text?.includes("Create your member space")||collision)))
+   throw Error("V115_FIRST_ARRIVAL_"+label+":"+JSON.stringify({...arrival,collision}));
   await screenshot("first-arrival-"+label);
   await evaluate('document.querySelector(".av115-wayfinder")?.scrollIntoView({block:"center",behavior:"instant"})');
   await screenshot("first-contact-"+label);
