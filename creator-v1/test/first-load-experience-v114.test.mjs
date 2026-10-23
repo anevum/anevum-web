@@ -15,24 +15,29 @@ test("V114 is the existing canonical homepage, not an alternate first-load appli
  assert.match(home,/className="av79-hero av114-arrival"/);
  assert.match(home,/className="av114-arrival-scene"/);
  assert.match(home,/THE CONTINUANCE INSTITUTE/);
- assert.match(home,/Create beyond <em>worlds\.<\/em>/);
- assert.match(home,/className="av79-gateways"/);
- assert.match(home,/className="av111-onramp"/);
- assert.match(home,/className="av79-feature"/);
+ assert.match(home,/A universe <em>in the making\.<\/em>/);
+ assert.match(home,/className="av79-gateways av115-gateways"/);
+ assert.match(home,/className="av115-iren-console"/);
+ assert.match(home,/className="av79-now av115-public-index"/);
+ assert.doesNotMatch(home,/className="av111-onramp"|Play a game/);
  assert.match(entry,/import "\.\/home-first-contact-v111\.css"/);
  assert.match(entry,/import "\.\/first-load-experience-v114\.css"/);
+ assert.match(entry,/import "\.\/first-contact-wayfinder-v115\.css"/);
  assert.ok(entry.lastIndexOf("first-load-experience-v114.css")>entry.lastIndexOf("home-first-contact-v111.css"));
  assert.doesNotMatch(home,/setTimeout|setInterval\([^)]*navigate|fullScreenIntro|<video|autoplay/);
 });
 
-test("V114 keeps immediate user actions and never represents testing as public publishing",()=>{
- assert.match(home,/to={firstGame\|\|"\/discover\?category=games"}/);
+test("V115 first load opens the ANEVUM universe and real IREN, not the alpha game",()=>{
  assert.match(home,/to="\/discover"/);
+ assert.match(home,/Enter ANEVUM/);
+ assert.match(home,/Meet IREN/);
+ assert.match(home,/new Event\("anevum:iren-intro"\)/);
  assert.match(home,/Explore freely\. No account required\./);
- assert.match(home,/Creator publishing is still in testing\./);
- assert.match(home,/to={signedIn\?"\/member":"\/join"}/);
- assert.match(home,/new Event\("anevum:iren-tour"\)/);
- assert.match(home,/readProjects\({limit:"32"},signal\)/);
+ assert.match(home,/Studio publishing is still in testing\./);
+ assert.match(home,/to=\{signedIn\?"\/member":"\/join"\}/);
+ assert.match(home,/readProjects\(\{limit:"32"\},signal\)/);
+ assert.match(home,/const showcase=projects\.filter\(project=>project\.category!=="games"\)/);
+ assert.doesNotMatch(home,/Play a game|FEATURED RELEASE|const firstGame=/);
  assert.doesNotMatch(home,/sampleProject|sampleUser|Math\.random|fakeActivity|fakeRatings|placeholderUsers|dangerouslySetInnerHTML/);
 });
 
