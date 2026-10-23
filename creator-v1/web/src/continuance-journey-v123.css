@@ -263,3 +263,8 @@
  font:500 16px/1.45 var(--av9-body,system-ui,sans-serif);
  overflow-wrap:anywhere;word-break:break-word;white-space:normal
 }
+
+/* Short mobile keyboard viewport: keep OTP recovery actions clear of the floating IREN dock. */
+@media(max-width:390px) and (max-height:520px){
+ .av12-phase1-join .av125-email-recovery{padding-inline-end:22px}
+}
