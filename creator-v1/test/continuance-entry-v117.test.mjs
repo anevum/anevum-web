@@ -31,6 +31,8 @@ test("V117 IREN assistance opens the existing guide without introducing another 
  assert.match(join,/will never ask for your verification code/);
  assert.match(guide,/window\.addEventListener\("anevum:iren-open",onOpen\)/);
  assert.match(guide,/window\.addEventListener\("anevum:iren-intro",onIntro\)/);
+ assert.match(guide,/pathname==="\/join"\?"Joining ANEVUM"/);
+ assert.match(guide,/never share it with IREN/);
  assert.equal((join.match(/anevum:iren-open/g)||[]).length,1);
  assert.doesNotMatch(join,/IrenLivingCanvas|<IrenGuidedContinuance|dangerouslySetInnerHTML/);
 });
