@@ -15,7 +15,7 @@ export type StudioFileVersion={
 export class StudioFileError extends Error{
  constructor(readonly status:number,message:string){super(message);this.name='StudioFileError';}
 }
-const validId=(id:string)=>{if(!UUID.test(id))throw new StudioFileError(400,'Invalid project or file identifier.');return id;};
+const validId=(id:string)=>{if(typeof id!=='string'||!UUID.test(id))throw new StudioFileError(400,'Invalid project or file identifier ('+typeof id+', '+String(id??'').length+' characters).');return id;};
 const fileRoot=(projectId:string)=>BASE+'/'+validId(projectId)+'/files';
 const nodePath=(projectId:string,nodeId:string)=>fileRoot(projectId)+'/'+validId(nodeId);
 function validNode(node:unknown,contentRequired=false):node is StudioFileNode{
