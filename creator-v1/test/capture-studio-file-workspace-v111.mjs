@@ -192,6 +192,7 @@ try{
  await click('.csf-editor-title button.csw-strong');
  await until(()=>evaluate('document.querySelector(".csf-editor")?.textContent.includes("Saved private revision 3.")'),'Explicit save after switching tabs');
  assert.equal(filePatches.length,2,'Two explicit saves; switching tabs did not auto-save');
+ await until(()=>evaluate('document.querySelector(".csf-status")?.textContent.includes("0 UNSAVED CHANGES")'),'Source save finalized before navigation');
  await navigate('/studio/workspace');
  await until(()=>evaluate('document.querySelector(".csw-file-host:not([hidden]) .csf-header h2")?.textContent==="Signal Atlas"'),'Original project restored after full browser reload');
  await until(()=>evaluate('document.querySelector(".csf-tree-body")?.textContent.includes("intro.md")'),'Folder tree persisted after browser reload');
