@@ -1,0 +1,138 @@
+# Exact V130 combined homepage/signup/IREN + mobile player, full Worker packaging, OFFLINE ONLY.
+# No Cloudflare token, upload, deployment, Access or D1 mutation in any job.
+name: ANEVUM V131 V130 Exact-Source Offline Apex Package
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v131-v130-offline-apex-package.yml'
+      - 'creator-v1/ops/v131-v130-offline-apex.mjs'
+      - 'creator-v1/test/v131-v130-offline-apex.test.mjs'
+      - 'docs/production/v131-v130-offline-apex-20261023.md'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: anevum-v131-v130-offline-package-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  offline-package:
+    if: github.repository == 'anevum/anevum-web' && github.event.pull_request.head.repo.full_name == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+      CLOUDFLARE_API_TOKEN: ''
+      CLOUDFLARE_API_KEY: ''
+      CLOUDFLARE_ACCOUNT_ID: ''
+      VITE_IREN_SPATIAL_GUIDE: 'true'
+      VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
+      VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reject any V130 application or auth drift; prove CI source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test -z "$CLOUDFLARE_API_TOKEN"
+          test -z "$CLOUDFLARE_API_KEY"
+          test -z "$CLOUDFLARE_ACCOUNT_ID"
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import {sourceIdentity,REVIEWED_V130} from './creator-v1/ops/v131-v130-offline-apex.mjs';
+          const packagingHead=sourceIdentity();
+          const runs=[40009402434,40009402474,40009402386,40009402457];
+          for(const id of runs){
+           const r=await fetch(`https://api.github.com/repos/anevum/anevum-web/actions/runs/${id}`,{
+            headers:{Authorization:`Bearer ${process.env.GH_TOKEN}`,Accept:'application/vnd.github+json'},
+            signal:AbortSignal.timeout(30000)
+           });
+           assert.ok(r.ok,`Reviewed exact-source workflow evidence unavailable: ${id} / ${r.status}`);
+           const run=await r.json();
+           assert.equal(run.head_sha,REVIEWED_V130,`Wrong CI source for run ${id}`);
+           assert.equal(run.status,'completed');assert.equal(run.conclusion,'success');
+          }
+          console.log(JSON.stringify({source:REVIEWED_V130,packagingHead,verifiedRuns:runs,providerWrites:false}));
+          JS
+      - name: Reconstruct required canonical evolution media (same release procedure)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install numpy==2.2.6 scipy==1.15.3 Pillow==11.2.1
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libgl1-mesa-dri
+          (
+            cd design/evolution-v059
+            mkdir -p artwork/{native,textures,vector,masters,web,compact} docs dist previews
+            python src/export_native.py
+            python src/render_web.py
+            python src/build.py
+          )
+          python creator-v1/ops/install-evolution-v060.py
+          test "$(find creator-v1/web/public/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+      - name: Build the reviewed V130 feature-ON apex / assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          node --test creator-v1/test/v131-v130-offline-apex.test.mjs creator-v1/test/apex-worker-bundle-v117.test.mjs creator-v1/test/v100-apex-root-assets.test.mjs creator-v1/test/continuance-signal-atlas-v125.test.mjs
+          test -s creator-v1/dist/web/index.html
+          test "$(find creator-v1/dist/web/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+          test -z "$(find creator-v1/dist/web -name '*.map' -print -quit)"
+      - name: Render EXACT compiled root at 320/390/1440, not simulated site markup
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$chrome"
+          mkdir -p "$RUNNER_TEMP/v131-browser"
+          ANEVUM_APEX_ROOT_QA=1 node creator-v1/test/portal-offline-preview.mjs > "$RUNNER_TEMP/v131-browser/fixture.log" 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 80); do
+            if curl --fail --silent --max-time 3 http://127.0.0.1:4180/__ready >/dev/null; then ready=1; break; fi
+            sleep 0.3
+          done
+          test "$ready" = 1
+          node creator-v1/test/capture-v100-apex-root.mjs "$chrome" http://127.0.0.1:4180 "$RUNNER_TEMP/v131-browser"
+          for width in 320 390 1440; do test -s "$RUNNER_TEMP/v131-browser/apex-root-$width.png"; done
+      - name: Seal source-locked complete Worker WITHOUT uploading
+        shell: bash
+        run: |
+          set -euo pipefail
+          node creator-v1/ops/v131-v130-offline-apex.mjs prepare creator-v1/dist/web "$RUNNER_TEMP/v131-browser/acceptance.json" "$RUNNER_TEMP/v131-package"
+          npx --no-install wrangler deploy --dry-run --config "$RUNNER_TEMP/v131-package/wrangler.offline.synthetic.json" --outdir "$RUNNER_TEMP/v131-package/worker-bundle"
+          node creator-v1/ops/v131-v130-offline-apex.mjs seal "$RUNNER_TEMP/v131-package"
+          test -s "$RUNNER_TEMP/v131-package/worker-bundle/gateway.js"
+          test -s "$RUNNER_TEMP/v131-package/package-manifest.json"
+          rm "$RUNNER_TEMP/v131-package/wrangler.offline.synthetic.json"
+          test ! -e "$RUNNER_TEMP/v131-package/wrangler.offline.synthetic.json"
+          echo 'V131_V130_OFFLINE_COMPLETE=PASS; PROVIDER_WRITES=NONE; UPLOAD=NONE; PRODUCTION_APPROVAL=NONE' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: anevum-v131-v130-complete-offline-worker-${{ github.event.pull_request.head.sha }}
+          path: |
+            ${{ runner.temp }}/v131-package/compiled-web/
+            ${{ runner.temp }}/v131-package/worker-bundle/
+            ${{ runner.temp }}/v131-package/package-manifest.json
+            ${{ runner.temp }}/v131-package/frontend-manifest.json
+            ${{ runner.temp }}/v131-package/root-browser-acceptance.json
+            ${{ runner.temp }}/v131-browser/apex-root-320.png
+            ${{ runner.temp }}/v131-browser/apex-root-390.png
+            ${{ runner.temp }}/v131-browser/apex-root-1440.png
+          retention-days: 14
+          if-no-files-found: error
