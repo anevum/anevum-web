@@ -221,7 +221,7 @@ export function CinematicLandingPage(){
       </section>}
 
       <footer className="av79-home-end">
-        <span>{verified&&status?String(status.counts.publishedProjects)+" VERIFIED PUBLIC RELEASE"+(snapshot.status.counts.publishedProjects===1?"":"S"):"PUBLIC NETWORK / ANEVUM"}</span>
+        <span>{verified&&status?String(status.counts.publishedProjects)+" VERIFIED PUBLIC RELEASE"+(status.counts.publishedProjects===1?"":"S"):"PUBLIC NETWORK / ANEVUM"}</span>
         <Link to="/community">MEET THE PEOPLE MAKING IT <Icon name="arrow" size={14}/></Link>
       </footer>
     </div>
