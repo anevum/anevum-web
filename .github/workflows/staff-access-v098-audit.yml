@@ -1,0 +1,96 @@
+name: ANEVUM V098 Staff Access Read-Only Audit
+# This workflow NEVER changes Access apps, policies, routes, DNS, Workers,
+# live secrets, user grants, authenticated sessions or production traffic.
+on:
+  push:
+    branches:
+      - ops/staff-access-simplification-20261020-001
+    paths:
+      - creator-v1/ops/staff-access-cutover-v098.mjs
+      - creator-v1/test/staff-access-cutover-v098.test.mjs
+      - .github/workflows/staff-access-v098-audit.yml
+permissions:
+  contents: read
+concurrency:
+  group: anevum-staff-access-v098-readonly-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source-security:
+    if: github.repository == 'anevum/anevum-web' && github.ref == 'refs/heads/ops/staff-access-simplification-20261020-001'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check and source identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check creator-v1/ops/staff-access-cutover-v098.mjs
+          node --check creator-v1/test/staff-access-cutover-v098.test.mjs
+          git rev-parse HEAD
+      - name: Validate route matching, fail-closed audit and existing native staff authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          node --test creator-v1/test/staff-access-cutover-v098.test.mjs \
+            creator-v1/test/staff-session-transport-v091.test.mjs \
+            creator-v1/test/staff-transport-release-v091.test.mjs
+          echo 'SOURCE_ROLE_GUARDS_AND_READ_ONLY_AUDIT_TESTS=PASS' >> "$GITHUB_STEP_SUMMARY"
+  read-only-cloudflare-inventory:
+    if: github.repository == 'anevum/anevum-web' && github.ref == 'refs/heads/ops/staff-access-simplification-20261020-001'
+    needs: [source-security]
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Retrieve restricted redacted Access scope without mutations
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          umask 077
+          mkdir -p "$RUNNER_TEMP/anevum-v098"
+          node creator-v1/ops/staff-access-cutover-v098.mjs audit \
+            "$RUNNER_TEMP/anevum-v098/access-coverage-redacted.json"
+          test -s "$RUNNER_TEMP/anevum-v098/access-coverage-redacted.json"
+          node --input-type=module - "$RUNNER_TEMP/anevum-v098/access-coverage-redacted.json" <<'JS'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const a=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          assert.equal(a.status,'READ_ONLY_AUDIT_COMPLETE');
+          assert.equal(a.localGuards.allPassed,true);
+          assert.equal(a.cloudflarePolicyMutation,false);
+          assert.equal(a.cloudflareWorkerMutation,false);
+          assert.equal(a.productionPromotion,false);
+          console.log('STAFF_ACCESS_SCOPE='+a.coverage.removalCandidateType);
+          console.log('STAFF_ROUTE_APPS='+a.coverage.routeCoverage['/staff/observatory'].length);
+          console.log('PUBLIC_ROUTE_APPS='+a.coverage.routeCoverage['/studio/alpha'].length);
+          console.log('NO_ACCESS_POLICY_CHANGE_NO_PRODUCTION_CHANGE');
+          JS
+      - name: Preserve sanitized audit evidence only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v098-access-readonly-audit-${{ github.sha }}
+          path: ${{ runner.temp }}/anevum-v098/access-coverage-redacted.json
+          retention-days: 7
+          if-no-files-found: ignore
