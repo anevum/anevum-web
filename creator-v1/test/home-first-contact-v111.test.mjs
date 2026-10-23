@@ -9,27 +9,25 @@ const bootstrap=read("web/src/main.tsx");
 const css=read("web/src/home-first-contact-v111.css");
 const guide=read("web/src/components/IrenGuidedContinuance.tsx");
 
-test("V111 first contact retains canonical public home and original four gateways",()=>{
+test("V115 supersedes V111 intro rail but keeps public access and genuine member routes",()=>{
  assert.doesNotThrow(()=>parse(home,{sourceType:"module",plugins:["typescript","jsx"]}));
- assert.match(home,/const featured=games\[0\]\|\|projects\[0\]\|\|null/);
- assert.match(home,/av79-hero/);
- assert.match(home,/av79-gateways/);
- assert.match(home,/av79-feature/);
+ assert.match(home,/className="av79-hero av114-arrival av115-arrival"/);
+ assert.match(home,/className="av79-gateways av115-gateways"/);
+ assert.match(home,/className="av115-iren-console"/);
+ assert.match(home,/className="av79-now av115-public-index"/);
  assert.match(home,/av79-member-invitation/);
- assert.match(home,/av111-onramp-title/);
- assert.ok(home.indexOf('className="av111-onramp"')>home.indexOf('className="av79-gateways"'));
- assert.ok(home.indexOf('className="av111-onramp"')<home.indexOf('className="av79-now"'));
+ assert.doesNotMatch(home,/className="av111-onramp"/);
  assert.doesNotMatch(home,/fakeProject|fakeActivity|sampleRatings|dangerouslySetInnerHTML/);
 });
 
-test("First-contact choices take visitors to verified member route or authentic IREN tour",()=>{
+test("Arrival uses genuine existing IREN orientation and verified join rather than a test game",()=>{
  assert.match(home,/to=\{signedIn\?"\/member":"\/join"\}/);
  assert.match(home,/emailVerified===true/);
- assert.match(home,/onClick=\{\(\)=>window\.dispatchEvent\(new Event\("anevum:iren-tour"\)\)\}/);
- assert.match(guide,/addEventListener\("anevum:iren-tour",onStart\)/);
- assert.match(home,/publishing tools are still in testing/);
- assert.match(home,/Studio publishing is still being tested/);
- assert.doesNotMatch(home,/signupCount|fakeUsers|Math\.random/);
+ assert.match(home,/new Event\("anevum:iren-intro"\)/);
+ assert.match(guide,/addEventListener\("anevum:iren-intro",onIntro\)/);
+ assert.match(home,/Studio publishing is still in testing/);
+ assert.match(home,/to="\/discover"/);
+ assert.doesNotMatch(home,/Play a game|FEATURED RELEASE|firstGame\|\||signupCount|fakeUsers|Math\.random/);
 });
 
 test("First-contact styling is responsive, accessible, and stops animation when requested",()=>{
