@@ -72,7 +72,9 @@ try{
   await send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:2,mobile:width<700});
   await send("Page.navigate",{url:base+"/creator/join"});
   await until(()=>evaluate('!!document.querySelector("#anevum-email")&&!!document.querySelector(".av123-iren-join button")&&!!document.querySelector(".ir80-dock")'));
-  const view=await evaluate('(()=>{const story=document.querySelector(".join-story"),form=document.querySelector(".av12-email-entry"),panel=document.querySelector(".join-panel"),head=document.querySelector("#phase1-join-title"),email=document.querySelector("#anevum-email"),help=document.querySelector(".av123-iren-join button"),box=panel?.getBoundingClientRect();return {heading:head?.innerText,hasStory:!!story,hasForm:!!form,hasEmail:!!email,hasHelp:!!help,methods:[...document.querySelectorAll(".join-methods button")].length,ireN:document.querySelectorAll(".ir80-dock").length,registration:document.querySelector(".join-state")?.textContent,overflow:document.documentElement.scrollWidth>innerWidth+1,panelBounds:box?[box.left,box.right]:null,firstEmail:true,privacy:document.querySelector(".join-security")?.textContent};})()');
+  const view=await evaluate('(()=>{const story=document.querySelector(".join-story"),form=document.querySelector(".av12-email-entry"),panel=document.querySelector(".join-panel"),head=document.querySelector("#phase1-join-title"),email=document.querySelector("#anevum-email"),help=document.querySelector(".av123-iren-join button"),box=panel?.getBoundingClientRect();return {heading:head?.innerText,hasStory:!!story,hasForm:!!form,hasEmail:!!email,hasHelp:!!help,methods:[...document.querySelectorAll(".join-methods button")].length,ireN:document.querySelectorAll(".ir80-dock").length,registration:document.querySelector(".join-state")?.textContent,overflow:document.documentElement.scrollWidth>innerWidth+1,panelBounds:box?[box.left,box.right]:null,emailTop:email?.getBoundingClientRect().top,
+   submitTop:form?.querySelector("button[type=submit]")?.getBoundingClientRect().top,
+   privacy:document.querySelector(".join-security")?.textContent};})()');
   assert.equal(view.hasStory,true,"Join story was not rendered");
   assert.equal(view.hasForm,true,"Email code form absent");
   assert.equal(view.hasEmail,true,"Email field absent");
@@ -82,6 +84,12 @@ try{
   assert.ok(view.panelBounds[0]>=-1&&view.panelBounds[1]<=width+1,"Form panel beyond viewport: "+JSON.stringify(view));
   assert.ok(view.registration?.includes("INVITATION BETA"),"Synthetic signup availability label unexpected");
   assert.equal(view.methods,0,"Unverified provider method improperly offered");
+  if(width<=390){
+   assert.ok(view.emailTop<height*.75,
+    "Email sign-in is buried below the first phone screen: "+JSON.stringify(view));
+   assert.ok(view.submitTop<height-56,
+    "Continue with Email is not reachable in the first screen: "+JSON.stringify(view));
+  }
   assert.ok(view.privacy?.includes("private"),"First profile privacy not explained");
   await snapshot("join-v123-"+width);
   results.push({width,height,label,view});

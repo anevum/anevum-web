@@ -137,3 +137,51 @@
   outline:2px solid Highlight!important
  }
 }
+
+/* V123 mobile sign-in priority: keep the orbital scene, not a full-screen
+ * story gate. A visitor should see the real email form on first paint.
+ * The informational desktop promise is folded away, never used as a gate.
+ */
+@media(max-width:900px){
+ .av12-phase1-join .av123-member-promise{display:none}
+}
+@media(max-width:650px){
+ .av12-phase1-join.join-experience{
+  gap:9px;min-height:0;align-items:stretch;
+  padding:14px 13px 18px;margin-top:0
+ }
+ .av12-phase1-join .join-story{
+  padding:1px 5px 0;max-width:none;margin:0
+ }
+ .av12-phase1-join .join-story .join-orbit-art,
+ .av12-phase1-join .join-story .av52-entry-index,
+ .av12-phase1-join .join-story>.kicker,
+ .av12-phase1-join .join-story .av52-entry-counters{
+  display:none
+ }
+ .av12-phase1-join .join-story h1{
+  font-size:clamp(32px,8.65vw,40px)!important;
+  line-height:.97!important;letter-spacing:-.055em;
+  margin:5px 0 9px!important;
+  text-wrap:balance
+ }
+ .av12-phase1-join .join-story>.av52-hero-copy{
+  max-width:390px;font-size:12px!important;line-height:1.48!important;
+  margin:0 0 3px!important
+ }
+ .av12-phase1-join .join-panel{
+  align-self:stretch;max-width:none;min-width:0;
+  margin:0;padding:16px 15px!important;border-radius:16px
+ }
+ .av12-phase1-join .join-panel h2{
+  margin:8px 0 6px!important;
+  font-size:clamp(28px,7.6vw,35px)!important
+ }
+ .av12-phase1-join .join-lead{margin:0 0 12px!important}
+}
+@media(max-width:380px){
+ .av12-phase1-join.join-experience{padding:12px 10px 16px}
+ .av12-phase1-join .join-story h1{font-size:clamp(29px,9vw,34px)!important}
+ .av12-phase1-join .join-panel{padding:14px 12px!important}
+ .av12-phase1-join .join-panel h2{font-size:29px!important}
+}
