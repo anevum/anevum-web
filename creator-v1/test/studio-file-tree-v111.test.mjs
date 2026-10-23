@@ -48,7 +48,9 @@ test('W111 folder/text creation, replay, rename, version and optimistic conflict
   assert.equal((await s.call(ROOT+'/'+folder.id,'PATCH',patch(folder,{deleted:true}))).status,409);
   assert.equal((await s.call(ROOT,'GET',undefined,'bob')).status,401);
   const listed=await(await s.call()).json();assert.equal(listed.nodes.length,2);
-  assert.equal(listed.nodes.find(x=>x.id===file.id).content,'# First Signal\nHello.');
+  assert.equal('content' in listed.nodes.find(x=>x.id===file.id),false,'Private file bodies must not appear in a folder listing');
+  const individual=await(await s.call(ROOT+'/'+file.id)).json();
+  assert.equal(individual.node.content,'# First Signal\nHello.','File GET returns selected authorized source');
  }finally{s.close();}
 });
 test('W111 disallows cycles, path traversal and edits during review',async()=>{
