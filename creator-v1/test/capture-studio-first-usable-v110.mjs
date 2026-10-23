@@ -147,6 +147,14 @@ try{
  throw error;
 }finally{
  if(socket){for(const p of pending.values())clearTimeout(p.timer);socket.close();}
- child.kill('SIGTERM');
- rmSync(profile,{recursive:true,force:true});
+ // Chrome writes asynchronous profile journals; wait for process exit before
+ // cleaning up. A filesystem housekeeping race must not reverse passed QA.
+ if(child.exitCode===null){
+  const exited=new Promise(resolve=>child.once('exit',resolve));
+  child.kill('SIGTERM');
+  await Promise.race([exited,pause(2000)]);
+  if(child.exitCode===null)child.kill('SIGKILL');
+ }
+ try{rmSync(profile,{recursive:true,force:true,maxRetries:10,retryDelay:120});}
+ catch(error){console.warn('Chromium temporary profile cleanup is deferred:',String(error));}
 }
