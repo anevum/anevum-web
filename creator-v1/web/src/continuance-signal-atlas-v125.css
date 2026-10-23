@@ -1,0 +1,65 @@
+/* ANEVUM V125 — Continuance Institute signal atlas. Source-local, no network media. */
+.av9-shell .av79-home .av125-arrival{isolation:isolate;border-color:#b0c9ee8c;box-shadow:inset 0 1px #fffb,0 27px 90px #050a20a8,0 0 0 1px #b0c9ee13}
+.av9-shell .av79-home .av125-arrival .av114-arrival-scene{overflow:hidden}
+.av125-signal-atlas{position:absolute;width:clamp(540px,72vw,920px);height:auto;aspect-ratio:1;right:-17%;top:-28%;opacity:.66;filter:drop-shadow(0 0 22px #b1c9fc22);pointer-events:none;transform-origin:50% 50%}
+.av125-horizon-glow{position:absolute;pointer-events:none;left:20%;right:-20%;bottom:-4px;height:140px;background:radial-gradient(ellipse at 55% 100%,#8cb7e31c,transparent 73%);mix-blend-mode:screen}
+.av125-atlas-beacon-sweep,.av125-atlas-azimuth,.av125-atlas-stars{transform-origin:360px 360px}
+.av9-shell .av79-home .av125-arrival .av79-hero-content{max-width:min(640px,59%)}
+.av9-shell .av79-home .av125-arrival .av79-hero-content>p{max-width:510px;color:#e9e7f6!important}
+.av9-shell .av79-home .av125-arrival h1{text-wrap:balance;letter-spacing:-.052em!important}
+.av125-arrival-utility{display:flex;flex-wrap:wrap;align-items:center;gap:12px 28px;margin-top:10px}
+.av9-shell .av79-home .av125-arrival-utility .av124-hero-wayfinder{margin-top:0}
+.av125-motion-toggle{display:inline-flex;align-items:center;gap:9px;min-height:44px;padding:9px 0;border:0;background:transparent;color:#c2d8ee;font:700 10px/1.3 ui-monospace,monospace;letter-spacing:.12em;cursor:pointer;text-align:left}
+.av125-motion-toggle:hover{color:#f5fbff}
+.av125-motion-toggle:focus-visible{outline:3px solid #b4edfc;outline-offset:4px;border-radius:3px}
+.av125-motion-indicator{display:block;width:8px;height:8px;border-radius:2px;border:1px solid #afd8f7;background:#afd8f76b;box-shadow:0 0 11px #afd8f77a}
+.av125-is-paused .av125-motion-indicator{background:transparent;box-shadow:none}
+.av9-shell .av79-home .av125-arrival.av125-is-paused .av79-hero-content{animation:none!important}
+.av125-motion-note{display:none;color:#c2d8ee;font:700 9px/1.4 ui-monospace,monospace;letter-spacing:.04em}
+.av79-home[data-scene-paused="true"] .av125-charter *{animation-play-state:paused!important}
+.av9-shell .av79-home .av125-arrival.av125-is-paused *, .av9-shell .av79-home .av125-arrival.av125-is-paused *::before,.av9-shell .av79-home .av125-arrival.av125-is-paused *::after{animation-play-state:paused!important}
+.av125-charter{position:relative;isolation:isolate;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(220px,.8fr);gap:28px;align-items:center;margin:clamp(28px,4vw,52px) 0;padding:clamp(23px,4vw,48px);border:1px solid #c1b2d363;border-radius:21px;background:radial-gradient(ellipse at 78% 50%,#71689d24,transparent 59%),linear-gradient(118deg,#181e34,#111b30 65%,#171932);box-shadow:inset 0 1px #fff2,0 20px 60px #0309186b;overflow:hidden}
+.av125-charter::before{content:"";position:absolute;inset:0;z-index:-1;opacity:.3;pointer-events:none;background:repeating-linear-gradient(90deg,transparent 0 98px,#bedaff0a 99px 100px)}
+.av125-charter-register{display:block;color:#e7bfc7;font:700 10px/1.5 ui-monospace,monospace;letter-spacing:.16em}
+.av9-shell .av79-home .av125-charter h2{max-width:660px;margin:14px 0!important;font:460 clamp(28px,3.6vw,49px)/1.05 var(--av9-display,Georgia,serif)!important;letter-spacing:-.045em;color:#fff4f0;text-wrap:balance}
+.av125-charter h2 em{font-weight:440;color:#d5cbf7}
+.av9-shell .av79-home .av125-charter p{max-width:56ch;margin:0!important;font:450 clamp(13px,1.2vw,15px)/1.75 var(--av9-body,system-ui,sans-serif)!important;color:#cfd9eb}
+.av125-charter-action{display:inline-flex;align-items:center;gap:16px;min-height:46px;margin-top:23px;padding:9px 0;border-bottom:1px solid #d6c0ed88;color:#f5dbed;text-decoration:none;font:750 11px/1.4 ui-monospace,monospace;letter-spacing:.05em}
+.av125-charter-action:hover{color:white;border-color:#f5dbed}
+.av125-charter-action:focus-visible{outline:3px solid #b4edfc;outline-offset:3px}
+.av125-charter-instrument{position:relative;display:grid;place-items:center;justify-self:center;width:min(100%,270px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#c0b0fc22 1%,#8ec3ed10 32%,transparent 72%)}
+.av125-charter-circle{position:absolute;display:block;border:1px solid #c8d7ff82;border-radius:50%;width:90%;aspect-ratio:1;box-shadow:inset 0 0 26px #a1bbff13}
+.av125-charter-circle--middle{width:67%;border-color:#eec7f184;transform:rotate(-22deg) scaleX(.62)}
+.av125-charter-circle--inner{width:27%;border-color:#f4e6f5;background:radial-gradient(circle at 35% 30%,#edfaff,#9eacd0 28%,#435278 70%,#1b2645);box-shadow:0 0 34px #bac9f077,inset -10px -10px 15px #0a133d}
+.av125-charter-signal{position:absolute;left:8%;top:49%;width:84%;height:1px;background:linear-gradient(90deg,transparent,#bfdffec2,transparent);transform:rotate(-32deg)}
+.av125-charter-axis{position:absolute;width:1px;height:100%;background:linear-gradient(transparent,#cedffd30,transparent)}
+.av125-charter-index{position:absolute;bottom:0;color:#c6d9ec;white-space:nowrap;font:700 8px/1.5 ui-monospace,monospace;letter-spacing:.16em}
+@media(prefers-reduced-motion:no-preference){.av125-atlas-beacon-sweep{animation:av125-sweep 48s linear infinite}.av125-atlas-azimuth{animation:av125-azimuth 80s linear infinite reverse}.av125-atlas-stars{animation:av125-stars 12s ease-in-out infinite alternate}.av125-charter-circle--middle{animation:av125-charter-orbit 24s linear infinite}.av125-charter-signal{animation:av125-charter-signal 9s ease-in-out infinite alternate}@keyframes av125-sweep{to{transform:rotate(360deg)}}@keyframes av125-azimuth{to{transform:rotate(360deg)}}@keyframes av125-stars{to{opacity:.42}}@keyframes av125-charter-orbit{to{transform:rotate(338deg) scaleX(.62)}}@keyframes av125-charter-signal{to{opacity:.25}}}
+@media(max-width:1040px){.av125-signal-atlas{right:-30%;top:-16%;width:790px;opacity:.45}.av9-shell .av79-home .av125-arrival .av79-hero-content{max-width:65%}}
+@media(max-width:800px){.av125-signal-atlas{right:-47%;top:-23%;width:700px;opacity:.33}.av9-shell .av79-home .av125-arrival .av79-hero-content{max-width:100%}.av125-arrival-utility{gap:4px 22px}.av125-charter{grid-template-columns:minmax(0,1fr) minmax(140px,.38fr);gap:12px}.av125-charter-instrument{width:180px}}
+@media(max-width:650px){.av125-signal-atlas{width:560px;right:-360px;top:-110px;opacity:.26}.av9-shell .av79-home .av125-arrival .av79-hero-content{max-width:100%}.av125-arrival-utility{justify-content:space-between;gap:3px 14px}.av125-motion-toggle{font-size:9px;letter-spacing:.04em}.av125-charter{grid-template-columns:1fr;padding:22px 19px;gap:10px;margin:28px 0;border-radius:16px}.av125-charter-instrument{width:150px;justify-self:end;margin:-15px -9px -35px 0;opacity:.5}.av125-charter-index{display:none}.av9-shell .av79-home .av125-charter h2{font-size:clamp(28px,8.7vw,39px)!important}.av125-charter-action{margin-top:16px}}
+@media(max-width:380px){.av125-signal-atlas{right:-400px;opacity:.21}.av125-arrival-utility{flex-wrap:wrap}.av125-motion-toggle{font-size:9px}.av125-charter{padding:19px 14px}.av125-charter-instrument{display:none}}
+@media(prefers-reduced-motion:reduce){.av125-signal-atlas *, .av125-charter *, .av125-arrival-utility *{animation:none!important;transition:none!important}.av125-signal-atlas{opacity:.2}}
+@media(forced-colors:active){.av125-signal-atlas,.av125-charter-instrument,.av125-horizon-glow{display:none}.av125-charter{background:Canvas;color:CanvasText;border:2px solid CanvasText}.av125-charter h2 em{-webkit-text-fill-color:currentColor;color:CanvasText}.av125-motion-toggle,.av125-charter-action{background:ButtonFace;color:ButtonText;border-color:ButtonText}}
+
+/* Keep both utilities on one narrow-phone row, clear of the IREN station. */
+@media(max-width:650px){
+ .av125-arrival-utility{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px}
+ .av9-shell .av79-home .av125-arrival-utility .av124-hero-wayfinder{justify-self:start;gap:10px}
+ .av125-motion-toggle{justify-self:end;font-size:10px;letter-spacing:0}
+}
+@media(max-width:380px){
+ .av9-shell .av79-home .av114-arrival.av115-arrival.av125-arrival{padding:18px 14px 16px}
+ .av9-shell .av79-home .av125-arrival .av114-arrival-chapter{margin-top:6px;letter-spacing:.07em}
+ .av9-shell .av79-home .av125-arrival h1{margin:10px 0!important}
+ .av9-shell .av79-home .av125-arrival .av114-arrival-clarity{margin-top:12px}
+ .av125-arrival-utility{margin-top:4px}
+ .av9-shell .av79-home .av125-arrival .av115-iren-console{margin-top:10px}
+ .av9-shell .av79-home .av125-arrival .av79-hero-content>p{line-height:1.55!important}
+ .av125-arrival-utility{gap:8px}
+ .av125-motion-toggle{gap:6px;font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){
+ .av125-motion-toggle{display:none}
+ .av125-motion-note{display:block}
+}

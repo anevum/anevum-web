@@ -220,6 +220,14 @@
  color:#d0c3d7!important;
  font:500 11px/1.6 ui-monospace,monospace!important
 }
+.av12-phase1-join .av125-email-recovery{display:flex;flex-wrap:wrap;gap:8px}
+.av12-phase1-join .av125-email-recovery .av12-email-reset{
+ flex:1 1 145px;min-height:44px;padding:10px 12px;cursor:pointer
+}
+.av12-phase1-join #anevum-otp{scroll-margin-block:110px;letter-spacing:.16em}
+.av12-phase1-join .av125-email-recovery .av12-email-reset:focus-visible{
+ outline:3px solid #b4edfc;outline-offset:3px
+}
 @media(max-width:650px){
  .av9-shell .av79-home .av124-hero-wayfinder{margin-top:8px}
 }
@@ -244,4 +252,19 @@
  }
  .av12-phase1-join .av124-join-progress>span.is-complete,
  .av12-phase1-join .av124-step-context{color:CanvasText!important}
+}
+
+/* V125 short-screen address receipt: do not visually truncate a disabled email input. */
+.av12-phase1-join .av12-email-entry #anevum-email.av125-sent-email-input{display:none}
+.av12-phase1-join .av125-sent-email-recipient{
+ display:block;box-sizing:border-box;width:100%;min-height:54px;
+ padding:13px 16px;border:1px solid #c0929294;border-radius:15px;
+ background:#151622;color:#fff5e7;box-shadow:inset 0 1px 4px #0007;
+ font:500 16px/1.45 var(--av9-body,system-ui,sans-serif);
+ overflow-wrap:anywhere;word-break:break-word;white-space:normal
+}
+
+/* Short mobile keyboard viewport: keep OTP recovery actions clear of the floating IREN dock. */
+@media(max-width:390px) and (max-height:520px){
+ .av12-phase1-join .av125-email-recovery{padding-inline-end:56px}
 }

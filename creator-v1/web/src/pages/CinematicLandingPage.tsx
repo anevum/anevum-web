@@ -4,6 +4,7 @@ import {readCreators,readProjects,readStatus,type Creator,type Project,type Stat
 import {useResource} from "../lib/useResource";
 import {projectDetailPath} from "../lib/navigation";
 import {Icon} from "../components/Icons";
+import {ContinuanceSignalAtlas} from "../components/ContinuanceSignalAtlas";
 import {CompactMemberIdentity} from "../components/CompactMemberIdentity";
 import {useOwnPlayerCard} from "../lib/useOwnPlayerCard";
 import {canonicalAuthClient} from "../lib/canonical-beta";
@@ -47,6 +48,7 @@ function CreatorSignature({project,creators}:{project:Project;creators:readonly 
 export function CinematicLandingPage(){
   const [lastVerified,setLastVerified]=useState<PublicSnapshot|null>(null);
   const [revision,setRevision]=useState(0);
+  const [scenePaused,setScenePaused]=useState(false);
   const ownCard=useOwnPlayerCard();
   const {data:session}=canonicalAuthClient.useSession();
   const signedIn=Boolean(session?.user?.id&&session.user.emailVerified===true);
@@ -84,9 +86,9 @@ export function CinematicLandingPage(){
   const showcase=projects.filter(project=>project.category!=="games").slice(0,3);
   const verified=Boolean(snapshot);
 
-  return <div className="anevum-cinema av9-home av79-home">
+  return <div className="anevum-cinema av9-home av79-home" data-scene-paused={scenePaused}>
     <div className="cinema-content av79-home-content">
-      <section className="av79-hero av114-arrival av115-arrival" data-iren-anchor="arrival" aria-labelledby="av79-home-heading">
+      <section className={"av79-hero av114-arrival av115-arrival av125-arrival"+(scenePaused?" av125-is-paused":"")} data-iren-anchor="arrival" aria-labelledby="av79-home-heading">
         <div className="av114-arrival-scene" aria-hidden="true">
           <span className="av114-arrival-stars"/>
           <span className="av114-arrival-planet"><i/></span>
@@ -94,13 +96,15 @@ export function CinematicLandingPage(){
           <span className="av114-arrival-ring av114-arrival-ring--two"/>
           <span className="av114-arrival-arc"/>
           <span className="av114-arrival-beacon"/>
+          <ContinuanceSignalAtlas/>
+          <span className="av125-horizon-glow"/>
         </div>
         <div className="av79-hero-orbit" aria-hidden="true"><span/><span/><span/></div>
         <div className="av79-hero-content">
           <span className="av79-kicker"><i aria-hidden="true"/> ANEVUM / THE CREATIVE NETWORK</span>
           <span className="av114-arrival-chapter">THE CONTINUANCE INSTITUTE <span aria-hidden="true">/</span> FIRST CONTACT</span>
           <h1 id="av79-home-heading">A universe <em>in the making.</em></h1>
-          <p>Explore original creations, ambitious ideas and the people behind them. Discover what exists, connect with others, or start building your own.</p>
+          <p>Explore original creations and the people behind them. Discover new worlds, connect with others, or start building your own.</p>
           <div className="av79-hero-actions">
             <Link className="av79-button av79-button--bright" to="/discover">
               Enter ANEVUM <Icon name="arrow" size={18}/>
@@ -113,9 +117,19 @@ export function CinematicLandingPage(){
             <span><i aria-hidden="true"/> Explore freely. No account required.</span>
             <span>Studio publishing is still in testing.</span>
           </div>
-          <a className="av124-hero-wayfinder" href="#wayfinder" aria-label="Jump to the ANEVUM Wayfinder">
-            <span>Find your direction</span><span aria-hidden="true">↓</span>
-          </a>
+          <div className="av125-arrival-utility">
+            <a className="av124-hero-wayfinder" href="#wayfinder" aria-label="Jump to the ANEVUM Wayfinder">
+              <span>Find your way</span><span aria-hidden="true">↓</span>
+            </a>
+            <button className="av125-motion-toggle" type="button"
+              aria-pressed={scenePaused}
+              aria-label={scenePaused?"Resume decorative background animation":"Pause decorative background animation"}
+              onClick={()=>setScenePaused(previous=>!previous)}>
+              <span className="av125-motion-indicator" aria-hidden="true"/>
+              {scenePaused?"RESUME MOTION":"PAUSE MOTION"}
+            </button>
+            <span className="av125-motion-note">REDUCED MOTION</span>
+          </div>
         </div>
         <aside className="av115-iren-console" aria-label="IREN arrival orientation">
           <div className="av115-iren-console-top">
@@ -124,7 +138,7 @@ export function CinematicLandingPage(){
             <span>01 / ARRIVAL</span>
           </div>
           <div className="av115-iren-pulse" aria-hidden="true"><i/><i/><i/><i/><i/><i/><i/><i/><i/></div>
-          <strong>Not sure where to begin?</strong>
+          <strong>Need a guide?</strong>
           <p>I'm IREN. I can help you find your way through the network.</p>
           <button type="button" onClick={()=>window.dispatchEvent(new Event("anevum:iren-intro"))}>
             MEET IREN <Icon name="arrow" size={15}/>
@@ -192,6 +206,25 @@ export function CinematicLandingPage(){
           <Link to="/discover">OPEN DISCOVER <Icon name="arrow" size={17}/></Link>
         </div>}
         {portal.state==="error"&&verified&&<p className="av79-stale" role="status">Live refresh is unavailable. Previously verified public records are shown.</p>}
+      </section>
+
+      <section className="av125-charter" aria-labelledby="av125-charter-title">
+        <div className="av125-charter-main">
+          <span className="av125-charter-register">FIELD NOTE 001 / THE CONTINUANCE PRINCIPLE</span>
+          <h2 id="av125-charter-title">What we make <em>becomes what comes next.</em></h2>
+          <p>Original worlds, useful software, experiments and art belong in the same universe. Discover the work people have released and follow the tools being built to create more.</p>
+          <Link to="/guide" className="av125-charter-action">
+            EXPLORE THE FIELD GUIDE <Icon name="arrow" size={16}/>
+          </Link>
+        </div>
+        <div className="av125-charter-instrument" aria-hidden="true">
+          <span className="av125-charter-circle av125-charter-circle--outer"/>
+          <span className="av125-charter-circle av125-charter-circle--middle"/>
+          <span className="av125-charter-circle av125-charter-circle--inner"/>
+          <span className="av125-charter-signal"/>
+          <span className="av125-charter-axis"/>
+          <span className="av125-charter-index">CONTINUANCE / OPEN HORIZONS</span>
+        </div>
       </section>
 
       {ownCard?<section className="av79-member-section" aria-labelledby="av79-member-heading">
