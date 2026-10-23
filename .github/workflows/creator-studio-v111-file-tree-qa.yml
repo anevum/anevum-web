@@ -1,0 +1,34 @@
+name: Creator Studio V111 File Tree QA
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/canonical-auth/studio-file-tree.mjs'
+      - 'creator-v1/canonical-auth/worker.mjs'
+      - 'creator-v1/canonical-auth/migrations/0014_private_studio_file_tree.sql'
+      - 'creator-v1/test/studio-file-tree-v111.test.mjs'
+      - '.github/workflows/creator-studio-v111-file-tree-qa.yml'
+permissions:
+  contents: read
+jobs:
+  source-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Private file-tree contract and cross-member isolation
+        run: node --test creator-v1/test/studio-file-tree-v111.test.mjs
+      - name: Existing canonical Studio regression
+        run: node --test creator-v1/test/canonical-studio-v043.test.mjs
+      - name: Browser TypeScript safety
+        run: npm run check:creator-v1-web
+      - name: Confirm migration remains review-only
+        run: |
+          test -f creator-v1/canonical-auth/migrations/0014_private_studio_file_tree.sql
+          echo 'W111=SOURCE_ONLY; NO_D1_MIGRATION_APPLIED; NO_PRODUCTION_ROLLOUT' >> "$GITHUB_STEP_SUMMARY"
