@@ -372,9 +372,9 @@ function FolderInspectorV111({projectId,folder,nodes,editable:canEdit,onUpdated,
  </section>;
 }
 
-function SourceEditorV111({projectId,nodeId,nodes,editable:canEdit,onDirty,onUpdated}:{
+function SourceEditorV111({projectId,nodeId,nodes,editable:canEdit,onDirty,onUpdated,onDeleted}:{
  projectId:string;nodeId:string;nodes:StudioFileNode[];editable:boolean;
- onDirty:(dirty:boolean)=>void;onUpdated:(node:StudioFileNode)=>void
+ onDirty:(dirty:boolean)=>void;onUpdated:(node:StudioFileNode)=>void;onDeleted:(node:StudioFileNode)=>void
 }){
  const [base,setBase]=useState<StudioFileNode|null>(null);
  const [content,setContent]=useState('');
@@ -417,6 +417,16 @@ function SourceEditorV111({projectId,nodeId,nodes,editable:canEdit,onDirty,onUpd
   }catch(e){setError(presentError(e)+' Unsaved edits remain in this tab. Inspect the latest version before retrying.');}
   finally{setBusy(false);}
  }
+ async function moveToTrash(){
+  if(!base||!canEdit||dirty||busy)return;
+  if(!window.confirm('Move '+base.name+' to private Trash? You can restore the last saved source later.'))return;
+  setBusy(true);setError('');
+  try{
+   const deleted=await studioFileUpdate(projectId,nodeId,{revision:base.revision,name:base.name,parentId:base.parentId,content:base.content||'',deleted:true});
+   onDeleted(deleted);
+  }catch(e){setError(presentError(e)+' The file remains open until the server confirms deletion.');}
+  finally{setBusy(false);}
+ }
  async function refresh(){
   if(!window.confirm(dirty?'Discard unsaved source and reload the latest server version?':'Reload the latest saved source?'))return;
   setLoading(true);setError('');setMessage('');
@@ -449,6 +459,8 @@ function SourceEditorV111({projectId,nodeId,nodes,editable:canEdit,onDirty,onUpd
      onClick={()=>void save()}>{busy?'Saving…':'Save revision'}</button>
     <button type="button" className="csw-action csw-subtle" disabled={!base||busy} onClick={()=>void refresh()}>Reload</button>
     <button type="button" className="csw-action csw-subtle" disabled={!base||historyLoading} onClick={()=>void loadVersions()}>History</button>
+    <button type="button" className="csw-action csw-danger" disabled={!base||!canEdit||loading||busy||dirty}
+     onClick={()=>void moveToTrash()}>Move to Trash</button>
    </div>
   </div>
   {loading&&<p role="status" className="csf-muted">Retrieving this file from your private Studio…</p>}
