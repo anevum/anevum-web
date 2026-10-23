@@ -86,7 +86,7 @@ export function CinematicLandingPage(){
   const showcase=projects.filter(project=>project.category!=="games").slice(0,3);
   const verified=Boolean(snapshot);
 
-  return <div className="anevum-cinema av9-home av79-home">
+  return <div className="anevum-cinema av9-home av79-home" data-scene-paused={scenePaused}>
     <div className="cinema-content av79-home-content">
       <section className={"av79-hero av114-arrival av115-arrival av125-arrival"+(scenePaused?" av125-is-paused":"")} data-iren-anchor="arrival" aria-labelledby="av79-home-heading">
         <div className="av114-arrival-scene" aria-hidden="true">
@@ -119,7 +119,7 @@ export function CinematicLandingPage(){
           </div>
           <div className="av125-arrival-utility">
             <a className="av124-hero-wayfinder" href="#wayfinder" aria-label="Jump to the ANEVUM Wayfinder">
-              <span>Find your direction</span><span aria-hidden="true">↓</span>
+              <span>Find your way</span><span aria-hidden="true">↓</span>
             </a>
             <button className="av125-motion-toggle" type="button"
               aria-pressed={scenePaused}
@@ -128,6 +128,7 @@ export function CinematicLandingPage(){
               <span className="av125-motion-indicator" aria-hidden="true"/>
               {scenePaused?"RESUME MOTION":"PAUSE MOTION"}
             </button>
+            <span className="av125-motion-note">REDUCED MOTION</span>
           </div>
         </div>
         <aside className="av115-iren-console" aria-label="IREN arrival orientation">

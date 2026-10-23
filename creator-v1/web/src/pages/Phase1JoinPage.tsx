@@ -69,6 +69,13 @@ export function Phase1JoinPage(){
  const [busy,setBusy]=useState(false),[error,setError]=useState("");
  // Focus after the visitor requests the code, never on page arrival.
  useEffect(()=>{if(codeSent)otpRef.current?.focus({preventScroll:true});},[codeSent]);
+ // Bring the newly mounted code into view after an explicit email request,
+ // including when the phone keyboard leaves a shorter visible viewport.
+ useEffect(()=>{
+   if(!codeSent)return;
+   const frame=window.requestAnimationFrame(()=>otpRef.current?.scrollIntoView({block:"center",behavior:"instant"}));
+   return()=>window.cancelAnimationFrame(frame);
+ },[codeSent]);
  const ready=capability.state==="ready"&&(capability.data.registration==="invite-only"||capability.data.registration==="open");
  // An unavailable database/auth service is not an intentional registration pause.
  // The server remains authoritative: these labels never unlock signup.
@@ -192,9 +199,11 @@ export function Phase1JoinPage(){
          <span role="listitem">03 <small>ARRIVE</small></span>
        </div>
        <p className="av124-step-context" aria-live="polite">{codeSent
-         ?"Step 2 of 3: enter the latest eight-digit email code below."
-         :ready?"Step 1 of 3: choose an available sign-in method to begin."
-         :"Browse freely while we check member access."}</p>
+         ?"Step 2 of 3: enter your eight-digit code."
+         :ready?(emailReady?"Step 1 of 3: start with your email.":"Step 1 of 3: choose a sign-in method.")
+         :capability.state==="loading"?"Checking member access. You can browse freely."
+         :serviceUnavailable?"Member access is temporarily unavailable."
+         :"Member registration is currently paused."}</p>
        <h2>{codeSent?"CHECK YOUR INBOX.":requiresEmailVerification?"VERIFY YOUR EMAIL.":"YOUR STORY STARTS HERE."}</h2>
        <p className="join-lead">{codeSent?"Your access code is on its way. Enter all eight digits below to continue.":requiresEmailVerification?"Your sign-in provider did not verify your email. Confirm the email on this session before opening your ANEVUM profile.":"A place to discover, publish and belong. No password. No cost to join."}</p>
        {oauthFeedback&&<p role="alert" className="av12-join-error">{oauthFeedback}</p>}
@@ -220,14 +229,16 @@ export function Phase1JoinPage(){
              onChange={event=>setOtp(event.target.value.replace(/\D/g,"").slice(0,8))}
              disabled={busy} placeholder="8-digit code" required/>
            <small className="av12-email-guidance" id="av124-otp-instructions">Use the latest code. It expires after a short time. We will never ask for it in chat.</small>
-           <button type="button" className="av12-email-reset" onClick={()=>void requestReplacementCode()} disabled={busy}>
-             {busy?"REQUESTING…":"SEND A NEW CODE"}
-           </button>
-           {!requiresEmailVerification&&<button type="button" className="av12-email-reset" onClick={resetCode} disabled={busy}>USE A DIFFERENT EMAIL</button>}
          </>}
          <button type="submit" className="av12-email-submit" disabled={busy} aria-busy={busy}>
            <span>{busy?"CONNECTING…":codeSent?"VERIFY & CONTINUE":"CONTINUE WITH EMAIL"}</span><span className="av52-action-arrow" aria-hidden="true">↗</span>
          </button>
+         {codeSent&&<div className="av125-email-recovery" aria-label="Email code recovery">
+           <button type="button" className="av12-email-reset" onClick={()=>void requestReplacementCode()} disabled={busy}>
+             {busy?"REQUESTING…":"SEND A NEW CODE"}
+           </button>
+           {!requiresEmailVerification&&<button type="button" className="av12-email-reset" onClick={resetCode} disabled={busy}>USE A DIFFERENT EMAIL</button>}
+         </div>}
          {notice&&<p role="status">{notice}</p>}
        </form>}
        {ready&&!requiresEmailVerification&&emailReady&&(["google","github","apple","microsoft"] as const).some(socialReady)&&!codeSent&&

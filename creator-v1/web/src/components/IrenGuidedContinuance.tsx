@@ -201,6 +201,14 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   const dockRef=useRef<HTMLButtonElement>(null);
   const companionRef=useRef<HTMLDivElement>(null);
   const closePanelRef=useRef<HTMLButtonElement>(null);
+  const panelInvokerRef=useRef<HTMLElement|null>(null);
+  const restorePanelFocus=useCallback(()=>{
+    window.requestAnimationFrame(()=>{
+      const invoker=panelInvokerRef.current;
+      if(invoker?.isConnected)invoker.focus({preventScroll:true});
+      else dockRef.current?.focus({preventScroll:true});
+    });
+  },[]);
   // Only explicit user actions move keyboard focus into the panel.
   // The unsolicited first visit must never steal focus from page content.
   const focusRequested=useRef(false);
@@ -292,6 +300,9 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
       }else start(true);
     };
     const onOpen=()=>{
+      const active=document.activeElement;
+      if(active instanceof HTMLElement&&active.matches("button,a,input")&&!companionRef.current?.contains(active))
+        panelInvokerRef.current=active;
       rememberFirstContact();
       setWelcomeOpen(false);
       setWelcomeExpanded(false);
@@ -310,6 +321,9 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     };
     const onStart=()=>start();
     const onIntro=()=>{
+      const active=document.activeElement;
+      if(active instanceof HTMLElement&&active.matches("button,a,input")&&!companionRef.current?.contains(active))
+        panelInvokerRef.current=active;
       // Explicit first-contact action from the arrival scene. Reuse this
       // companion's existing verified welcome, not a second IREN instance.
       rememberFirstContact();
@@ -348,7 +362,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
       if(event.key==="Escape"){
         setPanelOpen(false);
         setWelcomeOpen(false);
-        dockRef.current?.focus({preventScroll:true});
+        restorePanelFocus();
       }
     };
     document.addEventListener("pointerdown",onOutside);
@@ -357,7 +371,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
       document.removeEventListener("pointerdown",onOutside);
       document.removeEventListener("keydown",onEscape);
     };
-  },[panelOpen]);
+  },[panelOpen,restorePanelFocus]);
 
   useEffect(()=>{
     if(panelOpen&&activeView==="updates"&&memberId)markSignalsSeen();
@@ -539,7 +553,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   };
   const closePanel=()=>{
     closeWelcome();
-    window.requestAnimationFrame(()=>dockRef.current?.focus({preventScroll:true}));
+    restorePanelFocus();
   };
   const currentTopic=topics.find(topic=>topic.id===activeTopic)||topics[0];
   const isMobile=viewport.width<=650;
@@ -852,7 +866,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
           setWelcomeOpen(false);
           setWakeCycle(c=>c+1);
           setMood(panelOpen?"idle":"greet");
-          if(!panelOpen)focusRequested.current=true;
+          if(!panelOpen){panelInvokerRef.current=dockRef.current;focusRequested.current=true;}
           setPanelOpen(open=>!open);
         }}>
         <IrenLivingCanvas mood={mood} expanded={(panelOpen&&!floatingInvite)||broadcast} paused={motionPaused}

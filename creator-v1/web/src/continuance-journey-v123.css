@@ -220,6 +220,14 @@
  color:#d0c3d7!important;
  font:500 11px/1.6 ui-monospace,monospace!important
 }
+.av12-phase1-join .av125-email-recovery{display:flex;flex-wrap:wrap;gap:8px}
+.av12-phase1-join .av125-email-recovery .av12-email-reset{
+ flex:1 1 145px;min-height:44px;padding:10px 12px;cursor:pointer
+}
+.av12-phase1-join #anevum-otp{scroll-margin-block:110px;letter-spacing:.16em}
+.av12-phase1-join .av125-email-recovery .av12-email-reset:focus-visible{
+ outline:3px solid #b4edfc;outline-offset:3px
+}
 @media(max-width:650px){
  .av9-shell .av79-home .av124-hero-wayfinder{margin-top:8px}
 }

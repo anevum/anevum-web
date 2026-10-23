@@ -30,6 +30,7 @@ async function until(fn,timeout=23000){
 }
 let ws=null;
 const results=[];
+let syntheticSends=0,syntheticVerifications=0,interceptionError=null;
 try{
  const port=await until(()=>{
   const file=join(profile,"DevToolsActivePort");
@@ -42,7 +43,12 @@ try{
  ws=new WebSocket(debuggerUrl);
  const tasks=new Map();let sequence=0;
  ws.addEventListener("message",({data})=>{
-  const result=JSON.parse(String(data)),pending=tasks.get(result.id);
+  const result=JSON.parse(String(data));
+  if(result.method==="Fetch.requestPaused"){
+   void interceptAuth(result.params).catch(error=>{interceptionError=error;});
+   return;
+  }
+  const pending=tasks.get(result.id);
   if(!pending)return;
   tasks.delete(result.id);
   result.error?pending.reject(Error(result.error.message)):pending.resolve(result.result||{});
@@ -55,6 +61,26 @@ try{
   const id=++sequence;tasks.set(id,{resolve,reject});
   ws.send(JSON.stringify({id,method,params}));
  });
+ // Browser-only synthetic responses: no email delivery, account or session.
+ // Never trace request bodies or a code. Reject any unexpected mutation.
+ const interceptAuth=async({requestId,request})=>{
+  const url=new URL(request.url);
+  if(url.origin!==base)throw Error("V125_NONLOCAL_AUTH_REQUEST");
+  if(request.method==="GET")return send("Fetch.continueRequest",{requestId});
+  const payload=JSON.parse(request.postData||"{}");
+  let responseCode=400,body={code:"INVALID_OTP",message:"Synthetic verification rejection"};
+  if(request.method==="POST"&&url.pathname==="/api/v1/member/auth/email-otp/send-verification-otp"&&payload.email==="preview@anevum.invalid"&&payload.type==="sign-in"){
+   syntheticSends++;responseCode=200;body={success:true};
+  }else if(request.method==="POST"&&url.pathname==="/api/v1/member/auth/sign-in/email-otp"&&payload.email==="preview@anevum.invalid"){
+   syntheticVerifications++;
+  }else{
+   await send("Fetch.failRequest",{requestId,errorReason:"Aborted"});
+   throw Error("V125_UNEXPECTED_AUTH_MUTATION");
+  }
+  return send("Fetch.fulfillRequest",{requestId,responseCode,
+   responseHeaders:[{name:"Content-Type",value:"application/json"}],
+   body:Buffer.from(JSON.stringify(body)).toString("base64")});
+ };
  const evaluate=async expression=>{
   const result=await send("Runtime.evaluate",{expression,returnByValue:true,awaitPromise:true});
   if(result.exceptionDetails)throw Error(result.exceptionDetails.exception?.description||result.exceptionDetails.text);
@@ -67,6 +93,7 @@ try{
   writeFileSync(join(output,filename+".png"),Buffer.from(screenshot.data,"base64"));
  };
  await send("Page.enable");await send("Runtime.enable");
+ await send("Fetch.enable",{patterns:[{urlPattern:base+"/api/v1/member/auth/*",requestStage:"Request"}]});
  await send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:"reduce"}]});
  for(const [width,height,label] of [[1440,900,"desktop"],[390,844,"phone"],[320,720,"small-phone"]]){
   await send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:2,mobile:width<700});
@@ -92,7 +119,7 @@ try{
   await snapshot("join-v123-"+width);
   results.push({width,height,label,view});
   if(width===390){
-   await evaluate('document.querySelector(".av123-iren-join button")?.click()');
+   await evaluate('document.querySelector(".av123-iren-join button")?.focus();document.querySelector(".av123-iren-join button")?.click()');
    await until(()=>evaluate('!!document.querySelector(".ir123-code-boundary")&&!!document.querySelector(".ir80-topic-detail")'));
    const iren=await evaluate('(()=>{const panel=document.querySelector(".ir80-help"),b=panel?.getBoundingClientRect();return {joinTitle:document.querySelector(".ir80-help h2")?.textContent,joinTopic:document.querySelector(".ir80-topic-detail")?.textContent,codeBoundary:document.querySelector(".ir123-code-boundary")?.textContent,one:document.querySelectorAll(".ir80-dock").length===1,bounds:b?[b.left,b.top,b.right,b.bottom]:null,focused:document.activeElement?.getAttribute("aria-label")};})()');
    assert.equal(iren.one,true);
@@ -102,8 +129,38 @@ try{
    assert.ok(iren.bounds&&iren.bounds[0]>=-1&&iren.bounds[2]<=391,"IREN panel exceeds phone width");
    await snapshot("iren-join-v123-390");
    results.push({label:"iren-join-phone",iren});
+   await evaluate('document.querySelector(".ir80-help-head .ir80-icon-button")?.click()');
+   await until(()=>evaluate('!document.querySelector(".ir80-help")&&document.activeElement===document.querySelector(".av123-iren-join button")'));
+  }
+  if(width<=390){
+   // Short-viewport regression models available layout space, not iPhone Safari.
+   await send("Emulation.setDeviceMetricsOverride",{width,height:460,deviceScaleFactor:2,mobile:true});
+   await evaluate('(()=>{const email=document.querySelector("#anevum-email");Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set.call(email,"preview@anevum.invalid");email.dispatchEvent(new Event("input",{bubbles:true}));})()');
+   await evaluate('document.querySelector(".av12-email-entry").requestSubmit()');
+   await until(()=>evaluate('!!document.querySelector("#anevum-otp")&&document.activeElement===document.querySelector("#anevum-otp")'));
+   await until(()=>evaluate('(()=>{const r=document.querySelector("#anevum-otp").getBoundingClientRect();return r.top>=70&&r.bottom<innerHeight})()'));
+   const codeView=await evaluate('(()=>{const input=document.querySelector("#anevum-otp"),submit=document.querySelector(".av12-email-submit"),recovery=document.querySelector(".av125-email-recovery"),r=input.getBoundingClientRect(),s=submit.getBoundingClientRect(),b=recovery.getBoundingClientRect(),dock=document.querySelector(".ir80-dock").getBoundingClientRect();return {step:document.querySelector("[aria-current=step]")?.textContent,codeTop:r.top,codeBottom:r.bottom,submitBottom:s.bottom,submitBeforeRecovery:s.bottom<=b.top+1,obstructed:s.left<dock.right&&dock.left<s.right&&s.top<dock.bottom&&dock.top<s.bottom,one:document.querySelectorAll(".ir80-dock").length===1,overflow:document.documentElement.scrollWidth>innerWidth+1,help:input.getAttribute("aria-describedby"),fontSize:parseFloat(getComputedStyle(input).fontSize)}})()');
+   assert.ok(codeView.step.includes("VERIFY"));
+   assert.ok(codeView.submitBeforeRecovery&&codeView.submitBottom<460,"Primary verify action is below recovery or viewport: "+JSON.stringify(codeView));
+   assert.ok(codeView.one&&!codeView.overflow&&!codeView.obstructed&&codeView.fontSize>=16,"Unsafe short-viewport code form: "+JSON.stringify(codeView));
+   assert.equal(codeView.help,"av124-otp-instructions");
+   await snapshot("join-v125-code-short-"+width);
+   const before=syntheticSends;
+   await evaluate('[...document.querySelectorAll(".av12-email-reset")].find(b=>b.textContent.includes("SEND A NEW CODE")).click()');
+   await until(()=>evaluate('document.querySelector(".av12-email-entry [role=status]")?.textContent.includes("replacement")'));
+   assert.equal(syntheticSends,before+1,"Resend did not request a synthetic replacement");
+   await evaluate('(()=>{const code=document.querySelector("#anevum-otp");Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set.call(code,"00000000");code.dispatchEvent(new Event("input",{bubbles:true}));})()');
+   await evaluate('document.querySelector(".av12-email-entry").requestSubmit()');
+   await until(()=>evaluate('!!document.querySelector(".av12-join-error")'));
+   assert.equal(syntheticSends,before+1,"Failed verification automatically sent another code");
+   assert.ok(await evaluate('document.querySelector(".av12-join-error").textContent.includes("No replacement is sent automatically")'));
+   await evaluate('[...document.querySelectorAll(".av12-email-reset")].find(b=>b.textContent.includes("USE A DIFFERENT EMAIL")).click()');
+   await until(()=>evaluate('!document.querySelector("#anevum-otp")&&!document.querySelector("#anevum-email").disabled'));
+   results.push({label:"synthetic-code-short-"+width,codeView,resend:true,rejection:true,changeEmail:true});
   }
  }
+ if(interceptionError)throw interceptionError;
+ assert.equal(syntheticSends,4);assert.equal(syntheticVerifications,2);
  writeFileSync(join(output,"acceptance.json"),JSON.stringify({pass:true,source:"compiled React / read-only localhost",writes:0,results},null,2));
  console.log("V123_SIGNUP_IREN_COMPILED_BROWSER=PASS");
 }finally{

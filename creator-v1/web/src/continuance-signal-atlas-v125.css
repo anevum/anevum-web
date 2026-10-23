@@ -14,6 +14,8 @@
 .av125-motion-toggle:focus-visible{outline:3px solid #b4edfc;outline-offset:4px;border-radius:3px}
 .av125-motion-indicator{display:block;width:8px;height:8px;border-radius:2px;border:1px solid #afd8f7;background:#afd8f76b;box-shadow:0 0 11px #afd8f77a}
 .av125-is-paused .av125-motion-indicator{background:transparent;box-shadow:none}
+.av125-motion-note{display:none;color:#c2d8ee;font:700 9px/1.4 ui-monospace,monospace;letter-spacing:.04em}
+.av79-home[data-scene-paused="true"] .av125-charter *{animation-play-state:paused!important}
 .av9-shell .av79-home .av125-arrival.av125-is-paused *, .av9-shell .av79-home .av125-arrival.av125-is-paused *::before,.av9-shell .av79-home .av125-arrival.av125-is-paused *::after{animation-play-state:paused!important}
 .av125-charter{position:relative;isolation:isolate;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(220px,.8fr);gap:28px;align-items:center;margin:clamp(28px,4vw,52px) 0;padding:clamp(23px,4vw,48px);border:1px solid #c1b2d363;border-radius:21px;background:radial-gradient(ellipse at 78% 50%,#71689d24,transparent 59%),linear-gradient(118deg,#181e34,#111b30 65%,#171932);box-shadow:inset 0 1px #fff2,0 20px 60px #0309186b;overflow:hidden}
 .av125-charter::before{content:"";position:absolute;inset:0;z-index:-1;opacity:.3;pointer-events:none;background:repeating-linear-gradient(90deg,transparent 0 98px,#bedaff0a 99px 100px)}
@@ -38,3 +40,20 @@
 @media(max-width:380px){.av125-signal-atlas{right:-400px;opacity:.21}.av125-arrival-utility{flex-wrap:wrap}.av125-motion-toggle{font-size:9px}.av125-charter{padding:19px 14px}.av125-charter-instrument{display:none}}
 @media(prefers-reduced-motion:reduce){.av125-signal-atlas *, .av125-charter *, .av125-arrival-utility *{animation:none!important;transition:none!important}.av125-signal-atlas{opacity:.2}}
 @media(forced-colors:active){.av125-signal-atlas,.av125-charter-instrument,.av125-horizon-glow{display:none}.av125-charter{background:Canvas;color:CanvasText;border:2px solid CanvasText}.av125-charter h2 em{-webkit-text-fill-color:currentColor;color:CanvasText}.av125-motion-toggle,.av125-charter-action{background:ButtonFace;color:ButtonText;border-color:ButtonText}}
+
+/* Keep both utilities on one narrow-phone row, clear of the IREN station. */
+@media(max-width:650px){
+ .av125-arrival-utility{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px}
+ .av9-shell .av79-home .av125-arrival-utility .av124-hero-wayfinder{justify-self:start;gap:10px}
+ .av125-motion-toggle{justify-self:end;font-size:10px;letter-spacing:0}
+}
+@media(max-width:380px){
+ .av9-shell .av79-home .av125-arrival .av114-arrival-chapter{margin-top:16px;letter-spacing:.07em}
+ .av9-shell .av79-home .av125-arrival .av79-hero-content>p{line-height:1.55!important}
+ .av125-arrival-utility{gap:8px}
+ .av125-motion-toggle{gap:6px;font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){
+ .av125-motion-toggle{display:none}
+ .av125-motion-note{display:block}
+}

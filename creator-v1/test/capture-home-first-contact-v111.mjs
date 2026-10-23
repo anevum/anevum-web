@@ -39,7 +39,7 @@ try{
  await send("Page.addScriptToEvaluateOnNewDocument",{source:'localStorage.setItem("anevum.iren.first-contact.v092","seen");'});
  await send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:"reduce"}]});
  for(const [width,height,label] of [[1440,900,"desktop"],[390,844,"phone"],[320,720,"small-phone"]]){
-  await send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:1,mobile:width<700});
+  await send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:2,mobile:width<700});
   await send("Page.navigate",{url:base+"/creator/"});
   // First contact is now an ANEVUM world/wayfinder experience, not a game
   // promotion. The local catalogue fixture remains authentic public data.
@@ -67,6 +67,22 @@ try{
      (two&&(!member.href?.endsWith("/join")||!member.text?.includes("Create your member space")||collision)))
    throw Error("V115_FIRST_ARRIVAL_"+label+":"+JSON.stringify({...arrival,collision}));
   await screenshot("first-arrival-"+label);
+  // V125: exercise the real control, including the OS reduced-motion state.
+  const reduced=await evaluate('(()=>({hidden:getComputedStyle(document.querySelector(".av125-motion-toggle")).display==="none",note:getComputedStyle(document.querySelector(".av125-motion-note")).display!=="none",running:document.querySelector(".av114-arrival-scene").getAnimations({subtree:true}).filter(a=>a.playState==="running").length,companions:document.querySelectorAll(".ir80-dock").length}))()');
+  if(!reduced.hidden||!reduced.note||reduced.running||reduced.companions!==1)
+   throw Error("V125_REDUCED_MOTION_"+JSON.stringify(reduced));
+  await send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:"no-preference"}]});
+  await until(()=>evaluate('document.querySelector(".av125-atlas-beacon-sweep").getAnimations().some(a=>a.playState==="running")'));
+  await evaluate('document.querySelector(".av125-motion-toggle").focus();document.querySelector(".av125-motion-toggle").click()');
+  await until(()=>evaluate('document.querySelector(".av125-motion-toggle").getAttribute("aria-pressed")==="true"'));
+  const paused=await evaluate('(()=>{const toggle=document.querySelector(".av125-motion-toggle"),a=toggle.getBoundingClientRect(),way=document.querySelector(".av124-hero-wayfinder").getBoundingClientRect();return {running:[...document.querySelector(".av125-arrival").getAnimations({subtree:true}),...document.querySelector(".av125-charter").getAnimations({subtree:true})].filter(a=>a.playState==="running").length,focused:document.activeElement===toggle,utilitiesOneRow:Math.abs(a.top-way.top)<5,label:toggle.textContent}})()');
+  if(paused.running||!paused.focused||(width<=390&&!paused.utilitiesOneRow))
+   throw Error("V125_PAUSE_"+JSON.stringify(paused));
+  await screenshot("motion-paused-"+label);
+  await evaluate('document.querySelector(".av125-motion-toggle").click()');
+  await until(()=>evaluate('document.querySelector(".av125-motion-toggle").getAttribute("aria-pressed")==="false"&&document.querySelector(".av125-atlas-beacon-sweep").getAnimations().some(a=>a.playState==="running")'));
+  evidence.push({label:"motion-"+label,reduced,paused,resumed:true});
+  await send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:"reduce"}]});
   await evaluate('document.querySelector(".av115-wayfinder")?.scrollIntoView({block:"center",behavior:"instant"})');
   await screenshot("first-contact-"+label);
   evidence.push({label,width,height,entry,arrival});

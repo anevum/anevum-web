@@ -23,3 +23,13 @@ Elevate the approved V116–V124 Continuance Institute arrival to a visually dis
 
 ## Next gate
 Use compiled browser captures to review the hero with actual rendered layout, then correct any mobile/focus/overlap defects. For a combined public release, require fresh integration QA, protected account acceptance, actual iPhone Safari and independent owner go/no-go before traffic promotion.
+
+## Continuation 002 — compiled review and bounded repairs
+Session: `ANEVUM.WEB.UPDATE.2026-10-23.002.HOMEPAGE-ONBOARDING-IREN-ALIGNMENT`
+
+- Initial V125 head `60fadbd` failed four workflows because two older tests required the pre-V125 hero class string byte-for-byte. `9b79e86` repairs those assertions while retaining the canonical section/class prefix and all behavioral guards. Its compiled captures were actually inspected at 1440/390/320 (home run 39988446121, signup run 39988446167).
+- Desktop and 390px arrival were readable. At 320px the utility row wrapped, lengthening the hero and leaving the IREN orientation below the first screen. The shorter Wayfinder label and explicit utility columns address that observed defect. The motion control now also pauses the charter instrument. OS reduced motion shows an honest static label rather than an ineffective pause button.
+- Signup remains email-first and server-attested. Shorter progress copy brings the form forward, the primary Verify action precedes recovery actions, recovery targets are at least 44px, and requesting a code intentionally focuses/centers its field. Paused and unavailable access states receive accurate step context. No authentication, resend, eligibility, rate-limit or privacy contract changes.
+- The existing IREN panel returns keyboard focus to the invoking page control on Close/Escape, with its dock as fallback. No second companion, tour, member identity or sign-in system is added.
+- Browser QA now exercises pause/resume, reduced motion, focus and narrow utility layout using the actual compiled app. Signup QA adds isolated synthetic send/resend/rejected-code/change-email cases at 390/320 with a 460px viewport. Auth POSTs are intercepted and fulfilled only inside that browser test; no email is sent and no account/session is created. These are layout/interaction checks, not proof of a physical Safari keyboard or real account acceptance. No code/request body is recorded in evidence.
+- Final-head CI and captures must be rechecked after these repairs. #325 holds the final source SHA, exact run links and remaining gates. #658 stays draft/default OFF, #667 stays separate, migration 0014 remains unapplied, and #655/#622 release safeguards remain in force.
