@@ -1,0 +1,43 @@
+# Review-only V125 acceptance evidence: no provider API calls or release actions.
+name: ANEVUM V129 Protected Release Evidence (No Credentials)
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/ops/v129-protected-release-evidence.mjs'
+      - 'creator-v1/test/v129-protected-release-evidence.test.mjs'
+      - '.github/workflows/v129-protected-release-evidence.yml'
+      - 'docs/production/v129-protected-release-evidence-20261023.md'
+permissions:
+  contents: read
+concurrency:
+  group: v129-evidence-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  evidence-contract:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      CLOUDFLARE_API_TOKEN: ''
+      CLOUDFLARE_API_KEY: ''
+      CLOUDFLARE_ACCOUNT_ID: ''
+      GH_TOKEN: ''
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate source-only evidence contract and false-ready regression cases
+        run: |
+          set -euo pipefail
+          test -z "$CLOUDFLARE_API_TOKEN"
+          test -z "$GH_TOKEN"
+          node --check creator-v1/ops/v129-protected-release-evidence.mjs
+          node --test creator-v1/test/v129-protected-release-evidence.test.mjs
+          node creator-v1/ops/v129-protected-release-evidence.mjs > "$RUNNER_TEMP/v129-empty-evidence.json"
+          node --input-type=module -e 'import {readFileSync} from "node:fs";import assert from "node:assert/strict";const x=JSON.parse(readFileSync(process.argv[1],"utf8"));assert.equal(x.status,"BLOCKED_AWAITING_PROTECTED_ACCEPTANCE");assert.equal(x.productionDeploymentAuthorized,false);' "$RUNNER_TEMP/v129-empty-evidence.json"
+          echo 'V129_SOURCE_ONLY_EVIDENCE_GATE=PASS; REAL_ACCOUNT_ACCEPTANCE=NOT_CLAIMED; DEPLOYMENT=NONE' >> "$GITHUB_STEP_SUMMARY"
