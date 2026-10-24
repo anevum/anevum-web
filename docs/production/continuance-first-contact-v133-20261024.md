@@ -14,7 +14,7 @@ Live anonymous Cloudflare Browser Rendering on 2026-10-24 exposed a communicatio
 
 **Find something worth trying.**
 
-ANEVUM is a place to discover independently made games, useful apps and creative experiments. Explore real public projects for free, then join the community when you want a place of your own.
+Discover independent games, useful apps and creative experiments. Explore real projects for free, then join when something catches your eye.
 
 Preserve the existing cinematic direction and identity: asymmetric celestial/orbital mark, warm cream/copper, ink-black/blue-violet world, delicate signal geometry, deep layered illumination, one IREN companion. Clarity is layered into existing React, not a second site, stripped redesign or generic SaaS landing.
 
