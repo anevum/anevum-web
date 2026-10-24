@@ -47,7 +47,17 @@ export async function sendViaResend(env,payload){
  const result=await fetch('https://api.resend.com/emails',{method:'POST',redirect:'error',headers:{Authorization:'Bearer '+env.COMMUNICATIONS_RESEND_API_KEY,'content-type':'application/json'},body:JSON.stringify(payload)});
  if(!result.ok)throw Error('Email delivery failed');
 }
-const emailMessage=(env,to,subject,body)=>({from:env.COMMUNICATIONS_FROM,to:[to],subject,text:body,html:'<div style="font:16px/1.6 system-ui;background:#101b2b;color:#f5efe8;padding:32px"><h1>ANEVUM / CONTINUANCE</h1><p>'+body.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')+'</p></div>'});
+function emailMessage(env,to,subject,body){
+ // The only clickable URL is a server-created token URL on ANEVUM's own origin.
+ const match=body.match(/https:\/\/anevum\.com\/updates\/preferences\?action=(?:confirm|unsubscribe)&token=[A-Za-z0-9_.%-]+/);
+ const link=match?match[0].replace(/&/g,'&amp;'):null;
+ const safe=body.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+ const action=subject.startsWith('Confirm')?'Confirm requested updates':'Manage optional email';
+ const html='<div style="font:16px/1.6 system-ui;background:#101b2b;color:#f5efe8;padding:32px"><h1>ANEVUM / CONTINUANCE</h1><p>'+safe+'</p>'+
+  (link?'<p><a href="'+link+'" style="display:inline-block;padding:12px 16px;color:#081522;background:#b5e7f1;border-radius:6px;text-decoration:none;font-weight:700">'+action+'</a></p>':'')+
+  '<p style="font-size:12px;color:#c8d4e1">You receive no optional updates until confirmed. Ignore this message if it was not requested.</p></div>';
+ return {from:env.COMMUNICATIONS_FROM,to:[to],subject,text:body,html};
+}
 export function createCommunicationsWorker({send=sendViaResend,clock=()=>Date.now()}={}){
  return {async fetch(request,env){
   const url=new URL(request.url),action=url.pathname.startsWith(PREFIX)?url.pathname.slice(PREFIX.length):'';
