@@ -18,9 +18,9 @@ import {publicCreatorHandle} from "../lib/public-creator-handle";
  */
 type PublicSnapshot={status:Status|null;projects:Project[];creators:Creator[]};
 const gateways=[
-  {to:"/discover",title:"Discover",detail:"Find ideas, worlds and original work",icon:"explore",eyebrow:"01 / EXPLORE"},
-  {to:"/studio",title:"Create",detail:"Open the Studio workspace (testing)",icon:"create",eyebrow:"02 / MAKE"},
-  {to:"/community",title:"Connect",detail:"Meet creators and join conversations",icon:"community",eyebrow:"03 / BELONG"}
+  {to:"/discover",title:"Discover",detail:"Open approved games, apps and experiments",icon:"explore",eyebrow:"01 / EXPLORE"},
+  {to:"/studio",title:"Create",detail:"Explore the creator workspace (publishing in testing)",icon:"create",eyebrow:"02 / MAKE"},
+  {to:"/community",title:"Connect",detail:"Find public conversations and creators",icon:"community",eyebrow:"03 / BELONG"}
 ] as const;
 
 const categoryName:Record<Project["category"],string>={
@@ -81,9 +81,11 @@ export function CinematicLandingPage(){
   const projects=[...(snapshot?.projects||[])].sort(byPublication);
   const creators=metadata.state==="ready"?metadata.data.creators:snapshot?.creators||[];
   const status=metadata.state==="ready"?metadata.data.status:snapshot?.status||null;
-  // Alpha playables stay discoverable in the public index, but are not
-  // promoted as launch-ready flagship experiences while they are test builds.
-  const showcase=projects.filter(project=>project.category!=="games").slice(0,3);
+  // Public API returns approved catalogue records. Early games may be shown
+  // as explicitly experimental first looks, never as a finished flagship.
+  // Do not suppress the only genuine public work just because it is a game.
+  const showcase=projects.slice(0,3);
+  const firstLook=showcase[0]||null;
   const verified=Boolean(snapshot);
 
   return <div className="anevum-cinema av9-home av79-home" data-scene-paused={scenePaused}>
@@ -101,21 +103,22 @@ export function CinematicLandingPage(){
         </div>
         <div className="av79-hero-orbit" aria-hidden="true"><span/><span/><span/></div>
         <div className="av79-hero-content">
-          <span className="av79-kicker"><i aria-hidden="true"/> ANEVUM / THE CREATIVE NETWORK</span>
+          <span className="av79-kicker"><i aria-hidden="true"/> ANEVUM / A WORLD OF THINGS PEOPLE MAKE</span>
           <span className="av114-arrival-chapter">THE CONTINUANCE INSTITUTE <span aria-hidden="true">/</span> FIRST CONTACT</span>
-          <h1 id="av79-home-heading">A universe <em>in the making.</em></h1>
-          <p>Explore original creations and the people behind them. Discover new worlds, connect with others, or start building your own.</p>
+          <span className="av133-hero-purpose">INDEPENDENT GAMES <span aria-hidden="true">/</span> APPS <span aria-hidden="true">/</span> CREATIVE EXPERIMENTS</span>
+          <h1 id="av79-home-heading">Find something <em>worth trying.</em></h1>
+          <p>ANEVUM is a place to discover independently made games, useful apps and creative experiments. Explore real public projects for free, then join the community when you want a place of your own.</p>
           <div className="av79-hero-actions">
             <Link className="av79-button av79-button--bright" to="/discover">
-              Enter ANEVUM <Icon name="arrow" size={18}/>
+              Explore real projects <Icon name="arrow" size={18}/>
             </Link>
              <Link className="av123-member-entry" to={signedIn?"/member":"/join"}>
-               {signedIn?"Return to my space":"Create your member space"} <Icon name="arrow" size={16}/>
+               {signedIn?"Return to my space":"Join the early community"} <Icon name="arrow" size={16}/>
              </Link>
           </div>
           <div className="av114-arrival-clarity" aria-label="Visitor access and creator publishing status">
-            <span><i aria-hidden="true"/> Explore freely. No account required.</span>
-            <span>Studio publishing is still in testing.</span>
+            <span><i aria-hidden="true"/> Free to explore. No account required.</span>
+            <span>Membership is free. Creator publishing is still in testing.</span>
           </div>
           <div className="av125-arrival-utility">
             <a className="av124-hero-wayfinder" href="#wayfinder" aria-label="Jump to the ANEVUM Wayfinder">
@@ -149,6 +152,38 @@ export function CinematicLandingPage(){
         </div>
       </section>
 
+      <section className="av133-first-look" aria-labelledby="av133-first-look-heading">
+        <div className="av133-first-look-intro">
+          <span className="av133-eyebrow"><i aria-hidden="true"/> THE PUBLIC INDEX / FIRST LOOK</span>
+          <h2 id="av133-first-look-heading">See what lives here.</h2>
+          <p>Start with work that's genuinely available in the public catalogue. No signup required to browse.</p>
+          <Link to="/discover" className="av133-index-link">Browse every project <Icon name="arrow" size={16}/></Link>
+        </div>
+        {firstLook?<article className="av133-first-look-card">
+          <div className="av133-first-look-scene" aria-hidden="true">
+            <span className="av133-first-look-orbit"/><span className="av133-first-look-core"/>
+            <span className="av133-first-look-line"/><span className="av133-first-look-satellite"/>
+          </div>
+          <div className="av133-first-look-copy">
+            <div className="av133-first-look-meta">
+              <span>{categoryName[firstLook.category]}</span>
+              <span>{firstLook.category==="games"?"EARLY PUBLIC EXPERIMENT":"APPROVED PUBLIC PROJECT"}</span>
+            </div>
+            <h3>{firstLook.title}</h3>
+            <p>{firstLook.summary}</p>
+            <div className="av133-first-look-bottom">
+              <span>BY {firstLook.creatorName||"ANEVUM member"}</span>
+              <Link to={projectDetailPath(firstLook.id,"/")}>View this project <Icon name="arrow" size={16}/></Link>
+            </div>
+          </div>
+        </article>:<div className="av133-first-look-empty" role="status">
+          <span>{portal.state==="error"?"INDEX TEMPORARILY UNAVAILABLE":portal.state==="loading"?"CHECKING APPROVED WORK":"PUBLIC DISCOVERY"}</span>
+          <strong>{portal.state==="loading"?"Finding real projects…":"Explore the public project directory."}</strong>
+          <p>{portal.state==="error"?"The catalogue could not load here. Try Discover directly.":"We'll show approved creations here as they become available."}</p>
+          <Link to="/discover">Open Discover <Icon name="arrow" size={16}/></Link>
+        </div>}
+      </section>
+
       <section id="wayfinder" tabIndex={-1} className="av115-wayfinder" data-iren-anchor="arrival-paths" aria-labelledby="av115-wayfinder-title">
         <div className="av115-wayfinder-heading">
           <span className="av79-kicker">SELECT A DIRECTION / WAYFINDER</span>
@@ -178,7 +213,7 @@ export function CinematicLandingPage(){
         <header className="av79-section-heading">
           <div><span className="av79-kicker">PUBLIC INDEX / VERIFIED WORK</span>
             <h2 id="av79-now-heading">What people are making.</h2>
-            <p className="av115-index-intro">A window into approved creations, not a showcase for temporary test games.</p>
+            <p className="av115-index-intro">Actual published projects, including experiments still being developed. See each project for its access details.</p>
           </div>
           <Link to="/discover">BROWSE THE INDEX <Icon name="arrow" size={15}/></Link>
         </header>
@@ -200,7 +235,7 @@ export function CinematicLandingPage(){
           <div><span className="av79-kicker">{portal.state==="error"?"INDEX UNAVAILABLE":portal.state==="loading"?"CHECKING THE PUBLIC INDEX":"THE NETWORK IS GROWING"}</span>
             <strong>{portal.state==="error"?"The public index is temporarily unavailable.":"More creations are on the way."}</strong>
             <p>{portal.state==="ready"
-              ?"Experimental games remain in the Discover index; the homepage will spotlight completed, approved work as it arrives."
+              ?"Approved projects will appear here as they become available. You can still explore ANEVUM as a guest."
               :"Explore the public directory directly, or learn what you can create."}</p>
           </div>
           <Link to="/discover">OPEN DISCOVER <Icon name="arrow" size={17}/></Link>
@@ -238,9 +273,9 @@ export function CinematicLandingPage(){
         <span className="av79-invitation-seal" aria-hidden="true">✳</span>
         <div><span className="av79-kicker">YOUR PLACE IN THE NETWORK</span>
           <h2>{signedIn?"Complete your signature.":"Make your mark."}</h2>
-          <p>{signedIn?"Finish your profile to carry your player identity into creations and conversations.":"Build your player identity, share what you make and earn recognition through real participation."}</p>
+          <p>{signedIn?"Finish your profile to carry your player identity into creations and conversations.":"Create your profile, save discoveries and earn recognition for eligible participation. Creator publishing is in testing."}</p>
         </div>
-        <Link to={signedIn?"/member":"/join"}>{signedIn?"SET UP MY CARD":"JOIN ANEVUM"} <Icon name="arrow" size={17}/></Link>
+        <Link to={signedIn?"/member":"/join"}>{signedIn?"SET UP MY CARD":"JOIN THE EARLY COMMUNITY"} <Icon name="arrow" size={17}/></Link>
       </section>}
 
       <footer className="av79-home-end">
