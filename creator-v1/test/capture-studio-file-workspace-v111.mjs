@@ -309,6 +309,7 @@ try{
  await click('.csf-split-toggle');
  await until(()=>evaluate('document.querySelectorAll(".csf-editor-mount:not([hidden])").length===2'),'Two real visible independent source mounts');
  assert.ok(await evaluate('!!document.querySelector(".csf-editor-decks.is-split")'),'Actual split layout');
+ await until(()=>evaluate('getComputedStyle(document.querySelector(".csf-tree")).display==="none"'),'Split focus hides the file explorer to reclaim code width');
  assert.equal(await evaluate('document.querySelector(".csf-editor-mount.is-secondary .csf-source")?.value.includes("First Signal")'),true,'Secondary retains its private content');
  await click('.csf-editor-mount.is-primary .csi-toolbar-actions button[aria-label="Document outline"]');
  await until(()=>evaluate('document.querySelector(".csf-editor-mount.is-primary .csi-outline-item")?.textContent.includes("assembleWorld")'),'Live TS outline from private draft');
@@ -323,6 +324,7 @@ try{
  assert.ok(fileNodes.get(sourceId).content.includes('First Signal'),'Secondary source revision unchanged');
  await click('.csf-split-toggle');
  await until(()=>evaluate('!document.querySelector(".csf-editor-decks.is-split")'),'Single view restored');
+ await until(()=>evaluate('getComputedStyle(document.querySelector(".csf-tree")).display!=="none"'),'Single view restores private project Explorer');
  await click('.csf-tab button:first-child');
  await until(()=>evaluate('document.querySelector(".csf-editor-mount.is-primary .csf-source")?.value.includes("First Signal")'),'First tab restored');
  await click('.csf-split-toggle');
