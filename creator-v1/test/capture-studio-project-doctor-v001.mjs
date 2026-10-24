@@ -165,9 +165,9 @@ try{
  const focusDoctor=async label=>{
   assert.equal(await evaluate('(()=>{const el=document.querySelector("[data-studio-project-doctor=v001]");if(!el)return false;el.scrollIntoView({block:"start",inline:"nearest",behavior:"instant"});return true;})()'),true,label+' present');
   await until(()=>evaluate('(()=>{const el=document.querySelector("[data-studio-project-doctor=v001]"),r=el?.getBoundingClientRect();return !!r&&r.top<innerHeight-80&&r.bottom>110;})()'),label+' scrolled visibly into the current viewport');
-  const measure=await evaluate('(()=>{const el=document.querySelector("[data-studio-project-doctor=v001]");return {client:el.clientWidth,scroll:el.scrollWidth,left:el.getBoundingClientRect().left,right:el.getBoundingClientRect().right};})()');
+  const measure=await evaluate('(()=>{const el=document.querySelector("[data-studio-project-doctor=v001]");return {client:el.clientWidth,scroll:el.scrollWidth,left:el.getBoundingClientRect().left,right:el.getBoundingClientRect().right,viewport:window.innerWidth};})()');
   assert.ok(measure.scroll<=measure.client+2,label+' has no internal horizontal clipping: '+JSON.stringify(measure));
-  assert.ok(measure.left>=-2&&measure.right<=innerWidth+2,label+' fits the physical viewport: '+JSON.stringify(measure));
+  assert.ok(measure.left>=-2&&measure.right<=measure.viewport+2,label+' fits the physical viewport: '+JSON.stringify(measure));
   await pause(120);
  };
  const snap=async name=>{
