@@ -82,7 +82,7 @@ for tier in ("desktop","mobile"):
     joined=[]
     # Keep Meshopt decode buffers below the existing CSP-safe reference worker's
     # 1 MiB per-accessor ceiling. Material grouping limits real GPU draw calls.
-    max_per_batch=32 if tier=="desktop" else 22
+    max_per_batch=32 if tier=="desktop" else 36
     for key,members in material_groups.items():
         for start in range(0,len(members),max_per_batch):
             batch=members[start:start+max_per_batch]
