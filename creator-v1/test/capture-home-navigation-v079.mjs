@@ -67,7 +67,7 @@ try{
   if(navigation.errorText)throw Error("V079_NAV_"+label+":"+navigation.errorText);
   await until(()=>evaluate('!!document.querySelector(".av115-wayfinder")&&!!document.querySelector(".av115-public-index")&&document.querySelectorAll(".av79-gateway").length===4'));
   const home=await evaluate('(()=>{const hero=document.querySelector(".av79-hero"),wayfinder=document.querySelector(".av115-wayfinder");return {title:hero?.querySelector("h1")?.textContent,routes:[...wayfinder.querySelectorAll(".av79-gateway")].map(x=>x.getAttribute("href")),join:wayfinder.querySelector(".av115-gateway-member")?.getAttribute("href"),iren:!!hero.querySelector(".av115-iren-console button"),index:!!document.querySelector(".av115-public-index"),testFeatured:!!document.querySelector(".av79-feature"),legacy:document.querySelectorAll(".av73-world-deck,.av11-live-index,.av6-community-index").length,art:document.querySelectorAll(".av79-home img,.av79-home .cw-artwork").length,overflow:document.documentElement.scrollWidth>innerWidth+1,fold:hero?.getBoundingClientRect().top<innerHeight}})()');
-  if(!home.title?.includes("A universe")||home.routes.length!==4||
+  if(!home.title?.includes("Find something worth trying")||home.routes.length!==4||
    !home.join?.endsWith("/join")||!home.iren||!home.index||home.testFeatured||home.legacy||home.art||home.overflow||!home.fold)
    throw Error("V115_HOME_ENTRY_"+label+":"+JSON.stringify(home));
   await screenshot("home-"+label);
