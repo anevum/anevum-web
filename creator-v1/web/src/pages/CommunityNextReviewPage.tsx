@@ -114,7 +114,7 @@ export function CommunityNextReviewPage(){
     {id:'atlas',label:'District Atlas',description:'Explore by discipline'},
     {id:'people',label:'People & Worlds',description:'Meet published creators'}
   ];
-  return <main className="lnx-root" data-motion={motionAllowed?'on':'off'} data-iren-anchor="community" aria-labelledby="lnx-title">
+  return <section className="lnx-root" data-motion={motionAllowed?'on':'off'} data-iren-anchor="community" aria-labelledby="lnx-title">
     <a href="#lnx-main" className="lnx-skip">Skip to Community content</a>
     <div className="lnx-preview-warning">NEXT COMMUNITY / FEATURE-FLAGGED REVIEW / PUBLIC READS ONLY / NOT PUBLISHED</div>
     <section className="lnx-intro" aria-labelledby="lnx-title">
@@ -132,7 +132,7 @@ export function CommunityNextReviewPage(){
       </div>
     </section>
     <nav className="lnx-mode-switch" aria-label="Living Commons review destinations">{previewViews.map(item=><button type="button" key={item.id} aria-current={view===item.id?'page':undefined} onClick={()=>change({view:item.id})}><strong>{item.label}</strong><small>{item.description}</small></button>)}<button type="button" className="lnx-motion-switch" aria-pressed={paused} onClick={()=>setPaused(value=>!value)}>{paused?'Resume optional motion':'Pause optional motion'}</button></nav>
-    <div className="lnx-layout" id="lnx-main">
+    <div className="lnx-layout" id="lnx-main" tabIndex={-1}>
       <aside className="lnx-directory" aria-label="Community field filters"><CategoryPicker value={category} onPick={chooseDistrict}/><div className="lnx-directory-secondary"><span>THE PEOPLE BEHIND IT</span><p>Open a creator channel from a verified public listing. Private member worlds remain opt-in.</p><Link to="/creators">Full creator directory ↗</Link></div></aside>
       <div className="lnx-main-column">
         {view==='signals'&&<>
@@ -175,5 +175,5 @@ export function CommunityNextReviewPage(){
       </div><div className="lnx-context-rule"/><strong>Earned, never simulated.</strong><p>Only the canonical member inventory may display earned level art, badges, medals, ribbons or roles. This review awards nothing.</p></div></aside>
     </div>
     <footer className="lnx-footer"><span>CONTINUANCE NEXT / REVIEW</span><span>Signal Board first. Atlas optional. Server authority unchanged.</span></footer>
-  </main>;
+  </section>;
 }
