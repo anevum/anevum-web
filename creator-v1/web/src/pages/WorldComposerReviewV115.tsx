@@ -124,7 +124,10 @@ export function WorldComposerReviewV115(){
     </aside>
     <div className="cvw-workspace">
      <div className="cvs-mode-header"><div className="cvs-mode-label"><span>SCENE COMPOSER / REAL GEOMETRY</span><strong>Sky Archipelago — editable world</strong></div><span className="cvs-chip"><i/> PRIVATE GPU REVIEW</span></div>
-     <div className="cvw-toolbar"><span>ORBIT · PICK · TRANSFORM</span><div><button type="button" onClick={()=>setCamera(scene.camera)}>Reset camera</button>
+     <div className="cvw-toolbar"><span>ORBIT · PICK · TRANSFORM</span><div>
+      <button type="button" aria-label="Zoom camera in" onClick={()=>setCamera(c=>({...c,distance:clamp(c.distance-2,4,80)}))}>Zoom +</button>
+      <button type="button" aria-label="Zoom camera out" onClick={()=>setCamera(c=>({...c,distance:clamp(c.distance+2,4,80)}))}>Zoom −</button>
+      <button type="button" onClick={()=>setCamera(scene.camera)}>Reset camera</button>
       <button type="button" aria-expanded={showSource} onClick={()=>setShowSource(v=>!v)}>{showSource?'Hide world document':'Inspect world document'}</button></div></div>
      <div className="cvw-stage" role="region" aria-label="Live world composer">
       <WorldCanvasV115 document={scene} camera={camera} selection={selected}
