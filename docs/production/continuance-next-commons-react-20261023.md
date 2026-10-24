@@ -83,3 +83,8 @@ The review's map/list presentation choice now lives in a typed `atlas=map|list` 
 The Signal Board now exposes independently removable project-discipline and search chips, with a separate Clear all control. Each removal preserves the other active filter and produces the correct actual public API query. Updated local compiled-browser tests cover phone map/list reload and navigation, focus, independent chip removal, browser history and full reset. The continuation does not introduce additional API endpoints, persistence, analytics/telemetry, member reads, writes, earned rewards, permissions or dependency changes. Default-off preview isolation, a single existing IREN and all release gates remain intact.
 
 Source remains in draft PR #679; every new screenshot/test receipt must be bound to its exact checked Git head. No V131 release or Cloudflare action is implied.
+
+
+### Continuation 011: compiled browser focus regression
+
+The first exact-head compiled Chromium browser run caught an interaction with the existing shared Shell: Shell deliberately focuses `#main` for every search-param navigation. That applied to the map/list selector too, causing focus to leave the pressed button. The scoped Commons page now schedules selected-button focus restoration after Shell's route effect for presentation-only URL transitions (including Back and reset-to-device-default). Content-changing navigation still retains its established content-focus behavior. The original browser assertion was preserved and expanded to verify map, list and reset focus; no global Shell or member route was changed.

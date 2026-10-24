@@ -145,7 +145,19 @@ export function CommunityNextReviewPage() {
       previousContent.delete('atlas');
       nextContent.delete('atlas');
       previousQuery.current = queryString;
-      if (previousContent.toString() !== nextContent.toString()) focusContent();
+      if (previousContent.toString() !== nextContent.toString()) {
+        focusContent();
+      } else if (view === 'atlas' && previousContent.toString() === nextContent.toString()) {
+        // Shell focuses #main for *every* URL change, including presentation-only
+        // changes. Restore the selected layout control after Shell's effect runs.
+        // This also works for Back/Forward and when "device default" unmounts.
+        if (focusFrame.current !== null) cancelAnimationFrame(focusFrame.current);
+        focusFrame.current = requestAnimationFrame(() => {
+          const selected = document.querySelector<HTMLButtonElement>('.lnx-atlas-controls button[aria-pressed="true"]');
+          if (selected && selected.getClientRects().length > 0) selected.focus({preventScroll: true});
+          focusFrame.current = null;
+        });
+      }
     }
   }, [queryString]);
   useEffect(() => () => {

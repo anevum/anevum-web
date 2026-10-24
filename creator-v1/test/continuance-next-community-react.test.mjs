@@ -75,6 +75,9 @@ test('Atlas presentation is a shareable URL choice without storage or lost keybo
  assert.match(page,/chooseAtlasPresentation\(''\)/);
  assert.match(page,/previousContent\.delete\('atlas'\)/);
  assert.match(page,/nextContent\.delete\('atlas'\)/);
+ assert.match(page,/requestAnimationFrame\(\(\) => \{/);
+ assert.match(page,/\.lnx-atlas-controls button\[aria-pressed="true"\]/);
+ assert.match(page,/selected\.focus\(\{preventScroll: true\}\)/);
  assert.match(css,/\.lnx-root \.lnx-atlas-controls>\.lnx-atlas-auto/);
  for(const denied of ['localStorage','sessionStorage'])assert.doesNotMatch(page,new RegExp(denied));
 });

@@ -331,6 +331,7 @@ try {
     record('Atlas spatial layout survives copyable URL and hard reload on a phone');
     await list.click();
     assert.equal(await list.getAttribute('aria-pressed'),'true');
+    assert.equal(await list.evaluate(el=>el===document.activeElement),true,'List selection retains keyboard focus despite Shell navigation');
     assert.equal(new URL(mobile.page.url()).searchParams.get('atlas'),'list');
     await mobile.page.goBack();
     await mobile.page.waitForURL(url=>url.searchParams.get('atlas')==='map');
@@ -338,6 +339,7 @@ try {
     await mobile.page.getByRole('button',{name:'Use device default'}).click();
     await mobile.page.waitForURL(url=>url.searchParams.get('atlas')===null);
     assert.equal(await list.getAttribute('aria-pressed'),'true');
+    assert.equal(await list.evaluate(el=>el===document.activeElement),true,'Device default restores focus to the active layout control');
     record('Atlas history restores map selection; device default returns to accessible list');
     await mobile.page.locator('.lnx-atlas-row').first().click();
     assert.equal(new URL(mobile.page.url()).searchParams.get('category'),'games');
