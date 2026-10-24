@@ -6,7 +6,27 @@ import * as ui from '../interface-builder/document.mjs';
 const MAX_SOURCE_BYTES = 32768;
 const MAX_FINDINGS = 32;
 const textBytes = source => new TextEncoder().encode(source).length;
-const finding = (code, severity, path, message) => ({code, severity, path, message});
+// Curated suggestions are shared by the browser inspector and the private API.
+// Never generate patches or infer that a listed suggestion is safe to auto-apply.
+const NEXT_STEPS = Object.freeze({
+  'scene.missing':'Add a Scene block to establish a playable starting location.',
+  'scene.unnamed':'Give the scene a descriptive title so creators and players can recognize it.',
+  'scene.unreachable':'Add a choice from a reachable scene that leads here, or remove this unused scene.',
+  'choice.unlabeled':'Write a concise choice label explaining what the player will do.',
+  'choice.unlinked':'Choose a destination scene in the visual editor, or delete this unused choice.',
+  'page.empty':'Add an interface component or intentionally leave this page as a draft.',
+  'page.unreachable':'Add a navigation button on a reachable page that targets this page, or remove it.',
+  'button.unlabeled':'Give this button visible title or text describing its action.',
+  'button.inert':'Assign a valid interaction to the button, or remove it if it is only decorative.',
+  'input.unlabeled':'Give the input a visible title identifying the information it accepts.',
+  'source.type':'Supply a text source encoded in a supported ANEVUM document format.',
+  'source.too_large':'Reduce source content to the supported inspection limit; nothing was changed.',
+  'source.unsupported':'Inspect a supported scene or interface document, not executable code.',
+  'document.invalid':'Review the canonical document format, IDs and references before saving.'
+});
+const finding = (code, severity, path, message) => ({
+  code, severity, path, message, nextStep: NEXT_STEPS[code] || 'Review this finding before changing the source.'
+});
 
 function gatherNarrative(doc) {
   const findings = [];
