@@ -56,7 +56,6 @@ export function CinematicReactReview() {
   const [query, setQuery] = useState('');
   const [catalogueState, setCatalogueState] = useState<CatalogueState>('browse');
   const [layout, setLayout] = useState<'grid' | 'list'>('grid');
-  const [motionPaused, setMotionPaused] = useState(false);
   const [osReduced, setOsReduced] = useState(false);
   const [visible, setVisible] = useState(true);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -77,7 +76,7 @@ export function CinematicReactReview() {
   useEffect(() => {
     if (previousView.current !== view) { previousView.current = view; heading.current?.focus({ preventScroll: true }); }
   }, [view]);
-  const still = motionPaused || osReduced || !visible;
+  const still = osReduced || !visible;
   const visibleRooms = useMemo(() => rooms.filter(r => (category === 'all' || r.id === category) && (r.name + ' ' + r.description + ' ' + r.subtitle).toLowerCase().includes(query.trim().toLowerCase())), [category, query]);
   const navigate = (next: View) => { setView(next); setHelpOpen(false); };
   const pick = (next: Category) => { setCategory(next); setCatalogueState('browse'); setView('discover'); };
@@ -95,7 +94,6 @@ export function CinematicReactReview() {
         <span>Community</span><span>Creators</span>
       </nav>
       <div className="cnr-header-actions">
-        <button type="button" className="cnr-motion" aria-pressed={motionPaused} onClick={() => setMotionPaused(v => !v)}>{motionPaused ? 'Resume motion' : 'Pause motion'}</button>
         <button type="button" className="cnr-action cnr-action-quiet" onClick={() => navigate('discover')}>Explore <span aria-hidden="true">↗</span></button>
       </div>
     </header>
