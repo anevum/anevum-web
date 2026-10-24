@@ -18,7 +18,9 @@ import {
   commonsDiscoverPath, commonsCreatorsPath, normalizeCommonsSearch, type CommonsPreviewView
 } from '../lib/commons-next-model';
 import { CosmicArtwork } from '../components/CosmicArtwork';
+import { CommonsQuickNavigator } from './CommonsQuickNavigator';
 import './community-next-review.css';
+import './commons-quick-navigator.css';
 
 type AtlasMode = 'map' | 'list';
 type ResourceName = 'status' | 'projects' | 'discussions' | 'categories' | 'creators';
@@ -218,6 +220,7 @@ export function CommunityNextReviewPage() {
     </section>
     <nav className="lnx-mode-switch" aria-label="Living Commons review destinations">
       {previewViews.map(item => <button type="button" key={item.id} aria-current={view === item.id ? 'page' : undefined} onClick={() => change({view: item.id})}><span className="lnx-mode-code" aria-hidden="true">{item.code}</span><span><strong>{item.label}</strong><small>{item.description}</small></span></button>)}
+      <CommonsQuickNavigator view={view} category={category} discoverPath={discoverPath} creatorsPath={creatorsPath} onChoose={change}/>
       <button type="button" className="lnx-motion-switch" aria-pressed={paused || Boolean(reduceMotion)} disabled={Boolean(reduceMotion)} onClick={() => setPaused(value => !value)}>{reduceMotion ? 'Reduced motion is on' : paused ? 'Resume optional motion' : 'Pause optional motion'}</button>
     </nav>
     <div className="lnx-layout" id="lnx-main" tabIndex={-1} ref={content} aria-labelledby="lnx-section-title">
@@ -230,14 +233,14 @@ export function CommunityNextReviewPage() {
             <div><input id="lnx-search" type="search" maxLength={72} placeholder="Search projects by title or idea" value={draft} onChange={e => setDraft(e.target.value)}/><button type="submit">Search <span aria-hidden="true">↗</span></button></div>
             {(q || category) && <div className="lnx-active-filters"><span>{selected?.title || 'All disciplines'}{q ? ' · “' + q + '”' : ''}</span><button type="button" onClick={clearProjects}>Clear filters <span aria-hidden="true">×</span></button></div>}
           </form>
-          <section className="lnx-resource-region" id="lnx-projects" tabIndex={-1} aria-label="Approved projects">
+          <section className="lnx-resource-region" id="lnx-projects" tabIndex={-1} aria-label="Approved projects" aria-busy={projectFeed.state === 'loading'}>
           <div className="lnx-result-header"><h3>Original releases</h3><span aria-live="polite">{projectFeed.state === 'ready' ? projectFeed.data.items.length + ' approved on this page' : 'PUBLIC CATALOGUE'}</span></div>
           {projectFeed.state === 'loading' && <LoadingSignals label="Loading approved public projects…"/>}
           {projectFeed.state === 'error' && <RealEmpty error title="Public project catalogue unavailable" detail="We couldn’t load the collection. Try the connection again." action={retryButton('projects', 'Retry projects')}/>}
           {projectFeed.state === 'ready' && (results.length ? <div className="lnx-project-grid">{results.map(item => <ProjectSignal item={item} returnTo={discoverPath} key={item.id}/>)}</div> : <RealEmpty title="Nothing published in this view yet" detail={q || category ? 'Try another project search or clear your filters to explore the full collection.' : 'New work will appear here after it has been approved for publication.'} action={q || category ? <button type="button" className="lnx-retry" onClick={clearProjects}>Clear project filters ↗</button> : <Link className="lnx-retry" to="/creators">Meet public creators ↗</Link>}/>)}
           {projectFeed.state === 'ready' && projectFeed.data.nextCursor && <p className="lnx-more-note">There is more to explore. <Link to={discoverPath}>Continue in full Discover ↗</Link></p>}
           </section>
-          <section className="lnx-resource-region" id="lnx-discussions" tabIndex={-1} aria-label="Public discussions">
+          <section className="lnx-resource-region" id="lnx-discussions" tabIndex={-1} aria-label="Public discussions" aria-busy={status.state === 'loading' || (status.state === 'ready' && discussions.state === 'loading')}>
           <div className="lnx-result-header lnx-discussion-head"><div><span className="lnx-kicker">ACROSS THE COMMONS</span><h3>Open conversations</h3><p>Recent discussions from every discipline. Project filters apply above.</p></div>{discussionAvailable && <div className="lnx-sort" role="group" aria-label="Sort public discussions"><button type="button" aria-pressed={sort === 'new'} onClick={() => change({sort: 'new'})}>Recent</button><button type="button" aria-pressed={sort === 'hot'} onClick={() => change({sort: 'hot'})}>Hot</button></div>}</div>
           {status.state === 'loading' && <p className="lnx-status" role="status">Checking moderated discussion availability…</p>}
           {status.state === 'error' && <RealEmpty error title="Discussion availability unknown" detail="We couldn’t check whether public discussions are open. Try again in a moment." action={retryButton('status', 'Retry availability', 'discussions')}/>}
@@ -249,7 +252,7 @@ export function CommunityNextReviewPage() {
         </>}
         {view === 'atlas' && <>
           <header className="lnx-section-head"><div><span className="lnx-kicker">02 / DISTRICT ATLAS</span><h2 id="lnx-section-title">Places to explore.</h2><p>Eight creative disciplines. Choose a field and find the work taking shape within it.</p></div><div className="lnx-atlas-controls" role="group" aria-label="Atlas presentation"><button type="button" aria-pressed={atlasMode === 'map'} onClick={() => setAtlasPreference('map')}>Spatial map</button><button type="button" aria-pressed={atlasMode === 'list'} onClick={() => setAtlasPreference('list')}>Accessible list</button></div></header>
-          <section className="lnx-resource-region" id="lnx-categories" tabIndex={-1} aria-label="District catalogue">
+          <section className="lnx-resource-region" id="lnx-categories" tabIndex={-1} aria-label="District catalogue" aria-busy={districtCounts.state === 'loading'}>
           {districtCounts.state === 'loading' && <p className="lnx-status" role="status">Loading public category totals…</p>}
           {districtCounts.state === 'error' && <div className="lnx-status" role="status"><p>Category totals are unavailable. You can still explore every district.</p>{retryButton('categories', 'Retry counts')}</div>}
           {atlasMode === 'map' && <div className="lnx-atlas-map" role="group" aria-label="Eight creative districts; an equivalent list follows"><div className="lnx-atlas-rings" aria-hidden="true"/><span className="lnx-atlas-center" aria-hidden="true"><OrbitalMark/><span>THE COMMONS</span></span>{COMMONS_DISTRICTS.map(item => <button key={item.id} type="button" className="lnx-atlas-point" style={{left: item.coordinates[0] + '%', top: item.coordinates[1] + '%'}} onClick={() => chooseDistrict(item.id)} aria-label={'Explore ' + item.title}><span>{item.code}</span><strong>{item.title}</strong><small>{countLabel(item.id)}</small></button>)}</div>}
@@ -260,7 +263,7 @@ export function CommunityNextReviewPage() {
         {view === 'people' && <>
           <header className="lnx-section-head"><div><span className="lnx-kicker">03 / PEOPLE & WORLDS</span><h2 id="lnx-section-title">Meet the makers.</h2><p>Discover the people behind published work. Open a channel to explore what they make.</p></div><Link to={creatorsPath}>Full directory ↗</Link></header>
           <form className="lnx-search" role="search" aria-label="Search public creators" onSubmit={search}><label htmlFor="lnx-people-search">Search public creator channels</label><div><input id="lnx-people-search" type="search" maxLength={72} value={draft} onChange={e => setDraft(e.target.value)} placeholder="Search creator names"/><button type="submit">Find people ↗</button></div>{q && <div className="lnx-active-filters"><span>Search: “{q}”</span><button type="button" onClick={() => change({q: ''})}>Clear search ×</button></div>}</form>
-          <section className="lnx-resource-region" id="lnx-creators" tabIndex={-1} aria-label="Public creator results">
+          <section className="lnx-resource-region" id="lnx-creators" tabIndex={-1} aria-label="Public creator results" aria-busy={creators.state === 'loading'}>
           {creators.state === 'loading' && <LoadingSignals label="Loading public creator channels…" kind="people"/>}
           {creators.state === 'error' && <RealEmpty error title="Public creators unavailable" detail="We couldn’t load the creator directory. Try again to reconnect." action={retryButton('creators', 'Retry directory')}/>}
           {creators.state === 'ready' && (creators.data.items.length ? <><p className="lnx-directory-count" role="status">{creators.data.items.length} public {creators.data.items.length === 1 ? 'channel' : 'channels'} on this page</p><div className="lnx-people-grid">{creators.data.items.map(creator => <article key={creator.handle} className="lnx-person"><div className="lnx-person-top"><span className="lnx-person-avatar" aria-hidden="true">{(creator.displayName || creator.handle).slice(0, 1).toUpperCase()}</span><span className="lnx-kicker">PUBLIC CREATOR<br/>CHANNEL</span></div><h3><Link to={creatorRoute(creator.handle)}>{creator.displayName || '@' + creator.handle}</Link></h3><small>@{creator.handle}</small><p>{creator.publishedProjects} approved {creator.publishedProjects === 1 ? 'release' : 'releases'}</p><Link className="lnx-open" to={creatorRoute(creator.handle)}>Visit channel <span aria-hidden="true">↗</span></Link></article>)}</div></> : <RealEmpty title="No public creators match" detail={q ? 'Try another name or clear your search to meet the published creators.' : 'Creator channels appear here when approved work is available.'} action={q ? <button type="button" className="lnx-retry" onClick={() => change({q: ''})}>Clear creator search ↗</button> : undefined}/>)}

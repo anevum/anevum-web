@@ -6,11 +6,16 @@ on:
       - 'creator-v1/web/src/App.tsx'
       - 'creator-v1/web/src/pages/CommunityNextReviewPage.tsx'
       - 'creator-v1/web/src/pages/community-next-review.css'
+      - 'creator-v1/web/src/pages/CommonsQuickNavigator.tsx'
+      - 'creator-v1/web/src/pages/commons-quick-navigator.css'
       - 'creator-v1/web/src/lib/commons-next-model.ts'
       - 'creator-v1/test/continuance-next-community-model.test.mjs'
       - 'creator-v1/test/continuance-next-community-react.test.mjs'
       - 'creator-v1/test/continuance-next-community-browser.mjs'
+      - 'creator-v1/test/continuance-next-navigator.test.mjs'
+      - 'creator-v1/test/continuance-next-navigator-browser.mjs'
       - 'docs/production/continuance-next-commons-react-20261023.md'
+      - 'docs/production/continuance-commons-navigator-20261023.md'
 permissions:
   contents: read
 concurrency:
@@ -52,11 +57,16 @@ jobs:
             ['creator-v1/web/src/App.tsx','M'],
             ['creator-v1/web/src/pages/CommunityNextReviewPage.tsx','A'],
             ['creator-v1/web/src/pages/community-next-review.css','A'],
+            ['creator-v1/web/src/pages/CommonsQuickNavigator.tsx','A'],
+            ['creator-v1/web/src/pages/commons-quick-navigator.css','A'],
             ['creator-v1/web/src/lib/commons-next-model.ts','A'],
             ['creator-v1/test/continuance-next-community-model.test.mjs','A'],
             ['creator-v1/test/continuance-next-community-react.test.mjs','A'],
             ['creator-v1/test/continuance-next-community-browser.mjs','A'],
+            ['creator-v1/test/continuance-next-navigator.test.mjs','A'],
+            ['creator-v1/test/continuance-next-navigator-browser.mjs','A'],
             ['docs/production/continuance-next-commons-react-20261023.md','A'],
+            ['docs/production/continuance-commons-navigator-20261023.md','A'],
             ['.github/workflows/continuance-next-commons-react-review.yml','A']
           ]);
           for(const row of rows){
@@ -70,7 +80,7 @@ jobs:
       - name: Verify state and public API source contracts
         run: |
           node --experimental-strip-types --test creator-v1/test/continuance-next-community-model.test.mjs
-          node --test creator-v1/test/continuance-next-community-react.test.mjs
+          node --test creator-v1/test/continuance-next-community-react.test.mjs creator-v1/test/continuance-next-navigator.test.mjs
       - name: Verify React typecheck
         run: npm run check:creator-v1-web
       - name: Build default site without NEXT Commons preview
@@ -84,7 +94,7 @@ jobs:
           function readAll(dir){return fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?readAll(path.join(dir,e.name)):[path.join(dir,e.name)]);}
           const paths=readAll('creator-v1/dist/web').filter(x=>/\.(js|css)$/.test(x));
           if(paths.length===0)throw Error('Missing generated assets');
-          for(const file of paths)if(fs.readFileSync(file,'utf8').includes('lnx-root'))throw Error('Commons review leaked into default production bundle: '+file);
+          for(const file of paths)if(/lnx-root|lnx-quick-dialog/.test(fs.readFileSync(file,'utf8')))throw Error('Commons review leaked into default production bundle: '+file);
           JS
       - name: Build explicitly flagged preview without deploying
         env:
@@ -96,15 +106,19 @@ jobs:
           import fs from 'node:fs';import path from 'node:path';
           function readAll(dir){return fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?readAll(path.join(dir,e.name)):[path.join(dir,e.name)]);}
           const paths=readAll('creator-v1/dist/web').filter(x=>/\.(js|css)$/.test(x));
-          if(!paths.some(file=>fs.readFileSync(file,'utf8').includes('lnx-root')))throw Error('Review bundle is missing NEXT Commons');
+          for(const marker of ['lnx-root','lnx-quick-dialog'])if(!paths.some(file=>fs.readFileSync(file,'utf8').includes(marker)))throw Error('Review bundle missing '+marker);
           JS
       - name: Install pinned browser review tooling
         run: |
           npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.56.1
-          npx playwright install --with-deps chromium
+          npx playwright install --with-deps chromium webkit
       - name: Review compiled React on desktop and mobile with synthetic public fixtures
         run: node creator-v1/test/continuance-next-community-browser.mjs --output "$RUNNER_TEMP/anevum-commons-react-review"
-      - name: Retain labelled compiled React captures and browser receipt
+      - name: Verify navigator interactions in Chromium
+        run: node creator-v1/test/continuance-next-navigator-browser.mjs --engine chromium --output "$RUNNER_TEMP/anevum-commons-react-review/navigator-chromium"
+      - name: Verify navigator interactions in WebKit
+        run: node creator-v1/test/continuance-next-navigator-browser.mjs --engine webkit --output "$RUNNER_TEMP/anevum-commons-react-review/navigator-webkit"
+      - name: Retain labelled compiled React captures and browser receipts
         if: always()
         uses: actions/upload-artifact@v4
         with:
