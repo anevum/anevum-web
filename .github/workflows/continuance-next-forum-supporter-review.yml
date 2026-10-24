@@ -1,0 +1,100 @@
+name: ANEVUM NEXT Public Forum Supporter Review
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/canonical-auth/supporter-rewards.mjs'
+      - 'creator-v1/canonical-auth/public-member-card.mjs'
+      - 'creator-v1/canonical-auth/forums.mjs'
+      - 'creator-v1/web/src/lib/member-forums.ts'
+      - 'creator-v1/test/capture-canonical-forums-v041.mjs'
+      - 'creator-v1/test/continuance-next-forum-supporter.test.mjs'
+      - '.github/workflows/continuance-next-forum-supporter-review.yml'
+      - 'docs/production/continuance-next-forum-supporter-projection-20261024.md'
+permissions:
+  contents: read
+concurrency:
+  group: anevum-next-forum-supporters-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  review-public-supporter-projection:
+    if: github.repository == 'anevum/anevum-web' && github.event.pull_request.head.repo.full_name == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      CLOUDFLARE_API_TOKEN: ''
+      CLOUDFLARE_API_KEY: ''
+      CLOUDFLARE_ACCOUNT_ID: ''
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Guard exact parent, path scope and no private or production edits
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          test -z "$CLOUDFLARE_API_TOKEN"
+          test -z "$CLOUDFLARE_API_KEY"
+          test -z "$CLOUDFLARE_ACCOUNT_ID"
+          test "$(git rev-parse HEAD)" = "$HEAD_SHA"
+          test "$BASE_SHA" = "d67d577968b202375e2316e115dd32339dbe7718"
+          git diff --no-renames --name-status "$BASE_SHA" HEAD > /tmp/next-public-supporter-scope.txt
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const actual=fs.readFileSync('/tmp/next-public-supporter-scope.txt','utf8').trim().split('\n').filter(Boolean);
+          const expected=new Map([
+           ['creator-v1/canonical-auth/supporter-rewards.mjs','M'],
+           ['creator-v1/canonical-auth/public-member-card.mjs','M'],
+           ['creator-v1/canonical-auth/forums.mjs','M'],
+           ['creator-v1/web/src/lib/member-forums.ts','M'],
+           ['creator-v1/test/capture-canonical-forums-v041.mjs','M'],
+           ['creator-v1/test/continuance-next-forum-supporter.test.mjs','A'],
+           ['.github/workflows/continuance-next-forum-supporter-review.yml','A'],
+           ['docs/production/continuance-next-forum-supporter-projection-20261024.md','A']
+          ]);
+          assert.equal(actual.length,expected.size);
+          for(const line of actual){
+            const [status,path]=line.split('\t');
+            assert.equal(status,expected.get(path),'Unexpected scope '+line);
+          }
+          console.log('PASS isolated opt-in public supporter integration scope');
+          JS
+      - name: Install pinned dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Verify supporter projection and canonical forum privacy
+        run: |
+          node --test creator-v1/test/continuance-next-forum-supporter.test.mjs
+          node --test creator-v1/test/continuance-next-forum-author.test.mjs
+          node --test creator-v1/test/canonical-forums-v041.test.mjs
+          node --test creator-v1/test/supporter-rewards-v034.test.mjs
+      - name: Check React TypeScript
+        run: npm run check:creator-v1-web
+      - name: Build default-off production frontend
+        env:
+          VITE_LIVING_COMMONS_REVIEW: 'false'
+        run: npm run build:creator-v1-web
+      - name: Install Chromium for actual compiled UI acceptance
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
+          npx playwright install --with-deps chromium
+      - name: Capture supporter frame and responsive Chromium receipts
+        run: |
+          CHROME="$(node --input-type=module -e "import {chromium} from 'playwright';console.log(chromium.executablePath())")"
+          node creator-v1/test/capture-canonical-forums-v041.mjs --chrome "$CHROME" --output "$RUNNER_TEMP/next-forum-supporter"
+      - name: Upload synthetic-only browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-public-supporter-forum-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/next-forum-supporter
+          retention-days: 14
+          if-no-files-found: warn
