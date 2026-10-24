@@ -31,10 +31,13 @@ class Handler(SimpleHTTPRequestHandler):
                 data={"items":[],"nextCursor":None}
             elif path.startswith("/api/v1/categories"):
                 data={"categories":[]}
+            elif path.startswith("/api/v1/status"):
+                # Honest unavailable-status response: never label fixture counts VERIFIED.
+                data={"error":"Isolated local review: status service unavailable"}
             else:
                 data={"message":"Isolated local visual review. No service connected."}
             body=json.dumps(data).encode()
-            self.send_response(200)
+            self.send_response(503 if path.startswith("/api/v1/status") else 200)
             self.send_header("Content-Type","application/json; charset=utf-8")
             self.send_header("Content-Length",str(len(body)))
             self.send_header("Cache-Control","no-store")
