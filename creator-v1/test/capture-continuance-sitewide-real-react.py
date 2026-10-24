@@ -74,9 +74,23 @@ with sync_playwright() as p:
         page=ctx.new_page()
         page_errors=[];external=[]
         page.on("pageerror",lambda e:page_errors.append(str(e)))
+        console_errors=[]
+        failed_requests=[]
+        page.on("console",lambda m:console_errors.append(m.text) if m.type=="error" else None)
+        page.on("requestfailed",lambda r:failed_requests.append(r.url))
         page.on("request",lambda r:external.append(r.url) if not r.url.startswith(base) else None)
         page.goto(base+"/",wait_until="networkidle",timeout=60000)
-        page.locator(".av-next-cinema").wait_for(timeout=20000)
+        try:
+            page.locator(".av-next-cinema").wait_for(timeout=12000)
+        except Exception:
+            diagnostic={"viewport":width,"url":page.url,"body":page.locator("body").inner_text(timeout=2500)[:5000],
+                        "root_html":page.locator("#root").inner_html(timeout=2500)[:4500] if page.locator("#root").count() else "missing root",
+                        "page_errors":page_errors,"console_errors":console_errors,"failed_requests":failed_requests,
+                        "external":external,"request_paths":queries[:30]}
+            (EVIDENCE/"runtime-diagnostic.json").write_text(json.dumps(diagnostic,indent=2))
+            page.screenshot(path=str(EVIDENCE/f"runtime-debug-{width}.png"),full_page=False)
+            print("ANEVUM REACT BROWSER DIAGNOSTIC:",json.dumps(diagnostic,indent=2))
+            raise
         check(f"{width}: real canonical homepage",page.locator(".av79-home.av-next-cinema").count()==1)
         check(f"{width}: current real heading",page.locator("#av79-home-heading").count()==1)
         check(f"{width}: canonical one IREN guide button",page.get_by_role("button",name="MEET IREN").count()==1)
