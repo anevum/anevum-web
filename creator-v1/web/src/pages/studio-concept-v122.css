@@ -114,7 +114,7 @@
 .cvs-iren-profile-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
 .cvs-iren-eyebrow{font:750 8px/1.25 ui-monospace,monospace;color:#b0c4ff;letter-spacing:.065em}
 .cvs-iren-profile-copy>div{display:flex;align-items:center;gap:7px}
-.cvs-iren-profile-copy strong{font:780 23px/1.1 inherit;letter-spacing:.02em;color:#f3f9ff}
+.cvs-iren-profile-copy strong{font-size:23px;line-height:1.1;font-weight:780;letter-spacing:.02em;color:#f3f9ff}
 .cvs-iren-profile-copy>div small{padding:3px 5px;font:700 8px/1 ui-monospace,monospace;letter-spacing:.1em;
  color:#b2deff;border:1px solid #537da6;border-radius:4px;background:#1d4562}
 .cvs-iren-profile-copy p{font-size:10px;line-height:1.35;color:#bbcede;margin:0}
