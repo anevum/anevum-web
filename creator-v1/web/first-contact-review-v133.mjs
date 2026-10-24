@@ -15,13 +15,23 @@ const CSP="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inlin
 function reject(body,status=404,type="text/plain; charset=utf-8"){
   return new Response(body,{status,headers:{...BASE,"content-type":type}});
 }
-function safe(response){
+async function safe(response){
   const headers=new Headers(response.headers);
   for(const [key,value] of Object.entries(BASE))headers.set(key,value);
   headers.delete("set-cookie");
   headers.delete("access-control-allow-origin");
   headers.set("x-anevum-preview","V133-READ-ONLY");
-  if((headers.get("content-type")||"").includes("text/html"))headers.set("content-security-policy",CSP);
+  const isHtml=(headers.get("content-type")||"").includes("text/html");
+  if(isHtml){
+    headers.set("content-security-policy",CSP);
+    // The same real React app is visibly labelled as a non-signup visual preview.
+    // This inserts outside the React root; it is not synthetic project content.
+    const banner='<div role="note" aria-label="Read-only preview environment" style="position:fixed;left:10px;bottom:10px;z-index:2147483000;max-width:calc(100vw - 130px);padding:7px 10px;border:1px solid #c4a4c7;border-radius:7px;background:#141829f2;color:#ffe0c6;font:700 10px/1.35 system-ui,sans-serif;pointer-events:none">READ-ONLY PREVIEW · JOIN ON ANEVUM.COM</div>';
+    const html=(await response.text()).replace("</body>",banner+"</body>");
+    headers.delete("content-length");
+    headers.delete("content-encoding");
+    return new Response(html,{status:response.status,statusText:response.statusText,headers});
+  }
   return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
 }
 export default {
