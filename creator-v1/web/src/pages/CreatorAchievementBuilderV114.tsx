@@ -132,6 +132,11 @@ export class CreatorAchievementBuilderV114 extends React.Component<Props,State>{
       <button type="button" disabled={!preview} onClick={()=>this.setState({count:s.draft.targetCount})}>Preview completed milestone</button>
       <button type="button" onClick={()=>this.setState({count:0})}>Reset preview</button>
      </div>
+    {import.meta.env.VITE_PROJECT_MARK_BRIDGE_V115==='true'&&<section className="cav-integration">
+      <h3>Game &amp; app integration</h3><p>After this project has a separately approved public release, install the ANEVUM browser SDK in your game. A confidential creator backend must verify milestones before reporting earned marks.</p>
+      <code>{'await anevum.achievements.unlock("'+s.draft.stableKey+'");'}</code>
+      <small>SOURCE PREVIEW ONLY. This does not install an SDK, generate credentials, mint XP or publish a mark.</small>
+     </section>}
     </aside>
    </div>}
    <footer className="cav-footer">A draft is not an earned record. Live profile display requires a published definition, a verified issuance path, and the member's display preferences.</footer>

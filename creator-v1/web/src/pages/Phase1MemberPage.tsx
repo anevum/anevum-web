@@ -5,6 +5,7 @@ import {canonicalAuthClient,canonicalClaim,canonicalEdit,canonicalMe,canonicalRe
 import {useResource} from "../lib/useResource";
 import {OrbitalMark} from "../components/OrbitalMark";
 import {MemberSpaceDashboard} from "../components/MemberSpaceDashboard";
+import {ProjectMarksMemberPanel} from "../components/ProjectMarksV115";
 import {MemberExperienceMap} from "../components/MemberExperienceMap";
 import {MemberClosurePanel} from "../components/MemberClosurePanel";
 import {VerifiedStaffShortcut} from "../components/VerifiedStaffShortcut";
@@ -272,7 +273,7 @@ function MemberEditor({memberId,memberName,memberEmail}:{memberId:string;memberN
     </div>
   </section>;
   const privacyControls=<MemberClosurePanel memberId={memberId} memberEmail={memberEmail}/>;
-  return <><div>{claimed&&persisted?<MemberSpaceDashboard profile={persisted} editor={editor}/>:editor}</div><ConnectedSignInMethods memberId={memberId}/>{privacyControls}</>;
+  return <><div>{claimed&&persisted?<MemberSpaceDashboard profile={persisted} editor={editor}/>:editor}</div><ConnectedSignInMethods memberId={memberId}/>{claimed&&import.meta.env.VITE_PROJECT_MARK_BRIDGE_V115==='true'&&<ProjectMarksMemberPanel/>}{privacyControls}</>;
 }
 export function Phase1MemberPage(){
  const {data:session,isPending}=canonicalAuthClient.useSession();

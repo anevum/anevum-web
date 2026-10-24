@@ -1,0 +1,22 @@
+{
+  "name": "@anevum/achievements",
+  "version": "0.0.0-v115-source",
+  "private": true,
+  "description": "ANEVUM creator-attested project marks SDK (unpublished source candidate)",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./browser": {
+      "types": "./browser.d.mts",
+      "default": "./browser.mjs"
+    },
+    "./server": {
+      "types": "./server.d.mts",
+      "default": "./server.mjs"
+    },
+    "./game-handlers": {
+      "types": "./game-handlers.d.mts",
+      "default": "./game-handlers.mjs"
+    }
+  }
+}
