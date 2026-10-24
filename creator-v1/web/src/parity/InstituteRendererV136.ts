@@ -85,7 +85,7 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
     catch{if(controller.signal.aborted)return;canvas.dataset.cinemaStage='fallback'}
    }
    const asset=instituteAsset(family,budget.tier);
-   let gltf:Awaited<ReturnType<typeof loader.parseAsync>>;
+   let gltf:Awaited<ReturnType<typeof loader.parseAsync>>|null=null;
    if(stage){
     try{gltf=await loader.parseAsync(stage.buffer,'')}
     catch{stage=null;canvas.dataset.cinemaStage='fallback'}
@@ -96,6 +96,7 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
     const bytes=await response.arrayBuffer();if(bytes.byteLength!==asset.bytes)throw Error('Environment asset length mismatch');
     gltf=await loader.parseAsync(bytes,'');
    }
+   if(!gltf)throw Error('Environment scene did not parse');
    if(stage){
     stageSamples=stage.manifest.cameraSamples.map(sample=>convertBlenderCamera(sample));
     canvas.dataset.cinemaStage='ready';
@@ -154,15 +155,16 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
   }
   // QA-only genuine shared-source camera. It is NOT a claim of visual parity:
   // no cinematic frame sequence is approved and the live models remain unchanged.
-  const qaCamera=stageEnabled&&stageSamples&&stageSamples.length>=4&&
-   input.sector==='hero'&&family==='atrium'&&input.animated;
-  if(qaCamera){
+  const samples=stageSamples;
+  const qaCamera=Boolean(stageEnabled&&samples&&samples.length>=4&&
+   input.sector==='hero'&&family==='atrium'&&input.animated);
+  if(qaCamera&&samples){
    const layer=document.querySelector<HTMLElement>('[data-cinematic-v136]');
    const travel=Number(layer?.dataset.cameraProgress??0);
    const normalized=Number.isFinite(travel)?T.MathUtils.clamp(travel,0,1):0;
-   const index=normalized*(stageSamples.length-1),left=Math.floor(index),
-    right=Math.min(stageSamples.length-1,left+1),t=index-left;
-   const a=stageSamples[left],b=stageSamples[right];
+   const index=normalized*(samples.length-1),left=Math.floor(index),
+    right=Math.min(samples.length-1,left+1),t=index-left;
+   const a=samples[left],b=samples[right];
    const position=new T.Vector3(...a.position).lerp(new T.Vector3(...b.position),t);
    const forward=new T.Vector3(...a.forward).lerp(new T.Vector3(...b.forward),t).normalize();
    const up=new T.Vector3(...a.up).lerp(new T.Vector3(...b.up),t).normalize();
