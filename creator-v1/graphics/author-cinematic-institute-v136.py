@@ -349,11 +349,29 @@ scene.frame_start=1
 scene.frame_end=opts.frames
 def camera_state(frame):
     scene.frame_set(frame)
-    return {"position":list(round(v,6) for v in cam.location),
-            "rotation_euler":list(round(v,6) for v in cam.rotation_euler),
+    camera_world=cam.matrix_world
+    quaternion=camera_world.to_quaternion()
+    forward=quaternion @ Vector((0,0,-1))
+    up=quaternion @ Vector((0,1,0))
+    return {"frame":frame,
+            "position":list(round(v,7) for v in camera_world.translation),
+            "rotation_euler":list(round(v,7) for v in cam.rotation_euler),
+            "forward":list(round(v,7) for v in forward),
+            "up":list(round(v,7) for v in up),
             "lens_mm":cam.data.lens,
-            "vertical_fov_radians":round(cam.data.angle_y,6),
-            "horizontal_fov_radians":round(cam.data.angle_x,6)}
+            "verticalFovRadians":round(cam.data.angle_y,7),
+            "vertical_fov_radians":round(cam.data.angle_y,7),
+            "horizontal_fov_radians":round(cam.data.angle_x,7)}
+# Source landmarks live in Blender's Z-up coordinates and are the same
+# mesh-derived landmarks used by the glTF Y-up export. They are not labels
+# claiming to match the preexisting v136-011 Atrium.
+source_landmarks=[
+    {"id":"continuance-core","blender":[0,.5,1.1]},
+    {"id":"orbital-pearl","blender":[0,.5,9.3]},
+    {"id":"east-observatory","blender":[9,-2.2,1.5]},
+    {"id":"west-observatory","blender":[-9,-3,1.6]},
+]
+
 camera_manifest={
     "schema":"anevum.cinematic.camera.v1",
     "world":"Continuance Institute Atrium first master",
@@ -366,6 +384,10 @@ camera_manifest={
     "frames":opts.frames,
     "start":camera_state(1),
     "end":camera_state(opts.frames),
+    "samples":[camera_state(i) for i in range(1,opts.frames+1)],
+    "worldRevision":"continuance-atrium-source-v136015-001",
+    "coordinateSystem":"Blender-Z-up-to-glTF-Y-up",
+    "sourceLandmarks":source_landmarks,
     "handoffStatus":"UNREGISTERED / NOT A SEAMLESS THREE.JS CAMERA MATCH",
     "contentClaims":"Atmospheric original environment only; no real member or publication data",
     "backdrop": {"file":os.path.basename(opts.backdrop) if opts.backdrop else None,
@@ -380,6 +402,43 @@ blend_source=os.path.join(root,"continuance-institute-atrium-v136014.blend")
 if opts.backdrop:
     bpy.ops.file.pack_all()
 bpy.ops.wm.save_as_mainfile(filepath=blend_source)
+# Review-only shared source geometry: this model is derived from EXACTLY the
+# same scene as the rendered film. The shipped v136-011 Atrium remains intact.
+# Exclude camera-attached matte, decorative stars and cameras/lights. Selection
+# is restored after the GLB export so renders are unaffected.
+export_objects=[obj for obj in scene.objects if obj.type=="MESH" and
+    not obj.name.startswith("CINEMA / APPROVED") and
+    not obj.name.startswith("Aether dust luminous node")]
+bpy.ops.object.select_all(action='DESELECT')
+for obj in export_objects:
+    obj.select_set(True)
+bpy.context.view_layer.objects.active=export_objects[0]
+glb_path=os.path.join(root,"continuance-atrium-shared-v136015-review.glb")
+bpy.ops.export_scene.gltf(filepath=glb_path,export_format='GLB',use_selection=True,
+    export_cameras=False,export_lights=False)
+bpy.ops.object.select_all(action='DESELECT')
+import hashlib
+with open(glb_path,'rb') as f:
+    glb_hash=hashlib.sha256(f.read()).hexdigest()
+camera_manifest["geometryExport"]={
+    "file":os.path.basename(glb_path),"sha256":glb_hash,"bytes":os.path.getsize(glb_path),
+    "objectCount":len(export_objects),"approvedForRuntime":False,
+    "geometryMatchToLiveV136011":False,"sourceWorldRevision":camera_manifest["worldRevision"]}
+with open(os.path.join(root,"camera-manifest.json"),"w",encoding="utf8") as f:
+    json.dump(camera_manifest,f,indent=2)
+# The exact glTF conversion is [x,y,z](Blender) -> [x,z,-y](Three/glTF).
+def to_three(v):
+    return [v[0],v[2],-v[1]]
+landmarks={
+  "schema":"anevum.cinematic.landmarks.v1",
+  "sourceCameraId":camera_manifest["cameraId"],
+  "worldRevision":camera_manifest["worldRevision"],
+  "reviewGeometrySha256":glb_hash,
+  "runtimeGeometryMatchApproved":False,
+  "pairs":[dict(item,three=to_three(item["blender"])) for item in source_landmarks]
+}
+with open(os.path.join(root,"camera-landmarks-review.json"),"w",encoding="utf8") as f:
+    json.dump(landmarks,f,indent=2)
 for i in range(1,opts.frames+1):
     scene.frame_set(i)
     scene.render.filepath=os.path.join(root,"frame-%04d.png"%i)

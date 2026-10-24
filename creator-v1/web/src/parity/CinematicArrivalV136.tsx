@@ -1,6 +1,6 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {useLivingWorld} from './LivingWorldState';
-import {cinematicMode,cinematicReveal,cinematicScrollProgress} from './cinematic-director-v136';
+import {cinematicMode,cinematicScrollProgress,cinematicRevealWhenReady,cinematicWorldReadiness} from './cinematic-director-v136';
 import {allowMotion,approvedCinematicSequence,approvedCinematicVideo} from './CinematicMediaContractV136';
 import {CinematicFramesV136} from './CinematicFramesV136';
 import {CinematicVideoV136} from './CinematicVideoV136';
@@ -40,7 +40,9 @@ export function CinematicArrivalV136(){
    connection?:{saveData?:boolean;addEventListener?:(name:string,cb:()=>void)=>void;
     removeEventListener?:(name:string,cb:()=>void)=>void}
   }).connection;
-  let raf=0,visible=document.visibilityState==='visible';
+  const world=document.querySelector<HTMLElement>('.p136-living-world[data-enabled="true"]');
+  const worldCanvas=world?.querySelector<HTMLCanvasElement>('.p136-living-canvas');
+  let raf=0,visible=document.visibilityState==='visible',handoffCommitted=false;
   const paint=()=>{
    raf=0;
    const input={
@@ -58,8 +60,16 @@ export function CinematicArrivalV136(){
    setPlayAllowed(previous=>previous===videoPlayable?previous:videoPlayable);
    const travel=cinematicScrollProgress(hero.getBoundingClientRect().top,hero.getBoundingClientRect().height);
    const staticPreference=reduced.matches||paused||Boolean(connection?.saveData);
+   const readiness=cinematicWorldReadiness(world?.dataset.renderer==='webgl'?'webgl':
+    world?.dataset.renderer==='vector'?'vector':null,worldCanvas?.dataset.assetState??null);
+   // A user who has already crossed into the live scene never sees the poster
+   // flash back on a temporary renderer reset or GPU status change.
+   if(travel<manifest.handoff.revealStart*.5)handoffCommitted=false;
+   else if(readiness!=='hold'&&travel>=manifest.handoff.revealStart)handoffCommitted=true;
+   const permitted=handoffCommitted?'ready':readiness;
+   element.dataset.handoff=permitted;
    const opacity=nextMode==='off'?0:nextMode==='poster'&&staticPreference?1:
-    cinematicReveal(travel,manifest.handoff.revealStart,manifest.handoff.revealEnd);
+    cinematicRevealWhenReady(travel,permitted,manifest.handoff.revealStart,manifest.handoff.revealEnd);
    element.style.setProperty('--cinema-opacity',String(opacity));
    element.style.setProperty('--cinema-offset',(-1.6*(staticPreference?0:travel)).toFixed(3)+'%');
    if(nextMode==='sequence')setProgress(value=>Math.abs(value-travel)>.002?travel:value);
@@ -72,6 +82,9 @@ export function CinematicArrivalV136(){
   reduced.addEventListener('change',schedule);
   forced.addEventListener('change',schedule);
   connection?.addEventListener?.('change',schedule);
+  const observe=world?new MutationObserver(schedule):null;
+  if(world)observe?.observe(world,{attributes:true,attributeFilter:['data-renderer','data-enabled']});
+  if(worldCanvas)observe?.observe(worldCanvas,{attributes:true,attributeFilter:['data-asset-state']});
   schedule();
   return()=>{
    window.removeEventListener('scroll',schedule);
@@ -80,12 +93,13 @@ export function CinematicArrivalV136(){
    reduced.removeEventListener('change',schedule);
    forced.removeEventListener('change',schedule);
    connection?.removeEventListener?.('change',schedule);
+   observe?.disconnect();
    if(raf)window.cancelAnimationFrame(raf);
   };
  },[paused,posterFailed,frameFailed,videoFailed]);
  if(!enabled||posterFailed)return null;
  return <div ref={stage} className="p136-cinematic-arrival"
-    aria-hidden="true" data-cinematic-v136="poster-pilot" data-mode={mode}>
+    aria-hidden="true" data-cinematic-v136="poster-pilot" data-mode={mode} data-handoff="fallback">
    <picture className="p136-cinematic-art">
     <source media="(max-width: 680px)" srcSet={asset(manifest.posters.mobile.path)}/>
     <img src={asset(manifest.posters.desktop.path)} width={manifest.posters.desktop.width}

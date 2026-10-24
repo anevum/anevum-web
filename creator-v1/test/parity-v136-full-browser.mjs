@@ -373,7 +373,21 @@ try{
     const cinema=page.locator('[data-cinematic-v136="poster-pilot"]');await cinema.waitFor();
     const opacity=()=>cinema.evaluate(el=>Number.parseFloat(getComputedStyle(el).opacity));
     assert.ok(await opacity()>.9,'Arrival poster begins visible');
-    await page.evaluate(()=>window.scrollTo(0,550));
+    // Simulate the loading status only. The actual GPU geometry is tested in
+    // its separate compiled GLB browser acceptance; this tests fade timing.
+    await page.evaluate(()=>{
+      const world=document.querySelector('.p136-living-world');
+      const canvas=world?.querySelector('.p136-living-canvas');
+      if(world)world.dataset.renderer='webgl';
+      if(canvas)canvas.dataset.assetState='loading';
+      window.scrollTo(0,550);
+    });
+    await page.waitForFunction(()=>document.querySelector('[data-cinematic-v136]')?.dataset.handoff==='hold');
+    assert.ok(await opacity()>.95,'Cinema does not reveal an incompletely loaded 3D model');
+    await page.evaluate(()=>{
+      const canvas=document.querySelector('.p136-living-world .p136-living-canvas');
+      if(canvas)canvas.dataset.assetState='ready';
+    });
     await page.waitForFunction(()=>{
       const layer=document.querySelector('[data-cinematic-v136="poster-pilot"]');
       return layer&&Number.parseFloat(getComputedStyle(layer).opacity)<.5;
