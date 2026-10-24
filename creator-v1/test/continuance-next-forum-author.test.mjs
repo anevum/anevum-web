@@ -61,7 +61,9 @@ test('component introduces no unscoped global styles or data-writing controls',(
  // Match standalone HTTP verbs, not the substring PUT in REPUTATION.
  assert.doesNotMatch(card,/onSubmit|onClick|<button|\b(?:POST|PUT|DELETE|PATCH)\b/);
  assert.match(card,/Public profile of/);
- assert.match(card,/PUBLIC MEMBER/);
+ assert.match(card,/PUBLIC IDENTITY/);
+ assert.match(card,/data-aura=\{aura\}/);
+ assert.match(card,/hasDetails&&<details/);
 });
 
 test('compact identity preserves member-chosen visuals instead of replacing them with generic tags',()=>{
