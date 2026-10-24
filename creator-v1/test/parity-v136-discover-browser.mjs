@@ -134,6 +134,15 @@ try{
     await page.getByRole('link',{name:/Clear filters/}).click();
     await page.waitForURL(base+'/discover');
     await page.getByRole('heading',{name:'SYNTHETIC TOOL WORKSHOP'}).waitFor();
+    await page.getByRole('button',{name:'Open site navigation',exact:true}).click();
+    await page.locator('#av79-navigation[open]').waitFor();
+    const focusBefore=await page.evaluate(()=>document.activeElement?.outerHTML.slice(0,120));
+    await page.keyboard.press('ArrowDown');
+    const focusAfter=await page.evaluate(()=>document.activeElement?.outerHTML.slice(0,120));
+    assert.notEqual(focusAfter,focusBefore,'Directional input advances modal navigation focus');
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(()=>!document.querySelector('#av79-navigation').open);
+    record('spatial menu directional focus and escape');
     record('interactive category, list, free, encoded query, true empty, reset');
     await context.close();
   }
