@@ -7,6 +7,7 @@ import previous from './anevum-iren-staff-observatory-v105.mjs';
 import {NEXT_CSS,NEXT_CLIENT} from './anevum-observatory-continuance-v106-assets.mjs';
 import {RUM_CSS,RUM_CLIENT} from './anevum-observatory-rum-v106-assets.mjs';
 import {fetchRumAggregates} from '../analytics/cloudflare-rum-observatory-v106.mjs';
+import {WEEKLY_CSS,WEEKLY_CLIENT} from '../analytics/anevum-observatory-weekly-v107.mjs';
 
 const ORIGIN='https://anevum.com';
 const BASE='/staff/observatory';
@@ -73,6 +74,17 @@ const CAMPAIGN_PRESETS='<div class="ci-preset-lab" aria-label="Campaign starting
  '<button type="button" data-ci-campaign="creator" aria-pressed="false"><strong>Creator invites</strong><small>Creator collaborations</small></button></div>'+
  '<p id="ci-preset-status" class="ci-preset-status" role="status" aria-live="polite">Choose a starting campaign. Your link updates locally; tracking is not connected.</p></div>';
 
+const WEEKLY_PANEL='<section id="ci-weekly-signal" class="ci-weekly" data-ci-state="unavailable" aria-labelledby="ci-weekly-heading">'+
+ '<header class="ci-weekly-head"><div><div class="ci-weekly-overline">COMPLETE UTC WINDOWS / VERIFIED REGISTRATIONS</div>'+
+ '<h3 id="ci-weekly-heading">Weekly signal.</h3><p>Compare two completed seven-day calendar periods, not the current incomplete day or browser visits.</p></div>'+
+ '<span class="ci-weekly-state" id="ci-weekly-state" role="status" aria-live="polite">DATA UNAVAILABLE</span></header>'+
+ '<div class="ci-weekly-stats" aria-label="Recorded registration momentum">'+
+ '<div class="ci-weekly-stat"><span>LATEST COMPLETE 7D</span><strong id="ci-weekly-current">—</strong><small id="ci-weekly-current-dates">Awaiting verified dates</small></div>'+
+ '<div class="ci-weekly-stat"><span>PRECEDING COMPLETE 7D</span><strong id="ci-weekly-previous">—</strong><small id="ci-weekly-previous-dates">Awaiting verified dates</small></div>'+
+ '<div class="ci-weekly-stat"><span>ABSOLUTE CHANGE</span><strong id="ci-weekly-delta">—</strong><small>Registered account records; not converted visitors</small></div></div>'+
+ '<footer class="ci-weekly-foot"><p id="ci-weekly-context">No comparison without a verified 30-day registration series.</p>'+
+ '<a href="#campaign">Prepare campaign links &#8599;</a></footer></section>';
+
 const RANGES='<div class="ci-range-tools" aria-label="Registration chart controls">'+
  '<strong>REGISTRATION SIGNAL / UTC CALENDAR WINDOW</strong>'+
  '<div class="ci-range-switch" role="group" aria-label="Number of calendar days">'+
@@ -120,6 +132,8 @@ export function decorateObservatoryHtml(html,page){
    '<link rel="stylesheet" href="'+RUM_CSS_PATH+'"><script src="'+RUM_SCRIPT+'" defer></script></head>');
   output=replaceExactlyOnce(output,'<section id="acquisition" aria-labelledby="acq-heading">',
    FOCUS_NAV+'<section id="acquisition" aria-labelledby="acq-heading">');
+  output=replaceExactlyOnce(output,'<div class="kpis" id="kpis" aria-live="polite"><div class="unavailable">Waiting for aggregate records…</div></div>',
+   '<div class="kpis" id="kpis" aria-live="polite"><div class="unavailable">Waiting for aggregate records…</div></div>'+WEEKLY_PANEL);
   output=replaceExactlyOnce(output,'<div class="campaign-form">',
    CAMPAIGN_PRESETS+'<div class="campaign-form">');
   output=replaceExactlyOnce(output,'<body><div class="shell">',
@@ -166,7 +180,7 @@ export default {
    const denial=await staffGate(request,env);
    if(denial)return denial;
    const css=url.pathname===CSS||url.pathname===RUM_CSS_PATH;
-   const content=url.pathname===CSS?NEXT_CSS:url.pathname===CLIENT?NEXT_CLIENT:url.pathname===RUM_CSS_PATH?RUM_CSS:RUM_CLIENT;
+   const content=url.pathname===CSS?NEXT_CSS+'\n'+WEEKLY_CSS:url.pathname===CLIENT?NEXT_CLIENT+'\n'+WEEKLY_CLIENT:url.pathname===RUM_CSS_PATH?RUM_CSS:RUM_CLIENT;
    return new Response(content,{headers:{...PRIVATE_HEADERS,'content-type':css?'text/css; charset=utf-8':'application/javascript; charset=utf-8'}});
   }
   if(url.pathname===RUM_API){
