@@ -4,6 +4,8 @@ export interface ProjectDoctorFinding {
   severity: ProjectDoctorSeverity;
   path: string;
   message: string;
+  /** Curated human-review guidance only; never an executable patch. */
+  nextStep: string;
 }
 export interface ProjectDoctorResult {
   format: string;
