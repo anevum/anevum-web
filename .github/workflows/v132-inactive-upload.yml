@@ -23,7 +23,7 @@ jobs:
     env:
       CLOUDFLARE_API_TOKEN: ''
       CLOUDFLARE_API_KEY: ''
-      ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}_ID: ''
+      CLOUDFLARE_ACCOUNT_ID: ''
     steps:
       - uses: actions/checkout@v4
         with:
@@ -39,7 +39,7 @@ jobs:
           node --check creator-v1/ops/v132-inactive-upload.mjs
           node --test creator-v1/test/v132-inactive-upload.test.mjs
       - name: Never activate anything as part of verification
-        run: echo 'V132_INACTIVE_UPLOAD_SOURCE_CHECKED; NO_${{ secrets.CLOUDFLARE_API_TOKEN }}; NO_UPLOAD; NO_TRAFFIC_CHANGE' >> "$GITHUB_STEP_SUMMARY"
+        run: echo 'V132_INACTIVE_UPLOAD_SOURCE_CHECKED; NO_CREDENTIALS; NO_UPLOAD; NO_TRAFFIC_CHANGE' >> "$GITHUB_STEP_SUMMARY"
   inactive-version-only:
     needs: verify-inactive
     if: >-
@@ -74,7 +74,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           node creator-v1/ops/v132-inactive-upload.mjs before \
             "$RUNNER_TEMP/v132-review" \
@@ -83,7 +83,7 @@ jobs:
       - name: Upload exactly one immutable version, no traffic or route changes
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           test -s "$RUNNER_TEMP/v132-before.json"
           test -s "$RUNNER_TEMP/v132-upload.json"
@@ -94,7 +94,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           node creator-v1/ops/v132-inactive-upload.mjs after \
             "$RUNNER_TEMP/v132-review" \
