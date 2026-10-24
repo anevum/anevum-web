@@ -52,3 +52,7 @@ No public production deployment is authorized or performed by V134.
 ## Visual QA follow-up
 
 Desktop and original phone PNG inspection identified excess blank editor height on small screens. The 430px and 760px breakpoints now compact the source editor; file badges use more intentional folded-file silhouettes. The compiled suite was extended with 1024px workspace and first-viewport Home/Discover/Community captures at 1440px, 390px and 320px. Those route captures use offline API responses, not invented published catalogue entries. They are for layout acceptance, not marketing.
+
+## Source-bound typography corrections
+
+Reviewed real 1440px Home, Discover and Community screenshots and found two concrete inconsistencies: Community hero used an italic emphasis line and a lower serif section title; Discover network-error panels retained older serif display type. V134 now applies consistent sans typography and a non-italic cyan/violet semantic emphasis gradient, plus a quieter error panel and softened portal cards. The actual compiled browser suite asserts computed font-style and font-family at 1440px, 390px and 320px, including forced-color fallback. These changes remain opt-in and do not alter editorial copy or real user data.
