@@ -24,7 +24,7 @@ The time-unlocked supporter seal named **Constellation** is not the same thing a
 
 ## Verification and acceptance
 
-The child workflow verifies the exact parent, all eight changed paths, no credential-bearing deployment route, dedicated consent/privacy/freshness/hold/disabled-source tests, existing canonical forum and supporter suites, strict React TypeScript, unchanged default-off production build, and real compiled Chromium browser screenshots at 1440, 1024, 390, and 320 px.
+The child workflow verifies the exact parent, all eight changed paths, no credential-bearing deployment route, dedicated consent/privacy/freshness/hold/disabled-source tests, existing canonical forum and supporter suites, strict React TypeScript, unchanged default-off production build, and real compiled Chromium browser screenshots at 1440, 1024, 390, and 320 px, including dedicated author-card-focused captures at each width.
 
 The browser fixture creates a clearly **synthetic** consented test-mode subscriber at a verified 120-day eligibility point with a Stellar Crown frame, plus an opted-out public reply. It requires the actual shared member portrait to carry `.av34-frame-stellar` and the public supporter seal to appear only on the opted-in author; its 28px icon treatment must not expand the collapsed forum card beyond the prior compact-height limit. The full supporter nameplate remains available outside the forum strip. Captures must not be represented as real member accounts or live ANEVUM rewards.
 
