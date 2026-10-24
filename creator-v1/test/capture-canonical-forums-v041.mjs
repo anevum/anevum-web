@@ -213,6 +213,9 @@ try{
  await evaluate("document.querySelector('.cf-detail .cf-author-dossier--detail summary').focus()");
  await client.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
  await client.send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
+ // Native summary activation may settle after the CDP key-up response.
+ // Require the actual DOM open state, never click as a keyboard fallback.
+ await until(()=>evaluate("document.querySelector('.cf-detail .cf-author-dossier--detail details')?.open===true"),3000);
  const disclosures=await evaluate("(()=>{const entry=document.querySelector('.cf-detail .cf-author-dossier--detail details');if(!entry)return {open:false,counts:0};return {open:entry.open,counts:entry.querySelectorAll('.cf-author-dossier-activity>span').length,chosen:entry.innerText.includes('Nebula'),award:entry.innerText.includes('Open Door'),label:entry.querySelector('summary')?.getAttribute('aria-label')}})()");
  assert.equal(disclosures.label,'Public profile details for Fixture orbit_writer','The screen-reader label is accurate in both open and closed states');
  result.keyboardDisclosure=disclosures.open;
