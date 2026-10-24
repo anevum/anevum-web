@@ -19,6 +19,7 @@ The Observatory is ANEVUM's first-party business intelligence command center. It
 - Display 30 UTC **calendar dates** with zero-filled days and exact-values table; explicitly distinguish this series from the rolling thirty-day KPI.
 - Display cumulative project saves/votes/comments and forum/wall record totals with clearly qualified labels.
 - Explicitly mark visitors/UTM attribution, traffic-to-signup conversion, activation/retention, active creator engagement and collected revenue/ROI as **NOT CONNECTED**, not zero.
+- Add an interactive staff-side **Campaign Link Laboratory**: generate canonical ANEVUM homepage, join and Discover links with validated source, medium, campaign and optional content UTM labels; copy link with manual fallback. It makes **no event capture, API calls or storage writes** and openly states that attribution reporting is not connected.
 - Preserve staff no-store, CSP, noindex, noframe headers; restricted methods; fail-closed invalid sessions, DB outages and invalid numeric aggregates. No XP test display or grants.
 - Run isolated fixture tests and Chromium screenshot QA (1440/390/320 and owner/reviewer/error). Synthetic fixture counts live **only in tests**.
 - **No existing V104 or frozen V092 source modification**, migration, event collection or production settings change.
