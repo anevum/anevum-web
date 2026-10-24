@@ -4,7 +4,7 @@
  * Bounded navigation aid, NOT a language server, full parser,
  * build step or trusted validator. Operates only on open source text.
  */
-import {editorLanguage} from './language-v119.mjs';
+import {editorLanguage,sourceCursor} from './language-v119.mjs';
 import {decode,PREFIX} from '../world-composer/document.mjs';
 const MAX_LINES=3000,MAX_SYMBOLS=100;
 const identifier='[A-Za-z_$][\\w$]*';
@@ -39,7 +39,13 @@ export function sourceOutline(source,filename){
   const value=text.startsWith(PREFIX)?decode(text):null;
   if(value){
    append('world',value.name,1,1);
-   for(const node of value.nodes||[])append('node',node.name||node.id,2,1,node.parentId?1:0);
+   let from=PREFIX.length;
+   for(const node of value.nodes||[]){
+    const exact=JSON.stringify(node.id),at=text.indexOf(exact,from);
+    const coordinate=sourceCursor(text,at<0?from:at);
+    append('node',node.name||node.id,coordinate.line,coordinate.column,node.parentId?1:0);
+    if(at>=0)from=at+exact.length;
+   }
   }
  }else{
   let inComment=false,inFence=false;
