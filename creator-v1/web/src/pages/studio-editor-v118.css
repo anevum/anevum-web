@@ -1,0 +1,82 @@
+/* ANEVUM Creator Studio V118 / scene-first authoring refinement.
+ * Scoped exclusively to feature-gated world-review UI. No sitewide
+ * navigation changes, external imagery or motion pause controls.
+ */
+.cvw-root .cvw-action-short{display:none}
+.cvw-root .cvw-toolbar button:focus-visible,
+.cvw-root .csn-export-heading button:focus-visible{
+ outline:2px solid #a4ebff;outline-offset:2px
+}
+.csn-export-heading{display:flex!important;gap:9px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.csn-export-heading strong{color:#e3f6ff;letter-spacing:.09em;font-size:11px}
+.csn-export-heading span{font-size:10px;color:#b9d0dd}
+.csn-export-heading button{
+ min-height:39px;padding:8px 12px;white-space:nowrap;border-radius:7px;
+ background:linear-gradient(145deg,#245776,#153c59);border:1px solid #6cadcb;
+ color:#e5f9ff;font-size:11px;font-weight:650
+}
+.csn-export-heading button:hover{background:#286883;border-color:#a4e7f6}
+.csn-export-notice{
+ color:#c2e9e2;font-size:11px;line-height:1.5;margin:0;
+ background:#173f42;border:1px solid #3e807a;border-radius:7px;padding:9px 12px
+}
+.cvw-root .csn-shelf-head strong{letter-spacing:.08em}
+.cvw-root .csn-asset-card{transition:background .15s ease,border-color .15s ease}
+.cvw-root .csn-asset-card:focus-visible{outline:2px solid #a3e9fd;outline-offset:2px}
+.cvw-root .csn-asset-card.is-addable:active{transform:translateY(0)}
+@media(min-width:1041px){
+ /* One fewer header beneath the six functional mode tabs. The viewport
+  * remains dominant and the shelf becomes visible at 900px desktop height. */
+ .cvw-root .cvs-mode-header{display:none}
+ .cvw-root .cvw-toolbar{min-height:39px;padding:4px 10px}
+ .cvw-root .cvw-stage{height:clamp(320px,39vh,480px);min-height:320px}
+ .cvw-root .csn-shelf-head{min-height:40px}
+ .cvw-root .csn-asset-track{padding-bottom:6px}
+ .cvw-root .csn-asset-card{flex-basis:102px;padding:5px}
+ .cvw-root .csn-asset-thumbnail{height:72px}
+ .cvw-root .cvw-world-footer{min-height:28px;padding-block:5px}
+}
+@media(min-width:681px) and (max-width:1040px){
+ .cvw-root .cvs-mode-header{min-height:40px;padding-block:5px}
+ .cvw-root .cvw-toolbar{min-height:42px}
+ .cvw-root .cvw-stage{height:clamp(320px,45vh,440px)}
+}
+@media(max-width:680px){
+ .cvw-root .cvw-action-full{display:none}
+ .cvw-root .cvw-action-short{display:inline}
+ .cvw-root .cvw-toolbar{
+  display:block;min-height:45px;padding:4px 7px;
+ }
+ .cvw-root .cvw-toolbar>div{
+  width:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:4px;overflow:visible
+ }
+ .cvw-root .cvw-toolbar button{
+  min-width:0;width:100%;min-height:38px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-size:10px;letter-spacing:-.015em;padding:6px 4px
+ }
+ .cvw-root .cvw-stage{height:clamp(325px,89vw,450px);min-height:325px}
+ .cvw-root .cvw-selection-chip{max-width:53%}
+ .cvw-root .cvw-viewport-instructions{font-size:8px;max-width:43%}
+ .cvw-root .csn-shelf-head{min-height:43px}
+ .cvw-root .csn-asset-card{flex-basis:103px}
+ .cvw-root .csn-asset-thumbnail{height:75px}
+ .cvw-root .csn-export-heading{align-items:flex-start;flex-direction:column}
+ .cvw-root .csn-export-heading button{width:100%;justify-content:center}
+ .cvw-root .csn-scene-light{display:none}
+}
+@media(max-width:360px){
+ .cvw-root .cvw-stage{height:327px}
+ .cvw-root .cvw-toolbar{padding-inline:5px}
+ .cvw-root .cvw-toolbar button{font-size:9px}
+ .cvw-root .csn-asset-card{flex-basis:97px}
+}
+@media(prefers-reduced-motion:reduce){
+ .cvw-root .csn-asset-card{transition:none}
+ .cvw-root .csn-asset-card:active{transform:none}
+}
+@media(forced-colors:active){
+ .cvw-root .csn-export-heading button{border:1px solid ButtonText}
+ .cvw-root .csn-export-notice{border:1px solid CanvasText}
+}
