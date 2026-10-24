@@ -142,7 +142,13 @@ try{
         }));
         assert.equal(actual.style,'normal','Community headline no longer switches to italics');
         assert.match(actual.family,/Inter|sans-serif/,'Community headline uses coherent interface type');
-        record('Community type parity '+width,actual);
+        const guestHeading=await page.locator('.mc-own h2').first().evaluate(el=>({
+          family:getComputedStyle(el).fontFamily,
+          style:getComputedStyle(el).fontStyle
+        }));
+        assert.match(guestHeading.family,/Inter|sans-serif/,'Nested member guest heading uses consistent sans family');
+        assert.equal(guestHeading.style,'normal','Nested member guest heading is not italic');
+        record('Community type parity '+width,{...actual,guestHeading});
       }
       if(name==='discover'){
         await page.locator('.state-error h2').waitFor();
