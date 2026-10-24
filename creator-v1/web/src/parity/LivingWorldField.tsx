@@ -45,7 +45,7 @@ function compile(gl:WebGL2RenderingContext):Compiled{
   if(position<0){gl.deleteBuffer(buffer);gl.deleteProgram(program);throw Error('World vertex attribute unavailable')}
   gl.enableVertexAttribArray(position);
   gl.vertexAttribPointer(position,2,gl.FLOAT,false,0,0);
-  const names=['u_resolution','u_pointer','u_time','u_density','u_verified','u_tone'];
+  const names=['u_resolution','u_pointer','u_time','u_density','u_verified','u_tone','u_pulse'];
   const location=names.map(name=>gl.getUniformLocation(program,name));
   if(location.some(x=>x===null)){
     gl.deleteBuffer(buffer);gl.deleteProgram(program);throw Error('World uniforms unavailable')
@@ -80,6 +80,7 @@ export function LivingWorldField({sector='hero',enabled}:{sector?:WorldSector;en
   const compiled=useRef<Compiled|null>(null);
   const raf=useRef<number|null>(null);
   const pointer=useRef<[number,number]>([0,0]);
+  const pulse=useRef(0);
   const phase=useRef(0);
   const {signal,paused}=useLivingWorld();
   const [renderer,setRenderer]=useState<Renderer>('booting');
@@ -159,6 +160,21 @@ export function LivingWorldField({sector='hero',enabled}:{sector?:WorldSector;en
   },[enabled,paused,reduced,saveData,visible]);
 
   useEffect(()=>{
+    if(!enabled)return;
+    const interaction=(target:EventTarget|null)=>{
+      if(target instanceof Element&&target.closest('button,a,input,[role="button"]'))
+        pulse.current=1;
+    };
+    const tap=(event:PointerEvent)=>interaction(event.target);
+    const press=(event:KeyboardEvent)=>{
+      if(event.key==='Enter'||event.key===' ')interaction(event.target);
+    };
+    window.addEventListener('pointerdown',tap,{passive:true});
+    window.addEventListener('keydown',press);
+    return()=>{window.removeEventListener('pointerdown',tap);window.removeEventListener('keydown',press)};
+  },[enabled]);
+
+  useEffect(()=>{
     const render=(milliseconds:number)=>{
       const compiledNow=compiled.current;
       if(!compiledNow)return;
@@ -172,6 +188,7 @@ export function LivingWorldField({sector='hero',enabled}:{sector?:WorldSector;en
       gl.uniform1f(location[3],density);
       gl.uniform1f(location[4],verified?1:0);
       gl.uniform3f(location[5],tone[0],tone[1],tone[2]);
+      gl.uniform1f(location[6],pulse.current);
       gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
     };
     if(renderer!=='webgl'||!enabled)return;
@@ -182,6 +199,7 @@ export function LivingWorldField({sector='hero',enabled}:{sector?:WorldSector;en
       const delta=Math.min(100,now-lastTick);lastTick=now;
       if(now-lastDraw>=1000/30){
         phase.current+=delta;
+        pulse.current=Math.max(0,pulse.current-0.085);
         render(phase.current);
         lastDraw=now;
       }
