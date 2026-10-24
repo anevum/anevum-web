@@ -1,11 +1,12 @@
 import {useEffect,useRef,useState} from 'react';
 import type {PointerEvent,WheelEvent,KeyboardEvent} from 'react';
-import type {WorldDocument,WorldCamera} from '../../../world-composer/document.mjs';
+import type {WorldDocument,WorldCamera,Vec3} from '../../../world-composer/document.mjs';
 import {createWorldRenderer,type WorldRenderer} from './world-webgl2-v115';
 
 type Props={
  document:WorldDocument;camera:WorldCamera;selection:string|null;
  onCamera:(next:WorldCamera)=>void;onSelect:(id:string|null)=>void;
+ onNudge:(offset:Vec3)=>void;
 };
 type Status='initializing'|'webgl2'|'unsupported'|'lost'|'error';
 type Pointer={x:number;y:number;moved:boolean};
@@ -14,16 +15,16 @@ const clamp=(v:number,min:number,max:number)=>Math.min(max,Math.max(min,v));
 /** Actual GPU canvas with invalidation rendering; sleep when not visible,
  * clamp DPR, retain accessible inspector fallback for unsupported devices.
  */
-export function WorldCanvasV115({document,camera,selection,onCamera,onSelect}:Props){
+export function WorldCanvasV115({document,camera,selection,onCamera,onSelect,onNudge}:Props){
  const ref=useRef<HTMLCanvasElement>(null);
  const engine=useRef<WorldRenderer|null>(null);
  const gesture=useRef<Pointer|null>(null);
  const frame=useRef<number|null>(null);
- const current=useRef<Props>({document,camera,selection,onCamera,onSelect});
+ const current=useRef<Props>({document,camera,selection,onCamera,onSelect,onNudge});
  const [status,setStatus]=useState<Status>('initializing');
  const [reason,setReason]=useState('');
  const [restartKey,setRestartKey]=useState(0);
- current.current={document,camera,selection,onCamera,onSelect};
+ current.current={document,camera,selection,onCamera,onSelect,onNudge};
  function schedule(){
   if(frame.current!==null||documentVisibilityHidden())return;
   frame.current=requestAnimationFrame(()=>{
@@ -125,7 +126,12 @@ export function WorldCanvasV115({document,camera,selection,onCamera,onSelect}:Pr
  }
  function keydown(event:KeyboardEvent<HTMLCanvasElement>){
   if(status!=='webgl2')return;
-  if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','-','0'].includes(event.key))event.preventDefault();
+  if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','PageUp','PageDown','+','-','0'].includes(event.key))event.preventDefault();
+  if(event.shiftKey&&current.current.selection){
+   const steps:Record<string,Vec3>={ArrowLeft:[-.5,0,0],ArrowRight:[.5,0,0],
+    ArrowUp:[0,0,-.5],ArrowDown:[0,0,.5],PageUp:[0,.5,0],PageDown:[0,-.5,0]};
+   if(steps[event.key]){current.current.onNudge(steps[event.key]);return;}
+  }
   if(event.key==='ArrowLeft')orbit(-22,0);
   if(event.key==='ArrowRight')orbit(22,0);
   if(event.key==='ArrowUp')orbit(0,-20);
@@ -136,7 +142,7 @@ export function WorldCanvasV115({document,camera,selection,onCamera,onSelect}:Pr
  }
  return <div className={"cvw-canvas-container"+(document.environment.sky==="night"?" is-night":"")} data-world-canvas-v115={status} data-camera-yaw={camera.yaw.toFixed(3)}>
   <canvas key={restartKey} ref={ref} className="cvw-world-canvas" tabIndex={0}
-   aria-label="Interactive WebGL2 world. Drag to orbit; mouse wheel or plus and minus to zoom; arrow keys rotate; click an object to select. The scene hierarchy offers an accessible alternate selection method."
+   aria-label="Interactive WebGL2 world. Drag to orbit; mouse wheel or plus and minus to zoom; arrow keys rotate; Shift and arrows move selected object; Shift with Page Up or Down raises or lowers it. Click an object to select. The hierarchy offers accessible alternative selection."
    onPointerDown={down} onPointerMove={move} onPointerUp={up}
    onPointerCancel={()=>{gesture.current=null;}}
    onWheel={wheel} onKeyDown={keydown}/>
