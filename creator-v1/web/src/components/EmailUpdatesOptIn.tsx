@@ -44,7 +44,7 @@ export function EmailUpdatesOptIn(){
     </fieldset>
     <button type="submit" disabled={status==='saving'||!(releases||weekly)}>{status==='saving'?'Requesting confirmation…':'Send confirmation email'}</button>
     {status==='error'&&<p role="alert">{error}</p>}
-    <small>No automatic enrollment from signing in. Only confirmed choices receive email. This is separate from account/security emails. <Link to="/guide">Community guidance</Link>.</small>
+    <small>No automatic enrollment from signing in. Only confirmed choices receive email. This is separate from account/security emails. <Link to="/updates/preferences">Manage an existing subscription</Link>. <Link to="/guide">Community guidance</Link>.</small>
    </form>}
  </section>;
 }
