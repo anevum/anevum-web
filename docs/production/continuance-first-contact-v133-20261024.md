@@ -33,7 +33,7 @@ The First Look's CSS orbital artwork is explicitly decorative and **does not cla
 ### Signup — existing Phase1JoinPage
 
 1. Join story now explains independent games, apps and creative experiments and that joining is free.
-2. Email-first panel adds a compact value explanation: private identity, saved discoveries and *eligible* recognition, and clarifies publishing is still being tested. Value section is hidden after sending an OTP and on special email-verification states to preserve short mobile viewports.
+2. The email-first panel states the immediate free-member value in its headline/lead, with a compact supporting explanation of private identity, saved discoveries and *eligible* recognition after the email action. The supporting section stays below the primary mobile action and is hidden once an OTP is sent or special email verification is required, preserving short mobile viewports.
 3. Canonical Better Auth, email OTP, resend and limits, social provider status, errors, private defaults, existing optional IREN orientation and join buttons remain unchanged.
 
 ## Visual implementation
