@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState, lazy, Suspense } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { readCategories,readProjects, type Category } from "../lib/api";
 import { useResource } from "../lib/useResource";
 import { ProjectCard } from "../components/ProjectCard";
@@ -48,6 +48,7 @@ const immersiveWorlds:Partial<Record<Category,{
 
 export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
   const [params,setParams]=useSearchParams();
+  const navigate=useNavigate();
   const q=params.get("q")||"",category=params.get("category")||"",cursor=params.get("cursor")||"",freeOnly=params.get("free")==="1";
   const [draft,setDraft]=useState(q);
   const [view,setView]=useState<"covers"|"compact">("covers");
@@ -65,18 +66,19 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
   const active=useMemo(()=>channels.find(x=>x.id===category),[category]);
   const world=immersive?immersiveWorlds[category as Category]:undefined;
 
+  function commitSearch(raw:string){
+    // Read current URL at the moment of activation, not a suspended render's
+    // captured params. React ViewTransition may defer a component update.
+    const value=raw.trim(),next=new URLSearchParams(window.location.search);
+    if(value)next.set("q",value);else next.delete("q");
+    next.delete("cursor");
+    const query=next.toString();
+    navigate({pathname:"/discover",search:query?"?"+query:""});
+  }
   function search(e:FormEvent){
     e.preventDefault();
-    // Read the submitted input, not an earlier render's draft. Navigation
-    // transitions can defer React state while the user is already typing.
-    const field=(e.currentTarget as HTMLFormElement).querySelector<HTMLInputElement>('input[type="search"]');
-    const value=(field?.value??draft).trim();
-    setParams(current=>{
-      const next=new URLSearchParams(current);
-      if(value)next.set("q",value);else next.delete("q");
-      next.delete("cursor");
-      return next;
-    });
+    const field=(e.currentTarget as HTMLFormElement).elements.namedItem("q") as HTMLInputElement|null;
+    commitSearch(field?.value??draft);
   }
   function selectCategory(id:string){
     setParams(current=>{
@@ -108,7 +110,7 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
     <FullParityDiscover
       channels={channels} category={category} activeLabel={active?.label||null}
       query={q} cursor={cursor} freeOnly={freeOnly}
-      draft={draft} onDraft={setDraft} onSearch={search}
+      draft={draft} onDraft={setDraft} onSearch={search} onSearchValue={commitSearch}
       onCategory={selectCategory} onToggleFree={toggleFreeOnly}
       view={view} onView={setView}
       resourceState={resource.state} packageState={packageResource.state}
