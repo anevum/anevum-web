@@ -162,14 +162,25 @@ try{
   if(!visual.theme||!visual.spine||visual.orbital<2||visual.overflows||visual.calendar!==3||!visual.exportReady||!visual.dateLabelsNoWrap)throw Error('V106_VISUAL_CONTRACT_'+label+':'+JSON.stringify(visual));
   const range=await evaluate("(()=>{const btn=document.querySelector('[data-ci-days=\\\"7\\\"]');btn.click();const seven=document.querySelectorAll('#trend .bar-wrap:not([hidden])').length===7&&document.querySelector('#trendCaption').textContent.includes('7 UTC calendar dates');document.querySelector('[data-ci-days=\\\"14\\\"]').click();const fourteen=document.querySelectorAll('#trend .bar-wrap:not([hidden])').length===14;document.querySelector('[data-ci-days=\\\"30\\\"]').click();const thirty=document.querySelectorAll('#trend .bar-wrap:not([hidden])').length===30;return {seven,fourteen,thirty}})()");
   if(!range.seven||!range.fourteen||!range.thirty)throw Error('V106_CHART_WINDOW_'+label+':'+JSON.stringify(range));
+  const ticks=await evaluate("(()=>{const chart=document.querySelector('#trend');const slots=[...chart.querySelectorAll('.bar-wrap:not([hidden])')];const labeled=slots.filter(x=>x.dataset.day);return {count:labeled.length,fontSize:Number.parseFloat(getComputedStyle(labeled[0],'::after').fontSize),overflow:document.documentElement.scrollWidth>innerWidth+1}})()");
+  if(ticks.overflow||(width<=390&&(ticks.count<4||ticks.count>5||ticks.fontSize<8)))throw Error('V107_DATE_TICKS_'+label+':'+JSON.stringify(ticks));
   const brief=await evaluate("(async()=>{\n const button=document.querySelector('#ci-copy-brief'),status=document.querySelector('#ci-range-status');\n const fallback=document.querySelector('#ci-brief-fallback'),output=document.querySelector('#ci-brief-output');\n if(!button||button.disabled||!fallback||!output)return {enabled:false};\n Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.__testBrief=text}}});\n button.click();\n await new Promise(resolve=>setTimeout(resolve,0));\n const copied=String(window.__testBrief||'');\n const copyWorks=copied.includes('saved account registrations')&&copied.includes('untagged test accounts may be included')&&copied.includes('not unique visitors')&&!fallback.hidden===false;\n Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async()=>{throw Error('synthetic blocked clipboard')}}});\n button.click();\n await new Promise(resolve=>setTimeout(resolve,0));\n const manual=!fallback.hidden&&output.value.includes('saved account registrations')&&status.textContent.includes('Automatic clipboard access is unavailable');\n return {enabled:true,copyWorks,manual,words:copied.length};\n})()");
   if(!brief.enabled||!brief.copyWorks||!brief.manual)throw Error('V107_INTERNAL_BRIEF_'+label+':'+JSON.stringify(brief));
+  if(label==='owner-desktop'||label==='owner-phone'){
+   await evaluate("document.querySelector('#ci-brief-fallback').scrollIntoView()");
+   await capture('brief-fallback-'+label);
+  }
+  await evaluate("document.querySelector('#ci-brief-fallback').hidden=true;window.scrollTo(0,0)");
   if(requests.length!==1||rumRequests.length!==1)throw Error('V107_UI_INTERACTION_CREATED_NETWORK_CALL');
   const motion=await evaluate("(()=>{const b=document.querySelector('#ci-motion');const before=b.getAttribute('aria-pressed');b.click();const toggled=b.getAttribute('aria-pressed')!==before;b.click();return toggled&&b.getAttribute('aria-pressed')===before})()");
   if(!motion)throw Error('V106_MOTION_CONTROL_'+label);
   const rum=await evaluate("(()=>({state:document.querySelector('#ci-rum-state')?.dataset.state,days:document.querySelectorAll('#ci-rum-chart .ci-rum-slot').length,rows:document.querySelectorAll('#ci-rum-table tbody tr').length,visible:!document.querySelector('#ci-rum-chart')?.hidden,overflow:document.documentElement.scrollWidth>innerWidth+1}))()");
   if(rum.state!=='estimated'||rum.days!==30||rum.rows!==30||!rum.visible||rum.overflow)throw Error('V106_RUM_RENDER_'+label+':'+JSON.stringify(rum));
   await capture('growth-next-'+label);
+  if(label==='owner-desktop'||label==='owner-phone'){
+   await evaluate("document.querySelector('#trend').scrollIntoView()");
+   await capture('chart-next-'+label);
+  }
   if(label==='owner-desktop'||label==='owner-phone'){
    await evaluate("document.querySelector('.ci-focus-nav').scrollIntoView()");
    await capture('focus-next-'+label);
@@ -188,7 +199,7 @@ try{
   const operations=await evaluate("(()=>({theme:document.body.classList.contains('ci-next'),hero:!!document.querySelector('#ci-hero-title'),brand:!!document.querySelector('.brand .ci-orbital-mark'),controls:!!document.querySelector('[data-tab=\\\"moderation\\\"]'),ownerPanel:!!document.querySelector('#memberRows'),overflow:document.documentElement.scrollWidth>innerWidth+1,spine:!!document.querySelector('.ci-spine'),heroHeight:Math.round(document.querySelector('.ci-hero').getBoundingClientRect().height),introHidden:getComputedStyle(document.querySelector('.ci-hero p')).display==='none',secondaryHidden:getComputedStyle(document.querySelector('.ci-hero-actions a:last-child')).display==='none'}))()");
   if(!operations.theme||!operations.hero||!operations.brand||!operations.controls||!operations.ownerPanel||operations.overflow||!operations.spine||(width<=390&&(operations.heroHeight>235||!operations.introHidden||!operations.secondaryHidden)))throw Error('V106_OPERATIONS_CONTRACT_'+label+':'+JSON.stringify(operations));
   await capture('operations-next-'+label);
-  evidence.push({label,role,width,height,state,campaign,visual,range,motion,operations,rum,presets,brief,requests:[...requests],rumRequests:[...rumRequests],syntheticOnly:true});
+  evidence.push({label,role,width,height,state,campaign,visual,range,motion,operations,rum,presets,brief,ticks,requests:[...requests],rumRequests:[...rumRequests],syntheticOnly:true});
   console.log('V105_GROWTH_'+label.toUpperCase().replaceAll('-','_')+'=PASS');
  }
  offline=true;role='owner';requests=[];rumRequests=[];rumMode='unavailable';
