@@ -8,6 +8,7 @@ import {
 import { useResource } from "../lib/useResource";
 import { projectDetailPath } from "../lib/navigation";
 import { CosmicArtwork } from "../components/CosmicArtwork";
+import {ContinuanceSignalAtlas} from "../components/ContinuanceSignalAtlas";
 import { Icon } from "../components/Icons";
 import { LoadingState, ErrorState } from "../components/States";
 import "./community-hub-v007.css";
@@ -19,6 +20,7 @@ import {CommunityForums} from "./CanonicalForums";
  * The public hub only reads approved records from the existing API. No fake
  * accounts, client-awarded XP, unmoderated writes, or invented popularity.
  */
+const cinematicNextEnabled=import.meta.env.VITE_CONTINUANCE_CINEMATIC_SITEWIDE==="true";
 type View = "all" | "projects" | "conversations" | "people";
 type Entry =
   | { kind: "project"; id: string; at: number; value: Project }
@@ -158,9 +160,9 @@ export function CommunityPage() {
     event.preventDefault();
     setCreatorQuery(creatorInput.trim().slice(0, 72));
   }
-  return <div className="ch7-hub">
+  return <div className={"ch7-hub"+(cinematicNextEnabled?" av-next-commons":"")}>
     <section data-iren-anchor="community" className="ch7-hero" aria-labelledby="ch7-hero-title">
-      <div className="ch7-hero-art" aria-hidden="true"><CosmicArtwork scene="creative"/></div>
+      <div className="ch7-hero-art" aria-hidden="true"><CosmicArtwork scene="creative" priority={cinematicNextEnabled} sizes={cinematicNextEnabled?"100vw":undefined}/>{cinematicNextEnabled&&<ContinuanceSignalAtlas/>}</div>
       <div className="ch7-hero-copy"><span className="ch7-kicker">ANEVUM / COMMUNITY / PUBLIC DISCUSSIONS</span>
         <h1 id="ch7-hero-title">Made by people.<br/><em>Better together.</em></h1>
         <p>A gathering place for independent games, art, useful software, ideas and the people who make them. Discover something worth exploring. Help something new take shape.</p>
