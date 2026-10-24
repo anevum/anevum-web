@@ -1,5 +1,5 @@
 import {useEffect,useState} from 'react';
-import './project-marks-v115.css';
+import '../pages/project-marks-v115.css';
 type Mark={id:string;projectId:string;projectTitle:string;stableKey:string;title:string;description:string;
  motif:string;rewardLabel:string;earnedAt:number;trust:'creator_attested'};
 type MemberResponse={marks:Mark[];links:{linkId:string;projectId:string;title:string}[];
@@ -10,7 +10,7 @@ function validMark(m:Mark){return !!m&&UUID.test(m.id)&&UUID.test(m.projectId)&&
   typeof m.title==='string'&&m.title.length<=80&&typeof m.projectTitle==='string'&&m.projectTitle.length<=100&&
   typeof m.description==='string'&&m.description.length<=600&&m.trust==='creator_attested'&&
   Number.isSafeInteger(m.earnedAt)&&m.earnedAt>0;}
-const format=at=>new Date(at*1000).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+const format=(at:number)=>new Date(at*1000).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
 function Card({item}:{item:Mark}){
  return <article className="pm-mark">
   <span className="pm-symbol" aria-hidden="true">{({beacon:'◈',orbit:'◎',spark:'✧',atlas:'◇',key:'⌖',constellation:'✣'} as Record<string,string>)[item.motif]||'◈'}</span>
@@ -96,7 +96,7 @@ export function ProjectMarksMemberPanel(){
     <label><input type="radio" name="mark-mode" checked={mode==='curated'} disabled={pending} onChange={()=>setMode('curated')}/> Show selected marks</label>
     {mode==='curated'&&<div className="pm-picks">{data.marks.map(m=><label key={m.id}>
       <input type="checkbox" disabled={pending||(!selected.includes(m.id)&&selected.length>=6)}
-       checked={selected.includes(m.id)} onChange={e=>setSelected(xs=>e.currentTarget.checked?[...xs,m.id]:xs.filter(id=>id!==m.id))}/>
+       checked={selected.includes(m.id)} onChange={e=>{const checked=e.currentTarget.checked;setSelected(xs=>checked?[...xs,m.id]:xs.filter(id=>id!==m.id));}}/>
       {m.title} <small>from {m.projectTitle}</small>
      </label>)}</div>}
     <button type="button" disabled={pending} onClick={()=>void save()}>Save public display</button>
