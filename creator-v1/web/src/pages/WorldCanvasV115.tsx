@@ -20,27 +20,39 @@ export function WorldCanvasV115({document,camera,selection,onCamera,onSelect,onN
  const engine=useRef<WorldRenderer|null>(null);
  const gesture=useRef<Pointer|null>(null);
  const frame=useRef<number|null>(null);
+ const inView=useRef(true);
+ const motionAllowed=useRef(true);
+ const lastTick=useRef(0);
  const current=useRef<Props>({document,camera,selection,onCamera,onSelect,onNudge});
  const [status,setStatus]=useState<Status>('initializing');
  const [reason,setReason]=useState('');
  const [restartKey,setRestartKey]=useState(0);
  current.current={document,camera,selection,onCamera,onSelect,onNudge};
  function schedule(){
-  if(frame.current!==null||documentVisibilityHidden())return;
-  frame.current=requestAnimationFrame(()=>{
+  if(frame.current!==null||documentVisibilityHidden()||!inView.current)return;
+  frame.current=requestAnimationFrame(now=>{
    frame.current=null;
    const canvas=ref.current,renderer=engine.current;
-   if(!canvas||!renderer)return;
+   if(!canvas||!renderer||!inView.current||documentVisibilityHidden())return;
    const rect=canvas.getBoundingClientRect();
    if(rect.width<1||rect.height<1)return;
+   const moving=motionAllowed.current;
+   // GPU budget: 24 fps desktop, 18 fps mobile. Match OS reduced-motion
+   // without introducing the extra pause UI disallowed by the design.
+   const minFrameTime=rect.width<=680?55:42;
+   if(moving&&lastTick.current&&now-lastTick.current<minFrameTime){
+    schedule();return;
+   }
+   lastTick.current=now;
    try{
     const p=current.current;
-    renderer.render(p.document,p.camera,p.selection,rect.width,rect.height);
+    renderer.render(p.document,p.camera,p.selection,rect.width,rect.height,moving?now/1000:0);
    }catch(error){
     setReason(error instanceof Error?error.message:'GPU rendering failed');
     setStatus('error');
     renderer.dispose();engine.current=null;
    }
+   if(moving&&engine.current)schedule();
   });
  }
  function documentVisibilityHidden(){return typeof window==='undefined'||window.document.hidden;}
@@ -66,13 +78,25 @@ export function WorldCanvasV115({document,camera,selection,onCamera,onSelect,onN
   function contextRestored(){init();}
   const observer=new ResizeObserver(()=>schedule());
   observer.observe(canvas);
+  const intersection=new IntersectionObserver(entries=>{
+   inView.current=entries.some(entry=>entry.isIntersecting);
+   if(inView.current)schedule();
+   else if(frame.current!==null){cancelAnimationFrame(frame.current);frame.current=null;}
+  },{threshold:0});
+  intersection.observe(canvas);
+  const preference=window.matchMedia('(prefers-reduced-motion: reduce)');
+  const setMotion=()=>{motionAllowed.current=!preference.matches;schedule();};
+  preference.addEventListener('change',setMotion);
+  setMotion();
   const visible=()=>schedule();
   window.document.addEventListener('visibilitychange',visible);
   canvas.addEventListener('webglcontextlost',contextLost);
   canvas.addEventListener('webglcontextrestored',contextRestored);
   init();
   return ()=>{
-   closed=true;observer.disconnect();window.document.removeEventListener('visibilitychange',visible);
+   closed=true;observer.disconnect();intersection.disconnect();
+   preference.removeEventListener('change',setMotion);
+   window.document.removeEventListener('visibilitychange',visible);
    canvas.removeEventListener('webglcontextlost',contextLost);
    canvas.removeEventListener('webglcontextrestored',contextRestored);
    if(frame.current!==null)cancelAnimationFrame(frame.current);
