@@ -427,3 +427,35 @@ html[data-av-next-visual="v134"] .av79-destination-icon {color:var(--av134-cyan)
   .av134-lab .av134-input {color:CanvasText;-webkit-text-fill-color:CanvasText;background:Canvas}
   .av134-lab .av134-highlight {visibility:hidden}
 }
+
+/* Exact preview containment and polished interactive menu edges. */
+.av134-lab .av134-live-frame {
+  width:100%;min-height:290px;flex:1;border:1px solid var(--av134-edge);
+  border-radius:14px;background:#0b142b;
+  box-shadow:inset 0 1px rgba(255,255,255,.14),0 16px 38px rgba(0,4,19,.25);
+}
+.av134-lab .av134-source-title button:disabled {cursor:not-allowed;opacity:.5}
+html[data-av-next-visual="v134"] .av79-navigation .av79-destination {
+  border:1px solid transparent;border-radius:13px;
+  transition:background-color .16s ease,border-color .16s ease,transform .16s ease;
+}
+html[data-av-next-visual="v134"] .av79-navigation .av79-destination:is(:hover,:focus-visible) {
+  background:rgba(71,95,157,.19);border-color:rgba(145,187,255,.36);
+}
+html[data-av-next-visual="v134"] .av79-navigation .av79-destination-icon {
+  border-radius:11px;background:linear-gradient(145deg,rgba(76,112,183,.18),rgba(25,40,74,.28));
+}
+html[data-av-next-visual="v134"] :is(.av9-brand .brand-mark,.av79-wayfinder-mark,.av134-toolbar-brand svg) {
+  shape-rendering:geometricPrecision;
+}
+html[data-av-next-visual="v134"] .av79-navigation .av79-navigation-search {
+  border:1px solid rgba(139,188,255,.36);
+  border-radius:12px;background:rgba(11,22,44,.72);
+}
+html[data-av-next-visual="v134"] .av79-navigation .av79-navigation-search:focus-visible {
+  outline:3px solid var(--av134-cyan);outline-offset:3px;
+}
+@media (max-width:760px) {
+  .av134-lab .av134-live-frame {min-height:240px;flex:none}
+  html[data-av-next-visual="v134"] .av79-navigation {border-radius:15px}
+}
