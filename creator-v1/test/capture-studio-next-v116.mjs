@@ -54,9 +54,10 @@ async function setSize(width,height){
  await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:2,mobile:width<=680});
  await sleep(300);
  const val=await evaluate('(()=>{const r=document.querySelector(".cvw-root"),c=document.querySelector(".cvw-world-canvas");'+
-  'const rect=r.getBoundingClientRect(),canvas=c.getBoundingClientRect();return {'+
+  'const rect=r.getBoundingClientRect(),canvas=c?.getBoundingClientRect();return {'+
   'viewport:innerWidth,scrollWidth:r.scrollWidth,clientWidth:r.clientWidth,x:rect.x,right:rect.right,'+
-  'canvasWidth:c.width,canvasHeight:c.height,visibleCanvasWidth:canvas.width,renderer:c.parentElement.dataset.worldCanvasV115}})()');
+  'canvasWidth:c?.width??0,canvasHeight:c?.height??0,visibleCanvasWidth:canvas?.width??0,'+
+  'renderer:c?.parentElement?.dataset.worldCanvasV115??null}})()');
  assert.ok(val.scrollWidth<=val.clientWidth+2,'Studio overflow '+JSON.stringify(val));
  assert.ok(val.x>=-2&&val.right<=width+2,'Studio over viewport '+JSON.stringify(val));
  return val;
