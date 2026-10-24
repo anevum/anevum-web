@@ -114,6 +114,7 @@ test('new confirmation reactivates a properly unsubscribed address only after ne
   assert.equal((await h.execute('confirm',{token})).status,200);
   assert.equal(h.get(h.email).releases,1);
   assert.equal(h.get(h.email).weekly,0);
+  assert.equal(h.get(h.email).unsubscribed_at,null,'new confirmed consent must clear the previous terminal unsubscribe marker');
   assert.deepEqual(h.logs(h.email),['optin-requested','confirmed','unsubscribed','optin-requested','confirmed']);
  }finally{h.close()}
 });
