@@ -159,6 +159,10 @@ try{
     if(state==='project'){
       await page.getByRole('heading',{name:fixture.title,exact:true}).waitFor();
       assert.equal(await page.getByRole('link',{name:'View '+fixture.title,exact:true}).count(),1);
+      // The homepage remains a direct project link. Inspection is a
+      // Discover-only affordance and must not be invented on the homepage.
+      await page.goto(base+'/discover',{waitUntil:'networkidle'});
+      await page.getByRole('heading',{name:fixture.title,exact:true}).waitFor();
       const inspect=page.getByRole('button',{name:'Inspect '+fixture.title,exact:true});
       assert.equal(await inspect.count(),1,'Approved project has one optional Artifact Lens action');
       const before=page.url();
