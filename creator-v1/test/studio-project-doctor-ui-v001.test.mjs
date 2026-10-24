@@ -64,10 +64,17 @@ test('diagnostic navigation only selects valid local editor nodes, never saves o
  assert.match(workspace,/jumpTo=\{doctorJump\?\.kind==='scene'\?doctorJump:null\}/);
  assert.match(sceneEditor,/jumpTo\.blockId/);
  assert.match(sceneEditor,/setSelectedId\(jumpTo\.blockId\)/);
+ assert.match(sceneEditor,/ref=\{blockTreeRef\}/);
+ assert.match(sceneEditor,/data-block-id=\{item\.id\}/);
+ assert.match(sceneEditor,/querySelector<HTMLButtonElement>/);
  assert.match(sceneEditor,/setMode\('compose'\)/);
  assert.match(interfaceEditor,/jumpTo\.pageId/);
  assert.match(interfaceEditor,/setPageId\(page\.id\)/);
  assert.match(interfaceEditor,/setComponentId\(jumpTo\.componentId\)/);
+ assert.match(interfaceEditor,/ref=\{explorerRef\}/);
+ assert.match(interfaceEditor,/data-page-id=\{pg\.id\}/);
+ assert.match(interfaceEditor,/data-component-id=\{item\.id\}/);
+ assert.match(interfaceEditor,/querySelector<HTMLButtonElement>/);
  assert.match(interfaceEditor,/setView\('design'\)/);
  assert.match(css,/\.cpd-filters/);
  assert.match(css,/\.cpd-jump/);
