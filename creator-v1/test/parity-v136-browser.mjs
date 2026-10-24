@@ -15,7 +15,7 @@ const server=createServer((req,res)=>{
   if(!['GET','HEAD'].includes(req.method)){res.writeHead(405);res.end();return;}
   let name;try{name=decodeURIComponent(new URL(req.url,'http://127.0.0.1').pathname);}catch{res.writeHead(400);res.end();return;}
   let file=resolve(build,'.'+name);
-  if(!file.startsWith(build+sep)){res.writeHead(403);res.end();return;}
+  if(file!==build&&!file.startsWith(build+sep)){res.writeHead(403);res.end();return;}
   if(!existsSync(file)||!statSync(file).isFile()){
     if(extname(file)){res.writeHead(404);res.end();return;}
     file=join(build,'index.html');
@@ -53,7 +53,8 @@ async function contextFor(width,{motion='reduce',state='empty',failedArt=false}=
 try{
   for(const width of [1440,1024,390,320]){
     const {page,context}=await contextFor(width);
-    await page.goto(base,{waitUntil:'networkidle'});
+    const response=await page.goto(base,{waitUntil:'networkidle'});
+    assert.equal(response.status(),200,'Compiled homepage is served successfully');
     await page.locator('.av136-arrival').waitFor();
     await page.waitForFunction(()=>getComputedStyle(document.documentElement).getPropertyValue('--av136-void').trim()!=='');
     await page.locator('.av133-first-look-empty').waitFor();
