@@ -4,6 +4,12 @@ on:
     paths:
       - '.github/workflows/parity-v136-cinematic-production.yml'
       - 'creator-v1/graphics/author-cinematic-institute-v136.py'
+      - 'creator-v1/graphics/lod-cinematic-institute-v136.py'
+      - 'creator-v1/graphics/optimize-cinematic-runtime-v136.mjs'
+      - 'creator-v1/web/src/parity/CinematicStageGeometryV136.ts'
+      - 'creator-v1/test/parity-v136-stage-geometry.test.mjs'
+      - 'creator-v1/test/parity-v136-cinematic-stage-browser.mjs'
+      - 'docs/production/parity-v136-cinematic-runtime-20261024.md'
       - 'creator-v1/graphics/inspect-cinematic-camera-v136.mjs'
       - 'creator-v1/test/parity-v136-camera-registration.test.mjs'
       - 'creator-v1/web/src/parity/CinematicCameraRegistrationV136.ts'
@@ -49,6 +55,7 @@ jobs:
           node --experimental-strip-types --test creator-v1/test/parity-v136-media-contract.test.mjs
           node --experimental-strip-types --test creator-v1/test/parity-v136-cinematic.test.mjs
           node --experimental-strip-types --test creator-v1/test/parity-v136-camera-registration.test.mjs
+          node --experimental-strip-types --test creator-v1/test/parity-v136-stage-geometry.test.mjs
       - name: Encode real short footage and verify both image/video derivatives
         run: node creator-v1/graphics/smoke-cinematic-v136.mjs
 
@@ -82,6 +89,42 @@ jobs:
         run: node creator-v1/graphics/inspect-cinematic-candidate-v136.mjs --candidate "$RUNNER_TEMP/continuance-cinematic"
       - name: Check camera transforms against exported ORIGINAL review GLB and landmarks
         run: node --experimental-strip-types creator-v1/graphics/inspect-cinematic-camera-v136.mjs --source "$RUNNER_TEMP/continuance-blender" --candidate "$RUNNER_TEMP/continuance-cinematic"
+      - name: Create desktop/mobile material-batched geometry from packed Blender source
+        run: |
+          PYTHONPATH=/usr/lib/python3/dist-packages blender --background --python creator-v1/graphics/lod-cinematic-institute-v136.py -- --blend "$RUNNER_TEMP/continuance-blender/continuance-institute-atrium-v136014.blend" --camera-manifest "$RUNNER_TEMP/continuance-blender/camera-manifest.json" --out "$RUNNER_TEMP/continuance-lod"
+      - name: Install pinned project optimization and stage preview dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - name: Compress original scene variants with Meshopt and enforce source/budget gates
+        run: node creator-v1/graphics/optimize-cinematic-runtime-v136.mjs --lod "$RUNNER_TEMP/continuance-lod" --camera "$RUNNER_TEMP/continuance-blender/camera-manifest.json" --out "$RUNNER_TEMP/continuance-stage"
+      - name: Compile opt-in stage geometry into a disposable compiled QA site only
+        env:
+          VITE_PARITY_V136_FULL: 'true'
+          VITE_PARITY_V136_CINEMATIC: 'true'
+          VITE_PARITY_V136_SHARED_SCENE_QA: 'true'
+        run: |
+          mkdir -p creator-v1/web/public/assets/cinematic-v136/stage
+          cp "$RUNNER_TEMP/continuance-stage/"*.glb "$RUNNER_TEMP/continuance-stage/manifest.json" creator-v1/web/public/assets/cinematic-v136/stage/
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+      - name: Install isolated Chromium browser with software WebGL
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
+          npx playwright install --with-deps chromium
+      - name: Render real shared cinematic geometry and camera in desktop/mobile QA
+        env:
+          VITE_PARITY_V136_SHARED_SCENE_QA: 'true'
+        run: node creator-v1/test/parity-v136-cinematic-stage-browser.mjs
+      - name: Upload original and optimized 3D plus QA evidence (never production assets)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-v136-cinematic-runtime-STAGE-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            ${{ runner.temp }}/continuance-lod/
+            ${{ runner.temp }}/continuance-stage/
+            evidence/parity-v136/cinematic-shared-stage/
+          retention-days: 14
+          if-no-files-found: warn
       - name: Publish reviewer-only render source and playback derivatives
         if: always()
         uses: actions/upload-artifact@v4

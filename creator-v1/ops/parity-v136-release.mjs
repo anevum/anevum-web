@@ -76,6 +76,12 @@ const allowed=new Set([
   '.github/workflows/parity-v136-cinematic-production.yml',
   'creator-v1/graphics/author-cinematic-institute-v136.py',
   'creator-v1/graphics/inspect-cinematic-camera-v136.mjs',
+  'creator-v1/graphics/lod-cinematic-institute-v136.py',
+  'creator-v1/graphics/optimize-cinematic-runtime-v136.mjs',
+  'creator-v1/web/src/parity/CinematicStageGeometryV136.ts',
+  'creator-v1/test/parity-v136-stage-geometry.test.mjs',
+  'creator-v1/test/parity-v136-cinematic-stage-browser.mjs',
+  'docs/production/parity-v136-cinematic-runtime-20261024.md',
   'creator-v1/test/parity-v136-camera-registration.test.mjs',
   'docs/production/parity-v136-cinematic-camera-handoff-20261024.md',
   'creator-v1/web/src/parity/CinematicCameraRegistrationV136.ts',
@@ -95,11 +101,17 @@ const allowed=new Set([
  ...['institute-768.webp','institute-1536.webp','institute-1672.webp','manifest.json'].map(x=>'creator-v1/web/public/assets/parity-v136/'+x)
 ]);
 export function source(){
+ // Staged cinematic geometry/video are reviewed artifacts only. Never permit
+ // deployment or packaging with either private QA or unapproved media flags.
+ assert.notEqual(process.env.VITE_PARITY_V136_SHARED_SCENE_QA,'true',
+  'Shared cinematic scene QA flag must be disabled in release');
+ assert.notEqual(process.env.VITE_PARITY_V136_NATIVE_VIDEO,'true',
+  'Native video requires independently reviewed CSP/media deployment');
  git('merge-base','--is-ancestor',BASE,'HEAD');
  // Allow this renderer's pinned additions without permitting collateral changes
  // to auth/runtime dependencies through the package.json allowlist.
  const baseline=JSON.parse(git('show',BASE+':package.json')),current=load('package.json');
- const additions={dependencies:{three:'0.180.0','monaco-editor':'0.55.1',fflate:'0.8.2'},devDependencies:{'@types/three':'0.180.0','@gltf-transform/core':'4.2.1','@gltf-transform/extensions':'4.2.1',meshoptimizer:'0.24.0',basisu:'1.16.3'}};
+ const additions={dependencies:{three:'0.180.0','monaco-editor':'0.55.1',fflate:'0.8.2'},devDependencies:{'@types/three':'0.180.0','@gltf-transform/core':'4.2.1','@gltf-transform/extensions':'4.2.1','@gltf-transform/functions':'4.2.1',meshoptimizer:'0.24.0',basisu:'1.16.3'}};
  for(const field of ['dependencies','devDependencies'])assert.deepEqual(current[field],{...baseline[field],...additions[field]},'Only pinned graphics dependencies may change');
  assert.deepEqual(current.scripts,baseline.scripts,'Build and protected-system commands preserved');
  const changed=git('diff','--name-only',BASE,'HEAD').split('\n').filter(Boolean);

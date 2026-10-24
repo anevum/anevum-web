@@ -13,6 +13,7 @@ import './cinematic-arrival-v136.css';
  */
 const enabled=import.meta.env.VITE_PARITY_V136_CINEMATIC==='true';
 const nativeVideoFlag=import.meta.env.VITE_PARITY_V136_NATIVE_VIDEO==='true';
+const stageCamera=import.meta.env.VITE_PARITY_V136_SHARED_SCENE_QA==='true';
 const approvedSequence=approvedCinematicSequence(manifest.sequence);
 const videoCandidate=(manifest as unknown as {video?:unknown}).video;
 const approvedVideo=approvedCinematicVideo(videoCandidate);
@@ -59,6 +60,9 @@ export function CinematicArrivalV136(){
    setMode(previous=>previous===nextMode?previous:nextMode);
    setPlayAllowed(previous=>previous===videoPlayable?previous:videoPlayable);
    const travel=cinematicScrollProgress(hero.getBoundingClientRect().top,hero.getBoundingClientRect().height);
+   // The shared 3D renderer reads this strictly local normalized value only
+   // when the isolated stage-geometry build flag is enabled.
+   if(stageCamera)element.dataset.cameraProgress=travel.toFixed(4);
    const staticPreference=reduced.matches||paused||Boolean(connection?.saveData);
    const readiness=cinematicWorldReadiness(world?.dataset.renderer==='webgl'?'webgl':
     world?.dataset.renderer==='vector'?'vector':null,worldCanvas?.dataset.assetState??null);
