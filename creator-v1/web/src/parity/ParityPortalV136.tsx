@@ -2,7 +2,6 @@ import {useState, type FormEvent} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import {Icon} from '../components/Icons';
 import {OrbitalMark} from '../components/OrbitalMark';
-import {useLivingWorld} from './LivingWorldState';
 import {CosmicArtwork} from '../components/CosmicArtwork';
 import {projectDetailPath} from '../lib/navigation';
 import type {Project, Category} from '../lib/api';
@@ -47,7 +46,6 @@ function PublicProjectCard({project}:{project:Project}){
 }
 export function ParityPortalV136({projects,catalogueState,signedIn,verifiedCount}:Props){
   const navigate=useNavigate(),[search,setSearch]=useState('');
-  const {paused,setPaused}=useLivingWorld();
   function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();navigate(search.trim()?'/discover?q='+encodeURIComponent(search.trim()):'/discover');}
   return <div className="p136-portal" data-parity-v136="full">
     <section className="p136-hero" aria-labelledby="p136-hero-title">
@@ -81,7 +79,6 @@ export function ParityPortalV136({projects,catalogueState,signedIn,verifiedCount
         <Link to="/community"><Icon name="community" size={21}/><span><strong>Community</strong><small>Ideas and discussions</small></span></Link>
         <Link to="/studio"><Icon name="create" size={21}/><span><strong>Creator Studio</strong><small>Tools for building</small></span></Link>
       </nav>
-      <button type="button" className="p136-motion-control" aria-pressed={paused} onClick={()=>setPaused(value=>!value)} aria-label="Pause atmospheric animation">{paused?'Resume atmosphere':'Pause atmosphere'}</button>
     </section>
     <section className="p136-discover" aria-labelledby="p136-discover-title">
       <div className="p136-section-heading">
