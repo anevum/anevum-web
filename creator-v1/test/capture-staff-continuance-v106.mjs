@@ -6,6 +6,7 @@ import {createServer} from 'node:http';
 import {decorateObservatoryHtml} from '../operations/anevum-iren-staff-observatory-v106.mjs';
 import {NEXT_CSS,NEXT_CLIENT} from '../operations/anevum-observatory-continuance-v106-assets.mjs';
 import {RUM_CSS,RUM_CLIENT} from '../operations/anevum-observatory-rum-v106-assets.mjs';
+import {WEEKLY_CSS,WEEKLY_CLIENT} from '../analytics/anevum-observatory-weekly-v107.mjs';
 import {spawn} from 'node:child_process';
 import {readFileSync,writeFileSync,mkdirSync,existsSync,mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
@@ -61,8 +62,8 @@ const server=createServer((req,res)=>{
  if(path==='/staff/observatory'||path==='/staff/observatory/')return reply(ops,'text/html; charset=utf-8');
  if(path==='/staff/observatory/styles.css')return reply(opsCss,'text/css; charset=utf-8');
  if(path==='/staff/observatory/app.js')return reply(opsJs,'application/javascript; charset=utf-8');
- if(path==='/staff/observatory/continuance-v106.css')return reply(NEXT_CSS,'text/css; charset=utf-8');
- if(path==='/staff/observatory/continuance-v106.js')return reply(NEXT_CLIENT,'application/javascript; charset=utf-8');
+ if(path==='/staff/observatory/continuance-v106.css')return reply(NEXT_CSS+'\n'+WEEKLY_CSS,'text/css; charset=utf-8');
+ if(path==='/staff/observatory/continuance-v106.js')return reply(NEXT_CLIENT+'\n'+WEEKLY_CLIENT,'application/javascript; charset=utf-8');
  if(path==='/staff/observatory/rum.css')return reply(RUM_CSS,'text/css; charset=utf-8');
  if(path==='/staff/observatory/rum.js')return reply(RUM_CLIENT,'application/javascript; charset=utf-8');
  if(path==='/staff/observatory/rum/api'){
@@ -158,6 +159,11 @@ try{
   await evaluate("document.querySelector('[data-ci-section=\"acquisition\"]').click()");
   await poll(()=>evaluate("document.querySelector('[data-ci-section=\"acquisition\"]').getAttribute('aria-current')==='location'"));
   await evaluate("window.scrollTo(0,0)");
+  await poll(()=>evaluate("document.querySelector('#ci-weekly-signal')?.dataset.ciState==='verified'"));
+  const weekly=await evaluate("(()=>{const panel=document.querySelector('#ci-weekly-signal');\nconst id=id=>document.getElementById(id);\nreturn {state:panel?.dataset.ciState,current:id('ci-weekly-current')?.textContent,previous:id('ci-weekly-previous')?.textContent,delta:id('ci-weekly-delta')?.textContent,context:id('ci-weekly-context')?.textContent||'',last:id('ci-weekly-current-dates')?.textContent,overflow:document.documentElement.scrollWidth>innerWidth+1}})()");
+  if(weekly.state!=='verified'||weekly.current!=='5'||weekly.previous!=='2'||weekly.delta!=='+3'||!weekly.context.includes('untagged test accounts')||!weekly.context.includes('excluded')||weekly.overflow)
+   throw Error('V107_COMPLETE_WEEK_CONTRACT_'+label+':'+JSON.stringify(weekly));
+  if(requests.length!==1||rumRequests.length!==1)throw Error('V107_WEEKLY_EXTRA_NETWORK_REQUESTS');
   const visual=await evaluate("(()=>({theme:document.body.classList.contains('ci-next'),spine:!!document.querySelector('.ci-spine'),orbital:document.querySelectorAll('.ci-orbital-mark').length,overflows:document.documentElement.scrollWidth>innerWidth+1,calendar:document.querySelectorAll('[data-ci-days]').length,exportReady:!document.querySelector('#ci-export')?.disabled,dateLabelsNoWrap:getComputedStyle(document.querySelector('#trend .bar-wrap'),'::after').whiteSpace==='nowrap'}))()");
   if(!visual.theme||!visual.spine||visual.orbital<2||visual.overflows||visual.calendar!==3||!visual.exportReady||!visual.dateLabelsNoWrap)throw Error('V106_VISUAL_CONTRACT_'+label+':'+JSON.stringify(visual));
   const range=await evaluate("(()=>{const btn=document.querySelector('[data-ci-days=\\\"7\\\"]');btn.click();const seven=document.querySelectorAll('#trend .bar-wrap:not([hidden])').length===7&&document.querySelector('#trendCaption').textContent.includes('7 UTC calendar dates');document.querySelector('[data-ci-days=\\\"14\\\"]').click();const fourteen=document.querySelectorAll('#trend .bar-wrap:not([hidden])').length===14;document.querySelector('[data-ci-days=\\\"30\\\"]').click();const thirty=document.querySelectorAll('#trend .bar-wrap:not([hidden])').length===30;return {seven,fourteen,thirty}})()");
@@ -177,6 +183,10 @@ try{
   const rum=await evaluate("(()=>({state:document.querySelector('#ci-rum-state')?.dataset.state,days:document.querySelectorAll('#ci-rum-chart .ci-rum-slot').length,rows:document.querySelectorAll('#ci-rum-table tbody tr').length,visible:!document.querySelector('#ci-rum-chart')?.hidden,overflow:document.documentElement.scrollWidth>innerWidth+1}))()");
   if(rum.state!=='estimated'||rum.days!==30||rum.rows!==30||!rum.visible||rum.overflow)throw Error('V106_RUM_RENDER_'+label+':'+JSON.stringify(rum));
   await capture('growth-next-'+label);
+  if(label==='owner-desktop'||label==='owner-phone'){
+   await evaluate("document.querySelector('#ci-weekly-signal').scrollIntoView()");
+   await capture('weekly-next-'+label);
+  }
   if(label==='owner-desktop'||label==='owner-phone'){
    await evaluate("document.querySelector('#trend').scrollIntoView()");
    await capture('chart-next-'+label);
@@ -199,7 +209,7 @@ try{
   const operations=await evaluate("(()=>({theme:document.body.classList.contains('ci-next'),hero:!!document.querySelector('#ci-hero-title'),brand:!!document.querySelector('.brand .ci-orbital-mark'),controls:!!document.querySelector('[data-tab=\\\"moderation\\\"]'),ownerPanel:!!document.querySelector('#memberRows'),overflow:document.documentElement.scrollWidth>innerWidth+1,spine:!!document.querySelector('.ci-spine'),heroHeight:Math.round(document.querySelector('.ci-hero').getBoundingClientRect().height),introHidden:getComputedStyle(document.querySelector('.ci-hero p')).display==='none',secondaryHidden:getComputedStyle(document.querySelector('.ci-hero-actions a:last-child')).display==='none'}))()");
   if(!operations.theme||!operations.hero||!operations.brand||!operations.controls||!operations.ownerPanel||operations.overflow||!operations.spine||(width<=390&&(operations.heroHeight>235||!operations.introHidden||!operations.secondaryHidden)))throw Error('V106_OPERATIONS_CONTRACT_'+label+':'+JSON.stringify(operations));
   await capture('operations-next-'+label);
-  evidence.push({label,role,width,height,state,campaign,visual,range,motion,operations,rum,presets,brief,ticks,requests:[...requests],rumRequests:[...rumRequests],syntheticOnly:true});
+  evidence.push({label,role,width,height,state,campaign,visual,range,motion,operations,rum,presets,brief,ticks,weekly,requests:[...requests],rumRequests:[...rumRequests],syntheticOnly:true});
   console.log('V105_GROWTH_'+label.toUpperCase().replaceAll('-','_')+'=PASS');
  }
  offline=true;role='owner';requests=[];rumRequests=[];rumMode='unavailable';
@@ -208,6 +218,7 @@ try{
  const failure=await evaluate("(()=>({kpis:document.querySelectorAll('#kpis .kpi').length,bars:document.querySelectorAll('#trend .bar').length,health:document.querySelector('#health')?.textContent}))()");
  if(failure.kpis||failure.bars||!failure.health.includes('DATA UNAVAILABLE'))throw Error('V105_MISSING_DATA_LIES_'+JSON.stringify(failure));
  await poll(()=>evaluate("document.querySelector('#ci-rum-state')?.dataset.state==='unavailable'"));
+ await poll(()=>evaluate("document.querySelector('#ci-weekly-signal')?.dataset.ciState==='unavailable'"));
  const offlineCheck=await evaluate("document.querySelector('#ci-export')?.disabled===true&&document.querySelector('#ci-copy-brief')?.disabled===true&&document.body.classList.contains('ci-next')&&document.querySelector('#ci-rum-chart')?.hidden===true");
  if(!offlineCheck)throw Error('V106_OFFLINE_EXPORT_ENABLED');
  await capture('offline-phone');
