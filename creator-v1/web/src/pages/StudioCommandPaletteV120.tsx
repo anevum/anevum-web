@@ -19,18 +19,19 @@ export function StudioCommandPaletteV120({items,onChoose,onClose,initialMode='fi
  const input=useRef<HTMLInputElement|null>(null);
  const root=useRef<HTMLDivElement|null>(null);
  const id=useId().replace(/:/g,'-');
+ const latestClose=useRef(onClose);
+ latestClose.current=onClose;
  const results=useMemo(()=>rankStudioItems(items.filter(item=>mode==='files'?
   item.kind==='file':item.kind==='command'),query,12),[items,mode,query]);
- useEffect(()=>{input.current?.focus();},[]);
  useEffect(()=>{
   const previous=window.document.activeElement instanceof HTMLElement?window.document.activeElement:null;
-  const focusTimer=window.requestAnimationFrame(()=>input.current?.focus());
+  input.current?.focus();
   const onKey=(event:globalThis.KeyboardEvent)=>{
-   if(event.key==='Escape'){event.preventDefault();onClose();}
+   if(event.key==='Escape'){event.preventDefault();latestClose.current();}
   };
   window.document.addEventListener('keydown',onKey);
-  return()=>{window.cancelAnimationFrame(focusTimer);window.document.removeEventListener('keydown',onKey);previous?.focus();};
- },[onClose]);
+  return()=>{window.document.removeEventListener('keydown',onKey);previous?.focus();};
+ },[]);
  function choose(item:StudioPaletteItem){
   if(item.disabled)return;
   onChoose(item);
