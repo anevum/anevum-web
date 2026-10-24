@@ -100,6 +100,8 @@ test('approved post author cards show only published, optionally verified creato
  assert.match(page,/visibleLevel !== null/);
  assert.match(page,/className="lnx-thread-author"/);
  assert.match(page,/className="lnx-author-recognition"/);
+ assert.match(page,/className="lnx-author-level-seal"/);
+ assert.doesNotMatch(page,/<LevelEmblem/,'Post authors must not request gated member reward image endpoints');
  assert.match(page,/aria-label=\{'Public author card: ' \+ name\}/);
  assert.match(css,/\.lnx-root \.lnx-thread-author/);
  assert.match(css,/@media\(forced-colors:active\)/);
