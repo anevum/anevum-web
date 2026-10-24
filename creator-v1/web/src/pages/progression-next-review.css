@@ -113,3 +113,6 @@
  .px-mobile-area-picker select{display:block;width:100%;max-width:100%;min-height:46px;padding:10px 13px;background:#1e2435;color:#f3eafa;border:1px solid rgba(188,200,223,.35);border-radius:9px;font-size:14px;font-weight:600;font-family:inherit}
  .px-guest>div{min-width:0}
 }
+
+/* Keep IREN clear of microcopy on 320px and smaller displays. */
+@media(max-width:360px){.px-browse-intro{padding-right:58px}.px-root .px-nav button{white-space:nowrap;font-size:12px}}

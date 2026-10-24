@@ -10,7 +10,7 @@ import {ACTIVITIES,TRACKS,EXPEDITIONS,browseActivities,summarizeProgress,type Ac
 import './progression-next-review.css';
 
 type View='earn'|'expeditions'|'chronicle';
-const VIEWS:ReadonlyArray<{id:View;label:string}>=[{id:'earn',label:'Explore'},{id:'expeditions',label:'Guided paths'},{id:'chronicle',label:'My history'}];
+const VIEWS:ReadonlyArray<{id:View;label:string}>=[{id:'earn',label:'Explore'},{id:'expeditions',label:'Paths'},{id:'chronicle',label:'History'}];
 const readProgress=(signal:AbortSignal)=>progressionRequest<{progression:MemberProgression}>('progression',undefined,signal);
 const dateLabel=(value:number)=>Number.isFinite(value)&&value>0?new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'}).format(new Date(value*1000)):'Date unavailable';
 
