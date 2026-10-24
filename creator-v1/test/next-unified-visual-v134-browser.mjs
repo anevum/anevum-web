@@ -182,6 +182,23 @@ try{
         assert.equal(guestHeading.style,'normal','Nested member guest heading is not italic');
         record('Community type parity '+width,{...actual,guestHeading});
       }
+      if(name==='creators'&&width<=390){
+        const form=page.locator('.portal-creators form.portal-wide-search');
+        const metrics=await form.evaluate(node=>{
+          const input=node.querySelector('input'),button=node.querySelector('button');
+          const a=input.getBoundingClientRect(),b=button.getBoundingClientRect();
+          return {
+            formWidth:node.getBoundingClientRect().width,
+            inputWidth:a.width,inputHeight:a.height,inputBottom:a.bottom,
+            buttonTop:b.top,buttonWidth:b.width,buttonHeight:b.height
+          };
+        });
+        assert.ok(metrics.inputWidth>=Math.min(245,width-85),'Creator search input too compressed at '+width);
+        assert.ok(metrics.buttonTop>=metrics.inputBottom-1,'Creator search controls overlap at '+width);
+        assert.ok(metrics.buttonHeight>=44,'Creator search action below touch target requirement');
+        assert.ok(metrics.buttonWidth>=metrics.inputWidth-1,'Creator search action not full width at '+width);
+        record('V135 creator search repaired '+width,metrics);
+      }
       if(name==='discover'){
         await page.locator('.state-error h2').waitFor();
         const family=await page.locator('.state-error h2').evaluate(el=>getComputedStyle(el).fontFamily);
