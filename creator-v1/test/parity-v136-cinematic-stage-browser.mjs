@@ -71,6 +71,9 @@ try{
    const canvas=document.querySelector('.p136-living-canvas');
    return canvas?.dataset.cinemaStage==='ready'&&canvas?.dataset.assetState==='ready';
   },null,{timeout:60000});
+  // Mesh readiness precedes the existing 1-second opacity/draw transition.
+  // Sample stable geometry rather than temporarily double-drawn materials.
+  await page.waitForTimeout(1800);
   const start=await page.evaluate(()=>{
    const canvas=document.querySelector('.p136-living-canvas');
    const world=document.querySelector('.p136-living-world');
@@ -95,7 +98,9 @@ try{
   assert.equal(start.mediaCount,0,'No reviewed cinematic video or autoplay');
   assert.equal(start.cinema,'poster','No media approvals were invented');
   assert.ok(start.controlsVisible,'The real Discover action remains usable');
-  assert.ok(start.modelBudget.drawCalls<=65,'Staged authoring must not destroy GPU draw-call budget');
+  console.log('OBSERVED_STAGE_METRICS '+JSON.stringify({width,model:start.model,metrics:start.modelBudget}));
+  assert.ok(start.modelBudget.drawCalls<=65,
+   'Staged authoring must not destroy GPU draw-call budget: '+JSON.stringify(start.modelBudget));
   assert.ok(start.modelBudget.triangles<=200000,'Staged geometry must be bounded');
   const capture=async name=>{
    const png=await page.locator('.p136-living-canvas').screenshot({animations:'disabled'});
