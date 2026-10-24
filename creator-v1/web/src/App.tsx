@@ -36,6 +36,7 @@ import SupporterCollectionPage from './pages/SupporterCollectionPage';
 const WorkbenchAlphaPage=lazy(()=>import("./pages/WorkbenchAlpha").then(m=>({default:m.WorkbenchAlphaPage})));
 const NativeCreatorStudioPage=lazy(()=>import("./pages/NativeCreatorStudio").then(m=>({default:m.NativeCreatorStudioPage})));
 const CreatorWorkspacePage=lazy(()=>import("./pages/CreatorStudioWorkspaceV109").then(m=>({default:m.CreatorStudioWorkspacePage})));
+const StudioAchievementsPage=lazy(()=>import("./pages/StudioAchievementsV114").then(m=>({default:m.StudioAchievementsPage})));
 const NativePackagePlayerPage=lazy(()=>import("./pages/NativeCreatorStudio").then(m=>({default:m.NativePackagePlayerPage})));
 const creatorFallback=<LoadingState label="Opening Creator Studio"/>;
 const PublicBoardsPage = lazy(() => import("./pages/PublicBoardsPage").then(mod=>({default:mod.PublicBoardsPage})));
@@ -108,6 +109,7 @@ export default function App(){
     <Route path="studio/records" element={<CanonicalStudioPage/>}/>
     <Route path="studio/new" element={<CanonicalStudioPage mode="new"/>}/>
     <Route path="studio/review" element={<CanonicalStudioPage mode="review"/>}/>
+    <Route path="studio/:projectId/achievements" element={import.meta.env.VITE_CREATOR_ACHIEVEMENTS_V114==='true'?<Suspense fallback={creatorFallback}><StudioAchievementsPage/></Suspense>:<Navigate to="/studio" replace/>}/>
     <Route path="studio/:projectId" element={<CanonicalStudioPage mode="edit"/>}/>
     <Route element={<MemberGate/>}>
       <Route path="community/write" element={<CommunityPostEditorPage/>}/>
