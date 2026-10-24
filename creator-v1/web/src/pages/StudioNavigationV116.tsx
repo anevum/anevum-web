@@ -20,7 +20,11 @@ export function StudioModeRailV116({mode,onChange}:{mode:StudioModeV116;onChange
    onClick={()=>onChange(item.name)} aria-current={mode===item.name?'page':undefined} title={item.caption}>
    <Icon name={item.icon} size={19}/><span>{item.name}</span>
   </button>)}
-  <div className="csn-rail-foot"><span>CREATE</span><span>EXPLORE</span><span>SHIP</span></div>
+  <div className="csn-rail-foot"><button type="button" className="csn-rail-iren"
+    aria-label="Open existing IREN companion" title="Open ANEVUM IREN"
+    onClick={()=>window.dispatchEvent(new Event('anevum:iren-open'))}>
+    <Icon name="star" size={18}/><span>IREN</span></button>
+    <span>CREATE · EXPLORE · SHIP</span></div>
  </nav>;
 }
 export function StudioTopModesV116({mode,onChange}:{mode:StudioModeV116;onChange:(mode:StudioModeV116)=>void}){
