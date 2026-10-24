@@ -10,7 +10,7 @@ import './creator-studio-visual-v115.css';
  * GPU renderer or publication takes place here. This is NOT a real 3D editor.
  */
 type Mode='World'|'Interface'|'Code'|'Assets'|'Playtest'|'Publish';
-type Panel='explorer'|'inspector'|'assets'|'none';
+type Panel='explorer'|'inspector'|'none';
 type InspectorTab='properties'|'assistant';
 type Tool='Select'|'Move'|'Rotate'|'Scale';
 type SceneObject={id:string;name:string;kind:string;x:number;y:number;z:number;scale:number};
@@ -42,7 +42,7 @@ const clamp=(n:number,min:number,max:number)=>Math.max(min,Math.min(max,n));
 
 function SampleScene({night,light}:{night:boolean;light:number}){
  return <svg className={'cvs-scene-art'+(night?' is-night':'')} viewBox="0 0 1180 590"
-  preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false" style={{filter:'brightness('+(0.62+light/175)+')'}}>
+  preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false" style={{filter:'brightness('+(0.62+light/175)+')'+(night?' hue-rotate(24deg) saturate(1.35)':'')}}>
   <defs>
    <linearGradient id="cvs-sky" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#071b3b"/><stop offset=".42" stopColor="#225479"/><stop offset=".75" stopColor="#78a3b3"/><stop offset="1" stopColor="#e7b892"/></linearGradient>
    <radialGradient id="cvs-sun"><stop stopColor="#fff3d9" stopOpacity=".85"/><stop offset=".17" stopColor="#ead9c6" stopOpacity=".3"/><stop offset="1" stopColor="#d2e5ff" stopOpacity="0"/></radialGradient>
@@ -254,14 +254,14 @@ export function CreatorStudioVisualReviewV115(){
       {trayOpen&&<><div className="cvs-shelf-filters"><div role="group" aria-label="Filter asset categories">{['All','Environment','Architecture','Vehicle','Nature','Effect'].map(a=><button type="button" key={a} aria-pressed={assetCategory===a} onClick={()=>setAssetCategory(a)}>{a}</button>)}</div><label className="cvs-search cvs-asset-search"><Icon name="search" size={14}/><input aria-label="Search example assets" type="search" value={assetQuery} onChange={e=>setAssetQuery(e.target.value)} placeholder="Search assets…"/></label></div>
       <div className="cvs-asset-strip">{assets.map(a=><button key={a.name} type="button" className="cvs-asset-tile" onClick={addObject} title={'Add synthetic primitive inspired by '+a.name}><span className={'cvs-asset-illustration cvs-asset-'+a.hue}><SymbolArt symbol={a.symbol}/></span><strong>{a.name}</strong><small>{a.kind}</small></button>)}{assets.length===0&&<p className="cvs-muted">No matching demo assets.</p>}</div></>}
      </div>}
-     <div className="cvs-mobile-actionbar" role="group" aria-label="Mobile workspace panels"><button type="button" aria-pressed={panel==='explorer'} onClick={()=>toggle('explorer')}>Objects</button><button type="button" aria-pressed={panel==='inspector'} onClick={()=>toggle('inspector')}>Inspector</button><button type="button" onClick={()=>{setMode('World');toggle('assets')}} aria-pressed={panel==='assets'}>Assets</button><button type="button" onClick={()=>window.dispatchEvent(new Event('anevum:iren-open'))}>IREN</button></div>
+     <div className="cvs-mobile-actionbar" role="group" aria-label="Mobile workspace panels"><button type="button" aria-pressed={panel==='explorer'} onClick={()=>toggle('explorer')}>Objects</button><button type="button" aria-pressed={panel==='inspector'} onClick={()=>toggle('inspector')}>Inspector</button><button type="button" onClick={()=>{setMode('World');setTrayOpen(true);setPanel('none')}}>Assets</button><button type="button" onClick={()=>window.dispatchEvent(new Event('anevum:iren-open'))}>IREN</button></div>
     </main>
     <aside className={'cvs-inspector cvs-pane'+(panel==='inspector'?' is-open':'')} aria-label="Studio context inspector">
      <div className="cvs-inspector-tabs"><button type="button" className={inspectorTab==='properties'?'is-active':''} aria-pressed={inspectorTab==='properties'} onClick={()=>setInspectorTab('properties')}>INSPECTOR</button><button type="button" aria-pressed={inspectorTab==='assistant'} className={inspectorTab==='assistant'?'is-active':''} onClick={()=>setInspectorTab('assistant')}>IREN</button><button className="cvs-mobile-close" type="button" aria-label="Close Inspector" onClick={()=>setPanel('none')}><Icon name="close"/></button></div>
      {inspectorTab==='assistant'?<div className="cvs-iren"><div className="cvs-iren-orb"><OrbitalMark/></div><small>ONE COMPANION / EXISTING SITE RIG</small><h3>IREN / Creative guidance</h3><p>Future Studio context will connect to the existing IREN identity with reviewed, undoable commands. This sample contains no model connection or project access.</p><button type="button" onClick={()=>window.dispatchEvent(new Event('anevum:iren-open'))}>Open existing IREN <Icon name="arrow" size={16}/></button></div>:
      <div className="cvs-inspector-content"><div className="cvs-inspector-object"><span className="cvs-inspector-icon"><Icon name="explore" size={22}/></span><div><small>LOCAL SELECTION</small><h3>{selected?.name||'Nothing selected'}</h3><span>{selected?.kind||'Select an object'}</span></div></div>
       <div className="cvs-inspector-section"><div className="cvs-subheading"><span>TRANSFORM</span><span>LOCAL PREVIEW</span></div>
-       {(['x','y','z','scale'] as const).map(field=><label className="cvs-field" key={field}><span>{field==='scale'?'Scale':field.toUpperCase()+' Position'}</span><input type="number" disabled={!selected} min={field==='scale'?.1:-40} max={field==='scale'?6:40} step={field==='scale'?.1:1} value={selected?.[field]??0} onChange={e=>updateObject(field,e.target.valueAsNumber)}/></label>)}
+       {(['x','y','z','scale'] as const).map(field=><label className="cvs-field" key={field}><span>{field==='scale'?'Scale':field.toUpperCase()+' Position'}</span><input type="number" disabled={!selected} min={field==='scale'?0.1:-40} max={field==='scale'?6:40} step={field==='scale'?0.1:1} value={selected?.[field]??0} onChange={e=>updateObject(field,e.target.valueAsNumber)}/></label>)}
       </div>
       <div className="cvs-inspector-section"><div className="cvs-subheading"><span>SCENE LIGHTING</span></div><label className="cvs-slider"><span>Intensity <b>{light}%</b></span><input type="range" min={10} max={100} step={5} value={light} onChange={e=>{setLight(Number(e.target.value));setDirty(true)}}/></label>
        <label className="cvs-switch"><span>Nebula mode</span><input type="checkbox" checked={night} onChange={e=>{setNight(e.target.checked);setDirty(true)}}/></label>
