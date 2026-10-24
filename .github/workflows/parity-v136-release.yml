@@ -52,6 +52,8 @@ jobs:
         with:
           node-version: '22'
       - run: node creator-v1/ops/parity-v136-release.mjs source
+      - name: Controller input mapping and repeat safety
+        run: node --experimental-strip-types --test creator-v1/test/parity-v136-controller.test.mjs
       - run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
       - name: Existing data, collections, rewards and auth contracts
         run: |

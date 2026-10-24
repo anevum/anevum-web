@@ -319,6 +319,38 @@ try{
     record('session-bound source workstation / real editor / native ZIP compatibility / stale archive invalidation '+width,{monaco:width===1440,uploads:0});
     await context.close();
   }
+  // Gamepad API fixture lives only in this local Chromium context. It never
+  // changes the real controller status of a public production visitor.
+  {
+    const {page,context}=await contextFor(390);
+    await context.addInitScript(()=>{
+      const pad={index:0,connected:true,mapping:'standard',
+        buttons:Array.from({length:17},()=>({pressed:false,value:0})),axes:[0,0]};
+      window.__avGamepadFixture=pad;
+      Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>[pad]});
+    });
+    await page.goto(base,{waitUntil:'networkidle'});
+    await page.locator('[data-av-controller-status="ready"]').waitFor({timeout:10000});
+    const stations=page.locator('.p136-console-wayfinder a[data-station]');
+    await stations.first().focus();
+    const button=async(index,pressed)=>{
+      await page.evaluate(({index,pressed})=>{
+        const b=window.__avGamepadFixture.buttons[index];
+        b.pressed=pressed;b.value=pressed?1:0;
+      },{index,pressed});
+    };
+    await button(15,true);
+    await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='Discover',null,{timeout:5000});
+    await button(15,false);
+    await page.waitForTimeout(150);
+    await button(0,true);
+    await page.waitForURL(base+'/discover',{timeout:8000});
+    await button(0,false);
+    await page.evaluate(()=>{window.__avGamepadFixture.connected=false;});
+    await page.waitForFunction(()=>!document.querySelector('.p136-controller-indicator'),null,{timeout:8000});
+    record('synthetic Gamepad API / connected badge / D-pad DOM focus / A route / disconnected cleanup',{hardwareVerified:false});
+    await context.close();
+  }
   const {page,context}=await contextFor(390,{motion:'no-preference',forceVector:true});
   await page.goto(base,{waitUntil:'networkidle'});
   await page.locator('.p136-living-world[data-renderer="vector"]').waitFor();
