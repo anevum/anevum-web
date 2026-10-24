@@ -1,0 +1,64 @@
+/* Continuance Institute release archive: restrained, readable and fully responsive. */
+.au26-page{--au26-gold:#efd3a8;--au26-cyan:#a9e5f4;--au26-fg:#f2f2ec;max-width:1350px;margin:0 auto;padding:clamp(24px,5vw,74px);color:var(--au26-fg);min-width:0}
+.au26-page *{box-sizing:border-box}
+.au26-page :where(h1,h2,h3,p){margin:0}
+.au26-page .au26-kicker{display:block;color:var(--au26-gold);font:700 11px/1.5 ui-monospace,Consolas,monospace;letter-spacing:.13em}
+.au26-masthead{position:relative;isolation:isolate;overflow:hidden;min-height:310px;display:flex;align-items:center;gap:clamp(22px,4vw,55px);border:1px solid #6689a1;border-radius:18px;background:radial-gradient(circle at 78% 20%,#2b668867,transparent 48%),linear-gradient(145deg,#192d42,#0b1625);padding:clamp(29px,5vw,62px)}
+.au26-masthead>svg{width:clamp(60px,9vw,122px);height:clamp(60px,9vw,122px);flex:none;color:var(--au26-gold);filter:drop-shadow(0 0 23px #d6aa7165)}
+.au26-masthead h1{font-weight:650;font-size:clamp(38px,5.2vw,74px);line-height:1.06;letter-spacing:-.045em;margin:11px 0 20px}
+.au26-masthead h1 em{font-style:normal;color:var(--au26-gold)}
+.au26-masthead p{max-width:65ch;color:#d2e2ee;line-height:1.7;margin-bottom:18px;font-size:15px}
+.au26-page a{color:var(--au26-cyan);text-underline-offset:4px}
+.au26-page a:hover{text-decoration-thickness:2px}
+.au26-page :where(button,a,input):focus-visible{outline:3px solid #9febfa;outline-offset:3px}
+.au26-updates{padding:clamp(37px,5vw,70px) 0}
+.au26-section-heading{margin-bottom:23px}
+.au26-section-heading h2{font-weight:650;letter-spacing:-.03em;font-size:clamp(27px,3vw,44px);margin-top:8px}
+.au26-entry-list{display:grid;gap:17px}
+.au26-entry{scroll-margin-top:108px;border:1px solid #536e86;border-radius:13px;background:linear-gradient(135deg,#132439,#0d1929);padding:clamp(20px,3vw,35px)}
+.au26-entry-meta{display:flex;gap:13px;flex-wrap:wrap;align-items:center;color:var(--au26-gold);font:700 11px/1.4 ui-monospace,monospace;letter-spacing:.08em;margin-bottom:14px}
+.au26-entry-meta span{border:1px solid #a5ad9a70;padding:4px 8px;border-radius:4px}
+.au26-entry h3{font-size:clamp(21px,2.6vw,34px);letter-spacing:-.025em;line-height:1.25;margin:0 0 11px}
+.au26-entry p{font-size:15px;color:#d9e4ec;line-height:1.65;margin-bottom:16px}
+.au26-entry ul{margin:0;padding-left:21px;color:#c5d7e5;line-height:1.75}
+.au26-entry li+li{margin-top:7px}
+.au26-entry small{display:block;margin-top:16px;color:#aebfd0}
+.au26-optin{margin:0 0 45px;padding:clamp(24px,4vw,46px);border:1px solid #68849b;border-radius:16px;background:linear-gradient(160deg,#1b3044,#101e2f)}
+.au26-optin h2{font-size:clamp(25px,3vw,40px);font-weight:620;margin:9px 0 12px;letter-spacing:-.04em}
+.au26-optin>p{max-width:70ch;line-height:1.65;color:#d5e2ea}
+.au26-optin-pending{margin-top:22px;border-left:2px solid var(--au26-gold);padding:14px;background:#edf2fc0b}
+.au26-optin-form{margin-top:22px;display:grid;gap:13px;max-width:620px}
+.au26-optin-form>label{font-weight:680;color:#f1e9db;font-size:13px}
+.au26-optin-form>input{min-height:49px;border:1px solid #92adbe;border-radius:7px;background:#101c2e;color:#fff;padding:10px 14px}
+.au26-optin-form fieldset{border:1px solid #587c93;border-radius:7px;padding:13px 15px;margin:7px 0}
+.au26-optin-form legend{font-weight:650;font-size:12px;color:#f1d8b3;padding:0 8px}
+.au26-optin-form fieldset label{display:flex;gap:12px;padding:13px 3px;align-items:start;cursor:pointer}
+.au26-optin-form fieldset label+label{border-top:1px solid #7b9db33e}
+.au26-optin-form input[type=checkbox]{width:20px;height:20px;accent-color:#cfe8f1;flex:none;margin:3px 0 0}
+.au26-optin-form label span{display:grid;gap:4px}
+.au26-optin-form label small{font-size:12px;color:#cfdfeb;line-height:1.45}
+.au26-optin button,.au26-preferences button{justify-self:start;border:1px solid #d0e9ed;color:#091723;background:linear-gradient(110deg,#f4fafb,#b6e8f2);border-radius:6px;padding:11px 17px;min-height:45px;font-weight:750;cursor:pointer}
+.au26-optin button:disabled,.au26-preferences button:disabled{opacity:.5;cursor:not-allowed}
+.au26-optin-form>small{font-size:11px;color:#bcd0df;line-height:1.6}
+.au26-optin-result{margin-top:23px}
+.au26-optin-result strong{font-size:19px}
+.au26-optin-result p{margin:9px 0 15px;color:#d3e2e9}
+.au26-preferences{padding-block:clamp(60px,8vw,120px)}
+.au26-preferences h1{font-size:clamp(32px,5vw,59px);margin:12px 0 20px}
+.au26-preferences p{margin:20px 0;color:#d5e3ed;line-height:1.7}
+@media(max-width:650px){.au26-page{padding:18px 15px}.au26-masthead{min-height:0;display:block;padding:29px 21px;border-radius:13px}.au26-masthead>svg{height:66px;width:66px;margin-bottom:20px}.au26-masthead h1{font-size:clamp(35px,10vw,51px)}.au26-updates{padding:40px 0}.au26-entry{padding:19px}.au26-optin{padding:20px}.au26-entry-meta{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.au26-page *, .au26-page *::before, .au26-page *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media(forced-colors:active){.au26-masthead,.au26-entry,.au26-optin{background:Canvas;color:CanvasText;border:2px solid CanvasText}}
+
+.au26-weekly{padding:0 0 clamp(38px,5vw,72px)}
+.au26-weekly .au26-section-heading>p{font-size:13px;color:#c8d9e4;margin-top:9px;line-height:1.5}
+.au26-weekly-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.au26-weekly-card{min-width:0;padding:clamp(20px,3vw,33px);border:1px solid #577a93;border-radius:12px;
+ background:linear-gradient(143deg,#13283d,#0b1727);box-shadow:inset 0 1px #effaff10}
+.au26-weekly-card .au26-kicker{font-size:9px;letter-spacing:.08em}
+.au26-weekly-card h3{font-size:clamp(20px,2.5vw,29px);line-height:1.2;margin:15px 0 10px;letter-spacing:-.028em}
+.au26-weekly-card h3 a{color:#f4f1e9;text-decoration:none}
+.au26-weekly-card h3 a:hover{text-decoration:underline}
+.au26-weekly-card>p{font-size:13px;line-height:1.65;color:#d4e3ea;margin-bottom:15px;overflow-wrap:anywhere}
+.au26-weekly-author{display:block;font-size:11px;color:#e6cfa8;overflow-wrap:anywhere}
+@media(max-width:700px){.au26-weekly-grid{grid-template-columns:1fr}}

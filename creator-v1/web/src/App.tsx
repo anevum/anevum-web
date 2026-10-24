@@ -8,6 +8,8 @@ import { DiscoverPage } from "./pages/DiscoverPage";
 import { ProjectPage } from "./pages/ProjectPage";
 import { CreatorPage, CreatorsPage } from "./pages/CreatorsPage";
 import { StatusPage } from "./pages/StatusPage";
+import {ReleaseUpdatesPage} from "./pages/ReleaseUpdatesPage";
+import {EmailUpdatePreferencesPage} from "./pages/EmailUpdatePreferencesPage";
 import { LevelsPage } from "./pages/LevelsPage";
 import { RecognitionRegistryPage } from "./pages/RecognitionRegistryPage";
 import { AuraCodexPage } from "./pages/AuraCodexPage";
@@ -81,6 +83,8 @@ export default function App(){
     <Route path="member/setup" element={<Navigate to="/member" replace/>}/>
     <Route path="start" element={<StartPage/>}/>
     <Route path="guide" element={<FieldGuidePage/>}/>
+    <Route path="updates" element={<ReleaseUpdatesPage/>}/>
+    <Route path="updates/preferences" element={<EmailUpdatePreferencesPage/>}/>
     <Route path="discover" element={<DiscoverPage/>}/>
     <Route path="projects/:id" element={<ProjectPage/>}/>
     <Route path="saved" element={<CanonicalSavedWorksPage/>}/>
