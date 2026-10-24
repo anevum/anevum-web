@@ -56,6 +56,22 @@ const HERO='<div class="ci-hero" aria-labelledby="ci-hero-title">'+
  '<div class="ci-hero-actions"><a href="'+GROWTH+'">Explore growth intelligence &#8599;</a>'+
  '<a href="/staff/projects">Review creator projects &#8599;</a></div></div>'+
  '<div class="ci-field" aria-hidden="true"><span class="ci-disc">'+ORBITAL_MARK+'</span><small>CONTINUANCE / LIVE INSTRUMENTS</small></div></div>';
+const FOCUS_NAV='<nav class="ci-focus-nav" aria-label="Growth intelligence sections">'+
+ '<span class="ci-focus-label">SIGNAL INDEX / EXPLORE</span>'+
+ '<div class="ci-focus-links">'+
+ '<a href="#acquisition" data-ci-section="acquisition">Registrations</a>'+
+ '<a href="#ci-rum" data-ci-section="ci-rum">Browser traffic</a>'+
+ '<a href="#ecosystem" data-ci-section="ecosystem">Creators</a>'+
+ '<a href="#campaign" data-ci-section="campaign">Campaigns</a>'+
+ '<a href="#coverage" data-ci-section="coverage">Data quality</a></div></nav>';
+const CAMPAIGN_PRESETS='<div class="ci-preset-lab" aria-label="Campaign starting templates">'+
+ '<div class="ci-preset-intro"><span>START WITH A CAMPAIGN</span><small>Editable link templates / no tracking activated</small></div>'+
+ '<div class="ci-preset-grid" role="group" aria-label="Select campaign template">'+
+ '<button type="button" data-ci-campaign="reddit" aria-pressed="false"><strong>Reddit testers</strong><small>Community recruitment</small></button>'+
+ '<button type="button" data-ci-campaign="facebook" aria-pressed="false"><strong>Facebook launch</strong><small>Public awareness</small></button>'+
+ '<button type="button" data-ci-campaign="flyer" aria-pressed="false"><strong>Local flyers</strong><small>In-person outreach</small></button>'+
+ '<button type="button" data-ci-campaign="creator" aria-pressed="false"><strong>Creator invites</strong><small>Creator collaborations</small></button></div></div>';
+
 const RANGES='<div class="ci-range-tools" aria-label="Registration chart controls">'+
  '<strong>REGISTRATION SIGNAL / UTC CALENDAR WINDOW</strong>'+
  '<div class="ci-range-switch" role="group" aria-label="Number of calendar days">'+
@@ -99,6 +115,10 @@ export function decorateObservatoryHtml(html,page){
  } else {
   output=replaceExactlyOnce(output,'</head>',
    '<link rel="stylesheet" href="'+RUM_CSS_PATH+'"><script src="'+RUM_SCRIPT+'" defer></script></head>');
+  output=replaceExactlyOnce(output,'<section id="acquisition" aria-labelledby="acq-heading">',
+   FOCUS_NAV+'<section id="acquisition" aria-labelledby="acq-heading">');
+  output=replaceExactlyOnce(output,'<div class="campaign-form">',
+   CAMPAIGN_PRESETS+'<div class="campaign-form">');
   output=replaceExactlyOnce(output,'<body><div class="shell">',
     '<body class="ci-next"><a class="ci-skip" href="#ci-growth-main">Skip to growth intelligence</a><div class="shell">');
   output=replaceExactlyOnce(output,'<div class="brand"><div><small>ANEVUM / IREN</small>',
