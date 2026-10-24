@@ -132,6 +132,11 @@ try{
     ]){
       await page.goto(base+path,{waitUntil:'networkidle'});
       await page.locator(selector).waitFor();
+      if(path==='/community'){
+        await page.locator('.p136-community-navigation[data-spatial-surface="v136.008"]').waitFor();
+        assert.equal(await page.locator('.ch7-portals a').count(),4,'Four real community paths remain');
+        assert.equal(await page.locator('.ch7-status').count(),1,'Public metric panel is present even if status is malformed');
+      }
       await page.locator('.p136-living-world[data-enabled="true"][data-sector="'+sector+'"]').waitFor();
       assert.equal(await page.locator('.p136-living-canvas').count(),1,
         'A single GPU surface exists on '+path);
