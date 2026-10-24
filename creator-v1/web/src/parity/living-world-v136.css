@@ -35,7 +35,7 @@ html[data-av-parity="v136-full"] .site-shell{
 }
 .p136-living-world[data-renderer="webgl"] .p136-living-vector{opacity:0}
 .p136-living-world[data-renderer="vector"] .p136-living-canvas{visibility:hidden}
-.p136-living-world[data-renderer="vector"][data-active="true"] .p136-living-orbitals{
+.p136-living-world[data-renderer="vector"][data-motion="true"] .p136-living-orbitals{
   transform-origin:1080px 410px;animation:p136-living-drift 48s ease-in-out infinite alternate
 }
 @keyframes p136-living-drift{from{transform:rotate(-3deg) scale(.99)}to{transform:rotate(4deg) scale(1.03)}}
@@ -85,6 +85,18 @@ html[data-av-parity="v136-full"] .p136-discover-hero-copy{
 .cw-live-glyph{position:relative;display:block;isolation:isolate;overflow:hidden;
   background:#081b2e;color:#6ee0ff}
 .cw-live-glyph>svg{width:100%;height:100%;display:block;object-fit:cover}
+.p136-project-media>.cw-live-glyph,.p136-passage>.cw-live-glyph,
+.p136-discover-world>.cw-live-glyph,
+.p136-discover-results .project-art>.cw-live-glyph{
+  position:absolute;inset:0;width:100%;height:100%
+}
+.p136-discover-results .project-art>.cw-live-glyph>svg,
+.p136-discover-world>.cw-live-glyph>svg{width:100%;height:100%}
+.av010-work-cover>.p136-package-field{
+  position:absolute;inset:0;width:100%;height:100%
+}
+.av010-work-cover>.p136-package-field>svg{width:100%;height:100%}
+
 .cw-live-glyph svg .cw-live-orbit{
   transform-origin:50% 50%;transition:transform .55s cubic-bezier(.2,.6,.2,1)
 }
