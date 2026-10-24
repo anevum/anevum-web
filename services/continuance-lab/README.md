@@ -55,3 +55,20 @@ GitHub Actions also builds the Docker container from its restricted build contex
 - No live ANEVUM/RHEN deployments, databases, member data, financial execution, payments, IREN privileges or moderation workflows are modified by this work.
 - No self-learning model, API provider connection, trainable weights or GPU is included in V001.
 - The cloud API is independently usable for synthetic fixtures and internal research; it must not receive private member source until authenticated and consented server-to-server transport is reviewed.
+
+
+## Source-only V001.2: saved/draft issue comparison
+
+The feature-off Studio panel can compare the currently edited draft with the last server-confirmed saved source. It uses the same canonical inspectors **locally in the browser** and identifies diagnostics by the stable block/page/component UUID plus the finding code (not mutable list indexes). It reports:
+
+- Newly reported: a finding present in the draft but absent from the saved revision.
+- No longer reported: a finding absent in the draft; this may reflect deletion or changed connections rather than a verified repair.
+- Still reported: a finding attached to the same canonical node that persists despite reordering, insertions or other edits.
+
+The comparator fails closed for unsupported, malformed, incompatible or truncated documents. It does not persist the comparison, send the source to Railway, update revisions or confer approval to publish.
+
+The research test suite covers reordered blocks/components, newly introduced defects, invalid sources, truncation and a synthetic sensitive string not being echoed. Exact-head GitHub CI is required before declaring it verified.
+
+## Synthetic benchmark limitations
+
+The lab's 60-case benchmark is constructed from 50 intentionally seeded issues and 10 clean canonical documents. It is a baseline unit/fixture benchmark, not a randomized audit of actual members, real-world accessibility certification or evidence of online learning. Do not claim general performance based on this constrained fixture set.
