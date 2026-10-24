@@ -76,7 +76,7 @@ export function WorldComposerReviewV115(){
  }
  function transform(field:'position'|'rotation'|'scale',index:0|1|2,value:number){
   if(!node||!Number.isFinite(value))return;
-  const min=field==='scale'?.1:field==='rotation'?-6.284:-40;
+  const min=field==='scale'?0.1:field==='rotation'?-6.284:-40;
   const max=field==='scale'?6:field==='rotation'?6.284:40;
   const next=[...node[field]] as Vec3;
   next[index]=clamp(value,min,max);
@@ -150,8 +150,8 @@ export function WorldComposerReviewV115(){
       <div className="cvs-subheading">OBJECT TRANSFORM</div>
       {(['position','rotation','scale'] as const).map(field=><fieldset key={field} className="cvw-vector">
        <legend>{field}</legend><div>{AXES.map((axis,i)=><label key={axis}><span>{axis}</span><input type="number"
-        value={node[field][i]} step={field==='rotation'?.1:field==='scale'?.1:.5}
-        min={field==='scale'?.1:field==='rotation'?-6.284:-40}
+        value={node[field][i]} step={field==='rotation'?0.1:field==='scale'?0.1:.5}
+        min={field==='scale'?0.1:field==='rotation'?-6.284:-40}
         max={field==='scale'?6:field==='rotation'?6.284:40}
         onChange={event=>transform(field,i as 0|1|2,event.target.valueAsNumber)}/></label>)}</div>
       </fieldset>)}
