@@ -6,6 +6,7 @@ import {canonicalPublic} from "../lib/canonical-beta";
 import {resolveCreatorRoute} from "../lib/creator-route";
 import {useResource} from "../lib/useResource";
 import {ProjectCard} from "../components/ProjectCard";
+import {VisualEdge} from "../components/NextVisualPrimitivesV135";
 import {CompactMemberIdentity} from "../components/CompactMemberIdentity";
 import {PageNav} from "../components/PageNav";
 import {PortalHeading} from "../components/PortalHeading";
@@ -32,6 +33,7 @@ export function CreatorsPage(){
     <div className="portal-browse-layout">
       <div className="portal-browse-main">
         <section className="portal-box portal-search-hall">
+          <VisualEdge tone="violet"/>
           <header className="portal-box-header"><div><span className="kicker">PUBLIC CREATOR DIRECTORY</span><h2>FIND YOUR PEOPLE</h2></div><span className="portal-hall-stamp">CHANNELS / ACTIVE</span></header>
           <form className="portal-wide-search" role="search" onSubmit={search}>
             <input type="search" aria-label="Search published creators" placeholder="SEARCH CREATOR NAMES..." maxLength={80} value={draft} onChange={e=>setDraft(e.target.value)}/>
@@ -45,6 +47,7 @@ export function CreatorsPage(){
           {data.data.items.length?
             <section aria-label="Published creator channels" className="portal-creator-grid">{data.data.items.map((c,i)=>
               <Link className="portal-creator-tile" to={"/creators/"+encodeURIComponent(c.handle)} key={c.handle}>
+                <VisualEdge tone="violet"/>
                 <span className="portal-creator-tile-top"><span>CREATOR CHANNEL</span><span>{String(i+1).padStart(2,"0")} / ORBIT</span></span>
                 <CompactMemberIdentity interactive={false} size="standard" className="av65-directory-channel" member={{handle:c.handle,displayName:c.displayName,avatar:false,level:null,featuredAwards:[],source:'creator-channel'}}/>
                 <span className="portal-creator-tile-meta">{c.publishedProjects} PUBLISHED {c.publishedProjects===1?"PROJECT":"PROJECTS"}</span>

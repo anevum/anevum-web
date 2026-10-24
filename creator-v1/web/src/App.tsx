@@ -42,6 +42,9 @@ const pageFallback=<LoadingState label="Opening approved public boards"/>;
 /** Built only into explicitly flagged review artifacts. Existing public Community stays untouched. */
 const livingCommonsReviewEnabled=import.meta.env.VITE_LIVING_COMMONS_REVIEW==="true";
 const LivingCommonsReviewPage=livingCommonsReviewEnabled?lazy(()=>import("./pages/CommunityNextReviewPage").then(m=>({default:m.CommunityNextReviewPage}))):null;
+/** Opt-in NEXT V134 visual system lab, never an active publishing interface. */
+const nextVisualV134Enabled=import.meta.env.VITE_NEXT_VISUAL_SYSTEM==="true";
+const NextVisualV134=nextVisualV134Enabled?lazy(()=>import("./pages/NextVisualLabV134").then(m=>({default:m.NextVisualLabV134}))):null;
 
 /** Historical Atlas links return to the canonical public experience.
  * Retains experimental files without mounting a second site theme. */
@@ -88,6 +91,7 @@ export default function App(){
     <Route path="creators/:handle" element={<CreatorPage/>}/>
     <Route path="community" element={<CommunityPage/>}/>
     {LivingCommonsReviewPage&&<Route path="__review/commons" element={<Suspense fallback={<LoadingState label="Opening Living Commons preview"/>}><LivingCommonsReviewPage/></Suspense>}/> }
+    {NextVisualV134&&<Route path="__review/visual-system" element={<Suspense fallback={<LoadingState label="Opening visual system review"/>}><NextVisualV134/></Suspense>}/> }
       <Route path="boards" element={<Suspense fallback={pageFallback}><PublicBoardsPage/></Suspense>}/>
     <Route path="community/posts/:id" element={<CommunityPostPage/>}/>
     <Route path="community/threads/:id" element={<CommunityThread/>}/>

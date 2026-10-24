@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import {VisualEdge} from "./NextVisualPrimitivesV135";
 import { OrbitalStage } from "./OrbitalStage";
 import { CosmicHorizon } from "./CosmicHorizon";
 import { CosmicArtwork } from "./CosmicArtwork";
@@ -12,6 +13,7 @@ export function PortalHeading({
   action?:{to:string;label:string};scene?:CosmicScene;
 }){
   return <section className={"portal-page-heading portal-page-heading--"+scene}>
+    <VisualEdge tone="violet"/>
     <CosmicHorizon/><div className="cw-heading-cosmos" aria-hidden="true"><CosmicArtwork scene={scene}/></div>
     <div className="portal-page-heading-copy">
       <span className="kicker">{eyebrow}</span>

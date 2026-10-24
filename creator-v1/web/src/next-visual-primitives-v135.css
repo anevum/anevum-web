@@ -1,0 +1,244 @@
+/*
+ * ANEVUM NEXT V135 / shared real React surface primitives.
+ * Imported only when VITE_NEXT_VISUAL_SYSTEM=true; V131 stays default-off.
+ * Every visible effect is CSS/vector-based, never a flattened promo picture.
+ */
+html[data-av-next-visual="v134"] {
+  --av135-surface:linear-gradient(145deg,rgba(24,35,59,.86),rgba(8,16,30,.89));
+  --av135-stroke:rgba(167,195,246,.24);
+  --av135-illuminate:inset 0 1px rgba(255,255,255,.10),0 16px 38px rgba(0,4,18,.29);
+  --av135-font:var(--av134-font,Inter,system-ui,sans-serif);
+}
+html[data-av-next-visual="v134"] .av135-edge {
+  --av135-edge-light:var(--av134-cyan,#86dcfa);
+  position:absolute;inset:0;z-index:4;pointer-events:none;user-select:none;
+  border:1px solid rgba(167,195,246,.25);
+  border-color:color-mix(in srgb,var(--av135-edge-light) 41%,transparent);
+  border-radius:inherit;
+  opacity:.66;
+  box-shadow:inset 0 1px rgba(255,255,255,.085),inset 0 -1px rgba(8,13,30,.34);
+}
+html[data-av-next-visual="v134"] .av135-edge--violet {--av135-edge-light:var(--av134-violet,#c39bff)}
+html[data-av-next-visual="v134"] .av135-edge--copper {--av135-edge-light:var(--av134-copper,#f1bea5)}
+html[data-av-next-visual="v134"] .av135-edge--mint {--av135-edge-light:var(--av134-green,#98e8c5)}
+@supports (-webkit-mask-composite:xor) {
+  html[data-av-next-visual="v134"] .av135-edge::before {
+    content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+    padding:1px;
+    background:linear-gradient(127deg,rgba(243,248,255,.64),var(--av135-edge-light) 25%,transparent 58%,rgba(175,185,254,.48) 85%,var(--av135-edge-light));
+    -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+    -webkit-mask-composite:xor;mask-composite:exclude;
+  }
+}
+html[data-av-next-visual="v134"] :is(
+  .portal-page-heading,.project-card,.av73-project-card,.portal-search-hall,
+  .portal-creator-tile,.ch7-entry,.ch7-hero
+) {position:relative}
+html[data-av-next-visual="v134"] :is(
+  .portal-page-heading,.project-card,.av73-project-card,.portal-search-hall,
+  .portal-creator-tile,.ch7-entry,.ch7-hero
+):hover>.av135-edge {
+  opacity:.94;
+  filter:drop-shadow(0 0 5px rgba(159,193,255,.11));
+}
+html[data-av-next-visual="v134"] .portal-page-heading {
+  border:1px solid var(--av135-stroke);
+  border-radius:20px;
+  background:
+    radial-gradient(ellipse at 85% 4%,rgba(128,92,204,.22),transparent 45%),
+    radial-gradient(ellipse at 10% 100%,rgba(50,114,164,.13),transparent 60%),
+    linear-gradient(118deg,#111c31,#11172c 67%,#15182e);
+  box-shadow:var(--av135-illuminate);
+}
+html[data-av-next-visual="v134"] .portal-page-heading-copy {position:relative;z-index:1}
+html[data-av-next-visual="v134"] .portal-page-heading h1 {
+  color:var(--av134-ink);
+  font-family:var(--av135-font)!important;
+  font-style:normal!important;
+  font-weight:740!important;
+  font-size:clamp(37px,5vw,70px)!important;
+  line-height:1.03!important;
+  letter-spacing:-.05em!important;
+  text-shadow:none!important;
+  text-transform:none;
+  text-wrap:balance;
+}
+html[data-av-next-visual="v134"] .portal-page-heading h1 em {
+  font-style:normal;
+  color:var(--av134-cyan);
+  background:linear-gradient(93deg,var(--av134-cyan),var(--av134-violet) 72%,#e5bde9);
+  background-clip:text;-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+html[data-av-next-visual="v134"] .portal-page-heading p {
+  color:var(--av134-soft);font-size:clamp(13px,1.1vw,15px);line-height:1.6;
+}
+html[data-av-next-visual="v134"] .portal-page-heading .kicker {
+  color:var(--av134-copper);font-family:var(--av134-mono);
+}
+html[data-av-next-visual="v134"] .portal-page-heading-stamp {z-index:1}
+html[data-av-next-visual="v134"] .portal-page-heading-stamp svg {
+  color:#c5d3fa;filter:drop-shadow(0 0 18px rgba(120,162,240,.28));
+}
+html[data-av-next-visual="v134"] .portal-page-heading-stamp>span {
+  border-radius:5px;background:rgba(21,34,64,.83);
+  border:1px solid rgba(174,192,244,.42);color:#e2edff;
+}
+html[data-av-next-visual="v134"] .portal-page-heading .portal-heading-action {
+  border-radius:9px;
+}
+html[data-av-next-visual="v134"] .av9-shell :is(
+  .av73-discover,.portal-creator-channel
+) .av73-project-card,
+html[data-av-next-visual="v134"] .av9-shell .project-card.depth-hover-card {
+  min-width:0;overflow:hidden;
+  border:1px solid var(--av135-stroke);border-radius:15px;
+  background:var(--av135-surface);
+  box-shadow:var(--av135-illuminate);
+}
+html[data-av-next-visual="v134"] .av9-shell :is(
+  .av73-discover,.portal-creator-channel
+) .av73-project-card h3,
+html[data-av-next-visual="v134"] .av9-shell .project-card-body h3 {
+  font-family:var(--av135-font)!important;
+  font-style:normal!important;
+  font-weight:680!important;
+  letter-spacing:-.034em!important;
+  text-transform:none;
+}
+html[data-av-next-visual="v134"] .av9-shell :is(
+  .av73-discover,.portal-creator-channel
+) .av73-project-card:hover {
+  border-color:rgba(169,204,255,.51);
+  background:linear-gradient(130deg,rgba(31,46,74,.90),rgba(13,24,44,.92));
+  box-shadow:inset 0 1px rgba(255,255,255,.12),0 20px 42px rgba(0,7,28,.29);
+}
+html[data-av-next-visual="v134"] :is(
+  .portal-creator-tile,.portal-search-hall,.ch7-entry
+) {
+  border-color:var(--av135-stroke);
+  box-shadow:var(--av135-illuminate);
+}
+html[data-av-next-visual="v134"] .portal-creator-tile {
+  background:radial-gradient(ellipse at 80% 10%,rgba(124,109,201,.13),transparent 47%),var(--av135-surface);
+  border-radius:15px;
+}
+html[data-av-next-visual="v134"] .portal-creator-tile:nth-child(3n+2) {
+  background:radial-gradient(ellipse at 77% 9%,rgba(74,148,183,.12),transparent 48%),var(--av135-surface);
+}
+html[data-av-next-visual="v134"] .portal-creator-tile .portal-creator-tile-cta {
+  color:var(--av134-cyan);font-family:var(--av134-mono);
+}
+html[data-av-next-visual="v134"] .ch7-hero {
+  border-radius:20px;border-color:var(--av135-stroke);
+}
+html[data-av-next-visual="v134"] .ch7-entry {
+  border-radius:16px;
+  background:linear-gradient(135deg,rgba(25,37,64,.8),rgba(11,20,38,.87));
+}
+html[data-av-next-visual="v134"] :is(
+  .portal-search-hall,.ch7-entry,.av73-project-card,.portal-creator-tile
+) :where(a,button) {position:relative;z-index:5}
+html[data-av-next-visual="v134"] .av135-file-glyph {
+  display:inline-grid;place-items:center;
+  width:24px;height:28px;flex:none;
+  color:var(--av134-muted);line-height:1;
+}
+html[data-av-next-visual="v134"] .av135-file-glyph svg {
+  display:block;width:22px;height:26px;
+  overflow:visible;shape-rendering:geometricPrecision;
+  filter:drop-shadow(0 2px 2px rgba(0,3,15,.25));
+}
+html[data-av-next-visual="v134"] .av135-file-glyph--html {color:#ffc098}
+html[data-av-next-visual="v134"] .av135-file-glyph--css {color:#8ecaff}
+html[data-av-next-visual="v134"] .av135-file-glyph--typescript {color:#c8b1ff}
+html[data-av-next-visual="v134"] .av135-file-glyph--javascript {color:#ffe497}
+html[data-av-next-visual="v134"] .av135-file-glyph--json {color:#9ce1ce}
+html[data-av-next-visual="v134"] .av135-file-glyph--markdown {color:#b4c8ea}
+html[data-av-next-visual="v134"] .av135-file-glyph--image {color:#e8a9e4}
+html[data-av-next-visual="v134"] .av135-file-glyph--folder {color:#d2b2f5}
+html[data-av-next-visual="v134"] .av134-lab .av134-file-icon {
+  display:grid;place-items:center;clip-path:none;
+  width:28px;height:30px;border-radius:5px;
+  background:transparent;box-shadow:none;
+}
+html[data-av-next-visual="v134"] .av134-lab .av134-file-icon--html,
+html[data-av-next-visual="v134"] .av134-lab .av134-file-icon--css,
+html[data-av-next-visual="v134"] .av134-lab .av134-file-icon--typescript {
+  background:transparent;
+}
+html[data-av-next-visual="v134"] .av134-lab .av134-file[aria-selected="true"] .av135-file-glyph {
+  filter:drop-shadow(0 0 4px rgba(123,171,250,.25));
+}
+@media(max-width:760px){
+  html[data-av-next-visual="v134"] .portal-page-heading{
+    border-radius:15px;padding:clamp(20px,4vw,32px);
+  }
+  html[data-av-next-visual="v134"] .portal-page-heading h1 {
+    font-size:clamp(34px,7.7vw,52px)!important;
+  }
+  html[data-av-next-visual="v134"] .portal-page-heading-stamp svg {
+    max-width:100%;
+  }
+}
+@media(max-width:430px){
+  html[data-av-next-visual="v134"] .portal-page-heading h1 {
+    font-size:clamp(29px,8.5vw,38px)!important;
+  }
+  html[data-av-next-visual="v134"] .av134-lab .av134-file-icon {
+    width:24px;height:27px;
+  }
+}
+
+/* Real 390/320 screenshots: creator search placeholder cannot be read in the
+ * legacy side-by-side form. Stack real controls without changing search logic.
+ */
+html[data-av-next-visual="v134"] .portal-creators .portal-box-header h2 {
+  font-family:var(--av135-font)!important;
+  font-style:normal!important;font-weight:680!important;
+  line-height:1.09!important;letter-spacing:-.035em!important;
+  color:var(--av134-ink);
+}
+@media(max-width:650px){
+  html[data-av-next-visual="v134"] .portal-creators .portal-search-hall form.portal-wide-search {
+    display:grid;grid-template-columns:minmax(0,1fr);gap:9px;
+    border:0;box-shadow:none;background:transparent;overflow:visible;
+    height:auto;min-height:0;
+  }
+  html[data-av-next-visual="v134"] .portal-creators .portal-search-hall .portal-wide-search input {
+    display:block;width:100%;min-width:0;min-height:47px;padding:0 14px;
+    border:1px solid rgba(166,197,242,.40);border-radius:10px;
+    background:rgba(8,18,34,.95);
+    color:var(--av134-ink);font:530 13px/1.35 var(--av135-font);
+    letter-spacing:0;text-overflow:clip;
+  }
+  html[data-av-next-visual="v134"] .portal-creators .portal-search-hall .portal-wide-search input::placeholder {
+    color:var(--av134-soft);opacity:1;
+  }
+  html[data-av-next-visual="v134"] .portal-creators .portal-search-hall .portal-wide-search button {
+    display:flex;align-items:center;justify-content:center;
+    width:100%;min-height:47px;min-width:0;
+    padding:10px 12px;border:1px solid rgba(166,197,242,.51);
+    border-radius:10px;
+    background:linear-gradient(125deg,#c7e9fb,#c4c8f8);
+    color:#0b182e;
+    box-shadow:inset 0 1px rgba(255,255,255,.5),0 8px 19px rgba(0,4,18,.23);
+    font:720 12px/1.35 var(--av135-font);
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  html[data-av-next-visual="v134"] .av135-edge{
+    filter:none!important;transition:none!important;
+  }
+}
+@media(forced-colors:active){
+  html[data-av-next-visual="v134"] .av135-edge {
+    border:1px solid CanvasText;box-shadow:none;opacity:1;
+  }
+  html[data-av-next-visual="v134"] .av135-edge::before {display:none}
+  html[data-av-next-visual="v134"] .portal-page-heading h1 em {
+    color:CanvasText!important;
+    background:none!important;-webkit-text-fill-color:CanvasText!important;
+  }
+  html[data-av-next-visual="v134"] .av135-file-glyph {color:CanvasText!important}
+}

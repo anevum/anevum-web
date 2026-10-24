@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { readCategories,readProjects, type Category } from "../lib/api";
 import { useResource } from "../lib/useResource";
 import { ProjectCard } from "../components/ProjectCard";
+import {VisualEdge} from "../components/NextVisualPrimitivesV135";
 import {WorkCard,packageGalleryUIEnabled} from "../components/CreatorPackageGallery";
 import {readPackageCatalogue,packageDiscoveryResults} from "../lib/creator-package-gallery-v010";
 import { PageNav } from "../components/PageNav";
@@ -103,6 +104,7 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
     <div className="portal-browse-layout">
       <div className="portal-browse-main">
         <section className="portal-box portal-search-hall" aria-label="Search and browse published projects">
+          <VisualEdge tone="cyan"/>
           <div className="portal-box-header">
             <div><span className="kicker">PUBLIC CATALOGUE</span><h2>{world?.searchTitle||"Browse published work"}</h2></div>
             <span className="portal-hall-stamp">{world?.stamp||"Approved releases only"}</span>
