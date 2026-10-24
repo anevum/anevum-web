@@ -186,11 +186,11 @@ export function CommunityPage() {
     <CommunityMemberCard onPosted={()=>setRevision(value=>value+1)}/>
     <CommunityForums/>
 
-    <nav className="ch7-portals" aria-label="Community destinations">
-      <Link to="/discover"><Icon name="explore" size={19}/><span><strong>DISCOVER</strong><small>Explore new creations</small></span><Icon name="arrow" size={15}/></Link>
-      <Link to="/boards"><Icon name="library" size={19}/><span><strong>THE BOARDS</strong><small>Releases & first looks</small></span><Icon name="arrow" size={15}/></Link>
-      <Link to="/member?tab=wall"><Icon name="create" size={19}/><span><strong>YOUR WALL</strong><small>Write, share & make it yours</small></span><Icon name="arrow" size={15}/></Link>
-      <Link to="/levels"><Icon name="star" size={19}/><span><strong>RECOGNITION</strong><small>Progress earned fairly</small></span><Icon name="arrow" size={15}/></Link>
+    <nav className="ch7-portals ch7-portals-plain" aria-label="Community destinations">
+      <Link to="/discover"><span><strong>Discover</strong><small>Explore original work</small></span></Link>
+      <Link to="/boards"><span><strong>Discussions</strong><small>Browse verified boards</small></span></Link>
+      <Link to="/member?tab=wall"><span><strong>Your wall</strong><small>Share updates and work</small></span></Link>
+      <Link to="/levels"><span><strong>Recognition</strong><small>See earned progress</small></span></Link>
     </nav>
 
     <header className="ch7-section-header"><div><span className="ch7-kicker">ANEVUM / OPEN PUBLIC INDEX</span><h2>Inside the <em>community.</em></h2></div>
@@ -254,34 +254,23 @@ export function CommunityPage() {
           <Link to={view === "people" ? "/creators" : "/discover"}>{view === "people" ? "FULL CREATOR DIRECTORY" : "FULL PROJECT DISCOVERY"} <Icon name="arrow" size={14}/></Link>
         </footer>
       </section>
-      <aside className="ch7-sidebar" aria-label="Community guide">
-        <section className="ch7-panel"><span className="ch7-kicker">01 / FIND YOUR FIELD</span><h3>Every idea has <em>a place.</em></h3>
-          <div className="ch7-categories">{fields.map(field => <Link key={field.id} to={"/discover?category=" + field.id}>
-            <span className="ch7-field-art" aria-hidden="true"><CosmicArtwork scene={field.id}/></span><span>{field.label}</span><Icon name="arrow" size={14}/>
-          </Link>)}</div>
-        </section>
-        <section className="ch7-panel"><span className="ch7-kicker">02 / MEET THE MAKERS</span><h3>Behind the <em>work.</em></h3>
+      <aside className="ch7-sidebar ch7-sidebar-editorial" aria-label="People and participation">
+        <section className="ch7-panel ch7-people-panel"><span className="ch7-kicker">COMMUNITY / PEOPLE</span><h3>Meet the <em>makers.</em></h3>
           {creators.state === "loading" && <p>Loading public creator channels…</p>}
           {creators.state === "error" && <p>Creator directory is temporarily unavailable.</p>}
           {creators.state === "ready" && creatorItems.length === 0 && <p>Channels appear here when real, independently reviewed projects are published.</p>}
           {creators.state === "ready" && creatorItems.length > 0 && <div className="ch7-featured-people">
             {creatorItems.slice(0, 5).map(item => <Link key={item.handle} to={creatorPath(item.handle)}>
-              <span className="ch7-avatar" aria-hidden="true">{item.displayName.charAt(0).toUpperCase()}</span>
               <span><strong>{item.displayName}</strong><small>@{item.handle}</small></span>
-              <Icon name="arrow" size={14}/>
             </Link>)}</div>}
-          <Link className="ch7-panel-link" to="/creators">BROWSE ALL CREATORS <Icon name="arrow" size={14}/></Link>
+          <Link className="ch7-panel-link" to="/creators">Browse all creators</Link>
         </section>
-        <section className="ch7-panel ch7-take-part"><span className="ch7-kicker">03 / YOUR PART IN THE UNIVERSE</span>
-          <h3>Not just for <em>developers.</em></h3>
-          <p>Explore for free. Help with thoughtful reviews, feedback and collaboration. Building software is not a prerequisite for belonging.</p>
+        <section className="ch7-panel ch7-take-part"><span className="ch7-kicker">COMMUNITY / PARTICIPATE</span>
+          <h3>Take part.</h3>
+          <p>Explore independent work, share feedback and join conversations when you are ready.</p>
           <p className="ch7-private-note">Visit Join for the current account options. You control whether your member wall is public.</p>
-          <Link className="ch7-panel-link" to="/start">START HERE <Icon name="arrow" size={14}/></Link>
-          <Link className="ch7-panel-link" to="/levels">LEVELS & RECOGNITION <Icon name="arrow" size={14}/></Link>
-        </section>
-        <section className="ch7-values"><span className="ch7-kicker">A NOTE FROM ANEVUM</span>
-          <h3>Make the next thing better.</h3>
-          <p>Give useful feedback. Credit the people behind the work. Keep participation accessible. Earn recognition through genuine contribution, never payment.</p>
+          <Link className="ch7-panel-link" to="/start">How ANEVUM works</Link>
+          <Link className="ch7-panel-link" to="/levels">Recognition explained</Link>
         </section>
       </aside>
     </div>
