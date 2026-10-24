@@ -67,22 +67,32 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
 
   function search(e:FormEvent){
     e.preventDefault();
-    const next=new URLSearchParams(params),value=draft.trim();
-    if(value)next.set("q",value);else next.delete("q");
-    next.delete("cursor");
-    setParams(next);
+    // Read the submitted input, not an earlier render's draft. Navigation
+    // transitions can defer React state while the user is already typing.
+    const field=(e.currentTarget as HTMLFormElement).querySelector<HTMLInputElement>('input[type="search"]');
+    const value=(field?.value??draft).trim();
+    setParams(current=>{
+      const next=new URLSearchParams(current);
+      if(value)next.set("q",value);else next.delete("q");
+      next.delete("cursor");
+      return next;
+    });
   }
   function selectCategory(id:string){
-    const next=new URLSearchParams(params);
-    if(id)next.set("category",id);else next.delete("category");
-    next.delete("cursor");
-    setParams(next);
+    setParams(current=>{
+      const next=new URLSearchParams(current);
+      if(id)next.set("category",id);else next.delete("category");
+      next.delete("cursor");
+      return next;
+    });
   }
   function toggleFreeOnly(){
-    const next=new URLSearchParams(params);
-    if(freeOnly)next.delete("free");else next.set("free","1");
-    next.delete("cursor");
-    setParams(next);
+    setParams(current=>{
+      const next=new URLSearchParams(current);
+      if(next.get("free")==="1")next.delete("free");else next.set("free","1");
+      next.delete("cursor");
+      return next;
+    });
   }
   const categories=resource.state==="ready"?resource.data.categories.categories:[];
   const countByCategory=new Map(categories.map(x=>[x.category,x.count]));
