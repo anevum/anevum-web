@@ -4,6 +4,7 @@ import {diagnoseStudioSource} from '../../../agent-quality-lab/project-doctor-v0
 import {projectDoctorBrief,formatProjectDoctorBriefText} from '../../../agent-quality-lab/project-doctor-brief-v001.mjs';
 import {compareProjectDoctorSources} from '../../../agent-quality-lab/project-doctor-diff-v001.mjs';
 import {locateProjectDoctorFinding} from '../../../agent-quality-lab/project-doctor-location-v001.mjs';
+import {localRepairGuide} from '../../../agent-quality-lab/project-doctor-guidance-v001.mjs';
 import type {ProjectDoctorTarget} from '../../../agent-quality-lab/project-doctor-location-v001.mjs';
 import './studio-project-doctor-v001.css';
 
@@ -48,13 +49,13 @@ export function StudioProjectDoctorV001({source,savedSource,revision,dirty,onNav
      <span>ANEVUM</span></span>
     <span className="cpd-brand-divider" aria-hidden="true">/</span>
     <span>CONTINUANCE LAB</span>
-    <span className="cpd-brand-version">V001.6 / LOCAL</span>
+    <span className="cpd-brand-version">V001.7 / LOCAL</span>
    </div>
    <div className="cpd-hero">
     <div className="cpd-head-copy">
      <p className="cpd-kicker">STUDIO INTELLIGENCE <span aria-hidden="true">—</span> STRUCTURAL ANALYSIS</p>
      <h4 id={titleId}>Inspect <em>your project.</em></h4>
-     <p>Trace broken connections, reveal overlooked details, and move directly to the work that needs attention.</p>
+     <p>Trace broken connections, understand why they matter, and verify changes without leaving your workspace.</p>
     </div>
     <div className="cpd-hero-art" aria-hidden="true">
      <div className="cpd-orbit-frame"><i className="cpd-orbit-ring cpd-orbit-ring-a"/><i className="cpd-orbit-ring cpd-orbit-ring-b"/>
@@ -66,7 +67,7 @@ export function StudioProjectDoctorV001({source,savedSource,revision,dirty,onNav
     <div className="cpd-toolbar-meta">
      <span className="cpd-local-dot" aria-hidden="true"/>
      <span>LOCAL ONLY</span><span aria-hidden="true" className="cpd-meta-sep">/</span>
-     <span>READ-ONLY</span>
+     <span>READ-ONLY</span><span aria-hidden="true" className="cpd-meta-sep">/</span><span>0 MODEL CALLS</span>
     </div>
     <button type="button" className="cpd-button" aria-expanded={opened} aria-controls={reportId}
      onClick={()=>setOpened(value=>!value)}>{opened?'Close findings':'Inspect draft'} <span aria-hidden="true">{opened?'−':'↗'}</span></button>
@@ -108,6 +109,7 @@ export function StudioProjectDoctorV001({source,savedSource,revision,dirty,onNav
       {visibleFindings.length===0?<p className="cpd-filter-empty" role="status">No findings in this filter.</p>:
        <ul className="cpd-findings">{visibleFindings.map((item,index)=>{
         const target=onNavigate?locateProjectDoctorFinding(source,item.path):null;
+        const guidance=localRepairGuide(item.code);
         return <li key={item.path+':'+item.code+':'+index} data-severity={item.severity}>
          <div className="cpd-finding-rail">
           <span className={'cpd-severity is-'+item.severity}>{item.severity}</span>
@@ -116,6 +118,25 @@ export function StudioProjectDoctorV001({source,savedSource,revision,dirty,onNav
          <div className="cpd-finding-content">
           <strong>{item.message}</strong>
           <p className="cpd-next-step"><span>Suggested next step:</span> {item.nextStep}</p>
+          {guidance&&<details className="cpd-guide">
+           <summary>Understand and verify <span aria-hidden="true">＋</span></summary>
+           <div className="cpd-guide-body">
+            <div className="cpd-guide-section">
+             <span className="cpd-guide-label">WHY IT MATTERS</span>
+             <p>{guidance.impact}</p>
+            </div>
+            <div className="cpd-guide-section">
+             <span className="cpd-guide-label">WHAT TO DO</span>
+             <ol>{guidance.steps.map((step,stepIndex)=><li key={stepIndex}>{step}</li>)}</ol>
+            </div>
+            <div className="cpd-guide-section">
+             <span className="cpd-guide-label">VERIFY YOUR WORK</span>
+             <p>{guidance.verify}</p>
+            </div>
+            <p className="cpd-guide-caveat">{guidance.note}</p>
+            <p className="cpd-guide-mode">LOCAL RULES <span aria-hidden="true">/</span> NO AI REQUESTS <span aria-hidden="true">/</span> NO AUTO-EDITS</p>
+           </div>
+          </details>}
           <div className="cpd-finding-foot">
            <small>{item.code} · {item.path}</small>
            {target&&onNavigate&&<button className="cpd-jump" type="button"
@@ -153,7 +174,7 @@ export function StudioProjectDoctorV001({source,savedSource,revision,dirty,onNav
     {copyStatus&&<p className="cpd-copy-status" role="status" aria-live="polite">{copyStatus}</p>}
    </div>
    <p className="cpd-foot"><span className="cpd-foot-label">PRIVATE BY DESIGN</span>
-    Inspection runs only in this browser tab. No source is sent to a model or Railway, no edits are applied, and existing revision/review controls remain authoritative. Findings update as you edit.</p>
+    Inspection and guidance run only in this browser tab. No source is sent to a model or Railway, no edits are applied, and existing revision/review controls remain authoritative. Findings update as you edit.</p>
   </div>}
  </section>;
 }
