@@ -70,6 +70,7 @@ test('Real renderer retains one canvas; stage path only with explicit QA opt-in'
  assert.match(renderer,/stageEnabled&&family==='atrium'&&input\.sector==='hero'/);
  assert.match(renderer,/fetchStageScene\(budget\.tier,controller\.signal\)/);
  assert.match(renderer,/loader\.parseAsync\(stage\.buffer,''\)/);
+ assert.match(renderer,/if\(stage\)m\.forceSinglePass=true/,'Closed, double-sided Blender surfaces must not double-draw during alpha handoff');
  assert.match(renderer,/if\(!stage\)/);
  assert.match(renderer,/camera\.up\.copy\(up\)/);
  assert.match(renderer,/stageUnavailable=true/);
