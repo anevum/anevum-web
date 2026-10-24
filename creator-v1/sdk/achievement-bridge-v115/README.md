@@ -82,3 +82,9 @@ Creator server:
 - \`POST /api/v1/marks/publisher/events\`: one accepted event -> bounded progress/one-time mark
 
 Bridge flags: \`CANONICAL_CREATOR_STUDIO_ENABLED\`, \`CANONICAL_CREATOR_ACHIEVEMENTS_V114\`, \`CANONICAL_PROJECT_MARK_BRIDGE_V115\`; frontend \`VITE_PROJECT_MARK_BRIDGE_V115\`. All must be default-OFF. Schema \`0016\` is source-only and unapplied.
+
+## Creator-backend adapter (framework-neutral)
+
+The optional `@anevum/achievements/game-handlers` module implements the browser SDK's same-origin `link` and `report` endpoints. It **requires** five creator-provided callbacks: authenticating the game session, enforcing the game's CSRF token, privately reading/writing the per-player ANEVUM opaque link ID, and deriving authoritative milestone receipts from the game's real database. It cannot be instantiated without these controls. Map these Request → Response handlers to your existing Node HTTP / Express / Cloudflare routing; do not copy a fake login handler into production.
+
+Browser requests are untrusted and may only contain a project ID, connection code or stable milestone key. Game user identity, event UUID and evidence digest must come from the game's trusted backend.

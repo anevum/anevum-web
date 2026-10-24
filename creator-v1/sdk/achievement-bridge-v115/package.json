@@ -13,6 +13,10 @@
     "./server": {
       "types": "./server.d.mts",
       "default": "./server.mjs"
+    },
+    "./game-handlers": {
+      "types": "./game-handlers.d.mts",
+      "default": "./game-handlers.mjs"
     }
   }
 }

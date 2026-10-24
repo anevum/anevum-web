@@ -6,6 +6,7 @@ import {fixture} from './helpers/canonical-fixture.mjs';
 import {createCanonicalStageWorker} from '../canonical-auth/worker.mjs';
 import {createAnevumAchievements} from '../sdk/achievement-bridge-v115/browser.mjs';
 import {createAnevumPublisher} from '../sdk/achievement-bridge-v115/server.mjs';
+import {createAnevumGameHandlers} from '../sdk/achievement-bridge-v115/game-handlers.mjs';
 import {markBridgeReady} from '../canonical-auth/project-mark-bridge-v115.mjs';
 
 const ORIGIN='https://a.anevum.com';
@@ -215,4 +216,39 @@ test('server SDK uses confidential bearer against only approved ANEVUM host',asy
  assert.equal(requests[1].url,ORIGIN+'/api/v1/marks/publisher/events');
  assert.equal(requests[1].opt.headers.authorization,'Bearer '+KEY_ID+'.'+SECRET);
  assert.throws(()=>createAnevumPublisher({projectId:P,keyId:KEY_ID,secret:SECRET,anevumOrigin:'https://evil.invalid'}));
+});
+
+test('game-server handler rejects forged browser proof and requires mandatory auth/CSRF',async ()=>{
+ const calls=[],links=new Map();
+ const publisher={projectId:P,
+  exchange:async code=>({projectId:P,linkId:'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'}),
+  award:async proof=>{calls.push(proof);return {status:'earned',platformXp:0};}};
+ const h=createAnevumGameHandlers({publisher,
+  authenticatePlayer:req=>req.headers.get('x-test-game-user'),
+  verifyCsrf:req=>req.headers.get('x-test-game-csrf')==='accepted',
+  readGameLink:player=>links.get(player)||null,
+  saveGameLink:(player,id)=>{links.set(player,id);},
+  proveGameMilestone:(player,key)=>player==='game-bob'&&key==='hidden_observatory'?{eventId:DEF3,evidenceDigest:DIGEST}:null
+ });
+ function request(path,payload,user='game-bob',csrf='accepted'){
+  return new Request('https://creator.example.org'+path,{method:'POST',
+   headers:{origin:'https://creator.example.org','content-type':'application/json','x-test-game-user':user,'x-test-game-csrf':csrf,
+    'sec-fetch-site':'same-origin'},body:JSON.stringify(payload)});
+ }
+ assert.equal((await h.link(request('/api/anevum/achievements/link',{projectId:P,code:'d'.repeat(64)},'game-bob','bad'))).status,403);
+ assert.equal((await h.link(request('/api/anevum/achievements/link',{projectId:P,code:'d'.repeat(64)},''))).status,401);
+ assert.equal((await h.link(request('/api/anevum/achievements/link',{projectId:P,code:'d'.repeat(64)}))).status,200);
+ const forged={projectId:P,stableKey:'hidden_observatory',eventId:randomUUID(),xp:9999,userId:U.id};
+ assert.equal((await h.report(request('/api/anevum/achievements/report',forged))).status,400);
+ assert.equal(calls.length,0);
+ assert.equal((await h.report(request('/api/anevum/achievements/report',{projectId:P,stableKey:'ten_creations'}))).status,403);
+ const r=await h.report(request('/api/anevum/achievements/report',{projectId:P,stableKey:'hidden_observatory'}));
+ assert.equal(r.status,200);
+ const publicReply=await r.json();
+ assert.deepEqual(publicReply,{status:'earned',trust:'creator_attested',platformXp:0});
+ assert.equal(calls.length,1);
+ assert.equal(calls[0].eventId,DEF3,'Game backend, not client, owns event ID');
+ assert.equal(calls[0].evidenceDigest,DIGEST);
+ assert.equal('userId' in calls[0],false);
+ assert.throws(()=>createAnevumGameHandlers({publisher}),TypeError,'Missing game-auth and CSRF hooks fail closed');
 });
