@@ -9,6 +9,7 @@ import {useResource} from "../lib/useResource";
 import {CosmicArtwork} from "../components/CosmicArtwork";
 import type {Category} from "../lib/api";
 import {browseSavedWorks,savedCategoryFilters} from "../lib/saved-works-browse";
+import {MemberCollectionNav} from "../components/MemberCollectionNav";
 import "./canonical-saved-works.css";
 
 function SavedWorksCollection({memberId}:{memberId:string}){
@@ -59,6 +60,7 @@ function SavedWorksCollection({memberId}:{memberId:string}){
   }finally{setPending(null)}
  }
  return <section className="avsaved-content" data-view={layout} aria-label="Your private saved projects">
+  <MemberCollectionNav current="saved"/>
   {initial.state==="loading"&&<p role="status" className="avsaved-message">Checking your saved projects…</p>}
   {initial.state==="error"&&<p role="alert" className="avsaved-message">Your private collection is temporarily unavailable. Your saved choices have not been changed.</p>}
   {initial.state==="ready"&&<>

@@ -3,6 +3,7 @@ import {canonicalAuthClient} from '../lib/canonical-beta';
 import {useMemberProgression} from '../components/AnevumNotifications';
 import {EarnedRewardVault} from '../components/EarnedRewardVault';
 import {LevelEmblem} from '../components/LevelEmblem';
+import {MemberCollectionNav,MEMBER_COLLECTION_NAV_REVIEW} from '../components/MemberCollectionNav';
 
 /** No public specimen gallery, previews or unearned names. Your own
  * authenticated progression determines every visible image and model. */
@@ -14,11 +15,12 @@ export function LevelsPage(){
  const earnedFounding=p?.awards.filter(a=>a.earnedAt!==null).map(a=>a.id)??[];
  const pct=p?(p.nextLevel===null?100:
   Math.min(100,Math.max(0,Math.round(100*(p.xp-p.levelStart)/(p.nextLevel-p.levelStart))))):0;
- return <section className="av75-levels-page" aria-labelledby="av75-levels-heading">
+ return <section className={"av75-levels-page"+(MEMBER_COLLECTION_NAV_REVIEW?" mc-collection-page":"")} aria-labelledby="av75-levels-heading">
+  {signedIn&&<MemberCollectionNav current="levels"/>}
   <header className="av75-page-heading">
    <span>CONTINUANCE INSTITUTE / EVOLUTION</span>
    <h1 id="av75-levels-heading">Your evolution.</h1>
-   <p>The universe unfolds through what you earn. Future specimens remain unknown until your progress reaches them. There is no public gallery or shortcut to the unreached forms.</p>
+   <p>{MEMBER_COLLECTION_NAV_REVIEW?"View your verified level and the specimens you have earned. Future discoveries stay hidden.":"The universe unfolds through what you earn. Future specimens remain unknown until your progress reaches them. There is no public gallery or shortcut to the unreached forms."}</p>
    <div className="av75-page-actions"><Link to="/member?tab=awards">My awards &amp; player card ↗</Link><Link to="/recognition">Earned recognition ↗</Link></div>
   </header>
   {!signedIn?<section className="av75-vault-empty">
@@ -34,7 +36,7 @@ export function LevelsPage(){
     <small>{p.xp.toLocaleString()} XP · {p.nextLevel===null?'Final level reached':(p.nextLevel-p.xp).toLocaleString()+' XP until the next undisclosed discovery'}</small>
    </div>
   </section>}
-  {signedIn&&p&&<EarnedRewardVault level={level} fallbackBadges={earnedFounding} title="Your earned discoveries"/>}
+  {signedIn&&p&&<EarnedRewardVault key={session?.user?.id} level={level} fallbackBadges={earnedFounding} title="Your earned discoveries"/>}
   <footer className="av75-vault-principles">All levels and badges are earned, never purchased. XP and recognition come from verified server records. Levels do not grant moderation authority.</footer>
  </section>;
 }
