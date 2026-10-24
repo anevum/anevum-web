@@ -1,0 +1,12 @@
+*
+!Dockerfile
+!creator-v1/
+!creator-v1/agent-quality-lab/
+!creator-v1/agent-quality-lab/project-doctor-v001.mjs
+!creator-v1/workbench-alpha/
+!creator-v1/workbench-alpha/document.mjs
+!creator-v1/interface-builder/
+!creator-v1/interface-builder/document.mjs
+!services/
+!services/continuance-lab/
+!services/continuance-lab/server.mjs
