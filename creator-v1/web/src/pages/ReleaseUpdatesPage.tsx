@@ -3,6 +3,7 @@ import {Link} from 'react-router-dom';
 import {OrbitalMark} from '../components/OrbitalMark';
 import {EmailUpdatesOptIn} from '../components/EmailUpdatesOptIn';
 import {readReleaseFeed,type ReleaseBulletin} from '../lib/release-bulletins';
+import {markPublicReleaseSeen} from '../lib/public-release-read-state';
 import '../release-updates-v026.css';
 type State='loading'|'ready'|'error';
 const labels:Record<ReleaseBulletin['kind'],string>={release:'Release',patch:'Patch notes',notice:'Announcement',maintenance:'Maintenance'};
@@ -11,7 +12,7 @@ export function ReleaseUpdatesPage(){
  const [entries,setEntries]=useState<ReleaseBulletin[]>([]);
  useEffect(()=>{
   const controller=new AbortController();
-  readReleaseFeed(controller.signal).then(data=>{setEntries(data.entries);setState('ready')}).catch(()=>{if(!controller.signal.aborted)setState('error')});
+  readReleaseFeed(controller.signal).then(data=>{setEntries(data.entries);setState('ready');if(data.entries[0])markPublicReleaseSeen(data.entries[0].id)}).catch(()=>{if(!controller.signal.aborted)setState('error')});
   return()=>controller.abort();
  },[]);
  return <div className="au26-page">

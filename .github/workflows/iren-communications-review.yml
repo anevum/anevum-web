@@ -10,6 +10,8 @@ on:
       - 'creator-v1/web/src/lib/release-bulletins.ts'
       - 'creator-v1/web/public/communications/updates.v1.json'
       - 'creator-v1/web/src/pages/ReleaseUpdatesPage.tsx'
+      - 'creator-v1/web/src/components/IrenGuidedContinuance.tsx'
+      - 'creator-v1/web/src/lib/public-release-read-state.ts'
       - 'creator-v1/web/src/components/EmailUpdatesOptIn.tsx'
       - 'creator-v1/web/src/pages/EmailUpdatePreferencesPage.tsx'
       - '.github/workflows/iren-communications-review.yml'

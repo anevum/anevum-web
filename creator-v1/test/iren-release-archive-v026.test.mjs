@@ -6,6 +6,7 @@ import {parseReleaseFeed} from '../web/src/lib/release-bulletins.ts';
 const data=JSON.parse(fs.readFileSync(new URL('../web/public/communications/updates.v1.json',import.meta.url),'utf8'));
 const component=fs.readFileSync(new URL('../web/src/components/IrenGuidedContinuance.tsx',import.meta.url),'utf8');
 const routes=fs.readFileSync(new URL('../web/src/App.tsx',import.meta.url),'utf8');
+const archive=fs.readFileSync(new URL('../web/src/pages/ReleaseUpdatesPage.tsx',import.meta.url),'utf8');
 const optin=fs.readFileSync(new URL('../web/src/components/EmailUpdatesOptIn.tsx',import.meta.url),'utf8');
 test('public release record parses and contains no future or fabricated news',()=>{
  const feed=parseReleaseFeed(data);
@@ -26,10 +27,15 @@ test('rejects duplicate IDs, insecure URLs and invalid release fields',()=>{
 });
 test('existing IREN Signals panel includes source-bound release records but preserves earned rewards separation',()=>{
  assert.match(component,/readReleaseFeed/);
+ assert.match(component,/PUBLIC_RELEASE_SEEN_EVENT/);
+ assert.match(component,/publicReleaseUnread/);
+ assert.match(component,/displaySignalCount/);
+ assert.match(component,/markPublicReleaseSeen/);
  assert.match(component,/setReleaseNotes/);
  assert.match(component,/Published system availability is tracked separately/);
  assert.match(component,/READ ALL RELEASE NOTES/);
  assert.match(routes,/<Route path="updates" element={<ReleaseUpdatesPage\/>}/);
+ assert.match(archive,/markPublicReleaseSeen/);
  assert.match(routes,/<Route path="updates\/preferences" element={<EmailUpdatePreferencesPage\/>}/);
 });
 test('email content remains separate from member signup and is explicitly gated',()=>{
