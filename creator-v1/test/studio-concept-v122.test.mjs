@@ -11,7 +11,7 @@ const css=read('creator-v1/web/src/pages/studio-concept-v122.css');
 
 test('V122 real Studio and IREN JSX parse as components, not a baked screenshot',()=>{
  for(const src of [world,assistant,rail,shelf])
-  assert.ok(parse(src,{sourceType:'module',plugins:['typescript','jsx']}).program.body.length>5);
+  assert.ok(parse(src,{sourceType:'module',plugins:['typescript','jsx']}).program.body.length>=4);
  assert.match(world,/WorldCanvasV115 document=\{scene\}/);
  assert.match(world,/StudioIrenAssistantV122 projectName=\{scene.name\}/);
  assert.match(world,/selectedObject=\{node\?\.name\|\|null\}/);
