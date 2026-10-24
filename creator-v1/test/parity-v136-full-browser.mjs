@@ -45,7 +45,8 @@ async function contextFor(width,{motion='reduce',state='empty',forceVector=false
       const path=url.pathname;
       const value=path==='/api/v1/member/auth/get-session'?null:
         path==='/api/v1/projects'?page(state==='project'?[fixture]:[]):
-        path==='/api/v1/creators'?page([]):
+        path==='/api/v1/status'?{features:{communityPosts:false},counts:{publishedProjects:0,publishedCreators:0}}:
+         path==='/api/v1/creators'?page([]):
         path==='/api/v1/categories'?{categories:[]}:null;
       const status=state==='unavailable'&&path==='/api/v1/projects'?503:200;
       await route.fulfill({status,contentType:'application/json',body:JSON.stringify(status===503?{error:'CI unavailable fixture'}:value)});return;
