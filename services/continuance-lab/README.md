@@ -72,3 +72,12 @@ The research test suite covers reordered blocks/components, newly introduced def
 ## Synthetic benchmark limitations
 
 The lab's 60-case benchmark is constructed from 50 intentionally seeded issues and 10 clean canonical documents. It is a baseline unit/fixture benchmark, not a randomized audit of actual members, real-world accessibility certification or evidence of online learning. Do not claim general performance based on this constrained fixture set.
+
+
+## Source-only V001.3: authenticated synthetic smoke benchmark
+
+An authenticated internal-only GET /v1/benchmark runs the fixed 60-case synthetic diagnostic benchmark at request time. It returns the number of clean/defective cases, exact-match count, false-positive and false-negative counts, precision/recall, duration, and a list of fixture IDs with mismatches. The response declares source=synthetic-fixtures-only, memberData=false, and modelEvaluated=false.
+
+This is a repeatable software baseline, **not** evidence of generalization, actual member-project accuracy, model training, reasoning ability or a self-improving AI. The endpoint accepts no user-supplied fixtures or query parameters, uses the existing bearer authorization and instance-local request quota, and is only accessible on Railway's private service interface. Do not publish it as an open URL.
+
+Capabilities now include lab.synthetic-benchmark.run, which is a developer test capability rather than an end-user or IREN tool. All API calls are strictly read-only and return no secrets or source text. If the synthetic benchmark finds mismatches, it responds with HTTP 503 instead of claiming full readiness.
