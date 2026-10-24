@@ -91,7 +91,7 @@ export function WorldComposerReviewV115(){
   <header className="cvs-head">
    <div className="cvs-head-brand"><OrbitalMark className="cvs-mark"/><div><span>ANEVUM / CONTINUANCE INSTITUTE</span><h1>World <b>Composer</b></h1></div></div>
    <div className="cvs-head-links"><span className="cvs-head-version">WORLD FORMAT <strong>V1</strong></span>
-    <Link to="/studio/visual-review" className="cvs-link">Instrument Glass overview <Icon name="arrow" size={16}/></Link></div>
+    {import.meta.env.VITE_CREATOR_VISUAL_REVIEW_V115==='true'?<Link to="/studio/visual-review" className="cvs-link">Visual overview <Icon name="arrow" size={16}/></Link>:<Link to="/studio" className="cvs-link">Studio home <Icon name="arrow" size={16}/></Link>}</div>
   </header>
   <div className="cvs-studio">
    <div className="cvs-projectbar">
