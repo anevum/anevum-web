@@ -16,6 +16,11 @@ const PROFILES=Object.freeze({
  light:{half:[.6,.6,.6],y:11,spawn:[[5,11,4],[-3,11,6],[6,11,-6],[-7,11,-7]]},
  starship:{half:[2.6,1.1,2.3],y:8,spawn:[[-5,8,6],[5,8,6],[-4,9,-7],[8,9,-8],[-12,7,9]]}
 });
+function profileFor(kind){
+ if(typeof kind!=='string'||!Object.prototype.hasOwnProperty.call(PROFILES,kind))
+  throw Error('Unsupported kind for placement');
+ return PROFILES[kind];
+}
 function validatePoint(p){
  return Array.isArray(p)&&p.length===3&&p.every(v=>typeof v==='number'&&Number.isFinite(v)&&Math.abs(v)<=LIMIT);
 }
@@ -38,8 +43,7 @@ function canUse(point,kind,nodes){
 }
 export function getWorldSpawnPosition(document,kind){
  if(!document||!Array.isArray(document.nodes))throw Error('Invalid scene placement context');
- const profile=PROFILES[kind];
- if(!profile)throw Error('Unsupported kind for placement');
+ const profile=profileFor(kind);
  if(document.nodes.length>=64)throw Error('The world has reached its 64-object limit');
  for(const point of profile.spawn)if(canUse(point,kind,document.nodes))return [...point];
  // Search concentric grid positions. Bounded to valid document dimensions.
@@ -55,6 +59,7 @@ export function getWorldSpawnPosition(document,kind){
  throw Error('No collision-free location found; remove or reposition an object before adding');
 }
 export function getWorldSpawnTarget(kind,position){
- if(!PROFILES[kind]||!validatePoint(position))throw Error('Invalid world framing request');
+ profileFor(kind);
+ if(!validatePoint(position))throw Error('Invalid world framing request');
  return [...position];
 }
