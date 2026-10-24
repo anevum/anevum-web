@@ -20,9 +20,11 @@ jobs:
     timeout-minutes: 50
     env:
       WRANGLER_SEND_METRICS: 'false'
-      VITE_IREN_SPATIAL_GUIDE: 'true'
-      VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
-      VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
+      # Review-only, default-off UI flags. Exact production feature-ON
+      # acceptance belongs to V131-targeted PR707; this worker has no accounts.
+      VITE_IREN_SPATIAL_GUIDE: 'false'
+      VITE_NATIVE_CREATOR_STUDIO_V095: 'false'
+      VITE_PACKAGE_CREATOR_GALLERY_V010: 'false'
     steps:
       - uses: actions/checkout@v4
         with:
