@@ -50,7 +50,7 @@ export function StudioProjectDoctorV001({source,savedSource,revision,dirty}:{
      <p>Only documented structural findings are compared. "No longer reported" does not guarantee a successful repair.</p>
     </>:<p role="status">{comparison.reason} Compare changes after the source validates.</p>}
    </section>}
-   {result.truncated&&<p className="cpd-limit">The findings list was limited to 32 entries.</p>
+   {result.truncated&&<p className="cpd-limit">The findings list was limited to 32 entries.</p>}
    <p className="cpd-foot">Inspection runs only in this browser tab. No source is sent to a model or Railway, no edits are applied, and existing revision/review controls remain authoritative. Findings update as you edit.</p>
   </div>}
  </section>;
