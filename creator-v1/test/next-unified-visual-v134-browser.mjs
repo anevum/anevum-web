@@ -62,7 +62,7 @@ async function screenshot(page,name){
   captures.push(name+'.png');
 }
 try{
-  for(const width of [1440,390,320]){
+  for(const width of [1440,1024,390,320]){
     const {page,context}=await openContext(width,width===1440?900:844);
     await page.goto(base+'/__review/visual-system',{waitUntil:'domcontentloaded'});
     await page.locator('.av134-lab').waitFor();
@@ -114,17 +114,33 @@ try{
     record('editor/sandbox/material '+width,{actualColor,sandbox});
     await context.close();
   }
-  const {page,context}=await openContext(390,844);
-  for(const path of ['/','/discover','/community']){
-    await page.goto(base+path,{waitUntil:'domcontentloaded'});
-    await page.locator('.av9-header').waitFor();
-    await page.waitForFunction(()=>getComputedStyle(document.documentElement).getPropertyValue('--av134-void').trim()!=='');
-    const r=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,enabled:document.documentElement.dataset.avNextVisual,headerBackground:getComputedStyle(document.querySelector('.av9-header')).backgroundImage}));
-    assert.equal(r.enabled,'v134');
-    assert.match(r.headerBackground,/gradient/,'Header renders real visual layer');
-    noOverflow(r,390,'sitewide '+path);
+  // Review genuine React page structure without claiming synthetic/failed API
+  // responses represent real project content or live account statistics.
+  for(const width of [1440,390,320]){
+    const {page,context}=await openContext(width,width===1440?900:844);
+    for(const [path,name,contentSelector] of [
+      ['/','home','.av79-home'],
+      ['/discover','discover','.av73-discover'],
+      ['/community','community','.ch7-hub']
+    ]){
+      await page.goto(base+path,{waitUntil:'domcontentloaded'});
+      await page.locator('.av9-header').waitFor();
+      await page.locator(contentSelector).waitFor();
+      await page.waitForFunction(()=>getComputedStyle(document.documentElement).getPropertyValue('--av134-void').trim()!=='');
+      const result=await page.evaluate(()=>({
+        scroll:document.documentElement.scrollWidth,
+        enabled:document.documentElement.dataset.avNextVisual,
+        headerBackground:getComputedStyle(document.querySelector('.av9-header')).backgroundImage
+      }));
+      assert.equal(result.enabled,'v134');
+      assert.match(result.headerBackground,/gradient/,'Header renders real visual layer');
+      noOverflow(result,width,'sitewide '+name+' '+width);
+      const filename='route-'+name+'-'+width+'.png';
+      await page.screenshot({path:join(output,filename),fullPage:false,animations:'disabled'});
+      captures.push(filename);
+    }
+    await context.close();
   }
-  await context.close();
   assert.deepEqual(forbidden,[],'No external or write requests');
   assert.deepEqual(errors,[],'No uncaught page errors');
   const sha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
