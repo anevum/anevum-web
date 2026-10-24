@@ -163,11 +163,11 @@ export function StudioCodeEditorV119({
    <div className="csi-toolbar-actions">
     <button type="button" onClick={()=>openFind()} aria-label="Find in file" title="Find · Ctrl/Cmd+F"><Icon name="search" size={16}/></button>
     <button type="button" onClick={()=>openFind(true)} aria-label="Find and replace" title="Replace · Ctrl/Cmd+H"><Icon name="replace" size={16}/></button>
-    {(language==='json')&&<button type="button" onClick={formatJson} disabled={disabled||readOnly} aria-label="Format JSON" title="Format JSON"><Icon name="braces" size={16}/></button>
+    {(language==='json')&&<button type="button" onClick={formatJson} disabled={disabled||readOnly} aria-label="Format JSON" title="Format JSON"><Icon name="braces" size={16}/></button>}
     <button type="button" onClick={()=>{setGotoOpen(x=>!x);setGotoLine(String(cursor.line));}} aria-label="Go to line" title="Go to line · Ctrl/Cmd+G"><Icon name="list-ordered" size={16}/></button>
     <button type="button" onClick={()=>setProblemsOpen(x=>!x)} aria-expanded={problemsOpen} aria-label="Source diagnostics" title="Problems · Ctrl/Cmd+Shift+M" className={problemErrors?'csi-has-problems':''}>
      <Icon name={problemErrors?'alert-triangle':'check-circle'} size={16}/>
-     {problemErrors>0&&<span className="csi-problem-count">{problemErrors}</span>}</button>}
+     {problemErrors>0&&<span className="csi-problem-count">{problemErrors}</span>}</button>
     <button type="button" onClick={()=>setSettingsOpen(x=>!x)} aria-expanded={settingsOpen} aria-label="Editor settings" title="Editor preferences · Ctrl/Cmd+,"><Icon name="settings" size={16}/></button>
    </div>
   </div>
