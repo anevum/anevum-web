@@ -149,11 +149,55 @@ function grid(){
 }
 function parts(node:WorldNode):{mesh:string,transform:Float32Array,material:WorldMaterial}[]{
  const I=identity();
- if(node.kind==='island')return [{mesh:'islandRock',transform:I,material:'stone'},
-  {mesh:'islandTop',transform:I,material:'grass'}];
- if(node.kind==='spire')return [{mesh:'tower',transform:I,material:node.material}];
- if(node.kind==='bridge')return [{mesh:'cube',transform:scaling([10,.2,.75]),material:node.material}];
- if(node.kind==='waterfall')return [{mesh:'cube',transform:scaling([.8,6,.5]),material:'water'}];
+ const at=(point:Vec3,size:Vec3)=>mul(translation(point),scaling(size));
+ if(node.kind==='island'){
+  const p:{mesh:string,transform:Float32Array,material:WorldMaterial}[]=[
+   {mesh:'islandRock',transform:I,material:'stone'},
+   {mesh:'islandTop',transform:I,material:'grass'}
+  ];
+  // Scaled with the parent node and included in its GPU selection ID:
+  // real 3D tree trunks/canopies on authored island geometry, never extra nodes.
+  const trees:[number,number,number][]=[
+   [-1.30,.15,-.45],[-.70,.15,.78],[.25,.15,-.92],[1.21,.15,.43],[1.48,.15,-.55]
+  ];
+  for(const [x,y,z] of trees){
+   p.push({mesh:'cube',transform:at([x,y+.28,z],[.14,.6,.14]),material:'slate'});
+   p.push({mesh:'sphere',transform:at([x,y+.92,z],[.51,.62,.51]),material:'grass'});
+  }
+  p.push({mesh:'cube',transform:at([.20,.24,.03],[1.35,.16,1.3]),material:'stone'});
+  return p;
+ }
+ if(node.kind==='spire'){
+  const p:{mesh:string,transform:Float32Array,material:WorldMaterial}[]=[
+   {mesh:'tower',transform:I,material:node.material},
+   {mesh:'cube',transform:at([0,-.24,0],[1.78,.24,1.78]),material:'stone'},
+   {mesh:'cube',transform:at([0,2.65,0],[.95,.13,.95]),material:'gold'}
+  ];
+  const corners:[number,number][]=[[-.49,-.49],[.49,-.49],[-.49,.49],[.49,.49]];
+  for(const [x,z] of corners)
+   p.push({mesh:'cube',transform:at([x,1.15,z],[.12,2.4,.12]),material:'glass'});
+  p.push({mesh:'sphere',transform:at([0,4.62,0],[.23,.23,.23]),material:'cyan'});
+  return p;
+ }
+ if(node.kind==='bridge'){
+  const p:{mesh:string,transform:Float32Array,material:WorldMaterial}[]=[
+   {mesh:'cube',transform:at([0,0,0],[10,.24,1]),material:node.material}
+  ];
+  for(const z of [-.52,.52]){
+   p.push({mesh:'cube',transform:at([0,.89,z],[10,.12,.12]),material:'gold'});
+   for(const x of [-4.7,-3.5,-2.3,-1.1,0,1.1,2.3,3.5,4.7]){
+    p.push({mesh:'cube',transform:at([x,.46,z],[.12,.85,.12]),material:'slate'});
+   }
+  }
+  return p;
+ }
+ if(node.kind==='waterfall'){
+  return [
+   {mesh:'cube',transform:at([-.22,0,0],[.48,6.6,.48]),material:'water'},
+   {mesh:'cube',transform:at([.24,-.3,-.08],[.25,6.1,.48]),material:'glass'},
+   {mesh:'sphere',transform:at([0,-3.4,0],[.76,.20,.77]),material:'cyan'}
+  ];
+ }
  if(node.kind==='light')return [{mesh:'sphere',transform:scaling([.52,.52,.52]),material:'cyan'}];
  if(node.kind==='sphere')return [{mesh:'sphere',transform:I,material:node.material}];
  return [{mesh:'cube',transform:I,material:node.material}];
