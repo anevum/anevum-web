@@ -27,6 +27,10 @@ export function StudioTopModesV116({mode,onChange}:{mode:StudioModeV116;onChange
   {MODE_META.map(item=><button key={item.name} type="button" aria-current={mode===item.name?'page':undefined} onClick={()=>onChange(item.name)}>{item.name}</button>)}
  </nav>;
 }
+function displayLabel(node:StudioTreeNode):string{
+ if(node.kind==='folder')return node.name;
+ return node.name.replace(/\.(world|ui|asset|playtest)\.anevum$/i,'').replace(/\.anevum$/i,'');
+}
 const fixture=projectTreeTemplate();
 const tree=buildProjectTree(fixture.items,fixture.projectId);
 function TreeNode({node,depth,expanded,onToggle,onChoose,selectedId}:{
@@ -41,7 +45,7 @@ function TreeNode({node,depth,expanded,onToggle,onChoose,selectedId}:{
    style={{paddingInlineStart:10+Math.min(depth,8)*14+'px'}} title={node.path}
    onClick={()=>folder?onToggle(node.id):onChoose(node)}>
    <span className={'csn-file-icon '+(folder?'is-folder':'is-'+node.role)} aria-hidden="true">{folder?(open?'▾':'▸'):'◇'}</span>
-   <span className="csn-file-label">{node.name}</span>
+   <span className="csn-file-label">{displayLabel(node)}</span>
    {!folder&&<span className="csn-file-type" aria-hidden="true">{node.role==='world'?'3D':node.role==='interface'?'UI':node.role==='script'?'TS':''}</span>}
   </button>
   {folder&&open&&node.children.map(c=><TreeNode key={c.id} node={c} depth={depth+1} expanded={expanded}
