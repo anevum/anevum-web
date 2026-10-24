@@ -8,7 +8,8 @@ const scenePositions:Record<WorldSector,[number,number,number]>={
   games:[1.65,1.52,4.22],tools:[1.92,1.38,4.80],
   creative:[0.84,2.00,4.42],research:[1.35,1.86,4.26],
   libraries:[1.78,1.32,4.92],learning:[0.95,1.76,4.96],
-  automation:[1.84,1.55,4.45],other:[1.42,1.76,4.70]
+  automation:[1.84,1.55,4.45],other:[1.42,1.76,4.70],
+  community:[0.9,1.66,4.72],creators:[1.75,1.95,4.55],studio:[1.4,1.28,4.30]
 };
 /** Each destination has a different cinematic camera target; the world itself
  * remains mounted, so navigation interpolates rather than replacing imagery.
@@ -19,7 +20,8 @@ const palette:Record<WorldSector,[number,number,number]>={
   games:[0.61,0.42,1.0],tools:[0.24,0.82,1.0],
   creative:[0.91,0.46,0.97],research:[0.40,0.68,1.0],
   libraries:[0.36,0.90,0.79],learning:[0.78,0.63,1.0],
-  automation:[0.55,0.70,1.0],other:[0.62,0.69,0.96]
+  automation:[0.55,0.70,1.0],other:[0.62,0.69,0.96],
+  community:[0.67,0.52,1],creators:[0.48,0.82,0.93],studio:[0.94,0.66,0.36]
 };
 type Renderer='booting'|'webgl'|'vector';
 type Compiled={
@@ -94,15 +96,16 @@ export function LivingWorldField({sector='hero',enabled}:{sector?:WorldSector;en
   const pulse=useRef(0);
   const worldPosition=useRef<[number,number,number]>([1.58,1.70,4.60]);
   const phase=useRef(0);
-  const {signal,paused}=useLivingWorld();
+  const {signal,paused,previewSector}=useLivingWorld();
   const [renderer,setRenderer]=useState<Renderer>('booting');
   const [reduced,setReduced]=useState(false);
   const [visible,setVisible]=useState(true);
   const [saveData,setSaveData]=useState(false);
-  const density=worldDensity(signal,sector);
+  const activeSector=enabled?(previewSector||sector):sector;
+  const density=worldDensity(signal,activeSector);
   const motionAllowed=enabled&&!paused&&!reduced&&!saveData&&visible;
   const active=motionAllowed&&renderer==='webgl';
-  const tone=palette[sector],position=scenePositions[sector];
+  const tone=palette[activeSector],position=scenePositions[activeSector];
   const param=useRef({density,tone,position,verified:signal.source==='verified',active});
   param.current={density,tone,position,verified:signal.source==='verified',active};
 
@@ -224,11 +227,11 @@ export function LivingWorldField({sector='hero',enabled}:{sector?:WorldSector;en
     if(active)raf.current=requestAnimationFrame(tick);
     else render(phase.current);
     return()=>{if(raf.current!==null)cancelAnimationFrame(raf.current);raf.current=null};
-  },[enabled,active,renderer,sector,density,signal.source,tone]);
+  },[enabled,active,renderer,activeSector,density,signal.source,tone]);
 
   const anchorCount=signal.source==='verified'?Math.max(2,Math.min(15,Math.floor(2+density*12))):3;
   return <div className="p136-living-world" data-enabled={enabled} data-active={active} data-motion={motionAllowed}
-      data-renderer={renderer==='booting'?'vector':renderer} data-sector={sector} data-source={signal.source} data-anchors={anchorCount}
+      data-renderer={renderer==='booting'?'vector':renderer} data-sector={activeSector} data-source={signal.source} data-anchors={anchorCount}
       aria-hidden="true">
     <canvas ref={canvas} className="p136-living-canvas"/>
     <svg className="p136-living-vector" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
