@@ -80,3 +80,19 @@
  .cvw-root .csn-export-heading button{border:1px solid ButtonText}
  .cvw-root .csn-export-notice{border:1px solid CanvasText}
 }
+
+/* V118 visual QA: the parent ANEVUM app already renders real primary nav.
+ * Duplicating Home/Discover/Community/Creators in the Studio subheader
+ * wastes the creator viewport and weakens hierarchy. Keep the mark, Studio
+ * name, real site header, and project actions intact.
+ */
+@media(min-width:1041px){
+ .cvw-root .csn-site-nav{display:none}
+ .cvw-root .cvs-head{justify-content:space-between;gap:12px}
+ .cvw-root .cvs-head-brand{min-width:0}
+}
+.cvw-root .cvs-project-actions .cvs-primary:disabled{
+ opacity:.65;cursor:not-allowed;
+ background:#304658;color:#b5c6d0;border-color:#536b7c;
+ box-shadow:none;filter:saturate(.5)
+}
