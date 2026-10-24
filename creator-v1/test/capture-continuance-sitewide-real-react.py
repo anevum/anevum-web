@@ -38,9 +38,9 @@ class Handler(SimpleHTTPRequestHandler):
                 # Honest unavailable-status response: never label fixture counts VERIFIED.
                 data={"error":"Isolated local review: status service unavailable"}
             else:
-                data={"message":"Isolated local visual review. No service connected."}
+                data={"error":"Isolated local visual review: this service is unavailable."}
             body=json.dumps(data).encode()
-            self.send_response(404 if path.startswith("/api/v1/members/") else 503 if path.startswith("/api/v1/status") else 200)
+            self.send_response(404 if path.startswith("/api/v1/members/") else 503 if isinstance(data,dict) and "error" in data else 200)
             self.send_header("Content-Type","application/json; charset=utf-8")
             self.send_header("Content-Length",str(len(body)))
             self.send_header("Cache-Control","no-store")
@@ -120,6 +120,16 @@ with sync_playwright() as p:
         # verified counts, not the disconnected visual concept's demo content.
         page.goto(base+"/community",wait_until="domcontentloaded",timeout=30000)
         page.locator(".ch7-hub.av-next-commons").wait_for(timeout=20000)
+        page.wait_for_timeout(750)
+        if page.locator(".ch7-tabs button").count()!=4:
+            diagnostic={"viewport":width,"route":"community","body":page.locator("body").inner_text(timeout=2500)[:6000],
+                        "root":page.locator("#root").inner_html(timeout=2500)[:7000] if page.locator("#root").count() else "missing",
+                        "page_errors":page_errors,"console_errors":console_errors,"failed_requests":failed_requests,
+                        "request_paths":queries[-40:]}
+            (EVIDENCE/f"community-runtime-{width}.json").write_text(json.dumps(diagnostic,indent=2))
+            page.screenshot(path=str(EVIDENCE/f"community-debug-{width}.png"),full_page=False)
+            print("COMMUNITY RUNTIME DIAGNOSTIC:",json.dumps(diagnostic,indent=2))
+            raise AssertionError("Real Community tabs disappeared after local API reads")
         check(f"{width}: actual Community renders with cinematic treatment",page.locator(".ch7-hub.av-next-commons").count()==1)
         check(f"{width}: existing Community heading remains",page.locator("#ch7-hero-title").count()==1)
         check(f"{width}: responsive original Commons artwork loaded",loaded_image(page,".ch7-hero-art .cw-artwork-image"))
