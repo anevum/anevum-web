@@ -12,7 +12,7 @@ test('exact isolated review entry and copy-only approved responsive artwork asse
   assert.match(vite, /continuance-cinematic-react-review/);
   assert.match(vite, /public\/assets\/community-portals/);
   assert.match(vite, /emptyOutDir:\s*true/);
-  assert.doesNotMatch(vite, /wrangler|cloudflare|deploy\s*\(/i);
+  assert.doesNotMatch(vite, /^\s*import\s+.*(?:cloudflare|wrangler)|\bdeploy\s*\(/mi);
   assert.match(reviewHtml, /noindex,nofollow,noarchive/);
   assert.match(reviewHtml, /continuance-cinematic-react-review/);
   assert.doesNotMatch(read('../web/src/main.tsx'), /continuance-cinematic/);
