@@ -329,6 +329,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
       <p>{item.reason}</p>
      </div>)}
     </section>}
+    {project&&import.meta.env.VITE_CREATOR_ACHIEVEMENTS_V114==='true'&&<section className="st-panel" aria-label="Private project achievements"><p className="st-kicker">PROJECT ACHIEVEMENTS / PRIVATE DRAFTS</p><h2>DESIGN PROJECT MARKS.</h2><p>Create secret milestones, completion marks and project-specific rewards. This editor does not issue XP or player awards.</p><Link className="st-action" to={'/studio/'+project.id+'/achievements'}>DESIGN ACHIEVEMENTS &amp; REWARDS ↗</Link></section>}
     {project&&<StudioReceipts projectId={project.id} revision={project.revision}/>}
     {project&&<StudioUploader project={project} uploadsReady={uploadsReady}
      onAssetsChanged={setAssetSummary} onProjectChanged={setProject}/>}

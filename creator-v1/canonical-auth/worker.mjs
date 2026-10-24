@@ -1,4 +1,5 @@
 import {studioFileTree} from './studio-file-tree.mjs';
+import {studioAchievements,STUDIO_ACHIEVEMENT_PATH} from './studio-achievements-v114.mjs';
 import {
   CANONICAL_ORIGIN,CANONICAL_PREFIX,CANONICAL_AUTH_PATH,
   AUTH_ALLOWLIST,canonicalConfigState,canonicalSchemaReady,
@@ -167,6 +168,8 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     if(ownWorkbench&&env?.CANONICAL_WORKBENCH_ALPHA_ENABLED!=="true")return fail(request,404);
     const ownStudioFiles=/^\/api\/v1\/member\/studio\/projects\/[0-9a-f-]{36}\/files(?:\/(?:trash|[0-9a-f-]{36}(?:\/(?:versions|restore))?))?$/.test(path);
     if(ownStudioFiles&&env?.CANONICAL_STUDIO_FILE_TREE_V111!=='true')return fail(request,404);
+    const ownStudioAchievements=STUDIO_ACHIEVEMENT_PATH.test(path);
+    if(ownStudioAchievements&&(env?.CANONICAL_CREATOR_STUDIO_ENABLED!=="true"||env?.CANONICAL_CREATOR_ACHIEVEMENTS_V114!=="true"))return fail(request,404);
     const ownStudioReview=path===CANONICAL_PREFIX+"/studio/review"||
       /^\/api\/v1\/member\/studio\/review\/[0-9a-f-]{36}\/manifest$/.test(path);
     const ownStudio=/^\/api\/v1\/member\/studio\/projects(?:\/[0-9a-f-]{36}(?:\/(?:submit|withdraw|submissions|assets(?:\/[a-f0-9]{32}(?:\/file)?)?))?)?$/.test(path);
@@ -174,7 +177,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     // This is a proposed, source-only pilot. Do not expose even a GET
     // endpoint without a deliberate rollout flag and an approved D1 schema.
     if(ownProjectSave&&env?.CANONICAL_PROJECT_SAVES_ENABLED!=="true")return fail(request,404);
-    if(path!==HEALTH && path!==METHODS && !ownRewardMedia && !publicRewardMedia && !ownRewardInventory && !publicRewardInventory && !publicRecognitionCatalog && !publicHandle && !ownProfile && !ownExport && !ownClosure && !ownSpace && !publicSpace && !ownRecognition && !publicCommunity && !forumRoute && !publicMetrics && !ownProgression && !ownSupporter && !ownProjectSave && !ownStudio && !ownStudioFiles && !ownStudioReview && !ownWorkbench &&
+    if(path!==HEALTH && path!==METHODS && !ownRewardMedia && !publicRewardMedia && !ownRewardInventory && !publicRewardInventory && !publicRecognitionCatalog && !publicHandle && !ownProfile && !ownExport && !ownClosure && !ownSpace && !publicSpace && !ownRecognition && !publicCommunity && !forumRoute && !publicMetrics && !ownProgression && !ownSupporter && !ownProjectSave && !ownStudio && !ownStudioFiles && !ownStudioAchievements && !ownStudioReview && !ownWorkbench &&
       !(path.startsWith(CANONICAL_AUTH_PATH+"/") &&
         (AUTH_ALLOWLIST[request.method]?.has(path)??false)))
       return fail(request,404);
@@ -188,6 +191,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     if(ownProjectSave && !["GET","PUT","DELETE"].includes(request.method))return fail(request,405);
     if(ownWorkbench && !["GET","POST","PATCH"].includes(request.method))return fail(request,405);
     if(ownStudioFiles && !["GET","POST","PATCH"].includes(request.method))return fail(request,405);
+    if(ownStudioAchievements && !["GET","POST","PATCH"].includes(request.method))return fail(request,405);
     if(ownStudioReview && !["GET","POST"].includes(request.method))return fail(request,405);
     if(ownStudio && !["GET","HEAD","POST","PATCH","PUT","DELETE"].includes(request.method))return fail(request,405);
     if(ownClosure && !["GET","POST"].includes(request.method))return fail(request,405);
@@ -349,7 +353,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
         if(!session?.user?.id||session.user.emailVerified!==true)
           return safeJson(request,{error:"Verified sign-in required"},401);
       }
-      if(ownRewardMedia||ownRewardInventory||ownProfile||ownExport||ownClosure||ownSpace||ownRecognition||ownProgression||ownSupporter||ownProjectSave||ownStudio||ownStudioFiles||ownStudioReview||ownWorkbench){
+      if(ownRewardMedia||ownRewardInventory||ownProfile||ownExport||ownClosure||ownSpace||ownRecognition||ownProgression||ownSupporter||ownProjectSave||ownStudio||ownStudioFiles||ownStudioAchievements||ownStudioReview||ownWorkbench){
         const session=await auth.api.getSession({headers:clean.headers});
         if(!session?.user)return safeJson(request,{error:"Sign-in required"},401);
         if(ownRewardMedia)return safeResponse(await earnedRewardMedia(clean,env,session.user,rewardMedia));
@@ -357,6 +361,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
         if(ownClosure)return safeResponse(await canonicalAccountClosure(clean,env,session.user,session.session));
         if(ownWorkbench)return safeResponse(await canonicalWorkbench(clean,env,session.user));
         if(ownStudioFiles)return safeResponse(await studioFileTree(clean,env,session.user));
+        if(ownStudioAchievements)return safeResponse(await studioAchievements(clean,env,session.user));
         if(ownStudioReview)return safeResponse(await canonicalStudioReview(clean,env,session.user));
         if(ownStudio)return safeResponse(await canonicalStudio(clean,env,session.user));
         if(ownProjectSave)return safeResponse(await canonicalProjectSave(clean,env,session.user));

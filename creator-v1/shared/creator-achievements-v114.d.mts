@@ -1,0 +1,11 @@
+export type AchievementMotif='beacon'|'orbit'|'spark'|'atlas'|'key'|'constellation';
+export type AchievementDraft={stableKey:string;title:string;description:string;triggerKey:string;targetCount:number;visibility:'visible'|'secret';motif:AchievementMotif;rewardLabel:string};
+export type AchievementPreview={simulation:true;ready:boolean;count:number;target:number;title:string;description:string;motif:AchievementMotif|null;rewardLabel:string;platformXp:0};
+export declare const ACHIEVEMENT_MOTIFS:readonly AchievementMotif[];
+export declare const ACHIEVEMENT_FIELDS:readonly string[];
+export declare const ACHIEVEMENT_LIMITS:Readonly<{active:50;total:100;editsPerHour:40;history:12}>;
+export declare const UUID_V4:RegExp;
+export declare const ACHIEVEMENT_STARTERS:readonly Readonly<{label:string;draft:Readonly<AchievementDraft>}>[];
+export declare function exactFields(value:unknown,keys:readonly string[]):boolean;
+export declare function normalizeAchievementDraft(input:unknown):AchievementDraft;
+export declare function previewAchievement(input:unknown,event:unknown):AchievementPreview;

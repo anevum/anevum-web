@@ -4,8 +4,44 @@ import {readFileSync,existsSync} from "node:fs";
 import {resolve,extname} from "node:path";
 import {fileURLToPath} from "node:url";
 import {createPackageDiscoveryFixture} from "./package-discovery-fixture-v011.mjs";
+import {DatabaseSync} from 'node:sqlite';
+import {studioAchievements,STUDIO_ACHIEVEMENT_PATH} from '../canonical-auth/studio-achievements-v114.mjs';
 // Root-mode is a test-only fixture for the actual apex / asset contract.
 // The default staging-path behavior remains byte-for-byte equivalent.
+
+// V114 opt-in browser fixture: local ONLY, synthetic identity and in-memory D1
+// adapter. This never changes production or exposes an award issuer.
+const V114_BROWSER_REVIEW=process.env.ANEVUM_V114_ACHIEVEMENT_FIXTURE==='1';
+const V114_PROJECT='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+const V114_OWNER={id:'00000000000000000000000000000099',emailVerified:true};
+let v114Db=null,v114Env=null;
+if(V114_BROWSER_REVIEW){
+ v114Db=new DatabaseSync(':memory:');
+ v114Db.exec('PRAGMA foreign_keys=ON; CREATE TABLE "user"(id TEXT PRIMARY KEY);'+
+  'CREATE TABLE member_studio_projects(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES "user"(id),title TEXT NOT NULL,status TEXT NOT NULL);');
+ v114Db.prepare('INSERT INTO "user" VALUES(?)').run(V114_OWNER.id);
+ v114Db.prepare('INSERT INTO member_studio_projects VALUES(?,?,?,?)').run(
+  V114_PROJECT,V114_OWNER.id,'Observatory / SYNTHETIC REVIEW','draft');
+ v114Db.exec(readFileSync(new URL('../canonical-auth/migrations/0015_private_creator_achievements.sql',import.meta.url),'utf8'));
+ const db=v114Db;
+ v114Env={MEMBER_DB:{prepare(sql){let params=[];const stmt={
+  bind(...args){params=args;return stmt;},
+  async first(){return db.prepare(sql).get(...params)||null;},
+  async all(){return {success:true,results:db.prepare(sql).all(...params)};}
+ };return stmt;}},CANONICAL_CREATOR_STUDIO_ENABLED:'true',CANONICAL_CREATOR_ACHIEVEMENTS_V114:'true'};
+}
+async function localV114Achievement(req,res,u){
+ const cookie=(req.headers.cookie||'').split(';').some(s=>s.trim()==='anevum_offline_visual_fixture=1');
+ const chunks=[];for await(const chunk of req)chunks.push(chunk);
+ const payload=Buffer.concat(chunks);
+ const response=await studioAchievements(
+  new Request(u,{method:req.method,headers:req.headers,...(payload.length?{body:payload}:{})}),
+  v114Env,cookie?V114_OWNER:null
+ );
+ res.writeHead(response.status,Object.fromEntries(response.headers));
+ res.end(await response.text());
+}
+
 const APEX_ROOT_QA=process.env.ANEVUM_APEX_ROOT_QA==="1";
 const dist=resolve(fileURLToPath(new URL(APEX_ROOT_QA?"../dist/web/":"../dist/react-staging/",import.meta.url)));
 const port=APEX_ROOT_QA?4180:4178;
@@ -276,10 +312,12 @@ function api(res,url){
  return json(res,{error:"not-found"},404);
 }
 const mime={".css":"text/css",".js":"text/javascript",".svg":"image/svg+xml",".png":"image/png",".webp":"image/webp"};
-createServer((req,res)=>{
+createServer(async(req,res)=>{
  try{
   const u=new URL(req.url,"http://127.0.0.1:4178");
   if(packageDiscoveryFixture.handle(req,res,u))return;
+  if(V114_BROWSER_REVIEW&&STUDIO_ACHIEVEMENT_PATH.test(u.pathname)&&req.headers.host==='127.0.0.1:4178')
+    return await localV114Achievement(req,res,u);
   if(u.pathname==="/__player-member-fixture"&&req.headers.host==="127.0.0.1:4178"&&req.method==="GET"){
     const mode=u.searchParams.get("mode");
     if(!["canonical","canonical-saves","legacy","offline"].includes(mode))return json(res,{error:"invalid-mode"},400);
