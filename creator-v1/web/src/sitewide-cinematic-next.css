@@ -24,8 +24,8 @@
 .av9-shell .av79-home.av-next-cinema .av125-arrival::before{
   z-index:1;
   background:
-    linear-gradient(90deg,#040b16f5 0%,#06101de9 27%,#071322a8 54%,#06101e55 86%,#07111cc8 100%),
-    linear-gradient(0deg,#040913e0,transparent 40%);
+    linear-gradient(90deg,#040b16f1 0%,#06101dd1 28%,#0713226b 54%,#06101e19 86%,#07111c67 100%),
+    linear-gradient(0deg,#040913aa,transparent 43%);
 }
 .av9-shell .av79-home.av-next-cinema .av114-arrival-scene{
   z-index:0;inset:0;overflow:hidden;contain:paint;pointer-events:none;
@@ -43,8 +43,8 @@
 }
 .av9-shell .av79-home.av-next-cinema .av-next-arrival-art .cw-artwork-glaze{
   position:absolute;inset:0;display:block;
-  background:linear-gradient(90deg,#050b16b8 0%,#07142183 38%,#05101b20 74%,#060d1854 100%),
-    linear-gradient(0deg,#050912bc 0%,transparent 50%);
+  background:linear-gradient(90deg,#050b16b0 0%,#0714216b 38%,#05101b18 74%,#060d1830 100%),
+    linear-gradient(0deg,#05091276 0%,transparent 52%);
 }
 .av9-shell .av79-home.av-next-cinema .av125-arrival .av125-signal-atlas{
   z-index:2;right:-17%;top:-22%;width:min(760px,68vw);opacity:.28;
@@ -331,7 +331,16 @@
     min-height:0;padding:27px 20px 23px;border-radius:15px;
   }
   .av9-shell .av79-home.av-next-cinema .av125-arrival::before{
-    background:linear-gradient(180deg,#050d19da,#060e1bf1 48%,#081523cb),linear-gradient(90deg,#040b16c5,#07121b8c);
+    background:linear-gradient(180deg,#06122094 0%,#07111dba 40%,#07132095 74%,#07142283 100%),
+      linear-gradient(90deg,#050c18b0 0%,#0714212a 82%);
+  }
+  /* Less opaque mobile scrim: readable copy over a recognizable portal world. */
+  .av9-shell .av79-home.av-next-cinema .av-next-arrival-art .cw-artwork-glaze{
+    background:linear-gradient(180deg,#040c172f 0%,#04101c60 43%,#07101e39 76%,#06121b6c 100%),
+      linear-gradient(90deg,#040b188e 0%,#07142123 68%,#050c160d 100%);
+  }
+  .av9-shell .av79-home.av-next-cinema .av-next-arrival-art .cw-artwork-image{
+    object-position:67% 42%;filter:contrast(1.12) saturate(1.17) brightness(1.035);
   }
   .av9-shell .av79-home.av-next-cinema .av125-arrival .av79-hero-content{max-width:100%;margin:0 0 20px}
   .av9-shell .av79-home.av-next-cinema .av125-arrival h1{font-size:clamp(40px,11.3vw,61px)!important;line-height:1.08!important}
