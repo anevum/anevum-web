@@ -35,6 +35,9 @@ test('cinematic styling is off by default and only requested by explicit build-t
   assert.equal((discover.match(/VITE_CONTINUANCE_CINEMATIC_SITEWIDE/g)||[]).length,1);
   assert.doesNotMatch(app,/continuance-cinematic|av-next-cinema|sitewide-cinematic/);
   assert.doesNotMatch(shell,/continuance-cinematic|av-next-cinema|sitewide-cinematic/);
+  assert.match(shell,/VITE_CONTINUANCE_CINEMATIC_SITEWIDE/);
+  assert.match(shell,/av-next-site-shell/);
+  assert.match(css,/\.av9-shell\.av-next-site-shell \.site-header\.av9-header/);
 });
 test('actual current art masters are responsive and are full-width on retina screens',()=>{
   assert.match(home,/cinematicNextEnabled&&<CosmicArtwork scene="games" priority sizes="100vw" className="av-next-arrival-art"\/>/);
