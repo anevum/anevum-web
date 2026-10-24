@@ -99,7 +99,7 @@ export function LivingLevelSigil({level,size}:{level:number;size:number}){
        })}
        <ellipse cx="60" cy="60" rx="36" ry="16" transform="rotate(-30 60 60)" opacity=".65"/>
      </g>
-     <circle cx="60" cy="60" r="41" fill={'url(#'+id+'-face')'} stroke={edge} strokeWidth="2"/>
+     <circle cx="60" cy="60" r="41" fill={'url(#'+id+'-face)'} stroke={edge} strokeWidth="2"/>
      <path d="M60 23 69 51 97 60 69 69 60 97 51 69 23 60 51 51Z"
        fill="none" stroke={edge} strokeOpacity=".32" strokeWidth="1.5"/>
      <text x="60" y="69" fill="#f8fbff" fontSize="31" textAnchor="middle"
