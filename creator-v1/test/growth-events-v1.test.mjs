@@ -13,9 +13,9 @@ const valid={
 };
 const check=(event=valid,authority='client')=>validateGrowthEvent(event,{authority,now:NOW});
 const invalid=(x,authority='client')=>assert.throws(()=>check(x,authority),/ANEVUM_GROWTH_EVENT_INVALID/);
-test('23 versioned growth events are declared with immutable provenance and classifications',()=>{
+test('24 versioned growth events are declared with immutable provenance and classifications',()=>{
  assert.equal(EVENT_SCHEMA_VERSION,1);
- assert.equal(Object.keys(GROWTH_EVENTS).length,23);
+ assert.equal(Object.keys(GROWTH_EVENTS).length,24);
  assert.ok(Object.isFrozen(GROWTH_EVENTS));
  assert.ok(Object.values(GROWTH_EVENTS).every(x=>Object.isFrozen(x)));
  assert.equal(GROWTH_EVENTS.account_created.authority,'server');
@@ -69,10 +69,11 @@ test('only trusted, server-confirmed qualifying actions can contribute to meanin
  const allowed=GROWTH_METRICS.weeklyMeaningfulParticipants.qualifyingEvents;
  assert.ok(allowed.length>=4);
  assert.ok(allowed.every(k=>GROWTH_EVENTS[k].authority==='server'));
- for(const k of ['landing_view','signup_started','studio_opened','project_play_intent','project_voted','creator_achievement_issued','payment_settled']){
+ for(const k of ['landing_view','signup_started','studio_opened','project_play_intent','project_voted','creator_achievement_issued','payment_settled','community_reply_published','community_post_published']){
   assert.equal(eventIsMeaningful(k),false);
   assert.equal(allowed.includes(k),false);
  }
+ assert.ok(allowed.includes('community_contribution_qualified'));
  for(const k of allowed)assert.equal(eventIsMeaningful(k),true);
  assert.equal(GROWTH_METRICS.weeklyMeaningfulParticipants.status,'not-instrumented');
 });
