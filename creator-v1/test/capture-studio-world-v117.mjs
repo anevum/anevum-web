@@ -119,6 +119,10 @@ try{
  // Shift+Arrow; the data change is undoable and inspector-visible.
  await evaluate('(()=>{const c=document.querySelector(".cvw-world-canvas");c.focus();c.dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowRight",shiftKey:true,bubbles:true}));return true;})()');
  await until(()=>evaluate('Number(document.querySelector(".cvw-vector input[type=number]").value)===.5'),'Selected object keyboard move');
+ await click('.csn-axis-x button:last-child');
+ await until(()=>evaluate('Number(document.querySelector(".cvw-vector input[type=number]").value)===1'),'Touch transform pad updates canonical XYZ inspector');
+ await click('.csn-transform-heading button');
+ await photo('v117-transform-pad-1440');
  await click('.cvw-primitive-grid button:first-child');
  await until(()=>evaluate('document.querySelectorAll(".cvw-tree-node").length===11'),'Local 3D node created');
  await click('button[aria-label="Undo scene edit"]');
