@@ -145,6 +145,79 @@
 .av9-shell .av73-discover.av-next-discover :is(a,button,input):focus-visible{
   outline:3px solid #aff1ff;outline-offset:3px;
 }
+/* Same institutional instrument chrome across ALL opt-in site routes.
+   Existing Shell controls, canonical mark, auth state and IREN stay mounted. */
+.av9-shell.av-next-site-shell{
+  --av9-space:#060c17;
+  --av9-midnight:#0b1729;
+  --av9-panel:#122538;
+  --av9-paper:#f6f0e7;
+  --av9-secondary:#ccdae4;
+  --av9-muted:#b3c3d2;
+  --av9-lavender:#e4d0b0;
+  --av9-cyan:#a4e6f6;
+  --av9-border:#63849f;
+  background:radial-gradient(ellipse 79% 700px at 83% -240px,#1c46645e,transparent 80%),radial-gradient(ellipse 74% 800px at -8% 70%,#1232513b,transparent 85%),#060c17;
+  color:#f6f0e7;
+}
+.av9-shell.av-next-site-shell .site-header.av9-header{
+  border-bottom:1px solid #668ba2;
+  background:linear-gradient(98deg,#061422f6 0%,#0f2538f4 54%,#071827f8);
+  box-shadow:inset 0 1px #e2f4ff26,0 10px 30px #02071582;
+  backdrop-filter:blur(16px) saturate(125%);
+}
+.av9-shell.av-next-site-shell .av9-brand .brand-mark{
+  color:#f2d49d;filter:drop-shadow(0 0 12px #f3d6a342);
+}
+.av9-shell.av-next-site-shell .av9-brand .cw-brand-stack b{
+  font-weight:690;color:#f8f2e6;letter-spacing:.14em;
+}
+.av9-shell.av-next-site-shell .av9-brand .cw-brand-stack small{
+  color:#b9d0dc;letter-spacing:.09em;
+}
+.av9-shell.av-next-site-shell .av9-primary a{
+  color:#cedfe9;border-radius:6px;min-height:44px;
+}
+.av9-shell.av-next-site-shell .av9-primary a:hover,
+.av9-shell.av-next-site-shell .av9-primary a.active{
+  border-color:#8dbbd6;background:#234159a6;color:#fff;
+}
+.av9-shell.av-next-site-shell .av9-primary a.active{
+  box-shadow:inset 0 -2px #d2bb8d;
+}
+.av9-shell.av-next-site-shell .av9-header-search{
+  border-color:#688da6;border-radius:7px;
+  background:linear-gradient(110deg,#081826ed,#0d2236df);
+  box-shadow:inset 0 1px #d6f2ff1c,0 4px 17px #0004;
+}
+.av9-shell.av-next-site-shell .av9-header-search input{color:#fff}
+.av9-shell.av-next-site-shell .av9-header-search input::placeholder{color:#bbcfdd;opacity:1}
+.av9-shell.av-next-site-shell .av9-header-actions :is(.av9-create,.av9-account,.av9-menu-trigger,.av9-search-mobile){
+  border-color:#688ba3;background:#162e44;color:#e8f4f8;
+  box-shadow:inset 0 1px #e9f7ff1b;
+}
+.av9-shell.av-next-site-shell .av9-header-actions :is(.av9-create,.av9-account,.av9-menu-trigger,.av9-search-mobile):hover{
+  border-color:#b8e4f0;background:#234057;color:#fff;
+}
+.av9-shell.av-next-site-shell .site-main{
+  color:#f5f0e8;
+}
+.av9-shell.av-next-site-shell .site-footer.av9-footer{
+  border-top:1px solid #547994;
+  background:linear-gradient(110deg,#0d1d2f,#071320 78%);
+  color:#bdd0dd;
+  box-shadow:inset 0 1px #e6f3ff0b;
+}
+.av9-shell.av-next-site-shell .site-footer.av9-footer a{
+  color:#e3d0af;text-underline-offset:4px;
+}
+.av9-shell.av-next-site-shell .site-footer.av9-footer a:hover{color:#fff}
+@media(forced-colors:active){
+  .av9-shell.av-next-site-shell .site-header.av9-header,.av9-shell.av-next-site-shell .site-footer.av9-footer{
+    background:Canvas;color:CanvasText;border:1px solid CanvasText;
+  }
+}
+
 /* Real public catalogue: preserve search filters, pagination, true loading and verified cards. */
 .av9-shell .av73-discover.av-next-discover{
   --av-next-copper:#efd0a0;--av-next-cyan:#a9eafa;
