@@ -131,6 +131,7 @@ test('topic-specific unsubscribe preserves other consent and invalidates replay'
   assert.equal(h.get(h.email).releases,1);
   assert.equal(h.get(h.email).weekly,0);
   assert.equal(h.get(h.email).status,'confirmed');
+  assert.equal(h.get(h.email).unsubscribed_at,null,'disabling one topic must not falsely record complete unsubscription');
   assert.ok(h.get(h.email).unsub_version>before);
   assert.equal((await h.execute('unsubscribe',{token,topic:'all'})).status,410);
   assert.equal(h.logs(h.email).at(-1),'preferences-disabled');
@@ -138,6 +139,7 @@ test('topic-specific unsubscribe preserves other consent and invalidates replay'
   token=h.token(h.sent.at(-1));
   assert.equal((await h.execute('unsubscribe',{token,topic:'all'})).status,200);
   assert.equal(h.get(h.email).status,'unsubscribed');
+  assert.ok(h.get(h.email).unsubscribed_at>0);
   assert.equal(h.logs(h.email).at(-1),'unsubscribed');
  }finally{h.close()}
 });
