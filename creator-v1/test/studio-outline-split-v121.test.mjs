@@ -74,6 +74,9 @@ test('V121 code editor and private split workspace parse and preserve owner/revi
  assert.match(workspace,/setSplitId\(null\)/);
  assert.match(read('creator-v1/web/src/pages/studio-layout-v121.css'),/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
  assert.match(read('creator-v1/web/src/pages/studio-layout-v121.css'),/max-width:1100px/);
+ assert.match(read('creator-v1/web/src/pages/studio-layout-v121.css'),/\.csf-root\.is-split \.csf-tree\{display:none!important\}/);
+ assert.match(read('creator-v1/web/src/pages/studio-layout-v121.css'),/\.csf-root\.is-split \.csf-work-area\{container-type:inline-size\}/);
+ assert.match(workspace,/csf-split-focus-note/);
  assert.match(read('creator-v1/web/src/pages/studio-code-editor-v119.css'),/\.csi-outline-list/);
  assert.doesNotMatch(code,/dangerouslySetInnerHTML|new Function|\beval\s*\(/);
 });
