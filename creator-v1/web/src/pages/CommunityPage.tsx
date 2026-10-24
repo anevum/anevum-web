@@ -8,6 +8,7 @@ import {
 import { useResource } from "../lib/useResource";
 import { projectDetailPath } from "../lib/navigation";
 import { CosmicArtwork } from "../components/CosmicArtwork";
+import {VisualEdge} from "../components/NextVisualPrimitivesV135";
 import { Icon } from "../components/Icons";
 import { LoadingState, ErrorState } from "../components/States";
 import "./community-hub-v007.css";
@@ -58,6 +59,7 @@ function ProjectEntry({ item }: { item: Project }) {
   const destination = projectDetailPath(item.id, "/community");
   const field = fields.find(field => field.id === item.category);
   return <article className="ch7-entry ch7-project">
+    <VisualEdge tone="cyan"/>
     <Link className="ch7-entry-art" to={destination} aria-label={"Explore " + item.title}>
       <CosmicArtwork scene={item.category}/>
       <span>{field?.label || "Project"} / APPROVED RELEASE</span>
@@ -79,6 +81,7 @@ function ProjectEntry({ item }: { item: Project }) {
 function ConversationEntry({ item }: { item: CommunityPost }) {
   const destination = "/community/posts/" + encodeURIComponent(item.id);
   return <article className="ch7-entry ch7-conversation">
+    <VisualEdge tone="violet"/>
     <div className="ch7-conversation-art" aria-hidden="true"><Icon name="community" size={32}/><span>PUBLIC CONVERSATION</span></div>
     <div className="ch7-entry-copy">
       <div className="ch7-meta"><span>DISCUSSION / {item.topic.toUpperCase()}</span><time dateTime={item.publishedAt}>{asDate(item.publishedAt)}</time></div>
@@ -160,6 +163,7 @@ export function CommunityPage() {
   }
   return <div className="ch7-hub">
     <section data-iren-anchor="community" className="ch7-hero" aria-labelledby="ch7-hero-title">
+      <VisualEdge tone="violet"/>
       <div className="ch7-hero-art" aria-hidden="true"><CosmicArtwork scene="creative"/></div>
       <div className="ch7-hero-copy"><span className="ch7-kicker">ANEVUM / COMMUNITY / PUBLIC DISCUSSIONS</span>
         <h1 id="ch7-hero-title">Made by people.<br/><em>Better together.</em></h1>
