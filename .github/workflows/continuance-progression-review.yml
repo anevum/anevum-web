@@ -68,6 +68,9 @@ jobs:
         run: |
           npm run build:creator-v1-web
           grep -r -l 'px-root' creator-v1/dist/web/assets
+          mkdir -p /tmp/progression-next-review/compiled-web
+          cp -a creator-v1/dist/web/. /tmp/progression-next-review/compiled-web/
+          git rev-parse HEAD > /tmp/progression-next-review/compiled-source-sha.txt
       - name: Install browser test tooling without modifying package manifests
         run: |
           npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.56.1

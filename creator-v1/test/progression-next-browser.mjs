@@ -21,7 +21,7 @@ const server=createServer((req,res)=>{
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const base='http://127.0.0.1:'+server.address().port;
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
-let failure=null;
+let failure=null,activePage=null;
 async function fixture(width=1440,user=null){
  const context=await browser.newContext({viewport:{width,height:width===1440?1000:844},reducedMotion:'reduce'});
  const state={user,error:false,invalid:false,privateReads:[]};
@@ -51,7 +51,7 @@ async function fixture(width=1440,user=null){
   if(p==='/api/v1/status'){await json({version:'synthetic',phase:'review',counts:{publishedProjects:0,publishedCreators:0},features:{communityPosts:false}});return}
   await json({error:'No synthetic data for this endpoint'},503);
  });
- const page=await context.newPage();page.setDefaultTimeout(15000);page.on('pageerror',e=>errors.push(e.message));
+ const page=await context.newPage();activePage=page;page.setDefaultTimeout(15000);page.on('pageerror',e=>errors.push(e.message));
  return {page,state,context};
 }
 async function open(page){await page.goto(base+'/__review/progression',{waitUntil:'networkidle'});await page.locator('.px-root').waitFor()}
@@ -63,13 +63,13 @@ try{
   assert.equal(await page.locator('.px-activity').count(),19);record(width+' guest sees proposed catalog');
   assert.equal(await page.locator('.px-current').count(),0);assert.ok(!state.privateReads.includes('/api/v1/member/progression'));record(width+' guest has no private progression or art');
   await fit(page,width+' catalog');await capture(page,'guest-'+width);
-  await page.getByRole('button',{name:'Creation',exact:true}).click();assert.equal(await page.locator('.px-activity').count(),5);record(width+' track filter');
+  await page.getByRole('button',{name:'Creation',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.px-activity').length===5);assert.equal(await page.locator('.px-activity').count(),5);record(width+' track filter');
   const input=page.getByRole('searchbox',{name:'Find a contribution'});await input.fill('not-present-zzz');await page.getByRole('heading',{name:'No matching paths.'}).waitFor();
-  await page.getByRole('button',{name:'Clear filters'}).click();assert.equal(await page.locator('.px-activity').count(),19);record(width+' search empty recovery');
+  await page.getByRole('button',{name:'Clear filters'}).click();await page.waitForFunction(()=>document.querySelectorAll('.px-activity').length===19);assert.equal(await page.locator('.px-activity').count(),19);record(width+' search empty recovery');
   const button=page.getByRole('button',{name:'View criteria for Write a useful field report'});await button.click();await page.locator('.px-dialog[open]').waitFor();
   assert.match(await page.locator('.px-dialog').innerText(),/independent review/i);await page.keyboard.press('Escape');await page.locator('.px-dialog').waitFor({state:'hidden'});
   assert.equal(await button.evaluate(el=>el===document.activeElement),true);record(width+' dialog Escape and focus restoration');
-  await page.locator('.px-nav button').nth(1).click();assert.equal(await page.locator('.px-expedition').count(),3);await fit(page,width+' expeditions');await capture(page,'expeditions-'+width);
+  await page.locator('.px-nav button').nth(1).click();await page.locator('.px-expedition').first().waitFor();assert.equal(await page.locator('.px-expedition').count(),3);await fit(page,width+' expeditions');await capture(page,'expeditions-'+width);
   assert.equal(await page.locator('.px-orbit-one').evaluate(el=>getComputedStyle(el).animationName),'none');record(width+' reduced motion');
   await page.emulateMedia({reducedMotion:'no-preference'});await page.locator('.px-motion').click();assert.equal(await page.locator('.px-orbit-one').evaluate(el=>getComputedStyle(el).animationPlayState),'paused');record(width+' manual motion pause');
   await context.close();
@@ -81,7 +81,14 @@ try{
  state.invalid=true;await open(page);await page.getByRole('heading',{name:'Progress could not be verified.'}).waitFor();assert.equal(await page.locator('.px-current').count(),0);record('malformed server progress fails closed');
  state.invalid=false;state.user=null;await open(page);assert.equal(await page.locator('.px-current').count(),0);record('signed-out member does not retain private art');await context.close();
  assert.deepEqual(errors,[]);assert.deepEqual(writes,[]);assert.deepEqual(external,[]);record('no runtime errors, writes or external requests');
-}catch(e){failure=e.message;throw e}
+}catch(e){
+ failure=e.message;
+ if(activePage&&!activePage.isClosed()){
+  await activePage.screenshot({path:join(output,'failure.png'),fullPage:true,animations:'disabled'}).catch(()=>{});
+  writeFileSync(join(output,'failure.html'),await activePage.content().catch(()=>''));
+ }
+ throw e;
+}
 finally{
  writeFileSync(join(output,'receipt.json'),JSON.stringify({source:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),data:'synthetic only',checks,captures,errors,writes,external,failure},null,2));
  await browser.close();await new Promise(r=>server.close(r));
