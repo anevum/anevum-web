@@ -134,10 +134,15 @@
  .cf-author-dossier-activity strong{font-size:17px}
 }
 @media(max-width:360px){
- .cf-author-dossier{grid-template-columns:minmax(0,1fr) 41px 41px;column-gap:2px;padding:7px}
+ /* Keep every selected badge/crest. Stacking the two actions vertically
+    reclaims ~43px for the actual identity on 320px screens. */
+ .cf-author-dossier{grid-template-columns:minmax(0,1fr) 41px;column-gap:4px;padding:7px;min-height:108px;align-items:start}
  .cf-author-dossier--no-details,.cf-author-dossier--no-wall{grid-template-columns:minmax(0,1fr) 41px}
- .cf-author-dossier-visit,.cf-author-dossier-details>summary{width:40px;min-height:44px}
- .cf-author-dossier-details>summary{right:7px;top:10px}
+ .cf-author-dossier--no-details.cf-author-dossier--no-wall{grid-template-columns:minmax(0,1fr);min-height:0}
+ .cf-author-dossier-visit,.cf-author-dossier-details>summary{width:40px;min-height:44px;height:44px}
+ .cf-author-dossier-visit{grid-column:2;grid-row:1;align-self:start}
+ .cf-author-dossier-details>summary{right:7px;top:57px}
+ .cf-author-dossier--no-wall .cf-author-dossier-details>summary{top:7px}
  .cf-author-dossier .cf-author .av61-photo .ms-portrait{width:36px!important;height:36px!important}
  .cf-author-dossier .cf-author .av61-specimen{width:30px!important}
  .cf-author-dossier .cf-author .av61-member-copy{gap:2px!important}
