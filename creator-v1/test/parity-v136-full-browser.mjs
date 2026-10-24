@@ -28,6 +28,10 @@ const base='http://127.0.0.1:'+server.address().port;
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 const fixture={id:'v136-ci-fixture',title:'SYNTHETIC CI PROJECT',summary:'Loopback fixture only; not a real release.',
   category:'games',freeToUse:true,license:'MIT',publishedAt:'2026-10-24T12:00:00Z',creatorName:'CI fixture',creatorHandle:null};
+const packageFixture={id:'123e4567-e89b-42d3-a456-426614174000',
+  title:'SYNTHETIC APPROVED PACKAGE',summary:'Loopback-only approved package inspection fixture.',
+  category:'game',version:1,status:'published',draft_status:null,cover_url:null,
+  play_url:'/upload/v3/play/123e4567-e89b-42d3-a456-426614174000',published_at:1792843200};
 const record=(name,data={})=>{checks.push({name,...data});console.log('PASS '+name);};
 async function contextFor(width,{motion='reduce',state='empty',forceVector=false}={}){
   const context=await browser.newContext({viewport:{width,height:width<650?844:960},deviceScaleFactor:2,reducedMotion:motion});
@@ -40,6 +44,14 @@ async function contextFor(width,{motion='reduce',state='empty',forceVector=false
   await context.route('**/*',async route=>{
     const request=route.request(),url=new URL(request.url());
     if(url.origin!==base||!['GET','HEAD'].includes(request.method())){forbidden.push({url:request.url(),method:request.method()});await route.abort();return;}
+    // The isolated uploader is optional. No real upload or unpublished package
+    // endpoint is contacted during this loopback-only acceptance.
+    if(url.pathname==='/upload/v3/api/v1/packages/projects'){
+      const published=state==='package';
+      await route.fulfill({status:published?200:404,contentType:'application/json',
+        body:JSON.stringify(published?{projects:[packageFixture]}:{error:'CI optional uploader disabled'})});
+      return;
+    }
     if(url.pathname.startsWith('/api/')){
       const page=items=>({items,count:items.length,nextCursor:null});
       const path=url.pathname;
@@ -190,6 +202,30 @@ try{
     }else await page.getByText('The public index is temporarily unavailable',{exact:true}).waitFor();
     await page.screenshot({path:join(out,'catalogue-'+state+'-390.png'),fullPage:true,animations:'disabled'});
     record('honest catalogue '+state);await context.close();
+  }
+  // Exercise the second public source independently: only approved packages
+  // can open the Artifact Lens, and their play URLs remain canonical.
+  {
+    const {page,context}=await contextFor(390,{state:'package'});
+    await page.goto(base+'/discover',{waitUntil:'domcontentloaded'});
+    await page.getByRole('heading',{name:packageFixture.title,exact:true}).waitFor();
+    const before=page.url();
+    const inspect=page.getByRole('button',{name:'Inspect '+packageFixture.title,exact:true});
+    await inspect.click();
+    const lens=page.locator('.p136-artifact-lens[open]');
+    await lens.waitFor();
+    assert.equal(await lens.getByRole('heading',{name:packageFixture.title,exact:true}).count(),1);
+    assert.equal(await lens.getByText(packageFixture.summary,{exact:true}).count(),1);
+    assert.equal(await lens.getByText('Approved browser package',{exact:true}).count(),1);
+    const action=lens.getByRole('link',{name:'Open approved release'});
+    assert.equal(await action.getAttribute('href'),packageFixture.play_url,
+      'Public package action retains the approved canonical player path');
+    assert.equal(page.url(),before,'Inspecting approved package never changes route');
+    await page.screenshot({path:join(out,'artifact-lens-package-390.png'),animations:'disabled'});
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(()=>!document.querySelector('.p136-artifact-lens[open]'));
+    record('approved package Artifact Lens / canonical player path / Escape / unchanged URL');
+    await context.close();
   }
   const {page,context}=await contextFor(390,{motion:'no-preference',forceVector:true});
   await page.goto(base,{waitUntil:'networkidle'});
