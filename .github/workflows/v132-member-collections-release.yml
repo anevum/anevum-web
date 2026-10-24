@@ -133,14 +133,17 @@ jobs:
             --outdir "$RUNNER_TEMP/v132-dryrun"
           echo 'V132_OFFLINE_BUNDLE=PASS; ORIGINAL_V131_GATEWAY=UNCHANGED; PROVIDER_WRITES=0; PUBLIC_TRAFFIC=UNCHANGED' >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: anevum-v132-release-package-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/v132-package/
+          retention-days: 14
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: anevum-v132-sealed-offline-${{ github.event.pull_request.head.sha }}
+          name: anevum-v132-review-evidence-${{ github.event.pull_request.head.sha }}
           path: |
-            ${{ runner.temp }}/v132-package/compiled-web/
-            ${{ runner.temp }}/v132-package/worker-bundle/
-            ${{ runner.temp }}/v132-package/v132-offline-manifest.json
-            ${{ runner.temp }}/v132-package/v132-asset-inventory.json
             ${{ runner.temp }}/v132-root/apex-root-320.png
             ${{ runner.temp }}/v132-root/apex-root-390.png
             ${{ runner.temp }}/v132-root/apex-root-1440.png
