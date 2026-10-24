@@ -1,6 +1,7 @@
 import {useId} from 'react';
 import {BADGE_CATALOG,type BadgeFamily} from '../lib/player-recognition';
 import './badge-insignia-v066.css';
+import {LivingBadgeSigil} from '../parity/LivingRecognition';
 
 /** Original high-density badge engraving system.
  * A distinct silhouette, engraved central device, and lighting are generated
@@ -73,6 +74,8 @@ export function BadgeInsignia({badge,size='small',state='earned',title}:{
  const px={tiny:22,small:38,medium:76,large:118}[size];
  const alt=title||entry?.name||'Achievement badge';
  const fg=palette.light;
+ if(import.meta.env.VITE_PARITY_V136_FULL==='true'&&entry)
+  return <LivingBadgeSigil badge={badge} displayName={alt} family={entry.family} size={px} state={state}/>;
  return <span className={'av66-badge-insignia av66-badge-insignia--'+size+' av66-badge-insignia--'+state}
   title={alt} role="img" aria-label={alt} style={{width:px,height:px}}>
   <svg viewBox="0 0 100 100" width={px} height={px} aria-hidden="true" focusable="false">
