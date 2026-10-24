@@ -32,6 +32,23 @@ await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const base='http://127.0.0.1:'+server.address().port;
 let browser;
 const record=(name,detail={})=>{checks.push({name,...detail});console.log('PASS '+name)};
+async function readyCommons(page){
+  await page.locator('.lnx-quick-entry').waitFor({state:'visible'});
+  await page.waitForFunction(()=>{
+    const counts=document.querySelector('#lnx-counts');
+    const regions=[...document.querySelectorAll('.lnx-resource-region')];
+    return counts?.getAttribute('aria-busy')==='false'&&regions.length>0&&regions.every(region=>region.getAttribute('aria-busy')==='false');
+  });
+}
+async function visitCommons(page,query=''){
+  // Readiness is the rendered application state, not 500ms of network silence.
+  // https://playwright.dev/docs/api/class-page#page-goto
+  const expected=new URL('/__review/commons'+query,base);
+  const response=await page.goto(expected.href,{waitUntil:'domcontentloaded'});
+  assert.equal(response?.status(),200,'Compiled document must load successfully');
+  await readyCommons(page);
+  assert.equal(page.url(),expected.href,'The requested public review state must be restored');
+}
 async function fixture(width=1440,height=1000,reducedMotion='reduce'){
   const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:2,reducedMotion});
   context.setDefaultTimeout(12000);
@@ -51,8 +68,7 @@ async function fixture(width=1440,height=1000,reducedMotion='reduce'){
   });
   const page=await context.newPage();
   page.on('pageerror',error=>errors.push(error.message));
-  await page.goto(base+'/__review/commons',{waitUntil:'networkidle'});
-  await page.locator('.lnx-quick-entry').waitFor();
+  await visitCommons(page);
   return {context,page};
 }
 async function openQuick(page){
@@ -158,10 +174,12 @@ try{
   await page.keyboard.press('Enter');
   await page.waitForURL(url=>url.searchParams.get('view')==='atlas');
   await page.waitForFunction(()=>document.activeElement?.id==='lnx-main');
-  await page.goBack();
+  await page.goBack({waitUntil:'domcontentloaded'});
   await page.waitForURL(url=>url.searchParams.get('category')==='research'&&url.searchParams.get('view')==='signals');
+  await readyCommons(page);
+  await page.waitForFunction(()=>document.activeElement?.id==='lnx-main');
   record('Scoped navigation changes views and history preserves the selected district');
-  await page.goto(base+'/__review/commons?category=tools&q=signal',{waitUntil:'networkidle'});
+  await visitCommons(page,'?category=tools&q=signal');
   await openQuick(page);
   await page.locator('#lnx-quick-search').fill('full discover');
   await page.keyboard.press('Enter');
@@ -169,14 +187,14 @@ try{
   assert.equal(new URL(page.url()).searchParams.get('category'),'tools');
   assert.equal(new URL(page.url()).searchParams.get('q'),'signal');
   record('Full Discover destination preserves public project filters');
-  await page.goto(base+'/__review/commons?view=people&q=maker',{waitUntil:'networkidle'});
+  await visitCommons(page,'?view=people&q=maker');
   await openQuick(page);
   await page.locator('#lnx-quick-search').fill('creator directory');
   await page.keyboard.press('Enter');
   await page.waitForURL(url=>url.pathname==='/creators');
   assert.equal(new URL(page.url()).searchParams.get('q'),'maker');
   record('Creator Directory destination preserves public creator search');
-  await page.goto(base+'/__review/commons',{waitUntil:'networkidle'});
+  await visitCommons(page);
   await page.evaluate(()=>{
     const other=document.createElement('dialog');other.id='qa-other-modal';
     other.innerHTML='<button id="qa-other-focus">Other modal</button>';document.body.append(other);other.showModal();
