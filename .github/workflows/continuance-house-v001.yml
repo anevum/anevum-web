@@ -27,3 +27,13 @@ jobs:
           node-version: "22"
       - name: Verify static files, security invariants and command routing
         run: npm run verify
+      - name: Browser interaction and responsive screenshots
+        run: node scripts/browser-smoke.mjs
+      - name: Save V001 desktop and phone screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: continuance-house-v001-visual
+          path: apps/continuance-house/artifacts/*.png
+          if-no-files-found: warn
+          retention-days: 7
