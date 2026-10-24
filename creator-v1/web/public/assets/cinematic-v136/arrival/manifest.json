@@ -1,0 +1,32 @@
+{
+  "schema": "anevum.cinematic.arrival.v1",
+  "session": "ANEVUM.WEB.BUILD.2026-10-24.003.CINEMATIC-CONTINUANCE-ENGINE",
+  "status": "preview-only",
+  "mode": "poster-pilot",
+  "source": "First-party PARITY V136 illustrated environment; not the final governing concept or a rendered live world",
+  "sourceManifest": "assets/parity-v136/manifest.json",
+  "posters": {
+    "desktop": {
+      "path": "assets/parity-v136/institute-1672.webp",
+      "width": 1672,
+      "height": 941,
+      "bytes": 316454,
+      "sha256": "1c65c975ed013bc3e59787c69be19bd3f47978abb918ba7c6f3db4c2b743a350"
+    },
+    "mobile": {
+      "path": "assets/parity-v136/institute-768.webp",
+      "width": 768,
+      "height": 432,
+      "bytes": 89948,
+      "sha256": "ede5d6296703ba62a2d5bccf5e08f8e6fdd2e94d95a904f96e28966d0358607f"
+    }
+  },
+  "sequence": null,
+  "handoff": {
+    "sceneSector": "hero",
+    "geometry": "atrium",
+    "revealStart": 0.12,
+    "revealEnd": 0.74,
+    "note": "Pilot fades from an authored illustration to the existing Atrium renderer. Camera-matched source scenes are still required before claiming a seamless handoff."
+  }
+}
