@@ -8,6 +8,7 @@ const app=readFileSync('creator-v1/web/src/App.tsx','utf8');
 const page=readFileSync('creator-v1/web/src/pages/WorldComposerReviewV115.tsx','utf8');
 const canvas=readFileSync('creator-v1/web/src/pages/WorldCanvasV115.tsx','utf8');
 const gl=readFileSync('creator-v1/web/src/pages/world-webgl2-v115.ts','utf8');
+const sky=readFileSync('creator-v1/web/src/pages/world-sky-v115.ts','utf8');
 const css=readFileSync('creator-v1/web/src/pages/world-composer-v115.css','utf8');
 
 const deep=value=>JSON.parse(JSON.stringify(value));
@@ -118,9 +119,25 @@ test('GPU renderer has true WebGL2 shader draws, depth, ID picking and lifecycle
  assert.match(gl,/gl\.drawArrays\(m\.mode,0,m\.count\)/);
  assert.match(gl,/gl\.enable\(gl\.DEPTH_TEST\)/);
  assert.match(gl,/gl\.readPixels\(px,py,1,1/);
+ assert.match(gl,/createWorldSky\(gl\)/);
+ assert.match(gl,/sky\.render\(w,h,camera\.yaw/);
+ assert.match(gl,/const trees:\[number,number,number\]\[\]/);
+ assert.match(gl,/kind==='bridge'/);
+ assert.match(sky,/gl\.drawArrays\(gl\.TRIANGLES,0,3\)/);
+ assert.match(sky,/uResolution/);
+ assert.match(sky,/uNight/);
+ assert.match(sky,/planetMask/);
+ assert.match(sky,/cloudMask/);
+ assert.ok(parse(sky,{sourceType:'module',plugins:['typescript']}).program.body.length>3);
+
  assert.match(gl,/gl\.deleteBuffer\(m\.buffer\)/);
  assert.match(canvas,/webglcontextlost/);
  assert.match(canvas,/webglcontextrestored/);
+ assert.match(canvas,/Retry graphics on a fresh canvas/);
+ assert.match(canvas,/setRestartKey\(value=>value\+1\)/);
+ assert.match(canvas,/onNudge/);
+ assert.match(page,/field:'position',value:position/);
+
  assert.match(canvas,/ResizeObserver/);
  assert.match(canvas,/requestAnimationFrame/);
  assert.match(canvas,/pointer/i);
