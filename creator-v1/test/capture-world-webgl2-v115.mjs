@@ -119,13 +119,32 @@ try{
  const small=await setSize(320,720);
  await photo('world-gpu-320');
  // A real WebGL2 loss extension, where offered, tests fallback/reinitialization.
- const hadExtension=await evaluate('(()=>{const gl=document.querySelector(".cvw-world-canvas").getContext("webgl2");const ext=gl.getExtension("WEBGL_lose_context");if(!ext)return false;ext.loseContext();return true;})()');
+ const hadExtension=await evaluate('(()=>{const gl=document.querySelector(".cvw-world-canvas").getContext("webgl2");const ext=gl.getExtension("WEBGL_lose_context");if(!ext)return false;window.__v115ContextLossExtension=ext;ext.loseContext();return true;})()');
+ let recoveredBy='not-exercised';
  if(hadExtension){
   await until(()=>evaluate('document.querySelector("[data-world-canvas-v115]").dataset.worldCanvasV115==="lost"'),'Real WebGL2 context loss recovery state');
   assert.equal(await evaluate('document.querySelectorAll(".cvw-tree-node").length'),11,'Context loss preserved editable world');
   await photo('world-gpu-context-lost-320');
-  await evaluate('(()=>{const gl=document.querySelector(".cvw-world-canvas").getContext("webgl2");gl.getExtension("WEBGL_lose_context")?.restoreContext();return true;})()');
-  await until(()=>evaluate('document.querySelector("[data-world-canvas-v115]").dataset.worldCanvasV115==="webgl2"'),'WebGL2 context restore',26000);
+  // Restore using the SAME extension obtained before loss. Requerying the
+  // context after loss silently skipped restoration on SwiftShader.
+  await evaluate('(()=>{window.__v115ContextLossExtension.restoreContext();return true;})()');
+  let nativeRestored=false;
+  const nativeDeadline=Date.now()+5000;
+  while(Date.now()<nativeDeadline){
+   nativeRestored=await evaluate('document.querySelector("[data-world-canvas-v115]").dataset.worldCanvasV115==="webgl2"');
+   if(nativeRestored)break;
+   await sleep(150);
+  }
+  if(nativeRestored){
+   recoveredBy='webglcontextrestored';
+  }else{
+   assert.equal(await evaluate('document.querySelector("[data-world-canvas-v115]").dataset.worldCanvasV115==="lost"'),true,'Fallback visible during stalled restore');
+   await click('.cvw-retry-graphics');
+   await until(()=>evaluate('document.querySelector("[data-world-canvas-v115]").dataset.worldCanvasV115==="webgl2"'),'Fresh-canvas GPU recovery',16000);
+   recoveredBy='fresh-canvas-user-retry';
+  }
+  assert.equal(await evaluate('document.querySelectorAll(".cvw-tree-node").length'),11,'World state preserved after context recovery');
+  await photo('world-gpu-recovered-320');
  }
  await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
  assert.equal(await evaluate('matchMedia("(prefers-reduced-motion: reduce)").matches'),true);
@@ -135,7 +154,7 @@ try{
  assert.equal(errors.length,0,'No runtime browser exceptions '+errors.join('; '));
  const report={status:'PASS',source:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),
   mode:'synthetic source-only real WebGL2 / software-emulated GPU on CI',
-  noRealMemberAcceptance:true,desktop,mobile,small,version,contextLossExercise:hadExtension,
+  noRealMemberAcceptance:true,desktop,mobile,small,version,contextLossExercise:hadExtension,recoveredBy,
   prohibitedWrites:mutating.length,errors,screenshots:shots};
  writeFileSync(join(output,'acceptance.json'),JSON.stringify(report,null,2));
  console.log(JSON.stringify(report));
