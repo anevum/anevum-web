@@ -165,3 +165,21 @@
  .csi-toolbar-actions button,.csi-find-controls>button{border-color:ButtonText}
  .csi-file-icon{color:CanvasText}
 }
+
+/* Shared file glyph alignment in both the synthetic V116 navigator and
+ * the actual owner-scoped private V111 workspace. */
+.cvw-root .csn-file-icon{display:inline-flex;align-items:center;justify-content:flex-start;
+ gap:2px;flex:0 0 28px;min-width:28px;font-size:12px}
+.cvw-root .csn-file-icon .csi-file-icon-code{font-size:6px}
+.csf-root .csf-node-icon{display:inline-flex;align-items:center;gap:4px;
+ width:36px;min-width:36px;justify-content:flex-start}
+.csf-root .csf-node-icon .csf-disclosure{min-width:9px;font-size:11px;color:#e1bc84}
+.csf-root .csf-node-icon:not(.is-folder){padding-left:12px}
+.csf-root .csf-tab>button:first-child .csi-file-icon{vertical-align:middle;margin-right:7px}
+.csn-code-filetabs button{display:inline-flex;align-items:center;gap:7px}
+.csn-code-filetabs button .csi-file-icon{vertical-align:middle}
+.csi-code-viewport .csi-input::selection{color:transparent;background:rgba(90,161,216,.50)}
+@media(max-width:680px){
+ .csf-root .csf-node-icon{min-width:33px;width:33px}
+ .cvw-root .csn-file-icon{min-width:27px;flex-basis:27px}
+}
