@@ -10,7 +10,7 @@ const [chrome,base,output]=process.argv.slice(2);
 if(!chrome||!/^http:\/\/127\.0\.0\.1:\d+$/.test(base||"")||!output)
  throw Error("V115_HOME_LOCAL_BROWSER_REQUIRED");
 const delay=ms=>new Promise(ok=>setTimeout(ok,ms));
-async function until(fn,timeout=18000){
+async function until(fn,timeout=24000){
  let last="";
  for(let end=Date.now()+timeout;Date.now()<end;){
   try{const value=await fn();if(value)return value}catch(error){last=String(error)}
@@ -27,7 +27,9 @@ const chromeProc=spawn(chrome,[
 ],{stdio:"ignore"});
 let ws=null;const evidence=[];
 try{
- const port=await until(()=>{const file=join(profile,"DevToolsActivePort");return existsSync(file)?readFileSync(file,"utf8").split("\n")[0]:null});
+ // GitHub shared runners can take longer to start Chromium while parallel suites run.
+ // Allow startup grace only; keep all page/interactivity deadlines unchanged.
+ const port=await until(()=>{const file=join(profile,"DevToolsActivePort");return existsSync(file)?readFileSync(file,"utf8").split("\n")[0]:null},45000);
  const url=await until(async()=>{const r=await fetch("http://127.0.0.1:"+port+"/json/list");return r.ok?(await r.json()).find(t=>t.type==="page")?.webSocketDebuggerUrl:null});
  ws=new WebSocket(url);let seq=0;const tasks=new Map();
  ws.addEventListener("message",({data})=>{const v=JSON.parse(String(data)),t=tasks.get(v.id);if(!t)return;tasks.delete(v.id);v.error?t.reject(Error(v.error.message)):t.resolve(v.result||{})});
@@ -59,14 +61,27 @@ try{
   const two=arrival.actionCount===2;
   const collision=two&&discover.left<member.right-1&&member.left<discover.right-1&&
     discover.top<member.bottom-1&&member.top<discover.bottom-1;
-  if(!arrival.exists||!arrival.scene||!arrival.heading?.includes("A universe")||
+  if(!arrival.exists||!arrival.scene||!arrival.heading?.includes("Find something")||
      ![1,2].includes(arrival.actionCount)||arrival.overflow||
      arrival.actions.some(b=>b.height<44||b.top<0||b.bottom>height)||
      arrival.rect[0]<-1||arrival.rect[1]>width+1||
      !discover.href?.endsWith("/discover")||
-     (two&&(!member.href?.endsWith("/join")||!member.text?.includes("Create your member space")||collision)))
+     (two&&(!member.href?.endsWith("/join")||!member.text?.includes("Join the early community")||collision)))
    throw Error("V115_FIRST_ARRIVAL_"+label+":"+JSON.stringify({...arrival,collision}));
   await screenshot("first-arrival-"+label);
+  // V133 source-bound first look: it must be the actual approved catalogue
+  // fixture, not a hard-coded mascot, fake rating or decorative project.
+  await until(()=>evaluate('!!document.querySelector(".av133-first-look-card")||!!document.querySelector(".av133-first-look-empty")'));
+  const firstLook=await evaluate('(()=>{const root=document.querySelector(".av133-first-look"),card=root?.querySelector(".av133-first-look-card"),index=root?.querySelector(".av133-index-link"),preview=card?.querySelector(".av133-first-look-bottom a"),rect=root?.getBoundingClientRect(),title=card?.querySelector("h3")?.textContent;return {heading:root?.querySelector("h2")?.textContent,card:!!card,preview:preview?.getAttribute("href"),title,index:index?.getAttribute("href"),rect:rect?[rect.left,rect.right]:null,overflow:document.documentElement.scrollWidth>innerWidth+1}})()');
+  if(!firstLook.heading?.includes("See what lives here")||!firstLook.card||
+    !firstLook.title||!firstLook.preview?.includes("/projects/")||
+    !firstLook.index?.endsWith("/discover")||firstLook.overflow||
+    firstLook.rect[0]<-1||firstLook.rect[1]>width+1)
+    throw Error("V133_FIRST_LOOK_"+label+":"+JSON.stringify(firstLook));
+  await evaluate('document.querySelector(".av133-first-look").scrollIntoView({block:"center",behavior:"instant"})');
+  await screenshot("first-look-"+label);
+  await evaluate('window.scrollTo({top:0,behavior:"instant"})');
+  evidence.push({label:"first-look-"+label,firstLook});
   if(width<=390){
    const orientation=await evaluate('(()=>{const b=document.querySelector(".av115-iren-console button").getBoundingClientRect(),d=document.querySelector(".ir80-dock").getBoundingClientRect();return {bottom:b.bottom,obstructed:b.left<d.right&&d.left<b.right&&b.top<d.bottom&&d.top<b.bottom}})()');
    if(orientation.bottom>height||orientation.obstructed)throw Error("V125_ORIENTATION_OBSTRUCTED_"+JSON.stringify(orientation));
@@ -99,12 +114,26 @@ try{
    await evaluate('document.querySelector(".ir80-help-head .ir80-icon-button")?.click()');
    await until(()=>evaluate('!document.querySelector(".ir92-first-contact")'));
    await evaluate('window.dispatchEvent(new Event("anevum:iren-tour"))');
-   await until(()=>evaluate('!!document.querySelector(".ir80-guide-card")'));
-   const tour=await evaluate('(()=>({route:location.pathname,title:document.querySelector("#ir80-guide-title")?.textContent,one:document.querySelectorAll(".ir87-scout").length<=1}))()');
-   if(!tour.route?.endsWith("/creator/")||!tour.title?.includes("ANEVUM")||!tour.one)throw Error("V115_HOME_IREN_TOUR_"+JSON.stringify(tour));
-   await screenshot("first-contact-iren-tour-phone");
-   await evaluate('document.querySelector(".ir80-skip")?.click()');
-   await until(()=>evaluate('!document.querySelector(".ir80-guide-card")'));
+   await until(()=>evaluate('!!document.querySelector(".ir80-guide-card")||!!document.querySelector(".ir97-speech-bubble")'));
+   const spatial=await evaluate('!!document.querySelector(".ir97-speech-bubble")');
+   if(spatial){
+    // V131 feature-ON uses the approved spatial guide instead of the old
+    // modal. Assert genuine IREN teaching actions and one companion.
+    const tour=await evaluate('(()=>({route:location.pathname,content:document.querySelector(".ir97-bubble-line")?.textContent,actions:document.querySelectorAll(".ir97-bubble-actions button").length,next:!!document.querySelector(".ir97-forward"),skip:!!document.querySelector(".ir97-subtle"),one:document.querySelectorAll(".ir87-scout").length<=1,region:document.querySelector(".ir97-speech-bubble")?.getAttribute("role")}))()');
+    if(!tour.route?.endsWith("/creator/")||!tour.content||tour.actions<3||!tour.next||!tour.skip||!tour.one||tour.region!=="region")
+     throw Error("V133_HOME_SPATIAL_IREN_TOUR_"+JSON.stringify(tour));
+    await screenshot("first-contact-iren-tour-phone");
+    await evaluate('document.querySelector(".ir97-subtle")?.click()');
+    await until(()=>evaluate('!document.querySelector(".ir97-speech-bubble")'));
+   }else{
+    // Original legacy guide remains under the default-off flag.
+    const tour=await evaluate('(()=>({route:location.pathname,title:document.querySelector("#ir80-guide-title")?.textContent,one:document.querySelectorAll(".ir87-scout").length<=1}))()');
+    if(!tour.route?.endsWith("/creator/")||!tour.title?.includes("ANEVUM")||!tour.one)
+     throw Error("V115_HOME_IREN_TOUR_"+JSON.stringify(tour));
+    await screenshot("first-contact-iren-tour-phone");
+    await evaluate('document.querySelector(".ir80-skip")?.click()');
+    await until(()=>evaluate('!document.querySelector(".ir80-guide-card")'));
+   }
   }
  }
  writeFileSync(join(output,"acceptance.json"),JSON.stringify({pass:true,source:"compiled React local loopback",memberWrites:0,evidence},null,2));

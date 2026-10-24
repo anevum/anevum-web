@@ -17,6 +17,8 @@ test("V115 supersedes V111 intro rail but keeps public access and genuine member
  assert.match(home,/className="av115-iren-console"/);
  assert.match(home,/className="av79-now av115-public-index"/);
  assert.match(home,/av79-member-invitation/);
+ assert.match(home,/av133-first-look/);
+ assert.match(home,/Find something <em>worth trying\.<\/em>/);
  assert.doesNotMatch(home,/className="av111-onramp"/);
  assert.doesNotMatch(home,/fakeProject|fakeActivity|sampleRatings|dangerouslySetInnerHTML/);
 });
@@ -26,7 +28,7 @@ test("Arrival uses genuine existing IREN orientation and verified join rather th
  assert.match(home,/emailVerified===true/);
  assert.match(home,/new Event\("anevum:iren-intro"\)/);
  assert.match(guide,/addEventListener\("anevum:iren-intro",onIntro\)/);
- assert.match(home,/Studio publishing is still in testing/);
+ assert.match(home,/Creator publishing is still in testing/);
  assert.match(home,/to="\/discover"/);
  assert.doesNotMatch(home,/Play a game|FEATURED RELEASE|firstGame\|\||signupCount|fakeUsers|Math\.random/);
 });

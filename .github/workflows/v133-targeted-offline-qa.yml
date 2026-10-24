@@ -1,0 +1,173 @@
+name: ANEVUM V133 Targeted V131-Base Offline Apex QA
+# No Cloudflare credentials, upload, release promotion, D1 changes or route writes.
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v133-targeted-offline-qa.yml'
+      - 'creator-v1/web/src/pages/CinematicLandingPage.tsx'
+      - 'creator-v1/web/src/pages/Phase1JoinPage.tsx'
+      - 'creator-v1/web/src/main.tsx'
+      - 'creator-v1/web/src/continuance-first-contact-v133.css'
+      - 'creator-v1/test/**'
+      - 'docs/production/v133-first-contact-targeted-release-20261024.md'
+permissions:
+  contents: read
+concurrency:
+  group: anevum-v133-targeted-qa-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  offline-source-bound-candidate:
+    if: github.repository == 'anevum/anevum-web' && github.event.pull_request.head.repo.full_name == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+      CLOUDFLARE_API_TOKEN: ''
+      CLOUDFLARE_API_KEY: ''
+      CLOUDFLARE_ACCOUNT_ID: ''
+      VITE_IREN_SPATIAL_GUIDE: 'true'
+      VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
+      VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
+      BASE_V131: ad0d3aef473e12c124b003d2c3bb45b79bff520e
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Exact approved source delta and unchanged protected assets/auth/runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$CLOUDFLARE_API_TOKEN"
+          test -z "$CLOUDFLARE_API_KEY"
+          test -z "$CLOUDFLARE_ACCOUNT_ID"
+          git merge-base --is-ancestor "$BASE_V131" HEAD
+          changed="$(git diff --name-only "$BASE_V131" HEAD)"
+          test -n "$changed"
+          unexpected="$(printf '%s\n' "$changed" | grep -Ev '^(creator-v1/web/src/pages/(CinematicLandingPage|Phase1JoinPage)\.tsx|creator-v1/web/src/main\.tsx|creator-v1/web/src/continuance-first-contact-v133\.css|creator-v1/test/(first-contact-conversion-v133|home-first-contact-v111|first-load-experience-v114|continuance-journey-v123|continuance-reconciliation-v124|continuance-signal-atlas-v125|iren-home-integration-v116|sitewide-experience-v009|cinematic-depth-v011|module-experience-v073|v079-reconciled-null-creator)\.test\.mjs|creator-v1/test/(capture-home-first-contact-v111|capture-home-navigation-v079|capture-community-hub-v007|capture-sitewide-v012)\.mjs|\.github/workflows/v133-targeted-offline-qa\.yml|docs/production/v133-first-contact-targeted-release-20261024\.md)$' || true)"
+          if test -n "$unexpected"; then
+            echo "::error::Unreviewed release-scope source delta: $unexpected"
+            exit 1
+          fi
+          git diff --exit-code "$BASE_V131" HEAD -- \
+            creator-v1/apex-prelaunch creator-v1/canonical-auth \
+            creator-v1/ops creator-v1/wrangler.apex-prelaunch.jsonc \
+            creator-v1/web/src/App.tsx creator-v1/web/src/lib \
+            creator-v1/web/vite.config.ts creator-v1/auth creator-v1/site \
+            creator-v1/authoring creator-v1/integration \
+            creator-v1/migrations creator-v1/package.json package.json \
+            package-lock.json creator-v1/web/public
+          echo "V133_APPROVED_SOURCE_ONLY=PASS"
+      - name: Rebuild original canonical evolution media
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install -q numpy==2.2.6 scipy==1.15.3 Pillow==11.2.1
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libgl1-mesa-dri
+          (
+            cd design/evolution-v059
+            mkdir -p artwork/{native,textures,vector,masters,web,compact} docs dist previews
+            python src/export_native.py
+            python src/render_web.py
+            python src/build.py
+          )
+          python creator-v1/ops/install-evolution-v060.py
+          test "$(find creator-v1/web/public/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+      - name: Install, compile public apex and staging, validate auth and UI source
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+          node --test creator-v1/test/first-contact-conversion-v133.test.mjs \
+            creator-v1/test/home-first-contact-v111.test.mjs \
+            creator-v1/test/first-load-experience-v114.test.mjs \
+            creator-v1/test/continuance-journey-v123.test.mjs \
+            creator-v1/test/continuance-reconciliation-v124.test.mjs \
+            creator-v1/test/continuance-signal-atlas-v125.test.mjs \
+            creator-v1/test/iren-home-integration-v116.test.mjs \
+            creator-v1/test/sitewide-experience-v009.test.mjs \
+            creator-v1/test/cinematic-depth-v011.test.mjs \
+            creator-v1/test/module-experience-v073.test.mjs \
+            creator-v1/test/v079-reconciled-null-creator.test.mjs \
+            creator-v1/test/signup-email-first-v026.test.mjs \
+            creator-v1/test/signup-access-states-v082.test.mjs
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import {readFileSync,existsSync} from 'node:fs';
+          import {verifyCandidateAssets} from './creator-v1/ops/v095-inactive-candidate-gate.mjs';
+          const result=verifyCandidateAssets('creator-v1/dist/web');
+          assert.equal(result.earned_media_count,152);
+          assert.ok(result.assets.length>150);
+          assert.match(readFileSync('creator-v1/dist/web/index.html','utf8'),/\/assets\//);
+          assert.ok(existsSync('creator-v1/dist/react-staging/index.html'));
+          console.log(JSON.stringify({head:process.env.GITHUB_SHA,assetCount:result.assets.length,sha256:result.sha256,earnedMedia:result.earned_media_count,uploaded:false}));
+          JS
+          test -z "$(find creator-v1/dist/web creator-v1/dist/react-staging -name '*.map' -print -quit)"
+      - name: Render actual root and staged pages at 1440, 390, 320 (synthetic fixture)
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome"
+          mkdir -p evidence/v133-targeted/root evidence/v133-targeted/staging
+          ANEVUM_APEX_ROOT_QA=1 node creator-v1/test/portal-offline-preview.mjs > evidence/v133-targeted/root/fixture.log 2>&1 &
+          root_pid=$!
+          for attempt in $(seq 1 100); do
+            if curl --fail --silent http://127.0.0.1:4180/__ready >/dev/null; then break; fi
+            sleep .3
+          done
+          curl --fail --silent http://127.0.0.1:4180/__ready >/dev/null
+          node creator-v1/test/capture-v100-apex-root.mjs "$chrome" http://127.0.0.1:4180 evidence/v133-targeted/root
+          for width in 320 390 1440; do test -s "evidence/v133-targeted/root/apex-root-$width.png"; done
+          kill "$root_pid" 2>/dev/null || true
+          node creator-v1/test/portal-offline-preview.mjs > evidence/v133-targeted/staging/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 100); do
+            if curl --fail --silent http://127.0.0.1:4178/__ready >/dev/null; then ready=1; break; fi
+            sleep .3
+          done
+          test "$ready" = 1
+          node creator-v1/test/capture-home-first-contact-v111.mjs "$chrome" http://127.0.0.1:4178 evidence/v133-targeted/staging
+          node creator-v1/test/capture-continuance-join-v123.mjs "$chrome" http://127.0.0.1:4178 evidence/v133-targeted/staging
+          for label in desktop phone small-phone; do
+            test -s "evidence/v133-targeted/staging/first-arrival-$label.png"
+            test -s "evidence/v133-targeted/staging/first-look-$label.png"
+          done
+          for width in 320 390 1440; do test -s "evidence/v133-targeted/staging/join-v123-$width.png"; done
+      - name: Dry-run complete existing Worker code, NEVER upload or activate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/v133-targeted/dry-run
+          # An offline compile proves Worker bundle shape only; the checked-in
+          # Wrangler vars are historical and MUST NOT be deployed.
+          npx --no-install wrangler deploy --dry-run \
+            --config creator-v1/wrangler.apex-prelaunch.jsonc \
+            --outdir evidence/v133-targeted/dry-run
+          # Wrangler emits .mjs and additional asset metadata on current releases;
+          # the successful dry-run exit, bundle files and no-credential environment
+          # are the acceptance criteria, not a legacy .js extension.
+          test -n "$(find evidence/v133-targeted/dry-run -type f -print -quit)"
+          echo "OFFLINE_WORKER_DRY_RUN_ONLY=PASS" >> "$GITHUB_STEP_SUMMARY"
+          echo "CLOUDFLARE_UPLOAD=NONE; DEPLOYMENT=NONE; PRODUCTION_V131_V132=UNCHANGED" >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve exact-head offline release evidence only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v133-targeted-v131-root-offline-${{ github.event.pull_request.head.sha }}
+          path: evidence/v133-targeted
+          retention-days: 14
+          if-no-files-found: warn
