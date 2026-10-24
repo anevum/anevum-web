@@ -183,3 +183,20 @@
  .csf-root .csf-node-icon{min-width:33px;width:33px}
  .cvw-root .csn-file-icon{min-width:27px;flex-basis:27px}
 }
+
+/* V119 visual QA correction: V116 had a 39px gutter + textarea CSS grid.
+ * Once replaced by the self-contained source IDE, that legacy grid made
+ * the *entire* editor become the first 39px track. Scope an explicit
+ * higher-specificity reset to the actual Studio Scripts host.
+ */
+.cvw-root .csn-code-content{
+ display:block!important;grid-template-columns:none!important;grid-auto-columns:auto!important;
+ min-width:0!important;width:100%!important;max-width:100%!important;
+ overflow:visible!important
+}
+.cvw-root .csn-code-content>.csi-editor{
+ display:flex!important;grid-column:1 / -1!important;min-width:0!important;
+ width:100%!important;max-width:100%!important
+}
+.cvw-root .csn-code-shell{min-width:0}
+.cvw-root .csn-code-content .csi-code-viewport{min-width:0;width:100%}
