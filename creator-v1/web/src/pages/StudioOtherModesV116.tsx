@@ -1,16 +1,20 @@
-import {useState} from 'react';
+import {useEffect,useMemo,useState} from 'react';
 import {Link} from 'react-router-dom';
 import {Icon} from '../components/Icons';
 import {OrbitalMark} from '../components/OrbitalMark';
 import {StudioAssetShelfV116,type StudioAsset} from './StudioAssetShelfV116';
 import {StudioCodeEditorV119} from './StudioCodeEditorV119';
+import {StudioCommandPaletteV120} from './StudioCommandPaletteV120';
+import {studioFileItems,studioCommandItems,type StudioPaletteItem} from '../../../source-ide/commands-v120.mjs';
 import {StudioFileIconV119} from './StudioFileIconV119';
 import type {StudioModeV116} from './StudioNavigationV116';
 
-export function StudioOtherModesV116({mode,onAdd}:{
- mode:Exclude<StudioModeV116,'Scene'|'Playtest'>;onAdd:(asset:StudioAsset)=>void
+export function StudioOtherModesV116({mode,onAdd,onNavigate}:{
+ mode:Exclude<StudioModeV116,'Scene'|'Playtest'>;onAdd:(asset:StudioAsset)=>void;
+ onNavigate?:(next:StudioModeV116)=>void
 }){
  const [frame,setFrame]=useState<'desktop'|'mobile'>('desktop');
+ const [paletteMode,setPaletteMode]=useState<'files'|'commands'|null>(null);
  const [interfaceTitle,setInterfaceTitle]=useState('Explore the Continuance');
  const [interfaceAction,setInterfaceAction]=useState('Enter world');
  const [interfaceTheme,setInterfaceTheme]=useState<'cosmic'|'auric'>('cosmic');
@@ -20,7 +24,32 @@ export function StudioOtherModesV116({mode,onAdd}:{
   'scene.ts':'// ANEVUM / local source sample\n// Displayed text is NOT executed or published.\n\nexport const world = {\n  name: "Sky Archipelago",\n  editor: "Creator Studio",\n  atmosphere: "celestial"\n};\n',
   'interface.css':'/* ANEVUM / local style sample */\n.world-screen {\n  background: #071727;\n  color: #e9f5ff;\n  border: 1px solid #547d9b;\n}\n'
  });
- if(mode==='Assets')return <div className="csn-alternate csn-asset-mode">
+ const paletteItems=useMemo(()=>[
+  ...studioFileItems([
+   {id:'scene.ts',name:'scene.ts',kind:'text'},
+   {id:'interface.css',name:'interface.css',kind:'text'}
+  ],[{id:'scene.ts',path:'Scripts / scene.ts'},
+     {id:'interface.css',path:'Interfaces / interface.css'}],[tab]),
+  ...studioCommandItems(onNavigate?['open-world','open-interface','open-scripts']:[])
+ ],[tab,onNavigate]);
+ useEffect(()=>{
+  if(mode!=='Scripts')return;
+  const onKey=(event:globalThis.KeyboardEvent)=>{
+   if(!(event.ctrlKey||event.metaKey)||event.altKey||event.key.toLowerCase()!=='p')return;
+   event.preventDefault();setPaletteMode(event.shiftKey?'commands':'files');
+  };
+  window.addEventListener('keydown',onKey);
+  return()=>window.removeEventListener('keydown',onKey);
+ },[mode]);
+ function chooseSample(item:StudioPaletteItem){
+  setPaletteMode(null);
+  if(item.kind==='file'){
+   if(item.fileId==='scene.ts'||item.fileId==='interface.css')setTab(item.fileId);
+  }else if(item.id==='open-world')onNavigate?.('Scene');
+  else if(item.id==='open-interface')onNavigate?.('Interface');
+  else if(item.id==='open-scripts')onNavigate?.('Scripts');
+ }
+  if(mode==='Assets')return <div className="csn-alternate csn-asset-mode">
   <div className="csn-mode-intro"><div><span>ASSET FOUNDRY / OWNED & PROCEDURAL</span><h2>Build your world from the elements.</h2>
    <p>Each available starter adds an actual primitive to the unsaved in-memory 3D scene. Future imports are marked preview-only.</p></div></div>
   <StudioAssetShelfV116 onAdd={onAdd} expanded onToggle={()=>{}} large/>
@@ -56,7 +85,10 @@ export function StudioOtherModesV116({mode,onAdd}:{
  </div>;
  if(mode==='Scripts')return <div className="csn-alternate">
   <div className="csn-mode-intro"><div><span>CODE & LOGIC / RESTRICTED SAMPLE</span><h2>Write the systems behind your world.</h2>
-   <p>Source editing with clear file context. Text is local to this preview, is not executed, and never replaces a V111 project revision.</p></div></div>
+   <p>Source editing with clear file context. Text is local to this preview, is not executed, and never replaces a V111 project revision.</p></div>
+   <button type="button" className="csn-ide-quick-open" onClick={()=>setPaletteMode('files')}>
+    <Icon name="command" size={15}/> Quick Open <small>⌘P</small>
+   </button></div>
   <div className="csn-code-shell">
    <div className="csn-code-filetabs" role="tablist" aria-label="Sample source files">
     {(['scene.ts','interface.css'] as const).map(f=><button type="button" role="tab" key={f} aria-selected={tab===f} onClick={()=>setTab(f)}><StudioFileIconV119 name={f} size={15}/>{f}</button>)}
@@ -67,6 +99,8 @@ export function StudioOtherModesV116({mode,onAdd}:{
    <div className="csn-code-status"><span>{tab} · UTF-8 SAMPLE</span><span>{new TextEncoder().encode(code[tab]).length.toLocaleString()} bytes</span><span>Execution disabled</span></div>
   </div>
   <div className="csn-nonpersistent">For authenticated, revisioned source files, use the existing private Creator Studio workspace after its access gate is enabled.</div>
+  {paletteMode&&<StudioCommandPaletteV120 initialMode={paletteMode} items={paletteItems}
+    title="Sample Studio Quick Open" onChoose={chooseSample} onClose={()=>setPaletteMode(null)}/>}
  </div>;
  return <div className="csn-alternate csn-publish">
   <div className="csn-mode-intro"><div><span>PUBLISH & DEPLOY / RELEASE GATES</span><h2>From private creation to reviewed experience.</h2>
