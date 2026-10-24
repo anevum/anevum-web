@@ -22,8 +22,9 @@ function SavedWorksCollection({memberId}:{memberId:string}){
  const [category,setCategory]=useState("all");
  const [query,setQuery]=useState("");
  const [layout,setLayout]=useState<"list"|"grid">("list");
- const displayed=browseSavedWorks(items,category,query);
  const categories=savedCategoryFilters(items);
+ const safeCategory=category==="all"||categories.some(option=>option.id===category)?category:"all";
+ const displayed=browseSavedWorks(items,safeCategory,query);
 
  useEffect(()=>{
   if(initial.state!=="ready")return;
@@ -68,7 +69,7 @@ function SavedWorksCollection({memberId}:{memberId:string}){
     </div>
     <div className="avsaved-controls">
      <label>Search saved work<input type="search" maxLength={100} value={query} onChange={e=>setQuery(e.target.value)} placeholder="Project name or creator"/></label>
-     <label>Category<select aria-label="Saved category" value={category} onChange={e=>setCategory(e.target.value)}><option value="all">All saved ({items.length})</option>{categories.map(group=><option key={group.id} value={group.id}>{group.label} ({group.count})</option>)}</select></label>
+     <label>Category<select aria-label="Saved category" value={safeCategory} onChange={e=>setCategory(e.target.value)}><option value="all">All saved ({items.length})</option>{categories.map(group=><option key={group.id} value={group.id}>{group.label} ({group.count})</option>)}</select></label>
     </div>
     <p className="avsaved-filter-count" role="status">{displayed.length} of {items.length} loaded projects shown{cursor?". Load older saves to include more projects.":""}</p>
    </div>}
