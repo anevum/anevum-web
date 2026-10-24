@@ -13,7 +13,7 @@ permissions:
   contents: read
   actions: read
 concurrency:
-  group: anevum-v132-inactive-immutable-upload
+  group: anevum-v132-inactive-immutable-upload-${{ github.event_name }}
   cancel-in-progress: false
 jobs:
   verify-inactive:
