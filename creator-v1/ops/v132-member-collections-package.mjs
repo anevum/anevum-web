@@ -28,14 +28,14 @@ export const UI_FILES=[
  'creator-v1/web/src/lib/saved-works-browse.ts',
  'creator-v1/web/src/member-collection-nav.css'
 ];
-const REVIEW_FILES=[
+export const REVIEW_FILES=[
  ...UI_FILES,
  'creator-v1/test/member-collections-v011.test.mjs',
  'creator-v1/test/member-collections-v011-browser.mjs',
  'creator-v1/test/saved-works-organization-v010.test.mjs',
  'docs/production/continuance-member-collections-v011.md'
 ];
-const META_FILES=[
+export const META_FILES=[
  'creator-v1/ops/v132-member-collections-package.mjs',
  'creator-v1/test/v132-member-collections-release.test.mjs',
  'docs/production/v132-member-collections-release.md',
