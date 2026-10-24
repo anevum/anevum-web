@@ -5,6 +5,7 @@ import {StudioSceneComposerV112,studioVisualScenesEnabled} from './StudioSceneCo
 import {PREFIX as UI_PREFIX} from '../../../interface-builder/document.mjs';
 import {StudioInterfaceBuilderV113,studioInterfaceBuilderEnabled} from './StudioInterfaceBuilderV113';
 import {StudioProjectDoctorV001,studioProjectDoctorEnabled} from './StudioProjectDoctorV001';
+import type {ProjectDoctorTarget} from '../../../agent-quality-lab/project-doctor-location-v001.mjs';
 import {
  studioFileTreeEnabled,studioFileList,studioFileGet,studioFileCreate,
  studioFileUpdate,studioFileVersions,studioFileTrash,studioFileRestore,type StudioFileNode,type StudioFileVersion,
@@ -390,6 +391,7 @@ function SourceEditorV111({projectId,nodeId,nodes,editable:canEdit,onDirty,onUpd
  const [base,setBase]=useState<StudioFileNode|null>(null);
  const [content,setContent]=useState('');
  const [presentation,setPresentation]=useState<'text'|'visual'|'interface'>('text');
+ const [doctorJump,setDoctorJump]=useState<(ProjectDoctorTarget&{requestId:number})|null>(null);
  const [name,setName]=useState('');
  const [parentId,setParentId]=useState<string|null>(null);
  const [loading,setLoading]=useState(true);
@@ -426,6 +428,13 @@ function SourceEditorV111({projectId,nodeId,nodes,editable:canEdit,onDirty,onUpd
   (name.toLowerCase().endsWith('.ui.anevum')||content.startsWith(UI_PREFIX));
  const canVisual=studioVisualScenesEnabled&&
   !canInterface&&(name.toLowerCase().endsWith('.anevum')||content.startsWith(PREFIX));
+ function navigateToDoctorFinding(target:ProjectDoctorTarget){
+  if(target.kind==='interface'&&canInterface)setPresentation('interface');
+  else if(target.kind==='scene'&&canVisual)setPresentation('visual');
+  else return;
+  // A monotonically increasing request ID reselects the same finding on repeat clicks.
+  setDoctorJump(previous=>({...target,requestId:(previous?.requestId??0)+1}));
+ }
  async function save(){
   if(!base||!canEdit||!dirty||busy||byteCount>32768)return;
   setBusy(true);setError('');setMessage('');
@@ -501,10 +510,12 @@ function SourceEditorV111({projectId,nodeId,nodes,editable:canEdit,onDirty,onUpd
    </div>}
    {canInterface&&presentation==='interface'?
     <StudioInterfaceBuilderV113 raw={content} fileName={name} resetToken={nodeId+':'+base.revision}
-     readOnly={!canEdit||busy} onChange={setContent}/>:
+     readOnly={!canEdit||busy} onChange={setContent}
+     jumpTo={doctorJump?.kind==='interface'?doctorJump:null}/>:
     canVisual&&presentation==='visual'?
     <StudioSceneComposerV112 raw={content} fileName={name} resetToken={nodeId+':'+base.revision}
-     readOnly={!canEdit||busy} onChange={setContent}/>:
+     readOnly={!canEdit||busy} onChange={setContent}
+     jumpTo={doctorJump?.kind==='scene'?doctorJump:null}/>:
     <>
    <label className="csf-source-label" htmlFor={'source-'+nodeId}>Text source</label>
    <textarea id={'source-'+nodeId} className="csf-source" spellCheck={false}
@@ -521,7 +532,8 @@ function SourceEditorV111({projectId,nodeId,nodes,editable:canEdit,onDirty,onUpd
     <span>{dirty?'Unsaved local draft':'Matches last confirmed saved revision'}</span>
    </div>
    {studioProjectDoctorEnabled&&(content.startsWith(PREFIX)||content.startsWith(UI_PREFIX))&&
-    <StudioProjectDoctorV001 source={content} savedSource={base.content||''} revision={base.revision} dirty={dirty}/>}
+    <StudioProjectDoctorV001 source={content} savedSource={base.content||''} revision={base.revision} dirty={dirty}
+     onNavigate={canInterface||canVisual?navigateToDoctorFinding:undefined}/>}
    {byteCount>32768&&<p className="csf-error" role="alert">The source exceeds the server file limit. Shorten it before saving.</p>}
    {historyError&&<p className="csf-error" role="alert">{historyError}</p>}
    {versions&&<section className="csf-history" aria-label="Previous source versions">
