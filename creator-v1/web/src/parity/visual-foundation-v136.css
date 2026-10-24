@@ -120,12 +120,12 @@ html[data-av-parity="v136-full"] .av9-footer{border-top:1px solid var(--p-line);
  * The browser renders captured pixels only during the short transition.
  */
 @keyframes p136-route-depart {
-  from {opacity:1;filter:blur(0);transform:scale(1)}
-  to {opacity:0;filter:blur(7px);transform:scale(.992)}
+  from {opacity:1;transform:scale(1)}
+  to {opacity:0;transform:scale(.995)}
 }
 @keyframes p136-route-arrive {
-  from {opacity:0;filter:blur(6px);transform:scale(1.006)}
-  to {opacity:1;filter:blur(0);transform:scale(1)}
+  from {opacity:0;transform:scale(1.004)}
+  to {opacity:1;transform:scale(1)}
 }
 ::view-transition-old(.p136-route) {
   animation:150ms ease-in both p136-route-depart;
