@@ -37,7 +37,7 @@ const packageFixture={id:'123e4567-e89b-42d3-a456-426614174000',
   play_url:'/upload/v3/play/123e4567-e89b-42d3-a456-426614174000',published_at:1792843200};
 const record=(name,data={})=>{checks.push({name,...data});console.log('PASS '+name);};
 async function contextFor(width,{motion='reduce',state='empty',forceVector=false}={}){
-  const context=await browser.newContext({viewport:{width,height:width<650?844:960},deviceScaleFactor:2,reducedMotion:motion});
+  const context=await browser.newContext({viewport:{width,height:width===1536?1024:width<650?844:960},deviceScaleFactor:width===1536?1:2,reducedMotion:motion});
   if(forceVector)await context.addInitScript(()=>{
     const original=HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext=function(kind,...args){
@@ -83,7 +83,7 @@ async function contextFor(width,{motion='reduce',state='empty',forceVector=false
   return {page,context};
 }
 try{
-  for(const width of [1920,1440,1024,768,390,320]){
+  for(const width of [1920,1536,1440,1024,768,390,320]){
     const {page,context}=await contextFor(width);
     await page.goto(base,{waitUntil:'networkidle'});
     await page.locator('.p136-hero').waitFor();
@@ -236,7 +236,7 @@ try{
   }
   // Exercise the actual production Three.js module and compressed GLBs,
   // rather than treating the retained standalone shader test as mesh evidence.
-  for(const width of [1440,390]){
+  for(const width of [1536,1440,390]){
     const {page,context}=await contextFor(width,{motion:'reduce'});
     await page.goto(base,{waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>{
@@ -269,6 +269,7 @@ try{
       assert.ok(metrics.triangles>3000,'Actual modeled architecture was drawn');
       assert.ok(metrics.width*metrics.height<=(width<850?650000:1800000)+2500,'Bounded GPU resolution');
       assert.equal(await page.locator('.p136-living-canvas').count(),1,'One environment canvas');
+      await page.evaluate(()=>window.scrollTo(0,0));
       await page.screenshot({path:join(out,'institute-'+family+'-'+width+'.png'),animations:'disabled'});
       snapshots.push(metrics);
     }
@@ -299,6 +300,13 @@ try{
     assert.equal(await page.getByRole('button',{name:'Prepare private playtest',exact:true}).isDisabled(),true,'Archive creation never confirms publication rights or uploads');
     const workstationLayout=await workbench.evaluate(node=>({width:node.getBoundingClientRect().width,height:node.getBoundingClientRect().height,pageHeight:document.documentElement.scrollHeight}));
     assert.ok(workstationLayout.height<2400,'Workbench dimensions remain bounded: '+JSON.stringify(workstationLayout));
+    if(width<650){
+      const explorerFits=await workbench.locator('.p136-source-explorer nav button').evaluateAll(nodes=>nodes.every(button=>{
+        const label=button.lastElementChild,range=document.createRange();range.selectNodeContents(label);
+        return range.getBoundingClientRect().right<=button.getBoundingClientRect().right+1;
+      }));
+      assert.equal(explorerFits,true,'Phone source file labels never overlap neighbouring controls');
+    }
     await workbench.scrollIntoViewIfNeeded();
     await page.screenshot({path:join(out,'artifact-workbench-'+width+'.png'),fullPage:false,animations:'disabled'});
     if(width===1440)await workbench.getByRole('button',{name:'Accessible text editor',exact:true}).click();
