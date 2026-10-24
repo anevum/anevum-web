@@ -331,7 +331,7 @@ try{
      // Guest sees Join; a verified member correctly sees My Space.
      const expectedIdentityRoute=entrance.gateways[3]==="Join"?"/join":
        entrance.gateways[3]==="My Space"?"/member":null;
-     if(!entrance.headline?.includes("A universe in the making")||
+     if(!entrance.headline?.includes("Find something worth trying")||
        !entrance.primary?.endsWith("/discover")||
        entrance.gateways.slice(0,3).join("|")!=="Discover|Create|Connect"||
        !expectedIdentityRoute||!entrance.join?.endsWith(expectedIdentityRoute)||
