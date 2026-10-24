@@ -6,6 +6,7 @@ import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
 import {diagnoseStudioSource} from '../../creator-v1/agent-quality-lab/project-doctor-v001.mjs';
 import {projectDoctorBrief} from '../../creator-v1/agent-quality-lab/project-doctor-brief-v001.mjs';
+import {evaluateBenchmark} from '../../creator-v1/agent-quality-lab/project-doctor-benchmark-v001.mjs';
 
 export const MAX_BODY_BYTES = 36 * 1024;
 const WINDOW_MS = 60_000;
@@ -72,13 +73,13 @@ export function createServer({token=process.env.LAB_API_TOKEN, now=()=>Date.now(
           mode:'read-only',models:false,persistence:false});
         return;
       }
-      if (route !== '/v1/diagnose' && route !== '/v1/capabilities') {
+      if (route !== '/v1/diagnose' && route !== '/v1/capabilities' && route !== '/v1/benchmark') {
         json(response,404,{error:'not_found'});
         return;
       }
-      if ((route === '/v1/capabilities' && request.method !== 'GET') ||
+      if (((route === '/v1/capabilities' || route === '/v1/benchmark') && request.method !== 'GET') ||
           (route === '/v1/diagnose' && request.method !== 'POST')) {
-        response.setHeader('allow',route === '/v1/capabilities'?'GET':'POST');
+        response.setHeader('allow',route === '/v1/diagnose'?'POST':'GET');
         json(response,405,{error:'method_not_allowed'});
         return;
       }
@@ -97,9 +98,17 @@ export function createServer({token=process.env.LAB_API_TOKEN, now=()=>Date.now(
 
       if (route === '/v1/capabilities') {
         json(response,200,{service:'continuance-lab',version:'v001',
-          capabilities:['studio.document.diagnose'],
+          capabilities:['studio.document.diagnose','lab.synthetic-benchmark.run'],
           formats:['anevum.blocks.v1','anevum.ui.v1'],
           modelEnabled:false,writesEnabled:false,storesSource:false});
+        return;
+      }
+      if (route === '/v1/benchmark') {
+        const result=evaluateBenchmark();
+        json(response,result.mismatches.length===0?200:503,{
+          ...result,source:'synthetic-fixtures-only',memberData:false,modelEvaluated:false,
+          validation:'Fixture-set checks only; not real-world accuracy or a learning-model evaluation.'
+        });
         return;
       }
       if (!/^application\/json(?:\s*;\s*charset=utf-8)?$/i.test(request.headers['content-type'] || '')) {
