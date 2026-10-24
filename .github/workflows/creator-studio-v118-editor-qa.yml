@@ -1,0 +1,122 @@
+name: Creator Studio V118 World Authoring and UX QA
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/world-composer/**'
+      - 'creator-v1/web/src/App.tsx'
+      - 'creator-v1/web/src/pages/WorldCanvasV115.tsx'
+      - 'creator-v1/web/src/pages/world-webgl2-v115.ts'
+      - 'creator-v1/web/src/pages/WorldComposerReviewV115.tsx'
+      - 'creator-v1/web/src/pages/world-composer-v115.css'
+      - 'creator-v1/test/world-composer-v115.test.mjs'
+      - 'creator-v1/test/capture-world-webgl2-v115.mjs'
+      - 'creator-v1/studio-next/**'
+      - 'creator-v1/world-composer/document.mjs'
+      - 'creator-v1/world-composer/document.d.mts'
+      - 'creator-v1/world-composer/placement-v118.mjs'
+      - 'creator-v1/world-composer/placement-v118.d.mts'
+      - 'creator-v1/web/src/pages/world-geometry-v117.ts'
+      - 'creator-v1/web/src/pages/StudioTransformPadV117.tsx'
+      - 'creator-v1/web/src/pages/studio-world-v117.css'
+      - 'creator-v1/web/src/pages/studio-editor-v118.css'
+      - 'creator-v1/web/src/pages/world-sky-v115.ts'
+      - 'creator-v1/web/src/pages/world-webgl2-v115.ts'
+      - 'creator-v1/web/src/pages/WorldCanvasV115.tsx'
+      - 'creator-v1/web/src/pages/StudioNavigationV116.tsx'
+      - 'creator-v1/web/src/pages/StudioAssetShelfV116.tsx'
+      - 'creator-v1/web/src/pages/StudioOtherModesV116.tsx'
+      - 'creator-v1/web/src/pages/StudioFileWorkspaceV111.tsx'
+      - 'creator-v1/web/src/pages/studio-file-workspace-v116.css'
+      - 'creator-v1/web/src/pages/studio-next-v116.css'
+      - 'creator-v1/test/studio-next-v116.test.mjs'
+      - 'creator-v1/test/studio-world-v117.test.mjs'
+      - 'creator-v1/test/studio-editor-v118.test.mjs'
+      - 'creator-v1/test/capture-studio-world-v117.mjs'
+      - 'creator-v1/test/capture-studio-editor-v118.mjs'
+      - '.github/workflows/creator-studio-v118-editor-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: creator-studio-editor-v118-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  creator-authoring:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install existing pinned dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Strict document, command, security and renderer model tests
+        run: |
+          node --test creator-v1/test/world-composer-v115.test.mjs
+          node --test creator-v1/test/studio-next-v116.test.mjs
+          node --experimental-strip-types --test creator-v1/test/studio-world-v117.test.mjs
+          node --test creator-v1/test/studio-editor-v118.test.mjs
+          node --test creator-v1/test/creator-studio-visual-v115.test.mjs
+          node --test creator-v1/test/studio-visual-scenes-v112.test.mjs
+          node --test creator-v1/test/studio-interface-builder-v113.test.mjs
+          node --check creator-v1/test/capture-world-webgl2-v115.mjs
+          node --check creator-v1/test/capture-studio-next-v116.mjs
+          node --check creator-v1/test/capture-studio-world-v117.mjs
+          node --check creator-v1/test/capture-studio-editor-v118.mjs
+      - name: Strict React TypeScript
+        run: npm run check:creator-v1-web
+      - name: Verify P1 GPU editor never enters default OFF build
+        env:
+          VITE_CREATOR_WORLD_WEBGL2_V115: 'false'
+          VITE_CREATOR_VISUAL_REVIEW_V115: 'false'
+        run: |
+          npm run build:creator-v1-web:staging
+          if grep -R -l --include='*.js' 'data-world-composer-v115' creator-v1/dist/react-staging; then
+            echo 'World Composer leaked into default-OFF public bundle' >&2
+            exit 1
+          fi
+      - name: Build isolated GPU review, no V111 database feature activation
+        env:
+          VITE_CREATOR_WORLD_WEBGL2_V115: 'true'
+          VITE_CREATOR_VISUAL_REVIEW_V115: 'false'
+          VITE_CREATOR_WORKSPACE_V109: 'false'
+          VITE_CREATOR_FILE_TREE_V111: 'false'
+          VITE_CREATOR_VISUAL_SCENE_V112: 'false'
+          VITE_CREATOR_INTERFACE_BUILDER_V113: 'false'
+          VITE_NATIVE_CREATOR_STUDIO_V095: 'false'
+        run: |
+          npm run build:creator-v1-web:staging
+          if ! grep -R -l --include='*.js' 'data-world-composer-v115' creator-v1/dist/react-staging; then
+            echo 'Feature-ON review world not found in compiled bundle' >&2
+            exit 1
+          fi
+      - name: Compiled V118 smart spawning, local world export, history and 1440/390/320 captures
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/studio-editor-v118
+          node creator-v1/test/portal-offline-preview.mjs > evidence/studio-editor-v118/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for _ in $(seq 1 75); do
+            if curl --fail --silent http://127.0.0.1:4178/__ready >/dev/null; then ready=1; break; fi
+            sleep .2
+          done
+          test "$ready" -eq 1
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          node creator-v1/test/capture-studio-editor-v118.mjs --chrome "$chrome" --output evidence/studio-editor-v118
+      - name: Record release boundary
+        if: always()
+        run: |
+          echo "V118 bounded in-memory asset spawn, local .world.anevum export, keyboard history and mobile chrome; default-OFF; NO MEMBER WRITE/AI/GPU SERVER/DEPLOY" >> "$GITHUB_STEP_SUMMARY"
+          echo "Software-emulated Chromium GPU is not physical Safari/real-account acceptance." >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: studio-editor-v118-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/studio-editor-v118/
+          if-no-files-found: ignore
