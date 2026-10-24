@@ -247,3 +247,5 @@
 @media(forced-colors:active){
  .lnx-root .lnx-thread-author,.lnx-root .lnx-author-facts>span,.lnx-root .lnx-author-award,.lnx-root .lnx-author-profile-link{border-color:CanvasText}
 }
+
+.lnx-root .lnx-author-level-seal svg{width:31px;height:31px;color:#efd5b0}
