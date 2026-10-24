@@ -65,7 +65,23 @@
 .cf-author-dossier .cf-author .av65-badge .av66-badge-insignia{width:19px!important;height:19px!important}
 .cf-author-dossier .cf-author .av65-medal{width:22px;height:28px}
 .cf-author-dossier .cf-author .av65-ribbon{width:23px;height:11px}
-.cf-author-dossier .cf-author .av61-supporter{display:inline-flex!important}
+/* Public forums keep the verified supporter seal AND avatar frame, but
+ * collapse the full-width supporter nameplate into a compact 28px crest.
+ * The seal's own role=img accessible name remains intact. Profile and
+ * supporter collection pages retain the full nameplate treatment. */
+.cf-author-dossier .cf-author .av61-supporter{
+ display:inline-flex!important;align-items:center;flex:0 0 auto;max-width:28px;
+}
+.cf-author-dossier .cf-author .av61-supporter .av34-identity-compact{
+ display:inline-flex;align-items:center;justify-content:center;
+ width:28px;min-width:28px;height:28px;gap:0;padding:2px;
+ border-radius:50%;
+}
+.cf-author-dossier .cf-author .av61-supporter .av34-identity-compact>span:last-child{display:none}
+.cf-author-dossier .cf-author .av61-supporter .av34-seal-compact{width:22px;height:22px}
+.cf-author-dossier .cf-author .av61-supporter .av34-seal-compact svg{width:14px;height:14px}
+.cf-author-dossier .cf-author .av61-supporter .av34-seal-ring{inset:3px}
+.cf-author-dossier .cf-author .av61-supporter .av34-seal-star{font-size:8px;right:0;top:0}
 .cf-author-dossier-visit{
  grid-column:2;grid-row:1;display:grid;place-items:center;justify-self:end;
  width:42px;height:44px;border:1px solid rgba(var(--cfad-glow),.37);
