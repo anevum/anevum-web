@@ -10,6 +10,7 @@ export type VisualFileKind = "html"|"css"|"typescript"|"javascript"|"json"|"mark
 
 /** Accessible surface contents never depend on this pointer-transparent layer. */
 export function VisualEdge({tone="cyan"}:{tone?:VisualEdgeTone}){
+  if(import.meta.env.VITE_NEXT_VISUAL_SYSTEM!=="true")return null;
   return <span className={"av135-edge av135-edge--"+tone} aria-hidden="true"/>;
 }
 
