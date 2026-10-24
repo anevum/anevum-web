@@ -58,7 +58,8 @@ async function fixture(width,mode='ready'){
  });
  const page=await ctx.newPage();lastPage=page;page.setDefaultTimeout(12000);
  page.on('pageerror',e=>errors.push(e.message));
- await page.goto(base+'/saved',{waitUntil:'networkidle'});
+ await page.goto(base+'/saved',{waitUntil:'domcontentloaded'});
+ await page.locator('.avsaved-shell').first().waitFor();
  return {ctx,page,state};
 }
 async function fit(page,label){
