@@ -301,7 +301,7 @@ try{
  assert.equal(await setValue('.csf-create input','logic.ts'),'logic.ts');
  await click('.csf-create button[type="submit"]');
  await until(()=>evaluate('document.querySelectorAll(".csf-tab").length===2'),'Two real private source tabs');
- const logicCode='export function assembleWorld() {\\n  return "safe source";\\n}\\n';
+ const logicCode='export function assembleWorld() {\n  return "safe source";\n}\n';
  await until(()=>visible('.csf-editor-mount.is-primary .csf-source'),'New private source editor');
  assert.equal(await setTextArea('.csf-editor-mount.is-primary .csf-source',logicCode),logicCode);
  await until(()=>evaluate('document.querySelector(".csf-editor-mount.is-primary .csf-editor h3")?.textContent.includes("Unsaved")'),'New source marked unsaved');
