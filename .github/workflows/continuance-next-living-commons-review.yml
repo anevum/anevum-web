@@ -1,0 +1,65 @@
+name: ANEVUM Continuance NEXT Living Commons Source Review
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/continuance-next-living-commons-review.yml'
+      - 'creator-v1/web/review/continuance-community-profile/living-commons.html'
+      - 'creator-v1/web/src/experience/continuance-next/living-commons-action-graph.ts'
+      - 'creator-v1/test/continuance-next-living-commons-actions.test.mjs'
+      - 'creator-v1/test/continuance-next-living-commons-source.test.mjs'
+      - 'docs/production/continuance-next-living-commons-20261023.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: anevum-living-commons-review-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  local-contracts:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      CLOUDFLARE_API_TOKEN: ''
+      CLOUDFLARE_API_KEY: ''
+      CLOUDFLARE_ACCOUNT_ID: ''
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify credentials are absent
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${CLOUDFLARE_API_TOKEN}"
+          test -z "${CLOUDFLARE_API_KEY}"
+          test -z "${CLOUDFLARE_ACCOUNT_ID}"
+      - name: Test isolated Living Commons model and review source
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-strip-types --test \
+            creator-v1/test/continuance-next-living-commons-actions.test.mjs \
+            creator-v1/test/continuance-next-living-commons-source.test.mjs
+      - name: Prove no real product route or Worker is introduced
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f creator-v1/web/review/continuance-community-profile/living-commons.html
+          test -f creator-v1/web/src/experience/continuance-next/living-commons-action-graph.ts
+          test -f docs/production/continuance-next-living-commons-20261023.md
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const sample=fs.readFileSync('creator-v1/web/review/continuance-community-profile/living-commons.html','utf8');
+          assert.match(sample,/Fictional people and activity/);
+          assert.match(sample,/connect-src 'none'/);
+          assert.doesNotMatch(sample,/<script[^>]+src=/);
+          JS
