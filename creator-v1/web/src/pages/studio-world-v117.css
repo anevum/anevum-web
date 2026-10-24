@@ -62,3 +62,25 @@
 @media(forced-colors:active){
  .csn-axis-name,.csn-transform-step button[aria-pressed=true]{outline:2px solid Highlight}
 }
+
+/* V117 evidence pass: reveal the asset shelf in the first desktop viewport.
+ * The site-level navigation remains untouched; only feature-flagged Studio
+ * chrome is compacted, while the GPU scene retains a cinematic focal area.
+ */
+@media(min-width:1041px){
+ .cvw-root .cvs-review-banner{min-height:20px;padding:3px 9px;font-size:8px}
+ .cvw-root .cvs-head{min-height:53px;padding-block:6px}
+ .cvw-root .cvs-head-brand .cvs-mark{width:36px;height:36px}
+ .cvw-root .cvs-head-brand h1{font-size:clamp(18px,1.8vw,25px)}
+ .cvw-root .cvs-head-brand>div>span{font-size:8px}
+ .cvw-root .cvs-projectbar{min-height:49px;padding-block:5px}
+ .cvw-root .cvs-project-thumb{width:34px;height:34px}
+ .cvw-root .csn-workspace-tabs{min-height:39px}
+ .cvw-root .csn-workspace-tabs button{min-height:39px;padding-block:8px}
+ .cvw-root .cvs-mode-header{min-height:39px;padding-block:5px}
+ .cvw-root .cvw-toolbar{min-height:40px;padding-block:4px}
+ .cvw-root .cvw-toolbar button{min-height:31px;padding:6px 9px}
+ .cvw-root .cvw-stage{height:clamp(295px,34vh,470px);min-height:295px}
+ .cvw-root .csn-shelf-head{min-height:39px}
+ .cvw-root .csn-asset-thumbnail{height:73px}
+}
