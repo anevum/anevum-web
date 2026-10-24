@@ -97,7 +97,7 @@ try{
  await click('button[aria-label="Redo scene edit"]');
  assert.equal(await evaluate('document.querySelectorAll(".cvw-tree-node").length'),11,'Redo reinstated new world node');
  await change('.cvw-vector input[type=number]','5');
- await click('.cvw-toolbar button:nth-child(2)');
+ await click('.cvw-toolbar button[aria-expanded]');
  await until(()=>evaluate('document.querySelector(".cvw-source textarea")?.value.includes("ANEVUM_WORLD_V1")'),'Real typed serialized document');
  const source=await evaluate('document.querySelector(".cvw-source textarea").value');
  assert.match(source,/"position":\[5,0,0\]/,'Inspector edit is encoded in actual document');
