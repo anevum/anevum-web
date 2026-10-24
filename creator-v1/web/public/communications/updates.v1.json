@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "source": "approved-anevum-release-records",
+  "entries": [
+    {
+      "id": "v131-public-launch",
+      "kind": "release",
+      "audience": "everyone",
+      "publishedAt": "2026-10-23",
+      "version": "V131",
+      "title": "ANEVUM V131 is live",
+      "summary": "The verified public release brings the updated first-contact experience, IREN site guidance, and mobile player fixes.",
+      "changes": [
+        "A clearer first-contact experience for discovering ANEVUM.",
+        "IREN can help visitors find their way around the network.",
+        "The mobile player compatibility fix is included in the accepted release."
+      ],
+      "href": "/updates#v131-public-launch"
+    }
+  ]
+}
