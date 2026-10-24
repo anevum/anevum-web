@@ -13,6 +13,7 @@ import {readWithDeadline} from '../../../shared/read-deadline.mjs';
 import {nativeCreatorEnabled} from '../lib/native-creator-v095';
 import {workbenchAlphaEnabled} from '../lib/workbench-alpha';
 import {NativeStudioNavigation} from './NativeCreatorStudio';
+import {StudioAchievementEntry} from './StudioAchievementsV114';
 import {resolveStudioEntry} from '../lib/studio-entry-read';
 const WorkbenchAlphaEntryGate=lazy(()=>import('./WorkbenchAlpha').then(m=>({default:m.WorkbenchAlphaEntryGate})));
 
