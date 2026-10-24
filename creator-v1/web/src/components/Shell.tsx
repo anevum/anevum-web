@@ -14,6 +14,7 @@ import {VerifiedStaffShortcut} from "./VerifiedStaffShortcut";
 import {LivingWorldProvider,useLivingWorld,type WorldSector} from "../parity/LivingWorldState";
 import {LivingWorldField} from "../parity/LivingWorldField";
 import {ConsoleWayfinderV136} from "../parity/ConsoleWayfinderV136";
+import {StudioSpatialWorkspaceV136} from "../parity/StudioSpatialWorkspaceV136";
 import "../parity/spatial-surface-v136.css";
 
 const FullParityHeader=import.meta.env.VITE_PARITY_V136_FULL==="true" ? lazy(()=>import("../parity/ParityHeaderV136").then(m=>({default:m.ParityHeaderV136}))) : null;
@@ -129,7 +130,15 @@ function ShellContent(){
   // PARITY destinations own a full-bleed spatial canvas, not a nested page box.
   // Legacy routes retain their protected frame until individually transformed.
   // One stable route surface keeps navigation, IREN and launcher mounted.
-  const routeSurface=home||parityFullBleed?<Outlet/>:
+  const studioWorkspace=Boolean(FullParityHeader&&canonicalMember&&
+    (location.pathname==="/studio"||location.pathname==="/studio/records"||
+    location.pathname==="/studio/new"||location.pathname==="/studio/review"||
+    /^\/studio\/[0-9a-f-]{36}$/.test(location.pathname)));
+  const routeSurface=studioWorkspace?
+    <StudioSpatialWorkspaceV136 key={canonicalSession?.user?.id||"unavailable"} memberId={canonicalSession?.user?.id||""}>
+      <Outlet/>
+    </StudioSpatialWorkspaceV136>:
+    home||parityFullBleed?<Outlet/>:
     <div className="av5-site-frame av9-unified-frame"><div className="av5-site-content"><Outlet/></div></div>;
   return <div className={"site-shell site-shell--cinematic av9-shell"+(home?" site-shell--home":"")}>
     {FullParityHeader&&<LivingWorldField enabled={publicSpatial} sector={worldSector(location.pathname,location.search)}/>}

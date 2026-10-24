@@ -28,6 +28,8 @@ const allowed=new Set([
  'creator-v1/web/src/pages/CanonicalStudioPage.tsx',
  'creator-v1/web/src/components/CompactMemberIdentity.tsx',
  'creator-v1/web/src/parity/SpatialSurfaceV136.tsx',
+ 'creator-v1/web/src/parity/StudioSpatialWorkspaceV136.tsx',
+ 'creator-v1/web/src/parity/studio-spatial-workspace-v136.css',
  'creator-v1/web/src/parity/spatial-surface-v136.css',
  'creator-v1/web/src/pages/CanonicalSavedWorksPage.tsx',
  'creator-v1/web/src/pages/canonical-saved-works.css',
