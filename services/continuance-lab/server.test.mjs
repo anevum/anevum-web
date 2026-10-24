@@ -44,7 +44,7 @@ test('capabilities require a token and advertise no writes or model',async()=>{
     const response=await fetch(base+'/v1/capabilities',{headers:auth});
     assert.equal(response.status,200);
     const body=await response.json();
-    assert.deepEqual(body.capabilities,['studio.document.diagnose']);
+    assert.deepEqual(body.capabilities,['studio.document.diagnose','lab.synthetic-benchmark.run']);
     assert.equal(body.writesEnabled,false);
     assert.equal(body.modelEnabled,false);
     assert.equal(body.storesSource,false);
@@ -124,5 +124,41 @@ test('source is rejected even if valid JSON when canonical validation fails',asy
     const reply=await post(base,{source});
     assert.equal(reply.status,422);
     assert.equal((await reply.json()).findings[0].code,'document.invalid');
+  });
+});
+
+test('authenticated benchmark runs synthetic fixtures only and returns measured scores',async()=>{
+  await withService(async base=>{
+    const unauth=await fetch(base+'/v1/benchmark');
+    assert.equal(unauth.status,401);
+    const response=await fetch(base+'/v1/benchmark',{headers:auth});
+    assert.equal(response.status,200);
+    const stats=await response.json();
+    assert.equal(stats.benchmark,'continuance-project-doctor-synthetic-v001');
+    assert.equal(stats.source,'synthetic-fixtures-only');
+    assert.equal(stats.memberData,false);
+    assert.equal(stats.modelEvaluated,false);
+    assert.equal(stats.fixtures,60);
+    assert.equal(stats.clean,10);
+    assert.equal(stats.defectCases,50);
+    assert.equal(stats.exactMatches,60);
+    assert.equal(stats.falsePositives,0);
+    assert.equal(stats.falseNegatives,0);
+    assert.equal(stats.precision,1);
+    assert.equal(stats.recall,1);
+    assert.deepEqual(stats.mismatches,[]);
+    assert.match(stats.validation,/not real-world accuracy/);
+    assert.match(response.headers.get('cache-control'),/no-store/);
+    assert.ok(!JSON.stringify(stats).includes(TOKEN));
+  });
+});
+
+test('benchmark supports only GET with no query parameters',async()=>{
+  await withService(async base=>{
+    const badMethod=await fetch(base+'/v1/benchmark',{headers:auth,method:'POST'});
+    assert.equal(badMethod.status,405);
+    assert.equal(badMethod.headers.get('allow'),'GET');
+    assert.equal((await fetch(base+'/v1/benchmark?config=1',{headers:auth})).status,404);
+    assert.equal((await fetch(base+'/v1/benchmark/',{headers:auth})).status,404);
   });
 });
