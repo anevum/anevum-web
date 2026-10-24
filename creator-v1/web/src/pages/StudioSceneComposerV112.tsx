@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useState} from 'react';
+import {useEffect,useMemo,useRef,useState} from 'react';
 import {block,decode,encode,starter,visible,remove,TYPES,LIMITS,PREFIX,
  type Document,type BlockType} from '../../../workbench-alpha/document.mjs';
 import './studio-scene-composer-v112.css';
@@ -22,6 +22,7 @@ type Props={
 export function StudioSceneComposerV112({raw,fileName,resetToken,readOnly,onChange,jumpTo}:Props){
  const doc=useMemo(()=>decode(raw),[raw]);
  const [selectedId,setSelectedId]=useState<string|null>(null);
+ const blockTreeRef=useRef<HTMLElement|null>(null);
  const [previewSceneId,setPreviewSceneId]=useState<string|null>(null);
  const [mode,setMode]=useState<'compose'|'preview'>('compose');
  const [addType,setAddType]=useState<BlockType>('paragraph');
@@ -43,6 +44,14 @@ export function StudioSceneComposerV112({raw,fileName,resetToken,readOnly,onChan
    setMode('compose');
   }
  },[jumpTo?.requestId]);
+ useEffect(()=>{
+  if(!jumpTo||mode!=='compose'||selectedId!==jumpTo.blockId)return;
+  // The selected tree button is a semantic focus destination. This runs after
+  // compose mode and the selected block have committed to the DOM.
+  blockTreeRef.current?.querySelector<HTMLButtonElement>(
+   'button[data-block-id="'+jumpTo.blockId+'"]'
+  )?.focus();
+ },[jumpTo?.requestId,mode,selectedId]);
  const focused=doc?.blocks.find(b=>b.id===selectedId)||null;
  const sceneList=doc?.blocks.filter(b=>b.type==='scene')||[];
  const currentScene=previewSceneId&&sceneList.some(b=>b.id===previewSceneId)?
@@ -136,10 +145,10 @@ export function StudioSceneComposerV112({raw,fileName,resetToken,readOnly,onChan
   {error&&<p className="csf-error" role="alert">{error}</p>}
   {readOnly&&<p className="csx-muted" role="status">This project is read-only. Preview remains available; changes are disabled.</p>}
   {mode==='compose'?<div className="csx-layout">
-   <aside className="csx-block-tree" aria-label="Scene blocks">
+   <aside className="csx-block-tree" ref={blockTreeRef} aria-label="Scene blocks">
     <h4>Scenes and blocks</h4>
     <ol>{doc.blocks.map((item,index)=><li key={item.id}>
-     <button type="button" className={item.id===selectedId?'is-selected':''}
+     <button type="button" data-block-id={item.id} className={item.id===selectedId?'is-selected':''}
       aria-current={item.id===selectedId?'true':undefined} onClick={()=>setSelectedId(item.id)}>
       <span>{index+1}. {item.type}</span>
       <strong>{item.text.slice(0,64)||'(empty block)'}</strong>
