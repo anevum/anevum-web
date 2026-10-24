@@ -156,7 +156,7 @@ export async function canonicalAccountClosure(request,env,user,session,{now=Date
    'AND NOT EXISTS(SELECT 1 FROM supporter_subscriptions WHERE member_user_id=?) '+
    'AND NOT EXISTS(SELECT 1 FROM supporter_checkout_intents WHERE member_user_id=?) '+
    'AND NOT EXISTS(SELECT 1 FROM supporter_checkout_guards WHERE member_user_id=? AND expires_at_ms>?) '+
-   (v2Installed?'AND '+v2Guard.replaceAll(' AND ', ' AND ').replace(/\s+$/,'')+' ':'')+
+   (v2Installed?'AND '+v2Guard:'')+
    'RETURNING id',
    user.id,user.id,nonce,user.id,user.id,user.id,user.id,now,...v2Params);
   return deleted.length===1?out({deleted:true,sessionRevoked:true})
