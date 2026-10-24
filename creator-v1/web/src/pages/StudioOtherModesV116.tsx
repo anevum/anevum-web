@@ -3,6 +3,8 @@ import {Link} from 'react-router-dom';
 import {Icon} from '../components/Icons';
 import {OrbitalMark} from '../components/OrbitalMark';
 import {StudioAssetShelfV116,type StudioAsset} from './StudioAssetShelfV116';
+import {StudioCodeEditorV119} from './StudioCodeEditorV119';
+import {StudioFileIconV119} from './StudioFileIconV119';
 import type {StudioModeV116} from './StudioNavigationV116';
 
 export function StudioOtherModesV116({mode,onAdd}:{
@@ -57,12 +59,11 @@ export function StudioOtherModesV116({mode,onAdd}:{
    <p>Source editing with clear file context. Text is local to this preview, is not executed, and never replaces a V111 project revision.</p></div></div>
   <div className="csn-code-shell">
    <div className="csn-code-filetabs" role="tablist" aria-label="Sample source files">
-    {(['scene.ts','interface.css'] as const).map(f=><button type="button" role="tab" key={f} aria-selected={tab===f} onClick={()=>setTab(f)}>{f}</button>)}
+    {(['scene.ts','interface.css'] as const).map(f=><button type="button" role="tab" key={f} aria-selected={tab===f} onClick={()=>setTab(f)}><StudioFileIconV119 name={f} size={15}/>{f}</button>)}
     <span>UNSAVED / SAMPLE</span>
    </div>
-   <div className="csn-code-content"><aside aria-hidden="true">{code[tab].split('\n').map((_,i)=><span key={i}>{i+1}</span>)}</aside>
-    <textarea aria-label={'Edit synthetic '+tab} value={code[tab]} onChange={e=>setCode(v=>({...v,[tab]:e.target.value}))}
-     maxLength={32000} spellCheck={false} autoCapitalize="off" autoCorrect="off"/></div>
+   <div className="csn-code-content"><StudioCodeEditorV119 key={tab} fileName={tab} value={code[tab]} onChange={value=>setCode(v=>({...v,[tab]:value}))}
+     maxLength={32000} status="Unsaved sample · no execution or cloud save"/></div>
    <div className="csn-code-status"><span>{tab} · UTF-8 SAMPLE</span><span>{new TextEncoder().encode(code[tab]).length.toLocaleString()} bytes</span><span>Execution disabled</span></div>
   </div>
   <div className="csn-nonpersistent">For authenticated, revisioned source files, use the existing private Creator Studio workspace after its access gate is enabled.</div>

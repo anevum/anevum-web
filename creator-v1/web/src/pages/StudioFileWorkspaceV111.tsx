@@ -2,6 +2,8 @@ import {useEffect,useMemo,useRef,useState,type ReactNode,type FormEvent} from 'r
 import {Link} from 'react-router-dom';
 import {PREFIX} from '../../../workbench-alpha/document.mjs';
 import {classifyFile,SECTIONS} from '../../../studio-next/project-tree-v116.mjs';
+import {StudioCodeEditorV119} from './StudioCodeEditorV119';
+import {StudioFileIconV119} from './StudioFileIconV119';
 import {StudioSceneComposerV112,studioVisualScenesEnabled} from './StudioSceneComposerV112';
 import {PREFIX as UI_PREFIX} from '../../../interface-builder/document.mjs';
 import {PREFIX as WORLD_PREFIX} from '../../../world-composer/document.mjs';
@@ -199,7 +201,7 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
     style={{paddingInlineStart:(12+depth*16)+'px'}} title={pathLabel(node,nodes)}
     aria-expanded={folder?isOpen:undefined}
     onClick={()=>folder?selectFolder(node):openFile(node)}>
-    <span aria-hidden="true" className={'csf-node-icon'+(folder?' is-folder':' is-'+classifyFile(node.name))}>{folder?(isOpen?'▾':'▸'):'◇'}</span>
+    <span aria-hidden="true" className={'csf-node-icon'+(folder?' is-folder':' is-'+classifyFile(node.name))}>{folder&&<span className="csf-disclosure">{isOpen?'▾':'▸'}</span>}<StudioFileIconV119 name={node.name} folder={folder}/></span>
     <span className="csf-node-name">{node.name}</span>
      {!folder&&<span className="csf-file-kind" aria-hidden="true">{classifyFile(node.name)==='world'?'3D':classifyFile(node.name)==='interface'?'UI':classifyFile(node.name)==='script'?'CODE':''}</span>}
     {(dirtyIds.has(node.id)||dirtyIds.has('folder:'+node.id))&&<span className="csf-unsaved-marker" aria-label="Unsaved edits">●</span>}
@@ -332,7 +334,7 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
         if(!confirmLeavingFolder())return;
         setActiveId(id);
        }}>
-        {node?.name||'Unavailable file'}{dirtyIds.has(id)?' ●':''}</button>
+        <StudioFileIconV119 name={node?.name||'Unavailable file'}/>{node?.name||'Unavailable file'}{dirtyIds.has(id)?' ●':''}</button>
        <button className="csf-tab-close" type="button" aria-label={'Close '+(node?.name||'source file')}
         onClick={()=>closeFile(id)}>×</button>
       </div>;
@@ -544,14 +546,11 @@ function SourceEditorV111({projectId,nodeId,nodes,editable:canEdit,onDirty,onUpd
      readOnly={!canEdit||busy} onChange={setContent}/>:
     <>
    <label className="csf-source-label" htmlFor={'source-'+nodeId}>Text source</label>
-   <textarea id={'source-'+nodeId} className="csf-source" spellCheck={false}
-    value={content} disabled={!canEdit||busy} onChange={e=>setContent(e.target.value)}
-    onKeyDown={e=>{
-     if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){
-      e.preventDefault();if(canEdit&&!busy&&dirty)void save();
-     }
-    }}
-    aria-describedby={'source-status-'+nodeId}/>
+   <StudioCodeEditorV119 id={'source-'+nodeId} className="csf-source" fileName={name}
+    value={content} disabled={!canEdit||busy} onChange={setContent}
+    onSave={()=>void save()} saveDisabled={!base||!dirty||busy||byteCount>32768}
+    maxLength={32768} ariaDescribedBy={'source-status-'+nodeId}
+    status={dirty?'Unsaved private draft':'Confirmed revision '+base.revision}/>
     </>}
    <div className="csf-editor-foot" id={'source-status-'+nodeId}>
     <span>{byteCount.toLocaleString()} / 32,768 UTF-8 bytes</span>

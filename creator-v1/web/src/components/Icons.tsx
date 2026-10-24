@@ -11,7 +11,30 @@ const paths: Record<string, string> = {
   arrow: "M5 12h14 M14 7l5 5-5 5",
   star: "m12 3 2.5 5.4L20 9l-4 4 1 6-5-2.8L7 19l1-6-4-4 5.5-.6z",
   save: "M6 4h12v17l-6-4-6 4z",
-  close: "M5 5l14 14 M19 5 5 19"
+  close: "M5 5l14 14 M19 5 5 19",
+  folder: "M3 6a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
+  file: "M6 2h8l5 5v15H6z M14 2v6h5",
+  'file-text': "M6 2h8l5 5v15H6z M14 2v6h5 M9 13h7 M9 17h7",
+  'file-code': "M6 2h8l5 5v15H6z M14 2v6h5 M10 12l-2 2 2 2 M15 12l2 2-2 2",
+  code: "m8 6-6 6 6 6 M16 6l6 6-6 6",
+  braces: "M8 3H6a2 2 0 0 0-2 2v4c0 2-2 3-3 3 1 0 3 1 3 3v4a2 2 0 0 0 2 2h2 M16 3h2a2 2 0 0 1 2 2v4c0 2 2 3 3 3-1 0-3 1-3 3v4a2 2 0 0 1-2 2h-2",
+  box: "m12 2 9 5v10l-9 5-9-5V7z M3 7l9 5 9-5 M12 12v10",
+  layers: "m12 2 10 5-10 5L2 7z m-10 5v5l10 5 10-5V7 m-20 10 10 5 10-5",
+  'layout-dashboard': "M3 3h8v8H3z M14 3h7v5h-7z M14 11h7v10h-7z M3 14h8v7H3z",
+  terminal: "M4 4h16v16H4z m3 5 3 3-3 3 M12 16h5",
+  settings: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M12 2v3 M12 19v3 M2 12h3 M19 12h3 M5 5l2 2 M17 17l2 2 M19 5l-2 2 M7 17l-2 2",
+  palette: "M12 3a9 9 0 1 0 0 18h2a2 2 0 0 0 2-2c0-2-2-2-2-4a2 2 0 0 1 2-2h3a2 2 0 0 0 2-2A9 9 0 0 0 12 3z M8 9h.01 M13 7h.01 M17 10h.01 M7 14h.01",
+  music: "M9 19V6l12-3v13 M9 10l12-3 M9 19a3 3 0 1 1-3-3c2 0 3 1 3 3 M21 16a3 3 0 1 1-3-3c2 0 3 1 3 3",
+  play: "m7 4 13 8-13 8z",
+  'chevron-down': "m6 9 6 6 6-6",
+  'chevron-right': "m9 6 6 6-6 6",
+  check: "m4 12 5 5L20 6",
+  replace: "M4 6h16 M4 18h16 m-4-3 4 3-4 3 M8 9 4 6l4-3",
+  'case-sensitive': "M3 18 9 5l6 13 M5 14h8 M17 18v-7a3 3 0 0 1 6 0v7 M17 14h6",
+  wrap: "M4 7h16 M4 12h12a3 3 0 0 1 0 6h-2 m3-3-3 3 3 3 M4 18h6",
+  'list-ordered': "M9 6h12 M9 12h12 M9 18h12 M3 6h2 M3 12h2 M3 18h2",
+  download: "M12 3v12 m-4-4 4 4 4-4 M4 18v3h16v-3",
+  'more-horizontal': "M4 12h.01 M12 12h.01 M20 12h.01"
 };
 export function Icon({ name, size = 18 }: { name: string; size?: number }) {
   return <svg aria-hidden="true" viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={paths[name] || paths.explore} /></svg>;

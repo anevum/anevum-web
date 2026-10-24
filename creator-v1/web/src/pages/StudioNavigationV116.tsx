@@ -1,15 +1,16 @@
 import {useMemo,useState} from 'react';
 import {Icon} from '../components/Icons';
+import {StudioFileIconV119} from './StudioFileIconV119';
 import {buildProjectTree,projectTreeTemplate,searchTree,type StudioTreeNode} from '../../../studio-next/project-tree-v116.mjs';
 
 export type StudioModeV116='Scene'|'Interface'|'Scripts'|'Assets'|'Playtest'|'Publish';
 export type StudioFileChoice={role:string;name:string;path:string;id:string};
 export const MODE_META:{name:StudioModeV116;icon:string;caption:string}[]=[
- {name:'Scene',icon:'explore',caption:'World Composer'},
- {name:'Interface',icon:'library',caption:'Interface Builder'},
- {name:'Scripts',icon:'create',caption:'Script Editor'},
- {name:'Assets',icon:'save',caption:'Asset Foundry'},
- {name:'Playtest',icon:'star',caption:'Playtest & Preview'},
+ {name:'Scene',icon:'box',caption:'World Composer'},
+ {name:'Interface',icon:'layout-dashboard',caption:'Interface Builder'},
+ {name:'Scripts',icon:'file-code',caption:'Script Editor'},
+ {name:'Assets',icon:'layers',caption:'Asset Foundry'},
+ {name:'Playtest',icon:'play',caption:'Playtest & Preview'},
  {name:'Publish',icon:'arrow',caption:'Publish & Deploy'}
 ];
 export function StudioModeRailV116({mode,onChange}:{mode:StudioModeV116;onChange:(mode:StudioModeV116)=>void}){
@@ -44,7 +45,7 @@ function TreeNode({node,depth,expanded,onToggle,onChoose,selectedId}:{
    aria-expanded={folder?open:undefined} aria-pressed={folder?undefined:selectedId===node.id}
    style={{paddingInlineStart:10+Math.min(depth,8)*14+'px'}} title={node.path}
    onClick={()=>folder?onToggle(node.id):onChoose(node)}>
-   <span className={'csn-file-icon '+(folder?'is-folder':'is-'+node.role)} aria-hidden="true">{folder?(open?'▾':'▸'):'◇'}</span>
+   <span className={'csn-file-icon '+(folder?'is-folder':'is-'+node.role)} aria-hidden="true">{folder&&(open?'▾':'▸')}<StudioFileIconV119 name={node.name} folder={folder} size={15}/></span>
    <span className="csn-file-label">{displayLabel(node)}</span>
    {!folder&&<span className="csn-file-type" aria-hidden="true">{node.role==='world'?'3D':node.role==='interface'?'UI':node.role==='script'?'TS':''}</span>}
   </button>
