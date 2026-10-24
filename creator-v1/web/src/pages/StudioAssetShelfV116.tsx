@@ -108,7 +108,8 @@ export function StudioAssetShelfV116({onAdd,expanded,onToggle,large=false}:{
     {assets.map(a=><button type="button" key={a.id} className={'csn-asset-card'+(a.kind?' is-addable':' is-preview')+(previewId===a.id?' is-previewing':'')}
      onClick={()=>{if(a.kind)onAdd(a);else setPreviewId(a.id)}}
      title={a.kind?'Add an editable '+a.title+' to the in-memory scene':'Preview only — no model available'}>
-     <span className={'csn-asset-thumbnail csn-thumb-'+a.thumb}><Miniature type={a.thumb}/></span>
+     <span className={'csn-asset-thumbnail csn-thumb-'+a.thumb}><Miniature type={a.thumb}/>
+      <span className={'csn-asset-availability'+(a.kind?' is-real':' is-concept')}>{a.kind?'3D':'CONCEPT'}</span></span>
      <strong>{a.title}</strong><small>{a.subtitle}</small>
     </button>)}
     {assets.length===0&&<p className="csn-shelf-empty">No matching assets. Try another category or search term.</p>}
