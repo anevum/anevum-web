@@ -47,9 +47,12 @@ test('no supporter payments or Stripe destinations are reachable from the public
  assert.match(page,/PAYMENTS PAUSED/);
  assert.match(page,/PROVIDER TRANSITION/);
  for(const text of [page,collection]){
-  assert.doesNotMatch(text,/stripe\.com|window\.location\.assign|\/api\/v1\/member\/supporter/);
+  assert.doesNotMatch(text,/stripe\.com|\/api\/v1\/member\/supporter(?:\/|['\"])/);
  }
  assert.match(collection,/memberId=\{null\}/);
+ assert.match(page,/trustedSquareDestination/);
+ assert.match(page,/sandbox/);
+ assert.match(page,/\/api\/v1\/member\/support-v2\/checkout/);
 });
 
 test('cron retains media cleanup but not payment processor reconciliation',()=>{
