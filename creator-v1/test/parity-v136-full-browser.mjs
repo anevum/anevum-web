@@ -63,12 +63,14 @@ try{
         hero:rect('.p136-hero'),primary:rect('.p136-button--primary'),secondary:rect('.p136-button--signal'),
         artLoaded:img.complete&&img.naturalWidth>0,source:img.currentSrc,
         headingFont:getComputedStyle(document.querySelector('.p136-hero h1')).fontFamily,
+        headingLines:document.querySelector('.p136-hero h1').getBoundingClientRect().height/parseFloat(getComputedStyle(document.querySelector('.p136-hero h1')).lineHeight),
         animation:getComputedStyle(img).animationName,
         h1Count:document.querySelectorAll('h1').length,dockCount:document.querySelectorAll('.ir80-dock').length};
     });
     assert.ok(layout.scroll<=width+1,'No horizontal overflow: '+JSON.stringify(layout));
     assert.equal(layout.h1Count,1);assert.equal(layout.dockCount,1,'One canonical IREN companion');
     assert.ok(layout.artLoaded,'Original environment loads');
+    if(width>=1440){assert.ok(layout.headingLines<=2.1,'Desktop headline remains two lines');assert.ok(layout.hero.height<=690,'Desktop hero retains concept density');}
     assert.ok(!/Georgia|Cambria/.test(layout.headingFont),'Concept uses sans typography');
     assert.equal(layout.animation,'none','Reduced motion has a static scene');
     for(const rect of [layout.primary,layout.secondary]){assert.ok(rect.height>=44);assert.ok(rect.width>=44);assert.ok(rect.left>=0&&rect.right<=width);}
