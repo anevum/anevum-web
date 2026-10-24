@@ -11,6 +11,7 @@ const page=read('creator-v1/web/src/pages/WorldComposerReviewV115.tsx');
 const nav=read('creator-v1/web/src/pages/StudioNavigationV116.tsx');
 const assets=read('creator-v1/web/src/pages/StudioAssetShelfV116.tsx');
 const modes=read('creator-v1/web/src/pages/StudioOtherModesV116.tsx');
+const iren=read('creator-v1/web/src/pages/StudioIrenAssistantV122.tsx');
 const css=read('creator-v1/web/src/pages/studio-next-v116.css');
 const privateFiles=read('creator-v1/web/src/pages/StudioFileWorkspaceV111.tsx');
 const privateCss=read('creator-v1/web/src/pages/studio-file-workspace-v116.css');
@@ -71,7 +72,9 @@ test('all V116 React pieces compile as typed JSX and use the original site ident
  assert.match(page,/StudioOtherModesV116/);
  assert.match(page,/WorldCanvasV115/);
  assert.match(page,/ANEVUM <b>\/ CREATOR STUDIO<\/b>/);
- assert.match(page,/IREN \/ CREATIVE COPILOT/);
+ assert.match(page,/StudioIrenAssistantV122/);
+ assert.match(iren,/aria-label="IREN Studio assistant"/);
+ assert.match(iren,/Your existing creative companion/);
 });
 test('new navigation and asset shelves have functioning states, not inert buttons',()=>{
  assert.match(nav,/name:'Scene'/);
