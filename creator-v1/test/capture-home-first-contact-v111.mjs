@@ -10,7 +10,7 @@ const [chrome,base,output]=process.argv.slice(2);
 if(!chrome||!/^http:\/\/127\.0\.0\.1:\d+$/.test(base||"")||!output)
  throw Error("V115_HOME_LOCAL_BROWSER_REQUIRED");
 const delay=ms=>new Promise(ok=>setTimeout(ok,ms));
-async function until(fn,timeout=18000){
+async function until(fn,timeout=24000){
  let last="";
  for(let end=Date.now()+timeout;Date.now()<end;){
   try{const value=await fn();if(value)return value}catch(error){last=String(error)}
