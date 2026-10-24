@@ -144,7 +144,10 @@ with sync_playwright() as p:
         # 404 fixtures cannot produce a fabricated member, banner or XP.
         page.goto(base+"/@unpublished",wait_until="domcontentloaded",timeout=30000)
         page.locator(".av12-public-world.av-next-private-boundary").wait_for(timeout=20000)
+        page.get_by_role("heading",name="A PRIVATE WORLD.").wait_for(timeout=20000)
         check(f"{width}: private/nonexistent world stays private",page.get_by_role("heading",name="A PRIVATE WORLD.").count()==1)
+        check(f"{width}: real ANEVUM mark on anonymous boundary",page.locator(".av-next-private-sigil svg").count()==1)
+        check(f"{width}: closed-world panel has controlled vertical density",page.locator(".av-next-private-boundary").evaluate("(el)=>el.getBoundingClientRect().height <= 540"))
         check(f"{width}: private world never renders invented public profile",page.locator(".ms-public.av-next-member-world").count()==0)
         check(f"{width}: private world has no horizontal overflow",page.evaluate("document.documentElement.scrollWidth <= innerWidth+1"))
         page.screenshot(path=str(EVIDENCE/f"private-world-{width}-dpr{dpr}.png"),full_page=False,animations="disabled")
