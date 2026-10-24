@@ -44,3 +44,33 @@ test('UI and styles retain explicit mobile and reduced-motion coverage',()=>{
  assert.match(css,/:focus-visible/);
  assert.match(css,/\.cpd-diff-metrics/);
 });
+
+
+const sceneEditor=readFileSync(new URL('../web/src/pages/StudioSceneComposerV112.tsx',import.meta.url),'utf8');
+const interfaceEditor=readFileSync(new URL('../web/src/pages/StudioInterfaceBuilderV113.tsx',import.meta.url),'utf8');
+
+test('diagnostic navigation only selects valid local editor nodes, never saves or executes',()=>{
+ assert.match(ui,/locateProjectDoctorFinding\(source,item\.path\)/);
+ assert.match(ui,/onNavigate\?\:/);
+ assert.match(ui,/onNavigate\(target\)/);
+ assert.match(ui,/Open in visual editor/);
+ assert.match(ui,/role="group" aria-label="Filter inspection findings"/);
+ assert.match(ui,/aria-pressed=\{filter==='warning'\}/);
+ assert.match(ui,/aria-pressed=\{filter==='info'\}/);
+ assert.match(ui,/No findings in this filter/);
+ assert.match(workspace,/navigateToDoctorFinding\(target:ProjectDoctorTarget\)/);
+ assert.match(workspace,/onNavigate=\{canInterface\|\|canVisual\?navigateToDoctorFinding:undefined\}/);
+ assert.match(workspace,/jumpTo=\{doctorJump\?\.kind==='interface'\?doctorJump:null\}/);
+ assert.match(workspace,/jumpTo=\{doctorJump\?\.kind==='scene'\?doctorJump:null\}/);
+ assert.match(sceneEditor,/jumpTo\.blockId/);
+ assert.match(sceneEditor,/setSelectedId\(jumpTo\.blockId\)/);
+ assert.match(sceneEditor,/setMode\('compose'\)/);
+ assert.match(interfaceEditor,/jumpTo\.pageId/);
+ assert.match(interfaceEditor,/setPageId\(page\.id\)/);
+ assert.match(interfaceEditor,/setComponentId\(jumpTo\.componentId\)/);
+ assert.match(interfaceEditor,/setView\('design'\)/);
+ assert.match(css,/\.cpd-filters/);
+ assert.match(css,/\.cpd-jump/);
+ assert.match(css,/\.cpd-filter-empty/);
+ assert.doesNotMatch(ui,/\bfetch\s*\(|dangerouslySetInnerHTML|eval\s*\(/);
+});
