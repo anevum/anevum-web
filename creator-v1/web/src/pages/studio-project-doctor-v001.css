@@ -49,3 +49,11 @@
 .cpd-jump{display:inline-flex;align-items:center;justify-content:center;align-self:start;width:fit-content;margin-top:3px;min-height:40px}
 .cpd-filter-empty{margin:0;padding:14px 10px;border:1px dashed #466b7d;border-radius:6px;font-size:.75rem;color:#c9dce6}
 @media(max-width:570px){.cpd-filters button{flex:1 1 100px}.cpd-jump{width:100%}}
+
+
+.cpd-handoff{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap}
+.cpd-handoff p{font-size:.7rem;line-height:1.5;color:#bbe8d8;margin:0}
+.cpd-copy{min-height:40px;border-radius:7px;background:#184055;color:#def6ff;border:1px solid #85c5d6;padding:9px 13px;font-size:.71rem;font-weight:700;font-family:inherit;cursor:pointer}
+.cpd-copy:hover{background:#29586e;border-color:#a1e3ef}
+.cpd-copy:focus-visible{outline:2px solid #c4f1fa;outline-offset:2px}
+@media(max-width:570px){.cpd-handoff{display:grid}.cpd-copy{width:100%}}
