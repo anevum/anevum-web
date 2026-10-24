@@ -6,6 +6,9 @@ test("read-only status command switches to public signals", () => {
   assert.deepEqual(interpretCommand("show development status").kind, "view");
   assert.equal(interpretCommand("check github status").view, "signals");
 });
+test("CI question routes to read-only workflow results", () => {
+  assert.equal(interpretCommand("Show CI checks").feed, "ci");
+});
 test("integration prompt routes to the right screen", () => {
   assert.equal(interpretCommand("Show integrations").view, "systems");
 });

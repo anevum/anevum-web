@@ -95,6 +95,7 @@
         <section id="signals-view" class="station-view" data-station="signals" hidden>
           <div class="page-heading"><div class="eyebrow"><span class="eyebrow-line"></span> LIVE PUBLIC SOURCE</div><h1>Signal <em>Relay.</em></h1><p>Open development pull requests from ANEVUM GitHub. These do not establish production health, successful CI, or deployment status.</p><button class="button button--ghost" id="refresh-signals" type="button">↻ Refresh public activity</button></div>
           <div class="rail-note"><span class="led led--cyan"></span><div><strong>Public metadata only</strong><p>No private repository access, tokens, live service status, or permission to deploy.</p></div></div>
+          <div class="feed-tabs" role="group" aria-label="Development data source"><button type="button" data-feed="prs" class="is-active" aria-pressed="true">◈ Pull Requests</button><button type="button" data-feed="ci" aria-pressed="false">⌁ CI Workflows</button></div>
           <div id="signal-list" class="signal-list" aria-live="polite"><p class="empty-note">Loading public GitHub activity…</p></div>
         </section>
         <section id="family-view" class="station-view" data-station="family" hidden>

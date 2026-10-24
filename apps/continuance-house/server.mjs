@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 import { authenticate, AccessError } from "./src/identity.mjs";
 import { interpretCommand } from "./src/intent.mjs";
-import { getPublicDevelopmentActivity } from "./src/github.mjs";
+import { getPublicDevelopmentActivity, getPublicWorkflowActivity } from "./src/github.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const staticFiles = new Map([
@@ -76,6 +76,9 @@ export function createHouseServer({ env = process.env, fetchImpl = globalThis.fe
         }
         if (request.method === "GET" && path === "/api/activity") {
           return json(res, 200, await getPublicDevelopmentActivity(fetchImpl));
+        }
+        if (request.method === "GET" && path === "/api/workflows") {
+          return json(res, 200, await getPublicWorkflowActivity(fetchImpl));
         }
         if (request.method === "GET" && path === "/api/integrations") {
           return json(res, 200, {

@@ -29,6 +29,9 @@ export function interpretCommand(value) {
   if (/\b(family|cadets|stardust|mission|explorer|fridge)\b/i.test(lower)) {
     return { kind: "view", view: "family", message: "Opening the family demonstration dashboard. Values are synthetic." };
   }
+  if (/\b(ci|checks?|workflows?|test results)\b/i.test(lower)) {
+    return { kind: "view", view: "signals", feed: "ci", message: "Showing public CI workflow results. These do not establish live deployment health." };
+  }
   if (/\b(build|pull request|pull requests|github|development|status|signal|activity|pipeline)\b/i.test(lower)) {
     return { kind: "view", view: "signals", message: "Showing public GitHub development activity. This does not prove production deployment health." };
   }

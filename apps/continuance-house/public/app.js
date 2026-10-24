@@ -1,6 +1,6 @@
 const state = {
-  view: "desk", session: null, speaking: false, recognition: null,
-  listening: false, fridge: false, activity: null, integrations: null, family: null,
+  view: "desk", signalFeed: "prs", session: null, speaking: false, recognition: null,
+  listening: false, fridge: false, activity: null, workflows: null, integrations: null, family: null,
   missionStates: new Set(), failed: false
 };
 
@@ -76,33 +76,50 @@ function showStation(name) {
   if (name === "systems") renderIntegrations();
   document.querySelector("#main-content").scrollIntoView({ block: "start" });
 }
-async function renderActivity(reload = false) {
+async function renderActivity() {
   const container = document.querySelector("#signal-list");
-  if (state.activity && !reload) return;
-  clear(container); append(container, textElement("p", "Retrieving public GitHub development activity…", "empty-note"));
+  const isCi = state.signalFeed === "ci";
+  for (const button of document.querySelectorAll("[data-feed]")) {
+    const selected = button.dataset.feed === state.signalFeed;
+    button.setAttribute("aria-pressed", String(selected));
+    button.classList.toggle("is-active", selected);
+  }
+  clear(container);
+  append(container, textElement("p", isCi ? "Retrieving public GitHub workflow runs…" : "Retrieving public GitHub pull requests…", "empty-note"));
   try {
-    const result = await requestJSON("/api/activity");
-    state.activity = result;
+    const result = await requestJSON(isCi ? "/api/workflows" : "/api/activity");
+    if (isCi) state.workflows = result; else state.activity = result;
+    // If the user switched feeds before this request completed, ignore the stale response.
+    if ((state.signalFeed === "ci") !== isCi) return;
     clear(container);
     if (!result.live) return append(container, textElement("p", result.note, "empty-note"));
-    if (!result.items.length) return append(container, textElement("p", "No open public pull requests were returned.", "empty-note"));
+    if (!result.items.length) return append(container, textElement("p", "No public records were returned.", "empty-note"));
     for (const item of result.items) {
       const card = textElement("a", "", "signal-card");
       card.href = item.url;
       card.target = "_blank";
       card.rel = "noopener noreferrer";
       const content = textElement("div", "", "signal-content");
-      append(content, textElement("strong", item.title),
-        textElement("p", (item.draft ? "DRAFT · " : "OPEN PR · ") + "Updated " + timeString(item.updatedAt)));
-      append(card, textElement("span", "#" + item.number, "signal-index"), content,
-        textElement("span", "↗", "signal-arrow"));
+      const meta = isCi
+        ? "STATE: " + item.status.toUpperCase().replace(/_/g, " ") +
+          (item.conclusion ? " · " + item.conclusion.toUpperCase().replace(/_/g, " ") : "") +
+          " · " + timeString(item.updatedAt)
+        : (item.draft ? "DRAFT · " : "OPEN PR · ") + "Updated " + timeString(item.updatedAt);
+      append(content, textElement("strong", item.title), textElement("p", meta));
+      append(card, textElement("span", isCi ? "CI" : "#" + item.number, "signal-index"),
+        content, textElement("span", "↗", "signal-arrow"));
       container.append(card);
     }
-    append(container, textElement("p", "SOURCE: PUBLIC GITHUB PULL REQUESTS · NOT VERIFIED PRODUCTION STATUS · FETCHED " + timeString(result.fetchedAt), "micro"));
+    append(container, textElement("p",
+      (isCi ? "SOURCE: PUBLIC GITHUB ACTIONS · NOT PROOF OF LIVE DEPLOYMENT" : "SOURCE: PUBLIC GITHUB PULL REQUESTS · NOT VERIFIED PRODUCTION STATUS") +
+      " · FETCHED " + timeString(result.fetchedAt), "micro"));
   } catch (error) {
-    clear(container); append(container, textElement("p", "Development activity unavailable: " + error.message, "empty-note"));
+    if ((state.signalFeed === "ci") !== isCi) return;
+    clear(container);
+    append(container, textElement("p", "Development activity unavailable: " + error.message, "empty-note"));
   }
 }
+
 async function renderIntegrations() {
   const container = document.querySelector("#integration-list");
   if (!state.integrations) {
@@ -172,7 +189,10 @@ async function sendCommand(command) {
     });
     appendMessage("IREN", response.message);
     say(response.message);
-    if (response.kind === "view" && stations[response.view]) showStation(response.view);
+    if (response.kind === "view" && stations[response.view]) {
+      if (response.feed === "ci" || response.feed === "prs") state.signalFeed = response.feed;
+      showStation(response.view);
+    }
     else if (response.kind === "link" && /^https:\/\/anevum\.com\//.test(response.href)) {
       const link = document.createElement("a");
       link.href = response.href;
@@ -242,6 +262,10 @@ function bind() {
   document.addEventListener("click", (event) => {
     const target = event.target.closest("button");
     if (!target) return;
+    if (target.dataset.feed) {
+      state.signalFeed = target.dataset.feed;
+      return renderActivity();
+    }
     if (target.dataset.view) return showStation(target.dataset.view);
     if (target.dataset.prompt) {
       if (matchMedia("(max-width: 820px)").matches) mobileOpen(true);
@@ -253,7 +277,7 @@ function bind() {
       renderFamily();
     }
   });
-  document.querySelector("#refresh-signals").addEventListener("click", () => renderActivity(true));
+  document.querySelector("#refresh-signals").addEventListener("click", () => renderActivity());
   document.querySelector("#fridge-mode").addEventListener("click", () => {
     state.fridge = !state.fridge;
     document.body.classList.toggle("fridge-preview", state.fridge);

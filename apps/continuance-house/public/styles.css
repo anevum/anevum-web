@@ -118,6 +118,9 @@ h2{letter-spacing:-.035em}
 .rail-note{display:flex;align-items:flex-start;gap:14px;padding:16px 17px;border:1px solid #5f9fb544;border-radius:6px;background:#12304659;margin:0 0 23px}
 .rail-note strong{font-size:12px}.rail-note p{color:#93aac2;font-size:11px;margin-top:5px}
 .rail-note>.led{margin-top:7px}
+.feed-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:17px}
+.feed-tabs button{font-size:10px;letter-spacing:.06em;color:#97aec2;border:1px solid #59788d66;background:#122235;padding:11px 16px;border-radius:4px;font-weight:740}
+.feed-tabs button.is-active,.feed-tabs button[aria-pressed="true"]{color:#b9eef5;border-color:#6fcfdd91;background:#15394a}
 .signal-list{display:grid;gap:9px}
 .signal-card{display:flex;align-items:center;gap:17px;border:1px solid var(--line);background:linear-gradient(130deg,#101c2e,#0b1523);border-radius:6px;padding:19px;transition:border-color .16s}
 .signal-card:hover{border-color:#5dc5d08c}

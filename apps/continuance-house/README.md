@@ -8,7 +8,7 @@ An independent, source-only owner command interface for ANEVUM and the future ho
 
 - Desktop, couch, iPhone, tablet and future fridge responsive interface.
 - Owner-only private gateway (Cloudflare Access signed JWT verification) or explicit loopback demonstration.
-- Built-in deterministic IREN command router, safe navigation, public GitHub PR activity.
+- Built-in deterministic IREN command router, safe navigation, public GitHub PR activity and GitHub Actions workflow status (each separately labeled; no private tokens).
 - Synthetic family explorer and Stardust preview. No child's actual details, progression or private data.
 - Browser push-to-talk where the device supports Web Speech and optional spoken replies.
 - Keyboard shortcuts suitable for Stream Deck macro programming.
