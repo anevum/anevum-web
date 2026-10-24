@@ -1,0 +1,45 @@
+import {useEffect,useRef,type KeyboardEvent} from 'react';
+import {NavLink,useLocation} from 'react-router-dom';
+import {Icon} from '../components/Icons';
+import {useLivingWorld,type WorldSector} from './LivingWorldState';
+import './console-wayfinder-v136.css';
+
+const stations=[
+ {to:'/',label:'Arrival',small:'Enter',icon:'home',sector:'hero'},
+ {to:'/discover',label:'Discover',small:'Explore',icon:'explore',sector:'portal'},
+ {to:'/community',label:'Commons',small:'Connect',icon:'community',sector:'community'},
+ {to:'/creators',label:'Creators',small:'People',icon:'people',sector:'creators'},
+ {to:'/studio',label:'Studio',small:'Create',icon:'create',sector:'studio'}
+] as const satisfies ReadonlyArray<{to:string;label:string;small:string;icon:string;sector:WorldSector}>;
+type Props={onOpenSearch:()=>void};
+export function ConsoleWayfinderV136({onOpenSearch}:Props){
+ const {setPreviewSector}=useLivingWorld();
+ const location=useLocation();
+ const ref=useRef<HTMLElement>(null);
+ const index=stations.findIndex(s=>s.to==='/'?location.pathname==='/':location.pathname===s.to);
+ useEffect(()=>{setPreviewSector(null)},[location.pathname,location.search,setPreviewSector]);
+ useEffect(()=>()=>setPreviewSector(null),[setPreviewSector]);
+ function onKey(event:KeyboardEvent<HTMLElement>){
+   if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(event.key))return;
+   const links=Array.from(ref.current?.querySelectorAll<HTMLAnchorElement>('a[data-station]')||[]);
+   if(!links.length)return;
+   const selected=links.indexOf(document.activeElement as HTMLAnchorElement);
+   const step=event.key==='ArrowRight'||event.key==='ArrowDown'?1:-1;
+   const next=event.key==='Home'?0:event.key==='End'?links.length-1:selected<0?(step===1?0:links.length-1):(selected+step+links.length)%links.length;
+   event.preventDefault();links[next].focus();
+ }
+ return <nav ref={ref} className="p136-console-wayfinder" aria-label="ANEVUM console wayfinder" onKeyDown={onKey} onMouseLeave={()=>setPreviewSector(null)} onBlur={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setPreviewSector(null)}}>
+   <span className="p136-console-ident" aria-hidden="true"><span className="p136-console-light"/> A / CONTINUANCE</span>
+   <div className="p136-console-stations">
+     {stations.map((station,i)=><NavLink data-station="" key={station.to} to={station.to} end={station.to==='/'} aria-label={station.label} onFocus={()=>setPreviewSector(station.sector)} onMouseEnter={()=>setPreviewSector(station.sector)}
+       className={({isActive})=>'p136-console-station'+(isActive?' is-active':'')} data-sector={station.sector}>
+       <span className="p136-console-icon"><Icon name={station.icon} size={20}/></span>
+       <span className="p136-console-title"><strong>{station.label}</strong><small>{station.small}</small></span>
+       {i===index&&<span className="p136-console-selection" aria-hidden="true"/>}
+     </NavLink>)}
+   </div>
+   <button type="button" className="p136-console-command" onClick={onOpenSearch} aria-label="Search and quick navigation" title="Search and quick navigation">
+    <Icon name="search" size={19}/><span>COMMAND</span><kbd>⌘ K</kbd>
+   </button>
+ </nav>;
+}
