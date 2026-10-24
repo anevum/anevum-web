@@ -125,7 +125,7 @@ export function CommunityPage() {
     [revision, category, view === "projects"]
   );
   const creators = useResource(signal => readCreators({ limit: "12", q: creatorQuery || undefined }, signal), [revision, creatorQuery]);
-  const enabled = status.state === "ready" && status.data?.features?.communityPosts === true;
+  const enabled = status.state === "ready" && status.data.features?.communityPosts === true;
   const conversations = useResource(async signal => {
     if (!enabled) return { availability: "closed" as const, items: [] as CommunityPost[] };
     try {
@@ -174,8 +174,8 @@ export function CommunityPage() {
       </div>
       <aside className="ch7-status" aria-label="Verified public community counts"><span className="ch7-kicker">PUBLISHED WORK / VERIFIED</span>
         <div className="ch7-count-grid">
-          <div><strong>{status.state === "ready" ? (status.data?.counts?.publishedProjects ?? "—") : "—"}</strong><span>APPROVED PROJECTS</span></div>
-          <div><strong>{status.state === "ready" ? (status.data?.counts?.publishedCreators ?? "—") : "—"}</strong><span>PUBLIC CREATORS</span></div>
+          <div><strong>{status.state === "ready" ? status.data.counts.publishedProjects : "—"}</strong><span>APPROVED PROJECTS</span></div>
+          <div><strong>{status.state === "ready" ? status.data.counts.publishedCreators : "—"}</strong><span>PUBLIC CREATORS</span></div>
         </div>
         <p>{status.state === "error" ? "Public counts are temporarily unavailable." : "Only independently approved public records. No fabricated activity."}</p>
       </aside>
