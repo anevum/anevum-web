@@ -1,6 +1,6 @@
 /* Project Doctor V001.6 — scoped Continuance NEXT / Orbital Underground.
    No global tokens or public routes. Local-only, read-only, feature default OFF. */
-.cpd-root{--cpd-bg:#0b111c;--cpd-panel:#141d2b;--cpd-raised:#1c293b;--cpd-line:#49566c;--cpd-bone:#f4f0e6;--cpd-soft:#c5cdda;--cpd-muted:#aab8cb;--cpd-copper:#ebc28c;--cpd-violet:#c2b3ed;--cpd-focus:#b7e9f0;position:relative;isolation:isolate;scroll-margin-top:84px;min-width:0;max-width:100%;overflow:hidden;border:1px solid #59657b;border-radius:10px;background:var(--cpd-bg);color:var(--cpd-bone);font:14px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;box-shadow:0 22px 55px #050b1466}
+.cpd-root{--cpd-bg:#0b111c;--cpd-panel:#141d2b;--cpd-raised:#1c293b;--cpd-line:#49566c;--cpd-bone:#f4f0e6;--cpd-soft:#c5cdda;--cpd-muted:#aab8cb;--cpd-copper:#ebc28c;--cpd-violet:#c2b3ed;--cpd-focus:#b7e9f0;position:relative;isolation:isolate;container-name:cpd;container-type:inline-size;scroll-margin-top:84px;width:100%;min-width:0;max-width:100%;overflow:hidden;border:1px solid #59657b;border-radius:10px;background:var(--cpd-bg);color:var(--cpd-bone);font:14px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;box-shadow:0 22px 55px #050b1466}
 .cpd-root *,.cpd-root *::before,.cpd-root *::after{box-sizing:border-box}
 .cpd-root :where(h4,h5,p){margin:0}
 .cpd-root button{font:inherit;cursor:pointer}
@@ -105,3 +105,48 @@
 @media(max-width:350px){.cpd-hero{grid-template-columns:1fr}.cpd-hero-art{display:none}.cpd-totals small{font-size:8px}}
 @media(prefers-reduced-motion:reduce){.cpd-root *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 @media(forced-colors:active){.cpd-root,.cpd-root :where(button,.cpd-findings li,.cpd-totals,.cpd-diff){forced-color-adjust:auto;border-color:CanvasText}.cpd-root button:focus-visible{outline:3px solid Highlight}}
+
+
+/* The Studio's file inspector lives in a narrow center pane even on wide displays.
+   Container queries adapt to actual component space, not just window width. */
+@container cpd (max-width:700px){
+ .cpd-overview{grid-template-columns:1fr}
+ .cpd-hero{grid-template-columns:minmax(0,1fr) 112px}
+ .cpd-orbit-frame{max-width:125px}
+ .cpd-totals strong{font-size:32px}
+ .cpd-handoff{grid-template-columns:1fr}
+ .cpd-copy{width:100%}
+}
+@container cpd (max-width:490px){
+ .cpd-hero{grid-template-columns:minmax(0,1fr) 74px;gap:8px;min-height:0;padding-block:20px}
+ .cpd-orbit-frame{width:80px}
+ .cpd-orbit-caption{display:none}
+ .cpd-head-copy h4{font-size:clamp(25px,7cqi,31px)}
+ .cpd-head-copy>p:last-child{font-size:11px}
+ .cpd-brand-version{width:100%;margin-left:0}
+ .cpd-toolbar-meta{width:100%}
+ .cpd-button{width:100%}
+ .cpd-overview,.cpd-review{padding:15px}
+ .cpd-findings li{grid-template-columns:1fr;gap:8px}
+ .cpd-finding-rail{flex-direction:row;align-items:center}
+ .cpd-finding-foot{display:grid}
+ .cpd-jump{width:100%}
+ .cpd-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+ .cpd-filters button{padding:9px 5px;justify-content:center;font-size:10px;gap:4px}
+ .cpd-filters button span{font-size:9px}
+ .cpd-totals>div{padding:11px 8px}
+ .cpd-totals strong{font-size:28px}
+ .cpd-totals small{font-size:9px}
+ .cpd-diff-metrics{gap:5px}
+ .cpd-diff-metrics span{padding:10px 7px;font-size:10px}
+ .cpd-diff-metrics strong{font-size:24px}
+ .cpd-foot{flex-wrap:wrap;gap:5px}
+}
+@container cpd (max-width:340px){
+ .cpd-hero{grid-template-columns:1fr}
+ .cpd-hero-art{display:none}
+ .cpd-brandline{font-size:8px;gap:7px}
+ .cpd-totals span{font-size:8px}
+ .cpd-totals small{font-size:8px}
+ .cpd-totals strong{font-size:25px}
+}
