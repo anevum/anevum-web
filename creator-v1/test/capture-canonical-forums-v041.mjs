@@ -216,7 +216,7 @@ try{
  // CDP requires text/unmodifiedText for a complete Enter keypress; omitting
  // them generated a keyDown but not the activation keypress in Chromium.
  await client.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',
-  text:'\\r',unmodifiedText:'\\r',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
+  text:'\r',unmodifiedText:'\r',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
  await client.send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',
   windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
  // Native summary activation may settle after the CDP key-up response.
