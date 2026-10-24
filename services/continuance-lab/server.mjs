@@ -5,6 +5,7 @@ import {createHash, timingSafeEqual} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
 import {diagnoseStudioSource} from '../../creator-v1/agent-quality-lab/project-doctor-v001.mjs';
+import {projectDoctorBrief} from '../../creator-v1/agent-quality-lab/project-doctor-brief-v001.mjs';
 
 export const MAX_BODY_BYTES = 36 * 1024;
 const WINDOW_MS = 60_000;
@@ -121,6 +122,7 @@ export function createServer({token=process.env.LAB_API_TOKEN, now=()=>Date.now(
       const result = diagnoseStudioSource(input.source);
       const safeResult = {
         ...result,
+        brief:projectDoctorBrief(result),
         sourceSha256:sha256(input.source),
         sourceBytes:Buffer.byteLength(input.source,'utf8')
       };
