@@ -206,11 +206,6 @@ export function Phase1JoinPage(){
          :"Member registration is currently paused."}</p>
        <h2>{codeSent?"CHECK YOUR INBOX.":requiresEmailVerification?"VERIFY YOUR EMAIL.":"YOUR STORY STARTS HERE."}</h2>
        <p className="join-lead">{codeSent?"Your access code is on its way. Enter all eight digits below to continue.":requiresEmailVerification?"Your sign-in provider did not verify your email. Confirm the email on this session before opening your ANEVUM profile.":"Join free to create your member identity. No password required; creator publishing is still in testing."}</p>
-       {!codeSent&&!requiresEmailVerification&&<aside className="av133-join-context" aria-label="Why join ANEVUM">
-         <strong>WHAT YOU GET AS A MEMBER</strong>
-         <p>Explore public creations without signing up. Membership gives you a space to return to your discoveries and take part as the community develops.</p>
-         <div className="av133-join-perks"><span>Private profile</span><span>Saved discoveries</span><span>Eligible recognition</span></div>
-       </aside>}
        {oauthFeedback&&<p role="alert" className="av12-join-error">{oauthFeedback}</p>}
        {requiresEmailVerification&&<div className="join-service-note" role="status">
          <strong>EMAIL VERIFICATION REQUIRED</strong>
@@ -247,6 +242,11 @@ export function Phase1JoinPage(){
          </div>}
          {notice&&<p role="status">{notice}</p>}
        </form>}
+       {!codeSent&&!requiresEmailVerification&&<aside className="av133-join-context" aria-label="Why join ANEVUM">
+         <strong>WHAT YOU GET AS A MEMBER</strong>
+         <p>Explore public creations without signing up. Membership gives you a space to return to your discoveries and take part as the community develops.</p>
+         <div className="av133-join-perks"><span>Private profile</span><span>Saved discoveries</span><span>Eligible recognition</span></div>
+       </aside>}
        {ready&&!requiresEmailVerification&&emailReady&&(["google","github","apple","microsoft"] as const).some(socialReady)&&!codeSent&&
          <p className="av123-alternative-label">OR CONTINUE WITH</p>}
        {ready&&!requiresEmailVerification&&(["google","github","apple","microsoft"] as const).some(socialReady)&&!codeSent&&<div className="join-methods" aria-label="Other available sign-in methods">
