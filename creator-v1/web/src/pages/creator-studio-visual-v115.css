@@ -326,6 +326,11 @@
   border:0;background:transparent;color:var(--v115-ink)}
  .cvs-backdrop{display:block;position:fixed;z-index:1449;inset:0;background:rgba(2,7,15,.7);
   border:0;border-radius:0;padding:0;width:100vw;height:100dvh}
+ /* Do not leave translated fixed drawers in the scrollable Studio subtree.
+    A hidden translateX panel still increases Element.scrollWidth in Chromium. */
+ .cvs-inspector:not(.is-open){display:none;transform:none}
+ .cvs-inspector.is-open{display:flex;transform:none}
+
  .cvs-mobile-actionbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;
   padding:9px 13px;background:#0b1b2d;border-top:1px solid #507f9d}
  .cvs-mobile-actionbar button{min-height:45px;border:1px solid #476e89;border-radius:7px;
@@ -344,6 +349,9 @@
   transform:translateX(calc(-100% - 50px));opacity:0;visibility:hidden;
   transition:transform .2s ease,opacity .2s ease,visibility .2s ease}
  .cvs-explorer.is-open{transform:translateX(0);opacity:1;visibility:visible}
+ .cvs-explorer:not(.is-open){display:none;transform:none}
+ .cvs-explorer.is-open{display:flex;transform:none}
+
  .cvs-rail{padding-inline:4px}
  .cvs-stage{height:clamp(335px,52vw,490px)}
  .cvs-head{padding:12px 15px}
