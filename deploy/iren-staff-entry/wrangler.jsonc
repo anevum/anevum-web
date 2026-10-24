@@ -1,0 +1,31 @@
+{
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  "name": "anevum-iren-staff-entry-v003",
+  "main": "./src/index.mjs",
+  "compatibility_date": "2026-10-19",
+  "workers_dev": false,
+  "routes": [
+    {
+      "pattern": "anevum.com/staff",
+      "zone_name": "anevum.com"
+    },
+    {
+      "pattern": "anevum.com/staff/",
+      "zone_name": "anevum.com"
+    }
+  ],
+  "services": [
+    {
+      "binding": "APEX_AUTH",
+      "service": "anevum-apex-prelaunch-gateway",
+      "environment": "production"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "MEMBER_DB",
+      "database_name": "anevum-canonical-member-staging",
+      "database_id": "e1d29049-c83b-4534-8355-dc1fa36ba6d8"
+    }
+  ]
+}
