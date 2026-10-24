@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState, lazy, Suspense } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { readCategories,readProjects, type Category } from "../lib/api";
 import { useResource } from "../lib/useResource";
@@ -8,6 +8,11 @@ import {readPackageCatalogue,packageDiscoveryResults} from "../lib/creator-packa
 import { PageNav } from "../components/PageNav";
 import { PortalHeading } from "../components/PortalHeading";
 import { EmptyState, ErrorState, LoadingState } from "../components/States";
+
+// The protected catalogue logic stays canonical; PARITY loads only when enabled.
+const FullParityDiscover=import.meta.env.VITE_PARITY_V136_FULL==="true"
+  ?lazy(()=>import("../parity/ParityDiscoverV136").then(mod=>({default:mod.ParityDiscoverV136})))
+  :null;
 
 const channels: ReadonlyArray<{id:Category;label:string;description:string;mark:string}> = [
   {id:"games",label:"Games",description:"Independent play and interactive experiments",mark:"✦"},
@@ -62,22 +67,32 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
 
   function search(e:FormEvent){
     e.preventDefault();
-    const next=new URLSearchParams(params),value=draft.trim();
-    if(value)next.set("q",value);else next.delete("q");
-    next.delete("cursor");
-    setParams(next);
+    // Read the submitted input, not an earlier render's draft. Navigation
+    // transitions can defer React state while the user is already typing.
+    const field=(e.currentTarget as HTMLFormElement).querySelector<HTMLInputElement>('input[type="search"]');
+    const value=(field?.value??draft).trim();
+    setParams(current=>{
+      const next=new URLSearchParams(current);
+      if(value)next.set("q",value);else next.delete("q");
+      next.delete("cursor");
+      return next;
+    });
   }
   function selectCategory(id:string){
-    const next=new URLSearchParams(params);
-    if(id)next.set("category",id);else next.delete("category");
-    next.delete("cursor");
-    setParams(next);
+    setParams(current=>{
+      const next=new URLSearchParams(current);
+      if(id)next.set("category",id);else next.delete("category");
+      next.delete("cursor");
+      return next;
+    });
   }
   function toggleFreeOnly(){
-    const next=new URLSearchParams(params);
-    if(freeOnly)next.delete("free");else next.set("free","1");
-    next.delete("cursor");
-    setParams(next);
+    setParams(current=>{
+      const next=new URLSearchParams(current);
+      if(next.get("free")==="1")next.delete("free");else next.set("free","1");
+      next.delete("cursor");
+      return next;
+    });
   }
   const categories=resource.state==="ready"?resource.data.categories.categories:[];
   const countByCategory=new Map(categories.map(x=>[x.category,x.count]));
@@ -89,6 +104,21 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
   const shown=legacyProjects.length+packageProjects.length;
   const resultsReady=resource.state==="ready"||(packagesInScope&&packageResource.state==="ready");
   const emptyVerified=resource.state==="ready"&&(!packagesInScope||packageResource.state==="ready")&&shown===0;
+  if(FullParityDiscover)return <Suspense fallback={<LoadingState label="Opening the public discovery index"/>}>
+    <FullParityDiscover
+      channels={channels} category={category} activeLabel={active?.label||null}
+      query={q} cursor={cursor} freeOnly={freeOnly}
+      draft={draft} onDraft={setDraft} onSearch={search}
+      onCategory={selectCategory} onToggleFree={toggleFreeOnly}
+      view={view} onView={setView}
+      resourceState={resource.state} packageState={packageResource.state}
+      packagesInScope={packagesInScope} packagesCount={packages.length}
+      packageProjects={packageProjects} legacyProjects={legacyProjects}
+      shown={shown} resultsReady={resultsReady} emptyVerified={emptyVerified}
+      current={current} params={params}
+      nextCursor={resource.state==="ready"?resource.data.projects.nextCursor:null}
+    />
+  </Suspense>;
   return <div data-iren-anchor="discover" className="portal-discover av73-discover">
     {immersive?<PortalHeading
       eyebrow={world?.eyebrow||"THE PORTALS / EVERYTHING WORTH TRYING"}

@@ -10,6 +10,8 @@ export const BASE='baa92c0cbdcce71bd0ae5862e574c90ac53d84a9';
 export const WORKER='anevum-apex-prelaunch-gateway';
 export const ACCOUNT='2f7ee83107240152097efd956a4e8335';
 export const V131='44f5971b-4cc9-4e7e-ab6a-1adb6fc5c12e',V132='de673bf1-ef05-4276-af16-2ee8713d965c';
+export const LIVE_V136_003='72f35ec3-e046-4f75-ae65-19fa672b87c9';
+export const LIVE_DEPLOY_003='319d9632-5c88-4d41-a3de-849a29e96b98';
 export const GATEWAY='1884ff0dd3c8aa3d38711167af0b4552c9b200b3148e72d9ba6d90d23171ef99';
 const ROOT=`/accounts/${ACCOUNT}/workers/scripts/${WORKER}`;
 const ZONE='8abe27259b5436af5966d3b40d9a3760';
@@ -20,6 +22,12 @@ const save=(p,v)=>writeFileSync(p,JSON.stringify(v,null,2)+'\n');
 const stable=x=>JSON.stringify(x,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b))):v);
 const allowed=new Set([
  '.github/workflows/parity-v136-release.yml','creator-v1/ops/parity-v136-release.mjs',
+ 'creator-v1/test/parity-v136-discover-browser.mjs',
+ 'creator-v1/web/src/pages/DiscoverPage.tsx',
+ 'creator-v1/web/src/pages/CanonicalSavedWorksPage.tsx',
+ 'creator-v1/web/src/pages/canonical-saved-works.css',
+ 'creator-v1/web/src/parity/ParityDiscoverV136.tsx',
+ 'creator-v1/web/src/parity/parity-discover-v136.css',
  'creator-v1/test/parity-v136-full-browser.mjs','docs/production/parity-v136-release-20261024.md',
  'creator-v1/web/src/main.tsx','creator-v1/web/vite.config.ts',
  'creator-v1/web/src/components/Shell.tsx','creator-v1/web/src/pages/CinematicLandingPage.tsx',
@@ -63,8 +71,8 @@ async function snapshot(){
  return {deployment:deploy.deployments[0],settings,original,controller:controller.deployments[0],routes,versions:versions.items};
 }
 function verifyBefore(s){
- assert.equal(s.deployment.id,'a17c98bb-e59e-4384-bdc6-1b397169d94a','Production changed; inspect before retry');
- assert.deepEqual(s.deployment.versions,[{version_id:V131,percentage:99},{version_id:V132,percentage:1}]);
+ assert.equal(s.deployment.id,LIVE_DEPLOY_003,'Production changed; inspect before retry');
+ assert.deepEqual(s.deployment.versions,[{version_id:LIVE_V136_003,percentage:100}]);
  assert.equal(s.settings.bindings.length,26);assert.deepEqual(signatures(s.settings.bindings),signatures(s.original.resources.bindings));
  assert.equal(s.controller.id,'4c832ec7-ce67-4864-832c-9b0b470af92d','Controller changed; inspect');
  assert.equal(s.routes.length,40,'Route inventory changed; inspect');
@@ -93,7 +101,7 @@ async function after(out){
  assert.deepEqual(signatures(v.resources.bindings),signatures(original.original.resources.bindings));
  assert.deepEqual(v.resources.script_runtime,original.original.resources.script_runtime);
  assert.equal(v.annotations?.['workers/message'],'PARITY V136 frontend '+git('rev-parse','HEAD')+'; V131 gateway unchanged; INACTIVE');
- const result={status:'VERIFIED_INACTIVE_PARITY_VERSION',version:v.id,number:v.number,source:git('rev-parse','HEAD'),gatewaySha256:GATEWAY,rollback:[V131,V132],trafficChanged:false,controllerChanged:false,bindingsPreserved:true,routesPreserved:true,memberDataChanged:false};
+ const result={status:'VERIFIED_INACTIVE_PARITY_VERSION',version:v.id,number:v.number,source:git('rev-parse','HEAD'),gatewaySha256:GATEWAY,rollback:[LIVE_V136_003,V131,V132],trafficChanged:false,controllerChanged:false,bindingsPreserved:true,routesPreserved:true,memberDataChanged:false};
  save(join(out,'inactive-receipt.json'),result);return result;
 }
 const [cmd,...args]=process.argv.slice(2);

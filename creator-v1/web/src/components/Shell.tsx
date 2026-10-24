@@ -1,5 +1,5 @@
 import { NavLink, Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { type FormEvent, useEffect, useRef, useState, lazy, Suspense } from "react";
+import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState, lazy, Suspense, ViewTransition } from "react";
 import { OrbitalMark } from "./OrbitalMark";
 import { Icon } from "./Icons";
 import { PortalLauncher } from "./PortalLauncher";
@@ -91,9 +91,29 @@ export function Shell(){
     setMenuOpen(false);
     navigate(trimmed?"/discover?q="+encodeURIComponent(trimmed):"/discover");
   }
+  // Console-style navigation remains DOM focus, so it works with keyboard,
+  // assistive technology and any future gamepad-to-focus adapter.
+  function menuDirectionalKey(event:ReactKeyboardEvent<HTMLDialogElement>){
+    if(!FullParityHeader||isEditableTarget(event.target)||
+      !['ArrowDown','ArrowUp','ArrowRight','ArrowLeft'].includes(event.key))return;
+    const items=Array.from(menuDialog.current?.querySelectorAll<HTMLElement>('a[href],button:not([disabled])')||[])
+      .filter(node=>node.getClientRects().length>0);
+    if(!items.length)return;
+    const current=items.indexOf(document.activeElement as HTMLElement);
+    const direction=event.key==='ArrowDown'||event.key==='ArrowRight'?1:-1;
+    const next=current<0?(direction>0?0:items.length-1):(current+direction+items.length)%items.length;
+    event.preventDefault();
+    items[next]?.focus();
+  }
   const home=location.pathname==="/";
+  const parityFullBleed=Boolean(FullParityHeader&&(home||location.pathname==="/discover"));
+  // PARITY destinations own a full-bleed spatial canvas, not a nested page box.
+  // Legacy routes retain their protected frame until individually transformed.
+  // One stable route surface keeps navigation, IREN and launcher mounted.
+  const routeSurface=home||parityFullBleed?<Outlet/>:
+    <div className="av5-site-frame av9-unified-frame"><div className="av5-site-content"><Outlet/></div></div>;
   return <div className={"site-shell site-shell--cinematic av9-shell"+(home?" site-shell--home":"")}>
-    {!(FullParityHeader&&home)&&<ContinuanceWorldStage path={location.pathname}/>}
+    {!parityFullBleed&&<ContinuanceWorldStage path={location.pathname}/>}
     {FullParityHeader?<Suspense fallback={<header className="p136-header" aria-label="ANEVUM navigation loading"/>}><FullParityHeader memberDestination={memberDestination} canonicalMember={canonicalMember} query={query} onQuery={setQuery} onSearch={search} onOpenLauncher={()=>setLauncherOpen(true)} onOpenIren={()=>window.dispatchEvent(new Event("anevum:iren-open"))} menuOpen={menuOpen} onToggleMenu={()=>setMenuOpen(v=>!v)} menuButton={menuButton}/></Suspense>:<header className="site-header av9-header">
       <div className="header-inner av9-header-inner">
         <Link to="/" className="brand-lockup av9-brand" aria-label="ANEVUM homepage">
@@ -126,6 +146,7 @@ export function Shell(){
     </header>}
     <dialog ref={menuDialog} id="av79-navigation" className="av79-navigation"
       aria-label="ANEVUM navigation"
+      onKeyDown={menuDirectionalKey}
       onClose={()=>{setMenuOpen(false);menuButton.current?.focus();}}
       onCancel={()=>setMenuOpen(false)}
       onClick={event=>{if(event.target===menuDialog.current)setMenuOpen(false);}}>
@@ -180,8 +201,8 @@ export function Shell(){
     <IrenGuidedContinuance memberId={canonicalMember?canonicalSession?.user?.id||null:null}/>
     <PortalLauncher open={launcherOpen} onClose={()=>setLauncherOpen(false)}/>
     <main id="main" tabIndex={-1} className="site-main av9-main">
-      {!(FullParityHeader&&home)&&<VisualKitAtmosphere room={publicVisualRoom(location.pathname)}/>}
-      {home?<Outlet/>:<div className="av5-site-frame av9-unified-frame"><div className="av5-site-content"><Outlet/></div></div>}
+      {!parityFullBleed&&<VisualKitAtmosphere room={publicVisualRoom(location.pathname)}/>}
+      {parityFullBleed?<ViewTransition enter="p136-route" exit="p136-route" update="p136-route">{routeSurface}</ViewTransition>:routeSurface}
     </main>
     <footer className="site-footer av9-footer">
       <span>ANEVUM / A WORLD OF THINGS PEOPLE MAKE</span>
