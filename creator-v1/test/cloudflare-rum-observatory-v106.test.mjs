@@ -58,6 +58,7 @@ test('duplicate, malformed, oversize and out-of-range aggregates fail closed',()
  assert.throws(()=>normalizeRumResponse(pack([...rows,rows[0]]),NOW));
  assert.throws(()=>normalizeRumResponse(pack([{dimensions:{date:'2026-10-31'},count:1,sum:{visits:1}}]),NOW));
  assert.throws(()=>normalizeRumResponse(pack([{dimensions:{date:'2026-10-21'},count:-1,sum:{visits:1}}]),NOW));
+ assert.throws(()=>normalizeRumResponse(pack([{dimensions:{date:'2026-09-31'},count:1,sum:{visits:1}}]),NOW));
  assert.throws(()=>normalizeRumResponse(pack([{dimensions:{date:'2026-10-21'},count:1,sum:{visits:Infinity}}]),NOW));
  assert.throws(()=>normalizeRumResponse(pack(Array.from({length:31},(_,i)=>({dimensions:{date:'2026-10-23'},count:i,sum:{visits:1}}))),NOW));
  assert.throws(()=>normalizeRumResponse({viewer:{accounts:[]}},NOW));
