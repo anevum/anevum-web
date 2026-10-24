@@ -202,7 +202,7 @@ export function Shell(){
     <PortalLauncher open={launcherOpen} onClose={()=>setLauncherOpen(false)}/>
     <main id="main" tabIndex={-1} className="site-main av9-main">
       {!parityFullBleed&&<VisualKitAtmosphere room={publicVisualRoom(location.pathname)}/>}
-      {FullParityHeader?<ViewTransition enter="p136-route" exit="p136-route" update="p136-route">{routeSurface}</ViewTransition>:routeSurface}
+      {parityFullBleed?<ViewTransition enter="p136-route" exit="p136-route" update="p136-route">{routeSurface}</ViewTransition>:routeSurface}
     </main>
     <footer className="site-footer av9-footer">
       <span>ANEVUM / A WORLD OF THINGS PEOPLE MAKE</span>
