@@ -38,7 +38,7 @@ export function selectWeeklyPublicCreations(source:unknown,now=Date.now()):Weekl
  for(const value of source.latestReleases){
   if(!object(value))throw new Error('Invalid public publication');
   const date=timestamp(value.publishedAt);
-  if(typeof value.id!=='string'||!ID.test(value.id)||!CATEGORIES.has(value.category)||
+  if(typeof value.id!=='string'||!ID.test(value.id)||typeof value.category!=='string'||!CATEGORIES.has(value.category)||
    typeof value.creatorHandle!=='string'||!HANDLE.test(value.creatorHandle)||
    !cleanText(value.title,110)||!cleanText(value.creatorName,80)||
    (value.summary!==null&&value.summary!==undefined&&typeof value.summary!=='string')||
