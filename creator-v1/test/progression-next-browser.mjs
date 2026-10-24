@@ -63,8 +63,8 @@ try{
   assert.equal(await page.locator('.px-activity').count(),4);record(width+' guest sees four curated paths');
   assert.equal(await page.locator('.px-current').count(),0);assert.ok(!state.privateReads.includes('/api/v1/member/progression'));record(width+' guest has no private progression or art');
   await fit(page,width+' catalog');await capture(page,'guest-'+width);
-  await page.getByRole('button',{name:'Creation',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.px-activity').length===5);assert.equal(await page.locator('.px-activity').count(),5);record(width+' track filter');
-  await page.getByRole('button',{name:'All paths',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.px-activity').length===6);record(width+' all paths are initially limited');
+  if(width>680)await page.getByRole('button',{name:'Creation',exact:true}).click();else await page.getByRole('combobox',{name:'Contribution category'}).selectOption('creation');await page.waitForFunction(()=>document.querySelectorAll('.px-activity').length===5);assert.equal(await page.locator('.px-activity').count(),5);record(width+' track filter');
+  if(width>680)await page.getByRole('button',{name:'All paths',exact:true}).click();else await page.getByRole('combobox',{name:'Contribution category'}).selectOption('all');await page.waitForFunction(()=>document.querySelectorAll('.px-activity').length===6);record(width+' all paths are initially limited');
   await page.getByRole('button',{name:/Show 13 more/}).click();await page.waitForFunction(()=>document.querySelectorAll('.px-activity').length===19);record(width+' all 19 paths on request');
   await page.getByRole('button',{name:/Show fewer/}).click();await page.waitForFunction(()=>document.querySelectorAll('.px-activity').length===6);record(width+' list collapses cleanly');
   const input=page.getByRole('searchbox',{name:'Search all paths'});await input.fill('not-present-zzz');await page.getByRole('heading',{name:'No matching paths.'}).waitFor();

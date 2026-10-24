@@ -85,6 +85,7 @@ export function ProgressionNextReviewPage(){
      {TRACKS.map(t=><button type="button" key={t.id} aria-pressed={track===t.id&&!query} onClick={()=>chooseTrack(t.id)}>{t.name}</button>)}
      <button type="button" aria-pressed={track==='all'&&!query} onClick={()=>chooseTrack('all')}>All paths</button>
     </div>
+    <label className="px-mobile-area-picker"><span>Browse by category</span><select aria-label="Contribution category" value={track} onChange={e=>chooseTrack(e.target.value)}><option value="starter">Start here</option>{TRACKS.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}<option value="all">All paths</option></select></label>
     <section className="px-list-shell" aria-label="Contribution paths">
      <div className="px-list-toolbar">
       <div><span className="px-overline">CONTRIBUTION LIBRARY / REVIEW CANDIDATE</span><h3>{query.trim()?'Search results':track==='starter'?'A good place to begin':track==='all'?'All contribution paths':TRACKS.find(t=>t.id===track)?.verb||'Contribution paths'}</h3></div>

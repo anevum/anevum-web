@@ -104,3 +104,12 @@
  .px-main{padding-top:14px}
  .px-section-heading{margin-bottom:11px}.px-section-heading h2{font-size:21px}
 }
+/* Review-backed polish: deconflict desktop orbital caption and phone IREN. */
+.px-root .px-motion{top:10px;bottom:auto;right:12px}
+.px-mobile-area-picker{display:none}
+@media(max-width:680px){
+ .px-track-picker{display:none}
+ .px-mobile-area-picker{display:grid;gap:7px;max-width:calc(100% - 58px);margin:13px 0 16px;color:#c9c4db;font-size:12px}
+ .px-mobile-area-picker select{display:block;width:100%;max-width:100%;min-height:46px;padding:10px 13px;background:#1e2435;color:#f3eafa;border:1px solid rgba(188,200,223,.35);border-radius:9px;font-size:14px;font-weight:600;font-family:inherit}
+ .px-guest>div{min-width:0}
+}
