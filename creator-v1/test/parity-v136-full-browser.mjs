@@ -45,7 +45,8 @@ async function contextFor(width,{motion='reduce',state='empty',forceVector=false
       const path=url.pathname;
       const value=path==='/api/v1/member/auth/get-session'?null:
         path==='/api/v1/projects'?page(state==='project'?[fixture]:[]):
-        path==='/api/v1/creators'?page([]):
+        path==='/api/v1/status'?{features:{communityPosts:false},counts:{publishedProjects:0,publishedCreators:0}}:
+         path==='/api/v1/creators'?page([]):
         path==='/api/v1/categories'?{categories:[]}:null;
       const status=state==='unavailable'&&path==='/api/v1/projects'?503:200;
       await route.fulfill({status,contentType:'application/json',body:JSON.stringify(status===503?{error:'CI unavailable fixture'}:value)});return;
@@ -111,6 +112,27 @@ try{
     assert.equal(await page.locator('.ir80-dock').count(),1);
     await page.waitForFunction(()=>!!document.querySelector('.ir80-guide-layer,.ir123-tour,.ir92-tour,.ir87-panel'));
     record('canonical Discover / Join / IREN '+width);
+    await context.close();
+  }
+  // Public destinations share the single WebGL canvas, while canonical
+  // community and creators components keep their working content/controls.
+  {
+    const {page,context}=await contextFor(390);
+    await page.goto(base,{waitUntil:'networkidle'});
+    for(const [path,sector,selector] of [
+      ['/community','community','.ch7-hub'],
+      ['/creators','creators','.portal-creators'],
+      ['/','hero','.p136-portal']
+    ]){
+      await page.goto(base+path,{waitUntil:'networkidle'});
+      await page.locator(selector).waitFor();
+      await page.locator('.p136-living-world[data-enabled="true"][data-sector="'+sector+'"]').waitFor();
+      assert.equal(await page.locator('.p136-living-canvas').count(),1,
+        'A single GPU surface exists on '+path);
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),
+        'Spatial routes do not overflow phone viewport: '+path);
+    }
+    record('WebGL public sectors / protected DOM route continuity');
     await context.close();
   }
   for(const state of ['project','unavailable']){

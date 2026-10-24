@@ -188,3 +188,59 @@ html[data-av-parity="v136-full"] .p136-scene{
   .p136-living-world{display:none!important}
   .cw-live-glyph{background:Canvas;color:CanvasText}
 }
+
+/* V136.007: one continuous spatial public environment, not a flat overlay.
+ * Existing public route data, actions and semantics remain unchanged. */
+html[data-av-parity="v136-full"] .site-shell:has(.ch7-hub) .av5-site-frame,
+html[data-av-parity="v136-full"] .site-shell:has(.portal-creators) .av5-site-frame{
+  background:transparent;box-shadow:none;border-color:transparent
+}
+html[data-av-parity="v136-full"] .site-shell:has(.ch7-hub) .av5-site-content,
+html[data-av-parity="v136-full"] .site-shell:has(.portal-creators) .av5-site-content{
+  position:relative;isolation:isolate
+}
+html[data-av-parity="v136-full"] .ch7-hub{
+  --ch7-line:#72bdfa72;--ch7-paper:Inter,"Segoe UI",system-ui,sans-serif;
+  background:linear-gradient(180deg,#0613298c,#040b17ed 58%,#030911);
+  border:0;border-radius:0;box-shadow:none
+}
+html[data-av-parity="v136-full"] .ch7-hero{
+  border-radius:0;border-left:0;border-right:0;
+  background:linear-gradient(90deg,#020b19ee,#06142a99 58%,#030c1d8c);
+  box-shadow:none
+}
+html[data-av-parity="v136-full"] .ch7-hero-art{opacity:.10}
+html[data-av-parity="v136-full"] .ch7-entry,
+html[data-av-parity="v136-full"] .ch7-person,
+html[data-av-parity="v136-full"] .portal-creator-tile{
+  border-color:#7abbed6b;
+  background:linear-gradient(135deg,#122941df,#071326ef);
+  box-shadow:inset 0 1px #ddf7ff19,0 14px 38px #0005;
+  transition:transform .23s cubic-bezier(.2,.7,.2,1),border-color .2s,box-shadow .2s
+}
+html[data-av-parity="v136-full"] :is(.ch7-entry,.ch7-person,.portal-creator-tile):hover{
+  transform:translateY(-3px);border-color:#8de0ffb8;
+  box-shadow:inset 0 1px #ddf7ff35,0 0 28px #4bc7ff20,0 18px 42px #0009
+}
+html[data-av-parity="v136-full"] .portal-creators{
+  background:linear-gradient(180deg,#061328a1,#030c18f5 75%);
+  color:#e8f5ff
+}
+html[data-av-parity="v136-full"] .portal-creators :is(.portal-box,.portal-sidebox){
+  background:linear-gradient(140deg,#102941d9,#071322ec);
+  border-color:#71bdf367;box-shadow:inset 0 1px #eafcff17
+}
+html[data-av-parity="v136-full"] .portal-creators :is(a,button,input):focus-visible,
+html[data-av-parity="v136-full"] .ch7-hub :is(a,button,input):focus-visible{
+  outline:3px solid #80ddff;outline-offset:3px
+}
+@media(prefers-reduced-motion:reduce){
+ html[data-av-parity="v136-full"] :is(.ch7-entry,.ch7-person,.portal-creator-tile){
+  transition:none!important;transform:none!important
+ }
+}
+@media(forced-colors:active){
+ html[data-av-parity="v136-full"] :is(.ch7-hub,.portal-creators,.ch7-entry,.ch7-person,.portal-creator-tile){
+  color:CanvasText;background:Canvas;border-color:CanvasText;box-shadow:none
+ }
+}
