@@ -85,18 +85,14 @@ export function WorldComposerReviewV115(){
  const filtered=useMemo(()=>scene.nodes.filter(n=>(n.name+' '+n.kind).toLowerCase().includes(treeQuery.trim().toLowerCase())),[scene.nodes,treeQuery]);
  function command(next:WorldCommand){dispatch({type:'COMMAND',command:next});}
  function add(kind:WorldKind){
+  // World primitives deliberately remain at the origin for established
+  // keyboard/inspector placement workflows. Drag-ready catalog assets use
+  // getWorldSpawnPosition instead, avoiding clashes with the starter world.
   let i=serial,id='sample-'+i;
   while(scene.nodes.some(n=>n.id===id)){i+=1;id='sample-'+i;}
-  try{
-   const position=getWorldSpawnPosition(scene,kind);
-   setSerial(i+1);
-   command({type:'ADD_NODE',node:{...primitive(id,kind),position}});
-   setPanel('closed');
-   setFileNotice('');
-   setCamera(c=>({...c,target:getWorldSpawnTarget(kind,position),distance:Math.min(c.distance,24)}));
-  }catch(error){
-   setFileNotice(error instanceof Error?error.message:'No available object placement');
-  }
+  setSerial(i+1);
+  command({type:'ADD_NODE',node:primitive(id,kind)});
+  setPanel('closed');
  }
  function addAsset(asset:StudioAsset){
   if(!asset.kind)return;
