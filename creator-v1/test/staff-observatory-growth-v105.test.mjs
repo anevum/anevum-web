@@ -29,7 +29,7 @@ function fixture(role='reviewer',opts={}){
       pendingProjects:2,pendingForum:0,projectReports:0,forumReports:0};
     throw Error('Unexpected SQL query');
    },
-   async all(){return {results:sql.includes('LIMIT 30')?[{day:new Date().toISOString().slice(0,10),n:1}]:[]}};
+   async all(){return {results:sql.includes('LIMIT 30')?[{day:new Date().toISOString().slice(0,10),n:1}]:[]}}};
  }};
  const env={MEMBER_DB:db,APEX_AUTH:{async fetch(){
   return new Response(JSON.stringify({
