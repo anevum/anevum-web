@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS support_v2_intents (
  checkout_url TEXT,
  created_at_ms INTEGER NOT NULL,
  updated_at_ms INTEGER NOT NULL,
+ last_reconciled_at_ms INTEGER NOT NULL DEFAULT 0,
  CHECK((interval='month' AND amount_cents=500) OR (interval='year' AND amount_cents=3600))
 );
 CREATE INDEX IF NOT EXISTS support_v2_intent_member_idx ON support_v2_intents(member_user_id,created_at_ms DESC);
