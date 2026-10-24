@@ -37,7 +37,7 @@ export function createAnevumGameHandlers({
    return {error:json({error:'Same-origin request required'},403)};
   if(await verifyCsrf(request)!==true)return {error:json({error:'Session authenticity required'},403)};
   const player=await authenticatePlayer(request);
-  if(typeof player!=='string'||player.length>160)return {error:json({error:'Authenticated game session required'},401)};
+  if(typeof player!=='string'||!player.trim()||player.length>160)return {error:json({error:'Authenticated game session required'},401)};
   const b=await boundedJson(request);
   if(!b)return {error:json({error:'Invalid request'},400)};
   return {player,b};
