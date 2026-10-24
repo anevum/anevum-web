@@ -156,6 +156,9 @@ test('NEXT layout aligns with NEXT design and preserves 320px navigation and red
  assert.match(NEXT_CSS,/@media\(prefers-reduced-motion:reduce\)/);
  assert.match(NEXT_CSS,/body\.ci-next \.ci-hero\{min-height:184px/);
  assert.match(NEXT_CSS,/\.trend \.bar-wrap:after\{white-space:nowrap/);
+ assert.match(NEXT_CLIENT,/Math\.ceil\(days\/\(compact\?4:7\)\)/);
+ assert.match(NEXT_CLIENT,/addEventListener\('resize',render/);
+ assert.match(NEXT_CSS,/sparse, legible UTC ticks/);
  assert.match(NEXT_CSS,/@media\(max-width:480px\)/);
  assert.match(NEXT_CSS,/\.ci-hero p\{display:none\}/);
 });
