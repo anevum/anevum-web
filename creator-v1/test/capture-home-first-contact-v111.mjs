@@ -27,7 +27,9 @@ const chromeProc=spawn(chrome,[
 ],{stdio:"ignore"});
 let ws=null;const evidence=[];
 try{
- const port=await until(()=>{const file=join(profile,"DevToolsActivePort");return existsSync(file)?readFileSync(file,"utf8").split("\n")[0]:null});
+ // GitHub shared runners can take longer to start Chromium while parallel suites run.
+ // Allow startup grace only; keep all page/interactivity deadlines unchanged.
+ const port=await until(()=>{const file=join(profile,"DevToolsActivePort");return existsSync(file)?readFileSync(file,"utf8").split("\n")[0]:null},45000);
  const url=await until(async()=>{const r=await fetch("http://127.0.0.1:"+port+"/json/list");return r.ok?(await r.json()).find(t=>t.type==="page")?.webSocketDebuggerUrl:null});
  ws=new WebSocket(url);let seq=0;const tasks=new Map();
  ws.addEventListener("message",({data})=>{const v=JSON.parse(String(data)),t=tasks.get(v.id);if(!t)return;tasks.delete(v.id);v.error?t.reject(Error(v.error.message)):t.resolve(v.result||{})});
