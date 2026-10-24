@@ -106,7 +106,10 @@ try{
     await page.goto(base+'/discover',{waitUntil:'networkidle'});
     await page.getByRole('button',{name:/Games Independent play/i}).first().click();
     await page.waitForURL(url=>url.pathname==='/discover'&&url.searchParams.get('category')==='games');
-    assert.equal(await page.locator('.p136-discover-results article').count(),1,'Category filters actual API records');
+    // Navigation commits the URL before the new query finishes. Wait for the
+    // actual compiled filtered render rather than asserting stale cards.
+    await page.waitForFunction(()=>document.querySelectorAll('.p136-discover-results article').length===1);
+    assert.equal(await page.getByRole('heading',{name:'SYNTHETIC TOOL WORKSHOP'}).count(),0,'Category excludes other categories');
     await page.getByRole('button',{name:'List',exact:true}).click();
     await page.locator('.p136-discover-results--compact').waitFor();
     await page.getByRole('button',{name:'Marked free'}).click();
