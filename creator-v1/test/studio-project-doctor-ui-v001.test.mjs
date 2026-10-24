@@ -39,7 +39,10 @@ test('UI and styles retain explicit mobile and reduced-motion coverage',()=>{
  assert.match(ui,/no longer reported/);
  assert.match(ui,/Suggested next step:/);
  assert.match(css,/\.cpd-next-step/);
- assert.match(css,/@media\(max-width:570px\)/);
+ assert.match(css,/@media\(max-width:700px\)/);
+ assert.match(css,/@media\(max-width:480px\)/);
+ assert.match(css,/@media\(max-width:350px\)/);
+ assert.match(css,/@media\(forced-colors:active\)/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
  assert.match(css,/:focus-visible/);
  assert.match(css,/\.cpd-diff-metrics/);
@@ -86,4 +89,24 @@ test('diagnostic navigation only selects valid local editor nodes, never saves o
  assert.match(css,/\.cpd-jump/);
  assert.match(css,/\.cpd-filter-empty/);
  assert.doesNotMatch(ui,/\bfetch\s*\(|dangerouslySetInnerHTML|eval\s*\(/);
+});
+
+
+test('NEXT Project Doctor uses the real mark and scoped Orbital Underground visual tokens',()=>{
+ assert.match(ui,/import \{OrbitalMark\} from '\.\.\/components\/OrbitalMark';/);
+ assert.match(ui,/<OrbitalMark className="cpd-symbol"\/>/);
+ assert.match(ui,/<OrbitalMark className="cpd-orbit-mark"\/>/);
+ assert.match(ui,/aria-labelledby=\{titleId\}/);
+ assert.match(ui,/data-cpd-state=\{outcome\}/);
+ assert.match(ui,/aria-controls=\{reportId\}/);
+ assert.match(ui,/PRIVATE BY DESIGN/);
+ assert.match(css,/--cpd-bone:#f4f0e6/);
+ assert.match(css,/--cpd-copper:#ebc28c/);
+ assert.match(css,/--cpd-violet:#c2b3ed/);
+ assert.match(css,/--cpd-focus:#b7e9f0/);
+ assert.match(css,/\.cpd-finding-content/);
+ assert.match(css,/\.cpd-totals/);
+ assert.match(css,/\.cpd-handoff/);
+ assert.doesNotMatch(css,/@import\b|url\(/);
+ assert.doesNotMatch(ui,/<img\b|https?:\/\/|CanvasRenderingContext2D/);
 });
