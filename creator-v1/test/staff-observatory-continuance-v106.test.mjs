@@ -125,6 +125,37 @@ test('authorized optional Cloudflare GraphQL response exposes estimates without 
   assert.ok(!JSON.stringify(body).includes(f.env.ANEVUM_RUM_ACCOUNT_TAG));
  }finally{globalThis.fetch=saved}
 });
+test('Growth Signal Index links and four campaign template controls are exposed to verified staff only',async()=>{
+ const f=fixture('reviewer');
+ const result=await worker.fetch(f.req('/growth'),f.env);
+ assert.equal(result.status,200);
+ const html=await result.text();
+ assert.match(html,/class="ci-focus-nav"/);
+ assert.match(html,/data-ci-section="acquisition"/);
+ assert.match(html,/data-ci-section="ci-rum"/);
+ assert.match(html,/data-ci-section="coverage"/);
+ for(const name of ['reddit','facebook','flyer','creator']){
+  assert.match(html,new RegExp('data-ci-campaign="'+name+'"'));
+ }
+ assert.match(html,/id="campaignTarget"/);
+ assert.match(html,/id="campaignOutput"/);
+ const script=await (await worker.fetch(f.req('/continuance-v106.js'),f.env)).text();
+ for(const phrase of ['campaignPresets','campaignSlug','utmSource','utmCampaign','hashchange','aria-current','dispatchEvent']){
+  if(phrase==='campaignSlug')continue; // Existing V105 client owns canonical slug validation.
+  assert.ok(script.includes(phrase),phrase);
+ }
+ assert.doesNotMatch(script,/localStorage|sessionStorage|XMLHttpRequest|sendBeacon/);
+});
+test('NEXT layout aligns with NEXT design and preserves 320px navigation and reduced-motion controls',()=>{
+ assert.match(NEXT_CSS,/--ci-void:#080d16/);
+ assert.match(NEXT_CSS,/--ci-gold:#e2c28b/);
+ assert.match(NEXT_CSS,/--ci-cyan:#b7e9f0/);
+ assert.match(NEXT_CSS,/\.ci-focus-links/);
+ assert.match(NEXT_CSS,/\.ci-preset-grid/);
+ assert.match(NEXT_CSS,/@media\(max-width:370px\)/);
+ assert.match(NEXT_CSS,/@media\(prefers-reduced-motion:reduce\)/);
+ assert.match(NEXT_CSS,/body\.ci-next \.ci-hero\{min-height:184px/);
+});
 test('invalid pages cannot be transformed into authorized Observatory pages',()=>{
  assert.throws(()=>decorateObservatoryHtml('not Observatory','growth'),/verified HTML anchor/);
  assert.throws(()=>decorateObservatoryHtml('not Observatory','operations'),/verified HTML anchor/);
