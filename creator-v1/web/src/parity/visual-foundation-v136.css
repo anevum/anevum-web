@@ -46,9 +46,9 @@ html[data-av-parity="v136-full"] .site-shell--home::before,html[data-av-parity="
 .p136-scene[data-active="true"] .p136-scene-stars{animation-play-state:running}
 .p136-scene-horizon{position:absolute;inset:0;background:linear-gradient(0deg,#040c189c,transparent 24%)}
 .p136-hero-shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,#030914ed 0%,#030914b8 23%,#040c1730 56%,transparent 78%),linear-gradient(0deg,#040b16 0%,transparent 30%)}
-.p136-hero-content{position:relative;z-index:2;grid-column:1;align-self:center;max-width:790px;padding:56px 30px 46px 48px}
+.p136-hero-content{position:relative;z-index:2;grid-column:1;align-self:center;max-width:860px;padding:56px 30px 46px 48px}
 .p136-hero-register{font-size:10px;letter-spacing:.24em;color:#a5e1ff;margin-bottom:22px!important}.p136-hero-register span{color:var(--p-violet)}
-.p136-hero h1{font-size:clamp(42px,3.6vw,64px);font-weight:650;line-height:1.08;letter-spacing:-.038em;color:#f5f6ff;text-shadow:0 3px 25px #000a;max-width:640px}
+.p136-hero h1{font-size:clamp(42px,3.6vw,64px);font-weight:650;line-height:1.08;letter-spacing:-.038em;color:#f5f6ff;text-shadow:0 3px 25px #000a;max-width:740px}
 .p136-hero h1 em{display:block;font-style:normal;color:#d7dfff}
 .p136-hero-intro{max-width:470px;font-size:15px;line-height:1.75;color:#c3cee2;margin-top:23px!important}
 .p136-hero-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:28px}

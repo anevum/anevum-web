@@ -70,7 +70,7 @@ try{
     assert.ok(layout.scroll<=width+1,'No horizontal overflow: '+JSON.stringify(layout));
     assert.equal(layout.h1Count,1);assert.equal(layout.dockCount,1,'One canonical IREN companion');
     assert.ok(layout.artLoaded,'Original environment loads');
-    if(width>=1440){assert.ok(layout.headingLines<=2.1,'Desktop headline remains two lines');assert.ok(layout.hero.height<=690,'Desktop hero retains concept density');}
+    if(width>=1440){assert.ok(layout.headingLines<=2.1,'Desktop headline remains two lines: '+JSON.stringify(layout));assert.ok(layout.hero.height<=690,'Desktop hero retains concept density');}
     assert.ok(!/Georgia|Cambria/.test(layout.headingFont),'Concept uses sans typography');
     assert.equal(layout.animation,'none','Reduced motion has a static scene');
     for(const rect of [layout.primary,layout.secondary]){assert.ok(rect.height>=44);assert.ok(rect.width>=44);assert.ok(rect.left>=0&&rect.right<=width);}
