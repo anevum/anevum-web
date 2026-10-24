@@ -117,3 +117,24 @@ test('NEXT Project Doctor uses the real mark and scoped Orbital Underground visu
  assert.doesNotMatch(css,/@import\b|url\(/);
  assert.doesNotMatch(ui,/<img\b|https?:\/\/|CanvasRenderingContext2D/);
 });
+
+
+test('local repair explanations remain disclosure-based, source-free and model-free',()=>{
+ assert.match(ui,/import \{localRepairGuide\} from '\.\.\/\.\.\/\.\.\/agent-quality-lab\/project-doctor-guidance-v001\.mjs';/);
+ assert.match(ui,/const guidance=localRepairGuide\(item\.code\)/);
+ assert.match(ui,/<details className="cpd-guide">/);
+ assert.match(ui,/<summary>Understand and verify/);
+ assert.match(ui,/guidance\.impact/);
+ assert.match(ui,/guidance\.steps\.map/);
+ assert.match(ui,/guidance\.verify/);
+ assert.match(ui,/guidance\.note/);
+ assert.match(ui,/NO AI REQUESTS/);
+ assert.match(ui,/0 MODEL CALLS/);
+ assert.match(ui,/V001\.7 \/ LOCAL/);
+ assert.match(css,/\.cpd-guide summary\{[^}]*min-height:44px/);
+ assert.match(css,/\.cpd-guide summary:focus-visible/);
+ assert.match(css,/\.cpd-guide-body/);
+ assert.match(css,/\.cpd-findings>li\{/);
+ assert.match(css,/\.cpd-guide-section li\{/);
+ assert.doesNotMatch(ui,/\bfetch\s*\(|WebSocket|EventSource|dangerouslySetInnerHTML|eval\s*\(/);
+});
