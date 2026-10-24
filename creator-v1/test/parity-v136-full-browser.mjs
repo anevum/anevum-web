@@ -90,7 +90,20 @@ try{
     record('responsive arrival '+width,layout);
     if(width===390){
       const stations=page.locator('.p136-console-wayfinder a[data-station]');
+      // World identity follows real keyboard focus, without changing routes.
+      const liveWorld=page.locator('.p136-living-world');
+      assert.equal(await liveWorld.getAttribute('data-geometry'),'atrium');
+      await stations.nth(1).focus();
+      await page.waitForFunction(()=>document.querySelector('.p136-living-world')?.dataset.geometry==='archive');
+      assert.equal(new URL(page.url()).pathname,'/','Preview must never navigate');
+      await stations.last().focus();
+      await page.waitForFunction(()=>document.querySelector('.p136-living-world')?.dataset.geometry==='forge');
+      await stations.nth(2).focus();
+      await page.waitForFunction(()=>document.querySelector('.p136-living-world')?.dataset.geometry==='relay');
       await stations.first().focus();
+      await page.waitForFunction(()=>document.querySelector('.p136-living-world')?.dataset.geometry==='atrium');
+      record('four spatial architectures follow keyboard preview with stable URL');
+
       await stations.first().press('ArrowRight');
       assert.equal(await stations.nth(1).evaluate(el=>el===document.activeElement),true,'Controller right focuses next station');
       await stations.nth(1).press('End');
