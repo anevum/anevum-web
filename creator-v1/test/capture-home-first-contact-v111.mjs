@@ -78,6 +78,7 @@ try{
     throw Error("V133_FIRST_LOOK_"+label+":"+JSON.stringify(firstLook));
   await evaluate('document.querySelector(".av133-first-look").scrollIntoView({block:"center",behavior:"instant"})');
   await screenshot("first-look-"+label);
+  await evaluate('window.scrollTo({top:0,behavior:"instant"})');
   evidence.push({label:"first-look-"+label,firstLook});
   if(width<=390){
    const orientation=await evaluate('(()=>{const b=document.querySelector(".av115-iren-console button").getBoundingClientRect(),d=document.querySelector(".ir80-dock").getBoundingClientRect();return {bottom:b.bottom,obstructed:b.left<d.right&&d.left<b.right&&b.top<d.bottom&&d.top<b.bottom}})()');
