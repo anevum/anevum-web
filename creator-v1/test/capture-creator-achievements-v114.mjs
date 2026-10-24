@@ -96,7 +96,7 @@ try{
  await click('.cav-editor button[type="submit"]');
  await until(()=>text('.cav-notice').then(x=>x.includes('Private draft saved')),'Private SQL save');
  assert.equal(await evaluate('document.querySelectorAll(".cav-draft").length'),1,'One saved mark');
- assert.equal(await evaluate('document.querySelector(".cav-editor input")?.disabled'),true,'Stable key locked after creation');
+ assert.equal(await evaluate('(()=>{const label=[...document.querySelectorAll(".cav-field")].find(x=>x.textContent.includes("Stable identifier"));return label?.querySelector("input")?.disabled;})()'),true,'Stable key locked after creation');
  // Simulate reload: persisted record must come from the server, not React memory.
  await navigate('/creator/studio/'+projectId+'/achievements');
  await until(()=>evaluate('document.querySelectorAll(".cav-draft").length===1'),'Saved mark survives full reload');
