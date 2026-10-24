@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS communication_subscribers (
  confirm_hash TEXT UNIQUE CHECK(confirm_hash IS NULL OR length(confirm_hash)=64),
  confirm_expires_at INTEGER,
  unsub_version INTEGER NOT NULL DEFAULT 1 CHECK(unsub_version>0),
+ manage_hash TEXT UNIQUE CHECK(manage_hash IS NULL OR length(manage_hash)=64),
+ manage_expires_at INTEGER,
  consent_version TEXT CHECK(consent_version IS NULL OR consent_version='v1'),
  consent_source TEXT CHECK(consent_source IS NULL OR consent_source='site-optin-v1'),
  consent_at INTEGER,
