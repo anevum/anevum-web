@@ -1,0 +1,11 @@
+.p136-spatial-surface{--spatial-x:0;--spatial-y:0;position:relative;isolation:isolate;min-width:0;transform-style:preserve-3d;perspective:1000px}
+.p136-spatial-surface::before{content:"";position:absolute;z-index:-1;inset:0;pointer-events:none;opacity:.62;border:1px solid #8addff28;border-radius:inherit;background:radial-gradient(circle at calc(50% + var(--spatial-x)*24%) calc(50% + var(--spatial-y)*24%),#78e0ff1a,transparent 60%);transition:opacity .2s}
+.p136-spatial-surface:focus-within::before,.p136-spatial-surface:hover::before{opacity:1;border-color:#8addff73}
+.p136-spatial-surface :is(a,button,input,textarea,select):focus-visible{outline:3px solid #8beaff;outline-offset:3px}
+html[data-av-parity="v136-full"] .p136-spatial-surface .st-create-path-grid>a,
+html[data-av-parity="v136-full"] .p136-spatial-surface .ch7-portals>a{position:relative;transition:border-color .22s,box-shadow .22s,transform .22s}
+html[data-av-parity="v136-full"] .p136-spatial-surface .st-create-path-grid>a:hover,
+html[data-av-parity="v136-full"] .p136-spatial-surface .ch7-portals>a:hover{transform:translateY(-3px);box-shadow:0 0 26px #5ed4ff2d,inset 0 1px #fff4}
+html[data-av-parity="v136-full"] .p136-spatial-profile{border-radius:14px;background:linear-gradient(135deg,#0c2232c9,#0a1533b5);border:1px solid #80ceff61}
+@media(prefers-reduced-motion:reduce){.p136-spatial-surface::before,.p136-spatial-surface :is(a,button){transition:none!important;transform:none!important}}
+@media(forced-colors:active){.p136-spatial-surface::before{display:none}.p136-spatial-surface{background:Canvas;color:CanvasText;border-color:CanvasText}}
