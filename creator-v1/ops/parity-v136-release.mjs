@@ -70,6 +70,7 @@ const allowed=new Set([
  'creator-v1/web/src/parity/controller-input-v136.ts',
  'creator-v1/web/src/parity/controller-bridge-v136.css',
  'creator-v1/test/parity-v136-controller.test.mjs',
+ 'docs/production/parity-v136-controller-integration-20261024.md',
  'creator-v1/web/src/components/Shell.tsx',
  'creator-v1/web/src/parity/ConsoleWayfinderV136.tsx',
  'creator-v1/web/src/parity/console-wayfinder-v136.css','creator-v1/web/src/pages/CinematicLandingPage.tsx',
