@@ -95,8 +95,19 @@ try{
   }
   const f=await fixture();
   const {page}=f;
+  for(const key of ['Control+k','Meta+k']){
+    await page.keyboard.press(key);
+    await page.locator('.portal-launcher').waitFor({state:'visible'});
+    assert.equal(await page.locator('#lnx-quick-dialog').evaluate(el=>el.open),false);
+    await page.keyboard.press('Alt+k');
+    assert.equal(await page.locator('#lnx-quick-dialog').evaluate(el=>el.open),false);
+    assert.equal(await page.locator('dialog[open]').count(),1);
+    await page.getByRole('button',{name:'Close quick navigation',exact:true}).click();
+    await page.locator('.portal-launcher').waitFor({state:'hidden'});
+    record(key+' remains owned by the original site-wide launcher');
+  }
   await page.locator('.lnx-quick-entry').focus();
-  await page.keyboard.press('Control+k');
+  await page.keyboard.press('Alt+k');
   await page.locator('#lnx-quick-dialog').waitFor({state:'visible'});
   await page.waitForFunction(()=>document.activeElement?.id==='lnx-quick-search');
   const before=requests.length;
@@ -114,7 +125,7 @@ try{
   await page.keyboard.press('Enter');
   await page.waitForURL(url=>url.searchParams.get('category')==='research');
   await page.waitForFunction(()=>document.activeElement?.id==='lnx-main');
-  record('Ctrl+K, local search and arrow/Enter navigate to a canonical district');
+  record('Alt+K, local search and arrow/Enter navigate to a canonical district');
   await openQuick(page);
   await page.locator('#lnx-quick-search').fill('no-such-destination');
   await page.getByText('No matching destinations.',{exact:true}).waitFor();
@@ -132,8 +143,13 @@ try{
   assert.equal(await page.evaluate(()=>document.querySelector('#lnx-quick-dialog')?.contains(document.activeElement)),true);
   record('Home/End and reverse Tab stay in the native modal');
   await page.keyboard.press('Control+k');
-  await page.locator('#lnx-quick-dialog').waitFor({state:'hidden'});
-  await page.keyboard.press('Meta+k');
+  await page.locator('.portal-launcher').waitFor({state:'visible'});
+  assert.equal(await page.locator('#lnx-quick-dialog').evaluate(el=>el.open),false);
+  assert.equal(await page.locator('dialog[open]').count(),1);
+  await page.getByRole('button',{name:'Close quick navigation',exact:true}).click();
+  await page.locator('.portal-launcher').waitFor({state:'hidden'});
+  record('Global shortcut hands off from Commons without stacking two modals');
+  await page.keyboard.press('Alt+k');
   await page.locator('#lnx-quick-dialog').waitFor({state:'visible'});
   await page.locator('#lnx-quick-search').fill('district atlas');
   await page.keyboard.press('Enter');
@@ -141,7 +157,7 @@ try{
   await page.waitForFunction(()=>document.activeElement?.id==='lnx-main');
   await page.goBack();
   await page.waitForURL(url=>url.searchParams.get('category')==='research'&&url.searchParams.get('view')==='signals');
-  record('Cmd+K changes views and browser history preserves the selected district');
+  record('Scoped navigation changes views and history preserves the selected district');
   await page.goto(base+'/__review/commons?category=tools&q=signal',{waitUntil:'networkidle'});
   await openQuick(page);
   await page.locator('#lnx-quick-search').fill('full discover');
@@ -162,7 +178,7 @@ try{
     const other=document.createElement('dialog');other.id='qa-other-modal';
     other.innerHTML='<button id="qa-other-focus">Other modal</button>';document.body.append(other);other.showModal();
   });
-  await page.keyboard.press('Control+k');
+  await page.keyboard.press('Alt+k');
   assert.equal(await page.locator('#lnx-quick-dialog').evaluate(el=>el.open),false);
   assert.equal(await page.locator('#qa-other-modal').evaluate(el=>el.open),true);
   await page.evaluate(()=>document.querySelector('#qa-other-modal').remove());

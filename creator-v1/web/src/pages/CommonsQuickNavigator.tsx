@@ -2,6 +2,7 @@
 import {useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {OrbitalMark} from '../components/OrbitalMark';
+import {isEditableTarget} from '../lib/portal-destinations';
 import {COMMONS_DISTRICTS, normalizeCommonsSearch, type CommonsPreviewQuery, type CommonsPreviewView} from '../lib/commons-next-model';
 import type {Category} from '../lib/api';
 
@@ -66,9 +67,18 @@ export function CommonsQuickNavigator({view, category, discoverPath, creatorsPat
 
   useEffect(() => {
     const shortcut = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || event.repeat || event.isComposing || event.altKey || event.shiftKey) return;
-      if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'k') return;
-      // A native modal or editable application surface owns its own shortcuts.
+      // Ctrl/Cmd+K and slash belong to the existing site-wide Shell launcher.
+      // Relinquish our modal before that launcher opens, without handling its key.
+      const globalCommand = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k' && !event.altKey;
+      const globalSlash = event.key === '/' && !event.ctrlKey && !event.metaKey && !event.altKey && !isEditableTarget(event.target);
+      if (dialog.current?.open && (globalCommand || globalSlash)) {
+        selected.current = true;
+        dialog.current.close();
+        return;
+      }
+      if (event.defaultPrevented || event.repeat || event.isComposing || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      // Physical KeyK also works with Option+K on keyboards producing a symbol.
+      if (!event.altKey || (event.code !== 'KeyK' && event.key.toLowerCase() !== 'k')) return;
       const target = event.target;
       if (!dialog.current?.open && target instanceof HTMLElement && target.closest('textarea, [contenteditable="true"]')) return;
       const occupied = Array.from(document.querySelectorAll('dialog[open], [role="dialog"][aria-modal="true"]'))
@@ -104,17 +114,18 @@ export function CommonsQuickNavigator({view, category, discoverPath, creatorsPat
   const close = () => {
     setOpened(false);
     setQuery('');
-    // Selection lets the existing Shell/page restore the new destination's focus.
-    // Cancellation returns to the invoker, including pointer-opened Safari dialogs.
+    // Selection and global handoff defer focus to the existing page/Shell.
+    // Cancellation restores a visible invoker, including pointer-opened Safari.
     if (!selected.current) {
-      const target = opener.current?.isConnected && opener.current !== document.body ? opener.current : trigger.current;
+      const visible = opener.current?.isConnected && opener.current.getClientRects().length > 0 && opener.current !== document.body;
+      const target = visible ? opener.current : trigger.current;
       target?.focus({preventScroll: true});
     }
   };
 
   return <>
-    <button ref={trigger} type="button" className="lnx-quick-entry" aria-haspopup="dialog" aria-expanded={opened} aria-controls="lnx-quick-dialog" aria-keyshortcuts="Control+K Meta+K" onClick={event => openNavigator(event.currentTarget)}>
-      <span>Quick Navigator</span><kbd>Ctrl / Cmd K</kbd>
+    <button ref={trigger} type="button" className="lnx-quick-entry" aria-haspopup="dialog" aria-expanded={opened} aria-controls="lnx-quick-dialog" aria-keyshortcuts="Alt+K" onClick={event => openNavigator(event.currentTarget)}>
+      <span>Quick Navigator</span><kbd>Alt K</kbd>
     </button>
     <dialog ref={dialog} id="lnx-quick-dialog" className="lnx-quick-dialog" aria-modal="true" aria-labelledby="lnx-quick-title" aria-describedby="lnx-quick-help" onClose={close}>
       <div className="lnx-quick-panel">
