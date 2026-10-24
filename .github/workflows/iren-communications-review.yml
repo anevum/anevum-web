@@ -4,6 +4,7 @@ on:
     paths:
       - 'creator-v1/communications/**'
       - 'creator-v1/test/iren-communications-v026.test.mjs'
+      - 'creator-v1/test/iren-communications-d1-lifecycle.test.mjs'
       - 'creator-v1/web/src/components/EmailUpdatesOptIn.tsx'
       - 'creator-v1/web/src/pages/EmailUpdatePreferencesPage.tsx'
       - '.github/workflows/iren-communications-review.yml'
@@ -22,3 +23,5 @@ jobs:
         run: node --check creator-v1/communications/worker.mjs
       - name: Verify isolated consent, routing and preference contracts
         run: node --test creator-v1/test/iren-communications-v026.test.mjs
+      - name: Exercise actual SQLite schema and consent lifecycle with no network
+        run: node --test creator-v1/test/iren-communications-d1-lifecycle.test.mjs
