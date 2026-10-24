@@ -116,7 +116,7 @@ function SessionStudio({id,mode}:{id:string;mode:Mode}){
   {mode==='list'&&<section className="st-panel st-create-paths" aria-label="Choose your creation workflow">
    <div className="st-section-head"><div><p className="st-kicker">CREATOR STUDIO / START HERE</p>
     <h2>One identity. Three ways to begin.</h2></div></div>
-   <div className="st-create-path-grid">
+   <div className="st-create-path-grid p136-spatial-surface" data-spatial-surface="v136.008">
     <Link to="/studio/new"><strong>01 / PROJECT RECORD</strong><span>Describe and organize work privately. Attach eligible files when your account's upload capability is enabled.</span><small>PRIVATE DRAFT ↗</small></Link>
     {nativeCreatorEnabled?<Link to="/studio/packages"><strong>02 / PLAYABLE BUILD</strong><span>Prepare a browser-ready ZIP or standalone HTML file. Playtest the isolated build, then submit the exact revision for independent review.</span><small>OPEN PLAYABLE LIBRARY ↗</small></Link>:
      <a href="/upload/v3"><strong>02 / PLAYABLE BUILD</strong><span>Open the existing separate Creator Uplink. Native integration is not active in this release.</span><small>OPEN EXISTING UPLINK ↗</small></a>}
