@@ -6,6 +6,10 @@ on:
       - 'creator-v1/test/iren-communications-v026.test.mjs'
       - 'creator-v1/test/iren-communications-d1-lifecycle.test.mjs'
       - 'creator-v1/test/iren-weekly-discovery-preview.test.mjs'
+      - 'creator-v1/test/iren-release-archive-v026.test.mjs'
+      - 'creator-v1/web/src/lib/release-bulletins.ts'
+      - 'creator-v1/web/public/communications/updates.v1.json'
+      - 'creator-v1/web/src/pages/ReleaseUpdatesPage.tsx'
       - 'creator-v1/web/src/components/EmailUpdatesOptIn.tsx'
       - 'creator-v1/web/src/pages/EmailUpdatePreferencesPage.tsx'
       - '.github/workflows/iren-communications-review.yml'
@@ -17,6 +21,9 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -28,3 +35,13 @@ jobs:
         run: node --test creator-v1/test/iren-communications-d1-lifecycle.test.mjs
       - name: Verify weekly digest preview uses approved public releases only
         run: node --test creator-v1/test/iren-weekly-discovery-preview.test.mjs
+      - name: Verify public release archive and single IREN navigation
+        run: node --experimental-strip-types --test creator-v1/test/iren-release-archive-v026.test.mjs
+      - name: Install project toolchain without lifecycle scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Typecheck real IREN and communications React screens
+        run: npm run check:creator-v1-web
+      - name: Compile default-disabled site and opt-in UI review build
+        run: |
+          npm run build:creator-v1-web
+          VITE_ANEVUM_EMAIL_UPDATES=true npm run build:creator-v1-web
