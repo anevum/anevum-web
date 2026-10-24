@@ -340,8 +340,13 @@ try {
     await mobile.page.locator('.lnx-atlas-map').waitFor({state:'visible'});
     await mobile.page.getByRole('button',{name:'Use device default'}).click();
     await mobile.page.waitForURL(url=>url.searchParams.get('atlas')===null);
+    // The URL may settle one render ahead of React's responsive default.
+    // Wait for *both* the selected state and focus before asserting either.
+    await mobile.page.waitForFunction(() => {
+      const selected = document.querySelector('.lnx-atlas-controls button[aria-pressed="true"]');
+      return selected?.textContent?.includes('Accessible list') && document.activeElement === selected;
+    });
     assert.equal(await list.getAttribute('aria-pressed'),'true');
-    await mobile.page.waitForFunction(() => document.querySelector('.lnx-atlas-controls button[aria-pressed="true"]')===document.activeElement);
     assert.equal(await list.evaluate(el=>el===document.activeElement),true,'Device default restores focus to the active layout control');
     record('Atlas history restores map selection; device default returns to accessible list');
     await mobile.page.locator('.lnx-atlas-row').first().click();
