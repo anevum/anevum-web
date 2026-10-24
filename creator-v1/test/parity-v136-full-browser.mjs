@@ -115,10 +115,15 @@ try{
   await page.goto(base,{waitUntil:'networkidle'});
   await page.locator('.p136-living-world[data-renderer="vector"]').waitFor();
   await page.waitForFunction(()=>document.querySelector('.p136-living-world').dataset.motion==='true');
-  await page.getByRole('button',{name:'Pause atmospheric animation',exact:true}).click();
-  assert.equal(await page.getByRole('button',{name:'Pause atmospheric animation',exact:true}).getAttribute('aria-pressed'),'true');
+  await page.getByRole('button',{name:'Open site navigation',exact:true}).click();
+  await page.locator('#av79-navigation[open]').waitFor();
+  const preference=page.getByRole('button',{name:'Atmospheric animation',exact:true});
+  await preference.click();
+  assert.equal(await preference.getAttribute('aria-pressed'),'false','Menu preference disables motion');
   await page.waitForFunction(()=>document.querySelector('.p136-living-world').dataset.motion==='false');
-  await page.getByRole('button',{name:'Pause atmospheric animation',exact:true}).click();
+  await preference.click();
+  assert.equal(await preference.getAttribute('aria-pressed'),'true','Menu preference restores motion');
+  await page.getByRole('button',{name:'Close navigation',exact:true}).click();
   await page.emulateMedia({reducedMotion:'reduce'});
   await page.waitForFunction(()=>document.querySelector('.p136-living-world').dataset.motion==='false');
   await page.getByRole('link',{name:'Explore projects',exact:true}).press('Tab');
