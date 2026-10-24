@@ -56,3 +56,5 @@ Desktop and original phone PNG inspection identified excess blank editor height 
 ## Source-bound typography corrections
 
 Reviewed real 1440px Home, Discover and Community screenshots and found two concrete inconsistencies: Community hero used an italic emphasis line and a lower serif section title; Discover network-error panels retained older serif display type. V134 now applies consistent sans typography and a non-italic cyan/violet semantic emphasis gradient, plus a quieter error panel and softened portal cards. The actual compiled browser suite asserts computed font-style and font-family at 1440px, 390px and 320px, including forced-color fallback. These changes remain opt-in and do not alter editorial copy or real user data.
+
+The second real screenshot pass also exposed a legacy serif heading in the nested public Community guest/member card (mc-own), outside the original ch7 component family. V134 now scopes a consistent sans title and quieter glass treatment to that actual module, with responsive computed-style assertions. This reinforces the need to validate the entire rendered component tree, not just top-level section names.
