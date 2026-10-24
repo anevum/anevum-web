@@ -36,6 +36,7 @@ import SupporterCollectionPage from './pages/SupporterCollectionPage';
 const WorkbenchAlphaPage=lazy(()=>import("./pages/WorkbenchAlpha").then(m=>({default:m.WorkbenchAlphaPage})));
 const NativeCreatorStudioPage=lazy(()=>import("./pages/NativeCreatorStudio").then(m=>({default:m.NativeCreatorStudioPage})));
 const CreatorWorkspacePage=lazy(()=>import("./pages/CreatorStudioWorkspaceV109").then(m=>({default:m.CreatorStudioWorkspacePage})));
+const CreatorVisualReviewPageV115=lazy(()=>import("./pages/CreatorStudioVisualReviewV115").then(m=>({default:m.CreatorStudioVisualReviewV115})));
 const NativePackagePlayerPage=lazy(()=>import("./pages/NativeCreatorStudio").then(m=>({default:m.NativePackagePlayerPage})));
 const creatorFallback=<LoadingState label="Opening Creator Studio"/>;
 const PublicBoardsPage = lazy(() => import("./pages/PublicBoardsPage").then(mod=>({default:mod.PublicBoardsPage})));
@@ -99,6 +100,7 @@ export default function App(){
     <Route path="studio/alpha" element={<PublicCreatorAlphaPage/>}/>
     <Route path="studio/workbench" element={<Suspense fallback={creatorFallback}><WorkbenchAlphaPage/></Suspense>}/>
     <Route path="studio/workspace" element={import.meta.env.VITE_CREATOR_WORKSPACE_V109==='true'?<Suspense fallback={creatorFallback}><CreatorWorkspacePage/></Suspense>:<Navigate to="/studio" replace/>}/>
+     <Route path="studio/visual-review" element={import.meta.env.VITE_CREATOR_VISUAL_REVIEW_V115==='true'?<Suspense fallback={creatorFallback}><CreatorVisualReviewPageV115/></Suspense>:<Navigate to="/studio" replace/>}/>
     <Route path="studio/packages" element={<Suspense fallback={creatorFallback}><NativeCreatorStudioPage/></Suspense>}/>
     <Route path="studio/packages/new" element={<Suspense fallback={creatorFallback}><NativeCreatorStudioPage mode="new"/></Suspense>}/>
     <Route path="studio/packages/review" element={<Suspense fallback={creatorFallback}><NativeCreatorStudioPage mode="review"/></Suspense>}/>
