@@ -38,7 +38,7 @@ function noOverflow(result,width,name){
   assert.ok(result.scroll<=width+1,name+' horizontal overflow: '+JSON.stringify(result));
   record(name+' width',result);
 }
-async function openContext(width,height=900){
+async function openContext(width,height=900,{synthetic=false}={}){
   const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:2,reducedMotion:'reduce'});
   context.setDefaultTimeout(12000);
   await context.route('**/*',async route=>{
@@ -46,7 +46,22 @@ async function openContext(width,height=900){
     if(url.origin!==base){forbidden.push({reason:'external',url:req.url()});await route.abort();return;}
     if(!['GET','HEAD'].includes(req.method())){forbidden.push({reason:'write',method:req.method(),url:req.url()});await route.abort();return;}
     if(url.pathname.startsWith('/api/')){
-      apiCalls.push({path:url.pathname,method:req.method()});
+      apiCalls.push({path:url.pathname,method:req.method(),synthetic});
+      if(synthetic){
+        const pageOf=(items)=>({items,count:items.length,nextCursor:null});
+        const sampleProject={
+          id:'synthetic-visual-v135',slug:'synthetic-visual-v135',title:'SYNTHETIC SOURCE QA RECORD',
+          summary:'Local fixture only. Never published or used in public marketing.',
+          category:'tools',sourceUrl:null,demoUrl:null,freeToUse:true,license:'MIT',
+          publishedAt:'2026-10-24T12:00:00Z',creatorHandle:'fixture_creator',creatorName:'Synthetic Fixture'
+        };
+        const sampleCreator={handle:'fixture_creator',displayName:'Synthetic Fixture',publishedProjects:1};
+        const path=url.pathname;
+        const value=path==='/api/v1/projects'?pageOf([sampleProject]):
+          path==='/api/v1/categories'?{categories:[{category:'tools',count:1}]}:
+          path==='/api/v1/creators'?pageOf([sampleCreator]):null;
+        if(value){await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(value)});return;}
+      }
       const session=url.pathname==='/api/v1/member/auth/get-session';
       await route.fulfill({status:session?200:404,contentType:'application/json',body:session?'null':'{"error":"Offline preview API"}'});
       return;
@@ -82,6 +97,7 @@ try{
     assert.ok(summary.properMark,'Canonical SVG mark is rendered');
     assert.equal(summary.iframeCount,0,'Default depth scene is visual CSS');
     assert.equal(summary.tabs.length,3,'Three working file tabs');
+    assert.equal(await page.locator('.av134-tree .av135-file-glyph svg').count(),3,'New vector file glyphs are rendered by the real editor');
     noOverflow(summary,width,'lab '+width);
     assert.ok(await page.locator('.av134-highlight .av134-token--tag').count()>0,'HTML tags are colorized');
     await screenshot(page,'visual-system-'+width);
@@ -121,7 +137,8 @@ try{
     for(const [path,name,contentSelector] of [
       ['/','home','.av79-home'],
       ['/discover','discover','.av73-discover'],
-      ['/community','community','.ch7-hub']
+      ['/community','community','.ch7-hub'],
+      ['/creators','creators','.portal-creators']
     ]){
       await page.goto(base+path,{waitUntil:'domcontentloaded'});
       await page.locator('.av9-header').waitFor();
@@ -135,6 +152,21 @@ try{
       assert.equal(result.enabled,'v134');
       assert.match(result.headerBackground,/gradient/,'Header renders real visual layer');
       noOverflow(result,width,'sitewide '+name+' '+width);
+      const edgeSelector=name==='community'?'.ch7-hero > .av135-edge':
+        name==='discover'?'.portal-search-hall > .av135-edge':
+        name==='creators'?'.portal-page-heading > .av135-edge':null;
+      if(edgeSelector){
+        await page.waitForFunction(()=>getComputedStyle(document.documentElement).getPropertyValue('--av135-surface').trim()!=='');
+        const edge=await page.locator(edgeSelector).first().evaluate(node=>({
+          pointerEvents:getComputedStyle(node).pointerEvents,
+          borderTopWidth:getComputedStyle(node).borderTopWidth,
+          position:getComputedStyle(node).position
+        }));
+        assert.equal(edge.pointerEvents,'none','Glass edge cannot intercept buttons/links');
+        assert.equal(edge.borderTopWidth,'1px','Real 1px high-DPI edge is present');
+        assert.equal(edge.position,'absolute','Edge is a true positioned vector layer');
+        record('V135 real '+name+' edge '+width,edge);
+      }
       if(name==='community'){
         const actual=await page.locator('.ch7-hero h1 em').evaluate(el=>({
           style:getComputedStyle(el).fontStyle,
@@ -160,6 +192,38 @@ try{
       await page.screenshot({path:join(output,filename),fullPage:false,animations:'disabled'});
       captures.push(filename);
     }
+    await context.close();
+  }
+  // An isolated synthetic source fixture checks actual registered components
+  // without implying these records exist on the live website.
+  for(const width of [1440,390,320]){
+    const {page,context}=await openContext(width,width===1440?900:844,{synthetic:true});
+    await page.goto(base+'/discover',{waitUntil:'domcontentloaded'});
+    await page.locator('.av73-project-card').first().waitFor();
+    const project=await page.locator('.av73-project-card').first().evaluate(node=>{
+      const edge=node.querySelector('.av135-edge');
+      return {
+        title:node.querySelector('h3')?.textContent?.trim(),
+        border:edge?getComputedStyle(edge).borderTopWidth:null,
+        interactive:edge?getComputedStyle(edge).pointerEvents:null
+      };
+    });
+    assert.equal(project.title,'SYNTHETIC SOURCE QA RECORD');
+    assert.equal(project.border,'1px');
+    assert.equal(project.interactive,'none');
+    const projectOverflow=await page.evaluate(()=>document.documentElement.scrollWidth);
+    assert.ok(projectOverflow<=width+1,'Synthetic project card overflows '+width);
+    record('V135 synthetic-only published-card integration '+width,project);
+    await page.goto(base+'/creators',{waitUntil:'domcontentloaded'});
+    await page.locator('.portal-creator-tile').first().waitFor();
+    const creator=await page.locator('.portal-creator-tile').first().evaluate(node=>({
+      edge:!!node.querySelector('.av135-edge'),
+      label:node.textContent?.includes('Synthetic Fixture')
+    }));
+    assert.ok(creator.edge&&creator.label,'Real creator tile has reusable edge over local fixture data');
+    const creatorOverflow=await page.evaluate(()=>document.documentElement.scrollWidth);
+    assert.ok(creatorOverflow<=width+1,'Synthetic creator tile overflows '+width);
+    record('V135 synthetic-only creator-card integration '+width,creator);
     await context.close();
   }
   assert.deepEqual(forbidden,[],'No external or write requests');
