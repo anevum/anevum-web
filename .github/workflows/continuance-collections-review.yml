@@ -7,6 +7,7 @@ on:
       - 'creator-v1/web/src/pages/canonical-saved-works.css'
       - 'creator-v1/web/src/lib/saved-works-browse.ts'
       - 'creator-v1/test/saved-works-organization-v010.test.mjs'
+      - 'creator-v1/test/saved-works-next-browser.mjs'
 permissions:
   contents: read
 concurrency:
@@ -38,7 +39,7 @@ jobs:
           node --input-type=module <<'JS'
           import {execFileSync} from 'node:child_process';
           const paths=execFileSync('git',['diff','--name-only',process.env.BASE_SHA,'HEAD'],{encoding:'utf8'}).trim().split('\n');
-          const allowed=/^(?:\.github\/workflows\/continuance-collections-review\.yml|creator-v1\/web\/src\/pages\/(?:CanonicalSavedWorksPage\.tsx|canonical-saved-works\.css)|creator-v1\/web\/src\/lib\/saved-works-browse\.ts|creator-v1\/test\/saved-works-organization-v010\.test\.mjs)$/;
+          const allowed=/^(?:\.github\/workflows\/continuance-collections-review\.yml|creator-v1\/web\/src\/pages\/(?:CanonicalSavedWorksPage\.tsx|canonical-saved-works\.css)|creator-v1\/web\/src\/lib\/saved-works-browse\.ts|creator-v1\/test\/saved-works-organization-v010\.test\.mjs|saved-works-next-browser\.mjs)$/;
           for(const p of paths)if(!allowed.test(p))throw Error('Outside isolated collections review: '+p);
           JS
       - name: Install pinned project dependencies
@@ -49,3 +50,18 @@ jobs:
         run: npm run check:creator-v1-web
       - name: Build existing app without deployment
         run: npm run build:creator-v1-web
+
+      - name: Install browser tooling for synthetic local acceptance
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.56.1
+          npx playwright install chromium
+      - name: Exercise actual compiled saved library at 1440/390/320
+        run: node creator-v1/test/saved-works-next-browser.mjs
+      - name: Retain labelled UI screenshots and receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: collections-review-${{ github.event.pull_request.head.sha }}
+          path: /tmp/anevum-saved-review
+          if-no-files-found: warn
+          retention-days: 14
