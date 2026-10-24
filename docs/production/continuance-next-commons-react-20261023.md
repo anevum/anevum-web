@@ -1,12 +1,38 @@
-# ANEVUM NEXT — Living Commons React integration slice 01
+# ANEVUM NEXT — Living Commons React integration and browser review
 
-**Session:** `ANEVUM.WEB.BUILD.2026-10-23.006.LIVING-COMMONS-REACT-BRIDGE`
+**Current session:** `ANEVUM.WEB.BUILD.2026-10-23.007.LIVING-COMMONS-REACT-BRIDGE`
+**Original integration session:** `ANEVUM.WEB.BUILD.2026-10-23.006.LIVING-COMMONS-REACT-BRIDGE`
 **Status:** IMPLEMENTED AS OPT-IN REACT REVIEW ONLY; NO LIVE ROUTE REPLACEMENT, NO PRODUCTION DEPLOY, NO DB OR ACCOUNT MUTATION.
 **Source lineage:** Protected V131 exact candidate -> NEXT foundation #676 -> profile/community #677 -> Living Commons prototype #678 -> this narrow real-data React bridge.
 
+## Continuation 007 — compiled React polish and recovery
+
+Continued the existing PR #679 branch from `dca020a410ba28fe5e8c704ea26531045fa325b4`. The previous checkpoint had source/type/build checks but no compiled React browser captures; earlier concept images were standalone HTML. This continuation adds the actual browser fixture and fixes defects found in that review.
+
+### Changes
+
+- Tightened the orbital hero and mobile typography so the destinations appear earlier. Preserved the genuine repository OrbitalMark, established colour language, existing high-resolution CosmicArtwork and one Shell-owned IREN.
+- Repaired the overly broad project-art span selector, refined card hierarchy and focus states, added honest loading skeletons, and moved implementation notes into a collapsed review note.
+- Made Atlas presentation agree with its controls: small screens initially select the list; both list and a readable two-column spatial map remain available. Counts still come only from the category API.
+- Added independent retry controls for projects, discussions, category totals, creator results and status. Stable focusable result regions keep keyboard focus in place when a retry replaces its error button with loading content. Status retry closes discussion visibility until the authoritative flag is verified again.
+- Added live operating-system reduced-motion observation. Changing the preference while the page remains open updates animation state and the control label; explicit pause and hidden-document suspension remain supported.
+- Preserved bounded search/category state in full Discover links and project return links, and creator search in full-directory links. The existing `safeReturnPath` intentionally rejects review-only routes, so project details return to **filtered public Discover**, not an expanded route allowlist. Unicode/control-character handling respects the existing 72-unit input and 512-character encoded return-path budgets.
+- Local view, district, search and browser-history changes land at the selected content after the Shell's navigation effect. Project filters are explicitly distinguished from the independent discussion sort.
+- Context Lens now changes its description and destinations for the Signal Board, Atlas, creators and selected project field.
+
+### Evidence and its limits
+
+The new `creator-v1/test/continuance-next-community-browser.mjs` serves an immutable temporary copy of the real flagged Vite build on loopback. The default browser fixture uses conspicuously labelled synthetic public responses; it rejects external requests, private profile reads and mutations. The final local Chromium run passed **37 recorded checks** and retained **11 labelled captures**. It checks the three destinations at **1440, 390 and 320px**, navigation/history, query-preserving return links, loading/empty/error/closed states, independent retries, keyboard recovery and skip focus, mobile map/list parity, OS reduced-motion changes and the single existing IREN/main landmark. It captures labelled 1440/390 screenshots and a JSON receipt. Source/model contracts total **24 passing tests**; TypeScript and the unflagged/flagged bundle-isolation builds passed locally.
+
+Read-only production requests during this continuation returned HTTP 200 for `/api/v1/status`, `/api/v1/projects`, `/api/v1/categories` and `/api/v1/creators`. The public response at that point reported **one published project, zero public creator channels and `communityPosts: false`**. These are endpoint observations, not a claim about all signed-in ANEVUM features. A separate optional `--public-snapshot DIRECTORY --capture-only` harness mode renders those actual saved responses with an explicit **public API snapshot / local review / not deployed** label. Synthetic conversations are never represented as current public content.
+
+The read-only PR workflow now retains browser screenshots and the source-SHA receipt as a GitHub Actions artifact. Local receipts record tracked working-tree changes; only the subsequent clean PR-head Actions run is exact-commit CI evidence. The original OV03 foundation allowlist is unchanged and remains a separate known cumulative-stack failure, not a waived release gate. Browser checks do not certify physical iPhone Safari, screen-reader acceptance, signed-in role isolation or production release readiness.
+
+**Release reconciliation:** #655 is completed and records founder-accepted V131 production at 100%. This NEXT continuation changes no production deployment, Worker, authentication, database, XP or migration. A future NEXT release requires its own reconciled successor candidate and authorization; do not reuse the completed V131 approval as NEXT approval.
+
 ## Decision and recommendation
 
-Adopt **Signal Board first, District Atlas second** as the recommended *review design*. The Atlas is the differentiated spatial experience, but public projects, constructive discussion and a clear participation path should be immediately accessible. A third People & Worlds view presents existing approved creator channels. Do not convert this owner recommendation into production publication without #335's 1440/390 review and independent #655 release approval.
+Adopt **Signal Board first, District Atlas second** as the accepted direction for this review. The Atlas is the differentiated spatial experience, but public projects, constructive discussion and a clear participation path should be immediately accessible. A third People & Worlds view presents existing approved creator channels. Production adoption still requires #335's visual acceptance and a separately authorized successor release; #655 records the completed V131 release.
 
 ## Real implementation
 

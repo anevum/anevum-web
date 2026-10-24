@@ -21,8 +21,8 @@ test('live Community uses only existing public canonical read APIs',()=>{
 });
 test('discussion feature flags fail closed and are server sourced',()=>{
  assert.match(page,/moderatedPostsEnabled\(status\.data\)/);
- assert.match(page,/view!=='signals'\|\|!discussionAvailable/);
- assert.match(page,/\.status===404/);
+ assert.match(page,/view\s*!==\s*'signals'\s*\|\|\s*!discussionAvailable/);
+ assert.match(page,/\.status\s*===\s*404/);
 });
 test('read-only public directories are not mistaken for private member worlds',()=>{
  assert.match(page,/Private member worlds remain opt-in/);

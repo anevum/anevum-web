@@ -9,6 +9,7 @@ on:
       - 'creator-v1/web/src/lib/commons-next-model.ts'
       - 'creator-v1/test/continuance-next-community-model.test.mjs'
       - 'creator-v1/test/continuance-next-community-react.test.mjs'
+      - 'creator-v1/test/continuance-next-community-browser.mjs'
       - 'docs/production/continuance-next-commons-react-20261023.md'
 permissions:
   contents: read
@@ -54,6 +55,7 @@ jobs:
             ['creator-v1/web/src/lib/commons-next-model.ts','A'],
             ['creator-v1/test/continuance-next-community-model.test.mjs','A'],
             ['creator-v1/test/continuance-next-community-react.test.mjs','A'],
+            ['creator-v1/test/continuance-next-community-browser.mjs','A'],
             ['docs/production/continuance-next-commons-react-20261023.md','A'],
             ['.github/workflows/continuance-next-commons-react-review.yml','A']
           ]);
@@ -96,3 +98,17 @@ jobs:
           const paths=readAll('creator-v1/dist/web').filter(x=>/\.(js|css)$/.test(x));
           if(!paths.some(file=>fs.readFileSync(file,'utf8').includes('lnx-root')))throw Error('Review bundle is missing NEXT Commons');
           JS
+      - name: Install pinned browser review tooling
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Review compiled React on desktop and mobile with synthetic public fixtures
+        run: node creator-v1/test/continuance-next-community-browser.mjs --output "$RUNNER_TEMP/anevum-commons-react-review"
+      - name: Retain labelled compiled React captures and browser receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: living-commons-react-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/anevum-commons-react-review
+          if-no-files-found: warn
+          retention-days: 14
