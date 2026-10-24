@@ -19,7 +19,7 @@ on:
       - 'creator-v1/web/src/pages/NativeCreatorStudio.tsx'
       - 'creator-v1/source-ide/**'
   push:
-    branches: ['release/parity-v136-home-navigation-20261024-001', 'release/parity-v136-living-world-20261024-005']
+    branches: ['release/parity-v136-home-navigation-20261024-001', 'release/parity-v136-living-world-20261024-005', 'release/parity-v136-institute-20261024-011']
 permissions:
   contents: read
   actions: read
@@ -29,7 +29,7 @@ concurrency:
 jobs:
   verify-package:
     if: >-
-      github.event_name == 'pull_request' || (github.event.head_commit.message == 'release(parity-v136): upload verified homepage candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified living-world candidate')
+      github.event_name == 'pull_request' || (github.event.head_commit.message == 'release(parity-v136): upload verified homepage candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified living-world candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified institute candidate')
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -91,7 +91,7 @@ jobs:
   upload-inactive:
     needs: verify-package
     if: >-
-      github.event_name == 'push' && (github.event.head_commit.message == 'release(parity-v136): upload verified homepage candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified living-world candidate')
+      github.event_name == 'push' && (github.event.head_commit.message == 'release(parity-v136): upload verified homepage candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified living-world candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified institute candidate')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
