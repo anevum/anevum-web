@@ -3,6 +3,10 @@ on:
   pull_request:
     paths:
       - "creator-v1/operations/anevum-iren-staff-observatory-v105.mjs"
+      - "creator-v1/operations/anevum-iren-staff-observatory-v106.mjs"
+      - "creator-v1/operations/anevum-observatory-continuance-v106-assets.mjs"
+      - "creator-v1/test/staff-observatory-continuance-v106.test.mjs"
+      - "creator-v1/test/capture-staff-continuance-v106.mjs"
       - "creator-v1/analytics/growth-events-v1.mjs"
       - "creator-v1/test/growth-events-v1.test.mjs"
       - "creator-v1/test/staff-observatory-growth-v105.test.mjs"
@@ -23,6 +27,10 @@ jobs:
       - name: Verify isolated growth Worker and fixture syntax
         run: |
           node --check creator-v1/operations/anevum-iren-staff-observatory-v105.mjs
+          node --check creator-v1/operations/anevum-iren-staff-observatory-v106.mjs
+          node --check creator-v1/operations/anevum-observatory-continuance-v106-assets.mjs
+          node --check creator-v1/test/staff-observatory-continuance-v106.test.mjs
+          node --check creator-v1/test/capture-staff-continuance-v106.mjs
           node --check creator-v1/analytics/growth-events-v1.mjs
           node --check creator-v1/test/growth-events-v1.test.mjs
           node --check creator-v1/test/staff-observatory-growth-v105.test.mjs
@@ -30,6 +38,7 @@ jobs:
       - name: Check aggregate metrics, owner/reviewer authorization, and legacy protection
         run: |
           node --test creator-v1/test/staff-observatory-growth-v105.test.mjs
+          node --test creator-v1/test/staff-observatory-continuance-v106.test.mjs
           node --test creator-v1/test/growth-events-v1.test.mjs
           node --test creator-v1/test/staff-observatory-cleanup-v104.test.mjs
       - name: Inspect actual Chromium growth experience at 1440, 390, and 320
@@ -47,6 +56,22 @@ jobs:
           test -s "$RUNNER_TEMP/growth-v105/reviewer-phone.png"
           test -s "$RUNNER_TEMP/growth-v105/offline-phone.png"
           test -s "$RUNNER_TEMP/growth-v105/acceptance.json"
+      - name: Capture V106 NEXT Observatory and growth views at 1440, 390 and 320
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$chrome"
+          node creator-v1/test/capture-staff-continuance-v106.mjs "$chrome" "$RUNNER_TEMP/observatory-v106"
+          test -s "$RUNNER_TEMP/observatory-v106/operations-next-owner-desktop.png"
+          test -s "$RUNNER_TEMP/observatory-v106/operations-next-owner-phone.png"
+          test -s "$RUNNER_TEMP/observatory-v106/operations-next-owner-small-phone.png"
+          test -s "$RUNNER_TEMP/observatory-v106/operations-next-reviewer-phone.png"
+          test -s "$RUNNER_TEMP/observatory-v106/growth-next-owner-desktop.png"
+          test -s "$RUNNER_TEMP/observatory-v106/growth-next-owner-phone.png"
+          test -s "$RUNNER_TEMP/observatory-v106/growth-next-owner-small-phone.png"
+          test -s "$RUNNER_TEMP/observatory-v106/growth-next-reviewer-phone.png"
+          test -s "$RUNNER_TEMP/observatory-v106/acceptance.json"
       - name: Assert synthetic-only evidence and no production calls
         run: |
           node --input-type=module - "$RUNNER_TEMP/growth-v105/acceptance.json" <<'JS'
@@ -60,5 +85,12 @@ jobs:
         with:
           name: iren-growth-observatory-v105-visual-review
           path: ${{ runner.temp }}/growth-v105/
+          retention-days: 14
+          if-no-files-found: warn
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: iren-observatory-continuance-v106-visual-review
+          path: ${{ runner.temp }}/observatory-v106/
           retention-days: 14
           if-no-files-found: warn
