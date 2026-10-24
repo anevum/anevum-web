@@ -1,5 +1,6 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
-import {cinematicFrameIndex,CINEMATIC_DECODE_CACHE_LIMIT,type CinematicSequence} from './CinematicMediaContractV136';
+import {CINEMATIC_DECODE_CACHE_LIMIT,type CinematicSequence} from './CinematicMediaContractV136';
+import {cinematicFrameIndex} from './cinematic-director-v136';
 
 /** Bounded DOM image player. Never creates a canvas or controls application focus.
  * Only APPROVED same-origin, manifest-checked assets reach this component.
@@ -45,7 +46,7 @@ export function CinematicFramesV136({sequence,progress,onFault}:{
    image.onerror=()=>{if(!cancelled)onFault()};
    image.src=url;
    // decode() can finish before or after onload; both paths are idempotent.
-   void image.decode?.().then(ready,()=>{});
+   if(typeof image.decode==='function')void image.decode().then(ready,()=>{});
    return()=>{cancelled=true;image.onload=null;image.onerror=null;
      if(!image.complete)image.src='data:,';};
  },[url,onFault]);
