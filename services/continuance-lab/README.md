@@ -6,7 +6,7 @@ Isolated CPU-only diagnostic API for ANEVUM's Creator Studio pilot. This is an i
 
 - GitHub source: this research branch, tracking draft PR #664.
 - Railway project: ANEVUM Continuance Lab, environment staging, service continuance-diagnostics-api.
-- Container image builds from the repository-root Dockerfile using an allowlisted .dockerignore; only canonical codecs, the Project Doctor and HTTP server are copied.
+- Container image builds using services/continuance-lab/Dockerfile and its service-local Dockerfile.dockerignore allowlist; only canonical codecs, Project Doctor and HTTP server are copied. No root Dockerfile or Railway config alters other ANEVUM builds.
 - Node 22 as a non-root user, listens on PORT (Railway assigns it), no external packages.
 - Public domain: **none**. The health check is intentionally unprivileged but useful only inside the isolated deployment. Do not attach a public domain or expose model input to browsers until identity, origin and usage controls are reviewed.
 - Health path: GET /healthz. Version and mode only; no user data.
