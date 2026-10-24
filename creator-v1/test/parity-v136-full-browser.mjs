@@ -76,6 +76,8 @@ try{
     });
     assert.ok(layout.scroll<=width+1,'No horizontal overflow: '+JSON.stringify(layout));
     assert.equal(layout.h1Count,1);assert.equal(layout.dockCount,1,'One canonical IREN companion');
+    assert.equal(await page.locator('.p136-console-wayfinder').count(),1,'Exactly one persistent console wayfinder');
+    assert.equal(await page.locator('.p136-console-wayfinder a[data-station]').count(),5,'Five real route stations');
     assert.ok(layout.artLoaded,'Procedural vector and GPU canvas available');
     assert.ok(['webgl','vector'].includes(layout.renderer),'Supported live world renderer');
     if(width>=1440){assert.ok(layout.headingLines<=2.1,'Desktop headline remains two lines: '+JSON.stringify(layout));assert.ok(layout.hero.height<=690,'Desktop hero retains concept density');}
@@ -86,6 +88,16 @@ try{
     await page.screenshot({path:join(out,'arrival-'+width+'.png'),fullPage:false,animations:'disabled'});
     await page.screenshot({path:join(out,'home-'+width+'.png'),fullPage:true,animations:'disabled'});
     record('responsive arrival '+width,layout);
+    if(width===390){
+      const stations=page.locator('.p136-console-wayfinder a[data-station]');
+      await stations.first().focus();
+      await stations.first().press('ArrowRight');
+      assert.equal(await stations.nth(1).evaluate(el=>el===document.activeElement),true,'Controller right focuses next station');
+      await stations.nth(1).press('End');
+      assert.equal(await stations.last().evaluate(el=>el===document.activeElement),true,'Controller End focuses final station');
+      await stations.last().press('Home');
+      assert.equal(await stations.first().evaluate(el=>el===document.activeElement),true,'Controller Home focuses first station');
+    }
     await page.getByRole('link',{name:'Explore projects',exact:true}).click();
     await page.waitForURL(base+'/discover');
     await page.locator('.av73-discover').waitFor();
