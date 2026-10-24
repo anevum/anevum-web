@@ -80,15 +80,21 @@ for tier in ("desktop","mobile"):
         key="|".join(signature)
         material_groups.setdefault(key,[]).append(obj)
     joined=[]
+    # Keep Meshopt decode buffers below the existing CSP-safe reference worker's
+    # 1 MiB per-accessor ceiling. Material grouping limits real GPU draw calls.
+    max_per_batch=32 if tier=="desktop" else 22
     for key,members in material_groups.items():
-        bpy.ops.object.select_all(action='DESELECT')
-        for obj in members:
-            obj.select_set(True)
-        bpy.context.view_layer.objects.active=members[0]
-        bpy.ops.object.join()
-        result=bpy.context.view_layer.objects.active
-        result.name="LODV136_"+tier+"_"+hashlib.sha256(key.encode()).hexdigest()[:8]
-        joined.append(result)
+        for start in range(0,len(members),max_per_batch):
+            batch=members[start:start+max_per_batch]
+            bpy.ops.object.select_all(action='DESELECT')
+            for obj in batch:
+                obj.select_set(True)
+            bpy.context.view_layer.objects.active=batch[0]
+            if len(batch)>1:
+                bpy.ops.object.join()
+            result=bpy.context.view_layer.objects.active
+            result.name="LODV136_"+tier+"_"+hashlib.sha256((key+str(start)).encode()).hexdigest()[:10]
+            joined.append(result)
     # Only the merged architectural geometry is included; no camera, matte,
     # fake UI, creator content or uploaded external texture references.
     bpy.ops.object.select_all(action='DESELECT')
