@@ -34,7 +34,7 @@ test('respect focus, accessible color schemes, responsive layouts and reduced-mo
   assert.match(lab,/aria-selected=\{active===item\.id\}/);
   assert.match(lab,/aria-pressed=\{previewTab==="scene"\}/);
   assert.match(lab,/aria-label=\{"Edit sample "\+active\}/);
-  assert.match(lab,/onKeyDown=\{handleFileKeys/);
+  assert.match(lab,/onKeyDown=\{e=>handleFileKeys/);
 });
 test('use the canonical ANEVUM SVG mark, not a newly invented brand symbol',()=>{
   assert.match(lab,/import \{OrbitalMark\} from "\.\.\/components\/OrbitalMark"/);
