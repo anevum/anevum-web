@@ -265,6 +265,8 @@ camera_manifest={
 }
 with open(os.path.join(root,"camera-manifest.json"),"w",encoding="utf8") as f:
     json.dump(camera_manifest,f,indent=2)
+blend_source=os.path.join(root,"continuance-institute-atrium-v136014.blend")
+bpy.ops.wm.save_as_mainfile(filepath=blend_source)
 for i in range(1,opts.frames+1):
     scene.frame_set(i)
     scene.render.filepath=os.path.join(root,"frame-%04d.png"%i)
