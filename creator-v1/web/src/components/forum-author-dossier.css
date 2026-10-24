@@ -1,0 +1,169 @@
+/* ANEVUM NEXT 015: public author identity as one living, compact artifact.
+ * The universal identity owns the user's chosen portrait, supporter frame (when
+ * public), aura, constellation crest, selected badges, medals and ribbons.
+ * This skin must never replace those with generic labels or fake status. */
+.cf-author-dossier{
+ --cfad-glow:148,171,217;--cfad-tint:#b8d2e9;
+ position:relative;isolation:isolate;display:grid;align-items:center;
+ grid-template-columns:minmax(0,1fr) 44px 44px;column-gap:4px;row-gap:0;
+ width:min(100%,570px);min-width:0;min-height:64px;
+ padding:8px 9px;border:1px solid rgba(var(--cfad-glow),.35);border-radius:12px;
+ background:radial-gradient(ellipse at 8% 30%,rgba(var(--cfad-glow),.14),transparent 55%),
+ linear-gradient(118deg,rgba(15,27,46,.96),rgba(14,20,38,.96));
+ box-shadow:inset 2px 0 0 rgba(var(--cfad-glow),.78),inset 0 1px rgba(245,248,255,.07);
+ color:#f1ebee;transition:border-color .2s ease,box-shadow .2s ease;
+}
+.cf-author-dossier[data-aura="aurora"]{--cfad-glow:111,214,222;--cfad-tint:#b5f4eb}
+.cf-author-dossier[data-aura="eclipse"]{--cfad-glow:172,142,247;--cfad-tint:#d9c2ff}
+.cf-author-dossier[data-aura="ember"]{--cfad-glow:255,159,119;--cfad-tint:#ffe0b6}
+.cf-author-dossier[data-aura="nebula"]{--cfad-glow:225,139,222;--cfad-tint:#f5c7f4}
+.cf-author-dossier[data-aura="transcosmic"]{--cfad-glow:211,166,255;--cfad-tint:#f0d6ff}
+.cf-author-dossier:hover,.cf-author-dossier:focus-within{
+ border-color:rgba(var(--cfad-glow),.64);
+ box-shadow:inset 2px 0 rgba(var(--cfad-glow),.94),0 4px 25px rgba(var(--cfad-glow),.1);
+}
+.cf-author-dossier--no-details,.cf-author-dossier--no-wall{grid-template-columns:minmax(0,1fr) 44px}
+.cf-author-dossier--no-details.cf-author-dossier--no-wall{grid-template-columns:minmax(0,1fr)}
+.cf-author-dossier>.cf-author{
+ grid-column:1;grid-row:1;display:flex!important;width:100%;max-width:100%;min-width:0;
+ align-items:center;overflow:visible;
+ background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;
+ padding:0!important;gap:6px!important;
+}
+.cf-author-dossier .cf-author .av81-corona{display:none!important}
+.cf-author-dossier .cf-author .av65-aura-field{display:block;inset:-4px 0;opacity:.76}
+.cf-author-dossier .cf-author.av65-aura--none .av65-aura-field{display:none}
+.cf-author-dossier .cf-author .av61-portrait-zone{flex:none;min-width:0}
+.cf-author-dossier .cf-author .av61-photo .ms-portrait{
+ width:42px!important;height:42px!important;border-radius:12px!important;
+ box-shadow:0 0 0 1px rgba(var(--cfad-glow),.28),0 4px 12px #020714b2!important;
+}
+.cf-author-dossier .cf-author .av61-specimen{
+ width:37px!important;height:39px!important;margin-left:-6px!important;
+}
+.cf-author-dossier .cf-author .av61-specimen .level-emblem{
+ width:36px!important;height:36px!important;
+}
+.cf-author-dossier .cf-author .av61-member-copy{gap:3px!important;min-width:0;flex:1}
+.cf-author-dossier .cf-author .av65-name-line{gap:4px;min-width:0;max-width:100%}
+.cf-author-dossier .cf-author .av61-member-name{
+ font-size:clamp(12px,1.12vw,15px)!important;font-weight:750!important;line-height:1.23!important;
+ white-space:normal!important;overflow-wrap:anywhere!important;overflow:visible!important;
+ color:#f8f5f6!important;
+}
+.cf-author-dossier .cf-author .av61-member-handle{font-size:10px!important;line-height:1.25!important;color:#b6c5d8!important}
+.cf-author-dossier .cf-author .av81-standing{gap:4px!important;margin-top:1px;flex-wrap:wrap}
+.cf-author-dossier .cf-author .av81-role-token{font-size:8px!important;padding:2px 5px!important}
+.cf-author-dossier .cf-author .av81-reputation-token{
+ font-size:8px!important;padding:2px 5px!important;
+ border-color:rgba(var(--cfad-glow),.34);color:var(--cfad-tint)!important;
+}
+.cf-author-dossier .cf-author .av61-member-rewards{display:flex!important;min-height:0!important;gap:3px!important;flex-wrap:wrap!important;margin-top:1px!important}
+.cf-author-dossier .cf-author .av61-level-label{font-size:8px!important;padding:2px 5px!important;color:#ecd5bc!important}
+.cf-author-dossier .cf-author .av65-badge-rack{flex-wrap:wrap!important;gap:3px!important;max-width:100%}
+.cf-author-dossier .cf-author .av65-badge{width:19px!important;height:19px!important}
+.cf-author-dossier .cf-author .av65-badge .av66-badge-insignia{width:19px!important;height:19px!important}
+.cf-author-dossier .cf-author .av65-medal{width:22px;height:28px}
+.cf-author-dossier .cf-author .av65-ribbon{width:23px;height:11px}
+.cf-author-dossier .cf-author .av61-supporter{display:inline-flex!important}
+.cf-author-dossier-visit{
+ grid-column:2;grid-row:1;display:grid;place-items:center;justify-self:end;
+ width:42px;height:44px;border:1px solid rgba(var(--cfad-glow),.37);
+ border-radius:10px;background:rgba(13,25,45,.7);color:#d4e7f4!important;
+ text-decoration:none!important;
+}
+.cf-author-dossier-visit svg{width:19px;height:19px;transition:transform .2s ease}
+.cf-author-dossier-visit:hover{color:#fff2d5!important;border-color:rgba(var(--cfad-glow),.85);background:rgba(var(--cfad-glow),.15)}
+.cf-author-dossier-visit:hover svg{transform:translateX(2px)}
+.cf-author-dossier-details{grid-column:1/-1;grid-row:2;min-width:0;margin:0;padding:0}
+.cf-author-dossier-details:not([open]){height:0}
+.cf-author-dossier-details>summary{
+ position:absolute;top:calc(8px + 3px);right:9px;display:grid;place-items:center;
+ width:42px;height:44px;cursor:pointer;list-style:none;
+ border:1px solid rgba(var(--cfad-glow),.31);border-radius:10px;
+ color:#c8d0e1;background:rgba(13,25,45,.7);
+}
+.cf-author-dossier-details>summary::-webkit-details-marker{display:none}
+.cf-author-dossier-details>summary svg{width:19px;height:19px;transition:transform .18s ease}
+.cf-author-dossier-details>summary:hover{color:#ffedd6;border-color:rgba(var(--cfad-glow),.8);background:rgba(var(--cfad-glow),.13)}
+.cf-author-dossier-details[open]>summary{color:var(--cfad-tint);background:rgba(var(--cfad-glow),.14)}
+.cf-author-dossier-details[open]>summary svg{transform:rotate(90deg)}
+.cf-author-dossier-expanded{
+ display:grid;gap:10px;min-width:0;margin-top:11px;padding:12px 2px 3px;
+ border-top:1px solid rgba(var(--cfad-glow),.26);
+}
+.cf-author-dossier-heading{
+ color:#b7c3d3;font:650 9px/1.3 ui-monospace,monospace;letter-spacing:.1em;
+}
+.cf-author-dossier-heading>span{color:var(--cfad-tint)}
+.cf-author-dossier-facts{display:flex;flex-wrap:wrap;gap:7px 16px;min-width:0}
+.cf-author-dossier-facts>span{display:grid;gap:3px;min-width:0;flex:0 1 auto}
+.cf-author-dossier-facts small{color:#aabbd0;font:650 8px/1.4 ui-monospace,monospace;letter-spacing:.06em}
+.cf-author-dossier-facts strong{color:#f1e3dc;font:650 11px/1.3 system-ui,sans-serif;overflow-wrap:anywhere}
+.cf-author-dossier-awards{display:flex;gap:5px;align-items:center;flex-wrap:wrap;min-width:0}
+.cf-author-dossier-award{
+ display:inline-flex;align-items:center;max-width:100%;
+ border:1px solid rgba(var(--cfad-glow),.26);border-radius:5px;
+ background:rgba(var(--cfad-glow),.07);color:#e9deeb;
+ font:600 10px/1.3 system-ui,sans-serif;padding:4px 7px;overflow-wrap:anywhere;
+}
+.cf-author-dossier-activity{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;min-width:0;
+ border-top:1px solid rgba(var(--cfad-glow),.18);padding-top:9px}
+.cf-author-dossier-activity>span{display:grid;gap:2px;min-width:0;text-align:left;padding:1px 7px}
+.cf-author-dossier-activity>span:first-child{padding-left:0}
+.cf-author-dossier-activity>span+span{border-left:1px solid rgba(var(--cfad-glow),.18)}
+.cf-author-dossier-activity strong{font:400 19px/1.15 Georgia,serif;color:var(--cfad-tint);font-variant-numeric:tabular-nums}
+.cf-author-dossier-activity small{font:650 8px/1.3 ui-monospace,monospace;color:#aebdcf;letter-spacing:.025em}
+.cf-author-dossier-caption{font:400 10px/1.45 system-ui,sans-serif;color:#aab7c7}
+.cf-author-dossier--detail{width:min(100%,580px)}
+.cf-author-dossier--reply{width:min(100%,540px)}
+.cf-author-dossier--highlight{width:min(100%,490px);border-radius:10px;padding:6px 8px}
+.cf-author-dossier :is(a,summary):focus-visible{outline:2px solid var(--cfad-tint);outline-offset:3px}
+@media(max-width:540px){
+ .cf-author-dossier{width:100%;max-width:100%;padding:8px;column-gap:3px}
+ .cf-author-dossier>.cf-author{gap:4px!important}
+ .cf-author-dossier-visit{width:42px}
+ .cf-author-dossier-details>summary{right:8px;top:11px;width:42px}
+ .cf-author-dossier .cf-author .av61-photo .ms-portrait{width:38px!important;height:38px!important}
+ .cf-author-dossier .cf-author .av61-specimen{width:32px!important;height:34px!important;margin-left:-5px!important}
+ .cf-author-dossier .cf-author .av61-specimen .level-emblem{width:31px!important;height:31px!important}
+ .cf-author-dossier .cf-author .av61-member-name{font-size:12px!important}
+ .cf-author-dossier .cf-author .av65-name-line{gap:3px}
+ .cf-author-dossier .cf-author .av61-member-handle{font-size:9px!important}
+ .cf-author-dossier-facts{gap:8px 12px}
+ .cf-author-dossier-activity strong{font-size:17px}
+}
+@media(max-width:360px){
+ /* Keep every selected badge/crest. Stacking the two actions vertically
+    reclaims ~43px for the actual identity on 320px screens. */
+ .cf-author-dossier{grid-template-columns:minmax(0,1fr) 41px;column-gap:4px;padding:7px;min-height:108px;align-items:start}
+ .cf-author-dossier--no-details,.cf-author-dossier--no-wall{grid-template-columns:minmax(0,1fr) 41px}
+ .cf-author-dossier--no-details.cf-author-dossier--no-wall{grid-template-columns:minmax(0,1fr);min-height:0}
+ .cf-author-dossier-visit,.cf-author-dossier-details>summary{width:40px;min-height:44px;height:44px}
+ .cf-author-dossier-visit{grid-column:2;grid-row:1;align-self:start}
+ .cf-author-dossier-details>summary{right:7px;top:57px}
+ .cf-author-dossier--no-wall .cf-author-dossier-details>summary{top:7px}
+ .cf-author-dossier .cf-author .av61-photo .ms-portrait{width:36px!important;height:36px!important}
+ .cf-author-dossier .cf-author .av61-specimen{width:30px!important}
+ .cf-author-dossier .cf-author .av61-member-copy{gap:2px!important}
+ .cf-author-dossier .cf-author .av81-standing{gap:2px!important}
+ .cf-author-dossier .cf-author .av61-member-rewards{gap:2px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .cf-author-dossier,.cf-author-dossier *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+@media(forced-colors:active){
+ .cf-author-dossier,.cf-author-dossier-visit,.cf-author-dossier-details>summary,
+ .cf-author-dossier-award{border-color:CanvasText;background:Canvas;color:CanvasText!important;box-shadow:none}
+ .cf-author-dossier-facts strong,.cf-author-dossier-activity strong{color:CanvasText}
+}
+
+/* 016: a long user-selected public display name must not force the icon
+   controls or earned cosmetics off the visible edge at 320px. Full identity
+   remains available to assistive tech via the universal card's aria-label. */
+.cf-author-dossier .cf-author .av61-member-name{
+ display:-webkit-box!important;-webkit-box-orient:vertical;
+ -webkit-line-clamp:2;line-clamp:2;overflow:hidden!important;
+ min-width:0;max-width:100%;
+}
+.cf-author-dossier .cf-author .av65-name-line{min-width:0}

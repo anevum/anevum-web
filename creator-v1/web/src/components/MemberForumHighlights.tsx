@@ -22,7 +22,7 @@ export function MemberForumHighlights(){
      <time dateTime={new Date(item.publishedAt*1000).toISOString()}>{new Date(item.publishedAt*1000).toLocaleDateString()}</time></div>
     <h3><Link to={'/community/threads/'+item.id}>{item.title}</Link></h3>
     <p>{item.body.length>170?item.body.slice(0,167)+'…':item.body}</p>
-    <div className="cf-thread-foot"><ForumAuthorCard author={item.author}/>
+    <div className="cf-thread-foot"><ForumAuthorCard author={item.author} variant="highlight"/>
      <Link to={'/community/threads/'+item.id} className="cf-count">{item.replyCount} REPLIES ↗</Link>
     </div>
    </article>)}</div>

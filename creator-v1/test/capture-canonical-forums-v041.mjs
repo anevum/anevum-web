@@ -15,6 +15,8 @@ mkdirSync(out,{recursive:true});
 const {db,env}=fixture();
 db.exec(readFileSync(new URL('../canonical-auth/migrations/0006_member_community_forums.sql',import.meta.url),'utf8'));
 env.CANONICAL_FORUM_ENABLED='true';env.CANONICAL_FORUM_REVIEWER_IDS='reviewer';
+// Synthetic approved activity only. Public reputation is guarded by the same visibility and showStats projection.
+env.CANONICAL_REPUTATION_ENABLED='true';
 const id=()=>crypto.randomUUID();
 function seed(key,handle,visibility='public'){
  db.prepare('INSERT INTO "user"(id,name,email,emailVerified,createdAt,updatedAt) VALUES(?,?,?,1,1,1)')
@@ -25,6 +27,26 @@ function seed(key,handle,visibility='public'){
 }
 const author=seed('author','orbit_writer'),reader=seed('reader','orbit_reader');
 const reviewer=seed('reviewer','orbit_reviewer'),privateUser=seed('private','private_orbit','private');
+// Review-only, independently vetted synthetic author customizations. No live grants.
+db.exec(readFileSync(new URL('../canonical-auth/migrations/0010_player_recognition.sql',import.meta.url),'utf8'));
+db.exec(readFileSync(new URL('../canonical-auth/migrations/0011_verified_roles_v081.sql',import.meta.url),'utf8'));
+db.prepare("UPDATE member_recognition_preferences SET badge_mode='curated',badge_ids_json='[\"accessibility_builder\"]',medal_id='first_light',ribbon_ids_json='[\"makers_service\"]',aura='nebula' WHERE user_id=?").run(author.id);
+for(const [kind,id] of [['badge','accessibility_builder'],['medal','first_light'],['ribbon','makers_service']]){
+ db.prepare('INSERT INTO member_recognition_grants(user_id,kind,recognition_id,earned_at,granted_by,evidence_ref,reviewed_by) VALUES(?,?,?,?,?,?,?)')
+  .run(author.id,kind,id,1120,'synthetic_moderation','test-only-reviewed-evidence','synthetic_independent_reviewer');
+}
+db.prepare('INSERT INTO member_role_grants(user_id,role,granted_at,granted_by,reviewed_by,evidence_ref) VALUES(?,?,?,?,?,?)')
+ .run(author.id,'curator',1120,'synthetic_moderation','synthetic_independent_reviewer','test-only-role-evidence');
+env.CANONICAL_RECOGNITION_ENABLED='true';env.CANONICAL_VERIFIED_ROLES_ENABLED='true';
+// Reader is a public participant who has expressly hidden badges and all public
+// numerical statistics. An actually issued but undisplayed award remains hidden.
+// Stress an allowed 80-character display name without fabricating a new account.
+db.prepare("UPDATE member_creator_profiles SET display_name=? WHERE user_id=?")
+ .run('Fixture Reader With An Extended Public Display Name For Responsive Testing',reader.id);
+db.prepare("INSERT INTO member_space_settings(user_id,featured_json,show_stats) VALUES(?,'[]',0)").run(reader.id);
+db.prepare("UPDATE member_recognition_preferences SET badge_mode='hidden',badge_ids_json='[]',aura='none' WHERE user_id=?").run(reader.id);
+db.prepare('INSERT INTO member_recognition_grants(user_id,kind,recognition_id,earned_at,granted_by,evidence_ref,reviewed_by) VALUES(?,?,?,?,?,?,?)')
+ .run(reader.id,'badge','accessibility_builder',1121,'fixture_issuer','reader-only-reviewed-evidence','fixture_reviewer');
 const origin='https://a.anevum.com';
 const request=(path,method='GET',body)=>new Request(origin+path,{
  method,headers:{origin,...(body?{'content-type':'application/json'}:{})},
@@ -45,6 +67,16 @@ assert.equal(reply.status,201);const replyId=(await reply.json()).id;
 assert.equal((await canonicalForums(request('/api/v1/member/forum-review','POST',{
  targetKind:'reply',targetId:replyId,action:'publish'
 }),env,reviewer,1003)).status,200);
+// Verify actual server projection before the compiled browser touches it. An
+// issued award does not override this member's deliberately hidden selection.
+const approvedReplies=await canonicalForums(request('/api/v1/community/threads/'+threadId+'/replies'),env);
+assert.equal(approvedReplies.status,200);
+const publicReply=(await approvedReplies.json()).items[0].author;
+assert.equal(publicReply.level,null,'Show-stats opt-out hides earned level numbers');
+assert.equal(publicReply.reputation,undefined,'Show-stats opt-out removes reputation and contribution counts');
+assert.equal(publicReply.badgeDisplay?.mode,'hidden','Chosen hidden display setting survives projection');
+assert.deepEqual(publicReply.earnedBadges,[],'Privately earned hidden badges must not leak through forum responses');
+assert.equal(publicReply.handle,'orbit_reader');
 // Twenty-four extra approved forum entries exercise verified pagination.
 for(let i=0;i<24;i++)db.prepare("INSERT INTO member_forum_threads(id,author_id,client_request_id,topic,title,body,status,created_at,published_at,updated_at) VALUES(?,?,?,?,?,?,'published',?,?,?)")
  .run(id(),author.id,id(),'games','Synthetic forum discussion '+String(i).padStart(2,'0'),
@@ -105,7 +137,10 @@ function connect(url){
   ws.addEventListener('error',()=>reject(Error('CDP connection failed')),{once:true});
  });
 }
-const result={fixture:'synthetic',widths:[],authorCards:false,threadNavigation:false,
+const result={fixture:'synthetic',widths:[],authorCards:false,authorDossiers:false,
+ publicWallLinks:false,contributionDisclosure:false,compactHeight:null,
+ customizedAura:false,visibleEarnedArt:false,privateOptOutProtected:false,
+ longNameCompact:false,keyboardDisclosure:false,threadNavigation:false,
  homeWayfinder:false,pagination:false,privateThreadExcluded:false};
 let client=null;
 try{
@@ -127,22 +162,80 @@ try{
  }
  await goto('/community');
  await until(()=>evaluate("document.querySelectorAll('.cf-forums .cf-thread').length===20"));
- const first=await evaluate("({count:document.querySelectorAll('.cf-forums .cf-thread').length,more:!!document.querySelector('.cf-more'),secret:document.body.innerText.includes('PRIVATE THREAD MUST NEVER APPEAR'),author:!!document.querySelector('.cf-author .av61-specimen .level-emblem')})");
+ const first=await evaluate("(()=>{const c=document.querySelector('.cf-list .cf-author-dossier');return {count:document.querySelectorAll('.cf-forums .cf-thread').length,more:!!document.querySelector('.cf-more'),secret:document.body.innerText.includes('PRIVATE THREAD MUST NEVER APPEAR'),author:!!document.querySelector('.cf-author .av61-specimen .level-emblem'),dossiers:document.querySelectorAll('.cf-list .cf-author-dossier').length,rep:!!c?.querySelector('.av81-reputation-token'),wall:c?.querySelector('.cf-author-dossier-visit')?.getAttribute('href'),details:!!c?.querySelector('.cf-author-dossier-details'),aura:c?.getAttribute('data-aura'),badge:!!c?.querySelector('.av65-badge-rack'),medal:!!c?.querySelector('.av65-medal-slot'),ribbon:!!c?.querySelector('.av65-ribbon-rack'),role:!!c?.querySelector('.av81-role-token')}})()");
  assert.equal(first.count,20);assert.equal(first.more,true);
  assert.equal(first.secret,false);assert.equal(first.author,true);
- result.authorCards=true;result.privateThreadExcluded=true;
+ assert.equal(first.dossiers,20,'Each approved forum thread has one meaningful author dossier');
+ assert.equal(first.wall,'/@orbit_writer','Public author link must lead to their canonical wall');
+ assert.equal(first.rep,true,'Only server-validated, opted-in earned reputation is displayed');
+ assert.equal(first.details,true,'The public profile uses a native keyboard-accessible disclosure');
+ assert.equal(first.aura,'nebula','The chosen public member aura reaches the actual compact strip');
+ assert.equal(first.badge,true,'The member selected earned badge is still rendered in the compact bar');
+ assert.equal(first.medal,true,'The independently reviewed medal remains in the compact bar');
+ assert.equal(first.ribbon,true,'The chosen earned ribbon remains in the compact bar');
+ assert.equal(first.role,true,'The independently verified public role remains visible');
+ result.authorCards=true;result.authorDossiers=true;result.publicWallLinks=true;
+ result.customizedAura=true;result.visibleEarnedArt=true;result.privateThreadExcluded=true;
  await evaluate("document.querySelector('.cf-more').click()");
  await until(()=>evaluate("document.querySelectorAll('.cf-forums .cf-thread').length===25"));
  result.pagination=true;
  await evaluate("document.querySelectorAll('.cf-forums .cf-thread h3 a')[24].click()");
  await until(()=>evaluate("!!document.querySelector('.cf-detail .cf-fullbody')"));
  assert.equal(await evaluate("!!document.querySelector('.cf-detail .cf-author .av61-specimen .level-emblem')"),true);
+ assert.equal(await evaluate("!!document.querySelector('.cf-detail .cf-author-dossier--detail .cf-author-dossier-visit')"),true);
+ assert.equal(await evaluate("!!document.querySelector('.cf-detail .cf-author-dossier--reply')"),true);
+ const replyIdentity=await evaluate("(()=>{const e=document.querySelector('.cf-detail .cf-author-dossier--reply');return {publicName:e?.getAttribute('aria-label'),level:!!e?.querySelector('.av61-specimen'),rep:!!e?.querySelector('.av81-reputation-token'),badges:!!e?.querySelector('.av65-badge-rack'),details:!!e?.querySelector('details'),wall:e?.querySelector('.cf-author-dossier-visit')?.getAttribute('href')}})()");
+ assert.equal(replyIdentity.level,false,'Opted-out public reply must not expose level');
+ assert.equal(replyIdentity.rep,false,'Opted-out public reply must not expose reputation');
+ assert.equal(replyIdentity.badges,false,'Hidden earned badge must not appear in reply identity');
+ assert.equal(replyIdentity.details,false,'No empty or inferred detail panel for the opted-out member');
+ assert.equal(replyIdentity.wall,'/@orbit_reader','Public wall navigation remains available without statistics');
+ assert.ok(replyIdentity.publicName?.includes('Extended Public Display Name'),'Full public name remains exposed to assistive technology');
+ result.privateOptOutProtected=true;
  result.threadNavigation=true;
  await client.send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
  await evaluate("(()=>{const e=document.querySelector('.cf-detail');window.scrollTo(0,e.getBoundingClientRect().top+window.scrollY-82)})()");
  await delay(220);
  const detailShot=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
  writeFileSync(join(out,'forum-detail-390.png'),Buffer.from(detailShot.data,'base64'));
+ const longNameLayout=await evaluate("(()=>{const e=document.querySelector('.cf-detail .cf-author-dossier--reply');const r=e?.getBoundingClientRect();const n=e?.querySelector('.av61-member-name');const ns=n?.getBoundingClientRect();return {height:r?.height,overflow:e?.scrollWidth>e?.clientWidth+2,nameHeight:ns?.height,fontSize:n?parseFloat(getComputedStyle(n).fontSize):0,fullName:e?.getAttribute('aria-label')}})()");
+ assert.equal(longNameLayout.overflow,false,'An opted-out reader with a long name must not overflow the phone');
+ assert.ok(longNameLayout.height<180,'Even a long display name should stay compact: '+JSON.stringify(longNameLayout));
+ assert.ok(longNameLayout.fontSize>0&&longNameLayout.nameHeight<=longNameLayout.fontSize*2.8,'The visible name may wrap at most two lines');
+ result.longNameCompact=true;
+ const beforeExpand=await evaluate("(()=>{const e=document.querySelector('.cf-detail .cf-author-dossier--detail');const d=e?.querySelector('details');return {height:e?.getBoundingClientRect().height,closed:!d?.open,links:e?.querySelectorAll('a').length,colors:e?.getAttribute('data-aura')}})()");
+ assert.ok(beforeExpand.closed,'The additional author dossier should be collapsed on entry');
+ assert.ok(beforeExpand.height<170,'Compact customized member bar must remain short on phone: '+JSON.stringify(beforeExpand));
+ assert.equal(beforeExpand.links,1,'Single canonical public wall action, no nested links');
+ result.compactHeight=beforeExpand.height;
+ // Exercise native disclosure with an actual CDP Enter key, not a synthetic
+ // click. Browser accessibility state must stay correct when opened.
+ await evaluate("document.querySelector('.cf-detail .cf-author-dossier--detail summary').focus()");
+ assert.equal(await evaluate("document.activeElement===document.querySelector('.cf-detail .cf-author-dossier--detail summary')"),
+  true,'Native details summary must receive actual keyboard focus');
+ // CDP requires text/unmodifiedText for a complete Enter keypress; omitting
+ // them generated a keyDown but not the activation keypress in Chromium.
+ await client.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',
+  text:'\r',unmodifiedText:'\r',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
+ await client.send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',
+  windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
+ // Native summary activation may settle after the CDP key-up response.
+ // Require the actual DOM open state, never click as a keyboard fallback.
+ await until(()=>evaluate("document.querySelector('.cf-detail .cf-author-dossier--detail details')?.open===true"),3000);
+ const disclosures=await evaluate("(()=>{const entry=document.querySelector('.cf-detail .cf-author-dossier--detail details');if(!entry)return {open:false,counts:0};return {open:entry.open,counts:entry.querySelectorAll('.cf-author-dossier-activity>span').length,chosen:entry.innerText.includes('Nebula'),award:entry.innerText.includes('Open Door'),label:entry.querySelector('summary')?.getAttribute('aria-label')}})()");
+ assert.equal(disclosures.label,'Public profile details for Fixture orbit_writer','The screen-reader label is accurate in both open and closed states');
+ result.keyboardDisclosure=disclosures.open;
+ assert.equal(disclosures.open,true);
+ assert.equal(disclosures.counts,4,'Only four bounded, public approved-activity counters');
+ assert.equal(disclosures.chosen,true,'Public cosmetic choice is readable when expanded');
+ assert.equal(disclosures.award,true,'Only independently verified selected earned awards appear when expanded');
+ result.contributionDisclosure=true;
+ const openShot=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+ writeFileSync(join(out,'forum-author-contributions-390.png'),Buffer.from(openShot.data,'base64'));
+ await evaluate("document.querySelector('.cf-detail .cf-author-dossier--detail summary').click()");
+ await delay(130);
+ const collapsedShot=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+ writeFileSync(join(out,'forum-author-compact-390.png'),Buffer.from(collapsedShot.data,'base64'));
  await goto('/');
  // V079 deliberately removes the old forum-highlights panel from the
  // homepage. Forum author cards are verified above on real thread routes;
@@ -168,8 +261,14 @@ try{
   const layout=await evaluate("(()=>{const e=document.querySelector('.cf-forums');const r=e.getBoundingClientRect();return {viewport:innerWidth,left:r.left,right:r.right,overflow:e.scrollWidth>e.clientWidth+2,cards:document.querySelectorAll('.cf-forums .cf-thread').length}})()");
   assert.equal(layout.overflow,false,JSON.stringify({width,...layout}));
   assert.ok(layout.left>=-2&&layout.right<=width+3,JSON.stringify(layout));
+  const authorLayout=await evaluate("(()=>{const a=document.querySelector('.cf-list .cf-author-dossier');const r=a?.getBoundingClientRect();const v=a?.querySelector('.cf-author-dossier-visit')?.getBoundingClientRect();const d=a?.querySelector('summary')?.getBoundingClientRect();const overlap=v&&d?Math.max(0,Math.min(v.right,d.right)-Math.max(v.left,d.left))*Math.max(0,Math.min(v.bottom,d.bottom)-Math.max(v.top,d.top)):0;return {height:r?.height,overflow:a?.scrollWidth>a?.clientWidth+2,art:!!a?.querySelector('.av61-specimen'),auralabel:a?.getAttribute('data-aura'),actionOverlap:overlap,wallHeight:v?.height,detailsHeight:d?.height}})()");
   const shot=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   assert.ok(shot.data);writeFileSync(join(out,'forum-'+width+'.png'),Buffer.from(shot.data,'base64'));
+  assert.equal(authorLayout.overflow,false,'Identity must not overflow at '+width);
+  assert.equal(authorLayout.auralabel,'nebula','User aura remains selected at '+width);
+  assert.equal(authorLayout.actionOverlap,0,'Mobile public wall and details controls must not overlap at '+width);
+  assert.ok(authorLayout.wallHeight>=40&&authorLayout.detailsHeight>=40,'Profile actions retain meaningful target size at '+width);
+  assert.ok(authorLayout.height < (width<=320?196:width<=390?174:156),'Forum author bar is not compact at '+width+': '+JSON.stringify(authorLayout));
   result.widths.push({width,...layout});
  }
  // Turning the feature off must remove the new forum without hiding the legacy community.
