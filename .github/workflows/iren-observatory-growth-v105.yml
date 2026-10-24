@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - "creator-v1/operations/anevum-iren-staff-observatory-v105.mjs"
+      - "creator-v1/analytics/growth-events-v1.mjs"
+      - "creator-v1/test/growth-events-v1.test.mjs"
       - "creator-v1/test/staff-observatory-growth-v105.test.mjs"
       - "creator-v1/test/capture-staff-growth-v105.mjs"
       - ".github/workflows/iren-observatory-growth-v105.yml"
@@ -21,11 +23,14 @@ jobs:
       - name: Verify isolated growth Worker and fixture syntax
         run: |
           node --check creator-v1/operations/anevum-iren-staff-observatory-v105.mjs
+          node --check creator-v1/analytics/growth-events-v1.mjs
+          node --check creator-v1/test/growth-events-v1.test.mjs
           node --check creator-v1/test/staff-observatory-growth-v105.test.mjs
           node --check creator-v1/test/capture-staff-growth-v105.mjs
       - name: Check aggregate metrics, owner/reviewer authorization, and legacy protection
         run: |
           node --test creator-v1/test/staff-observatory-growth-v105.test.mjs
+          node --test creator-v1/test/growth-events-v1.test.mjs
           node --test creator-v1/test/staff-observatory-cleanup-v104.test.mjs
       - name: Inspect actual Chromium growth experience at 1440, 390, and 320
         shell: bash
