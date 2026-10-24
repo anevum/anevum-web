@@ -1,6 +1,6 @@
 // ANEVUM IREN communications: isolated, UNROUTED Worker; no live mail until approved.
 const ORIGIN='https://anevum.com',PREFIX='/api/v1/communications/';
-const EMAIL=/^[^\s@]{1,64}@[^\s@]{1,190}$/;
+const EMAIL=/^[A-Za-z0-9.!#$%&'*+/=?^_{|}~-]{1,64}@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/;
 const TOKEN=/^[A-Za-z0-9_-]{43}$/;
 const UNSUB=/^v1\.([a-f0-9-]{36})\.([A-Za-z0-9_-]{43})$/;
 const headers={'content-type':'application/json; charset=utf-8','cache-control':'private, no-store','referrer-policy':'no-referrer','x-content-type-options':'nosniff','x-robots-tag':'noindex, nofollow','x-frame-options':'DENY'};

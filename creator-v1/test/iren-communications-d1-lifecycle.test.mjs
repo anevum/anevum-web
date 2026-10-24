@@ -57,6 +57,9 @@ test('subscription requires explicit topics, consent, same origin, correct secre
  const h=harness();
  try{
   assert.equal((await h.execute('subscribe',{email:h.email,topics:h.topics,consent:false})).status,400);
+  assert.equal((await h.execute('subscribe',{email:'evil<script>@example.org',topics:h.topics,consent:true})).status,400);
+  assert.equal((await h.execute('subscribe',{email:'nobody@localhost',topics:h.topics,consent:true})).status,400);
+  assert.equal((await h.execute('subscribe',{email:'valid+tag@example.org',topics:h.topics,consent:true})).status,202);
   assert.equal((await h.execute('subscribe',{email:h.email,topics:{releases:false,weekly:false},consent:true})).status,400);
   assert.equal((await h.execute('subscribe',{email:h.email,topics:{releases:true,weekly:true},consent:true,role:'owner'})).status,400);
   assert.equal((await h.execute('subscribe',{email:h.email,topics:h.topics,consent:true},{origin:'https://evil.example'})).status,403);
