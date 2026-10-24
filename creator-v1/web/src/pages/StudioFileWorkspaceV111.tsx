@@ -1,6 +1,7 @@
 import {useEffect,useMemo,useRef,useState,type ReactNode,type FormEvent} from 'react';
 import {Link} from 'react-router-dom';
 import {PREFIX} from '../../../workbench-alpha/document.mjs';
+import {classifyFile,SECTIONS} from '../../../studio-next/project-tree-v116.mjs';
 import {StudioSceneComposerV112,studioVisualScenesEnabled} from './StudioSceneComposerV112';
 import {PREFIX as UI_PREFIX} from '../../../interface-builder/document.mjs';
 import {StudioInterfaceBuilderV113,studioInterfaceBuilderEnabled} from './StudioInterfaceBuilderV113';
@@ -10,6 +11,7 @@ import {
  type StudioNodeKind
 } from '../lib/studio-files-v111';
 import './studio-file-workspace-v111.css';
+import './studio-file-workspace-v116.css';
 
 const MAX_OPEN=8;
 type Props={
@@ -17,8 +19,16 @@ type Props={
  onDirtyChange:(dirty:boolean)=>void
 };
 const presentError=(e:unknown)=>e instanceof Error?e.message:'File operation was not confirmed. No changes were applied locally.';
-const alphabetic=(a:StudioFileNode,b:StudioFileNode)=>
- a.kind===b.kind?a.name.localeCompare(b.name,undefined,{sensitivity:'base'}):(a.kind==='folder'?-1:1);
+const alphabetic=(a:StudioFileNode,b:StudioFileNode)=>{
+ if(a.kind!==b.kind)return a.kind==='folder'?-1:1;
+ if(a.kind==='folder'&&a.parentId===null&&b.parentId===null){
+  const ai=SECTIONS.indexOf(a.name),bi=SECTIONS.indexOf(b.name);
+  if(ai>=0&&bi>=0)return ai-bi;
+  if(ai>=0)return -1;
+  if(bi>=0)return 1;
+ }
+ return a.name.localeCompare(b.name,undefined,{sensitivity:'base',numeric:true});
+};
 function pathLabel(node:StudioFileNode,nodes:StudioFileNode[]):string{
  const names=[node.name],seen=new Set([node.id]);
  let parent=node.parentId;
@@ -35,6 +45,7 @@ function editable(status:string){return status==='draft'||status==='changes_requ
 
 export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,onDirtyChange}:Props){
  const [nodes,setNodes]=useState<StudioFileNode[]>([]);
+ const [fileQuery,setFileQuery]=useState('');
  const [loading,setLoading]=useState(true);
  const [error,setError]=useState('');
  const [attempt,setAttempt]=useState(0);
@@ -93,6 +104,20 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
  },[]);
 
  const folderOptions=useMemo(()=>nodes.filter(n=>n.kind==='folder').sort((a,b)=>pathLabel(a,nodes).localeCompare(pathLabel(b,nodes))),[nodes]);
+ const visibleIds=useMemo(()=>{
+  const q=fileQuery.trim().toLocaleLowerCase();
+  if(!q)return null;
+  const ids=new Set<string>();
+  for(const item of nodes){
+   if(!(item.name+' '+pathLabel(item,nodes)).toLocaleLowerCase().includes(q))continue;
+   let cursor:StudioFileNode|undefined=item;const seen=new Set<string>();
+   while(cursor&&!seen.has(cursor.id)){
+    ids.add(cursor.id);seen.add(cursor.id);
+    cursor=cursor.parentId?nodes.find(n=>n.id===cursor?.parentId):undefined;
+   }
+  }
+  return ids;
+ },[nodes,fileQuery]);
  const selectedFolderNode=nodes.find(n=>n.id===selectedFolder)||null;
  function confirmLeavingFolder(){
   return !selectedFolder||!dirtyIds.has('folder:'+selectedFolder)||
@@ -162,16 +187,17 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
  }
  function renderTree(parentId:string|null,depth=0,ancestry=new Set<string>()):ReactNode[]{
   if(depth>20)return [];
-  return nodes.filter(n=>n.parentId===parentId).sort(alphabetic).flatMap(node=>{
+  return nodes.filter(n=>n.parentId===parentId&&(!visibleIds||visibleIds.has(n.id))).sort(alphabetic).flatMap(node=>{
    if(ancestry.has(node.id))return [];
-   const folder=node.kind==='folder',isOpen=expanded.has(node.id);
+   const folder=node.kind==='folder',isOpen=!!visibleIds||expanded.has(node.id);
    const row=<button key={node.id} type="button"
     className={'csf-tree-row'+((folder?selectedFolder===node.id:activeId===node.id)?' is-active':'')}
     style={{paddingInlineStart:(12+depth*16)+'px'}} title={pathLabel(node,nodes)}
     aria-expanded={folder?isOpen:undefined}
     onClick={()=>folder?selectFolder(node):openFile(node)}>
-    <span aria-hidden="true" className="csf-node-icon">{folder?(isOpen?'▾':'▸'):'◇'}</span>
+    <span aria-hidden="true" className={'csf-node-icon'+(folder?' is-folder':' is-'+classifyFile(node.name))}>{folder?(isOpen?'▾':'▸'):'◇'}</span>
     <span className="csf-node-name">{node.name}</span>
+     {!folder&&<span className="csf-file-kind" aria-hidden="true">{classifyFile(node.name)==='world'?'3D':classifyFile(node.name)==='interface'?'UI':classifyFile(node.name)==='script'?'CODE':''}</span>
     {(dirtyIds.has(node.id)||dirtyIds.has('folder:'+node.id))&&<span className="csf-unsaved-marker" aria-label="Unsaved edits">●</span>}
    </button>;
    if(!folder||!isOpen)return[row];
@@ -235,6 +261,10 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
        onClick={()=>{setCreateKind('text');setCreateName('interface.ui.anevum');setMessage('');}}>+ Interface</button>}
      </div>
     </div>
+    <label className="csf-tree-search"><span aria-hidden="true">⌕</span>
+     <input type="search" value={fileQuery} onChange={event=>setFileQuery(event.target.value)}
+      placeholder="Search files and folders…" aria-label="Search private project files"/>
+    </label>
     <div className="csf-tree-body">
      <button type="button" className={'csf-tree-row csf-tree-root'+(selectedFolder===null&&!activeId?' is-active':'')}
       onClick={()=>{
@@ -244,6 +274,7 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
       <span aria-hidden="true">⌂</span><span className="csf-node-name">{projectTitle} / root</span></button>
      {loading&&<p role="status" className="csf-muted">Loading your private file tree…</p>}
      {!loading&&!error&&nodes.length===0&&<p className="csf-muted">No files yet. Create a folder or text file to begin.</p>}
+     {!loading&&!error&&!!visibleIds&&!visibleIds.size&&<p className="csf-muted">No matching source files or folders.</p>}
      {!loading&&!error&&renderTree(null)}
     </div>
     <div className="csf-tree-footer">
