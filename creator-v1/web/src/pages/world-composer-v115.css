@@ -145,6 +145,30 @@
  .cvw-selection-chip strong{font-size:11px}
  .cvw-world-footer{font-size:8px;gap:6px;padding:8px}
  .cvw-renderer-live{font-size:8px;top:8px;left:8px;padding:6px}
+ /* Mobile editing prioritizes the active GPU canvas over desktop ceremony. */
+ .cvw-root .cvs-review-banner{font-size:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:5px 7px;min-height:27px}
+ .cvw-root .cvs-head{padding:8px 10px;flex-wrap:nowrap;gap:8px}
+ .cvw-root .cvs-head-brand{gap:6px}
+ .cvw-root .cvs-head-brand span{display:none}
+ .cvw-root .cvs-head-brand h1{font-size:19px;white-space:nowrap}
+ .cvw-root .cvs-mark{width:29px;height:29px}
+ .cvw-root .cvs-head-links .cvs-link{min-height:37px;max-width:130px;padding:5px 8px;font-size:9px;line-height:1.2}
+ .cvw-root .cvs-projectbar{padding:7px 9px;gap:5px;min-height:0}
+ .cvw-root .cvs-project-thumb{width:32px;height:32px}
+ .cvw-root .cvs-projectidentity>div small{font-size:7px}
+ .cvw-root .cvs-projectidentity>div strong{font-size:12px}
+ .cvw-root .cvs-project-actions{width:100%;display:flex;flex-wrap:nowrap;gap:5px}
+ .cvw-root .cvs-save-state{flex:1;min-width:0;font-size:8px;letter-spacing:0;line-height:1.2}
+ .cvw-root .cvs-project-actions .cvs-action{min-height:39px;flex:0 0 auto;padding:6px 8px;font-size:10px}
+ .cvw-root .cvs-project-actions .cvs-primary{display:none}
+ .cvw-root .cvs-mode-header{min-height:41px;padding:6px 9px}
+ .cvw-root .cvs-mode-label>span{display:none}
+ .cvw-root .cvs-mode-label>strong{font-size:12px}
+ .cvw-root .cvs-chip{font-size:7px;letter-spacing:0;padding:3px 6px}
+ .cvw-root .cvw-toolbar{min-height:43px;flex-wrap:nowrap;padding:3px 6px}
+ .cvw-root .cvw-toolbar>span{display:none}
+ .cvw-root .cvw-toolbar>div{display:flex;flex-wrap:nowrap;white-space:nowrap;overflow-x:auto;width:100%;gap:5px;scrollbar-width:thin}
+ .cvw-root .cvw-toolbar button{flex:0 0 auto;min-height:39px;padding:7px 9px}
 }
 @media(max-width:360px){
  .cvw-toolbar>span{width:100%}
