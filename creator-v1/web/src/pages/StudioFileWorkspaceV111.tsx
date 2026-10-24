@@ -4,6 +4,7 @@ import {PREFIX} from '../../../workbench-alpha/document.mjs';
 import {classifyFile,SECTIONS} from '../../../studio-next/project-tree-v116.mjs';
 import {StudioSceneComposerV112,studioVisualScenesEnabled} from './StudioSceneComposerV112';
 import {PREFIX as UI_PREFIX} from '../../../interface-builder/document.mjs';
+import {PREFIX as WORLD_PREFIX} from '../../../world-composer/document.mjs';
 import {StudioInterfaceBuilderV113,studioInterfaceBuilderEnabled} from './StudioInterfaceBuilderV113';
 import {
  studioFileTreeEnabled,studioFileList,studioFileGet,studioFileCreate,
@@ -42,6 +43,9 @@ function pathLabel(node:StudioFileNode,nodes:StudioFileNode[]):string{
  return names.join(' / ');
 }
 function editable(status:string){return status==='draft'||status==='changes_requested';}
+function isWorldSource(name:string,content:string){
+ return name.toLowerCase().endsWith('.world.anevum')||content.startsWith(WORLD_PREFIX);
+}
 
 export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,onDirtyChange}:Props){
  const [nodes,setNodes]=useState<StudioFileNode[]>([]);
@@ -259,6 +263,8 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
       {studioInterfaceBuilderEnabled&&<button type="button" title="Create visual interface" aria-label="Create visual interface"
        disabled={!canEdit||loading||!!error||!!pendingCreate}
        onClick={()=>{setCreateKind('text');setCreateName('interface.ui.anevum');setMessage('');}}>+ Interface</button>}
+      <button type="button" title="Expand all folders" aria-label="Expand all folders" disabled={loading} onClick={()=>setExpanded(new Set(nodes.filter(n=>n.kind==='folder').map(n=>n.id)))}>Expand</button>
+      <button type="button" title="Collapse all folders" aria-label="Collapse all folders" disabled={loading} onClick={()=>setExpanded(new Set())}>Collapse</button>
      </div>
     </div>
     <label className="csf-tree-search"><span aria-hidden="true">⌕</span>
@@ -445,7 +451,8 @@ function SourceEditorV111({projectId,nodeId,nodes,editable:canEdit,onDirty,onUpd
     setBase(node);setContent(node.content||'');setName(node.name);setParentId(node.parentId);
     setPresentation(studioInterfaceBuilderEnabled&&
      (node.name.toLowerCase().endsWith('.ui.anevum')||(node.content||'').startsWith(UI_PREFIX))?'interface':
-     studioVisualScenesEnabled&&(node.name.toLowerCase().endsWith('.anevum')||(node.content||'').startsWith(PREFIX))?'visual':'text');
+     studioVisualScenesEnabled&&!isWorldSource(node.name,node.content||'')&&
+      (node.name.toLowerCase().endsWith('.anevum')||(node.content||'').startsWith(PREFIX))?'visual':'text');
    })
    .catch(e=>{if(!controller.signal.aborted)setError(presentError(e));})
    .finally(()=>{if(!controller.signal.aborted)setLoading(false);});
@@ -455,7 +462,7 @@ function SourceEditorV111({projectId,nodeId,nodes,editable:canEdit,onDirty,onUpd
  const canInterface=studioInterfaceBuilderEnabled&&
   (name.toLowerCase().endsWith('.ui.anevum')||content.startsWith(UI_PREFIX));
  const canVisual=studioVisualScenesEnabled&&
-  !canInterface&&(name.toLowerCase().endsWith('.anevum')||content.startsWith(PREFIX));
+  !canInterface&&!isWorldSource(name,content)&&(name.toLowerCase().endsWith('.anevum')||content.startsWith(PREFIX));
  async function save(){
   if(!base||!canEdit||!dirty||busy||byteCount>32768)return;
   setBusy(true);setError('');setMessage('');
