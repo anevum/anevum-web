@@ -38,6 +38,7 @@ export const REVIEW_FILES=[
 export const META_FILES=[
  'creator-v1/ops/v132-member-collections-package.mjs',
  'creator-v1/test/v132-member-collections-release.test.mjs',
+ 'creator-v1/test/v132-member-collections-browser.mjs',
  'docs/production/v132-member-collections-release.md',
  '.github/workflows/v132-member-collections-release.yml'
 ];
