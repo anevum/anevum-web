@@ -43,7 +43,7 @@ test('editable Starcraft stays inside canonical world validation and undoable so
  assert.equal(ship.kind,'starship');
  assert.equal(ship.name,'Starcraft');
  const start=starter();
- assert.equal(start.nodes.length,10,'Founder's current starter layout stays unchanged');
+ assert.equal(start.nodes.length,10,"The existing starter layout remains unchanged");
  const added=apply(start,{type:'ADD_NODE',node:ship});
  assert.equal(added.nodes.length,11);
  const moved=apply(added,{type:'SET_TRANSFORM',id:ship.id,field:'position',value:[4,5,-3]});
