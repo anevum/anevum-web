@@ -64,6 +64,10 @@ test('V117 native renderer integrates authored 3D assets, water and daylight int
   assert.ok(renderer.includes("'"+name+"'"),name+' must be invoked by real document node geometry');
  assert.match(renderer,/node\.kind==='starship'/);
  assert.match(renderer,/uWater/);
+ assert.match(renderer,/mesh:'islandTop',transform:I,material:node.material/);
+ assert.match(renderer,/mesh:'waterRibbon',transform:I,material:node.material/);
+ assert.match(renderer,/node.kind==='light'.*material:node.material/);
+
  assert.match(renderer,/uTime/);
  assert.match(renderer,/lastTime/);
  assert.match(renderer,/gl\.isContextLost\(\)/);
