@@ -17,6 +17,8 @@ on:
       - 'creator-v1/test/sitewide-experience-v009.test.mjs'
       - 'creator-v1/test/cinematic-depth-v011.test.mjs'
       - 'creator-v1/test/module-experience-v073.test.mjs'
+      - 'creator-v1/test/v079-reconciled-null-creator.test.mjs'
+      - 'creator-v1/test/capture-home-navigation-v079.mjs'
       - 'creator-v1/test/capture-home-first-contact-v111.mjs'
       - 'docs/production/continuance-first-contact-v133-20261024.md'
 permissions:
@@ -56,6 +58,7 @@ jobs:
             creator-v1/test/sitewide-experience-v009.test.mjs \
             creator-v1/test/cinematic-depth-v011.test.mjs \
             creator-v1/test/module-experience-v073.test.mjs \
+            creator-v1/test/v079-reconciled-null-creator.test.mjs \
             creator-v1/test/signup-email-first-v026.test.mjs \
             creator-v1/test/signup-access-states-v082.test.mjs
       - name: Typecheck and build actual public and isolated staging paths
