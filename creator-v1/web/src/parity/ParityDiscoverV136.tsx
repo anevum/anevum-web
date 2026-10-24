@@ -91,12 +91,10 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
     packagesCount,packageProjects,legacyProjects,shown,resultsReady,emptyVerified,
     current,params,nextCursor
   }=props;
-  const scene=Object.prototype.hasOwnProperty.call(scenes,category)?scenes[category as Category]:'portal';
   const filtered=Boolean(query||category||cursor||freeOnly);
   const countLabel=resourceState==='ready'?'APPROVED PROJECT CATALOGUE':packagesInScope&&packageState==='ready'?'AVAILABLE BROWSER RELEASES':'READING THE PUBLIC INDEX';
   return <div data-iren-anchor="discover" className="portal-discover av73-discover p136-discovery" data-parity-discover="v136.004">
     <section className="p136-discover-hero" aria-labelledby="p136-discover-title">
-      <div className="p136-discover-hero-art" aria-hidden="true"><CosmicArtwork scene={scene} priority/></div>
       <div className="p136-discover-hero-grid" aria-hidden="true"/>
       <div className="p136-discover-hero-copy">
         <p className="p136-discover-register"><span className="p136-discover-signal"/> THE CONTINUANCE INSTITUTE <span className="p136-register-break">/</span> OPEN DISCOVERY</p>
@@ -116,7 +114,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
         </div>
         <div className="p136-discover-readout-foot"><span>EXPLORE / CONNECT / CONTINUE</span><Icon name="explore" size={18}/></div>
       </aside>
-      <p className="p136-discover-art-note">ANEVUM ENVIRONMENT ILLUSTRATION / NOT CREATOR ARTWORK</p>
+      <p className="p136-discover-art-note">GENERATED ENVIRONMENT / NOT CREATOR ARTWORK</p>
     </section>
 
     <div className="p136-discover-main">
@@ -158,7 +156,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
               <span className="p136-discover-world-shade" aria-hidden="true"/>
               <span className="p136-discover-world-top">FIELD / 0{index+1}<Icon name="arrow" size={17}/></span>
               <span className="p136-discover-world-copy"><strong>{item.label}</strong><small>{item.description}</small></span>
-              <span className="p136-discover-world-art-note">CATEGORY ILLUSTRATION</span>
+              <span className="p136-discover-world-art-note">PROCEDURAL CATEGORY FIELD</span>
             </button>;
           })}
         </div>
