@@ -61,7 +61,7 @@ async function contextFor(width,{motion='reduce',state='empty',forceVector=false
     }
     await route.continue();
   });
-  const page=await context.newPage();page.on('pageerror',e=>{errors.push(e.message);console.error('BROWSER_RUNTIME_ERROR '+e.message);});
+  const page=await context.newPage();page.on('pageerror',e=>{errors.push(e.message);console.error('BROWSER_RUNTIME_ERROR '+(e.stack||e.message));});
   return {page,context};
 }
 try{
@@ -86,6 +86,7 @@ try{
     assert.ok(layout.scroll<=width+1,'No horizontal overflow: '+JSON.stringify(layout));
     assert.equal(layout.h1Count,1);assert.equal(layout.dockCount,1,'One canonical IREN companion');
     assert.equal(await page.locator('.p136-console-wayfinder').count(),1,'Exactly one persistent console wayfinder');
+    assert.equal(await page.locator('.p136-studio-console').count(),0,'Private Studio explorer never appears for anonymous visitor');
     assert.equal(await page.locator('.p136-console-wayfinder a[data-station]').count(),5,'Five real route stations');
     assert.equal(await page.locator('.p136-console-wayfinder').getByRole('button',{name:'Open IREN companion'}).count(),1,
       'One IREN launcher belongs to the persistent console; the header may also open the same companion');
