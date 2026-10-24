@@ -81,7 +81,8 @@ export function verifyMarker(){
   'creator-v1/ops/v132-inactive-upload.mjs',
   'creator-v1/test/v132-inactive-upload.test.mjs',
   'docs/production/v132-inactive-upload.md',
-  '.github/workflows/v132-inactive-upload.yml'
+  '.github/workflows/v132-inactive-upload.yml',
+  MARKER
  ]);
  for(const p of files)assert.ok(safe.has(p),'Unreviewed upload source: '+p);
  assert.ok(process.env.CLOUDFLARE_API_TOKEN?.length>15);
