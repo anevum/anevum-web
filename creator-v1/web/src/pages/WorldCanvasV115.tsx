@@ -126,7 +126,7 @@ export function WorldCanvasV115({document,camera,selection,onCamera,onSelect}:Pr
   if(event.key==='-')zoom(1.8);
   if(event.key==='0')current.current.onCamera(current.current.document.camera);
  }
- return <div className="cvw-canvas-container" data-world-canvas-v115={status}>
+ return <div className={"cvw-canvas-container"+(document.environment.sky==="night"?" is-night":"")} data-world-canvas-v115={status} data-camera-yaw={camera.yaw.toFixed(3)}>
   <canvas ref={ref} className="cvw-world-canvas" tabIndex={0}
    aria-label="Interactive WebGL2 world. Drag to orbit; mouse wheel or plus and minus to zoom; arrow keys rotate; click an object to select. The scene hierarchy offers an accessible alternate selection method."
    onPointerDown={down} onPointerMove={move} onPointerUp={up}
