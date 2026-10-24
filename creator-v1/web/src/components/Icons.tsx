@@ -39,7 +39,10 @@ const paths: Record<string, string> = {
   'file-search': "M6 2h8l5 5v8 M14 2v6h5 M10 13a4 4 0 1 0 0 8 4 4 0 0 0 0-8z M13 20l3 3",
   'alert-triangle': "M10 3a2 2 0 0 1 3.5 0l9 16a2 2 0 0 1-1.7 3H3.2a2 2 0 0 1-1.7-3z M12 9v5 M12 18h.01",
   'check-circle': "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z m-5-10 3 3 6-6",
-  'list-checks': "M9 5h12 M9 12h12 M9 19h12 m-8-3 2 2 4-4 M2 5h3 M2 12h3 M2 19h3"
+  'list-checks': "M9 5h12 M9 12h12 M9 19h12 m-8-3 2 2 4-4 M2 5h3 M2 12h3 M2 19h3",
+  'list-tree': "M6 3v15 M6 7h5 M11 7h10 M6 13h5 M11 13h10 M6 19h5 M11 19h10",
+  columns: "M3 4h18v16H3z M12 4v16",
+  panel: "M3 3h18v18H3z M3 8h18"
 };
 export function Icon({ name, size = 18 }: { name: string; size?: number }) {
   return <svg aria-hidden="true" viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={paths[name] || paths.explore} /></svg>;
