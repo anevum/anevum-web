@@ -257,7 +257,7 @@ export function CommunityNextReviewPage() {
   const publicCreatorIndex = new Map(
     creators.state === 'ready' ? creators.data.items.map(item => [item.handle, item] as const) : []
   );
-  const publicShowcaseIndex = publicDossiers.state === 'ready' ? publicDossiers.data.items : {};
+  const publicShowcaseIndex: Record<string, PublicCreatorShowcase> = publicDossiers.state === 'ready' ? publicDossiers.data.items : {};
   const results = projectFeed.state === 'ready' ? projectFeed.data.items : [];
   const selected = COMMONS_DISTRICTS.find(d => d.id === category);
   const counts = useMemo(() => new Map(districtCounts.state === 'ready' ? districtCounts.data.categories.map(x => [x.category, x.count] as const) : []), [districtCounts]);
