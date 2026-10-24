@@ -102,6 +102,22 @@ try{
         h1Count:document.querySelectorAll('h1').length,dockCount:document.querySelectorAll('.ir80-dock').length};
     });
     assert.ok(layout.scroll<=width+1,'No horizontal overflow: '+JSON.stringify(layout));
+    if(process.env.VITE_PARITY_V136_CINEMATIC==='true'){
+      const cinema=page.locator('[data-cinematic-v136="poster-pilot"]');
+      assert.equal(await cinema.count(),1,'One authored cinematic presentation layer');
+      const cinemaRead=await cinema.evaluate(node=>{
+        const image=node.querySelector('img');
+        return {hidden:node.getAttribute('aria-hidden'),pointerEvents:getComputedStyle(node).pointerEvents,
+          imageLoaded:Boolean(image?.complete&&image?.naturalWidth>0),mode:node.dataset.mode,
+          imageSrc:image?.currentSrc};
+      });
+      assert.equal(cinemaRead.hidden,'true','Cinematic artwork is decorative, not fake content');
+      assert.equal(cinemaRead.pointerEvents,'none','Cinematic layer cannot block real navigation');
+      assert.ok(cinemaRead.imageLoaded,'Verified same-origin cinematic poster loads');
+      assert.equal(cinemaRead.mode,'poster','Unapproved motion must remain disabled');
+      assert.ok(cinemaRead.imageSrc.startsWith(base+'/assets/parity-v136/'),'Only approved original source artwork');
+    } else assert.equal(await page.locator('[data-cinematic-v136]').count(),0,'Cinematic pilot is opt-in');
+
     assert.equal(layout.h1Count,1);assert.equal(layout.dockCount,1,'One canonical IREN companion');
     assert.equal(await page.locator('.p136-console-wayfinder').count(),1,'Exactly one persistent console wayfinder');
     assert.equal(await page.locator('.p136-studio-console').count(),0,'Private Studio explorer never appears for anonymous visitor');
@@ -349,6 +365,26 @@ try{
     await page.evaluate(()=>{window.__avGamepadFixture.connected=false;});
     await page.waitForFunction(()=>!document.querySelector('.p136-controller-indicator'),null,{timeout:8000});
     record('synthetic Gamepad API / connected badge / D-pad DOM focus / A route / disconnected cleanup',{hardwareVerified:false});
+    await context.close();
+  }
+  if(process.env.VITE_PARITY_V136_CINEMATIC==='true'){
+    const {page,context}=await contextFor(1440,{motion:'no-preference',forceVector:true});
+    await page.goto(base,{waitUntil:'networkidle'});
+    const cinema=page.locator('[data-cinematic-v136="poster-pilot"]');await cinema.waitFor();
+    const opacity=()=>cinema.evaluate(el=>Number.parseFloat(getComputedStyle(el).opacity));
+    assert.ok(await opacity()>.9,'Arrival poster begins visible');
+    await page.evaluate(()=>window.scrollTo(0,550));
+    await page.waitForFunction(()=>{
+      const layer=document.querySelector('[data-cinematic-v136="poster-pilot"]');
+      return layer&&Number.parseFloat(getComputedStyle(layer).opacity)<.5;
+    });
+    assert.ok(await opacity()<.5,'Poster reveals one canonical live environment on native scroll');
+    await page.screenshot({path:join(out,'cinematic-handoff-scroll-1440.png'),animations:'disabled'});
+    await page.evaluate(()=>window.scrollTo(0,0));
+    await page.locator('.p136-button--primary').click();
+    await page.waitForURL(/\/discover(?:\?|$)/);
+    assert.equal(await page.locator('.p136-living-canvas').count(),1,'No duplicate WebGL renderer after cinematic navigation');
+    record('cinematic art-to-world fade / accessible real Discover action / one renderer');
     await context.close();
   }
   const {page,context}=await contextFor(390,{motion:'no-preference',forceVector:true});
