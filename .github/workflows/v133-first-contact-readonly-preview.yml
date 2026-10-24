@@ -1,10 +1,13 @@
 name: ANEVUM V133 Isolated Read-only Preview
-# Trigger exactly once when owner-approved PR #704 is merged into its NEXT parent.
-# This has no production routes, D1, auth or member-write bindings.
+# Trusted PR679 browser preview of immutable, owner-approved #704 merge.
+# PR jobs are already registered; unlike new workflows, new push workflows on
+# non-default branches are not eligible for activation until registered.
+# No production routes, D1, auth or member-write bindings.
 on:
-  push:
-    branches: [build/continuance-living-commons-react-20261023-001]
-    paths: ['.github/release-approvals/v133-first-contact-preview-only.json']
+  pull_request:
+    paths:
+      - '.github/workflows/v133-first-contact-readonly-preview.yml'
+      - '.github/release-approvals/v133-first-contact-preview-only.json'
 permissions:
   contents: read
 concurrency:
@@ -12,18 +15,21 @@ concurrency:
   cancel-in-progress: false
 jobs:
   preview:
-    if: github.repository == 'anevum/anevum-web' && github.ref == 'refs/heads/build/continuance-living-commons-react-20261023-001'
+    if: github.repository == 'anevum/anevum-web' && github.event_name == 'pull_request' && github.event.pull_request.number == 679 && github.event.pull_request.head.repo.full_name == 'anevum/anevum-web' && github.event.pull_request.head.ref == 'build/continuance-living-commons-react-20261023-001'
     runs-on: ubuntu-latest
     timeout-minutes: 50
     env:
       WRANGLER_SEND_METRICS: 'false'
-      VITE_IREN_SPATIAL_GUIDE: 'true'
-      VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
-      VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
+      # Review-only, default-off UI flags. Exact production feature-ON
+      # acceptance belongs to V131-targeted PR707; this worker has no accounts.
+      VITE_IREN_SPATIAL_GUIDE: 'false'
+      VITE_NATIVE_CREATOR_STUDIO_V095: 'false'
+      VITE_PACKAGE_CREATOR_GALLERY_V010: 'false'
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }}
+          # Only build the owner-reviewed immutable PR704 merge, not a mutable PR head.
+          ref: 36330bbfa4614ddfd3c0c0572e93b7bc7d866e50
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
@@ -36,8 +42,9 @@ jobs:
         run: |
           set -euo pipefail
           test "$GITHUB_REPOSITORY" = 'anevum/anevum-web'
-          test "$GITHUB_REF" = 'refs/heads/build/continuance-living-commons-react-20261023-001'
-          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$GITHUB_HEAD_REF" = 'build/continuance-living-commons-react-20261023-001'
+          test "$GITHUB_EVENT_NAME" = 'pull_request'
+          test "$(git rev-parse HEAD)" = '36330bbfa4614ddfd3c0c0572e93b7bc7d866e50'
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
           import {readFileSync} from 'node:fs';
@@ -136,6 +143,16 @@ jobs:
         run: |
           set -euo pipefail
           node --test creator-v1/test/first-contact-review-isolation-v133.test.mjs
+          # Fail closed if the named review script already exists. Never
+          # overwrite a different source or rely on mutable PR code.
+          status="$(curl --silent --show-error --max-time 20 -o "$RUNNER_TEMP/v133-preview-existence.json" -w '%{http_code}' \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-first-contact-v133-review")"
+          if test "$status" = 200; then
+            echo "::error::The preview Worker already exists. Refusing to overwrite without fresh review."
+            exit 1
+          fi
+          test "$status" = 404
           npx --no-install wrangler deploy --config creator-v1/wrangler.first-contact-review-v133.jsonc
       - name: Smoke review-only origin and prove production allocations unchanged
         env:
