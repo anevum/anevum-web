@@ -4,6 +4,9 @@ on:
     paths:
       - '.github/workflows/parity-v136-cinematic-production.yml'
       - 'creator-v1/graphics/author-cinematic-institute-v136.py'
+      - 'creator-v1/graphics/inspect-cinematic-camera-v136.mjs'
+      - 'creator-v1/test/parity-v136-camera-registration.test.mjs'
+      - 'creator-v1/web/src/parity/CinematicCameraRegistrationV136.ts'
       - 'creator-v1/graphics/encode-cinematic-v136.mjs'
       - 'creator-v1/graphics/inspect-cinematic-candidate-v136.mjs'
       - 'creator-v1/graphics/smoke-cinematic-v136.mjs'
@@ -45,6 +48,7 @@ jobs:
         run: |
           node --experimental-strip-types --test creator-v1/test/parity-v136-media-contract.test.mjs
           node --experimental-strip-types --test creator-v1/test/parity-v136-cinematic.test.mjs
+          node --experimental-strip-types --test creator-v1/test/parity-v136-camera-registration.test.mjs
       - name: Encode real short footage and verify both image/video derivatives
         run: node creator-v1/graphics/smoke-cinematic-v136.mjs
 
@@ -75,6 +79,8 @@ jobs:
         run: node creator-v1/graphics/encode-cinematic-v136.mjs --frames "$RUNNER_TEMP/continuance-blender" --out "$RUNNER_TEMP/continuance-cinematic" --fps 8
       - name: Verify file hashes, frame chronology, native source resolution and video codecs
         run: node creator-v1/graphics/inspect-cinematic-candidate-v136.mjs --candidate "$RUNNER_TEMP/continuance-cinematic"
+      - name: Check camera transforms against exported ORIGINAL review GLB and landmarks
+        run: node --experimental-strip-types creator-v1/graphics/inspect-cinematic-camera-v136.mjs --source "$RUNNER_TEMP/continuance-blender" --candidate "$RUNNER_TEMP/continuance-cinematic"
       - name: Publish reviewer-only render source and playback derivatives
         if: always()
         uses: actions/upload-artifact@v4
