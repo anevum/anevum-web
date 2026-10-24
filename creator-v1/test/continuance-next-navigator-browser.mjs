@@ -21,6 +21,18 @@ const mark=(kind,detail={})=>{
   if(timeline.length<450)timeline.push({ms:Date.now(),kind,...detail});
 };
 const pathOnly=raw=>{try{const url=new URL(raw,base);return url.pathname+url.search;}catch{return String(raw).slice(0,120);}};
+/** Same-origin synthetic public API through real HTTP, not route.fulfill().
+ * WebKit may classify a pending intercepted fulfillment as an access-control
+ * failure when the containing document navigates away. A normal HTTP response
+ * exercises the production fetch path while preserving the strict fixture gate.
+ */
+function fixturePayload(pathname){
+  if(pathname==='/api/v1/member/auth/get-session')return null;
+  if(pathname==='/api/v1/status')return {version:'synthetic-navigator-fixture',counts:{publishedProjects:0,publishedCreators:0},features:{communityPosts:false}};
+  if(pathname==='/api/v1/projects'||pathname==='/api/v1/creators')return {items:[],count:0,nextCursor:null};
+  if(pathname==='/api/v1/categories')return {categories:[]};
+  return undefined;
+}
 const sourceHead=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
 const server=createServer((req,res)=>{
   const observed={ms:Date.now(),method:req.method,path:req.url};
@@ -28,6 +40,16 @@ const server=createServer((req,res)=>{
   res.once('finish',()=>{observed.status=res.statusCode;observed.finished=Date.now()});
   if(!['GET','HEAD'].includes(req.method)){forbidden.push({method:req.method,path:req.url});res.writeHead(405).end();return;}
   const url=new URL(req.url,'http://127.0.0.1');
+  if(url.pathname.startsWith('/api/')){
+    const payload=fixturePayload(url.pathname);
+    if(payload===undefined){
+      forbidden.push({path:url.pathname,reason:'Unexpected or private API reached fixture server'});
+      res.writeHead(403,{'content-type':'application/json','cache-control':'no-store'}).end(req.method==='HEAD'?undefined:JSON.stringify({error:'No fixture'}));
+      return;
+    }
+    res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'}).end(req.method==='HEAD'?undefined:JSON.stringify(payload));
+    return;
+  }
   let file=resolve(build,'.'+decodeURIComponent(url.pathname));
   if(!file.startsWith(build+sep)||!existsSync(file)||!statSync(file).isFile()){
     if(extname(file)){res.writeHead(404).end();return;}
@@ -85,12 +107,13 @@ async function fixture(width=1440,height=1000,reducedMotion='reduce'){
     }
     if(!url.pathname.startsWith('/api/')){await route.continue();return;}
     requests.push({path:url.pathname,query:url.search});
-    const json=(data,status=200)=>route.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
-    if(url.pathname==='/api/v1/member/auth/get-session'){await json(null);return;}
-    if(url.pathname==='/api/v1/status'){await json({version:'synthetic-navigator-fixture',counts:{publishedProjects:0,publishedCreators:0},features:{communityPosts:false}});return;}
-    if(url.pathname==='/api/v1/projects'||url.pathname==='/api/v1/creators'){await json({items:[],count:0,nextCursor:null});return;}
-    if(url.pathname==='/api/v1/categories'){await json({categories:[]});return;}
-    forbidden.push({path:url.pathname,reason:'Unexpected or private API'});await json({error:'No fixture for this endpoint'},403);return;
+    if(fixturePayload(url.pathname)===undefined){
+      forbidden.push({path:url.pathname,reason:'Unexpected or private API'});
+      await route.abort();return;
+    }
+    // Keep routing policy, but return bytes through the same-origin HTTP server.
+    await route.continue();
+    return;
   });
   const page=await context.newPage();
   page.on('pageerror',error=>{errors.push(error.message);mark('pageerror',{message:error.message})});
