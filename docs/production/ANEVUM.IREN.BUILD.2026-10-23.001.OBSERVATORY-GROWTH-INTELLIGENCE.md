@@ -67,6 +67,21 @@ Counts are exact for the queried database snapshot provided queries complete. Th
 - CAC = eligible campaign spend / *new attributed customers* over a declared period; use no denominator until attribution and paid-customer definitions are consistent.
 - Infrastructure unit economics: Workers/D1/Stream/R2/AI request cost per meaningful participant, projected consumption and budget alerts. Do not confuse tokens or request counts with invoiced costs.
 
+### Source-implemented V1 event governance — NOT ACTIVATED
+
+`creator-v1/analytics/growth-events-v1.mjs` now contains a strict, versioned schema for 24 named first-party product events across acquisition, identity, discovery, engagement, creator work, experiments, revenue and moderation. It is a **pure validation/definition library**, not an ingest service or new telemetry provider; CI covers its privacy and authority boundaries in `creator-v1/test/growth-events-v1.test.mjs`.
+
+- Client-observed intent events may be validated but cannot claim server-only `account_created`, `email_verified`, `project_play_completed_verified`, `project_saved`, `project_published`, `creator_achievement_issued`, `payment_settled`, or `payment_refunded`.
+- Unknown event names, unknown top-level attributes, unapproved dimension keys, client-supplied account/role/test/consent identifiers, raw URLs, emails, message text, malformed timestamps and oversized identifiers are rejected rather than stored.
+- WMP eligibility requires an authoritative server event; merely `community_reply_published` or `community_post_published` is **not** enough. Only a separate `community_contribution_qualified` event may certify a valuable community contribution after moderation/anti-abuse checks. No XP or creator rewards are granted by this module.
+- A real collector must additionally enforce consent, signatures/authenticated identity, event-id deduplication, clock skew bounds, bot/test suppression, retention, access audit and reconciled aggregation. None of those server-side operations is activated here.
+
+### Verified Cloudflare observability availability (provider read-only discovery)
+
+The Cloudflare Web Analytics site for `anevum.com` is enabled with automatic installation. Authenticated read-only GraphQL discovery confirmed historical `rumPageloadEventsAdaptiveGroups` data grouped by UTC date. This establishes a practical candidate source for browser-beacon **visits/page loads**, not a presently valid unique-person count or ANEVUM member funnel. The provider may sample reported datasets; much of the historical period overlaps site development and synthetic/owner traffic. **Do not treat this finding as a production dashboard integration or as proof of organic growth.**
+
+A future Cloudflare RUM adapter must use a distinct least-privilege analytics-read credential, server-only account/site identifiers, bounded grouped GraphQL reads, confidence/sample metadata where available, safe error handling, rate-limit backoff, and aggregate-only reviewer projections. Cloudflare introspection/query read budget was exhausted during discovery; no additional reads were attempted after that provider limit. No API token or private ID should enter the repository. Browser visits must remain separate from registered accounts and action-based participation.
+
 ### Technical instrumentation blueprint — NOT ACTIVATED
 
 1. **Browser Web Analytics:** evaluate scoped Cloudflare Web Analytics GraphQL reads for pageviews/visitor estimates, sampling indicators and available history. Browser beacons are not server-confirmed activity; show sampling or estimate metadata. Never use edge requests as unique visitors.
