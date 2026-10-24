@@ -4,6 +4,8 @@
  * This module defines an explicitly opt-in future event taxonomy, not collection.
  * No network I/O, no database writes, no XP rewards, no advertising identifiers.
  * Canonical actor attribution must be populated only by authenticated server code.
+ * Posting by itself is not qualified engagement: moderation / abuse / relevance checks
+ * must issue a separate community_contribution_qualified receipt.
  */
 export const EVENT_SCHEMA_VERSION = 1;
 
@@ -20,8 +22,9 @@ const EVENTS = {
   project_play_completed_verified: {stage:'activation',authority:SERVER,meaningful:true},
   project_saved:                   {stage:'activation',authority:SERVER,meaningful:true},
   project_voted:                   {stage:'engagement',authority:SERVER,meaningful:false},
-  community_reply_published:      {stage:'engagement',authority:SERVER,meaningful:true},
-  community_post_published:       {stage:'engagement',authority:SERVER,meaningful:true},
+  community_reply_published:      {stage:'engagement',authority:SERVER,meaningful:false},
+  community_post_published:       {stage:'engagement',authority:SERVER,meaningful:false},
+  community_contribution_qualified:{stage:'engagement',authority:SERVER,meaningful:true},
   studio_opened:                   {stage:'creator',authority:CLIENT,meaningful:false},
   project_draft_saved:            {stage:'creator',authority:SERVER,meaningful:false},
   project_submitted:              {stage:'creator',authority:SERVER,meaningful:false},
