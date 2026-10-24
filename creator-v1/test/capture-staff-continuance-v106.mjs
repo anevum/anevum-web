@@ -185,6 +185,9 @@ try{
   await capture('growth-next-'+label);
   if(label==='owner-desktop'||label==='owner-phone'){
    await evaluate("document.querySelector('#ci-weekly-signal').scrollIntoView()");
+   const clip=await evaluate("(()=>{const panel=document.querySelector('#ci-weekly-signal');const top=document.querySelector('.top');const label=document.querySelector('#ci-weekly-current-dates');return {panelTop:Math.round(panel.getBoundingClientRect().top),headerBottom:Math.round(top.getBoundingClientRect().bottom),label:label?.textContent,overflow:document.documentElement.scrollWidth>innerWidth+1}})()");
+   if(clip.panelTop<clip.headerBottom+6||clip.overflow||!clip.label?.includes(' UTC')||clip.label.includes('2026-10-'))
+    throw Error('V107_WEEKLY_STICKY_VISUAL_'+label+':'+JSON.stringify(clip));
    await capture('weekly-next-'+label);
   }
   if(label==='owner-desktop'||label==='owner-phone'){
