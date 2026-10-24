@@ -186,7 +186,7 @@ export function Shell(){
     </main>
     <footer className="site-footer av9-footer">
       <span>ANEVUM / A WORLD OF THINGS PEOPLE MAKE</span>
-      <nav aria-label="Site information"><Link to="/start">Start Here</Link><Link to="/guide">Field Guide</Link><Link to="/boards">Boards</Link><Link to="/status">Status</Link></nav>
+      <nav aria-label="Site information"><Link to="/start">Start Here</Link><Link to="/guide">Field Guide</Link><Link to="/boards">Boards</Link><Link to="/status">Status</Link><Link to="/updates">Release Notes</Link></nav>
       <span>PUBLIC DISCOVERY IS OPEN · CREATOR PUBLISHING IN TESTING</span>
     </footer>
   </div>;
