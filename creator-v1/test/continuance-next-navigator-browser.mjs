@@ -49,6 +49,21 @@ async function visitCommons(page,query=''){
   await readyCommons(page);
   assert.equal(page.url(),expected.href,'The requested public review state must be restored');
 }
+async function closeGlobalLauncher(page){
+  // Native close() hides a dialog before dispatching its queued close event.
+  // Wait for that real event to reach the original React onClose before reopening.
+  await page.locator('.portal-launcher').evaluate(element=>{
+    element.dataset.qaClosePending='true';
+    element.addEventListener('close',()=>requestAnimationFrame(()=>{
+      delete element.dataset.qaClosePending;
+    }),{once:true});
+  });
+  await page.getByRole('button',{name:'Close quick navigation',exact:true}).click();
+  await page.waitForFunction(()=>{
+    const element=document.querySelector('.portal-launcher');
+    return element&&!element.open&&!element.dataset.qaClosePending;
+  });
+}
 async function fixture(width=1440,height=1000,reducedMotion='reduce'){
   const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:2,reducedMotion});
   context.setDefaultTimeout(12000);
@@ -118,8 +133,7 @@ try{
     await page.keyboard.press('Alt+k');
     assert.equal(await page.locator('#lnx-quick-dialog').evaluate(el=>el.open),false);
     assert.equal(await page.locator('dialog[open]').count(),1);
-    await page.getByRole('button',{name:'Close quick navigation',exact:true}).click();
-    await page.locator('.portal-launcher').waitFor({state:'hidden'});
+    await closeGlobalLauncher(page);
     record(key+' remains owned by the original site-wide launcher');
   }
   await page.locator('.lnx-quick-entry').focus();
@@ -165,8 +179,7 @@ try{
   await page.locator('.portal-launcher').waitFor({state:'visible'});
   assert.equal(await page.locator('#lnx-quick-dialog').evaluate(el=>el.open),false);
   assert.equal(await page.locator('dialog[open]').count(),1);
-  await page.getByRole('button',{name:'Close quick navigation',exact:true}).click();
-  await page.locator('.portal-launcher').waitFor({state:'hidden'});
+  await closeGlobalLauncher(page);
   record('Global shortcut hands off from Commons without stacking two modals');
   await page.keyboard.press('Alt+k');
   await page.locator('#lnx-quick-dialog').waitFor({state:'visible'});
