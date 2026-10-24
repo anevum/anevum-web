@@ -69,4 +69,7 @@ test('edge/text treatment remains responsive and keyboard/high-contrast safe',()
   assert.match(css,/\.av135-file-glyph--typescript/);
   assert.match(css,/\.portal-page-heading h1 em/);
   assert.match(css,/\.av73-project-card h3/);
+  assert.match(css,/@media\(max-width:650px\)/);
+  assert.match(css,/\.portal-creators \.portal-search-hall form\.portal-wide-search/);
+  assert.match(css,/grid-template-columns:minmax\(0,1fr\);gap:9px/);
 });
