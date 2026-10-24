@@ -86,8 +86,8 @@ jobs:
           set -euo pipefail
           chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
           test -n "$chrome"
-          mkdir -p "$${{ runner.temp }}/v132-root"
-          ANEVUM_APEX_ROOT_QA=1 node creator-v1/test/portal-offline-preview.mjs > "$${{ runner.temp }}/v132-root/server.log" 2>&1 &
+          mkdir -p "$RUNNER_TEMP/v132-root"
+          ANEVUM_APEX_ROOT_QA=1 node creator-v1/test/portal-offline-preview.mjs > "$RUNNER_TEMP/v132-root/server.log" 2>&1 &
           pid=$!
           trap 'kill "$pid" 2>/dev/null || true' EXIT
           ready=0
@@ -96,8 +96,8 @@ jobs:
             sleep 0.3
           done
           test "$ready" = 1
-          node creator-v1/test/capture-v100-apex-root.mjs "$chrome" http://127.0.0.1:4180 "$${{ runner.temp }}/v132-root"
-          for width in 320 390 1440; do test -s "$${{ runner.temp }}/v132-root/apex-root-$width.png"; done
+          node creator-v1/test/capture-v100-apex-root.mjs "$chrome" http://127.0.0.1:4180 "$RUNNER_TEMP/v132-root"
+          for width in 320 390 1440; do test -s "$RUNNER_TEMP/v132-root/apex-root-$width.png"; done
       - name: Retrieve exact original V131 assets and Worker (sealed)
         uses: actions/download-artifact@v4
         with:
@@ -109,12 +109,12 @@ jobs:
       - name: Package only reviewed frontend over untouched V131 backend and artwork
         run: |
           node creator-v1/ops/v132-member-collections-package.mjs prepare \
-            "$${{ runner.temp }}/v131-preserved/v131-package" \
+            "$RUNNER_TEMP/v131-preserved/v131-package" \
             creator-v1/dist/web \
-            "$${{ runner.temp }}/v132-package"
-          node --check "$${{ runner.temp }}/v132-package/worker-bundle/gateway.js"
-          test -s "$${{ runner.temp }}/v132-package/v132-offline-manifest.json"
-          test -z "$(find "$${{ runner.temp }}/v132-package/compiled-web" -name '*.map' -print -quit)"
+            "$RUNNER_TEMP/v132-package"
+          node --check "$RUNNER_TEMP/v132-package/worker-bundle/gateway.js"
+          test -s "$RUNNER_TEMP/v132-package/v132-offline-manifest.json"
+          test -z "$(find "$RUNNER_TEMP/v132-package/compiled-web" -name '*.map' -print -quit)"
       - name: No-auth static assets/Worker dry run, never upload
         run: |
           node --input-type=module <<'JS'
@@ -122,15 +122,15 @@ jobs:
           import {resolve} from 'node:path';
           const c=JSON.parse(readFileSync('creator-v1/wrangler.apex-prelaunch.jsonc','utf8'));
           c.$schema=resolve('node_modules/wrangler/config-schema.json');
-          c.main=resolve(process.env.${{ runner.temp }},'v132-package','worker-bundle','gateway.js');
-          c.assets.directory=resolve(process.env.${{ runner.temp }},'v132-package','compiled-web');
+          c.main=resolve(process.env.RUNNER_TEMP,'v132-package','worker-bundle','gateway.js');
+          c.assets.directory=resolve(process.env.RUNNER_TEMP,'v132-package','compiled-web');
           c.routes=[];c.workers_dev=false;c.preview_urls=false;
           c.vars={CANONICAL_CREATOR_UPLOADS_ENABLED:'false',CANONICAL_XP_TEST_ENABLED:'false'};
-          writeFileSync(resolve(process.env.${{ runner.temp }},'v132-synthetic.json'),JSON.stringify(c));
+          writeFileSync(resolve(process.env.RUNNER_TEMP,'v132-synthetic.json'),JSON.stringify(c));
           JS
           npx --no-install wrangler deploy --dry-run --no-bundle \
-            --config "$${{ runner.temp }}/v132-synthetic.json" \
-            --outdir "$${{ runner.temp }}/v132-dryrun"
+            --config "$RUNNER_TEMP/v132-synthetic.json" \
+            --outdir "$RUNNER_TEMP/v132-dryrun"
           echo 'V132_OFFLINE_BUNDLE=PASS; ORIGINAL_V131_GATEWAY=UNCHANGED; PROVIDER_WRITES=0; PUBLIC_TRAFFIC=UNCHANGED' >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         if: always()
