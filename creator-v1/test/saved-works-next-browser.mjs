@@ -90,6 +90,11 @@ try{
   await fit(page,width+' gallery fits');await snap(page,'saved-gallery-'+width);
   await page.getByRole('button',{name:'List',exact:true}).click();
   assert.equal(await page.locator('.avsaved-content').getAttribute('data-view'),'list');
+  if(width===320){
+   await page.locator('.avsaved-card').first().getByRole('button',{name:'UNSAVE'}).click();
+   await page.waitForFunction(()=>document.querySelectorAll('.avsaved-card').length===2);
+   log('320 unsave button is usable without an IREN obstruction');
+  }
   await ctx.close();
  }
  const {ctx,page,state}=await fixture(390);
