@@ -35,7 +35,7 @@ test("V115 first load opens the ANEVUM universe and real IREN, not the alpha gam
  assert.equal((home.match(/MEET IREN/g)||[]).length,1);
  assert.match(home,/new Event\("anevum:iren-intro"\)/);
  assert.match(home,/Free to explore\. No account required\./);
- assert.match(home,/Studio publishing is still in testing\./);
+ assert.match(home,/Creator publishing is still in testing\./);
  assert.match(home,/to=\{signedIn\?"\/member":"\/join"\}/);
  assert.match(home,/readProjects\(\{limit:"32"\},signal\)/);
  assert.match(home,/const firstLook=projects\[0\]\|\|null/);
