@@ -79,7 +79,7 @@ export function ProgressionNextReviewPage(){
   <div className="px-main"><header className="px-section-heading"><div><span className="px-overline">{view==='earn'?'BROWSE / CREATE / CONNECT':view==='expeditions'?'GUIDED PATHS':'YOUR PRIVATE RECORD'}</span><h2 ref={heading} tabIndex={-1}>{view==='earn'?'Choose what interests you.':view==='expeditions'?'One meaningful path at a time.':'Your milestones, clearly recorded.'}</h2></div><span className="px-small-note">EARNED, NEVER PURCHASED</span></header>
 
    {view==='earn'&&<>
-    <div className="px-browse-intro"><p>Start with a few ideas. Choose an area to see more, or search all 19 paths.</p><span>All reward amounts below are proposed, except the separately labelled staging rule.</span></div>
+    <div className="px-browse-intro"><p>Start with a few ideas. Choose an area to see more, or search all 19 paths.</p></div>
     <div className="px-track-picker" role="group" aria-label="Contribution tracks">
      <button type="button" aria-pressed={track==='starter'&&!query} onClick={()=>chooseTrack('starter')}>Start here</button>
      {TRACKS.map(t=><button type="button" key={t.id} aria-pressed={track===t.id&&!query} onClick={()=>chooseTrack(t.id)}>{t.name}</button>)}
@@ -95,7 +95,7 @@ export function ProgressionNextReviewPage(){
      {matches.length===0?<div className="px-empty"><h3>No matching paths.</h3><p>Try a shorter phrase or return to the suggested paths.</p><button type="button" onClick={()=>chooseTrack('starter')}>Clear filters</button></div>:
       <ol id="px-path-list" className="px-activity-list">{shown.map(a=><li key={a.id}><article className={'px-activity px-track-'+a.track}>
        <div className="px-activity-copy"><span className="px-entry-track">{TRACKS.find(t=>t.id===a.track)?.name}</span><h4>{a.title}</h4><p>{a.detail}</p></div>
-       <div className="px-activity-action"><span className="px-entry-value">{a.xp>0?'+'+a.xp+' XP':'No XP'}</span>{a.stage==='staging-only'&&<small>Staging only</small>}<button type="button" onClick={()=>inspect(a)} aria-haspopup="dialog" aria-label={'View criteria for '+a.title}>Details <span aria-hidden="true">&#8599;</span></button></div>
+       <div className="px-activity-action"><span className="px-entry-value">{a.xp>0?'+'+a.xp+' XP':'No XP'}</span><small>{a.stage==='staging-only'?'Staging only':'Proposed'}</small><button type="button" onClick={()=>inspect(a)} aria-haspopup="dialog" aria-label={'View criteria for '+a.title}>Details <span aria-hidden="true">&#8599;</span></button></div>
       </article></li>)}</ol>}
      {hiddenCount>0&&<button type="button" className="px-more" aria-controls="px-path-list" onClick={()=>setExpanded(true)}>Show {hiddenCount} more {track==='all'?'paths':track==='starter'?'suggestions':'in this area'} <span aria-hidden="true">&#8595;</span></button>}
      {expanded&&!query.trim()&&matches.length>6&&<button type="button" className="px-more px-less" aria-controls="px-path-list" onClick={()=>setExpanded(false)}>Show fewer <span aria-hidden="true">&#8593;</span></button>}
