@@ -1,5 +1,5 @@
 /* Project Doctor: bounded local-only diagnostics in the private Studio draft editor. */
-.cpd-root{border:1px solid #375a70;border-radius:10px;background:linear-gradient(115deg,#10293b,#101e30);color:#eef8ff;min-width:0}
+.cpd-root{scroll-margin-top:84px;border:1px solid #375a70;border-radius:10px;background:linear-gradient(115deg,#10293b,#101e30);color:#eef8ff;min-width:0}
 .cpd-root *{box-sizing:border-box}
 .cpd-header{padding:16px;display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap}
 .cpd-head-copy{min-width:0;flex:1 1 250px}
