@@ -56,7 +56,8 @@ test('native detail disclosure and variants are wired in every genuine forum pla
 });
 test('component introduces no unscoped global styles or data-writing controls',()=>{
  assert.doesNotMatch(css,/^\s*(html|body|:root)\s*\{/m);
- assert.doesNotMatch(card,/onSubmit|onClick|<button|POST|PUT|DELETE|PATCH/);
+ // Match standalone HTTP verbs, not the substring PUT in REPUTATION.
+ assert.doesNotMatch(card,/onSubmit|onClick|<button|\b(?:POST|PUT|DELETE|PATCH)\b/);
  assert.match(card,/Public profile of/);
  assert.match(card,/PUBLIC MEMBER/);
 });
