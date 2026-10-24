@@ -322,6 +322,7 @@ try {
     await mobile.page.locator('.lnx-atlas-map').waitFor({state:'visible'});
     assert.equal(await map.getAttribute('aria-pressed'),'true');
     assert.equal(new URL(mobile.page.url()).searchParams.get('atlas'),'map');
+    await mobile.page.waitForFunction(() => document.querySelector('.lnx-atlas-controls button[aria-pressed="true"]')===document.activeElement);
     assert.equal(await map.evaluate(el=>el===document.activeElement),true,'Changing presentation retains keyboard focus');
     await noOverflow(mobile.page,'Atlas mobile optional map');
     await capture(mobile.page,'atlas-map-390');
@@ -331,6 +332,7 @@ try {
     record('Atlas spatial layout survives copyable URL and hard reload on a phone');
     await list.click();
     assert.equal(await list.getAttribute('aria-pressed'),'true');
+    await mobile.page.waitForFunction(() => document.querySelector('.lnx-atlas-controls button[aria-pressed="true"]')===document.activeElement);
     assert.equal(await list.evaluate(el=>el===document.activeElement),true,'List selection retains keyboard focus despite Shell navigation');
     assert.equal(new URL(mobile.page.url()).searchParams.get('atlas'),'list');
     await mobile.page.goBack();
@@ -339,6 +341,7 @@ try {
     await mobile.page.getByRole('button',{name:'Use device default'}).click();
     await mobile.page.waitForURL(url=>url.searchParams.get('atlas')===null);
     assert.equal(await list.getAttribute('aria-pressed'),'true');
+    await mobile.page.waitForFunction(() => document.querySelector('.lnx-atlas-controls button[aria-pressed="true"]')===document.activeElement);
     assert.equal(await list.evaluate(el=>el===document.activeElement),true,'Device default restores focus to the active layout control');
     record('Atlas history restores map selection; device default returns to accessible list');
     await mobile.page.locator('.lnx-atlas-row').first().click();
