@@ -101,6 +101,23 @@ test('original Observatory navigation and member controls are preserved',async()
  assert.match(page,/data-tab="members"/);assert.match(page,/data-tab="moderation"/);
  assert.match(page,/id="memberSearch"/);
 });
+test('campaign link laboratory only creates bounded UTM links and never asserts that tracking is connected',async()=>{
+ const f=fixture('owner');
+ const res=await worker.fetch(f.request(),f.env);
+ const markup=await res.text();
+ assert.match(markup,/id="campaignTarget"/);
+ assert.match(markup,/id="utmSource"/);
+ assert.match(markup,/id="utmCampaign"/);
+ assert.match(markup,/id="campaignOutput"/);
+ assert.match(markup,/Attribution and conversion reporting require separately approved event instrumentation/);
+ const js=asset('CLIENT');
+ assert.match(js,/utm_source/);
+ assert.match(js,/utm_medium/);
+ assert.match(js,/utm_campaign/);
+ assert.match(js,/campaignSlug/);
+ assert.match(js,/clipboard\.writeText/);
+ assert.match(js,/!\['\/',\'\/join\',\'\/discover\'\]/);
+});
 test('rolling windows are distinct from UTC calendar chart and zero-baseline percent is not invented',()=>{
  assert.match(source,/julianday\('now','-7 days'\)/);
  assert.match(source,/julianday\('now','-14 days'\)/);
