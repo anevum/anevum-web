@@ -5,15 +5,16 @@
  */
 import {useMemo,useRef,useState,type KeyboardEvent,type ReactNode,type UIEvent} from "react";
 import {OrbitalMark} from "../components/OrbitalMark";
+import {VisualFileGlyph} from "../components/NextVisualPrimitivesV135";
 
 type FileId="index.html"|"styles.css"|"main.ts";
 type Material="nebula"|"metal"|"signal";
 type PreviewTab="scene"|"html";
 type EditorFiles=Record<FileId,string>;
-const entries:readonly {id:FileId;label:string;icon:string;kind:string}[]=[
-  {id:"index.html",label:"index.html",icon:"H",kind:"html"},
-  {id:"styles.css",label:"styles.css",icon:"C",kind:"css"},
-  {id:"main.ts",label:"main.ts",icon:"TS",kind:"typescript"}
+const entries:readonly {id:FileId;label:string;kind:string}[]=[
+  {id:"index.html",label:"index.html",kind:"html"},
+  {id:"styles.css",label:"styles.css",kind:"css"},
+  {id:"main.ts",label:"main.ts",kind:"typescript"}
 ];
 const samples:EditorFiles={
   "index.html":[
@@ -161,7 +162,7 @@ export function NextVisualLabV134(){
           key={item.id} className="av134-file"
           onClick={()=>setFile(item.id)}
           onKeyDown={e=>handleFileKeys(e,item.id)}>
-          <span className={"av134-file-icon av134-file-icon--"+item.kind} aria-hidden="true">{item.icon}</span>
+          <span className={"av134-file-icon av134-file-icon--"+item.kind} aria-hidden="true"><VisualFileGlyph name={item.id}/></span>
           <span className="av134-file-name">{item.label}</span>
         </button>)}
       </div>
