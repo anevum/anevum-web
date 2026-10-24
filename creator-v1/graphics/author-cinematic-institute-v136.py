@@ -369,7 +369,7 @@ camera_manifest={
     "handoffStatus":"UNREGISTERED / NOT A SEAMLESS THREE.JS CAMERA MATCH",
     "contentClaims":"Atmospheric original environment only; no real member or publication data",
     "backdrop": {"file":os.path.basename(opts.backdrop) if opts.backdrop else None,
-                 "nativePixels":list(bpy.data.images[os.path.basename(opts.backdrop)].size) if opts.backdrop else None,
+                 "nativePixels":list(image.size) if opts.backdrop else None,
                  "sourceRights":"Existing first-party PARITY V136 original environment, not creator content"}
 }
 with open(os.path.join(root,"camera-manifest.json"),"w",encoding="utf8") as f:
