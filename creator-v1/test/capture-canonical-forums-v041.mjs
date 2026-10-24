@@ -290,6 +290,13 @@ try{
   const authorLayout=await evaluate("(()=>{const a=document.querySelector('.cf-list .cf-author-dossier');const r=a?.getBoundingClientRect();const v=a?.querySelector('.cf-author-dossier-visit')?.getBoundingClientRect();const d=a?.querySelector('summary')?.getBoundingClientRect();const overlap=v&&d?Math.max(0,Math.min(v.right,d.right)-Math.max(v.left,d.left))*Math.max(0,Math.min(v.bottom,d.bottom)-Math.max(v.top,d.top)):0;return {height:r?.height,overflow:a?.scrollWidth>a?.clientWidth+2,art:!!a?.querySelector('.av61-specimen'),auralabel:a?.getAttribute('data-aura'),actionOverlap:overlap,wallHeight:v?.height,detailsHeight:d?.height}})()");
   const shot=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   assert.ok(shot.data);writeFileSync(join(out,'forum-'+width+'.png'),Buffer.from(shot.data,'base64'));
+   // Review the actual source card at each viewport, not just the community
+   // masthead or first thread heading. This is a synthetic compiled UI only.
+   await evaluate("document.querySelector('.cf-list .cf-author-dossier')?.scrollIntoView({block:'center'})");
+   await delay(120);
+   const focused=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+   assert.ok(focused.data,'Focused author screenshot must exist at '+width);
+   writeFileSync(join(out,'forum-author-'+width+'.png'),Buffer.from(focused.data,'base64'));
   assert.equal(authorLayout.overflow,false,'Identity must not overflow at '+width);
   assert.equal(authorLayout.auralabel,'nebula','User aura remains selected at '+width);
   assert.equal(authorLayout.actionOverlap,0,'Mobile public wall and details controls must not overlap at '+width);
