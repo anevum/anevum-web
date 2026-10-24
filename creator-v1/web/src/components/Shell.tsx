@@ -14,6 +14,7 @@ import {VerifiedStaffShortcut} from "./VerifiedStaffShortcut";
 import {LivingWorldProvider,useLivingWorld,type WorldSector} from "../parity/LivingWorldState";
 import {LivingWorldField} from "../parity/LivingWorldField";
 import {ConsoleWayfinderV136} from "../parity/ConsoleWayfinderV136";
+import {ControllerBridgeV136} from "../parity/ControllerBridgeV136";
 import {StudioSpatialWorkspaceV136} from "../parity/StudioSpatialWorkspaceV136";
 import "../parity/spatial-surface-v136.css";
 
@@ -153,6 +154,7 @@ function ShellContent(){
     <div className="av5-site-frame av9-unified-frame"><div className="av5-site-content"><Outlet/></div></div>;
   return <div className={"site-shell site-shell--cinematic av9-shell"+(home?" site-shell--home":"")}>
     {FullParityHeader&&<LivingWorldField enabled={publicSpatial} sector={worldSector(location.pathname,location.search)}/>}
+    {FullParityHeader&&<ControllerBridgeV136 navigationEnabled={publicSpatial}/>}
 
     {!publicSpatial&&<ContinuanceWorldStage path={location.pathname}/>}
     {FullParityHeader?<Suspense fallback={<header className="p136-header" aria-label="ANEVUM navigation loading"/>}><FullParityHeader memberDestination={memberDestination} canonicalMember={canonicalMember} query={query} onQuery={setQuery} onSearch={search} onOpenLauncher={()=>setLauncherOpen(true)} onOpenIren={()=>window.dispatchEvent(new Event("anevum:iren-open"))} menuOpen={menuOpen} onToggleMenu={()=>setMenuOpen(v=>!v)} menuButton={menuButton}/></Suspense>:<header className="site-header av9-header">
