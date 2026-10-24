@@ -245,9 +245,9 @@ try{
  assert.equal(await setValue('.csp-inputbar input','collapse'),'collapse');
  await until(()=>evaluate('document.querySelector(".csp-result")?.textContent.includes("Collapse all")'),'Allowed folder command');
  await click('.csp-result:first-child');
- await until(()=>evaluate('document.querySelector(".csf-tree-row[title="Scenes"]")?.getAttribute("aria-expanded")==="false"'),'Collapse command');
+ await until(()=>evaluate('document.querySelector(".csf-tree-row[aria-expanded]")?.getAttribute("aria-expanded")==="false"'),'Collapse command');
  await click('.csf-tree-actions button[title="Expand all folders"]');
- await until(()=>evaluate('document.querySelector(".csf-tree-row[title="Scenes"]")?.getAttribute("aria-expanded")==="true"'),'Expand after palette');
+ await until(()=>evaluate('document.querySelector(".csf-tree-row[aria-expanded]")?.getAttribute("aria-expanded")==="true"'),'Expand after palette');
  assert.equal(filePatches.length,2,'Command navigation does not mutate revisions');
  acceptNextConfirmation=true;
  await click('.csf-editor-title .csw-danger');
