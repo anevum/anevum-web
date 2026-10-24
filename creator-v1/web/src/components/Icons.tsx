@@ -42,7 +42,8 @@ const paths: Record<string, string> = {
   'list-checks': "M9 5h12 M9 12h12 M9 19h12 m-8-3 2 2 4-4 M2 5h3 M2 12h3 M2 19h3",
   'list-tree': "M6 3v15 M6 7h5 M11 7h10 M6 13h5 M11 13h10 M6 19h5 M11 19h10",
   columns: "M3 4h18v16H3z M12 4v16",
-  panel: "M3 3h18v18H3z M3 8h18"
+  panel: "M3 3h18v18H3z M3 8h18",
+  sun: "M12 4V2 M12 22v-2 M4 12H2 M22 12h-2 M5.6 5.6l1.5 1.5 M16.9 16.9l1.5 1.5 M18.4 5.6l-1.5 1.5 M7.1 16.9l-1.5 1.5 M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10z"
 };
 export function Icon({ name, size = 18 }: { name: string; size?: number }) {
   return <svg aria-hidden="true" viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={paths[name] || paths.explore} /></svg>;
