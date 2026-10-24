@@ -58,5 +58,9 @@ test("V133 preview has no registration, access, or production mutation permissio
  assert.match(worker,/productionDeployment:false/);
  assert.match(worker,/database:false/);
  assert.match(worker,/x-anevum-preview/);
+ assert.match(worker,/READ-ONLY PREVIEW/);
+ assert.match(worker,/JOIN ON ANEVUM.COM/);
+ assert.match(worker,/role="note"/);
+ assert.match(worker,/outside the React root/);
  assert.doesNotMatch(worker,/wrangler|CLOUDFLARE_|api[_-]?key|Bearer |eval\(|new Function|document\.cookie|new WebSocket/);
 });
