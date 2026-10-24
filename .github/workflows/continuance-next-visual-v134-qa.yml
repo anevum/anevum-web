@@ -4,10 +4,18 @@ on:
     paths:
       - '.github/workflows/continuance-next-visual-v134-qa.yml'
       - 'creator-v1/web/src/continuance-next-visual-v134.css'
+      - 'creator-v1/web/src/next-visual-primitives-v135.css'
+      - 'creator-v1/web/src/components/NextVisualPrimitivesV135.tsx'
+      - 'creator-v1/web/src/components/PortalHeading.tsx'
+      - 'creator-v1/web/src/components/ProjectCard.tsx'
+      - 'creator-v1/web/src/pages/CommunityPage.tsx'
+      - 'creator-v1/web/src/pages/CreatorsPage.tsx'
+      - 'creator-v1/web/src/pages/DiscoverPage.tsx'
       - 'creator-v1/web/src/pages/NextVisualLabV134.tsx'
       - 'creator-v1/web/src/main.tsx'
       - 'creator-v1/web/src/App.tsx'
       - 'creator-v1/test/next-unified-visual-v134.test.mjs'
+      - 'creator-v1/test/next-visual-primitives-v135.test.mjs'
       - 'creator-v1/test/next-unified-visual-v134-browser.mjs'
       - 'docs/production/continuance-next-visual-v134-20261024.md'
 permissions:
@@ -38,7 +46,7 @@ jobs:
           test -z "$CLOUDFLARE_API_TOKEN"
           test -z "$CLOUDFLARE_API_KEY"
           test -z "$CLOUDFLARE_ACCOUNT_ID"
-          node --test creator-v1/test/next-unified-visual-v134.test.mjs
+          node --test creator-v1/test/next-unified-visual-v134.test.mjs creator-v1/test/next-visual-primitives-v135.test.mjs
       - name: Install frontend without lifecycle scripts
         run: npm install --ignore-scripts --no-audit --no-fund
       - name: Check actual TypeScript source
@@ -53,7 +61,7 @@ jobs:
           import fs from 'node:fs';import path from 'node:path';
           const all=dir=>fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?all(path.join(dir,e.name)):[path.join(dir,e.name)]);
           const content=all('creator-v1/dist/web').filter(p=>/\.(js|css)$/.test(p)).map(p=>fs.readFileSync(p,'utf8')).join('\n');
-          for(const marker of ['av134-lab','av134-scene-core','--av134-glass'])if(content.includes(marker))throw Error('V134 leaked into default output: '+marker);
+          for(const marker of ['av134-lab','av134-scene-core','--av134-glass','--av135-surface'])if(content.includes(marker))throw Error('V134 leaked into default output: '+marker);
           JS
       - name: Build explicitly enabled NEXT visual review
         env:
@@ -65,13 +73,13 @@ jobs:
           import fs from 'node:fs';import path from 'node:path';
           const all=dir=>fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?all(path.join(dir,e.name)):[path.join(dir,e.name)]);
           const content=all('creator-v1/dist/web').filter(p=>/\.(js|css)$/.test(p)).map(p=>fs.readFileSync(p,'utf8')).join('\n');
-          for(const marker of ['av134-lab','av134-scene-core','--av134-glass'])if(!content.includes(marker))throw Error('Missing V134 flagged content: '+marker);
+          for(const marker of ['av134-lab','av134-scene-core','--av134-glass','--av135-surface'])if(!content.includes(marker))throw Error('Missing V134 flagged content: '+marker);
           JS
       - name: Install pinned Chromium review tooling
         run: |
           npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
           npx playwright install --with-deps chromium
-      - name: Exercise real compiled responsive React + interactive code editor
+      - name: Exercise real compiled React, vector file icons, shared surfaces and editor
         run: node creator-v1/test/next-unified-visual-v134-browser.mjs --output "$RUNNER_TEMP/anevum-next-visual-v134"
       - name: Retain compiled screenshots and precise browser receipt
         if: always()
