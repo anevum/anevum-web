@@ -1,0 +1,108 @@
+name: ANEVUM Creator Package V004 Resource Protection
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - build/creator-package-v004-resource-protection-20261019
+    paths:
+      - creator-v1/package-alpha-v004/**
+      - creator-v1/test/package-resource-*.test.mjs
+      - creator-v1/ops/v004-live-smoke.mjs
+      - .github/workflows/creator-package-v004-verify.yml
+  pull_request:
+    paths:
+      - creator-v1/package-alpha-v004/**
+      - creator-v1/test/package-resource-*.test.mjs
+      - creator-v1/ops/v004-live-smoke.mjs
+      - .github/workflows/creator-package-v004-verify.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: creator-package-v004-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  protect-creator-storage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout exact protected source
+        uses: actions/checkout@v4
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Python 3.12 for disposable SQLite
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate all Worker modules
+        run: |
+          set -euo pipefail
+          for f in creator-v1/package-alpha-v004/*.mjs; do node --check "$f"; done
+          python3 -m py_compile creator-v1/package-alpha-v004/tests/sqlite-bridge.py
+      - name: Reject credential or production deployment changes
+        run: |
+          set -euo pipefail
+          test -f creator-v1/package-alpha-v004/migrations/0002_resource_protection.sql
+          ! grep -R -E 'DROP TABLE|DELETE FROM user|wrangler deploy' creator-v1/package-alpha-v004/migrations/
+      - name: Test bounded uploads and browser script contracts
+        run: node --test creator-v1/test/package-resource-protection-v004.test.mjs
+      - name: Test D1 transactions against disposable SQLite and fake private R2
+        run: node --test creator-v1/test/package-resource-integration-v004.test.mjs
+      - name: Test deployed staging router and signed isolated player
+        run: node --test creator-v1/test/package-stage-runtime-v004.test.mjs
+      - name: Smoke live opt-in V004 staging (read-only)
+        run: node creator-v1/ops/v004-live-smoke.mjs
+      - name: Render Creator Lab at mobile and desktop resolutions
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/v004
+          node --input-type=module <<'EOF'
+          import {writeFileSync} from "node:fs";
+          import {uploadScreen} from "./creator-v1/package-alpha-v004/ui.mjs";
+          const now=Math.floor(Date.now()/1000),project={
+            id:"123e4567-e89b-42d3-a456-426614174000",title:"Aether Drift",
+            summary:"A playable experimental journey through the Continuance universe",
+            category:"game",status:"draft",draft_release_id:"123e4567-e89b-42d3-a456-426614174001",
+            draft_status:"ready",draft_mode:"test",draft_expires_at:now+45*3600,release_version:2,
+            updated_at:now,review_reason:null
+          };
+          const usage={
+            memberPhysicalBytes:12*1048576,memberPhysicalLimit:200*1048576,
+            memberArchiveBytes:5*1048576,pilotPhysicalBytes:88*1048576,
+            pilotPhysicalLimit:512*1048576,cleanupPending:1
+          };
+          const html=await uploadScreen([project],true,true,"",usage).text();
+          writeFileSync("evidence/v004/creator-lab-fixture.html",html);
+          EOF
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [ -n "$chrome" ]; then
+            for width in 390 1440; do
+              "$chrome" --headless --no-sandbox --disable-gpu --hide-scrollbars \
+                --disable-dev-shm-usage --window-size="$width,900" \
+                --screenshot="$PWD/evidence/v004/creator-lab-$width.png" \
+                "file://$PWD/evidence/v004/creator-lab-fixture.html" \
+                >"/tmp/anevum-package-chrome-$width.log" 2>&1
+              "$chrome" --headless --no-sandbox --disable-gpu --hide-scrollbars \
+                --disable-dev-shm-usage --window-size="$width,900" \
+                --screenshot="$PWD/evidence/v004/creator-lab-live-$width.png" \
+                "https://anevum.com/creator-lab/v004" \
+                >"/tmp/anevum-package-live-$width.log" 2>&1
+            done
+          else
+            echo "Chromium missing; mobile screenshot gate remains outstanding."
+          fi
+      - name: Verify real deployed V004 routes without accounts or writes
+        run: node creator-v1/ops/v004-live-smoke.mjs
+      - name: Publish visual and test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: creator-package-v004-${{ github.sha }}
+          path: evidence/v004/
+          retention-days: 7
