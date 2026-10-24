@@ -108,8 +108,19 @@ try{
   if(state.kpis!==8||state.bars!==30||state.coverage!==5||state.role!==(role==='owner'?'OWNER':'REVIEWER')||
      !state.health?.includes('VERIFIED AGGREGATE')||state.overflows||!state.returnLink||state.broken)throw Error('V105_BROWSER_CONTRACT_'+label+':'+JSON.stringify(state));
   if(requests.length!==1)throw Error('V105_UNEXPECTED_REQUESTS_'+JSON.stringify(requests));
+  const campaign=await evaluate("(()=>({link:document.querySelector('#campaignOutput')?.value,copyDisabled:document.querySelector('#campaignCopy')?.disabled}))()");
+  if(!campaign.link?.startsWith('https://anevum.com/?utm_source=reddit&utm_medium=community&utm_campaign=founding-testers')||campaign.copyDisabled)
+   throw Error('V105_CAMPAIGN_URL_CONTRACT_'+label+':'+JSON.stringify(campaign));
+  if(role==='owner'){
+   const invalid=await evaluate("(()=>{const x=document.querySelector('#utmSource');x.value='unsafe input !';x.dispatchEvent(new Event('input',{bubbles:true}));const rejected=document.querySelector('#campaignCopy').disabled&&document.querySelector('#campaignOutput').value==='';x.value='reddit';x.dispatchEvent(new Event('input',{bubbles:true}));return rejected&&document.querySelector('#campaignOutput').value.includes('utm_source=reddit')})()");
+   if(!invalid)throw Error('V105_CAMPAIGN_INVALID_SLUG_ACCEPTED_'+label);
+  }
   await capture(label);
-  evidence.push({label,role,width,height,state,requests:[...requests],syntheticOnly:true});
+  if(label==='owner-desktop'||label==='owner-phone'){
+   await evaluate("document.querySelector('#campaign').scrollIntoView()");
+   await capture('campaign-'+label);
+  }
+  evidence.push({label,role,width,height,state,campaign,requests:[...requests],syntheticOnly:true});
   console.log('V105_GROWTH_'+label.toUpperCase().replaceAll('-','_')+'=PASS');
  }
  offline=true;role='owner';requests=[];
