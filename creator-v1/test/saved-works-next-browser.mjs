@@ -26,7 +26,7 @@ const id=(x)=>x.repeat(32);
 const saved=[
  {id:id('a'),title:'Orbital Garden',summary:'Grow a pocket universe through seasonal decisions.',category:'games',creatorHandle:'maker_one',creatorName:'A Maker',publishedAt:'2026-10-23T00:00:00Z',savedAt:1792700000},
  {id:id('b'),title:'Signal Workbench',summary:'Tools for turning structured ideas into working prototypes.',category:'tools',creatorHandle:'maker_two',creatorName:'B Maker',publishedAt:'2026-10-23T00:00:00Z',savedAt:1792700100},
- {id:id('c'),title:'Living Garden',summary:'A different playable approach to orbital systems.',category:'games',creatorHandle:'maker_three',creatorName:'C Maker',publishedAt:'2026-10-23T00:00:00Z',savedAt:1792700200}
+ {id:id('c'),title:'Living Garden',summary:'A different playable approach to growing worlds.',category:'games',creatorHandle:'maker_three',creatorName:'C Maker',publishedAt:'2026-10-23T00:00:00Z',savedAt:1792700200}
 ];
 let lastPage=null;let failure=null;
 async function fixture(width,mode='ready'){
