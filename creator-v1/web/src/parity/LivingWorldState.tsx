@@ -5,7 +5,7 @@ import {readCategories,readStatus,type Category} from '../lib/api';
  * session state, behavioral analytics or moderation data.
  */
 const categories=['games','tools','creative','libraries','automation','research','learning','other'] as const satisfies readonly Category[];
-export type WorldSector=Category|'hero'|'portal';
+export type WorldSector=Category|'hero'|'portal'|'community'|'creators'|'studio';
 export type WorldSignal={
   source:'unavailable'|'partial'|'verified';
   publishedProjects:number|null;
@@ -17,10 +17,12 @@ export type WorldContextValue={
   signal:WorldSignal;
   paused:boolean;
   setPaused:(next:boolean|((previous:boolean)=>boolean))=>void;
+  previewSector:WorldSector|null;
+  setPreviewSector:(next:WorldSector|null)=>void;
 };
 export const EMPTY_WORLD:WorldSignal={source:'unavailable',publishedProjects:null,publishedCreators:null,categories:{},observedAt:null};
 const WorldContext=createContext<WorldContextValue>({
-  signal:EMPTY_WORLD,paused:false,setPaused:()=>{}
+  signal:EMPTY_WORLD,paused:false,setPaused:()=>{},previewSector:null,setPreviewSector:()=>{}
 });
 const validCount=(v:unknown):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>=0&&v<=10_000_000;
 const object=(v:unknown):v is Record<string,unknown>=>Boolean(v)&&typeof v==='object'&&!Array.isArray(v);
@@ -48,7 +50,9 @@ export function normalizeWorldSignals(status:unknown,counts:unknown,observedAt:n
 }
 
 export function worldDensity(signal:WorldSignal,sector:WorldSector):number {
-  const count=sector==='hero'||sector==='portal'?signal.publishedProjects:signal.categories[sector];
+  const count=sector==='creators'?signal.publishedCreators:
+    sector==='hero'||sector==='portal'||sector==='community'||sector==='studio'
+      ?signal.publishedProjects:signal.categories[sector];
   // An unknown count is not zero. A zero count still renders a quiet neutral
   // field. Log scaling prevents large catalogues from saturating the scene.
   return count===null||count===undefined?0.24:Math.min(0.94,0.18+Math.log2(1+count)*0.075);
@@ -61,6 +65,9 @@ export function worldDensity(signal:WorldSignal,sector:WorldSector):number {
 export function LivingWorldProvider({children}:{children:ReactNode}){
   const [signal,setSignal]=useState<WorldSignal>(EMPTY_WORLD);
   const [paused,setPaused]=useState(false);
+  // Ephemeral scene selection is visual-only. Never records browsing,
+  // dispatches analytics or replaces the actual router destination.
+  const [previewSector,setPreviewSector]=useState<WorldSector|null>(null);
   useEffect(()=>{
     let disposed=false;
     let controller:AbortController|null=null;
@@ -82,7 +89,7 @@ export function LivingWorldProvider({children}:{children:ReactNode}){
     document.addEventListener('visibilitychange',visibility);
     return()=>{disposed=true;controller?.abort();window.clearInterval(interval);document.removeEventListener('visibilitychange',visibility)};
   },[]);
-  const value=useMemo(()=>({signal,paused,setPaused}),[signal,paused]);
+  const value=useMemo(()=>({signal,paused,setPaused,previewSector,setPreviewSector}),[signal,paused,previewSector]);
   return <WorldContext.Provider value={value}>{children}</WorldContext.Provider>;
 }
 
