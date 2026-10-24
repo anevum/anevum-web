@@ -1,5 +1,5 @@
 import { NavLink, Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { type FormEvent, useEffect, useRef, useState, lazy, Suspense, ViewTransition } from "react";
+import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState, lazy, Suspense, ViewTransition } from "react";
 import { OrbitalMark } from "./OrbitalMark";
 import { Icon } from "./Icons";
 import { PortalLauncher } from "./PortalLauncher";
@@ -91,6 +91,20 @@ export function Shell(){
     setMenuOpen(false);
     navigate(trimmed?"/discover?q="+encodeURIComponent(trimmed):"/discover");
   }
+  // Console-style navigation remains DOM focus, so it works with keyboard,
+  // assistive technology and any future gamepad-to-focus adapter.
+  function menuDirectionalKey(event:ReactKeyboardEvent<HTMLDialogElement>){
+    if(!FullParityHeader||isEditableTarget(event.target)||
+      !['ArrowDown','ArrowUp','ArrowRight','ArrowLeft'].includes(event.key))return;
+    const items=Array.from(menuDialog.current?.querySelectorAll<HTMLElement>('a[href],button:not([disabled])')||[])
+      .filter(node=>node.getClientRects().length>0);
+    if(!items.length)return;
+    const current=items.indexOf(document.activeElement as HTMLElement);
+    const direction=event.key==='ArrowDown'||event.key==='ArrowRight'?1:-1;
+    const next=current<0?(direction>0?0:items.length-1):(current+direction+items.length)%items.length;
+    event.preventDefault();
+    items[next]?.focus();
+  }
   const home=location.pathname==="/";
   const parityFullBleed=Boolean(FullParityHeader&&(home||location.pathname==="/discover"));
   // PARITY destinations own a full-bleed spatial canvas, not a nested page box.
@@ -132,6 +146,7 @@ export function Shell(){
     </header>}
     <dialog ref={menuDialog} id="av79-navigation" className="av79-navigation"
       aria-label="ANEVUM navigation"
+      onKeyDown={menuDirectionalKey}
       onClose={()=>{setMenuOpen(false);menuButton.current?.focus();}}
       onCancel={()=>setMenuOpen(false)}
       onClick={event=>{if(event.target===menuDialog.current)setMenuOpen(false);}}>
