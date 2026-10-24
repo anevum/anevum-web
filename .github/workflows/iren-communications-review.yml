@@ -17,6 +17,9 @@ on:
       - 'creator-v1/web/src/pages/EmailUpdatePreferencesPage.tsx'
       - '.github/workflows/iren-communications-review.yml'
   workflow_dispatch:
+concurrency:
+  group: iren-comms-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   communications-review:
     runs-on: ubuntu-latest
