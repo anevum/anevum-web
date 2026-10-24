@@ -56,6 +56,8 @@ jobs:
       - run: |
           npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
           npx playwright install --with-deps chromium
+      - name: WebGL2 shader compile, four architecture frames and captured evidence
+        run: node --experimental-strip-types creator-v1/test/parity-v136-spatial-render-browser.mjs
       - run: node creator-v1/test/parity-v136-full-browser.mjs
       - name: V136 Discover composition, filters, catalogue and responsive acceptance
         run: node creator-v1/test/parity-v136-discover-browser.mjs
