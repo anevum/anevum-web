@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useState} from 'react';
+import {useEffect,useMemo,useRef,useState} from 'react';
 import {
  PREFIX,THEMES,KINDS,TONES,ALIGNS,WIDTHS,ACTIONS,LIMITS,
  component,page,starter,encode,decode,removeComponent,removePage,
@@ -7,7 +7,8 @@ import {
 import './studio-interface-builder-v113.css';
 
 export const studioInterfaceBuilderEnabled=import.meta.env.VITE_CREATOR_INTERFACE_BUILDER_V113==='true';
-type Props={raw:string;fileName:string;resetToken:string;readOnly:boolean;onChange:(value:string)=>void};
+type Props={raw:string;fileName:string;resetToken:string;readOnly:boolean;onChange:(value:string)=>void;
+ jumpTo?:{pageId:string;componentId:string|null;requestId:number}|null};
 type Device='desktop'|'tablet'|'phone';
 type View='design'|'preview';
 type PreviewState={counts:Record<string,number>;visible:Record<string,boolean>;inputs:Record<string,string>};
@@ -17,10 +18,11 @@ const deviceWidths:Record<Device,number>={desktop:960,tablet:720,phone:360};
 
 /** Declarative preview only. A user-supplied source file never enters an iframe,
  * srcdoc, script, CSS style string, external URL, or arbitrary HTML parser. */
-export function StudioInterfaceBuilderV113({raw,fileName,resetToken,readOnly,onChange}:Props){
+export function StudioInterfaceBuilderV113({raw,fileName,resetToken,readOnly,onChange,jumpTo}:Props){
  const document=useMemo(()=>decode(raw),[raw]);
  const [pageId,setPageId]=useState<string|null>(null);
  const [componentId,setComponentId]=useState<string|null>(null);
+ const explorerRef=useRef<HTMLElement|null>(null);
  const [view,setView]=useState<View>('design');
  const [device,setDevice]=useState<Device>('desktop');
  const [previewPageId,setPreviewPageId]=useState<string|null>(null);
@@ -37,6 +39,27 @@ export function StudioInterfaceBuilderV113({raw,fileName,resetToken,readOnly,onC
   if(!document){setPageId(null);setComponentId(null);return;}
   setPageId(old=>old&&document.pages.some(p=>p.id===old)?old:document.pages[0].id);
  },[document]);
+ useEffect(()=>{
+  if(!jumpTo)return;
+  // A navigation request only affects local editor selection. Keep ordinary
+  // text edits and visual undo/redo independent of diagnostics.
+  const page=document?.pages.find(item=>item.id===jumpTo.pageId);
+  if(!page)return;
+  if(jumpTo.componentId&&!page.components.some(item=>item.id===jumpTo.componentId))return;
+  setPageId(page.id);
+  setComponentId(jumpTo.componentId);
+  setView('design');
+ },[jumpTo?.requestId]);
+ useEffect(()=>{
+  if(!jumpTo||view!=='design'||pageId!==jumpTo.pageId||
+   componentId!==jumpTo.componentId)return;
+  // Focus the selected semantic tree button only after the matching design
+  // mode and canonical IDs are shown. No source mutation or external request.
+  const selector=jumpTo.componentId?
+   'button[data-component-id="'+jumpTo.componentId+'"]':
+   'button[data-page-id="'+jumpTo.pageId+'"]';
+  explorerRef.current?.querySelector<HTMLButtonElement>(selector)?.focus();
+ },[jumpTo?.requestId,view,pageId,componentId]);
  const activePage=document?.pages.find(p=>p.id===pageId)||document?.pages[0]||null;
  const activeItem=activePage?.components.find(c=>c.id===componentId)||null;
  const previewPage=document?.pages.find(p=>p.id===previewPageId)||document?.pages[0]||null;
@@ -187,14 +210,14 @@ export function StudioInterfaceBuilderV113({raw,fileName,resetToken,readOnly,onC
   {readOnly&&<p className="cui-muted" role="status">Read-only: preview works, authoring is disabled.</p>}
   {error&&<p role="alert" className="csf-error">{error}</p>}
   {view==='design'?<div className="cui-workspace">
-   <aside className="cui-explorer" aria-label="Interface pages and components">
+   <aside className="cui-explorer" ref={explorerRef} aria-label="Interface pages and components">
     <div className="cui-panel-head"><h4>Pages</h4>
      <button type="button" disabled={readOnly||document.pages.length>=LIMITS.pages} onClick={addPage}>+ Page</button></div>
-    {document.pages.map(pg=><button key={pg.id} type="button" className={'cui-page-row'+(pg.id===activePage?.id?' active':'')}
+    {document.pages.map(pg=><button key={pg.id} type="button" data-page-id={pg.id} className={'cui-page-row'+(pg.id===activePage?.id?' active':'')}
      aria-current={pg.id===activePage?.id?'page':undefined} onClick={()=>{setPageId(pg.id);setComponentId(null);}}>
      {pg.name}<small>{pg.components.length}</small></button>)}
     <div className="cui-panel-head"><h4>Components</h4><small>{activePage?.components.length||0}/{LIMITS.componentsPerPage}</small></div>
-    {activePage?.components.map(item=><button type="button" key={item.id} className={'cui-item-row'+(item.id===componentId?' active':'')}
+    {activePage?.components.map(item=><button type="button" key={item.id} data-component-id={item.id} className={'cui-item-row'+(item.id===componentId?' active':'')}
      onClick={()=>setComponentId(item.id)}><span>{item.kind}</span><strong>{item.title||item.text.slice(0,32)||'Untitled'}</strong></button>)}
     <div className="cui-create">
      <label htmlFor="cui-kind">Add component</label>

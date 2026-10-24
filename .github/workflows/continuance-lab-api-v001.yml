@@ -1,0 +1,49 @@
+name: Continuance Lab V001 - private API safety
+
+on:
+  push:
+    branches: [research/studio-project-doctor-v001-20261023]
+    paths:
+      - services/continuance-lab/**
+      - creator-v1/agent-quality-lab/**
+      - creator-v1/web/src/pages/StudioProjectDoctorV001.tsx
+      - creator-v1/web/src/pages/StudioFileWorkspaceV111.tsx
+      - creator-v1/web/src/pages/StudioSceneComposerV112.tsx
+      - creator-v1/web/src/pages/StudioInterfaceBuilderV113.tsx
+      - creator-v1/web/src/pages/studio-project-doctor-v001.css
+      - creator-v1/test/studio-project-doctor-ui-v001.test.mjs
+      - creator-v1/workbench-alpha/document.mjs
+      - creator-v1/interface-builder/document.mjs
+      - .github/workflows/continuance-lab-api-v001.yml
+  pull_request:
+    paths:
+      - services/continuance-lab/**
+      - creator-v1/agent-quality-lab/**
+      - creator-v1/web/src/pages/StudioProjectDoctorV001.tsx
+      - creator-v1/web/src/pages/StudioFileWorkspaceV111.tsx
+      - creator-v1/web/src/pages/StudioSceneComposerV112.tsx
+      - creator-v1/web/src/pages/StudioInterfaceBuilderV113.tsx
+      - creator-v1/web/src/pages/studio-project-doctor-v001.css
+      - creator-v1/test/studio-project-doctor-ui-v001.test.mjs
+      - creator-v1/workbench-alpha/document.mjs
+      - creator-v1/interface-builder/document.mjs
+      - .github/workflows/continuance-lab-api-v001.yml
+
+permissions:
+  contents: read
+
+jobs:
+  safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate diagnostic library and API
+        run: node --test creator-v1/agent-quality-lab/project-doctor-v001.test.mjs creator-v1/agent-quality-lab/project-doctor-benchmark-v001.test.mjs creator-v1/agent-quality-lab/project-doctor-brief-v001.test.mjs creator-v1/agent-quality-lab/project-doctor-diff-v001.test.mjs creator-v1/agent-quality-lab/project-doctor-location-v001.test.mjs creator-v1/agent-quality-lab/project-doctor-guidance-v001.test.mjs services/continuance-lab/server.test.mjs creator-v1/test/studio-project-doctor-ui-v001.test.mjs
+      - name: Print synthetic benchmark metrics (no user data)
+        run: node creator-v1/agent-quality-lab/project-doctor-benchmark-v001.mjs
+      - name: Validate minimal isolation image
+        run: docker build --file services/continuance-lab/Dockerfile -t continuance-lab-v001:test .
