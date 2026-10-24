@@ -39,7 +39,7 @@ jobs:
           node --input-type=module <<'JS'
           import {execFileSync} from 'node:child_process';
           const paths=execFileSync('git',['diff','--name-only',process.env.BASE_SHA,'HEAD'],{encoding:'utf8'}).trim().split('\n');
-          const allowed=/^(?:\.github\/workflows\/continuance-collections-review\.yml|creator-v1\/web\/src\/pages\/(?:CanonicalSavedWorksPage\.tsx|canonical-saved-works\.css)|creator-v1\/web\/src\/lib\/saved-works-browse\.ts|creator-v1\/test\/saved-works-organization-v010\.test\.mjs|saved-works-next-browser\.mjs)$/;
+          const allowed=/^(?:\.github\/workflows\/continuance-collections-review\.yml|creator-v1\/web\/src\/pages\/(?:CanonicalSavedWorksPage\.tsx|canonical-saved-works\.css)|creator-v1\/web\/src\/lib\/saved-works-browse\.ts|creator-v1\/test\/(?:saved-works-organization-v010\.test\.mjs|saved-works-next-browser\.mjs))$/;
           for(const p of paths)if(!allowed.test(p))throw Error('Outside isolated collections review: '+p);
           JS
       - name: Install pinned project dependencies
