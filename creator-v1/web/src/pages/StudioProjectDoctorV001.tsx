@@ -33,7 +33,7 @@ export function StudioProjectDoctorV001({source,revision,dirty}:{
     findings.length===0?<p className="cpd-clear" role="status">No issues detected by this limited inspection. This is not a complete accessibility, logic or security test.</p>:
     <ul className="cpd-findings">{findings.map((item,index)=><li key={item.path+':'+item.code+':'+index}>
      <span className={'cpd-severity is-'+item.severity}>{item.severity}</span>
-     <div><strong>{item.message}</strong><small>{item.code} · {item.path}</small></div>
+     <div><strong>{item.message}</strong><p className="cpd-next-step"><span>Suggested next step:</span> {item.nextStep}</p><small>{item.code} · {item.path}</small></div>
     </li>)}</ul>}
    {result.truncated&&<p className="cpd-limit">The findings list was limited to 32 entries.</p>}
    <p className="cpd-foot">Inspection runs only in this browser tab. No source is sent to a model or Railway, no edits are applied, and existing revision/review controls remain authoritative. Findings update as you edit.</p>
