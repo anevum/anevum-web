@@ -2,6 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {cinematicWorldReadiness,cinematicRevealWhenReady} from '../web/src/parity/cinematic-director-v136.ts';
 import {
  blenderToThreePosition,normalizedCameraSample,convertBlenderCamera,
  registrationFromLandmarks,applyRegistration,registeredCameraPose,cameraHandoffEligible
@@ -82,4 +83,24 @@ test('original editable Blender source exports real shared geometry and normaliz
  assert.match(script,/sourceWorldRevision/);
  assert.match(script,/geometryMatchToLiveV136011/);
  assert.match(script,/approvedForRuntime":False/);
+});
+
+
+test('cinematic poster does not reveal a loading GLB or flash backward during handoff',()=>{
+ assert.equal(cinematicWorldReadiness('webgl','loading'),'hold');
+ assert.equal(cinematicWorldReadiness('webgl',null),'hold');
+ assert.equal(cinematicWorldReadiness('webgl','ready'),'ready');
+ assert.equal(cinematicWorldReadiness('webgl','unavailable'),'fallback');
+ assert.equal(cinematicWorldReadiness('vector',null),'fallback');
+ assert.equal(cinematicWorldReadiness(null,null),'fallback');
+ assert.equal(cinematicRevealWhenReady(1,'hold',.12,.74),1);
+ assert.equal(cinematicRevealWhenReady(1,'ready',.12,.74),0);
+ assert.equal(cinematicRevealWhenReady(.43,'fallback',.12,.74),
+  cinematicRevealWhenReady(.43,'ready',.12,.74));
+ const code=readFileSync(new URL('../web/src/parity/CinematicArrivalV136.tsx',import.meta.url),'utf8');
+ assert.match(code,/const observe=world\?new MutationObserver\(schedule\):null/);
+ assert.match(code,/attributeFilter:\['data-asset-state'\]/);
+ assert.match(code,/handoffCommitted=true/);
+ assert.match(code,/observe\?\.disconnect\(\)/);
+ assert.ok(!/window\.location|history\.pushState|dispatchEvent/.test(code));
 });
