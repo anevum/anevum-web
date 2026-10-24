@@ -194,7 +194,7 @@ export function LivingWorldField({sector='hero',enabled}:{sector?:WorldSector;en
 
   const anchorCount=signal.source==='verified'?Math.max(2,Math.min(15,Math.floor(2+density*12))):3;
   return <div className="p136-living-world" data-enabled={enabled} data-active={active} data-motion={motionAllowed}
-      data-renderer={renderer==='booting'?'vector':renderer} data-sector={sector} data-source={signal.source}
+      data-renderer={renderer==='booting'?'vector':renderer} data-sector={sector} data-source={signal.source} data-anchors={anchorCount}
       aria-hidden="true">
     <canvas ref={canvas} className="p136-living-canvas"/>
     <svg className="p136-living-vector" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
