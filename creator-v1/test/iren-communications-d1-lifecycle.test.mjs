@@ -59,13 +59,14 @@ test('subscription requires explicit topics, consent, same origin, correct secre
   assert.equal((await h.execute('subscribe',{email:h.email,topics:h.topics,consent:false})).status,400);
   assert.equal((await h.execute('subscribe',{email:'evil<script>@example.org',topics:h.topics,consent:true})).status,400);
   assert.equal((await h.execute('subscribe',{email:'nobody@localhost',topics:h.topics,consent:true})).status,400);
-  assert.equal((await h.execute('subscribe',{email:'valid+tag@example.org',topics:h.topics,consent:true})).status,202);
   assert.equal((await h.execute('subscribe',{email:h.email,topics:{releases:false,weekly:false},consent:true})).status,400);
   assert.equal((await h.execute('subscribe',{email:h.email,topics:{releases:true,weekly:true},consent:true,role:'owner'})).status,400);
   assert.equal((await h.execute('subscribe',{email:h.email,topics:h.topics,consent:true},{origin:'https://evil.example'})).status,403);
   assert.equal((await h.execute('subscribe',{email:h.email,topics:h.topics,consent:true},{host:'evil.example'})).status,404);
   assert.equal((await h.execute('subscribe',{email:h.email,topics:h.topics,consent:true},{contentType:'text/plain'})).status,400);
   assert.equal(h.sent.length,0);
+  assert.equal((await h.execute('subscribe',{email:'valid+tag@example.org',topics:h.topics,consent:true})).status,202);
+  assert.equal(h.sent.length,1);
   h.env.COMMUNICATIONS_RATE_SECRET='short';
   assert.equal((await h.subscribe()).status,503);
   h.env.COMMUNICATIONS_RATE_SECRET='rate-key-should-be-at-least-32-characters';
