@@ -70,7 +70,8 @@ const CAMPAIGN_PRESETS='<div class="ci-preset-lab" aria-label="Campaign starting
  '<button type="button" data-ci-campaign="reddit" aria-pressed="false"><strong>Reddit testers</strong><small>Community recruitment</small></button>'+
  '<button type="button" data-ci-campaign="facebook" aria-pressed="false"><strong>Facebook launch</strong><small>Public awareness</small></button>'+
  '<button type="button" data-ci-campaign="flyer" aria-pressed="false"><strong>Local flyers</strong><small>In-person outreach</small></button>'+
- '<button type="button" data-ci-campaign="creator" aria-pressed="false"><strong>Creator invites</strong><small>Creator collaborations</small></button></div></div>';
+ '<button type="button" data-ci-campaign="creator" aria-pressed="false"><strong>Creator invites</strong><small>Creator collaborations</small></button></div>'+
+ '<p id="ci-preset-status" class="ci-preset-status" role="status" aria-live="polite">Choose a starting campaign. Your link updates locally; tracking is not connected.</p></div>';
 
 const RANGES='<div class="ci-range-tools" aria-label="Registration chart controls">'+
  '<strong>REGISTRATION SIGNAL / UTC CALENDAR WINDOW</strong>'+
