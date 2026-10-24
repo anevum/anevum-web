@@ -43,13 +43,21 @@ async function contextFor(width,{motion='reduce',state='empty',forceVector=false
     if(url.pathname.startsWith('/api/')){
       const page=items=>({items,count:items.length,nextCursor:null});
       const path=url.pathname;
+      // Explicit public API shapes prevent test-only null responses from
+      // masquerading as successful catalogue, forums or member feed reads.
+      // Unknown/private endpoints remain 404 (fail closed).
       const value=path==='/api/v1/member/auth/get-session'?null:
         path==='/api/v1/projects'?page(state==='project'?[fixture]:[]):
         path==='/api/v1/status'?{features:{communityPosts:false},counts:{publishedProjects:0,publishedCreators:0}}:
-         path==='/api/v1/creators'?page([]):
-        path==='/api/v1/categories'?{categories:[]}:null;
-      const status=state==='unavailable'&&path==='/api/v1/projects'?503:200;
-      await route.fulfill({status,contentType:'application/json',body:JSON.stringify(status===503?{error:'CI unavailable fixture'}:value)});return;
+        path==='/api/v1/creators'?page([]):
+        path==='/api/v1/categories'?{categories:[]}:
+        path==='/api/v1/community/threads'?{items:[],nextCursor:null}:
+        path==='/api/v1/community/members'||path==='/api/v1/community/activity'?{items:[],nextCursor:null}:null;
+      const recognized=value!==null||path==='/api/v1/member/auth/get-session';
+      const status=state==='unavailable'&&path==='/api/v1/projects'?503:recognized?200:404;
+      await route.fulfill({status,contentType:'application/json',
+        body:JSON.stringify(status===503?{error:'CI unavailable fixture'}:
+          status===404?{error:'CI route not provided'}:value)});return;
     }
     await route.continue();
   });
