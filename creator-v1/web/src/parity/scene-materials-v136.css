@@ -1,0 +1,162 @@
+/* PARITY V136.007 — Continuance optical material system.
+   GPU supplies the architecture. Accessible HTML remains the real interface.
+   This layer is scoped to the PARITY shell and cannot alter legacy routes. */
+html[data-av-parity="v136-full"] {
+  --p137-void:#020710;
+  --p137-ink:#e9f7ff;
+  --p137-edge:#84d5f9;
+  --p137-frost:rgba(12,29,49,.84);
+  --p137-beam:rgba(96,215,255,.7);
+  --p137-glint:rgba(220,250,255,.48);
+  --p137-motion:280ms;
+}
+html[data-av-parity="v136-full"] .p136-living-world::before{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:
+    linear-gradient(90deg,transparent 0 4%,rgba(90,180,235,.11) 4.04%,transparent 4.1%,transparent 95.9%,rgba(90,180,235,.11) 95.96%,transparent 96%),
+    linear-gradient(0deg,transparent 0 8%,rgba(90,180,235,.09) 8.05%,transparent 8.12%,transparent 90%,rgba(90,180,235,.08) 90.1%,transparent 90.2%);
+  opacity:.55;
+}
+html[data-av-parity="v136-full"] .p136-living-world::after{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent 0 5px,rgba(120,210,255,.012) 5px 6px);
+  mix-blend-mode:screen;
+}
+html[data-av-parity="v136-full"] .p136-living-world[data-geometry="atrium"] {
+  --p137-ambient:rgba(52,184,255,.3);
+}
+html[data-av-parity="v136-full"] .p136-living-world[data-geometry="archive"]{
+  --p137-ambient:rgba(70,220,193,.26);
+}
+html[data-av-parity="v136-full"] .p136-living-world[data-geometry="forge"]{
+  --p137-ambient:rgba(206,104,241,.26);
+}
+html[data-av-parity="v136-full"] .p136-living-world[data-geometry="relay"]{
+  --p137-ambient:rgba(91,146,255,.24);
+}
+html[data-av-parity="v136-full"] .p136-living-world[data-geometry="forge"]::after{
+  background:repeating-linear-gradient(0deg,transparent 0 8px,rgba(226,154,255,.012) 8px 9px);
+}
+html[data-av-parity="v136-full"] .p136-living-world[data-geometry="archive"]::after{
+  background:repeating-linear-gradient(90deg,transparent 0 17px,rgba(160,246,233,.015) 17px 18px);
+}
+html[data-av-parity="v136-full"] .p136-living-world[data-geometry="relay"]::after{
+  background:repeating-linear-gradient(135deg,transparent 0 24px,rgba(115,198,255,.016) 24px 25px);
+}
+
+/* A single instrument, not a row of disconnected app cards. */
+html[data-av-parity="v136-full"] .p136-console-wayfinder{
+  border-radius:18px;
+  border-color:rgba(118,211,252,.36);
+  background:
+    linear-gradient(160deg,rgba(27,57,88,.91),rgba(7,19,36,.94) 62%,rgba(2,9,21,.97)),
+    rgba(7,19,35,.95);
+  box-shadow:
+    inset 0 1px rgba(242,252,255,.26),
+    inset 0 -1px rgba(43,126,190,.38),
+    0 0 0 1px rgba(8,18,28,.77),
+    0 18px 45px rgba(0,3,10,.72),
+    0 0 55px rgba(49,174,244,.13);
+  isolation:isolate;
+  overflow:visible;
+  will-change:transform;
+}
+html[data-av-parity="v136-full"] .p136-console-wayfinder::before{
+  content:"";position:absolute;inset:4px;
+  z-index:-1;pointer-events:none;border-radius:13px;
+  border:1px solid rgba(137,208,249,.09);
+  background:linear-gradient(120deg,rgba(169,238,255,.09),transparent 29%,transparent 79%,rgba(103,201,255,.04));
+}
+html[data-av-parity="v136-full"] .p136-console-wayfinder::after{
+  content:"";position:absolute;left:4%;right:4%;height:1px;top:-1px;
+  pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(191,241,255,.85) 36%,rgba(74,189,255,.58) 65%,transparent);
+  filter:drop-shadow(0 0 8px rgba(74,204,255,.55));
+}
+html[data-av-parity="v136-full"] .p136-console-station{
+  border-radius:11px;
+  transition:background var(--p137-motion) ease,border-color var(--p137-motion) ease,
+    box-shadow var(--p137-motion) ease,transform var(--p137-motion) ease;
+}
+html[data-av-parity="v136-full"] .p136-console-station.is-active{
+  background:linear-gradient(157deg,rgba(62,129,170,.42),rgba(13,35,61,.76));
+  box-shadow:inset 0 1px rgba(215,251,255,.21),inset 0 0 26px rgba(29,123,195,.14),0 0 21px rgba(64,202,255,.12);
+}
+html[data-av-parity="v136-full"] .p136-console-icon{
+  filter:drop-shadow(0 0 7px rgba(113,223,255,.32));
+  transition:transform var(--p137-motion) cubic-bezier(.21,.7,.23,1),
+    filter var(--p137-motion) ease;
+}
+@media (hover:hover) and (pointer:fine){
+  html[data-av-parity="v136-full"] .p136-console-station:hover .p136-console-icon,
+  html[data-av-parity="v136-full"] .p136-console-station:focus-visible .p136-console-icon{
+    transform:translateY(-2px) scale(1.08);
+    filter:drop-shadow(0 0 11px rgba(127,237,255,.58));
+  }
+  html[data-av-parity="v136-full"] .p136-discover-world{
+    transform-style:preserve-3d;
+    transition:transform 330ms cubic-bezier(.2,.7,.2,1),box-shadow 330ms ease,border-color 330ms ease;
+  }
+  html[data-av-parity="v136-full"] .p136-discover-world:hover,
+  html[data-av-parity="v136-full"] .p136-discover-world:focus-visible{
+    transform:translateY(-5px);
+    box-shadow:0 16px 36px rgba(0,3,14,.50),0 0 29px rgba(94,195,255,.16),inset 0 1px rgba(185,238,255,.25);
+  }
+}
+html[data-av-parity="v136-full"] .p136-discover-world::before{
+  content:"";position:absolute;inset:1px;pointer-events:none;z-index:3;
+  border:1px solid rgba(169,218,255,.21);
+  background:
+    linear-gradient(90deg,rgba(150,227,255,.45),transparent 14%) top left/39% 1px no-repeat,
+    linear-gradient(180deg,rgba(150,227,255,.37),transparent 14%) top left/1px 36% no-repeat,
+    linear-gradient(270deg,rgba(150,227,255,.40),transparent 14%) bottom right/40% 1px no-repeat,
+    linear-gradient(0deg,rgba(150,227,255,.40),transparent 14%) bottom right/1px 36% no-repeat;
+}
+html[data-av-parity="v136-full"] .p136-discover-readout,
+html[data-av-parity="v136-full"] .p136-discover-command{
+  backdrop-filter:blur(16px) saturate(130%);
+  -webkit-backdrop-filter:blur(16px) saturate(130%);
+  box-shadow:inset 0 1px rgba(190,239,255,.14),0 14px 43px rgba(0,3,13,.22);
+}
+html[data-av-parity="v136-full"] .p136-discover-readout{
+  background:linear-gradient(145deg,rgba(19,48,80,.7),rgba(3,12,26,.75));
+}
+html[data-av-parity="v136-full"] .p136-discover-search-form:focus-within{
+  box-shadow:0 0 0 1px rgba(113,231,255,.78),0 0 24px rgba(35,153,217,.25);
+}
+html[data-av-parity="v136-full"] :is(.p136-discover-world,.p136-console-station,.p136-console-command):focus-visible{
+  outline:2px solid #b6f4ff;outline-offset:3px;
+}
+@media(max-width:660px){
+  html[data-av-parity="v136-full"] .p136-console-wayfinder{
+    bottom:calc(8px + env(safe-area-inset-bottom,0px));
+    border-radius:17px;
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+  }
+  html[data-av-parity="v136-full"] .p136-living-world::before{opacity:.28}
+  html[data-av-parity="v136-full"] .p136-discover-readout,
+  html[data-av-parity="v136-full"] .p136-discover-command{
+    backdrop-filter:blur(9px);
+    -webkit-backdrop-filter:blur(9px);
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  html[data-av-parity="v136-full"] .p136-console-wayfinder :is(.p136-console-station,.p136-console-icon),
+  html[data-av-parity="v136-full"] .p136-discover-world{
+    transition:none!important;animation:none!important;transform:none!important;
+  }
+}
+@media(forced-colors:active){
+  html[data-av-parity="v136-full"] .p136-living-world::before,
+  html[data-av-parity="v136-full"] .p136-living-world::after,
+  html[data-av-parity="v136-full"] .p136-console-wayfinder::before,
+  html[data-av-parity="v136-full"] .p136-console-wayfinder::after,
+  html[data-av-parity="v136-full"] .p136-discover-world::before{display:none}
+  html[data-av-parity="v136-full"] .p136-console-wayfinder,
+  html[data-av-parity="v136-full"] .p136-discover-readout,
+  html[data-av-parity="v136-full"] .p136-discover-command{
+    background:Canvas;border:1px solid CanvasText;box-shadow:none;
+    backdrop-filter:none;-webkit-backdrop-filter:none;
+  }
+}

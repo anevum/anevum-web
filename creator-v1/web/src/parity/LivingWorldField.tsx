@@ -1,28 +1,11 @@
 import {useEffect,useRef,useState} from 'react';
 import {fragmentSource,vertexSource} from './living-world-shaders';
+import {sceneProfile,frameFor,advanceSceneFrame,sceneRenderSize,type SceneFrame} from './SceneDirectorV136';
 import {useLivingWorld,worldDensity,type WorldSector} from './LivingWorldState';
 import './living-world-v136.css';
+import './scene-materials-v136.css';
 
-const scenePositions:Record<WorldSector,[number,number,number]>={
-  hero:[1.58,1.70,4.60],portal:[1.18,1.72,4.80],
-  games:[1.65,1.52,4.22],tools:[1.92,1.38,4.80],
-  creative:[0.84,2.00,4.42],research:[1.35,1.86,4.26],
-  libraries:[1.78,1.32,4.92],learning:[0.95,1.76,4.96],
-  automation:[1.84,1.55,4.45],other:[1.42,1.76,4.70],
-  community:[0.9,1.66,4.72],creators:[1.75,1.95,4.55],studio:[1.4,1.28,4.30]
-};
-/** Each destination has a different cinematic camera target; the world itself
- * remains mounted, so navigation interpolates rather than replacing imagery.
- */
-
-const palette:Record<WorldSector,[number,number,number]>={
-  hero:[0.27,0.71,1.0],portal:[0.36,0.69,1.0],
-  games:[0.61,0.42,1.0],tools:[0.24,0.82,1.0],
-  creative:[0.91,0.46,0.97],research:[0.40,0.68,1.0],
-  libraries:[0.36,0.90,0.79],learning:[0.78,0.63,1.0],
-  automation:[0.55,0.70,1.0],other:[0.62,0.69,0.96],
-  community:[0.67,0.52,1],creators:[0.48,0.82,0.93],studio:[0.94,0.66,0.36]
-};
+/** All route colors, camera targets and geometry families come from SceneDirectorV136. */
 type Renderer='booting'|'webgl'|'vector';
 type Compiled={
   gl:WebGL2RenderingContext;
@@ -58,7 +41,7 @@ function compile(gl:WebGL2RenderingContext):Compiled{
   if(position<0){gl.deleteBuffer(buffer);gl.deleteProgram(program);throw Error('World vertex attribute unavailable')}
   gl.enableVertexAttribArray(position);
   gl.vertexAttribPointer(position,2,gl.FLOAT,false,0,0);
-  const names=['u_resolution','u_pointer','u_time','u_density','u_verified','u_tone','u_pulse','u_center','u_architecture'];
+  const names=['u_resolution','u_pointer','u_time','u_density','u_verified','u_tone','u_pulse','u_center','u_architecture','u_shape','u_signature'];
   const location=names.map(name=>gl.getUniformLocation(program,name));
   if(location.some(x=>x===null)){
     gl.deleteBuffer(buffer);gl.deleteProgram(program);throw Error('World uniforms unavailable')
@@ -73,15 +56,11 @@ function dispose(compiled:Compiled|null){
   }catch{/* Context may already have been lost. */}
 }
 function resize(canvas:HTMLCanvasElement,gl:WebGL2RenderingContext){
-  const width=Math.max(1,canvas.clientWidth),height=Math.max(1,canvas.clientHeight);
-  const cap=window.innerWidth<=600?2:1.75;
-  const requested=Math.min(window.devicePixelRatio||1,cap);
-  const budget=Math.min(1,Math.sqrt(3_100_000/Math.max(1,width*height*requested*requested)));
-  const ratio=Math.max(0.55,requested*budget);
-  const w=Math.max(1,Math.round(width*ratio));
-  const h=Math.max(1,Math.round(height*ratio));
-  if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}
-  gl.viewport(0,0,w,h);
+  const size=sceneRenderSize(canvas.clientWidth,canvas.clientHeight,window.devicePixelRatio||1);
+  if(canvas.width!==size.width||canvas.height!==size.height){
+    canvas.width=size.width;canvas.height=size.height;
+  }
+  gl.viewport(0,0,size.width,size.height);
 }
 
 /** Single persistent canvas above the site backdrop and below actual UI.
@@ -93,10 +72,8 @@ export function LivingWorldField({sector='hero',enabled}:{sector?:WorldSector;en
   const compiled=useRef<Compiled|null>(null);
   const raf=useRef<number|null>(null);
   const pointer=useRef<[number,number]>([0,0]);
-  const paletteBlend=useRef<[number,number,number]>([.27,.71,1]);
   const architecturalBlend=useRef(0);
   const pulse=useRef(0);
-  const worldPosition=useRef<[number,number,number]>([1.58,1.70,4.60]);
   const phase=useRef(0);
   const {signal,paused,previewSector}=useLivingWorld();
   const [renderer,setRenderer]=useState<Renderer>('booting');
@@ -107,10 +84,12 @@ export function LivingWorldField({sector='hero',enabled}:{sector?:WorldSector;en
   const density=worldDensity(signal,activeSector);
   const motionAllowed=enabled&&!paused&&!reduced&&!saveData&&visible;
   const active=motionAllowed&&renderer==='webgl';
-  const tone=palette[activeSector],position=scenePositions[activeSector];
+  const scene=sceneProfile(activeSector);
+  const target=frameFor(scene,density);
+  const directorFrame=useRef<SceneFrame>(target);
   const architecture=activeSector==='community'?1:activeSector==='creators'?2:activeSector==='studio'?3:activeSector==='games'?4:0;
-  const param=useRef({density,tone,position,architecture,verified:signal.source==='verified',active});
-  param.current={density,tone,position,architecture,verified:signal.source==='verified',active};
+  const param=useRef({target,architecture,verified:signal.source==='verified',active});
+  param.current={target,architecture,verified:signal.source==='verified',active};
 
   useEffect(()=>{
     const media=window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -193,52 +172,53 @@ export function LivingWorldField({sector='hero',enabled}:{sector?:WorldSector;en
   },[enabled]);
 
   useEffect(()=>{
-    const render=(milliseconds:number)=>{
+    const render=(milliseconds:number,elapsedMs:number)=>{
       const compiledNow=compiled.current;
       if(!compiledNow)return;
       const {gl,program,buffer,location}=compiledNow;
       if(gl.isContextLost())return;
-      const {density,tone,position,architecture}=param.current;
-      const verified=param.current.verified;
-      const xyz=worldPosition.current;
-      for(let i=0;i<3;i++)xyz[i]+=(position[i]-xyz[i])*(param.current.active?0.09:1);
+      const {target,architecture,verified}=param.current;
+      directorFrame.current=advanceSceneFrame(directorFrame.current,target,elapsedMs,param.current.active);
+      const frame=directorFrame.current;
       gl.useProgram(program);gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
       gl.uniform2f(location[0],gl.drawingBufferWidth,gl.drawingBufferHeight);
       gl.uniform2f(location[1],pointer.current[0],pointer.current[1]);
       gl.uniform1f(location[2],milliseconds/1000);
-      gl.uniform1f(location[3],density);
+      gl.uniform1f(location[3],frame.density);
       gl.uniform1f(location[4],verified?1:0);
-      const blend=paletteBlend.current;
-      for(let i=0;i<3;i++)blend[i]+=(tone[i]-blend[i])*(param.current.active?.075:1);
-      architecturalBlend.current+=(architecture-architecturalBlend.current)*(param.current.active?.06:1);
-      gl.uniform3f(location[5],blend[0],blend[1],blend[2]);
+      architecturalBlend.current+=(architecture-architecturalBlend.current)*(param.current.active?(1-Math.exp(-elapsedMs/220)):1);
+      gl.uniform3f(location[5],frame.tone[0],frame.tone[1],frame.tone[2]);
       gl.uniform1f(location[6],pulse.current);
-      gl.uniform3f(location[7],worldPosition.current[0],worldPosition.current[1],worldPosition.current[2]);
+      gl.uniform3f(location[7],frame.camera[0],frame.camera[1],frame.camera[2]);
       gl.uniform1f(location[8],architecturalBlend.current);
+      gl.uniform4f(location[9],frame.silhouette[0],frame.silhouette[1],
+        frame.silhouette[2],frame.silhouette[3]);
+      gl.uniform1f(location[10],frame.signature);
       gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
     };
     if(renderer!=='webgl'||!enabled)return;
-    let lastTick=0,lastDraw=0;
+    let lastDraw=0;
+    const interval=sceneRenderSize(canvas.current?.clientWidth||window.innerWidth,
+      canvas.current?.clientHeight||window.innerHeight,window.devicePixelRatio||1).frameIntervalMs;
     const tick=(now:number)=>{
       if(!param.current.active)return;
-      if(!lastTick)lastTick=now;
-      const delta=Math.min(100,now-lastTick);lastTick=now;
-      if(now-lastDraw>=1000/30){
-        phase.current+=delta;
-        pulse.current=Math.max(0,pulse.current-0.085);
-        render(phase.current);
+      if(now-lastDraw>=interval){
+        const elapsed=lastDraw?Math.min(100,now-lastDraw):interval;
         lastDraw=now;
+        phase.current+=elapsed;
+        pulse.current=Math.max(0,pulse.current-elapsed/380);
+        render(phase.current,elapsed);
       }
       raf.current=requestAnimationFrame(tick);
     };
     if(active)raf.current=requestAnimationFrame(tick);
-    else render(phase.current);
+    else render(phase.current,0);
     return()=>{if(raf.current!==null)cancelAnimationFrame(raf.current);raf.current=null};
-  },[enabled,active,renderer,activeSector,density,signal.source,tone]);
+  },[enabled,active,renderer,activeSector,density,signal.source,scene]);
 
   const anchorCount=signal.source==='verified'?Math.max(2,Math.min(15,Math.floor(2+density*12))):3;
   return <div className="p136-living-world" data-enabled={enabled} data-active={active} data-motion={motionAllowed}
-      data-renderer={renderer==='booting'?'vector':renderer} data-sector={activeSector} data-source={signal.source} data-anchors={anchorCount}
+      data-renderer={renderer==='booting'?'vector':renderer} data-sector={activeSector} data-geometry={scene.geometry} data-source={signal.source} data-anchors={anchorCount}
       aria-hidden="true">
     <canvas ref={canvas} className="p136-living-canvas"/>
     <svg className="p136-living-vector" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">

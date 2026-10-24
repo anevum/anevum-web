@@ -28,6 +28,10 @@ const base='http://127.0.0.1:'+server.address().port;
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 const fixture={id:'v136-ci-fixture',title:'SYNTHETIC CI PROJECT',summary:'Loopback fixture only; not a real release.',
   category:'games',freeToUse:true,license:'MIT',publishedAt:'2026-10-24T12:00:00Z',creatorName:'CI fixture',creatorHandle:null};
+const packageFixture={id:'123e4567-e89b-42d3-a456-426614174000',
+  title:'SYNTHETIC APPROVED PACKAGE',summary:'Loopback-only approved package inspection fixture.',
+  category:'game',version:1,status:'published',draft_status:null,cover_url:null,
+  play_url:'/upload/v3/play/123e4567-e89b-42d3-a456-426614174000',published_at:1792843200};
 const record=(name,data={})=>{checks.push({name,...data});console.log('PASS '+name);};
 async function contextFor(width,{motion='reduce',state='empty',forceVector=false}={}){
   const context=await browser.newContext({viewport:{width,height:width<650?844:960},deviceScaleFactor:2,reducedMotion:motion});
@@ -40,16 +44,32 @@ async function contextFor(width,{motion='reduce',state='empty',forceVector=false
   await context.route('**/*',async route=>{
     const request=route.request(),url=new URL(request.url());
     if(url.origin!==base||!['GET','HEAD'].includes(request.method())){forbidden.push({url:request.url(),method:request.method()});await route.abort();return;}
+    // The isolated uploader is optional. No real upload or unpublished package
+    // endpoint is contacted during this loopback-only acceptance.
+    if(url.pathname==='/upload/v3/api/v1/packages/projects'){
+      const published=state==='package';
+      await route.fulfill({status:published?200:404,contentType:'application/json',
+        body:JSON.stringify(published?{projects:[packageFixture]}:{error:'CI optional uploader disabled'})});
+      return;
+    }
     if(url.pathname.startsWith('/api/')){
       const page=items=>({items,count:items.length,nextCursor:null});
       const path=url.pathname;
+      // Explicit public API shapes prevent test-only null responses from
+      // masquerading as successful catalogue, forums or member feed reads.
+      // Unknown/private endpoints remain 404 (fail closed).
       const value=path==='/api/v1/member/auth/get-session'?null:
         path==='/api/v1/projects'?page(state==='project'?[fixture]:[]):
         path==='/api/v1/status'?{features:{communityPosts:false},counts:{publishedProjects:0,publishedCreators:0}}:
-         path==='/api/v1/creators'?page([]):
-        path==='/api/v1/categories'?{categories:[]}:null;
-      const status=state==='unavailable'&&path==='/api/v1/projects'?503:200;
-      await route.fulfill({status,contentType:'application/json',body:JSON.stringify(status===503?{error:'CI unavailable fixture'}:value)});return;
+        path==='/api/v1/creators'?page([]):
+        path==='/api/v1/categories'?{categories:[]}:
+        path==='/api/v1/community/threads'?{items:[],nextCursor:null}:
+        path==='/api/v1/community/members'||path==='/api/v1/community/activity'?{items:[],nextCursor:null}:null;
+      const recognized=value!==null||path==='/api/v1/member/auth/get-session';
+      const status=state==='unavailable'&&path==='/api/v1/projects'?503:recognized?200:404;
+      await route.fulfill({status,contentType:'application/json',
+        body:JSON.stringify(status===503?{error:'CI unavailable fixture'}:
+          status===404?{error:'CI route not provided'}:value)});return;
     }
     await route.continue();
   });
@@ -79,8 +99,8 @@ try{
     assert.equal(layout.h1Count,1);assert.equal(layout.dockCount,1,'One canonical IREN companion');
     assert.equal(await page.locator('.p136-console-wayfinder').count(),1,'Exactly one persistent console wayfinder');
     assert.equal(await page.locator('.p136-console-wayfinder a[data-station]').count(),5,'Five real route stations');
-    assert.equal(await page.getByRole('button',{name:'Open IREN companion'}).count(),1,
-      'IREN control is integrated into console');
+    assert.equal(await page.locator('.p136-console-wayfinder').getByRole('button',{name:'Open IREN companion'}).count(),1,
+      'One IREN launcher belongs to the persistent console; the header may also open the same companion');
     assert.equal(await page.locator('.p136-console-member').count(),1,
       'One canonical member entry is integrated into console');
     assert.equal(await page.getByRole('button',{name:'Search and quick navigation'}).count(),1,
@@ -115,7 +135,7 @@ try{
     await page.waitForURL(base+'/join');
     await page.getByRole('heading',{name:/ENTER THE\s*CONTINUANCE\./i}).waitFor();
     await page.goto(base,{waitUntil:'networkidle'});
-    await page.getByRole('button',{name:'Open IREN companion',exact:true}).click();
+    await page.locator('.p136-console-wayfinder').getByRole('button',{name:'Open IREN companion',exact:true}).click();
     assert.equal(await page.locator('.ir80-dock').count(),1);
     await page.waitForFunction(()=>!!document.querySelector('.ir80-guide-layer,.ir123-tour,.ir92-tour,.ir87-panel'));
     record('canonical Discover / Join / IREN '+width);
@@ -151,9 +171,61 @@ try{
     if(state==='project'){
       await page.getByRole('heading',{name:fixture.title,exact:true}).waitFor();
       assert.equal(await page.getByRole('link',{name:'View '+fixture.title,exact:true}).count(),1);
+      // The homepage remains a direct project link. Inspection is a
+      // Discover-only affordance and must not be invented on the homepage.
+      // Discover may keep optional catalogue/background reads active.
+      // DOM readiness plus the exact approved project is the acceptance gate,
+      // not a global network-silence heuristic.
+      await page.goto(base+'/discover',{waitUntil:'domcontentloaded'});
+      await page.getByRole('heading',{name:fixture.title,exact:true}).waitFor();
+      const inspect=page.getByRole('button',{name:'Inspect '+fixture.title,exact:true});
+      assert.equal(await inspect.count(),1,'Approved project has one optional Artifact Lens action');
+      const before=page.url();
+      await inspect.click();
+      const lens=page.locator('.p136-artifact-lens[open]');
+      await lens.waitFor();
+      assert.equal(await lens.getByRole('heading',{name:fixture.title,exact:true}).count(),1);
+      assert.equal(await lens.getByText(fixture.summary,{exact:true}).count(),1);
+      assert.equal(await lens.getByText('CI fixture',{exact:true}).count(),1,'Real creator field is used');
+      await page.waitForFunction(()=>document.querySelector('.p136-living-world')?.dataset.geometry==='forge');
+      assert.equal(page.url(),before,'Inspecting a public release never mutates the route');
+      assert.equal(await lens.getByRole('link',{name:'Open project record'}).count(),1);
+      await page.screenshot({path:join(out,'artifact-lens-project-390.png'),animations:'disabled'});
+      await lens.getByRole('button',{name:'Return to results'}).click();
+      await page.waitForFunction(()=>!document.querySelector('.p136-artifact-lens[open]'));
+      await page.waitForFunction(()=>document.querySelector('.p136-living-world')?.dataset.geometry==='archive');
+      await inspect.click();
+      await page.keyboard.press('Escape');
+      await page.waitForFunction(()=>!document.querySelector('.p136-artifact-lens[open]'));
+      assert.equal(page.url(),before,'Escape closes inspection without navigation');
+      record('Artifact Lens approved project / native dialog / Escape / real data / scene morph', {url:before});
     }else await page.getByText('The public index is temporarily unavailable',{exact:true}).waitFor();
     await page.screenshot({path:join(out,'catalogue-'+state+'-390.png'),fullPage:true,animations:'disabled'});
     record('honest catalogue '+state);await context.close();
+  }
+  // Exercise the second public source independently: only approved packages
+  // can open the Artifact Lens, and their play URLs remain canonical.
+  {
+    const {page,context}=await contextFor(390,{state:'package'});
+    await page.goto(base+'/discover',{waitUntil:'domcontentloaded'});
+    await page.getByRole('heading',{name:packageFixture.title,exact:true}).waitFor();
+    const before=page.url();
+    const inspect=page.getByRole('button',{name:'Inspect '+packageFixture.title,exact:true});
+    await inspect.click();
+    const lens=page.locator('.p136-artifact-lens[open]');
+    await lens.waitFor();
+    assert.equal(await lens.getByRole('heading',{name:packageFixture.title,exact:true}).count(),1);
+    assert.equal(await lens.getByText(packageFixture.summary,{exact:true}).count(),1);
+    assert.equal(await lens.getByText('Approved browser package',{exact:true}).count(),1);
+    const action=lens.getByRole('link',{name:'Open approved release'});
+    assert.equal(await action.getAttribute('href'),packageFixture.play_url,
+      'Public package action retains the approved canonical player path');
+    assert.equal(page.url(),before,'Inspecting approved package never changes route');
+    await page.screenshot({path:join(out,'artifact-lens-package-390.png'),animations:'disabled'});
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(()=>!document.querySelector('.p136-artifact-lens[open]'));
+    record('approved package Artifact Lens / canonical player path / Escape / unchanged URL');
+    await context.close();
   }
   const {page,context}=await contextFor(390,{motion:'no-preference',forceVector:true});
   await page.goto(base,{waitUntil:'networkidle'});
