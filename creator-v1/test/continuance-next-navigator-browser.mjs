@@ -245,6 +245,10 @@ try{
   assert.equal(new URL(page.url()).searchParams.get('category'),'tools');
   assert.equal(new URL(page.url()).searchParams.get('q'),'signal');
   record('Full Discover destination preserves public project filters');
+  // A URL match does not guarantee that the new public directory has loaded.
+  await page.locator('.portal-discover .portal-true-empty').waitFor({state:'visible'});
+  assert.deepEqual(errors,[],'Discover must settle without uncaught browser errors');
+  record('Full Discover rendered the actual synthetic public API response');
   await visitCommons(page,'?view=people&q=maker');
   await openQuick(page);
   await page.locator('#lnx-quick-search').fill('creator directory');
@@ -252,6 +256,9 @@ try{
   await page.waitForURL(url=>url.pathname==='/creators');
   assert.equal(new URL(page.url()).searchParams.get('q'),'maker');
   record('Creator Directory destination preserves public creator search');
+  await page.locator('.portal-creators .portal-true-empty').waitFor({state:'visible'});
+  assert.deepEqual(errors,[],'Creator Directory must settle without uncaught browser errors');
+  record('Creator Directory rendered the actual synthetic public API response');
   await visitCommons(page);
   await page.evaluate(()=>{
     const other=document.createElement('dialog');other.id='qa-other-modal';
