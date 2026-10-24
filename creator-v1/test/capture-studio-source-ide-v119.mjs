@@ -102,6 +102,9 @@ try{
  await click('.csn-workspace-tabs button:nth-child(3)');
  await until(()=>evaluate('!!document.querySelector(".csn-code-content textarea")'),'Local Code mode');
  await until(()=>evaluate('document.querySelector(".csi-editor")?.dataset.studioCodeEditor==="v119"'),'Mounted source IDE');
+ const ideLayout=await evaluate('(()=>{const h=document.querySelector(".csn-code-content"),e=h.querySelector(".csi-editor");return {host:h.clientWidth,editor:e.clientWidth}})()');
+ assert.ok(ideLayout.host>400&&ideLayout.editor>=ideLayout.host*.94,
+  'Studio source IDE must occupy actual canvas column rather than legacy 39px grid '+JSON.stringify(ideLayout));
  assert.ok(await evaluate('document.querySelectorAll(".csi-gutter-line").length>=4'),'Real source line numbers');
  assert.ok(await evaluate('document.querySelectorAll(".csi-token-keyword, .csi-token-property").length>2'),'Syntax-highlighted code');
  await click('.csn-code-filetabs button:nth-child(2)');
@@ -169,6 +172,9 @@ try{
  await photo('v116-mobile-interface-390');
  await click('.csn-workspace-tabs button:nth-child(3)');
  await until(()=>evaluate('!!document.querySelector(".csi-editor")'),'Mobile source IDE');
+ const mobileIde=await evaluate('(()=>{const h=document.querySelector(".csn-code-content"),e=h.querySelector(".csi-editor");return {host:h.clientWidth,editor:e.clientWidth}})()');
+ assert.ok(mobileIde.host>=255&&mobileIde.editor>=mobileIde.host*.94,
+  'Mobile source editor must fill available width '+JSON.stringify(mobileIde));
  assert.ok(await evaluate('document.querySelector(".csn-alternate").scrollWidth<=document.querySelector(".csn-alternate").clientWidth+2'),'Mobile source editor does not overflow');
  await photo('v119-mobile-source-ide-390');
  await click('.csn-workspace-tabs button:first-child');
