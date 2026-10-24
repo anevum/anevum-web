@@ -20,10 +20,10 @@ const save=(p,v)=>writeFileSync(p,JSON.stringify(v,null,2)+'\n');
 const stable=x=>JSON.stringify(x,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b))):v);
 const allowed=new Set([
  '.github/workflows/parity-v136-release.yml','creator-v1/ops/parity-v136-release.mjs',
- 'creator-v1/test/earned-reward-media-v075.test.mjs','creator-v1/test/parity-v136-full-browser.mjs','docs/production/parity-v136-release-20261024.md',
- 'creator-v1/web/src/main.tsx','creator-v1/web/src/legacy-styles.css',
+ 'creator-v1/test/parity-v136-full-browser.mjs','docs/production/parity-v136-release-20261024.md',
+ 'creator-v1/web/src/main.tsx','creator-v1/web/vite.config.ts',
  'creator-v1/web/src/components/Shell.tsx','creator-v1/web/src/pages/CinematicLandingPage.tsx',
- ...['ParityHeaderV136.tsx','ParityPortalV136.tsx','ParityScene.tsx','parity-entry.css','visual-foundation-v136.css'].map(x=>'creator-v1/web/src/parity/'+x),
+ ...['ParityHeaderV136.tsx','ParityPortalV136.tsx','ParityScene.tsx','visual-foundation-v136.css'].map(x=>'creator-v1/web/src/parity/'+x),
  ...['institute-768.webp','institute-1536.webp','institute-1672.webp','manifest.json'].map(x=>'creator-v1/web/public/assets/parity-v136/'+x)
 ]);
 export function source(){

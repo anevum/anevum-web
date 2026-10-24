@@ -175,7 +175,7 @@ test('V075 renders no public level gallery, badge preview or simulated Level 30 
  assert.match(renderer,/webgl/);
  assert.doesNotMatch(renderer,/position:'fixed'|document\.body\.appendChild\(canvas\)/);
  assert.doesNotMatch(notices,/notify\(kind==='level'\?\{kind,level:30/);
- assert.match(read('web/src/main.tsx')+read('web/src/legacy-styles.css'),/earned-rewards-v075\.css/);
+ assert.match(read('web/src/main.tsx'),/earned-rewards-v075\.css/);
  const member=read('web/src/components/MemberSpaceDashboard.tsx');
  const publicPage=read('web/src/pages/Phase1PublicMemberPage.tsx');
  assert.match(member,/<EarnedRewardVault/);

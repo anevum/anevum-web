@@ -2,7 +2,7 @@
 
 Session: `ANEVUM.WEB.BUILD.2026-10-24.001.PARITY-V136`.
 
-The cinematic homepage and navigation from #715 are selectively integrated on deployed V132 collection source `baa92c0cbdcce71bd0ae5862e574c90ac53d84a9`. This is not a merge of the NEXT draft ancestry. Only the homepage, shared header, style bootstrap, original environment assets and bounded release/QA files change. App routes, authentication, Worker code, databases, permissions, rewards and collections remain byte-identical to the protected source.
+The cinematic homepage and navigation from #715 are selectively integrated on deployed V132 collection source `baa92c0cbdcce71bd0ae5862e574c90ac53d84a9`. This is not a merge of the NEXT draft ancestry. Only the homepage, shared header, style bootstrap/build cascade, original environment assets and bounded release/QA files change. App routes, authentication, Worker code, databases, permissions, rewards and collections remain byte-identical to the protected source.
 
 The original 152 earned-media assets and sealed V131 gateway (`1884ff0dd3c8aa3d38711167af0b4552c9b200b3148e72d9ba6d90d23171ef99`) come from verified artifact 12526930761, run 40011027824. The build enables the same V131 features plus already deployed V132 collections and the PARITY presentation flag. Native scene resolution is 1672×941, with 768/1536 responsive variants; no 4K claim. No flattened UI or substituted logo.
 
