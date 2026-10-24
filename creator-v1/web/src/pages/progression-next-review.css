@@ -77,3 +77,30 @@
 }
 @media(prefers-reduced-motion:reduce){.px-root .px-activity{transition:none}}
 @media(forced-colors:active){.px-list-shell,.px-library-tip,.px-journey-detail,.px-expedition{background:Canvas!important;border:1px solid CanvasText!important}.px-root .px-track-picker button[aria-pressed=true],.px-root .px-expedition[aria-pressed=true]{outline:2px solid Highlight}}
+
+/* Keep the first useful choice above the fold, especially on small screens. */
+.px-root .px-hero{min-height:225px;padding:24px 36px}
+.px-root .px-hero h1{font-size:clamp(31px,3vw,44px);margin:12px 0 14px}
+.px-root .px-hero-copy>p{font-size:14px;line-height:1.55;margin-bottom:0}
+.px-summary{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:15px 0}
+.px-summary .px-record{flex:1;min-width:0;padding:17px 21px}.px-summary-note{font-size:12px;color:var(--px-muted);max-width:290px;line-height:1.6;margin:0}
+.px-guest{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.px-guest h2{font-size:18px;margin:4px 0 3px}.px-guest p{font-size:12px;line-height:1.5;margin:0}
+.px-guest .px-primary{flex:none}
+@media(max-width:680px){
+ .px-root .px-hero{padding:19px 18px;min-height:0}
+ .px-root .px-hero h1{font-size:30px;line-height:1.06;margin:11px 0}
+ .px-root .px-hero-copy>p{font-size:13px;line-height:1.48}
+ .px-hero-actions{margin-top:15px;gap:13px}.px-hero-actions .px-primary{min-height:44px;padding:10px 12px;font-size:12px}
+ .px-hero-actions>a:not(.px-primary){font-size:11px}
+ .px-root .px-motion{display:none}
+ .px-summary{padding:11px 0;display:block}
+ .px-summary .px-record{padding:13px 14px}
+ .px-guest{gap:9px}.px-guest h2{font-size:15px}.px-guest p{font-size:11px}
+ .px-guest .px-overline{font-size:9px}
+ .px-guest .px-primary{gap:8px;padding:8px 12px;font-size:11px}
+ .px-summary-note{display:none}
+ .px-root .px-nav button{padding:11px 7px;font-size:12px}
+ .px-main{padding-top:14px}
+ .px-section-heading{margin-bottom:11px}.px-section-heading h2{font-size:21px}
+}

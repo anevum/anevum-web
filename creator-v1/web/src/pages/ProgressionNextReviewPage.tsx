@@ -39,7 +39,7 @@ function VerifiedMember({memberId,history=false}:{memberId:string;history?:boole
   <div className="px-member-links"><Link to="/levels">Earned specimens</Link><Link to="/recognition">Your recognition</Link></div>
  </div>;
 }
-function GuestRecord(){return <div className="px-guest"><span className="px-overline">YOUR CONTINUANCE / PRIVATE</span><h2>A record that belongs to you.</h2><p>Sign in to see your actual earned XP, milestones and discoveries. Nothing here assumes a level or invents an award.</p><Link className="px-primary" to="/join">Join or sign in <span aria-hidden="true">&#8599;</span></Link></div>}
+function GuestRecord(){return <div className="px-guest"><div><span className="px-overline">YOUR PRIVATE RECORD</span><h2>Your progress, when you are ready.</h2><p>Sign in to see verified XP and earned milestones.</p></div><Link className="px-primary" to="/join">Sign in <span aria-hidden="true">&#8599;</span></Link></div>}
 
 export function ProgressionNextReviewPage(){
  const {data:session}=canonicalAuthClient.useSession();
@@ -70,11 +70,11 @@ export function ProgressionNextReviewPage(){
  function chooseTrack(next:string){setTrack(next);setQuery('');setExpanded(false)}
  return <section className={'px-root'+(paused||hidden?' px-paused':'')} aria-labelledby="px-title">
   <p className="px-review-note">DEVELOPMENT REVIEW / No XP is granted from this preview. Proposed rates are not live rewards.</p>
-  <header className="px-hero"><div className="px-hero-copy"><span className="px-overline"><OrbitalMark className="px-brand"/> THE CONTINUANCE INSTITUTE</span><h1 id="px-title">Leave a signal.<br/><em>Become part of the story.</em></h1><p>Discover something worthwhile. Help it grow. Build a lasting record of what you contribute to ANEVUM.</p><div className="px-hero-actions"><button type="button" className="px-primary" onClick={()=>switchView('expeditions')}>Explore an expedition <span aria-hidden="true">&#8599;</span></button><Link to="/levels">Open my earned vault</Link></div></div>
+  <header className="px-hero"><div className="px-hero-copy"><span className="px-overline"><OrbitalMark className="px-brand"/> THE CONTINUANCE INSTITUTE</span><h1 id="px-title">Make your mark.<br/><em>Keep exploring.</em></h1><p>Find meaningful work, contribute to it and see your progress grow.</p><div className="px-hero-actions"><button type="button" className="px-primary" onClick={()=>switchView('expeditions')}>Explore an expedition <span aria-hidden="true">&#8599;</span></button><Link to="/levels">Open my earned vault</Link></div></div>
    <div className="px-orbital" aria-hidden="true"><div className="px-orbit px-orbit-one"/><div className="px-orbit px-orbit-two"/><div className="px-orbit px-orbit-three"/><span className="px-orbital-core"><OrbitalMark/></span><span className="px-orbital-word">DISCOVER / CONTRIBUTE / CREATE</span></div>
    <button type="button" className="px-motion" aria-pressed={paused} onClick={()=>setPaused(v=>!v)}>{paused?'Resume ambient motion':'Pause ambient motion'}</button>
   </header>
-  <div className="px-summary"><div className="px-summary-copy"><span className="px-overline">PROGRESS WITH A PURPOSE</span><h2>Not a daily obligation.<br/>A world worth returning to.</h2><p>Permanent discoveries. Useful contributions. No bought XP, streak penalties or rewards for staying online.</p></div><div className="px-record">{memberId?<VerifiedMember key={memberId} memberId={memberId}/>:<GuestRecord/>}</div></div>
+  <div className="px-summary"><div className="px-record">{memberId?<VerifiedMember key={memberId} memberId={memberId}/>:<GuestRecord/>}</div><p className="px-summary-note">No streaks or purchased XP. Progress reflects verified contributions, not time spent online.</p></div>
   <nav className="px-nav" aria-label="Progression views">{VIEWS.map((v,i)=><button key={v.id} type="button" aria-current={view===v.id?'page':undefined} onClick={()=>switchView(v.id)}><small>0{i+1}</small>{v.label}</button>)}</nav>
   <div className="px-main"><header className="px-section-heading"><div><span className="px-overline">{view==='earn'?'BROWSE / CREATE / CONNECT':view==='expeditions'?'GUIDED PATHS':'YOUR PRIVATE RECORD'}</span><h2 ref={heading} tabIndex={-1}>{view==='earn'?'Choose what interests you.':view==='expeditions'?'One meaningful path at a time.':'Your milestones, clearly recorded.'}</h2></div><span className="px-small-note">EARNED, NEVER PURCHASED</span></header>
 
