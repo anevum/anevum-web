@@ -6,6 +6,7 @@ on:
       - 'creator-v1/canonical-auth/public-member-card.mjs'
       - 'creator-v1/canonical-auth/forums.mjs'
       - 'creator-v1/web/src/lib/member-forums.ts'
+      - 'creator-v1/web/src/components/forum-author-dossier.css'
       - 'creator-v1/test/capture-canonical-forums-v041.mjs'
       - 'creator-v1/test/continuance-next-forum-supporter.test.mjs'
       - '.github/workflows/continuance-next-forum-supporter-review.yml'
@@ -56,6 +57,7 @@ jobs:
            ['creator-v1/canonical-auth/public-member-card.mjs','M'],
            ['creator-v1/canonical-auth/forums.mjs','M'],
            ['creator-v1/web/src/lib/member-forums.ts','M'],
+           ['creator-v1/web/src/components/forum-author-dossier.css','M'],
            ['creator-v1/test/capture-canonical-forums-v041.mjs','M'],
            ['creator-v1/test/continuance-next-forum-supporter.test.mjs','A'],
            ['.github/workflows/continuance-next-forum-supporter-review.yml','A'],
