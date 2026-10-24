@@ -9,6 +9,7 @@ import {IrenSpatialTour} from "./IrenSpatialTour";
 import type {IrenMood} from "../lib/iren-living-rig-v088";
 import "../iren-transmissions-v111.css";
 import {irenStationForPath} from "../lib/iren-companion-context-v089";
+import {readReleaseFeed,type ReleaseBulletin} from "../lib/release-bulletins";
 
 /**
  * IREN Guided Continuance V080
@@ -181,6 +182,8 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
   const [welcomeOpen,setWelcomeOpen]=useState(false);
   const [welcomeExpanded,setWelcomeExpanded]=useState(false);
   const [activeView,setActiveView]=useState<"help"|"updates">("help");
+  const [releaseNotes,setReleaseNotes]=useState<ReleaseBulletin[]>([]);
+  const [releaseState,setReleaseState]=useState<"loading"|"ready"|"error">("loading");
   const [activeTopic,setActiveTopic]=useState("discover");
   const [hidden,setHidden]=useState(()=>hiddenInStorage(storageKey));
   const [spotlight,setSpotlight]=useState<Spotlight|null>(null);
@@ -225,6 +228,14 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     setSpotlight(null);
     setHidden(hiddenInStorage(storageKey));
   },[storageKey]);
+
+  // Public releases are independent of member XP and never award recognition.
+  useEffect(()=>{
+    const controller=new AbortController();
+    readReleaseFeed(controller.signal).then(feed=>{setReleaseNotes(feed.entries.slice(0,3));setReleaseState("ready")})
+      .catch(()=>{if(!controller.signal.aborted)setReleaseState("error")});
+    return()=>controller.abort();
+  },[]);
 
   // Tour cards mask the main IREN transmission; pause automatic dismissal
   // until the visitor exits. The existing queue observes body-class changes.
@@ -800,7 +811,14 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
             <button type="button" className="ir80-hide" onClick={hide}>Hide helper</button>
           </footer>
         </div>:<div id="ir87-updates-body" role="tabpanel" aria-labelledby="ir87-updates-tab">
-          <h2>Your signals.</h2>
+          <h2>IREN / Signals.</h2>
+          <div className="ir111-status-link" aria-label="Published platform transmissions">
+            <span>RELEASES & PATCH NOTES</span>
+            {releaseState==="loading"?<p>Checking published transmissions…</p>:releaseState==="error"?<p>Release records are temporarily unavailable.</p>:releaseNotes.length===0?<p>No published release notes yet.</p>:
+             <ul className="ir87-signal-list">{releaseNotes.map(item=><li key={item.id}><span><strong>{item.title}</strong><small>{item.publishedAt} · {item.summary}</small></span></li>)}</ul>}
+            <Link to="/updates" onClick={()=>setPanelOpen(false)}>READ ALL RELEASE NOTES <Icon name="arrow" size={15}/></Link>
+          </div>
+          <h3>Member recognition</h3>
           {!memberId?<p className="ir87-empty">Sign in to see your earned levels, badges, and recognition updates.</p>:
            recent.length?<ul className="ir87-signal-list">
              {recent.slice(0,8).map(item=><li key={item.id}>
@@ -815,7 +833,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
           </Link>
           <div className="ir111-status-link">
             <span>PLATFORM UPDATES</span>
-            <p>Published system availability is tracked separately from earned personal signals. Unreleased changes are not announcements.</p>
+            <p>Live availability is tracked separately from published patch notes and earned personal recognition.</p>
             <Link to="/status" onClick={()=>setPanelOpen(false)}>VIEW LIVE STATUS <Icon name="arrow" size={15}/></Link>
           </div>
           <button type="button" className="ir87-back-help" onClick={()=>{setActiveView("help");setMood("curious")}}>Back to guidance</button>
