@@ -1,0 +1,76 @@
+/* V116 refinements to genuine owner-scoped V111 source workspace.
+ * No alternate persistence, no new API, no D1 migration; visual/read-only
+ * hierarchy enhancements only over existing verified member file nodes.
+ */
+.csf-root[data-studio-file-tree="v111"]{
+ --csf-v116-border:#426782;--csf-v116-ice:#9de4f4;--csf-v116-gold:#e8ca96;
+}
+.csf-root[data-studio-file-tree="v111"] .csf-header{
+ background:linear-gradient(90deg,#102840,#0d1c30);
+ border-bottom:1px solid rgba(123,194,229,.35);
+}
+.csf-root[data-studio-file-tree="v111"] .csf-tree{
+ background:linear-gradient(180deg,#0d2135,#091929);
+}
+.csf-root[data-studio-file-tree="v111"] .csf-tree-top{
+ padding:13px 11px 10px;
+ border-bottom:1px solid rgba(123,194,229,.22);
+}
+.csf-root[data-studio-file-tree="v111"] .csf-tree-top h3{
+ color:#eefaff;font-size:.82rem;letter-spacing:.025em;
+}
+.csf-root[data-studio-file-tree="v111"] .csf-tree-actions{gap:5px}
+.csf-root[data-studio-file-tree="v111"] .csf-tree-actions button{
+ background:#17344d;border-color:#527b98;border-radius:7px;
+ font-size:.68rem;min-height:38px;padding:6px 9px
+}
+.csf-root[data-studio-file-tree="v111"] .csf-tree-actions button:hover:not(:disabled){
+ border-color:#92dff5;background:#285475
+}
+.csf-tree-search{
+ display:flex;align-items:center;gap:7px;margin:10px 10px 0;
+ background:#0a1c30;border:1px solid #486b86;border-radius:8px;
+ min-height:42px;padding:0 11px;color:#abd9ee
+}
+.csf-tree-search:focus-within{border-color:#8ce4f6;box-shadow:0 0 0 1px #477d9c}
+.csf-tree-search span{font-size:19px;line-height:1;color:#99cfe5}
+.csf-tree-search input{width:100%;min-width:0;min-height:36px;background:transparent;
+ border:0;outline:0;color:#edfaff;font-size:.73rem}
+.csf-tree-search input::placeholder{color:#acbfcd;opacity:1}
+.csf-root[data-studio-file-tree="v111"] .csf-tree-body{
+ padding:10px 6px;scrollbar-width:thin
+}
+.csf-root[data-studio-file-tree="v111"] .csf-tree-row{
+ min-height:39px;padding-block:7px;padding-inline-end:7px;gap:7px;border-radius:7px;
+ color:#d6e9f6;font-size:.73rem
+}
+.csf-root[data-studio-file-tree="v111"] .csf-tree-row:hover{background:#1c3d57}
+.csf-root[data-studio-file-tree="v111"] .csf-tree-row.is-active{
+ background:linear-gradient(100deg,#245472,#18364f);
+ border-color:#6aa1c4;box-shadow:inset 2px 0 #9dedff
+}
+.csf-root[data-studio-file-tree="v111"] .csf-node-icon{color:#9fe0f5}
+.csf-root[data-studio-file-tree="v111"] .csf-node-icon.is-folder{color:#e6c895}
+.csf-root[data-studio-file-tree="v111"] .csf-node-icon.is-interface{color:#c5b0f1}
+.csf-root[data-studio-file-tree="v111"] .csf-node-icon.is-script{color:#a4e6d1}
+.csf-file-kind{flex:none;align-self:center;padding:2px 5px;background:#19425e;
+ border:1px solid #446d8b;border-radius:4px;font-size:.55rem;
+ line-height:1.2;color:#c7e6f2;letter-spacing:.08em;min-width:0}
+.csf-root[data-studio-file-tree="v111"] .csf-status{
+ background:#071726;color:#adc8d9;border-top:1px solid #41617b
+}
+.csf-root[data-studio-file-tree="v111"] .csf-welcome{max-width:620px}
+.csf-root[data-studio-file-tree="v111"] .csf-editor{
+ background:radial-gradient(ellipse at 70% 0%,rgba(33,92,131,.08),transparent 70%),#091928
+}
+@media(max-width:730px){
+ .csf-root[data-studio-file-tree="v111"] .csf-tree-top{
+  flex-direction:column;align-items:stretch;gap:7px
+ }
+ .csf-root[data-studio-file-tree="v111"] .csf-tree-body{max-height:268px}
+ .csf-tree-search{min-height:44px;margin:9px 9px 0}
+}
+@media(forced-colors:active){
+ .csf-root[data-studio-file-tree="v111"] .csf-tree-row.is-active{outline:2px solid Highlight}
+ .csf-file-kind{border-color:CanvasText}
+}
