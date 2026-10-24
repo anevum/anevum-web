@@ -406,6 +406,8 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
       </div>;
      })}
      {!!openIds.length&&<button className="csf-close-all" type="button" onClick={closeAllFiles}>Close all</button>}
+    </nav>
+    {activeId&&<div className="csf-view-toolbar" role="group" aria-label="Source editor layout controls">
      {activeId&&<button type="button" className="csf-split-toggle" aria-label={secondaryId?'Return to single editor':'Split open source editors'}
       aria-pressed={!!secondaryId} disabled={!secondaryId&&openIds.length<2}
       title={secondaryId?'Return to single editor':'Show two already-open source files'}
@@ -417,7 +419,7 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
         return <option key={id} value={id}>{name}</option>;
        })}
       </select></label>}
-    </nav>
+    </div>}
     {secondaryId&&<p className="csf-split-focus-note" role="status">
      <Icon name="columns" size={14}/> Split focus · Explorer hidden. Use Quick Open for files or Single view to return. Each file saves independently.
     </p>}
