@@ -20,6 +20,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--out", required=True)
 parser.add_argument("--quality", choices=["preview", "master"], default="preview")
 parser.add_argument("--frames", type=int, default=8)
+parser.add_argument("--backdrop", default=None, help="Optional reviewed first-party environment matte (not project artwork)")
 opts = parser.parse_args(arguments)
 if not 4 <= opts.frames <= 180:
     parser.error("Frame count must be 4..180")
@@ -35,7 +36,7 @@ for datablocks in (bpy.data.meshes, bpy.data.curves, bpy.data.materials, bpy.dat
 
 scene = bpy.context.scene
 scene.render.engine = "CYCLES"
-scene.cycles.samples = 12 if opts.quality == "preview" else 48
+scene.cycles.samples = 24 if opts.quality == "preview" else 64
 # Ubuntu's packaged Blender builds may omit OpenImageDenoiser entirely.
 # Keep headless first-master rendering independent of optional denoise binaries.
 scene.cycles.use_denoising = False
@@ -51,13 +52,14 @@ scene.render.image_settings.color_mode = "RGBA"
 scene.render.film_transparent = False
 scene.render.filepath = root + "/"
 scene.view_settings.view_transform = "AgX"
+scene.view_settings.exposure = 0.5
 scene.render.film_transparent = False
 world = bpy.data.worlds.new("The Continuance Void")
 scene.world = world
 world.use_nodes = True
 world_bg = world.node_tree.nodes.get("Background")
-world_bg.inputs["Color"].default_value = (0.002, 0.006, 0.022, 1)
-world_bg.inputs["Strength"].default_value = 0.6
+world_bg.inputs["Color"].default_value = (0.007, 0.013, 0.038, 1)
+world_bg.inputs["Strength"].default_value = 0.85
 
 def material(name, color, metal=0.0, rough=0.48, emission=None, strength=0.0):
     m = bpy.data.materials.new(name)
@@ -74,17 +76,48 @@ def material(name, color, metal=0.0, rough=0.48, emission=None, strength=0.0):
             p.inputs["Emission Strength"].default_value = strength
     return m
 
-void_alloy = material("01 Machined titanium cobalt", (0.026, 0.061, 0.115), .82, .31)
-lit_alloy = material("02 Brushed blue-silver", (0.24, 0.39, 0.52), .91, .19)
+void_alloy = material("01 Machined titanium cobalt", (0.055, 0.105, 0.19), .78, .33)
+lit_alloy = material("02 Brushed blue-silver", (0.39, 0.55, 0.68), .87, .25)
 near_black = material("03 Obsidian carbon", (0.006, 0.014, 0.035), .45, .43)
 auric = material("04 Antiqued auric trim", (0.39, 0.25, 0.11), .78, .28)
-stone = material("05 Engineered blue basalt", (0.063, 0.095, 0.16), .14, .83)
+stone = material("05 Engineered blue basalt", (0.12, 0.18, 0.255), .14, .72)
 cyan = material("06 Photonic cyan seams", (0.06, .32, .6), .2, .22, (.09, .72, 1), 3.4)
 violet = material("07 Photon-violet alloy", (.21, .1, .42), .23, .25, (.34, .18, .86), 2.4)
 teal = material("08 Signal-lattice teal", (.025, .25, .28), .18, .27, (.15, .7, .73), 2.1)
 planet = material("09 Planet atmosphere", (.023, .08, .26), .12, .64, (.016, .09, .35), .4)
 halo = material("10 Planet rim phosphor", (.015, .14, .49), .1, .22, (.1, .3, .7), 1.1)
 star = material("11 Stellar light", (.74, .87, 1), 0, .2, (.4, .7, 1), 1.5)
+
+# Real surface detail rather than flat primitive paint. Deterministic materials,
+# no external textures and no additional GPU services.
+for surf,scale,amp in [(void_alloy,19,.12),(lit_alloy,32,.06),(stone,6,.28),(auric,24,.08)]:
+    nodes=surf.node_tree.nodes
+    links=surf.node_tree.links
+    p=nodes.get("Principled BSDF")
+    noise=nodes.new("ShaderNodeTexNoise")
+    noise.inputs["Scale"].default_value=scale
+    noise.inputs["Detail"].default_value=3.0
+    bump=nodes.new("ShaderNodeBump")
+    bump.inputs["Strength"].default_value=amp
+    bump.inputs["Distance"].default_value=.055
+    links.new(noise.outputs["Fac"],bump.inputs["Height"])
+    links.new(bump.outputs["Normal"],p.inputs["Normal"])
+
+# Atmosphere-only celestial texture. Atmospheric vista may be supplied by
+# a first-party prerendered matte; this texture is retained for all-3D fallback.
+np=planet.node_tree.nodes
+nl=planet.node_tree.links
+pn=np.new("ShaderNodeTexNoise")
+pn.inputs["Scale"].default_value=3.7
+pn.inputs["Detail"].default_value=6.0
+ramp=np.new("ShaderNodeValToRGB")
+ramp.color_ramp.elements[0].position=.17
+ramp.color_ramp.elements[0].color=(.012,.036,.12,1)
+ramp.color_ramp.elements[1].position=.82
+ramp.color_ramp.elements[1].color=(.13,.28,.65,1)
+nl.new(pn.outputs["Fac"],ramp.inputs["Fac"])
+nl.new(ramp.outputs["Color"],np.get("Principled BSDF").inputs["Base Color"])
+
 
 def apply(obj, mat):
     obj.data.materials.append(mat)
@@ -143,6 +176,23 @@ def island(name, x, y, z, radius, height):
     cylinder(name + " / structural deck", (x,y,z), radius, height, stone, 12)
     cylinder(name + " / machined perimeter", (x,y,z+height*.49), radius*1.02, .085, lit_alloy, 12)
     torus(name + " / lower photonic halo", (x,y,z-height*.25), radius*.93, .047, cyan, (0,0,0))
+    # Nonuniform under-rock strata create suspended mass and believable silhouettes.
+    for j in range(10):
+        a=2*math.pi*j/10
+        distance=radius*(.35+.3*random.random())
+        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1,radius=1,
+            location=(x+math.cos(a)*distance,y+math.sin(a)*distance,z-height*.95))
+        rock=bpy.context.object
+        rock.name=name+" / fractured suspended stone"
+        rock.scale=(radius*.33,radius*.35,height*(.55+random.random()*.7))
+        apply(rock,stone)
+    # Energy cascades reference the design boards without pretending to depict live activity.
+    for j in range(3):
+        a=j*2*math.pi/3
+        px=x+math.cos(a)*radius*.62;py=y+math.sin(a)*radius*.62
+        beam(name+" / suspended photonic cascade",
+             (px,py,z-height*.5),(px+.09,py,z-height*2.6),.045,teal)
+
     for j in range(12):
         a = 2*math.pi*j/12
         px,pz=x+math.cos(a)*radius*.82,y+math.sin(a)*radius*.82
@@ -166,6 +216,25 @@ def observatory(name, x, y, z, radius, stories, tone=cyan):
         beam(name+" / spire", (x+math.cos(a)*radius*.68,y+math.sin(a)*radius*.68,peak),
              (x,y,peak+1.75), .065,lit_alloy)
     sphere(name+" / beacon",(x,y,peak+1.68),.16,tone,16,8)
+    # Radiating finial ribs and broken skylines make the outposts more like
+    # transcosmic cathedrals rather than generic round observatory cylinders.
+    for j in range(8):
+        a=2*math.pi*j/8
+        x1=x+math.cos(a)*radius*1.5
+        y1=y+math.sin(a)*radius*1.5
+        beam(name+" / carved radial buttress",
+            (x1,y1,peak-1.8),(x+math.cos(a)*radius*.58,y+math.sin(a)*radius*.58,peak+1.4),
+            .11,auric if j%3==0 else void_alloy)
+    for j in range(4):
+        a=2*math.pi*j/4
+        sx=x+math.cos(a)*radius*.7
+        sy=y+math.sin(a)*radius*.7
+        cylinder(name+" / distal cathedral tower",(sx,sy,peak+.85),radius*.19,2.0,void_alloy,8)
+        bpy.ops.mesh.primitive_cone_add(vertices=8,radius1=radius*.24,radius2=0,depth=1.7,
+            location=(sx,sy,peak+2.5))
+        apply(bpy.context.object,lit_alloy)
+        torus(name+" / distal light halo",(sx,sy,peak+1.8),radius*.25,.025,tone)
+
 
 # Wide floating citadel set, all in a common source coordinate system.
 island("Primary transit nave", 0, 0, .15, 6.2, 1.15)
@@ -194,9 +263,10 @@ for i in range(12):
     beam("Cradle aperture brace",(x,y,4.2),(x*.64,y*.64,8.55),.16,void_alloy)
     sphere("Cradle signal bead",(x,y,4.2),.08,cyan,12,6)
 # A vast distant moon and atmospheric ring behind the architecture.
-sphere("Transcosmic horizon planet",(27,28,22),18,planet,64,32)
-torus("Planetary illuminated orbital axis",(27,28,22),19.1,.19,halo,(.35,.2,.8))
-torus("Planetary far-field ring",(27,28,22),22.5,.12,violet,(.35,.2,.8))
+if not opts.backdrop:
+    sphere("Transcosmic horizon planet",(27,28,22),18,planet,64,32)
+    torus("Planetary illuminated orbital axis",(27,28,22),19.1,.19,halo,(.35,.2,.8))
+    torus("Planetary far-field ring",(27,28,22),22.5,.12,violet,(.35,.2,.8))
 # Atmospheric structures: distant archways, hidden bridges and dense strata.
 for i in range(17):
     angle=2*math.pi*i/17
@@ -234,6 +304,37 @@ bpy.context.collection.objects.link(cam)
 scene.camera=cam
 cam.data.lens=38
 cam.data.sensor_width=36
+
+# This is the hybrid cinematic technique: an art-directed first-party matte
+# is held in camera space behind individually rendered 3D architecture. The
+# foreground responds to authored camera motion; the background does not.
+# A real background image still has its honest native source resolution.
+if opts.backdrop:
+    backdrop_path=os.path.abspath(opts.backdrop)
+    if not os.path.isfile(backdrop_path):
+        parser.error("Missing first-party backdrop: "+backdrop_path)
+    image=bpy.data.images.load(backdrop_path,check_existing=True)
+    matte=bpy.data.materials.new("CAMERA LOCKED / ORIGINAL ANEVUM ENVIRONMENT MATTE")
+    matte.use_nodes=True
+    nodes=matte.node_tree.nodes
+    nodes.clear()
+    output=nodes.new("ShaderNodeOutputMaterial")
+    emitted=nodes.new("ShaderNodeEmission")
+    emitted.inputs["Strength"].default_value=1.0
+    tex=nodes.new("ShaderNodeTexImage")
+    tex.image=image
+    matte.node_tree.links.new(tex.outputs["Color"],emitted.inputs["Color"])
+    matte.node_tree.links.new(emitted.outputs["Emission"],output.inputs["Surface"])
+    bpy.ops.mesh.primitive_plane_add(size=2)
+    plane=bpy.context.object
+    plane.name="CINEMA / APPROVED FIRST-PARTY ENVIRONMENT MATTE"
+    plane.parent=cam
+    distance=85
+    plane.location=(0,0,-distance)
+    plane.scale=(distance*math.tan(cam.data.angle_x/2),
+                 distance*math.tan(cam.data.angle_y/2),1)
+    apply(plane,matte)
+
 target=Vector((1.25,7.0,3.5))
 def pose(frame,location,look_at):
     scene.frame_set(frame)
@@ -267,6 +368,9 @@ camera_manifest={
     "end":camera_state(opts.frames),
     "handoffStatus":"UNREGISTERED / NOT A SEAMLESS THREE.JS CAMERA MATCH",
     "contentClaims":"Atmospheric original environment only; no real member or publication data",
+    "backdrop": {"file":os.path.basename(opts.backdrop) if opts.backdrop else None,
+                 "nativePixels":list(bpy.data.images[os.path.basename(opts.backdrop)].size) if opts.backdrop else None,
+                 "sourceRights":"Existing first-party PARITY V136 original environment, not creator content"}
 }
 with open(os.path.join(root,"camera-manifest.json"),"w",encoding="utf8") as f:
     json.dump(camera_manifest,f,indent=2)
