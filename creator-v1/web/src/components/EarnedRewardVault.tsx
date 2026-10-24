@@ -28,14 +28,14 @@ function validInventory(value:unknown,publicProfile:boolean):value is Inventory{
  */
 export function EarnedRewardVault({
  level,handle=null,badges=[],distinctions,fallbackBadges=[],
- title='Earned discoveries',showLevels=true
+ title='Earned discoveries',showLevels=true,showHonors=true
 }:{
  level:number|null|undefined;
  handle?:string|null;
  badges?:readonly string[];
  distinctions?:PublicDistinctions;
  fallbackBadges?:readonly string[];
- title?:string;showLevels?:boolean;
+ title?:string;showLevels?:boolean;showHonors?:boolean;
 }){
  const publicProfile=typeof handle==='string';
  const [ledger,setLedger]=useState<RecognitionSettings|null>(null);
@@ -91,7 +91,7 @@ export function EarnedRewardVault({
   ...(distinctions?.medals??[]),...(distinctions?.ribbons??[])
  ]:[...(ledger?.earnedMedals.map(d=>d.id)??[]),...(ledger?.earnedRibbons.map(d=>d.id)??[])];
  const validHonors=[...new Set(honors)].filter(id=>Object.hasOwn(DISTINCTION_CATALOG,id));
- const hasReward=records.length>0||validBadges.length>0||validHonors.length>0;
+ const hasReward=records.length>0||(showHonors&&(validBadges.length>0||validHonors.length>0));
  const simple=MEMBER_COLLECTION_NAV_REVIEW&&!publicProfile;
  const shownLevels=simple&&!allLevels?[...records].slice(-4).reverse():records;
  const shownBadges=simple&&!allHonors?validBadges.slice(0,3):validBadges;
@@ -130,7 +130,7 @@ export function EarnedRewardVault({
    </div>
    {simple&&records.length>4&&<button type="button" className="mc-reward-more" aria-expanded={allLevels} onClick={()=>setAllLevels(v=>!v)}>{allLevels?"Show fewer earned levels":"Show "+(records.length-shownLevels.length)+" more earned levels"}</button>}
   </div>}
-  {(validBadges.length>0||validHonors.length>0)&&<div className="av75-vault-section">
+  {showHonors&&(validBadges.length>0||validHonors.length>0)&&<div className="av75-vault-section">
    <h3>Earned distinctions</h3>
    <div className="av75-honors-earned">
     {shownBadges.map(id=>{

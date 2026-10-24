@@ -71,3 +71,13 @@ test('deep links, privacy and stats controls remain accessible',()=>{
  assert.match(member,/spaceRequest<MemberSpace>\('\/api\/v1\/member\/space','PATCH'/);
  assert.match(member,/showStats/);
 });
+
+test('review mode separates level specimens from awards without affecting legacy vault',()=>{
+ const levels=read('web/src/pages/LevelsPage.tsx');
+ const badges=read('web/src/pages/RecognitionRegistryPage.tsx');
+ const vault=read('web/src/components/EarnedRewardVault.tsx');
+ assert.match(levels,/showHonors=\{!MEMBER_COLLECTION_NAV_REVIEW\}/);
+ assert.match(vault,/showHonors=true/);
+ assert.match(vault,/showHonors&&\(validBadges\.length/);
+ assert.match(badges,/!MEMBER_COLLECTION_NAV_REVIEW&&<Link to="\/levels"/);
+});

@@ -71,6 +71,8 @@ async function fixture(width,mode='ready',pagePath='/saved'){
 async function fit(page,name){const a=await page.evaluate(()=>({w:innerWidth,scroll:document.documentElement.scrollWidth}));assert.ok(a.scroll<=a.w+1,JSON.stringify(a));check(name+' viewport fits')}
 async function shot(page,name){
  await page.evaluate(()=>{let el=document.querySelector('#synthetic-qa-banner');if(el)return;el=document.createElement('div');el.id='synthetic-qa-banner';el.textContent='SYNTHETIC MEMBER DATA / COMPILED REACT / NOT DEPLOYED';el.setAttribute('role','note');el.style.cssText='position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#271b3f;color:#f3e2bd;padding:4px 14px;text-align:center;font:600 11px/1.5 sans-serif;pointer-events:none';document.body.append(el)});
+ await page.evaluate(()=>{document.activeElement instanceof HTMLElement&&document.activeElement.blur();window.scrollTo({top:0,left:0,behavior:'instant'})});
+ await page.waitForFunction(()=>scrollY<=1);
  await page.screenshot({path:join(output,name+'.png'),fullPage:true,animations:'disabled'});captures.push(name+'.png');
 }
 function nav(page){return page.getByRole('navigation',{name:'My collection navigation'})}
@@ -87,7 +89,8 @@ try{
   await page.getByRole('heading',{name:'Your evolution.'}).waitFor();
   await page.waitForFunction(()=>document.querySelectorAll('.av75-earned-level').length===4);
   assert.equal(await nav(page).getByRole('link',{name:'Evolution'}).getAttribute('aria-current'),'page');
-  check(width+' earned-only levels default to four');
+  assert.equal(await page.locator('.av75-earned-honor').count(),0);
+  check(width+' earned-only levels default to four with no duplicate awards');
   await page.getByRole('button',{name:'Show 1 more earned levels'}).click();
   await page.waitForFunction(()=>document.querySelectorAll('.av75-earned-level').length===5);
   await page.getByRole('button',{name:'Show fewer earned levels'}).click();

@@ -21,7 +21,7 @@ export function LevelsPage(){
    <span>CONTINUANCE INSTITUTE / EVOLUTION</span>
    <h1 id="av75-levels-heading">Your evolution.</h1>
    <p>{MEMBER_COLLECTION_NAV_REVIEW?"View your verified level and the specimens you have earned. Future discoveries stay hidden.":"The universe unfolds through what you earn. Future specimens remain unknown until your progress reaches them. There is no public gallery or shortcut to the unreached forms."}</p>
-   <div className="av75-page-actions"><Link to="/member?tab=awards">My awards &amp; player card ↗</Link><Link to="/recognition">Earned recognition ↗</Link></div>
+   <div className="av75-page-actions"><Link to="/member?tab=awards">{MEMBER_COLLECTION_NAV_REVIEW?"Player card ↗":"My awards & player card ↗"}</Link>{!MEMBER_COLLECTION_NAV_REVIEW&&<Link to="/recognition">Earned recognition ↗</Link>}</div>
   </header>
   {!signedIn?<section className="av75-vault-empty">
    <strong>Your progression is private until you sign in.</strong>
@@ -36,7 +36,7 @@ export function LevelsPage(){
     <small>{p.xp.toLocaleString()} XP · {p.nextLevel===null?'Final level reached':(p.nextLevel-p.xp).toLocaleString()+' XP until the next undisclosed discovery'}</small>
    </div>
   </section>}
-  {signedIn&&p&&<EarnedRewardVault key={session?.user?.id} level={level} fallbackBadges={earnedFounding} title="Your earned discoveries"/>}
+  {signedIn&&p&&<EarnedRewardVault key={session?.user?.id} level={level} fallbackBadges={earnedFounding} title="Your earned discoveries" showHonors={!MEMBER_COLLECTION_NAV_REVIEW}/>}
   <footer className="av75-vault-principles">All levels and badges are earned, never purchased. XP and recognition come from verified server records. Levels do not grant moderation authority.</footer>
  </section>;
 }

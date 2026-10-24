@@ -17,7 +17,7 @@ export function RecognitionRegistryPage(){
    <span>CONTINUANCE INSTITUTE / RECOGNITION</span>
    <h1 id="av75-recognition-heading">Marks of your journey.</h1>
    <p>{MEMBER_COLLECTION_NAV_REVIEW?"Your verified badges, ribbons and medals, in one earned-only collection.":"Badges, service ribbons and prestige medals become visible when they are earned and verified. Unreached designs and their descriptions are not published in a public cabinet."}</p>
-   <div className="av75-page-actions"><Link to="/levels">My evolution ↗</Link><Link to="/member?tab=awards">Edit my player card ↗</Link></div>
+   <div className="av75-page-actions">{!MEMBER_COLLECTION_NAV_REVIEW&&<Link to="/levels">My evolution ↗</Link>}<Link to="/member?tab=awards">{MEMBER_COLLECTION_NAV_REVIEW?"Player card ↗":"Edit my player card ↗"}</Link></div>
   </header>
   {!signedIn?<section className="av75-vault-empty">
     <strong>Your earned record is available after sign-in.</strong>

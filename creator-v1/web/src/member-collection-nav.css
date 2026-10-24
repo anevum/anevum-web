@@ -55,3 +55,21 @@
  .ms-dashboard .ms-toolbar-next .ms-toolbar-more>summary{min-height:44px}
  .mc-award-selectors{grid-template-columns:minmax(0,1fr)}
 }
+
+/* Compiled-capture findings: remove duplicate hero weight and make labels legible. */
+.av9-shell .mc-collection-page .av75-page-heading{padding:14px 0 17px}
+.av9-shell .mc-collection-page .av75-page-heading h1{
+ font:500 clamp(30px,4.7vw,44px)/1.12 var(--av9-display,Georgia,serif)!important;
+ letter-spacing:-.035em!important;margin:7px 0 9px
+}
+.av9-shell .mc-collection-page .av75-page-actions{margin-top:13px;gap:8px}
+.av9-shell .mc-collection-page .av75-page-actions a{min-height:44px;padding:10px 14px}
+.mc-collection-page .av75-earned-honor>span:has(>strong){
+ display:flex;flex-direction:column;gap:4px;min-width:0;line-height:1.4
+}
+.mc-collection-page .av75-earned-honor>span:has(>strong)>small,
+.mc-collection-page .av75-earned-honor>span:has(>strong)>strong{
+ display:block;margin:0;line-height:1.45;overflow-wrap:anywhere
+}
+.avsaved-organizer .avsaved-organizer-intro h2{line-height:1.28}
+@media(max-width:390px){.av9-shell .mc-collection-page .av75-page-heading{padding:12px 0 16px}.av9-shell .mc-collection-page .av75-page-heading h1{font-size:31px!important}}

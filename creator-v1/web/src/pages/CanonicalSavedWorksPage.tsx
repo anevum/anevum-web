@@ -9,7 +9,7 @@ import {useResource} from "../lib/useResource";
 import {CosmicArtwork} from "../components/CosmicArtwork";
 import type {Category} from "../lib/api";
 import {browseSavedWorks,savedCategoryFilters} from "../lib/saved-works-browse";
-import {MemberCollectionNav} from "../components/MemberCollectionNav";
+import {MemberCollectionNav,MEMBER_COLLECTION_NAV_REVIEW} from "../components/MemberCollectionNav";
 import "./canonical-saved-works.css";
 
 function SavedWorksCollection({memberId}:{memberId:string}){
@@ -66,7 +66,7 @@ function SavedWorksCollection({memberId}:{memberId:string}){
   {initial.state==="ready"&&<>
    <div className="avsaved-counter"><span className="kicker">YOUR SAVED WORK / PRIVATE</span><span>{cursor?items.length+" SHOWN · MORE BELOW":items.length+" SAVED PROJECT"+(items.length===1?"":"S")}</span></div>
    {items.length>0&&<div className="avsaved-organizer" aria-label="Organize saved work">
-    <div className="avsaved-organizer-intro"><div><h2>Find what you saved.</h2><p>Browse by category or search projects already loaded.</p></div>
+    <div className="avsaved-organizer-intro"><div><h2>{MEMBER_COLLECTION_NAV_REVIEW?"Browse":"Find what you saved."}</h2><p>Browse by category or search projects already loaded.</p></div>
      <div className="avsaved-layout" role="group" aria-label="Saved work display"><button type="button" aria-pressed={layout==="list"} onClick={()=>setLayout("list")}>List</button><button type="button" aria-pressed={layout==="grid"} onClick={()=>setLayout("grid")}>Gallery</button></div>
     </div>
     <div className="avsaved-controls">
@@ -119,7 +119,7 @@ export function CanonicalSavedWorksPage(){
    <h1>YOUR <em>LIBRARY.</em></h1>
    <p>Everything you saved, organized in one private place.</p>
    <div className="avsaved-header-links"><Link to="/discover">FIND PROJECTS <span aria-hidden="true">↗</span></Link>
-    {verified&&<Link to="/member">MY SPACE <span aria-hidden="true">↗</span></Link>}</div>
+    {verified&&!MEMBER_COLLECTION_NAV_REVIEW&&<Link to="/member">MY SPACE <span aria-hidden="true">↗</span></Link>}</div>
   </header>
   {!active?<section className="avsaved-inactive" aria-label="Saved works availability">
    <span className="kicker">PRIVATE COLLECTION / IN DEVELOPMENT</span>
