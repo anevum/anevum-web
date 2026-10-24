@@ -4,6 +4,7 @@ import {PREFIX} from '../../../workbench-alpha/document.mjs';
 import {StudioSceneComposerV112,studioVisualScenesEnabled} from './StudioSceneComposerV112';
 import {PREFIX as UI_PREFIX} from '../../../interface-builder/document.mjs';
 import {StudioInterfaceBuilderV113,studioInterfaceBuilderEnabled} from './StudioInterfaceBuilderV113';
+import {StudioProjectDoctorV001,studioProjectDoctorEnabled} from './StudioProjectDoctorV001';
 import {
  studioFileTreeEnabled,studioFileList,studioFileGet,studioFileCreate,
  studioFileUpdate,studioFileVersions,studioFileTrash,studioFileRestore,type StudioFileNode,type StudioFileVersion,
@@ -519,6 +520,8 @@ function SourceEditorV111({projectId,nodeId,nodes,editable:canEdit,onDirty,onUpd
     <span>{byteCount.toLocaleString()} / 32,768 UTF-8 bytes</span>
     <span>{dirty?'Unsaved local draft':'Matches last confirmed saved revision'}</span>
    </div>
+   {studioProjectDoctorEnabled&&(content.startsWith(PREFIX)||content.startsWith(UI_PREFIX))&&
+    <StudioProjectDoctorV001 source={content} revision={base.revision} dirty={dirty}/>}
    {byteCount>32768&&<p className="csf-error" role="alert">The source exceeds the server file limit. Shorten it before saving.</p>}
    {historyError&&<p className="csf-error" role="alert">{historyError}</p>}
    {versions&&<section className="csf-history" aria-label="Previous source versions">
