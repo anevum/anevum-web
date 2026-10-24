@@ -78,6 +78,8 @@ jobs:
           test -s "$RUNNER_TEMP/observatory-v106/growth-next-owner-phone.png"
           test -s "$RUNNER_TEMP/observatory-v106/rum-next-owner-desktop.png"
           test -s "$RUNNER_TEMP/observatory-v106/rum-next-owner-phone.png"
+          test -s "$RUNNER_TEMP/observatory-v106/focus-next-owner-desktop.png"
+          test -s "$RUNNER_TEMP/observatory-v106/focus-next-owner-phone.png"
           test -s "$RUNNER_TEMP/observatory-v106/growth-next-owner-small-phone.png"
           test -s "$RUNNER_TEMP/observatory-v106/growth-next-reviewer-phone.png"
           test -s "$RUNNER_TEMP/observatory-v106/acceptance.json"
