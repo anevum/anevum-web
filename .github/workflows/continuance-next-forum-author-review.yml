@@ -1,0 +1,98 @@
+name: ANEVUM NEXT Forum Author Dossier Review
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/continuance-next-forum-author-review.yml'
+      - 'creator-v1/web/src/components/ForumAuthorCard.tsx'
+      - 'creator-v1/web/src/components/forum-author-dossier.css'
+      - 'creator-v1/web/src/components/MemberForumHighlights.tsx'
+      - 'creator-v1/web/src/pages/CanonicalForums.tsx'
+      - 'creator-v1/test/continuance-next-forum-author.test.mjs'
+      - 'creator-v1/test/capture-canonical-forums-v041.mjs'
+      - 'docs/production/continuance-next-forum-author-dossiers-20261024.md'
+permissions:
+  contents: read
+concurrency:
+  group: anevum-next-forum-dossiers-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  read-only-forum-dossiers:
+    if: github.repository == 'anevum/anevum-web' && github.event.pull_request.head.repo.full_name == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      CLOUDFLARE_API_TOKEN: ''
+      CLOUDFLARE_API_KEY: ''
+      CLOUDFLARE_ACCOUNT_ID: ''
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Guard exact stack base, path scope and no private or production edits
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$CLOUDFLARE_API_TOKEN"
+          test -z "$CLOUDFLARE_API_KEY"
+          test -z "$CLOUDFLARE_ACCOUNT_ID"
+          test "$(git rev-parse HEAD)" = "$HEAD_SHA"
+          test "$BASE_SHA" = "0809374c87b64f2837efdd1bd1a5ff489d3a45ad"
+          git diff --no-renames --name-status "$BASE_SHA" HEAD >/tmp/next-forum-files.txt
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const rows=fs.readFileSync('/tmp/next-forum-files.txt','utf8').trim().split('\n').filter(Boolean);
+          const approved=new Map([
+           ['.github/workflows/continuance-next-forum-author-review.yml','A'],
+           ['creator-v1/web/src/components/ForumAuthorCard.tsx','M'],
+           ['creator-v1/web/src/components/forum-author-dossier.css','A'],
+           ['creator-v1/web/src/components/MemberForumHighlights.tsx','M'],
+           ['creator-v1/web/src/pages/CanonicalForums.tsx','M'],
+           ['creator-v1/test/continuance-next-forum-author.test.mjs','A'],
+           ['creator-v1/test/capture-canonical-forums-v041.mjs','M'],
+           ['docs/production/continuance-next-forum-author-dossiers-20261024.md','A']
+          ]);
+          assert.equal(rows.length,approved.size,'Unexpected files or missing approved files');
+          for(const row of rows){
+           const [status,path]=row.split('\t');
+           assert.equal(status,approved.get(path),'Unapproved forum source change: '+row);
+          }
+          console.log('PASS exactly '+approved.size+' scoped source/QA paths');
+          JS
+      - name: Install pinned frontend dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Verify public author projection and forum data privacy
+        run: |
+          node --test creator-v1/test/continuance-next-forum-author.test.mjs
+          node --test creator-v1/test/canonical-forums-v041.test.mjs
+      - name: Check real React TypeScript
+        run: npm run check:creator-v1-web
+      - name: Build real default frontend without enabling NEXT
+        env:
+          VITE_LIVING_COMMONS_REVIEW: 'false'
+        run: npm run build:creator-v1-web
+      - name: Install pinned Chromium browser
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
+          npx playwright install --with-deps chromium
+      - name: Visually review approved forum authors on real compiled UI
+        run: |
+          CHROME="$(node --input-type=module -e "import {chromium} from 'playwright';console.log(chromium.executablePath())")"
+          node creator-v1/test/capture-canonical-forums-v041.mjs --chrome "$CHROME" --output "$RUNNER_TEMP/forum-author-dossiers"
+      - name: Upload synthetic-only screenshots and browser receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-next-forum-author-dossiers-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/forum-author-dossiers
+          retention-days: 14
+          if-no-files-found: warn

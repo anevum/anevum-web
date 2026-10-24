@@ -15,6 +15,8 @@ mkdirSync(out,{recursive:true});
 const {db,env}=fixture();
 db.exec(readFileSync(new URL('../canonical-auth/migrations/0006_member_community_forums.sql',import.meta.url),'utf8'));
 env.CANONICAL_FORUM_ENABLED='true';env.CANONICAL_FORUM_REVIEWER_IDS='reviewer';
+// Synthetic approved activity only. Public reputation is guarded by the same visibility and showStats projection.
+env.CANONICAL_REPUTATION_ENABLED='true';
 const id=()=>crypto.randomUUID();
 function seed(key,handle,visibility='public'){
  db.prepare('INSERT INTO "user"(id,name,email,emailVerified,createdAt,updatedAt) VALUES(?,?,?,1,1,1)')
@@ -105,7 +107,8 @@ function connect(url){
   ws.addEventListener('error',()=>reject(Error('CDP connection failed')),{once:true});
  });
 }
-const result={fixture:'synthetic',widths:[],authorCards:false,threadNavigation:false,
+const result={fixture:'synthetic',widths:[],authorCards:false,authorDossiers:false,
+ publicWallLinks:false,contributionDisclosure:false,threadNavigation:false,
  homeWayfinder:false,pagination:false,privateThreadExcluded:false};
 let client=null;
 try{
@@ -127,22 +130,34 @@ try{
  }
  await goto('/community');
  await until(()=>evaluate("document.querySelectorAll('.cf-forums .cf-thread').length===20"));
- const first=await evaluate("({count:document.querySelectorAll('.cf-forums .cf-thread').length,more:!!document.querySelector('.cf-more'),secret:document.body.innerText.includes('PRIVATE THREAD MUST NEVER APPEAR'),author:!!document.querySelector('.cf-author .av61-specimen .level-emblem')})");
+ const first=await evaluate("({count:document.querySelectorAll('.cf-forums .cf-thread').length,more:!!document.querySelector('.cf-more'),secret:document.body.innerText.includes('PRIVATE THREAD MUST NEVER APPEAR'),author:!!document.querySelector('.cf-author .av61-specimen .level-emblem'),dossiers:document.querySelectorAll('.cf-list .cf-author-dossier').length,rep:!!document.querySelector('.cf-list .cf-author-dossier-reputation'),wall:document.querySelector('.cf-list .cf-author-dossier-visit')?.getAttribute('href'),details:!!document.querySelector('.cf-list .cf-author-dossier-details')})");
  assert.equal(first.count,20);assert.equal(first.more,true);
  assert.equal(first.secret,false);assert.equal(first.author,true);
- result.authorCards=true;result.privateThreadExcluded=true;
+ assert.equal(first.dossiers,20,'Each approved forum thread has one meaningful author dossier');
+ assert.equal(first.wall,'/@orbit_writer','Public author link must lead to their canonical wall');
+ assert.equal(first.rep,true,'Only server-validated, opted-in earned reputation is displayed');
+ assert.equal(first.details,true,'The contribution record uses native keyboard-accessible details');
+ result.authorCards=true;result.authorDossiers=true;result.publicWallLinks=true;result.privateThreadExcluded=true;
  await evaluate("document.querySelector('.cf-more').click()");
  await until(()=>evaluate("document.querySelectorAll('.cf-forums .cf-thread').length===25"));
  result.pagination=true;
  await evaluate("document.querySelectorAll('.cf-forums .cf-thread h3 a')[24].click()");
  await until(()=>evaluate("!!document.querySelector('.cf-detail .cf-fullbody')"));
  assert.equal(await evaluate("!!document.querySelector('.cf-detail .cf-author .av61-specimen .level-emblem')"),true);
+ assert.equal(await evaluate("!!document.querySelector('.cf-detail .cf-author-dossier--detail .cf-author-dossier-visit')"),true);
+ assert.equal(await evaluate("!!document.querySelector('.cf-detail .cf-author-dossier--reply')"),true);
  result.threadNavigation=true;
  await client.send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
  await evaluate("(()=>{const e=document.querySelector('.cf-detail');window.scrollTo(0,e.getBoundingClientRect().top+window.scrollY-82)})()");
  await delay(220);
  const detailShot=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
  writeFileSync(join(out,'forum-detail-390.png'),Buffer.from(detailShot.data,'base64'));
+ const disclosures=await evaluate("(()=>{const entry=document.querySelector('.cf-detail .cf-author-dossier--detail details');if(!entry)return {open:false,counts:0};entry.querySelector('summary').click();return {open:entry.open,counts:entry.querySelectorAll('.cf-author-dossier-activity>span').length}})()");
+ assert.equal(disclosures.open,true);
+ assert.equal(disclosures.counts,4,'Only four bounded, public approved-activity counters');
+ result.contributionDisclosure=true;
+ const openShot=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+ writeFileSync(join(out,'forum-author-contributions-390.png'),Buffer.from(openShot.data,'base64'));
  await goto('/');
  // V079 deliberately removes the old forum-highlights panel from the
  // homepage. Forum author cards are verified above on real thread routes;
