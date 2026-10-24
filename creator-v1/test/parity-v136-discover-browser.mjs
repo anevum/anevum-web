@@ -128,8 +128,9 @@ try{
     await page.getByRole('button',{name:'Marked free'}).click();
     await page.waitForURL(url=>url.searchParams.get('free')==='1'&&url.searchParams.get('category')==='games');
     await page.getByRole('searchbox',{name:'Search published projects'}).fill('ORBITAL & TEST');
-    await page.getByRole('button',{name:'Search index'}).click();
-    await page.waitForURL(url=>url.searchParams.get('q')==='ORBITAL & TEST');
+    await page.getByRole('searchbox',{name:'Search published projects'}).press('Enter');
+    await page.waitForFunction(()=>new URLSearchParams(location.search).get('q')==='ORBITAL & TEST',
+      null,{timeout:10000});
     await page.getByRole('heading',{name:'No matching projects yet.'}).waitFor();
     await page.getByRole('link',{name:/Clear filters/}).click();
     await page.waitForURL(base+'/discover');
