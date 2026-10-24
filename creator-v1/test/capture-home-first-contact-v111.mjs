@@ -67,6 +67,18 @@ try{
      (two&&(!member.href?.endsWith("/join")||!member.text?.includes("Join the early community")||collision)))
    throw Error("V115_FIRST_ARRIVAL_"+label+":"+JSON.stringify({...arrival,collision}));
   await screenshot("first-arrival-"+label);
+  // V133 source-bound first look: it must be the actual approved catalogue
+  // fixture, not a hard-coded mascot, fake rating or decorative project.
+  await until(()=>evaluate('!!document.querySelector(".av133-first-look-card")||!!document.querySelector(".av133-first-look-empty")'));
+  const firstLook=await evaluate('(()=>{const root=document.querySelector(".av133-first-look"),card=root?.querySelector(".av133-first-look-card"),index=root?.querySelector(".av133-index-link"),preview=card?.querySelector(".av133-first-look-bottom a"),rect=root?.getBoundingClientRect(),title=card?.querySelector("h3")?.textContent;return {heading:root?.querySelector("h2")?.textContent,card:!!card,preview:preview?.getAttribute("href"),title,index:index?.getAttribute("href"),rect:rect?[rect.left,rect.right]:null,overflow:document.documentElement.scrollWidth>innerWidth+1}})()');
+  if(!firstLook.heading?.includes("See what lives here")||!firstLook.card||
+    !firstLook.title||!firstLook.preview?.includes("/projects/")||
+    !firstLook.index?.endsWith("/discover")||firstLook.overflow||
+    firstLook.rect[0]<-1||firstLook.rect[1]>width+1)
+    throw Error("V133_FIRST_LOOK_"+label+":"+JSON.stringify(firstLook));
+  await evaluate('document.querySelector(".av133-first-look").scrollIntoView({block:"center",behavior:"instant"})');
+  await screenshot("first-look-"+label);
+  evidence.push({label:"first-look-"+label,firstLook});
   if(width<=390){
    const orientation=await evaluate('(()=>{const b=document.querySelector(".av115-iren-console button").getBoundingClientRect(),d=document.querySelector(".ir80-dock").getBoundingClientRect();return {bottom:b.bottom,obstructed:b.left<d.right&&d.left<b.right&&b.top<d.bottom&&d.top<b.bottom}})()');
    if(orientation.bottom>height||orientation.obstructed)throw Error("V125_ORIENTATION_OBSTRUCTED_"+JSON.stringify(orientation));
