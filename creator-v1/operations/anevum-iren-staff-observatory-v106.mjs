@@ -98,13 +98,17 @@ export function decorateObservatoryHtml(html,page){
 async function staffGate(request,env){
  const cookie=request.headers.get('cookie');
  if(!cookie||cookie.length>8192)return deny(401,'Valid staff session required');
- const auth=new Request(ORIGIN+BASE+'/api/overview',{
-  method:'GET',headers:{cookie,accept:'application/json'},cache:'no-store',redirect:'manual'
+ // The preexisting page handler checks verified staff identity and grant without
+ // running the overview's costly COUNT subqueries once per CSS/JS asset request.
+ // No user details are inspected or returned by this gate.
+ const auth=new Request(ORIGIN+BASE,{
+  method:'GET',headers:{cookie,accept:'text/html'},cache:'no-store',redirect:'manual'
  });
  let response;try{response=await previous.fetch(auth,env)}catch{return deny(503,'Staff authorization unavailable')}
  if(!response.ok)return deny([401,403,503].includes(response.status)?response.status:503,'Staff authorization failed');
- let result;try{result=await response.json()}catch{return deny(503,'Staff authorization unavailable')}
- return result&&['owner','reviewer'].includes(result.role)?null:deny(403,'Staff clearance required');
+ if(!(response.headers.get('content-type')||'').includes('text/html'))
+  return deny(503,'Staff authorization unavailable');
+ return null;
 }
 
 export default {
