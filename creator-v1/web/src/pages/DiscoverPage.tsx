@@ -100,7 +100,7 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
       description={world?.description||"Games, apps, interactive experiments and independent work. Search actual published projects, not paid placement or invented activity."}
       index={world?.index||"DISCOVER / 001"} scene={world?.scene||"portal"}/>:
       <header className="av73-discover-intro">
-        {cinematicNextEnabled&&<div className="av-next-discover-scene" aria-hidden="true"><CosmicArtwork scene="creative" priority className="av-next-discover-art"/><ContinuanceSignalAtlas/></div>}
+        {cinematicNextEnabled&&<div className="av-next-discover-scene" aria-hidden="true"><CosmicArtwork scene="creative" priority sizes="100vw" className="av-next-discover-art"/><ContinuanceSignalAtlas/></div>}
         <span className="av73-discover-eyebrow">ANEVUM / DISCOVER</span>
         <h1>{active?"Explore "+active.label:"Find something worth opening."}</h1>
         <p>Search genuine, approved games, apps, art and shared tools. See what's actually published before deciding what to explore.</p>
