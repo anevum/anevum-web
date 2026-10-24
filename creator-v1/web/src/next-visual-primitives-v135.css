@@ -189,6 +189,43 @@ html[data-av-next-visual="v134"] .av134-lab .av134-file[aria-selected="true"] .a
     width:24px;height:27px;
   }
 }
+
+/* Real 390/320 screenshots: creator search placeholder cannot be read in the
+ * legacy side-by-side form. Stack real controls without changing search logic.
+ */
+html[data-av-next-visual="v134"] .portal-creators .portal-box-header h2 {
+  font-family:var(--av135-font)!important;
+  font-style:normal!important;font-weight:680!important;
+  line-height:1.09!important;letter-spacing:-.035em!important;
+  color:var(--av134-ink);
+}
+@media(max-width:650px){
+  html[data-av-next-visual="v134"] .portal-creators .portal-search-hall form.portal-wide-search {
+    display:grid;grid-template-columns:minmax(0,1fr);gap:9px;
+    border:0;box-shadow:none;background:transparent;overflow:visible;
+    height:auto;min-height:0;
+  }
+  html[data-av-next-visual="v134"] .portal-creators .portal-search-hall .portal-wide-search input {
+    display:block;width:100%;min-width:0;min-height:47px;padding:0 14px;
+    border:1px solid rgba(166,197,242,.40);border-radius:10px;
+    background:rgba(8,18,34,.95);
+    color:var(--av134-ink);font:530 13px/1.35 var(--av135-font);
+    letter-spacing:0;text-overflow:clip;
+  }
+  html[data-av-next-visual="v134"] .portal-creators .portal-search-hall .portal-wide-search input::placeholder {
+    color:var(--av134-soft);opacity:1;
+  }
+  html[data-av-next-visual="v134"] .portal-creators .portal-search-hall .portal-wide-search button {
+    display:flex;align-items:center;justify-content:center;
+    width:100%;min-height:47px;min-width:0;
+    padding:10px 12px;border:1px solid rgba(166,197,242,.51);
+    border-radius:10px;
+    background:linear-gradient(125deg,#c7e9fb,#c4c8f8);
+    color:#0b182e;
+    box-shadow:inset 0 1px rgba(255,255,255,.5),0 8px 19px rgba(0,4,18,.23);
+    font:720 12px/1.35 var(--av135-font);
+  }
+}
 @media(prefers-reduced-motion:reduce){
   html[data-av-next-visual="v134"] .av135-edge{
     filter:none!important;transition:none!important;
