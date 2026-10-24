@@ -1,0 +1,44 @@
+{
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  "name": "anevum-profile-staff-access-v001",
+  "main": "./src/index.mjs",
+  "compatibility_date": "2026-10-19",
+  "workers_dev": false,
+  "routes": [
+    {
+      "pattern": "anevum.com/",
+      "zone_name": "anevum.com"
+    },
+    {
+      "pattern": "anevum.com/member*",
+      "zone_name": "anevum.com"
+    },
+    {
+      "pattern": "anevum.com/__anevum_profile_staff_access_v002.js",
+      "zone_name": "anevum.com"
+    },
+    {
+      "pattern": "anevum.com/__anevum_profile_staff_role_v001",
+      "zone_name": "anevum.com"
+    }
+  ],
+  "services": [
+    {
+      "binding": "UPSTREAM",
+      "service": "anevum-native-frame-policy-v001",
+      "environment": "production"
+    },
+    {
+      "binding": "APEX_AUTH",
+      "service": "anevum-apex-prelaunch-gateway",
+      "environment": "production"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "MEMBER_DB",
+      "database_name": "anevum-canonical-member-staging",
+      "database_id": "e1d29049-c83b-4534-8355-dc1fa36ba6d8"
+    }
+  ]
+}
