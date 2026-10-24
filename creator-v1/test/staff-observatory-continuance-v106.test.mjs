@@ -32,7 +32,7 @@ test('operations and growth pages render approved NEXT brand with intact staff c
  const f=fixture();
  for(const [route,required] of [
   ['', ['id="memberRows"','id="priorityActions"','id="ci-hero-title"']],
-  ['/growth',['id="coverageRows"','id="campaignOutput"','id="ci-export"','data-ci-days="7"']]
+  ['/growth',['id="coverageRows"','id="campaignOutput"','id="ci-export"','data-ci-days="7"','id="ci-rum"','id="ci-rum-chart"','/staff/observatory/rum.js']]
  ]){
   const res=await worker.fetch(f.req(route),f.env);
   assert.equal(res.status,200,route);
@@ -65,6 +65,65 @@ test('existing read-only growth data and private reviewer permissions remain unc
  assert.equal(data.role,'reviewer');
  assert.ok(data.coverage.every(x=>x.status==='unavailable'));
  assert.equal((await worker.fetch(f.req('/api/members'),f.env)).status,403);
+});
+test('optional Cloudflare browser analytics is staff protected, read only, and missing data is explicit',async()=>{
+ for(const role of ['owner','reviewer']){
+  const f=fixture(role);
+  const available=await worker.fetch(f.req('/rum/api'),f.env);
+  assert.equal(available.status,200);
+  assert.equal(available.headers.get('cache-control'),'private, no-store');
+  const result=await available.json();
+  assert.equal(result.status,'unavailable');
+  assert.ok(!('visits' in result));
+  assert.ok(!('pageLoads' in result));
+  for(const path of ['/rum/api','/rum.js','/rum.css']){
+   const unauth=await worker.fetch(f.req(path,'GET',false),f.env);
+   assert.equal(unauth.status,401,path);
+   const post=await worker.fetch(f.req(path,'POST'),f.env);
+   assert.equal(post.status,405,path);
+   const query=await worker.fetch(f.req(path+'?debug=1'),f.env);
+   assert.equal(query.status,400,path);
+  }
+  for(const path of ['/rum.js','/rum.css']){
+   const asset=await worker.fetch(f.req(path),f.env);
+   assert.equal(asset.status,200);
+   assert.match(asset.headers.get('content-type'),/charset=utf-8/);
+   assert.ok((await asset.text()).length>500);
+  }
+ }
+});
+test('authorized optional Cloudflare GraphQL response exposes estimates without upstream identity or secrets',async()=>{
+ const f=fixture('owner'),saved=globalThis.fetch;
+ const secret='synthetic-private-read-token-not-a-real-value';
+ Object.assign(f.env,{
+  ANEVUM_RUM_ACCOUNT_TAG:'0123456789abcdef0123456789abcdef',
+  ANEVUM_RUM_SITE_TAG:'1234567890abcdef',
+  ANEVUM_RUM_READ_TOKEN:secret,
+ });
+ let calls=0;
+ globalThis.fetch=async (_url,request)=>{
+  calls++;
+  assert.equal(_url,'https://api.cloudflare.com/client/v4/graphql');
+  assert.ok(request.body.includes('rumPageloadEventsAdaptiveGroups'));
+  assert.equal(request.headers.Authorization,'Bearer '+secret);
+  const today=new Date().toISOString().slice(0,10);
+  return new Response(JSON.stringify({data:{viewer:{accounts:[{rumPageloadEventsAdaptiveGroups:[
+   {dimensions:{date:today},count:4,sum:{visits:3}}
+  ]}]}}}),{headers:{'content-type':'application/json'}});
+ };
+ try{
+  const reply=await worker.fetch(f.req('/rum/api'),f.env);
+  assert.equal(reply.status,200);
+  const body=await reply.json();
+  assert.equal(body.status,'estimated');
+  assert.equal(body.quality,'may_be_sampled');
+  assert.equal(body.visits,3);
+  assert.equal(body.pageLoads,4);
+  assert.equal(body.days.length,30);
+  assert.equal(calls,1);
+  assert.ok(!JSON.stringify(body).includes(secret));
+  assert.ok(!JSON.stringify(body).includes(f.env.ANEVUM_RUM_ACCOUNT_TAG));
+ }finally{globalThis.fetch=saved}
 });
 test('invalid pages cannot be transformed into authorized Observatory pages',()=>{
  assert.throws(()=>decorateObservatoryHtml('not Observatory','growth'),/verified HTML anchor/);
