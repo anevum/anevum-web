@@ -93,7 +93,8 @@ export function EarnedRewardVault({
  const validHonors=[...new Set(honors)].filter(id=>Object.hasOwn(DISTINCTION_CATALOG,id));
  const hasReward=records.length>0||(showHonors&&(validBadges.length>0||validHonors.length>0));
  const simple=MEMBER_COLLECTION_NAV_REVIEW&&!publicProfile;
- const shownLevels=simple&&!allLevels?[...records].slice(-4).reverse():records;
+ const orderedLevels=simple?[...records].reverse():records;
+ const shownLevels=simple&&!allLevels?orderedLevels.slice(0,4):orderedLevels;
  const shownBadges=simple&&!allHonors?validBadges.slice(0,3):validBadges;
  const shownHonors=simple&&!allHonors?validHonors.slice(0,Math.max(0,3-shownBadges.length)):validHonors;
  const undisplayedHonors=validBadges.length+validHonors.length-shownBadges.length-shownHonors.length;

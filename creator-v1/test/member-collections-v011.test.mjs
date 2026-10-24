@@ -53,6 +53,7 @@ test('only owner-earned reward lists collapse, not public profiles',()=>{
  assert.match(vault,/const simple=MEMBER_COLLECTION_NAV_REVIEW&&!publicProfile/);
  assert.match(vault,/records\]\.slice\(-4\)/);
  assert.match(vault,/validBadges\.slice\(0,3\)/);
+ assert.match(vault,/orderedLevels\.slice\(0,4\)/);
  assert.match(vault,/shownLevels\.map/);
  assert.match(vault,/shownBadges\.map/);
  assert.match(vault,/shownHonors\.map/);

@@ -90,9 +90,11 @@ try{
   await page.waitForFunction(()=>document.querySelectorAll('.av75-earned-level').length===4);
   assert.equal(await nav(page).getByRole('link',{name:'Evolution'}).getAttribute('aria-current'),'page');
   assert.equal(await page.locator('.av75-earned-honor').count(),0);
+  assert.match(await page.locator('.av75-earned-level').first().innerText(),/Earned Sample 5/);
   check(width+' earned-only levels default to four with no duplicate awards');
   await page.getByRole('button',{name:'Show 1 more earned levels'}).click();
   await page.waitForFunction(()=>document.querySelectorAll('.av75-earned-level').length===5);
+  assert.match(await page.locator('.av75-earned-level').first().innerText(),/Earned Sample 5/);
   await page.getByRole('button',{name:'Show fewer earned levels'}).click();
   await page.waitForFunction(()=>document.querySelectorAll('.av75-earned-level').length===4);
   check(width+' level collection expands and collapses');await fit(page,width+' evolution');
