@@ -21,7 +21,7 @@ test("V124 reconciliation parses and keeps one production-facing app and IREN gu
 });
 
 test("Discovery, member entry, Wayfinder and real IREN compose in one first load",()=>{
- assert.match(home,/A universe <em>in the making\.<\/em>/);
+ assert.match(home,/Find something <em>worth trying\.<\/em>/);
  assert.match(home,/to="\/discover"/);
  assert.match(home,/className="av123-member-entry" to=\{signedIn\?"\/member":"\/join"\}/);
  assert.match(home,/href="#wayfinder"/);

@@ -19,7 +19,8 @@ test("production-reconciled V079 never fabricates a public creator channel",()=>
  }
  const home=read("web/src/pages/CinematicLandingPage.tsx");
  assert.match(home,/Public creator channel not linked\./);
- assert.match(home,/const showcase=projects\.filter\(project=>project\.category!=="games"\)/);
+ assert.match(home,/const firstLook=projects\[0\]\|\|null/);
+ assert.match(home,/const showcase=projects\.slice\(1,4\)/);
  assert.match(home,/project\.title/);
  assert.doesNotMatch(home,/ANEVUM \/ PUBLISHED 001/);
  const cards=read("web/src/components/ProjectCard.tsx");
