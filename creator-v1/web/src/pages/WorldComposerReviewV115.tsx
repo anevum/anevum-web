@@ -111,6 +111,19 @@ export function WorldComposerReviewV115(){
   const position=node.position.map((value,i)=>clamp(value+delta[i],-40,40)) as Vec3;
   command({type:'SET_TRANSFORM',id:node.id,field:'position',value:position});
  }
+ function frameSelected(){
+  if(!node)return;
+  const height=node.kind==='spire'?2.1*node.scale[1]:
+   node.kind==='waterfall'?-3.0*node.scale[1]:
+   node.kind==='island'?-.7*node.scale[1]:0;
+  const target:Vec3=[node.position[0],clamp(node.position[1]+height,-40,40),node.position[2]];
+  const distance=node.kind==='spire'?Math.max(22,13*node.scale[1]):
+   node.kind==='island'?Math.max(17,9*node.scale[0]):
+   node.kind==='bridge'?Math.max(22,21*node.scale[0]):
+   node.kind==='waterfall'?Math.max(17,13*node.scale[1]):
+   node.kind==='starship'?16:14;
+  setCamera(c=>({...c,target,distance:clamp(distance,4,80)}));
+ }
  function transform(field:'position'|'rotation'|'scale',index:0|1|2,value:number){
   if(!node||!Number.isFinite(value))return;
   const min=field==='scale'?0.1:field==='rotation'?-6.284:-40;
@@ -218,7 +231,7 @@ export function WorldComposerReviewV115(){
         onChange={event=>transform(field,i as 0|1|2,event.target.valueAsNumber)}/></label>)}</div>
       </fieldset>)}
       <StudioTransformPadV117 position={node.position} onMove={nudge}
-       onFrame={()=>setCamera(c=>({...c,target:[...node.position] as Vec3,distance:Math.min(c.distance,20)}))}/>
+       onFrame={frameSelected}/>
       <label className="cvw-select">Material <select value={node.material} onChange={e=>command({type:'SET_MATERIAL',id:node.id,material:e.target.value as WorldMaterial})}>
        {MATERIALS.map(m=><option value={m} key={m}>{m}</option>)}</select></label>
       <button type="button" className="cvw-remove" onClick={()=>command({type:'DELETE_NODE',id:node.id})}>Remove selected object</button>
