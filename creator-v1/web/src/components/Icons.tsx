@@ -1,3 +1,21 @@
+/** Functional controls remain actual SVG/DOM, not bitmap sprites.
+ * PARITY's icons are a coherent navigational instrument family.
+ */
+const parityPaths:Record<string,string>={
+  home:"M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3z M7 10h10",
+  explore:"M12 2 16 8l6 4-6 4-4 6-4-6-6-4 6-4Z M12 8v8M8 12h8",
+  people:"M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z M5 21v-2c0-3.8 3-6 7-6s7 2.2 7 6v2 M4 7V4h3m10 0h3v3M4 17v3h3m10 0h3v-3",
+  create:"M12 2 21 7v10l-9 5-9-5V7z M3 7l9 5 9-5M12 12v10 M8 5l9 5",
+  community:"M3 5h14v11H8l-5 4V5Z M8 9h6M8 12h4M19 9h2v8h-6",
+  library:"M5 4h6v16H5z M13 4h6v16h-6z M7 7v9M15 9v7M3 21h18",
+  status:"M2 14h4l3-7 4 11 3-8 2 4h4 M4 4h16M4 20h16",
+  search:"M11 3a8 8 0 1 0 0 16 8 8 0 0 0 0-16Z M17 17l5 5M11 6v2M7 11H5",
+  menu:"M3 7h18 M7 12h14 M3 17h18",
+  arrow:"M3 12h18 M14 5l7 7-7 7",
+  star:"M12 2 15 9l7 3-7 3-3 7-3-7-7-3 7-3Z M12 8v8",
+  save:"M5 3h14v19l-7-5-7 5Z M9 7h6",
+  close:"M5 5l14 14M19 5 5 19"
+};
 const paths: Record<string, string> = {
   home: "M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3z",
   explore: "M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M14 14h6v6h-6z",
@@ -14,5 +32,11 @@ const paths: Record<string, string> = {
   close: "M5 5l14 14 M19 5 5 19"
 };
 export function Icon({ name, size = 18 }: { name: string; size?: number }) {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={paths[name] || paths.explore} /></svg>;
+  const enhanced=import.meta.env.VITE_PARITY_V136_FULL==='true';
+  const available=enhanced?parityPaths:paths;
+  return <svg className={enhanced?'p136-system-icon':undefined} aria-hidden="true" viewBox="0 0 24 24"
+    width={size} height={size} fill="none" stroke="currentColor"
+    strokeWidth={enhanced?1.65:1.8} strokeLinecap="round" strokeLinejoin="round">
+    <path d={available[name]||available.explore}/>
+  </svg>;
 }

@@ -14,7 +14,7 @@ on:
       - 'creator-v1/web/src/pages/CinematicLandingPage.tsx'
       - 'creator-v1/web/public/assets/parity-v136/**'
   push:
-    branches: ['release/parity-v136-home-navigation-20261024-001']
+    branches: ['release/parity-v136-home-navigation-20261024-001', 'release/parity-v136-living-world-20261024-005']
 permissions:
   contents: read
   actions: read
@@ -24,7 +24,7 @@ concurrency:
 jobs:
   verify-package:
     if: >-
-      github.event_name == 'pull_request' || github.event.head_commit.message == 'release(parity-v136): upload verified homepage candidate'
+      github.event_name == 'pull_request' || (github.event.head_commit.message == 'release(parity-v136): upload verified homepage candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified living-world candidate')
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -84,7 +84,7 @@ jobs:
   upload-inactive:
     needs: verify-package
     if: >-
-      github.event_name == 'push' && github.event.head_commit.message == 'release(parity-v136): upload verified homepage candidate'
+      github.event_name == 'push' && (github.event.head_commit.message == 'release(parity-v136): upload verified homepage candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified living-world candidate')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:

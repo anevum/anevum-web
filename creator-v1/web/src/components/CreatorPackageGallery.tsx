@@ -2,6 +2,8 @@ import {useEffect,useState} from 'react';
 import {readPackageGallery,type CreatorPackageCard,type PackageGalleryMode,type PackageGalleryResult} from '../lib/creator-package-gallery-v010';
 import './creator-package-gallery-v010.css';
 import {nativeCreatorEnabled,nativePlayerPath,nativeBuildPath} from '../lib/native-creator-v095';
+import {CosmicArtwork} from './CosmicArtwork';
+import type {CosmicScene} from './CosmicIllustration';
 
 /** This flag is build-time OFF unless the backend, author binding and public
  * identity protections were separately accepted and enabled.
@@ -9,6 +11,7 @@ import {nativeCreatorEnabled,nativePlayerPath,nativeBuildPath} from '../lib/nati
  */
 export const packageGalleryUIEnabled=import.meta.env.VITE_PACKAGE_CREATOR_GALLERY_V010==='true';
 type State={kind:'loading'|'ready'|'missing'|'error';data:PackageGalleryResult|null;message:string};
+const packageScene:Record<string,CosmicScene>={game:'games',app:'tools',simulation:'research',story:'creative'};
 function statusLabel(p:CreatorPackageCard,mode:PackageGalleryMode){
  if(mode==='public')return 'APPROVED RELEASE';
  if(p.draftStatus==='ready')return p.status==='published'?'LIVE + PRIVATE UPDATE':'PRIVATE BUILD READY';
@@ -25,7 +28,9 @@ export function WorkCard({work,mode,compact=false}:{work:CreatorPackageCard;mode
  return <article className={'av010-work-card'+(compact?' av010-work-card--compact':'')} aria-label={work.title} data-package-id={work.id}>
   <div className={'av010-work-cover'+(work.coverUrl?' av010-work-cover--creator':'')} aria-label={work.coverUrl?'Creator-supplied project artwork':'ANEVUM project record without uploaded artwork'}>
    {work.coverUrl?<img src={work.coverUrl} alt={'Artwork uploaded for '+work.title} loading="lazy" decoding="async" referrerPolicy="same-origin"/>:
-    <span className="av010-work-emblem" aria-hidden="true"><i/><i/><i/></span>}
+    import.meta.env.VITE_PARITY_V136_FULL==='true'
+      ?<CosmicArtwork className="p136-package-field" scene={packageScene[work.category]||'portal'} seed={work.id}/>
+      :<span className="av010-work-emblem" aria-hidden="true"><i/><i/><i/></span>}
    <span className="av010-work-cover-label">{work.category.toUpperCase()}</span>
   </div>
   <div className="av010-work-body">

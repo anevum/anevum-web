@@ -1,5 +1,6 @@
 import {Link} from 'react-router-dom';
 import {LevelEmblem} from './LevelEmblem';
+import {LivingLevelSigil} from '../parity/LivingRecognition';
 import {BadgeInsignia} from './BadgeInsignia';
 import {HonorInsignia} from './HonorInsignia';
 import {MemberPortrait} from './MemberPortrait';
@@ -101,7 +102,9 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
   {aura!=='none'&&<span className="av65-aura-field" aria-hidden="true"/>}
   {(role||earnedAura!=='none')&&<span className="av81-corona" aria-hidden="true"/>}
   {size==='featured'&&specimen&&<span className="av78-featured-art" aria-hidden="true">
-   <LevelEmblem level={level!} artwork="card" size={184} handle={artworkHandle}/>
+   {import.meta.env.VITE_PARITY_V136_FULL==='true'&&member.source==='canonical-member'
+    ?<LivingLevelSigil level={level!} size={184}/>
+    :<LevelEmblem level={level!} artwork="card" size={184} handle={artworkHandle}/>}
   </span>}
   <span className="av61-portrait-zone">
    <span className="av61-photo"><MemberPortrait name={member.displayName}
@@ -109,7 +112,9 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
     (Number.isSafeInteger(member.avatarVersion)&&member.avatarVersion!>0?'?v='+member.avatarVersion:'')):undefined}
     supporterFrame={member.supporterAppearance?.frame}/></span>
    {specimen&&<span className="av61-specimen" title={'Earned Evolution Level '+level}>
-    <LevelEmblem level={level!} artwork="card" size={size==='inline'?30:size==='compact'?38:size==='featured'?60:44} handle={artworkHandle}/>
+    {import.meta.env.VITE_PARITY_V136_FULL==='true'&&member.source==='canonical-member'
+      ?<LivingLevelSigil level={level!} size={size==='inline'?30:size==='compact'?38:size==='featured'?60:44}/>
+      :<LevelEmblem level={level!} artwork="card" size={size==='inline'?30:size==='compact'?38:size==='featured'?60:44} handle={artworkHandle}/>}
    </span>}
   </span>
   <span className="av61-member-copy">

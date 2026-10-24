@@ -30,6 +30,7 @@ export type ParityDiscoverProps={
   draft:string;
   onDraft:(next:string)=>void;
   onSearch:(event:FormEvent)=>void;
+  onSearchValue:(submitted:string)=>void;
   onCategory:(next:string)=>void;
   onToggleFree:()=>void;
   view:Layout;
@@ -86,17 +87,15 @@ function focusNearestWorld(event:KeyboardEvent<HTMLButtonElement>){
 
 export function ParityDiscoverV136(props:ParityDiscoverProps){
   const {
-    channels,category,activeLabel,query,cursor,freeOnly,draft,onDraft,onSearch,
+    channels,category,activeLabel,query,cursor,freeOnly,draft,onDraft,onSearch,onSearchValue,
     onCategory,onToggleFree,view,onView,resourceState,packageState,packagesInScope,
     packagesCount,packageProjects,legacyProjects,shown,resultsReady,emptyVerified,
     current,params,nextCursor
   }=props;
-  const scene=Object.prototype.hasOwnProperty.call(scenes,category)?scenes[category as Category]:'portal';
   const filtered=Boolean(query||category||cursor||freeOnly);
   const countLabel=resourceState==='ready'?'APPROVED PROJECT CATALOGUE':packagesInScope&&packageState==='ready'?'AVAILABLE BROWSER RELEASES':'READING THE PUBLIC INDEX';
   return <div data-iren-anchor="discover" className="portal-discover av73-discover p136-discovery" data-parity-discover="v136.004">
     <section className="p136-discover-hero" aria-labelledby="p136-discover-title">
-      <div className="p136-discover-hero-art" aria-hidden="true"><CosmicArtwork scene={scene} priority/></div>
       <div className="p136-discover-hero-grid" aria-hidden="true"/>
       <div className="p136-discover-hero-copy">
         <p className="p136-discover-register"><span className="p136-discover-signal"/> THE CONTINUANCE INSTITUTE <span className="p136-register-break">/</span> OPEN DISCOVERY</p>
@@ -116,7 +115,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
         </div>
         <div className="p136-discover-readout-foot"><span>EXPLORE / CONNECT / CONTINUE</span><Icon name="explore" size={18}/></div>
       </aside>
-      <p className="p136-discover-art-note">ANEVUM ENVIRONMENT ILLUSTRATION / NOT CREATOR ARTWORK</p>
+      <p className="p136-discover-art-note">GENERATED ENVIRONMENT / NOT CREATOR ARTWORK</p>
     </section>
 
     <div className="p136-discover-main">
@@ -125,12 +124,26 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
           <div><span className="p136-discover-kicker">THE PUBLIC INDEX / 001</span><h2>Find your next discovery.</h2></div>
           <Link to="/guide" className="p136-discover-helper">How publishing works <Icon name="arrow" size={16}/></Link>
         </div>
-        <form role="search" onSubmit={onSearch} className="p136-discover-search-form">
+        <form role="search" action="/discover" method="get" onSubmit={onSearch} className="p136-discover-search-form">
           <label htmlFor="p136-project-query" className="visually-hidden">Search published projects</label>
           <Icon name="search" size={22}/>
-          <input id="p136-project-query" type="search" maxLength={100} value={draft}
-            onChange={event=>onDraft(event.target.value)} placeholder="Search games, software, art, research..." />
-          <button type="submit">Search index <Icon name="arrow" size={17}/></button>
+          <input id="p136-project-query" name="q" type="search" maxLength={100} value={draft}
+            onChange={event=>onDraft(event.target.value)}
+            onKeyDown={event=>{
+              // Commit before the browser can perform a document-navigation GET
+              // if the ViewTransition tree has an interrupted submit boundary.
+              if(event.key==='Enter'&&!event.nativeEvent.isComposing){
+                event.preventDefault();onSearchValue(event.currentTarget.value);
+              }
+            }}
+            placeholder="Search games, software, art, research..." />
+          {category&&<input type="hidden" name="category" value={category}/>}
+          {freeOnly&&<input type="hidden" name="free" value="1"/>}
+          <button type="submit" onClick={event=>{
+            event.preventDefault();
+            const field=event.currentTarget.form?.elements.namedItem("q") as HTMLInputElement|null;
+            onSearchValue(field?.value??draft);
+          }}>Search index <Icon name="arrow" size={17}/></button>
         </form>
         <div className="p136-discover-command-bottom">
           <div className="p136-discover-availability" role="group" aria-label="Filter by creator-declared free access">
@@ -158,7 +171,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
               <span className="p136-discover-world-shade" aria-hidden="true"/>
               <span className="p136-discover-world-top">FIELD / 0{index+1}<Icon name="arrow" size={17}/></span>
               <span className="p136-discover-world-copy"><strong>{item.label}</strong><small>{item.description}</small></span>
-              <span className="p136-discover-world-art-note">CATEGORY ILLUSTRATION</span>
+              <span className="p136-discover-world-art-note">PROCEDURAL CATEGORY FIELD</span>
             </button>;
           })}
         </div>

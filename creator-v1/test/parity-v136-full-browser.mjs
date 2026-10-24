@@ -29,12 +29,17 @@ const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 const fixture={id:'v136-ci-fixture',title:'SYNTHETIC CI PROJECT',summary:'Loopback fixture only; not a real release.',
   category:'games',freeToUse:true,license:'MIT',publishedAt:'2026-10-24T12:00:00Z',creatorName:'CI fixture',creatorHandle:null};
 const record=(name,data={})=>{checks.push({name,...data});console.log('PASS '+name);};
-async function contextFor(width,{motion='reduce',state='empty',failedArt=false}={}){
+async function contextFor(width,{motion='reduce',state='empty',forceVector=false}={}){
   const context=await browser.newContext({viewport:{width,height:width<650?844:960},deviceScaleFactor:2,reducedMotion:motion});
+  if(forceVector)await context.addInitScript(()=>{
+    const original=HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext=function(kind,...args){
+      return kind==='webgl2'?null:original.call(this,kind,...args);
+    };
+  });
   await context.route('**/*',async route=>{
     const request=route.request(),url=new URL(request.url());
     if(url.origin!==base||!['GET','HEAD'].includes(request.method())){forbidden.push({url:request.url(),method:request.method()});await route.abort();return;}
-    if(failedArt&&url.pathname.includes('/assets/parity-v136/')){await route.fulfill({status:404,body:''});return;}
     if(url.pathname.startsWith('/api/')){
       const page=items=>({items,count:items.length,nextCursor:null});
       const path=url.pathname;
@@ -58,18 +63,21 @@ try{
     await page.locator('.p136-empty-index').waitFor();
     const layout=await page.evaluate(()=>{
       const rect=s=>document.querySelector(s).getBoundingClientRect().toJSON();
-      const img=document.querySelector('.p136-scene img');
+      const world=document.querySelector('.p136-living-world');
+      const vector=world?.querySelector('svg.p136-living-vector');
+      const canvas=world?.querySelector('canvas.p136-living-canvas');
       return {width:innerWidth,scroll:document.documentElement.scrollWidth,
         hero:rect('.p136-hero'),primary:rect('.p136-button--primary'),secondary:rect('.p136-button--signal'),
-        artLoaded:img.complete&&img.naturalWidth>0,source:img.currentSrc,
+        artLoaded:Boolean(vector&&canvas),source:world?.dataset.source,renderer:world?.dataset.renderer,
         headingFont:getComputedStyle(document.querySelector('.p136-hero h1')).fontFamily,
         headingLines:document.querySelector('.p136-hero h1').getBoundingClientRect().height/parseFloat(getComputedStyle(document.querySelector('.p136-hero h1')).lineHeight),
-        animation:getComputedStyle(img).animationName,
+        animation:getComputedStyle(document.querySelector('.p136-living-orbitals')).animationName,
         h1Count:document.querySelectorAll('h1').length,dockCount:document.querySelectorAll('.ir80-dock').length};
     });
     assert.ok(layout.scroll<=width+1,'No horizontal overflow: '+JSON.stringify(layout));
     assert.equal(layout.h1Count,1);assert.equal(layout.dockCount,1,'One canonical IREN companion');
-    assert.ok(layout.artLoaded,'Original environment loads');
+    assert.ok(layout.artLoaded,'Procedural vector and GPU canvas available');
+    assert.ok(['webgl','vector'].includes(layout.renderer),'Supported live world renderer');
     if(width>=1440){assert.ok(layout.headingLines<=2.1,'Desktop headline remains two lines: '+JSON.stringify(layout));assert.ok(layout.hero.height<=690,'Desktop hero retains concept density');}
     assert.ok(!/Georgia|Cambria/.test(layout.headingFont),'Concept uses sans typography');
     assert.equal(layout.animation,'none','Reduced motion has a static scene');
@@ -103,16 +111,21 @@ try{
     await page.screenshot({path:join(out,'catalogue-'+state+'-390.png'),fullPage:true,animations:'disabled'});
     record('honest catalogue '+state);await context.close();
   }
-  const {page,context}=await contextFor(390,{motion:'no-preference',failedArt:true});
+  const {page,context}=await contextFor(390,{motion:'no-preference',forceVector:true});
   await page.goto(base,{waitUntil:'networkidle'});
-  await page.locator('.p136-scene[data-fallback="true"]').waitFor();
-  await page.waitForFunction(()=>document.querySelector('.p136-scene').dataset.active==='true');
-  await page.getByRole('button',{name:'Pause atmospheric animation',exact:true}).click();
-  assert.equal(await page.getByRole('button',{name:'Pause atmospheric animation',exact:true}).getAttribute('aria-pressed'),'true');
-  await page.waitForFunction(()=>document.querySelector('.p136-scene').dataset.active==='false');
-  await page.getByRole('button',{name:'Pause atmospheric animation',exact:true}).click();
+  await page.locator('.p136-living-world[data-renderer="vector"]').waitFor();
+  await page.waitForFunction(()=>document.querySelector('.p136-living-world').dataset.motion==='true');
+  await page.getByRole('button',{name:'Open site navigation',exact:true}).click();
+  await page.locator('#av79-navigation[open]').waitFor();
+  const preference=page.getByRole('button',{name:'Atmospheric animation',exact:true});
+  await preference.click();
+  assert.equal(await preference.getAttribute('aria-pressed'),'false','Menu preference disables motion');
+  await page.waitForFunction(()=>document.querySelector('.p136-living-world').dataset.motion==='false');
+  await preference.click();
+  assert.equal(await preference.getAttribute('aria-pressed'),'true','Menu preference restores motion');
+  await page.getByRole('button',{name:'Close navigation',exact:true}).click();
   await page.emulateMedia({reducedMotion:'reduce'});
-  await page.waitForFunction(()=>document.querySelector('.p136-scene').dataset.active==='false');
+  await page.waitForFunction(()=>document.querySelector('.p136-living-world').dataset.motion==='false');
   await page.getByRole('link',{name:'Explore projects',exact:true}).press('Tab');
   const focus=await page.evaluate(()=>({tag:document.activeElement.tagName,outline:getComputedStyle(document.activeElement).outlineStyle}));
   assert.equal(focus.tag,'A');assert.equal(focus.outline,'solid');
@@ -125,8 +138,8 @@ try{
   await page.getByRole('searchbox',{name:'Search approved ANEVUM projects',exact:true}).press('Enter');
   await page.waitForURL(base+'/discover?q=orbital%20%26%20worlds');
   await page.goto(base,{waitUntil:'networkidle'});
-  await page.screenshot({path:join(out,'art-fallback-390.png'),animations:'disabled'});
-  record('art failure / live reduced motion / pause / keyboard / menu focus / search',focus);await context.close();
+  await page.screenshot({path:join(out,'vector-fallback-390.png'),animations:'disabled'});
+  record('WebGL unavailable / procedural vector fallback / pause / reduced motion / keyboard / menu focus / search',focus);await context.close();
   assert.deepEqual(errors,[]);assert.deepEqual(forbidden,[]);
 }catch(error){
   for(const context of browser.contexts())for(const page of context.pages()){

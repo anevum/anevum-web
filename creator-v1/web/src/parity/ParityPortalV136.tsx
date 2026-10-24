@@ -2,8 +2,8 @@ import {useState, type FormEvent} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import {Icon} from '../components/Icons';
 import {OrbitalMark} from '../components/OrbitalMark';
-import {ParityScene} from './ParityScene';
 import {CosmicArtwork} from '../components/CosmicArtwork';
+import {useLivingWorld} from './LivingWorldState';
 import {projectDetailPath} from '../lib/navigation';
 import type {Project, Category} from '../lib/api';
 import type {CosmicScene} from '../components/CosmicIllustration';
@@ -29,11 +29,24 @@ const passages=[
   {title:'Creative works',detail:'Explore art, experiences and experiments',to:'/discover?category=creative',scene:'creative' as CosmicScene,tone:'auric'},
   {title:'Open knowledge',detail:'Explore research, learning and open source',to:'/discover?category=research',scene:'research' as CosmicScene,tone:'mint'}
 ];
+/** A reproducible ambient wave derived from public content volume, not
+ * a synthetic activity graph or fabricated IREN usage signal.
+ */
+function publicWorldWave(count:number|null,phase=0){
+ const weight=count===null?2:Math.min(19,Math.log2(1+Math.max(0,count))*2.3+2);
+ return Array.from({length:45},(_,i)=>{
+   const x=i*240/44;
+   const carrier=Math.sin(i*0.55+phase)*weight;
+   const overtone=Math.sin(i*1.37+phase*1.73)*weight*0.22;
+   const y=42+carrier+overtone;
+   return (i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);
+ }).join(' ');
+}
 function PublicProjectCard({project}:{project:Project}){
   const meta=types[project.category];
   return <article className={'p136-project-card p136-tone-'+meta.tone}>
     <Link to={projectDetailPath(project.id,'/')} className="p136-project-media" aria-label={'View '+project.title}>
-      <CosmicArtwork scene={meta.scene}/><span className="p136-project-art-note">ANEVUM CATEGORY ILLUSTRATION</span><span className="p136-kind">{meta.label}</span>
+      <CosmicArtwork scene={meta.scene} seed={project.id}/><span className="p136-project-art-note">DYNAMIC ANEVUM FIELD / NOT CREATOR COVER</span><span className="p136-kind">{meta.label}</span>
     </Link>
     <div className="p136-project-body">
       <span className="p136-project-meta">{project.freeToUse?'FREE TO USE':'PROJECT DIRECTORY'} <span> / </span> APPROVED PUBLIC WORK</span>
@@ -47,11 +60,11 @@ function PublicProjectCard({project}:{project:Project}){
 }
 export function ParityPortalV136({projects,catalogueState,signedIn,verifiedCount}:Props){
   const navigate=useNavigate(),[search,setSearch]=useState('');
-  const [paused,setPaused]=useState(false);
+  const {signal}=useLivingWorld();
   function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();navigate(search.trim()?'/discover?q='+encodeURIComponent(search.trim()):'/discover');}
   return <div className="p136-portal" data-parity-v136="full">
     <section className="p136-hero" aria-labelledby="p136-hero-title">
-      <ParityScene paused={paused}/><div className="p136-hero-shade" aria-hidden="true"/>
+      <div className="p136-hero-shade" aria-hidden="true"/>
       <div className="p136-hero-content">
         <p className="p136-hero-register">THE CONTINUANCE INSTITUTE <span> / </span> FIRST CONTACT</p>
         <h1 id="p136-hero-title">Independent worlds.<em>Made to continue.</em></h1>
@@ -63,11 +76,13 @@ export function ParityPortalV136({projects,catalogueState,signedIn,verifiedCount
         <p className="p136-hero-disclosure">Free to explore. No account required. Creator publishing remains in testing.</p>
       </div>
       <aside className="p136-iren-console" aria-label="IREN signal and navigation">
-        <div className="p136-panel-top"><span className="p136-signal-dot"/><strong>IREN</strong><span>PUBLIC SIGNAL</span></div>
+        <div className="p136-panel-top"><span className="p136-signal-dot"/><strong>IREN</strong><span>{signal.source==='verified'?'PUBLIC INDEX':'AMBIENT FIELD'}</span></div>
         <p className="p136-iren-sub">Your companion to the Continuance Institute</p>
-        <svg className="p136-iren-wave" viewBox="0 0 240 80" role="img" aria-label="Decorative signal-wave illustration, not live telemetry">
-          <path d="M0 48L18 43 30 49 41 30 53 41 61 40 69 55 82 21 94 46 111 40 125 57 138 34 154 42 165 26 176 50 192 31 208 44 221 20 240 36" stroke="#7ee3ff" strokeWidth="2.2" fill="none"/>
-          <path d="M0 62L30 61 53 48 72 60 100 46 132 54 157 39 188 50 215 39 240 43" stroke="#ad80fe" opacity=".7" fill="none" strokeWidth="1.6"/>
+        <svg className="p136-iren-wave" viewBox="0 0 240 80" role="img"
+          aria-label={signal.publishedProjects===null?'Generated idle environment wave; not live telemetry':
+            'Generated wave based on '+signal.publishedProjects+' approved public projects; not user telemetry'}>
+          <path d={publicWorldWave(signal.publishedProjects)} stroke="#7ee3ff" strokeWidth="2.2" fill="none"/>
+          <path d={publicWorldWave(signal.publishedProjects,1.6)} stroke="#ad80fe" opacity=".7" fill="none" strokeWidth="1.6"/>
         </svg>
         <nav className="p136-iren-links" aria-label="Explore with IREN">
           <Link to="/discover"><Icon name="explore" size={16}/> Explore published work</Link>
@@ -81,7 +96,6 @@ export function ParityPortalV136({projects,catalogueState,signedIn,verifiedCount
         <Link to="/community"><Icon name="community" size={21}/><span><strong>Community</strong><small>Ideas and discussions</small></span></Link>
         <Link to="/studio"><Icon name="create" size={21}/><span><strong>Creator Studio</strong><small>Tools for building</small></span></Link>
       </nav>
-      <button type="button" className="p136-motion-control" aria-pressed={paused} onClick={()=>setPaused(value=>!value)} aria-label="Pause atmospheric animation">{paused?'Resume atmosphere':'Pause atmosphere'}</button>
     </section>
     <section className="p136-discover" aria-labelledby="p136-discover-title">
       <div className="p136-section-heading">
@@ -105,7 +119,7 @@ export function ParityPortalV136({projects,catalogueState,signedIn,verifiedCount
         </div>}
       <div className="p136-passages">
         {passages.map(item=><Link key={item.title} to={item.to} className={'p136-passage p136-tone-'+item.tone}>
-          <CosmicArtwork scene={item.scene}/><span className="p136-passage-shade"/>
+          <CosmicArtwork scene={item.scene} seed={item.to}/><span className="p136-passage-shade"/>
           <span className="p136-passage-copy"><strong>{item.title}</strong><small>{item.detail}</small></span><Icon name="arrow" size={18}/>
         </Link>)}
       </div>

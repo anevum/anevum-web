@@ -39,7 +39,7 @@ await new Promise(done=>server.listen(0,'127.0.0.1',done));
 const base='http://127.0.0.1:'+server.address().port;
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 function record(name,data={}){checks.push({name,...data});console.log('PASS '+name)}
-async function makeContext(width,{state='projects',packages='none'}={}){
+async function makeContext(width,{state='projects',packages='none',publishedCount=2}={}){
   const context=await browser.newContext({viewport:{width,height:width<650?844:950},deviceScaleFactor:2,reducedMotion:'reduce'});
   await context.route('**/*',async route=>{
     const request=route.request(),url=new URL(request.url());
@@ -56,7 +56,9 @@ async function makeContext(width,{state='projects',packages='none'}={}){
           (!url.searchParams.get('category')||item.category===url.searchParams.get('category'))&&
           (url.searchParams.get('free')!=='1'||item.freeToUse)),nextCursor:null,count:synthetic.length}
         :url.pathname==='/api/v1/categories'?
-          {categories:[{category:'games',count:1},{category:'tools',count:1}]}
+          {categories:[{category:'games',count:Math.min(publishedCount,10000)},{category:'tools',count:1}]}
+        :url.pathname==='/api/v1/status'?
+          {phase:'public',version:'test',counts:{publishedProjects:publishedCount,publishedCreators:1}}
         :url.pathname==='/api/v1/member/auth/get-session'?null
         :null;
       const status=state==='unavailable'&&url.pathname==='/api/v1/projects'?503:200;
@@ -84,6 +86,9 @@ try{
         headings:document.querySelectorAll('h1').length,
         worlds:document.querySelectorAll('.p136-discover-world').length,
         siteIren:document.querySelectorAll('.ir80-dock').length,
+        renderer:document.querySelector('.p136-living-world')?.dataset.renderer,
+        source:document.querySelector('.p136-living-world')?.dataset.source,
+        generated:document.querySelectorAll('.p136-discover-world .cw-live-glyph[data-generated="procedural"]').length,
         font:getComputedStyle(document.querySelector('.p136-discover-hero h1')).fontFamily,
         railScroll:getComputedStyle(document.querySelector('.p136-discover-featured')).overflowX,
         scrollSnap:getComputedStyle(document.querySelector('.p136-discover-featured')).scrollSnapType
@@ -93,6 +98,9 @@ try{
     assert.equal(layout.headings,1,'A single page heading');
     assert.equal(layout.worlds,4,'Four real filter gateways');
     assert.equal(layout.siteIren,1,'Single shared IREN');
+    assert.equal(layout.generated,4,'Category gateways are procedural, not fixed AI images');
+    assert.ok(['webgl','vector'].includes(layout.renderer),'A live world renderer exists');
+    assert.equal(layout.source,'verified','World uses actual public aggregate fixtures');
     if(width<=600){
       assert.equal(layout.railScroll,'auto','Mobile console rail is swipeable without page overflow');
       assert.ok(layout.scrollSnap.includes('mandatory'),'Mobile rail snaps between scene gateways');
@@ -128,9 +136,12 @@ try{
     await page.getByRole('button',{name:'Marked free'}).click();
     await page.waitForURL(url=>url.searchParams.get('free')==='1'&&url.searchParams.get('category')==='games');
     await page.getByRole('searchbox',{name:'Search published projects'}).fill('ORBITAL & TEST');
+    await page.evaluate(()=>{window.__parityNavigationDocumentMarker='same-document-'+Math.random()});
     await page.getByRole('searchbox',{name:'Search published projects'}).press('Enter');
     await page.waitForFunction(()=>new URLSearchParams(location.search).get('q')==='ORBITAL & TEST',
       null,{timeout:10000});
+    assert.equal(await page.evaluate(()=>window.__parityNavigationDocumentMarker?.startsWith('same-document-')),true,
+      'Search must stay within the mounted application; no native GET navigation');
     await page.getByRole('heading',{name:'No matching projects yet.'}).waitFor();
     await page.getByRole('link',{name:/Clear filters/}).click();
     await page.waitForURL(base+'/discover');
@@ -144,6 +155,7 @@ try{
     await page.keyboard.press('Escape');
     await page.waitForFunction(()=>!document.querySelector('#av79-navigation').open);
     record('spatial menu directional focus and escape');
+    await page.locator('.p136-living-world[data-sector="portal"]').waitFor();
     record('interactive category, list, free, encoded query, true empty, reset');
     await context.close();
   }
@@ -166,6 +178,19 @@ try{
     record('honest zero-project state');
     await context.close();
   }
+  // A different verified public catalogue count changes the generated world.
+  // These two synthetic scenarios are isolated contexts, never site telemetry.
+  const anchorCounts=[];
+  for(const publishedCount of [2,256]){
+    const {page,context}=await makeContext(390,{publishedCount});
+    await page.goto(base+'/discover',{waitUntil:'networkidle'});
+    await page.locator('.p136-living-world[data-source="verified"]').waitFor();
+    const value=await page.locator('.p136-living-world').getAttribute('data-anchors');
+    anchorCounts.push(Number(value));
+    await context.close();
+  }
+  assert.ok(anchorCounts[1]>anchorCounts[0],'Verified content growth changes rendered world geometry');
+  record('public content growth changes orbital signal geometry',{anchorCounts});
   assert.deepEqual(errors,[],'No runtime page errors');
   assert.deepEqual(forbidden,[],'No external calls or unsafe mutations');
 } catch(error){
