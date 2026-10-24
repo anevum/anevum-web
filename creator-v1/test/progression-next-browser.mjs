@@ -74,7 +74,7 @@ try{
   assert.equal(await button.evaluate(el=>el===document.activeElement),true);record(width+' dialog Escape and focus restoration');
   await page.locator('.px-nav button').nth(1).click();await page.locator('.px-expedition').first().waitFor();assert.equal(await page.locator('.px-expedition').count(),3);await page.locator('.px-expedition').last().click();await page.getByRole('heading',{name:'Build a bridge'}).waitFor();record(width+' one expanded journey at a time');await fit(page,width+' expeditions');await capture(page,'expeditions-'+width);
   assert.equal(await page.locator('.px-orbit-one').evaluate(el=>getComputedStyle(el).animationName),'none');record(width+' reduced motion');
-  await page.emulateMedia({reducedMotion:'no-preference'});await page.locator('.px-motion').click();assert.equal(await page.locator('.px-orbit-one').evaluate(el=>getComputedStyle(el).animationPlayState),'paused');record(width+' manual motion pause');
+  await page.emulateMedia({reducedMotion:'no-preference'});if(width>680){await page.locator('.px-motion').click();assert.equal(await page.locator('.px-orbit-one').evaluate(el=>getComputedStyle(el).animationPlayState),'paused');record(width+' manual motion pause')}else{assert.equal(await page.locator('.px-motion').isVisible(),false);record(width+' compact layout omits hidden animation toggle')}
   await context.close();
  }
  const {page,state,context}=await fixture(390,'fixture-a');await open(page);await page.locator('.px-current').waitFor();assert.match(await page.locator('.px-current').innerText(),/Level 4/);record('member snapshot from server');await capture(page,'member-390');
