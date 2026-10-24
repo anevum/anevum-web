@@ -54,7 +54,7 @@ function reducer(state:ReviewState,action:Action):ReviewState{
 }
 const KINDS:{kind:WorldKind;name:string}[]=[
  {kind:'cube',name:'Cube'},{kind:'sphere',name:'Sphere'},
- {kind:'spire',name:'Spire'},{kind:'island',name:'Island'},{kind:'light',name:'Light'}
+ {kind:'spire',name:'Spire'},{kind:'island',name:'Island'},{kind:'starship',name:'Starcraft'},{kind:'light',name:'Light'}
 ];
 const MATERIALS:WorldMaterial[]=['stone','grass','gold','glass','cyan','slate','violet','water'];
 const AXES=['X','Y','Z'] as const;
