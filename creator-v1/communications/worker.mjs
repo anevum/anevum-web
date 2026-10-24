@@ -91,7 +91,7 @@ export function createCommunicationsWorker({send=sendViaResend,clock=()=>Date.no
     if(row){
      // A fresh random management token is issued and stored only as a digest.
      const token=random();
-     await db.prepare("UPDATE communication_subscribers SET confirm_hash=NULL,confirm_expires_at=NULL,updated_at=? WHERE id=?").bind(now,row.id).run();
+     // Preference-link requests must not erase a still-valid, separately requested consent confirmation.
      // The management link uses a separate opaque token stored as hash.
      await db.prepare("UPDATE communication_subscribers SET manage_hash=?,manage_expires_at=? WHERE id=?").bind(await sha(token),now+86400,row.id).run();
      const link=ORIGIN+'/updates/preferences?action=unsubscribe&token='+encodeURIComponent('v1.'+row.id+'.'+token);
