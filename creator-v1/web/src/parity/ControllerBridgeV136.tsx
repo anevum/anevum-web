@@ -42,11 +42,17 @@ export function ControllerBridgeV136({navigationEnabled}: {navigationEnabled: bo
       focused?.removeAttribute('data-av-controller-focus');
       focused = null;
     };
+    const clearControllerMode = () => {
+      if (document.documentElement.dataset.avInput === 'gamepad') {
+        delete document.documentElement.dataset.avInput;
+      }
+    };
+    const noteControllerInput = () => {document.documentElement.dataset.avInput = 'gamepad';};
     const updateConnection = (next: Connection) => {
       if (observed === next) return;
       observed = next;
       setConnection(next);
-      if (next !== 'ready') clearFocus();
+      if (next !== 'ready') {clearFocus(); clearControllerMode();}
     };
     const setFocus = (element: HTMLElement) => {
       if (focused !== element) clearFocus();
@@ -117,9 +123,9 @@ export function ControllerBridgeV136({navigationEnabled}: {navigationEnabled: bo
       if (navigationEnabled && document.hasFocus() && !playableFrameOpen()) {
         const next = advanceControllerRepeat(repeat, intent.direction, now);
         repeat = next.state;
-        if (next.fire && intent.direction) move(intent.direction);
+        if (next.fire && intent.direction) {noteControllerInput(); move(intent.direction);}
         // Avoid selecting a target in the very frame that moves focus.
-        if (intent.select && !selectHeld && !intent.direction) select();
+        if (intent.select && !selectHeld && !intent.direction) {noteControllerInput(); select();}
       } else {
         repeat = noControllerRepeat;
       }
@@ -128,7 +134,7 @@ export function ControllerBridgeV136({navigationEnabled}: {navigationEnabled: bo
     };
     const cancelPolling = () => {cancelAnimationFrame(frame); clearTimeout(idleTimer); frame = 0; idleTimer = 0;};
     const kick = () => {cancelPolling(); tick(performance.now());};
-    const clearOnManualInput = () => clearFocus();
+    const clearOnManualInput = () => {clearFocus(); clearControllerMode();};
     window.addEventListener('gamepadconnected', kick);
     window.addEventListener('gamepaddisconnected', kick);
     document.addEventListener('visibilitychange', kick);
@@ -144,6 +150,7 @@ export function ControllerBridgeV136({navigationEnabled}: {navigationEnabled: bo
       document.removeEventListener('pointerdown', clearOnManualInput);
       document.removeEventListener('keydown', clearOnManualInput);
       clearFocus();
+      clearControllerMode();
     };
   }, [navigationEnabled]);
   if (connection === 'absent') return null;
