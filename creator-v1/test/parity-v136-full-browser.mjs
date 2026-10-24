@@ -15,7 +15,7 @@ const server=createServer((req,res)=>{
   if(!['GET','HEAD'].includes(req.method)){res.writeHead(405);res.end();return;}
   let name;try{name=decodeURIComponent(new URL(req.url,'http://127.0.0.1').pathname);}catch{res.writeHead(400);res.end();return;}
   let file=resolve(build,'.'+name);
-  if(!file.startsWith(build+sep)){res.writeHead(403);res.end();return;}
+  if(file!==build&&!file.startsWith(build+sep)){res.writeHead(403);res.end();return;}
   if(!existsSync(file)||!statSync(file).isFile()){
     if(extname(file)){res.writeHead(404);res.end();return;}
     file=join(build,'index.html');
@@ -47,7 +47,7 @@ async function contextFor(width,{motion='reduce',state='empty',failedArt=false}=
     }
     await route.continue();
   });
-  const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
+  const page=await context.newPage();page.on('pageerror',e=>{errors.push(e.message);console.error('BROWSER_RUNTIME_ERROR '+e.message);});
   return {page,context};
 }
 try{
@@ -125,6 +125,12 @@ try{
   await page.screenshot({path:join(out,'art-fallback-390.png'),animations:'disabled'});
   record('art failure / live reduced motion / pause / keyboard / menu focus / search',focus);await context.close();
   assert.deepEqual(errors,[]);assert.deepEqual(forbidden,[]);
+}catch(error){
+  for(const context of browser.contexts())for(const page of context.pages()){
+    await page.screenshot({path:join(out,'failure.png'),fullPage:true}).catch(()=>{});
+    writeFileSync(join(out,'failure.json'),JSON.stringify({url:page.url(),body:await page.locator('body').innerText().catch(()=>''),errors,forbidden,error:String(error)},null,2));
+  }
+  throw error;
 }finally{
   writeFileSync(join(out,'acceptance.json'),JSON.stringify({source:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),checks,errors,forbidden,fixtureOnly:true},null,2)+'\n');
   await browser.close();await new Promise(done=>server.close(done));
