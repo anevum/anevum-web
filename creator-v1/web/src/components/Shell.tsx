@@ -135,7 +135,7 @@ function ShellContent(){
     location.pathname==="/studio/new"||location.pathname==="/studio/review"||
     /^\/studio\/[0-9a-f-]{36}$/.test(location.pathname)));
   const routeSurface=studioWorkspace?
-    <StudioSpatialWorkspaceV136 key={canonicalSession!.user.id} memberId={canonicalSession!.user.id}>
+    <StudioSpatialWorkspaceV136 key={canonicalSession?.user?.id||"unavailable"} memberId={canonicalSession?.user?.id||""}>
       <Outlet/>
     </StudioSpatialWorkspaceV136>:
     home||parityFullBleed?<Outlet/>:
