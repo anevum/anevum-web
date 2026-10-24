@@ -1,0 +1,50 @@
+/* ANEVUM Creator Studio V121 / two real, independent private source panes.
+ * Layout only; each pane remains the original owner-scoped V111 editor.
+ */
+.csf-root .csf-editor-decks{display:flex;flex:1 1 auto;min-width:0;min-height:400px;width:100%}
+.csf-root .csf-editor-decks[hidden]{display:none!important}
+.csf-root .csf-editor-decks>.csf-editor-mount{display:flex;flex-direction:column;flex:1 1 0;min-width:0;width:100%}
+.csf-root .csf-editor-decks>.csf-editor-mount[hidden]{display:none!important}
+.csf-root .csf-editor-decks.is-split{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;gap:0}
+.csf-root .csf-editor-decks.is-split>.csf-editor-mount{width:100%;min-width:0;overflow:hidden;border-right:1px solid #4c7590}
+.csf-root .csf-editor-decks.is-split>.csf-editor-mount:last-child{border-right:0}
+.csf-root .csf-pane-heading{display:flex;gap:7px;align-items:center;min-width:0;min-height:38px;
+ padding:7px 11px;background:linear-gradient(105deg,#1a3c52,#112b42);border-bottom:1px solid #47728b;
+ color:#d3f2ff}
+.csf-root .csf-pane-heading svg{color:#91cde0;flex:none}
+.csf-root .csf-pane-heading strong{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.csf-root .csf-pane-heading span{font:650 9px/1.4 ui-monospace,monospace;color:#98bacd;margin-left:auto;white-space:nowrap}
+.csf-root .csf-split-toggle{display:inline-flex;align-items:center;gap:7px;flex:none;min-width:98px;min-height:37px;
+ justify-content:center;align-self:center;padding:6px 10px;border-radius:6px;background:#18425b;
+ color:#e0f8ff;border:1px solid #547f9b;font-size:11px;white-space:nowrap}
+.csf-root .csf-split-toggle:hover:not(:disabled){border-color:#99e3f7;background:#275875}
+.csf-root .csf-split-toggle[aria-pressed=true]{background:#2b5c6c;border-color:#9cd6d8}
+.csf-root .csf-split-toggle:disabled{opacity:.45;cursor:not-allowed}
+.csf-root .csf-split-picker{display:inline-flex;align-items:center;gap:6px;flex:none;align-self:center;
+ color:#adccdd;font-size:10px;padding:0 6px}
+.csf-root .csf-split-picker select{min-width:100px;max-width:175px;min-height:36px;padding:6px 8px;border-radius:5px;
+ color:#e0f1fa;border:1px solid #5a8ba8;background:#112c44;font-size:11px}
+.csf-root .csf-tabs{gap:4px;padding-bottom:0}
+.csf-root .csf-editor-decks.is-split .csf-editor{padding:12px;gap:9px}
+.csf-root .csf-editor-decks.is-split .csf-metadata{grid-template-columns:minmax(0,1fr)}
+.csf-root .csf-editor-decks.is-split .csf-editor-title{align-items:flex-start}
+.csf-root .csf-editor-decks.is-split .csf-source-label{font-size:11px}
+.csf-root .csf-editor-decks.is-split .csi-editor{min-width:0;width:100%;flex:1}
+.csf-root .csf-editor-decks.is-split .csi-editor-body{min-width:0}
+@media(max-width:1100px){
+ .csf-root .csf-editor-decks.is-split{grid-template-columns:minmax(0,1fr)}
+ .csf-root .csf-editor-decks.is-split>.csf-editor-mount{border-right:0;border-bottom:1px solid #47748d}
+ .csf-root .csf-editor-decks.is-split>.csf-editor-mount:last-child{border-bottom:0}
+ .csf-root .csf-editor-decks.is-split .csf-editor{min-height:400px}
+}
+@media(max-width:730px){
+ .csf-root .csf-pane-heading{min-height:36px;padding-inline:8px}
+ .csf-root .csf-split-toggle{min-height:36px}
+ .csf-root .csf-split-picker{padding-inline:3px}
+ .csf-root .csf-split-picker select{min-width:90px;max-width:120px}
+ .csf-root .csf-editor-decks.is-split .csf-editor{padding:10px}
+}
+@media(forced-colors:active){
+ .csf-root .csf-split-toggle[aria-pressed=true]{outline:2px solid Highlight}
+ .csf-root .csf-editor-decks.is-split>.csf-editor-mount{border-color:CanvasText}
+}
