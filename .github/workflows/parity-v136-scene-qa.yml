@@ -8,6 +8,9 @@ on:
       - 'creator-v1/web/src/parity/CinematicFramesV136.tsx'
       - 'creator-v1/web/src/parity/CinematicVideoV136.tsx'
       - 'creator-v1/web/src/parity/CinematicMediaContractV136.ts'
+      - 'creator-v1/web/src/parity/CinematicCameraRegistrationV136.ts'
+      - 'creator-v1/test/parity-v136-camera-registration.test.mjs'
+      - 'creator-v1/graphics/inspect-cinematic-camera-v136.mjs'
       - 'creator-v1/graphics/encode-cinematic-v136.mjs'
       - 'creator-v1/graphics/inspect-cinematic-candidate-v136.mjs'
       - 'creator-v1/graphics/smoke-cinematic-v136.mjs'
@@ -78,6 +81,8 @@ jobs:
           node --experimental-strip-types --test creator-v1/test/parity-v136-cinematic.test.mjs
       - name: Runtime media approval and single-renderer contract
         run: node --experimental-strip-types --test creator-v1/test/parity-v136-media-contract.test.mjs
+      - name: Spatial cinema registration math and GPU-to-vector reveal
+        run: node --experimental-strip-types --test creator-v1/test/parity-v136-camera-registration.test.mjs
       - name: Gamepad standard mapping and repeat contract
         run: node --experimental-strip-types --test creator-v1/test/parity-v136-controller.test.mjs
       - name: Deterministic GPU scene grammar, shader source and pixel budgets
