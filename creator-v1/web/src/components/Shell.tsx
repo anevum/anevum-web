@@ -123,7 +123,7 @@ function ShellContent(){
     items[next]?.focus();
   }
   const home=location.pathname==="/";
-  const parityFullBleed=Boolean(FullParityHeader&&["/","/discover","/community","/creators","/studio"].includes(location.pathname));
+  const parityFullBleed=Boolean(FullParityHeader&&(home||location.pathname==="/discover"));
   // PARITY destinations own a full-bleed spatial canvas, not a nested page box.
   // Legacy routes retain their protected frame until individually transformed.
   // One stable route surface keeps navigation, IREN and launcher mounted.
