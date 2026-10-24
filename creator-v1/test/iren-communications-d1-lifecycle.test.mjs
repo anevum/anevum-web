@@ -66,7 +66,7 @@ test('subscription requires explicit topics, consent, same origin, correct secre
   h.env.COMMUNICATIONS_RATE_SECRET='short';
   assert.equal((await h.subscribe()).status,503);
   h.env.COMMUNICATIONS_RATE_SECRET='rate-key-should-be-at-least-32-characters';
-  h.raw.prepare("UPDATE communication_manifest SET issuer='wrong-issuer' WHERE id=1").run();
+  h.raw.prepare("DELETE FROM communication_manifest WHERE id=1").run();
   assert.equal((await h.subscribe()).status,503);
  }finally{h.close()}
 });
