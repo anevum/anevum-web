@@ -58,7 +58,7 @@ for(const tier of ['desktop','mobile']){
   const material=primitive.getMaterial();
   if(!material||material.getMetallicFactor()>.6)continue;
   for(const semantic of primitive.listSemantics()){
-   if(!/^TEXCOORD_\\d+$/.test(semantic))continue;
+   if(!semantic.startsWith('TEXCOORD_'))continue;
    primitive.setAttribute(semantic,null);droppedTexturelessUV++;
   }
  }
