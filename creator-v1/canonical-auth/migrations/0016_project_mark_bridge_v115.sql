@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS member_mark_definitions (
  motif TEXT NOT NULL CHECK(motif IN ('beacon','orbit','spark','atlas','key','constellation')),
  visibility TEXT NOT NULL CHECK(visibility IN ('visible','secret')),
  reward_label TEXT NOT NULL DEFAULT '' CHECK(length(reward_label)<=120),
- reviewer_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
+ reviewer_id TEXT REFERENCES "user"(id) ON DELETE SET NULL,
  reviewed_at INTEGER NOT NULL CHECK(reviewed_at>0),
  revoked_at INTEGER,
  UNIQUE(project_id,release_ref,stable_key)
