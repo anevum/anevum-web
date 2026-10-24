@@ -101,7 +101,8 @@ test('unlisted Studio draft is not a public publisher and does not leak owner',a
 });
 test('one-time account linking requires actual consent, origin and verified sign-in',async t=>{
  const s=setup(t),payload={projectId:P,state:'f'.repeat(48)};
- assert.equal((await s.member('/connect','POST',payload,null)).status,401);
+ assert.equal((await s.member('/connect','POST',payload,null)).status,403,'CSRF rejects unauthenticated browser writes before session lookup');
+ assert.equal((await s.member('', 'GET', undefined, null)).status,401,'Private read still requires an authenticated session');
  assert.equal((await s.member('/connect','POST',payload,'bob',{origin:'https://evil.invalid'})).status,403);
  assert.equal((await s.member('/connect','POST',{...payload,state:'bad'})).status,400);
  const code=await s.connect();
