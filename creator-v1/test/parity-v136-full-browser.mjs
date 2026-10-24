@@ -151,6 +151,27 @@ try{
     if(state==='project'){
       await page.getByRole('heading',{name:fixture.title,exact:true}).waitFor();
       assert.equal(await page.getByRole('link',{name:'View '+fixture.title,exact:true}).count(),1);
+      const inspect=page.getByRole('button',{name:'Inspect '+fixture.title,exact:true});
+      assert.equal(await inspect.count(),1,'Approved project has one optional Artifact Lens action');
+      const before=page.url();
+      await inspect.click();
+      const lens=page.locator('.p136-artifact-lens[open]');
+      await lens.waitFor();
+      assert.equal(await lens.getByRole('heading',{name:fixture.title,exact:true}).count(),1);
+      assert.equal(await lens.getByText(fixture.summary,{exact:true}).count(),1);
+      assert.equal(await lens.getByText('CI fixture',{exact:true}).count(),1,'Real creator field is used');
+      await page.waitForFunction(()=>document.querySelector('.p136-living-world')?.dataset.geometry==='forge');
+      assert.equal(page.url(),before,'Inspecting a public release never mutates the route');
+      assert.equal(await lens.getByRole('link',{name:'Open project record'}).count(),1);
+      await page.screenshot({path:join(out,'artifact-lens-project-390.png'),animations:'disabled'});
+      await lens.getByRole('button',{name:'Return to results'}).click();
+      await page.waitForFunction(()=>!document.querySelector('.p136-artifact-lens[open]'));
+      await page.waitForFunction(()=>document.querySelector('.p136-living-world')?.dataset.geometry==='archive');
+      await inspect.click();
+      await page.keyboard.press('Escape');
+      await page.waitForFunction(()=>!document.querySelector('.p136-artifact-lens[open]'));
+      assert.equal(page.url(),before,'Escape closes inspection without navigation');
+      record('Artifact Lens approved project / native dialog / Escape / real data / scene morph', {url:before});
     }else await page.getByText('The public index is temporarily unavailable',{exact:true}).waitFor();
     await page.screenshot({path:join(out,'catalogue-'+state+'-390.png'),fullPage:true,animations:'disabled'});
     record('honest catalogue '+state);await context.close();
