@@ -47,7 +47,7 @@ export const fragmentSource=[
 'vec3 materialLight(vec3 normal,vec3 tone,float striping){',
 '  float lit=0.24+0.64*max(0.0,dot(normal,normalize(vec3(-0.5,0.9,-0.7))));',
 '  return tone*(lit+0.18*striping)+vec3(0.015,0.03,0.07);',
-}',
+'}',
 'void main(){',
 '  vec2 uv=(v_uv*2.0-1.0)*vec2(u_resolution.x/max(1.0,u_resolution.y),1.0);',
 '  vec3 ro=vec3(u_pointer.x*0.33,0.54+u_pointer.y*0.2,-4.0);',
