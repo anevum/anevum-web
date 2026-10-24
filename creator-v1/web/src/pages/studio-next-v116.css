@@ -240,8 +240,12 @@
  .cvw-root .cvw-grid{display:block;min-height:0}
  .csn-mode-rail{display:none}
  .cvw-root .cvs-head{min-height:0}
- .cvw-root .cvs-head-brand h1{font-size:18px;letter-spacing:-.03em}
- .cvw-root .cvs-head-brand>div>span{font-size:8px}
+ .cvw-root .cvs-head-brand{flex:1;min-width:0}
+ .cvw-root .cvs-head-brand h1{font-size:15px;letter-spacing:-.015em;white-space:normal;line-height:1.1}
+ .cvw-root .cvs-head-brand h1 b{display:block;font-size:11px;letter-spacing:.02em;white-space:nowrap}
+ .cvw-root .cvs-head-links{flex:0 0 auto}
+ .cvw-root .cvs-head-links .cvs-link{min-width:65px;max-width:79px;min-height:38px;padding:6px;font-size:9px;white-space:nowrap}
+ .cvw-root .cvs-head-brand>div>span{display:none}
  .cvw-root .cvw-explorer{max-height:100%;padding:12px;gap:11px}
  .cvw-root .cvw-inspector{max-height:100%;overflow-y:auto}
  .cvw-root .cvw-stage{height:clamp(310px,78vw,440px)}
