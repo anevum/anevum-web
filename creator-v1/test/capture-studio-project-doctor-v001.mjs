@@ -165,9 +165,11 @@ try{
  const focusDoctor=async label=>{
   assert.equal(await evaluate('(()=>{const el=document.querySelector("[data-studio-project-doctor=v001]");if(!el)return false;el.scrollIntoView({block:"start",inline:"nearest",behavior:"instant"});return true;})()'),true,label+' present');
   await until(()=>evaluate('(()=>{const el=document.querySelector("[data-studio-project-doctor=v001]"),r=el?.getBoundingClientRect();return !!r&&r.top<innerHeight-80&&r.bottom>110;})()'),label+' scrolled visibly into the current viewport');
-  const measure=await evaluate('(()=>{const el=document.querySelector("[data-studio-project-doctor=v001]");return {client:el.clientWidth,scroll:el.scrollWidth,left:el.getBoundingClientRect().left,right:el.getBoundingClientRect().right,viewport:window.innerWidth};})()');
+  const measure=await evaluate('(()=>{const el=document.querySelector("[data-studio-project-doctor=v001]");const cols=node=>node?getComputedStyle(node).gridTemplateColumns.split(/\\s+/).filter(Boolean).length:null;return {client:el.clientWidth,scroll:el.scrollWidth,left:el.getBoundingClientRect().left,right:el.getBoundingClientRect().right,viewport:window.innerWidth,overviewColumns:cols(el.querySelector(".cpd-overview")),findingColumns:cols(el.querySelector(".cpd-findings li"))};})()');
   assert.ok(measure.scroll<=measure.client+2,label+' has no internal horizontal clipping: '+JSON.stringify(measure));
   assert.ok(measure.left>=-2&&measure.right<=measure.viewport+2,label+' fits the physical viewport: '+JSON.stringify(measure));
+  if(measure.client<=698)assert.equal(measure.overviewColumns,1,label+' overview adapts to actual editor pane width');
+  if(measure.client<=488&&measure.findingColumns!==null)assert.equal(measure.findingColumns,1,label+' finding card adapts to narrow editor pane');
   await pause(120);
  };
  const snap=async name=>{
