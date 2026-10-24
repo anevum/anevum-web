@@ -383,3 +383,310 @@
   .av9-shell .av79-home.av-next-cinema .av125-arrival,
   .av9-shell .av73-discover.av-next-discover .av73-discover-intro{border:2px solid CanvasText;background:Canvas;color:CanvasText}
 }
+
+
+/* Continuance Commons + Member Worlds / stacked implementation slice.
+ * These selectors are opt-in via the exact same existing sitewide build flag.
+ * No substitute community members, project results, public-profile permissions,
+ * status counts, user-selected themes or custom banner uploads are introduced.
+ */
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons{
+  --ch7-line:#5f819a;
+  --ch7-text:#f5f1e8;
+  --ch7-muted:#c8d6e0;
+  --ch7-cyan:#a8ebf9;
+  --ch7-copper:#efd0a0;
+  color:#f5f1e8;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero{
+  min-height:clamp(405px,36vw,560px);
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(230px,270px);
+  align-items:end;
+  gap:clamp(20px,3vw,50px);
+  border:1px solid #7594ad;
+  border-radius:19px;
+  padding:clamp(30px,4vw,67px);
+  background:#091826;
+  box-shadow:inset 0 1px #c1e7f53b,0 24px 75px #020917a3;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero-art{
+  z-index:-2;
+  inset:0;overflow:hidden;background:#071423;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero-art .cw-artwork{
+  position:absolute;inset:0;width:100%;height:100%;display:block;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero-art .cw-artwork-image{
+  width:100%;height:100%;object-fit:cover;object-position:57% 44%;
+  filter:brightness(1.03) contrast(1.11) saturate(1.12);
+  transform:scale(1.015);
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero-art .cw-artwork-glaze{
+  background:linear-gradient(90deg,#05101bc7 0%,#07142177 45%,#07142120 80%,#0714217c 100%),
+    linear-gradient(0deg,#071421a0,transparent 65%);
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero-art .av125-signal-atlas{
+  position:absolute;width:min(75%,850px);height:auto;
+  right:-12%;top:-43%;opacity:.25;
+  pointer-events:none;filter:drop-shadow(0 0 18px #7fd2f42b);
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero::before{
+  background:linear-gradient(90deg,#06101ce8 0%,#06111ed8 23%,#07152293 59%,#07132255 82%,#09121cb3 100%),
+    linear-gradient(0deg,#05111bba,transparent 55%);
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero-copy{
+  max-width:710px;z-index:2;text-shadow:0 4px 27px #020914aa;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-kicker{
+  color:#efcca0;letter-spacing:.11em;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero-copy h1{
+  font-size:clamp(48px,5.2vw,88px)!important;
+  line-height:1.02!important;
+  letter-spacing:-.06em!important;
+  font-weight:540!important;color:#faf7f0;
+  margin:16px 0 21px!important;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero h1 em{
+  color:#f4d19d;font-style:normal;font-weight:450;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero-copy>p{
+  max-width:610px;font-size:clamp(15px,1.3vw,18px);
+  line-height:1.72;color:#e1ebf4;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero-actions .ch7-button{
+  min-height:48px;padding:13px 18px;border-radius:6px;
+  border-color:#7899ad;box-shadow:0 7px 22px #01091770;
+  background:#163149;color:#ecf5f9!important;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero-actions .ch7-button-primary{
+  border-color:#b8e8f5;background:linear-gradient(110deg,#effaf8,#afe1f0);color:#0a1a27!important;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-status{
+  z-index:2;border:1px solid #7498b1;border-radius:10px;
+  background:linear-gradient(155deg,#1a3044ee,#0c1b2be9);
+  box-shadow:inset 0 1px #e9f9ff26,0 17px 50px #020714a1;
+  backdrop-filter:blur(12px);
+  padding:19px;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-count-grid strong{
+  color:#f3e2c7;font-family:var(--ch7-code);
+  font-size:clamp(23px,2.2vw,34px);font-weight:500;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-count-grid span{
+  font-size:10px;line-height:1.5;color:#c9dbe7;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-portals{
+  gap:13px;margin:24px 0 42px;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-portals>a{
+  border:1px solid #5b7a93;border-radius:9px;
+  min-height:100px;padding:17px;
+  background:linear-gradient(145deg,#1a3046,#0b1929);
+  box-shadow:inset 0 1px #dfebf919,0 12px 33px #0005;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-portals>a:hover{
+  border-color:#b6e5f2;transform:translateY(-3px);
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-portals>a>svg:first-child{
+  color:#f2d4a9;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-portals small{
+  color:#d3e1ec;font-size:11px;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-section-header{
+  border-color:#63829c;padding-bottom:21px;margin-bottom:20px;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-section-header h2{
+  color:#f7f2e7;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-section-header h2 em,
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-sidebar h3 em{
+  color:#efd0a0;font-style:normal;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons :is(.ch7-main,.ch7-panel,.ch7-values,.ch7-entry,.ch7-person,.ch7-empty){
+  border-color:#587a94;border-radius:11px;
+  background:linear-gradient(145deg,#172b40ee,#0b1728f4);
+  box-shadow:inset 0 1px #e6f4ff17,0 13px 35px #01081567;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-tabs{
+  border-radius:7px;background:#0b1b2c;border-color:#5c7d97;
+  overflow-x:auto;max-width:100%;flex-wrap:nowrap;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-tabs button{
+  white-space:nowrap;min-height:44px;border-radius:4px;
+  color:#d3e2ed;padding:10px 15px;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-tabs button[aria-pressed=true]{
+  color:#081826;background:linear-gradient(110deg,#e4f4f5,#b7e4ee);
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons :is(.ch7-refresh,.ch7-sort button,.ch7-field-filter select,.ch7-search button){
+  border-radius:6px;min-height:43px;
+  color:#f3f7f8;background:#193148;border-color:#769bb1;
+  box-shadow:inset 0 1px #eaf7ff1c;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-entry-art{
+  border:1px solid #416f8e;border-radius:7px;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-entry-copy>p,
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-section-header>p{
+  color:#d3e2ed;
+}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons :is(a,button,input,select):focus-visible{
+  outline:3px solid #b1f0fc;outline-offset:3px;
+}
+/* Existing verified member worlds; the member's own banner and appearance
+ * still win, and a private or unavailable profile is never synthesized. */
+.av9-shell.av-next-site-shell .ms-public.av-next-member-world,
+.av9-shell.av-next-site-shell .ms-dashboard{
+  --ms-line:#7294ac66;
+  --ms-gold:#efd1aa;
+  --ms-muted:#c0d1df;
+  --ms-surface:#102236;
+  max-width:1420px;
+  background:var(--av18-gradient,radial-gradient(circle at 12% 0,#41648a3d,transparent 58%)),linear-gradient(145deg,#101e30,#0a1422);
+  border-color:#67859e;
+  box-shadow:inset 0 1px #e2f5ff21,0 20px 65px #01071287;
+  border-radius:17px;color:#f2f1e9;
+}
+.av9-shell.av-next-site-shell .ms-public.av-next-member-world .ms-cover,
+.av9-shell.av-next-site-shell .ms-dashboard .ms-cover{
+  min-height:clamp(345px,31vw,470px);
+  border-bottom:1px solid #6e91a4;
+  background:var(--av18-gradient,radial-gradient(ellipse at 78% 17%,#627eaa73,transparent 54%)),linear-gradient(135deg,#192e43,#0c1b2d);
+}
+.av9-shell.av-next-site-shell .ms-public.av-next-member-world .ms-cover:before,
+.av9-shell.av-next-site-shell .ms-dashboard .ms-cover:before{
+  opacity:.3;filter:saturate(1.1) contrast(1.07);
+}
+.av9-shell.av-next-site-shell .ms-public.av-next-member-world .ms-cover-art,
+.av9-shell.av-next-site-shell .ms-dashboard .ms-cover-art{
+  opacity:1;filter:none;image-rendering:auto;
+}
+.av9-shell.av-next-site-shell .ms-public.av-next-member-world .ms-cover-shade,
+.av9-shell.av-next-site-shell .ms-dashboard .ms-cover-shade{
+  background:linear-gradient(180deg,#04121a48 0%,#06162436 30%,#061624d8 100%);
+}
+.av9-shell.av-next-site-shell .ms-public.av-next-member-world .ms-cover-meta,
+.av9-shell.av-next-site-shell .ms-dashboard .ms-cover-meta{
+  color:#f6e6d0;
+}
+.av9-shell.av-next-site-shell .ms-public.av-next-member-world .ms-visibility,
+.av9-shell.av-next-site-shell .ms-dashboard .ms-visibility{
+  min-height:30px;display:inline-flex;align-items:center;
+  color:#e5f0f4;border:1px solid #80a7bd;border-radius:4px;
+  background:#0e2739db;
+}
+.av9-shell.av-next-site-shell .ms-public.av-next-member-world .ms-identity,
+.av9-shell.av-next-site-shell .ms-dashboard .ms-identity{
+  position:relative;z-index:2;
+  margin-top:clamp(120px,15vw,220px);
+}
+.av9-shell.av-next-site-shell .ms-public.av-next-member-world .ms-identity p,
+.av9-shell.av-next-site-shell .ms-dashboard .ms-identity p{
+  color:#dbe8ee;
+}
+.av9-shell.av-next-site-shell .ms-public.av-next-member-world :is(.ms-card,.ms-progress,.ms-wall),
+.av9-shell.av-next-site-shell .ms-dashboard :is(.ms-card,.ms-progress,.ms-wall,.ms-image-editor){
+  background:linear-gradient(147deg,#192b3de8,#0c192af2);
+  border:1px solid #6a899f;
+  border-radius:11px;box-shadow:inset 0 1px #e9f6ff15,0 13px 32px #0004;
+}
+.av9-shell.av-next-site-shell .ms-public.av-next-member-world .ms-public-body{
+  gap:22px;padding:clamp(20px,2.5vw,36px);
+}
+.av9-shell.av-next-site-shell .ms-public.av-next-member-world .ms-public-body aside{
+  gap:18px;
+}
+.av9-shell.av-next-site-shell :is(.ms-public.av-next-member-world,.ms-dashboard) :is(.ms-card,.ms-progress) h2{
+  color:#f4e9d8;
+}
+.av9-shell.av-next-site-shell :is(.ms-public.av-next-member-world,.ms-dashboard) .kicker{
+  color:#f0cfa1;letter-spacing:.11em;
+}
+.av9-shell.av-next-site-shell :is(.ms-public.av-next-member-world,.ms-dashboard) .ms-public-bio{
+  color:#d0dee8;line-height:1.77;
+}
+.av9-shell.av-next-site-shell :is(.ms-public.av-next-member-world,.ms-dashboard) :is(a,button,input,textarea):focus-visible{
+  outline:3px solid #a7e9fa;outline-offset:4px;
+}
+.av9-shell.av-next-site-shell .av12-public-world.av-next-private-boundary{
+  max-width:1200px;border:1px solid #6488a5;border-radius:14px;
+  padding:clamp(22px,3vw,45px);background:linear-gradient(145deg,#19293d,#0a1929);
+  color:#d9e8ef;
+}
+/* Density and actual author media stay readable at device widths. */
+@media(max-width:1060px){
+  .av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero{
+    grid-template-columns:minmax(0,1fr) minmax(190px,225px);gap:24px;
+  }
+  .av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero-copy h1{font-size:clamp(40px,5.7vw,68px)!important}
+}
+@media(max-width:900px){
+  .av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero{grid-template-columns:1fr;padding:29px}
+  .av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-status{max-width:430px}
+  .av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-columns{grid-template-columns:1fr}
+  .av9-shell.av-next-site-shell .ms-public.av-next-member-world .ms-public-body{grid-template-columns:1fr}
+}
+@media(max-width:650px){
+  .av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero{
+    padding:25px 19px;border-radius:14px;gap:18px;min-height:0;
+  }
+  .av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero::before{
+    background:linear-gradient(180deg,#071222ba 0%,#06111ce4 42%,#071521ad 70%,#061323bd 100%);
+  }
+  .av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero-art .cw-artwork-image{
+    object-position:69% 42%;filter:brightness(1.14) contrast(1.1) saturate(1.15);
+  }
+  .av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero-copy h1{
+    font-size:clamp(35px,10.5vw,54px)!important;
+    line-height:1.07!important;margin:12px 0 16px!important;
+  }
+  .av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero-copy>p{
+    font-size:14px;line-height:1.66;
+  }
+  .av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-portals{
+    grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:14px 0 28px;
+  }
+  .av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-portals>a{
+    padding:12px;gap:9px;min-height:88px;
+  }
+  .av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-main{
+    padding:12px;
+  }
+  .av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-tabs-row{
+    flex-wrap:wrap;
+  }
+  .av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-tabs{
+    flex:1 1 100%;width:100%;min-width:0;
+  }
+  .av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-tabs button{padding-inline:12px}
+  .av9-shell.av-next-site-shell :is(.ms-public.av-next-member-world,.ms-dashboard) .ms-cover{
+    min-height:315px;padding:20px;
+  }
+  .av9-shell.av-next-site-shell :is(.ms-public.av-next-member-world,.ms-dashboard) .ms-identity{
+    margin-top:135px;gap:13px;
+  }
+  .av9-shell.av-next-site-shell .ms-public.av-next-member-world .ms-public-body{padding:17px}
+}
+@media(max-width:359px){
+  .av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero{padding:20px 14px}
+  .av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero-actions{flex-direction:column;align-items:stretch}
+  .av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero-actions .ch7-button{width:100%}
+  .av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-portals>a{padding:10px}
+}
+@media(prefers-reduced-motion:reduce){
+  .av9-shell.av-next-site-shell .ch7-hub.av-next-commons *,
+  .av9-shell.av-next-site-shell .ms-public.av-next-member-world *,
+  .av9-shell.av-next-site-shell .ms-dashboard *{
+    animation:none!important;transition:none!important;scroll-behavior:auto!important;
+  }
+}
+@media(forced-colors:active){
+  .av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero-art{display:none}
+  .av9-shell.av-next-site-shell .ch7-hub.av-next-commons :is(.ch7-hero,.ch7-main,.ch7-status,.ch7-entry),
+  .av9-shell.av-next-site-shell .ms-public.av-next-member-world :is(.ms-cover,.ms-card){
+    background:Canvas;color:CanvasText;border:2px solid CanvasText;
+  }
+}
