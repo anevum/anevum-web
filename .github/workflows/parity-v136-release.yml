@@ -45,6 +45,8 @@ jobs:
         with:
           node-version: '22'
       - run: node creator-v1/ops/parity-v136-release.mjs source
+      - name: Scene director, shader grammar, GPU budget and accessible materials
+        run: node --experimental-strip-types --test creator-v1/test/parity-v136-scene-director.test.mjs
       - run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
       - name: Existing data, collections, rewards and auth contracts
         run: |
@@ -54,6 +56,8 @@ jobs:
       - run: |
           npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
           npx playwright install --with-deps chromium
+      - name: WebGL2 shader compile, four architecture frames and captured evidence
+        run: node --experimental-strip-types creator-v1/test/parity-v136-spatial-render-browser.mjs
       - run: node creator-v1/test/parity-v136-full-browser.mjs
       - name: V136 Discover composition, filters, catalogue and responsive acceptance
         run: node creator-v1/test/parity-v136-discover-browser.mjs
