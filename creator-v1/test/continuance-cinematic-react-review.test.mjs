@@ -50,7 +50,8 @@ test('legible responsive design, pause and OS reduced motion, focus and forced c
   for (const item of [':focus-visible', 'max-width:640px', 'max-width:359px', 'prefers-reduced-motion:reduce', 'forced-colors:active', 'data-still="true"', '@keyframes cnr-orbit', 'object-fit:cover']) assert.ok(css.includes(item), item);
   assert.match(source, /prefers-reduced-motion: reduce/);
   assert.match(source, /visibilitychange/);
-  assert.match(source, /Pause motion/);
+  assert.doesNotMatch(source, /Pause motion|Resume motion|cnr-motion|motionPaused/);
+  assert.match(source, /const still = osReduced \|\| !visible/);
   assert.doesNotMatch(css, /@import|url\s*\(\s*['"]?https?:/i);
 });
 test('production bundle does not contain isolated review (optional post-build guard)', { skip: process.env.CNR_CHECK_PRODUCTION !== '1' }, () => {
