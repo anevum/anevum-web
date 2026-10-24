@@ -47,7 +47,7 @@ export function StudioCodeEditorV119({
  const style={
   '--csi-size':fontSize+'px',
   '--csi-lineheight':(fontSize*1.65)+'px',
-  '--csi-gutter-width':lineNumbers&&!wordWrap?'49px':'0px',
+  '--csi-gutter-width':lineNumbers&&!wordWrap&&!plain?'49px':'0px',
   '--csi-indent':indentWidth
  } as CSSProperties;
  function syncSelection(){
@@ -175,7 +175,7 @@ export function StudioCodeEditorV119({
    <small>Preferences are local to this editor view. Wrap hides the line gutter.</small>
   </div>}
   <div className="csi-surface">
-   {lineNumbers&&!wordWrap&&<div className="csi-gutter" aria-hidden="true">
+   {lineNumbers&&!wordWrap&&!plain&&<div className="csi-gutter" aria-hidden="true">
     <div className="csi-line-track" style={{transform:'translateY('+-scroll.top+'px)'}}>
      {Array.from({length:codeLines},(_,i)=><div className={'csi-gutter-line'+(cursor.line===i+1?' is-active':'')} key={i}>{i+1}</div>)}
     </div>
@@ -201,7 +201,7 @@ export function StudioCodeEditorV119({
    <span><Icon name="code" size={13}/>{language.toUpperCase()}</span>
    <span>Ln {cursor.line}, Col {cursor.column}{cursor.selection>0?' · '+cursor.selection+' selected':''}</span>
    <span>{codeLines} lines</span><span>{bytes.toLocaleString()} bytes</span>
-   <span>{wordWrap?'Wrap':'No wrap'} · Spaces: {indentWidth}</span>
+   <span>{plain?'Large-file plain view':wordWrap?'Wrap':'No wrap'} · Spaces: {indentWidth}</span>
    <span>{status||'Local source · no execution'}</span>
   </div>
   {notice&&<p className="csi-notice" role="status">{notice}</p>}
