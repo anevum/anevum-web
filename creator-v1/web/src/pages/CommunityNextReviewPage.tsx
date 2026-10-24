@@ -13,7 +13,6 @@ import {
 import { useResource } from '../lib/useResource';
 import { projectDetailPath } from '../lib/navigation';
 import { OrbitalMark } from '../components/OrbitalMark';
-import { LevelEmblem } from '../components/LevelEmblem';
 import { publicCreatorHandle } from '../lib/public-creator-handle';
 import {
   COMMONS_DISTRICTS, decodeCommonsQuery, nextCommonsQuery, moderatedPostsEnabled,
@@ -94,7 +93,7 @@ function ThreadAuthorCard({post, creator, showcase}: {
       <span className="lnx-author-topic"><small>CONVERSATION FIELD</small><strong>{post.topic}</strong></span>
       {publicWorks !== null && <span className="lnx-author-works"><small>PUBLISHED WORKS</small><strong>{publicWorks} approved {publicWorks === 1 ? 'release' : 'releases'}</strong></span>}
       {visibleLevel !== null && <span className="lnx-author-level">
-        <span aria-hidden="true"><LevelEmblem level={visibleLevel} handle={handle} size={35}/></span>
+        <span className="lnx-author-level-seal" aria-hidden="true"><OrbitalMark/></span>
         <span><small>VERIFIED PROGRESSION</small><strong>Level {String(visibleLevel).padStart(2, '0')}</strong></span>
       </span>}
     </div>
