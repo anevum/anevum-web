@@ -1,0 +1,118 @@
+/* V117 / Continuance Institute cinematic world interaction polish.
+ * New layer is scoped to the existing feature-flagged World Composer.
+ * No new global selectors, no remote fonts/textures or GPU dependencies.
+ */
+.cvw-root .cvw-stage{
+ background:radial-gradient(ellipse at 67% 17%,#a6d5ec 0%,#568fb0 33%,#183f70 68%,#07162c);
+}
+.cvw-root .cvw-stage::after{
+ background:
+  linear-gradient(180deg,rgba(3,12,30,.08),transparent 35%,rgba(3,11,27,.48)),
+  radial-gradient(ellipse at 79% 8%,rgba(248,217,162,.22),transparent 45%);
+}
+.cvw-root .cvw-selection-chip{border-color:rgba(127,216,244,.72);box-shadow:0 8px 21px rgba(4,13,30,.23)}
+.cvw-root .cvw-renderer-live{background:rgba(5,20,35,.76);backdrop-filter:blur(10px)}
+.csn-transform-pad{
+ display:grid;gap:10px;
+ border:1px solid rgba(111,177,212,.35);
+ border-radius:9px;
+ background:linear-gradient(165deg,#152f48,#0c2237);
+ padding:10px;
+ min-width:0;
+}
+.csn-transform-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.csn-transform-heading strong{color:#c3eafb;font-size:10px;letter-spacing:.12em}
+.csn-transform-heading button{
+ min-height:34px;background:#1c4762;border:1px solid #5a89aa;border-radius:5px;
+ color:#e5f9ff;padding:6px 9px;font-size:10px
+}
+.csn-transform-heading button:hover{background:#28627f;border-color:#89ddf6}
+.csn-transform-step{display:grid;gap:6px}
+.csn-transform-step>span{color:#adcbdc;font-size:10px}
+.csn-transform-step>div{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.csn-transform-step button{min-width:0;min-height:33px;border-radius:5px;border:1px solid #3c607b;
+ background:#0e293f;color:#c7dfeb;font-size:10px;padding:5px 2px}
+.csn-transform-step button[aria-pressed=true]{background:#285a78;border-color:#82cfea;color:#f0fbff}
+.csn-axis-stack{display:grid;gap:6px}
+.csn-axis{display:grid;grid-template-columns:24px 31px minmax(0,1fr) 31px;gap:5px;align-items:center}
+.csn-axis-name{font-size:10px;font-weight:800;color:#dbefff;display:grid;place-items:center;
+ width:24px;height:27px;background:#203b53;border-radius:4px;border-left:3px solid #a3cfe5}
+.csn-axis-x .csn-axis-name{border-color:#d59fa5}
+.csn-axis-y .csn-axis-name{border-color:#a0dec3}
+.csn-axis-z .csn-axis-name{border-color:#88bff5}
+.csn-axis button{width:31px;height:33px;min-height:33px;display:grid;place-items:center;border-radius:5px;
+ background:#17354c;border:1px solid #4c7796;color:#e9faff;font-size:17px}
+.csn-axis button:hover{background:#265a7b;border-color:#a2e7ff}
+.csn-axis output{min-width:0;display:grid;place-items:center;height:33px;padding:3px 5px;border:1px solid #365975;
+ background:#0b2135;border-radius:5px;color:#e8f8ff;font-size:11px;font-variant-numeric:tabular-nums}
+.csn-transform-pad p{margin:0;font-size:9px;color:#a8c5d5;line-height:1.55}
+.cvw-root .csn-transform-pad button:focus-visible{outline:2px solid #98e5ff;outline-offset:2px}
+@media(max-width:680px){
+ .cvw-root .cvw-stage{
+  background:radial-gradient(ellipse at 67% 20%,#a0cade,#3b6c98 48%,#102b50 78%);
+ }
+ .csn-transform-pad{padding:11px}
+ .csn-axis{grid-template-columns:28px 42px minmax(0,1fr) 42px}
+ .csn-axis button{width:42px;min-height:43px;height:43px}
+ .csn-axis output{height:43px}
+}
+@media(prefers-reduced-motion:reduce){
+ .cvw-root .cvw-renderer-live,.csn-transform-pad *{animation:none!important;transition:none!important}
+}
+@media(forced-colors:active){
+ .csn-axis-name,.csn-transform-step button[aria-pressed=true]{outline:2px solid Highlight}
+}
+
+/* V117 evidence pass: reveal the asset shelf in the first desktop viewport.
+ * The site-level navigation remains untouched; only feature-flagged Studio
+ * chrome is compacted, while the GPU scene retains a cinematic focal area.
+ */
+@media(min-width:1041px){
+ .cvw-root .cvs-review-banner{min-height:20px;padding:3px 9px;font-size:8px}
+ .cvw-root .cvs-head{min-height:53px;padding-block:6px}
+ .cvw-root .cvs-head-brand .cvs-mark{width:36px;height:36px}
+ .cvw-root .cvs-head-brand h1{font-size:clamp(18px,1.8vw,25px)}
+ .cvw-root .cvs-head-brand>div>span{font-size:8px}
+ .cvw-root .cvs-projectbar{min-height:49px;padding-block:5px}
+ .cvw-root .cvs-project-thumb{width:34px;height:34px}
+ .cvw-root .csn-workspace-tabs{min-height:39px}
+ .cvw-root .csn-workspace-tabs button{min-height:39px;padding-block:8px}
+ .cvw-root .cvs-mode-header{min-height:39px;padding-block:5px}
+ .cvw-root .cvw-toolbar{min-height:40px;padding-block:4px}
+ .cvw-root .cvw-toolbar button{min-height:31px;padding:6px 9px}
+ .cvw-root .cvw-stage{height:clamp(295px,34vh,470px);min-height:295px}
+ .cvw-root .csn-shelf-head{min-height:39px}
+ .cvw-root .csn-asset-thumbnail{height:73px}
+}
+
+
+/* A contextual inspector for non-world authoring modes. Previous builds
+ * incorrectly left an unrelated 3D spire transform visible in UI and Code.
+ */
+.csn-context-panel{display:flex;flex-direction:column;gap:17px;padding:15px 12px;
+ min-width:0;color:#d0e5f2}
+.csn-context-mode-head{display:grid;gap:8px}
+.csn-context-mode-head>span{font-size:9px;letter-spacing:.12em;color:#e7c890;font-weight:750}
+.csn-context-mode-head h2{font-size:19px;line-height:1.15;color:#f1fbff;letter-spacing:-.015em}
+.csn-context-mode-head p{font-size:11px;line-height:1.6;color:#b6cddf;margin:0}
+.csn-context-metadata{border:1px solid #416781;border-radius:9px;
+ background:linear-gradient(155deg,#132d45,#0d2137);overflow:hidden}
+.csn-context-metadata>div{display:grid;gap:4px;padding:11px 10px;border-bottom:1px solid rgba(128,183,214,.17)}
+.csn-context-metadata>div:last-child{border-bottom:0}
+.csn-context-metadata span{color:#b5ccdf;font-size:9px;letter-spacing:.035em}
+.csn-context-metadata strong{font-size:11px;line-height:1.4;color:#e8f9ff;overflow-wrap:anywhere}
+.csn-context-guidance{padding:13px 11px;border-radius:8px;border-left:2px solid #dfc18d;
+ background:#172b40;display:grid;gap:9px}
+.csn-context-guidance strong{color:#f1d8a7;font-size:9px;letter-spacing:.105em}
+.csn-context-guidance p{margin:0;color:#c1d6e5;font-size:11px;line-height:1.65}
+.csn-context-next{display:flex;align-items:center;justify-content:space-between;gap:8px;
+ padding:11px 12px;border:1px solid #6292b1;border-radius:8px;background:#21445e;
+ min-height:44px;color:#eefbff;font-size:11px;font-weight:700}
+.csn-context-next:hover{background:#2c5977;border-color:#92d3ec}
+.csn-context-next span{font-size:18px;line-height:1}
+.csn-context-footer{margin-top:auto;border-top:1px solid #385b73;padding-top:15px;
+ line-height:1.6;color:#a2bed0;font-size:9px;letter-spacing:.08em}
+.csn-context-panel :focus-visible{outline:2px solid #9beaff;outline-offset:3px}
+@media(max-width:1040px){
+ .csn-context-panel{padding:15px;max-width:340px;width:100%;margin:0 auto}
+}

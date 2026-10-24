@@ -9,9 +9,12 @@ import {WorldCanvasV115} from './WorldCanvasV115';
 import {StudioModeRailV116,StudioTopModesV116,StudioFileTreeV116,type StudioFileChoice,type StudioModeV116} from './StudioNavigationV116';
 import {StudioAssetShelfV116,type StudioAsset} from './StudioAssetShelfV116';
 import {StudioOtherModesV116} from './StudioOtherModesV116';
+import {StudioTransformPadV117} from './StudioTransformPadV117';
+import {StudioContextPanelV117} from './StudioContextPanelV117';
 import './creator-studio-visual-v115.css';
 import './world-composer-v115.css';
 import './studio-next-v116.css';
+import './studio-world-v117.css';
 
 /** Review-only P1 GPU workspace. All edits stay in React memory; explicit
  * exported document text never reaches canonical member DB or publication.
@@ -54,7 +57,7 @@ function reducer(state:ReviewState,action:Action):ReviewState{
 }
 const KINDS:{kind:WorldKind;name:string}[]=[
  {kind:'cube',name:'Cube'},{kind:'sphere',name:'Sphere'},
- {kind:'spire',name:'Spire'},{kind:'island',name:'Island'},{kind:'light',name:'Light'}
+ {kind:'spire',name:'Spire'},{kind:'island',name:'Island'},{kind:'starship',name:'Starcraft'},{kind:'light',name:'Light'}
 ];
 const MATERIALS:WorldMaterial[]=['stone','grass','gold','glass','cyan','slate','violet','water'];
 const AXES=['X','Y','Z'] as const;
@@ -104,6 +107,25 @@ export function WorldComposerReviewV115(){
   setFileNotice(file.path+' — sample structure only; no member file opened.');
   setPanel('closed');
  }
+ function nudge(delta:Vec3){
+  if(!node)return;
+  const position=node.position.map((value,i)=>clamp(value+delta[i],-40,40)) as Vec3;
+  if(position.every((value,i)=>value===node.position[i]))return;
+  command({type:'SET_TRANSFORM',id:node.id,field:'position',value:position});
+ }
+ function frameSelected(){
+  if(!node)return;
+  const height=node.kind==='spire'?2.1*node.scale[1]:
+   node.kind==='waterfall'?-3.0*node.scale[1]:
+   node.kind==='island'?-.7*node.scale[1]:0;
+  const target:Vec3=[node.position[0],clamp(node.position[1]+height,-40,40),node.position[2]];
+  const distance=node.kind==='spire'?Math.max(22,13*node.scale[1]):
+   node.kind==='island'?Math.max(17,9*node.scale[0]):
+   node.kind==='bridge'?Math.max(22,21*node.scale[0]):
+   node.kind==='waterfall'?Math.max(17,13*node.scale[1]):
+   node.kind==='starship'?16:14;
+  setCamera(c=>({...c,target,distance:clamp(distance,4,80)}));
+ }
  function transform(field:'position'|'rotation'|'scale',index:0|1|2,value:number){
   if(!node||!Number.isFinite(value))return;
   const min=field==='scale'?0.1:field==='rotation'?-6.284:-40;
@@ -120,7 +142,7 @@ export function WorldComposerReviewV115(){
   </div>
   <header className="cvs-head">
    <div className="cvs-head-brand"><OrbitalMark className="cvs-mark"/><div><span>THE CREATIVE NETWORK / CONTINUANCE INSTITUTE</span><h1>ANEVUM <b>/ CREATOR STUDIO</b></h1></div></div>
-   <nav className="csn-site-nav" aria-label="ANEVUM navigation"><Link to="/">Home</Link><Link to="/discover">Discover</Link><Link to="/community">Community</Link><Link to="/creators">Creators</Link></nav>
+   {/* Site-wide ANEVUM navigation already sits above the editor. */}
    <div className="cvs-head-links"><span className="cvs-head-version">WORLD FORMAT <strong>V1</strong></span><Link to="/studio" className="cvs-link">My space <Icon name="arrow" size={16}/></Link></div>
   </header>
   <div className="cvs-studio">
@@ -170,11 +192,7 @@ export function WorldComposerReviewV115(){
      <div className="cvw-stage" role="region" aria-label="Live world composer">
       <WorldCanvasV115 document={scene} camera={camera} selection={selected}
        onCamera={setCamera} onSelect={id=>dispatch({type:'SELECT',id})}
-       onNudge={delta=>{
-        if(!node)return;
-        const position=node.position.map((v,i)=>clamp(v+delta[i],-40,40)) as Vec3;
-        command({type:'SET_TRANSFORM',id:node.id,field:'position',value:position});
-       }}/>
+       onNudge={nudge}/>
       <div className="cvw-selection-chip"><span>SELECTED OBJECT</span><strong>{node?.name||'None'}</strong></div>
       <div className="csn-scene-light">
        <button type="button" aria-expanded={lightingOpen} aria-controls="csn-floating-lighting" onClick={()=>setLightingOpen(v=>!v)}>SCENE LIGHTING <span aria-hidden="true">{lightingOpen?'⌃':'⌄'}</span></button>
@@ -204,7 +222,7 @@ export function WorldComposerReviewV115(){
     <aside className={'cvw-inspector cvs-pane'+(panel==='inspector'?' is-mobile-open':'')} aria-label="World object inspector">
      <div className="csn-inspector-tabs" role="group" aria-label="Context panels"><button type="button" aria-pressed={inspectorTab==='properties'} onClick={()=>setInspectorTab('properties')}>INSPECTOR</button><button type="button" aria-pressed={inspectorTab==='iren'} onClick={()=>setInspectorTab('iren')}>IREN</button>
       <button type="button" className="cvw-close" onClick={()=>setPanel('closed')} aria-label="Close inspector">×</button></div>
-     {inspectorTab==='properties'?<><div className="cvs-pane-title csn-context-title"><div><small>SELECTED OBJECT</small><h2>{node?.name||'Select an object'}</h2></div></div>
+     {inspectorTab==='properties'?(mode==='Scene'||mode==='Playtest'?<><div className="cvs-pane-title csn-context-title"><div><small>SELECTED OBJECT</small><h2>{node?.name||'Select an object'}</h2></div></div>
      {node?<div className="cvw-inspector-content">
       <div className="cvs-subheading">OBJECT TRANSFORM</div>
       {(['position','rotation','scale'] as const).map(field=><fieldset key={field} className="cvw-vector">
@@ -214,6 +232,8 @@ export function WorldComposerReviewV115(){
         max={field==='scale'?6:field==='rotation'?6.284:40}
         onChange={event=>transform(field,i as 0|1|2,event.target.valueAsNumber)}/></label>)}</div>
       </fieldset>)}
+      <StudioTransformPadV117 position={node.position} onMove={nudge}
+       onFrame={frameSelected}/>
       <label className="cvw-select">Material <select value={node.material} onChange={e=>command({type:'SET_MATERIAL',id:node.id,material:e.target.value as WorldMaterial})}>
        {MATERIALS.map(m=><option value={m} key={m}>{m}</option>)}</select></label>
       <button type="button" className="cvw-remove" onClick={()=>command({type:'DELETE_NODE',id:node.id})}>Remove selected object</button>
@@ -226,7 +246,8 @@ export function WorldComposerReviewV115(){
        onChange={e=>command({type:'SET_ENVIRONMENT',sky:e.target.value as 'day'|'night',sunIntensity:scene.environment.sunIntensity})}>
        <option value="day">Daylight</option><option value="night">Nebula night</option></select></label>
      </div>
-     </>:<div className="csn-iren-panel">
+     </>:<StudioContextPanelV117 mode={mode} objects={scene.nodes.length} documentBytes={new TextEncoder().encode(source).length}
+        onNavigate={setMode}/>):<div className="csn-iren-panel">
       <div className="csn-iren-identity"><div className="csn-iren-symbol"><OrbitalMark/></div><div><small>IREN / CREATIVE COPILOT</small><strong>Design intelligence</strong><span>Existing companion · no scene access</span></div></div>
       <p>IREN's future Studio integration will inspect selected objects and propose typed changes for review. This prototype does not send prompts or execute model calls.</p>
       <div className="csn-iren-suggestions"><span>FUTURE CAPABILITIES</span><div>Generate a world plan</div><div>Build an interface</div><div>Find and validate assets</div><div>Inspect scene scripts</div></div>

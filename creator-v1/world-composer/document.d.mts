@@ -1,4 +1,4 @@
-export type WorldKind='island'|'spire'|'bridge'|'waterfall'|'cube'|'sphere'|'light';
+export type WorldKind='island'|'spire'|'bridge'|'waterfall'|'cube'|'sphere'|'light'|'starship';
 export type WorldMaterial='stone'|'grass'|'gold'|'glass'|'cyan'|'slate'|'violet'|'water';
 export type Vec3=[number,number,number];
 export type WorldNode={id:string;name:string;kind:WorldKind;parentId:string|null;position:Vec3;

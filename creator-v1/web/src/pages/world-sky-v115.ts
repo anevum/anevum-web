@@ -19,6 +19,7 @@ const fragmentSource=[
  'uniform float uNight;',
  'uniform float uYaw;',
  'uniform float uIntensity;',
+ 'uniform float uTime;',
  'out vec4 outColor;',
  'float hash(vec2 p){',
  ' p=fract(p*vec2(123.34,345.45));p+=dot(p,p+34.345);',
@@ -42,7 +43,7 @@ const fragmentSource=[
  ' vec3 nocturne=mix(vec3(.11,.15,.28),vec3(.012,.024,.075),zenith);',
  ' nocturne+=vec3(.12,.025,.19)*exp(-pow((uv.y-.57)/.25,2.0))*.55;',
  ' vec3 color=mix(day,nocturne,uNight);',
- ' vec2 flow=vec2(uv.x*3.1+uYaw*.075,uv.y*5.4);',
+ ' vec2 flow=vec2(uv.x*3.1+uYaw*.075+uTime*.007,uv.y*5.4+uTime*.004);',
  ' float cloud=fbm(flow+vec2(0.0,noise2(flow*.8)*.35));',
  ' float cloudMask=smoothstep(.49,.75,cloud);',
  ' cloudMask*=.64*(1.0-smoothstep(.31,.79,uv.y));',
@@ -53,6 +54,9 @@ const fragmentSource=[
  ' vec2 p=vec2((uv.x-planetCenter.x)*aspect,uv.y-planetCenter.y);',
  ' float d=length(p);',
  ' float radius=.185;',
+ ' float ringR=length(vec2(p.x*.91+p.y*.44,(p.y*.85-p.x*.22)*2.9));',
+ ' float rings=(smoothstep(.215,.230,ringR)-smoothstep(.315,.338,ringR));',
+ ' color=mix(color,vec3(.71,.78,.84),rings*.33);',
  ' float planetMask=1.0-smoothstep(radius-.002,radius+.002,d);',
  ' float bands=.5+.5*sin(p.y*43.0+sin(p.x*15.0)*.45);',
  ' float smallBands=.5+.5*sin(p.y*122.0+p.x*8.0);',
@@ -64,6 +68,10 @@ const fragmentSource=[
  ' color=mix(color,mix(planet,planet*vec3(.64,.69,.85),uNight),planetMask);',
  ' float limb=exp(-pow((d-radius)/.012,2.0))*.17;',
  ' color+=limb*mix(vec3(.3,.57,.81),vec3(.33,.24,.64),uNight);',
+ ' vec2 moon=vec2((uv.x-.16)*aspect,uv.y-.79);',
+ ' float moonR=length(moon);',
+ ' float moonMask=1.0-smoothstep(.029,.032,moonR);',
+ ' color=mix(color,vec3(.71,.83,.92)*(.72+.28*smoothstep(-.015,.01,moon.x)),moonMask*.77);',
  ' vec2 sun=vec2((uv.x-.98)*aspect,uv.y-.59);',
  ' float scatter=exp(-length(sun)*8.0);',
  ' color+=mix(vec3(.26,.20,.15),vec3(.15,.075,.31),uNight)*scatter*clamp(uIntensity,.2,2.0);',
@@ -89,7 +97,7 @@ function compile(gl:WebGL2RenderingContext,type:number,source:string){
  return shader;
 }
 export type WorldSkyRenderer={
- render:(width:number,height:number,yaw:number,night:boolean,sunIntensity:number)=>void;
+ render:(width:number,height:number,yaw:number,night:boolean,sunIntensity:number,timeSeconds?:number)=>void;
  dispose:()=>void;
 };
 export function createWorldSky(gl:WebGL2RenderingContext):WorldSkyRenderer{
@@ -110,9 +118,10 @@ export function createWorldSky(gl:WebGL2RenderingContext):WorldSkyRenderer{
  const yaw=gl.getUniformLocation(program,'uYaw');
  const night=gl.getUniformLocation(program,'uNight');
  const sunlight=gl.getUniformLocation(program,'uIntensity');
+ const clock=gl.getUniformLocation(program,'uTime');
  let disposed=false;
  return {
-  render(width,height,skyYaw,skyNight,skySun){
+  render(width,height,skyYaw,skyNight,skySun,timeSeconds=0){
    if(disposed||gl.isContextLost())return;
    gl.disable(gl.DEPTH_TEST);gl.disable(gl.BLEND);
    gl.useProgram(program);
@@ -120,6 +129,7 @@ export function createWorldSky(gl:WebGL2RenderingContext):WorldSkyRenderer{
    gl.uniform1f(yaw,skyYaw);
    gl.uniform1f(night,skyNight?1:0);
    gl.uniform1f(sunlight,skySun);
+   gl.uniform1f(clock,timeSeconds);
    gl.bindVertexArray(vao);
    gl.drawArrays(gl.TRIANGLES,0,3);
    gl.bindVertexArray(null);

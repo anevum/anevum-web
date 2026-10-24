@@ -9,7 +9,7 @@ export const PREFIX='ANEVUM_WORLD_V1\n';
 export const LIMITS=Object.freeze({bytes:32768,nodes:64,depth:6,name:80,id:40,dimension:40});
 const ID=/^[a-z][a-z0-9_-]{0,39}$/;
 const MATERIALS=Object.freeze(['stone','grass','gold','glass','cyan','slate','violet','water']);
-const KINDS=Object.freeze(['island','spire','bridge','waterfall','cube','sphere','light']);
+const KINDS=Object.freeze(['island','spire','bridge','waterfall','cube','sphere','light','starship']);
 const isRecord=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const finite=(v,min,max)=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
 const vect=(value,min,max)=>Array.isArray(value)&&value.length===3&&value.every(v=>finite(v,min,max));
@@ -96,8 +96,8 @@ export function starter(){
 }
 export function primitive(id,kind='cube'){
  if(!ID.test(id))fail('Invalid new id');
- if(!['cube','sphere','spire','island','light'].includes(kind))fail('Unsupported primitive type');
- return assertNode(node(id,kind==='cube'?'Cube':kind==='sphere'?'Sphere':kind==='light'?'Point Light':kind==='island'?'Floating Island':'Spire',
+ if(!['cube','sphere','spire','island','light','starship'].includes(kind))fail('Unsupported primitive type');
+ return assertNode(node(id,kind==='cube'?'Cube':kind==='sphere'?'Sphere':kind==='light'?'Point Light':kind==='island'?'Floating Island':kind==='starship'?'Starcraft':'Spire',
   kind,0,0,0,kind==='light'?'cyan':kind==='island'?'grass':'stone'));
 }
 /** Each result is a new canonical document; callers own undo/redo and persistence. */
