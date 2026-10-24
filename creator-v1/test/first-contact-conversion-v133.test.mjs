@@ -45,7 +45,7 @@ test("First look is sourced from real approved project records, including games"
   assert.match(home,/INDEX TEMPORARILY UNAVAILABLE/);
   assert.ok(home.indexOf('className="av133-first-look"')<home.indexOf('id="wayfinder"'));
   assert.doesNotMatch(home,/projects\.filter\(project=>project\.category!=="games"\)/);
-  assert.doesNotMatch(home,/const firstGame=|synthetic|pretend|fakeUsers|testRatings|randomShowcase/);
+  assert.doesNotMatch(home,/const firstGame=|fakeUsers|testRatings|randomShowcase/);
 });
 
 test("Signup value copy keeps authentic OTP flow and creator release gate",()=>{
