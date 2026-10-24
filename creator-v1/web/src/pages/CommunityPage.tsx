@@ -9,7 +9,6 @@ import { useResource } from "../lib/useResource";
 import { projectDetailPath } from "../lib/navigation";
 import { CosmicArtwork } from "../components/CosmicArtwork";
 import { Icon } from "../components/Icons";
-import {SpatialSurfaceV136} from "../parity/SpatialSurfaceV136";
 import { LoadingState, ErrorState } from "../components/States";
 import "./community-hub-v007.css";
 import {CommunityMemberCard,PublicMemberDirectory,PublicMemberActivity} from "../components/MemberCommunity";
@@ -126,7 +125,7 @@ export function CommunityPage() {
     [revision, category, view === "projects"]
   );
   const creators = useResource(signal => readCreators({ limit: "12", q: creatorQuery || undefined }, signal), [revision, creatorQuery]);
-  const enabled = status.state === "ready" && status.data?.features?.communityPosts === true;
+  const enabled = status.state === "ready" && status.data.features?.communityPosts === true;
   const conversations = useResource(async signal => {
     if (!enabled) return { availability: "closed" as const, items: [] as CommunityPost[] };
     try {
@@ -175,8 +174,8 @@ export function CommunityPage() {
       </div>
       <aside className="ch7-status" aria-label="Verified public community counts"><span className="ch7-kicker">PUBLISHED WORK / VERIFIED</span>
         <div className="ch7-count-grid">
-          <div><strong>{status.state === "ready" ? (status.data?.counts?.publishedProjects ?? "—") : "—"}</strong><span>APPROVED PROJECTS</span></div>
-          <div><strong>{status.state === "ready" ? (status.data?.counts?.publishedCreators ?? "—") : "—"}</strong><span>PUBLIC CREATORS</span></div>
+          <div><strong>{status.state === "ready" ? status.data.counts.publishedProjects : "—"}</strong><span>APPROVED PROJECTS</span></div>
+          <div><strong>{status.state === "ready" ? status.data.counts.publishedCreators : "—"}</strong><span>PUBLIC CREATORS</span></div>
         </div>
         <p>{status.state === "error" ? "Public counts are temporarily unavailable." : "Only independently approved public records. No fabricated activity."}</p>
       </aside>
@@ -185,14 +184,12 @@ export function CommunityPage() {
     <CommunityMemberCard onPosted={()=>setRevision(value=>value+1)}/>
     <CommunityForums/>
 
-    <SpatialSurfaceV136 className="p136-community-navigation">
     <nav className="ch7-portals" aria-label="Community destinations">
       <Link to="/discover"><Icon name="explore" size={19}/><span><strong>DISCOVER</strong><small>Explore new creations</small></span><Icon name="arrow" size={15}/></Link>
       <Link to="/boards"><Icon name="library" size={19}/><span><strong>THE BOARDS</strong><small>Releases & first looks</small></span><Icon name="arrow" size={15}/></Link>
       <Link to="/member?tab=wall"><Icon name="create" size={19}/><span><strong>YOUR WALL</strong><small>Write, share & make it yours</small></span><Icon name="arrow" size={15}/></Link>
       <Link to="/levels"><Icon name="star" size={19}/><span><strong>RECOGNITION</strong><small>Progress earned fairly</small></span><Icon name="arrow" size={15}/></Link>
     </nav>
-    </SpatialSurfaceV136>
 
     <header className="ch7-section-header"><div><span className="ch7-kicker">ANEVUM / OPEN PUBLIC INDEX</span><h2>Inside the <em>community.</em></h2></div>
       <p>Public member worlds, approved projects and moderated discussions. Meet someone new or share a signal from your wall.</p>
