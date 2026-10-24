@@ -833,7 +833,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
           </Link>
           <div className="ir111-status-link">
             <span>PLATFORM UPDATES</span>
-            <p>Live availability is tracked separately from published patch notes and earned personal recognition.</p>
+            <p>Published system availability is tracked separately from release notes and earned personal recognition.</p>
             <Link to="/status" onClick={()=>setPanelOpen(false)}>VIEW LIVE STATUS <Icon name="arrow" size={15}/></Link>
           </div>
           <button type="button" className="ir87-back-help" onClick={()=>{setActiveView("help");setMood("curious")}}>Back to guidance</button>
