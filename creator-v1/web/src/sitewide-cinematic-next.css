@@ -536,6 +536,16 @@
 .av9-shell.av-next-site-shell .ch7-hub.av-next-commons :is(a,button,input,select):focus-visible{
   outline:3px solid #b1f0fc;outline-offset:3px;
 }
+/* Community navigation is editorial, not a grid of categories or icons. */
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-portals.ch7-portals-plain>a{min-height:72px;padding:15px 18px;display:flex;align-items:center;box-shadow:none}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-portals.ch7-portals-plain>a>span{display:flex;flex-direction:column;gap:5px}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-portals.ch7-portals-plain strong{font-size:15px;letter-spacing:0;text-transform:none;color:#f2f3f0}
+.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-portals.ch7-portals-plain small{font-size:12px;line-height:1.4}
+.av9-shell.av-next-site-shell .ch7-sidebar-editorial .ch7-featured-people>a{padding:12px 4px;border-radius:0;border:0;border-bottom:1px solid #7696a43b}
+.av9-shell.av-next-site-shell .ch7-sidebar-editorial .ch7-featured-people>a>span:first-child{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.av9-shell.av-next-site-shell .ch7-sidebar-editorial .ch7-panel-link{background:transparent;box-shadow:none;border:0;border-top:1px solid #7696a45e;border-radius:0;padding:15px 0;margin-top:12px;min-height:44px;text-transform:none;font-size:12px}
+.av9-shell.av-next-site-shell .ch7-sidebar-editorial .ch7-panel-link:hover{text-decoration:underline}
+@media(max-width:650px){.av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-portals.ch7-portals-plain>a{min-height:75px;padding:12px}}
 /* Existing verified member worlds; the member's own banner and appearance
  * still win, and a private or unavailable profile is never synthesized. */
 .av9-shell.av-next-site-shell .ms-public.av-next-member-world,
