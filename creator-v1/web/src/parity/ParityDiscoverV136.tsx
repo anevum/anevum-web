@@ -30,6 +30,7 @@ export type ParityDiscoverProps={
   draft:string;
   onDraft:(next:string)=>void;
   onSearch:(event:FormEvent)=>void;
+  onSearchValue:(submitted:string)=>void;
   onCategory:(next:string)=>void;
   onToggleFree:()=>void;
   view:Layout;
@@ -86,7 +87,7 @@ function focusNearestWorld(event:KeyboardEvent<HTMLButtonElement>){
 
 export function ParityDiscoverV136(props:ParityDiscoverProps){
   const {
-    channels,category,activeLabel,query,cursor,freeOnly,draft,onDraft,onSearch,
+    channels,category,activeLabel,query,cursor,freeOnly,draft,onDraft,onSearch,onSearchValue,
     onCategory,onToggleFree,view,onView,resourceState,packageState,packagesInScope,
     packagesCount,packageProjects,legacyProjects,shown,resultsReady,emptyVerified,
     current,params,nextCursor
@@ -123,12 +124,26 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
           <div><span className="p136-discover-kicker">THE PUBLIC INDEX / 001</span><h2>Find your next discovery.</h2></div>
           <Link to="/guide" className="p136-discover-helper">How publishing works <Icon name="arrow" size={16}/></Link>
         </div>
-        <form role="search" onSubmit={onSearch} className="p136-discover-search-form">
+        <form role="search" action="/discover" method="get" onSubmit={onSearch} className="p136-discover-search-form">
           <label htmlFor="p136-project-query" className="visually-hidden">Search published projects</label>
           <Icon name="search" size={22}/>
-          <input id="p136-project-query" type="search" maxLength={100} value={draft}
-            onChange={event=>onDraft(event.target.value)} placeholder="Search games, software, art, research..." />
-          <button type="submit">Search index <Icon name="arrow" size={17}/></button>
+          <input id="p136-project-query" name="q" type="search" maxLength={100} value={draft}
+            onChange={event=>onDraft(event.target.value)}
+            onKeyDown={event=>{
+              // Commit before the browser can perform a document-navigation GET
+              // if the ViewTransition tree has an interrupted submit boundary.
+              if(event.key==='Enter'&&!event.nativeEvent.isComposing){
+                event.preventDefault();onSearchValue(event.currentTarget.value);
+              }
+            }}
+            placeholder="Search games, software, art, research..." />
+          {category&&<input type="hidden" name="category" value={category}/>}
+          {freeOnly&&<input type="hidden" name="free" value="1"/>}
+          <button type="submit" onClick={event=>{
+            event.preventDefault();
+            const field=event.currentTarget.form?.elements.namedItem("q") as HTMLInputElement|null;
+            onSearchValue(field?.value??draft);
+          }}>Search index <Icon name="arrow" size={17}/></button>
         </form>
         <div className="p136-discover-command-bottom">
           <div className="p136-discover-availability" role="group" aria-label="Filter by creator-declared free access">
