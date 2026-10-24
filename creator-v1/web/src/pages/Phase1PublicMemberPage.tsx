@@ -9,6 +9,7 @@ import {CompactMemberIdentity} from '../components/CompactMemberIdentity';
 import {SpaceProgress} from '../components/MemberSpaceDashboard';
 import {CreatorPackageGallery} from '../components/CreatorPackageGallery';
 import {EarnedRewardVault} from '../components/EarnedRewardVault';
+import {ProjectMarksPublicPanel} from '../components/ProjectMarksV115';
 import {safePlayerAura,safeVerifiedRole} from '../lib/player-recognition';
 
 
@@ -62,5 +63,6 @@ function PublicMemberWorld({memberHandle}:{memberHandle:string}){
  badges={space.earnedBadges?.map(item=>item.id)??space.featuredAwards}
  distinctions={space.distinctions}
  title={profile.displayName+' · Earned discoveries'}/>
+ {import.meta.env.VITE_PROJECT_MARK_BRIDGE_V115==='true'&&<ProjectMarksPublicPanel handle={profile.handle}/>}
  <Link className="ms-public-back" to="/discover">EXPLORE OTHER WORLDS ↗</Link></section>;
 }
