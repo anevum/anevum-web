@@ -333,6 +333,9 @@ try{
  await pause(150);
  const mobileSplit=await evaluate('(()=>{const d=document.querySelector(".csf-editor-decks"),panes=[...d.querySelectorAll(".csf-editor-mount:not([hidden])")].map(e=>e.getBoundingClientRect()),root=document.querySelector(".csw-root");return {panes:panes.map(r=>({top:r.top,bottom:r.bottom,width:r.width})),overflow:root.scrollWidth>root.clientWidth+2}})()');
  assert.equal(mobileSplit.overflow,false,'Mobile split avoids horizontal overflow');
+ const mobileViewControl=await evaluate('(()=>{const e=document.querySelector(".csf-view-toolbar .csf-split-toggle"),r=e.getBoundingClientRect();return {left:r.left,right:r.right,visible:getComputedStyle(e).display!=="none"}})()');
+ assert.ok(mobileViewControl.visible&&mobileViewControl.left>=-1&&mobileViewControl.right<=391,
+  'Mobile Single view toggle stays visible without horizontal scrolling '+JSON.stringify(mobileViewControl));
  assert.equal(mobileSplit.panes.length,2);
  assert.ok(mobileSplit.panes[1].top>=mobileSplit.panes[0].bottom-1,'Mobile private panes stack vertically');
  await snap('mobile-v121-private-stacked-split');
