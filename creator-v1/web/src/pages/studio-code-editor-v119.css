@@ -1,0 +1,167 @@
+/* ANEVUM Creator Studio V119 / Source IDE.
+ * A real textarea retains browser edit/selection/accessibility behavior;
+ * syntax tokens are a completely inert, aria-hidden, painted overlay.
+ */
+.csi-editor{
+ --csi-size:14px;--csi-lineheight:23.1px;--csi-gutter-width:49px;--csi-indent:2;
+ display:flex;flex-direction:column;min-width:0;width:100%;min-height:420px;
+ overflow:hidden;border:1px solid #426b87;border-radius:9px;
+ background:#071522;color:#e1ecf9;
+ font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace
+}
+.csi-editor *{box-sizing:border-box}
+.csi-toolbar{flex:none;display:flex;align-items:center;gap:9px;justify-content:space-between;
+ background:linear-gradient(110deg,#163048,#0e263b);border-bottom:1px solid #446985;
+ padding:6px 9px;min-height:44px}
+.csi-file-title{display:flex;align-items:center;gap:9px;min-width:0}
+.csi-file-title>strong{font-size:12px;color:#edf9ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.csi-language{color:#9bbbd1;background:#11273a;border:1px solid #385a70;padding:4px 5px;
+ border-radius:4px;font:650 9px/1.2 ui-monospace,monospace;letter-spacing:.07em;flex:none}
+.csi-toolbar-actions{display:flex;gap:3px;flex:none}
+.csi-toolbar-actions button{background:transparent;border:1px solid transparent;
+ border-radius:6px;color:#cce5f4;width:35px;min-height:35px;display:grid;place-items:center}
+.csi-toolbar-actions button:hover,.csi-toolbar-actions button[aria-expanded=true]{
+ background:#2c5571;border-color:#557b95;color:#e7faff
+}
+.csi-toolbar-actions button:disabled{opacity:.4;cursor:not-allowed}
+.csi-file-icon{display:inline-flex;align-items:center;justify-content:center;
+ position:relative;flex:none;color:#9fc1d8}
+.csi-file-icon svg{display:block}
+.csi-file-icon .csi-file-icon-code{position:absolute;right:-3px;bottom:-4px;
+ font:800 7px/1 ui-monospace,monospace;letter-spacing:-.02em;
+ padding:1px;color:var(--csi-file-color,#b8d4e2);background:#173248;border-radius:2px}
+.csi-file-icon.is-folder{color:#ecc686}
+.csi-file-icon.is-world,.csi-file-icon.is-asset{color:#8cdbf5}
+.csi-file-icon.is-typescript{color:#76c5ff;--csi-file-color:#a8ddff}
+.csi-file-icon.is-javascript{color:#eccc73;--csi-file-color:#f9e2a6}
+.csi-file-icon.is-css{color:#bfabfd;--csi-file-color:#d8cbff}
+.csi-file-icon.is-html{color:#f3a781;--csi-file-color:#ffcba9}
+.csi-file-icon.is-json,.csi-file-icon.is-config{color:#8de3dc;--csi-file-color:#b6faf0}
+.csi-file-icon.is-markdown{color:#b9d6ff;--csi-file-color:#e1ebff}
+.csi-file-icon.is-interface{color:#d3afff;--csi-file-color:#e4cfff}
+.csi-file-icon.is-playtest{color:#9de5c3;--csi-file-color:#cafbe2}
+.csi-file-icon.is-audio{color:#f2aecb;--csi-file-color:#ffcfe0}
+.csi-file-icon.is-document{color:#b2c9d9}
+.csi-find-bar{flex:none;display:grid;gap:6px;background:#10293f;
+ padding:8px 10px;border-bottom:1px solid #43677f}
+.csi-find-controls,.csi-replace-controls{display:flex;align-items:center;gap:5px;min-width:0}
+.csi-find-controls>label,.csi-replace-controls>label{display:flex;gap:7px;align-items:center;flex:1;min-width:70px;
+ min-height:38px;padding:0 8px;background:#091c30;border:1px solid #507793;
+ border-radius:5px;color:#a7cade}
+.csi-find-controls>label:focus-within,.csi-replace-controls>label:focus-within{border-color:#9ae1fb}
+.csi-find-controls input,.csi-replace-controls input{
+ background:transparent;color:#ebf7ff;border:0;outline:0;min-width:0;width:100%;
+ font:400 12px/1.3 ui-monospace,monospace}
+.csi-match-count{font:10px/1.3 ui-monospace,monospace;color:#c0d3de;min-width:46px;text-align:center}
+.csi-find-controls>button,.csi-replace-controls>button{
+ min-height:35px;padding:5px 8px;color:#cfe6f1;background:#1b3b55;border:1px solid #4b728e;
+ border-radius:5px;font-size:11px;flex:none
+}
+.csi-find-controls>button[aria-pressed=true]{background:#3c6079;border-color:#9cdff7;color:white}
+.csi-find-controls>button:hover,.csi-replace-controls>button:hover:not(:disabled){background:#2c5673}
+.csi-replace-controls>button:disabled{opacity:.45;cursor:not-allowed}
+.csi-settings{flex:none;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+ padding:10px 12px;background:#172d44;border-bottom:1px solid #496f8b}
+.csi-settings>label{display:flex;align-items:center;gap:6px;color:#c9dbe8;font-size:11px}
+.csi-settings select{background:#0d263d;color:#e3f8ff;border:1px solid #608aa5;border-radius:5px;
+ padding:6px;min-height:34px;font-size:11px}
+.csi-settings .csi-check input{accent-color:#86d8f5;width:17px;height:17px}
+.csi-settings>small{color:#9bbfd1;font-size:10px;line-height:1.4}
+.csi-surface{position:relative;display:flex;flex:1;min-width:0;min-height:300px;
+ height:360px;max-height:720px;background:#071420}
+.csi-gutter{position:relative;flex:0 0 var(--csi-gutter-width);width:var(--csi-gutter-width);
+ overflow:hidden;background:#0a1a2a;border-right:1px solid #294760;user-select:none}
+.csi-line-track{padding:15px 6px 60px 3px;font:var(--csi-size)/var(--csi-lineheight) ui-monospace,SFMono-Regular,Consolas,monospace;text-align:right;
+ white-space:pre;font-variant-numeric:tabular-nums}
+.csi-gutter-line{height:var(--csi-lineheight);color:#829cb1}
+.csi-gutter-line.is-active{background:#183a52;color:#bceafe}
+.csi-code-viewport{flex:1;min-width:0;position:relative;overflow:hidden;background:#081827}
+.csi-highlight-clip{position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none}
+.csi-highlight{position:absolute;top:0;left:0;min-height:100%;min-width:100%;width:max-content;max-width:none;
+ margin:0;padding:15px 18px 60px;white-space:pre;color:#d8e6f0;
+ background:transparent;border:0;tab-size:var(--csi-indent);
+ font:var(--csi-size)/var(--csi-lineheight) ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;
+ letter-spacing:0;overflow:visible}
+.csi-highlight code{font:inherit;white-space:inherit;letter-spacing:inherit}
+.csi-highlight .csi-source-line{display:contents}
+.csi-token-comment{color:#719b89;font-style:italic}
+.csi-token-keyword{color:#c7a6f0}
+.csi-token-literal{color:#f0b888}
+.csi-token-type{color:#78cad6}
+.csi-token-number{color:#e5b87b}
+.csi-token-string{color:#b6d999}
+.csi-token-operator{color:#96cfe4}
+.csi-token-punct{color:#a8bfd3}
+.csi-token-function{color:#e6d396}
+.csi-token-property{color:#84c9e6}
+.csi-token-selector{color:#f0d08f}
+.csi-token-tag{color:#e49ead}
+.csi-token-heading{color:#b5ddff;font-weight:750}
+.csi-token-attribute{color:#b8d48d}
+.csi-code-viewport .csi-input,
+.csn-code-content .csi-editor .csi-input,
+.csf-editor .csi-editor .csi-input{
+ position:absolute!important;inset:0!important;z-index:2;
+ display:block!important;width:100%!important;height:100%!important;max-width:none!important;
+ min-height:0!important;margin:0!important;border:0!important;border-radius:0!important;
+ padding:15px 18px 60px!important;
+ background:transparent!important;box-shadow:none!important;outline-offset:-2px!important;
+ color:transparent!important;-webkit-text-fill-color:transparent!important;caret-color:#ecfaff!important;
+ font:var(--csi-size)/var(--csi-lineheight) ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace!important;
+ letter-spacing:0!important;white-space:pre!important;overflow:auto!important;
+ resize:none!important;tab-size:var(--csi-indent);
+}
+.csi-code-viewport .csi-input::selection{background:rgba(78,148,200,.5)}
+.csi-code-viewport .csi-input:focus-visible{outline:2px solid #69a8c4!important}
+.csi-editor.is-wrapped .csi-highlight{white-space:pre-wrap;overflow-wrap:anywhere;width:100%}
+.csi-editor.is-wrapped .csi-input{white-space:pre-wrap!important;overflow-wrap:anywhere}
+.csi-editor.is-plain .csi-highlight-clip{display:none}
+.csi-editor.is-plain .csi-input{color:#e0edfa!important;-webkit-text-fill-color:#e0edfa!important}
+.csi-status{flex:none;display:flex;align-items:center;gap:11px;flex-wrap:wrap;
+ min-height:31px;padding:6px 11px;color:#bcd8e8;background:#12304a;
+ border-top:1px solid #52728a;font:10px/1.4 ui-monospace,monospace}
+.csi-status>span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.csi-status>span:last-child{margin-left:auto;color:#a0dfe6}
+.csi-notice{color:#dbeccf;background:#263c3b;border-top:1px solid #4b8d83;
+ padding:7px 11px;margin:0;font-size:11px;line-height:1.5}
+.csi-safety{background:#0c2134;color:#96afc0;border-top:1px solid #26465e;
+ margin:0;padding:7px 11px;font:10px/1.5 ui-monospace,monospace}
+.csn-code-content{display:block;min-width:0;min-height:440px}
+.csn-code-content .csi-editor{min-height:440px;border:0;border-radius:0}
+.csn-code-content .csi-surface{min-height:310px;height:360px}
+.csf-editor .csi-editor{min-height:420px;flex:1}
+.csf-editor .csi-editor .csi-surface{min-height:310px;height:340px}
+.csf-root .csf-tab{gap:3px}
+.csf-root .csf-tab .csi-file-icon{margin-left:8px}
+.csf-root .csf-tab>button:first-of-type{min-width:0;padding-left:5px}
+.csf-root .csf-tree-row .csi-file-icon{flex:none}
+.csf-root .csf-tree-row .csi-file-icon .csi-file-icon-code{right:-4px}
+@media(max-width:680px){
+ .csi-toolbar{padding:5px 8px;min-height:43px}
+ .csi-file-title>strong{font-size:11px}
+ .csi-language{font-size:8px}
+ .csi-status{gap:5px 10px}
+ .csi-status>span:last-child{margin-left:0}
+ .csi-find-controls,.csi-replace-controls{flex-wrap:wrap}
+ .csi-match-count{min-width:42px}
+ .csi-gutter{flex-basis:42px;width:42px}
+ .csi-highlight,.csi-code-viewport .csi-input,
+ .csn-code-content .csi-editor .csi-input,.csf-editor .csi-editor .csi-input{padding-inline:10px!important}
+ .csi-surface{min-height:280px;height:315px}
+ .csi-editor{min-height:390px}
+}
+@media(max-width:390px){
+ .csi-status>span:nth-child(3){display:none}
+ .csi-status>span:nth-child(5){display:none}
+ .csi-settings{gap:8px}
+ .csi-settings>small{width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+ .csi-editor *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+@media(forced-colors:active){
+ .csi-highlight-clip{display:none}
+ .csi-code-viewport .csi-input{color:CanvasText!important;-webkit-text-fill-color:CanvasText!important}
+ .csi-toolbar-actions button,.csi-find-controls>button{border-color:ButtonText}
+ .csi-file-icon{color:CanvasText}
+}
