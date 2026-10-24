@@ -358,14 +358,14 @@ try{
  await evaluate('(()=>{const s=document.querySelector(".cui-create select");s.value="input";s.dispatchEvent(new Event("change",{bubbles:true}));return s.value;})()');
  await click('.cui-create button');
  await until(()=>evaluate('document.querySelectorAll(".cui-item-row").length===8'),'New input added locally');
- await click('.cui-item-row:last-child');
- const newComponentId=await evaluate('document.querySelector(".cui-item-row:last-child")?.dataset.componentId');
+ await click('.cui-item-row:last-of-type');
+ const newComponentId=await evaluate('document.querySelector(".cui-item-row:last-of-type")?.dataset.componentId');
  assert.ok(newComponentId,'Editor uses stable canonical component IDs');
  assert.equal(await setValue('.cui-fields input',''),'','Remove label from synthetic input');
  await until(()=>evaluate('document.querySelector(".csf-editor h3")?.textContent.includes("Unsaved")'),'Input defect is unsaved');
  await click('.cpd-button');
  await until(()=>evaluate('document.querySelector(".cpd-findings")?.textContent.includes("Input needs a visible label")'),'Doctor detects unlabeled input');
- await click('.cui-page-row:last-child');
+ await evaluate('(()=>{const pages=[...document.querySelectorAll(".cui-page-row")];pages.at(-1).click();return true;})()');
  await click('.cpd-jump');
  await until(()=>evaluate('document.activeElement?.dataset?.componentId==='+JSON.stringify(newComponentId)),'Jump into affected page and focus input');
  // Clipboard is replaced only inside this disposable synthetic browser fixture.
