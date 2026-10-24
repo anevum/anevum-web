@@ -84,19 +84,32 @@ try{
         headings:document.querySelectorAll('h1').length,
         worlds:document.querySelectorAll('.p136-discover-world').length,
         siteIren:document.querySelectorAll('.ir80-dock').length,
-        font:getComputedStyle(document.querySelector('.p136-discover-hero h1')).fontFamily
+        font:getComputedStyle(document.querySelector('.p136-discover-hero h1')).fontFamily,
+        railScroll:getComputedStyle(document.querySelector('.p136-discover-featured')).overflowX,
+        scrollSnap:getComputedStyle(document.querySelector('.p136-discover-featured')).scrollSnapType
       }
     });
     assert.ok(layout.scroll<=width+1,'Horizontal overflow: '+JSON.stringify(layout));
     assert.equal(layout.headings,1,'A single page heading');
     assert.equal(layout.worlds,4,'Four real filter gateways');
     assert.equal(layout.siteIren,1,'Single shared IREN');
+    if(width<=600){
+      assert.equal(layout.railScroll,'auto','Mobile console rail is swipeable without page overflow');
+      assert.ok(layout.scrollSnap.includes('mandatory'),'Mobile rail snaps between scene gateways');
+    }
     assert.ok(!/Georgia|Cambria/.test(layout.font),'Sans-serif PARITY title');
     for(const box of [layout.cta,layout.search]){
       assert.ok(box&&box.left>=-1&&box.right<=width+1,'Controls remain in viewport: '+JSON.stringify(layout))
     }
     assert.ok(layout.cta.height>=44,'Mobile-safe primary control');
     assert.equal(await page.locator('.p136-discover-results article').count(),2,'Only approved fixture projects');
+    if(width===390){
+      const firstWorld=page.locator('.p136-discover-world').first();
+      const secondWorld=page.locator('.p136-discover-world').nth(1);
+      await firstWorld.focus();await firstWorld.press('ArrowRight');
+      assert.equal(await secondWorld.evaluate(element=>element===document.activeElement),true,'Console navigation moves focus to next scene');
+      await page.getByRole('link',{name:'Open Creator Studio'}).focus();
+    }
     await page.screenshot({path:join(out,'discover-'+width+'.png'),fullPage:true,animations:'disabled'});
     record('responsive live catalogue '+width,layout);
     await context.close();
