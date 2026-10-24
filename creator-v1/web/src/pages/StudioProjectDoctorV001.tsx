@@ -1,6 +1,6 @@
-import {useMemo,useState} from 'react';
+import {useEffect,useMemo,useState} from 'react';
 import {diagnoseStudioSource} from '../../../agent-quality-lab/project-doctor-v001.mjs';
-import {projectDoctorBrief} from '../../../agent-quality-lab/project-doctor-brief-v001.mjs';
+import {projectDoctorBrief,formatProjectDoctorBriefText} from '../../../agent-quality-lab/project-doctor-brief-v001.mjs';
 import {compareProjectDoctorSources} from '../../../agent-quality-lab/project-doctor-diff-v001.mjs';
 import {locateProjectDoctorFinding} from '../../../agent-quality-lab/project-doctor-location-v001.mjs';
 import type {ProjectDoctorTarget} from '../../../agent-quality-lab/project-doctor-location-v001.mjs';
@@ -15,12 +15,23 @@ export function StudioProjectDoctorV001({source,savedSource,revision,dirty,onNav
 }){
  const [opened,setOpened]=useState(false);
  const [filter,setFilter]=useState<'all'|'warning'|'info'>('all');
+ const [copyStatus,setCopyStatus]=useState('');
+ useEffect(()=>{setCopyStatus('');},[source]);
  const result=useMemo(()=>opened?diagnoseStudioSource(source):null,[opened,source]);
  const findings=result?.findings??[];
  const warnings=findings.filter(item=>item.severity!=='info').length;
  const informational=findings.length-warnings;
  const visibleFindings=filter==='all'?findings:findings.filter(item=>filter==='info'?item.severity==='info':item.severity!=='info');
  const brief=useMemo(()=>result?projectDoctorBrief(result):null,[result]);
+ async function copyBrief(){
+  if(!result)return;
+  try{
+   if(!navigator.clipboard?.writeText)throw Error('Clipboard unavailable');
+   // Only the curated, bounded brief is copied, never raw source.
+   await navigator.clipboard.writeText(formatProjectDoctorBriefText(result));
+   setCopyStatus('Source-free summary copied. Paste it only where you choose.');
+  }catch{setCopyStatus('Clipboard unavailable. No information was sent.');}
+ }
  const comparison=useMemo(()=>opened&&dirty&&source!==savedSource?
   compareProjectDoctorSources(savedSource,source):null,[opened,dirty,savedSource,source]);
  return <section className="cpd-root" aria-label="Local Project Doctor" data-studio-project-doctor="v001">
@@ -39,6 +50,12 @@ export function StudioProjectDoctorV001({source,savedSource,revision,dirty,onNav
      {brief?.headline}
     </span>
     <span>{dirty?'Unsaved local changes':'Based on saved revision '+revision}</span>
+   </div>
+   <div className="cpd-handoff">
+    <button type="button" className="cpd-copy" onClick={()=>void copyBrief()}>
+     Copy source-free diagnostic brief
+    </button>
+    {copyStatus&&<p role="status" aria-live="polite">{copyStatus}</p>}
    </div>
    {!result.valid?<p className="cpd-invalid" role="status">This document is not a valid supported scene or interface source. The original source was not changed.</p>:
     findings.length===0?<p className="cpd-clear" role="status">No issues detected by this limited inspection. This is not a complete accessibility, logic or security test.</p>:
