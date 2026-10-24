@@ -135,6 +135,21 @@ try{
       assert.equal(result.enabled,'v134');
       assert.match(result.headerBackground,/gradient/,'Header renders real visual layer');
       noOverflow(result,width,'sitewide '+name+' '+width);
+      if(name==='community'){
+        const actual=await page.locator('.ch7-hero h1 em').evaluate(el=>({
+          style:getComputedStyle(el).fontStyle,
+          family:getComputedStyle(el).fontFamily
+        }));
+        assert.equal(actual.style,'normal','Community headline no longer switches to italics');
+        assert.match(actual.family,/Inter|sans-serif/,'Community headline uses coherent interface type');
+        record('Community type parity '+width,actual);
+      }
+      if(name==='discover'){
+        await page.locator('.state-error h2').waitFor();
+        const family=await page.locator('.state-error h2').evaluate(el=>getComputedStyle(el).fontFamily);
+        assert.match(family,/Inter|sans-serif/,'Discover error state no longer uses legacy serif');
+        record('Discover error typography '+width,{family});
+      }
       const filename='route-'+name+'-'+width+'.png';
       await page.screenshot({path:join(output,filename),fullPage:false,animations:'disabled'});
       captures.push(filename);
