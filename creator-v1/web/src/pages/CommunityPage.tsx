@@ -9,6 +9,7 @@ import { useResource } from "../lib/useResource";
 import { projectDetailPath } from "../lib/navigation";
 import { CosmicArtwork } from "../components/CosmicArtwork";
 import { Icon } from "../components/Icons";
+import {SpatialSurfaceV136} from "../parity/SpatialSurfaceV136";
 import { LoadingState, ErrorState } from "../components/States";
 import "./community-hub-v007.css";
 import {CommunityMemberCard,PublicMemberDirectory,PublicMemberActivity} from "../components/MemberCommunity";
@@ -184,12 +185,14 @@ export function CommunityPage() {
     <CommunityMemberCard onPosted={()=>setRevision(value=>value+1)}/>
     <CommunityForums/>
 
-    <nav className="ch7-portals p136-spatial-surface" aria-label="Community destinations" data-spatial-surface="v136.008">
+    <SpatialSurfaceV136 className="p136-community-navigation">
+    <nav className="ch7-portals" aria-label="Community destinations">
       <Link to="/discover"><Icon name="explore" size={19}/><span><strong>DISCOVER</strong><small>Explore new creations</small></span><Icon name="arrow" size={15}/></Link>
       <Link to="/boards"><Icon name="library" size={19}/><span><strong>THE BOARDS</strong><small>Releases & first looks</small></span><Icon name="arrow" size={15}/></Link>
       <Link to="/member?tab=wall"><Icon name="create" size={19}/><span><strong>YOUR WALL</strong><small>Write, share & make it yours</small></span><Icon name="arrow" size={15}/></Link>
       <Link to="/levels"><Icon name="star" size={19}/><span><strong>RECOGNITION</strong><small>Progress earned fairly</small></span><Icon name="arrow" size={15}/></Link>
     </nav>
+    </SpatialSurfaceV136>
 
     <header className="ch7-section-header"><div><span className="ch7-kicker">ANEVUM / OPEN PUBLIC INDEX</span><h2>Inside the <em>community.</em></h2></div>
       <p>Public member worlds, approved projects and moderated discussions. Meet someone new or share a signal from your wall.</p>
