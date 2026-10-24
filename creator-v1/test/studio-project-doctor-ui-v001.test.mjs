@@ -29,6 +29,8 @@ test('UI and styles retain explicit mobile and reduced-motion coverage',()=>{
  assert.match(ui,/role="status"/);
  assert.match(ui,/data-studio-project-doctor="v001"/);
  assert.match(ui,/item\.nextStep/);
+ assert.match(ui,/projectDoctorBrief\(result\)/);
+ assert.match(ui,/brief\?\.headline/);
  assert.match(ui,/Suggested next step:/);
  assert.match(css,/\.cpd-next-step/);
  assert.match(css,/@media\(max-width:570px\)/);
