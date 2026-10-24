@@ -49,9 +49,9 @@ if(V115_BROWSER_REVIEW){
  db.prepare('INSERT INTO member_mark_links(id,project_id,member_id,created_at) VALUES(?,?,?,?)')
   .run(link,V114_PROJECT,V114_OWNER.id,100);
  db.prepare('INSERT INTO member_mark_events(id,project_id,link_id,member_id,definition_id,client_event_id,evidence_digest,created_at) VALUES(?,?,?,?,?,?,?,?)')
-  .run(event,V114_PROJECT,link,V114_OWNER.id,definition,'dddddddd-dddd-4ddd-8ddd-dddddddddddd','f'.repeat(64),100);
+  .run(event,V114_PROJECT,link,V114_OWNER.id,definition,'dddddddd-dddd-4ddd-8ddd-dddddddddddd','f'.repeat(64),1792800000);
  db.prepare('INSERT INTO member_mark_grants(member_id,project_id,stable_key,definition_id,source_event_id,earned_at) VALUES(?,?,?,?,?,?)')
-  .run(V114_OWNER.id,V114_PROJECT,'hidden_observatory',definition,event,100);
+  .run(V114_OWNER.id,V114_PROJECT,'hidden_observatory',definition,event,1792800000);
  db.prepare("INSERT INTO member_mark_preferences(member_id,mode,pinned_json) VALUES(?,'curated',?)")
   .run(V114_OWNER.id,JSON.stringify([definition]));
  v114Env.CANONICAL_PROJECT_MARK_BRIDGE_V115='true';
