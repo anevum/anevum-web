@@ -288,3 +288,60 @@
  .csn-file-node.is-current,.csn-workspace-tabs button[aria-current],.csn-mode-rail button.is-current,
  .csn-inspector-tabs button[aria-pressed=true]{outline:2px solid Highlight}
 }
+
+
+/* V116.1 screenshot refinements — match the reference's readable hierarchy
+ * while leaving room for a real viewport and discoverable asset thumbnails. */
+@media(min-width:1041px){
+ .cvw-root .cvs-head{min-height:61px;padding-block:9px}
+ .cvw-root .cvs-projectbar{min-height:55px;padding-block:5px}
+ .cvw-root .csn-workspace-tabs{min-height:40px}
+ .cvw-root .csn-workspace-tabs button{min-height:40px;padding-block:7px}
+ .cvw-root .cvs-mode-header{min-height:44px;padding-block:5px}
+ .cvw-root .cvw-toolbar{min-height:41px;padding-block:4px}
+ .cvw-root .cvw-stage{height:clamp(290px,36vh,505px);min-height:290px}
+ .cvw-root .csn-file-list{max-height:196px}
+ .cvw-root .cvw-tree{max-height:170px}
+ .cvw-root .cvw-explorer{max-height:calc(100vh - 145px)}
+}
+.csn-file-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(min-width:681px){
+ .cvw-root .csn-site-nav{gap:1px}
+ .cvw-root .csn-site-nav a{padding-inline:7px}
+}
+@media(max-width:680px){
+ /* The page already supplies the global ANEVUM navigation header.
+  * Remove repeated ceremony to bring real authoring above the fold. */
+ .cvw-root .cvs-review-banner{display:none}
+ .cvw-root .cvs-head{min-height:39px;padding:5px 10px}
+ .cvw-root .cvs-head .cvs-mark{display:none}
+ .cvw-root .cvs-head .cvs-head-brand h1{font-size:12px;letter-spacing:.045em;line-height:1.2;white-space:nowrap}
+ .cvw-root .cvs-head .cvs-head-brand h1 b{display:inline;font-size:12px;letter-spacing:0}
+ .cvw-root .cvs-head .cvs-head-brand{min-width:0;flex:1}
+ .cvw-root .cvs-head .cvs-head-links .cvs-link{min-height:33px;max-width:none;padding:6px 9px;font-size:10px}
+ .cvw-root .cvs-projectbar{display:flex;flex-wrap:nowrap;min-height:52px;padding:6px 8px;gap:5px}
+ .cvw-root .cvs-projectidentity{min-width:0;gap:5px;flex:1}
+ .cvw-root .cvs-projectidentity>div{min-width:0}
+ .cvw-root .cvs-projectidentity>div strong{font-size:12px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .cvw-root .cvs-projectidentity>div small{font-size:7px}
+ .cvw-root .cvs-project-thumb{width:28px;height:28px}
+ .cvw-root .cvs-project-thumb svg{width:19px;height:19px}
+ .cvw-root .cvs-draft{display:none}
+ .cvw-root .cvs-project-actions{flex:none;width:auto;display:flex;gap:3px;flex-wrap:nowrap}
+ .cvw-root .cvs-project-actions .cvs-save-state{display:none}
+ .cvw-root .cvs-project-actions .cvs-action{font-size:9px;padding:5px 7px;min-height:36px}
+ .cvw-root .cvs-mode-header{display:none}
+ .cvw-root .csn-workspace-tabs{min-height:39px}
+ .cvw-root .csn-workspace-tabs button{min-height:39px;padding:8px 9px}
+ .cvw-root .cvw-toolbar{min-height:39px;padding:2px 5px}
+ .cvw-root .cvw-toolbar button{min-height:35px;padding:6px 8px;font-size:9px}
+ .cvw-root .cvw-stage{height:clamp(315px,80vw,450px)}
+ .cvw-root .csn-file-list{max-height:225px}
+ .cvw-root .cvw-explorer{max-height:100%}
+}
+@media(max-width:360px){
+ .cvw-root .cvs-projectbar{padding-inline:5px}
+ .cvw-root .cvs-projectactions{gap:2px}
+ .cvw-root .cvs-project-actions .cvs-action{padding-inline:5px;font-size:9px}
+ .cvw-root .cvs-projectidentity>div strong{font-size:11px}
+}
