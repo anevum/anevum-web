@@ -211,8 +211,14 @@ try{
  // Exercise native disclosure with an actual CDP Enter key, not a synthetic
  // click. Browser accessibility state must stay correct when opened.
  await evaluate("document.querySelector('.cf-detail .cf-author-dossier--detail summary').focus()");
- await client.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
- await client.send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
+ assert.equal(await evaluate("document.activeElement===document.querySelector('.cf-detail .cf-author-dossier--detail summary')"),
+  true,'Native details summary must receive actual keyboard focus');
+ // CDP requires text/unmodifiedText for a complete Enter keypress; omitting
+ // them generated a keyDown but not the activation keypress in Chromium.
+ await client.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',
+  text:'\\r',unmodifiedText:'\\r',windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
+ await client.send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',
+  windowsVirtualKeyCode:13,nativeVirtualKeyCode:13});
  // Native summary activation may settle after the CDP key-up response.
  // Require the actual DOM open state, never click as a keyboard fallback.
  await until(()=>evaluate("document.querySelector('.cf-detail .cf-author-dossier--detail details')?.open===true"),3000);
