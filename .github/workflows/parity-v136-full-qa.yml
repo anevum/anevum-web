@@ -1,0 +1,47 @@
+name: PARITY V136 Full Visual Foundation QA
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/parity-v136-full-qa.yml'
+      - 'creator-v1/web/src/parity/**'
+      - 'creator-v1/web/src/components/Shell.tsx'
+      - 'creator-v1/web/src/pages/CinematicLandingPage.tsx'
+      - 'creator-v1/web/src/main.tsx'
+      - 'creator-v1/test/parity-v136-full.test.mjs'
+permissions:
+  contents: read
+jobs:
+  compile-and-contract:
+    if: github.repository == 'anevum/anevum-web' && github.event.pull_request.head.repo.full_name == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      CLOUDFLARE_API_TOKEN: ''
+      CLOUDFLARE_API_KEY: ''
+      CLOUDFLARE_ACCOUNT_ID: ''
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: node --test creator-v1/test/parity-v136-full.test.mjs
+      - run: npm run check:creator-v1-web
+      - name: Full visual build (non deployed)
+        env:
+          VITE_PARITY_V136_FULL: 'true'
+        run: npm run build:creator-v1-web
+      - name: Verify independent full frontend bundle
+        run: |
+          node --input-type=module <<'JS'
+          import fs from 'node:fs'; import path from 'node:path';
+          function all(root){return fs.readdirSync(root,{withFileTypes:true}).flatMap(e=>e.isDirectory()?all(path.join(root,e.name)):[path.join(root,e.name)]);}
+          const files=all('creator-v1/dist/web').filter(x=>/\.(js|css)$/.test(x));
+          const bundle=files.map(p=>fs.readFileSync(p,'utf8')).join('\n');
+          for(const marker of ['p136-hero','p136-header','Independent worlds.'])if(!bundle.includes(marker))throw Error('Missing PARITY full '+marker);
+          JS
+# Read-only CI. No worker deployments, migrations, authenticated sessions, or payment access.
