@@ -24,6 +24,7 @@ const allowed=new Set([
  '.github/workflows/parity-v136-release.yml','creator-v1/ops/parity-v136-release.mjs',
  'creator-v1/test/parity-v136-discover-browser.mjs',
  'creator-v1/test/parity-v136-scene-director.test.mjs',
+ 'creator-v1/test/parity-v136-spatial-render-browser.mjs',
  'creator-v1/web/src/pages/DiscoverPage.tsx',
  'creator-v1/web/src/pages/CanonicalSavedWorksPage.tsx',
  'creator-v1/web/src/pages/canonical-saved-works.css',
