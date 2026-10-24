@@ -27,7 +27,8 @@ test('library UI remains private, server-gated, list-first, and read-only for or
  assert.match(page,/useState<"list"\|"grid">\("list"\)/);
  assert.match(page,/className="avsaved-grid"/);
  assert.match(page,/data-view={layout}/);
- assert.match(page,/browseSavedWorks\(items,category,query\)/);
+ assert.match(page,/browseSavedWorks\(items,safeCategory,query\)/);
+ assert.match(page,/categories\.some\(option=>option\.id===category\)/);
  assert.match(page,/aria-label="Saved category"/);
  assert.match(page,/Show all saved projects/);
  assert.match(page,/canonicalAuthClient\.useSession\(\)/);
