@@ -127,3 +127,15 @@ WebGPU opt-in, advanced post-processing, procedural terrain, animation/physics, 
 
 ## Definition of success
 Visual parity means a real, legible, beautiful application shell at 1440/390/320, with genuine active/hover/focus/disabled/empty/error interactions, no overflow or broken small-screen layout, original ANEVUM mark, true project data when authorized, and no major frame budget regression. Functional parity requires separately verified actual WebGL manipulation, versioned saves and published playtests, not simply imagery. Each phase must produce screenshot evidence, tests, exact code head and a written residual blocker before advancing.
+
+## V004 LOCKED native formats integration — 2026-10-23
+
+**Canonical decision:** [#689](https://github.com/anevum/anevum-web/issues/689). **Full source architecture:** [Native Pack V004 / Studio bridge ADR](creator-studio-native-pack-v004-integration-contract-20261023.md). This is an approved **design direction**, not an implemented feature or merge/deployment authorization.
+
+- V115 remains the **one** Creator Studio shell for game, music, animation, art, writing and future interactive worlds. Reuse V109 tabs, V111 revisioned private Explorer, V112 scene editor, V113 interface editor, the original OrbitalMark and one IREN slot.
+- Five portable native formats (`.anvg`, `.anva`, `.anvs`, `.anvw`, `.anvp`) become **versioned interchange and release artifacts**. The authoritative editable project source stays inside the owner-authorized Studio file tree; native packages are **not** an alternative autosave database.
+- Reconcile and reuse validated logic from native pack draft PRs [#486](https://github.com/anevum/anevum-web/pull/486), [#497](https://github.com/anevum/anevum-web/pull/497), [#508](https://github.com/anevum/anevum-web/pull/508), but **do not graft in** their older full-screen Native Pack Lab as a competing Studio interface.
+- The V001 `.anvg` contract provides branching scenes, not a finished 2D/3D engine; `.anvp` V001 contains Workbench blocks, not a whole V111 project archive. Format upgrades require explicit versioning and migration tests. Specialty audio/animation/game editors remain staged implementation work.
+- All new Studio bindings, imports, exports, previews and staff/release integrations are feature-default-OFF and must preserve protected D1/R2, independent approvals, revision conflicts, rights/moderation, rollback and actual mobile Safari acceptance. No code execution on the logged-in Studio origin.
+
+The existing V115 P0–P5 visual/GPU build sequence stays in force. Native Pack V004 is a **compatible integration lane** within that sequence, not a redesign or a separate creative product.
