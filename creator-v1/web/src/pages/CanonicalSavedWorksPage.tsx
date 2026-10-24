@@ -62,7 +62,7 @@ function SavedWorksCollection({memberId}:{memberId:string}){
   {initial.state==="loading"&&<p role="status" className="avsaved-message">Checking your saved projects…</p>}
   {initial.state==="error"&&<p role="alert" className="avsaved-message">Your private collection is temporarily unavailable. Your saved choices have not been changed.</p>}
   {initial.state==="ready"&&<>
-   <div className="avsaved-counter"><span className="kicker">YOUR SAVED WORK / PRIVATE</span><span>{items.length} LOADED{cursor?" · OLDER SAVES AVAILABLE":""}</span></div>
+   <div className="avsaved-counter"><span className="kicker">YOUR SAVED WORK / PRIVATE</span><span>{cursor?items.length+" SHOWN · MORE BELOW":items.length+" SAVED PROJECT"+(items.length===1?"":"S")}</span></div>
    {items.length>0&&<div className="avsaved-organizer" aria-label="Organize saved work">
     <div className="avsaved-organizer-intro"><div><h2>Find what you saved.</h2><p>Browse by category or search projects already loaded.</p></div>
      <div className="avsaved-layout" role="group" aria-label="Saved work display"><button type="button" aria-pressed={layout==="list"} onClick={()=>setLayout("list")}>List</button><button type="button" aria-pressed={layout==="grid"} onClick={()=>setLayout("grid")}>Gallery</button></div>
@@ -71,7 +71,7 @@ function SavedWorksCollection({memberId}:{memberId:string}){
      <label>Search saved work<input type="search" maxLength={100} value={query} onChange={e=>setQuery(e.target.value)} placeholder="Project name or creator"/></label>
      <label>Category<select aria-label="Saved category" value={safeCategory} onChange={e=>setCategory(e.target.value)}><option value="all">All saved ({items.length})</option>{categories.map(group=><option key={group.id} value={group.id}>{group.label} ({group.count})</option>)}</select></label>
     </div>
-    <p className="avsaved-filter-count" role="status">{displayed.length} of {items.length} loaded projects shown{cursor?". Load older saves to include more projects.":""}</p>
+    <p className="avsaved-filter-count" role="status">Showing {displayed.length} of {items.length} {cursor?"loaded ":""}saved projects{cursor?". More available below.":""}</p>
    </div>}
    {items.length>0?<div className="avsaved-grid">{displayed.map(item=><article className="avsaved-card" key={item.id}>
     <div className="avsaved-art" aria-hidden="true"><CosmicArtwork scene={item.category as Category}/></div>
@@ -82,7 +82,7 @@ function SavedWorksCollection({memberId}:{memberId:string}){
      <div className="avsaved-card-maker">BY <Link to={"/creators/"+encodeURIComponent(item.creatorHandle)}>@{item.creatorHandle}</Link></div>
      <div className="avsaved-card-actions">
       <Link className="avsaved-open" to={"/projects/"+encodeURIComponent(item.id)+"?from="+encodeURIComponent("/saved")}>OPEN PROJECT <span aria-hidden="true">↗</span></Link>
-      <button type="button" disabled={pending!==null||loadingMore} onClick={()=>void remove(item.id)}>{pending===item.id?"REMOVING…":"REMOVE"}</button>
+      <button type="button" disabled={pending!==null||loadingMore} onClick={()=>void remove(item.id)}>{pending===item.id?"UPDATING…":"UNSAVE"}</button>
      </div>
     </div>
    </article>)}</div>:<div className="avsaved-empty">
@@ -116,8 +116,8 @@ export function CanonicalSavedWorksPage(){
    <span className="kicker">ANEVUM / SAVED WORK</span>
    <h1>YOUR <em>LIBRARY.</em></h1>
    <p>Everything you saved, organized in one private place.</p>
-   <div className="avsaved-header-links"><Link to="/discover">EXPLORE CREATIONS <span aria-hidden="true">↗</span></Link>
-    {verified&&<Link to="/member">MY MEMBER SPACE <span aria-hidden="true">↗</span></Link>}</div>
+   <div className="avsaved-header-links"><Link to="/discover">FIND PROJECTS <span aria-hidden="true">↗</span></Link>
+    {verified&&<Link to="/member">MY SPACE <span aria-hidden="true">↗</span></Link>}</div>
   </header>
   {!active?<section className="avsaved-inactive" aria-label="Saved works availability">
    <span className="kicker">PRIVATE COLLECTION / IN DEVELOPMENT</span>

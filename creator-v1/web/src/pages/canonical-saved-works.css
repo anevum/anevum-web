@@ -83,3 +83,17 @@
 .avsaved-card-meta{font-size:9px}}
 @media(max-width:360px){.avsaved-layout button{font-size:11px;padding:7px 9px}.avsaved-content[data-view=list] .avsaved-card{grid-template-columns:70px minmax(0,1fr)}}
 @media(forced-colors:active){.avsaved-organizer,.avsaved-filter-empty{background:Canvas;color:CanvasText;border:1px solid CanvasText}.avsaved-controls input,.avsaved-controls select,.avsaved-layout button[aria-pressed=true]{background:Field;color:FieldText;border:1px solid CanvasText}}
+
+/* Final mobile economy: project list appears sooner, actions are easier to recognize. */
+.avsaved-header h1{max-width:none}
+@media(max-width:660px){
+ .avsaved-header{padding:17px 17px 19px}
+ .avsaved-header h1{font-size:clamp(28px,8.8vw,33px);line-height:1.04;margin:9px 0}
+ .avsaved-header>p{font-size:13px;line-height:1.45}
+ .avsaved-header-links{gap:8px;margin-top:11px}
+ .avsaved-header-links a{padding:9px 12px;min-height:44px}
+ .avsaved-organizer-intro h2{font-size:15px;margin:0}
+ .avsaved-organizer-intro p{display:none}
+ .avsaved-organizer-intro{align-items:center}
+ .avsaved-organizer .avsaved-controls{margin-top:10px}
+}

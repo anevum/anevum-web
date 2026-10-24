@@ -96,7 +96,7 @@ try{
  await page.locator('.avsaved-card').first().waitFor();
  await page.getByRole('combobox',{name:'Saved category'}).selectOption('tools');
  await page.waitForFunction(()=>document.querySelectorAll('.avsaved-card').length===1);
- await page.getByRole('button',{name:'REMOVE',exact:true}).click();
+ await page.getByRole('button',{name:'UNSAVE',exact:true}).click();
  await page.waitForFunction(()=>document.querySelectorAll('.avsaved-card').length===2);
  assert.equal(await page.getByRole('combobox',{name:'Saved category'}).inputValue(),'all');
  assert.equal(state.writes.length,1);
