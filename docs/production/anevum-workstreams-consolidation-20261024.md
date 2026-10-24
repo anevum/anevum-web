@@ -56,3 +56,7 @@ Earlier NEXT/legacy experiments remain reference material. **An open PR is not a
 - Only then supersede old draft PRs in the main release sequence. Confirm Cloudflare routes, 26 binding signatures, protected gateway hash and rollback before any provider deployment. Require additional real-account and iOS Safari checks for public rollout.
 
 **For parallel ChatGPT sessions:** Consult this register and the current integration PR before changing `Shell.tsx`, `LivingWorldField.tsx`, `living-world-shaders.ts`, `parity-v136-release.mjs` or `parity-v136-full-browser.mjs`. Continue specialized changes on bounded branches and rebase/integrate them only after verifying the exact source.
+
+### Reconciliation refresh
+
+The public spatial branch #725 advanced after the first consolidation commit. This refresh merges its newer exact-head package Artifact Lens and approved-player regression assertions from `9c8cab31faa48680f9922e734d3c90e6cd135b8d`, preserving the anonymous private-Studio assertion and detailed browser error diagnostics. It is recorded as an additional merge parent; keep using the consolidated PR for future website work.
