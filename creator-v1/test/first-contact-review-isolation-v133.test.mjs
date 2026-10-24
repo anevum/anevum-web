@@ -31,7 +31,7 @@ test("V133 review accepts only verified workers.dev host and read-only requests"
  assert.match(worker,/if\(!PUBLIC\.test\(url\.pathname\)/);
  assert.match(worker,/url\.search\.length>1400/);
  assert.match(worker,/token\|password\|email\|secret\|key\|session/);
- assert.match(worker,/\/api\/v1\//);
+ assert.ok(worker.includes(String.raw`api\/v1\/`),"Only public versioned API root is allowlisted");
  assert.match(worker,/community/);
  assert.match(worker,/status/);
  assert.match(worker,/categories/);
