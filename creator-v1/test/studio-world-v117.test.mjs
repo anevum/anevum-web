@@ -14,6 +14,7 @@ const geometry=read('creator-v1/web/src/pages/world-geometry-v117.ts');
 const pad=read('creator-v1/web/src/pages/StudioTransformPadV117.tsx');
 const style=read('creator-v1/web/src/pages/studio-world-v117.css');
 const page=read('creator-v1/web/src/pages/WorldComposerReviewV115.tsx');
+const context=read('creator-v1/web/src/pages/StudioContextPanelV117.tsx');
 
 test('V117 scene meshes are finite, bounded, indexed by stable part names and formed from real triangles',()=>{
  const meshes=buildCinematicMeshes(), budgets=geometryBudgets();
@@ -112,4 +113,22 @@ test('V117 touch translation emits real undoable typed moves and camera focus ac
  assert.match(style,/forced-colors:active/);
  assert.match(style,/prefers-reduced-motion:reduce/);
  assert.doesNotMatch(pad,/\bfetch\s*\(|\blocalStorage\b|\bsessionStorage\b|dangerouslySetInnerHTML|\beval\s*\(/);
+});
+
+test('V117 inspector follows the actual editing mode and site navigation is not repeated',()=>{
+ assert.ok(parse(context,{sourceType:'module',plugins:['jsx','typescript']}).program.body.length>=3);
+ assert.match(page,/StudioContextPanelV117 mode=\{mode\}/);
+ assert.match(page,/mode==='Scene'\|\|mode==='Playtest'/);
+ assert.match(context,/data-studio-context-mode=\{mode\}/);
+ assert.match(context,/title:'Interface Builder'/);
+ assert.match(context,/title:'Script Editor'/);
+ assert.match(context,/title:'Asset Foundry'/);
+ assert.match(context,/title:'Release Inspector'/);
+ assert.match(context,/Not|Publication unavailable|not saved/i);
+ assert.match(context,/onNavigate\(item.next\)/);
+ assert.doesNotMatch(page,/className="csn-site-nav"/);
+ assert.match(page,/Site-wide ANEVUM navigation already sits above the editor/);
+ assert.match(style,/\.csn-context-metadata/);
+ assert.match(style,/\.csn-context-guidance/);
+ assert.doesNotMatch(context,/\bfetch\s*\(|\blocalStorage\b|\bsessionStorage\b|dangerouslySetInnerHTML|\beval\s*\(/);
 });
