@@ -1,0 +1,74 @@
+name: Continuance Lab V001.5 - Browser Pilot QA
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/agent-quality-lab/**'
+      - 'creator-v1/web/src/pages/StudioProjectDoctorV001.tsx'
+      - 'creator-v1/web/src/pages/studio-project-doctor-v001.css'
+      - 'creator-v1/web/src/pages/StudioFileWorkspaceV111.tsx'
+      - 'creator-v1/web/src/pages/StudioSceneComposerV112.tsx'
+      - 'creator-v1/web/src/pages/StudioInterfaceBuilderV113.tsx'
+      - 'creator-v1/test/capture-studio-project-doctor-v001.mjs'
+      - 'creator-v1/test/studio-project-doctor-ui-v001.test.mjs'
+      - '.github/workflows/continuance-lab-browser-v001.yml'
+permissions:
+  contents: read
+concurrency:
+  group: continuance-lab-browser-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  project-doctor-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned project dependencies without lifecycle scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Validate read-only diagnosis and browser automation syntax
+        run: |
+          node --test creator-v1/agent-quality-lab/project-doctor-location-v001.test.mjs creator-v1/agent-quality-lab/project-doctor-brief-v001.test.mjs creator-v1/test/studio-project-doctor-ui-v001.test.mjs
+          node --check creator-v1/test/capture-studio-project-doctor-v001.mjs
+      - name: Strict typecheck for Creator Studio
+        run: npm run check:creator-v1-web
+      - name: Build private synthetic Studio preview with Inspector intentionally ON
+        env:
+          VITE_CREATOR_WORKSPACE_V109: 'true'
+          VITE_CREATOR_AGENT_DOCK_V110: 'true'
+          VITE_CREATOR_FILE_TREE_V111: 'true'
+          VITE_CREATOR_VISUAL_SCENE_V112: 'true'
+          VITE_CREATOR_INTERFACE_BUILDER_V113: 'true'
+          VITE_STUDIO_PROJECT_DOCTOR_V001: 'true'
+          VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
+          VITE_CREATOR_WORKBENCH_ALPHA: 'false'
+        run: npm run build:creator-v1-web:staging
+      - name: Browser proof - draft findings, ID navigation, clipboard, phone layouts and guest isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/continuance-doctor-v001
+          node creator-v1/test/portal-offline-preview.mjs > evidence/continuance-doctor-v001/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for _ in $(seq 1 75); do
+            if curl --fail --silent http://127.0.0.1:4178/__ready > /dev/null; then ready=1; break; fi
+            sleep .2
+          done
+          test "$ready" -eq 1
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          node creator-v1/test/capture-studio-project-doctor-v001.mjs --chrome "$chrome" --output evidence/continuance-doctor-v001
+      - name: Explicit non-production evidence label
+        if: always()
+        run: echo 'V001.5=OFFLINE_SYNTHETIC_BROWSER_ONLY; NO_REAL_MEMBERS; NO_PRODUCTION_DB; NO_MODEL_CALLS; STUDIO_FLAG_DEFAULT_OFF' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: continuance-doctor-v001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/continuance-doctor-v001/
+          if-no-files-found: ignore
