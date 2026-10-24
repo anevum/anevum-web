@@ -20,7 +20,7 @@ function statusLabel(p:CreatorPackageCard,mode:PackageGalleryMode){
  if(p.status==='rejected'||p.draftStatus==='rejected')return 'CHANGES REQUESTED';
  return 'PRIVATE DRAFT';
 }
-export function WorkCard({work,mode,compact=false}:{work:CreatorPackageCard;mode:PackageGalleryMode;compact?:boolean}){
+export function WorkCard({work,mode,compact=false,onInspect}:{work:CreatorPackageCard;mode:PackageGalleryMode;compact?:boolean;onInspect?:(work:CreatorPackageCard)=>void}){
  const published=mode==='public'||work.status==='published';
  const publishedLabel=work.publishedAt
    ?new Date(work.publishedAt*1000).toLocaleDateString(undefined,{month:'short',year:'numeric'})
@@ -44,6 +44,7 @@ export function WorkCard({work,mode,compact=false}:{work:CreatorPackageCard;mode
     {work.playUrl&&<a href={nativeCreatorEnabled?import.meta.env.BASE_URL.replace(/\/$/,'')+nativePlayerPath(work.id):work.playUrl} className="av010-work-primary">PLAY RELEASE <span aria-hidden="true">↗</span></a>}
     {mode==='owner'&&work.previewUrl&&<a href={nativeCreatorEnabled?import.meta.env.BASE_URL.replace(/\/$/,'')+nativePlayerPath(work.id,true):work.previewUrl}>PRIVATE PLAYTEST ↗</a>}
     {mode==='owner'&&!work.previewUrl&&<a href={nativeCreatorEnabled?import.meta.env.BASE_URL.replace(/\/$/,'')+nativeBuildPath(work.id):'/upload/v3?update='+encodeURIComponent(work.id)}>MANAGE BUILD ↗</a>}
+    {mode==='public'&&onInspect&&<button type="button" className="p136-artifact-inspect-button" onClick={()=>onInspect(work)} aria-label={'Inspect '+work.title}>Inspect</button>}
    </div>
    {publishedLabel&&<small className="av010-work-published">APPROVED · {publishedLabel}</small>}
    {published&&!publishedLabel&&mode==='public'&&<small className="av010-work-published">INDEPENDENTLY REVIEWED</small>}
