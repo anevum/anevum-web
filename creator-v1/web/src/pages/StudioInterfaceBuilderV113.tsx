@@ -7,7 +7,8 @@ import {
 import './studio-interface-builder-v113.css';
 
 export const studioInterfaceBuilderEnabled=import.meta.env.VITE_CREATOR_INTERFACE_BUILDER_V113==='true';
-type Props={raw:string;fileName:string;resetToken:string;readOnly:boolean;onChange:(value:string)=>void};
+type Props={raw:string;fileName:string;resetToken:string;readOnly:boolean;onChange:(value:string)=>void;
+ jumpTo?:{pageId:string;componentId:string|null;requestId:number}|null};
 type Device='desktop'|'tablet'|'phone';
 type View='design'|'preview';
 type PreviewState={counts:Record<string,number>;visible:Record<string,boolean>;inputs:Record<string,string>};
@@ -17,7 +18,7 @@ const deviceWidths:Record<Device,number>={desktop:960,tablet:720,phone:360};
 
 /** Declarative preview only. A user-supplied source file never enters an iframe,
  * srcdoc, script, CSS style string, external URL, or arbitrary HTML parser. */
-export function StudioInterfaceBuilderV113({raw,fileName,resetToken,readOnly,onChange}:Props){
+export function StudioInterfaceBuilderV113({raw,fileName,resetToken,readOnly,onChange,jumpTo}:Props){
  const document=useMemo(()=>decode(raw),[raw]);
  const [pageId,setPageId]=useState<string|null>(null);
  const [componentId,setComponentId]=useState<string|null>(null);
@@ -37,6 +38,17 @@ export function StudioInterfaceBuilderV113({raw,fileName,resetToken,readOnly,onC
   if(!document){setPageId(null);setComponentId(null);return;}
   setPageId(old=>old&&document.pages.some(p=>p.id===old)?old:document.pages[0].id);
  },[document]);
+ useEffect(()=>{
+  if(!jumpTo)return;
+  // A navigation request only affects local editor selection. Keep ordinary
+  // text edits and visual undo/redo independent of diagnostics.
+  const page=document?.pages.find(item=>item.id===jumpTo.pageId);
+  if(!page)return;
+  if(jumpTo.componentId&&!page.components.some(item=>item.id===jumpTo.componentId))return;
+  setPageId(page.id);
+  setComponentId(jumpTo.componentId);
+  setView('design');
+ },[jumpTo?.requestId]);
  const activePage=document?.pages.find(p=>p.id===pageId)||document?.pages[0]||null;
  const activeItem=activePage?.components.find(c=>c.id===componentId)||null;
  const previewPage=document?.pages.find(p=>p.id===previewPageId)||document?.pages[0]||null;
