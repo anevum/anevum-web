@@ -17,11 +17,12 @@ function harness({secret='rate-key-should-be-at-least-32-characters',enabled='tr
  const sent=[];
  const db={prepare(sql){
   const stmt=raw.prepare(sql);
-  return {bind(...args){return{
+  const invoke=args=>({
    async first(){return stmt.get(...args)??null},
    async all(){return {success:true,results:stmt.all(...args)}},
    async run(){const result=stmt.run(...args);return {success:true,meta:{changes:Number(result.changes)}}}
-  }}};
+  });
+  return {...invoke([]),bind(...args){return invoke(args)}};
  }};
  let instant=start;
  const worker=createCommunicationsWorker({clock:()=>instant,send:async(_env,email)=>{sent.push(email)}});
