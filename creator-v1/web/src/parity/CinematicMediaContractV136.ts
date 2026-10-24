@@ -50,7 +50,7 @@ export function approvedCinematicSequence(value:unknown):CinematicSequence|null{
  !/^[a-z0-9-]{8,90}$/.test(value.cameraId))return null;
  if(!frameSet(value.desktop,value.count,8_500_000)||
  !frameSet(value.mobile,value.count,3_800_000))return null;
- return value as CinematicSequence;
+ return value as unknown as CinematicSequence;
 }
 export function approvedCinematicVideo(value:unknown):CinematicVideoSet|null {
  if(!isRecord(value)||value.approved!==true||value.requiresMediaSrcSelf!==true||
@@ -59,7 +59,7 @@ export function approvedCinematicVideo(value:unknown):CinematicVideoSet|null {
  if(!mp4&&!webm)return null;
  if(mp4&&!asset(mp4,'mp4',12_000_000))return null;
  if(webm&&!asset(webm,'webm',12_000_000))return null;
- return value as CinematicVideoSet;
+ return value as unknown as CinematicVideoSet;
 }
 export function frameAt(sequence:CinematicSequence,tier:'desktop'|'mobile',progress:number):CinematicAsset{
  const set=sequence[tier];
