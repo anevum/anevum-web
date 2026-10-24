@@ -43,6 +43,11 @@ test('UI and styles retain explicit mobile and reduced-motion coverage',()=>{
  assert.match(css,/@media\(max-width:480px\)/);
  assert.match(css,/@media\(max-width:350px\)/);
  assert.match(css,/@media\(forced-colors:active\)/);
+ assert.match(css,/container-name:cpd/);
+ assert.match(css,/container-type:inline-size/);
+ assert.match(css,/@container cpd \(max-width:700px\)/);
+ assert.match(css,/@container cpd \(max-width:490px\)/);
+ assert.match(css,/@container cpd \(max-width:340px\)/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
  assert.match(css,/:focus-visible/);
  assert.match(css,/\.cpd-diff-metrics/);
