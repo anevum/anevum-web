@@ -24,6 +24,8 @@ const allowed=new Set([
  '.github/workflows/parity-v136-release.yml','creator-v1/ops/parity-v136-release.mjs',
  'creator-v1/test/parity-v136-discover-browser.mjs',
  'creator-v1/web/src/pages/DiscoverPage.tsx',
+ 'creator-v1/web/src/pages/CanonicalSavedWorksPage.tsx',
+ 'creator-v1/web/src/pages/canonical-saved-works.css',
  'creator-v1/web/src/parity/ParityDiscoverV136.tsx',
  'creator-v1/web/src/parity/parity-discover-v136.css',
  'creator-v1/test/parity-v136-full-browser.mjs','docs/production/parity-v136-release-20261024.md',
