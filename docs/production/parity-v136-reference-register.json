@@ -1,10 +1,50 @@
 {
   "session": "ANEVUM.WEB.BUILD.2026-10-24.001.PARITY-V136",
   "version": "V136",
-  "increment": "001-arrival",
+  "increment": "003-scene-led-home-navigation",
   "baseline": "b429e6ab39665d51c8902878ff861f1a646df119",
   "acceptedScope": "Explicit owner kickoff; no separate staging website; source/CI/internal-browser QA then reviewed reversible live increments",
   "references": [
+    {
+      "id": "v136-1",
+      "library_file_id": "libfile_f70fb019b5b48191a029ec67b45ddbe5",
+      "filename": "ANEVUM Parity V136: Creator Universe Dashboard.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "0fb9a63aca9f7c515cb32fea7745973aa0d2ed9e9c609c3467827a1f845730f9",
+      "role": "Governing PARITY V136 collage; homepage region, sans typography, cyan/violet glass, compact navigation. UI remains DOM; alternate generated marks and fictional numbers excluded.",
+      "status": "recovered-and-inspected-2026-10-24"
+    },
+    {
+      "id": "v136-2",
+      "library_file_id": "libfile_66e0cab1cfbc8191b5eb13ed678da923",
+      "filename": "ANEVUM Parity V136 Neon UI Showcase.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "b239fbbb6e73e2c1473a5730c95acbd67044171155e7e0f0499165049d50f05b",
+      "role": "Governing PARITY V136 collage; homepage region, sans typography, cyan/violet glass, compact navigation. UI remains DOM; alternate generated marks and fictional numbers excluded.",
+      "status": "recovered-and-inspected-2026-10-24"
+    },
+    {
+      "id": "v136-3",
+      "library_file_id": "libfile_9cdf13e3cd9c8191bdbe977dc11f8d4e",
+      "filename": "Anevum Parity V136: Neon Creative Universe.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "23ef86c6ce97bea52c235a90426b6b0c461fbebc22d156e12a036e757fc08d8d",
+      "role": "Governing PARITY V136 collage; homepage region, sans typography, cyan/violet glass, compact navigation. UI remains DOM; alternate generated marks and fictional numbers excluded.",
+      "status": "recovered-and-inspected-2026-10-24"
+    },
+    {
+      "id": "v136-4",
+      "library_file_id": "libfile_5a835586bc1881918421842c11e46f33",
+      "filename": "ANEVUM Parity V136 Dashboard Showcase.png",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "ee27245a490622b324d5ad38050c1996de097a68e0e5c8cb43d91a01e008cebc",
+      "role": "Governing PARITY V136 collage; homepage region, sans typography, cyan/violet glass, compact navigation. UI remains DOM; alternate generated marks and fictional numbers excluded.",
+      "status": "recovered-and-inspected-2026-10-24"
+    },
     {
       "id": "catalogue-a",
       "library_file_id": "libfile_3321b6227c388191b0a6442002fb7457",
@@ -42,30 +82,37 @@
   "mobile": {
     "status": "responsive-derivation-for-owner-review",
     "widths": [
+      1920,
+      1440,
+      1024,
+      768,
       390,
       320
     ],
     "note": "Both original A/B boards are desktop. Do not mislabel historical mobile concepts or compiled screenshots as a separately approved V136 phone reference."
   },
   "environment": {
-    "path": "creator-v1/web/public/assets/community-portals/games-1536.webp",
-    "width": 1536,
-    "height": 1024,
-    "bytes": 511208,
-    "sha256": "e7304eea020e7357f57452fd12ced1854a8a649982d6e7c15a75fa3c145be518",
-    "status": "existing-V014-original-interim",
-    "mobilePath": "creator-v1/web/public/assets/community-portals/games-768.webp",
+    "path": "creator-v1/web/public/assets/parity-v136/institute-1672.webp",
+    "width": 1672,
+    "height": 941,
+    "status": "original-environment-derived-from-governing-board",
     "final4kMaster": false,
-    "flattenedUI": false
+    "flattenedUI": false,
+    "responsiveWidths": [
+      768,
+      1536,
+      1672
+    ]
   },
   "ownership": {
     "router": "creator-v1/web/src/App.tsx",
     "navigation": "creator-v1/web/src/components/Shell.tsx",
-    "arrival": "creator-v1/web/src/components/ParityArrivalV136.tsx",
+    "arrival": "creator-v1/web/src/parity/ParityPortalV136.tsx",
     "catalogue": "existing readProjects/readCreators/useResource in CinematicLandingPage",
     "assistant": "existing IrenGuidedContinuance via anevum:iren-intro",
     "studio": "preserved #709 lineage; not merged in increment 001",
-    "commerce": "preserved #713; independently gated; not merged in increment 001"
+    "commerce": "preserved #713; independently gated; not merged in increment 001",
+    "styles": "creator-v1/web/src/parity/parity-entry.css -> legacy cascade layer + visual-foundation-v136.css"
   },
   "candidates": [
     {
@@ -81,7 +128,7 @@
       "head": "b429e6ab39665d51c8902878ff861f1a646df119",
       "branch": "build/next-unified-visual-system-v134-20261024-001",
       "base": "build/continuance-living-commons-react-20261023-001",
-      "title": "[DRAFT NEXT] V134–V135 reusable cinematic UI, vector file glyphs and mobile polish",
+      "title": "[DRAFT NEXT] V134\u2013V135 reusable cinematic UI, vector file glyphs and mobile polish",
       "status": "preserved-source-candidate"
     },
     {
@@ -89,7 +136,7 @@
       "head": "46bf8518307c8e6c3584d6c72031f660509c334f",
       "branch": "build/creator-studio-v122-concept-fidelity-20261024-001",
       "base": "build/creator-studio-v121-outline-split-20261024-001",
-      "title": "[DRAFT] Creator Studio V122 — concept fidelity, living IREN panel and cinematic UI polish",
+      "title": "[DRAFT] Creator Studio V122 \u2014 concept fidelity, living IREN panel and cinematic UI polish",
       "status": "preserved-source-candidate"
     },
     {
@@ -121,7 +168,7 @@
       "head": "3858a0bf52b6e4e09120e8efdc0bfbb16308c9ef",
       "branch": "iren/observatory-growth-v105-20261023-001",
       "base": "release/v084-continuance-approved-20261019",
-      "title": "IREN Observatory V105–V107 — Growth Intelligence, NEXT UX and Weekly Signal",
+      "title": "IREN Observatory V105\u2013V107 \u2014 Growth Intelligence, NEXT UX and Weekly Signal",
       "status": "preserved-source-candidate"
     },
     {

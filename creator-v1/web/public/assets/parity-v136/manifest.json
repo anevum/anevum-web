@@ -1,0 +1,29 @@
+{
+  "session": "ANEVUM.WEB.BUILD.2026-10-24.001.PARITY-V136",
+  "assetType": "environment-only",
+  "generator": "built-in imagegen",
+  "reference": "libfile_9cdf13e3cd9c8191bdbe977dc11f8d4e",
+  "prompt": "Standalone transcosmic Continuance Institute environment. Dark left copy area, floating orbital cities and enormous luminous blue-violet planet on right. Cyan/violet material light, astronomical depth, terraces and waterfalls. No text, logo, UI, frames or controls. Derived from top-left approved reference region.",
+  "masterDimensions": [
+    1672,
+    941
+  ],
+  "native4k": false,
+  "variants": [
+    {
+      "path": "institute-1536.webp",
+      "bytes": 277550,
+      "sha256": "b84c8a3fc61197bd89bd2781b7162b2781e97049e94cc9734d7848f2707ad82d"
+    },
+    {
+      "path": "institute-1672.webp",
+      "bytes": 316454,
+      "sha256": "1c65c975ed013bc3e59787c69be19bd3f47978abb918ba7c6f3db4c2b743a350"
+    },
+    {
+      "path": "institute-768.webp",
+      "bytes": 89948,
+      "sha256": "ede5d6296703ba62a2d5bccf5e08f8e6fdd2e94d95a904f96e28966d0358607f"
+    }
+  ]
+}

@@ -85,7 +85,7 @@ try{
     await page.goto(base,{waitUntil:'networkidle'});
     await page.getByRole('link',{name:'Join the early community',exact:true}).click();
     await page.waitForURL(base+'/join');
-    assert.ok(await page.getByRole('heading',{name:/join|member|belong|space|identity/i}).count()>0);
+    assert.ok(await page.getByRole('heading',{name:/ENTER THE\s*CONTINUANCE\./i}).count()>0);
     await page.goto(base,{waitUntil:'networkidle'});
     await page.getByRole('button',{name:'Need a guide? Meet IREN',exact:true}).click();
     assert.equal(await page.locator('.ir80-dock').count(),1);

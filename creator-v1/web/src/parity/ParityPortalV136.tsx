@@ -2,6 +2,7 @@ import {useState, type FormEvent} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import {Icon} from '../components/Icons';
 import {OrbitalMark} from '../components/OrbitalMark';
+import {ParityScene} from './ParityScene';
 import {CosmicArtwork} from '../components/CosmicArtwork';
 import {projectDetailPath} from '../lib/navigation';
 import type {Project, Category} from '../lib/api';
@@ -28,45 +29,6 @@ const passages=[
   {title:'Creative works',detail:'Explore art, experiences and experiments',to:'/discover?category=creative',scene:'creative' as CosmicScene,tone:'auric'},
   {title:'Open knowledge',detail:'Explore research, learning and open source',to:'/discover?category=research',scene:'research' as CosmicScene,tone:'mint'}
 ];
-function OrbitEnvironment(){
-  const stars=Array.from({length:80},(_,i)=>({x:(i*157+31)%740,y:(i*229+47)%640,r:i%9===0?1.9:i%4===0?1.1:.65,a:i%7===0?.9:.45}));
-  return <div className="p136-orbital-field" aria-hidden="true">
-    <CosmicArtwork scene="hero" priority className="p136-orbital-art"/>
-    <svg className="p136-orbital-svg" viewBox="0 0 740 640" focusable="false" preserveAspectRatio="xMidYMid meet">
-      <defs>
-        <radialGradient id="p136-world-shade" cx="72%" cy="26%" r="77%">
-          <stop offset="0%" stopColor="#c5eaff"/><stop offset="17%" stopColor="#3c84b4"/>
-          <stop offset="42%" stopColor="#17446d"/><stop offset="74%" stopColor="#071930"/><stop offset="100%" stopColor="#030914"/>
-        </radialGradient>
-        <radialGradient id="p136-world-halo"><stop offset="50%" stopColor="#68caff" stopOpacity=".18"/><stop offset="84%" stopColor="#4a84d8" stopOpacity=".09"/><stop offset="100%" stopColor="#4f7cf8" stopOpacity="0"/></radialGradient>
-        <linearGradient id="p136-orbit-stroke"><stop stopColor="#86e2ff" stopOpacity=".05"/><stop offset=".4" stopColor="#a4e9ff" stopOpacity=".9"/><stop offset=".66" stopColor="#f7c48b" stopOpacity=".72"/><stop offset="1" stopColor="#a187ff" stopOpacity=".10"/></linearGradient>
-        <clipPath id="p136-world-clip"><circle cx="373" cy="298" r="204"/></clipPath>
-        <filter id="p136-world-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="12"/></filter>
-      </defs>
-      <g>{stars.map((s,i)=><circle key={i} cx={s.x} cy={s.y} r={s.r} fill="#c0e9ff" opacity={s.a}/>)}</g>
-      <circle cx="373" cy="300" r="294" fill="url(#p136-world-halo)"/>
-      <circle cx="373" cy="298" r="211" fill="none" stroke="#8dd9ff" strokeWidth="8" opacity=".4" filter="url(#p136-world-glow)"/>
-      <circle cx="373" cy="298" r="204" fill="url(#p136-world-shade)" stroke="#a3dafa" strokeWidth="1.8"/>
-      <g clipPath="url(#p136-world-clip)">
-        <path d="M212 157q50 18 73 10l28 24 30-17 19 22-14 31 43 18 29-10 10 26-23 27-34 4-12 42-26 5-16 44-35-12-20-44-49-10-16-45-35-14-6-44z" fill="#6e9eae" opacity=".38"/>
-        <path d="M410 110q54 12 81 47l34 4 33 42-12 34-49-11-24 21-37-8-32-33-30-8z" fill="#c1dde2" opacity=".35"/>
-        <path d="M471 318l58 15 10 27-26 18-9 43-44 31-21-38 10-45-21-21z" fill="#83c3b7" opacity=".28"/>
-        <path d="M214 341l46-3 23 34-19 28 19 33-30 12-53-62z" fill="#91cbb4" opacity=".31"/>
-        {Array.from({length:9},(_,i)=><ellipse key={i} cx="373" cy="298" rx={204-i*19} ry={62+i*10} fill="none" stroke="#b7eaff" opacity={.05+i*.007}/>)}
-        {Array.from({length:17},(_,i)=><path key={i} d={'M'+(208+i*21)+' 95v410'} fill="none" stroke="#bcdeff" opacity=".04"/>)}
-        <ellipse cx="422" cy="225" rx="126" ry="82" fill="#cbe9ff" opacity=".055" filter="url(#p136-world-glow)"/>
-      </g>
-      <ellipse cx="373" cy="298" rx="303" ry="95" transform="rotate(-19 373 298)" fill="none" stroke="url(#p136-orbit-stroke)" strokeWidth="2" className="p136-orbit-line"/>
-      <ellipse cx="373" cy="298" rx="265" ry="139" transform="rotate(24 373 298)" fill="none" stroke="url(#p136-orbit-stroke)" strokeWidth="1.4" opacity=".6"/>
-      <path d="M74 410q298-201 598-45" fill="none" stroke="#8fcfff" strokeWidth="1" opacity=".27"/>
-      <circle cx="568" cy="194" r="6" fill="#f5c78f"/><circle cx="568" cy="194" r="14" fill="none" stroke="#f5c78f" opacity=".75"/>
-      <circle cx="183" cy="419" r="5" fill="#90dffd"/><circle cx="183" cy="419" r="12" fill="none" stroke="#90dffd" opacity=".55"/>
-      <path d="M373 56v39 M373 501v35 M120 298h44 M578 298h41" stroke="#8ed8ff" opacity=".35"/>
-    </svg>
-    <span className="p136-orbital-coordinate p136-coordinate--one">CONTINUANCE / 01</span>
-    <span className="p136-orbital-coordinate p136-coordinate--two">ORBITAL SIGNAL / ANEVUM</span>
-  </div>;
-}
 function PublicProjectCard({project}:{project:Project}){
   const meta=types[project.category];
   return <article className={'p136-project-card p136-tone-'+meta.tone}>
@@ -85,16 +47,17 @@ function PublicProjectCard({project}:{project:Project}){
 }
 export function ParityPortalV136({projects,catalogueState,signedIn,verifiedCount}:Props){
   const navigate=useNavigate(),[search,setSearch]=useState('');
+  const [paused,setPaused]=useState(false);
   function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();navigate(search.trim()?'/discover?q='+encodeURIComponent(search.trim()):'/discover');}
   return <div className="p136-portal" data-parity-v136="full">
     <section className="p136-hero" aria-labelledby="p136-hero-title">
-      <OrbitEnvironment/><div className="p136-hero-shade" aria-hidden="true"/>
+      <ParityScene paused={paused}/><div className="p136-hero-shade" aria-hidden="true"/>
       <div className="p136-hero-content">
         <p className="p136-hero-register">THE CONTINUANCE INSTITUTE <span> / </span> FIRST CONTACT</p>
         <h1 id="p136-hero-title">Independent worlds.<em>Made to continue.</em></h1>
         <p className="p136-hero-intro">Discover independent games, useful software and creative experiments. Explore real work, meet the people behind it, and build what comes next.</p>
         <div className="p136-hero-actions">
-          <Link to="/discover" className="p136-button p136-button--auric">Explore projects <Icon name="arrow" size={20}/></Link>
+          <Link to="/discover" className="p136-button p136-button--primary">Explore projects <Icon name="arrow" size={20}/></Link>
           <Link to={signedIn?'/member':'/join'} className="p136-button p136-button--signal">{signedIn?'My member space':'Join the community'} <Icon name="arrow" size={18}/></Link>
         </div>
         <p className="p136-hero-disclosure">Free to explore. No account required. Creator publishing remains in testing.</p>
@@ -118,7 +81,7 @@ export function ParityPortalV136({projects,catalogueState,signedIn,verifiedCount
         <Link to="/community"><Icon name="community" size={21}/><span><strong>Community</strong><small>Ideas and discussions</small></span></Link>
         <Link to="/studio"><Icon name="create" size={21}/><span><strong>Creator Studio</strong><small>Tools for building</small></span></Link>
       </nav>
-      <span className="p136-hero-watermark">PARITY V136 / FOUNDATION 002</span>
+      <button type="button" className="p136-motion-control" aria-pressed={paused} onClick={()=>setPaused(value=>!value)} aria-label="Pause atmospheric animation">{paused?'Resume atmosphere':'Pause atmosphere'}</button>
     </section>
     <section className="p136-discover" aria-labelledby="p136-discover-title">
       <div className="p136-section-heading">

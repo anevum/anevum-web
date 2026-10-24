@@ -8,7 +8,7 @@ const home=source("web/src/pages/CinematicLandingPage.tsx");
 const join=source("web/src/pages/Phase1JoinPage.tsx");
 const app=source("web/src/App.tsx");
 const styles=source("web/src/continuance-first-contact-v133.css");
-const entry=source("web/src/main.tsx");
+const entry=source("web/src/legacy-styles.css");
 
 test("V133 is the original canonical route, not a replacement site",()=>{
   for(const file of [home,join,app])assert.doesNotThrow(()=>parse(file,{sourceType:"module",plugins:["typescript","jsx"]}));
