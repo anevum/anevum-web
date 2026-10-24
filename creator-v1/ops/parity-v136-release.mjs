@@ -40,7 +40,9 @@ const allowed=new Set([
  'creator-v1/web/src/parity/parity-discover-v136.css',
  'creator-v1/test/parity-v136-full-browser.mjs','docs/production/parity-v136-release-20261024.md',
  'creator-v1/web/src/main.tsx','creator-v1/web/vite.config.ts',
- 'creator-v1/web/src/components/Shell.tsx','creator-v1/web/src/pages/CinematicLandingPage.tsx',
+ 'creator-v1/web/src/components/Shell.tsx',
+ 'creator-v1/web/src/parity/ConsoleWayfinderV136.tsx',
+ 'creator-v1/web/src/parity/console-wayfinder-v136.css','creator-v1/web/src/pages/CinematicLandingPage.tsx',
  ...['ParityHeaderV136.tsx','ParityPortalV136.tsx','ParityScene.tsx','visual-foundation-v136.css'].map(x=>'creator-v1/web/src/parity/'+x),
  ...['institute-768.webp','institute-1536.webp','institute-1672.webp','manifest.json'].map(x=>'creator-v1/web/public/assets/parity-v136/'+x)
 ]);
