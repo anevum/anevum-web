@@ -23,9 +23,10 @@ test("V116 maintains one guide, one companion and a single verified notification
  assert.match(guide,/className="ir111-quiet"/);
  assert.doesNotMatch(queue,/className=\{'an-toast/);
 });
-test("V116 starts at genuine ANEVUM arrival; test games never become the first task",()=>{
- assert.match(home,/A universe <em>in the making\.<\/em>/);
- assert.match(home,/const showcase=projects\.filter\(project=>project\.category!=="games"\)/);
+test("V116 keeps genuine public project discovery while excluding fabricated first tasks",()=>{
+ assert.match(home,/Find something <em>worth trying\.<\/em>/);
+ assert.match(home,/const firstLook=projects\[0\]\|\|null/);
+ assert.match(home,/const showcase=projects\.slice\(1,4\)/);
  assert.doesNotMatch(home,/Play a game|FEATURED RELEASE|const firstGame=/);
  assert.match(home,/new Event\("anevum:iren-intro"\)/);
  assert.match(guide,/addEventListener\("anevum:iren-intro",onIntro\)/);
@@ -34,7 +35,7 @@ test("V116 starts at genuine ANEVUM arrival; test games never become the first t
  assert.match(guide,/Welcome to the Continuance\./);
  assert.match(guide,/setWelcomeOpen\(true\)/);
  assert.doesNotMatch(guide,/window\.setTimeout\(attempt,1100\)/);
- assert.match(home,/Studio publishing is still in testing/);
+ assert.match(home,/Creator publishing is still in testing/);
 });
 test("V116 preserves real IREN signals while guide is open or helper is hidden",()=>{
  assert.match(guide,/document\.body\.classList\.toggle\("ir80-tour-active",tourIndex!==null\)/);

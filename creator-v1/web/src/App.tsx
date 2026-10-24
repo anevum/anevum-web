@@ -39,6 +39,9 @@ const NativePackagePlayerPage=lazy(()=>import("./pages/NativeCreatorStudio").the
 const creatorFallback=<LoadingState label="Opening Creator Studio"/>;
 const PublicBoardsPage = lazy(() => import("./pages/PublicBoardsPage").then(mod=>({default:mod.PublicBoardsPage})));
 const pageFallback=<LoadingState label="Opening approved public boards"/>;
+/** Built only into explicitly flagged review artifacts. Existing public Community stays untouched. */
+const livingCommonsReviewEnabled=import.meta.env.VITE_LIVING_COMMONS_REVIEW==="true";
+const LivingCommonsReviewPage=livingCommonsReviewEnabled?lazy(()=>import("./pages/CommunityNextReviewPage").then(m=>({default:m.CommunityNextReviewPage}))):null;
 
 /** Historical Atlas links return to the canonical public experience.
  * Retains experimental files without mounting a second site theme. */
@@ -84,6 +87,7 @@ export default function App(){
     <Route path="creators" element={<CreatorsPage/>}/>
     <Route path="creators/:handle" element={<CreatorPage/>}/>
     <Route path="community" element={<CommunityPage/>}/>
+    {LivingCommonsReviewPage&&<Route path="__review/commons" element={<Suspense fallback={<LoadingState label="Opening Living Commons preview"/>}><LivingCommonsReviewPage/></Suspense>}/> }
       <Route path="boards" element={<Suspense fallback={pageFallback}><PublicBoardsPage/></Suspense>}/>
     <Route path="community/posts/:id" element={<CommunityPostPage/>}/>
     <Route path="community/threads/:id" element={<CommunityThread/>}/>

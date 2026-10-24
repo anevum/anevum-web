@@ -1,0 +1,15 @@
+{
+  "release":"ANEVUM V133 isolated first-contact preview",
+  "source_pr":704,
+  "target_branch":"build/continuance-living-commons-react-20261023-001",
+  "target_worker":"anevum-first-contact-v133-review",
+  "hostname":"anevum-first-contact-v133-review.devonakins.workers.dev",
+  "review":"owner visually approved V133 design direction 2026-10-24",
+  "allow_read_only_public_preview":true,
+  "allow_production_deployment":false,
+  "allow_cloudflare_routes_or_custom_domains":false,
+  "allow_private_member_data_or_auth":false,
+  "allow_database_or_secrets_binding":false,
+  "allow_public_creator_publishing":false
+}
+

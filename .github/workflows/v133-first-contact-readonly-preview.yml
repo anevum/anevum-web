@@ -1,0 +1,197 @@
+name: ANEVUM V133 Isolated Read-only Preview
+# Trusted PR679 browser preview of immutable, owner-approved #704 merge.
+# PR jobs are already registered; unlike new workflows, new push workflows on
+# non-default branches are not eligible for activation until registered.
+# No production routes, D1, auth or member-write bindings.
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v133-first-contact-readonly-preview.yml'
+      - '.github/release-approvals/v133-first-contact-preview-only.json'
+permissions:
+  contents: read
+concurrency:
+  group: anevum-v133-isolated-readonly-preview
+  cancel-in-progress: false
+jobs:
+  preview:
+    if: github.repository == 'anevum/anevum-web' && github.event_name == 'pull_request' && github.event.pull_request.number == 679 && github.event.pull_request.head.repo.full_name == 'anevum/anevum-web' && github.event.pull_request.head.ref == 'build/continuance-living-commons-react-20261023-001'
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+      # Review-only, default-off UI flags. Exact production feature-ON
+      # acceptance belongs to V131-targeted PR707; this worker has no accounts.
+      VITE_IREN_SPATIAL_GUIDE: 'false'
+      VITE_NATIVE_CREATOR_STUDIO_V095: 'false'
+      VITE_PACKAGE_CREATOR_GALLERY_V010: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Only build the owner-reviewed immutable PR704 merge, not a mutable PR head.
+          ref: 36330bbfa4614ddfd3c0c0572e93b7bc7d866e50
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate one-time scope, no credentials, and exact checked-out revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = 'anevum/anevum-web'
+          test "$GITHUB_HEAD_REF" = 'build/continuance-living-commons-react-20261023-001'
+          test "$GITHUB_EVENT_NAME" = 'pull_request'
+          test "$(git rev-parse HEAD)" = '36330bbfa4614ddfd3c0c0572e93b7bc7d866e50'
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const a=JSON.parse(readFileSync('.github/release-approvals/v133-first-contact-preview-only.json','utf8'));
+          assert.deepEqual(a,{
+            release:'ANEVUM V133 isolated first-contact preview',
+            source_pr:704,target_branch:'build/continuance-living-commons-react-20261023-001',
+            target_worker:'anevum-first-contact-v133-review',
+            hostname:'anevum-first-contact-v133-review.devonakins.workers.dev',
+            review:'owner visually approved V133 design direction 2026-10-24',
+            allow_read_only_public_preview:true,
+            allow_production_deployment:false,allow_cloudflare_routes_or_custom_domains:false,
+            allow_private_member_data_or_auth:false,allow_database_or_secrets_binding:false,
+            allow_public_creator_publishing:false
+          });
+          JS
+          node --check creator-v1/web/first-contact-review-v133.mjs
+          node --test creator-v1/test/first-contact-review-isolation-v133.test.mjs
+      - name: Reconstruct original earned media for visual parity
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install -q numpy==2.2.6 scipy==1.15.3 Pillow==11.2.1
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libgl1-mesa-dri
+          (
+            cd design/evolution-v059
+            mkdir -p artwork/{native,textures,vector,masters,web,compact} docs dist previews
+            python src/export_native.py
+            python src/render_web.py
+            python src/build.py
+          )
+          python creator-v1/ops/install-evolution-v060.py
+          test "$(find creator-v1/web/public/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+      - name: Compile, typecheck and inspect source without Cloudflare credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          node --test creator-v1/test/first-contact-conversion-v133.test.mjs \
+            creator-v1/test/first-contact-review-isolation-v133.test.mjs \
+            creator-v1/test/home-first-contact-v111.test.mjs \
+            creator-v1/test/iren-home-integration-v116.test.mjs \
+            creator-v1/test/v079-reconciled-null-creator.test.mjs \
+            creator-v1/test/signup-email-first-v026.test.mjs
+          test -s creator-v1/dist/web/index.html
+          test "$(find creator-v1/dist/web/evolution/assets -maxdepth 1 -type f | wc -l)" -eq 152
+          test -z "$(find creator-v1/dist/web -name '*.map' -print -quit)"
+      - name: Capture real compiled homepage and signup across desktop and phone
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome"
+          mkdir -p evidence/v133-preview
+          node creator-v1/test/portal-offline-preview.mjs > evidence/v133-preview/fixture.log 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:4178/__ready > /dev/null 2>&1; then ready=1; break; fi
+            sleep 0.4
+          done
+          test "$ready" = 1
+          node creator-v1/test/capture-home-first-contact-v111.mjs "$chrome" http://127.0.0.1:4178 evidence/v133-preview
+          node creator-v1/test/capture-continuance-join-v123.mjs "$chrome" http://127.0.0.1:4178 evidence/v133-preview
+          for v in desktop phone small-phone; do
+            test -s "evidence/v133-preview/first-arrival-$v.png"
+            test -s "evidence/v133-preview/first-look-$v.png"
+          done
+          for v in 1440 390 320; do test -s "evidence/v133-preview/join-v123-$v.png"; done
+      - name: Snapshot production version allocation before isolated preview
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          umask 077
+          for script in anevum-apex-prelaunch-gateway anevum-package-alpha-v003-control; do
+            curl --fail --silent --show-error --max-time 30 \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$script/deployments" \
+              > "$RUNNER_TEMP/v133-$script-before.json"
+            jq -e '.success == true and ((.result.deployments // .result) | length > 0)' "$RUNNER_TEMP/v133-$script-before.json" >/dev/null
+          done
+      - name: Deploy only the noindex Workers.dev preview, with no production routes
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test creator-v1/test/first-contact-review-isolation-v133.test.mjs
+          # Fail closed if the named review script already exists. Never
+          # overwrite a different source or rely on mutable PR code.
+          status="$(curl --silent --show-error --max-time 20 -o "$RUNNER_TEMP/v133-preview-existence.json" -w '%{http_code}' \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/anevum-first-contact-v133-review")"
+          if test "$status" = 200; then
+            echo "::error::The preview Worker already exists. Refusing to overwrite without fresh review."
+            exit 1
+          fi
+          test "$status" = 404
+          npx --no-install wrangler deploy --config creator-v1/wrangler.first-contact-review-v133.jsonc
+      - name: Smoke review-only origin and prove production allocations unchanged
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          base=https://anevum-first-contact-v133-review.devonakins.workers.dev
+          ready=0
+          for i in $(seq 1 25); do
+            if curl --fail --silent --show-error --max-time 15 "$base/__review" |
+                jq -e '.project == "ANEVUM FIRST CONTACT V133" and .status == "DESIGN PREVIEW" and .database == false and .memberAccess == false and .productionDeployment == false' >/dev/null 2>&1; then ready=1; break; fi
+            sleep 2
+          done
+          test "$ready" = 1
+          for path in / /discover /join /guide; do
+            test "$(curl --silent --show-error --max-time 20 -o /dev/null -w '%{http_code}' "$base$path")" = 200
+          done
+          test "$(curl --silent --show-error --max-time 20 -o /dev/null -w '%{http_code}' "$base/api/v1/member/me")" = 404
+          test "$(curl --silent --show-error --max-time 20 -X POST -o /dev/null -w '%{http_code}' "$base/api/v1/projects")" = 405
+          curl --fail --silent --show-error --max-time 20 -I "$base/" | grep -qi 'x-robots-tag: noindex'
+          for script in anevum-apex-prelaunch-gateway anevum-package-alpha-v003-control; do
+            curl --fail --silent --show-error --max-time 30 \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/scripts/$script/deployments" \
+              > "$RUNNER_TEMP/v133-$script-after.json"
+            before="$(jq -c '(.result.deployments // .result)[0].versions' "$RUNNER_TEMP/v133-$script-before.json")"
+            after="$(jq -c '(.result.deployments // .result)[0].versions' "$RUNNER_TEMP/v133-$script-after.json")"
+            test -n "$before"
+            test "$before" = "$after"
+          done
+          echo "V133_ISOLATED_READ_ONLY_PREVIEW=$base" >> "$GITHUB_STEP_SUMMARY"
+          echo "V131_V132_PRODUCTION_UNCHANGED=PASS" >> "$GITHUB_STEP_SUMMARY"
+      - name: Retain source-bound synthetic browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v133-readonly-preview-${{ github.sha }}
+          path: evidence/v133-preview
+          retention-days: 14
+          if-no-files-found: warn

@@ -1,0 +1,112 @@
+name: ANEVUM First Contact V133 Conversion QA
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/continuance-first-contact-v133-qa.yml'
+      - 'creator-v1/web/src/pages/CinematicLandingPage.tsx'
+      - 'creator-v1/web/src/pages/Phase1JoinPage.tsx'
+      - 'creator-v1/web/src/continuance-first-contact-v133.css'
+      - 'creator-v1/web/src/main.tsx'
+      - 'creator-v1/test/first-contact-conversion-v133.test.mjs'
+      - 'creator-v1/test/first-contact-review-isolation-v133.test.mjs'
+      - 'creator-v1/wrangler.first-contact-review-v133.jsonc'
+      - 'creator-v1/web/first-contact-review-v133.mjs'
+      - '.github/workflows/v133-first-contact-readonly-preview.yml'
+      - '.github/release-approvals/v133-first-contact-preview-only.json'
+      - 'creator-v1/test/home-first-contact-v111.test.mjs'
+      - 'creator-v1/test/first-load-experience-v114.test.mjs'
+      - 'creator-v1/test/continuance-journey-v123.test.mjs'
+      - 'creator-v1/test/continuance-reconciliation-v124.test.mjs'
+      - 'creator-v1/test/continuance-signal-atlas-v125.test.mjs'
+      - 'creator-v1/test/iren-home-integration-v116.test.mjs'
+      - 'creator-v1/test/sitewide-experience-v009.test.mjs'
+      - 'creator-v1/test/cinematic-depth-v011.test.mjs'
+      - 'creator-v1/test/module-experience-v073.test.mjs'
+      - 'creator-v1/test/v079-reconciled-null-creator.test.mjs'
+      - 'creator-v1/test/capture-home-navigation-v079.mjs'
+      - 'creator-v1/test/capture-home-first-contact-v111.mjs'
+      - 'docs/production/continuance-first-contact-v133-20261024.md'
+permissions:
+  contents: read
+concurrency:
+  group: anevum-first-contact-v133-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  first-contact-compiled:
+    if: github.repository == 'anevum/anevum-web' && github.event.pull_request.head.repo.full_name == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 27
+    env:
+      CLOUDFLARE_API_TOKEN: ''
+      CLOUDFLARE_API_KEY: ''
+      CLOUDFLARE_ACCOUNT_ID: ''
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install without package lifecycle scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Verify actual React source contracts and canonical auth protection
+        run: |
+          node --test creator-v1/test/first-contact-conversion-v133.test.mjs \
+            creator-v1/test/first-contact-review-isolation-v133.test.mjs \
+            creator-v1/test/home-first-contact-v111.test.mjs \
+            creator-v1/test/first-load-experience-v114.test.mjs \
+            creator-v1/test/continuance-journey-v123.test.mjs \
+            creator-v1/test/continuance-reconciliation-v124.test.mjs \
+            creator-v1/test/continuance-signal-atlas-v125.test.mjs \
+            creator-v1/test/iren-home-integration-v116.test.mjs \
+            creator-v1/test/sitewide-experience-v009.test.mjs \
+            creator-v1/test/cinematic-depth-v011.test.mjs \
+            creator-v1/test/module-experience-v073.test.mjs \
+            creator-v1/test/v079-reconciled-null-creator.test.mjs \
+            creator-v1/test/signup-email-first-v026.test.mjs \
+            creator-v1/test/signup-access-states-v082.test.mjs
+      - name: Typecheck and build actual public and isolated staging paths
+        run: |
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          npm run build:creator-v1-web:staging
+      - name: Compiled 1440 390 and 320 browser captures, first look, signup and IREN
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          test -n "$chrome"
+          mkdir -p evidence/first-contact-v133
+          node creator-v1/test/portal-offline-preview.mjs > evidence/first-contact-v133/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 75); do
+            if curl -fsS http://127.0.0.1:4178/__ready > /dev/null 2>&1; then ready=1; break; fi
+            sleep 0.3
+          done
+          test "$ready" = 1
+          node creator-v1/test/capture-home-first-contact-v111.mjs "$chrome" http://127.0.0.1:4178 evidence/first-contact-v133
+          node creator-v1/test/capture-continuance-join-v123.mjs "$chrome" http://127.0.0.1:4178 evidence/first-contact-v133
+          test -s evidence/first-contact-v133/first-arrival-desktop.png
+          test -s evidence/first-contact-v133/first-arrival-phone.png
+          test -s evidence/first-contact-v133/first-arrival-small-phone.png
+          test -s evidence/first-contact-v133/first-look-desktop.png
+          test -s evidence/first-contact-v133/first-look-phone.png
+          test -s evidence/first-contact-v133/first-look-small-phone.png
+          test -s evidence/first-contact-v133/join-v123-1440.png
+          test -s evidence/first-contact-v133/join-v123-390.png
+          test -s evidence/first-contact-v133/join-v123-320.png
+      - name: Retain actual compiled browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: first-contact-v133-${{ github.event.pull_request.head.sha }}
+          path: evidence/first-contact-v133
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Report exact head
+        run: git rev-parse HEAD
+# This workflow has no credentials and no production deployment step.

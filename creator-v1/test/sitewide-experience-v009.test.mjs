@@ -32,7 +32,9 @@ test("V115 homepage preserves real public work, identity and unduplicated naviga
  for(const contract of [/readStatus/,/readProjects/,/readCreators/,/projectDetailPath/,/useOwnPlayerCard/,/CompactMemberIdentity/,/av115-public-index/,/av115-gateways/])
   assert.match(home,contract);
  assert.doesNotMatch(home,/<WorldGatewayDeck|<LiveSignalModules|<CommunityHomeFeed|<CinematicSiteRail/);
- assert.match(home,/projects\.filter\(project=>project\.category!=="games"\)/);
+ assert.match(home,/const firstLook=projects\[0\]\|\|null/);
+ assert.match(home,/const showcase=projects\.slice\(1,4\)/);
+ assert.match(home,/projectDetailPath\(firstLook\.id,"\/"\)/);
  assert.match(home,/showcase\.map\(project=>/);
  assert.doesNotMatch(home,/featured=games\[0\]|Play a game|FEATURED RELEASE/);
  assert.match(portals,/discover\?category=games/);

@@ -12,7 +12,7 @@ const shell=read("web/src/components/Shell.tsx");
 test("V125 visually upgrades only genuine approved homepage, not the auth or creator routes",()=>{
  assert.doesNotThrow(()=>parse(home,{sourceType:"module",plugins:["typescript","jsx"]}));
  assert.doesNotThrow(()=>parse(atlas,{sourceType:"module",plugins:["typescript","jsx"]}));
- assert.match(home,/A universe <em>in the making\.<\/em>/);
+ assert.match(home,/Find something <em>worth trying\.<\/em>/);
  assert.match(home,/to="\/discover"/);
  assert.match(home,/to=\{signedIn\?"\/member":"\/join"\}/);
  assert.match(home,/href="#wayfinder"/);

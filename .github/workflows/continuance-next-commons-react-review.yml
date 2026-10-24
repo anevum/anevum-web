@@ -1,0 +1,134 @@
+name: ANEVUM Continuance NEXT Commons React Preview
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/continuance-next-commons-react-review.yml'
+      - 'creator-v1/web/src/App.tsx'
+      - 'creator-v1/web/src/pages/CommunityNextReviewPage.tsx'
+      - 'creator-v1/web/src/pages/community-next-review.css'
+      - 'creator-v1/web/src/pages/CommonsQuickNavigator.tsx'
+      - 'creator-v1/web/src/pages/commons-quick-navigator.css'
+      - 'creator-v1/web/src/lib/commons-next-model.ts'
+      - 'creator-v1/test/continuance-next-community-model.test.mjs'
+      - 'creator-v1/test/continuance-next-community-react.test.mjs'
+      - 'creator-v1/test/continuance-next-community-browser.mjs'
+      - 'creator-v1/test/continuance-next-navigator.test.mjs'
+      - 'creator-v1/test/continuance-next-navigator-browser.mjs'
+      - 'docs/production/continuance-next-commons-react-20261023.md'
+      - 'docs/production/continuance-commons-navigator-20261023.md'
+      - '.github/workflows/continuance-next-stack-integrity.yml'
+      - 'creator-v1/test/continuance-next-stack-integrity.mjs'
+      - 'docs/production/continuance-next-stack-integrity-20261023.md'
+permissions:
+  contents: read
+concurrency:
+  group: anevum-next-commons-react-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  reviewed-react-source:
+    if: github.repository == 'anevum/anevum-web' && github.event.pull_request.head.repo.full_name == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      CLOUDFLARE_API_TOKEN: ''
+      CLOUDFLARE_API_KEY: ''
+      CLOUDFLARE_ACCOUNT_ID: ''
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Protect stacked PR scope
+        shell: bash
+        env:
+          REVIEW_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          test -z "$CLOUDFLARE_API_TOKEN"
+          test -z "$CLOUDFLARE_API_KEY"
+          test -z "$CLOUDFLARE_ACCOUNT_ID"
+          git diff --name-status "$REVIEW_BASE_SHA" HEAD > /tmp/commons-react-diff.txt
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          const rows=fs.readFileSync('/tmp/commons-react-diff.txt','utf8').trim().split('\n').filter(Boolean);
+          const allowed=new Map([
+            ['creator-v1/web/src/App.tsx','M'],
+            ['creator-v1/web/src/pages/CommunityNextReviewPage.tsx','A'],
+            ['creator-v1/web/src/pages/community-next-review.css','A'],
+            ['creator-v1/web/src/pages/CommonsQuickNavigator.tsx','A'],
+            ['creator-v1/web/src/pages/commons-quick-navigator.css','A'],
+            ['creator-v1/web/src/lib/commons-next-model.ts','A'],
+            ['creator-v1/test/continuance-next-community-model.test.mjs','A'],
+            ['creator-v1/test/continuance-next-community-react.test.mjs','A'],
+            ['creator-v1/test/continuance-next-community-browser.mjs','A'],
+            ['creator-v1/test/continuance-next-navigator.test.mjs','A'],
+            ['creator-v1/test/continuance-next-navigator-browser.mjs','A'],
+            ['docs/production/continuance-next-commons-react-20261023.md','A'],
+            ['docs/production/continuance-commons-navigator-20261023.md','A'],
+            ['.github/workflows/continuance-next-commons-react-review.yml','A'],
+            ['.github/workflows/continuance-next-stack-integrity.yml','A'],
+            ['creator-v1/test/continuance-next-stack-integrity.mjs','A'],
+            ['docs/production/continuance-next-stack-integrity-20261023.md','A']
+          ]);
+          for(const row of rows){
+            const [status,path]=row.split('\t');
+            if(!allowed.has(path)||allowed.get(path)!==status) throw new Error('Unexpected change '+row);
+          }
+          if(rows.length!==allowed.size) throw new Error('Review diff missing or contains extra paths');
+          JS
+      - name: Install pinned frontend dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Verify state and public API source contracts
+        run: |
+          node --experimental-strip-types --test creator-v1/test/continuance-next-community-model.test.mjs
+          node --test creator-v1/test/continuance-next-community-react.test.mjs creator-v1/test/continuance-next-navigator.test.mjs
+      - name: Verify React typecheck
+        run: npm run check:creator-v1-web
+      - name: Build default site without NEXT Commons preview
+        env:
+          VITE_LIVING_COMMONS_REVIEW: 'false'
+          VITE_PACKAGE_CREATOR_GALLERY_V010: 'false'
+        run: |
+          npm run build:creator-v1-web
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';import path from 'node:path';
+          function readAll(dir){return fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?readAll(path.join(dir,e.name)):[path.join(dir,e.name)]);}
+          const paths=readAll('creator-v1/dist/web').filter(x=>/\.(js|css)$/.test(x));
+          if(paths.length===0)throw Error('Missing generated assets');
+          for(const file of paths)if(/lnx-root|lnx-quick-dialog/.test(fs.readFileSync(file,'utf8')))throw Error('Commons review leaked into default production bundle: '+file);
+          JS
+      - name: Build explicitly flagged preview without deploying
+        env:
+          VITE_LIVING_COMMONS_REVIEW: 'true'
+          VITE_PACKAGE_CREATOR_GALLERY_V010: 'false'
+        run: |
+          npm run build:creator-v1-web
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';import path from 'node:path';
+          function readAll(dir){return fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?readAll(path.join(dir,e.name)):[path.join(dir,e.name)]);}
+          const paths=readAll('creator-v1/dist/web').filter(x=>/\.(js|css)$/.test(x));
+          for(const marker of ['lnx-root','lnx-quick-dialog'])if(!paths.some(file=>fs.readFileSync(file,'utf8').includes(marker)))throw Error('Review bundle missing '+marker);
+          JS
+      - name: Install pinned browser review tooling
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
+          npx playwright install --with-deps chromium webkit
+      - name: Review compiled React on desktop and mobile with synthetic public fixtures
+        run: node creator-v1/test/continuance-next-community-browser.mjs --output "$RUNNER_TEMP/anevum-commons-react-review"
+      - name: Verify navigator interactions in Chromium
+        run: node creator-v1/test/continuance-next-navigator-browser.mjs --engine chromium --output "$RUNNER_TEMP/anevum-commons-react-review/navigator-chromium"
+      - name: Verify navigator interactions in WebKit
+        run: node creator-v1/test/continuance-next-navigator-browser.mjs --engine webkit --output "$RUNNER_TEMP/anevum-commons-react-review/navigator-webkit"
+      - name: Retain labelled compiled React captures and browser receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: living-commons-react-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/anevum-commons-react-review
+          if-no-files-found: warn
+          retention-days: 14
