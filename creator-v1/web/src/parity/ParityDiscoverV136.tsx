@@ -1,4 +1,4 @@
-import {type FormEvent,type KeyboardEvent} from 'react';
+import {useEffect,useState,type FormEvent,type KeyboardEvent} from 'react';
 import {Link} from 'react-router-dom';
 import {CosmicArtwork} from '../components/CosmicArtwork';
 import {Icon} from '../components/Icons';
@@ -10,6 +10,7 @@ import type {Category,Project} from '../lib/api';
 import type {CreatorPackageCard} from '../lib/creator-package-gallery-v010';
 import type {CosmicScene} from '../components/CosmicIllustration';
 import './parity-discover-v136.css';
+import {ArtifactLensV136,type ArtifactSelection} from './ArtifactLensV136';
 
 /**
  * PARITY V136.004 / Discover. The original DiscoverPage continues to own
@@ -92,6 +93,9 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
     packagesCount,packageProjects,legacyProjects,shown,resultsReady,emptyVerified,
     current,params,nextCursor
   }=props;
+  const [inspected,setInspected]=useState<ArtifactSelection|null>(null);
+  // Route/filter changes invalidate the local inspection, never the data API.
+  useEffect(()=>setInspected(null),[current]);
   const filtered=Boolean(query||category||cursor||freeOnly);
   const countLabel=resourceState==='ready'?'APPROVED PROJECT CATALOGUE':packagesInScope&&packageState==='ready'?'AVAILABLE BROWSER RELEASES':'READING THE PUBLIC INDEX';
   return <div data-iren-anchor="discover" className="portal-discover av73-discover p136-discovery" data-parity-discover="v136.004">
@@ -200,8 +204,8 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
         {packagesInScope&&packageState==='loading'&&<p className="p136-discover-status" role="status">Checking approved browser uploads…</p>}
         {packagesInScope&&packageState==='error'&&<p className="p136-discover-status" role="status">Uploaded browser releases are temporarily unavailable.</p>}
         {resultsReady&&shown>0&&<div className={'p136-discover-results'+(view==='compact'?' p136-discover-results--compact':'')}>
-          {packageProjects.map(project=><WorkCard key={'package:'+project.id} work={project} mode="public" compact={view==='compact'}/>)}
-          {legacyProjects.map(project=><ProjectCard key={'catalogue:'+project.id} project={project} returnTo={current} presentation={view==='compact'?'editorial':'visual'}/>)}
+          {packageProjects.map(project=><WorkCard key={'package:'+project.id} work={project} mode="public" compact={view==='compact'} onInspect={work=>setInspected({kind:'package',work})}/>)}
+          {legacyProjects.map(project=><ProjectCard key={'catalogue:'+project.id} project={project} returnTo={current} presentation={view==='compact'?'editorial':'visual'} onInspect={project=>setInspected({kind:'project',project})}/>)}
         </div>}
         {emptyVerified&&<div className="p136-discover-empty" role="status">
           <span className="p136-discover-empty-orbit" aria-hidden="true">◇</span>
@@ -216,5 +220,6 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
       </section>
       <footer className="p136-discover-footer"><span>ANEVUM / THE CONTINUANCE INSTITUTE</span><Link to="/community">Continue into the community <Icon name="arrow" size={16}/></Link></footer>
     </div>
+    {inspected&&<ArtifactLensV136 selection={inspected} returnTo={current} onClose={()=>setInspected(null)}/>}
   </div>;
 }
