@@ -36,7 +36,12 @@ for datablocks in (bpy.data.meshes, bpy.data.curves, bpy.data.materials, bpy.dat
 scene = bpy.context.scene
 scene.render.engine = "CYCLES"
 scene.cycles.samples = 12 if opts.quality == "preview" else 48
-scene.cycles.use_denoising = True
+# Ubuntu's packaged Blender builds may omit OpenImageDenoiser entirely.
+# Keep headless first-master rendering independent of optional denoise binaries.
+scene.cycles.use_denoising = False
+for layer in scene.view_layers:
+    if hasattr(layer.cycles, 'use_denoising'):
+        layer.cycles.use_denoising = False
 scene.render.resolution_x = 960 if opts.quality == "preview" else 3072
 scene.render.resolution_y = 540 if opts.quality == "preview" else 1728
 scene.render.resolution_percentage = 100
