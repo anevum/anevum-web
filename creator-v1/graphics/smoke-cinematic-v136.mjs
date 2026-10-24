@@ -22,6 +22,7 @@ try{
  assert.equal(Object.keys(data.video.assets).length,2);
  assert.ok(data.posters.desktop.bytes>0);assert.ok(data.video.assets.webm.bytes>0);
  assert.equal(readdirSync(join(output,'frames','desktop')).length,6);
+ run(process.execPath,['creator-v1/graphics/inspect-cinematic-candidate-v136.mjs','--candidate',output]);
  const fail=spawnSync(process.execPath,['creator-v1/graphics/encode-cinematic-v136.mjs','--frames',output,'--out',output],{encoding:'utf8'});
  assert.notEqual(fail.status,0,'Invalid input cannot self overwrite');
  console.log('PASS: real FFmpeg desktop/mobile 6-frame encode, video MP4/WebM, offline unreviewed manifest and path defense');
