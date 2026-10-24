@@ -82,6 +82,22 @@ The Cloudflare Web Analytics site for `anevum.com` is enabled with automatic ins
 
 A future Cloudflare RUM adapter must use a distinct least-privilege analytics-read credential, server-only account/site identifiers, bounded grouped GraphQL reads, confidence/sample metadata where available, safe error handling, rate-limit backoff, and aggregate-only reviewer projections. Cloudflare introspection/query read budget was exhausted during discovery; no additional reads were attempted after that provider limit. No API token or private ID should enter the repository. Browser visits must remain separate from registered accounts and action-based participation.
 
+### V106 Continuance NEXT design and optional browser analytics adapter — SOURCE ONLY
+
+The V106 protected Worker imports V105, which imports V104. It decorates both staff pages with the selected Orbital Underground/NEXT theme and authentic OrbitalMark SVG geometry. Staff access, owner-only fields, legacy APIs and production bindings are preserved. CSS/JS/theme endpoints reuse the original staff grant check. Registrations can be viewed across **7, 14 and 30 UTC calendar dates**, and exported as verified-source read-only CSVs.
+
+**Cloudflare Web Analytics implementation:** `creator-v1/analytics/cloudflare-rum-observatory-v106.mjs` defines a bounded thirty-day server-only GraphQL aggregate reader. `creator-v1/operations/anevum-observatory-rum-v106-assets.mjs` adds a dedicated browser-signal UI. V106 exposes protected `/staff/observatory/rum/api`, `/rum.js`, and `/rum.css`. No GraphQL read is attempted unless *all* three private Worker bindings are present and validated:
+
+- `ANEVUM_RUM_ACCOUNT_TAG` — private account tag, never included in HTML/JSON.
+- `ANEVUM_RUM_SITE_TAG` — private Web Analytics site tag; validated before query.
+- `ANEVUM_RUM_READ_TOKEN` — least-privilege analytics read token, set as a Worker secret only after independent approval.
+
+Without these bindings, the dashboard says **NOT CONNECTED** and returns no numeric visit estimates. The reader makes one bounded read-only GraphQL POST with timeout, checks site/account/time window, response shape and exact UTC day integrity. A failed upstream request returns a generic 503 without revealing token, upstream messages or IDs. No raw visitor events, individual identities, full URLs, session identifiers, IP addresses, advertising identifiers or user profiles are queried or stored.
+
+When credentials become available after separate review, the dashboard may show only **estimated 30-day browser beacon visits and page-load events**, with clear Cloudflare sampling/aggregation cautions. These are not unique people and cannot be divided into saved ANEVUM account counts as a signup conversion rate. Provider data may include owner/test/bot traffic until a reliable exclusion policy exists; daily zeros mean zero provider-reported samples on dates within an otherwise valid response, never that real human traffic was absent.
+
+**Release boundary:** New code is currently source-only and not wired to an active production Worker. Do not install the bindings, touch runtime routing or claim live metrics until exact-head CI, owner/reviewer access QA, bounded Web Analytics query verification and explicit telemetry privacy review are complete. See [Cloudflare Web Analytics FAQ](https://developers.cloudflare.com/web-analytics/faq/) regarding sampling and retention.
+
 ### Technical instrumentation blueprint — NOT ACTIVATED
 
 1. **Browser Web Analytics:** evaluate scoped Cloudflare Web Analytics GraphQL reads for pageviews/visitor estimates, sampling indicators and available history. Browser beacons are not server-confirmed activity; show sampling or estimate metadata. Never use edge requests as unique visitors.
