@@ -47,7 +47,7 @@ async function contextFor(width,{motion='reduce',state='empty',failedArt=false}=
     }
     await route.continue();
   });
-  const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
+  const page=await context.newPage();page.on('pageerror',e=>{errors.push(e.message);console.error('BROWSER_RUNTIME_ERROR '+e.message);});
   return {page,context};
 }
 try{
@@ -82,11 +82,12 @@ try{
     record('responsive arrival '+width,layout);
     await page.getByRole('link',{name:'Explore real projects',exact:true}).click();
     await page.waitForURL(base+'/discover');
+    await page.locator('.av73-discover').waitFor();
     assert.equal(await page.locator('.av73-discover').count(),1);
     await page.goto(base,{waitUntil:'networkidle'});
     await page.getByRole('link',{name:'Join the early community',exact:true}).click();
     await page.waitForURL(base+'/join');
-    assert.ok(await page.getByRole('heading',{name:/join|member|belong|space|identity/i}).count()>0);
+    await page.getByRole('heading',{name:/ENTER THE\s*CONTINUANCE\./i}).waitFor();
     await page.goto(base,{waitUntil:'networkidle'});
     await page.getByRole('button',{name:'Need a guide? Meet IREN',exact:true}).click();
     assert.equal(await page.locator('.ir80-dock').count(),1);
@@ -116,6 +117,12 @@ try{
   await page.screenshot({path:join(out,'art-fallback-390.png'),animations:'disabled'});
   record('art failure / live reduced motion / keyboard focus',focus);await context.close();
   assert.deepEqual(errors,[]);assert.deepEqual(forbidden,[]);
+}catch(error){
+  for(const context of browser.contexts())for(const page of context.pages()){
+    await page.screenshot({path:join(out,'failure.png'),fullPage:true}).catch(()=>{});
+    writeFileSync(join(out,'failure.json'),JSON.stringify({url:page.url(),body:await page.locator('body').innerText().catch(()=>''),errors,forbidden,error:String(error)},null,2));
+  }
+  throw error;
 }finally{
   writeFileSync(join(out,'acceptance.json'),JSON.stringify({source:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),checks,errors,forbidden,fixtureOnly:true},null,2)+'\n');
   await browser.close();await new Promise(done=>server.close(done));

@@ -1,0 +1,68 @@
+name: PARITY V136 Full Visual Foundation QA
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/parity-v136-full-qa.yml'
+      - 'creator-v1/web/src/parity/**'
+      - 'creator-v1/web/src/components/Shell.tsx'
+      - 'creator-v1/web/src/pages/CinematicLandingPage.tsx'
+      - 'creator-v1/web/src/main.tsx'
+      - 'creator-v1/web/src/legacy-styles.css'
+      - 'creator-v1/web/public/assets/parity-v136/**'
+      - 'creator-v1/test/parity-v136-full-browser.mjs'
+      - 'creator-v1/test/parity-v136-full.test.mjs'
+permissions:
+  contents: read
+jobs:
+  compile-and-contract:
+    if: github.repository == 'anevum/anevum-web' && github.event.pull_request.head.repo.full_name == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      CLOUDFLARE_API_TOKEN: ''
+      CLOUDFLARE_API_KEY: ''
+      CLOUDFLARE_ACCOUNT_ID: ''
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node creator-v1/test/parity-v136-scope.mjs
+      - run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - run: node --test creator-v1/test/parity-v136-full.test.mjs
+      - run: npm run check:creator-v1-web
+      - name: Full visual build (non deployed)
+        env:
+          VITE_PARITY_V136_FULL: 'true'
+          VITE_IREN_SPATIAL_GUIDE: 'true'
+          VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
+          VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
+        run: npm run build:creator-v1-web
+      - name: Verify independent full frontend bundle
+        run: |
+          node --input-type=module <<'JS'
+          import fs from 'node:fs'; import path from 'node:path';
+          function all(root){return fs.readdirSync(root,{withFileTypes:true}).flatMap(e=>e.isDirectory()?all(path.join(root,e.name)):[path.join(root,e.name)]);}
+          const files=all('creator-v1/dist/web').filter(x=>/\.(js|css)$/.test(x));
+          const bundle=files.map(p=>fs.readFileSync(p,'utf8')).join('\n');
+          for(const marker of ['p136-hero','p136-header','Independent worlds.'])if(!bundle.includes(marker))throw Error('Missing PARITY full '+marker);
+          JS
+# Read-only CI. No worker deployments, migrations, authenticated sessions, or payment access.
+
+      - name: Install pinned browser QA
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
+          npx playwright install --with-deps chromium
+      - name: Render six viewports and test navigation, states, IREN, keyboard and fallbacks
+        run: node creator-v1/test/parity-v136-full-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: parity-v136-full-${{ github.event.pull_request.head.sha }}
+          path: evidence/parity-v136
+          retention-days: 14
