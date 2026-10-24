@@ -26,8 +26,8 @@ export function cinematicArtUrl(scene:CosmicScene):string {
   return import.meta.env.BASE_URL + "assets/cinematic/" + assets[scene];
 }
 
-export function CosmicArtwork({scene="hero",priority=false,className="",title}: {
-  scene?:CosmicScene;priority?:boolean;className?:string;title?:string;
+export function CosmicArtwork({scene="hero",priority=false,className="",title,sizes}: {
+  scene?:CosmicScene;priority?:boolean;className?:string;title?:string;sizes?:string;
 }) {
   const [failed,setFailed]=useState(false);
   useEffect(()=>setFailed(false),[scene]);
@@ -36,7 +36,7 @@ export function CosmicArtwork({scene="hero",priority=false,className="",title}: 
     {failed ? <CosmicIllustration scene={scene} className="cw-artwork-vector"/> :
       <img className="cw-artwork-image" src={cinematicArtUrl(scene)} alt="" aria-hidden="true"
         srcSet={originals[scene]?import.meta.env.BASE_URL+"assets/community-portals/"+originals[scene]+"-768.webp 768w, "+cinematicArtUrl(scene)+" 1536w":undefined}
-        sizes={scene==="hero"?"100vw":"(max-width: 700px) 100vw, 50vw"}
+        sizes={sizes??(scene==="hero"?"100vw":"(max-width: 700px) 100vw, 50vw")}
         width={originals[scene]?1536:undefined} height={originals[scene]?1024:undefined}
         decoding="async" loading={priority?"eager":"lazy"} fetchPriority={priority?"high":"auto"}
         draggable={false} onError={()=>setFailed(true)} />}
