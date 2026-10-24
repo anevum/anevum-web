@@ -91,7 +91,7 @@ export function CinematicLandingPage(){
     <div className="cinema-content av79-home-content">
       <section className="av79-hero av114-arrival av115-arrival av125-arrival" data-iren-anchor="arrival" aria-labelledby="av79-home-heading">
         <div className="av114-arrival-scene" aria-hidden="true">
-          {cinematicNextEnabled&&<CosmicArtwork scene="games" priority className="av-next-arrival-art"/>}
+          {cinematicNextEnabled&&<CosmicArtwork scene="games" priority sizes="100vw" className="av-next-arrival-art"/>}
           <span className="av114-arrival-stars"/>
           <span className="av114-arrival-planet"><i/></span>
           <span className="av114-arrival-ring av114-arrival-ring--one"/>
