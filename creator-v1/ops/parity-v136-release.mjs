@@ -11,7 +11,9 @@ export const WORKER='anevum-apex-prelaunch-gateway';
 export const ACCOUNT='2f7ee83107240152097efd956a4e8335';
 export const V131='44f5971b-4cc9-4e7e-ab6a-1adb6fc5c12e',V132='de673bf1-ef05-4276-af16-2ee8713d965c';
 export const LIVE_V136_003='72f35ec3-e046-4f75-ae65-19fa672b87c9';
-export const LIVE_DEPLOY_003='319d9632-5c88-4d41-a3de-849a29e96b98';
+export const LIVE_DEPLOY_003='f2f950d8-8ec6-42cd-80c2-06681ad2fcf9';
+export const LIVE_V136_005='cf058439-2487-4b96-b183-94a5c419f3cb';
+export const SESSION='ANEVUM.WEB.BUILD.2026-10-24.002.WEBGL-ASSET-OVERHAUL';
 export const GATEWAY='1884ff0dd3c8aa3d38711167af0b4552c9b200b3148e72d9ba6d90d23171ef99';
 const ROOT=`/accounts/${ACCOUNT}/workers/scripts/${WORKER}`;
 const ZONE='8abe27259b5436af5966d3b40d9a3760';
@@ -21,13 +23,32 @@ const load=p=>JSON.parse(readFileSync(p,'utf8'));
 const save=(p,v)=>writeFileSync(p,JSON.stringify(v,null,2)+'\n');
 const stable=x=>JSON.stringify(x,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b))):v);
 const allowed=new Set([
+ 'creator-v1/ops/parity-v136-asset-pair.mjs','creator-v1/test/parity-v136-asset-pair.test.mjs',
+ 'creator-v1/web/src/pages/NativeCreatorStudio.tsx',
+ 'creator-v1/source-ide/language-v119.mjs','creator-v1/source-ide/language-v119.d.mts',
+ 'creator-v1/test/source-archive-v136.test.mjs','creator-v1/test/csp-meshopt-v136.test.mjs',
+ ...['ArtifactWorkbenchV136.tsx','MonacoSourceV136.tsx','source-archive-v136.ts','artifact-workbench-v136.css'].map(x=>'creator-v1/web/src/parity/'+x),
+ 'package.json',
+ 'creator-v1/graphics/build-institute-assets.mjs',
+ 'creator-v1/graphics/inspect-institute-assets.mjs','creator-v1/graphics/build-institute-textures.mjs',
+ 'docs/production/parity-v136-webgl-asset-overhaul-20261024.md',
+ ...['InstituteRendererV136.ts','InstituteMaterialsV136.ts','CspMeshoptDecoderV136.ts','MeshoptDecodeWorkerV136.ts','meshopt-reference-v136.d.ts','InstituteAssetManifestV136.ts','institute-optics-v136.css'].map(x=>'creator-v1/web/src/parity/'+x),
+ ...['manifest.json','texture-manifest.json','THIRD_PARTY_NOTICES.md',...['mobile','desktop'].flatMap(t=>['astc_rgba','bc7_rgba','etc2_rgba'].map(f=>'alloy-normal-'+t+'-'+f+'.ktx')),...['atrium','archive','forge','relay'].flatMap(f=>['mobile','desktop'].map(t=>f+'-'+t+'.glb'))].map(x=>'creator-v1/web/public/assets/institute/v136-011/'+x),
  '.github/workflows/parity-v136-release.yml','creator-v1/ops/parity-v136-release.mjs',
+ '.github/workflows/parity-v136-scene-qa.yml',
+ 'creator-v1/test/parity-v136-scene-director.test.mjs',
+ 'creator-v1/test/parity-v136-spatial-render-browser.mjs',
+ 'docs/production/parity-v136-continuance-spatial-system-20261024.md',
+ ...['SceneDirectorV136.ts','scene-materials-v136.css','ArtifactLensV136.tsx','artifact-lens-v136.css'].map(x=>'creator-v1/web/src/parity/'+x),
  'creator-v1/test/parity-v136-discover-browser.mjs',
  'creator-v1/web/src/pages/DiscoverPage.tsx',
  'creator-v1/web/src/pages/CommunityPage.tsx',
  'creator-v1/web/src/pages/CanonicalStudioPage.tsx',
  'creator-v1/web/src/components/CompactMemberIdentity.tsx',
  'creator-v1/web/src/parity/SpatialSurfaceV136.tsx',
+ 'creator-v1/web/src/parity/StudioSpatialWorkspaceV136.tsx',
+ 'creator-v1/web/src/parity/studio-spatial-workspace-v136.css',
+ 'docs/production/anevum-workstreams-consolidation-20261024.md',
  'creator-v1/web/src/parity/spatial-surface-v136.css',
  'creator-v1/web/src/pages/CanonicalSavedWorksPage.tsx',
  'creator-v1/web/src/pages/canonical-saved-works.css',
@@ -53,6 +74,12 @@ const allowed=new Set([
 ]);
 export function source(){
  git('merge-base','--is-ancestor',BASE,'HEAD');
+ // Allow this renderer's pinned additions without permitting collateral changes
+ // to auth/runtime dependencies through the package.json allowlist.
+ const baseline=JSON.parse(git('show',BASE+':package.json')),current=load('package.json');
+ const additions={dependencies:{three:'0.180.0','monaco-editor':'0.55.1',fflate:'0.8.2'},devDependencies:{'@types/three':'0.180.0','@gltf-transform/core':'4.2.1','@gltf-transform/extensions':'4.2.1',meshoptimizer:'0.24.0',basisu:'1.16.3'}};
+ for(const field of ['dependencies','devDependencies'])assert.deepEqual(current[field],{...baseline[field],...additions[field]},'Only pinned graphics dependencies may change');
+ assert.deepEqual(current.scripts,baseline.scripts,'Build and protected-system commands preserved');
  const changed=git('diff','--name-only',BASE,'HEAD').split('\n').filter(Boolean);
  assert.ok(changed.length);for(const p of changed)assert.ok(allowed.has(p),'Unreviewed release change '+p);
  assert.equal(git('diff','--name-only','--','creator-v1/web/src','creator-v1/apex-prelaunch','creator-v1/canonical-auth'),'','Uncommitted application edits');
@@ -69,7 +96,7 @@ export function pack(oldRoot,freshRoot,out){
  cpSync(join(oldRoot,'worker-bundle'),join(out,'worker-bundle'),{recursive:true});
  assert.deepEqual(walk(join(out,'compiled-web')).filter(x=>x.path.startsWith('evolution/assets/')),media);
  const inventory=walk(join(out,'compiled-web'));assert.equal(inventory.some(x=>x.path.endsWith('.map')),false);
- const report={session:'ANEVUM.WEB.BUILD.2026-10-24.001.PARITY-V136',source:identity,worker:WORKER,gatewaySha256:GATEWAY,
+ const report={session:SESSION,source:identity,worker:WORKER,gatewaySha256:GATEWAY,
   assetCount:inventory.length,assetsSha256:hash(stable(inventory)),earnedMediaCount:media.length,
   originalBackendUnchanged:true,uploaded:false,activated:false,authenticatedAcceptance:false,physicalSafariAcceptance:false};
  save(join(out,'manifest.json'),report);save(join(out,'assets.json'),inventory);return report;
@@ -89,7 +116,7 @@ async function snapshot(){
 }
 function verifyBefore(s){
  assert.equal(s.deployment.id,LIVE_DEPLOY_003,'Production changed; inspect before retry');
- assert.deepEqual(s.deployment.versions,[{version_id:LIVE_V136_003,percentage:100}]);
+ assert.deepEqual(s.deployment.versions,[{version_id:LIVE_V136_003,percentage:99},{version_id:LIVE_V136_005,percentage:1}]);
  assert.equal(s.settings.bindings.length,26);assert.deepEqual(signatures(s.settings.bindings),signatures(s.original.resources.bindings));
  assert.equal(s.controller.id,'4c832ec7-ce67-4864-832c-9b0b470af92d','Controller changed; inspect');
  assert.equal(s.routes.length,40,'Route inventory changed; inspect');
@@ -117,8 +144,10 @@ async function after(out){
  const v=await get(ROOT+'/versions/'+added[0].id);
  assert.deepEqual(signatures(v.resources.bindings),signatures(original.original.resources.bindings));
  assert.deepEqual(v.resources.script_runtime,original.original.resources.script_runtime);
- assert.equal(v.annotations?.['workers/message'],'PARITY V136 frontend '+git('rev-parse','HEAD')+'; V131 gateway unchanged; INACTIVE');
- const result={status:'VERIFIED_INACTIVE_PARITY_VERSION',version:v.id,number:v.number,source:git('rev-parse','HEAD'),gatewaySha256:GATEWAY,rollback:[LIVE_V136_003,V131,V132],trafficChanged:false,controllerChanged:false,bindingsPreserved:true,routesPreserved:true,memberDataChanged:false};
+ const packageManifest=load(join(out,'manifest.json'));
+ const label=packageManifest.releaseVariant==='baseline-assets-only'?'baseline-assets-only':'frontend';
+ assert.equal(v.annotations?.['workers/message'],'PARITY V136 '+label+' '+git('rev-parse','HEAD')+'; V131 gateway unchanged; INACTIVE');
+ const result={status:'VERIFIED_INACTIVE_PARITY_VERSION',releaseVariant:packageManifest.releaseVariant||'candidate',frontendSourceHead:packageManifest.frontendSourceHead||git('rev-parse','HEAD'),sharedAssetsSha256:packageManifest.sharedAssetsSha256||null,version:v.id,number:v.number,source:git('rev-parse','HEAD'),gatewaySha256:GATEWAY,rollback:[LIVE_V136_003,LIVE_V136_005,V131,V132],trafficChanged:false,controllerChanged:false,bindingsPreserved:true,routesPreserved:true,memberDataChanged:false};
  save(join(out,'inactive-receipt.json'),result);return result;
 }
 const [cmd,...args]=process.argv.slice(2);

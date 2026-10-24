@@ -1,0 +1,69 @@
+{
+  "version": "136.011.1",
+  "surface": "Original deterministic ANEVUM brushed-alloy normal",
+  "generator": "creator-v1/graphics/build-institute-textures.mjs",
+  "encoderPackage": "basisu@1.16.3",
+  "encoderBinary": "Basis Universal GPU Texture Compressor v1.15",
+  "container": "KTX1 native GPU blocks; no client transcoder",
+  "colorSpace": "linear normal",
+  "variants": {
+    "mobile": {
+      "ASTC_RGBA": {
+        "url": "/assets/institute/v136-011/alloy-normal-mobile-astc_rgba.ktx",
+        "bytes": 87508,
+        "width": 256,
+        "height": 256,
+        "internalFormat": 37808,
+        "mipmaps": 9,
+        "sha256": "5075ddefc83abe28fb8e7831c88afcdebf60b1142ccd6660abafba018031ce88"
+      },
+      "BC7_RGBA": {
+        "url": "/assets/institute/v136-011/alloy-normal-mobile-bc7_rgba.ktx",
+        "bytes": 87508,
+        "width": 256,
+        "height": 256,
+        "internalFormat": 36492,
+        "mipmaps": 9,
+        "sha256": "aee2d09722fad8bc60655d3456f116e79dcba1a860e9f88a932714abbaf54d46"
+      },
+      "ETC2_RGBA": {
+        "url": "/assets/institute/v136-011/alloy-normal-mobile-etc2_rgba.ktx",
+        "bytes": 87508,
+        "width": 256,
+        "height": 256,
+        "internalFormat": 37496,
+        "mipmaps": 9,
+        "sha256": "f67e15bf1b339924f8898fab4504e1ab58f758a5e873e7e2603317afd20dd69a"
+      }
+    },
+    "desktop": {
+      "ASTC_RGBA": {
+        "url": "/assets/institute/v136-011/alloy-normal-desktop-astc_rgba.ktx",
+        "bytes": 349656,
+        "width": 512,
+        "height": 512,
+        "internalFormat": 37808,
+        "mipmaps": 10,
+        "sha256": "885d6654487b3bba517a585ad0c7cb3f03c38b35973826c316ee641a85662977"
+      },
+      "BC7_RGBA": {
+        "url": "/assets/institute/v136-011/alloy-normal-desktop-bc7_rgba.ktx",
+        "bytes": 349656,
+        "width": 512,
+        "height": 512,
+        "internalFormat": 36492,
+        "mipmaps": 10,
+        "sha256": "da6ffe94d4efce7b574dea85a66056509380efe7092deb611287a847e162a55e"
+      },
+      "ETC2_RGBA": {
+        "url": "/assets/institute/v136-011/alloy-normal-desktop-etc2_rgba.ktx",
+        "bytes": 349656,
+        "width": 512,
+        "height": 512,
+        "internalFormat": 37496,
+        "mipmaps": 10,
+        "sha256": "0187fc15e0be3163d6cdb7424baf21a5180c882ba1c9e278497cf1f01f7cbbc8"
+      }
+    }
+  }
+}

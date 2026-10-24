@@ -1,5 +1,5 @@
 import { NavLink, Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState, lazy, Suspense, ViewTransition } from "react";
+import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState, lazy, Suspense } from "react";
 import { OrbitalMark } from "./OrbitalMark";
 import { Icon } from "./Icons";
 import { PortalLauncher } from "./PortalLauncher";
@@ -14,6 +14,7 @@ import {VerifiedStaffShortcut} from "./VerifiedStaffShortcut";
 import {LivingWorldProvider,useLivingWorld,type WorldSector} from "../parity/LivingWorldState";
 import {LivingWorldField} from "../parity/LivingWorldField";
 import {ConsoleWayfinderV136} from "../parity/ConsoleWayfinderV136";
+import {StudioSpatialWorkspaceV136} from "../parity/StudioSpatialWorkspaceV136";
 import "../parity/spatial-surface-v136.css";
 
 const FullParityHeader=import.meta.env.VITE_PARITY_V136_FULL==="true" ? lazy(()=>import("../parity/ParityHeaderV136").then(m=>({default:m.ParityHeaderV136}))) : null;
@@ -74,7 +75,8 @@ function ShellContent(){
   const [launcherOpen,setLauncherOpen]=useState(false);
   const menuButton=useRef<HTMLButtonElement>(null);
   const menuDialog=useRef<HTMLDialogElement>(null);
-  const previousPage=useRef(location.pathname+location.search);
+  const previousPage=useRef(location.pathname);
+  const routeMotion=useRef<HTMLDivElement>(null);
 
   useEffect(()=>{setMenuOpen(false);setLauncherOpen(false);},[location.pathname,location.search]);
   useEffect(()=>{
@@ -84,12 +86,22 @@ function ShellContent(){
     if(!menuOpen&&dialog.open)dialog.close();
   },[menuOpen]);
   useEffect(()=>{
-    const page=location.pathname+location.search;
+    // A filter/search update belongs to the current page. Moving focus to
+    // main during that update can steal the next Enter key from a searchbox
+    // and also breaks keyboard filter browsing. Only page traversal resets it.
+    const page=location.pathname;
     if(previousPage.current===page)return;
     previousPage.current=page;
     if(!location.hash)window.scrollTo({top:0,behavior:"instant"});
     document.getElementById("main")?.focus({preventScroll:true});
-  },[location.pathname,location.search,location.hash]);
+    // Animate the real DOM once per page traversal. Experimental React
+    // ViewTransition update snapshots also intercept controlled form updates;
+    // those must remain synchronous and never replace the interactive tree.
+    if(FullParityHeader&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      routeMotion.current?.animate([{opacity:.6,transform:'translateY(8px)'},{opacity:1,transform:'translateY(0)'}],
+        {duration:230,easing:'cubic-bezier(.2,.75,.2,1)'});
+    }
+  },[location.pathname,location.hash]);
   useEffect(()=>{
     function onShortcut(event:KeyboardEvent){
       const command=(event.metaKey || event.ctrlKey)&&event.key.toLowerCase()==="k"&&!event.altKey;
@@ -129,7 +141,15 @@ function ShellContent(){
   // PARITY destinations own a full-bleed spatial canvas, not a nested page box.
   // Legacy routes retain their protected frame until individually transformed.
   // One stable route surface keeps navigation, IREN and launcher mounted.
-  const routeSurface=home||parityFullBleed?<Outlet/>:
+  const studioWorkspace=Boolean(FullParityHeader&&canonicalMember&&
+    (location.pathname==="/studio"||location.pathname==="/studio/records"||
+    location.pathname==="/studio/new"||location.pathname==="/studio/review"||
+    /^\/studio\/[0-9a-f-]{36}$/.test(location.pathname)));
+  const routeSurface=studioWorkspace?
+    <StudioSpatialWorkspaceV136 key={canonicalSession?.user?.id||"unavailable"} memberId={canonicalSession?.user?.id||""}>
+      <Outlet/>
+    </StudioSpatialWorkspaceV136>:
+    home||parityFullBleed?<Outlet/>:
     <div className="av5-site-frame av9-unified-frame"><div className="av5-site-content"><Outlet/></div></div>;
   return <div className={"site-shell site-shell--cinematic av9-shell"+(home?" site-shell--home":"")}>
     {FullParityHeader&&<LivingWorldField enabled={publicSpatial} sector={worldSector(location.pathname,location.search)}/>}
@@ -230,7 +250,7 @@ function ShellContent(){
     <PortalLauncher open={launcherOpen} onClose={()=>setLauncherOpen(false)}/>
     <main id="main" tabIndex={-1} className="site-main av9-main">
       {!publicSpatial&&<VisualKitAtmosphere room={publicVisualRoom(location.pathname)}/>}
-      {parityFullBleed?<ViewTransition enter="p136-route" exit="p136-route" update="p136-route">{routeSurface}</ViewTransition>:routeSurface}
+      {FullParityHeader?<div ref={routeMotion} className={parityFullBleed?"p136-route-surface":undefined}>{routeSurface}</div>:routeSurface}
     </main>
     <footer className="site-footer av9-footer">
       <span>ANEVUM / A WORLD OF THINGS PEOPLE MAKE</span>

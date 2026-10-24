@@ -1,4 +1,4 @@
-import {useCallback,useEffect,useRef,useState,type FormEvent,type ReactNode} from 'react';
+import {useCallback,useEffect,useRef,useState,lazy,Suspense,type FormEvent,type ReactNode} from 'react';
 import {Link,NavLink,useLocation,useNavigate,useParams,useSearchParams} from 'react-router-dom';
 import {canonicalAuthClient} from '../lib/canonical-beta';
 import {readWithDeadline} from '../../../shared/read-deadline.mjs';
@@ -11,6 +11,7 @@ import {
 import {inspectLocalBrowserBuild,type LocalCompatibilityReport} from '../lib/native-compatibility-v101';
 import './canonical-studio.css';
 import './native-creator-v095.css';
+const SourceWorkbench=import.meta.env.VITE_PARITY_V136_FULL==='true'?lazy(()=>import('../parity/ArtifactWorkbenchV136').then(m=>({default:m.ArtifactWorkbenchV136}))):null;
 const message=(e:unknown)=>e instanceof Error?e.message:'Creator Studio is temporarily unavailable.';
 const pretty=(value:string)=>value.replaceAll('_',' ');
 const bytes=(n:number)=>(n/1048576).toFixed(1)+' MiB';
@@ -140,6 +141,7 @@ function BuildUpload({memberId,projectId}:{memberId:string;projectId?:string}){
  const navigate=useNavigate(),busyRef=useRef(false);
  const library=useRead('editing:'+memberId+':'+projectId,!!projectId,signal=>readNativeLibrary(memberId,signal));
  const project=library.data?.projects.find(p=>p.id===projectId);
+ const [sourceOpen,setSourceOpen]=useState(false),[sourceStarted,setSourceStarted]=useState(false),[sourceDirty,setSourceDirty]=useState(false),[sourceFile,setSourceFile]=useState(false);
  const [file,setFile]=useState<File|null>(null),[cover,setCover]=useState<File|null>(null),[coverUrl,setCoverUrl]=useState<string|null>(null);
  const [title,setTitle]=useState(''),[summary,setSummary]=useState(''),[category,setCategory]=useState<PackageCategory>('game');
  const [rights,setRights]=useState(false),[replace,setReplace]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('');
@@ -161,7 +163,15 @@ function BuildUpload({memberId,projectId}:{memberId:string;projectId?:string}){
   }).finally(()=>{if(version===compatibilityVersion.current)setCheckingCompatibility(false);});
   return()=>{compatibilityVersion.current++;};
  },[file]);
- const dirty=!!file||!!cover||rights;
+ useEffect(()=>{
+  if(!sourceDirty)return;
+  const guard=(event:MouseEvent)=>{
+   const anchor=(event.target as Element)?.closest?.('a[href]');
+   if(anchor&&!window.confirm('Your source changes have not been packaged or uploaded. Leave this workspace?')){event.preventDefault();event.stopPropagation()}
+  };
+  document.addEventListener('click',guard,true);return()=>document.removeEventListener('click',guard,true);
+ },[sourceDirty]);
+ const dirty=!!file||!!cover||rights||sourceDirty;
  useEffect(()=>{if(!dirty)return;const warn=(e:BeforeUnloadEvent)=>{e.preventDefault();e.returnValue='';};addEventListener('beforeunload',warn);return()=>removeEventListener('beforeunload',warn);},[dirty]);
  async function submit(e:FormEvent<HTMLFormElement>){
   e.preventDefault();if(busyRef.current)return;
@@ -185,9 +195,13 @@ function BuildUpload({memberId,projectId}:{memberId:string;projectId?:string}){
  if(projectId&&!project)return <Status title="Project unavailable."><p>This project is not in the signed-in creator's archive.</p></Status>;
  if(project?.draftStatus==='pending_review'||project?.status==='suspended')return <Status title="This build is not editable."><p>{project.status==='suspended'?'A moderator must resolve the suspension.':'The submitted revision is awaiting an independent decision. Your approved release remains unchanged.'}</p></Status>;
  return <div className="av095-upload-grid"><section className="st-panel"><p className="st-kicker">{project?'IMMUTABLE REVISION':'NEW PLAYABLE BUILD'}</p><h2>{project?'Prepare the next version.':'Give your creation a home.'}</h2><p>Your build stays private until an independent reviewer approves it.</p>
+  {SourceWorkbench&&<div className="av095-source-entry"><button type="button" className="st-action" aria-expanded={sourceOpen} onClick={()=>{setSourceStarted(true);setSourceOpen(v=>!v)}}>Artifact source workbench</button><p className="st-muted">Edit a self-contained browser build here, or upload an export from your existing tools.</p></div>}
+  {SourceWorkbench&&sourceStarted&&<div hidden={!sourceOpen}><Suspense fallback={<p role="status">Opening the local source workbench…</p>}><SourceWorkbench disabled={busy}
+   onDirty={()=>{setSourceDirty(true);if(sourceFile){setFile(null);setSourceFile(false)}setRights(false)}}
+   onPackage={archive=>{setFile(archive);setSourceFile(true);setSourceDirty(false);setRights(false);setError('')}}/></Suspense></div>}
   <form onSubmit={e=>void submit(e)} aria-busy={busy}>
    <fieldset disabled={busy} className="av095-fields">
-    <label className="av095-drop"><span className="st-kicker">01 / EXPORTED BROWSER BUILD</span><strong>{file?file.name:'Choose a ZIP or HTML file'}</strong><span>{file?bytes(file.size):'ZIP up to 20 MiB · HTML up to 5 MiB'}</span><input type="file" accept=".zip,.html,application/zip,text/html" required onChange={e=>{setFile(e.target.files?.[0]||null);setRights(false);setError('');}}/></label>
+    <label className="av095-drop"><span className="st-kicker">01 / EXPORTED BROWSER BUILD</span><strong>{file?file.name:'Choose a ZIP or HTML file'}</strong><span>{file?bytes(file.size):'ZIP up to 20 MiB · HTML up to 5 MiB'}</span><input type="file" accept=".zip,.html,application/zip,text/html" required={!file} onChange={e=>{setSourceFile(false);setFile(e.target.files?.[0]||null);setRights(false);setError('');}}/></label>
     {file&&<section className="av095-preflight" aria-label="Local compatibility findings" aria-live="polite">
      <p className="st-kicker">LOCAL COMPATIBILITY / ADVISORY</p>
      {checkingCompatibility&&<p role="status">Inspecting browser package structure on this device…</p>}
@@ -213,7 +227,7 @@ function BuildUpload({memberId,projectId}:{memberId:string;projectId?:string}){
    {busy&&<p role="status">Keep this page open. The server is checking the archive and storing the complete private revision.</p>}
    {error&&<div role="alert" className="st-error"><p>{error}</p><Link to="/studio/packages">Check your existing builds before retrying</Link></div>}
   </form>
- </section><aside className="st-panel av095-guide"><p className="st-kicker">CREATOR PROTOCOL</p><h2>Build elsewhere. Belong here.</h2><p>Export the finished browser build from your existing tools. ZIP the contents of the build folder, with <code>index.html</code> at its root.</p><h3>Keep it self-contained.</h3><p>Use relative asset paths. Do not include server code, node_modules, API keys, external CDNs or private credentials.</p><h3>Test the exact version.</h3><p>Play privately, save the draft, then submit it. A phone-sized preview is not a real-device test or a safety certification.</p><p className="st-muted">180 files maximum · 48 MiB expanded · 12 MiB per asset. A standalone HTML file must contain its dependencies.</p><Link className="st-action" to="/studio/new">Create a non-playable project record</Link></aside></div>;
+ </section><aside className="st-panel av095-guide"><p className="st-kicker">CREATOR PROTOCOL</p><h2>Make, test, release.</h2><p>Use the source workbench for a small self-contained browser build, or export from your existing tools. ZIP the contents of the build folder, with <code>index.html</code> at its root.</p><h3>Keep it self-contained.</h3><p>Use relative asset paths. Do not include server code, node_modules, API keys, external CDNs or private credentials.</p><h3>Test the exact version.</h3><p>Play privately, save the draft, then submit it. A phone-sized preview is not a real-device test or a safety certification.</p><p className="st-muted">180 files maximum · 48 MiB expanded · 12 MiB per asset. A standalone HTML file must contain its dependencies.</p><Link className="st-action" to="/studio/new">Create a non-playable project record</Link></aside></div>;
 }
 function ReviewQueue({memberId}:{memberId:string}){
  const queue=useRead('queue:'+memberId,true,signal=>readNativeQueue(memberId,signal));

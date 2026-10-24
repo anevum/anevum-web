@@ -1,0 +1,72 @@
+{
+  "version": "136.011.1",
+  "generator": "creator-v1/graphics/build-institute-assets.mjs",
+  "provenance": "Original ANEVUM procedural architectural models; no third-party media; source in repository.",
+  "license": "ANEVUM repository LICENSE; ANEVUM marks remain subject to TRADEMARKS.md",
+  "families": {
+    "atrium": {
+      "mobile": {
+        "url": "/assets/institute/v136-011/atrium-mobile.glb",
+        "bytes": 189252,
+        "sha256": "1e0d77dbecdb5bd5c8c00c4ee4b0d17f0ef314449ebb98c589302b38ecc3f98e",
+        "triangles": 16844,
+        "nodes": 259
+      },
+      "desktop": {
+        "url": "/assets/institute/v136-011/atrium-desktop.glb",
+        "bytes": 397820,
+        "sha256": "7f91b82e5e49330851b275042f8b6ec187c4da4a3ddfb2d194e7fe21b156368b",
+        "triangles": 41820,
+        "nodes": 259
+      }
+    },
+    "archive": {
+      "mobile": {
+        "url": "/assets/institute/v136-011/archive-mobile.glb",
+        "bytes": 76624,
+        "sha256": "49cba9b008412fafa5e66d63e11ff0ac134b5ed0c8c0e50eb224cd24887309dd",
+        "triangles": 9980,
+        "nodes": 727
+      },
+      "desktop": {
+        "url": "/assets/institute/v136-011/archive-desktop.glb",
+        "bytes": 90112,
+        "sha256": "ea182cff56a4960926cdca0ff0e5a2204fe046c442f1c7c68563b650fdbb73ca",
+        "triangles": 11772,
+        "nodes": 727
+      }
+    },
+    "forge": {
+      "mobile": {
+        "url": "/assets/institute/v136-011/forge-mobile.glb",
+        "bytes": 69200,
+        "sha256": "32b3bad058778484e22d014946cd68a071a4ad1f0c38415d04962c8c4783d50f",
+        "triangles": 5908,
+        "nodes": 265
+      },
+      "desktop": {
+        "url": "/assets/institute/v136-011/forge-desktop.glb",
+        "bytes": 102324,
+        "sha256": "7d965486d58dedaddbd01a899979ce95efc364c615e1b37bcd89aa29a8f1d78b",
+        "triangles": 9716,
+        "nodes": 265
+      }
+    },
+    "relay": {
+      "mobile": {
+        "url": "/assets/institute/v136-011/relay-mobile.glb",
+        "bytes": 70488,
+        "sha256": "c65a80c6434728be667a84f49b2f28eefae25fc5146d99b86351c5da599a0065",
+        "triangles": 7208,
+        "nodes": 339
+      },
+      "desktop": {
+        "url": "/assets/institute/v136-011/relay-desktop.glb",
+        "bytes": 108012,
+        "sha256": "f8a9add34ddd0e3fb3d5a88a22be52a97f81d6e8e6d37f96400205a33f2e110c",
+        "triangles": 11688,
+        "nodes": 339
+      }
+    }
+  }
+}

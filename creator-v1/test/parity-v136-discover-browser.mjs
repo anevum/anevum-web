@@ -135,11 +135,16 @@ try{
     await page.locator('.p136-discover-results--compact').waitFor();
     await page.getByRole('button',{name:'Marked free'}).click();
     await page.waitForURL(url=>url.searchParams.get('free')==='1'&&url.searchParams.get('category')==='games');
+    assert.equal(await page.getByRole('button',{name:'Marked free'}).evaluate(node=>node===document.activeElement),true,
+      'Filtering must retain the activating control focus rather than focus main');
     await page.getByRole('searchbox',{name:'Search published projects'}).fill('ORBITAL & TEST');
+    assert.equal(await page.getByRole('searchbox',{name:'Search published projects'}).inputValue(),'ORBITAL & TEST','Controlled search retains typed input before submission');
     await page.evaluate(()=>{window.__parityNavigationDocumentMarker='same-document-'+Math.random()});
     await page.getByRole('searchbox',{name:'Search published projects'}).press('Enter');
     await page.waitForFunction(()=>new URLSearchParams(location.search).get('q')==='ORBITAL & TEST',
       null,{timeout:10000});
+    assert.equal(new URL(page.url()).searchParams.get('category'),'games','Search preserves category');
+    assert.equal(new URL(page.url()).searchParams.get('free'),'1','Search preserves free access filter');
     assert.equal(await page.evaluate(()=>window.__parityNavigationDocumentMarker?.startsWith('same-document-')),true,
       'Search must stay within the mounted application; no native GET navigation');
     await page.getByRole('heading',{name:'No matching projects yet.'}).waitFor();
@@ -196,7 +201,7 @@ try{
 } catch(error){
   for(const context of browser.contexts())for(const page of context.pages()){
     await page.screenshot({path:join(out,'discover-failure.png'),fullPage:true}).catch(()=>{});
-    writeFileSync(join(out,'failure.json'),JSON.stringify({url:page.url(),body:await page.locator('body').innerText().catch(()=>''),errors,forbidden,error:String(error)},null,2));
+    writeFileSync(join(out,'failure.json'),JSON.stringify({url:page.url(),body:await page.locator('body').innerText().catch(()=>''),input:await page.getByRole('searchbox',{name:'Search published projects'}).inputValue().catch(()=>null),focus:await page.evaluate(()=>document.activeElement?.outerHTML.slice(0,300)),errors,forbidden,error:String(error)},null,2));
   }
   throw error;
 } finally{
