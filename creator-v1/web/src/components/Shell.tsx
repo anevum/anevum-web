@@ -11,7 +11,7 @@ import { CompactMemberIdentity } from "./CompactMemberIdentity";
 import { useOwnPlayerCard } from "../lib/useOwnPlayerCard";
 import {IrenGuidedContinuance} from "./IrenGuidedContinuance";
 import {VerifiedStaffShortcut} from "./VerifiedStaffShortcut";
-import {LivingWorldProvider,type WorldSector} from "../parity/LivingWorldState";
+import {LivingWorldProvider,useLivingWorld,type WorldSector} from "../parity/LivingWorldState";
 import {LivingWorldField} from "../parity/LivingWorldField";
 
 const FullParityHeader=import.meta.env.VITE_PARITY_V136_FULL==="true" ? lazy(()=>import("../parity/ParityHeaderV136").then(m=>({default:m.ParityHeaderV136}))) : null;
@@ -57,6 +57,7 @@ function worldSector(pathname:string,search:string):WorldSector{
   return category&&valid.some(item=>item===category)?category as WorldSector:"portal";
 }
 function ShellContent(){
+  const {paused,setPaused}=useLivingWorld();
   const {data:canonicalSession}=canonicalAuthClient.useSession();
   const canonicalMember=Boolean(canonicalSession?.user?.id&&canonicalSession.user.emailVerified===true);
   const memberDestination=canonicalMember?"/member":"/join";
@@ -207,6 +208,12 @@ function ShellContent(){
           <section aria-label="More destinations"><span className="av79-lower-label">ALSO IN ANEVUM</span>
             <div className="av79-utility-links">{menuUtilities.map(item=>
               <Link to={item.to==="/library"&&canonicalMember?"/saved":item.to} key={item.to} onClick={()=>setMenuOpen(false)}>{item.label}</Link>)}</div>
+            {FullParityHeader&&<button type="button" className="p136-wayfinder-motion"
+              aria-label="Atmospheric animation" aria-pressed={!paused}
+              onClick={()=>setPaused(previous=>!previous)}>
+              <Icon name="status" size={17}/><span>Environmental motion</span>
+              <small>{paused?'STILL':'ON'}</small>
+            </button>}
           </section>
         </div>
         <footer className="av79-navigation-foot"><span aria-hidden="true" className="av79-footer-star"/> THE CONTINUANCE INSTITUTE <span>EXPLORE / MAKE / BELONG</span></footer>
