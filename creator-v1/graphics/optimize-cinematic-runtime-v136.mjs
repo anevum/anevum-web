@@ -47,6 +47,22 @@ for(const tier of ['desktop','mobile']){
  assert.equal(sha(original),input.sha256);
  const document=await io.readBinary(new Uint8Array(original));
  const root=document.getRoot();
+ // Blender exports texture coordinates even on stone/energy/obsidian
+ // materials without any texture. They can remain outside [0,1] and force
+ // 32-bit GPU UV buffers. Preserve UV on metallic architecture because the
+ // existing runtime applies a first-party surface normal texture to metals.
+ assert.equal(root.listTextures().length,0,
+  'Review GLB unexpectedly contains a texture; preserve all UVs until art review');
+ let droppedTexturelessUV=0;
+ for(const mesh of root.listMeshes())for(const primitive of mesh.listPrimitives()){
+  const material=primitive.getMaterial();
+  if(!material||material.getMetallicFactor()>.6)continue;
+  for(const semantic of primitive.listSemantics()){
+   if(!/^TEXCOORD_\\d+$/.test(semantic))continue;
+   primitive.setAttribute(semantic,null);droppedTexturelessUV++;
+  }
+ }
+ assert.ok(droppedTexturelessUV>0,'Expected Blender textureless UV waste not found');
  const scene=root.listScenes()[0];
  assert.ok(scene,'Original GLB must contain one spatial scene');
  assert.ok(root.listMeshes().length>=2&&root.listMeshes().length<=40,
@@ -98,7 +114,7 @@ for(const tier of ['desktop','mobile']){
   bytes:binary.length,sha256:sha(binary),triangles,
   drawPrimitiveCount:primitives,sourceObjectCount:input.originalObjectCount,
   sourceMeshCount:input.joinedMeshCount,compressed:true,
-  sourceSha256:input.sha256,byteBudget:maxBytes,triangleBudget:triBudget,drawBudget:drawsBudget,
+  sourceSha256:input.sha256,droppedTexturelessUV,byteBudget:maxBytes,triangleBudget:triBudget,drawBudget:drawsBudget,
   withinBudget:bytePass&&trianglePass&&drawPass
  };
  console.log(tier,JSON.stringify(variants[tier]));
