@@ -78,3 +78,17 @@
  .csf-root.is-split .csf-shell{display:flex;flex-direction:column}
  .csf-root.is-split .csf-editor-decks .csf-editor{padding:9px}
 }
+
+/* V121 mobile visual review: source tabs scroll independently, but view
+ * actions must remain visible without sideways scrolling. */
+.csf-root .csf-view-toolbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+ min-height:47px;padding:6px 10px;background:#10293e;border-bottom:1px solid #466d87}
+.csf-root .csf-view-toolbar .csf-split-toggle{margin:0;min-width:110px}
+.csf-root .csf-view-toolbar .csf-split-picker{margin-left:auto;flex:1;justify-content:flex-end}
+.csf-root .csf-view-toolbar .csf-split-picker select{max-width:min(210px,40vw)}
+@media(max-width:680px){
+ .csf-root .csf-view-toolbar{gap:6px;padding:6px 8px}
+ .csf-root .csf-view-toolbar .csf-split-toggle{min-width:103px}
+ .csf-root .csf-view-toolbar .csf-split-picker{min-width:0}
+ .csf-root .csf-view-toolbar .csf-split-picker select{min-width:80px;max-width:112px}
+}
