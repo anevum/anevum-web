@@ -22,10 +22,25 @@ MAINTENANCE_PATHS = frozenset([
     "tests/v5-production-release.test.mjs"
 ])
 
+def isolated_house_path(path):
+    # This additive, independently authenticated Node app is not imported into
+    # Vite/Worker production builds. Root/runtime input changes still force a
+    # public website preview. Exact workflow name and path segment boundaries
+    # prevent accidental broad exemptions.
+    if path == ".github/workflows/continuance-house-v001.yml":
+        return True
+    return (path.startswith("apps/continuance-house/")
+            and path != "apps/continuance-house/"
+            and ".." not in path.split("/"))
+
+
 def app_preview_required(paths):
-    # Empty/unknown input fails closed. Only this reviewed maintenance allowlist
-    # can avoid legacy UI preview creation; all offline checks still run.
-    return not paths or any(path not in MAINTENANCE_PATHS for path in paths)
+    # Unknown or production application inputs fail closed. Standalone V001
+    # house source runs its own isolated security/behavior CI instead.
+    return not paths or any(
+        path not in MAINTENANCE_PATHS and not isolated_house_path(path)
+        for path in paths
+    )
 
 def main():
     if len(sys.argv) != 3 or not all(re.fullmatch(r'[a-f0-9]{40}', s) for s in sys.argv[1:]):
