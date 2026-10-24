@@ -309,6 +309,15 @@ try{
  await click('.cpd-filters button:nth-child(3)');
  assert.ok(await visible('.cpd-filter-empty'),'No informational results on warning-only defect');
  await click('.cpd-filters button:first-child');
+ // V001.7: strictly local repair instructions must require an explicit expand action.
+ assert.equal(await evaluate('document.querySelector(".cpd-guide")?.open'),false,'Local help starts collapsed');
+ await click('.cpd-guide summary');
+ await until(()=>evaluate('document.querySelector(".cpd-guide")?.open===true'),'Creator opens local manual repair guide');
+ assert.ok(await evaluate('document.querySelector(".cpd-guide-body")?.textContent.includes("WHY IT MATTERS")'),'Explains impact');
+ assert.ok(await evaluate('document.querySelector(".cpd-guide-body")?.textContent.includes("WHAT TO DO")'),'Shows manual steps');
+ assert.ok(await evaluate('document.querySelector(".cpd-guide-body")?.textContent.includes("VERIFY YOUR WORK")'),'Explains verification');
+ assert.ok(await evaluate('document.querySelector(".cpd-guide-body")?.textContent.includes("NO AI REQUESTS")'),'No LLM inferred or invoked');
+ assert.equal(filePatches.length,patchesBeforeDoctor,'Expanding local help does not send file writes');
  await click('.csx-block-tree li:first-child button');
  await click('.cpd-jump');
  await until(()=>evaluate('document.activeElement?.dataset?.blockId==='+JSON.stringify(expectedChoiceId)),'Jump to unlinked choice and keyboard focus');
@@ -318,6 +327,8 @@ try{
  await snap('doctor-desktop-story-findings');
  await focusDoctorDetail('.cpd-findings li','doctor-desktop-story-detail');
  await snap('doctor-desktop-story-detail');
+ await focusDoctorDetail('.cpd-guide','doctor-desktop-local-repair');
+ await snap('doctor-desktop-local-repair');
  await focusDoctorDetail('.cpd-diff','doctor-desktop-change-lens');
  await snap('doctor-desktop-change-lens');
  await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
@@ -326,12 +337,16 @@ try{
  await snap('doctor-phone-390-story-findings');
  await focusDoctorDetail('.cpd-findings li','doctor-phone-390-story-detail');
  await snap('doctor-phone-390-story-detail');
+ await focusDoctorDetail('.cpd-guide','doctor-phone-390-local-repair');
+ await snap('doctor-phone-390-local-repair');
  await send('Emulation.setDeviceMetricsOverride',{width:320,height:740,deviceScaleFactor:1,mobile:true});
  await pause(200);
  await focusDoctor('doctor-phone-320-story-findings');
  await snap('doctor-phone-320-story-findings');
  await focusDoctorDetail('.cpd-findings li','doctor-phone-320-story-detail');
  await snap('doctor-phone-320-story-detail');
+ await focusDoctorDetail('.cpd-guide','doctor-phone-320-local-repair');
+ await snap('doctor-phone-320-local-repair');
  await send('Emulation.setDeviceMetricsOverride',{width:1440,height:900,deviceScaleFactor:1,mobile:false});
  await pause(150);
  await click('.csx-top .csx-actions button:nth-child(3)');
@@ -393,6 +408,9 @@ try{
  await until(()=>evaluate('document.querySelector(".csf-editor h3")?.textContent.includes("Unsaved")'),'Input defect is unsaved');
  await click('.cpd-button');
  await until(()=>evaluate('document.querySelector(".cpd-findings")?.textContent.includes("Input needs a visible label")'),'Doctor detects unlabeled input');
+ assert.equal(await evaluate('document.querySelector(".cpd-guide")?.open'),false,'Interface help starts collapsed');
+ await click('.cpd-guide summary');
+ await until(()=>evaluate('document.querySelector(".cpd-guide-body")?.textContent.includes("Set a visible title")'),'Source-free input guidance is shown');
  await evaluate('(()=>{const pages=[...document.querySelectorAll(".cui-page-row")];pages.at(-1).click();return true;})()');
  await click('.cpd-jump');
  await until(()=>evaluate('document.activeElement?.dataset?.componentId==='+JSON.stringify(newComponentId)),'Jump into affected page and focus input');
@@ -409,6 +427,8 @@ try{
  await snap('doctor-desktop-interface-findings');
  await focusDoctorDetail('.cpd-findings li','doctor-desktop-interface-detail');
  await snap('doctor-desktop-interface-detail');
+ await focusDoctorDetail('.cpd-guide','doctor-desktop-interface-local-repair');
+ await snap('doctor-desktop-interface-local-repair');
  await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
  await pause(200);
  await focusDoctor('doctor-phone-390-interface-findings');
