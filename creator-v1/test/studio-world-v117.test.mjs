@@ -104,7 +104,9 @@ test('V117 touch translation emits real undoable typed moves and camera focus ac
  assert.match(page,/StudioTransformPadV117/);
  assert.match(page,/function nudge\(delta:Vec3\)/);
  assert.match(page,/command\(\{type:'SET_TRANSFORM',id:node.id,field:'position',value:position\}\)/);
- assert.match(page,/target:\[\.\.\.node.position\] as Vec3/);
+ assert.match(page,/function frameSelected\(\)/);
+ assert.match(page,/node.kind==='spire'\?2.1\*node.scale\[1\]/);
+ assert.match(page,/distance:clamp\(distance,4,80\)/);
  assert.match(style,/\.csn-transform-pad/);
  assert.match(style,/\.csn-axis-x/);
  assert.match(style,/forced-colors:active/);
