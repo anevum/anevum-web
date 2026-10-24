@@ -8,6 +8,8 @@ import {readCanonicalSavedProjects,setCanonicalProjectSaved,
 import {useResource} from "../lib/useResource";
 import {CosmicArtwork} from "../components/CosmicArtwork";
 import type {Category} from "../lib/api";
+import {browseSavedWorks,savedCategoryFilters} from "../lib/saved-works-browse";
+import {MemberCollectionNav,MEMBER_COLLECTION_NAV_REVIEW} from "../components/MemberCollectionNav";
 import "./canonical-saved-works.css";
 
 function SavedWorksCollection({memberId}:{memberId:string}){
@@ -18,6 +20,12 @@ function SavedWorksCollection({memberId}:{memberId:string}){
  const [pending,setPending]=useState<string|null>(null);
  const [error,setError]=useState("");
  const [notice,setNotice]=useState("");
+ const [category,setCategory]=useState("all");
+ const [query,setQuery]=useState("");
+ const [layout,setLayout]=useState<"list"|"grid">("list");
+ const categories=savedCategoryFilters(items);
+ const safeCategory=category==="all"||categories.some(option=>option.id===category)?category:"all";
+ const displayed=browseSavedWorks(items,safeCategory,query);
 
  useEffect(()=>{
   if(initial.state!=="ready")return;
@@ -51,13 +59,23 @@ function SavedWorksCollection({memberId}:{memberId:string}){
    setError(cause instanceof CanonicalProjectSaveError?cause.message:"The server could not confirm removal. Reload and try again.");
   }finally{setPending(null)}
  }
- return <section className="avsaved-content" aria-label="Your private saved projects">
+ return <section className="avsaved-content" data-view={layout} aria-label="Your private saved projects">
+  <MemberCollectionNav current="saved"/>
   {initial.state==="loading"&&<p role="status" className="avsaved-message">Checking your saved projects…</p>}
   {initial.state==="error"&&<p role="alert" className="avsaved-message">Your private collection is temporarily unavailable. Your saved choices have not been changed.</p>}
   {initial.state==="ready"&&<>
-   <div className="avsaved-counter"><span className="kicker">PRIVATE / VERIFIED COLLECTION</span>
-    <span>{items.length} CURRENTLY VISIBLE{cursor?" · MORE TO REVIEW":""}</span></div>
-   {items.length>0?<div className="avsaved-grid">{items.map(item=><article className="avsaved-card" key={item.id}>
+   <div className="avsaved-counter"><span className="kicker">YOUR SAVED WORK / PRIVATE</span><span>{cursor?items.length+" SHOWN · MORE BELOW":items.length+" SAVED PROJECT"+(items.length===1?"":"S")}</span></div>
+   {items.length>0&&<div className="avsaved-organizer" aria-label="Organize saved work">
+    <div className="avsaved-organizer-intro"><div><h2>{MEMBER_COLLECTION_NAV_REVIEW?"Browse":"Find what you saved."}</h2><p>Browse by category or search projects already loaded.</p></div>
+     <div className="avsaved-layout" role="group" aria-label="Saved work display"><button type="button" aria-pressed={layout==="list"} onClick={()=>setLayout("list")}>List</button><button type="button" aria-pressed={layout==="grid"} onClick={()=>setLayout("grid")}>Gallery</button></div>
+    </div>
+    <div className="avsaved-controls">
+     <label>Search saved work<input type="search" maxLength={100} value={query} onChange={e=>setQuery(e.target.value)} placeholder="Project name or creator"/></label>
+     <label>Category<select aria-label="Saved category" value={safeCategory} onChange={e=>setCategory(e.target.value)}><option value="all">All saved ({items.length})</option>{categories.map(group=><option key={group.id} value={group.id}>{group.label} ({group.count})</option>)}</select></label>
+    </div>
+    <p className="avsaved-filter-count" role="status">Showing {displayed.length} of {items.length} {cursor?"loaded ":""}saved projects{cursor?". More available below.":""}</p>
+   </div>}
+   {items.length>0?<div className="avsaved-grid">{displayed.map(item=><article className="avsaved-card" key={item.id}>
     <div className="avsaved-art" aria-hidden="true"><CosmicArtwork scene={item.category as Category}/></div>
     <div className="avsaved-card-body">
      <div className="avsaved-card-meta"><span>{item.category.toUpperCase()}</span><span>{new Intl.DateTimeFormat("en-US",{month:"short",day:"numeric",year:"numeric",timeZone:"UTC"}).format(new Date(item.savedAt*1000))}</span></div>
@@ -65,8 +83,8 @@ function SavedWorksCollection({memberId}:{memberId:string}){
      <p>{item.summary}</p>
      <div className="avsaved-card-maker">BY <Link to={"/creators/"+encodeURIComponent(item.creatorHandle)}>@{item.creatorHandle}</Link></div>
      <div className="avsaved-card-actions">
-      <Link className="avsaved-open" to={"/projects/"+encodeURIComponent(item.id)+"?from="+encodeURIComponent("/saved")}>OPEN PROJECT <span aria-hidden="true">↗</span></Link>
-      <button type="button" disabled={pending!==null||loadingMore} onClick={()=>void remove(item.id)}>{pending===item.id?"REMOVING…":"REMOVE"}</button>
+      <Link className="avsaved-open" aria-label={"Open project "+item.title} to={"/projects/"+encodeURIComponent(item.id)+"?from="+encodeURIComponent("/saved")}>OPEN <span aria-hidden="true">↗</span></Link>
+      <button type="button" disabled={pending!==null||loadingMore} onClick={()=>void remove(item.id)}>{pending===item.id?"UPDATING…":"UNSAVE"}</button>
      </div>
     </div>
    </article>)}</div>:<div className="avsaved-empty">
@@ -74,6 +92,7 @@ function SavedWorksCollection({memberId}:{memberId:string}){
     <p>{cursor?"Some saved projects have been withdrawn. Continue to older saved work.":"You have no currently visible saved projects. Explore approved creations to build your own collection."}</p>
     <Link to="/discover">DISCOVER APPROVED WORK →</Link>
    </div>}
+   {items.length>0&&displayed.length===0&&<section className="avsaved-filter-empty" aria-label="No matching saved projects"><h2>No matches in the projects loaded.</h2><p>Try another search or category. No saved projects were removed.</p><button type="button" onClick={()=>{setCategory("all");setQuery("")}}>Show all saved projects</button></section>}
    {cursor&&<div className="avsaved-more"><button type="button" disabled={loadingMore||pending!==null} onClick={()=>void loadMore()}>{loadingMore?"CHECKING OLDER SAVES…":"SHOW MORE SAVED WORK"}</button></div>}
   </>}
   {notice&&<p className="avsaved-notice" role="status">{notice}</p>}
@@ -96,11 +115,11 @@ export function CanonicalSavedWorksPage(){
  const verified=Boolean(member?.id&&member.emailVerified===true);
  return <section className="avsaved-shell">
   <header className="avsaved-header">
-   <span className="kicker">ANEVUM / PRIVATE COLLECTION SYSTEM</span>
-   <h1>THE WORK YOU <em>KEEP.</em></h1>
-   <p>A personal catalogue of the independent worlds, tools, and creative work you return to. Your selection stays yours.</p>
-   <div className="avsaved-header-links"><Link to="/discover">EXPLORE CREATIONS <span aria-hidden="true">↗</span></Link>
-    {verified&&<Link to="/member">MY MEMBER SPACE <span aria-hidden="true">↗</span></Link>}</div>
+   <span className="kicker">ANEVUM / SAVED WORK</span>
+   <h1>YOUR <em>LIBRARY.</em></h1>
+   <p>Everything you saved, organized in one private place.</p>
+   <div className="avsaved-header-links"><Link to="/discover">FIND PROJECTS <span aria-hidden="true">↗</span></Link>
+    {verified&&!MEMBER_COLLECTION_NAV_REVIEW&&<Link to="/member">MY SPACE <span aria-hidden="true">↗</span></Link>}</div>
   </header>
   {!active?<section className="avsaved-inactive" aria-label="Saved works availability">
    <span className="kicker">PRIVATE COLLECTION / IN DEVELOPMENT</span>
