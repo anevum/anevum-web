@@ -19,8 +19,9 @@ test('P0 Studio TSX parses as a standalone React component',()=>{
 });
 
 test('review route is opt-in, lazy loaded, isolated from V109+ public and private routes',()=>{
- assert.match(app,/CreatorVisualReviewPageV115=lazy\(\(\)=>import\("\.\/pages\/CreatorStudioVisualReviewV115"\)/);
- assert.match(app,/path="studio\/visual-review" element=\{import\.meta\.env\.VITE_CREATOR_VISUAL_REVIEW_V115==='true'/);
+ assert.match(app,/CreatorVisualReviewPageV115=import\.meta\.env\.VITE_CREATOR_VISUAL_REVIEW_V115==='true'/);
+ assert.match(app,/\?lazy\(\(\)=>import\("\.\/pages\/CreatorStudioVisualReviewV115"\)/);
+ assert.match(app,/path="studio\/visual-review" element=\{CreatorVisualReviewPageV115\?/);
  assert.match(app,/path="studio\/workspace" element=\{import\.meta\.env\.VITE_CREATOR_WORKSPACE_V109==='true'/);
  assert.match(app,/path="studio" element=\{nativeCreatorEnabled/);
  assert.match(app,/path="studio\/records"/);
