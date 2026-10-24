@@ -1,0 +1,46 @@
+name: ANEVUM NEXT Four-Layer Integrity Audit
+on:
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: anevum-next-stack-integrity-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  verify-four-layer-review-only-stack:
+    if: github.repository == 'anevum/anevum-web' && github.event.pull_request.number == 679 && github.event.pull_request.head.repo.full_name == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ''
+      CLOUDFLARE_API_KEY: ''
+      CLOUDFLARE_ACCOUNT_ID: ''
+      WRANGLER_SEND_METRICS: 'false'
+      NEXT_STACK_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      NEXT_STACK_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check strictly ordered PR scopes and V131 isolation
+        run: |
+          set -euo pipefail
+          test -z "$CLOUDFLARE_API_TOKEN"
+          test -z "$CLOUDFLARE_API_KEY"
+          test -z "$CLOUDFLARE_ACCOUNT_ID"
+          node --check creator-v1/test/continuance-next-stack-integrity.mjs
+          node creator-v1/test/continuance-next-stack-integrity.mjs --self-test
+          node creator-v1/test/continuance-next-stack-integrity.mjs
+      - name: Retain exact-head signed-off scope receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-next-four-layer-integrity-${{ github.event.pull_request.head.sha }}
+          path: evidence/continuance-next-stack
+          if-no-files-found: warn
+          retention-days: 14

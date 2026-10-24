@@ -16,6 +16,9 @@ on:
       - 'creator-v1/test/continuance-next-navigator-browser.mjs'
       - 'docs/production/continuance-next-commons-react-20261023.md'
       - 'docs/production/continuance-commons-navigator-20261023.md'
+      - '.github/workflows/continuance-next-stack-integrity.yml'
+      - 'creator-v1/test/continuance-next-stack-integrity.mjs'
+      - 'docs/production/continuance-next-stack-integrity-20261023.md'
 permissions:
   contents: read
 concurrency:
@@ -67,7 +70,10 @@ jobs:
             ['creator-v1/test/continuance-next-navigator-browser.mjs','A'],
             ['docs/production/continuance-next-commons-react-20261023.md','A'],
             ['docs/production/continuance-commons-navigator-20261023.md','A'],
-            ['.github/workflows/continuance-next-commons-react-review.yml','A']
+            ['.github/workflows/continuance-next-commons-react-review.yml','A'],
+            ['.github/workflows/continuance-next-stack-integrity.yml','A'],
+            ['creator-v1/test/continuance-next-stack-integrity.mjs','A'],
+            ['docs/production/continuance-next-stack-integrity-20261023.md','A']
           ]);
           for(const row of rows){
             const [status,path]=row.split('\t');
