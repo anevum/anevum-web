@@ -45,6 +45,8 @@ jobs:
         with:
           node-version: '22'
       - run: node creator-v1/ops/parity-v136-release.mjs source
+      - name: Scene director, shader grammar, GPU budget and accessible materials
+        run: node --experimental-strip-types --test creator-v1/test/parity-v136-scene-director.test.mjs
       - run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
       - name: Existing data, collections, rewards and auth contracts
         run: |
