@@ -296,8 +296,12 @@ export function createWorldRenderer(canvas:HTMLCanvasElement):WorldRenderer{
    gl.bindVertexArray(m.vao);gl.drawArrays(m.mode,0,m.count);
   };
   if(!picking){gl.uniform1f(alpha,.17);drawMesh('grid',identity(),'cyan');gl.uniform1f(alpha,1);}
-  scene.nodes.forEach((n,index)=>{
+  const animatedModel=(n:WorldNode)=>{
    const base=sceneMatrix(n,lookup);
+   return n.kind==='starship'?mul(base,translation([0,.12*Math.sin(timeSeconds*.9),0])):base;
+  };
+  scene.nodes.forEach((n,index)=>{
+   const base=animatedModel(n);
    for(const part of parts(n))drawMesh(part.mesh,mul(base,part.transform),part.material,index);
   });
   if(!picking&&selected){
@@ -307,7 +311,7 @@ export function createWorldRenderer(canvas:HTMLCanvasElement):WorldRenderer{
       n.kind==='bridge'?[10.4,.7,1.2]:n.kind==='waterfall'?[1.15,6.3,.9]:
       n.kind==='spire'?[1.95,5.3,1.95]:n.kind==='starship'?[5.2,1.8,4.8]:[1.4,1.4,1.4];
     const offset:Vec3=n.kind==='spire'?[0,2.1,0]:[0,0,0];
-    const modelOutline=mul(sceneMatrix(n,lookup),mul(translation(offset),scaling(bounds)));
+    const modelOutline=mul(animatedModel(n),mul(translation(offset),scaling(bounds)));
     gl.disable(gl.DEPTH_TEST);
     drawMesh('outline',modelOutline,'cyan');
     gl.enable(gl.DEPTH_TEST);
@@ -320,7 +324,7 @@ export function createWorldRenderer(canvas:HTMLCanvasElement):WorldRenderer{
   render(scene,camera,selected,width,height,timeSeconds=0){lastTime=timeSeconds;draw(scene,camera,selected,width,height,false,timeSeconds);},
   pick(scene,camera,x,y,width,height){
    if(disposed||gl.isContextLost()||width<=0||height<=0)return null;
-   draw(scene,camera,null,width,height,true);
+   draw(scene,camera,null,width,height,true,lastTime);
    const pixel=new Uint8Array(4);
    const px=Math.max(0,Math.min(canvas.width-1,Math.floor(x/width*canvas.width)));
    const py=Math.max(0,Math.min(canvas.height-1,Math.floor((height-y)/height*canvas.height)));
