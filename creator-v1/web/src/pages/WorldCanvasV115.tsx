@@ -65,12 +65,12 @@ export function WorldCanvasV115({document,camera,selection,onCamera,onSelect}:Pr
   const observer=new ResizeObserver(()=>schedule());
   observer.observe(canvas);
   const visible=()=>schedule();
-  document.addEventListener('visibilitychange',visible);
+  window.document.addEventListener('visibilitychange',visible);
   canvas.addEventListener('webglcontextlost',contextLost);
   canvas.addEventListener('webglcontextrestored',contextRestored);
   init();
   return ()=>{
-   closed=true;observer.disconnect();document.removeEventListener('visibilitychange',visible);
+   closed=true;observer.disconnect();window.document.removeEventListener('visibilitychange',visible);
    canvas.removeEventListener('webglcontextlost',contextLost);
    canvas.removeEventListener('webglcontextrestored',contextRestored);
    if(frame.current!==null)cancelAnimationFrame(frame.current);
