@@ -136,11 +136,11 @@ try{
     await page.getByRole('button',{name:'Marked free'}).click();
     await page.waitForURL(url=>url.searchParams.get('free')==='1'&&url.searchParams.get('category')==='games');
     await page.getByRole('searchbox',{name:'Search published projects'}).fill('ORBITAL & TEST');
-    const initialDocument=await page.evaluate(()=>document);
+    await page.evaluate(()=>{window.__parityNavigationDocumentMarker='same-document-'+Math.random()});
     await page.getByRole('searchbox',{name:'Search published projects'}).press('Enter');
     await page.waitForFunction(()=>new URLSearchParams(location.search).get('q')==='ORBITAL & TEST',
       null,{timeout:10000});
-    assert.equal(await page.evaluate((doc)=>document===doc,initialDocument),true,
+    assert.equal(await page.evaluate(()=>window.__parityNavigationDocumentMarker?.startsWith('same-document-')),true,
       'Search must stay within the mounted application; no native GET navigation');
     await page.getByRole('heading',{name:'No matching projects yet.'}).waitFor();
     await page.getByRole('link',{name:/Clear filters/}).click();
