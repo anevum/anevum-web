@@ -85,10 +85,25 @@ try{
  await evalJS('document.querySelector(".pm-public").scrollIntoView({block:"start"})');await pause(200);
  const publicShot=await send('Page.captureScreenshot',{format:'png',fromSurface:true});
  writeFileSync(join(output,'public-profile-1440.png'),Buffer.from(publicShot.data,'base64'));
- await send('Network.setCookie',{url:base,name:'anevum_offline_visual_fixture',value:'0',sameSite:'Strict'});
+ // A fresh anonymous browser context must have no retained cookie, cached
+ // Better Auth state or session-storage. Test the true isolated guest journey,
+ // not merely a cookie value mutated in an authenticated React process.
+ await send('Network.clearBrowserCookies');
+ await send('Storage.clearDataForOrigin',{origin:base,storageTypes:'all'});
+ const cookies=await send('Network.getCookies',{urls:[base]});
+ assert.equal(cookies.cookies.some(x=>x.name==='anevum_offline_visual_fixture'),false,'Synthetic member cookie cleared');
  assert.equal((await fetch(base+'/api/v1/member/marks')).status,401,'Guest cannot read the private mark API');
  await navigate(link);
- await until(()=>txt('.pm-connection-card').then(x=>x.includes('Sign in to your ANEVUM account')),'Guest consent denial');
+ try{
+  await until(()=>txt('.pm-connection-card').then(x=>x.includes('Sign in to your ANEVUM account')),'Guest consent denial');
+ }catch(error){
+  const diagnostic={url:await evalJS('location.href'),body:(await txt('body')).slice(0,1800),
+   memberCookie:await evalJS('document.cookie')};
+  const capture=await send('Page.captureScreenshot',{format:'png',fromSurface:true});
+  writeFileSync(join(output,'guest-debug.png'),Buffer.from(capture.data,'base64'));
+  writeFileSync(join(output,'guest-debug.json'),JSON.stringify(diagnostic,null,2));
+  throw new Error(String(error)+' / '+JSON.stringify(diagnostic));
+ }
  assert.equal(await has('.pm-actions button'),false,'Guest cannot approve connection');
  assert.equal(requests.filter(x=>x.method!=='GET'&&/\/api\/v1\/marks|\/api\/v1\/member\/marks/.test(x.url)).length,0,'No live publisher/event mutation');
  assert.deepEqual(errors,[],'No React errors');
