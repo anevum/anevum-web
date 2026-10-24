@@ -84,13 +84,13 @@ export function CinematicLandingPage(){
   // Public API returns approved catalogue records. Early games may be shown
   // as explicitly experimental first looks, never as a finished flagship.
   // Do not suppress the only genuine public work just because it is a game.
-  const showcase=projects.slice(0,3);
-  const firstLook=showcase[0]||null;
+  const firstLook=projects[0]||null;
+  const showcase=projects.slice(1,4);
   const verified=Boolean(snapshot);
 
   return <div className="anevum-cinema av9-home av79-home" data-scene-paused={scenePaused}>
     <div className="cinema-content av79-home-content">
-      <section className={"av79-hero av114-arrival av115-arrival av125-arrival"+(scenePaused?" av125-is-paused":"")} data-iren-anchor="arrival" aria-labelledby="av79-home-heading">
+      <section className={"av79-hero av114-arrival av115-arrival av125-arrival av133-arrival"+(scenePaused?" av125-is-paused":"")} data-iren-anchor="arrival" aria-labelledby="av79-home-heading">
         <div className="av114-arrival-scene" aria-hidden="true">
           <span className="av114-arrival-stars"/>
           <span className="av114-arrival-planet"><i/></span>
@@ -167,7 +167,7 @@ export function CinematicLandingPage(){
           <div className="av133-first-look-copy">
             <div className="av133-first-look-meta">
               <span>{categoryName[firstLook.category]}</span>
-              <span>{firstLook.category==="games"?"EARLY PUBLIC EXPERIMENT":"APPROVED PUBLIC PROJECT"}</span>
+              <span>APPROVED PUBLIC PROJECT</span>
             </div>
             <h3>{firstLook.title}</h3>
             <p>{firstLook.summary}</p>
@@ -212,8 +212,8 @@ export function CinematicLandingPage(){
       <section className="av79-now av115-public-index" aria-labelledby="av79-now-heading">
         <header className="av79-section-heading">
           <div><span className="av79-kicker">PUBLIC INDEX / VERIFIED WORK</span>
-            <h2 id="av79-now-heading">What people are making.</h2>
-            <p className="av115-index-intro">Actual published projects, including experiments still being developed. See each project for its access details.</p>
+            <h2 id="av79-now-heading">More things people are making.</h2>
+            <p className="av115-index-intro">More approved public work, with access details and creators credited on each project page.</p>
           </div>
           <Link to="/discover">BROWSE THE INDEX <Icon name="arrow" size={15}/></Link>
         </header>
@@ -235,7 +235,7 @@ export function CinematicLandingPage(){
           <div><span className="av79-kicker">{portal.state==="error"?"INDEX UNAVAILABLE":portal.state==="loading"?"CHECKING THE PUBLIC INDEX":"THE NETWORK IS GROWING"}</span>
             <strong>{portal.state==="error"?"The public index is temporarily unavailable.":"More creations are on the way."}</strong>
             <p>{portal.state==="ready"
-              ?"Approved projects will appear here as they become available. You can still explore ANEVUM as a guest."
+              ?"The first public project is featured above. More approved creations will appear here as they are released."
               :"Explore the public directory directly, or learn what you can create."}</p>
           </div>
           <Link to="/discover">OPEN DISCOVER <Icon name="arrow" size={17}/></Link>
