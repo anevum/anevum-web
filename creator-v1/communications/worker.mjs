@@ -82,8 +82,8 @@ export function createCommunicationsWorker({send=sendViaResend,clock=()=>Date.no
    if(!record(input,['token','topic'])||!match||!['all','releases','weekly',undefined].includes(input.topic))return fail(400);
    const topic=input.topic||'all';
    try{
-    const result=await db.prepare("UPDATE communication_subscribers SET releases=CASE WHEN ? IN ('all','releases') THEN 0 ELSE releases END,weekly=CASE WHEN ? IN ('all','weekly') THEN 0 ELSE weekly END,status=CASE WHEN ?='all' OR (?='releases' AND weekly=0) OR (?='weekly' AND releases=0) THEN 'unsubscribed' ELSE status END,pending_releases=0,pending_weekly=0,confirm_hash=NULL,confirm_expires_at=NULL,manage_hash=NULL,manage_expires_at=NULL,unsubscribed_at=?,updated_at=?,unsub_version=unsub_version+1 WHERE id=? AND manage_hash=? AND manage_expires_at>? AND status='confirmed' RETURNING id")
-     .bind(topic,topic,topic,topic,topic,now,now,match[1],await sha(match[2]),now).first();
+    const result=await db.prepare("UPDATE communication_subscribers SET releases=CASE WHEN ? IN ('all','releases') THEN 0 ELSE releases END,weekly=CASE WHEN ? IN ('all','weekly') THEN 0 ELSE weekly END,status=CASE WHEN ?='all' OR (?='releases' AND weekly=0) OR (?='weekly' AND releases=0) THEN 'unsubscribed' ELSE status END,pending_releases=0,pending_weekly=0,confirm_hash=NULL,confirm_expires_at=NULL,manage_hash=NULL,manage_expires_at=NULL,unsubscribed_at=CASE WHEN ?='all' OR (?='releases' AND weekly=0) OR (?='weekly' AND releases=0) THEN ? ELSE unsubscribed_at END,updated_at=?,unsub_version=unsub_version+1 WHERE id=? AND manage_hash=? AND manage_expires_at>? AND status='confirmed' RETURNING id")
+     .bind(topic,topic,topic,topic,topic,topic,topic,topic,now,now,match[1],await sha(match[2]),now).first();
     return result?.id?respond({status:'unsubscribed',topic}):fail(410);
    }catch{return fail(503)}
   }
