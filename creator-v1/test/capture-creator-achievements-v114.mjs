@@ -79,7 +79,7 @@ try{
  });
  await send('Page.enable');await send('Runtime.enable');await send('Network.enable');
  events.set('Runtime.exceptionThrown',ev=>errors.push(ev.exceptionDetails?.exception?.description||ev.exceptionDetails?.text||'Page exception'));
- events.set('Network.requestWillBeSent',ev=>requests.push(ev.request?.url||''));
+ events.set('Network.requestWillBeSent',ev=>requests.push({url:ev.request?.url||'',method:ev.request?.method||''}));
  await cookie(true);
  await send('Emulation.setDeviceMetricsOverride',{width:1440,height:900,deviceScaleFactor:2,mobile:false});
  await navigate('/creator/studio/'+projectId+'/achievements');
@@ -115,8 +115,8 @@ try{
  await navigate('/creator/studio/'+projectId+'/achievements');
  await until(()=>text('body').then(x=>x.includes('Sign in to design project achievements.')),'Guest denied private builder');
  assert.equal(await exists('.cav-draft'),false,'Guest cannot see private saved titles');
- assert.equal(requests.filter(u=>/\/api\/v1\/member\/(?:recognition|progression|notifications\/ack)/.test(u)).length,0,'No XP/award/ack mutation route called');
- assert.equal(requests.filter(u=>/api\.openai\.com|chatgpt\.com\/backend-api/.test(u)).length,0,'No provider calls');
+ assert.equal(requests.filter(r=>r.method!=='GET'&&/\/api\/v1\/member\/(?:recognition|progression|notifications\/ack)/.test(r.url)).length,0,'No XP/award/ack mutation route called');
+ assert.equal(requests.filter(r=>/api\.openai\.com|chatgpt\.com\/backend-api/.test(r.url)).length,0,'No provider calls');
  assert.deepEqual(errors,[],'Compiled React must not throw');
  const result={status:'PASS',source:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),
   scope:'Compiled React, synthetic Better Auth cookie and test-only SQLite-backed private draft service. Not production/Safari/user acceptance.',

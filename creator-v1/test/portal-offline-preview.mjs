@@ -13,7 +13,7 @@ import {studioAchievements,STUDIO_ACHIEVEMENT_PATH} from '../canonical-auth/stud
 // adapter. This never changes production or exposes an award issuer.
 const V114_BROWSER_REVIEW=process.env.ANEVUM_V114_ACHIEVEMENT_FIXTURE==='1';
 const V114_PROJECT='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
-const V114_OWNER={id:'v114-browser-synthetic',emailVerified:true};
+const V114_OWNER={id:'00000000000000000000000000000099',emailVerified:true};
 let v114Db=null,v114Env=null;
 if(V114_BROWSER_REVIEW){
  v114Db=new DatabaseSync(':memory:');
