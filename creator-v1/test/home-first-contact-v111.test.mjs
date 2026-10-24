@@ -28,7 +28,7 @@ test("Arrival uses genuine existing IREN orientation and verified join rather th
  assert.match(home,/emailVerified===true/);
  assert.match(home,/new Event\("anevum:iren-intro"\)/);
  assert.match(guide,/addEventListener\("anevum:iren-intro",onIntro\)/);
- assert.match(home,/Studio publishing is still in testing/);
+ assert.match(home,/Creator publishing is still in testing/);
  assert.match(home,/to="\/discover"/);
  assert.doesNotMatch(home,/Play a game|FEATURED RELEASE|firstGame\|\||signupCount|fakeUsers|Math\.random/);
 });
