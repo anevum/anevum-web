@@ -1,0 +1,84 @@
+name: ANEVUM Continuance Progression Review
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/continuance-progression-review.yml'
+      - 'creator-v1/web/src/App.tsx'
+      - 'creator-v1/web/src/lib/progression-next-model.ts'
+      - 'creator-v1/web/src/pages/ProgressionNextReviewPage.tsx'
+      - 'creator-v1/web/src/pages/progression-next-review.css'
+      - 'creator-v1/experiments/progression-next/**'
+      - 'creator-v1/test/progression-next*'
+      - 'docs/production/continuance-progression-20261023.md'
+permissions:
+  contents: read
+concurrency:
+  group: progression-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  isolated-review:
+    if: github.repository == 'anevum/anevum-web' && github.event.pull_request.head.repo.full_name == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CLOUDFLARE_API_TOKEN: ''
+      CLOUDFLARE_API_KEY: ''
+      CLOUDFLARE_ACCOUNT_ID: ''
+      WRANGLER_SEND_METRICS: 'false'
+      PROGRESSION_QA_OUTPUT: /tmp/progression-next-review
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Guard isolated source scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          node --input-type=module <<'JS'
+          import {execFileSync} from 'node:child_process';
+          const paths=execFileSync('git',['diff','--name-only',process.env.BASE_SHA,'HEAD'],{encoding:'utf8'}).trim().split('\n');
+          const allowed=/^(?:\.github\/workflows\/continuance-progression-review\.yml|creator-v1\/web\/src\/(?:App\.tsx|lib\/progression-next-model\.ts|pages\/(?:ProgressionNextReviewPage\.tsx|progression-next-review\.css))|creator-v1\/experiments\/progression-next\/(?:schema\.sql|ledger\.mjs)|creator-v1\/test\/progression-next-(?:model\.test\.mjs|ledger\.test\.mjs|browser\.mjs)|docs\/production\/continuance-progression-20261023\.md)$/;
+          for(const p of paths)if(!allowed.test(p))throw Error('Unexpected path: '+p);
+          const read=ref=>execFileSync('git',['show',ref+':creator-v1/web/src/App.tsx'],{encoding:'utf8'}).trimEnd();
+          const cleaned=read('HEAD').split('\n').filter(l=>!l.includes('const progressionNextReviewEnabled=')&&!l.includes('const ProgressionReviewPage=')&&!l.includes('{ProgressionReviewPage&&<Route')).join('\n');
+          if(cleaned!==read(process.env.BASE_SHA))throw Error('App change exceeds isolated review route');
+          JS
+      - name: Install existing pinned dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Run candidate model and isolated SQLite ledger tests
+        run: node --experimental-strip-types --test creator-v1/test/progression-next-model.test.mjs creator-v1/test/progression-next-ledger.test.mjs
+      - name: Check real React types
+        run: npm run check:creator-v1-web
+      - name: Verify default build contains no progression review
+        env:
+          VITE_PROGRESSION_NEXT_REVIEW: 'false'
+          VITE_LIVING_COMMONS_REVIEW: 'false'
+        run: |
+          npm run build:creator-v1-web
+          if grep -r -l 'px-root' creator-v1/dist/web/assets; then echo 'Review leaked into default bundle'; exit 1; fi
+      - name: Build explicitly enabled review
+        env:
+          VITE_PROGRESSION_NEXT_REVIEW: 'true'
+          VITE_LIVING_COMMONS_REVIEW: 'false'
+        run: |
+          npm run build:creator-v1-web
+          grep -r -l 'px-root' creator-v1/dist/web/assets
+      - name: Install browser test tooling without modifying package manifests
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Exercise compiled React at 1440, 390 and 320 pixels
+        run: node creator-v1/test/progression-next-browser.mjs
+      - name: Retain labelled screenshots and source receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: progression-review-${{ github.event.pull_request.head.sha }}
+          path: /tmp/progression-next-review
+          if-no-files-found: warn
+          retention-days: 14
