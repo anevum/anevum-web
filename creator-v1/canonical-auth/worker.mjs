@@ -16,6 +16,8 @@ import {matchRewardMedia,earnedRewardMedia,matchRewardInventory,earnedRewardInve
 import {boundedText} from "./request-body.mjs";
 import {canonicalAccountClosure} from "./account-closure.mjs";
 import {publicSupporterTelemetry,PUBLIC_TELEMETRY_PATH} from "./public-supporter-telemetry.mjs";
+import {supportV2Member,supportV2Webhook} from "./support-v2.mjs";
+import {SUPPORT_API,SUPPORT_HOOK} from "../support-v2/square.mjs";
 import {canonicalProjectSave,canonicalProjectSaveReady} from "./project-saves.mjs";
 import {canonicalStudio,canonicalStudioReview,studioReadiness} from "./studio.mjs";
 
@@ -108,6 +110,19 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     // V081: payment-provider migration. Retire every legacy supporter billing
     // endpoint before identity, database or provider code can execute.
     if(/^\/api\/v1\/member\/supporter(?:\/|$)/.test(path))return fail(request,404);
+    const ownSupportV2=path===SUPPORT_API||path===SUPPORT_API+'/checkout'||path===SUPPORT_API+'/cancel';
+    const supportV2Hook=path===SUPPORT_HOOK;
+    // Only signed provider notifications may bypass the browser Origin check.
+    if(supportV2Hook){
+      if(request.method!=='POST')return fail(request,405);
+      // Webhooks have no browser Origin, but require the same canonical
+      // identity issuer and schema boundary as authenticated member routes.
+      if(!canonicalConfigState(env).operational || !await canonicalSchemaReady(env) ||
+         !await canonicalCreatorSchemaReady(env.MEMBER_DB))return fail(request,404);
+      return safeResponse(await supportV2Webhook(request,env));
+    }
+    if(ownSupportV2&&!((path===SUPPORT_API&&request.method==='GET')||
+      ([SUPPORT_API+'/checkout',SUPPORT_API+'/cancel'].includes(path)&&request.method==='POST')))return fail(request,405);
     const rewardMedia=matchRewardMedia(path);
     const rewardInventory=matchRewardInventory(path);
     const ownRewardMedia=rewardMedia?.handle===null;
@@ -135,7 +150,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     // This is a proposed, source-only pilot. Do not expose even a GET
     // endpoint without a deliberate rollout flag and an approved D1 schema.
     if(ownProjectSave&&env?.CANONICAL_PROJECT_SAVES_ENABLED!=="true")return fail(request,404);
-    if(path!==HEALTH && path!==METHODS && !ownRewardMedia && !publicRewardMedia && !ownRewardInventory && !publicRewardInventory && !publicRecognitionCatalog && !publicHandle && !ownProfile && !ownExport && !ownClosure && !ownSpace && !publicSpace && !ownRecognition && !publicCommunity && !forumRoute && !publicMetrics && !ownProgression && !ownProjectSave && !ownStudio && !ownStudioReview &&
+    if(path!==HEALTH && path!==METHODS && !ownRewardMedia && !publicRewardMedia && !ownRewardInventory && !publicRewardInventory && !publicRecognitionCatalog && !publicHandle && !ownProfile && !ownExport && !ownClosure && !ownSpace && !publicSpace && !ownRecognition && !publicCommunity && !forumRoute && !publicMetrics && !ownProgression && !ownSupportV2 && !ownProjectSave && !ownStudio && !ownStudioReview &&
       !(path.startsWith(CANONICAL_AUTH_PATH+"/") &&
         (AUTH_ALLOWLIST[request.method]?.has(path)??false)))
       return fail(request,404);
@@ -296,7 +311,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
         if(!session?.user?.id||session.user.emailVerified!==true)
           return safeJson(request,{error:"Verified sign-in required"},401);
       }
-      if(ownRewardMedia||ownRewardInventory||ownProfile||ownExport||ownClosure||ownSpace||ownRecognition||ownProgression||ownProjectSave||ownStudio||ownStudioReview){
+      if(ownRewardMedia||ownRewardInventory||ownProfile||ownExport||ownClosure||ownSpace||ownRecognition||ownProgression||ownSupportV2||ownProjectSave||ownStudio||ownStudioReview){
         const session=await auth.api.getSession({headers:clean.headers});
         if(!session?.user)return safeJson(request,{error:"Sign-in required"},401);
         if(ownRewardMedia)return safeResponse(await earnedRewardMedia(clean,env,session.user,rewardMedia));
@@ -306,6 +321,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
         if(ownStudio)return safeResponse(await canonicalStudio(clean,env,session.user));
         if(ownProjectSave)return safeResponse(await canonicalProjectSave(clean,env,session.user));
         if(ownProgression)return safeResponse(await canonicalProgression(clean,env,session.user));
+        if(ownSupportV2)return safeResponse(await supportV2Member(clean,env,session.user));
         if(ownSpace)return safeResponse(await canonicalSpace(clean,env,session.user));
          if(ownRecognition)return safeResponse(await canonicalRecognition(clean,env,session.user));
         return safeResponse(ownExport?

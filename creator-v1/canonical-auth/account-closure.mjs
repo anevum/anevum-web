@@ -49,7 +49,13 @@ async function recentSession(db,session,memberId,now){
  return Number.isSafeInteger(created)&&Number.isSafeInteger(expires)&&
   created>0&&created<=now+30000&&now-created<=600000&&expires>now;
 }
-async function closureBlockers(db,memberId,now){
+async function supportV2Installed(db){
+ const rowsFound=await rows(db,
+  "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('support_v2_intents','support_v2_checkout_guards','support_v2_memberships')");
+ if(rowsFound.length>0&&rowsFound.length!==3)throw Error('Partial supporter schema');
+ return rowsFound.length===3;
+}
+async function closureBlockers(db,memberId,now,v2Installed){
  // Private objects cannot be removed by a cascading D1 delete. Always block
  // account erasure while owned R2 asset records exist, even with Studio OFF.
  const studioTable=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='member_studio_assets'").first();
@@ -64,6 +70,14 @@ async function closureBlockers(db,memberId,now){
   'SELECT member_user_id FROM supporter_checkout_guards WHERE member_user_id=? AND expires_at_ms>?',memberId,now);
  const closing=await one(db,
   'SELECT member_user_id FROM member_account_closure_guards WHERE member_user_id=? AND expires_at_ms>?',memberId,now);
+ if(v2Installed){
+  const v2Membership=await one(db,'SELECT member_user_id FROM support_v2_memberships WHERE member_user_id=?',memberId);
+  const v2Intent=await one(db,'SELECT member_user_id FROM support_v2_intents WHERE member_user_id=? LIMIT 1',memberId);
+  const v2Guard=await one(db,
+   'SELECT member_user_id FROM support_v2_checkout_guards WHERE member_user_id=? AND expires_at_ms>?',memberId,now);
+  if(v2Membership)return 'billing-review';
+  if(v2Intent||v2Guard)return 'checkout-review';
+ }
  if(customer||subscription)return 'billing-review';
  if(intent||pending)return 'checkout-review';
  if(closing)return 'in-progress';
@@ -83,7 +97,8 @@ export async function canonicalAccountClosure(request,env,user,session,{now=Date
  try{
   const exists=await one(db,'SELECT id FROM "user" WHERE id=? AND emailVerified=1',user.id);
   if(!exists)return fail(403,'Verified account no longer exists');
-  const reason=await closureBlockers(db,user.id,now);
+  const v2Installed=await supportV2Installed(db);
+  const reason=await closureBlockers(db,user.id,now,v2Installed);
   const fresh=await recentSession(db,session,user.id,now);
   if(request.method==='GET')
    return out({available:true,canClose:!reason,reason,reauthRequired:!fresh});
@@ -111,6 +126,12 @@ export async function canonicalAccountClosure(request,env,user,session,{now=Date
   // Immutable lease blocks simultaneous deletion and supporter Checkout
   // creation. Both operations check the other guard in their atomic INSERT.
   const nonce=crypto.randomUUID();
+  const v2Guard=v2Installed
+   ?'NOT EXISTS(SELECT 1 FROM support_v2_intents WHERE member_user_id=?) AND '+
+    'NOT EXISTS(SELECT 1 FROM support_v2_memberships WHERE member_user_id=?) AND '+
+    'NOT EXISTS(SELECT 1 FROM support_v2_checkout_guards WHERE member_user_id=? AND expires_at_ms>?) '
+   :'';
+  const v2Params=v2Installed?[user.id,user.id,user.id,now]:[];
   const acquired=await rows(db,
    'INSERT INTO member_account_closure_guards(member_user_id,request_nonce,expires_at_ms,created_at_ms) '+
    'SELECT ?,?,?,? WHERE '+
@@ -118,10 +139,11 @@ export async function canonicalAccountClosure(request,env,user,session,{now=Date
    'NOT EXISTS(SELECT 1 FROM supporter_subscriptions WHERE member_user_id=?) AND '+
    'NOT EXISTS(SELECT 1 FROM supporter_checkout_intents WHERE member_user_id=?) AND '+
    'NOT EXISTS(SELECT 1 FROM supporter_checkout_guards WHERE member_user_id=? AND expires_at_ms>?) '+
+   v2Guard+
    'ON CONFLICT(member_user_id) DO UPDATE SET request_nonce=excluded.request_nonce,'+
    'expires_at_ms=excluded.expires_at_ms,created_at_ms=excluded.created_at_ms '+
    'WHERE member_account_closure_guards.expires_at_ms<=? RETURNING request_nonce',
-   user.id,nonce,now+600000,now,user.id,user.id,user.id,user.id,now,now);
+   user.id,nonce,now+600000,now,user.id,user.id,user.id,user.id,now,...v2Params,now);
   if(acquired.length!==1||acquired[0].request_nonce!==nonce)
    return fail(409,'Billing or another closure operation changed. Reload.');
   // Single atomic D1 delete. ON DELETE CASCADE removes sessions, profile,
@@ -134,8 +156,9 @@ export async function canonicalAccountClosure(request,env,user,session,{now=Date
    'AND NOT EXISTS(SELECT 1 FROM supporter_subscriptions WHERE member_user_id=?) '+
    'AND NOT EXISTS(SELECT 1 FROM supporter_checkout_intents WHERE member_user_id=?) '+
    'AND NOT EXISTS(SELECT 1 FROM supporter_checkout_guards WHERE member_user_id=? AND expires_at_ms>?) '+
+   (v2Installed?'AND '+v2Guard:'')+
    'RETURNING id',
-   user.id,user.id,nonce,user.id,user.id,user.id,user.id,now);
+   user.id,user.id,nonce,user.id,user.id,user.id,user.id,now,...v2Params);
   return deleted.length===1?out({deleted:true,sessionRevoked:true})
    :fail(409,'Account changed during closure. No deletion was confirmed.');
  }catch{return fail(503,'Account closure could not be verified');}

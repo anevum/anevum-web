@@ -1,0 +1,68 @@
+name: ANEVUM Support V2 Sandbox Review
+on:
+  push:
+    branches:
+      - feature/continuance-support-v2-square-sandbox-20261024
+  pull_request:
+    paths:
+      - '.github/workflows/anevum-support-v2-review.yml'
+      - 'creator-v1/support-v2/**'
+      - 'creator-v1/canonical-auth/support-v2.mjs'
+      - 'creator-v1/canonical-auth/worker.mjs'
+      - 'creator-v1/canonical-auth/account-closure.mjs'
+      - 'creator-v1/canonical-auth/migrations/0011_support_v2_sandbox.sql'
+      - 'creator-v1/web/src/pages/SupporterPage.tsx'
+      - 'creator-v1/test/support-v2-square.test.mjs'
+permissions:
+  contents: read
+concurrency:
+  group: supporter-v2-readonly-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  sandbox-review:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ''
+      CLOUDFLARE_ACCOUNT_ID: ''
+      WRANGLER_SEND_METRICS: 'false'
+      ANEVUM_SUPPORT_V2_ENABLED: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run isolated sandbox contract tests
+        run: node --test creator-v1/test/support-v2-square.test.mjs
+      - name: Parse additive isolated D1 migration in memory
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import sqlite3
+          sql=Path("creator-v1/canonical-auth/migrations/0011_support_v2_sandbox.sql").read_text()
+          cx=sqlite3.connect(":memory:")
+          cx.execute('CREATE TABLE "user" (id TEXT PRIMARY KEY)')
+          cx.executescript(sql)
+          names={row[0] for row in cx.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+          required={
+            "support_v2_intents","support_v2_checkout_guards","support_v2_payments",
+            "support_v2_memberships","support_v2_payment_holds","support_v2_webhook_events"
+          }
+          assert required<=names
+          cx.execute("INSERT INTO \"user\"(id) VALUES('fixture-member')")
+          values=('fixture-intent','fixture-member','month',500,'USD','square_sandbox','creating',123,123)
+          cx.execute("""INSERT INTO support_v2_intents
+              (id,member_user_id,interval,amount_cents,currency,provider,state,created_at_ms,updated_at_ms)
+              VALUES (?,?,?,?,?,?,?,?,?)""",values)
+          try:
+            cx.execute("""INSERT INTO support_v2_intents
+                (id,member_user_id,interval,amount_cents,currency,provider,state,created_at_ms,updated_at_ms)
+                VALUES (?,?,?,?,?,?,?,?,?)""",
+                ('bad-intent','fixture-member','month',3600,'USD','square_sandbox','creating',123,123))
+          except sqlite3.IntegrityError: pass
+          else: raise AssertionError('mismatched plan/price accepted')
+          print("PASS: sandbox schema, FK-bearing ledger, and price constraint")
+          PY
