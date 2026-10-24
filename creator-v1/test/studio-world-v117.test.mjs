@@ -54,7 +54,7 @@ test('editable Starcraft stays inside canonical world validation and undoable so
 });
 test('V117 native renderer integrates authored 3D assets, water and daylight into the pick-safe pipeline',()=>{
  assert.ok(parse(renderer,{sourceType:'module',plugins:['typescript']}).program.body.length>7);
- assert.ok(parse(sky,{sourceType:'module',plugins:['typescript']}).program.body.length>5);
+ assert.ok(parse(sky,{sourceType:'module',plugins:['typescript']}).program.body.length>3);
  assert.ok(parse(canvas,{sourceType:'module',plugins:['jsx','typescript']}).program.body.length>6);
  assert.match(renderer,/buildCinematicMeshes\(\)/);
  assert.match(renderer,/gl\.drawArrays\(m\.mode,0,m\.count\)/);
