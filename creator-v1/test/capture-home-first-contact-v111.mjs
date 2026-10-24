@@ -114,12 +114,26 @@ try{
    await evaluate('document.querySelector(".ir80-help-head .ir80-icon-button")?.click()');
    await until(()=>evaluate('!document.querySelector(".ir92-first-contact")'));
    await evaluate('window.dispatchEvent(new Event("anevum:iren-tour"))');
-   await until(()=>evaluate('!!document.querySelector(".ir80-guide-card")'));
-   const tour=await evaluate('(()=>({route:location.pathname,title:document.querySelector("#ir80-guide-title")?.textContent,one:document.querySelectorAll(".ir87-scout").length<=1}))()');
-   if(!tour.route?.endsWith("/creator/")||!tour.title?.includes("ANEVUM")||!tour.one)throw Error("V115_HOME_IREN_TOUR_"+JSON.stringify(tour));
-   await screenshot("first-contact-iren-tour-phone");
-   await evaluate('document.querySelector(".ir80-skip")?.click()');
-   await until(()=>evaluate('!document.querySelector(".ir80-guide-card")'));
+   await until(()=>evaluate('!!document.querySelector(".ir80-guide-card")||!!document.querySelector(".ir97-speech-bubble")'));
+   const spatial=await evaluate('!!document.querySelector(".ir97-speech-bubble")');
+   if(spatial){
+    // V131 feature-ON uses the approved spatial guide instead of the old
+    // modal. Assert genuine IREN teaching actions and one companion.
+    const tour=await evaluate('(()=>({route:location.pathname,content:document.querySelector(".ir97-bubble-line")?.textContent,actions:document.querySelectorAll(".ir97-bubble-actions button").length,next:!!document.querySelector(".ir97-forward"),skip:!!document.querySelector(".ir97-subtle"),one:document.querySelectorAll(".ir87-scout").length<=1,region:document.querySelector(".ir97-speech-bubble")?.getAttribute("role")}))()');
+    if(!tour.route?.endsWith("/creator/")||!tour.content||tour.actions<3||!tour.next||!tour.skip||!tour.one||tour.region!=="region")
+     throw Error("V133_HOME_SPATIAL_IREN_TOUR_"+JSON.stringify(tour));
+    await screenshot("first-contact-iren-tour-phone");
+    await evaluate('document.querySelector(".ir97-subtle")?.click()');
+    await until(()=>evaluate('!document.querySelector(".ir97-speech-bubble")'));
+   }else{
+    // Original legacy guide remains under the default-off flag.
+    const tour=await evaluate('(()=>({route:location.pathname,title:document.querySelector("#ir80-guide-title")?.textContent,one:document.querySelectorAll(".ir87-scout").length<=1}))()');
+    if(!tour.route?.endsWith("/creator/")||!tour.title?.includes("ANEVUM")||!tour.one)
+     throw Error("V115_HOME_IREN_TOUR_"+JSON.stringify(tour));
+    await screenshot("first-contact-iren-tour-phone");
+    await evaluate('document.querySelector(".ir80-skip")?.click()');
+    await until(()=>evaluate('!document.querySelector(".ir80-guide-card")'));
+   }
   }
  }
  writeFileSync(join(output,"acceptance.json"),JSON.stringify({pass:true,source:"compiled React local loopback",memberWrites:0,evidence},null,2));
