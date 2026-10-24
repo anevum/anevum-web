@@ -80,6 +80,8 @@ test('double opt-in stores zero active topics until confirmed; token expires and
   assert.equal(pending.pending_releases,1);assert.equal(pending.pending_weekly,1);
   assert.equal(pending.confirm_hash.length,64);
   assert.equal(h.sent.length,1);
+  assert.match(h.sent[0].html,/<a href="https:\/\/anevum\.com\/updates\/preferences\?action=confirm&amp;token=/);
+  assert.doesNotMatch(h.sent[0].html,/<script|onclick=|href="https:\/\/evil/i);
   const token=h.token(h.sent[0]);
   assert.match(token,/^[A-Za-z0-9_-]{43}$/);
   assert.equal(h.logs(h.email).join(','),'optin-requested');
@@ -99,6 +101,7 @@ test('new confirmation reactivates a properly unsubscribed address only after ne
   let token=h.token(h.sent.at(-1));
   assert.equal((await h.execute('confirm',{token})).status,200);
   assert.equal((await h.execute('manage',{email:h.email})).status,202);
+  assert.match(h.sent.at(-1).html,/<a href="https:\/\/anevum\.com\/updates\/preferences\?action=unsubscribe&amp;token=/);
   const stop=h.token(h.sent.at(-1));
   assert.equal((await h.execute('unsubscribe',{token:stop,topic:'all'})).status,200);
   assert.equal(h.get(h.email).status,'unsubscribed');
