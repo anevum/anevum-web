@@ -3,6 +3,17 @@ import {fragmentSource,vertexSource} from './living-world-shaders';
 import {useLivingWorld,worldDensity,type WorldSector} from './LivingWorldState';
 import './living-world-v136.css';
 
+const scenePositions:Record<WorldSector,[number,number,number]>={
+  hero:[1.58,1.70,4.60],portal:[1.18,1.72,4.80],
+  games:[1.65,1.52,4.22],tools:[1.92,1.38,4.80],
+  creative:[0.84,2.00,4.42],research:[1.35,1.86,4.26],
+  libraries:[1.78,1.32,4.92],learning:[0.95,1.76,4.96],
+  automation:[1.84,1.55,4.45],other:[1.42,1.76,4.70]
+};
+/** Each destination has a different cinematic camera target; the world itself
+ * remains mounted, so navigation interpolates rather than replacing imagery.
+ */
+
 const palette:Record<WorldSector,[number,number,number]>={
   hero:[0.27,0.71,1.0],portal:[0.36,0.69,1.0],
   games:[0.61,0.42,1.0],tools:[0.24,0.82,1.0],
@@ -45,7 +56,7 @@ function compile(gl:WebGL2RenderingContext):Compiled{
   if(position<0){gl.deleteBuffer(buffer);gl.deleteProgram(program);throw Error('World vertex attribute unavailable')}
   gl.enableVertexAttribArray(position);
   gl.vertexAttribPointer(position,2,gl.FLOAT,false,0,0);
-  const names=['u_resolution','u_pointer','u_time','u_density','u_verified','u_tone','u_pulse'];
+  const names=['u_resolution','u_pointer','u_time','u_density','u_verified','u_tone','u_pulse','u_center'];
   const location=names.map(name=>gl.getUniformLocation(program,name));
   if(location.some(x=>x===null)){
     gl.deleteBuffer(buffer);gl.deleteProgram(program);throw Error('World uniforms unavailable')
@@ -81,6 +92,7 @@ export function LivingWorldField({sector='hero',enabled}:{sector?:WorldSector;en
   const raf=useRef<number|null>(null);
   const pointer=useRef<[number,number]>([0,0]);
   const pulse=useRef(0);
+  const worldPosition=useRef<[number,number,number]>([1.58,1.70,4.60]);
   const phase=useRef(0);
   const {signal,paused}=useLivingWorld();
   const [renderer,setRenderer]=useState<Renderer>('booting');
@@ -90,9 +102,9 @@ export function LivingWorldField({sector='hero',enabled}:{sector?:WorldSector;en
   const density=worldDensity(signal,sector);
   const motionAllowed=enabled&&!paused&&!reduced&&!saveData&&visible;
   const active=motionAllowed&&renderer==='webgl';
-  const tone=palette[sector];
-  const param=useRef({density,tone,verified:signal.source==='verified',active});
-  param.current={density,tone,verified:signal.source==='verified',active};
+  const tone=palette[sector],position=scenePositions[sector];
+  const param=useRef({density,tone,position,verified:signal.source==='verified',active});
+  param.current={density,tone,position,verified:signal.source==='verified',active};
 
   useEffect(()=>{
     const media=window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -180,7 +192,10 @@ export function LivingWorldField({sector='hero',enabled}:{sector?:WorldSector;en
       if(!compiledNow)return;
       const {gl,program,buffer,location}=compiledNow;
       if(gl.isContextLost())return;
-      const {density,tone,verified}=param.current;
+      const {density,tone,position}=param.current;
+      const verified=param.current.verified;
+      const xyz=worldPosition.current;
+      for(let i=0;i<3;i++)xyz[i]+=(position[i]-xyz[i])*(param.current.active?0.09:1);
       gl.useProgram(program);gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
       gl.uniform2f(location[0],gl.drawingBufferWidth,gl.drawingBufferHeight);
       gl.uniform2f(location[1],pointer.current[0],pointer.current[1]);
@@ -189,6 +204,7 @@ export function LivingWorldField({sector='hero',enabled}:{sector?:WorldSector;en
       gl.uniform1f(location[4],verified?1:0);
       gl.uniform3f(location[5],tone[0],tone[1],tone[2]);
       gl.uniform1f(location[6],pulse.current);
+      gl.uniform3f(location[7],worldPosition.current[0],worldPosition.current[1],worldPosition.current[2]);
       gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
     };
     if(renderer!=='webgl'||!enabled)return;
