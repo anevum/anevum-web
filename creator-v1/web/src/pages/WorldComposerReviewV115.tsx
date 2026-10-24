@@ -10,6 +10,7 @@ import {StudioModeRailV116,StudioTopModesV116,StudioFileTreeV116,type StudioFile
 import {StudioAssetShelfV116,type StudioAsset} from './StudioAssetShelfV116';
 import {StudioOtherModesV116} from './StudioOtherModesV116';
 import {StudioTransformPadV117} from './StudioTransformPadV117';
+import {StudioContextPanelV117} from './StudioContextPanelV117';
 import './creator-studio-visual-v115.css';
 import './world-composer-v115.css';
 import './studio-next-v116.css';
@@ -141,7 +142,7 @@ export function WorldComposerReviewV115(){
   </div>
   <header className="cvs-head">
    <div className="cvs-head-brand"><OrbitalMark className="cvs-mark"/><div><span>THE CREATIVE NETWORK / CONTINUANCE INSTITUTE</span><h1>ANEVUM <b>/ CREATOR STUDIO</b></h1></div></div>
-   <nav className="csn-site-nav" aria-label="ANEVUM navigation"><Link to="/">Home</Link><Link to="/discover">Discover</Link><Link to="/community">Community</Link><Link to="/creators">Creators</Link></nav>
+   {/* Site-wide ANEVUM navigation already sits above the editor. */}
    <div className="cvs-head-links"><span className="cvs-head-version">WORLD FORMAT <strong>V1</strong></span><Link to="/studio" className="cvs-link">My space <Icon name="arrow" size={16}/></Link></div>
   </header>
   <div className="cvs-studio">
@@ -221,7 +222,7 @@ export function WorldComposerReviewV115(){
     <aside className={'cvw-inspector cvs-pane'+(panel==='inspector'?' is-mobile-open':'')} aria-label="World object inspector">
      <div className="csn-inspector-tabs" role="group" aria-label="Context panels"><button type="button" aria-pressed={inspectorTab==='properties'} onClick={()=>setInspectorTab('properties')}>INSPECTOR</button><button type="button" aria-pressed={inspectorTab==='iren'} onClick={()=>setInspectorTab('iren')}>IREN</button>
       <button type="button" className="cvw-close" onClick={()=>setPanel('closed')} aria-label="Close inspector">×</button></div>
-     {inspectorTab==='properties'?<><div className="cvs-pane-title csn-context-title"><div><small>SELECTED OBJECT</small><h2>{node?.name||'Select an object'}</h2></div></div>
+     {inspectorTab==='properties'?(mode==='Scene'||mode==='Playtest'?<><div className="cvs-pane-title csn-context-title"><div><small>SELECTED OBJECT</small><h2>{node?.name||'Select an object'}</h2></div></div>
      {node?<div className="cvw-inspector-content">
       <div className="cvs-subheading">OBJECT TRANSFORM</div>
       {(['position','rotation','scale'] as const).map(field=><fieldset key={field} className="cvw-vector">
@@ -245,7 +246,8 @@ export function WorldComposerReviewV115(){
        onChange={e=>command({type:'SET_ENVIRONMENT',sky:e.target.value as 'day'|'night',sunIntensity:scene.environment.sunIntensity})}>
        <option value="day">Daylight</option><option value="night">Nebula night</option></select></label>
      </div>
-     </>:<div className="csn-iren-panel">
+     </>:<StudioContextPanelV117 mode={mode} objects={scene.nodes.length} documentBytes={new TextEncoder().encode(source).length}
+        onNavigate={setMode}/>):<div className="csn-iren-panel">
       <div className="csn-iren-identity"><div className="csn-iren-symbol"><OrbitalMark/></div><div><small>IREN / CREATIVE COPILOT</small><strong>Design intelligence</strong><span>Existing companion · no scene access</span></div></div>
       <p>IREN's future Studio integration will inspect selected objects and propose typed changes for review. This prototype does not send prompts or execute model calls.</p>
       <div className="csn-iren-suggestions"><span>FUTURE CAPABILITIES</span><div>Generate a world plan</div><div>Build an interface</div><div>Find and validate assets</div><div>Inspect scene scripts</div></div>
