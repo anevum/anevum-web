@@ -81,7 +81,7 @@ function SavedWorksCollection({memberId}:{memberId:string}){
      <p>{item.summary}</p>
      <div className="avsaved-card-maker">BY <Link to={"/creators/"+encodeURIComponent(item.creatorHandle)}>@{item.creatorHandle}</Link></div>
      <div className="avsaved-card-actions">
-      <Link className="avsaved-open" to={"/projects/"+encodeURIComponent(item.id)+"?from="+encodeURIComponent("/saved")}>OPEN PROJECT <span aria-hidden="true">↗</span></Link>
+      <Link className="avsaved-open" aria-label={"Open project "+item.title} to={"/projects/"+encodeURIComponent(item.id)+"?from="+encodeURIComponent("/saved")}>OPEN <span aria-hidden="true">↗</span></Link>
       <button type="button" disabled={pending!==null||loadingMore} onClick={()=>void remove(item.id)}>{pending===item.id?"UPDATING…":"UNSAVE"}</button>
      </div>
     </div>
