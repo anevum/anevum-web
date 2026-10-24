@@ -124,15 +124,16 @@ function ShellContent(){
   }
   const home=location.pathname==="/";
   const parityFullBleed=Boolean(FullParityHeader&&(home||location.pathname==="/discover"));
+  const publicSpatial=Boolean(FullParityHeader&&["/","/discover","/community","/creators"].includes(location.pathname));
   // PARITY destinations own a full-bleed spatial canvas, not a nested page box.
   // Legacy routes retain their protected frame until individually transformed.
   // One stable route surface keeps navigation, IREN and launcher mounted.
   const routeSurface=home||parityFullBleed?<Outlet/>:
     <div className="av5-site-frame av9-unified-frame"><div className="av5-site-content"><Outlet/></div></div>;
   return <div className={"site-shell site-shell--cinematic av9-shell"+(home?" site-shell--home":"")}>
-    {FullParityHeader&&<LivingWorldField enabled={parityFullBleed} sector={worldSector(location.pathname,location.search)}/>}
+    {FullParityHeader&&<LivingWorldField enabled={publicSpatial} sector={worldSector(location.pathname,location.search)}/>}
 
-    {!parityFullBleed&&<ContinuanceWorldStage path={location.pathname}/>}
+    {!publicSpatial&&<ContinuanceWorldStage path={location.pathname}/>}
     {FullParityHeader?<Suspense fallback={<header className="p136-header" aria-label="ANEVUM navigation loading"/>}><FullParityHeader memberDestination={memberDestination} canonicalMember={canonicalMember} query={query} onQuery={setQuery} onSearch={search} onOpenLauncher={()=>setLauncherOpen(true)} onOpenIren={()=>window.dispatchEvent(new Event("anevum:iren-open"))} menuOpen={menuOpen} onToggleMenu={()=>setMenuOpen(v=>!v)} menuButton={menuButton}/></Suspense>:<header className="site-header av9-header">
       <div className="header-inner av9-header-inner">
         <Link to="/" className="brand-lockup av9-brand" aria-label="ANEVUM homepage">
@@ -227,7 +228,7 @@ function ShellContent(){
     {FullParityHeader&&<ConsoleWayfinderV136 onOpenSearch={()=>setLauncherOpen(true)}/> }
     <PortalLauncher open={launcherOpen} onClose={()=>setLauncherOpen(false)}/>
     <main id="main" tabIndex={-1} className="site-main av9-main">
-      {!parityFullBleed&&<VisualKitAtmosphere room={publicVisualRoom(location.pathname)}/>}
+      {!publicSpatial&&<VisualKitAtmosphere room={publicVisualRoom(location.pathname)}/>}
       {parityFullBleed?<ViewTransition enter="p136-route" exit="p136-route" update="p136-route">{routeSurface}</ViewTransition>:routeSurface}
     </main>
     <footer className="site-footer av9-footer">
