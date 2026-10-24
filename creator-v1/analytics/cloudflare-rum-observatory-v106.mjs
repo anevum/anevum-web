@@ -56,7 +56,9 @@ export function normalizeRumResponse(data,now=Date.now()){
  for(const row of rows){
   const day=row?.dimensions?.date;
   const loads=row?.count,visits=row?.sum?.visits;
-  if(typeof day!=='string'||!DATE.test(day)||day<range.from||day>range.to||seen.has(day)||
+  if(typeof day!=='string'||!DATE.test(day)||Number.isNaN(Date.parse(day+'T00:00:00.000Z'))||
+   new Date(day+'T00:00:00.000Z').toISOString().slice(0,10)!==day||
+   day<range.from||day>range.to||seen.has(day)||
    !Number.isFinite(loads)||loads<0||!Number.isFinite(visits)||visits<0||
    loads>Number.MAX_SAFE_INTEGER||visits>Number.MAX_SAFE_INTEGER)
    throw Error('Cloudflare analytics day integrity unavailable');
