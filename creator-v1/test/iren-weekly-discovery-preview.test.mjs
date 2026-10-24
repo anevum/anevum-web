@@ -18,8 +18,8 @@ test('only genuinely recent approved public rows selected, restricted to distinc
  const r=selectWeeklyDiscoveryCandidates(board(rows),{now:NOW});
  assert.equal(r.shouldSend,false);assert.equal(r.items.length,5);
  assert.equal(r.distinctCreators,5);
- assert.deepEqual(new Set(r.items.map(x=>x.creatorHandle)),new Set(['alice','bob','charlie','dan','eve']));
- assert.ok(!r.items.some(x=>x.id==='old'||x.id==='future'||x.id==='two'));
+ assert.deepEqual(new Set(r.items.map(x=>x.creatorHandle)),new Set(['alice','charlie','dan','eve','frank']));
+ assert.ok(!r.items.some(x=>x.id==='old'||x.id==='future'||x.id==='two'||x.id==='three'));
  assert.ok(r.items.every(x=>x.url.startsWith('https://anevum.com/projects/')));
 });
 test('reject forged source, quality scores, malformed ids and unpublished or unsupported rows',()=>{
