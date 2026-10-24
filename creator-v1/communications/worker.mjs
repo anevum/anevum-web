@@ -72,7 +72,7 @@ export function createCommunicationsWorker({send=sendViaResend,clock=()=>Date.no
   if(action==='confirm'){
    if(!record(input,['token'])||typeof input.token!=='string'||!TOKEN.test(input.token))return fail(400);
    try{
-    const row=await db.prepare("UPDATE communication_subscribers SET status='confirmed',releases=pending_releases,weekly=pending_weekly,pending_releases=0,pending_weekly=0,confirm_hash=NULL,confirm_expires_at=NULL,confirmed_at=?,updated_at=?,unsub_version=unsub_version+1 WHERE confirm_hash=? AND confirm_expires_at>? AND (pending_releases=1 OR pending_weekly=1) RETURNING id")
+    const row=await db.prepare("UPDATE communication_subscribers SET status='confirmed',releases=pending_releases,weekly=pending_weekly,pending_releases=0,pending_weekly=0,confirm_hash=NULL,confirm_expires_at=NULL,confirmed_at=?,updated_at=?,unsubscribed_at=NULL,unsub_version=unsub_version+1 WHERE confirm_hash=? AND confirm_expires_at>? AND (pending_releases=1 OR pending_weekly=1) RETURNING id")
      .bind(now,now,await sha(input.token),now).first();
     return row?.id?respond({status:'confirmed'}):fail(410);
    }catch{return fail(503)}
