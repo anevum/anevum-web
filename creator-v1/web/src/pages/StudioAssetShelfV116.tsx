@@ -14,7 +14,7 @@ const ASSET_CATALOG:StudioAsset[]=[
  {id:'energy-core',title:'Energy Core',category:'Effects',subtitle:'Editable sphere',kind:'sphere',material:'cyan',thumb:'core'},
  {id:'sky-lantern',title:'Sky Lantern',category:'Effects',subtitle:'Editable light',kind:'light',material:'cyan',thumb:'light'},
  {id:'stone-block',title:'Stone Block',category:'Props',subtitle:'Editable cube',kind:'cube',material:'stone',thumb:'block'},
- {id:'starcraft',title:'Starcraft',category:'Vehicles',subtitle:'Preview only · GLB later',kind:null,material:null,thumb:'craft'},
+ {id:'starcraft',title:'Starcraft',category:'Vehicles',subtitle:'Editable procedural GPU craft',kind:'starship',material:'glass',thumb:'craft'},
  {id:'neon-bloom',title:'Neon Bloom',category:'Nature',subtitle:'Preview only · GLB later',kind:null,material:null,thumb:'plant'}
 ];
 const CATEGORIES=['All','Environments','Architecture','Props','Effects','Vehicles','Nature'] as const;
