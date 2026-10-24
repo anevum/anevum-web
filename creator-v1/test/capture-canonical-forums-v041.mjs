@@ -42,7 +42,7 @@ env.CANONICAL_RECOGNITION_ENABLED='true';env.CANONICAL_VERIFIED_ROLES_ENABLED='t
 // numerical statistics. An actually issued but undisplayed award remains hidden.
 // Stress an allowed 80-character display name without fabricating a new account.
 db.prepare("UPDATE member_creator_profiles SET display_name=? WHERE user_id=?")
- .run('Fixture Reader With An Extended Public Display Name For Responsive Identity Checks',reader.id);
+ .run('Fixture Reader With An Extended Public Display Name For Responsive Testing',reader.id);
 db.prepare("INSERT INTO member_space_settings(user_id,featured_json,show_stats) VALUES(?,'[]',0)").run(reader.id);
 db.prepare("UPDATE member_recognition_preferences SET badge_mode='hidden',badge_ids_json='[]',aura='none' WHERE user_id=?").run(reader.id);
 db.prepare('INSERT INTO member_recognition_grants(user_id,kind,recognition_id,earned_at,granted_by,evidence_ref,reviewed_by) VALUES(?,?,?,?,?,?,?)')
