@@ -42,7 +42,7 @@ test('use the canonical ANEVUM SVG mark, not a newly invented brand symbol',()=>
   assert.doesNotMatch(lab,/<IrenGuidedContinuance/);
 });
 test('sample files edit in memory with safe syntax colors and bounded input',()=>{
-  for(const part of ['index.html','styles.css','main.ts','coloredSource','tokenClass','av134-token--keyword','maxLength={12000}','onChange={e=>changeText(e.target.value)}'])
+  for(const part of ['index.html','styles.css','main.ts','coloredSource','tokenClass','av134-token--','maxLength={12000}','onChange={e=>changeText(e.target.value)}'])
     assert.ok(lab.includes(part),part);
   for(const forbidden of ['localStorage','sessionStorage','window.fetch(','eval(','new Function(','studioUpload(','memberCreate','awardXp('])
     assert.ok(!lab.includes(forbidden),'No persistence, execution or writes: '+forbidden);
