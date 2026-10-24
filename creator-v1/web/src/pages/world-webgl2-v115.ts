@@ -42,7 +42,7 @@ const fragmentShader=[
  ' if(uWater>.5){',
  '  float wave=.5+.5*sin(vWorld.y*3.9+vWorld.x*6.8-uTime*2.7);',
  '  float foam=.5+.5*sin(vWorld.y*7.1-vWorld.z*5.7+uTime*1.9);',
- '  color=mix(vec3(.17,.43,.69),vec3(.72,.94,1.0),.42+.33*wave+.16*foam);',
+ '  color=mix(uColor*.82,vec3(.72,.94,1.0),.39+.32*wave+.16*foam);',
  '  color+=vec3(.09,.17,.23)*pow(wave,6.0);',
  ' }',
  ' color=mix(color,color*vec3(.65,.76,1.07),uNight*.46);',
@@ -154,7 +154,7 @@ function parts(node:WorldNode):{mesh:string,transform:Float32Array,material:Worl
  if(node.kind==='island'){
   const p:{mesh:string,transform:Float32Array,material:WorldMaterial}[]=[
    {mesh:'islandRock',transform:I,material:'stone'},
-   {mesh:'islandTop',transform:I,material:'grass'}
+   {mesh:'islandTop',transform:I,material:node.material}
   ];
   // The same canonical island node owns all decorative foliage and
   // architecture, so click-selection and undo remain deterministic.
@@ -204,8 +204,8 @@ function parts(node:WorldNode):{mesh:string,transform:Float32Array,material:Worl
  }
  if(node.kind==='waterfall'){
   return [
-   {mesh:'waterRibbon',transform:I,material:'water'},
-   {mesh:'waterRibbon',transform:at([.42,-.18,-.26],[.36,.95,.82]),material:'water'},
+   {mesh:'waterRibbon',transform:I,material:node.material},
+   {mesh:'waterRibbon',transform:at([.42,-.18,-.26],[.36,.95,.82]),material:node.material},
    {mesh:'sphere',transform:at([0,-6.58,0],[1.03,.25,1.0]),material:'cyan'}
   ];
  }
@@ -219,7 +219,7 @@ function parts(node:WorldNode):{mesh:string,transform:Float32Array,material:Worl
    {mesh:'cube',transform:at([.79,-.09,0],[.73,.09,.9]),material:'gold'}
   ];
  }
- if(node.kind==='light')return [{mesh:'sphere',transform:scaling([.52,.52,.52]),material:'cyan'}];
+ if(node.kind==='light')return [{mesh:'sphere',transform:scaling([.52,.52,.52]),material:node.material}];
  if(node.kind==='sphere')return [{mesh:'sphere',transform:I,material:node.material}];
  return [{mesh:'cube',transform:I,material:node.material}];
 }
