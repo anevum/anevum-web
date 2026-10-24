@@ -66,6 +66,13 @@
  padding:22px;background:linear-gradient(145deg,#122943,#0a172a 70%);text-align:center}
 .cvw-renderer-fallback strong{font-size:17px;color:#f1faff}
 .cvw-renderer-fallback p{font-size:11px;max-width:370px;color:#b6c9dc;line-height:1.55}
+.cvw-retry-graphics{
+ margin-top:8px;padding:10px 16px;min-height:44px;border-radius:8px;
+ border:1px solid #91dff7;background:#173d59;color:#e8faff;
+ font-size:12px;font-weight:700;cursor:pointer
+}
+.cvw-retry-graphics:hover{background:#286080}
+.cvw-retry-graphics:focus-visible{outline:2px solid #93edff;outline-offset:3px}
 .cvw-fallback-orbit{width:67px;height:67px;border-radius:50%;border:2px solid #83daec;
  box-shadow:inset 0 0 25px #22425c,0 0 18px #224767;position:relative}
 .cvw-fallback-orbit::after{content:"";position:absolute;inset:15px;border:1px solid #dfbe90;
