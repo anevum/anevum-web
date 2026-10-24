@@ -52,6 +52,8 @@ test('V120 JSON, world and CSS diagnostics return exact local syntax problems wi
  assert.deepEqual(world.diagnostics,[]);
  const malformed=diagnoseSource('ANEVUM_WORLD_V1\n{"nodes":[]}','Main.world.anevum');
  assert.equal(malformed.diagnostics[0].code,'world-schema');
+ const emptyValue=diagnoseSource('ANEVUM_WORLD_V1\nnull','Main.world.anevum');
+ assert.equal(emptyValue.diagnostics[0].code,'world-schema');
  const noHeader=diagnoseSource('{"nodes":[]}','Main.world.anevum');
  assert.equal(noHeader.diagnostics[0].code,'world-header');
  const invalidCSS=diagnoseSource('.hero {\n  color: cyan;','site.css');
