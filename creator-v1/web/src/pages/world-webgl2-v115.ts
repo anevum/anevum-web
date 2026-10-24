@@ -122,30 +122,6 @@ function cube(){
  quad(out,a,e,h,d);quad(out,h,g,c,d);quad(out,a,b,f,e);
  return out;
 }
-function island(){
- const rock:number[]=[],top:number[]=[],count=10;
- const ring=(i:number,y:number,factor=1):Vertex=>{
-  const t=2*Math.PI*i/count;return [Math.cos(t)*2*factor,y,Math.sin(t)*1.6*factor];
- };
- for(let i=0;i<count;i++){
-  const j=(i+1)%count;
-  triangle(top,[0,.22,0],ring(j,.22),ring(i,.22));
-  triangle(rock,ring(i,.21),ring(j,.21),[0,-2.55,0]);
- }
- return {rock,top};
-}
-function tower(){
- const out:number[]=[],count=8;
- const ring=(i:number,y:number,r:number):Vertex=>{
-  const t=2*Math.PI*i/count;return [Math.cos(t)*r,y,Math.sin(t)*r];
- };
- for(let i=0;i<count;i++){
-  const j=(i+1)%count;
-  quad(out,ring(i,-.25,.65),ring(j,-.25,.65),ring(j,3.0,.4),ring(i,3.0,.4));
-  triangle(out,ring(i,3.0,.4),ring(j,3.0,.4),[0,4.5,0]);
- }
- return out;
-}
 function sphere(){
  const out:number[]=[],rings=10,segments=16;
  const point=(i:number,j:number):Vertex=>{
