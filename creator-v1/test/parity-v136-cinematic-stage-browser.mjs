@@ -70,7 +70,7 @@ try{
   await page.waitForFunction(()=>{
    const canvas=document.querySelector('.p136-living-canvas');
    return canvas?.dataset.cinemaStage==='ready'&&canvas?.dataset.assetState==='ready';
-  },{timeout:60000});
+  },null,{timeout:60000});
   const start=await page.evaluate(()=>{
    const canvas=document.querySelector('.p136-living-canvas');
    const world=document.querySelector('.p136-living-world');
@@ -88,6 +88,10 @@ try{
   assert.equal(start.model,'ready','Exact hash-validated original shared GLB');
   assert.equal(start.cameraRevision,'continuance-stage-v136016-001');
   assert.equal(start.canvasCount,1,'Never create a competing WebGL context');
+  assert.ok(start.cameraProgress>=0&&start.cameraProgress<=1,'Bounded source camera scrub');
+  assert.ok(start.modelBudget.models>=1,'Real model is loaded');
+  assert.ok(start.modelBudget.triangles>10000,'Staged GLB not replaced by empty scene');
+  assert.equal(start.modelBudget.family,'atrium','Camera and geometry belong to the same route');
   assert.equal(start.mediaCount,0,'No reviewed cinematic video or autoplay');
   assert.equal(start.cinema,'poster','No media approvals were invented');
   assert.ok(start.controlsVisible,'The real Discover action remains usable');
