@@ -51,7 +51,7 @@ test('member pages retain independent authentication and capability gates',()=>{
 test('only owner-earned reward lists collapse, not public profiles',()=>{
  const vault=read('web/src/components/EarnedRewardVault.tsx');
  assert.match(vault,/const simple=MEMBER_COLLECTION_NAV_REVIEW&&!publicProfile/);
- assert.match(vault,/records\]\.slice\(-4\)/);
+ assert.match(vault,/const orderedLevels=simple\?\[\.\.\.records\]\.reverse\(\):records/);
  assert.match(vault,/validBadges\.slice\(0,3\)/);
  assert.match(vault,/orderedLevels\.slice\(0,4\)/);
  assert.match(vault,/shownLevels\.map/);
