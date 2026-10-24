@@ -58,7 +58,7 @@ function compile(gl:WebGL2RenderingContext):Compiled{
   if(position<0){gl.deleteBuffer(buffer);gl.deleteProgram(program);throw Error('World vertex attribute unavailable')}
   gl.enableVertexAttribArray(position);
   gl.vertexAttribPointer(position,2,gl.FLOAT,false,0,0);
-  const names=['u_resolution','u_pointer','u_time','u_density','u_verified','u_tone','u_pulse','u_center'];
+  const names=['u_resolution','u_pointer','u_time','u_density','u_verified','u_tone','u_pulse','u_center','u_architecture'];
   const location=names.map(name=>gl.getUniformLocation(program,name));
   if(location.some(x=>x===null)){
     gl.deleteBuffer(buffer);gl.deleteProgram(program);throw Error('World uniforms unavailable')
@@ -93,6 +93,8 @@ export function LivingWorldField({sector='hero',enabled}:{sector?:WorldSector;en
   const compiled=useRef<Compiled|null>(null);
   const raf=useRef<number|null>(null);
   const pointer=useRef<[number,number]>([0,0]);
+  const paletteBlend=useRef<[number,number,number]>([.27,.71,1]);
+  const architecturalBlend=useRef(0);
   const pulse=useRef(0);
   const worldPosition=useRef<[number,number,number]>([1.58,1.70,4.60]);
   const phase=useRef(0);
@@ -106,8 +108,9 @@ export function LivingWorldField({sector='hero',enabled}:{sector?:WorldSector;en
   const motionAllowed=enabled&&!paused&&!reduced&&!saveData&&visible;
   const active=motionAllowed&&renderer==='webgl';
   const tone=palette[activeSector],position=scenePositions[activeSector];
-  const param=useRef({density,tone,position,verified:signal.source==='verified',active});
-  param.current={density,tone,position,verified:signal.source==='verified',active};
+  const architecture=activeSector==='community'?1:activeSector==='creators'?2:activeSector==='studio'?3:activeSector==='games'?4:0;
+  const param=useRef({density,tone,position,architecture,verified:signal.source==='verified',active});
+  param.current={density,tone,position,architecture,verified:signal.source==='verified',active};
 
   useEffect(()=>{
     const media=window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -195,7 +198,7 @@ export function LivingWorldField({sector='hero',enabled}:{sector?:WorldSector;en
       if(!compiledNow)return;
       const {gl,program,buffer,location}=compiledNow;
       if(gl.isContextLost())return;
-      const {density,tone,position}=param.current;
+      const {density,tone,position,architecture}=param.current;
       const verified=param.current.verified;
       const xyz=worldPosition.current;
       for(let i=0;i<3;i++)xyz[i]+=(position[i]-xyz[i])*(param.current.active?0.09:1);
@@ -205,9 +208,13 @@ export function LivingWorldField({sector='hero',enabled}:{sector?:WorldSector;en
       gl.uniform1f(location[2],milliseconds/1000);
       gl.uniform1f(location[3],density);
       gl.uniform1f(location[4],verified?1:0);
-      gl.uniform3f(location[5],tone[0],tone[1],tone[2]);
+      const blend=paletteBlend.current;
+      for(let i=0;i<3;i++)blend[i]+=(tone[i]-blend[i])*(param.current.active?.075:1);
+      architecturalBlend.current+=(architecture-architecturalBlend.current)*(param.current.active?.06:1);
+      gl.uniform3f(location[5],blend[0],blend[1],blend[2]);
       gl.uniform1f(location[6],pulse.current);
       gl.uniform3f(location[7],worldPosition.current[0],worldPosition.current[1],worldPosition.current[2]);
+      gl.uniform1f(location[8],architecturalBlend.current);
       gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
     };
     if(renderer!=='webgl'||!enabled)return;
