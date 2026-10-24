@@ -28,7 +28,9 @@ function reducer(state:ReviewState,action:Action):ReviewState{
   case 'COMMAND':
    try{
     const result=apply(state.document,action.command);
-    return {document:result,selected:action.command.type==='ADD_NODE'?action.command.node.id:state.selected,
+    const newSelection=action.command.type==='ADD_NODE'?action.command.node.id:
+     result.nodes.some(n=>n.id===state.selected)?state.selected:result.nodes[0]?.id||null;
+    return {document:result,selected:newSelection,
      past:[...state.past,state.document].slice(-48),future:[],error:''};
    }catch(error){return {...state,error:error instanceof Error?error.message:'Invalid world change'};}
   case 'SELECT':
