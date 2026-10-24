@@ -13,7 +13,6 @@ import {readWithDeadline} from '../../../shared/read-deadline.mjs';
 import {nativeCreatorEnabled} from '../lib/native-creator-v095';
 import {workbenchAlphaEnabled} from '../lib/workbench-alpha';
 import {NativeStudioNavigation} from './NativeCreatorStudio';
-import {StudioAchievementEntry} from './StudioAchievementsV114';
 import {resolveStudioEntry} from '../lib/studio-entry-read';
 const WorkbenchAlphaEntryGate=lazy(()=>import('./WorkbenchAlpha').then(m=>({default:m.WorkbenchAlphaEntryGate})));
 
@@ -330,6 +329,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
       <p>{item.reason}</p>
      </div>)}
     </section>}
+    {project&&import.meta.env.VITE_CREATOR_ACHIEVEMENTS_V114==='true'&&<section className="st-panel" aria-label="Private project achievements"><p className="st-kicker">PROJECT ACHIEVEMENTS / PRIVATE DRAFTS</p><h2>DESIGN PROJECT MARKS.</h2><p>Create secret milestones, completion marks and project-specific rewards. This editor does not issue XP or player awards.</p><Link className="st-action" to={'/studio/'+project.id+'/achievements'}>DESIGN ACHIEVEMENTS &amp; REWARDS ↗</Link></section>}
     {project&&<StudioReceipts projectId={project.id} revision={project.revision}/>}
     {project&&<StudioUploader project={project} uploadsReady={uploadsReady}
      onAssetsChanged={setAssetSummary} onProjectChanged={setProject}/>}
