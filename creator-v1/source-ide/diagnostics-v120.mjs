@@ -39,7 +39,7 @@ function addJsonProblem(out,source,fragment,offset,code){
  catch(error){
   out.push(makeDiagnostic(source,offset+jsonErrorOffset(fragment,error),'error',code,
    'JSON syntax: '+(error instanceof Error?error.message:'Invalid JSON')));
-  return null;
+  return undefined;
  }
 }
 function cssProblems(source,out){
@@ -72,7 +72,7 @@ export function diagnoseSource(source,filename,maxProblems=30){
    problems.push(makeDiagnostic(text,0,'error','world-header','Missing ANEVUM_WORLD_V1 version header.'));
   }else{
    const parsed=addJsonProblem(problems,text,text.slice(PREFIX.length),PREFIX.length,'world-json');
-   if(parsed!==null){
+   if(parsed!==undefined){
     try{validate(parsed);}
     catch(error){
      problems.push(makeDiagnostic(text,0,'error','world-schema',
