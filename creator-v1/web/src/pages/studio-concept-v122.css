@@ -172,7 +172,7 @@
  border:1px solid #8a8dc9;border-radius:7px;padding:10px 12px;background:#2a3c5c;color:#e7edff;font-size:11px}
 @media(min-width:1041px){
  .cvw-root .cvw-stage{height:clamp(340px,43vh,505px);min-height:340px}
- .cvw-root .cvw-inspector,.cvw-root .cvw-explorer{max-height:none}
+ .cvw-root .cvw-inspector,.cvw-root .cvw-explorer{max-height:calc(100vh - 165px);overflow-y:auto}
 }
 @media(min-width:681px) and (max-width:1040px){
  .cvw-root .cvs-studio-online{display:none}
