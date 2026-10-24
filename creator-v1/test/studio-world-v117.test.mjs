@@ -11,6 +11,9 @@ const sky=read('creator-v1/web/src/pages/world-sky-v115.ts');
 const canvas=read('creator-v1/web/src/pages/WorldCanvasV115.tsx');
 const shelf=read('creator-v1/web/src/pages/StudioAssetShelfV116.tsx');
 const geometry=read('creator-v1/web/src/pages/world-geometry-v117.ts');
+const pad=read('creator-v1/web/src/pages/StudioTransformPadV117.tsx');
+const style=read('creator-v1/web/src/pages/studio-world-v117.css');
+const page=read('creator-v1/web/src/pages/WorldComposerReviewV115.tsx');
 
 test('V117 scene meshes are finite, bounded, indexed by stable part names and formed from real triangles',()=>{
  const meshes=buildCinematicMeshes(), budgets=geometryBudgets();
@@ -64,6 +67,8 @@ test('V117 native renderer integrates authored 3D assets, water and daylight int
  assert.match(renderer,/uTime/);
  assert.match(renderer,/lastTime/);
  assert.match(renderer,/gl\.isContextLost\(\)/);
+ assert.match(renderer,/animatedModel\(n\)/);
+ assert.match(renderer,/draw\(scene,camera,null,width,height,true,lastTime\)/);
  assert.match(sky,/uTime/);
  assert.match(sky,/ringR/);
  assert.match(sky,/planetMask/);
@@ -84,4 +89,21 @@ test('V117 water and atmosphere motion does not invent browser or cloud GPU depe
  assert.match(shelf,/Neon Bloom/);
  for(const source of [renderer,sky,geometry,canvas])
   assert.doesNotMatch(source,/\bfetch\s*\(|\blocalStorage\b|\bsessionStorage\b|dangerouslySetInnerHTML|\beval\s*\(|new Function/);
+});
+
+test('V117 touch translation emits real undoable typed moves and camera focus actions',()=>{
+ assert.ok(parse(pad,{sourceType:'module',plugins:['jsx','typescript']}).program.body.length>2);
+ assert.match(pad,/onMove\(delta\)/);
+ assert.match(pad,/onFrame/);
+ assert.match(pad,/Movement step/);
+ assert.match(pad,/Move distance/);
+ assert.match(page,/StudioTransformPadV117/);
+ assert.match(page,/function nudge\(delta:Vec3\)/);
+ assert.match(page,/command\(\{type:'SET_TRANSFORM',id:node.id,field:'position',value:position\}\)/);
+ assert.match(page,/target:\[\.\.\.node.position\] as Vec3/);
+ assert.match(style,/\.csn-transform-pad/);
+ assert.match(style,/\.csn-axis-x/);
+ assert.match(style,/forced-colors:active/);
+ assert.match(style,/prefers-reduced-motion:reduce/);
+ assert.doesNotMatch(pad,/\bfetch\s*\(|\blocalStorage\b|\bsessionStorage\b|dangerouslySetInnerHTML|\beval\s*\(/);
 });
