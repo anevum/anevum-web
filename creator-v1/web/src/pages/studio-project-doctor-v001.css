@@ -18,6 +18,8 @@
 .cpd-findings li div{flex:1;min-width:0;display:grid;gap:5px}
 .cpd-findings strong{font-size:.76rem;font-weight:600;line-height:1.5}
 .cpd-findings small{font-size:.65rem;color:#b0c8d9;font-family:ui-monospace,Consolas,monospace;overflow-wrap:anywhere}
+.cpd-next-step{font-size:.73rem;line-height:1.5;margin:0;color:#d8e9f2}
+.cpd-next-step span{font-weight:700;color:#9ddbe7}
 .cpd-severity{text-transform:uppercase;letter-spacing:.06em;font-size:.56rem;font-weight:700;padding:4px 6px;border-radius:4px;border:1px solid #9bafbf;color:#f2f7fb;flex:none}
 .cpd-severity.is-warning{border-color:#c49b69;color:#ffdaaa}
 .cpd-severity.is-error{border-color:#c67f8e;color:#ffb5c7}
