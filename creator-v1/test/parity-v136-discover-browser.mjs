@@ -138,6 +138,7 @@ try{
     assert.equal(await page.getByRole('button',{name:'Marked free'}).evaluate(node=>node===document.activeElement),true,
       'Filtering must retain the activating control focus rather than focus main');
     await page.getByRole('searchbox',{name:'Search published projects'}).fill('ORBITAL & TEST');
+    assert.equal(await page.getByRole('searchbox',{name:'Search published projects'}).inputValue(),'ORBITAL & TEST','Controlled search retains typed input before submission');
     await page.evaluate(()=>{window.__parityNavigationDocumentMarker='same-document-'+Math.random()});
     await page.getByRole('searchbox',{name:'Search published projects'}).press('Enter');
     await page.waitForFunction(()=>new URLSearchParams(location.search).get('q')==='ORBITAL & TEST',
@@ -200,7 +201,7 @@ try{
 } catch(error){
   for(const context of browser.contexts())for(const page of context.pages()){
     await page.screenshot({path:join(out,'discover-failure.png'),fullPage:true}).catch(()=>{});
-    writeFileSync(join(out,'failure.json'),JSON.stringify({url:page.url(),body:await page.locator('body').innerText().catch(()=>''),errors,forbidden,error:String(error)},null,2));
+    writeFileSync(join(out,'failure.json'),JSON.stringify({url:page.url(),body:await page.locator('body').innerText().catch(()=>''),input:await page.getByRole('searchbox',{name:'Search published projects'}).inputValue().catch(()=>null),focus:await page.evaluate(()=>document.activeElement?.outerHTML.slice(0,300)),errors,forbidden,error:String(error)},null,2));
   }
   throw error;
 } finally{

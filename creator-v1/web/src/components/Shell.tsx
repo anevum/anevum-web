@@ -1,5 +1,5 @@
 import { NavLink, Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState, lazy, Suspense, ViewTransition } from "react";
+import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState, lazy, Suspense } from "react";
 import { OrbitalMark } from "./OrbitalMark";
 import { Icon } from "./Icons";
 import { PortalLauncher } from "./PortalLauncher";
@@ -76,6 +76,7 @@ function ShellContent(){
   const menuButton=useRef<HTMLButtonElement>(null);
   const menuDialog=useRef<HTMLDialogElement>(null);
   const previousPage=useRef(location.pathname);
+  const routeMotion=useRef<HTMLDivElement>(null);
 
   useEffect(()=>{setMenuOpen(false);setLauncherOpen(false);},[location.pathname,location.search]);
   useEffect(()=>{
@@ -93,6 +94,13 @@ function ShellContent(){
     previousPage.current=page;
     if(!location.hash)window.scrollTo({top:0,behavior:"instant"});
     document.getElementById("main")?.focus({preventScroll:true});
+    // Animate the real DOM once per page traversal. Experimental React
+    // ViewTransition update snapshots also intercept controlled form updates;
+    // those must remain synchronous and never replace the interactive tree.
+    if(FullParityHeader&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      routeMotion.current?.animate([{opacity:.6,transform:'translateY(8px)'},{opacity:1,transform:'translateY(0)'}],
+        {duration:230,easing:'cubic-bezier(.2,.75,.2,1)'});
+    }
   },[location.pathname,location.hash]);
   useEffect(()=>{
     function onShortcut(event:KeyboardEvent){
@@ -242,7 +250,7 @@ function ShellContent(){
     <PortalLauncher open={launcherOpen} onClose={()=>setLauncherOpen(false)}/>
     <main id="main" tabIndex={-1} className="site-main av9-main">
       {!publicSpatial&&<VisualKitAtmosphere room={publicVisualRoom(location.pathname)}/>}
-      {parityFullBleed?<ViewTransition enter="p136-route" exit="p136-route" update="p136-route">{routeSurface}</ViewTransition>:routeSurface}
+      <div ref={routeMotion} className={parityFullBleed?"p136-route-surface":undefined}>{routeSurface}</div>
     </main>
     <footer className="site-footer av9-footer">
       <span>ANEVUM / A WORLD OF THINGS PEOPLE MAKE</span>
