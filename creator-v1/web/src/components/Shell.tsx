@@ -1,5 +1,5 @@
 import { NavLink, Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { type FormEvent, useEffect, useRef, useState, lazy, Suspense } from "react";
+import { type FormEvent, useEffect, useRef, useState, lazy, Suspense, ViewTransition } from "react";
 import { OrbitalMark } from "./OrbitalMark";
 import { Icon } from "./Icons";
 import { PortalLauncher } from "./PortalLauncher";
@@ -92,6 +92,11 @@ export function Shell(){
     navigate(trimmed?"/discover?q="+encodeURIComponent(trimmed):"/discover");
   }
   const home=location.pathname==="/";
+  // One stable route surface: the navigation, IREN and launcher never unmount.
+  // React 19.3 paints a brief native crossfade between destinations, while
+  // older browsers and reduced-motion users retain ordinary navigation.
+  const routeSurface=home?<Outlet/>:
+    <div className="av5-site-frame av9-unified-frame"><div className="av5-site-content"><Outlet/></div></div>;
   return <div className={"site-shell site-shell--cinematic av9-shell"+(home?" site-shell--home":"")}>
     {!(FullParityHeader&&home)&&<ContinuanceWorldStage path={location.pathname}/>}
     {FullParityHeader?<Suspense fallback={<header className="p136-header" aria-label="ANEVUM navigation loading"/>}><FullParityHeader memberDestination={memberDestination} canonicalMember={canonicalMember} query={query} onQuery={setQuery} onSearch={search} onOpenLauncher={()=>setLauncherOpen(true)} onOpenIren={()=>window.dispatchEvent(new Event("anevum:iren-open"))} menuOpen={menuOpen} onToggleMenu={()=>setMenuOpen(v=>!v)} menuButton={menuButton}/></Suspense>:<header className="site-header av9-header">
@@ -181,7 +186,7 @@ export function Shell(){
     <PortalLauncher open={launcherOpen} onClose={()=>setLauncherOpen(false)}/>
     <main id="main" tabIndex={-1} className="site-main av9-main">
       {!(FullParityHeader&&home)&&<VisualKitAtmosphere room={publicVisualRoom(location.pathname)}/>}
-      {home?<Outlet/>:<div className="av5-site-frame av9-unified-frame"><div className="av5-site-content"><Outlet/></div></div>}
+      {FullParityHeader?<ViewTransition>{routeSurface}</ViewTransition>:routeSurface}
     </main>
     <footer className="site-footer av9-footer">
       <span>ANEVUM / A WORLD OF THINGS PEOPLE MAKE</span>
