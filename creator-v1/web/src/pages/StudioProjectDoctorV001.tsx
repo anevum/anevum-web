@@ -1,5 +1,6 @@
 import {useMemo,useState} from 'react';
 import {diagnoseStudioSource} from '../../../agent-quality-lab/project-doctor-v001.mjs';
+import {projectDoctorBrief} from '../../../agent-quality-lab/project-doctor-brief-v001.mjs';
 import './studio-project-doctor-v001.css';
 
 // Local draft inspection is opt-in and unavailable unless the Studio pilot is enabled.
@@ -11,7 +12,7 @@ export function StudioProjectDoctorV001({source,revision,dirty}:{
  const [opened,setOpened]=useState(false);
  const result=useMemo(()=>opened?diagnoseStudioSource(source):null,[opened,source]);
  const findings=result?.findings??[];
- const warningCount=findings.filter(item=>item.severity==='warning'||item.severity==='error').length;
+ const brief=useMemo(()=>result?projectDoctorBrief(result):null,[result]);
  return <section className="cpd-root" aria-label="Local Project Doctor" data-studio-project-doctor="v001">
   <header className="cpd-header">
    <div className="cpd-head-copy">
@@ -24,8 +25,8 @@ export function StudioProjectDoctorV001({source,revision,dirty}:{
   </header>
   {opened&&result&&<div className="cpd-report">
    <div className="cpd-summary">
-    <span className={'cpd-count'+(result.valid&&warningCount===0?' is-clear':'')}>
-     {result.valid?warningCount+' potential issue'+(warningCount===1?'':'s'):'Unsupported source'}
+    <span className={'cpd-count'+(brief?.status==='no_structural_warnings'?' is-clear':'')}>
+     {brief?.headline}
     </span>
     <span>{dirty?'Unsaved local changes':'Based on saved revision '+revision}</span>
    </div>
