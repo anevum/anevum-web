@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {ACTIVITIES,TRACKS,EXPEDITIONS,threshold,summarizeProgress,selectActivities,simulatePacing,PACING} from '../web/src/lib/progression-next-model.ts';
+import {ACTIVITIES,TRACKS,EXPEDITIONS,threshold,summarizeProgress,selectActivities,browseActivities,STARTER_ACTIVITY_IDS,simulatePacing,PACING} from '../web/src/lib/progression-next-model.ts';
 test('nineteen unique activities cover four tracks and truthful candidate status',()=>{
  assert.equal(ACTIVITIES.length,19);assert.equal(TRACKS.length,4);
  assert.equal(new Set(ACTIVITIES.map(x=>x.id)).size,19);
@@ -51,4 +51,25 @@ test('motion respects pause, hidden tabs, reduced motion and forced colors',()=>
  assert.match(css,/prefers-reduced-motion:reduce/);assert.match(css,/forced-colors:active/);
  assert.match(css,/animation-play-state:paused/);assert.match(page,/visibilitychange/);
  assert.match(page,/<dialog/);assert.match(page,/onCancel={close}/);
+});
+
+test('simplified browser begins with four deliberate recommendations, not nineteen cards',()=>{
+ const starter=browseActivities('starter','');
+ assert.equal(starter.length,4);
+ assert.deepEqual(starter.map(a=>a.id),[...STARTER_ACTIVITY_IDS]);
+ assert.equal(new Set(starter.map(a=>a.track)).size,3);
+ assert.equal(browseActivities('all','').length,19);
+ assert.equal(browseActivities('creation','').length,5);
+ assert.equal(browseActivities('discovery','').length,7);
+ assert.equal(browseActivities('starter','accessibility').length,1);
+ assert.equal(browseActivities('anything-else','').length,0);
+});
+test('simplified presentation does not fabricate earning or unlocks',()=>{
+ const page=readFileSync(new URL('../web/src/pages/ProgressionNextReviewPage.tsx',import.meta.url),'utf8');
+ assert.match(page,/px-activity-list/);
+ assert.match(page,/Show fewer/);
+ assert.match(page,/px-journey-options/);
+ assert.match(page,/px-atlas-disclosure/);
+ assert.match(page,/Open my library/);
+ assert.doesNotMatch(page,/claimReward|grantXp|testXp\s*=|useLocalStorage/);
 });

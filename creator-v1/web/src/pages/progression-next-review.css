@@ -10,3 +10,70 @@
 @media(forced-colors:active){.px-root{--px-line:CanvasText;--px-muted:CanvasText}.px-activity,.px-record,.px-hero,.px-rewards,.px-dialog{background:Canvas;border:1px solid CanvasText;color:CanvasText}.px-root button,.px-root .px-primary{border:1px solid ButtonText;background:ButtonFace;color:ButtonText}.px-root :focus-visible{outline:3px solid Highlight}.px-orbital{display:none}}
 
 .px-personal-atlas{margin:24px 0;padding:20px;background:radial-gradient(ellipse at center,#28213c,#111927);border:1px solid var(--px-line);border-radius:12px}.px-personal-atlas svg{width:100%;display:block;overflow:visible}.px-personal-atlas circle,.px-personal-atlas path{fill:none;stroke:#b6a1d333;stroke-width:1}.px-personal-atlas .px-atlas-core{fill:#c9b2ee;stroke:none}.px-personal-atlas .px-atlas-node{fill:#c5b0e3;stroke:#f1e6ff;stroke-width:2}.px-personal-atlas text{fill:#e3d8ef;font-size:13px}.px-personal-atlas p{font-size:11px;line-height:1.7;color:var(--px-muted);margin:0}.px-personal-atlas path{stroke:#c5a9e56b}
+
+/* NEXT / simplified hierarchy: suggested paths first, compact browsable rows. */
+.px-root .px-hero{min-height:285px;padding:32px 40px;grid-template-columns:minmax(0,1.65fr) minmax(175px,.55fr)}
+.px-hero h1{font-size:clamp(33px,3.2vw,48px);margin:16px 0}.px-hero-copy>p{font-size:15px;line-height:1.65}
+.px-orbital{max-width:215px}.px-hero-actions{margin-top:19px}
+.px-summary{padding:27px 12px;gap:25px}.px-summary-copy h2{font-size:23px;margin:9px 0}
+.px-summary-copy p{line-height:1.55;margin:0}.px-nav small{display:none}
+.px-root .px-nav button{padding:13px 17px;min-height:44px}.px-main{padding:25px 0 35px}
+.px-section-heading{margin-bottom:14px}.px-section-heading h2{font-size:25px;margin:5px 0}
+.px-browse-intro{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:14px;color:var(--px-muted);font-size:13px;line-height:1.5}
+.px-browse-intro p{margin:0}.px-browse-intro span{font-size:11px;max-width:320px}
+.px-track-picker{display:flex;flex-wrap:wrap;gap:7px;margin:14px 0 21px}
+.px-root .px-track-picker button{padding:11px 16px;min-height:45px;font-size:13px;border-radius:100px;border:1px solid var(--px-line);white-space:nowrap}
+.px-root .px-track-picker button[aria-pressed=true]{background:#e1d6f7;border-color:#e1d6f7;color:#1b1730}
+.px-list-shell{border:1px solid var(--px-line);border-radius:15px;background:linear-gradient(150deg,#121824,#0f1420);overflow:hidden}
+.px-list-toolbar{padding:21px 23px 12px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+.px-list-toolbar h3{font-size:22px;font-weight:560;line-height:1.25;letter-spacing:-.02em;margin:5px 0 0}
+.px-list-toolbar .px-search{display:grid;flex:0 1 280px;gap:5px}.px-list-toolbar .px-search input{padding:10px 12px;min-height:44px}
+.px-result-count{padding:0 23px;margin:0 0 12px;font-size:11px}
+.px-activity-list{list-style:none;padding:0;margin:0}
+.px-activity-list li{border-top:1px solid var(--px-line);margin:0}
+.px-root .px-activity{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:20px;min-height:98px;padding:16px 23px;border:0;border-radius:0;background:transparent;overflow:visible;transition:background .15s}
+.px-root .px-activity:before{display:none}.px-root .px-activity:hover{transform:none;border-color:transparent;background:#1d2637}
+.px-activity-copy{min-width:0}.px-entry-track{display:block;color:#bcb0d4;font-size:10px;font-weight:650;letter-spacing:.10em;margin-bottom:5px}
+.px-root .px-activity h4{font-size:16px;letter-spacing:-.01em;font-weight:600;line-height:1.35;margin:0 0 5px}
+.px-root .px-activity p{font-size:12px;line-height:1.55;max-width:790px;color:#b5bfd0;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.px-activity-action{display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:110px}.px-entry-value{font-size:15px;font-weight:650;font-variant-numeric:tabular-nums}
+.px-activity-action small{font-size:10px;color:#d8bfc5}
+.px-root .px-activity-action button{min-height:40px;padding:7px 12px;font-size:12px;border:1px solid var(--px-line);background:#21293a}
+.px-root .px-more{width:100%;text-align:center;border:0;border-radius:0;border-top:1px solid var(--px-line);color:#e1d0fa;padding:16px;font-size:13px;background:#182131}
+.px-root .px-less{background:#121824}
+.px-library-tip{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px 21px;margin:16px 0 0;border-radius:12px;border:1px solid var(--px-line);background:#161c2b}
+.px-library-tip strong{font-size:14px}.px-library-tip p{font-size:12px;line-height:1.6;color:var(--px-muted);margin:5px 0 0}
+.px-library-tip a{font-size:12px;white-space:nowrap;text-underline-offset:4px}
+.px-intro{margin-bottom:16px}.px-journey-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-bottom:14px}
+.px-root .px-expedition{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:7px;border:1px solid var(--px-line);border-radius:12px;padding:17px;background:#151c2b;min-height:130px}
+.px-root .px-expedition[aria-pressed=true]{border-color:#c9b5f1;background:linear-gradient(145deg,#302942,#1d2332)}
+.px-journey-index{font-size:11px;color:#b9a6d6}.px-expedition strong{font-size:16px;font-weight:580}.px-expedition small{font-size:12px;line-height:1.5;color:var(--px-muted)}
+.px-journey-detail{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:17px 32px;padding:25px;background:#141c2a;border:1px solid var(--px-line);border-radius:13px}
+.px-journey-detail h3{font-size:23px;margin:10px 0 8px}.px-journey-detail p{font-size:13px;line-height:1.6;color:var(--px-muted)}
+.px-journey-detail ol{margin:0;padding-left:21px;grid-row:span 2}.px-journey-detail li{font-size:13px;line-height:1.65;padding:0 0 12px 6px}
+.px-root .px-journey-detail button{justify-self:start;align-self:end;font-size:13px;padding:11px 15px}
+.px-atlas-disclosure{margin:15px 0}.px-atlas-disclosure summary{cursor:pointer;min-height:44px;padding:14px 5px;border-bottom:1px solid var(--px-line);font-size:13px}
+.px-atlas-disclosure .px-personal-atlas{margin:12px 0 0}
+.px-rewards{display:block;padding:22px 24px;border-radius:13px;background:#121925}
+.px-reward-links{display:flex;flex-wrap:wrap;align-items:center;gap:8px 23px;margin-top:8px}
+.px-root .px-reward-links a,.px-root .px-reward-links button{display:inline-flex;justify-content:flex-start;border:0;padding:8px 0;font-size:13px;min-height:44px}
+@media(max-width:680px){
+ .px-root .px-hero{padding:24px 20px 42px;min-height:0;display:block}.px-hero h1{font-size:35px}
+ .px-orbital{display:none}.px-summary{padding:20px 0;gap:12px}.px-summary-copy h2{font-size:21px}
+ .px-main{padding-top:20px}.px-section-heading h2{font-size:23px}
+ .px-browse-intro{display:block}.px-browse-intro p{font-size:13px}.px-browse-intro span{display:block;margin-top:7px;font-size:11px}
+ .px-track-picker{display:flex;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:thin;padding-bottom:6px;margin-bottom:12px}
+ .px-track-picker button{flex:none;scroll-snap-align:start}
+ .px-list-toolbar{display:block;padding:19px 16px 12px}.px-list-toolbar h3{font-size:20px}
+ .px-list-toolbar .px-search{margin-top:13px}.px-result-count{padding:0 16px}
+ .px-root .px-activity{gap:11px;min-height:93px;padding:15px 15px}
+ .px-root .px-activity h4{font-size:15px}
+ .px-activity-action{min-width:73px;gap:9px}.px-entry-value{font-size:13px}.px-activity-action small{font-size:9px}
+ .px-root .px-activity-action button{padding:8px 9px;font-size:11px}
+ .px-library-tip{display:block;padding:16px}.px-library-tip a{display:inline-block;margin-top:12px}
+ .px-journey-options{grid-template-columns:1fr;gap:7px}.px-root .px-expedition{min-height:0;padding:12px 16px;gap:4px}
+ .px-journey-detail{display:block;padding:20px}.px-journey-detail ol{margin:19px 0}
+ .px-rewards{padding:18px}.px-reward-links{gap:3px 16px}
+}
+@media(prefers-reduced-motion:reduce){.px-root .px-activity{transition:none}}
+@media(forced-colors:active){.px-list-shell,.px-library-tip,.px-journey-detail,.px-expedition{background:Canvas!important;border:1px solid CanvasText!important}.px-root .px-track-picker button[aria-pressed=true],.px-root .px-expedition[aria-pressed=true]{outline:2px solid Highlight}}

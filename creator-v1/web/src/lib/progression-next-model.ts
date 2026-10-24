@@ -66,3 +66,12 @@ export function simulatePacing(weeklyXp:number,weeks:number){
   if(!Number.isSafeInteger(xp))throw Error('Unsafe total');
   return {xp,level:Math.min(30,1+Math.floor(Math.sqrt(xp/75)))};
 }
+
+/** Progressive disclosure is a presentation rule, never a change to XP eligibility. */
+export const STARTER_ACTIVITY_IDS = ['rating','review','thread','first-project'] as const;
+export function browseActivities(category:string,query:string):Activity[]{
+  if(query.trim())return selectActivities('all',query);
+  if(category==='starter')return STARTER_ACTIVITY_IDS.map(id=>ACTIVITIES.find(a=>a.id===id)!);
+  if(category==='all'||TRACKS.some(t=>t.id===category))return selectActivities(category,'');
+  return [];
+}

@@ -60,16 +60,19 @@ async function fit(page,label){const size=await page.evaluate(()=>({w:innerWidth
 try{
  for(const width of [1440,390,320]){
   const {page,state,context}=await fixture(width);await open(page);
-  assert.equal(await page.locator('.px-activity').count(),19);record(width+' guest sees proposed catalog');
+  assert.equal(await page.locator('.px-activity').count(),4);record(width+' guest sees four curated paths');
   assert.equal(await page.locator('.px-current').count(),0);assert.ok(!state.privateReads.includes('/api/v1/member/progression'));record(width+' guest has no private progression or art');
   await fit(page,width+' catalog');await capture(page,'guest-'+width);
   await page.getByRole('button',{name:'Creation',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.px-activity').length===5);assert.equal(await page.locator('.px-activity').count(),5);record(width+' track filter');
-  const input=page.getByRole('searchbox',{name:'Find a contribution'});await input.fill('not-present-zzz');await page.getByRole('heading',{name:'No matching paths.'}).waitFor();
-  await page.getByRole('button',{name:'Clear filters'}).click();await page.waitForFunction(()=>document.querySelectorAll('.px-activity').length===19);assert.equal(await page.locator('.px-activity').count(),19);record(width+' search empty recovery');
+  await page.getByRole('button',{name:'All paths',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.px-activity').length===6);record(width+' all paths are initially limited');
+  await page.getByRole('button',{name:/Show 13 more/}).click();await page.waitForFunction(()=>document.querySelectorAll('.px-activity').length===19);record(width+' all 19 paths on request');
+  await page.getByRole('button',{name:/Show fewer/}).click();await page.waitForFunction(()=>document.querySelectorAll('.px-activity').length===6);record(width+' list collapses cleanly');
+  const input=page.getByRole('searchbox',{name:'Search all paths'});await input.fill('not-present-zzz');await page.getByRole('heading',{name:'No matching paths.'}).waitFor();
+  await page.getByRole('button',{name:'Clear filters'}).click();await page.waitForFunction(()=>document.querySelectorAll('.px-activity').length===4);assert.equal(await page.locator('.px-activity').count(),4);record(width+' search empty recovery');
   const button=page.getByRole('button',{name:'View criteria for Write a useful field report'});await button.click();await page.locator('.px-dialog[open]').waitFor();
   assert.match(await page.locator('.px-dialog').innerText(),/independent review/i);await page.keyboard.press('Escape');await page.locator('.px-dialog').waitFor({state:'hidden'});
   assert.equal(await button.evaluate(el=>el===document.activeElement),true);record(width+' dialog Escape and focus restoration');
-  await page.locator('.px-nav button').nth(1).click();await page.locator('.px-expedition').first().waitFor();assert.equal(await page.locator('.px-expedition').count(),3);await fit(page,width+' expeditions');await capture(page,'expeditions-'+width);
+  await page.locator('.px-nav button').nth(1).click();await page.locator('.px-expedition').first().waitFor();assert.equal(await page.locator('.px-expedition').count(),3);await page.locator('.px-expedition').last().click();await page.getByRole('heading',{name:'Build a bridge'}).waitFor();record(width+' one expanded journey at a time');await fit(page,width+' expeditions');await capture(page,'expeditions-'+width);
   assert.equal(await page.locator('.px-orbit-one').evaluate(el=>getComputedStyle(el).animationName),'none');record(width+' reduced motion');
   await page.emulateMedia({reducedMotion:'no-preference'});await page.locator('.px-motion').click();assert.equal(await page.locator('.px-orbit-one').evaluate(el=>getComputedStyle(el).animationPlayState),'paused');record(width+' manual motion pause');
   await context.close();
