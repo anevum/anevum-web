@@ -1,0 +1,43 @@
+/* Scoped NEXT-only native dialog. Does not alter the shared Shell. */
+.lnx-root nav.lnx-mode-switch>.lnx-quick-entry{margin-left:auto;display:inline-flex;flex-direction:row;align-items:center;justify-content:space-between;gap:12px;min-width:176px;border-color:#66768d;background:#202c40;color:var(--lnx-bone);font-size:12px}
+.lnx-root nav.lnx-mode-switch>.lnx-quick-entry:hover{background:#2c3b52;border-color:#d2b58e}
+.lnx-root .lnx-quick-entry kbd{white-space:nowrap;border:1px solid #66758a;border-radius:4px;padding:4px 6px;font:10px ui-monospace,monospace;color:var(--lnx-copper);background:#131d2c}
+.lnx-root nav.lnx-mode-switch>.lnx-motion-switch{margin-left:0}
+.lnx-root .lnx-quick-dialog{width:min(700px,calc(100vw - 24px));max-width:calc(100vw - 24px);max-height:calc(100dvh - 28px);margin:auto;padding:0;color:var(--lnx-bone);background:radial-gradient(ellipse at 100% 0,#44395770,transparent 60%),#121d2d;border:1px solid #a49496;border-radius:12px;box-shadow:0 30px 95px #000b;overflow:auto;overscroll-behavior:contain}
+.lnx-root .lnx-quick-dialog::backdrop{background:#050b17df;backdrop-filter:blur(8px)}
+.lnx-root .lnx-quick-panel{padding:clamp(18px,3vw,28px)}
+.lnx-root .lnx-quick-dialog .lnx-quick-top{display:flex;align-items:center;gap:12px}
+.lnx-root .lnx-quick-dialog .lnx-quick-top>.lnx-kicker{flex:1;min-width:0}
+.lnx-root .lnx-quick-dialog .lnx-quick-brand{width:32px;height:32px;color:var(--lnx-copper);flex:none}
+.lnx-root .lnx-quick-dialog .lnx-quick-brand svg{width:100%;height:100%}
+.lnx-root .lnx-quick-dialog .lnx-quick-close{display:inline-flex;flex-direction:row;align-items:center;justify-content:center;gap:10px;min-height:44px;padding:9px 12px;border:1px solid #66758a;border-radius:6px;background:#26354b;color:var(--lnx-bone);font-size:12px;line-height:1.3}
+.lnx-root .lnx-quick-dialog .lnx-quick-close>span{font-size:20px}
+.lnx-root .lnx-quick-panel h2{font:400 clamp(28px,4vw,39px)/1.12 Georgia,serif;letter-spacing:-.025em;margin:17px 0 12px}
+.lnx-root .lnx-quick-panel>p{max-width:550px;color:var(--lnx-soft);font-size:13px;line-height:1.65;margin-bottom:18px}
+.lnx-root .lnx-quick-panel>label{display:block;font:11px/1.5 ui-monospace,monospace;color:var(--lnx-copper);letter-spacing:.07em;margin-bottom:9px}
+.lnx-root .lnx-quick-panel>input{display:block;width:100%;min-height:52px;border:1px solid #8b91a3;border-radius:7px;padding:12px 16px;background:#0d1828;color:var(--lnx-bone);font-size:16px;line-height:1.4}
+.lnx-root .lnx-quick-panel>input::placeholder{color:#a8b2c4}
+.lnx-root .lnx-quick-count{margin:14px 0 8px;color:var(--lnx-muted);font:11px/1.6 ui-monospace,monospace;letter-spacing:.06em}
+.lnx-root .lnx-quick-results{max-height:43dvh;overflow-y:auto;overscroll-behavior:contain;padding:4px 6px 6px 4px;scrollbar-color:#71738d #151c2d;scrollbar-width:thin}
+.lnx-root .lnx-quick-group+.lnx-quick-group{margin-top:18px}
+.lnx-root .lnx-quick-group>h3{font:11px/1.6 ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--lnx-copper);margin-bottom:8px}
+.lnx-root .lnx-quick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.lnx-root .lnx-quick-dialog .lnx-quick-choice{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 12px;align-items:start;width:100%;min-height:90px;padding:13px 16px;text-align:left;background:#1b293d;border:1px solid #526278;border-radius:7px;transition:border-color .15s ease,background .15s ease}
+.lnx-root .lnx-quick-dialog .lnx-quick-choice:hover,.lnx-root .lnx-quick-dialog .lnx-quick-choice:focus-visible{background:#293951;border-color:#d3b791}
+.lnx-root .lnx-quick-dialog .lnx-quick-choice[aria-current=page]{border-color:#b5a080;box-shadow:inset 3px 0 var(--lnx-copper)}
+.lnx-root .lnx-quick-dialog .lnx-quick-choice strong{font:400 19px/1.25 Georgia,serif;min-width:0;color:var(--lnx-bone)}
+.lnx-root .lnx-quick-dialog .lnx-quick-choice>span{grid-column:1;color:var(--lnx-soft);font-size:12px;line-height:1.5}
+.lnx-root .lnx-quick-dialog .lnx-quick-choice>em{grid-column:2;grid-row:1/span 2;font:19px Georgia,serif;color:var(--lnx-copper);font-style:normal;align-self:center}
+.lnx-root .lnx-quick-dialog .lnx-quick-choice>small{grid-column:1;font:10px/1.5 ui-monospace,monospace;color:var(--lnx-copper)}
+.lnx-root .lnx-quick-empty{min-height:120px;padding:22px;background:#1b293d;border:1px dashed #778297;border-radius:7px;color:var(--lnx-soft);font-size:13px}
+.lnx-root .lnx-quick-empty>p{margin-top:8px}
+.lnx-root .lnx-quick-dialog .lnx-quick-reset{display:inline-flex;align-items:center;min-height:44px;margin-top:12px;padding:10px 14px;background:#2b3950;border:1px solid #8791a3;border-radius:5px;font-size:13px}
+.lnx-root .lnx-quick-panel>.lnx-quick-note{margin:15px 0 0;padding-top:12px;border-top:1px solid #46566d;font:10px/1.6 ui-monospace,monospace;letter-spacing:.06em;color:var(--lnx-muted)}
+.lnx-root[data-motion=on] .lnx-quick-dialog[open]{animation:lnx-quick-enter .18s ease-out both}
+@keyframes lnx-quick-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.lnx-root[data-motion=off] .lnx-quick-dialog,.lnx-root[data-motion=off] .lnx-quick-choice{animation:none;transition:none}
+@media(max-width:760px){.lnx-root nav.lnx-mode-switch>.lnx-quick-entry{order:2;flex:1 1 calc(50% - 6px);margin-left:0;min-width:0;min-height:44px;justify-content:center}.lnx-root nav.lnx-mode-switch>.lnx-motion-switch{order:3;flex:1 1 calc(50% - 6px);margin:0;min-width:0}.lnx-root .lnx-quick-entry kbd{display:none}}
+@media(max-width:530px){.lnx-root .lnx-quick-panel{padding:18px}.lnx-root .lnx-quick-grid{grid-template-columns:1fr}.lnx-root .lnx-quick-results{max-height:38dvh}.lnx-root .lnx-quick-dialog .lnx-quick-choice{min-height:82px;padding:12px 14px}.lnx-root .lnx-quick-dialog .lnx-quick-top>.lnx-kicker{font-size:9px}.lnx-root .lnx-quick-panel>p{font-size:12px}.lnx-root .lnx-quick-brand{display:none}}
+@media(max-height:600px){.lnx-root .lnx-quick-panel{padding:14px 18px}.lnx-root .lnx-quick-panel h2{font-size:26px;margin:9px 0}.lnx-root .lnx-quick-results{max-height:28dvh}.lnx-root .lnx-quick-panel>p{margin-bottom:12px}}
+@media(prefers-reduced-motion:reduce){.lnx-root .lnx-quick-dialog,.lnx-root .lnx-quick-choice{animation:none!important;transition:none!important}}
+@media(forced-colors:active){.lnx-root .lnx-quick-dialog,.lnx-root .lnx-quick-choice,.lnx-root .lnx-quick-panel>input{border-color:CanvasText}.lnx-root .lnx-quick-choice[aria-current=page]{outline:2px solid Highlight;outline-offset:-3px}}
