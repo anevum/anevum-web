@@ -283,7 +283,8 @@ try{
     const heading=document.querySelector('.av12-public-world h1');
     return heading?{title:heading.textContent,card:!!document.querySelector('.av78-player-card')}:null;
    })()`);
-  return data;
+  // The loading headline is transitional, not the final privacy verdict.
+  return data?.title?.includes('OPENING THIS WORLD')?null:data;
  });
  if(!privateState.title?.includes('PRIVATE WORLD')||privateState.card)
   throw Error('V078_PRIVATE_PROFILE_LEAK '+JSON.stringify(privateState));
