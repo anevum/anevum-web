@@ -226,7 +226,10 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
   if(!confirmLeavingFolder())return;
   setMessage('');
   setSelectedFolder(node.parentId);
-  if(openIds.includes(node.id)){activateTab(node.id);return;}
+  if(openIds.includes(node.id)){
+   if(node.id===splitId&&activeId&&activeId!==node.id)setSplitId(activeId);
+   setActiveId(node.id);return;
+  }
   if(openIds.length>=MAX_OPEN){setMessage('Close a source tab before opening another (8-file limit).');return;}
   setOpenIds(old=>[...old,node.id]);setActiveId(node.id);
  }
@@ -415,6 +418,9 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
        })}
       </select></label>}
     </nav>
+    {secondaryId&&<p className="csf-split-focus-note" role="status">
+     <Icon name="columns" size={14}/> Split focus · Explorer hidden. Use Quick Open for files or Single view to return. Each file saves independently.
+    </p>}
     {!activeId&&selectedFolderNode&&<FolderInspectorV111 key={selectedFolderNode.id}
      projectId={projectId} folder={selectedFolderNode} nodes={nodes} editable={canEdit}
      onUpdated={upsert} onMessage={setMessage} onDeleted={markedDeleted} onDirty={dirty=>setDirty('folder:'+selectedFolderNode.id,dirty)}/>}
