@@ -11,3 +11,4 @@ export interface ProjectDoctorBrief {
   disclaimer:string;
 }
 export declare function projectDoctorBrief(result:ProjectDoctorResult):ProjectDoctorBrief;
+export declare function formatProjectDoctorBriefText(result:ProjectDoctorResult):string;
