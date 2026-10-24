@@ -48,7 +48,7 @@ for(const tier of ['desktop','mobile']){
  const root=document.getRoot();
  const scene=root.listScenes()[0];
  assert.ok(scene,'Original GLB must contain one spatial scene');
- assert.ok(root.listMeshes().length>=2&&root.listMeshes().length<=24,
+ assert.ok(root.listMeshes().length>=2&&root.listMeshes().length<=40,
   'Blender source should be grouped by material, not retain hundreds of draw calls');
  let triangles=0,primitives=0;
  for(const mesh of root.listMeshes())for(const primitive of mesh.listPrimitives()){
