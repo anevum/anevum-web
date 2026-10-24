@@ -26,3 +26,32 @@
 @media(max-width:390px){.mc-hub-nav{padding:12px;margin:12px 0 16px}.mc-hub-heading{margin-bottom:8px}.mc-hub-subtitle{display:none}.mc-hub-eyebrow{font-size:10px}.mc-hub-links{grid-template-columns:repeat(2,minmax(0,1fr))}.mc-hub-link{font-size:12px;min-height:45px}.ms-toolbar-next nav{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.ms-toolbar-next nav button{font-size:12px;padding:10px 6px}.ms-toolbar-next .ms-toolbar-more{width:100%;margin-left:0}.ms-toolbar-next .ms-toolbar-more>summary{justify-content:center}}
 @media(prefers-reduced-motion:reduce){.mc-hub-nav *,.ms-toolbar-next *,.mc-reward-more{animation:none!important;transition:none!important}}
 @media(forced-colors:active){.mc-hub-nav,.mc-hub-link,.mc-reward-more,.ms-toolbar-next .ms-toolbar-more>summary{background:Canvas;color:CanvasText;border:1px solid CanvasText}.mc-hub-link[aria-current=page]{outline:2px solid Highlight}}
+
+/* Dense legacy member menu is retained unmodified when review is OFF. */
+.ms-dashboard .mc-hub-nav{margin:16px 21px 10px}
+.ms-dashboard .ms-toolbar-next{display:flex;flex-wrap:wrap;gap:8px;padding:12px 22px}
+.ms-dashboard .ms-toolbar-next nav{width:auto;min-width:0;flex:1;display:flex;flex-wrap:wrap;overflow:visible;gap:5px;padding:0}
+.ms-dashboard .ms-toolbar-next nav button{min-height:44px;padding:9px 13px;font-size:12px;flex:none}
+.ms-dashboard .ms-toolbar-next .ms-toolbar-more{flex:none}
+.ms-dashboard .ms-toolbar-next .ms-toolbar-more-content{width:100%;font-size:12px}
+.mc-member-awards-view{display:grid;gap:20px}
+.mc-card-editor>details,.mc-award-preferences{border:1px solid rgba(200,190,215,.32);border-radius:12px;padding:13px 17px;background:#151b2a}
+.mc-card-editor>details>summary,.mc-award-preferences>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size:14px;font-weight:600;line-height:1.4;font-family:inherit;color:#eee1f4}
+.mc-card-editor>details>p{font-size:13px;line-height:1.5}
+.mc-display-settings{max-width:820px}
+.mc-display-settings h2{font-size:23px!important}
+.mc-display-settings>p{font-size:13px;line-height:1.6}
+.mc-award-selectors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 0}
+.mc-award-selectors label{display:flex;align-items:center;gap:10px;min-height:44px;color:#e5deec}
+.mc-collection-page .av75-page-heading{margin-top:5px}
+.mc-collection-page .av75-page-heading h1{font-size:clamp(30px,3vw,44px);line-height:1.14;margin:12px 0}
+.mc-collection-page .av75-page-heading>p{font-size:13px;line-height:1.65;max-width:720px}
+@media(max-width:680px){
+ .ms-dashboard .mc-hub-nav{margin:12px}
+ .ms-dashboard .ms-toolbar-next{padding:10px 12px;display:block}
+ .ms-dashboard .ms-toolbar-next nav{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;overflow:visible;padding:0}
+ .ms-dashboard .ms-toolbar-next nav button{min-width:0;font-size:12px;padding:9px 5px;white-space:normal}
+ .ms-dashboard .ms-toolbar-next .ms-toolbar-more{width:100%;margin-top:6px}
+ .ms-dashboard .ms-toolbar-next .ms-toolbar-more>summary{min-height:44px}
+ .mc-award-selectors{grid-template-columns:minmax(0,1fr)}
+}
