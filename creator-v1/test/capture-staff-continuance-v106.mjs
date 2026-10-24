@@ -151,6 +151,13 @@ try{
    const invalid=await evaluate("(()=>{const x=document.querySelector('#utmSource');x.value='unsafe input !';x.dispatchEvent(new Event('input',{bubbles:true}));const rejected=document.querySelector('#campaignCopy').disabled&&document.querySelector('#campaignOutput').value==='';x.value='reddit';x.dispatchEvent(new Event('input',{bubbles:true}));return rejected&&document.querySelector('#campaignOutput').value.includes('utm_source=reddit')})()");
    if(!invalid)throw Error('V105_CAMPAIGN_INVALID_SLUG_ACCEPTED_'+label);
   }
+  const presets=await evaluate("(()=>{\n const root=document.querySelector('.ci-focus-nav'),buttons=[...document.querySelectorAll('[data-ci-campaign]')];\n const links=[...document.querySelectorAll('[data-ci-section]')];\n if(!root||buttons.length!==4||links.length!==5)return {ready:false};\n const click=id=>document.querySelector('[data-ci-campaign=\"'+id+'\"]')?.click();\n const output=()=>document.querySelector('#campaignOutput')?.value||'';\n const selected=id=>document.querySelector('[data-ci-campaign=\"'+id+'\"]')?.getAttribute('aria-pressed')==='true';\n click('facebook');\n const facebook=selected('facebook')&&output().includes('utm_source=facebook')&&output().includes('utm_campaign=anevum-preview');\n click('flyer');\n const flyer=selected('flyer')&&output().includes('utm_source=local-flyer')&&output().includes('utm_medium=offline')&&document.querySelector('#campaignTarget')?.value==='/';\n click('creator');\n const creator=selected('creator')&&output().includes('utm_source=creator-invite')&&output().includes('utm_content=invitation');\n document.querySelector('#utmSource').value='manual';\n document.querySelector('#utmSource').dispatchEvent(new Event('input',{bubbles:true}));\n const manual=[...buttons].every(b=>b.getAttribute('aria-pressed')==='false')&&output().includes('utm_source=manual');\n click('reddit');\n const reddit=selected('reddit')&&output().includes('utm_source=reddit');\n const overflow=document.documentElement.scrollWidth>innerWidth+1;\n return {ready:true,facebook,flyer,creator,manual,reddit,overflow};\n})()");
+  if(!presets.ready||!presets.facebook||!presets.flyer||!presets.creator||!presets.manual||!presets.reddit||presets.overflow)throw Error('V107_CAMPAIGN_PRESETS_'+label+':'+JSON.stringify(presets));
+  await evaluate("document.querySelector('[data-ci-section=\"ci-rum\"]').click()");
+  await poll(()=>evaluate("document.querySelector('[data-ci-section=\"ci-rum\"]').getAttribute('aria-current')==='location'"));
+  await evaluate("document.querySelector('[data-ci-section=\"acquisition\"]').click()");
+  await poll(()=>evaluate("document.querySelector('[data-ci-section=\"acquisition\"]').getAttribute('aria-current')==='location'"));
+  await evaluate("window.scrollTo(0,0)");
   const visual=await evaluate("(()=>({theme:document.body.classList.contains('ci-next'),spine:!!document.querySelector('.ci-spine'),orbital:document.querySelectorAll('.ci-orbital-mark').length,overflows:document.documentElement.scrollWidth>innerWidth+1,calendar:document.querySelectorAll('[data-ci-days]').length,exportReady:!document.querySelector('#ci-export')?.disabled}))()");
   if(!visual.theme||!visual.spine||visual.orbital<2||visual.overflows||visual.calendar!==3||!visual.exportReady)throw Error('V106_VISUAL_CONTRACT_'+label+':'+JSON.stringify(visual));
   const range=await evaluate("(()=>{const btn=document.querySelector('[data-ci-days=\\\"7\\\"]');btn.click();const seven=document.querySelectorAll('#trend .bar-wrap:not([hidden])').length===7&&document.querySelector('#trendCaption').textContent.includes('7 UTC calendar dates');document.querySelector('[data-ci-days=\\\"14\\\"]').click();const fourteen=document.querySelectorAll('#trend .bar-wrap:not([hidden])').length===14;document.querySelector('[data-ci-days=\\\"30\\\"]').click();const thirty=document.querySelectorAll('#trend .bar-wrap:not([hidden])').length===30;return {seven,fourteen,thirty}})()");
@@ -160,6 +167,10 @@ try{
   const rum=await evaluate("(()=>({state:document.querySelector('#ci-rum-state')?.dataset.state,days:document.querySelectorAll('#ci-rum-chart .ci-rum-slot').length,rows:document.querySelectorAll('#ci-rum-table tbody tr').length,visible:!document.querySelector('#ci-rum-chart')?.hidden,overflow:document.documentElement.scrollWidth>innerWidth+1}))()");
   if(rum.state!=='estimated'||rum.days!==30||rum.rows!==30||!rum.visible||rum.overflow)throw Error('V106_RUM_RENDER_'+label+':'+JSON.stringify(rum));
   await capture('growth-next-'+label);
+  if(label==='owner-desktop'||label==='owner-phone'){
+   await evaluate("document.querySelector('.ci-focus-nav').scrollIntoView()");
+   await capture('focus-next-'+label);
+  }
   if(label==='owner-desktop'||label==='owner-phone'){
    await evaluate("document.querySelector('#ci-rum').scrollIntoView()");
    await capture('rum-next-'+label);
@@ -174,7 +185,7 @@ try{
   const operations=await evaluate("(()=>({theme:document.body.classList.contains('ci-next'),hero:!!document.querySelector('#ci-hero-title'),brand:!!document.querySelector('.brand .ci-orbital-mark'),controls:!!document.querySelector('[data-tab=\\\"moderation\\\"]'),ownerPanel:!!document.querySelector('#memberRows'),overflow:document.documentElement.scrollWidth>innerWidth+1,spine:!!document.querySelector('.ci-spine')}))()");
   if(!operations.theme||!operations.hero||!operations.brand||!operations.controls||!operations.ownerPanel||operations.overflow||!operations.spine)throw Error('V106_OPERATIONS_CONTRACT_'+label+':'+JSON.stringify(operations));
   await capture('operations-next-'+label);
-  evidence.push({label,role,width,height,state,campaign,visual,range,motion,operations,rum,requests:[...requests],rumRequests:[...rumRequests],syntheticOnly:true});
+  evidence.push({label,role,width,height,state,campaign,visual,range,motion,operations,rum,presets,requests:[...requests],rumRequests:[...rumRequests],syntheticOnly:true});
   console.log('V105_GROWTH_'+label.toUpperCase().replaceAll('-','_')+'=PASS');
  }
  offline=true;role='owner';requests=[];rumRequests=[];rumMode='unavailable';
