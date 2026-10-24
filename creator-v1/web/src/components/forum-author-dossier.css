@@ -66,3 +66,29 @@
 @media(forced-colors:active){
  .cf-author-dossier,.cf-author-dossier-signal,.cf-author-dossier-award,.cf-author-dossier-visit,.cf-author-dossier-activity>span{border-color:CanvasText}
 }
+
+/* 014 actual browser review: one author information hierarchy, not a card
+   inside another card. Keep avatar, earned specimen and role insignia intact.
+   Explicitly visible Evolution/REP numbers live in the dossier facts below. */
+.cf-author-dossier .av78-player-card.av65-player-card--compact{
+ background:transparent!important;border:0!important;border-radius:0!important;
+ box-shadow:none!important;padding:0!important;min-width:0;flex:1 1 auto;
+}
+.cf-author-dossier .av78-player-card.av65-player-card--compact .av81-corona{
+ display:none!important;
+}
+.cf-author-dossier .av78-player-card.av65-player-card--compact .av61-level-label,
+.cf-author-dossier .av78-player-card.av65-player-card--compact .av81-reputation-token{
+ display:none!important;
+}
+.cf-author-dossier .av78-player-card.av65-player-card--compact .av61-member-copy{
+ gap:4px!important;
+}
+.cf-author-dossier .av78-player-card.av65-player-card--compact .av61-member-name{
+ font-size:clamp(14px,1.2vw,17px)!important;white-space:normal!important;
+}
+@media(forced-colors:active){
+ .cf-author-dossier .av78-player-card.av65-player-card--compact{
+  forced-color-adjust:auto;
+ }
+}
