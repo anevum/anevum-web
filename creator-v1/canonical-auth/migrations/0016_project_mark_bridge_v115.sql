@@ -10,17 +10,24 @@ PRAGMA foreign_keys=ON;
 -- Draft Studio status never substitutes for publication and has no write
 -- endpoint to activate this row.
 CREATE TABLE IF NOT EXISTS member_mark_publishers (
- project_id TEXT PRIMARY KEY NOT NULL REFERENCES member_studio_projects(id) ON DELETE RESTRICT,
- creator_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
+ project_id TEXT PRIMARY KEY NOT NULL CHECK(length(project_id)=36),
+ creator_id TEXT REFERENCES "user"(id) ON DELETE SET NULL,
  release_ref TEXT NOT NULL UNIQUE CHECK(length(release_ref) BETWEEN 8 AND 120),
  public_title TEXT NOT NULL CHECK(length(public_title) BETWEEN 3 AND 100),
  redirect_uri TEXT NOT NULL CHECK(length(redirect_uri) BETWEEN 12 AND 1000),
  status TEXT NOT NULL DEFAULT 'suspended' CHECK(status IN ('approved','suspended','retired')),
- reviewer_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
+ reviewer_id TEXT REFERENCES "user"(id) ON DELETE SET NULL,
  reviewed_at INTEGER NOT NULL CHECK(reviewed_at>0),
  created_at INTEGER NOT NULL CHECK(created_at>0),
  updated_at INTEGER NOT NULL CHECK(updated_at>=created_at)
 );
+-- Owner account deletion does not erase other members' history. The
+-- approved registration is a review snapshot, not an FK to private Studio.
+-- Deleting a private Studio project immediately suspends its publisher.
+CREATE TRIGGER IF NOT EXISTS member_mark_publisher_source_deleted
+ AFTER DELETE ON member_studio_projects
+ BEGIN UPDATE member_mark_publishers SET status='suspended',updated_at=MAX(updated_at,CAST(strftime('%s','now') AS INTEGER))
+ WHERE project_id=OLD.id; END;
 CREATE TRIGGER IF NOT EXISTS member_mark_publisher_owner
  BEFORE INSERT ON member_mark_publishers
  WHEN NOT EXISTS(SELECT 1 FROM member_studio_projects p
@@ -109,7 +116,7 @@ CREATE INDEX IF NOT EXISTS member_mark_release_definitions
 CREATE TABLE IF NOT EXISTS member_mark_events (
  id TEXT PRIMARY KEY NOT NULL CHECK(length(id)=36),
  project_id TEXT NOT NULL REFERENCES member_mark_publishers(project_id) ON DELETE RESTRICT,
- link_id TEXT NOT NULL REFERENCES member_mark_links(id) ON DELETE RESTRICT,
+ link_id TEXT NOT NULL REFERENCES member_mark_links(id) ON DELETE CASCADE,
  member_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
  definition_id TEXT NOT NULL REFERENCES member_mark_definitions(id) ON DELETE RESTRICT,
  client_event_id TEXT NOT NULL CHECK(length(client_event_id)=36),
@@ -132,11 +139,14 @@ CREATE TABLE IF NOT EXISTS member_mark_progress (
 -- by audited moderation in a future strictly staff-only service.
 CREATE TABLE IF NOT EXISTS member_mark_grants (
  member_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+ project_id TEXT NOT NULL REFERENCES member_mark_publishers(project_id) ON DELETE RESTRICT,
+ stable_key TEXT NOT NULL CHECK(length(stable_key) BETWEEN 3 AND 48),
  definition_id TEXT NOT NULL REFERENCES member_mark_definitions(id) ON DELETE RESTRICT,
- source_event_id TEXT NOT NULL REFERENCES member_mark_events(id) ON DELETE RESTRICT,
+ source_event_id TEXT NOT NULL REFERENCES member_mark_events(id) ON DELETE CASCADE,
  earned_at INTEGER NOT NULL CHECK(earned_at>0),
  revoked_at INTEGER,
  PRIMARY KEY(member_id,definition_id),
+ UNIQUE(member_id,project_id,stable_key),
  CHECK(revoked_at IS NULL OR revoked_at>=earned_at)
 );
 CREATE INDEX IF NOT EXISTS member_mark_member_inventory
