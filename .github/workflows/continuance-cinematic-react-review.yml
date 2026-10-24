@@ -1,0 +1,81 @@
+name: ANEVUM Continuance Cinematic React Review
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/web/src/experience/continuance-cinematic/**'
+      - 'creator-v1/web/review/continuance-cinematic-react/**'
+      - 'creator-v1/web/vite.continuance-cinematic-react-review.config.ts'
+      - 'creator-v1/test/*continuance-cinematic-react*'
+      - '.github/workflows/continuance-cinematic-react-review.yml'
+permissions:
+  contents: read
+concurrency:
+  group: continuance-cinematic-react-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  review:
+    if: github.repository == 'anevum/anevum-web' && github.event.pull_request.head.repo.full_name == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    env:
+      CLOUDFLARE_API_TOKEN: ''
+      CLOUDFLARE_API_KEY: ''
+      CLOUDFLARE_ACCOUNT_ID: ''
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Record exact head and check source-only delta from nearest NEXT parent
+        shell: bash
+        env:
+          PARENT_HEAD: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/continuance-cinematic-react
+          git rev-parse HEAD | tee evidence/continuance-cinematic-react/source-sha.txt
+          merge_base="$(git merge-base "$PARENT_HEAD" HEAD)"
+          git diff --name-status "$merge_base" HEAD > evidence/continuance-cinematic-react/source-diff.txt
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          const allowed = /^(creator-v1\/web\/review\/continuance-sitewide-cinematic\/index\.html|docs\/production\/continuance-sitewide-cinematic-design-20261023\.md|creator-v1\/web\/src\/experience\/continuance-cinematic\/[^/]+|creator-v1\/web\/review\/continuance-cinematic-react\/index\.html|creator-v1\/web\/vite\.continuance-cinematic-react-review\.config\.ts|creator-v1\/test\/[^/]*continuance-cinematic-react[^/]*|\.github\/workflows\/continuance-cinematic-react-review\.yml)$/;
+          const lines = fs.readFileSync('evidence/continuance-cinematic-react/source-diff.txt','utf8').trim().split('\n').filter(Boolean);
+          if (!lines.length) throw Error('No source additions for cinematic review');
+          for(const line of lines) {
+            const [status,name] = line.split('\t');
+            if(status !== 'A' || !allowed.test(name)) throw Error('Review-only isolation violation: '+line);
+          }
+          console.log('Source-only additive guard passed for '+lines.length+' files.');
+          JS
+      - name: Install unchanged pinned frontend dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Typecheck, source contracts, production exclusion and opt-in review
+        run: |
+          set -euo pipefail
+          npm run check:creator-v1-web
+          node --test creator-v1/test/continuance-cinematic-react-review.test.mjs
+          npm run build:creator-v1-web
+          CNR_CHECK_PRODUCTION=1 node --test creator-v1/test/continuance-cinematic-react-review.test.mjs
+          npx --no-install vite build --config creator-v1/web/vite.continuance-cinematic-react-review.config.ts
+      - name: Install isolated browser runner
+        run: |
+          python -m pip install playwright==1.64.1
+          python -m playwright install --with-deps chromium
+      - name: Exercise real compiled React at five screen widths
+        run: python creator-v1/test/capture-continuance-cinematic-react.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: continuance-cinematic-react-source-review
+          path: |
+            evidence/continuance-cinematic-react
+            creator-v1/dist/continuance-cinematic-react-review
+          retention-days: 14
