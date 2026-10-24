@@ -7,7 +7,11 @@ import {WorkCard,packageGalleryUIEnabled} from "../components/CreatorPackageGall
 import {readPackageCatalogue,packageDiscoveryResults} from "../lib/creator-package-gallery-v010";
 import { PageNav } from "../components/PageNav";
 import { PortalHeading } from "../components/PortalHeading";
+import {CosmicArtwork} from "../components/CosmicArtwork";
+import {ContinuanceSignalAtlas} from "../components/ContinuanceSignalAtlas";
 import { EmptyState, ErrorState, LoadingState } from "../components/States";
+
+const cinematicNextEnabled=import.meta.env.VITE_CONTINUANCE_CINEMATIC_SITEWIDE==="true";
 
 const channels: ReadonlyArray<{id:Category;label:string;description:string;mark:string}> = [
   {id:"games",label:"Games",description:"Independent play and interactive experiments",mark:"✦"},
@@ -89,13 +93,14 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
   const shown=legacyProjects.length+packageProjects.length;
   const resultsReady=resource.state==="ready"||(packagesInScope&&packageResource.state==="ready");
   const emptyVerified=resource.state==="ready"&&(!packagesInScope||packageResource.state==="ready")&&shown===0;
-  return <div data-iren-anchor="discover" className="portal-discover av73-discover">
+  return <div data-iren-anchor="discover" className={"portal-discover av73-discover"+(cinematicNextEnabled?" av-next-discover":"")}>
     {immersive?<PortalHeading
       eyebrow={world?.eyebrow||"THE PORTALS / EVERYTHING WORTH TRYING"}
       title={world?.title||"EXPLORE THE"} accent={world?.accent||"UNIVERSE."}
       description={world?.description||"Games, apps, interactive experiments and independent work. Search actual published projects, not paid placement or invented activity."}
       index={world?.index||"DISCOVER / 001"} scene={world?.scene||"portal"}/>:
       <header className="av73-discover-intro">
+        {cinematicNextEnabled&&<div className="av-next-discover-scene" aria-hidden="true"><CosmicArtwork scene="creative" priority className="av-next-discover-art"/><ContinuanceSignalAtlas/></div>}
         <span className="av73-discover-eyebrow">ANEVUM / DISCOVER</span>
         <h1>{active?"Explore "+active.label:"Find something worth opening."}</h1>
         <p>Search genuine, approved games, apps, art and shared tools. See what's actually published before deciding what to explore.</p>
