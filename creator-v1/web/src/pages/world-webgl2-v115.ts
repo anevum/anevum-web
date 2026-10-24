@@ -83,8 +83,8 @@ const minus=(a:Vec3,b:Vec3):Vec3=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
 const cross=(a:Vec3,b:Vec3):Vec3=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 const dot=(a:Vec3,b:Vec3)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
 function norm(a:Vec3):Vec3{const n=Math.hypot(...a)||1;return [a[0]/n,a[1]/n,a[2]/n];}
-function perspective(aspect:number){
- const f=1/Math.tan(52*Math.PI/360),near=.1,far=160,m=new Float32Array(16);
+function perspective(aspect:number,verticalFov=52){
+ const f=1/Math.tan(verticalFov*Math.PI/360),near=.1,far=160,m=new Float32Array(16);
  m[0]=f/aspect;m[5]=f;m[10]=(far+near)/(near-far);m[11]=-1;
  m[14]=2*far*near/(near-far);return m;
 }
@@ -282,7 +282,7 @@ export function createWorldRenderer(canvas:HTMLCanvasElement):WorldRenderer{
   gl.viewport(0,0,w,h);
   gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
   if(!picking)sky.render(w,h,camera.yaw,scene.environment.sky==='night',scene.environment.sunIntensity,timeSeconds);
-  const vp=mul(perspective(Math.max(.25,width/Math.max(1,height))),view(camera));
+  const vp=mul(perspective(Math.max(.25,width/Math.max(1,height)),width>=800?46:52),view(camera));
   const lookup=new Map(scene.nodes.map(n=>[n.id,n]));
   gl.useProgram(picking?picker:prog);
   if(picking){gl.disable(gl.DITHER);gl.disable(gl.BLEND);}
