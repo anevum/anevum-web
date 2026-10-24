@@ -28,6 +28,7 @@ const requestJSON = async (path, init) => {
   return value;
 };
 const timeString = (value) => {
+  if (!value) return "DATE NOT AVAILABLE";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "DATE NOT AVAILABLE";
   return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
@@ -243,7 +244,7 @@ function bind() {
     if (!target) return;
     if (target.dataset.view) return showStation(target.dataset.view);
     if (target.dataset.prompt) {
-      mobileOpen(true);
+      if (matchMedia("(max-width: 820px)").matches) mobileOpen(true);
       return sendCommand(target.dataset.prompt);
     }
     if (target.dataset.mission) {
