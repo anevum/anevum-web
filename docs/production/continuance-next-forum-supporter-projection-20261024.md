@@ -8,7 +8,7 @@
 
 The existing `CompactMemberIdentity` already renders an earned member's avatar and evolution art, selected aura, badges, medals, ribbons, verified role, and a supporter seal/frame when a public API response supplies an authorized appearance. This continuation projects that optional **supporter appearance** through the public forum author payload, including moderated thread indexes, thread detail, and approved replies. Existing public-wall navigation and native contribution disclosure are unchanged.
 
-No new endpoint, schema migration, checkout, provider write, XP grant, role grant, paid distinction, client-side private API call, or live production update. The parent #700's eight-file source guard is left unchanged; this child has its own independent eight-path exact-base CI. V131 stays untouched.
+No new endpoint, schema migration, checkout, provider write, XP grant, role grant, paid distinction, client-side private API call, or live production update. The parent #700's eight-file source guard is left unchanged; this child has its own independent nine-path exact-base CI, including a narrowly scoped forum-only supporter crest layout correction. V131 stays untouched.
 
 ## Data authority and permission boundaries
 
@@ -26,6 +26,6 @@ The time-unlocked supporter seal named **Constellation** is not the same thing a
 
 The child workflow verifies the exact parent, all eight changed paths, no credential-bearing deployment route, dedicated consent/privacy/freshness/hold/disabled-source tests, existing canonical forum and supporter suites, strict React TypeScript, unchanged default-off production build, and real compiled Chromium browser screenshots at 1440, 1024, 390, and 320 px.
 
-The browser fixture creates a clearly **synthetic** consented test-mode subscriber at a verified 120-day eligibility point with a Stellar Crown frame, plus an opted-out public reply. It requires the actual shared member portrait to carry `.av34-frame-stellar` and the public supporter seal to appear only on the opted-in author; captures must not be represented as real member accounts or live ANEVUM rewards.
+The browser fixture creates a clearly **synthetic** consented test-mode subscriber at a verified 120-day eligibility point with a Stellar Crown frame, plus an opted-out public reply. It requires the actual shared member portrait to carry `.av34-frame-stellar` and the public supporter seal to appear only on the opted-in author; its 28px icon treatment must not expand the collapsed forum card beyond the prior compact-height limit. The full supporter nameplate remains available outside the forum strip. Captures must not be represented as real member accounts or live ANEVUM rewards.
 
 **Outstanding:** exact-head CI completion, source-bound screenshots and owner visual approval (#335), physical Safari/VoiceOver, real signed-in privacy/role A/B, cumulative OV03 branch guard reconciliation, protected integration strategy, and explicit production release authorization. No Cloudflare change, merge or V131 modification is permitted by this draft.
