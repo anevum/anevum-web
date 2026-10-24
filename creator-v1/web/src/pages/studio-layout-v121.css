@@ -48,3 +48,33 @@
  .csf-root .csf-split-toggle[aria-pressed=true]{outline:2px solid Highlight}
  .csf-root .csf-editor-decks.is-split>.csf-editor-mount{border-color:CanvasText}
 }
+
+/* V121 screenshot review: entering Split is a focused code-editing action.
+ * Keep available file tabs and Quick Open, temporarily collapse the tree
+ * and file metadata to reclaim actual code width. Single view restores both.
+ */
+.csf-root.is-split .csf-shell{grid-template-columns:minmax(0,1fr)}
+.csf-root.is-split .csf-tree{display:none!important}
+.csf-root.is-split .csf-work-area{container-type:inline-size}
+.csf-root .csf-split-focus-note{display:flex;align-items:center;gap:7px;margin:0;
+ min-height:29px;padding:5px 12px;border-bottom:1px solid #3d6d83;
+ color:#badde9;background:#0d2d40;font:10px/1.45 ui-monospace,monospace}
+.csf-root .csf-split-focus-note>svg{flex:none;color:#8fdae4}
+.csf-root.is-split .csf-editor-decks.is-split .csf-metadata,
+.csf-root.is-split .csf-editor-decks.is-split .csf-source-label{display:none}
+.csf-root.is-split .csf-editor-title h3{font-size:13px;margin:1px 0 3px}
+.csf-root.is-split .csf-editor-title .csf-muted{font-size:10px}
+.csf-root.is-split .csf-editor-decks .csf-editor{gap:8px}
+.csf-root.is-split .csi-toolbar .csi-file-title{display:none}
+.csf-root.is-split .csi-toolbar-actions{width:100%;justify-content:space-between;gap:3px}
+.csf-root.is-split .csi-toolbar-actions button{flex:0 1 36px;min-width:28px}
+.csf-root.is-split .csi-editor{min-height:390px}
+@container(max-width:720px){
+ .csf-root .csf-editor-decks.is-split{grid-template-columns:minmax(0,1fr)}
+ .csf-root .csf-editor-decks.is-split>.csf-editor-mount{border-right:0;border-bottom:1px solid #47748d}
+}
+@media(max-width:730px){
+ .csf-root .csf-split-focus-note{font-size:9px;padding:7px 9px}
+ .csf-root.is-split .csf-shell{display:flex;flex-direction:column}
+ .csf-root.is-split .csf-editor-decks .csf-editor{padding:9px}
+}
