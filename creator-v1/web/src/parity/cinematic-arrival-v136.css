@@ -13,7 +13,7 @@ html[data-av-parity="v136-full"] .p136-cinematic-vignette {
 }
 html[data-av-parity="v136-full"] .p136-cinematic-art img {
   object-fit:cover;object-position:67% 45%;
-  transform:scale(1.065) translate3d(0,calc(var(--cinema-progress,0) * -1.6%),0);
+  transform:scale(1.065) translate3d(0,var(--cinema-offset,0%),0);
   will-change:transform;
 }
 html[data-av-parity="v136-full"] .p136-cinematic-luminance {
