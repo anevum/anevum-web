@@ -17,7 +17,8 @@ test('V118 smart asset placement remains deterministic, bounded and document-com
   assert.equal(p.length,3);
   assert.ok(p.every(x=>Number.isFinite(x)&&Math.abs(x)<=40),'Bounded location '+kind);
   assert.notDeepEqual(p,[0,0,0],'Catalog assets should not spawn over the main tower');
-  const result=apply(initial,{type:'ADD_NODE',node:{...primitive('spawn-'+kind,kind),position:p}});
+  const base=primitive('spawn-'+kind,kind==='bridge'||kind==='waterfall'?'cube':kind);
+  const result=apply(initial,{type:'ADD_NODE',node:{...base,kind,position:p}});
   assert.deepEqual(result.nodes.at(-1).position,p);
   assert.deepEqual(decode(encode(result)),result);
   assert.deepEqual(getWorldSpawnTarget(kind,p),p);
