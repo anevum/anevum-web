@@ -109,6 +109,7 @@ export function WorldComposerReviewV115(){
  function nudge(delta:Vec3){
   if(!node)return;
   const position=node.position.map((value,i)=>clamp(value+delta[i],-40,40)) as Vec3;
+  if(position.every((value,i)=>value===node.position[i]))return;
   command({type:'SET_TRANSFORM',id:node.id,field:'position',value:position});
  }
  function frameSelected(){
