@@ -35,7 +35,8 @@ export function CinematicArrivalV136(){
       const opacity=mode==='off'?0:mode==='poster'&&(reduced.matches||paused||connection?.saveData)?1:
         cinematicReveal(progress,manifest.handoff.revealStart,manifest.handoff.revealEnd);
       element.style.setProperty('--cinema-opacity',String(opacity));
-      element.style.setProperty('--cinema-progress',String(mode==='poster'&&(reduced.matches||paused)?0:progress));
+      const travel=mode==='poster'&&(reduced.matches||paused)?0:progress;
+      element.style.setProperty('--cinema-offset',(-1.6*travel).toFixed(3)+'%');
     };
     const schedule=()=>{if(!raf)raf=window.requestAnimationFrame(paint)};
     const onVisibility=()=>{visible=document.visibilityState==='visible';schedule()};
