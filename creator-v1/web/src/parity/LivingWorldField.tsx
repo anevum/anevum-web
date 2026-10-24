@@ -87,7 +87,8 @@ export function LivingWorldField({sector='hero',enabled}:{sector?:WorldSector;en
   const [visible,setVisible]=useState(true);
   const [saveData,setSaveData]=useState(false);
   const density=worldDensity(signal,sector);
-  const active=enabled&&!paused&&!reduced&&!saveData&&visible&&renderer==='webgl';
+  const motionAllowed=enabled&&!paused&&!reduced&&!saveData&&visible;
+  const active=motionAllowed&&renderer==='webgl';
   const tone=palette[sector];
   const param=useRef({density,tone,verified:signal.source==='verified',active});
   param.current={density,tone,verified:signal.source==='verified',active};
@@ -192,7 +193,7 @@ export function LivingWorldField({sector='hero',enabled}:{sector?:WorldSector;en
   },[enabled,active,renderer,sector,density,signal.source,tone]);
 
   const anchorCount=signal.source==='verified'?Math.max(2,Math.min(15,Math.floor(2+density*12))):3;
-  return <div className="p136-living-world" data-enabled={enabled} data-active={active}
+  return <div className="p136-living-world" data-enabled={enabled} data-active={active} data-motion={motionAllowed}
       data-renderer={renderer==='booting'?'vector':renderer} data-sector={sector} data-source={signal.source}
       aria-hidden="true">
     <canvas ref={canvas} className="p136-living-canvas"/>
