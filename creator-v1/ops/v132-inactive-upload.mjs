@@ -136,9 +136,12 @@ export function verifySnapshot(s){
  assert.equal(v.CANONICAL_CREATOR_UPLOADS_ENABLED,'false');
  assert.ok(Array.isArray(s.versions)&&s.versions.some(x=>x.id===PUBLIC));
  assert.equal(s.settings.compatibility_date,'2026-10-17');
+ const settingsSummary=Object.fromEntries(Object.entries(s.settings).filter(([key])=>key!=='annotations'));
+ const routesSummary=s.routes.map(route=>({pattern:route.pattern,script:route.script,
+  request_limit_fail_open:route.request_limit_fail_open})).sort((a,b)=>a.pattern.localeCompare(b.pattern));
  return {deployment:s.deployment,controller:s.controller,
-  operationalSettingsSha256:hash(Buffer.from(stable(Object.fromEntries(Object.entries(s.settings).filter(([k])=>k!=='annotations')))),
-  routesSha256:hash(Buffer.from(stable(s.routes.map(x=>({pattern:x.pattern,script:x.script,request_limit_fail_open:x.request_limit_fail_open})).sort((a,b)=>a.pattern.localeCompare(b.pattern))))),
+  operationalSettingsSha256:hash(Buffer.from(stable(settingsSummary))),
+  routesSha256:hash(Buffer.from(stable(routesSummary))),
   exposure:s.exposure,versions:s.versions.map(x=>x.id),bindingNames:names(b),db:db(b),plain:v};
 }
 export function config(root,state){
