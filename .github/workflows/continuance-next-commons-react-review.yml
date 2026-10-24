@@ -110,7 +110,7 @@ jobs:
           JS
       - name: Install pinned browser review tooling
         run: |
-          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.56.1
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
           npx playwright install --with-deps chromium webkit
       - name: Review compiled React on desktop and mobile with synthetic public fixtures
         run: node creator-v1/test/continuance-next-community-browser.mjs --output "$RUNNER_TEMP/anevum-commons-react-review"
