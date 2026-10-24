@@ -11,8 +11,8 @@ const stations=[
  {to:'/creators',label:'Creators',small:'People',icon:'people',sector:'creators'},
  {to:'/studio',label:'Studio',small:'Create',icon:'create',sector:'studio'}
 ] as const satisfies ReadonlyArray<{to:string;label:string;small:string;icon:string;sector:WorldSector}>;
-type Props={onOpenSearch:()=>void};
-export function ConsoleWayfinderV136({onOpenSearch}:Props){
+type Props={onOpenSearch:()=>void;onOpenIren:()=>void;memberDestination:string;memberLabel:string;memberInitial:string|null};
+export function ConsoleWayfinderV136({onOpenSearch,onOpenIren,memberDestination,memberLabel,memberInitial}:Props){
  const {setPreviewSector}=useLivingWorld();
  const location=useLocation();
  const ref=useRef<HTMLElement>(null);
@@ -38,8 +38,16 @@ export function ConsoleWayfinderV136({onOpenSearch}:Props){
        {i===index&&<span className="p136-console-selection" aria-hidden="true"/>}
      </NavLink>)}
    </div>
-   <button type="button" className="p136-console-command" onClick={onOpenSearch} aria-label="Search and quick navigation" title="Search and quick navigation">
-    <Icon name="search" size={19}/><span>COMMAND</span><kbd>⌘ K</kbd>
-   </button>
+   <div className="p136-console-utilities">
+    <button type="button" className="p136-console-command" onClick={onOpenSearch} aria-label="Search and quick navigation" title="Search and quick navigation">
+      <Icon name="search" size={19}/><span>COMMAND</span><kbd>⌘ K</kbd>
+    </button>
+    <button type="button" className="p136-console-ir" onClick={onOpenIren} aria-label="Open IREN companion">
+      <span className="p136-console-ir-light" aria-hidden="true"/> <span>IREN</span>
+    </button>
+    <NavLink to={memberDestination} className="p136-console-member" aria-label={memberLabel}>
+       <span className="p136-console-member-orbit" aria-hidden="true">{memberInitial||<Icon name="people" size={18}/>}</span>
+    </NavLink>
+   </div>
  </nav>;
 }

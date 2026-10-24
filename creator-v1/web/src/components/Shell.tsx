@@ -14,6 +14,7 @@ import {VerifiedStaffShortcut} from "./VerifiedStaffShortcut";
 import {LivingWorldProvider,useLivingWorld,type WorldSector} from "../parity/LivingWorldState";
 import {LivingWorldField} from "../parity/LivingWorldField";
 import {ConsoleWayfinderV136} from "../parity/ConsoleWayfinderV136";
+import "../parity/spatial-surface-v136.css";
 
 const FullParityHeader=import.meta.env.VITE_PARITY_V136_FULL==="true" ? lazy(()=>import("../parity/ParityHeaderV136").then(m=>({default:m.ParityHeaderV136}))) : null;
 /** ANEVUM V009 — one public navigation system across every Creator V1 page.
@@ -225,7 +226,7 @@ function ShellContent(){
       </div>
     </dialog>
     <IrenGuidedContinuance memberId={canonicalMember?canonicalSession?.user?.id||null:null}/>
-    {FullParityHeader&&<ConsoleWayfinderV136 onOpenSearch={()=>setLauncherOpen(true)}/> }
+    {FullParityHeader&&<ConsoleWayfinderV136 onOpenSearch={()=>setLauncherOpen(true)} onOpenIren={()=>window.dispatchEvent(new Event("anevum:iren-open"))} memberDestination={memberDestination} memberLabel={canonicalMember?"Open my verified member profile":"Join ANEVUM or sign in"} memberInitial={canonicalMember?(canonicalSession?.user?.name?.trim().slice(0,1).toUpperCase()||null):null}/> }
     <PortalLauncher open={launcherOpen} onClose={()=>setLauncherOpen(false)}/>
     <main id="main" tabIndex={-1} className="site-main av9-main">
       {!publicSpatial&&<VisualKitAtmosphere room={publicVisualRoom(location.pathname)}/>}

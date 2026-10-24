@@ -244,3 +244,43 @@ html[data-av-parity="v136-full"] .ch7-hub :is(a,button,input):focus-visible{
   color:CanvasText;background:Canvas;border-color:CanvasText;box-shadow:none
  }
 }
+
+/* V136.008: the protected Creator Studio receives the same visual materials.
+   No editor, private records, upload restrictions or submit flow is modified. */
+html[data-av-parity="v136-full"] .st-root{
+  --st-line:#7db8e764;--st-cyan:#8be7ff;--st-rose:#c4a8ff;
+  border:1px solid #6ca5dc4b;border-radius:13px;
+  background:radial-gradient(ellipse at 76% 3%,#21538433,transparent 55%),linear-gradient(160deg,#07192c,#050c19 74%);
+  box-shadow:inset 0 1px #e9fcff1b,0 25px 80px #0007;
+  isolation:isolate
+}
+html[data-av-parity="v136-full"] .st-header{
+  background:linear-gradient(115deg,#102e4b73,transparent 76%);
+  border-bottom:1px solid #8ad5fc58
+}
+html[data-av-parity="v136-full"] :is(.st-panel,.st-metrics>div,.st-project){
+  border-color:#76b7e46e;
+  background:linear-gradient(145deg,#132b43e8,#081529f2);
+  box-shadow:inset 0 1px #dbf5ff1c,0 15px 40px #0005
+}
+html[data-av-parity="v136-full"] :is(.st-panel,.st-project){
+  transition:border-color .2s,box-shadow .2s
+}
+html[data-av-parity="v136-full"] :is(.st-panel,.st-project):focus-within{
+  border-color:#8ce4ffc0;box-shadow:inset 0 1px #e4faff45,0 0 28px #4abefc2c
+}
+html[data-av-parity="v136-full"] .st-nav{
+  border-bottom:1px solid #81c6ee66;background:linear-gradient(90deg,#09243bdb,#08162b9c)
+}
+html[data-av-parity="v136-full"] .st-identity{
+  background:linear-gradient(125deg,#194062cf,#122445a8);border-color:#82d7ff91;box-shadow:0 0 22px #52aef523
+}
+html[data-av-parity="v136-full"] .st-root :is(button,a,input,select,textarea):focus-visible{
+  outline:3px solid #8be9ff;outline-offset:3px
+}
+@media(prefers-reduced-motion:reduce){
+ html[data-av-parity="v136-full"] :is(.st-panel,.st-project){transition:none!important}
+}
+@media(forced-colors:active){
+ html[data-av-parity="v136-full"] :is(.st-root,.st-panel,.st-project,.st-nav,.st-identity){background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none}
+}

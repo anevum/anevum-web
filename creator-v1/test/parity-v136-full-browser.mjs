@@ -79,6 +79,13 @@ try{
     assert.equal(layout.h1Count,1);assert.equal(layout.dockCount,1,'One canonical IREN companion');
     assert.equal(await page.locator('.p136-console-wayfinder').count(),1,'Exactly one persistent console wayfinder');
     assert.equal(await page.locator('.p136-console-wayfinder a[data-station]').count(),5,'Five real route stations');
+    assert.equal(await page.getByRole('button',{name:'Open IREN companion'}).count(),1,
+      'IREN control is integrated into console');
+    assert.equal(await page.locator('.p136-console-member').count(),1,
+      'One canonical member entry is integrated into console');
+    assert.equal(await page.getByRole('button',{name:'Search and quick navigation'}).count(),1,
+      'Search command remains discoverable');
+
     assert.ok(layout.artLoaded,'Procedural vector and GPU canvas available');
     assert.ok(['webgl','vector'].includes(layout.renderer),'Supported live world renderer');
     if(width>=1440){assert.ok(layout.headingLines<=2.1,'Desktop headline remains two lines: '+JSON.stringify(layout));assert.ok(layout.hero.height<=690,'Desktop hero retains concept density');}
@@ -126,6 +133,9 @@ try{
     ]){
       await page.goto(base+path,{waitUntil:'networkidle'});
       await page.locator(selector).waitFor();
+      if(path==='/community'){
+        assert.equal(await page.locator('.ch7-portals a').count(),4,'Four real community paths remain');
+      }
       await page.locator('.p136-living-world[data-enabled="true"][data-sector="'+sector+'"]').waitFor();
       assert.equal(await page.locator('.p136-living-canvas').count(),1,
         'A single GPU surface exists on '+path);

@@ -26,3 +26,32 @@ html[data-av-parity="v136-full"] .site-footer{padding-bottom:92px}
 }
 @media(prefers-reduced-motion:reduce){.p136-console-wayfinder *{transition:none!important;animation:none!important}}
 @media(forced-colors:active){.p136-console-wayfinder{background:Canvas;border:1px solid CanvasText;box-shadow:none}.p136-console-station.is-active{outline:2px solid Highlight}}
+
+/* V136.008: IREN + canonical identity live inside the same continuous console. */
+.p136-console-utilities{display:flex;align-items:stretch;gap:6px;flex:0 0 auto}
+.p136-console-ir,.p136-console-member{display:flex;align-items:center;justify-content:center;gap:7px;min-width:48px;min-height:48px;padding:7px 10px;border-radius:10px;border:1px solid #7acfff79;color:#dff8ff!important;background:linear-gradient(135deg,#194167cb,#0b213ce9);text-decoration:none;cursor:pointer;font:700 10px Inter,system-ui,sans-serif;letter-spacing:.08em}
+.p136-console-ir-light{height:12px;width:12px;border-radius:50%;background:radial-gradient(circle at 35% 25%,#e9ffff,#65b9ff 43%,#3d3b9b 75%);box-shadow:0 0 15px #5ebeffa1}
+.p136-console-member-orbit{width:29px;height:29px;display:grid;place-items:center;border-radius:50%;border:1px solid #b0e7ff;background:radial-gradient(circle at 32% 22%,#5285a9,#121d40 78%);box-shadow:0 0 15px #74baff6e;font-size:14px}
+.p136-console-utilities :is(button,a):hover{border-color:#b4f0ff;box-shadow:0 0 20px #58bcff56;background:#214a70}
+.p136-console-wayfinder :is(.p136-console-ir,.p136-console-member):focus-visible{outline:2px solid #9cecff;outline-offset:3px}
+html[data-av-parity="v136-full"] .ir80-companion:not(.ir88-companion-expanded):not(.ir97-invite-active){
+ bottom:106px;right:max(16px,env(safe-area-inset-right))
+}
+@media(max-width:660px){
+ .p136-console-utilities{gap:3px}
+ .p136-console-ir,.p136-console-member{min-width:43px;min-height:48px;padding:6px}
+ .p136-console-ir>span:last-child{display:none}
+ .p136-console-member-orbit{width:26px;height:26px}
+ html[data-av-parity="v136-full"] .ir80-companion:not(.ir88-companion-expanded):not(.ir97-invite-active){
+  bottom:calc(82px + env(safe-area-inset-bottom,0px));right:10px
+ }
+}
+@media(max-width:350px){
+ .p136-console-stations{gap:0}
+ .p136-console-station{min-width:0}
+ .p136-console-ir,.p136-console-member{min-width:37px;padding:4px}
+ .p136-console-command{padding:6px;min-width:37px}
+}
+@media(forced-colors:active){
+ .p136-console-ir,.p136-console-member,.p136-console-member-orbit{background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none}
+}
