@@ -32,7 +32,7 @@ export class AnevumPublisher {
   if(!valid(code,DIGEST))throw new TypeError('Invalid ANEVUM one-time code');
   return this.request('exchange',{code});
  }
- async award({linkId,stableKey,eventId=crypto.randomUUID(),evidenceDigest}={}){
+ async award({linkId,stableKey,eventId,evidenceDigest}={}){
   if(!valid(linkId,UUID4)||!valid(eventId,UUID4)||!valid(stableKey,KEY)||!valid(evidenceDigest,DIGEST))
    throw new TypeError('Invalid creator-verified event');
   return this.request('events',{linkId,stableKey,eventId,evidenceDigest});

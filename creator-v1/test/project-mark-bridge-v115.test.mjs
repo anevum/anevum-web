@@ -202,12 +202,14 @@ test('browser SDK contains no publisher secret and reports only to creator backe
  assert.equal(requests[0].opt.credentials,'same-origin');
  assert.equal('authorization' in requests[0].opt.headers,false);
  assert.equal(requests[0].opt.body.includes(SECRET),false);
+ assert.equal('eventId' in JSON.parse(requests[0].opt.body),false,'Authoritative replay IDs must come from game server');
 });
 test('server SDK uses confidential bearer against only approved ANEVUM host',async ()=>{
  const requests=[],client=createAnevumPublisher({projectId:P,keyId:KEY_ID,secret:SECRET,anevumOrigin:ORIGIN,
   fetchImpl:async(url,opt)=>{requests.push({url,opt});return {ok:true,headers:new Headers({'content-type':'application/json'}),json:async()=>({trust:'creator_attested'})};}});
  await client.exchange('d'.repeat(64));
- await client.award({linkId:randomUUID(),stableKey:'hidden_observatory',evidenceDigest:DIGEST});
+ await client.award({linkId:randomUUID(),stableKey:'hidden_observatory',eventId:randomUUID(),evidenceDigest:DIGEST});
+ assert.rejects(()=>client.award({linkId:randomUUID(),stableKey:'hidden_observatory',evidenceDigest:DIGEST}),TypeError);
  assert.equal(requests.length,2);
  assert.equal(requests[0].url,ORIGIN+'/api/v1/marks/publisher/exchange');
  assert.equal(requests[1].url,ORIGIN+'/api/v1/marks/publisher/events');

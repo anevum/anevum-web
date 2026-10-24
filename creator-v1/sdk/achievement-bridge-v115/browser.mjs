@@ -49,7 +49,7 @@ export class AnevumAchievementBrowser {
  async unlock(stableKey){
   if(typeof stableKey!=='string'||!KEY.test(stableKey))throw new TypeError('Invalid achievement key');
   // Not an issuer: creator's backend must check its own authoritative state.
-  return this.post(this.reportEndpoint,{projectId:this.projectId,stableKey,eventId:crypto.randomUUID()});
+  return this.post(this.reportEndpoint,{projectId:this.projectId,stableKey});
  }
  async post(path,payload){
   const response=await this.fetchImpl(path,{method:'POST',mode:'same-origin',credentials:'same-origin',
