@@ -172,6 +172,11 @@ try{
   if(measure.client<=488&&measure.findingColumns!==null)assert.equal(measure.findingColumns,1,label+' finding card adapts to narrow editor pane');
   await pause(120);
  };
+ const focusDoctorDetail=async (selector,label)=>{
+  assert.equal(await evaluate('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');if(!el)return false;el.scrollIntoView({block:"start",inline:"nearest",behavior:"instant"});return true;})()'),true,label+' detail exists');
+  await until(()=>evaluate('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');const r=el?.getBoundingClientRect();return !!r&&r.top<innerHeight-95&&r.bottom>80;})()'),label+' detail is visible');
+  await pause(120);
+ };
  const snap=async name=>{
   const reply=await send('Page.captureScreenshot',{format:'png',fromSurface:true});
   assert.ok(reply.data);
@@ -311,14 +316,22 @@ try{
  assert.equal(fileNodes.get(sourceId).content,savedStory,'Navigation cannot mutate persisted source');
  await focusDoctor('doctor-desktop-story-findings');
  await snap('doctor-desktop-story-findings');
+ await focusDoctorDetail('.cpd-findings li','doctor-desktop-story-detail');
+ await snap('doctor-desktop-story-detail');
+ await focusDoctorDetail('.cpd-diff','doctor-desktop-change-lens');
+ await snap('doctor-desktop-change-lens');
  await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
  await pause(200);
  await focusDoctor('doctor-phone-390-story-findings');
  await snap('doctor-phone-390-story-findings');
+ await focusDoctorDetail('.cpd-findings li','doctor-phone-390-story-detail');
+ await snap('doctor-phone-390-story-detail');
  await send('Emulation.setDeviceMetricsOverride',{width:320,height:740,deviceScaleFactor:1,mobile:true});
  await pause(200);
  await focusDoctor('doctor-phone-320-story-findings');
  await snap('doctor-phone-320-story-findings');
+ await focusDoctorDetail('.cpd-findings li','doctor-phone-320-story-detail');
+ await snap('doctor-phone-320-story-detail');
  await send('Emulation.setDeviceMetricsOverride',{width:1440,height:900,deviceScaleFactor:1,mobile:false});
  await pause(150);
  await click('.csx-top .csx-actions button:nth-child(3)');
@@ -394,14 +407,20 @@ try{
  assert.equal(filePatches.length,patchesBeforeUiDoctor,'Inspection, navigation and clipboard have no writes');
  await focusDoctor('doctor-desktop-interface-findings');
  await snap('doctor-desktop-interface-findings');
+ await focusDoctorDetail('.cpd-findings li','doctor-desktop-interface-detail');
+ await snap('doctor-desktop-interface-detail');
  await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
  await pause(200);
  await focusDoctor('doctor-phone-390-interface-findings');
  await snap('doctor-phone-390-interface-findings');
+ await focusDoctorDetail('.cpd-findings li','doctor-phone-390-interface-detail');
+ await snap('doctor-phone-390-interface-detail');
  await send('Emulation.setDeviceMetricsOverride',{width:320,height:740,deviceScaleFactor:1,mobile:true});
  await pause(200);
  await focusDoctor('doctor-phone-320-interface-findings');
  await snap('doctor-phone-320-interface-findings');
+ await focusDoctorDetail('.cpd-findings li','doctor-phone-320-interface-detail');
+ await snap('doctor-phone-320-interface-detail');
  await send('Emulation.setDeviceMetricsOverride',{width:1440,height:900,deviceScaleFactor:1,mobile:false});
  await pause(150);
  await click('.cui-header .cui-actions button:nth-child(3)');
