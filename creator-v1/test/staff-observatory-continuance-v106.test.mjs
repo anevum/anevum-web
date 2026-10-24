@@ -156,6 +156,21 @@ test('NEXT layout aligns with NEXT design and preserves 320px navigation and red
  assert.match(NEXT_CSS,/@media\(prefers-reduced-motion:reduce\)/);
  assert.match(NEXT_CSS,/body\.ci-next \.ci-hero\{min-height:184px/);
 });
+test('Growth internal signal brief is source-qualified, disabled on bad data, and has manual copy fallback',async()=>{
+ const f=fixture('reviewer');
+ const page=await (await worker.fetch(f.req('/growth'),f.env)).text();
+ assert.match(page,/id="ci-copy-brief" disabled/);
+ assert.match(page,/id="ci-brief-fallback"/);
+ assert.match(page,/id="ci-brief-output"/);
+ const script=NEXT_CLIENT;
+ assert.match(script,/untagged test accounts may be included/);
+ assert.match(script,/not unique visitors, converted?/);
+ assert.match(script,/navigator\.clipboard\?\.writeText/);
+ assert.match(script,/briefFallback\.hidden=false/);
+ assert.match(script,/copyBrief\.disabled=!valid/);
+ assert.match(script,/t-dates\[i-1\]!==86400000/);
+ assert.doesNotMatch(script,/sendBeacon\s*\(|fetch\s*\(|localStorage|sessionStorage/);
+});
 test('invalid pages cannot be transformed into authorized Observatory pages',()=>{
  assert.throws(()=>decorateObservatoryHtml('not Observatory','growth'),/verified HTML anchor/);
  assert.throws(()=>decorateObservatoryHtml('not Observatory','operations'),/verified HTML anchor/);
