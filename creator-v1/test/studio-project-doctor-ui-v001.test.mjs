@@ -54,6 +54,12 @@ test('diagnostic navigation only selects valid local editor nodes, never saves o
  assert.match(ui,/onNavigate\?\:/);
  assert.match(ui,/onNavigate\(target\)/);
  assert.match(ui,/Open in visual editor/);
+ assert.match(ui,/Copy source-free diagnostic brief/);
+ assert.match(ui,/navigator\.clipboard\.writeText\(formatProjectDoctorBriefText\(result\)\)/);
+ assert.match(ui,/setCopyStatus\('Source-free summary copied/);
+ assert.match(ui,/role="status" aria-live="polite"/);
+ assert.match(css,/\.cpd-handoff/);
+ assert.match(css,/\.cpd-copy/);
  assert.match(ui,/role="group" aria-label="Filter inspection findings"/);
  assert.match(ui,/aria-pressed=\{filter==='warning'\}/);
  assert.match(ui,/aria-pressed=\{filter==='info'\}/);
