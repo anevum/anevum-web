@@ -184,7 +184,7 @@ export function CommunityPage() {
     <CommunityMemberCard onPosted={()=>setRevision(value=>value+1)}/>
     <CommunityForums/>
 
-    <nav className="ch7-portals" aria-label="Community destinations">
+    <nav className="ch7-portals p136-spatial-surface" aria-label="Community destinations" data-spatial-surface="v136.008">
       <Link to="/discover"><Icon name="explore" size={19}/><span><strong>DISCOVER</strong><small>Explore new creations</small></span><Icon name="arrow" size={15}/></Link>
       <Link to="/boards"><Icon name="library" size={19}/><span><strong>THE BOARDS</strong><small>Releases & first looks</small></span><Icon name="arrow" size={15}/></Link>
       <Link to="/member?tab=wall"><Icon name="create" size={19}/><span><strong>YOUR WALL</strong><small>Write, share & make it yours</small></span><Icon name="arrow" size={15}/></Link>
