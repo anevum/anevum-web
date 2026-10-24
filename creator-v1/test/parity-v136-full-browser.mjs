@@ -78,6 +78,7 @@ try{
     assert.ok(layout.scroll<=width+1,'No horizontal overflow: '+JSON.stringify(layout));
     assert.equal(layout.h1Count,1);assert.equal(layout.dockCount,1,'One canonical IREN companion');
     assert.equal(await page.locator('.p136-console-wayfinder').count(),1,'Exactly one persistent console wayfinder');
+    assert.equal(await page.locator('.p136-studio-console').count(),0,'Private Studio explorer never appears for anonymous visitor');
     assert.equal(await page.locator('.p136-console-wayfinder a[data-station]').count(),5,'Five real route stations');
     assert.equal(await page.getByRole('button',{name:'Open IREN companion'}).count(),1,
       'IREN control is integrated into console');
