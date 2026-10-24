@@ -250,7 +250,7 @@ function ShellContent(){
     <PortalLauncher open={launcherOpen} onClose={()=>setLauncherOpen(false)}/>
     <main id="main" tabIndex={-1} className="site-main av9-main">
       {!publicSpatial&&<VisualKitAtmosphere room={publicVisualRoom(location.pathname)}/>}
-      <div ref={routeMotion} className={parityFullBleed?"p136-route-surface":undefined}>{routeSurface}</div>
+      {FullParityHeader?<div ref={routeMotion} className={parityFullBleed?"p136-route-surface":undefined}>{routeSurface}</div>:routeSurface}
     </main>
     <footer className="site-footer av9-footer">
       <span>ANEVUM / A WORLD OF THINGS PEOPLE MAKE</span>

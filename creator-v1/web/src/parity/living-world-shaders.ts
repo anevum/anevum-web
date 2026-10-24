@@ -68,7 +68,7 @@ export const fragmentSource=[
 '  float star=presence*smoothstep(0.12,0.0,length(starPos));',
 '  color+=vec3(0.56,0.77,1.0)*star*0.82;',
 '  // Preserve this shader as atmosphere when real meshes own architecture.',
-'  if(u_modeled>0.5){outColor=vec4(color*0.68,1.0);return;}',
+'  if(u_modeled>0.5){color+=u_tone*u_density*0.018;outColor=vec4(color*0.68,1.0);return;}',
 '  float commons=1.0-smoothstep(0.0,0.9,abs(u_architecture-1.0));',
 '  float creators=1.0-smoothstep(0.0,0.9,abs(u_architecture-2.0));',
 '  float studio=1.0-smoothstep(0.0,0.9,abs(u_architecture-3.0));',

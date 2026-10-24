@@ -45,6 +45,7 @@
     "@gltf-transform/core": "4.2.1",
     "@gltf-transform/extensions": "4.2.1",
     "@types/three": "0.180.0",
-    "meshoptimizer": "0.24.0"
+    "meshoptimizer": "0.24.0",
+    "basisu": "1.16.3"
   }
 }

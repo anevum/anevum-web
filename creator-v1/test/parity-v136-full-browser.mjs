@@ -20,7 +20,10 @@ const server=createServer((req,res)=>{
     if(extname(file)){res.writeHead(404);res.end();return;}
     file=join(build,'index.html');
   }
-  res.writeHead(200,{'content-type':mime[extname(file)]||'application/octet-stream','cache-control':'no-store'});
+  res.writeHead(200,{'content-type':mime[extname(file)]||'application/octet-stream','cache-control':'no-store',
+    // Exact production HTML policy read from anevum.com on 2026-10-24.
+    // In particular: no unsafe-eval, wasm-unsafe-eval, blob worker or CDN.
+    ...(extname(file)==='.html'?{'content-security-policy':"default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; frame-src 'self'"}:{})});
   res.end(req.method==='HEAD'?undefined:readFileSync(file));
 });
 await new Promise(done=>server.listen(0,'127.0.0.1',done));
@@ -251,9 +254,11 @@ try{
         const metrics=c?.dataset.metrics?JSON.parse(c.dataset.metrics):null;
         return c?.dataset.assetState==='ready'&&metrics?.family===family;
       },family,{timeout:30000});
+      await page.waitForFunction(()=>document.querySelector('.p136-living-canvas')?.dataset.textureState!=='loading',null,{timeout:20000});
       const metrics=await page.locator('.p136-living-canvas').evaluate(c=>({
-        ...JSON.parse(c.dataset.metrics),width:c.width,height:c.height,identity:c.dataset.acceptanceIdentity
+        ...JSON.parse(c.dataset.metrics),width:c.width,height:c.height,identity:c.dataset.acceptanceIdentity,textureState:c.dataset.textureState,textureFormat:c.dataset.textureFormat,textureBytes:c.dataset.textureBytes,glError:c.getContext('webgl2').getError()
       }));
+      assert.equal(metrics.glError,0,'Models and native GPU textures render without WebGL errors');
       assert.equal(metrics.identity,'persistent','Same canvas survives navigation');
       assert.ok(metrics.models>=1&&metrics.models<=2,'Bounded model cache');
       assert.ok(metrics.triangles>3000,'Actual modeled architecture was drawn');
@@ -287,7 +292,10 @@ try{
     await page.locator('.av095-drop strong').filter({hasText:'continuance-build.zip'}).waitFor();
     await page.getByText('Browser build candidate',{exact:true}).waitFor();
     assert.equal(await page.getByRole('button',{name:'Prepare private playtest',exact:true}).isDisabled(),true,'Archive creation never confirms publication rights or uploads');
-    await page.screenshot({path:join(out,'artifact-workbench-'+width+'.png'),fullPage:true,animations:'disabled'});
+    const workstationLayout=await workbench.evaluate(node=>({width:node.getBoundingClientRect().width,height:node.getBoundingClientRect().height,pageHeight:document.documentElement.scrollHeight}));
+    assert.ok(workstationLayout.height<2400,'Workbench dimensions remain bounded: '+JSON.stringify(workstationLayout));
+    await workbench.scrollIntoViewIfNeeded();
+    await page.screenshot({path:join(out,'artifact-workbench-'+width+'.png'),fullPage:false,animations:'disabled'});
     if(width===1440)await workbench.getByRole('button',{name:'Accessible text editor',exact:true}).click();
     await workbench.getByRole('button',{name:/styles\.css$/}).click();
     await workbench.locator('.p136-source-fallback textarea').fill('body { color: #ffffff; background: #06101d; }');

@@ -3,7 +3,7 @@
  * No user identity, draft/file content, artwork URL, or member API is accepted. */
 import * as T from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
-import {MeshoptDecoder} from 'three/addons/libs/meshopt_decoder.module.js';
+import {cspMeshoptDecoder} from './CspMeshoptDecoderV136';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
 import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
@@ -11,7 +11,7 @@ import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
 import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
 import {fragmentSource,vertexSource} from './living-world-shaders';
 import {frameFor,sceneProfile,advanceSceneFrame,type SceneFrame,type SceneSector,type SceneGeometry} from './SceneDirectorV136';
-import {instituteAlloySurface} from './InstituteMaterialsV136';
+import {instituteAlloySurface,nativeAlloySurface} from './InstituteMaterialsV136';
 import {instituteAsset,instituteBudget} from './InstituteAssetManifestV136';
 export type InstituteInput={sector:SceneSector;density:number;verified:boolean;animated:boolean;saveData:boolean};
 export type InstituteMetrics={tier:string;family:string;models:number;drawCalls:number;triangles:number;frameMs:number;renderMs:number;gpuMs:number|null;geometries:number;textures:number;scale:number;contextLosses:number};
@@ -36,7 +36,8 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
   }else timerPoll=requestAnimationFrame(pollGpu);
  }
 
- const alloySurface=instituteAlloySurface(budget.tier==='mobile',renderer.capabilities.getMaxAnisotropy());
+ const textureRequest=new AbortController();
+ let alloySurface:T.Texture=instituteAlloySurface(budget.tier==='mobile',renderer.capabilities.getMaxAnisotropy());
  const scene=new T.Scene();scene.fog=new T.FogExp2(0x071222,.026);
  const camera=new T.PerspectiveCamera(48,1,.1,95);camera.position.set(0,3.1,13);
  const pmrem=new T.PMREMGenerator(renderer);const room=new RoomEnvironment();
@@ -46,6 +47,10 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
  const key=new T.DirectionalLight(0xc3eaff,3.1);key.position.set(-3,8,7);scene.add(key);
  const rim=new T.DirectionalLight(0x9865ff,4);rim.position.set(7,4,-10);scene.add(rim);
  const beacon=new T.PointLight(0x55cdff,85,17,2);beacon.position.set(3,4,-3);scene.add(beacon);
+ const anchorGeometry=new T.SphereGeometry(.035,8,6),anchorMaterial=new T.MeshBasicMaterial({color:0x9be8ff});
+ const anchors=new T.InstancedMesh(anchorGeometry,anchorMaterial,15),anchorTransform=new T.Object3D();
+ for(let i=0;i<15;i++){anchorTransform.position.set(6.1+Math.sin(i*.8)*.2,.2+i*.19,-4-i*.8);anchorTransform.updateMatrix();anchors.setMatrixAt(i,anchorTransform.matrix)}
+ scene.add(anchors);
  const backdrop=new T.Scene(),backgroundCamera=new T.Camera();
  const uniforms={u_resolution:{value:new T.Vector2(1,1)},u_pointer:{value:new T.Vector2()},u_time:{value:0},u_modeled:{value:1},
   u_density:{value:0},u_verified:{value:0},u_tone:{value:new T.Vector3()},u_pulse:{value:0},
@@ -57,7 +62,8 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
  const composer=new EffectComposer(renderer);composer.addPass(new RenderPass(backdrop,backgroundCamera));
  const architecturePass=new RenderPass(scene,camera);architecturePass.clear=false;architecturePass.clearDepth=true;composer.addPass(architecturePass);
  const bloom=budget.bloom?new UnrealBloomPass(new T.Vector2(1,1),.32,.38,1.35):null;if(bloom)composer.addPass(bloom);composer.addPass(new OutputPass());
- const loader=new GLTFLoader().setMeshoptDecoder(MeshoptDecoder),cache=new Map<SceneGeometry,Family>(),pending=new Map<SceneGeometry,AbortController>();
+ const meshopt=cspMeshoptDecoder();
+ const loader=new GLTFLoader().setMeshoptDecoder(meshopt.decoder),cache=new Map<SceneGeometry,Family>(),pending=new Map<SceneGeometry,AbortController>();
  let report:InstituteMetrics={tier:budget.tier,family:sceneProfile(input.sector).geometry,models:0,drawCalls:0,triangles:0,frameMs:0,renderMs:0,gpuMs:null,geometries:0,textures:0,scale,contextLosses:0};
  function release(family:Family){scene.remove(family.root);family.root.traverse(node=>{if(node instanceof T.InstancedMesh)node.dispose()});family.geometries.forEach(g=>g.dispose());family.materials.forEach(m=>m.dispose())}
  function evict(){if(cache.size<=budget.maxCachedFamilies)return;const candidates=[...cache].filter(([name,f])=>name!==sceneProfile(input.sector).geometry&&f.weight<.01).sort((a,b)=>a[1].lastUsed-b[1].lastUsed);while(cache.size>budget.maxCachedFamilies&&candidates.length){const [name,f]=candidates.shift()!;release(f);cache.delete(name)}}
@@ -126,7 +132,8 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
   key.color.setRGB(.7+frame.tone[0]*.3,.8+frame.tone[1]*.2,1);rim.color.setRGB(frame.tone[0],frame.tone[1]*.65,1);
   uniforms.u_pointer.value.lerp(pointer,.04);uniforms.u_time.value=phase/1000;uniforms.u_density.value=frame.density;uniforms.u_verified.value=input.verified?1:0;
   uniforms.u_tone.value.fromArray(frame.tone);uniforms.u_center.value.fromArray(frame.camera);uniforms.u_shape.value.fromArray(frame.silhouette);uniforms.u_signature.value=frame.signature;
-  beacon.intensity=85+(moving?Math.sin(phase/1800)*7:0);
+  beacon.intensity=65+frame.density*35+(moving?Math.sin(phase/1800)*7:0);
+  anchors.count=input.verified?Math.max(2,Math.min(15,Math.floor(2+frame.density*12))):3;
   const start=performance.now();renderer.info.autoReset=false;renderer.info.reset();
   const timed=timer&&!gpuQuery;
   if(timed){gpuQuery=gl.createQuery();if(gpuQuery)gl.beginQuery(timer.TIME_ELAPSED_EXT,gpuQuery)}
@@ -148,9 +155,19 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
  function tick(now:number){if(disposed)return;if(input.animated&&last&&now-last<budget.frameMs-1){animation=requestAnimationFrame(tick);return}draw(now)}
  const visibility=()=>{last=0;if(document.visibilityState==='visible')schedule();else cancelAnimationFrame(animation)};
  document.addEventListener('visibilitychange',visibility);
+ canvas.dataset.textureState='loading';
+ void nativeAlloySurface(gl,budget.tier==='mobile',textureRequest.signal,renderer.capabilities.getMaxAnisotropy()).then(result=>{
+  if(disposed){result?.texture.dispose();return}
+  canvas.dataset.textureState=result?'compressed':'procedural';
+  if(result){
+   alloySurface.dispose();alloySurface=result.texture;canvas.dataset.textureFormat=result.format;canvas.dataset.textureBytes=String(result.bytes);
+   cache.forEach(f=>f.materials.forEach(material=>{const m=material as T.MeshStandardMaterial;if(m.metalness>.6){m.normalMap=alloySurface;m.needsUpdate=true}}));
+  }
+  schedule();
+ }).catch(()=>{if(!disposed){canvas.dataset.textureState='procedural';schedule()}});
  resize();void load(sceneProfile(input.sector).geometry);schedule();
  return {
   update(next:InstituteInput){const resizeNeeded=next.saveData!==input.saveData;input=next;if(resizeNeeded)resize();if(!input.animated)pointer.set(0,0);schedule()},
-  dispose(){disposed=true;cancelAnimationFrame(animation);cancelAnimationFrame(timerPoll);if(gpuQuery)gl.deleteQuery(gpuQuery);pending.forEach(p=>p.abort());pending.clear();resizeObserver.disconnect();window.removeEventListener('pointermove',move);document.removeEventListener('visibilitychange',visibility);canvas.removeEventListener('webglcontextlost',lost);cache.forEach(release);cache.clear();environment.dispose();alloySurface.dispose();backgroundGeometry.dispose();backgroundMaterial.dispose();bloom?.dispose();composer.dispose();renderer.dispose()}
+  dispose(){disposed=true;textureRequest.abort();cancelAnimationFrame(animation);cancelAnimationFrame(timerPoll);if(gpuQuery)gl.deleteQuery(gpuQuery);pending.forEach(p=>p.abort());pending.clear();meshopt.dispose();resizeObserver.disconnect();window.removeEventListener('pointermove',move);document.removeEventListener('visibilitychange',visibility);canvas.removeEventListener('webglcontextlost',lost);cache.forEach(release);cache.clear();environment.dispose();anchors.dispose();anchorGeometry.dispose();anchorMaterial.dispose();alloySurface.dispose();backgroundGeometry.dispose();backgroundMaterial.dispose();bloom?.dispose();composer.dispose();renderer.dispose()}
  };
 }

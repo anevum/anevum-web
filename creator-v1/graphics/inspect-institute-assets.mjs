@@ -24,3 +24,14 @@ for(const [family,variants] of Object.entries(manifest.families))for(const [tier
 assert.equal(readdirSync(folder).filter(p=>p.endsWith('.glb')).length,8);
 assert.ok(total<1500000,'All eight variants under 1.5 MB');
 console.log('PASS original asset provenance, all references, Meshopt, material fidelity and budgets:',total,'bytes');
+
+const surfaces=JSON.parse(readFileSync(folder+'/texture-manifest.json','utf8'));
+for(const [tier,variants] of Object.entries(surfaces.variants))for(const [format,asset] of Object.entries(variants)){
+ const bytes=readFileSync(root+asset.url);assert.equal(bytes.length,asset.bytes);
+ assert.equal(createHash('sha256').update(bytes).digest('hex'),asset.sha256);
+ assert.equal(bytes.subarray(0,12).toString('hex'),'ab4b5458203131bb0d0a1a0a','KTX container');
+ assert.equal(bytes.readUInt32LE(28),asset.internalFormat);assert.equal(bytes.readUInt32LE(36),asset.width);assert.equal(bytes.readUInt32LE(40),asset.height);
+ assert.equal(bytes.readUInt32LE(56),asset.mipmaps);assert.ok(asset.mipmaps>=9,'Complete mip chain');
+ assert.ok(bytes.length<(tier==='mobile'?90000:350000),'Native surface transfer budget');
+ console.log('PASS original mipmapped GPU normal',tier,format,bytes.length,'bytes');
+}
