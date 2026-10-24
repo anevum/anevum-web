@@ -38,6 +38,8 @@ jobs:
         with:
           node-version: '22'
       - name: Validate diagnostic library and API
-        run: node --test creator-v1/agent-quality-lab/project-doctor-v001.test.mjs services/continuance-lab/server.test.mjs creator-v1/test/studio-project-doctor-ui-v001.test.mjs
+        run: node --test creator-v1/agent-quality-lab/project-doctor-v001.test.mjs creator-v1/agent-quality-lab/project-doctor-benchmark-v001.test.mjs services/continuance-lab/server.test.mjs creator-v1/test/studio-project-doctor-ui-v001.test.mjs
+      - name: Print synthetic benchmark metrics (no user data)
+        run: node creator-v1/agent-quality-lab/project-doctor-benchmark-v001.mjs
       - name: Validate minimal isolation image
         run: docker build --file services/continuance-lab/Dockerfile -t continuance-lab-v001:test .
