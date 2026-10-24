@@ -85,5 +85,8 @@ test('responsive weekly surface respects clear attribution boundaries and reduce
  assert.match(WEEKLY_CSS,/\.ci-weekly-stats/);
  assert.match(WEEKLY_CSS,/@media\(max-width:700px\)/);
  assert.match(WEEKLY_CSS,/@media\(max-width:370px\)/);
+ assert.match(WEEKLY_CSS,/scroll-margin-top:108px/);
+ assert.match(WEEKLY_CLIENT,/displayRange/);
+ assert.match(WEEKLY_CLIENT,/timeZone:'UTC'/);
  assert.match(WEEKLY_CSS,/@media\(prefers-reduced-motion:reduce\)/);
 });
