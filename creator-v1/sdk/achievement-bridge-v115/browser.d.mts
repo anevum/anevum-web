@@ -1,5 +1,5 @@
 export type AnevumBrowserOptions={projectId:string;anevumOrigin?:string;reportEndpoint?:string;linkEndpoint?:string;storage?:Storage;navigation?:{assign(url:string):void};fetchImpl?:typeof fetch};
-export class AnevumAchievementBrowser {
+export declare class AnevumAchievementBrowser {
  constructor(options:AnevumBrowserOptions);
  readonly projectId:string;
  readonly achievements:{readonly unlock:(key:string)=>Promise<unknown>};
@@ -7,4 +7,4 @@ export class AnevumAchievementBrowser {
  finishConnection(options?:{callbackUrl?:string}):Promise<unknown>;
  unlock(stableKey:string):Promise<unknown>;
 }
-export function createAnevumAchievements(options:AnevumBrowserOptions):AnevumAchievementBrowser;
+export declare function createAnevumAchievements(options:AnevumBrowserOptions):AnevumAchievementBrowser;

@@ -9,4 +9,4 @@ export type GameHandlersConfig={
  saveGameLink:(gameUser:AuthenticatedGameUser,opaqueLinkId:string)=>Promise<void>|void;
  proveGameMilestone:(gameUser:AuthenticatedGameUser,stableKey:string)=>Promise<AuthoritativeMilestoneEvidence|null>|AuthoritativeMilestoneEvidence|null;
 };
-export function createAnevumGameHandlers(config:GameHandlersConfig):Readonly<{link(request:Request):Promise<Response>;report(request:Request):Promise<Response>}>;
+export declare function createAnevumGameHandlers(config:GameHandlersConfig):Readonly<{link(request:Request):Promise<Response>;report(request:Request):Promise<Response>}>;
