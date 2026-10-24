@@ -120,7 +120,7 @@ export const fragmentSource=[
 '  vec2 portal=uv-vec2(.42,.08);',
 '  float gate=exp(-abs(length(portal*vec2(.93,1.3))-.70)*55.0);',
 '  color+=(u_tone*.82+amber*.18)*gate*.20*worlds;',
-'  // The number of orbital signal anchors follows verified published counts.'
+'  // The number of orbital signal anchors follows verified published counts.',
 '  float anchors=u_verified>0.5?floor(2.0+u_density*12.0):3.0;',
 '  for(int i=0;i<15;i++){',
 '    if(float(i)>=anchors)break;',
