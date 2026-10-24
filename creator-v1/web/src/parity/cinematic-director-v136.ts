@@ -30,3 +30,22 @@ export function cinematicFrameIndex(progress:number,count:number):number {
   if (!Number.isSafeInteger(count)||count<1||count>180) return 0;
   return Math.min(count-1,Math.floor(unit(progress)*count));
 }
+
+
+/** A prerendered layer must never disappear into partially loaded WebGL geometry.
+ * Fallback deliberately includes the accessible vector and shader-only variants.
+ * Focus and page routing remain independent of this decorative handoff.
+ */
+export function cinematicWorldReadiness(
+ renderer:'webgl'|'vector'|null, assetState:string|null
+):'ready'|'fallback'|'hold'{
+ if(renderer===null||renderer==='vector')return 'fallback';
+ if(assetState==='ready')return 'ready';
+ if(assetState==='unavailable')return 'fallback';
+ return 'hold';
+}
+export function cinematicRevealWhenReady(
+ progress:number,readiness:'ready'|'fallback'|'hold',start:number,end:number
+):number{
+ return readiness==='hold'?1:cinematicReveal(progress,start,end);
+}
