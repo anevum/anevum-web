@@ -6,6 +6,8 @@ import {fileURLToPath} from "node:url";
 import {createPackageDiscoveryFixture} from "./package-discovery-fixture-v011.mjs";
 import {DatabaseSync} from 'node:sqlite';
 import {studioAchievements,STUDIO_ACHIEVEMENT_PATH} from '../canonical-auth/studio-achievements-v114.mjs';
+import {MARK_MEMBER_ROUTE,MARK_PROJECT_ROUTE,MARK_PUBLIC_ROUTE,
+ projectMarkMember,projectMarkDiscovery,projectMarkPublic} from '../canonical-auth/project-mark-bridge-v115.mjs';
 // Root-mode is a test-only fixture for the actual apex / asset contract.
 // The default staging-path behavior remains byte-for-byte equivalent.
 
@@ -30,6 +32,41 @@ if(V114_BROWSER_REVIEW){
   async all(){return {success:true,results:db.prepare(sql).all(...params)};}
  };return stmt;}},CANONICAL_CREATOR_STUDIO_ENABLED:'true',CANONICAL_CREATOR_ACHIEVEMENTS_V114:'true'};
 }
+// Browser-only synthetic Project Marks. Never bundled in the production Worker.
+const V115_BROWSER_REVIEW=process.env.ANEVUM_V115_MARK_FIXTURE==='1';
+if(V115_BROWSER_REVIEW){
+ if(!V114_BROWSER_REVIEW||!v114Db||!v114Env)throw Error('V115 browser fixture requires V114 synthetic fixture');
+ const db=v114Db,definition='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+ const link='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',event='ffffffff-ffff-4fff-8fff-ffffffffffff';
+ db.exec("CREATE TABLE member_creator_profiles(user_id TEXT PRIMARY KEY,handle TEXT,visibility TEXT);");
+ db.prepare("INSERT INTO member_creator_profiles VALUES(?,?,?)").run(V114_OWNER.id,'v091_public','public');
+ db.exec(readFileSync(new URL('../canonical-auth/migrations/0016_project_mark_bridge_v115.sql',import.meta.url),'utf8'));
+ db.prepare("INSERT INTO member_mark_publishers(project_id,creator_id,release_ref,public_title,redirect_uri,status,reviewer_id,reviewed_at,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)")
+  .run(V114_PROJECT,V114_OWNER.id,'reviewed-fixture-v1','SYNTHETIC OBSERVATORY','https://game.example.org/auth/anevum','approved',V114_OWNER.id,100,100,100);
+ db.prepare("INSERT INTO member_mark_definitions(id,project_id,release_ref,stable_key,trigger_key,target_count,title,description,motif,visibility,reward_label,reviewer_id,reviewed_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)")
+  .run(definition,V114_PROJECT,'reviewed-fixture-v1','hidden_observatory','secret.observatory',1,'Hidden Observatory','Discover the observatory in the fictional game.','atlas','secret','Observatory Explorer',V114_OWNER.id,100);
+ db.prepare('INSERT INTO member_mark_links(id,project_id,member_id,created_at) VALUES(?,?,?,?)')
+  .run(link,V114_PROJECT,V114_OWNER.id,100);
+ db.prepare('INSERT INTO member_mark_events(id,project_id,link_id,member_id,definition_id,client_event_id,evidence_digest,created_at) VALUES(?,?,?,?,?,?,?,?)')
+  .run(event,V114_PROJECT,link,V114_OWNER.id,definition,'dddddddd-dddd-4ddd-8ddd-dddddddddddd','f'.repeat(64),100);
+ db.prepare('INSERT INTO member_mark_grants(member_id,project_id,stable_key,definition_id,source_event_id,earned_at) VALUES(?,?,?,?,?,?)')
+  .run(V114_OWNER.id,V114_PROJECT,'hidden_observatory',definition,event,100);
+ db.prepare("INSERT INTO member_mark_preferences(member_id,mode,pinned_json) VALUES(?,'curated',?)")
+  .run(V114_OWNER.id,JSON.stringify([definition]));
+ v114Env.CANONICAL_PROJECT_MARK_BRIDGE_V115='true';
+}
+async function localV115Mark(req,res,u){
+ const cookie=(req.headers.cookie||'').split(';').some(x=>x.trim()==='anevum_offline_visual_fixture=1');
+ const chunks=[];for await(const chunk of req)chunks.push(chunk);
+ const bytes=Buffer.concat(chunks);
+ const request=new Request(u,{method:req.method,headers:req.headers,...(bytes.length?{body:bytes}:{})});
+ const p=u.pathname.match(MARK_PROJECT_ROUTE),m=u.pathname.match(MARK_PUBLIC_ROUTE);
+ const response=p?await projectMarkDiscovery(request,v114Env,p[1]):
+  m?await projectMarkPublic(request,v114Env,m[1]):await projectMarkMember(request,v114Env,cookie?V114_OWNER:null);
+ res.writeHead(response.status,Object.fromEntries(response.headers));
+ res.end(await response.text());
+}
+
 async function localV114Achievement(req,res,u){
  const cookie=(req.headers.cookie||'').split(';').some(s=>s.trim()==='anevum_offline_visual_fixture=1');
  const chunks=[];for await(const chunk of req)chunks.push(chunk);
@@ -318,6 +355,8 @@ createServer(async(req,res)=>{
   if(packageDiscoveryFixture.handle(req,res,u))return;
   if(V114_BROWSER_REVIEW&&STUDIO_ACHIEVEMENT_PATH.test(u.pathname)&&req.headers.host==='127.0.0.1:4178')
     return await localV114Achievement(req,res,u);
+  if(V115_BROWSER_REVIEW&&(MARK_MEMBER_ROUTE.test(u.pathname)||MARK_PROJECT_ROUTE.test(u.pathname)||MARK_PUBLIC_ROUTE.test(u.pathname))&&req.headers.host==='127.0.0.1:4178')
+    return await localV115Mark(req,res,u);
   if(u.pathname==="/__player-member-fixture"&&req.headers.host==="127.0.0.1:4178"&&req.method==="GET"){
     const mode=u.searchParams.get("mode");
     if(!["canonical","canonical-saves","legacy","offline"].includes(mode))return json(res,{error:"invalid-mode"},400);
