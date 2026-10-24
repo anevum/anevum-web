@@ -186,8 +186,9 @@ function makeMesh(gl:WebGL2RenderingContext,positions:number[],mode:number=gl.TR
  return {vao,buffer,count:positions.length/6,mode};
 }
 export function createWorldRenderer(canvas:HTMLCanvasElement):WorldRenderer{
- const gl=canvas.getContext('webgl2',{alpha:true,depth:true,antialias:true,preserveDrawingBuffer:false});
- if(!gl)throw Error('WebGL2 not available');
+ const candidate=canvas.getContext('webgl2',{alpha:true,depth:true,antialias:true,preserveDrawingBuffer:false});
+ if(!candidate)throw Error('WebGL2 not available');
+ const gl:WebGL2RenderingContext=candidate;
  const prog=makeProgram(gl,vertexShader,fragmentShader);
  const picker=makeProgram(gl,pickVertex,pickFragment);
  const meshes=new Map<string,Mesh>(),islandParts=island();
