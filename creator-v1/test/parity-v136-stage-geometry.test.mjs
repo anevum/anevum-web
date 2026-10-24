@@ -72,6 +72,13 @@ test('Real renderer retains one canvas; stage path only with explicit QA opt-in'
  assert.match(renderer,/loader\.parseAsync\(stage\.buffer,''\)/);
  assert.match(renderer,/if\(!stage\)/);
  assert.match(renderer,/camera\.up\.copy\(up\)/);
+ assert.match(renderer,/stageUnavailable=true/);
+ assert.match(renderer,/loaded\.stage===wantsStage/);
+ assert.match(renderer,/pending\.get\(family\)===controller/);
+ assert.match(renderer,/cache\.get\('atrium'\)\?\.stage===true/);
+ assert.match(renderer,/stageSamples=null;stageUnavailable=false/);
+ assert.match(renderer,/controller\.signal\.aborted\|\|disposed/);
+
  assert.match(stage,/crypto\.subtle\.digest\('SHA-256',buffer\)/);
  assert.match(arrival,/stageCamera\)element\.dataset\.cameraProgress=travel\.toFixed\(4\)/);
  assert.ok(!/new T\.WebGLRenderer|document\.createElement\('canvas'\)/.test(stage+arrival),
