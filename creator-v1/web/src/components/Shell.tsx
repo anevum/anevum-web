@@ -75,7 +75,7 @@ function ShellContent(){
   const [launcherOpen,setLauncherOpen]=useState(false);
   const menuButton=useRef<HTMLButtonElement>(null);
   const menuDialog=useRef<HTMLDialogElement>(null);
-  const previousPage=useRef(location.pathname+location.search);
+  const previousPage=useRef(location.pathname);
 
   useEffect(()=>{setMenuOpen(false);setLauncherOpen(false);},[location.pathname,location.search]);
   useEffect(()=>{
@@ -85,12 +85,15 @@ function ShellContent(){
     if(!menuOpen&&dialog.open)dialog.close();
   },[menuOpen]);
   useEffect(()=>{
-    const page=location.pathname+location.search;
+    // A filter/search update belongs to the current page. Moving focus to
+    // main during that update can steal the next Enter key from a searchbox
+    // and also breaks keyboard filter browsing. Only page traversal resets it.
+    const page=location.pathname;
     if(previousPage.current===page)return;
     previousPage.current=page;
     if(!location.hash)window.scrollTo({top:0,behavior:"instant"});
     document.getElementById("main")?.focus({preventScroll:true});
-  },[location.pathname,location.search,location.hash]);
+  },[location.pathname,location.hash]);
   useEffect(()=>{
     function onShortcut(event:KeyboardEvent){
       const command=(event.metaKey || event.ctrlKey)&&event.key.toLowerCase()==="k"&&!event.altKey;
