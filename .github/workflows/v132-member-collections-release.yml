@@ -1,0 +1,153 @@
+name: ANEVUM V132 V131-Backed Collections Candidate
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v132-member-collections-release.yml'
+      - 'creator-v1/ops/v132-member-collections-package.mjs'
+      - 'creator-v1/test/v132-member-collections-release.test.mjs'
+      - 'creator-v1/test/v132-member-collections-browser.mjs'
+      - 'creator-v1/test/member-collections-v011.test.mjs'
+      - 'creator-v1/test/member-collections-v011-browser.mjs'
+      - 'creator-v1/test/saved-works-organization-v010.test.mjs'
+      - 'creator-v1/web/src/pages/CanonicalSavedWorksPage.tsx'
+      - 'creator-v1/web/src/pages/canonical-saved-works.css'
+      - 'creator-v1/web/src/pages/LevelsPage.tsx'
+      - 'creator-v1/web/src/pages/RecognitionRegistryPage.tsx'
+      - 'creator-v1/web/src/components/EarnedRewardVault.tsx'
+      - 'creator-v1/web/src/components/MemberSpaceDashboard.tsx'
+      - 'creator-v1/web/src/components/MemberCollectionNav.tsx'
+      - 'creator-v1/web/src/lib/member-collection-map.ts'
+      - 'creator-v1/web/src/lib/saved-works-browse.ts'
+      - 'creator-v1/web/src/member-collection-nav.css'
+      - 'docs/production/v132-member-collections-release.md'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: anevum-v132-offline-review-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  sealed-offline-candidate:
+    if: github.repository == 'anevum/anevum-web' && github.event.pull_request.head.repo.full_name == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      CLOUDFLARE_API_TOKEN: ''
+      CLOUDFLARE_API_KEY: ''
+      CLOUDFLARE_ACCOUNT_ID: ''
+      WRANGLER_SEND_METRICS: 'false'
+      VITE_IREN_SPATIAL_GUIDE: 'true'
+      VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
+      VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Enforce exact V131 source plus reviewed UI, unchanged backend
+        run: |
+          node --input-type=module <<'JS'
+          import {verifySource} from './creator-v1/ops/v132-member-collections-package.mjs';
+          console.log(JSON.stringify(verifySource()));
+          JS
+      - name: Install pinned project dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - name: Verify UI, data permissions and preservation contracts
+        run: |
+          node --experimental-strip-types --test \
+            creator-v1/test/v132-member-collections-release.test.mjs \
+            creator-v1/test/member-collections-v011.test.mjs \
+            creator-v1/test/saved-works-organization-v010.test.mjs \
+            creator-v1/test/canonical-saved-works-v009.test.mjs \
+            creator-v1/test/member-space-resilience-v101.test.mjs \
+            creator-v1/test/earned-reward-media-v075.test.mjs \
+            creator-v1/test/apex-worker-bundle-v117.test.mjs
+      - name: Typecheck entire React application
+        run: npm run check:creator-v1-web
+      - name: Verify ordinary build with new feature disabled
+        env:
+          VITE_MEMBER_COLLECTION_NAV_REVIEW: 'false'
+        run: npm run build:creator-v1-web
+      - name: Build complete reviewed V132 frontend with original V131 features
+        env:
+          VITE_MEMBER_COLLECTION_NAV_REVIEW: 'true'
+        run: npm run build:creator-v1-web
+      - name: Install Chromium
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.56.1
+          npx playwright install chromium
+      - name: Test actual V132 compiled member routes at 1440, 390 and 320
+        run: node creator-v1/test/v132-member-collections-browser.mjs
+      - name: Test actual V132 root entry, IREN and responsive assets
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$chrome"
+          mkdir -p "$RUNNER_TEMP/v132-root"
+          ANEVUM_APEX_ROOT_QA=1 node creator-v1/test/portal-offline-preview.mjs > "$RUNNER_TEMP/v132-root/server.log" 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          ready=0
+          for i in $(seq 1 80); do
+            if curl --fail --silent --max-time 3 http://127.0.0.1:4180/__ready >/dev/null; then ready=1; break; fi
+            sleep 0.3
+          done
+          test "$ready" = 1
+          node creator-v1/test/capture-v100-apex-root.mjs "$chrome" http://127.0.0.1:4180 "$RUNNER_TEMP/v132-root"
+          for width in 320 390 1440; do test -s "$RUNNER_TEMP/v132-root/apex-root-$width.png"; done
+      - name: Retrieve exact original V131 assets and Worker (sealed)
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12526930761'
+          run-id: 40011027824
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v131-preserved
+          merge-multiple: true
+      - name: Package only reviewed frontend over untouched V131 backend and artwork
+        run: |
+          node creator-v1/ops/v132-member-collections-package.mjs prepare \
+            "$RUNNER_TEMP/v131-preserved/v131-package" \
+            creator-v1/dist/web \
+            "$RUNNER_TEMP/v132-package"
+          node --check "$RUNNER_TEMP/v132-package/worker-bundle/gateway.js"
+          test -s "$RUNNER_TEMP/v132-package/v132-offline-manifest.json"
+          test -z "$(find "$RUNNER_TEMP/v132-package/compiled-web" -name '*.map' -print -quit)"
+      - name: No-auth static assets/Worker dry run, never upload
+        run: |
+          node --input-type=module <<'JS'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          import {resolve} from 'node:path';
+          const c=JSON.parse(readFileSync('creator-v1/wrangler.apex-prelaunch.jsonc','utf8'));
+          c.$schema=resolve('node_modules/wrangler/config-schema.json');
+          c.main=resolve(process.env.RUNNER_TEMP,'v132-package','worker-bundle','gateway.js');
+          c.assets.directory=resolve(process.env.RUNNER_TEMP,'v132-package','compiled-web');
+          c.routes=[];c.workers_dev=false;c.preview_urls=false;
+          c.vars={CANONICAL_CREATOR_UPLOADS_ENABLED:'false',CANONICAL_XP_TEST_ENABLED:'false'};
+          writeFileSync(resolve(process.env.RUNNER_TEMP,'v132-synthetic.json'),JSON.stringify(c));
+          JS
+          npx --no-install wrangler deploy --dry-run --no-bundle \
+            --config "$RUNNER_TEMP/v132-synthetic.json" \
+            --outdir "$RUNNER_TEMP/v132-dryrun"
+          echo 'V132_OFFLINE_BUNDLE=PASS; ORIGINAL_V131_GATEWAY=UNCHANGED; PROVIDER_WRITES=0; PUBLIC_TRAFFIC=UNCHANGED' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: anevum-v132-release-package-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/v132-package/
+          retention-days: 14
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v132-review-evidence-${{ github.event.pull_request.head.sha }}
+          path: |
+            ${{ runner.temp }}/v132-root/apex-root-320.png
+            ${{ runner.temp }}/v132-root/apex-root-390.png
+            ${{ runner.temp }}/v132-root/apex-root-1440.png
+            /tmp/member-collections-v011/
+          retention-days: 14
+          if-no-files-found: warn

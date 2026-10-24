@@ -1,5 +1,6 @@
 import {useEffect, useState} from "react";
 import {CosmicIllustration, type CosmicScene} from "./CosmicIllustration";
+import {LivingWorldGlyph} from "../parity/LivingWorldGlyph";
 
 /** Local, versioned ANEVUM illustration masters; never creator-submitted covers. */
 const assets: Record<CosmicScene, string> = {
@@ -26,11 +27,16 @@ export function cinematicArtUrl(scene:CosmicScene):string {
   return import.meta.env.BASE_URL + "assets/cinematic/" + assets[scene];
 }
 
-export function CosmicArtwork({scene="hero",priority=false,className="",title}: {
-  scene?:CosmicScene;priority?:boolean;className?:string;title?:string;
+export function CosmicArtwork({scene="hero",priority=false,className="",title,seed}: {
+  scene?:CosmicScene;priority?:boolean;className?:string;title?:string;seed?:string;
 }) {
   const [failed,setFailed]=useState(false);
   useEffect(()=>setFailed(false),[scene]);
+  // V136 replaces ALL actively rendered generic image masters with code-generated
+  // shapes derived from verified public counts. Creator-owned uploaded covers
+  // remain their original media and are never silently replaced.
+  if(import.meta.env.VITE_PARITY_V136_FULL==="true")
+    return <LivingWorldGlyph scene={scene} seed={seed} className={className} title={title}/>;
   return <span className={"cw-artwork cw-artwork--"+scene+" "+className}
     role={title?"img":undefined} aria-label={title||undefined} aria-hidden={title?undefined:true}>
     {failed ? <CosmicIllustration scene={scene} className="cw-artwork-vector"/> :

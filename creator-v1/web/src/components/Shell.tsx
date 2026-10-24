@@ -1,5 +1,5 @@
 import { NavLink, Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState, lazy, Suspense, ViewTransition } from "react";
 import { OrbitalMark } from "./OrbitalMark";
 import { Icon } from "./Icons";
 import { PortalLauncher } from "./PortalLauncher";
@@ -11,7 +11,10 @@ import { CompactMemberIdentity } from "./CompactMemberIdentity";
 import { useOwnPlayerCard } from "../lib/useOwnPlayerCard";
 import {IrenGuidedContinuance} from "./IrenGuidedContinuance";
 import {VerifiedStaffShortcut} from "./VerifiedStaffShortcut";
+import {LivingWorldProvider,useLivingWorld,type WorldSector} from "../parity/LivingWorldState";
+import {LivingWorldField} from "../parity/LivingWorldField";
 
+const FullParityHeader=import.meta.env.VITE_PARITY_V136_FULL==="true" ? lazy(()=>import("../parity/ParityHeaderV136").then(m=>({default:m.ParityHeaderV136}))) : null;
 /** ANEVUM V009 — one public navigation system across every Creator V1 page.
  * This component is presentation only. Private routes remain MemberGate-owned;
  * no signup capability or session is inferred from an account shortcut.
@@ -43,7 +46,18 @@ const menuUtilities = [
   {to:"/status",label:"Status"}
 ] as const;
 
+/** One world provider survives every public route transition. */
 export function Shell(){
+  return FullParityHeader?<LivingWorldProvider><ShellContent/></LivingWorldProvider>:<ShellContent/>;
+}
+function worldSector(pathname:string,search:string):WorldSector{
+  if(pathname!=="/discover")return "hero";
+  const category=new URLSearchParams(search).get("category");
+  const valid:WorldSector[]=["games","tools","automation","research","creative","learning","libraries","other"];
+  return category&&valid.some(item=>item===category)?category as WorldSector:"portal";
+}
+function ShellContent(){
+  const {paused,setPaused}=useLivingWorld();
   const {data:canonicalSession}=canonicalAuthClient.useSession();
   const canonicalMember=Boolean(canonicalSession?.user?.id&&canonicalSession.user.emailVerified===true);
   const memberDestination=canonicalMember?"/member":"/join";
@@ -90,10 +104,32 @@ export function Shell(){
     setMenuOpen(false);
     navigate(trimmed?"/discover?q="+encodeURIComponent(trimmed):"/discover");
   }
+  // Console-style navigation remains DOM focus, so it works with keyboard,
+  // assistive technology and any future gamepad-to-focus adapter.
+  function menuDirectionalKey(event:ReactKeyboardEvent<HTMLDialogElement>){
+    if(!FullParityHeader||isEditableTarget(event.target)||
+      !['ArrowDown','ArrowUp','ArrowRight','ArrowLeft'].includes(event.key))return;
+    const items=Array.from(menuDialog.current?.querySelectorAll<HTMLElement>('a[href],button:not([disabled])')||[])
+      .filter(node=>node.getClientRects().length>0);
+    if(!items.length)return;
+    const current=items.indexOf(document.activeElement as HTMLElement);
+    const direction=event.key==='ArrowDown'||event.key==='ArrowRight'?1:-1;
+    const next=current<0?(direction>0?0:items.length-1):(current+direction+items.length)%items.length;
+    event.preventDefault();
+    items[next]?.focus();
+  }
   const home=location.pathname==="/";
+  const parityFullBleed=Boolean(FullParityHeader&&(home||location.pathname==="/discover"));
+  // PARITY destinations own a full-bleed spatial canvas, not a nested page box.
+  // Legacy routes retain their protected frame until individually transformed.
+  // One stable route surface keeps navigation, IREN and launcher mounted.
+  const routeSurface=home||parityFullBleed?<Outlet/>:
+    <div className="av5-site-frame av9-unified-frame"><div className="av5-site-content"><Outlet/></div></div>;
   return <div className={"site-shell site-shell--cinematic av9-shell"+(home?" site-shell--home":"")}>
-    <ContinuanceWorldStage path={location.pathname}/>
-    <header className="site-header av9-header">
+    {FullParityHeader&&<LivingWorldField enabled={parityFullBleed} sector={worldSector(location.pathname,location.search)}/>}
+
+    {!parityFullBleed&&<ContinuanceWorldStage path={location.pathname}/>}
+    {FullParityHeader?<Suspense fallback={<header className="p136-header" aria-label="ANEVUM navigation loading"/>}><FullParityHeader memberDestination={memberDestination} canonicalMember={canonicalMember} query={query} onQuery={setQuery} onSearch={search} onOpenLauncher={()=>setLauncherOpen(true)} onOpenIren={()=>window.dispatchEvent(new Event("anevum:iren-open"))} menuOpen={menuOpen} onToggleMenu={()=>setMenuOpen(v=>!v)} menuButton={menuButton}/></Suspense>:<header className="site-header av9-header">
       <div className="header-inner av9-header-inner">
         <Link to="/" className="brand-lockup av9-brand" aria-label="ANEVUM homepage">
           <OrbitalMark className="brand-mark"/>
@@ -122,9 +158,10 @@ export function Shell(){
           </button>
         </div>
       </div>
-    </header>
+    </header>}
     <dialog ref={menuDialog} id="av79-navigation" className="av79-navigation"
       aria-label="ANEVUM navigation"
+      onKeyDown={menuDirectionalKey}
       onClose={()=>{setMenuOpen(false);menuButton.current?.focus();}}
       onCancel={()=>setMenuOpen(false)}
       onClick={event=>{if(event.target===menuDialog.current)setMenuOpen(false);}}>
@@ -171,6 +208,12 @@ export function Shell(){
           <section aria-label="More destinations"><span className="av79-lower-label">ALSO IN ANEVUM</span>
             <div className="av79-utility-links">{menuUtilities.map(item=>
               <Link to={item.to==="/library"&&canonicalMember?"/saved":item.to} key={item.to} onClick={()=>setMenuOpen(false)}>{item.label}</Link>)}</div>
+            {FullParityHeader&&<button type="button" className="p136-wayfinder-motion"
+              aria-label="Atmospheric animation" aria-pressed={!paused}
+              onClick={()=>setPaused(previous=>!previous)}>
+              <Icon name="status" size={17}/><span>Environmental motion</span>
+              <small>{paused?'STILL':'ON'}</small>
+            </button>}
           </section>
         </div>
         <footer className="av79-navigation-foot"><span aria-hidden="true" className="av79-footer-star"/> THE CONTINUANCE INSTITUTE <span>EXPLORE / MAKE / BELONG</span></footer>
@@ -179,8 +222,8 @@ export function Shell(){
     <IrenGuidedContinuance memberId={canonicalMember?canonicalSession?.user?.id||null:null}/>
     <PortalLauncher open={launcherOpen} onClose={()=>setLauncherOpen(false)}/>
     <main id="main" tabIndex={-1} className="site-main av9-main">
-      <VisualKitAtmosphere room={publicVisualRoom(location.pathname)}/>
-      {home?<Outlet/>:<div className="av5-site-frame av9-unified-frame"><div className="av5-site-content"><Outlet/></div></div>}
+      {!parityFullBleed&&<VisualKitAtmosphere room={publicVisualRoom(location.pathname)}/>}
+      {parityFullBleed?<ViewTransition enter="p136-route" exit="p136-route" update="p136-route">{routeSurface}</ViewTransition>:routeSurface}
     </main>
     <footer className="site-footer av9-footer">
       <span>ANEVUM / A WORLD OF THINGS PEOPLE MAKE</span>

@@ -5,6 +5,7 @@ import {HonorInsignia} from './HonorInsignia';
 import {BADGE_CATALOG,DISTINCTION_CATALOG,type PublicDistinctions} from '../lib/player-recognition';
 import {readRecognition,type RecognitionSettings} from '../lib/player-recognition-api';
 import {RewardInspector,type InspectedReward} from './RewardInspector';
+import {MEMBER_COLLECTION_NAV_REVIEW} from './MemberCollectionNav';
 
 export type EarnedLevelRecord={level:number;name:string;subtitle:string;motion:string};
 type Inventory={currentLevel:number;levels:EarnedLevelRecord[]};
@@ -27,14 +28,14 @@ function validInventory(value:unknown,publicProfile:boolean):value is Inventory{
  */
 export function EarnedRewardVault({
  level,handle=null,badges=[],distinctions,fallbackBadges=[],
- title='Earned discoveries',showLevels=true
+ title='Earned discoveries',showLevels=true,showHonors=true
 }:{
  level:number|null|undefined;
  handle?:string|null;
  badges?:readonly string[];
  distinctions?:PublicDistinctions;
  fallbackBadges?:readonly string[];
- title?:string;showLevels?:boolean;
+ title?:string;showLevels?:boolean;showHonors?:boolean;
 }){
  const publicProfile=typeof handle==='string';
  const [ledger,setLedger]=useState<RecognitionSettings|null>(null);
@@ -42,6 +43,7 @@ export function EarnedRewardVault({
  const [inventory,setInventory]=useState<Inventory|null>(null);
  const [inventoryState,setInventoryState]=useState<'checking'|'ready'|'unavailable'>('checking');
  const [selected,setSelected]=useState<InspectedReward|null>(null);
+ const [allLevels,setAllLevels]=useState(false),[allHonors,setAllHonors]=useState(false);
  useEffect(()=>{
   if(publicProfile){setLedger(null);setLedgerState('ready');return;}
   const abort=new AbortController(),signal=abort.signal;
@@ -89,7 +91,13 @@ export function EarnedRewardVault({
   ...(distinctions?.medals??[]),...(distinctions?.ribbons??[])
  ]:[...(ledger?.earnedMedals.map(d=>d.id)??[]),...(ledger?.earnedRibbons.map(d=>d.id)??[])];
  const validHonors=[...new Set(honors)].filter(id=>Object.hasOwn(DISTINCTION_CATALOG,id));
- const hasReward=records.length>0||validBadges.length>0||validHonors.length>0;
+ const hasReward=records.length>0||(showHonors&&(validBadges.length>0||validHonors.length>0));
+ const simple=MEMBER_COLLECTION_NAV_REVIEW&&!publicProfile;
+ const orderedLevels=simple?[...records].reverse():records;
+ const shownLevels=simple&&!allLevels?orderedLevels.slice(0,4):orderedLevels;
+ const shownBadges=simple&&!allHonors?validBadges.slice(0,3):validBadges;
+ const shownHonors=simple&&!allHonors?validHonors.slice(0,Math.max(0,3-shownBadges.length)):validHonors;
+ const undisplayedHonors=validBadges.length+validHonors.length-shownBadges.length-shownHonors.length;
  const ownerCurrent=typeof level==='number'&&Number.isSafeInteger(level)?level:null;
  return <section className="av75-earned-vault" aria-labelledby={publicProfile?'av75-public-vault-title':'av75-private-vault-title'}>
   <header className="av75-vault-intro">
@@ -110,7 +118,7 @@ export function EarnedRewardVault({
   {showLevels&&records.length>0&&<div className="av75-vault-section">
    <h3>Earned evolution emblems</h3>
    <div className="av75-levels-earned">
-    {records.map(item=><button type="button" className={'av75-earned-level'+
+    {shownLevels.map(item=><button type="button" className={'av75-earned-level'+
      (item.level===verifiedLevel?' is-current':'')}
       key={item.level}
       onClick={()=>setSelected({kind:'level',level:item.level,name:item.name,detail:item.subtitle})}
@@ -121,18 +129,19 @@ export function EarnedRewardVault({
       <span className="av75-earned-cta">Inspect ↗</span>
      </button>)}
    </div>
+   {simple&&records.length>4&&<button type="button" className="mc-reward-more" aria-expanded={allLevels} onClick={()=>setAllLevels(v=>!v)}>{allLevels?"Show fewer earned levels":"Show "+(records.length-shownLevels.length)+" more earned levels"}</button>}
   </div>}
-  {(validBadges.length>0||validHonors.length>0)&&<div className="av75-vault-section">
+  {showHonors&&(validBadges.length>0||validHonors.length>0)&&<div className="av75-vault-section">
    <h3>Earned distinctions</h3>
    <div className="av75-honors-earned">
-    {validBadges.map(id=>{
+    {shownBadges.map(id=>{
      const def=BADGE_CATALOG[id];return <button type="button" key={id} className="av75-earned-honor"
       onClick={()=>setSelected({kind:'badge',id,name:def.name,detail:def.description})}>
       <BadgeInsignia badge={id} size="small" state="earned"/>
       <span><small>EARNED BADGE</small><strong>{def.name}</strong></span><span className="av75-earned-cta">Inspect ↗</span>
      </button>;
     })}
-    {validHonors.map(id=>{
+    {shownHonors.map(id=>{
      const def=DISTINCTION_CATALOG[id];return <button type="button" key={id} className="av75-earned-honor"
       onClick={()=>setSelected({kind:def.kind,id,name:def.name,detail:def.description})}>
       <HonorInsignia distinction={def} compact/>
@@ -140,6 +149,7 @@ export function EarnedRewardVault({
      </button>;
     })}
    </div>
+   {simple&&(validBadges.length+validHonors.length)>3&&<button type="button" className="mc-reward-more" aria-expanded={allHonors} onClick={()=>setAllHonors(v=>!v)}>{allHonors?"Show fewer earned distinctions":"Show "+undisplayedHonors+" more earned distinctions"}</button>}
   </div>}
   {!publicProfile&&ledgerState==='unavailable'&&
    <p className="av75-vault-ledger-note" role="status">The full recognition ledger is unavailable. Founding milestones appear only when recorded as earned; no future badges are previewed.</p>}

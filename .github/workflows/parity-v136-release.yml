@@ -1,0 +1,123 @@
+name: PARITY V136 Targeted Live-Compatible Release
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/parity-v136-release.yml'
+      - 'creator-v1/ops/parity-v136-release.mjs'
+      - 'creator-v1/test/parity-v136-full-browser.mjs'
+      - 'creator-v1/test/parity-v136-discover-browser.mjs'
+      - 'creator-v1/web/src/pages/DiscoverPage.tsx'
+      - 'creator-v1/web/src/parity/**'
+      - 'creator-v1/web/vite.config.ts'
+      - 'creator-v1/web/src/main.tsx'
+      - 'creator-v1/web/src/components/Shell.tsx'
+      - 'creator-v1/web/src/pages/CinematicLandingPage.tsx'
+      - 'creator-v1/web/public/assets/parity-v136/**'
+  push:
+    branches: ['release/parity-v136-home-navigation-20261024-001', 'release/parity-v136-living-world-20261024-005']
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: parity-v136-targeted-release-${{ github.event_name }}
+  cancel-in-progress: false
+jobs:
+  verify-package:
+    if: >-
+      github.event_name == 'pull_request' || (github.event.head_commit.message == 'release(parity-v136): upload verified homepage candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified living-world candidate')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CLOUDFLARE_API_TOKEN: ''
+      WRANGLER_SEND_METRICS: 'false'
+      VITE_PARITY_V136_FULL: 'true'
+      VITE_IREN_SPATIAL_GUIDE: 'true'
+      VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
+      VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
+      VITE_MEMBER_COLLECTION_NAV_REVIEW: 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node creator-v1/ops/parity-v136-release.mjs source
+      - run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - name: Existing data, collections, rewards and auth contracts
+        run: |
+          node --experimental-strip-types --test creator-v1/test/member-collections-v011.test.mjs creator-v1/test/saved-works-organization-v010.test.mjs creator-v1/test/canonical-saved-works-v009.test.mjs creator-v1/test/member-space-resilience-v101.test.mjs creator-v1/test/earned-reward-media-v075.test.mjs creator-v1/test/apex-worker-bundle-v117.test.mjs
+      - run: npm run check:creator-v1-web
+      - run: npm run build:creator-v1-web
+      - run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
+          npx playwright install --with-deps chromium
+      - run: node creator-v1/test/parity-v136-full-browser.mjs
+      - name: V136 Discover composition, filters, catalogue and responsive acceptance
+        run: node creator-v1/test/parity-v136-discover-browser.mjs
+      - name: Preserve verified member collections, guest and disabled states
+        run: node creator-v1/test/v132-member-collections-browser.mjs
+      - name: Retain original sealed V131 gateway and earned artwork
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12526930761'
+          run-id: 40011027824
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v131-preserved
+          merge-multiple: true
+      - run: node creator-v1/ops/parity-v136-release.mjs package "$RUNNER_TEMP/v131-preserved/v131-package" creator-v1/dist/web "$RUNNER_TEMP/parity-package"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: parity-v136-package-${{ github.event.pull_request.head.sha || github.sha }}
+          path: ${{ runner.temp }}/parity-package
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: parity-v136-release-browser-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/parity-v136
+            /tmp/member-collections-v011
+          retention-days: 14
+  upload-inactive:
+    needs: verify-package
+    if: >-
+      github.event_name == 'push' && (github.event.head_commit.message == 'release(parity-v136): upload verified homepage candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified living-world candidate')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - uses: actions/download-artifact@v4
+        with:
+          name: parity-v136-package-${{ github.sha }}
+          path: ${{ runner.temp }}/parity-package
+      - name: Fresh immutable production preflight
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: node creator-v1/ops/parity-v136-release.mjs before "$RUNNER_TEMP/parity-package"
+      - name: Upload verified frontend over unchanged gateway; zero traffic
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --no-install wrangler versions upload --no-bundle --no-upload-source-maps --keep-vars --strict --config "$RUNNER_TEMP/parity-package/upload.json" --message "PARITY V136 frontend $GITHUB_SHA; V131 gateway unchanged; INACTIVE"
+      - name: Verify immutable bindings and original live traffic
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: node creator-v1/ops/parity-v136-release.mjs after "$RUNNER_TEMP/parity-package"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: parity-v136-inactive-receipt-${{ github.sha }}
+          path: ${{ runner.temp }}/parity-package/inactive-receipt.json
+          retention-days: 14

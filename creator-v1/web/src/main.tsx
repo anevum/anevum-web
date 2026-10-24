@@ -38,6 +38,12 @@ import "./canonical-email.css";
 import "./staging-integration-v013.css";
 import "./community-home-v014.css";
 
+// Legacy route CSS keeps its exact import order. The build places it in a
+// lower-priority cascade layer only when this presentation flag is enabled.
+if (import.meta.env.VITE_PARITY_V136_FULL === "true") {
+  document.documentElement.dataset.avParity = "v136-full";
+  await import("./parity/visual-foundation-v136.css");
+}
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "") || "/"}>

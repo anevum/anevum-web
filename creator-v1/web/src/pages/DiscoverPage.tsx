@@ -1,5 +1,5 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { FormEvent, useEffect, useMemo, useState, lazy, Suspense } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { readCategories,readProjects, type Category } from "../lib/api";
 import { useResource } from "../lib/useResource";
 import { ProjectCard } from "../components/ProjectCard";
@@ -8,6 +8,11 @@ import {readPackageCatalogue,packageDiscoveryResults} from "../lib/creator-packa
 import { PageNav } from "../components/PageNav";
 import { PortalHeading } from "../components/PortalHeading";
 import { EmptyState, ErrorState, LoadingState } from "../components/States";
+
+// The protected catalogue logic stays canonical; PARITY loads only when enabled.
+const FullParityDiscover=import.meta.env.VITE_PARITY_V136_FULL==="true"
+  ?lazy(()=>import("../parity/ParityDiscoverV136").then(mod=>({default:mod.ParityDiscoverV136})))
+  :null;
 
 const channels: ReadonlyArray<{id:Category;label:string;description:string;mark:string}> = [
   {id:"games",label:"Games",description:"Independent play and interactive experiments",mark:"✦"},
@@ -43,6 +48,7 @@ const immersiveWorlds:Partial<Record<Category,{
 
 export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
   const [params,setParams]=useSearchParams();
+  const navigate=useNavigate();
   const q=params.get("q")||"",category=params.get("category")||"",cursor=params.get("cursor")||"",freeOnly=params.get("free")==="1";
   const [draft,setDraft]=useState(q);
   const [view,setView]=useState<"covers"|"compact">("covers");
@@ -60,24 +66,35 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
   const active=useMemo(()=>channels.find(x=>x.id===category),[category]);
   const world=immersive?immersiveWorlds[category as Category]:undefined;
 
-  function search(e:FormEvent){
-    e.preventDefault();
-    const next=new URLSearchParams(params),value=draft.trim();
+  function commitSearch(raw:string){
+    // Read current URL at the moment of activation, not a suspended render's
+    // captured params. React ViewTransition may defer a component update.
+    const value=raw.trim(),next=new URLSearchParams(window.location.search);
     if(value)next.set("q",value);else next.delete("q");
     next.delete("cursor");
-    setParams(next);
+    const query=next.toString();
+    navigate({pathname:"/discover",search:query?"?"+query:""});
+  }
+  function search(e:FormEvent){
+    e.preventDefault();
+    const field=(e.currentTarget as HTMLFormElement).elements.namedItem("q") as HTMLInputElement|null;
+    commitSearch(field?.value??draft);
   }
   function selectCategory(id:string){
-    const next=new URLSearchParams(params);
-    if(id)next.set("category",id);else next.delete("category");
-    next.delete("cursor");
-    setParams(next);
+    setParams(current=>{
+      const next=new URLSearchParams(current);
+      if(id)next.set("category",id);else next.delete("category");
+      next.delete("cursor");
+      return next;
+    });
   }
   function toggleFreeOnly(){
-    const next=new URLSearchParams(params);
-    if(freeOnly)next.delete("free");else next.set("free","1");
-    next.delete("cursor");
-    setParams(next);
+    setParams(current=>{
+      const next=new URLSearchParams(current);
+      if(next.get("free")==="1")next.delete("free");else next.set("free","1");
+      next.delete("cursor");
+      return next;
+    });
   }
   const categories=resource.state==="ready"?resource.data.categories.categories:[];
   const countByCategory=new Map(categories.map(x=>[x.category,x.count]));
@@ -89,6 +106,21 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
   const shown=legacyProjects.length+packageProjects.length;
   const resultsReady=resource.state==="ready"||(packagesInScope&&packageResource.state==="ready");
   const emptyVerified=resource.state==="ready"&&(!packagesInScope||packageResource.state==="ready")&&shown===0;
+  if(FullParityDiscover)return <Suspense fallback={<LoadingState label="Opening the public discovery index"/>}>
+    <FullParityDiscover
+      channels={channels} category={category} activeLabel={active?.label||null}
+      query={q} cursor={cursor} freeOnly={freeOnly}
+      draft={draft} onDraft={setDraft} onSearch={search} onSearchValue={commitSearch}
+      onCategory={selectCategory} onToggleFree={toggleFreeOnly}
+      view={view} onView={setView}
+      resourceState={resource.state} packageState={packageResource.state}
+      packagesInScope={packagesInScope} packagesCount={packages.length}
+      packageProjects={packageProjects} legacyProjects={legacyProjects}
+      shown={shown} resultsReady={resultsReady} emptyVerified={emptyVerified}
+      current={current} params={params}
+      nextCursor={resource.state==="ready"?resource.data.projects.nextCursor:null}
+    />
+  </Suspense>;
   return <div data-iren-anchor="discover" className="portal-discover av73-discover">
     {immersive?<PortalHeading
       eyebrow={world?.eyebrow||"THE PORTALS / EVERYTHING WORTH TRYING"}
