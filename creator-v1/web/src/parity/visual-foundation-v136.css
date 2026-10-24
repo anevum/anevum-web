@@ -113,3 +113,29 @@ html[data-av-parity="v136-full"] :is(.av79-destination,.av79-navigation-join,.av
 html[data-av-parity="v136-full"] .av79-destination strong{font-family:var(--p-body);font-size:16px;font-weight:600}
 html[data-av-parity="v136-full"] .av79-destination-icon{color:var(--p-cyan);border-color:#6aa3dc55;background:#123c5c50}
 html[data-av-parity="v136-full"] .av9-footer{border-top:1px solid var(--p-line);background:#050c17;font-family:var(--p-body);color:#a6bed8}
+
+
+/* PARITY / one spatial route surface: React 19.3 coordinates the swap.
+ * Navigation, IREN, and application identity remain mounted above it.
+ * The browser renders captured pixels only during the short transition.
+ */
+@keyframes p136-route-depart {
+  from {opacity:1;filter:blur(0);transform:scale(1)}
+  to {opacity:0;filter:blur(7px);transform:scale(.992)}
+}
+@keyframes p136-route-arrive {
+  from {opacity:0;filter:blur(6px);transform:scale(1.006)}
+  to {opacity:1;filter:blur(0);transform:scale(1)}
+}
+::view-transition-old(.p136-route) {
+  animation:150ms ease-in both p136-route-depart;
+}
+::view-transition-new(.p136-route) {
+  animation:240ms cubic-bezier(.2,.75,.2,1) both p136-route-arrive;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(.p136-route),
+  ::view-transition-new(.p136-route) {
+    animation:none!important;
+  }
+}
