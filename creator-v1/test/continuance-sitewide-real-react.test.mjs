@@ -103,6 +103,10 @@ test('Real public member worlds retain private 404 ambiguity and original identi
   assert.doesNotThrow(()=>parse(publicWorld,{sourceType:'module',plugins:['typescript','jsx']}));
   assert.match(publicWorld,/VITE_CONTINUANCE_CINEMATIC_SITEWIDE==="true"/);
   assert.match(publicWorld,/av-next-private-boundary/);
+  assert.match(publicWorld,/<OrbitalMark\/>/);
+  assert.match(publicWorld,/ANEVUM \/ MEMBER WORLDS/);
+  assert.match(css,/\.av-next-private-sigil/);
+  assert.match(css,/\.av12-public-world\.av-next-private-boundary::before/);
   assert.match(publicWorld,/av-next-member-world/);
   assert.match(publicWorld,/canonicalPublic\(handle,signal\)/);
   assert.match(publicWorld,/spaceRequest<MemberSpace>\(base\+'\/space','GET'/);
