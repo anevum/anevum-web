@@ -1,10 +1,11 @@
-import {useMemo,useReducer,useState} from 'react';
+import {useEffect,useMemo,useReducer,useState} from 'react';
 import {Link} from 'react-router-dom';
 import {OrbitalMark} from '../components/OrbitalMark';
 import {Icon} from '../components/Icons';
 import {apply,encode,primitive,starter,type WorldDocument,type WorldNode,
  type WorldCommand,type WorldKind,type Vec3,type WorldCamera,type WorldMaterial}
  from '../../../world-composer/document.mjs';
+import {getWorldSpawnPosition,getWorldSpawnTarget} from '../../../world-composer/placement-v118.mjs';
 import {WorldCanvasV115} from './WorldCanvasV115';
 import {StudioModeRailV116,StudioTopModesV116,StudioFileTreeV116,type StudioFileChoice,type StudioModeV116} from './StudioNavigationV116';
 import {StudioAssetShelfV116,type StudioAsset} from './StudioAssetShelfV116';
@@ -15,6 +16,7 @@ import './creator-studio-visual-v115.css';
 import './world-composer-v115.css';
 import './studio-next-v116.css';
 import './studio-world-v117.css';
+import './studio-editor-v118.css';
 
 /** Review-only P1 GPU workspace. All edits stay in React memory; explicit
  * exported document text never reaches canonical member DB or publication.
@@ -77,12 +79,16 @@ export function WorldComposerReviewV115(){
  const [inspectorTab,setInspectorTab]=useState<'properties'|'iren'>('properties');
  const [fileNotice,setFileNotice]=useState('');
  const [sceneHierarchyOpen,setSceneHierarchyOpen]=useState(true);
+ const [exportNotice,setExportNotice]=useState('');
  const {document:scene,selected,past,future,error}=state;
  const node=scene.nodes.find(n=>n.id===selected)||null;
  const source=useMemo(()=>encode(scene),[scene]);
  const filtered=useMemo(()=>scene.nodes.filter(n=>(n.name+' '+n.kind).toLowerCase().includes(treeQuery.trim().toLowerCase())),[scene.nodes,treeQuery]);
  function command(next:WorldCommand){dispatch({type:'COMMAND',command:next});}
  function add(kind:WorldKind){
+  // World primitives deliberately remain at the origin for established
+  // keyboard/inspector placement workflows. Drag-ready catalog assets use
+  // getWorldSpawnPosition instead, avoiding clashes with the starter world.
   let i=serial,id='sample-'+i;
   while(scene.nodes.some(n=>n.id===id)){i+=1;id='sample-'+i;}
   setSerial(i+1);
@@ -93,11 +99,20 @@ export function WorldComposerReviewV115(){
   if(!asset.kind)return;
   let i=serial,id='sample-'+i;
   while(scene.nodes.some(n=>n.id===id)){i+=1;id='sample-'+i;}
-  setSerial(i+1);
-  const core=primitive(id,asset.kind==='bridge'||asset.kind==='waterfall'?'cube':asset.kind);
-  const added:WorldNode={...core,kind:asset.kind,name:asset.title,material:asset.material||core.material};
-  command({type:'ADD_NODE',node:added});
-  setMode('Scene');setPanel('closed');
+  try{
+   const position=getWorldSpawnPosition(scene,asset.kind);
+   const core=primitive(id,asset.kind==='bridge'||asset.kind==='waterfall'?'cube':asset.kind);
+   const added:WorldNode={...core,kind:asset.kind,name:asset.title,material:asset.material||core.material,position};
+   setSerial(i+1);
+   command({type:'ADD_NODE',node:added});
+   setCamera(c=>({...c,target:getWorldSpawnTarget(asset.kind!,position),
+    distance:asset.kind==='starship'?18:Math.min(c.distance,24)}));
+   setFileNotice('');
+   setMode('Scene');setPanel('closed');
+  }catch(error){
+   setFileNotice(error instanceof Error?error.message:'No available asset placement');
+   setMode('Scene');
+  }
  }
  function openSampleFile(file:StudioFileChoice){
   const next:StudioModeV116=file.role==='world'?'Scene':file.role==='interface'?'Interface':
@@ -134,7 +149,41 @@ export function WorldComposerReviewV115(){
   next[index]=clamp(value,min,max);
   command({type:'SET_TRANSFORM',id:node.id,field,value:next});
  }
- function reset(){dispatch({type:'RESET'});setCamera(starter().camera);setPanel('closed');setShowSource(false);setFileNotice('');}
+ function reset(){dispatch({type:'RESET'});setCamera(starter().camera);setPanel('closed');setShowSource(false);setFileNotice('');setExportNotice('');}
+ function exportWorldDocument(){
+  try{
+   const contents=encode(scene);
+   const file=new Blob([contents],{type:'text/plain;charset=utf-8'});
+   const link=window.URL.createObjectURL(file);
+   const anchor=window.document.createElement('a');
+   anchor.href=link;
+   anchor.download='sky-archipelago.world.anevum';
+   anchor.hidden=true;window.document.body.appendChild(anchor);
+   anchor.click();anchor.remove();
+   window.setTimeout(()=>window.URL.revokeObjectURL(link),2000);
+   setExportNotice('A local .world.anevum file was prepared for download. No cloud revision was saved.');
+  }catch(error){
+   setExportNotice(error instanceof Error?'Export unavailable: '+error.message:'Export unavailable');
+  }
+ }
+ useEffect(()=>{
+  const shortcut=(event:globalThis.KeyboardEvent)=>{
+   if(mode!=='Scene'&&mode!=='Playtest')return;
+   if((!event.metaKey&&!event.ctrlKey)||event.altKey)return;
+   const target=event.target;
+   if(target instanceof HTMLElement&&target.closest('input, textarea, select, [contenteditable="true"]'))return;
+   const key=event.key.toLowerCase();
+   if(key==='z'){
+    event.preventDefault();
+    dispatch({type:event.shiftKey?'REDO':'UNDO'});
+   }else if(key==='y'&&!event.shiftKey){
+    event.preventDefault();
+    dispatch({type:'REDO'});
+   }
+  };
+  window.addEventListener('keydown',shortcut);
+  return ()=>window.removeEventListener('keydown',shortcut);
+ },[mode]);
  return <section className="cvs-root cvw-root" data-world-composer-v115="source-only" aria-label="ANEVUM World Composer WebGL2 prototype">
   <div className="cvs-review-banner" role="status"><span className="cvs-flash"/> CREATOR STUDIO / NEXT INTERACTIVE BUILD
    <span className="cvs-banner-sep">/</span> SYNTHETIC SAMPLE
@@ -153,8 +202,8 @@ export function WorldComposerReviewV115(){
     </div><span className="cvs-draft">LOCAL ONLY</span></div>
     <div className="cvs-project-actions">
      <span className="cvs-save-state">{past.length?'● UNSAVED LOCAL EDITS':'● PRIVATE SAMPLE / NOT PERSISTED'}</span>
-     <button type="button" className="cvs-action" onClick={()=>dispatch({type:'UNDO'})} disabled={!past.length} aria-label="Undo scene edit">Undo</button>
-     <button type="button" className="cvs-action" onClick={()=>dispatch({type:'REDO'})} disabled={!future.length} aria-label="Redo scene edit">Redo</button>
+     <button type="button" className="cvs-action" onClick={()=>dispatch({type:'UNDO'})} disabled={!past.length} aria-label="Undo scene edit" title="Undo · Ctrl/Cmd+Z">Undo</button>
+     <button type="button" className="cvs-action" onClick={()=>dispatch({type:'REDO'})} disabled={!future.length} aria-label="Redo scene edit" title="Redo · Ctrl/Cmd+Shift+Z">Redo</button>
      <button type="button" className="cvs-action" onClick={reset}>Reset</button>
      <button type="button" disabled className="cvs-primary" title="Saving requires separately approved V111 private project persistence">Save revision <Icon name="save" size={14}/></button>
     </div>
@@ -187,8 +236,8 @@ export function WorldComposerReviewV115(){
      <div className="cvw-toolbar"><span>{mode==='Playtest'?'3D VISUAL PLAYTEST / NO SCRIPTS':'SELECT · MOVE · ROTATE · SCALE'}</span><div>
       <button type="button" aria-label="Zoom camera in" onClick={()=>setCamera(c=>({...c,distance:clamp(c.distance-2,4,80)}))}>Zoom +</button>
       <button type="button" aria-label="Zoom camera out" onClick={()=>setCamera(c=>({...c,distance:clamp(c.distance+2,4,80)}))}>Zoom −</button>
-      <button type="button" onClick={()=>setCamera(scene.camera)}>Reset camera</button>
-      <button type="button" aria-expanded={showSource} onClick={()=>setShowSource(v=>!v)}>{showSource?'Hide world document':'Inspect world document'}</button></div></div>
+      <button type="button" onClick={()=>setCamera(scene.camera)} aria-label="Reset world camera"><span className="cvw-action-full">Reset camera</span><span className="cvw-action-short">Reset</span></button>
+      <button type="button" aria-expanded={showSource} aria-label={showSource?'Hide world document':'Inspect world document'} onClick={()=>setShowSource(v=>!v)}><span className="cvw-action-full">{showSource?'Hide world document':'Inspect world document'}</span><span className="cvw-action-short">{showSource?'Hide code':'World code'}</span></button></div></div>
      <div className="cvw-stage" role="region" aria-label="Live world composer">
       <WorldCanvasV115 document={scene} camera={camera} selection={selected}
        onCamera={setCamera} onSelect={id=>dispatch({type:'SELECT',id})}
@@ -209,8 +258,10 @@ export function WorldComposerReviewV115(){
       <span>{new TextEncoder().encode(source).length.toLocaleString()} / 32,768 BYTES</span></div>
      {mode==='Scene'&&<StudioAssetShelfV116 onAdd={addAsset} expanded={assetShelfOpen} onToggle={()=>setAssetShelfOpen(v=>!v)}/>}
      {mode==='Playtest'&&<div className="csn-playtest-note" role="status">Visual playtest uses the live WebGL2 camera and objects. Game scripts, collision, networking and publishing are not active in this review.</div>}
-     {showSource&&<section className="cvw-source"><div><strong>ANEVUM_WORLD_V1</strong><span>Read-only encoded document / no save</span></div>
-      <textarea aria-label="Read-only ANEVUM world document" readOnly value={source} rows={7} onFocus={event=>event.currentTarget.select()}/></section>}
+     {showSource&&<section className="cvw-source"><div className="csn-export-heading"><strong>ANEVUM_WORLD_V1</strong><span>Read-only encoded document / no cloud save</span>
+       <button type="button" onClick={exportWorldDocument}>Export .world.anevum</button></div>
+      <textarea aria-label="Read-only ANEVUM world document" readOnly value={source} rows={7} onFocus={event=>event.currentTarget.select()}/>
+      {exportNotice&&<p className="csn-export-notice" role="status">{exportNotice}</p>}</section>}
      {error&&<p role="alert" className="cvw-error">{error}</p>}
      </>:<StudioOtherModesV116 mode={mode} onAdd={addAsset}/>}
      <div className="cvw-mobile-tabs" role="group" aria-label="Mobile world editor panels">
