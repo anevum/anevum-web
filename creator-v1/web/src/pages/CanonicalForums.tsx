@@ -86,7 +86,7 @@ export function CommunityForums(){
  {threads.state==='loading'&&<p role="status" className="cf-note">Reading approved public conversations…</p>}
  {threads.state==='error'&&<div className="cf-note" role="status"><p>The next-generation member forum is not enabled in this environment yet. Existing community spaces remain accessible below.</p><button type="button" onClick={()=>setRevision(x=>x+1)}>RECHECK AVAILABILITY</button></div>}
  {threads.state==='ready'&&<div className="cf-list">{listed.length===0&&<p className="cf-note">No approved threads in this channel yet. Be the first to start a conversation.</p>}
- {listed.map(t=><article className="cf-thread" key={t.id}><div className="cf-thread-meta"><span>{topics.find(x=>x[0]===t.topic)?.[1]}</span><time>{date(t.publishedAt)}</time></div><h3><Link to={'/community/threads/'+t.id}>{t.title}</Link></h3><p>{t.body.length>320?t.body.slice(0,317)+'…':t.body}</p><div className="cf-thread-foot"><AuthorCard author={t.author}/><Link to={'/community/threads/'+t.id} className="cf-count">{t.replyCount} REPLIES · {t.reactions} REACTIONS ↗</Link></div></article>)}
+ {listed.map(t=><article className="cf-thread" key={t.id}><div className="cf-thread-meta"><span>{topics.find(x=>x[0]===t.topic)?.[1]}</span><time>{date(t.publishedAt)}</time></div><h3><Link to={'/community/threads/'+t.id}>{t.title}</Link></h3><p>{t.body.length>320?t.body.slice(0,317)+'…':t.body}</p><div className="cf-thread-foot"><AuthorCard author={t.author} variant="stream"/><Link to={'/community/threads/'+t.id} className="cf-count">{t.replyCount} REPLIES · {t.reactions} REACTIONS ↗</Link></div></article>)}
  {nextCursor&&<button type="button" className="cf-more" disabled={morePending} onClick={()=>void loadMore()}>{morePending?'READING MORE…':'LOAD MORE DISCUSSIONS'}</button>}
  {moreFailure&&<p role="alert" className="cf-error">{moreFailure}</p>}</div>}
  {session?.user?.id&&threads.state==='ready'&&<MySubmissions key={session.user.id} memberId={session.user.id}/>}
@@ -164,7 +164,7 @@ export function CommunityThread(){
    <header className="cf-header"><div>
     <span className="cf-kicker">COMMUNITY / {thread.data.thread.topic.toUpperCase()} / APPROVED</span>
     <h1>{thread.data.thread.title}</h1>
-    <AuthorCard author={thread.data.thread.author}/>
+    <AuthorCard author={thread.data.thread.author} variant="detail"/>
    </div></header>
    <article className="cf-thread">
     <p className="cf-fullbody">{thread.data.thread.body}</p>
@@ -180,7 +180,7 @@ export function CommunityThread(){
    {replies.state==='error'&&<p role="status">Approved replies are temporarily unavailable.</p>}
    {replies.state==='ready'&&(shownReplies.length?shownReplies.map(reply=>
     <article className="cf-thread" key={reply.id}>
-     <AuthorCard author={reply.author}/>
+     <AuthorCard author={reply.author} variant="reply"/>
      <p className="cf-fullbody">{reply.body}</p>
      <div className="cf-thread-foot"><time>{date(reply.publishedAt)}</time>
       {memberId&&<button type="button" disabled={busy} onClick={()=>setReportTarget({kind:'reply',id:reply.id})}>REPORT REPLY</button>}

@@ -1,0 +1,68 @@
+/* ANEVUM NEXT / 014: visibility-safe, responsive public forum author dossiers. */
+.cf-author-dossier{
+ --cfad-accent:#e9bf94;--cfad-copy:#f3e8e8;--cfad-muted:#c5b9cb;
+ display:grid;gap:12px;width:min(100%,660px);min-width:0;
+ border:1px solid #82657e;border-radius:14px;
+ background:radial-gradient(ellipse at 94% 3%,#64517445,transparent 68%),
+ linear-gradient(132deg,#30283b,#171c2d 90%);
+ padding:14px 16px;color:var(--cfad-copy);
+ box-shadow:inset 0 1px #d4b1cd15,0 12px 24px #0003;
+}
+.cf-author-dossier-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;min-width:0}
+.cf-author-dossier-person{display:grid;gap:6px;flex:1 1 190px;min-width:0}
+.cf-author-dossier-kicker{display:block;font:700 9px/1.4 ui-monospace,monospace;letter-spacing:.11em;color:var(--cfad-accent)}
+.cf-author-dossier .cf-author{min-width:0;max-width:100%;align-items:center}
+.cf-author-dossier .av61-member-name{color:var(--cfad-copy)!important}
+.cf-author-dossier-visit{
+ display:inline-flex;align-items:center;justify-content:space-between;gap:12px;
+ min-height:44px;flex:none;border:1px solid #a78a9e;border-radius:8px;
+ padding:9px 12px;background:#343149;color:#ffe0bb!important;
+ font:750 10px/1.3 ui-monospace,monospace;letter-spacing:.07em;
+ text-decoration:none!important;white-space:nowrap;
+}
+.cf-author-dossier-visit:hover{background:#4c3d5a;border-color:#efc6be}
+.cf-author-dossier-signals{display:flex;align-items:stretch;gap:7px;flex-wrap:wrap;min-width:0}
+.cf-author-dossier-signal{min-width:0;display:grid;align-content:center;gap:3px;flex:0 1 auto;
+ border:1px solid #62516d;border-radius:7px;padding:7px 10px;
+ background:#171d30;color:#ede4f2}
+.cf-author-dossier-signal small{font:700 9px/1.4 ui-monospace,monospace;letter-spacing:.06em;color:#c4b6d1}
+.cf-author-dossier-signal strong{font:750 12px/1.4 system-ui,sans-serif;overflow-wrap:anywhere;color:#ffe0bb}
+.cf-author-dossier-reputation{flex:1 1 178px}
+.cf-author-dossier-constellation{flex:1 1 145px}
+.cf-author-dossier-awards{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1 1 100%;min-width:0}
+.cf-author-dossier-award{display:inline-flex;align-items:center;min-height:30px;
+ border:1px solid #a1839e;border-radius:6px;padding:5px 9px;
+ background:#392c45;font:650 11px/1.3 system-ui,sans-serif;
+ color:#f1dce8;overflow-wrap:anywhere}
+.cf-author-dossier-details{border-top:1px solid #67536c;padding-top:9px}
+.cf-author-dossier-details>summary{display:flex;align-items:center;justify-content:space-between;gap:9px;
+ list-style:none;cursor:pointer;min-height:38px;color:#e6d2e7;
+ font:750 10px/1.4 ui-monospace,monospace;letter-spacing:.08em}
+.cf-author-dossier-details>summary::-webkit-details-marker{display:none}
+.cf-author-dossier-details>summary>span{font:17px/1 Georgia,serif;transition:transform .18s ease}
+.cf-author-dossier-details[open]>summary>span{transform:rotate(180deg)}
+.cf-author-dossier-activity{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:10px}
+.cf-author-dossier-activity>span{display:grid;gap:2px;min-width:0;border:1px solid #5b4f69;
+ background:#1c2031;padding:9px 6px;border-radius:6px;text-align:center}
+.cf-author-dossier-activity strong{font:400 20px/1.3 Georgia,serif;color:#f3dcb9}
+.cf-author-dossier-activity small{font:700 9px/1.35 ui-monospace,monospace;letter-spacing:.04em;color:#c0b7cc}
+.cf-author-dossier-details>p{font-size:11px;line-height:1.5;color:var(--cfad-muted);margin:10px 0 0}
+.cf-author-dossier--detail{width:min(100%,740px);padding:18px 20px}
+.cf-author-dossier--reply{width:min(100%,630px);padding:12px 15px}
+.cf-author-dossier--highlight{padding:12px 13px;border-radius:11px;gap:9px}
+.cf-author-dossier--highlight .cf-author-dossier-signals{gap:5px}
+.cf-author-dossier--highlight .cf-author-dossier-signal{padding:6px 8px}
+.cf-author-dossier :is(a,summary):focus-visible{outline:3px solid #f8dbac;outline-offset:3px}
+@media(max-width:540px){
+ .cf-author-dossier{padding:12px;gap:10px;width:100%}
+ .cf-author-dossier-top{align-items:start;gap:9px}
+ .cf-author-dossier-person{flex:1 1 155px}
+ .cf-author-dossier-visit{flex:1 1 100%;justify-content:space-between}
+ .cf-author-dossier-signal{flex:1 1 110px}
+ .cf-author-dossier-activity{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .cf-author-dossier-award{max-width:100%}
+}
+@media(prefers-reduced-motion:reduce){.cf-author-dossier *{transition:none!important;animation:none!important}}
+@media(forced-colors:active){
+ .cf-author-dossier,.cf-author-dossier-signal,.cf-author-dossier-award,.cf-author-dossier-visit,.cf-author-dossier-activity>span{border-color:CanvasText}
+}
