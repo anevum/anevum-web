@@ -44,6 +44,14 @@ if (import.meta.env.VITE_NEXT_VISUAL_SYSTEM === "true") {
   void import("./continuance-next-visual-v134.css");
   void import("./next-visual-primitives-v135.css");
 }
+// V136 is a successor increment; old visual flags and frozen guards stay intact.
+if (import.meta.env.VITE_PARITY_V136 === "true") {
+  document.documentElement.dataset.avNextVisual = "v134";
+  document.documentElement.dataset.avParity = "v136";
+  void import("./continuance-next-visual-v134.css");
+  void import("./next-visual-primitives-v135.css");
+  void import("./parity-v136.css");
+}
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "") || "/"}>
