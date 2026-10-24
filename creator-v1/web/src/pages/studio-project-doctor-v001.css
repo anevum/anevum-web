@@ -146,7 +146,9 @@
  .cpd-hero{grid-template-columns:1fr}
  .cpd-hero-art{display:none}
  .cpd-brandline{font-size:8px;gap:7px}
- .cpd-totals span{font-size:8px}
- .cpd-totals small{font-size:8px}
- .cpd-totals strong{font-size:25px}
+ .cpd-totals{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .cpd-totals>div:last-child{grid-column:1/-1;border-left:0;border-top:1px solid #46556b}
+ .cpd-totals span{font-size:9px}
+ .cpd-totals small{font-size:10px}
+ .cpd-totals strong{font-size:29px}
 }
