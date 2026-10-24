@@ -3,6 +3,7 @@ import {fragmentSource,vertexSource} from './living-world-shaders';
 import {sceneProfile,frameFor,advanceSceneFrame,sceneRenderSize,type SceneFrame} from './SceneDirectorV136';
 import {useLivingWorld,worldDensity,type WorldSector} from './LivingWorldState';
 import './living-world-v136.css';
+import './scene-materials-v136.css';
 
 /** Spatial identity and transitions are authored in SceneDirectorV136. */
 type Renderer='booting'|'webgl'|'vector';
