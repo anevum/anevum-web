@@ -13,6 +13,8 @@ on:
       - 'creator-v1/web/src/App.tsx'
       - 'creator-v1/test/creator-achievements-v114.test.mjs'
       - 'creator-v1/test/creator-achievements-v114-worker.test.mjs'
+      - 'creator-v1/test/portal-offline-preview.mjs'
+      - 'creator-v1/test/capture-creator-achievements-v114.mjs'
       - '.github/workflows/creator-achievements-v114-qa.yml'
 permissions:
   contents: read
@@ -43,5 +45,30 @@ jobs:
         env:
           VITE_CREATOR_ACHIEVEMENTS_V114: 'true'
         run: npm run build:creator-v1-web:staging
+      - name: Browser verify compiled private V114 at 1440 390 and 320
+        env:
+          ANEVUM_V114_ACHIEVEMENT_FIXTURE: '1'
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/creator-achievements-v114
+          node creator-v1/test/portal-offline-preview.mjs > evidence/creator-achievements-v114/server.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for _ in $(seq 1 80); do
+            if curl --fail --silent http://127.0.0.1:4178/__ready > /dev/null; then ready=1; break; fi
+            sleep .25
+          done
+          test "$ready" -eq 1
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          node creator-v1/test/capture-creator-achievements-v114.mjs --chrome "$chrome" --output evidence/creator-achievements-v114
+      - name: Retain synthetic browser captures and receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: creator-achievements-v114-browser
+          path: evidence/creator-achievements-v114
+          if-no-files-found: warn
+          retention-days: 14
       - name: Record explicit source-only boundary
         run: echo 'PRIVATE_DRAFT_INTEGRATED_DEFAULT_OFF_NO_DB_MIGRATION_NO_ISSUANCE_NO_DEPLOYMENT' >> "$GITHUB_STEP_SUMMARY"
