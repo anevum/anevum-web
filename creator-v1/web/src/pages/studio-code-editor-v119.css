@@ -200,3 +200,56 @@
 }
 .cvw-root .csn-code-shell{min-width:0}
 .cvw-root .csn-code-content .csi-code-viewport{min-width:0;width:100%}
+
+/* V120 / source diagnostics and navigable problems dock */
+.csi-toolbar-actions .csi-has-problems{color:#f4b7a0;border-color:#875959;background:#462c37}
+.csi-problem-count{position:absolute;margin-top:-23px;margin-left:22px;background:#b8645d;
+ border-radius:10px;min-width:14px;padding:2px 3px;color:white;font-size:9px;font-weight:700}
+.csi-toolbar-actions button{position:relative}
+.csi-goto{display:flex;align-items:center;gap:9px;padding:8px 12px;background:#132c42;
+ border-bottom:1px solid #486d88;color:#c5e1f0}
+.csi-goto label{display:flex;align-items:center;gap:9px;font-size:11px;flex:1}
+.csi-goto input{max-width:110px;min-height:35px;padding:5px 9px;background:#071b30;
+ border:1px solid #669bb9;border-radius:5px;color:#eefaff;font:12px ui-monospace,monospace}
+.csi-goto button{min-width:37px;min-height:34px;padding:5px 10px;border-radius:5px;
+ border:1px solid #638ea9;background:#1d4660;color:#dbf2fb}
+.csi-problems{display:flex;flex-direction:column;max-height:220px;min-height:108px;
+ background:#0a2032;border-top:1px solid #406781;color:#dcecf6}
+.csi-problems-heading{display:flex;align-items:center;gap:12px;min-height:39px;padding:7px 11px;
+ background:#18354b;border-bottom:1px solid #385b75}
+.csi-problems-heading strong{display:flex;align-items:center;gap:7px;letter-spacing:.09em;font-size:10px}
+.csi-problems-heading span{font-size:10px;color:#b6d0df}
+.csi-problems-heading button{margin-left:auto;background:transparent;color:#dcecf6;
+ border:1px solid #507890;border-radius:4px;min-height:27px;min-width:30px}
+.csi-problems-list{overflow:auto;padding:7px;scrollbar-color:#46718d #102238}
+.csi-diagnostic{width:100%;display:flex;align-items:flex-start;gap:10px;
+ text-align:left;min-height:39px;padding:7px;border:1px solid transparent;
+ border-radius:5px;background:transparent;color:#d4e8f5}
+.csi-diagnostic:hover,.csi-diagnostic:focus-visible{background:#1d415a;border-color:#608aa9}
+.csi-diagnostic.is-error>svg{color:#eeaa9b;flex:none}
+.csi-diagnostic.is-info>svg{color:#a6d5df;flex:none}
+.csi-diagnostic span{display:grid;gap:4px;min-width:0}
+.csi-diagnostic strong{font:500 11px/1.5 ui-monospace,monospace;overflow-wrap:anywhere}
+.csi-diagnostic small{font:9px/1.4 ui-monospace,monospace;color:#9abac9}
+.csi-problem-empty,.csi-problems-note{margin:5px 7px;padding:6px 8px;font-size:11px;line-height:1.5;color:#b5d4de}
+.csi-problems-note{border-top:1px solid #2b5069;color:#93b4c8;font-size:10px}
+.csi-status-problems{border:1px solid #477c98;color:#bde8eb;border-radius:4px;background:#173b52;
+ font:10px/1.2 ui-monospace,monospace;min-height:23px;padding:3px 6px}
+.csi-status-problems.has-error{border-color:#b77068;color:#f4c1b6;background:#492d3a}
+.csf-header-actions .csf-quick-open,.csf-header-actions .csf-quick-command{
+ min-height:38px;display:inline-flex;align-items:center;gap:7px}
+.csf-header-actions .csf-quick-open>span{font-size:10px;opacity:.72}
+.cvw-root .csn-ide-quick-open{display:inline-flex;align-items:center;gap:8px;
+ min-height:39px;padding:9px 14px;border:1px solid #5d91b0;border-radius:8px;
+ background:linear-gradient(140deg,#1a4560,#102e46);color:#e3f7ff;font:650 11px/1.4 inherit}
+.cvw-root .csn-ide-quick-open small{font:10px/1.2 ui-monospace,monospace;color:#a7c8d8}
+.cvw-root .csn-ide-quick-open:hover{border-color:#9ae3f3;background:#265873}
+@media(max-width:680px){
+ .csi-problems{max-height:190px}
+ .csi-goto{gap:6px;padding:7px}
+ .csf-header-actions .csf-quick-open>span{display:none}
+ .csf-header-actions .csf-quick-open,.csf-header-actions .csf-quick-command{flex:1;justify-content:center}
+}
+@media(forced-colors:active){
+ .csi-diagnostic:focus-visible,.csi-status-problems,.csi-goto input{outline:2px solid Highlight}
+}

@@ -1,6 +1,7 @@
 import {useMemo,useRef,useState,type CSSProperties,type KeyboardEvent} from 'react';
 import {Icon} from '../components/Icons';
 import {StudioFileIconV119} from './StudioFileIconV119';
+import {diagnoseSource,sourceOffsetForLine} from '../../../source-ide/diagnostics-v120.mjs';
 import {editorLanguage,highlightSource,sourceCursor,editorIndent,editorEnter,
  findSource,replaceSourceAll,prettyJsonSource} from '../../../source-ide/language-v119.mjs';
 import './studio-code-editor-v119.css';
@@ -30,8 +31,13 @@ export function StudioCodeEditorV119({
  const [scroll,setScroll]=useState({top:0,left:0});
  const [selection,setSelection]=useState({start:0,end:0});
  const [notice,setNotice]=useState('');
+ const [problemsOpen,setProblemsOpen]=useState(false);
+ const [gotoOpen,setGotoOpen]=useState(false);
+ const [gotoLine,setGotoLine]=useState('');
  const language=editorLanguage(fileName);
  const syntax=useMemo(()=>highlightSource(value,fileName),[value,fileName]);
+ const problems=useMemo(()=>diagnoseSource(value,fileName),[value,fileName]);
+ const problemErrors=problems.diagnostics.filter(x=>x.severity==='error').length;
  const codeLines=value.split('\n').length;
  const plain=syntax.truncated||value.length>65536;
  const cursor=sourceCursor(value,selection.start,selection.end);
@@ -76,6 +82,19 @@ export function StudioCodeEditorV119({
   if(!match){setNotice(query?'No matches in this file.':'Enter a search term.');return;}
   focusEditor(match.start,match.end);
   setNotice(matches+' '+(matches===1?'match':'matches')+' in this file.');
+ }
+ function focusLine(line:number,column=1){
+  const offset=sourceOffsetForLine(value,line,column);
+  const field=textarea.current;
+  focusEditor(offset,offset);
+  if(field)field.scrollTop=Math.max(0,(line-4)*fontSize*1.65);
+ }
+ function goToLine(){
+  const number=Number(gotoLine);
+  if(!Number.isFinite(number)||number<1||!Number.isInteger(number)){
+   setNotice('Enter a valid line number.');return;
+  }
+  focusLine(Math.min(codeLines,number));setGotoOpen(false);setNotice('');
  }
  function replaceCurrent(){
   if(disabled||readOnly)return;
@@ -123,6 +142,8 @@ export function StudioCodeEditorV119({
   }
   if(meta&&!e.altKey&&lower==='f'){e.preventDefault();openFind();return;}
   if(meta&&!e.altKey&&lower==='h'){e.preventDefault();openFind(true);return;}
+  if(meta&&!e.altKey&&lower==='g'){e.preventDefault();setGotoLine(String(cursor.line));setGotoOpen(true);return;}
+  if(meta&&e.shiftKey&&!e.altKey&&lower==='m'){e.preventDefault();setProblemsOpen(x=>!x);return;}
   if(meta&&!e.altKey&&e.key===','){e.preventDefault();setSettingsOpen(x=>!x);return;}
   if(disabled||readOnly)return;
   if(e.key==='Tab'&&!meta&&!e.altKey){
@@ -143,6 +164,10 @@ export function StudioCodeEditorV119({
     <button type="button" onClick={()=>openFind()} aria-label="Find in file" title="Find · Ctrl/Cmd+F"><Icon name="search" size={16}/></button>
     <button type="button" onClick={()=>openFind(true)} aria-label="Find and replace" title="Replace · Ctrl/Cmd+H"><Icon name="replace" size={16}/></button>
     {(language==='json')&&<button type="button" onClick={formatJson} disabled={disabled||readOnly} aria-label="Format JSON" title="Format JSON"><Icon name="braces" size={16}/></button>}
+    <button type="button" onClick={()=>{setGotoOpen(x=>!x);setGotoLine(String(cursor.line));}} aria-label="Go to line" title="Go to line · Ctrl/Cmd+G"><Icon name="list-ordered" size={16}/></button>
+    <button type="button" onClick={()=>setProblemsOpen(x=>!x)} aria-expanded={problemsOpen} aria-label="Source diagnostics" title="Problems · Ctrl/Cmd+Shift+M" className={problemErrors?'csi-has-problems':''}>
+     <Icon name={problemErrors?'alert-triangle':'check-circle'} size={16}/>
+     {problemErrors>0&&<span className="csi-problem-count">{problemErrors}</span>}</button>
     <button type="button" onClick={()=>setSettingsOpen(x=>!x)} aria-expanded={settingsOpen} aria-label="Editor settings" title="Editor preferences · Ctrl/Cmd+,"><Icon name="settings" size={16}/></button>
    </div>
   </div>
@@ -164,6 +189,13 @@ export function StudioCodeEditorV119({
     <button type="button" disabled={disabled||readOnly||!query} onClick={replaceCurrent}>Replace</button>
     <button type="button" disabled={disabled||readOnly||!query} onClick={replaceAll}>Replace all</button>
    </div>}
+  </div>}
+  {gotoOpen&&<div className="csi-goto">
+   <label>Go to line <input type="number" min={1} max={codeLines} aria-label="Line number" value={gotoLine}
+    onChange={event=>setGotoLine(event.target.value)}
+    onKeyDown={event=>{if(event.key==='Enter'){event.preventDefault();goToLine();}if(event.key==='Escape')setGotoOpen(false);}}/></label>
+   <button type="button" onClick={goToLine}>Go</button>
+   <button type="button" aria-label="Close go to line" onClick={()=>setGotoOpen(false)}>×</button>
   </div>}
   {settingsOpen&&<div className="csi-settings" aria-label="Editor preferences">
    <label>Font size <select aria-label="Editor font size" value={fontSize} onChange={e=>setFontSize(Number(e.target.value) as 12|14|16)}>
@@ -197,10 +229,26 @@ export function StudioCodeEditorV119({
      aria-multiline="true" aria-readonly={disabled||readOnly} />
    </div>
   </div>
+  {problemsOpen&&<section className="csi-problems" aria-label="Source problems and diagnostics">
+   <div className="csi-problems-heading"><strong><Icon name="list-checks" size={15}/> PROBLEMS</strong>
+    <span>{problemErrors} errors · {problems.diagnostics.filter(d=>d.severity==='info').length} notes</span>
+    <button type="button" aria-label="Close source problems" onClick={()=>setProblemsOpen(false)}>×</button></div>
+   <div className="csi-problems-list">
+    {problems.diagnostics.length?problems.diagnostics.map((problem,index)=>
+     <button type="button" key={index} className={'csi-diagnostic is-'+problem.severity}
+      onClick={()=>focusLine(problem.line,problem.column)}>
+      <Icon name={problem.severity==='error'?'alert-triangle':'check-circle'} size={15}/>
+      <span><strong>{problem.message}</strong><small>{problem.code} · Ln {problem.line}, Col {problem.column}</small></span>
+     </button>):<p className="csi-problem-empty">No issues found by the checks available for this file.</p>}
+    <p className="csi-problems-note">{problems.note}</p>
+   </div>
+  </section>}
   <div className="csi-status">
    <span><Icon name="code" size={13}/>{language.toUpperCase()}</span>
    <span>Ln {cursor.line}, Col {cursor.column}{cursor.selection>0?' · '+cursor.selection+' selected':''}</span>
    <span>{codeLines} lines</span><span>{bytes.toLocaleString()} bytes</span>
+   <button type="button" onClick={()=>setProblemsOpen(x=>!x)} className={'csi-status-problems'+(problemErrors?' has-error':'')}
+    aria-label="Open source problems">{problemErrors} problems</button>
    <span>{plain?'Large-file plain view':wordWrap?'Wrap':'No wrap'} · Spaces: {indentWidth}</span>
    <span>{status||'Local source · no execution'}</span>
   </div>

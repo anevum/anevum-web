@@ -1,0 +1,59 @@
+/* ANEVUM Creator Studio V120 — trusted Quick Open.
+ * Scoped overlay usable above both private V111 and synthetic V116 previews.
+ */
+.csp-backdrop{position:fixed;inset:0;z-index:1400;display:flex;align-items:flex-start;justify-content:center;
+ padding:clamp(25px,10vh,104px) 16px 20px;background:rgba(2,9,23,.82);backdrop-filter:blur(8px)}
+.csp-modal{display:flex;flex-direction:column;width:min(660px,100%);max-height:min(76vh,720px);
+ min-width:0;overflow:hidden;background:linear-gradient(155deg,#152b43,#071727);
+ border:1px solid #6399bb;border-radius:12px;box-shadow:0 18px 90px rgba(0,0,0,.65),0 0 0 1px rgba(160,220,250,.05);
+ color:#e5f3ff}
+.csp-head{display:flex;align-items:center;gap:11px;padding:12px 13px;border-bottom:1px solid #36546b;
+ background:linear-gradient(100deg,#1c3b54,#122a40);min-height:53px}
+.csp-head-icon{color:#8cdef5;display:grid;place-items:center}
+.csp-head strong{font-size:12px;letter-spacing:.025em}
+.csp-shortcut{margin-left:auto;font-size:10px;color:#a3c6d8}
+.csp-head>button{display:grid;place-items:center;min-width:36px;min-height:36px;color:#cee7f4;
+ background:transparent;border:1px solid #456982;border-radius:7px}
+.csp-head>button:hover{background:#244b67}
+.csp-inputbar{display:flex;align-items:center;gap:11px;margin:12px 13px 6px;padding:0 12px;
+ border:1px solid #619ab9;background:#081d31;color:#8dcfe7;border-radius:8px;min-height:48px}
+.csp-inputbar:focus-within{border-color:#a3e8fb;box-shadow:0 0 0 2px rgba(94,184,220,.18)}
+.csp-inputbar input{background:transparent;color:#edf9ff;border:0;outline:0;flex:1;min-width:0;
+ font:500 14px/1.4 ui-monospace,Consolas,monospace;min-height:45px}
+.csp-inputbar input::placeholder{color:#9ab9cc}
+.csp-switch{display:flex;align-items:center;gap:5px;padding:7px 13px 11px;border-bottom:1px solid #35526a}
+.csp-switch button{display:inline-flex;align-items:center;gap:7px;min-height:34px;padding:6px 11px;
+ border-radius:6px;border:1px solid transparent;color:#b5cede;background:#143149;font-size:11px}
+.csp-switch button[aria-pressed=true]{background:#244d67;color:#effaff;border-color:#70accb}
+.csp-switch button>span{font:9px/1.2 ui-monospace,monospace;color:#9dbbc8}
+.csp-results{min-height:170px;max-height:400px;overflow:auto;padding:8px;scrollbar-color:#47718c #102237}
+.csp-result{display:flex;align-items:center;gap:12px;text-align:left;width:100%;min-width:0;
+ min-height:56px;margin:0 0 3px;padding:8px 10px;color:#d9ebf7;background:transparent;
+ border:1px solid transparent;border-radius:7px}
+.csp-result:hover,.csp-result[aria-selected=true]{background:linear-gradient(90deg,#274f6c,#17354e);
+ border-color:#679cbc;color:#f1fbff}
+.csp-result:disabled{opacity:.48}
+.csp-result-icon{display:grid;place-items:center;flex:0 0 29px;height:31px;color:#b7dff2}
+.csp-result-body{display:flex;flex-direction:column;min-width:0;flex:1;gap:4px}
+.csp-result-body strong{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.csp-result-body small{font-size:10px;color:#abc5d5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.csp-category{font:650 9px/1.2 ui-monospace,monospace;letter-spacing:.075em;color:#99bece;flex:none}
+.csp-empty{padding:18px;font-size:12px;color:#adc6d7;line-height:1.5}
+.csp-footer{display:flex;gap:16px;align-items:center;flex-wrap:wrap;padding:11px 14px;border-top:1px solid #35536d;
+ background:#0d243b;font:10px/1.4 ui-monospace,monospace;color:#9cbfce}
+.csp-footer strong{color:#d2eefd;border:1px solid #446a82;border-radius:4px;padding:2px 5px}
+.csp-footer span:last-child{margin-left:auto;max-width:230px;text-align:right}
+@media(max-width:680px){
+ .csp-backdrop{padding:40px 9px 15px}
+ .csp-modal{max-height:min(83vh,690px)}
+ .csp-head{padding:8px 10px}
+ .csp-switch{padding:7px 9px}
+ .csp-switch button>span{display:none}
+ .csp-inputbar{margin-inline:9px}
+ .csp-result{gap:7px;padding-inline:7px}
+ .csp-footer{gap:8px}
+ .csp-footer span:last-child{width:100%;margin:0;text-align:left}
+}
+@media(prefers-reduced-motion:reduce){.csp-backdrop *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+@media(forced-colors:active){.csp-modal,.csp-result[aria-selected=true]{border:1px solid Highlight}
+ .csp-result[aria-selected=true]{outline:2px solid Highlight}}

@@ -3,6 +3,8 @@ import {Link} from 'react-router-dom';
 import {PREFIX} from '../../../workbench-alpha/document.mjs';
 import {classifyFile,SECTIONS} from '../../../studio-next/project-tree-v116.mjs';
 import {StudioCodeEditorV119} from './StudioCodeEditorV119';
+import {StudioCommandPaletteV120} from './StudioCommandPaletteV120';
+import {studioFileItems,studioCommandItems,type StudioPaletteItem} from '../../../source-ide/commands-v120.mjs';
 import {StudioFileIconV119} from './StudioFileIconV119';
 import {StudioSceneComposerV112,studioVisualScenesEnabled} from './StudioSceneComposerV112';
 import {PREFIX as UI_PREFIX} from '../../../interface-builder/document.mjs';
@@ -52,6 +54,7 @@ function isWorldSource(name:string,content:string){
 export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,onDirtyChange}:Props){
  const [nodes,setNodes]=useState<StudioFileNode[]>([]);
  const [fileQuery,setFileQuery]=useState('');
+ const [paletteMode,setPaletteMode]=useState<'files'|'commands'|null>(null);
  const [loading,setLoading]=useState(true);
  const [error,setError]=useState('');
  const [attempt,setAttempt]=useState(0);
@@ -124,7 +127,48 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
   }
   return ids;
  },[nodes,fileQuery]);
- const selectedFolderNode=nodes.find(n=>n.id===selectedFolder)||null;
+ const paletteItems=useMemo(()=>{
+  const paths=nodes.map(node=>({id:node.id,path:pathLabel(node,nodes)}));
+  const commands=['expand-folders','collapse-folders','toggle-trash'];
+  if(!loading&&!error&&dirtyIds.size===0)commands.push('refresh-tree','close-tabs');
+  if(canEdit&&!loading&&!error&&!pendingCreate)commands.push('new-file','new-folder');
+  return [...studioFileItems(nodes,paths,openIds),...studioCommandItems(commands)];
+ },[nodes,openIds,dirtyIds.size,canEdit,loading,error,pendingCreate]);
+ useEffect(()=>{
+  if(!visible)return;
+  const handler=(event:globalThis.KeyboardEvent)=>{
+   if(!(event.ctrlKey||event.metaKey)||event.altKey||event.key.toLowerCase()!=='p')return;
+   event.preventDefault();
+   setPaletteMode(event.shiftKey?'commands':'files');
+  };
+  window.addEventListener('keydown',handler);
+  return()=>window.removeEventListener('keydown',handler);
+ },[visible]);
+ function choosePalette(item:StudioPaletteItem){
+  setPaletteMode(null);
+  if(item.kind==='file'){
+   const node=nodes.find(n=>n.id===item.fileId&&n.kind==='text'&&n.deletedAt===null);
+   if(node)openFile(node);
+   return;
+  }
+  switch(item.id){
+   case 'new-file':
+    if(canEdit&&!loading&&!error&&!pendingCreate){setCreateKind('text');setCreateName('');setMessage('');}
+    break;
+   case 'new-folder':
+    if(canEdit&&!loading&&!error&&!pendingCreate){setCreateKind('folder');setCreateName('');setMessage('');}
+    break;
+   case 'refresh-tree':
+    if(dirtyIds.size===0&&!loading){setAttempt(x=>x+1);}
+    break;
+   case 'expand-folders':setExpanded(new Set(nodes.filter(n=>n.kind==='folder').map(n=>n.id)));break;
+   case 'collapse-folders':setExpanded(new Set());break;
+   case 'toggle-trash':setTrashOpen(x=>!x);break;
+   case 'close-tabs':if(dirtyIds.size===0)closeAllFiles();break;
+   default:break;
+  }
+ }
+  const selectedFolderNode=nodes.find(n=>n.id===selectedFolder)||null;
  function confirmLeavingFolder(){
   return !selectedFolder||!dirtyIds.has('folder:'+selectedFolder)||
    window.confirm('Discard unsaved folder property changes before navigating away?');
@@ -237,6 +281,10 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
     <p className="csf-subtitle">Text source files and folders · Stored privately · Never executed or published automatically</p>
    </div>
    <div className="csf-header-actions">
+    <button className="csw-action csw-subtle csf-quick-open" type="button" aria-label="Quick open private project files"
+     onClick={()=>setPaletteMode('files')}>Quick Open <span>⌘P</span></button>
+    <button className="csw-action csw-subtle csf-quick-command" type="button" aria-label="Show project commands"
+     onClick={()=>setPaletteMode('commands')}>Commands</button>
     <Link to={'/studio/'+projectId} className="csw-action csw-subtle">Project details ↗</Link>
     <button className="csw-action csw-subtle" type="button" disabled={loading||dirtyIds.size>0}
      onClick={()=>setAttempt(i=>i+1)}>Refresh tree</button>
@@ -358,6 +406,9 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
    </main>
   </div>
   <footer className="csf-status">PRIVATE DRAFT · {dirtyIds.size} UNSAVED CHANGE{dirtyIds.size===1?'':'S'} · NO AUTO-PUBLISH · FILE TREE {studioFileTreeEnabled?'ENABLED':'INACTIVE'}{!visible?' · BACKGROUND TAB':''}</footer>
+  {paletteMode&&<StudioCommandPaletteV120 title={'Quick Open · '+projectTitle}
+   initialMode={paletteMode} items={paletteItems} onChoose={choosePalette}
+   onClose={()=>setPaletteMode(null)}/>}
  </section>;
 }
 

@@ -227,6 +227,28 @@ try{
  await until(()=>evaluate('document.querySelector(".csf-source")?.value==="# First Signal\\nUnsaved workspace-local change."'),'Saved source reopened from verified server snapshot');
  assert.equal(filePatches.length,2,'Browser reload does not silently write changes');
  await snap('desktop-private-source-reopened');
+ // V120: Quick Open uses only existing authorized file metadata.
+ await click('.csw-file-host:not([hidden]) .csf-quick-open');
+ await until(()=>visible('[data-studio-command-palette="v120"]'),'Private Quick Open');
+ assert.equal(await setValue('.csp-inputbar input','intro'),'intro');
+ await until(()=>evaluate('document.querySelector(".csp-result")?.textContent.includes("intro.md")'),'Existing authorized file appears in Quick Open');
+ assert.equal(await evaluate('document.querySelector(".csp-result small")?.textContent.includes("Scenes")'),true,'Quick Open shows authorized folder path');
+ await snap('desktop-private-quick-open-v120');
+ await click('.csp-result:first-child');
+ await until(()=>evaluate('!document.querySelector(".csp-modal")'),'Quick Open closes after file selection');
+ assert.equal(await evaluate('document.querySelector(".csw-file-host:not([hidden]) .csf-editor h3")?.textContent.includes("intro.md")'),true);
+ assert.equal(filePatches.length,2,'Quick Open cannot mutate a revision');
+ // Ctrl+Shift+P invokes only an allowlisted existing folder action.
+ await evaluate('(()=>{window.dispatchEvent(new KeyboardEvent("keydown",{key:"p",ctrlKey:true,shiftKey:true,bubbles:true}));return true;})()');
+ await until(()=>visible('[data-studio-command-palette="v120"]'),'Keyboard command palette');
+ await until(()=>evaluate('document.querySelector(".csp-switch button:nth-child(2)")?.getAttribute("aria-pressed")==="true"'),'Command palette mode');
+ assert.equal(await setValue('.csp-inputbar input','collapse'),'collapse');
+ await until(()=>evaluate('document.querySelector(".csp-result")?.textContent.includes("Collapse all")'),'Allowed folder command');
+ await click('.csp-result:first-child');
+ await until(()=>evaluate('document.querySelector(".csf-tree-row[aria-expanded]")?.getAttribute("aria-expanded")==="false"'),'Collapse command');
+ await click('.csf-tree-actions button[title="Expand all folders"]');
+ await until(()=>evaluate('document.querySelector(".csf-tree-row[aria-expanded]")?.getAttribute("aria-expanded")==="true"'),'Expand after palette');
+ assert.equal(filePatches.length,2,'Command navigation does not mutate revisions');
  acceptNextConfirmation=true;
  await click('.csf-editor-title .csw-danger');
  await until(()=>evaluate('document.querySelector(".csf-message")?.textContent.includes("Moved intro.md")'),'Saved source moved to private Trash');
