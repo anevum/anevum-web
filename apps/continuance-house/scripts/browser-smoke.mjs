@@ -174,5 +174,8 @@ try {
   try { socket?.close(); } catch {}
   chrome?.kill("SIGTERM");
   server?.kill("SIGTERM");
-  await rm(tmp, { recursive: true, force: true });
+  // Chrome may briefly rewrite its profile after SIGTERM. Its ephemeral
+  // profile is non-secret and the runner deletes /tmp after completion.
+  await rm(tmp, { recursive: true, force: true, maxRetries: 12, retryDelay: 150 })
+    .catch((error) => console.warn("Ephemeral browser profile cleanup deferred:", error.code));
 }
