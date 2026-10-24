@@ -521,7 +521,7 @@ function SourceEditorV111({projectId,nodeId,nodes,editable:canEdit,onDirty,onUpd
     <span>{dirty?'Unsaved local draft':'Matches last confirmed saved revision'}</span>
    </div>
    {studioProjectDoctorEnabled&&(content.startsWith(PREFIX)||content.startsWith(UI_PREFIX))&&
-    <StudioProjectDoctorV001 source={content} revision={base.revision} dirty={dirty}/>}
+    <StudioProjectDoctorV001 source={content} savedSource={base.content||''} revision={base.revision} dirty={dirty}/>}
    {byteCount>32768&&<p className="csf-error" role="alert">The source exceeds the server file limit. Shorten it before saving.</p>}
    {historyError&&<p className="csf-error" role="alert">{historyError}</p>}
    {versions&&<section className="csf-history" aria-label="Previous source versions">
