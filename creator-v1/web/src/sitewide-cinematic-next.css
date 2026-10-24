@@ -616,6 +616,86 @@
   padding:clamp(22px,3vw,45px);background:linear-gradient(145deg,#19293d,#0a1929);
   color:#d9e8ef;
 }
+/* A closed or missing member world does not disclose a person's identity.
+   The universal mark belongs to ANEVUM, not to a hypothetical member.
+   Keep this lightweight and intentionally quieter than a public profile. */
+.av9-shell.av-next-site-shell .av12-public-world.av-next-private-boundary{
+  position:relative;isolation:isolate;overflow:hidden;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  gap:14px;min-height:clamp(340px,42vw,465px);
+  max-width:1080px;padding:clamp(35px,5vw,64px) clamp(20px,5vw,70px);
+  background:radial-gradient(ellipse at 69% 8%,#31557472,transparent 48%),
+    linear-gradient(135deg,#13263a,#091728 83%);
+  border:1px solid #65849d;border-radius:17px;
+  box-shadow:inset 0 1px #e5f3ff24,0 22px 60px #0006;
+}
+.av9-shell.av-next-site-shell .av12-public-world.av-next-private-boundary::before{
+  content:"";position:absolute;z-index:-1;top:-190px;right:-90px;
+  width:470px;aspect-ratio:1;border:1px solid #9ad5e01c;border-radius:50%;
+  box-shadow:0 0 0 50px #a9ddf306,0 0 0 130px #f2cfa307;
+  pointer-events:none;
+}
+.av9-shell.av-next-site-shell .av12-public-world.av-next-private-boundary .av-next-private-sigil{
+  display:grid;place-items:center;width:92px;height:92px;
+  border:1px solid #a2d3e650;border-radius:50%;background:radial-gradient(circle,#2c52694f,#0e1a2a48 75%);
+  box-shadow:0 0 0 9px #a7ddf209,0 0 28px #80bed326;position:relative;z-index:1;
+}
+.av9-shell.av-next-site-shell .av12-public-world.av-next-private-boundary .av-next-private-sigil svg{
+  width:54px;height:54px;max-width:100%;color:#efcf9f;filter:drop-shadow(0 0 10px #bfb48b3a);
+}
+.av9-shell.av-next-site-shell .av12-public-world.av-next-private-boundary .av-next-private-kicker{
+  position:relative;z-index:1;font:750 10px/1.5 ui-monospace,Consolas,monospace;
+  color:#eed4b0;letter-spacing:.18em;
+}
+.av9-shell.av-next-site-shell .av12-public-world.av-next-private-boundary h1{
+  position:relative;z-index:1;max-width:100%;margin:3px 0 0;
+  color:#f6f1e8;font-size:clamp(37px,5.2vw,66px)!important;line-height:1.08!important;
+  font-weight:480;letter-spacing:-.045em;text-wrap:balance;overflow-wrap:break-word;
+}
+.av9-shell.av-next-site-shell .av12-public-world.av-next-private-boundary p{
+  position:relative;z-index:1;max-width:62ch;margin:0;color:#d4e0ea;
+  font-size:clamp(13px,1.1vw,15px);line-height:1.7;text-wrap:pretty;
+}
+.av9-shell.av-next-site-shell .av12-public-world.av-next-private-boundary .av12-world-back{
+  position:relative;z-index:1;min-height:46px;border:1px solid #dec79e;
+  margin:7px 0 0;background:linear-gradient(140deg,#efdcb5,#c8a477);color:#152132;
+  padding:11px 19px;border-radius:7px;font-weight:750;text-decoration:none;
+  box-shadow:0 8px 25px #01091673;
+}
+.av9-shell.av-next-site-shell .av12-public-world.av-next-private-boundary :is(a,button):focus-visible{
+  outline:3px solid #9de8fb;outline-offset:4px;
+}
+@media(max-width:650px){
+  .av9-shell.av-next-site-shell .av12-public-world.av-next-private-boundary{
+    min-height:360px;gap:13px;margin:6px auto 22px;
+    border-radius:13px;padding:32px 17px;
+  }
+  .av9-shell.av-next-site-shell .av12-public-world.av-next-private-boundary::before{
+    width:310px;right:-170px;top:-125px;
+  }
+  .av9-shell.av-next-site-shell .av12-public-world.av-next-private-boundary .av-next-private-sigil{
+    width:70px;height:70px;
+  }
+  .av9-shell.av-next-site-shell .av12-public-world.av-next-private-boundary .av-next-private-sigil svg{
+    width:40px;height:40px;
+  }
+  .av9-shell.av-next-site-shell .av12-public-world.av-next-private-boundary h1{
+    font-size:clamp(34px,10vw,45px)!important;
+  }
+  .av9-shell.av-next-site-shell .av12-public-world.av-next-private-boundary p{
+    font-size:13px;line-height:1.65;
+  }
+}
+@media(forced-colors:active){
+  .av9-shell.av-next-site-shell .av12-public-world.av-next-private-boundary{
+    background:Canvas;color:CanvasText;border:2px solid CanvasText;
+  }
+  .av9-shell.av-next-site-shell .av12-public-world.av-next-private-boundary::before{display:none}
+  .av9-shell.av-next-site-shell .av12-public-world.av-next-private-boundary .av12-world-back{
+    background:ButtonFace;color:ButtonText;border:2px solid ButtonText;
+  }
+}
+
 /* Density and actual author media stay readable at device widths. */
 @media(max-width:1060px){
   .av9-shell.av-next-site-shell .ch7-hub.av-next-commons .ch7-hero{
