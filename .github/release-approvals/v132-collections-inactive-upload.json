@@ -1,0 +1,16 @@
+{
+  "parent_ops_sha": "b87f57a7078a7859128b9d732d84b937b3a4b98b",
+  "release_source_sha": "baa92c0cbdcce71bd0ae5862e574c90ac53d84a9",
+  "qa_run": 40060370329,
+  "artifact_id": 12547361119,
+  "artifact_sha256": "55ae566dfc7c12d1c55d4b58e27b133cdbc157c9b0b5083b4c26459bece4cc03",
+  "worker": "anevum-apex-prelaunch-gateway",
+  "upload_inactive_only": true,
+  "activate_traffic": false,
+  "alter_routes": false,
+  "alter_access": false,
+  "alter_controller": false,
+  "mutate_database": false,
+  "reset_xp": false,
+  "enable_uploads": false
+}
