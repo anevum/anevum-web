@@ -11,7 +11,7 @@ const css=read("web/src/module-experience-v073.css");
 const main=read("web/src/main.tsx");
 const browser=read("test/capture-sitewide-v012.mjs");
 
-test("V115 retains authentic public discovery without promoting a temporary alpha game",()=>{
+test("V133 retains authentic public discovery and clearly distinguished first looks",()=>{
  for(const source of [home,doors,activity])
   assert.doesNotThrow(()=>parse(source,{sourceType:"module",plugins:["typescript","jsx"]}));
  assert.match(main,/home-navigation-v079\.css/);
@@ -19,7 +19,8 @@ test("V115 retains authentic public discovery without promoting a temporary alph
  assert.match(home,/readProjects/);
  assert.match(home,/readCreators/);
  assert.match(home,/readStatus/);
- assert.match(home,/const showcase=projects\.filter\(project=>project\.category!=="games"\)/);
+ assert.match(home,/const firstLook=projects\[0\]\|\|null/);
+ assert.match(home,/const showcase=projects\.slice\(1,4\)/);
  assert.match(home,/av115-public-index/);
  assert.doesNotMatch(home,/Play a game|FEATURED RELEASE/);
  assert.match(home,/useOwnPlayerCard/);

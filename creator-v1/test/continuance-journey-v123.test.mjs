@@ -16,11 +16,11 @@ test("V123 preserves cinematic V116 discovery-first arrival and a single IREN co
  for(const source of [home,join,member,guide,shell]){
   assert.doesNotThrow(()=>parse(source,{sourceType:"module",plugins:["typescript","jsx"]}));
  }
- assert.match(home,/A universe <em>in the making\.<\/em>/);
+ assert.match(home,/Find something <em>worth trying\.<\/em>/);
  assert.match(home,/to="\/discover"/);
  assert.match(home,/className="av123-member-entry"/);
  assert.match(home,/to=\{signedIn\?"\/member":"\/join"\}/);
- assert.match(home,/Create your member space/);
+ assert.match(home,/Join the early community/);
  assert.match(home,/new Event\("anevum:iren-intro"\)/);
  assert.equal((home.match(/MEET IREN/g)||[]).length,1);
  assert.equal((shell.match(/<IrenGuidedContinuance memberId=/g)||[]).length,1);

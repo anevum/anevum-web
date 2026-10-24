@@ -16,7 +16,7 @@ test("V114 is the existing canonical homepage, not an alternate first-load appli
  assert.match(home,/<section\b[^>]*className=\{?"av79-hero av114-arrival av115-arrival(?:\s|")/);
  assert.match(home,/className="av114-arrival-scene"/);
  assert.match(home,/THE CONTINUANCE INSTITUTE/);
- assert.match(home,/A universe <em>in the making\.<\/em>/);
+ assert.match(home,/Find something <em>worth trying\.<\/em>/);
  assert.match(home,/className="av79-gateways av115-gateways"/);
  assert.match(home,/className="av115-iren-console"/);
  assert.match(home,/className="av79-now av115-public-index"/);
@@ -30,15 +30,15 @@ test("V114 is the existing canonical homepage, not an alternate first-load appli
 
 test("V115 first load opens the ANEVUM universe and real IREN, not the alpha game",()=>{
  assert.match(home,/to="\/discover"/);
- assert.match(home,/Enter ANEVUM/);
+ assert.match(home,/Explore real projects/);
  assert.match(home,/MEET IREN/);
  assert.equal((home.match(/MEET IREN/g)||[]).length,1);
  assert.match(home,/new Event\("anevum:iren-intro"\)/);
- assert.match(home,/Explore freely\. No account required\./);
- assert.match(home,/Studio publishing is still in testing\./);
+ assert.match(home,/Free to explore\. No account required\./);
+ assert.match(home,/Creator publishing is still in testing\./);
  assert.match(home,/to=\{signedIn\?"\/member":"\/join"\}/);
  assert.match(home,/readProjects\(\{limit:"32"\},signal\)/);
- assert.match(home,/const showcase=projects\.filter\(project=>project\.category!=="games"\)/);
+ assert.match(home,/const firstLook=projects\[0\]\|\|null/);
  assert.doesNotMatch(home,/Play a game|FEATURED RELEASE|const firstGame=/);
  assert.doesNotMatch(home,/sampleProject|sampleUser|Math\.random|fakeActivity|fakeRatings|placeholderUsers|dangerouslySetInnerHTML/);
 });
@@ -54,7 +54,7 @@ test("V114 paints the catalogue without waiting for optional metadata requests",
  assert.match(home,/creators:creatorResult\.status==="fulfilled"\?creatorResult\.value\.items:\[\]/);
  assert.match(home,/metadata\.state==="ready"\?metadata\.data\.creators/);
  assert.match(home,/verified&&status\?String\(status\.counts\.publishedProjects\)/);
- assert.match(home,/const showcase=projects\.filter\(project=>project\.category!=="games"\)/);
+ assert.match(home,/const firstLook=projects\[0\]\|\|null/);
 });
 
 test("V114 is responsive, motion-conscious, accessible and asset-free for fast first paint",()=>{
