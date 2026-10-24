@@ -79,8 +79,8 @@ try{
     assert.equal(layout.h1Count,1);assert.equal(layout.dockCount,1,'One canonical IREN companion');
     assert.equal(await page.locator('.p136-console-wayfinder').count(),1,'Exactly one persistent console wayfinder');
     assert.equal(await page.locator('.p136-console-wayfinder a[data-station]').count(),5,'Five real route stations');
-    assert.equal(await page.getByRole('button',{name:'Open IREN companion'}).count(),1,
-      'IREN control is integrated into console');
+    assert.equal(await page.locator('.p136-console-wayfinder').getByRole('button',{name:'Open IREN companion'}).count(),1,
+      'One IREN launcher belongs to the persistent console; the header may also open the same companion');
     assert.equal(await page.locator('.p136-console-member').count(),1,
       'One canonical member entry is integrated into console');
     assert.equal(await page.getByRole('button',{name:'Search and quick navigation'}).count(),1,
@@ -115,7 +115,7 @@ try{
     await page.waitForURL(base+'/join');
     await page.getByRole('heading',{name:/ENTER THE\s*CONTINUANCE\./i}).waitFor();
     await page.goto(base,{waitUntil:'networkidle'});
-    await page.getByRole('button',{name:'Open IREN companion',exact:true}).click();
+    await page.locator('.p136-console-wayfinder').getByRole('button',{name:'Open IREN companion',exact:true}).click();
     assert.equal(await page.locator('.ir80-dock').count(),1);
     await page.waitForFunction(()=>!!document.querySelector('.ir80-guide-layer,.ir123-tour,.ir92-tour,.ir87-panel'));
     record('canonical Discover / Join / IREN '+width);
