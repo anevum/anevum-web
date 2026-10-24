@@ -10,6 +10,8 @@ type Props={
  resetToken:string;
  readOnly:boolean;
  onChange:(next:string)=>void;
+ /** Safe, local-only selection from Project Doctor. */
+ jumpTo?:{blockId:string;requestId:number}|null;
 };
 
 /**
@@ -17,7 +19,7 @@ type Props={
  * No alternative scene schema, arbitrary HTML, runtime execution, publication
  * or automatic persistence. The caller owns saving through the V111 file API.
  */
-export function StudioSceneComposerV112({raw,fileName,resetToken,readOnly,onChange}:Props){
+export function StudioSceneComposerV112({raw,fileName,resetToken,readOnly,onChange,jumpTo}:Props){
  const doc=useMemo(()=>decode(raw),[raw]);
  const [selectedId,setSelectedId]=useState<string|null>(null);
  const [previewSceneId,setPreviewSceneId]=useState<string|null>(null);
@@ -32,6 +34,15 @@ export function StudioSceneComposerV112({raw,fileName,resetToken,readOnly,onChan
   setSelectedId(old=>old&&doc.blocks.some(b=>b.id===old)?old:doc.blocks[0]?.id||null);
   setPreviewSceneId(old=>old&&doc.blocks.some(b=>b.type==='scene'&&b.id===old)?old:null);
  },[doc]);
+ useEffect(()=>{
+  if(!jumpTo)return;
+  // Deliberately respond only to a new navigation request. Ordinary text edits
+  // must not steal the creator's current selection or reset undo/redo.
+  if(doc?.blocks.some(item=>item.id===jumpTo.blockId)){
+   setSelectedId(jumpTo.blockId);
+   setMode('compose');
+  }
+ },[jumpTo?.requestId]);
  const focused=doc?.blocks.find(b=>b.id===selectedId)||null;
  const sceneList=doc?.blocks.filter(b=>b.type==='scene')||[];
  const currentScene=previewSceneId&&sceneList.some(b=>b.id===previewSceneId)?
