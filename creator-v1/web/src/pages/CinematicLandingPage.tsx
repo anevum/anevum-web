@@ -1,4 +1,4 @@
-import {useEffect,useState} from "react";
+import {useEffect,useState,lazy,Suspense} from "react";
 import {Link} from "react-router-dom";
 import {readCreators,readProjects,readStatus,type Creator,type Project,type Status} from "../lib/api";
 import {useResource} from "../lib/useResource";
@@ -16,6 +16,7 @@ import {publicCreatorHandle} from "../lib/public-creator-handle";
  * projects. The only rewarded player identity is independently server-verified.
  * This page never opens up private submissions or moderation records.
  */
+const FullPortal=import.meta.env.VITE_PARITY_V136_FULL==="true" ? lazy(()=>import("../parity/ParityPortalV136").then(m=>({default:m.ParityPortalV136}))) : null;
 type PublicSnapshot={status:Status|null;projects:Project[];creators:Creator[]};
 const gateways=[
   {to:"/discover",title:"Discover",detail:"Find ideas, worlds and original work",icon:"explore",eyebrow:"01 / EXPLORE"},
@@ -86,6 +87,7 @@ export function CinematicLandingPage(){
   const showcase=projects.filter(project=>project.category!=="games").slice(0,3);
   const verified=Boolean(snapshot);
 
+  if(FullPortal)return <Suspense fallback={<div className="p136-loading" role="status">Opening ANEVUM…</div>}><FullPortal projects={projects} catalogueState={portal.state} signedIn={signedIn} verifiedCount={status?.counts?.publishedProjects??null}/></Suspense>;
   return <div className="anevum-cinema av9-home av79-home" data-scene-paused={scenePaused}>
     <div className="cinema-content av79-home-content">
       <section className={"av79-hero av114-arrival av115-arrival av125-arrival"+(scenePaused?" av125-is-paused":"")} data-iren-anchor="arrival" aria-labelledby="av79-home-heading">
