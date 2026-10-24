@@ -158,11 +158,12 @@ function parts(node:WorldNode):{mesh:string,transform:Float32Array,material:Worl
   ];
   // The same canonical island node owns all decorative foliage and
   // architecture, so click-selection and undo remain deterministic.
-  const trees:[number,number,number,number][]=[
-   [-1.35,.19,-.45,.72],[-.84,.19,.78,.89],[.18,.19,-.89,.64],
-   [1.19,.19,.47,.79],[1.45,.19,-.55,.57]
+  const trees:[number,number,number][]=[
+   [-1.35,.19,-.45],[-.84,.19,.78],[.18,.19,-.89],
+   [1.19,.19,.47],[1.45,.19,-.55]
   ];
-  for(const [x,y,z,size] of trees){
+  for(const [i,[x,y,z]] of trees.entries()){
+   const size=[.72,.89,.64,.79,.57][i];
    p.push({mesh:'cube',transform:at([x,y+.33*size,z],[.13*size,.7*size,.13*size]),material:'slate'});
    p.push({mesh:'canopy',transform:at([x,y+.98*size,z],[.62*size,.67*size,.59*size]),material:'grass'});
    p.push({mesh:'sphere',transform:at([x,y+1.35*size,z],[.09,.09,.09]),material:'cyan'});
