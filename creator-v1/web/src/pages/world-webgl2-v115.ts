@@ -1,4 +1,5 @@
 import type {WorldDocument,WorldNode,WorldCamera,Vec3,WorldMaterial} from '../../../world-composer/document.mjs';
+import {createWorldSky} from './world-sky-v115';
 
 /** Real, locally accelerated WebGL2 editor renderer. No external assets or
  * untrusted shaders, no model inference, no server-side GPU and no HTTP calls.
@@ -191,6 +192,7 @@ export function createWorldRenderer(canvas:HTMLCanvasElement):WorldRenderer{
  const gl:WebGL2RenderingContext=candidate;
  const prog=makeProgram(gl,vertexShader,fragmentShader);
  const picker=makeProgram(gl,pickVertex,pickFragment);
+ const sky=createWorldSky(gl);
  const meshes=new Map<string,Mesh>(),islandParts=island();
  for(const [name,positions,mode] of [
   ['cube',cube(),gl.TRIANGLES],['tower',tower(),gl.TRIANGLES],
@@ -213,6 +215,7 @@ export function createWorldRenderer(canvas:HTMLCanvasElement):WorldRenderer{
   if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
   gl.viewport(0,0,w,h);
   gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  if(!picking)sky.render(w,h,camera.yaw,scene.environment.sky==='night',scene.environment.sunIntensity);
   const vp=mul(perspective(Math.max(.25,width/Math.max(1,height))),view(camera));
   const lookup=new Map(scene.nodes.map(n=>[n.id,n]));
   gl.useProgram(picking?picker:prog);
@@ -263,7 +266,7 @@ export function createWorldRenderer(canvas:HTMLCanvasElement):WorldRenderer{
    if(disposed)return;disposed=true;
    if(!gl.isContextLost()){
     for(const m of meshes.values()){gl.deleteVertexArray(m.vao);gl.deleteBuffer(m.buffer);}
-    gl.deleteProgram(prog);gl.deleteProgram(picker);
+    sky.dispose();gl.deleteProgram(prog);gl.deleteProgram(picker);
    }
   }
  };
