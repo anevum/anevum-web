@@ -59,12 +59,12 @@ try{
   const two=arrival.actionCount===2;
   const collision=two&&discover.left<member.right-1&&member.left<discover.right-1&&
     discover.top<member.bottom-1&&member.top<discover.bottom-1;
-  if(!arrival.exists||!arrival.scene||!arrival.heading?.includes("A universe")||
+  if(!arrival.exists||!arrival.scene||!arrival.heading?.includes("Find something")||
      ![1,2].includes(arrival.actionCount)||arrival.overflow||
      arrival.actions.some(b=>b.height<44||b.top<0||b.bottom>height)||
      arrival.rect[0]<-1||arrival.rect[1]>width+1||
      !discover.href?.endsWith("/discover")||
-     (two&&(!member.href?.endsWith("/join")||!member.text?.includes("Create your member space")||collision)))
+     (two&&(!member.href?.endsWith("/join")||!member.text?.includes("Join the early community")||collision)))
    throw Error("V115_FIRST_ARRIVAL_"+label+":"+JSON.stringify({...arrival,collision}));
   await screenshot("first-arrival-"+label);
   if(width<=390){
