@@ -113,6 +113,27 @@ try{
     record('canonical Discover / Join / IREN '+width);
     await context.close();
   }
+  // Public destinations share the single WebGL canvas, while canonical
+  // community and creators components keep their working content/controls.
+  {
+    const {page,context}=await contextFor(390);
+    await page.goto(base,{waitUntil:'networkidle'});
+    for(const [path,sector,selector] of [
+      ['/community','community','.ch7-hub'],
+      ['/creators','creators','.portal-creators'],
+      ['/','hero','.p136-portal']
+    ]){
+      await page.goto(base+path,{waitUntil:'networkidle'});
+      await page.locator(selector).waitFor();
+      await page.locator('.p136-living-world[data-enabled="true"][data-sector="'+sector+'"]').waitFor();
+      assert.equal(await page.locator('.p136-living-canvas').count(),1,
+        'A single GPU surface exists on '+path);
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),
+        'Spatial routes do not overflow phone viewport: '+path);
+    }
+    record('WebGL public sectors / protected DOM route continuity');
+    await context.close();
+  }
   for(const state of ['project','unavailable']){
     const {page,context}=await contextFor(390,{state});
     await page.goto(base,{waitUntil:'networkidle'});
