@@ -144,6 +144,10 @@ export function sourceCursor(text,start,end=start){
 export function editorIndent(text,start,end,width=2,outdent=false){
  const src=String(text),tab=' '.repeat(width===4?4:2);
  const safeStart=Math.max(0,Math.min(src.length,start)),safeEnd=Math.max(safeStart,Math.min(src.length,end));
+ if(safeStart===safeEnd&&!outdent){
+  const next=src.slice(0,safeStart)+tab+src.slice(safeEnd);
+  return {text:next,start:safeStart+tab.length,end:safeStart+tab.length};
+ }
  const lineStart=src.lastIndexOf('\n',safeStart-1)+1;
  const finalEnd=src.indexOf('\n',safeEnd);
  const last=finalEnd<0?src.length:finalEnd;
