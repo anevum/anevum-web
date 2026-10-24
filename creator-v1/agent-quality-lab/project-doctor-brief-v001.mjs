@@ -39,3 +39,28 @@ export function projectDoctorBrief(result) {
   disclaimer:'These are bounded diagnostic suggestions, not a successful build, security certification, publication approval or automatic repair.'
  };
 }
+
+
+/**
+ * Minimal text for explicit creator-initiated clipboard sharing. Only the
+ * curated diagnostics/paths are included, never the encoded source document.
+ */
+export function formatProjectDoctorBriefText(result) {
+ const brief=projectDoctorBrief(result);
+ const lines=[
+  'ANEVUM Creator Studio - Project Doctor',
+  brief.headline,
+  'Warnings: '+brief.counts.warning+' | Errors: '+brief.counts.error+' | Informational: '+brief.counts.info,
+  'Status: '+brief.status,
+  'Suggested review:'
+ ];
+ if(!brief.recommendations.length)lines.push('- No specific suggestions in this limited scan.');
+ else for(const item of brief.recommendations) {
+  lines.push('- ['+item.severity.toUpperCase()+'] '+item.message+
+   ' ('+item.code+' at '+item.path+'). '+item.nextStep);
+ }
+ if(brief.listTruncated||brief.checkedFindings>brief.recommendations.length)
+  lines.push('Only the first '+brief.recommendations.length+' suggestions are included.');
+ lines.push(brief.disclaimer);
+ return lines.join('\n');
+}
