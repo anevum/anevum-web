@@ -66,8 +66,8 @@ try{
   await page.getByRole('button',{name:'Creation',exact:true}).click();assert.equal(await page.locator('.px-activity').count(),5);record(width+' track filter');
   const input=page.getByRole('searchbox',{name:'Find a contribution'});await input.fill('not-present-zzz');await page.getByRole('heading',{name:'No matching paths.'}).waitFor();
   await page.getByRole('button',{name:'Clear filters'}).click();assert.equal(await page.locator('.px-activity').count(),19);record(width+' search empty recovery');
-  const button=page.getByRole('button',{name:'View criteria for Write a useful field report'});await button.click();await page.locator('dialog[open]').waitFor();
-  assert.match(await page.locator('dialog').innerText(),/independent review/i);await page.keyboard.press('Escape');await page.locator('dialog').waitFor({state:'hidden'});
+  const button=page.getByRole('button',{name:'View criteria for Write a useful field report'});await button.click();await page.locator('.px-dialog[open]').waitFor();
+  assert.match(await page.locator('.px-dialog').innerText(),/independent review/i);await page.keyboard.press('Escape');await page.locator('.px-dialog').waitFor({state:'hidden'});
   assert.equal(await button.evaluate(el=>el===document.activeElement),true);record(width+' dialog Escape and focus restoration');
   await page.locator('.px-nav button').nth(1).click();assert.equal(await page.locator('.px-expedition').count(),3);await fit(page,width+' expeditions');await capture(page,'expeditions-'+width);
   assert.equal(await page.locator('.px-orbit-one').evaluate(el=>getComputedStyle(el).animationName),'none');record(width+' reduced motion');
