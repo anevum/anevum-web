@@ -109,6 +109,23 @@ html[data-av-parity="v136-full"] .p136-discover-hero-copy{
   background:linear-gradient(0deg,#030b16ab,transparent 50%),
              linear-gradient(135deg,#ffffff0b,transparent 40%);
 }
+.p136-wayfinder-motion{
+  display:flex;align-items:center;gap:10px;
+  margin-top:14px;min-height:44px;width:100%;
+  padding:9px 12px;color:#cceeff;
+  background:linear-gradient(110deg,#13344cb0,#09233a8f);
+  border:1px solid #82cfff65;border-radius:8px;
+  font:650 11px/1.4 Inter,"Segoe UI",system-ui,sans-serif;
+  cursor:pointer;text-align:left;
+}
+.p136-wayfinder-motion>svg{flex:none;color:#7adfff}
+.p136-wayfinder-motion>small{
+  margin-left:auto;color:#89ffd9;
+  font-size:9px;letter-spacing:.12em;
+}
+.p136-wayfinder-motion[aria-pressed="false"]>small{color:#c0cfe1}
+.p136-wayfinder-motion:focus-visible{outline:3px solid #7ee5ff;outline-offset:3px}
+
 /* Full-bleed console flow: no isolated homepage boxes between destinations. */
 html[data-av-parity="v136-full"] .p136-portal{
   max-width:none;margin:0;padding:0;
