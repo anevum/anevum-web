@@ -164,7 +164,7 @@ test('Growth internal signal brief is source-qualified, disabled on bad data, an
  assert.match(page,/id="ci-brief-output"/);
  const script=NEXT_CLIENT;
  assert.match(script,/untagged test accounts may be included/);
- assert.match(script,/not unique visitors, converted?/);
+ assert.match(script,/not unique visitors, conversion rates/);
  assert.match(script,/navigator\.clipboard\?\.writeText/);
  assert.match(script,/briefFallback\.hidden=false/);
  assert.match(script,/copyBrief\.disabled=!valid/);
