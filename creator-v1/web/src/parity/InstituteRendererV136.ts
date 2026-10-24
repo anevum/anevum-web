@@ -13,13 +13,17 @@ import {fragmentSource,vertexSource} from './living-world-shaders';
 import {frameFor,sceneProfile,advanceSceneFrame,type SceneFrame,type SceneSector,type SceneGeometry} from './SceneDirectorV136';
 import {instituteAlloySurface,nativeAlloySurface} from './InstituteMaterialsV136';
 import {instituteAsset,instituteBudget} from './InstituteAssetManifestV136';
+import {fetchStageScene} from './CinematicStageGeometryV136';
+import {convertBlenderCamera,type CinemaPose} from './CinematicCameraRegistrationV136';
 export type InstituteInput={sector:SceneSector;density:number;verified:boolean;animated:boolean;saveData:boolean};
 export type InstituteMetrics={tier:string;family:string;models:number;drawCalls:number;triangles:number;frameMs:number;renderMs:number;gpuMs:number|null;geometries:number;textures:number;scale:number;contextLosses:number};
 type Family={root:T.Group;weight:number;lastUsed:number;geometries:Set<T.BufferGeometry>;materials:Set<T.Material>};
+const stageEnabled=import.meta.env.VITE_PARITY_V136_SHARED_SCENE_QA==='true';
 const families:SceneGeometry[]=['atrium','archive','forge','relay'];
 const stripVersion=(s:string)=>s.replace(/^#version 300 es\n/,'');
 export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:InstituteInput,onState:(ready:boolean,metrics:InstituteMetrics)=>void){
  let disposed=false,input=initial,frame:SceneFrame=frameFor(sceneProfile(initial.sector),initial.density);
+ let stageSamples:readonly CinemaPose[]|null=null;
  let animation=0,last=0,phase=0,drawnAt=0,frameSum=0,samples=0,slowSamples=0,scale=1,losses=0;
  let budget=instituteBudget(canvas.clientWidth,window.devicePixelRatio,initial.saveData);
  const renderer=new T.WebGLRenderer({canvas,alpha:false,antialias:false,powerPreference:'high-performance',preserveDrawingBuffer:false});
@@ -71,11 +75,32 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
   if(cache.has(family)||pending.has(family)||disposed)return;
   const controller=new AbortController();pending.set(family,controller);
   try{
+   // The alternate geometry path is strictly local, immutable-hash-verified and
+   // available only in a deliberately flagged CI/staging build. Production still
+   // resolves the exact same eight v136-011 source GLBs as before.
+   let stage:Awaited<ReturnType<typeof fetchStageScene>>=null;
+   if(stageEnabled&&family==='atrium'&&input.sector==='hero'&&!input.saveData){
+    canvas.dataset.cinemaStage='loading';
+    try{stage=await fetchStageScene(budget.tier,controller.signal)}
+    catch{if(controller.signal.aborted)return;canvas.dataset.cinemaStage='fallback'}
+   }
    const asset=instituteAsset(family,budget.tier);
-   const response=await fetch(asset.url,{signal:controller.signal,credentials:'omit',cache:'force-cache'});
-   if(!response.ok)throw Error('Environment model unavailable');
-   const bytes=await response.arrayBuffer();if(bytes.byteLength!==asset.bytes)throw Error('Environment asset length mismatch');
-   const gltf=await loader.parseAsync(bytes,'');
+   let gltf:Awaited<ReturnType<typeof loader.parseAsync>>;
+   if(stage){
+    try{gltf=await loader.parseAsync(stage.buffer,'')}
+    catch{stage=null;canvas.dataset.cinemaStage='fallback'}
+   }
+   if(!stage){
+    const response=await fetch(asset.url,{signal:controller.signal,credentials:'omit',cache:'force-cache'});
+    if(!response.ok)throw Error('Environment model unavailable');
+    const bytes=await response.arrayBuffer();if(bytes.byteLength!==asset.bytes)throw Error('Environment asset length mismatch');
+    gltf=await loader.parseAsync(bytes,'');
+   }
+   if(stage){
+    stageSamples=stage.manifest.cameraSamples.map(sample=>convertBlenderCamera(sample));
+    canvas.dataset.cinemaStage='ready';
+    canvas.dataset.cinemaRevision=stage.manifest.geometryRevision;
+   }else if(stageEnabled&&family==='atrium')canvas.dataset.cinemaStage='fallback';
    const geometries=new Set<T.BufferGeometry>(),materials=new Set<T.Material>();
    const root=new T.Group();root.name=family;
    gltf.scene.updateMatrixWorld(true);
@@ -127,8 +152,33 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
     m.transparent=m.userData.originalTransparent||f.weight<.995;m.depthWrite=m.userData.originalDepthWrite&&f.weight>.95;
    });
   }
-  camera.position.set((frame.camera[0]-1.5)*1.8+pointer.x*.16,2.8+(frame.camera[1]-1.5)*1.7+pointer.y*.12,13+(frame.camera[2]-4.5)*2);
-  camera.lookAt(canvas.clientWidth<650?2.5:0,2,-5);
+  // QA-only genuine shared-source camera. It is NOT a claim of visual parity:
+  // no cinematic frame sequence is approved and the live models remain unchanged.
+  const qaCamera=stageEnabled&&stageSamples&&stageSamples.length>=4&&
+   input.sector==='hero'&&family==='atrium'&&input.animated;
+  if(qaCamera){
+   const layer=document.querySelector<HTMLElement>('[data-cinematic-v136]');
+   const travel=Number(layer?.dataset.cameraProgress??0);
+   const normalized=Number.isFinite(travel)?T.MathUtils.clamp(travel,0,1):0;
+   const index=normalized*(stageSamples.length-1),left=Math.floor(index),
+    right=Math.min(stageSamples.length-1,left+1),t=index-left;
+   const a=stageSamples[left],b=stageSamples[right];
+   const position=new T.Vector3(...a.position).lerp(new T.Vector3(...b.position),t);
+   const forward=new T.Vector3(...a.forward).lerp(new T.Vector3(...b.forward),t).normalize();
+   const up=new T.Vector3(...a.up).lerp(new T.Vector3(...b.up),t).normalize();
+   camera.position.copy(position);
+   camera.up.copy(up);
+   camera.lookAt(position.clone().add(forward));
+   const newFov=T.MathUtils.lerp(a.verticalFovDegrees,b.verticalFovDegrees,t);
+   if(Math.abs(camera.fov-newFov)>.001){camera.fov=newFov;camera.updateProjectionMatrix()}
+   canvas.dataset.cinemaCameraProgress=normalized.toFixed(3);
+  }else{
+   const originalFov=canvas.clientWidth<650?62:48;
+   camera.up.set(0,1,0);
+   camera.position.set((frame.camera[0]-1.5)*1.8+pointer.x*.16,2.8+(frame.camera[1]-1.5)*1.7+pointer.y*.12,13+(frame.camera[2]-4.5)*2);
+   camera.lookAt(canvas.clientWidth<650?2.5:0,2,-5);
+   if(Math.abs(camera.fov-originalFov)>.001){camera.fov=originalFov;camera.updateProjectionMatrix()}
+  }
   key.color.setRGB(.7+frame.tone[0]*.3,.8+frame.tone[1]*.2,1);rim.color.setRGB(frame.tone[0],frame.tone[1]*.65,1);
   uniforms.u_pointer.value.lerp(pointer,.04);uniforms.u_time.value=phase/1000;uniforms.u_density.value=frame.density;uniforms.u_verified.value=input.verified?1:0;
   uniforms.u_tone.value.fromArray(frame.tone);uniforms.u_center.value.fromArray(frame.camera);uniforms.u_shape.value.fromArray(frame.silhouette);uniforms.u_signature.value=frame.signature;
