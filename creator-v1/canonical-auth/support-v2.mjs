@@ -152,17 +152,33 @@ async function disputeEvent(env,disputeId,eventId,now,fetcher){
    d.disputed_payment.payment_id,eventId,now);
  return true;
 }
-async function status(env,user,now){
+async function status(env,user,now,fetcher){
  if(!await enabled(env))return reply({available:false,mode:'off',subscriber:false,
   status:'paused',plans:{month:500,year:3600},sandbox:true});
  try{
   const db=env.MEMBER_DB;
-  const s=await first(db,'SELECT * FROM support_v2_memberships WHERE member_user_id=?',user.id);
+  let s=await first(db,'SELECT * FROM support_v2_memberships WHERE member_user_id=?',user.id);
+  if(!s){
+   // Recover completed payments when Square's subscription event was delayed.
+   // D1's compare-and-update lease bounds provider polls to once per 2 minutes.
+   const pendingPaid=await first(db,
+     "SELECT i.id,i.member_user_id,i.interval,i.created_at_ms,p.payment_id,p.customer_id FROM support_v2_intents i "+
+     "JOIN support_v2_payments p ON p.intent_id=i.id WHERE i.member_user_id=? AND i.state='paid' AND i.last_reconciled_at_ms<? "+
+     'ORDER BY i.created_at_ms DESC LIMIT 1',user.id,now-120000);
+   if(pendingPaid){
+    const claimed=await dbRows(db,
+      'UPDATE support_v2_intents SET last_reconciled_at_ms=? WHERE id=? AND member_user_id=? AND last_reconciled_at_ms<? RETURNING id',
+      now,pendingPaid.id,user.id,now-120000);
+    if(claimed.length===1){
+     try{await findSubscription(env,pendingPaid,now,fetcher)}catch{/* Never guess paid access. */}
+     s=await first(db,'SELECT * FROM support_v2_memberships WHERE member_user_id=?',user.id);
+    }
+   }
+  }
   const held=await first(db,
     'SELECT h.reason FROM support_v2_payment_holds h JOIN support_v2_payments p ON p.payment_id=h.payment_id WHERE p.member_user_id=? LIMIT 1',user.id);
   const pending=await first(db,
-    "SELECT i.state FROM support_v2_intents i WHERE i.member_user_id=? AND i.created_at_ms>? ORDER BY i.created_at_ms DESC LIMIT 1",
-    user.id,now-7200000);
+    'SELECT i.state FROM support_v2_intents i WHERE i.member_user_id=? ORDER BY i.created_at_ms DESC LIMIT 1',user.id);
   const supporter=!held&&activeMembership(s,now);
   return reply({available:true,mode:'sandbox',sandbox:true,subscriber:supporter,
     status:held?'billing-review':supporter?(s.canceled_date?'canceling':'active'):
@@ -186,6 +202,10 @@ async function checkout(request,env,user,now,fetcher){
  try{
   const existing=await first(db,'SELECT member_user_id FROM support_v2_memberships WHERE member_user_id=?',user.id);
   if(existing)return error(409,'A supporter membership already exists; manage it before buying another');
+  const prior=await first(db,'SELECT id FROM support_v2_intents WHERE member_user_id=? LIMIT 1',user.id);
+  // Never risk double billing because an earlier checkout expired or an
+  // event was delayed. Re-enrollment needs explicit provider reconciliation.
+  if(prior)return error(409,'A previous checkout must be reviewed before starting another');
   // A pending account closure blocks financial enrollment.
   const closure=await first(db,
     'SELECT member_user_id FROM member_account_closure_guards WHERE member_user_id=? AND expires_at_ms>?',
@@ -239,7 +259,7 @@ export async function supportV2Member(request,env,user,{fetcher=fetch,now=Date.n
  if(!verifiedUser(user))return error(403,'Verified member sign-in required');
  const url=new URL(request.url);
  if(url.search)return error(400,'Unexpected query parameters');
- if(url.pathname===SUPPORT_API&&request.method==='GET')return status(env,user,now);
+ if(url.pathname===SUPPORT_API&&request.method==='GET')return status(env,user,now,fetcher);
  if(url.pathname===SUPPORT_API+'/checkout'&&request.method==='POST')return checkout(request,env,user,now,fetcher);
  if(url.pathname===SUPPORT_API+'/cancel'&&request.method==='POST'){
   if(request.body){const empty=await boundedText(request,1);if(empty!=='')return error(400,'Empty request required');}
