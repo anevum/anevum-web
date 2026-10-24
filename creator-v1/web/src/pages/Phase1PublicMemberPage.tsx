@@ -10,8 +10,10 @@ import {SpaceProgress} from '../components/MemberSpaceDashboard';
 import {CreatorPackageGallery} from '../components/CreatorPackageGallery';
 import {EarnedRewardVault} from '../components/EarnedRewardVault';
 import {safePlayerAura,safeVerifiedRole} from '../lib/player-recognition';
+import {OrbitalMark} from '../components/OrbitalMark';
 
 
+const cinematicNextEnabled=import.meta.env.VITE_CONTINUANCE_CINEMATIC_SITEWIDE==="true";
 const HANDLE=/^[a-z][a-z0-9_]{2,29}$/;
 export function Phase1PublicMemberPage(){
  const {memberHandle=''}=useParams<{memberHandle:string}>();
@@ -41,7 +43,9 @@ function PublicMemberWorld({memberHandle}:{memberHandle:string}){
  const data=resource.state==='ready'?resource.data:null;
  const transientFailure=resource.state==='error'&&
   ![401,403,404].includes((resource.error as {status?:number}).status??0);
- if(!data)return <section className="av12-public-world">
+ if(!data)return <section className={"av12-public-world"+(cinematicNextEnabled?" av-next-private-boundary":"")}>
+  {cinematicNextEnabled&&<div className="av-next-private-sigil" aria-hidden="true"><OrbitalMark/></div>}
+  {cinematicNextEnabled&&<span className="av-next-private-kicker">ANEVUM / MEMBER WORLDS</span>}
   <h1 id="av12-world-heading">{resource.state==='loading'&&valid?'OPENING THIS WORLD…':transientFailure?'PUBLIC WORLD UNAVAILABLE.':'A PRIVATE WORLD.'}</h1>
   <p role={resource.state==='loading'||transientFailure?'status':undefined}>{resource.state==='loading'&&valid?'Finding this member’s public world…':transientFailure?'The public profile service could not be reached. No private information has been exposed.':'This profile is not published, does not exist, or cannot be viewed right now. We never reveal which of those is the reason.'}</p>
   {transientFailure&&<button className="av12-world-back" type="button" onClick={()=>setProfileRetry(value=>value+1)}>TRY AGAIN ↗</button>}
@@ -49,7 +53,7 @@ function PublicMemberWorld({memberHandle}:{memberHandle:string}){
  </section>;
  const {profile,space}=data;
  const posts=wallResource.state==='ready'?wallResource.data:null;
- return <section className={'ms-public av18-world-'+profile.worldTheme} aria-labelledby="av12-world-heading"><header className={'ms-cover av92-presence-cover av92-presence-cover--'+safePlayerAura(space.aura)+
+ return <section className={'ms-public av18-world-'+profile.worldTheme+(cinematicNextEnabled?' av-next-member-world':'')} aria-labelledby="av12-world-heading"><header className={'ms-cover av92-presence-cover av92-presence-cover--'+safePlayerAura(space.aura)+
   ' av92-presence-role--'+(safeVerifiedRole(space.role)??'none')+
   (space.supporterAppearance?' av34-aura av34-aura-'+space.supporterAppearance.aura:'')}>{space.media.banner&&<img className="ms-cover-art" src={base+'/media/banner?v='+space.media.banner} alt={profile.displayName+'’s wall banner'}/>}<div className="ms-cover-shade"/><div className="ms-cover-meta"><span className="kicker">ANEVUM / MEMBER WORLD</span><span className="ms-visibility">PUBLIC WORLD</span></div><div className="ms-identity av65-public-identity"><div className="av65-public-dossier"><h1 id="av12-world-heading" className="av65-visually-hidden">{profile.displayName}</h1><CompactMemberIdentity size="featured" interactive={false} member={{handle:profile.handle,displayName:profile.displayName,avatar:Boolean(space.media.avatar),avatarVersion:space.media.avatar,level:space.stats?.level??null,featuredAwards:space.featuredAwards,earnedBadges:space.earnedBadges,badgeDisplay:space.badgeDisplay,distinctions:space.distinctions,aura:space.aura,role:space.role,reputation:space.reputation,earnedAura:space.earnedAura,constellation:space.constellation,supporterAppearance:space.supporterAppearance,progress:space.stats}}/>{profile.headline&&<p>{profile.headline}</p>}</div></div></header><div className="ms-public-body"><div>
   {wallResource.state==='error'?<div className="ms-public-wall-feedback" role="status">

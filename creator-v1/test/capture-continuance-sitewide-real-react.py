@@ -31,13 +31,16 @@ class Handler(SimpleHTTPRequestHandler):
                 data={"items":[],"nextCursor":None}
             elif path.startswith("/api/v1/categories"):
                 data={"categories":[]}
+            elif path.startswith("/api/v1/members/"):
+                # Never fabricate, reveal, or authorize a public member profile.
+                data={"error":"Not found"}
             elif path.startswith("/api/v1/status"):
                 # Honest unavailable-status response: never label fixture counts VERIFIED.
                 data={"error":"Isolated local review: status service unavailable"}
             else:
-                data={"message":"Isolated local visual review. No service connected."}
+                data={"error":"Isolated local visual review: this service is unavailable."}
             body=json.dumps(data).encode()
-            self.send_response(503 if path.startswith("/api/v1/status") else 200)
+            self.send_response(404 if path.startswith("/api/v1/members/") else 503 if isinstance(data,dict) and "error" in data else 200)
             self.send_header("Content-Type","application/json; charset=utf-8")
             self.send_header("Content-Length",str(len(body)))
             self.send_header("Cache-Control","no-store")
@@ -113,6 +116,41 @@ with sync_playwright() as p:
         page.screenshot(path=str(EVIDENCE/f"discover-{width}-dpr{dpr}.png"),full_page=True,animations="disabled")
         page.get_by_role("button",name="Apps & Tools").first.click()
         check(f"{width}: category changes actual query",("category=tools" in page.url))
+        # Source-bound real Community: preserve the actual approved feed and
+        # verified counts, not the disconnected visual concept's demo content.
+        page.goto(base+"/community",wait_until="domcontentloaded",timeout=30000)
+        page.locator(".ch7-hub.av-next-commons").wait_for(timeout=20000)
+        page.wait_for_timeout(750)
+        if page.locator(".ch7-tabs button").count()!=4:
+            diagnostic={"viewport":width,"route":"community","body":page.locator("body").inner_text(timeout=2500)[:6000],
+                        "root":page.locator("#root").inner_html(timeout=2500)[:7000] if page.locator("#root").count() else "missing",
+                        "page_errors":page_errors,"console_errors":console_errors,"failed_requests":failed_requests,
+                        "request_paths":queries[-40:]}
+            (EVIDENCE/f"community-runtime-{width}.json").write_text(json.dumps(diagnostic,indent=2))
+            page.screenshot(path=str(EVIDENCE/f"community-debug-{width}.png"),full_page=False)
+            print("COMMUNITY RUNTIME DIAGNOSTIC:",json.dumps(diagnostic,indent=2))
+            raise AssertionError("Real Community tabs disappeared after local API reads")
+        check(f"{width}: actual Community renders with cinematic treatment",page.locator(".ch7-hub.av-next-commons").count()==1)
+        check(f"{width}: existing Community heading remains",page.locator("#ch7-hero-title").count()==1)
+        check(f"{width}: responsive original Commons artwork loaded",loaded_image(page,".ch7-hero-art .cw-artwork-image"))
+        check(f"{width}: real Community tabs remain",page.locator(".ch7-tabs button").count()==4)
+        check(f"{width}: actual Community moderation area remains",page.locator("#ch7-stream").count()==1)
+        check(f"{width}: no fabricated public activity",page.locator(".ch7-stream .ch7-entry").count()==0)
+        check(f"{width}: no horizontal Commons overflow",page.evaluate("document.documentElement.scrollWidth <= innerWidth+1"))
+        page.screenshot(path=str(EVIDENCE/f"community-{width}-dpr{dpr}.png"),full_page=True,animations="disabled")
+        page.get_by_role("button",name="PROJECTS",exact=True).first.click()
+        check(f"{width}: Community project filter works",page.get_by_role("button",name="PROJECTS",exact=True).first.get_attribute("aria-pressed")=="true")
+        # Private/nonexistent member identity must remain indistinguishable;
+        # 404 fixtures cannot produce a fabricated member, banner or XP.
+        page.goto(base+"/@unpublished",wait_until="domcontentloaded",timeout=30000)
+        page.locator(".av12-public-world.av-next-private-boundary").wait_for(timeout=20000)
+        page.get_by_role("heading",name="A PRIVATE WORLD.").wait_for(timeout=20000)
+        check(f"{width}: private/nonexistent world stays private",page.get_by_role("heading",name="A PRIVATE WORLD.").count()==1)
+        check(f"{width}: real ANEVUM mark on anonymous boundary",page.locator(".av-next-private-sigil svg").count()==1)
+        check(f"{width}: closed-world panel has controlled vertical density",page.locator(".av-next-private-boundary").evaluate("(el)=>el.getBoundingClientRect().height <= 540"))
+        check(f"{width}: private world never renders invented public profile",page.locator(".ms-public.av-next-member-world").count()==0)
+        check(f"{width}: private world has no horizontal overflow",page.evaluate("document.documentElement.scrollWidth <= innerWidth+1"))
+        page.screenshot(path=str(EVIDENCE/f"private-world-{width}-dpr{dpr}.png"),full_page=False,animations="disabled")
         check(f"{width}: no unexpected external requests",len(external)==0)
         check(f"{width}: no uncaught runtime errors",len(page_errors)==0)
         errors.extend([f"{width}: "+x for x in page_errors])

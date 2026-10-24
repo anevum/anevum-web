@@ -4,6 +4,8 @@ on:
     paths:
       - 'creator-v1/web/src/pages/CinematicLandingPage.tsx'
       - 'creator-v1/web/src/pages/DiscoverPage.tsx'
+      - 'creator-v1/web/src/pages/CommunityPage.tsx'
+      - 'creator-v1/web/src/pages/Phase1PublicMemberPage.tsx'
       - 'creator-v1/web/src/components/CosmicArtwork.tsx'
       - 'creator-v1/web/src/components/Shell.tsx'
       - 'creator-v1/web/src/sitewide-cinematic-next.css'
@@ -12,6 +14,7 @@ on:
       - 'creator-v1/test/capture-continuance-sitewide-real-react.py'
       - 'creator-v1/test/continuance-signal-atlas-v125.test.mjs'
       - 'creator-v1/test/home-navigation-v079.test.mjs'
+      - 'creator-v1/test/player-card-v078-live-react-browser.mjs'
       - '.github/workflows/continuance-sitewide-react-integration.yml'
 permissions:
   contents: read
@@ -52,7 +55,7 @@ jobs:
           git diff --name-status "$merge_base" HEAD > evidence/continuance-sitewide-real-react/source-diff.txt
           node --input-type=module <<'JS'
           import fs from 'node:fs';
-          const allow=/^(creator-v1\/web\/src\/pages\/(?:CinematicLandingPage|DiscoverPage)\.tsx|creator-v1\/web\/src\/components\/(?:CosmicArtwork|Shell)\.tsx|creator-v1\/web\/src\/sitewide-cinematic-next\.css|creator-v1\/web\/src\/main\.tsx|creator-v1\/test\/(?:continuance-sitewide-real-react\.test\.mjs|capture-continuance-sitewide-real-react\.py|continuance-signal-atlas-v125\.test\.mjs|home-navigation-v079\.test\.mjs)|\.github\/workflows\/continuance-sitewide-react-integration\.yml)$/;
+          const allow=/^(creator-v1\/web\/src\/pages\/(?:CinematicLandingPage|DiscoverPage|CommunityPage|Phase1PublicMemberPage)\.tsx|creator-v1\/web\/src\/components\/(?:CosmicArtwork|Shell)\.tsx|creator-v1\/web\/src\/sitewide-cinematic-next\.css|creator-v1\/web\/src\/main\.tsx|creator-v1\/test\/(?:continuance-sitewide-real-react\.test\.mjs|capture-continuance-sitewide-real-react\.py|continuance-signal-atlas-v125\.test\.mjs|home-navigation-v079\.test\.mjs|player-card-v078-live-react-browser\.mjs)|\.github\/workflows\/continuance-sitewide-react-integration\.yml)$/;
           const lines=fs.readFileSync('evidence/continuance-sitewide-real-react/source-diff.txt','utf8').trim().split('\n').filter(Boolean);
           if(!lines.length)throw Error('No changes');
           for(const line of lines){const [status,path]=line.split('\t');if(!['A','M'].includes(status)||!allow.test(path))throw Error('Unexpected source change: '+line);}
@@ -80,7 +83,7 @@ jobs:
         run: |
           python -m pip install playwright==1.64.1
           python -m playwright install --with-deps chromium
-      - name: Exercise real compiled React and capture 2x and 3x evidence
+      - name: Exercise genuine Home, Discover, Commons and member privacy at 2x/3x
         run: python creator-v1/test/capture-continuance-sitewide-real-react.py
       - uses: actions/upload-artifact@v4
         if: always()

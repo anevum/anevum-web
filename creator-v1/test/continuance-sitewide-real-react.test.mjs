@@ -13,6 +13,8 @@ const art=read('web/src/components/CosmicArtwork.tsx');
 const css=read('web/src/sitewide-cinematic-next.css');
 const app=read('web/src/App.tsx');
 const shell=read('web/src/components/Shell.tsx');
+const community=read('web/src/pages/CommunityPage.tsx');
+const publicWorld=read('web/src/pages/Phase1PublicMemberPage.tsx');
 
 test('real existing pages retain exact canonical route and data contracts',()=>{
   for(const source of [main,home,discover,art,app,shell])assert.doesNotThrow(()=>parse(source,{sourceType:'module',plugins:['typescript','jsx']}));
@@ -76,4 +78,49 @@ test('exact production CSS gate and opt-in CSS gate', {skip: !process.env.CN_SIT
   visit(out);
   const hasReviewCSS=cssBlobs.some(text=>text.includes('.av-next-discover-scene')&&text.includes('.av-next-arrival-art'));
   assert.equal(hasReviewCSS,process.env.CN_SITEWIDE_CHECK_DIST==='enabled','sitewide CSS must be absent in normal bundle and present only in opt-in build');
+});
+
+
+test('Commons cinematic markup preserves true published feeds, moderation, and single IREN',()=>{
+  assert.doesNotThrow(()=>parse(community,{sourceType:'module',plugins:['typescript','jsx']}));
+  assert.match(community,/VITE_CONTINUANCE_CINEMATIC_SITEWIDE==="true"/);
+  assert.match(community,/ch7-hub.*av-next-commons/);
+  assert.match(community,/scene="creative" priority=\{cinematicNextEnabled\} sizes=/);
+  assert.match(community,/<ContinuanceSignalAtlas\/>/);
+  assert.doesNotMatch(community,/Every idea has|ch7-categories|ch7-field-art|01 \/ FIND YOUR FIELD/);
+  assert.match(community,/ch7-portals ch7-portals-plain/);
+  assert.match(community,/ch7-sidebar ch7-sidebar-editorial/);
+  assert.match(community,/setCategory/);
+  assert.match(community,/readCommunityPosts/);
+  assert.match(community,/readCreators/);
+  assert.match(community,/readStatus/);
+  assert.match(community,/CommunityForums\/>/);
+  assert.match(community,/PublicMemberDirectory\/>/);
+  assert.match(community,/PublicMemberActivity revision=\{revision\}/);
+  assert.match(community,/COMMUNITY RECORDS UNAVAILABLE/);
+  assert.match(community,/No fictional members or projects are substituted/);
+  assert.doesNotMatch(community,/Math\.random|fakeUser|fakeProject|testXP|syntheticViewers|dangerouslySetInnerHTML/);
+  assert.match(css,/\.ch7-hub\.av-next-commons/);
+  assert.match(css,/\.ch7-hero-art \.av125-signal-atlas/);
+});
+test('Real public member worlds retain private 404 ambiguity and original identity media',()=>{
+  assert.doesNotThrow(()=>parse(publicWorld,{sourceType:'module',plugins:['typescript','jsx']}));
+  assert.match(publicWorld,/VITE_CONTINUANCE_CINEMATIC_SITEWIDE==="true"/);
+  assert.match(publicWorld,/av-next-private-boundary/);
+  assert.match(publicWorld,/<OrbitalMark\/>/);
+  assert.match(publicWorld,/ANEVUM \/ MEMBER WORLDS/);
+  assert.match(css,/\.av-next-private-sigil/);
+  assert.match(css,/\.av12-public-world\.av-next-private-boundary::before/);
+  assert.match(publicWorld,/av-next-member-world/);
+  assert.match(publicWorld,/canonicalPublic\(handle,signal\)/);
+  assert.match(publicWorld,/spaceRequest<MemberSpace>\(base\+'\/space','GET'/);
+  assert.match(publicWorld,/spaceRequest<\{posts:WallEntry\[\]\}>\(base\+'\/wall','GET'/);
+  assert.match(publicWorld,/This profile is not published, does not exist, or cannot be viewed right now/);
+  assert.match(publicWorld,/space\.media\.banner&&<img/);
+  assert.match(publicWorld,/profile\.worldTheme/);
+  assert.match(publicWorld,/space\.earnedBadges/);
+  assert.match(publicWorld,/safeVerifiedRole\(space\.role\)/);
+  assert.match(css,/\.ms-public\.av-next-member-world/);
+  assert.match(css,/\.av12-public-world\.av-next-private-boundary/);
+  assert.doesNotMatch(publicWorld,/fakeProfile|fakeBadge|Math\.random|localStorage|testXP/);
 });
