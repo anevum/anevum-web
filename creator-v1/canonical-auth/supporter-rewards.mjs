@@ -98,3 +98,42 @@ export async function supporterRewardsRoute(request,env,user,{now=Date.now()}={}
     return json({selected:{seal:input.seal,frame:input.frame,aura:input.aura},revision:Number(changed[0].revision)});
   }catch{return fail(503,'Supporter appearance could not be saved')}
 }
+
+/**
+ * Read-only public projection for at most 25 verified forum identities.
+ * Screen for public profile visibility and independently opted-in public
+ * supporter insignia before querying the existing entitlement authority.
+ * Customer keys, subscription state and internal user IDs never go to JSON.
+ */
+export async function publicForumSupporterAppearanceMap(env,ownerIds,now=Date.now()){
+  const ids=[...new Set(Array.isArray(ownerIds)?ownerIds.filter(id=>
+    typeof id==='string'&&id.length>0&&id.length<=128):[])].slice(0,25);
+  const visible=new Map();
+  if(!ids.length||!supporterConfig(env).enabled||!env?.MEMBER_DB?.prepare)return visible;
+  try{
+    const placeholders=ids.map(()=>'?').join(',');
+    const consent=await resultRows(env.MEMBER_DB,
+      'SELECT v.member_user_id FROM supporter_visibility v '+
+      'JOIN member_creator_profiles p ON p.user_id=v.member_user_id '+
+      'JOIN "user" u ON u.id=p.user_id '+
+      "WHERE v.public_insignia=1 AND p.visibility='public' AND u.emailVerified=1 "+
+      'AND v.member_user_id IN ('+placeholders+')',...ids);
+    const allowed=new Set(ids);
+    const consented=[...new Set(consent.map(row=>row.member_user_id))]
+      .filter(id=>allowed.has(id));
+    for(let at=0;at<consented.length;at+=4){
+      const group=consented.slice(at,at+4);
+      const results=await Promise.all(group.map(id=>readSupporterRewards(env,id,now,true)));
+      group.forEach((id,i)=>{
+        const current=results[i];
+        if(current?.publicInsignia===true&&current.selected)
+          visible.set(id,{supporterAppearance:current.selected});
+      });
+    }
+    return visible;
+  }catch{
+    // Missing schema or a failed projection must not break the forum or
+    // accidentally advertise unverified supporter status.
+    return new Map();
+  }
+}
