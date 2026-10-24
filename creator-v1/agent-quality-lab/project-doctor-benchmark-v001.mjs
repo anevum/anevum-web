@@ -36,7 +36,7 @@ function storyFixture(defect,round) {
  switch(defect){
   case 'scene.unnamed': doc.blocks[0].text=''; break;
   case 'choice.unlabeled': doc.blocks.find(item=>item.type==='choice').text=''; break;
-  case 'choice.unlinked': doc.blocks.find(item=>item.type==='choice').target=null; break;
+  case 'choice.unlinked': doc.blocks.splice(3,0,blocks.block('choice','Optional route without a destination')); break;
   case 'scene.unreachable': doc.blocks.push(blocks.block('scene','Disconnected '+round)); break;
   case 'scene.missing': doc.blocks=[blocks.block('paragraph','Story prologue '+round)]; break;
   case null: doc.blocks[1].text+=' Fixture '+round; break;
