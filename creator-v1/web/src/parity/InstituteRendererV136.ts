@@ -11,9 +11,10 @@ import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
 import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
 import {fragmentSource,vertexSource} from './living-world-shaders';
 import {frameFor,sceneProfile,advanceSceneFrame,type SceneFrame,type SceneSector,type SceneGeometry} from './SceneDirectorV136';
+import {instituteAlloySurface} from './InstituteMaterialsV136';
 import {instituteAsset,instituteBudget} from './InstituteAssetManifestV136';
 export type InstituteInput={sector:SceneSector;density:number;verified:boolean;animated:boolean;saveData:boolean};
-export type InstituteMetrics={tier:string;family:string;models:number;drawCalls:number;triangles:number;frameMs:number;renderMs:number;scale:number;contextLosses:number};
+export type InstituteMetrics={tier:string;family:string;models:number;drawCalls:number;triangles:number;frameMs:number;renderMs:number;gpuMs:number|null;geometries:number;textures:number;scale:number;contextLosses:number};
 type Family={root:T.Group;weight:number;lastUsed:number;geometries:Set<T.BufferGeometry>;materials:Set<T.Material>};
 const families:SceneGeometry[]=['atrium','archive','forge','relay'];
 const stripVersion=(s:string)=>s.replace(/^#version 300 es\n/,'');
@@ -24,17 +25,29 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
  const renderer=new T.WebGLRenderer({canvas,alpha:false,antialias:false,powerPreference:'high-performance',preserveDrawingBuffer:false});
  renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
  renderer.autoClear=false;
+ const gl=renderer.getContext() as WebGL2RenderingContext;
+ const timer=gl.getExtension('EXT_disjoint_timer_query_webgl2');
+ let gpuQuery:WebGLQuery|null=null,gpuMs:number|null=null,timerPoll=0;
+ function pollGpu(){
+  if(disposed||!gpuQuery||gl.isContextLost())return;
+  if(gl.getQueryParameter(gpuQuery,gl.QUERY_RESULT_AVAILABLE)){
+   if(!gl.getParameter(timer.GPU_DISJOINT_EXT))gpuMs=gl.getQueryParameter(gpuQuery,gl.QUERY_RESULT)/1e6;
+   gl.deleteQuery(gpuQuery);gpuQuery=null;
+  }else timerPoll=requestAnimationFrame(pollGpu);
+ }
+
+ const alloySurface=instituteAlloySurface(budget.tier==='mobile',renderer.capabilities.getMaxAnisotropy());
  const scene=new T.Scene();scene.fog=new T.FogExp2(0x071222,.026);
  const camera=new T.PerspectiveCamera(48,1,.1,95);camera.position.set(0,3.1,13);
  const pmrem=new T.PMREMGenerator(renderer);const room=new RoomEnvironment();
- const environment=pmrem.fromScene(room,.05);scene.environment=environment.texture;scene.environmentIntensity=.8;
+ const environment=pmrem.fromScene(room,.05);scene.environment=environment.texture;scene.environmentIntensity=.65;
  room.dispose();pmrem.dispose();
- scene.add(new T.HemisphereLight(0xa1d7ff,0x11101f,2.1));
- const key=new T.DirectionalLight(0xc3eaff,3.8);key.position.set(-3,8,7);scene.add(key);
+ scene.add(new T.HemisphereLight(0xa1d7ff,0x11101f,1.5));
+ const key=new T.DirectionalLight(0xc3eaff,3.1);key.position.set(-3,8,7);scene.add(key);
  const rim=new T.DirectionalLight(0x9865ff,4);rim.position.set(7,4,-10);scene.add(rim);
  const beacon=new T.PointLight(0x55cdff,85,17,2);beacon.position.set(3,4,-3);scene.add(beacon);
  const backdrop=new T.Scene(),backgroundCamera=new T.Camera();
- const uniforms={u_resolution:{value:new T.Vector2(1,1)},u_pointer:{value:new T.Vector2()},u_time:{value:0},
+ const uniforms={u_resolution:{value:new T.Vector2(1,1)},u_pointer:{value:new T.Vector2()},u_time:{value:0},u_modeled:{value:1},
   u_density:{value:0},u_verified:{value:0},u_tone:{value:new T.Vector3()},u_pulse:{value:0},
   u_center:{value:new T.Vector3()},u_architecture:{value:0},u_shape:{value:new T.Vector4()},u_signature:{value:0}};
  const backgroundMaterial=new T.RawShaderMaterial({glslVersion:T.GLSL3,vertexShader:stripVersion(vertexSource),fragmentShader:stripVersion(fragmentSource),uniforms,depthTest:false,depthWrite:false});
@@ -45,8 +58,8 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
  const architecturePass=new RenderPass(scene,camera);architecturePass.clear=false;architecturePass.clearDepth=true;composer.addPass(architecturePass);
  const bloom=budget.bloom?new UnrealBloomPass(new T.Vector2(1,1),.32,.38,1.35):null;if(bloom)composer.addPass(bloom);composer.addPass(new OutputPass());
  const loader=new GLTFLoader().setMeshoptDecoder(MeshoptDecoder),cache=new Map<SceneGeometry,Family>(),pending=new Map<SceneGeometry,AbortController>();
- let report:InstituteMetrics={tier:budget.tier,family:sceneProfile(input.sector).geometry,models:0,drawCalls:0,triangles:0,frameMs:0,renderMs:0,scale,contextLosses:0};
- function release(family:Family){scene.remove(family.root);family.geometries.forEach(g=>g.dispose());family.materials.forEach(m=>m.dispose())}
+ let report:InstituteMetrics={tier:budget.tier,family:sceneProfile(input.sector).geometry,models:0,drawCalls:0,triangles:0,frameMs:0,renderMs:0,gpuMs:null,geometries:0,textures:0,scale,contextLosses:0};
+ function release(family:Family){scene.remove(family.root);family.root.traverse(node=>{if(node instanceof T.InstancedMesh)node.dispose()});family.geometries.forEach(g=>g.dispose());family.materials.forEach(m=>m.dispose())}
  function evict(){if(cache.size<=budget.maxCachedFamilies)return;const candidates=[...cache].filter(([name,f])=>name!==sceneProfile(input.sector).geometry&&f.weight<.01).sort((a,b)=>a[1].lastUsed-b[1].lastUsed);while(cache.size>budget.maxCachedFamilies&&candidates.length){const [name,f]=candidates.shift()!;release(f);cache.delete(name)}}
  async function load(family:SceneGeometry){
   if(cache.has(family)||pending.has(family)||disposed)return;
@@ -71,7 +84,7 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
    for(const b of batches.values()){
     const mesh=new T.InstancedMesh(b.geometry,b.material,b.matrices.length);
     b.matrices.forEach((matrix,index)=>mesh.setMatrixAt(index,matrix));mesh.computeBoundingSphere();root.add(mesh);
-    const m=b.material as T.MeshStandardMaterial;m.userData.originalOpacity=m.opacity;m.userData.originalTransparent=m.transparent;m.userData.originalDepthWrite=m.depthWrite;
+    const m=b.material as T.MeshStandardMaterial;if(m.metalness>.6){m.normalMap=alloySurface;m.normalScale.set(.35,.2);m.needsUpdate=true}m.userData.originalOpacity=m.opacity;m.userData.originalTransparent=m.transparent;m.userData.originalDepthWrite=m.depthWrite;
    }
    const f={root,weight:0,lastUsed:performance.now(),geometries,materials};
    if(disposed){release(f);return}
@@ -114,12 +127,18 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
   uniforms.u_pointer.value.lerp(pointer,.04);uniforms.u_time.value=phase/1000;uniforms.u_density.value=frame.density;uniforms.u_verified.value=input.verified?1:0;
   uniforms.u_tone.value.fromArray(frame.tone);uniforms.u_center.value.fromArray(frame.camera);uniforms.u_shape.value.fromArray(frame.silhouette);uniforms.u_signature.value=frame.signature;
   beacon.intensity=85+(moving?Math.sin(phase/1800)*7:0);
-  const start=performance.now();renderer.info.autoReset=false;renderer.info.reset();composer.render();const renderMs=performance.now()-start;
-  if(drawnAt){frameSum+=now-drawnAt;samples++}drawnAt=now;
+  const start=performance.now();renderer.info.autoReset=false;renderer.info.reset();
+  const timed=timer&&!gpuQuery;
+  if(timed){gpuQuery=gl.createQuery();if(gpuQuery)gl.beginQuery(timer.TIME_ELAPSED_EXT,gpuQuery)}
+  composer.render();
+  if(timed&&gpuQuery){gl.endQuery(timer.TIME_ELAPSED_EXT);cancelAnimationFrame(timerPoll);timerPoll=requestAnimationFrame(pollGpu)}
+  const renderMs=performance.now()-start;
+  if(moving&&drawnAt&&now-drawnAt<250){frameSum+=now-drawnAt;samples++;if(samples>120){frameSum/=2;samples=Math.round(samples/2)}}
+  if(!moving){frameSum=0;samples=0}drawnAt=moving?now:0;
   // Hysteresis avoids quality oscillation. Lower resolution after sustained missed budgets.
   if(moving&&dt>budget.frameMs*1.9)slowSamples++;else slowSamples=Math.max(0,slowSamples-1);
   if(slowSamples>45&&scale>.55){scale=Math.max(.55,scale-.15);slowSamples=0;resize()}
-  report={tier:budget.tier,family,models:cache.size,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,frameMs:samples?frameSum/samples:0,renderMs,scale,contextLosses:losses};
+  report={tier:budget.tier,family,models:cache.size,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,frameMs:samples?frameSum/samples:0,renderMs,gpuMs,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,scale,contextLosses:losses};
   canvas.dataset.assetState=cache.has(family)?'ready':pending.has(family)?'loading':'unavailable';
   canvas.dataset.engine='three';canvas.dataset.quality=budget.tier;canvas.dataset.metrics=JSON.stringify(report);
   onState(true,report);evict();
@@ -132,6 +151,6 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
  resize();void load(sceneProfile(input.sector).geometry);schedule();
  return {
   update(next:InstituteInput){const resizeNeeded=next.saveData!==input.saveData;input=next;if(resizeNeeded)resize();if(!input.animated)pointer.set(0,0);schedule()},
-  dispose(){disposed=true;cancelAnimationFrame(animation);pending.forEach(p=>p.abort());pending.clear();resizeObserver.disconnect();window.removeEventListener('pointermove',move);document.removeEventListener('visibilitychange',visibility);canvas.removeEventListener('webglcontextlost',lost);cache.forEach(release);cache.clear();environment.dispose();backgroundGeometry.dispose();backgroundMaterial.dispose();bloom?.dispose();composer.dispose();renderer.dispose()}
+  dispose(){disposed=true;cancelAnimationFrame(animation);cancelAnimationFrame(timerPoll);if(gpuQuery)gl.deleteQuery(gpuQuery);pending.forEach(p=>p.abort());pending.clear();resizeObserver.disconnect();window.removeEventListener('pointermove',move);document.removeEventListener('visibilitychange',visibility);canvas.removeEventListener('webglcontextlost',lost);cache.forEach(release);cache.clear();environment.dispose();alloySurface.dispose();backgroundGeometry.dispose();backgroundMaterial.dispose();bloom?.dispose();composer.dispose();renderer.dispose()}
  };
 }

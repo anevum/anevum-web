@@ -16,22 +16,23 @@ export function LivingWorldField({sector='hero',enabled}:{sector?:WorldSector;en
  const [visible,setVisible]=useState(document.visibilityState==='visible');
  const [saveData,setSaveData]=useState(false);
  const [epoch,setEpoch]=useState(0);
+ const [highContrast,setHighContrast]=useState(()=>window.matchMedia('(forced-colors: active)').matches);
  const activeSector=enabled?(previewSector||sector):sector;
  const density=worldDensity(signal,activeSector),scene=sceneProfile(activeSector);
- const motionAllowed=enabled&&!paused&&!reduced&&!saveData&&visible;
+ const motionAllowed=enabled&&!paused&&!reduced&&!saveData&&!highContrast&&visible;
  const active=motionAllowed&&renderer==='webgl';
  const input=useRef<InstituteInput>({sector:activeSector,density,verified:signal.source==='verified',animated:motionAllowed,saveData});
  input.current={sector:activeSector,density,verified:signal.source==='verified',animated:motionAllowed,saveData};
  useEffect(()=>{
-  const media=window.matchMedia('(prefers-reduced-motion: reduce)');
+  const media=window.matchMedia('(prefers-reduced-motion: reduce)'),contrast=window.matchMedia('(forced-colors: active)');
   const connection=(navigator as Navigator&{connection?:{saveData?:boolean;addEventListener?:(e:string,f:()=>void)=>void;removeEventListener?:(e:string,f:()=>void)=>void}}).connection;
-  const sync=()=>{setReduced(media.matches);setSaveData(Boolean(connection?.saveData))};
+  const sync=()=>{setReduced(media.matches);setHighContrast(contrast.matches);setSaveData(Boolean(connection?.saveData))};
   const visibility=()=>setVisible(document.visibilityState==='visible');
-  sync();media.addEventListener('change',sync);connection?.addEventListener?.('change',sync);document.addEventListener('visibilitychange',visibility);
-  return()=>{media.removeEventListener('change',sync);connection?.removeEventListener?.('change',sync);document.removeEventListener('visibilitychange',visibility)};
+  sync();media.addEventListener('change',sync);contrast.addEventListener('change',sync);connection?.addEventListener?.('change',sync);document.addEventListener('visibilitychange',visibility);
+  return()=>{media.removeEventListener('change',sync);contrast.removeEventListener('change',sync);connection?.removeEventListener?.('change',sync);document.removeEventListener('visibilitychange',visibility)};
  },[]);
  useEffect(()=>{
-  if(!enabled||saveData)return;
+  if(!enabled||saveData||highContrast)return;
   let disposed=false;const element=canvas.current;if(!element)return;
   const state=(ready:boolean,_metrics:InstituteMetrics)=>{if(!disposed)setRenderer(ready?'webgl':'vector')};
   void import('./InstituteRendererV136').then(({createInstituteRenderer})=>{
@@ -42,7 +43,7 @@ export function LivingWorldField({sector='hero',enabled}:{sector?:WorldSector;en
   const restored=()=>setEpoch(value=>value+1);
   element.addEventListener('webglcontextlost',lost);element.addEventListener('webglcontextrestored',restored);
   return()=>{disposed=true;element.removeEventListener('webglcontextlost',lost);element.removeEventListener('webglcontextrestored',restored);engine.current?.dispose();engine.current=null;setRenderer('vector')};
- },[enabled,saveData,epoch]);
+ },[enabled,saveData,highContrast,epoch]);
  useEffect(()=>{engine.current?.update(input.current)},[activeSector,density,signal.source,motionAllowed,saveData]);
  const anchorCount=signal.source==='verified'?Math.max(2,Math.min(15,Math.floor(2+density*12))):3;
  return <div className="p136-living-world" data-enabled={enabled} data-active={active} data-motion={motionAllowed}

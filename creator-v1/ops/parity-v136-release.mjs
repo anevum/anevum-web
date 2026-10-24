@@ -21,11 +21,15 @@ const load=p=>JSON.parse(readFileSync(p,'utf8'));
 const save=(p,v)=>writeFileSync(p,JSON.stringify(v,null,2)+'\n');
 const stable=x=>JSON.stringify(x,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b))):v);
 const allowed=new Set([
+ 'creator-v1/web/src/pages/NativeCreatorStudio.tsx',
+ 'creator-v1/source-ide/language-v119.mjs','creator-v1/source-ide/language-v119.d.mts',
+ 'creator-v1/test/source-archive-v136.test.mjs',
+ ...['ArtifactWorkbenchV136.tsx','MonacoSourceV136.tsx','source-archive-v136.ts','artifact-workbench-v136.css'].map(x=>'creator-v1/web/src/parity/'+x),
  'package.json',
  'creator-v1/graphics/build-institute-assets.mjs',
  'creator-v1/graphics/inspect-institute-assets.mjs',
  'docs/production/parity-v136-webgl-asset-overhaul-20261024.md',
- ...['InstituteRendererV136.ts','InstituteAssetManifestV136.ts','institute-optics-v136.css'].map(x=>'creator-v1/web/src/parity/'+x),
+ ...['InstituteRendererV136.ts','InstituteMaterialsV136.ts','InstituteAssetManifestV136.ts','institute-optics-v136.css'].map(x=>'creator-v1/web/src/parity/'+x),
  ...['manifest.json',...['atrium','archive','forge','relay'].flatMap(f=>['mobile','desktop'].map(t=>f+'-'+t+'.glb'))].map(x=>'creator-v1/web/public/assets/institute/v136-011/'+x),
  '.github/workflows/parity-v136-release.yml','creator-v1/ops/parity-v136-release.mjs',
  '.github/workflows/parity-v136-scene-qa.yml',
@@ -70,7 +74,7 @@ export function source(){
  // Allow this renderer's pinned additions without permitting collateral changes
  // to auth/runtime dependencies through the package.json allowlist.
  const baseline=JSON.parse(git('show',BASE+':package.json')),current=load('package.json');
- const additions={dependencies:{three:'0.180.0'},devDependencies:{'@types/three':'0.180.0','@gltf-transform/core':'4.2.1','@gltf-transform/extensions':'4.2.1',meshoptimizer:'0.24.0'}};
+ const additions={dependencies:{three:'0.180.0','monaco-editor':'0.55.1',fflate:'0.8.2'},devDependencies:{'@types/three':'0.180.0','@gltf-transform/core':'4.2.1','@gltf-transform/extensions':'4.2.1',meshoptimizer:'0.24.0'}};
  for(const field of ['dependencies','devDependencies'])assert.deepEqual(current[field],{...baseline[field],...additions[field]},'Only pinned graphics dependencies may change');
  assert.deepEqual(current.scripts,baseline.scripts,'Build and protected-system commands preserved');
  const changed=git('diff','--name-only',BASE,'HEAD').split('\n').filter(Boolean);

@@ -46,6 +46,9 @@ async function contextFor(width,{motion='reduce',state='empty',forceVector=false
     if(url.origin!==base||!['GET','HEAD'].includes(request.method())){forbidden.push({url:request.url(),method:request.method()});await route.abort();return;}
     // The isolated uploader is optional. No real upload or unpublished package
     // endpoint is contacted during this loopback-only acceptance.
+    if(state==='studio'&&url.pathname==='/upload/v3/api/v1/packages/native/session'){
+      await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({contract:'native-creator-v095',memberId:'00000000000000000000000000000099',canUpload:true,canReview:false,resourceProtection:true})});return;
+    }
     if(url.pathname==='/upload/v3/api/v1/packages/projects'){
       const published=state==='package';
       await route.fulfill({status:published?200:404,contentType:'application/json',
@@ -58,7 +61,7 @@ async function contextFor(width,{motion='reduce',state='empty',forceVector=false
       // Explicit public API shapes prevent test-only null responses from
       // masquerading as successful catalogue, forums or member feed reads.
       // Unknown/private endpoints remain 404 (fail closed).
-      const value=path==='/api/v1/member/auth/get-session'?null:
+      const value=path==='/api/v1/member/auth/get-session'?(state==='studio'?{user:{id:'00000000000000000000000000000099',name:'SYNTHETIC LOCAL CREATOR',email:'ci@anevum.invalid',emailVerified:true,createdAt:'2026-10-24T00:00:00Z',updatedAt:'2026-10-24T00:00:00Z'},session:{id:'loopback-fixture-only',userId:'00000000000000000000000000000099',expiresAt:'2030-01-01T00:00:00Z'}}:null):
         path==='/api/v1/projects'?page(state==='project'?[fixture]:[]):
         path==='/api/v1/status'?{features:{communityPosts:false},counts:{publishedProjects:0,publishedCreators:0}}:
         path==='/api/v1/creators'?page([]):
@@ -266,6 +269,33 @@ try{
     await page.locator('.p136-living-world[data-renderer="vector"]').waitFor();
     assert.equal(await page.getByRole('heading',{level:1}).count(),1,'DOM remains usable after GPU loss');
     record('real mesh families / compressed assets / one context / cache / GPU loss '+width,{snapshots,softwareGPU:true});
+    await context.close();
+  }
+  // The source workstation is reached only through a session-bound creator
+  // pilot fixture. Packaging is local; POST, publication and remote runtime
+  // execution remain forbidden in this acceptance context.
+  for(const width of [1440,390,320]){
+    const {page,context}=await contextFor(width,{state:'studio'});
+    await page.goto(base+'/studio/packages/new',{waitUntil:'domcontentloaded'});
+    await page.getByRole('heading',{name:'Transmit a creation.'}).waitFor();
+    await page.getByRole('button',{name:'Artifact source workbench',exact:true}).click();
+    const workbench=page.locator('[data-artifact-workbench="v136.011"]');await workbench.waitFor();
+    if(width===1440)await page.locator('[data-source-editor="monaco"]').waitFor({timeout:30000});
+    else assert.equal(await page.locator('[data-source-editor="monaco"]').count(),0,'Phone uses accessible text editor without Monaco allocation');
+    assert.equal(await page.locator('.p136-living-world').getAttribute('data-enabled'),'false','Private source never enters public GPU');
+    await workbench.getByRole('button',{name:'Prepare build archive',exact:true}).click();
+    await page.locator('.av095-drop strong').filter({hasText:'continuance-build.zip'}).waitFor();
+    await page.getByText('Browser build candidate',{exact:true}).waitFor();
+    assert.equal(await page.getByRole('button',{name:'Prepare private playtest',exact:true}).isDisabled(),true,'Archive creation never confirms publication rights or uploads');
+    await page.screenshot({path:join(out,'artifact-workbench-'+width+'.png'),fullPage:true,animations:'disabled'});
+    if(width===1440)await workbench.getByRole('button',{name:'Accessible text editor',exact:true}).click();
+    await workbench.getByRole('button',{name:/styles\.css$/}).click();
+    await workbench.locator('.p136-source-fallback textarea').fill('body { color: #ffffff; background: #06101d; }');
+    await page.locator('.av095-drop strong').filter({hasText:'Choose a ZIP or HTML file'}).waitFor();
+    assert.equal(await page.locator('.p136-source-state').innerText(),'LOCAL CHANGES','Editing invalidates the previously prepared archive');
+    const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1);
+    assert.equal(overflow,false,'Workbench has no horizontal page overflow');
+    record('session-bound source workstation / real editor / native ZIP compatibility / stale archive invalidation '+width,{monaco:width===1440,uploads:0});
     await context.close();
   }
   const {page,context}=await contextFor(390,{motion:'no-preference',forceVector:true});

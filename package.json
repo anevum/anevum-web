@@ -28,6 +28,8 @@
     "react-dom": "19.3.0",
     "react-router-dom": "7.18.4",
     "better-auth": "1.7.5",
+    "fflate": "0.8.2",
+    "monaco-editor": "0.55.1",
     "three": "0.180.0"
   },
   "devDependencies": {

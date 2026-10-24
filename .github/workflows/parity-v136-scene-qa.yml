@@ -9,6 +9,8 @@ on:
       - 'creator-v1/web/public/assets/institute/**'
       - 'creator-v1/graphics/**'
       - 'package.json'
+      - 'creator-v1/web/src/pages/NativeCreatorStudio.tsx'
+      - 'creator-v1/source-ide/**'
       - 'creator-v1/web/src/parity/LivingWorldField.tsx'
       - 'creator-v1/web/src/parity/living-world-shaders.ts'
       - 'creator-v1/web/src/parity/scene-materials-v136.css'
@@ -55,6 +57,8 @@ jobs:
         run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
       - name: Inspect all original compressed models and device budgets
         run: node creator-v1/graphics/inspect-institute-assets.mjs
+      - name: Verify source archive through canonical native compatibility inspector
+        run: node --experimental-strip-types --test creator-v1/test/source-archive-v136.test.mjs
       - name: Check current React source and build full spatial presentation
         run: |
           npm run check:creator-v1-web
