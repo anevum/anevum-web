@@ -32,7 +32,7 @@ test('operations and growth pages render approved NEXT brand with intact staff c
  const f=fixture();
  for(const [route,required] of [
   ['', ['id="memberRows"','id="priorityActions"','id="ci-hero-title"']],
-  ['/growth',['id="coverageRows"','id="campaignOutput"','id="ci-export"','data-ci-days="7"','id="ci-rum"','id="ci-rum-chart"','/staff/observatory/rum.js']]
+  ['/growth',['id="coverageRows"','id="campaignOutput"','id="ci-export"','data-ci-days="7"','id="ci-rum"','id="ci-rum-chart"','id="ci-weekly-signal"','id="ci-weekly-current"','id="ci-weekly-delta"','/staff/observatory/rum.js']]
  ]){
   const res=await worker.fetch(f.req(route),f.env);
   assert.equal(res.status,200,route);
