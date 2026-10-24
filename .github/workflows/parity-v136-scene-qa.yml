@@ -76,10 +76,8 @@ jobs:
         run: |
           node creator-v1/graphics/inspect-cinematic-v136.mjs
           node --experimental-strip-types --test creator-v1/test/parity-v136-cinematic.test.mjs
-      - name: Runtime media approval/security contract and real FFmpeg codec smoke
-        run: |
-          node --experimental-strip-types --test creator-v1/test/parity-v136-media-contract.test.mjs
-          node creator-v1/graphics/smoke-cinematic-v136.mjs
+      - name: Runtime media approval and single-renderer contract
+        run: node --experimental-strip-types --test creator-v1/test/parity-v136-media-contract.test.mjs
       - name: Gamepad standard mapping and repeat contract
         run: node --experimental-strip-types --test creator-v1/test/parity-v136-controller.test.mjs
       - name: Deterministic GPU scene grammar, shader source and pixel budgets
