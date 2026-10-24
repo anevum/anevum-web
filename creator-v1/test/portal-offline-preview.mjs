@@ -38,6 +38,7 @@ if(V115_BROWSER_REVIEW){
  if(!V114_BROWSER_REVIEW||!v114Db||!v114Env)throw Error('V115 browser fixture requires V114 synthetic fixture');
  const db=v114Db,definition='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
  const link='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',event='ffffffff-ffff-4fff-8fff-ffffffffffff';
+ db.exec('ALTER TABLE "user" ADD COLUMN emailVerified INTEGER NOT NULL DEFAULT 1;');
  db.exec("CREATE TABLE member_creator_profiles(user_id TEXT PRIMARY KEY,handle TEXT,visibility TEXT);");
  db.prepare("INSERT INTO member_creator_profiles VALUES(?,?,?)").run(V114_OWNER.id,'v091_public','public');
  db.exec(readFileSync(new URL('../canonical-auth/migrations/0016_project_mark_bridge_v115.sql',import.meta.url),'utf8'));
