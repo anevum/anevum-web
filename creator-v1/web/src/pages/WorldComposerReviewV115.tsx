@@ -131,7 +131,12 @@ export function WorldComposerReviewV115(){
       <button type="button" aria-expanded={showSource} onClick={()=>setShowSource(v=>!v)}>{showSource?'Hide world document':'Inspect world document'}</button></div></div>
      <div className="cvw-stage" role="region" aria-label="Live world composer">
       <WorldCanvasV115 document={scene} camera={camera} selection={selected}
-       onCamera={setCamera} onSelect={id=>dispatch({type:'SELECT',id})}/>
+       onCamera={setCamera} onSelect={id=>dispatch({type:'SELECT',id})}
+       onNudge={delta=>{
+        if(!node)return;
+        const position=node.position.map((v,i)=>clamp(v+delta[i],-40,40)) as Vec3;
+        command({type:'SET_TRANSFORM',id:node.id,field:'position',value:position});
+       }}/>
       <div className="cvw-selection-chip"><span>SELECTED OBJECT</span><strong>{node?.name||'None'}</strong></div>
      </div>
      <div className="cvw-world-footer"><span>ACTUAL MESH DRAW CALLS · OBJECT PICKING · CAMERA ORBIT</span>
