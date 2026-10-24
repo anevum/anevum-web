@@ -162,6 +162,14 @@ try{
  const click=selector=>evaluate('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');if(!el)throw Error("Missing click target");el.click();return true;})()');
  const setValue=(selector,value)=>evaluate('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');if(!el)throw Error("Missing field");const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set;setter.call(el,'+JSON.stringify(value)+');el.dispatchEvent(new Event("input",{bubbles:true}));el.dispatchEvent(new Event("change",{bubbles:true}));return el.value;})()');
  const setTextArea=(selector,value)=>evaluate('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');if(!el)throw Error("Missing textarea");const setter=Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,"value").set;setter.call(el,'+JSON.stringify(value)+');el.dispatchEvent(new Event("input",{bubbles:true}));el.dispatchEvent(new Event("change",{bubbles:true}));return el.value;})()');
+ const focusDoctor=async label=>{
+  assert.equal(await evaluate('(()=>{const el=document.querySelector("[data-studio-project-doctor=v001]");if(!el)return false;el.scrollIntoView({block:"start",inline:"nearest",behavior:"instant"});return true;})()'),true,label+' present');
+  await until(()=>evaluate('(()=>{const el=document.querySelector("[data-studio-project-doctor=v001]"),r=el?.getBoundingClientRect();return !!r&&r.top<innerHeight-80&&r.bottom>110;})()'),label+' scrolled visibly into the current viewport');
+  const measure=await evaluate('(()=>{const el=document.querySelector("[data-studio-project-doctor=v001]");return {client:el.clientWidth,scroll:el.scrollWidth,left:el.getBoundingClientRect().left,right:el.getBoundingClientRect().right};})()');
+  assert.ok(measure.scroll<=measure.client+2,label+' has no internal horizontal clipping: '+JSON.stringify(measure));
+  assert.ok(measure.left>=-2&&measure.right<=innerWidth+2,label+' fits the physical viewport: '+JSON.stringify(measure));
+  await pause(120);
+ };
  const snap=async name=>{
   const reply=await send('Page.captureScreenshot',{format:'png',fromSurface:true});
   assert.ok(reply.data);
@@ -255,6 +263,7 @@ try{
  await until(()=>evaluate('document.querySelector(".cpd-clear")?.textContent.includes("No issues detected")'),'Clean canonical story inspection');
  assert.equal(await visible('.cpd-jump'),false,'Clean source has no jump targets');
  assert.equal(await evaluate('document.querySelector(".cpd-foot")?.textContent.includes("No source is sent")'),true);
+ await focusDoctor('doctor-desktop-clean-story');
  await snap('doctor-desktop-clean-story');
  const playtest=await evaluate('(()=>{const b=[...document.querySelectorAll(".csx-top .csx-actions button")].find(x=>x.textContent==="Playtest");if(!b)return false;b.click();return true;})()');
  assert.equal(playtest,true,'Playtest selected');
@@ -298,12 +307,15 @@ try{
  await until(()=>evaluate('document.activeElement?.dataset?.blockId==='+JSON.stringify(expectedChoiceId)),'Jump to unlinked choice and keyboard focus');
  assert.equal(filePatches.length,patchesBeforeDoctor,'Navigation and diagnosis cause no server writes');
  assert.equal(fileNodes.get(sourceId).content,savedStory,'Navigation cannot mutate persisted source');
+ await focusDoctor('doctor-desktop-story-findings');
  await snap('doctor-desktop-story-findings');
  await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
  await pause(200);
+ await focusDoctor('doctor-phone-390-story-findings');
  await snap('doctor-phone-390-story-findings');
  await send('Emulation.setDeviceMetricsOverride',{width:320,height:740,deviceScaleFactor:1,mobile:true});
  await pause(200);
+ await focusDoctor('doctor-phone-320-story-findings');
  await snap('doctor-phone-320-story-findings');
  await send('Emulation.setDeviceMetricsOverride',{width:1440,height:900,deviceScaleFactor:1,mobile:false});
  await pause(150);
@@ -324,6 +336,7 @@ try{
  await until(()=>visible('[data-studio-project-doctor="v001"]'),'Project Doctor mounted on validated declarative UI');
  await click('.cpd-button');
  await until(()=>evaluate('document.querySelector(".cpd-clear")?.textContent.includes("No issues detected")'),'Clean UI starter inspected');
+ await focusDoctor('doctor-desktop-clean-interface');
  await snap('doctor-desktop-clean-interface');
  const preview=await evaluate('(()=>{const b=[...document.querySelectorAll(".cui-header .cui-actions button")].find(x=>x.textContent==="Interactive preview");if(!b)return false;b.click();return true;})()');
  assert.equal(preview,true);
@@ -377,12 +390,15 @@ try{
  assert.ok(!copied.includes('ANEVUM_UI_V1'),'Encoded document never reaches clipboard');
  assert.ok(!copied.includes('ANEVUM Continuance Portal'),'Project-specific source is not copied');
  assert.equal(filePatches.length,patchesBeforeUiDoctor,'Inspection, navigation and clipboard have no writes');
+ await focusDoctor('doctor-desktop-interface-findings');
  await snap('doctor-desktop-interface-findings');
  await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
  await pause(200);
+ await focusDoctor('doctor-phone-390-interface-findings');
  await snap('doctor-phone-390-interface-findings');
  await send('Emulation.setDeviceMetricsOverride',{width:320,height:740,deviceScaleFactor:1,mobile:true});
  await pause(200);
+ await focusDoctor('doctor-phone-320-interface-findings');
  await snap('doctor-phone-320-interface-findings');
  await send('Emulation.setDeviceMetricsOverride',{width:1440,height:900,deviceScaleFactor:1,mobile:false});
  await pause(150);
