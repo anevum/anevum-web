@@ -12,6 +12,8 @@ const nav=read('creator-v1/web/src/pages/StudioNavigationV116.tsx');
 const assets=read('creator-v1/web/src/pages/StudioAssetShelfV116.tsx');
 const modes=read('creator-v1/web/src/pages/StudioOtherModesV116.tsx');
 const css=read('creator-v1/web/src/pages/studio-next-v116.css');
+const privateFiles=read('creator-v1/web/src/pages/StudioFileWorkspaceV111.tsx');
+const privateCss=read('creator-v1/web/src/pages/studio-file-workspace-v116.css');
 
 test('project tree is a normalized V111-compatible namespace with clear folders',()=>{
  const fixture=projectTreeTemplate(),t=buildProjectTree(fixture.items,fixture.projectId);
@@ -111,4 +113,24 @@ test('concept UI has desktop workspace depth and specific mobile overflow safegu
  assert.match(css,/forced-colors:active/);
  assert.match(css,/overflow-x:auto/);
  assert.match(css,/\.cvw-root \.cvw-grid\{display:block/);
+});
+
+test('real V111 file tree has readable search and never changes owner-scoped service',()=>{
+ const ast=parse(privateFiles,{sourceType:'module',plugins:['typescript','jsx']});
+ assert.ok(ast.program.body.length>10);
+ assert.match(privateFiles,/studioFileList\(projectId,controller.signal\)/);
+ assert.match(privateFiles,/studioFileUpdate\(projectId,nodeId/);
+ assert.match(privateFiles,/Search private project files/);
+ assert.match(privateFiles,/visibleIds=useMemo/);
+ assert.match(privateFiles,/Expand all folders/);
+ assert.match(privateFiles,/Collapse all folders/);
+ assert.match(privateFiles,/classifyFile\(node.name\)/);
+ assert.match(privateFiles,/SECTIONS.indexOf\(a.name\)/);
+ assert.match(privateFiles,/function isWorldSource\(name:string,content:string\)/);
+ assert.match(privateFiles,/content.startsWith\(WORLD_PREFIX\)/);
+ assert.match(privateFiles,/!canInterface&&!isWorldSource\(name,content\)/);
+ assert.match(privateFiles,/studioFileTreeEnabled/);
+ assert.match(privateCss,/csf-tree-search/);
+ assert.match(privateCss,/csf-file-kind/);
+ assert.doesNotMatch(privateFiles,/fetch\(['"]https?:|localStorage|dangerouslySetInnerHTML/);
 });
