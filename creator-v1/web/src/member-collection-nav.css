@@ -1,0 +1,28 @@
+/* ANEVUM / My Collection: clear destinations, no decorative duplicates.
+ * This sheet loads only through the review-only component. */
+.mc-hub-nav{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px 18px;background:linear-gradient(130deg,#151a27,#111723);border:1px solid rgba(186,184,210,.23);border-radius:14px;margin:18px 0 21px;color:#ece8f4;font-family:inherit;max-width:100%;min-width:0}
+.mc-hub-heading{display:grid;gap:2px;min-width:150px}
+.mc-hub-eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;color:#d8c3f3}
+.mc-hub-subtitle{font-size:11px;line-height:1.45;color:#b5bdd0}
+.mc-hub-links{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.mc-hub-link{display:inline-flex;align-items:center;justify-content:center;min-height:44px;border:1px solid transparent;border-radius:9px;padding:10px 15px;color:#cbd0db;text-decoration:none!important;font-size:13px;font-weight:600;white-space:nowrap}
+.mc-hub-link:hover,.mc-hub-link:focus-visible{border-color:rgba(212,196,242,.35);background:#202638;color:#fff}
+.mc-hub-link[aria-current=page]{border-color:#d8c5f2;background:#e3d7f6;color:#211a2e}
+.mc-hub-nav :focus-visible,.mc-reward-more:focus-visible,.ms-toolbar-next :focus-visible{outline:3px solid #e6d4fb;outline-offset:3px}
+.ms-toolbar-next{display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap}
+.ms-toolbar-next nav{display:flex;flex-wrap:wrap;gap:6px}
+.ms-toolbar-next nav button{min-height:44px;padding:10px 17px;white-space:nowrap}
+.ms-toolbar-next .ms-toolbar-more{position:relative;margin-left:auto;color:#e7deed}
+.ms-toolbar-next .ms-toolbar-more>summary{cursor:pointer;display:grid;place-items:center;min-height:44px;padding:10px 15px;border:1px solid rgba(194,188,221,.36);border-radius:9px;font-size:12px;list-style:none}
+.ms-toolbar-next .ms-toolbar-more>summary::-webkit-details-marker{display:none}
+.ms-toolbar-next .ms-toolbar-more>summary:after{content:' +';font-size:14px;margin-left:5px}
+.ms-toolbar-next .ms-toolbar-more[open]>summary:after{content:' −'}
+.ms-toolbar-next .ms-toolbar-more-content{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:12px 0}
+.ms-toolbar-next .ms-toolbar-more-content button,.ms-toolbar-next .ms-toolbar-more-content a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;border:1px solid rgba(194,188,221,.26);border-radius:8px;padding:10px 12px;background:#202737;color:#eee7f5;text-decoration:none;font-size:12px}
+.ms-toolbar-next .ms-toolbar-more-content button[aria-current=page]{border-color:#e3d7f6}
+.mc-reward-more{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:48px;padding:13px 17px;margin-top:12px;background:#1c2431;border:1px solid rgba(200,190,215,.31);border-radius:10px;color:#e5d8ef;font:600 13px/1.4 inherit;cursor:pointer}
+.mc-reward-more:hover{background:#293148}
+@media(max-width:850px){.mc-hub-nav{display:block;padding:14px}.mc-hub-heading{margin-bottom:11px}.mc-hub-links{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}.mc-hub-link{font-size:12px;padding:10px 5px;white-space:normal;text-align:center}}
+@media(max-width:390px){.mc-hub-nav{padding:12px;margin:12px 0 16px}.mc-hub-heading{margin-bottom:8px}.mc-hub-subtitle{display:none}.mc-hub-eyebrow{font-size:10px}.mc-hub-links{grid-template-columns:repeat(2,minmax(0,1fr))}.mc-hub-link{font-size:12px;min-height:45px}.ms-toolbar-next nav{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.ms-toolbar-next nav button{font-size:12px;padding:10px 6px}.ms-toolbar-next .ms-toolbar-more{width:100%;margin-left:0}.ms-toolbar-next .ms-toolbar-more>summary{justify-content:center}}
+@media(prefers-reduced-motion:reduce){.mc-hub-nav *,.ms-toolbar-next *,.mc-reward-more{animation:none!important;transition:none!important}}
+@media(forced-colors:active){.mc-hub-nav,.mc-hub-link,.mc-reward-more,.ms-toolbar-next .ms-toolbar-more>summary{background:Canvas;color:CanvasText;border:1px solid CanvasText}.mc-hub-link[aria-current=page]{outline:2px solid Highlight}}
