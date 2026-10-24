@@ -81,3 +81,12 @@ An authenticated internal-only GET /v1/benchmark runs the fixed 60-case syntheti
 This is a repeatable software baseline, **not** evidence of generalization, actual member-project accuracy, model training, reasoning ability or a self-improving AI. The endpoint accepts no user-supplied fixtures or query parameters, uses the existing bearer authorization and instance-local request quota, and is only accessible on Railway's private service interface. Do not publish it as an open URL.
 
 Capabilities now include lab.synthetic-benchmark.run, which is a developer test capability rather than an end-user or IREN tool. All API calls are strictly read-only and return no secrets or source text. If the synthetic benchmark finds mismatches, it responds with HTTP 503 instead of claiming full readiness.
+
+
+## Source-only V001.4: finding navigation, filtering and explicit IREN handoff
+
+The feature-off Studio-local panel provides severity filters (all/warnings/informational) and a conditional "Open in visual editor" button for each finding with a valid, canonical location. The location resolver only accepts bounded, validated structural paths; it maps path indexes to stable scene/page/component IDs. It rejects malformed or out-of-range paths, and the visual editors independently confirm the selected node exists before choosing the corresponding compose/design mode. The editor focuses the selected, semantic tree button for keyboard users. Navigation never changes source content, saves a revision, publishes or calls the cloud API.
+
+The panel also offers "Copy source-free diagnostic brief". This action is user-initiated and requires browser clipboard permission; it copies only the diagnostic summary, severity counts, structural paths and up to four curated suggestions. The raw project text, canonical UUIDs, secrets, member identifiers and complete source are omitted. Clipboard refusal results in a visible error without fallback transmission. **This is not a direct IREN integration**: the creator may independently choose whether and where to paste the short summary.
+
+The research test suite verifies stable ID resolution under reordering, malicious-looking text as inert data, invalid/stale location refusal, explicit human action for clipboard writes and keyboard focus. These source-only UI controls remain gated by VITE_STUDIO_PROJECT_DOCTOR_V001 (default OFF) and still require parent PR #658's authorization, migration, backup and release gates before any account-facing rollout.
