@@ -1,0 +1,168 @@
+{
+  "session": "ANEVUM.WEB.BUILD.2026-10-24.001.PARITY-V136",
+  "version": "V136",
+  "increment": "001-arrival",
+  "baseline": "b429e6ab39665d51c8902878ff861f1a646df119",
+  "acceptedScope": "Explicit owner kickoff; no separate staging website; source/CI/internal-browser QA then reviewed reversible live increments",
+  "references": [
+    {
+      "id": "catalogue-a",
+      "library_file_id": "libfile_3321b6227c388191b0a6442002fb7457",
+      "filename": "LOCKED-REFERENCE-A-FEATURED-WORLDS.png",
+      "width": 1536,
+      "height": 1024,
+      "role": "Historical locked desktop board: catalogue density, scene and material direction",
+      "status": "recovered-and-inspected"
+    },
+    {
+      "id": "platform-b",
+      "library_file_id": "libfile_fc97c37c1a9481918c4b652048e15e85",
+      "filename": "LOCKED-REFERENCE-B-CREATOR-PLATFORM.png",
+      "width": 1536,
+      "height": 1024,
+      "role": "Historical locked desktop board: architectural environment and working platform",
+      "status": "recovered-and-inspected"
+    },
+    {
+      "id": "studio-20261024",
+      "library_file_id": "libfile_5c24a089ad0081919b25d76712104bc5",
+      "filename": "1687155E-CEE5-4DE9-87DC-F2174D59CCCE.jpeg",
+      "width": 1536,
+      "height": 864,
+      "role": "Latest supplied Creator Studio reference; source editor and real scene are separate layers",
+      "status": "recovered-and-inspected"
+    },
+    {
+      "id": "v133-first-contact",
+      "pr": 704,
+      "role": "Owner-approved headline/guest membership clarity and canonical real-project First Look",
+      "status": "preserved-in-V135-lineage"
+    }
+  ],
+  "mobile": {
+    "status": "responsive-derivation-for-owner-review",
+    "widths": [
+      390,
+      320
+    ],
+    "note": "Both original A/B boards are desktop. Do not mislabel historical mobile concepts or compiled screenshots as a separately approved V136 phone reference."
+  },
+  "environment": {
+    "path": "creator-v1/web/public/assets/community-portals/games-1536.webp",
+    "width": 1536,
+    "height": 1024,
+    "bytes": 511208,
+    "sha256": "e7304eea020e7357f57452fd12ced1854a8a649982d6e7c15a75fa3c145be518",
+    "status": "existing-V014-original-interim",
+    "mobilePath": "creator-v1/web/public/assets/community-portals/games-768.webp",
+    "final4kMaster": false,
+    "flattenedUI": false
+  },
+  "ownership": {
+    "router": "creator-v1/web/src/App.tsx",
+    "navigation": "creator-v1/web/src/components/Shell.tsx",
+    "arrival": "creator-v1/web/src/components/ParityArrivalV136.tsx",
+    "catalogue": "existing readProjects/readCreators/useResource in CinematicLandingPage",
+    "assistant": "existing IrenGuidedContinuance via anevum:iren-intro",
+    "studio": "preserved #709 lineage; not merged in increment 001",
+    "commerce": "preserved #713; independently gated; not merged in increment 001"
+  },
+  "candidates": [
+    {
+      "pr": 679,
+      "head": "817cfc353553ad49d5560f959695c1bdd064ae01",
+      "branch": "build/continuance-living-commons-react-20261023-001",
+      "base": "design/continuance-living-commons-20261023-001",
+      "title": "[DRAFT] NEXT Living Commons: React integration, accessible navigation and cross-browser QA",
+      "status": "preserved-source-candidate"
+    },
+    {
+      "pr": 711,
+      "head": "b429e6ab39665d51c8902878ff861f1a646df119",
+      "branch": "build/next-unified-visual-system-v134-20261024-001",
+      "base": "build/continuance-living-commons-react-20261023-001",
+      "title": "[DRAFT NEXT] V134–V135 reusable cinematic UI, vector file glyphs and mobile polish",
+      "status": "preserved-source-candidate"
+    },
+    {
+      "pr": 709,
+      "head": "46bf8518307c8e6c3584d6c72031f660509c334f",
+      "branch": "build/creator-studio-v122-concept-fidelity-20261024-001",
+      "base": "build/creator-studio-v121-outline-split-20261024-001",
+      "title": "[DRAFT] Creator Studio V122 — concept fidelity, living IREN panel and cinematic UI polish",
+      "status": "preserved-source-candidate"
+    },
+    {
+      "pr": 702,
+      "head": "57bba0d6858ee3f324824802f206a9a1f972ce18",
+      "branch": "build/iren-tester-release-comms-20261024-001",
+      "base": "build/continuance-cinematic-commons-member-20261024-001",
+      "title": "IREN tester communications: public release notes and gated email preferences",
+      "status": "preserved-source-candidate"
+    },
+    {
+      "pr": 710,
+      "head": "b75fd396085942695f8b66bcc8aa3daf45d73ebd",
+      "branch": "build/continuance-next-public-forum-supporters-20261024-001",
+      "base": "build/continuance-next-forum-author-dossiers-20261024-001",
+      "title": "[DRAFT] NEXT forum public supporter frames with verified privacy projection",
+      "status": "preserved-source-candidate"
+    },
+    {
+      "pr": 707,
+      "head": "e6ad895f49e08471a1c1ea40f6a0f67bfc6cd092",
+      "branch": "release/v133-first-contact-targeted-20261024-001",
+      "base": "release/v131-v130-integrated-offline-apex-20261023-001",
+      "title": "[RELEASE CANDIDATE] V133 first-contact only on protected V131 source",
+      "status": "preserved-source-candidate"
+    },
+    {
+      "pr": 685,
+      "head": "3858a0bf52b6e4e09120e8efdc0bfbb16308c9ef",
+      "branch": "iren/observatory-growth-v105-20261023-001",
+      "base": "release/v084-continuance-approved-20261019",
+      "title": "IREN Observatory V105–V107 — Growth Intelligence, NEXT UX and Weekly Signal",
+      "status": "preserved-source-candidate"
+    },
+    {
+      "pr": 713,
+      "head": "fff22af44da75b1080673b887cd19be6cb725dc6",
+      "branch": "feature/continuance-support-v2-square-sandbox-20261024",
+      "base": "patch/stripe-retirement-v081-20261018",
+      "title": "[DRAFT] ANEVUM Pay V2: isolated Square sandbox supporter checkout and ledger",
+      "status": "preserved-source-candidate"
+    },
+    {
+      "pr": 686,
+      "head": "affd75fffe41cfc4147e6a21e96721a8f5b61ee9",
+      "branch": "build/achievement-bridge-v115-20261023-001",
+      "base": "build/creator-project-achievements-v114-20261023-001",
+      "title": "[DRAFT] V115 Achievement Bridge: creator SDK, consent and project mark issuer",
+      "status": "preserved-source-candidate"
+    },
+    {
+      "pr": 688,
+      "head": "84c634f5677beaf0ef842281285f7ca537f64fba",
+      "branch": "build/continuance-member-collections-nav-20261023-001",
+      "base": "build/continuance-saved-collections-20261023-001",
+      "title": "[DRAFT] My Collection: unified member navigation and compact earned rewards",
+      "status": "preserved-source-candidate"
+    },
+    {
+      "pr": 680,
+      "head": "4c889ac12e178412f6d230aae8c16ca51fdcbdc0",
+      "branch": "build/continuance-progression-20261023-001",
+      "base": "build/continuance-living-commons-react-20261023-001",
+      "title": "[DRAFT] Continuance progression: 19 contribution paths, expeditions and audited XP prototype",
+      "status": "preserved-source-candidate"
+    }
+  ],
+  "acceptance": {
+    "source": "pending-final-run",
+    "chromium": "pending-CI",
+    "ownerFidelity": "pending",
+    "physicalSafari": "pending",
+    "production": "not-deployed",
+    "fullSiteParity": false
+  }
+}

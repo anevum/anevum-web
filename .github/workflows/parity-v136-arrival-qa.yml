@@ -1,0 +1,74 @@
+name: PARITY V136 Arrival QA
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/parity-v136-arrival-qa.yml'
+      - 'creator-v1/test/parity-v136-*.mjs'
+      - 'creator-v1/web/src/components/ParityArrivalV136.tsx'
+      - 'creator-v1/web/src/parity-v136.css'
+      - 'creator-v1/web/src/pages/CinematicLandingPage.tsx'
+      - 'creator-v1/web/src/main.tsx'
+      - 'docs/production/parity-v136*'
+permissions:
+  contents: read
+concurrency:
+  group: parity-v136-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  source-and-compiled-ui:
+    if: github.repository == 'anevum/anevum-web' && github.event.pull_request.head.repo.full_name == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CLOUDFLARE_API_TOKEN: ''
+      CLOUDFLARE_API_KEY: ''
+      CLOUDFLARE_ACCOUNT_ID: ''
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify successor source scope and untouched frozen guards
+        run: node creator-v1/test/parity-v136-scope.mjs
+      - name: Install unchanged frontend and check source
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          node --test creator-v1/test/first-contact-conversion-v133.test.mjs creator-v1/test/next-unified-visual-v134.test.mjs creator-v1/test/next-visual-primitives-v135.test.mjs
+      - name: Default output excludes PARITY
+        env:
+          VITE_PARITY_V136: 'false'
+          VITE_NEXT_VISUAL_SYSTEM: 'false'
+        run: |
+          npm run build:creator-v1-web
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';import path from 'node:path';
+          const all=d=>fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?all(path.join(d,e.name)):[path.join(d,e.name)]);
+          const text=all('creator-v1/dist/web').filter(p=>/\.(js|css)$/.test(p)).map(p=>fs.readFileSync(p,'utf8')).join('\n');
+          if(text.includes('av136-arrival')||text.includes('--av136-void'))throw Error('PARITY leaked into default output');
+          JS
+      - name: Build the single-flag PARITY successor
+        env:
+          VITE_PARITY_V136: 'true'
+          VITE_NEXT_VISUAL_SYSTEM: 'false'
+          VITE_LIVING_COMMONS_REVIEW: 'false'
+        run: npm run build:creator-v1-web
+      - name: Install pinned browser tooling
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
+          npx playwright install --with-deps chromium
+      - name: Compiled 1440 / 1024 / 390 / 320, navigation, IREN, catalogue and fallbacks
+        run: node creator-v1/test/parity-v136-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: parity-v136-${{ github.event.pull_request.head.sha }}
+          path: evidence/parity-v136
+          if-no-files-found: warn
+          retention-days: 14
+# Source/CI only. No deployment, D1, provider credentials or real member fixtures.

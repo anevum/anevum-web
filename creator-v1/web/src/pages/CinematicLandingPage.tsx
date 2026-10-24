@@ -4,6 +4,7 @@ import {readCreators,readProjects,readStatus,type Creator,type Project,type Stat
 import {useResource} from "../lib/useResource";
 import {projectDetailPath} from "../lib/navigation";
 import {Icon} from "../components/Icons";
+import {ParityArrivalV136} from "../components/ParityArrivalV136";
 import {ContinuanceSignalAtlas} from "../components/ContinuanceSignalAtlas";
 import {CompactMemberIdentity} from "../components/CompactMemberIdentity";
 import {useOwnPlayerCard} from "../lib/useOwnPlayerCard";
@@ -16,6 +17,7 @@ import {publicCreatorHandle} from "../lib/public-creator-handle";
  * projects. The only rewarded player identity is independently server-verified.
  * This page never opens up private submissions or moderation records.
  */
+const parityEnabled=import.meta.env.VITE_PARITY_V136==="true";
 type PublicSnapshot={status:Status|null;projects:Project[];creators:Creator[]};
 const gateways=[
   {to:"/discover",title:"Discover",detail:"Open approved games, apps and experiments",icon:"explore",eyebrow:"01 / EXPLORE"},
@@ -88,9 +90,9 @@ export function CinematicLandingPage(){
   const showcase=projects.slice(1,4);
   const verified=Boolean(snapshot);
 
-  return <div className="anevum-cinema av9-home av79-home" data-scene-paused={scenePaused}>
+  return <div className={"anevum-cinema av9-home av79-home"+(parityEnabled?" av136-home":"")} data-scene-paused={scenePaused}>
     <div className="cinema-content av79-home-content">
-      <section className={"av79-hero av114-arrival av115-arrival av125-arrival av133-arrival"+(scenePaused?" av125-is-paused":"")} data-iren-anchor="arrival" aria-labelledby="av79-home-heading">
+      {parityEnabled?<ParityArrivalV136 signedIn={signedIn}/>:<section className={"av79-hero av114-arrival av115-arrival av125-arrival av133-arrival"+(scenePaused?" av125-is-paused":"")} data-iren-anchor="arrival" aria-labelledby="av79-home-heading">
         <div className="av114-arrival-scene" aria-hidden="true">
           <span className="av114-arrival-stars"/>
           <span className="av114-arrival-planet"><i/></span>
@@ -150,7 +152,7 @@ export function CinematicLandingPage(){
         <div className="av114-arrival-signature" aria-hidden="true">
           <span>THE CONTINUANCE INSTITUTE</span><span>EXPLORE · CREATE · CONNECT · BELONG</span>
         </div>
-      </section>
+      </section>}
 
       <section className="av133-first-look" aria-labelledby="av133-first-look-heading">
         <div className="av133-first-look-intro">
