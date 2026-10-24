@@ -11,11 +11,13 @@ import {StudioModeRailV116,StudioTopModesV116,StudioFileTreeV116,type StudioFile
 import {StudioAssetShelfV116,type StudioAsset} from './StudioAssetShelfV116';
 import {StudioOtherModesV116} from './StudioOtherModesV116';
 import {StudioTransformPadV117} from './StudioTransformPadV117';
+import {StudioIrenAssistantV122} from './StudioIrenAssistantV122';
 import './creator-studio-visual-v115.css';
 import './world-composer-v115.css';
 import './studio-next-v116.css';
 import './studio-world-v117.css';
 import './studio-editor-v118.css';
+import './studio-concept-v122.css';
 
 /** Review-only P1 GPU workspace. All edits stay in React memory; explicit
  * exported document text never reaches canonical member DB or publication.
@@ -191,7 +193,7 @@ export function WorldComposerReviewV115(){
   <header className="cvs-head">
    <div className="cvs-head-brand"><OrbitalMark className="cvs-mark"/><div><span>THE CREATIVE NETWORK / CONTINUANCE INSTITUTE</span><h1>ANEVUM <b>/ CREATOR STUDIO</b></h1></div></div>
    <nav className="csn-site-nav" aria-label="ANEVUM navigation"><Link to="/">Home</Link><Link to="/discover">Discover</Link><Link to="/community">Community</Link><Link to="/creators">Creators</Link></nav>
-   <div className="cvs-head-links"><span className="cvs-head-version">WORLD FORMAT <strong>V1</strong></span><Link to="/studio" className="cvs-link">My space <Icon name="arrow" size={16}/></Link></div>
+   <div className="cvs-head-links"><span className="cvs-head-version">WORLD FORMAT <strong>V1</strong></span><span className="cvs-studio-online"><i/> LOCAL CREATIVE ENGINE</span><Link to="/studio" className="cvs-link">My space <Icon name="arrow" size={16}/></Link></div>
   </header>
   <div className="cvs-studio">
    <div className="cvs-projectbar">
@@ -232,7 +234,9 @@ export function WorldComposerReviewV115(){
      <div className="cvs-mode-header"><div className="cvs-mode-label"><span>WORKSPACE / {mode.toUpperCase()}</span><strong>{mode==='Scene'||mode==='Playtest'?'Sky Archipelago':mode==='Scripts'?'Script Editor':mode==='Assets'?'Asset Foundry':mode==='Interface'?'Interface Builder':'Publish & Deploy'}</strong></div><span className="cvs-chip"><i/> LOCAL DESIGN REVIEW</span></div>
      {fileNotice&&<div className="csn-file-notice" role="status"><span>{fileNotice}</span><button type="button" onClick={()=>setFileNotice('')} aria-label="Dismiss file notice">×</button></div>}
      {(mode==='Scene'||mode==='Playtest')?<>
-     <div className="cvw-toolbar"><span>{mode==='Playtest'?'3D VISUAL PLAYTEST / NO SCRIPTS':'SELECT · MOVE · ROTATE · SCALE'}</span><div>
+     <div className="cvw-toolbar"><span className="cvs-tool-title"><Icon name={mode==='Playtest'?'play':'box'} size={15}/>
+      {mode==='Playtest'?'3D VISUAL PLAYTEST / NO SCRIPTS':'SELECT · MOVE · ROTATE · SCALE'}
+     </span><div>
       <button type="button" aria-label="Zoom camera in" onClick={()=>setCamera(c=>({...c,distance:clamp(c.distance-2,4,80)}))}>Zoom +</button>
       <button type="button" aria-label="Zoom camera out" onClick={()=>setCamera(c=>({...c,distance:clamp(c.distance+2,4,80)}))}>Zoom −</button>
       <button type="button" onClick={()=>setCamera(scene.camera)} aria-label="Reset world camera"><span className="cvw-action-full">Reset camera</span><span className="cvw-action-short">Reset</span></button>
@@ -241,9 +245,12 @@ export function WorldComposerReviewV115(){
       <WorldCanvasV115 document={scene} camera={camera} selection={selected}
        onCamera={setCamera} onSelect={id=>dispatch({type:'SELECT',id})}
        onNudge={nudge}/>
-      <div className="cvw-selection-chip"><span>SELECTED OBJECT</span><strong>{node?.name||'None'}</strong></div>
+      <div className="cvw-selection-chip"><span><Icon name="box" size={13}/> SELECTED OBJECT</span><strong>{node?.name||'None'}</strong>
+        <small>{node?.kind||'Choose an editable object'}</small></div>
       <div className="csn-scene-light">
-       <button type="button" aria-expanded={lightingOpen} aria-controls="csn-floating-lighting" onClick={()=>setLightingOpen(v=>!v)}>SCENE LIGHTING <span aria-hidden="true">{lightingOpen?'⌃':'⌄'}</span></button>
+       <button type="button" aria-expanded={lightingOpen} aria-controls="csn-floating-lighting" onClick={()=>setLightingOpen(v=>!v)}>
+        <span className="csn-scene-light-title"><Icon name="sun" size={14}/> SCENE LIGHTING</span>
+        <Icon name={lightingOpen?'chevron-down':'chevron-right'} size={14}/></button>
        {lightingOpen&&<div id="csn-floating-lighting"><div className="csn-light-visual"><span/><span/><span/></div>
         <label>Time of day <select value={scene.environment.sky} onChange={e=>command({type:'SET_ENVIRONMENT',sky:e.target.value as 'day'|'night',sunIntensity:scene.environment.sunIntensity})}>
          <option value="day">Daylight</option><option value="night">Nebula night</option></select></label>
@@ -270,6 +277,12 @@ export function WorldComposerReviewV115(){
      </div>
     </div>
     <aside className={'cvw-inspector cvs-pane'+(panel==='inspector'?' is-mobile-open':'')} aria-label="World object inspector">
+     <StudioIrenAssistantV122 projectName={scene.name} selectedObject={node?.name||null} objectCount={scene.nodes.length}
+      onOpenIren={()=>window.dispatchEvent(new Event('anevum:iren-open'))}
+      onInspect={()=>{setInspectorTab('properties');setPanel('inspector');}}
+      onFrame={()=>{setMode('Scene');frameSelected();setInspectorTab('properties');setPanel('closed');}}
+      onLighting={()=>{setMode('Scene');setLightingOpen(true);setInspectorTab('properties');setPanel('inspector');}}
+      onMode={next=>{setMode(next);setPanel('closed');}}/>
      <div className="csn-inspector-tabs" role="group" aria-label="Context panels"><button type="button" aria-pressed={inspectorTab==='properties'} onClick={()=>setInspectorTab('properties')}>INSPECTOR</button><button type="button" aria-pressed={inspectorTab==='iren'} onClick={()=>setInspectorTab('iren')}>IREN</button>
       <button type="button" className="cvw-close" onClick={()=>setPanel('closed')} aria-label="Close inspector">×</button></div>
      {inspectorTab==='properties'?<><div className="cvs-pane-title csn-context-title"><div><small>SELECTED OBJECT</small><h2>{node?.name||'Select an object'}</h2></div></div>
@@ -296,11 +309,10 @@ export function WorldComposerReviewV115(){
        onChange={e=>command({type:'SET_ENVIRONMENT',sky:e.target.value as 'day'|'night',sunIntensity:scene.environment.sunIntensity})}>
        <option value="day">Daylight</option><option value="night">Nebula night</option></select></label>
      </div>
-     </>:<div className="csn-iren-panel">
-      <div className="csn-iren-identity"><div className="csn-iren-symbol"><OrbitalMark/></div><div><small>IREN / CREATIVE COPILOT</small><strong>Design intelligence</strong><span>Existing companion · no scene access</span></div></div>
-      <p>IREN's future Studio integration will inspect selected objects and propose typed changes for review. This prototype does not send prompts or execute model calls.</p>
-      <div className="csn-iren-suggestions"><span>FUTURE CAPABILITIES</span><div>Generate a world plan</div><div>Build an interface</div><div>Find and validate assets</div><div>Inspect scene scripts</div></div>
-      <button type="button" onClick={()=>window.dispatchEvent(new Event('anevum:iren-open'))}>Open existing IREN <Icon name="arrow" size={15}/></button>
+     </>:<div className="csn-iren-about-v122">
+      <strong>IREN / INTEGRATION STATUS</strong>
+      <p>The assistant above provides real local editor shortcuts. The existing ANEVUM IREN opens through its established app entrypoint. This prototype does not send scene data to AI or execute generated scripts.</p>
+      <button type="button" onClick={()=>window.dispatchEvent(new Event('anevum:iren-open'))}>Open existing IREN <Icon name="arrow" size={14}/></button>
      </div>}
     </aside>
     {panel!=='closed'&&<button className="cvw-backdrop" type="button" aria-label="Close mobile panel" onClick={()=>setPanel('closed')}/>}
