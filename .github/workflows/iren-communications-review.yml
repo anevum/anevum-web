@@ -1,0 +1,24 @@
+name: IREN Communications Isolated Review
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/communications/**'
+      - 'creator-v1/test/iren-communications-v026.test.mjs'
+      - 'creator-v1/web/src/components/EmailUpdatesOptIn.tsx'
+      - 'creator-v1/web/src/pages/EmailUpdatePreferencesPage.tsx'
+      - '.github/workflows/iren-communications-review.yml'
+  workflow_dispatch:
+jobs:
+  communications-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify Worker syntax
+        run: node --check creator-v1/communications/worker.mjs
+      - name: Verify isolated consent, routing and preference contracts
+        run: node --test creator-v1/test/iren-communications-v026.test.mjs
