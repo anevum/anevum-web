@@ -123,7 +123,15 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
    for(const b of batches.values()){
     const mesh=new T.InstancedMesh(b.geometry,b.material,b.matrices.length);
     b.matrices.forEach((matrix,index)=>mesh.setMatrixAt(index,matrix));mesh.computeBoundingSphere();root.add(mesh);
-    const m=b.material as T.MeshStandardMaterial;if(m.metalness>.6){m.normalMap=alloySurface;m.normalScale.set(.35,.2);m.needsUpdate=true}m.userData.originalOpacity=m.opacity;m.userData.originalTransparent=m.transparent;m.userData.originalDepthWrite=m.depthWrite;
+    const m=b.material as T.MeshStandardMaterial;
+    // Blender exports original alloy/stone materials double-sided. During the
+    // authored scene's fade their temporary transparent state would otherwise
+    // draw both faces separately (~2x geometry draw calls). The authored meshes
+    // are closed architectural surfaces, so one pass preserves the expected
+    // transition while staying within the compositor draw-call ceiling.
+    if(stage)m.forceSinglePass=true;
+    if(m.metalness>.6){m.normalMap=alloySurface;m.normalScale.set(.35,.2);m.needsUpdate=true}
+    m.userData.originalOpacity=m.opacity;m.userData.originalTransparent=m.transparent;m.userData.originalDepthWrite=m.depthWrite;
    }
    const f:Family={root,weight:0,lastUsed:performance.now(),geometries,materials,stage:Boolean(stage)};
    if(disposed){release(f);return}
