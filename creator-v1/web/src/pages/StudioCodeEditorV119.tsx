@@ -2,6 +2,7 @@ import {useMemo,useRef,useState,type CSSProperties,type KeyboardEvent} from 'rea
 import {Icon} from '../components/Icons';
 import {StudioFileIconV119} from './StudioFileIconV119';
 import {diagnoseSource,sourceOffsetForLine} from '../../../source-ide/diagnostics-v120.mjs';
+import {sourceOutline} from '../../../source-ide/outline-v121.mjs';
 import {editorLanguage,highlightSource,sourceCursor,editorIndent,editorEnter,
  findSource,replaceSourceAll,prettyJsonSource} from '../../../source-ide/language-v119.mjs';
 import './studio-code-editor-v119.css';
@@ -32,11 +33,15 @@ export function StudioCodeEditorV119({
  const [selection,setSelection]=useState({start:0,end:0});
  const [notice,setNotice]=useState('');
  const [problemsOpen,setProblemsOpen]=useState(false);
+ const [outlineOpen,setOutlineOpen]=useState(false);
+ const [outlineFilter,setOutlineFilter]=useState('');
  const [gotoOpen,setGotoOpen]=useState(false);
  const [gotoLine,setGotoLine]=useState('');
  const language=editorLanguage(fileName);
  const syntax=useMemo(()=>highlightSource(value,fileName),[value,fileName]);
  const problems=useMemo(()=>diagnoseSource(value,fileName),[value,fileName]);
+ const outline=useMemo(()=>sourceOutline(value,fileName),[value,fileName]);
+ const visibleSymbols=useMemo(()=>outline.symbols.filter(item=>item.name.toLocaleLowerCase('en').includes(outlineFilter.toLocaleLowerCase('en'))),[outline,outlineFilter]);
  const problemErrors=problems.diagnostics.filter(x=>x.severity==='error').length;
  const codeLines=value.split('\n').length;
  const plain=syntax.truncated||value.length>65536;
@@ -144,6 +149,7 @@ export function StudioCodeEditorV119({
   if(meta&&!e.altKey&&lower==='h'){e.preventDefault();openFind(true);return;}
   if(meta&&!e.altKey&&lower==='g'){e.preventDefault();setGotoLine(String(cursor.line));setGotoOpen(true);return;}
   if(meta&&e.shiftKey&&!e.altKey&&lower==='m'){e.preventDefault();setProblemsOpen(x=>!x);return;}
+  if(meta&&e.shiftKey&&!e.altKey&&lower==='o'){e.preventDefault();setOutlineOpen(x=>!x);return;}
   if(meta&&!e.altKey&&e.key===','){e.preventDefault();setSettingsOpen(x=>!x);return;}
   if(disabled||readOnly)return;
   if(e.key==='Tab'&&!meta&&!e.altKey){
@@ -155,7 +161,7 @@ export function StudioCodeEditorV119({
   }
  }
  const lines=syntax.lines;
- return <section className={'csi-editor'+(plain?' is-plain':'')+(wordWrap?' is-wrapped':'')+(disabled||readOnly?' is-readonly':'')}
+ return <section className={'csi-editor'+(plain?' is-plain':'')+(wordWrap?' is-wrapped':'')+(disabled||readOnly?' is-readonly':'')+(outlineOpen?' is-outline-open':'')}
   data-studio-code-editor="v119" aria-label={'Code editor for '+fileName} style={style}>
   <div className="csi-toolbar">
    <div className="csi-file-title"><StudioFileIconV119 name={fileName}/><strong title={fileName}>{fileName}</strong>
@@ -165,6 +171,8 @@ export function StudioCodeEditorV119({
     <button type="button" onClick={()=>openFind(true)} aria-label="Find and replace" title="Replace · Ctrl/Cmd+H"><Icon name="replace" size={16}/></button>
     {(language==='json')&&<button type="button" onClick={formatJson} disabled={disabled||readOnly} aria-label="Format JSON" title="Format JSON"><Icon name="braces" size={16}/></button>}
     <button type="button" onClick={()=>{setGotoOpen(x=>!x);setGotoLine(String(cursor.line));}} aria-label="Go to line" title="Go to line · Ctrl/Cmd+G"><Icon name="list-ordered" size={16}/></button>
+    <button type="button" onClick={()=>setOutlineOpen(x=>!x)} aria-expanded={outlineOpen} aria-label="Document outline" title="Outline · Ctrl/Cmd+Shift+O">
+     <Icon name="list-tree" size={16}/></button>
     <button type="button" onClick={()=>setProblemsOpen(x=>!x)} aria-expanded={problemsOpen} aria-label="Source diagnostics" title="Problems · Ctrl/Cmd+Shift+M" className={problemErrors?'csi-has-problems':''}>
      <Icon name={problemErrors?'alert-triangle':'check-circle'} size={16}/>
      {problemErrors>0&&<span className="csi-problem-count">{problemErrors}</span>}</button>
@@ -206,6 +214,7 @@ export function StudioCodeEditorV119({
    <label className="csi-check"><input type="checkbox" checked={wordWrap} onChange={e=>setWordWrap(e.target.checked)}/> Word wrap</label>
    <small>Preferences are local to this editor view. Wrap hides the line gutter.</small>
   </div>}
+  <div className="csi-editor-body">
   <div className="csi-surface">
    {lineNumbers&&!wordWrap&&!plain&&<div className="csi-gutter" aria-hidden="true">
     <div className="csi-line-track" style={{transform:'translateY('+-scroll.top+'px)'}}>
@@ -228,6 +237,25 @@ export function StudioCodeEditorV119({
      wrap={wordWrap?'soft':'off'} aria-label={'Edit source '+fileName} aria-describedby={ariaDescribedBy}
      aria-multiline="true" aria-readonly={disabled||readOnly} />
    </div>
+  </div>
+  {outlineOpen&&<aside className="csi-outline" aria-label="Document outline">
+   <header><strong><Icon name="list-tree" size={15}/> OUTLINE</strong>
+    <span>{outline.symbols.length}</span>
+    <button type="button" onClick={()=>setOutlineOpen(false)} aria-label="Close document outline">×</button>
+   </header>
+   <label className="csi-outline-find"><Icon name="search" size={14}/>
+    <input type="search" aria-label="Filter document symbols" placeholder="Filter symbols…" value={outlineFilter}
+     onChange={event=>setOutlineFilter(event.target.value)}/></label>
+   <div className="csi-outline-list">
+    {visibleSymbols.length?visibleSymbols.map((item,index)=><button key={index} type="button"
+     className={'csi-outline-item is-'+item.kind} style={{paddingInlineStart:(10+item.depth*13)+'px'}}
+     title={item.name+' · Ln '+item.line} onClick={()=>focusLine(item.line,item.column)}>
+     <Icon name={item.kind==='function'?'code':item.kind==='heading'?'file-text':item.kind==='node'?'box':'file-search'} size={14}/>
+     <span>{item.name}</span><small>{item.line}</small></button>):
+     <p className="csi-outline-empty">{outlineFilter?'No matching symbols.':'No navigable symbols found.'}</p>}
+   </div>
+   <p className="csi-outline-note">{outline.note}{outline.truncated?' Results are capped.':''}</p>
+  </aside>}
   </div>
   {problemsOpen&&<section className="csi-problems" aria-label="Source problems and diagnostics">
    <div className="csi-problems-heading"><strong><Icon name="list-checks" size={15}/> PROBLEMS</strong>
