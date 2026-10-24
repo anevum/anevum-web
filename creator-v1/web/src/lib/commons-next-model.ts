@@ -1,7 +1,9 @@
 /** Pure Living Commons preview taxonomy and URL state; no I/O, authorization or account writes. */
 import type {Category, CommunityPostSort, Status} from './api';
 export type CommonsPreviewView='signals'|'atlas'|'people';
-export type CommonsPreviewQuery=Readonly<{view:CommonsPreviewView;category:Category|'';q:string;sort:CommunityPostSort}>;
+/** Explicit layout choice is URL-only; an empty value follows the device width. */
+export type CommonsAtlasPresentation='map'|'list'|'';
+export type CommonsPreviewQuery=Readonly<{view:CommonsPreviewView;category:Category|'';q:string;sort:CommunityPostSort;atlas:CommonsAtlasPresentation}>;
 export type District=Readonly<{id:Category;title:string;description:string;coordinates:readonly [number,number];code:string}>;
 export const COMMONS_DISTRICTS:readonly District[]=[
  {id:'games',title:'Play & Worlds',description:'Playable ideas and interactive experiments',coordinates:[21,27],code:'01'},
@@ -26,7 +28,9 @@ export function decodeCommonsQuery(params:URLSearchParams):CommonsPreviewQuery{
  const category=COMMONS_DISTRICTS.find(item=>item.id===requested)?.id??'';
  const q=normalizeCommonsSearch(params.get('q')??'');
  const sort:CommunityPostSort=params.get('sort')==='hot'?'hot':'new';
- return {view,category,q,sort};
+ const rawAtlas=params.get('atlas');
+ const atlas:CommonsAtlasPresentation=rawAtlas==='map'||rawAtlas==='list'?rawAtlas:'';
+ return {view,category,q,sort,atlas};
 }
 export function nextCommonsQuery(current:URLSearchParams,changes:Partial<CommonsPreviewQuery>):URLSearchParams{
  const result=new URLSearchParams(current);

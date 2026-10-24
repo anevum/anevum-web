@@ -22,7 +22,6 @@ import { CommonsQuickNavigator } from './CommonsQuickNavigator';
 import './community-next-review.css';
 import './commons-quick-navigator.css';
 
-type AtlasMode = 'map' | 'list';
 type ResourceName = 'status' | 'projects' | 'discussions' | 'categories' | 'creators';
 export const COMMONS_PREVIEW_CATEGORIES = COMMONS_DISTRICTS.map(item => item.id);
 const presentDate = (raw: string | null | undefined) => {
@@ -96,9 +95,8 @@ function CategoryPicker({value, onPick}: {value: Category | ''; onPick: (id: Cat
 
 export function CommunityNextReviewPage() {
   const [params, setParams] = useSearchParams();
-  const {view, category, q, sort} = decodeCommonsQuery(params);
+  const {view, category, q, sort, atlas} = decodeCommonsQuery(params);
   const [draft, setDraft] = useState(q);
-  const [atlasPreference, setAtlasPreference] = useState<AtlasMode | null>(null);
   const [compactAtlas, setCompactAtlas] = useState(() => window.matchMedia('(max-width: 530px)').matches);
   const [paused, setPaused] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -108,7 +106,7 @@ export function CommunityNextReviewPage() {
   const queryString = params.toString();
   const previousQuery = useRef(queryString);
   const focusFrame = useRef<number | null>(null);
-  const atlasMode = atlasPreference ?? (compactAtlas ? 'list' : 'map');
+  const atlasMode = atlas || (compactAtlas ? 'list' : 'map');
 
   useEffect(() => setDraft(q), [q]);
   useEffect(() => {
@@ -140,8 +138,14 @@ export function CommunityNextReviewPage() {
   };
   useEffect(() => {
     if (previousQuery.current !== queryString) {
+      // A presentation-only map/list change must not throw keyboard focus back
+      // into the results or scroll away from the Atlas controls.
+      const previousContent = new URLSearchParams(previousQuery.current);
+      const nextContent = new URLSearchParams(queryString);
+      previousContent.delete('atlas');
+      nextContent.delete('atlas');
       previousQuery.current = queryString;
-      focusContent();
+      if (previousContent.toString() !== nextContent.toString()) focusContent();
     }
   }, [queryString]);
   useEffect(() => () => {
@@ -185,6 +189,10 @@ export function CommunityNextReviewPage() {
     else setParams(updated, {replace: false});
   };
   const chooseDistrict = (id: Category | '') => change({category: id, view: 'signals'});
+  const chooseAtlasPresentation = (choice: 'map' | 'list' | '') => {
+    const updated = nextCommonsQuery(params, {atlas: choice});
+    if (updated.toString() !== queryString) setParams(updated, {replace: false});
+  };
   const clearProjects = () => {setDraft(''); change({q: '', category: ''});};
   function search(event: FormEvent<HTMLFormElement>) {event.preventDefault(); change({q: normalizeCommonsSearch(draft)});}
   const retryButton = (name: ResourceName, label: string, focusTarget: ResourceName = name) => <button type="button" className="lnx-retry" onClick={() => retry(name, focusTarget)}>{label} <span aria-hidden="true">↻</span></button>;
@@ -231,7 +239,11 @@ export function CommunityNextReviewPage() {
           <form className="lnx-search" role="search" aria-label="Search approved projects" onSubmit={search}>
             <label htmlFor="lnx-search">Find approved projects</label>
             <div><input id="lnx-search" type="search" maxLength={72} placeholder="Search projects by title or idea" value={draft} onChange={e => setDraft(e.target.value)}/><button type="submit">Search <span aria-hidden="true">↗</span></button></div>
-            {(q || category) && <div className="lnx-active-filters"><span>{selected?.title || 'All disciplines'}{q ? ' · “' + q + '”' : ''}</span><button type="button" onClick={clearProjects}>Clear filters <span aria-hidden="true">×</span></button></div>}
+            {(q || category) && <div className="lnx-active-filters" role="group" aria-label="Active project filters">
+              {category && <button type="button" className="lnx-filter-chip" aria-label={'Remove discipline filter: ' + (selected?.title || category)} onClick={() => change({category: ''})}><span>FIELD · {selected?.title || category}</span><span aria-hidden="true">×</span></button>}
+              {q && <button type="button" className="lnx-filter-chip" aria-label={'Remove project search: ' + q} onClick={() => {setDraft(''); change({q: ''});}}><span>SEARCH · “{q}”</span><span aria-hidden="true">×</span></button>}
+              <button type="button" className="lnx-clear-all" onClick={clearProjects}>Clear all filters <span aria-hidden="true">×</span></button>
+            </div>}
           </form>
           <section className="lnx-resource-region" id="lnx-projects" tabIndex={-1} aria-label="Approved projects" aria-busy={projectFeed.state === 'loading'}>
           <div className="lnx-result-header"><h3>Original releases</h3><span aria-live="polite">{projectFeed.state === 'ready' ? projectFeed.data.items.length + ' approved on this page' : 'PUBLIC CATALOGUE'}</span></div>
@@ -251,7 +263,7 @@ export function CommunityNextReviewPage() {
           </section>
         </>}
         {view === 'atlas' && <>
-          <header className="lnx-section-head"><div><span className="lnx-kicker">02 / DISTRICT ATLAS</span><h2 id="lnx-section-title">Places to explore.</h2><p>Eight creative disciplines. Choose a field and find the work taking shape within it.</p></div><div className="lnx-atlas-controls" role="group" aria-label="Atlas presentation"><button type="button" aria-pressed={atlasMode === 'map'} onClick={() => setAtlasPreference('map')}>Spatial map</button><button type="button" aria-pressed={atlasMode === 'list'} onClick={() => setAtlasPreference('list')}>Accessible list</button></div></header>
+          <header className="lnx-section-head"><div><span className="lnx-kicker">02 / DISTRICT ATLAS</span><h2 id="lnx-section-title">Places to explore.</h2><p>Eight creative disciplines. Choose a field and find the work taking shape within it.</p></div><div className="lnx-atlas-controls" role="group" aria-label="Atlas presentation"><button type="button" aria-pressed={atlasMode === 'map'} onClick={() => chooseAtlasPresentation('map')}>Spatial map</button><button type="button" aria-pressed={atlasMode === 'list'} onClick={() => chooseAtlasPresentation('list')}>Accessible list</button>{atlas && <button type="button" className="lnx-atlas-auto" onClick={() => chooseAtlasPresentation('')}>Use device default</button>}</div></header>
           <section className="lnx-resource-region" id="lnx-categories" tabIndex={-1} aria-label="District catalogue" aria-busy={districtCounts.state === 'loading'}>
           {districtCounts.state === 'loading' && <p className="lnx-status" role="status">Loading public category totals…</p>}
           {districtCounts.state === 'error' && <div className="lnx-status" role="status"><p>Category totals are unavailable. You can still explore every district.</p>{retryButton('categories', 'Retry counts')}</div>}

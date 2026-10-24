@@ -65,3 +65,25 @@ test('the pure URL model includes typed state with no privilege grant or I/O',()
  assert.match(model,/export function moderatedPostsEnabled/);
  assert.doesNotMatch(model,/fetch\(|localStorage|sessionStorage|memberCreateReply|canonicalEdit/);
 });
+
+test('Atlas presentation is a shareable URL choice without storage or lost keyboard focus',()=>{
+ assert.match(model,/export type CommonsAtlasPresentation/);
+ assert.match(model,/rawAtlas==='map'\|\|rawAtlas==='list'/);
+ assert.match(page,/const atlasMode = atlas \|\| \(compactAtlas \? 'list' : 'map'\)/);
+ assert.match(page,/chooseAtlasPresentation\('map'\)/);
+ assert.match(page,/chooseAtlasPresentation\('list'\)/);
+ assert.match(page,/chooseAtlasPresentation\(''\)/);
+ assert.match(page,/previousContent\.delete\('atlas'\)/);
+ assert.match(page,/nextContent\.delete\('atlas'\)/);
+ assert.match(css,/\.lnx-root \.lnx-atlas-controls>\.lnx-atlas-auto/);
+ for(const denied of ['localStorage','sessionStorage'])assert.doesNotMatch(page,new RegExp(denied));
+});
+test('Project filter chips remove a discipline or search independently and preserve read-only URLs',()=>{
+ assert.match(page,/aria-label="Active project filters"/);
+ assert.match(page,/Remove discipline filter:/);
+ assert.match(page,/Remove project search:/);
+ assert.match(page,/change\(\{category: ''\}\)/);
+ assert.match(page,/change\(\{q: ''\}\)/);
+ assert.match(page,/Clear all filters/);
+ assert.match(css,/\.lnx-root \.lnx-active-filters>\.lnx-filter-chip/);
+});

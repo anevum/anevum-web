@@ -229,6 +229,28 @@ try {
     record('Creator search continuation and section-specific Context Lens');
     await f.close();
 
+    const filters=await fixture();
+    await open(filters.page,'?category=research&q=field');
+    await settled(filters.page,'.lnx-project-card');
+    assert.equal(await filters.page.locator('.lnx-filter-chip').count(),2);
+    await filters.page.getByRole('button',{name:'Remove discipline filter: Research'}).click();
+    await filters.page.waitForURL(url=>url.searchParams.get('category')===null && url.searchParams.get('q')==='field');
+    await settled(filters.page,'.lnx-project-card');
+    record('Remove only the discipline filter; project search and results remain');
+    await filters.page.goBack();
+    await filters.page.waitForURL(url=>url.searchParams.get('category')==='research' && url.searchParams.get('q')==='field');
+    await filters.page.getByRole('button',{name:'Remove project search: field'}).click();
+    await filters.page.waitForURL(url=>url.searchParams.get('category')==='research' && url.searchParams.get('q')===null);
+    assert.equal(await filters.page.locator('#lnx-search').inputValue(),'');
+    await settled(filters.page,'.lnx-project-card');
+    record('Remove only the search chip; selected discipline and input state remain correct');
+    await filters.page.getByRole('button',{name:'Clear all filters'}).click();
+    await filters.page.waitForURL(url=>url.searchParams.get('category')===null && url.searchParams.get('q')===null);
+    await filters.page.waitForFunction(()=>document.querySelectorAll('.lnx-project-card').length===4);
+    assert.equal(await filters.page.locator('.lnx-filter-chip').count(),0);
+    record('Clear all filters restores the real public project list');
+    await filters.close();
+
     for(const scenario of ['closed','posts-404','status-error','empty']){
       const f=await fixture({scenario});
       await open(f.page);
@@ -299,9 +321,24 @@ try {
     await map.click();
     await mobile.page.locator('.lnx-atlas-map').waitFor({state:'visible'});
     assert.equal(await map.getAttribute('aria-pressed'),'true');
+    assert.equal(new URL(mobile.page.url()).searchParams.get('atlas'),'map');
+    assert.equal(await map.evaluate(el=>el===document.activeElement),true,'Changing presentation retains keyboard focus');
     await noOverflow(mobile.page,'Atlas mobile optional map');
     await capture(mobile.page,'atlas-map-390');
-    await list.click();assert.equal(await list.getAttribute('aria-pressed'),'true');
+    await mobile.page.reload({waitUntil:'domcontentloaded'});
+    await mobile.page.locator('.lnx-atlas-map').waitFor({state:'visible'});
+    assert.equal(await map.getAttribute('aria-pressed'),'true');
+    record('Atlas spatial layout survives copyable URL and hard reload on a phone');
+    await list.click();
+    assert.equal(await list.getAttribute('aria-pressed'),'true');
+    assert.equal(new URL(mobile.page.url()).searchParams.get('atlas'),'list');
+    await mobile.page.goBack();
+    await mobile.page.waitForURL(url=>url.searchParams.get('atlas')==='map');
+    await mobile.page.locator('.lnx-atlas-map').waitFor({state:'visible'});
+    await mobile.page.getByRole('button',{name:'Use device default'}).click();
+    await mobile.page.waitForURL(url=>url.searchParams.get('atlas')===null);
+    assert.equal(await list.getAttribute('aria-pressed'),'true');
+    record('Atlas history restores map selection; device default returns to accessible list');
     await mobile.page.locator('.lnx-atlas-row').first().click();
     assert.equal(new URL(mobile.page.url()).searchParams.get('category'),'games');
     await settled(mobile.page,'.lnx-project-card');

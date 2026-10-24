@@ -72,3 +72,14 @@ No new auth, D1 migration, API endpoint, Worker, uploaded media, profile write, 
 ## Related controls
 
 Owner creative checkpoint: #335. Engineering board: #325. V131 protected release and rollback: #655. Public surfaces draft: #667. Creator Studio draft: #658. NEXT foundation: #676. Community/Profiles: #677. Living Commons prototype: #678. Keep independent PR reviews without mixing unfinished migrations, production artifact uploaders, or worker routes.
+
+
+## Continuation 011 — shareable Atlas layout and independent search filters
+
+Session `ANEVUM.WEB.BUILD.2026-10-23.011.LIVING-COMMONS-SHAREABLE-FILTERS`.
+
+The review's map/list presentation choice now lives in a typed `atlas=map|list` URL query instead of transient local React state or browser storage. Unset or unrecognized values honor the current viewport (map on desktop, accessible list on small screens). The choice survives Back, Forward, reload and copied links; a visible “Use device default” control clears the override. A presentation-only change leaves keyboard focus on the selected control instead of scrolling to the content. District and search filters continue to travel with the URL and approved project detail return links.
+
+The Signal Board now exposes independently removable project-discipline and search chips, with a separate Clear all control. Each removal preserves the other active filter and produces the correct actual public API query. Updated local compiled-browser tests cover phone map/list reload and navigation, focus, independent chip removal, browser history and full reset. The continuation does not introduce additional API endpoints, persistence, analytics/telemetry, member reads, writes, earned rewards, permissions or dependency changes. Default-off preview isolation, a single existing IREN and all release gates remain intact.
+
+Source remains in draft PR #679; every new screenshot/test receipt must be bound to its exact checked Git head. No V131 release or Cloudflare action is implied.

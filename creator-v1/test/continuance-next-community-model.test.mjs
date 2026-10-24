@@ -13,7 +13,7 @@ test('invalid URL state resolves to safe known views and categories',()=>{
 });
 test('URL parsing supports atlas and hot sort',()=>{
  const q=decodeCommonsQuery(new URLSearchParams('view=atlas&category=games&sort=hot&q=maker'));
- assert.deepEqual(q,{view:'atlas',category:'games',sort:'hot',q:'maker'});
+ assert.deepEqual(q,{view:'atlas',category:'games',sort:'hot',q:'maker',atlas:''});
 });
 test('navigation updates preserve unrelated URL state',()=>{
  const original=new URLSearchParams('view=atlas&q=render&sort=hot&review=owner');
@@ -86,4 +86,36 @@ test('discussion availability is fail-closed',()=>{
  assert.equal(moderatedPostsEnabled({features:{}}),false);
  assert.equal(moderatedPostsEnabled({features:{communityPosts:false}}),false);
  assert.equal(moderatedPostsEnabled({features:{communityPosts:true}}),true);
+});
+
+test('Atlas presentation links are typed, bounded and device-default when absent or invalid',()=>{
+ for(const value of ['map','list']){
+  const q=decodeCommonsQuery(new URLSearchParams('view=atlas&atlas='+value));
+  assert.equal(q.atlas,value);
+  const updated=nextCommonsQuery(new URLSearchParams('view=atlas&q=maker&category=tools'),{atlas:value});
+  assert.equal(updated.get('atlas'),value);
+  assert.equal(updated.get('q'),'maker');
+  assert.equal(updated.get('category'),'tools');
+ }
+ for(const raw of ['', 'auto', 'mobile', 'MAP', 'private', 'https://elsewhere.invalid']){
+  const params=new URLSearchParams({view:'atlas',atlas:raw});
+  assert.equal(decodeCommonsQuery(params).atlas,'');
+ }
+ const reset=nextCommonsQuery(new URLSearchParams('view=atlas&atlas=map&category=research&q=field'),{atlas:''});
+ assert.equal(reset.has('atlas'),false);
+ assert.equal(reset.get('category'),'research');
+ assert.equal(reset.get('q'),'field');
+});
+test('individual removal of project category or search keeps the other query and does not mutate inputs',()=>{
+ const original=new URLSearchParams('view=signals&category=research&q=field&sort=hot&atlas=map');
+ const withoutCategory=nextCommonsQuery(original,{category:''});
+ const withoutSearch=nextCommonsQuery(original,{q:''});
+ assert.equal(withoutCategory.get('category'),null);
+ assert.equal(withoutCategory.get('q'),'field');
+ assert.equal(withoutCategory.get('atlas'),'map');
+ assert.equal(withoutSearch.get('q'),null);
+ assert.equal(withoutSearch.get('category'),'research');
+ assert.equal(withoutSearch.get('sort'),'hot');
+ assert.equal(original.get('q'),'field');
+ assert.equal(original.get('category'),'research');
 });

@@ -195,3 +195,18 @@
 }
 @media(prefers-reduced-motion:reduce){.lnx-root .lnx-skeleton-card{animation:none!important}.lnx-root .lnx-project-card:hover{transform:none}}
 @media(forced-colors:active){.lnx-root :where(.lnx-retry,.lnx-mode-switch>button,.lnx-filter-row,.lnx-atlas-row){border:1px solid ButtonText}.lnx-root [aria-pressed=true],.lnx-root [aria-current=page]{outline:2px solid Highlight;outline-offset:-3px}}
+
+/* Session 011: individually removable URL-backed project filters and shareable Atlas layout. */
+.lnx-root .lnx-search .lnx-active-filters{justify-content:flex-start;gap:8px;padding:12px 0}
+.lnx-root .lnx-active-filters>.lnx-filter-chip{display:inline-flex;flex:none;align-items:center;justify-content:space-between;gap:14px;max-width:100%;min-height:44px;border:1px solid #7b8198;border-radius:22px;padding:9px 13px;background:#243248;color:var(--lnx-bone);font-size:12px;line-height:1.45}
+.lnx-root .lnx-filter-chip>span:first-child{overflow-wrap:anywhere;min-width:0;text-align:left}
+.lnx-root .lnx-filter-chip>span:last-child{font-size:17px;color:var(--lnx-copper)}
+.lnx-root .lnx-active-filters>.lnx-clear-all{display:inline-flex;align-items:center;justify-content:center;gap:8px;margin-left:auto;padding:9px 8px;font-size:12px;color:var(--lnx-copper);text-decoration:underline;text-underline-offset:3px}
+.lnx-root .lnx-atlas-controls{flex-wrap:wrap;align-items:center}
+.lnx-root .lnx-atlas-controls>.lnx-atlas-auto{font-size:11px;background:none;border-color:#68788d;color:var(--lnx-soft)}
+@media(max-width:530px){
+  .lnx-root .lnx-active-filters>.lnx-filter-chip{flex:1 1 auto}
+  .lnx-root .lnx-active-filters>.lnx-clear-all{flex:1 1 100%;justify-content:flex-start;margin:0}
+  .lnx-root .lnx-atlas-controls>.lnx-atlas-auto{grid-column:1/-1;min-height:44px}
+}
+@media(forced-colors:active){.lnx-root .lnx-active-filters>.lnx-filter-chip{border-color:ButtonText}}
