@@ -10,8 +10,9 @@ import {readFileSync,writeFileSync,mkdirSync,statSync} from 'node:fs';
 import {resolve,join,sep} from 'node:path';
 import {createHash} from 'node:crypto';
 import {NodeIO} from '@gltf-transform/core';
-import {EXTMeshoptCompression,ALL_EXTENSIONS} from '@gltf-transform/extensions';
+import {ALL_EXTENSIONS} from '@gltf-transform/extensions';
 import {MeshoptEncoder} from 'meshoptimizer';
+import {meshopt} from '@gltf-transform/functions';
 
 const args=process.argv.slice(2);
 const arg=(key)=>{const i=args.indexOf('--'+key);assert.ok(i!==-1&&args[i+1]&&!args[i+1].startsWith('--'),'Required --'+key+' PATH');return resolve(args[i+1])};
@@ -59,9 +60,32 @@ for(const tier of ['desktop','mobile']){
   triangles+=indices.getCount()/3;primitives++;
  }
  assert.ok(triangles>5000&&primitives>=2,'Authored scene has no usable detail');
- const extension=document.createExtension(EXTMeshoptCompression).setRequired(true);
- extension.setEncoderOptions({method:EXTMeshoptCompression.EncoderMethod.FILTER});
+ // Vertex reordering and KHR_mesh_quantization are required: lossless
+ // FILTER-only compression measured 1.83MB / .946MB and failed BOTH budgets.
+ // A measured 14-bit position grid maintains cinematic architecture accuracy;
+ // medium mode stores compact quantized accessors without needing Brotli or
+ // relaxing the site's 1 MiB CSP-safe Meshopt decode worker limits.
+ await document.transform(meshopt({
+  encoder:MeshoptEncoder,level:'medium',quantizePosition:14,
+  quantizeNormal:10,quantizeTexcoord:12
+ }));
  const binary=Buffer.from(await io.writeBinary(document));
+ const serialized=JSON.parse(binary.subarray(20,20+binary.readUInt32LE(12)).toString());
+ assert.ok(serialized.extensionsRequired?.includes('EXT_meshopt_compression'),
+  'QA geometry must remain Meshopt-encoded');
+ assert.ok(serialized.extensionsRequired?.includes('KHR_mesh_quantization'),
+  'Compact quantized geometry needs KHR_mesh_quantization');
+ assert.ok(!serialized.images?.length,'Standalone shared geometry must not link remote textures');
+ assert.ok(!(serialized.buffers||[]).some(b=>b.uri),
+  'Self-contained binary GLB only');
+ const decodedAccessors=serialized.accessors||[];
+ assert.ok(decodedAccessors.every(a=>a.count<1_000_000),'Reject extreme decoded accessor counts');
+ // Existing CSP decoder rejects any one decoded compressed bufferView >1 MiB.
+ for(const view of serialized.bufferViews||[]){
+  if(!view.extensions?.EXT_meshopt_compression)continue;
+  assert.ok(view.byteLength<=1_048_576,
+   'CSP-safe decoder per-bufferView output limit exceeded: '+view.byteLength);
+ }
  const targetName='atrium-'+tier+'.glb';
  const target=join(out,targetName);
  writeFileSync(target,binary);
