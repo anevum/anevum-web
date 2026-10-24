@@ -24,7 +24,7 @@ export function StudioTransformPadV117({position,onMove,onFrame}:{
     <span className="csn-axis-name">{axis}</span>
     <button type="button" onClick={()=>direction(i as 0|1|2,-1)}
      aria-label={'Move '+axis+' negative '+step+' meters'}>−</button>
-    <output aria-label={axis+' position'}>{position[i].toFixed(1)}</output>
+    <output aria-label={axis+' position'}>{position[i].toFixed(2)}</output>
     <button type="button" onClick={()=>direction(i as 0|1|2,1)}
      aria-label={'Move '+axis+' positive '+step+' meters'}>+</button>
    </div>)}
