@@ -252,6 +252,7 @@ try {
     assert.equal(await authorCards.page.locator('.lnx-author-award').count(),1,'Only the explicitly featured earned award displays');
     assert.equal(await authorCards.page.locator('.lnx-author-works').count(),2,'Only published creator-directory counts display');
     assert.equal(await authorCards.page.locator('.lnx-author-profile-link').count(),2);
+    assert.equal(await authorCards.page.locator('.lnx-thread-author').first().locator('.lnx-author-profile-link').getAttribute('href'),'/creators/mira_chen','Profile links use actual approved creator route');
     assert.equal(authorCards.state.requests.filter(x=>x.path==='/api/v1/community/showcases').length,1,'Bounded public dossier batch only');
     await capture(authorCards.page,'post-author-dossiers-1440');
     record('Post authors display verified level, equipped artifact, chosen award and published works');
@@ -416,7 +417,9 @@ try {
     await open(mobileAuthor.page);
     await mobileAuthor.page.getByText('Orbital Specimen',{exact:true}).waitFor();
     await noOverflow(mobileAuthor.page,'Post author dossiers mobile 390');
-    await capture(mobileAuthor.page,'post-author-dossiers-390',{fullPage:false});
+    await capture(mobileAuthor.page,'post-author-dossiers-390');
+    await mobileAuthor.page.locator('.lnx-thread-author').first().scrollIntoViewIfNeeded();
+    await capture(mobileAuthor.page,'post-author-dossiers-390-detail',{fullPage:false});
     record('Richer post author cards retain mobile layout and public-profile navigation');
     await mobileAuthor.close();
 
