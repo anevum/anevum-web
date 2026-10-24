@@ -140,8 +140,11 @@ try{
   assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('data-destination')),'signals');
   await page.locator('.lnx-quick-close').focus();
   await page.keyboard.press('Shift+Tab');
+  assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('data-destination')),'creators');
   assert.equal(await page.evaluate(()=>document.querySelector('#lnx-quick-dialog')?.contains(document.activeElement)),true);
-  record('Home/End and reverse Tab stay in the native modal');
+  await page.keyboard.press('Tab');
+  assert.equal(await page.locator('.lnx-quick-close').evaluate(el=>el===document.activeElement),true);
+  record('Home/End and forward/reverse Tab stay in the modal');
   await page.keyboard.press('Control+k');
   await page.locator('.portal-launcher').waitFor({state:'visible'});
   assert.equal(await page.locator('#lnx-quick-dialog').evaluate(el=>el.open),false);
@@ -198,7 +201,15 @@ try{
   writeFileSync(join(output,'navigator-review.json'),JSON.stringify({session:'ANEVUM.WEB.BUILD.2026-10-23.008.LIVING-COMMONS-QUICK-NAVIGATOR',sourceHead,engine,syntheticFixtures:true,compiledReact:true,productionAcceptance:false,checks,captures,requests,errors,forbidden},null,2)+'\n');
   console.log(JSON.stringify({result:'PASS',engine,checks:checks.length,captures:captures.length}));
 }catch(error){
-  writeFileSync(join(output,'navigator-failure.json'),JSON.stringify({sourceHead,engine,checks,captures,errors,forbidden,error:String(error)},null,2)+'\n');
+  let focusState=null;
+  try{
+    const page=browser?.contexts().flatMap(context=>context.pages()).at(-1);
+    if(page){
+      focusState=await page.evaluate(()=>({active:{tag:document.activeElement?.tagName,id:document.activeElement?.id,className:document.activeElement?.className},openDialogs:Array.from(document.querySelectorAll('dialog[open]')).map(el=>({id:el.id,className:el.className}))}));
+      await page.screenshot({path:join(output,'navigator-failure-state.png')});
+    }
+  }catch{}
+  writeFileSync(join(output,'navigator-failure.json'),JSON.stringify({sourceHead,engine,checks,captures,errors,forbidden,focusState,error:String(error),stack:error.stack},null,2)+'\n');
   throw error;
 }finally{
   if(browser)await browser.close();

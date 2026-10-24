@@ -111,7 +111,26 @@ export function CommonsQuickNavigator({view, category, discoverPath, creatorsPat
     else if (event.key === 'ArrowUp' && index === 0) input.current?.focus();
     else options[(index + (event.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length]?.focus();
   };
+  const retainTabFocus = (event: ReactKeyboardEvent<HTMLDialogElement>) => {
+    const modal = dialog.current;
+    if (!modal?.open || event.defaultPrevented || event.key !== 'Tab') return;
+    // Native modality makes the page inert, but browser chrome can still receive
+    // edge traversal. Wrap explicitly at the current, filtered control bounds.
+    const controls = Array.from(modal.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), a[href], [tabindex]'))
+      .filter(element => element.tabIndex >= 0 && element.getClientRects().length > 0);
+    const first = controls[0];
+    const last = controls[controls.length - 1];
+    if (!first || !last) return;
+    const active = document.activeElement;
+    if (event.shiftKey && (active === first || !modal.contains(active))) {
+      event.preventDefault(); last.focus();
+    } else if (!event.shiftKey && (active === last || !modal.contains(active))) {
+      event.preventDefault(); first.focus();
+    }
+  };
   const close = () => {
+    // Ignore an older queued close event after an immediate reopen.
+    if (dialog.current?.open) return;
     setOpened(false);
     setQuery('');
     // Selection and global handoff defer focus to the existing page/Shell.
@@ -127,7 +146,7 @@ export function CommonsQuickNavigator({view, category, discoverPath, creatorsPat
     <button ref={trigger} type="button" className="lnx-quick-entry" aria-haspopup="dialog" aria-expanded={opened} aria-controls="lnx-quick-dialog" aria-keyshortcuts="Alt+K" onClick={event => openNavigator(event.currentTarget)}>
       <span>Quick Navigator</span><kbd>Alt K</kbd>
     </button>
-    <dialog ref={dialog} id="lnx-quick-dialog" className="lnx-quick-dialog" aria-modal="true" aria-labelledby="lnx-quick-title" aria-describedby="lnx-quick-help" onClose={close}>
+    <dialog ref={dialog} id="lnx-quick-dialog" className="lnx-quick-dialog" aria-modal="true" aria-labelledby="lnx-quick-title" aria-describedby="lnx-quick-help" onClose={close} onKeyDown={retainTabFocus}>
       <div className="lnx-quick-panel">
         <header className="lnx-quick-top"><span className="lnx-quick-brand" aria-hidden="true"><OrbitalMark/></span><span className="lnx-kicker">CONTINUANCE / WAYFINDING</span><button type="button" className="lnx-quick-close" aria-label="Close Quick Navigator" onClick={() => dialog.current?.close()}>Close <span aria-hidden="true">&#215;</span></button></header>
         <h2 id="lnx-quick-title">Where to next?</h2>
