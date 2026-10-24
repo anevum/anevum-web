@@ -1,0 +1,90 @@
+name: Creator Studio V115 Instrument Glass QA
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/web/src/App.tsx'
+      - 'creator-v1/web/src/pages/CreatorStudioVisualReviewV115.tsx'
+      - 'creator-v1/web/src/pages/creator-studio-visual-v115.css'
+      - 'creator-v1/test/creator-studio-visual-v115.test.mjs'
+      - 'creator-v1/test/capture-studio-visual-v115.mjs'
+      - 'docs/production/creator-studio-v115-visual-system-and-build-20261023.md'
+      - '.github/workflows/creator-studio-v115-visual-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: creator-studio-v115-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  isolated-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned root dependencies (no install hooks)
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: V115 design contracts and existing Studio source compatibility
+        run: |
+          node --test creator-v1/test/creator-studio-visual-v115.test.mjs
+          node --test creator-v1/test/creator-workspace-v109.test.mjs
+          node --test creator-v1/test/studio-visual-scenes-v112.test.mjs
+          node --test creator-v1/test/studio-interface-builder-v113.test.mjs
+          node --check creator-v1/test/capture-studio-visual-v115.mjs
+      - name: Verify strict Creator React TypeScript
+        run: npm run check:creator-v1-web
+      - name: Build production-equivalent default OFF and prove no review module bytes
+        env:
+          VITE_CREATOR_VISUAL_REVIEW_V115: 'false'
+          VITE_CREATOR_WORKSPACE_V109: 'false'
+        run: |
+          npm run build:creator-v1-web:staging
+          if grep -R -l --include='*.js' 'NO GPU RENDERER YET' creator-v1/dist/react-staging; then
+            echo 'V115 leaked into the default-OFF shipped bundle' >&2
+            exit 1
+          fi
+      - name: Compile source-only V115 visual review, no backend writes
+        env:
+          VITE_CREATOR_VISUAL_REVIEW_V115: 'true'
+          VITE_CREATOR_WORKSPACE_V109: 'false'
+          VITE_CREATOR_FILE_TREE_V111: 'false'
+          VITE_CREATOR_VISUAL_SCENE_V112: 'false'
+          VITE_CREATOR_INTERFACE_BUILDER_V113: 'false'
+          VITE_NATIVE_CREATOR_STUDIO_V095: 'false'
+        run: |
+          npm run build:creator-v1-web:staging
+          if ! grep -R -l --include='*.js' 'NO GPU RENDERER YET' creator-v1/dist/react-staging; then
+            echo 'V115 review entry not found in feature-ON compiled output' >&2
+            exit 1
+          fi
+      - name: Real compiled Chromium interaction and 1440/390/320 captures
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/studio-v115
+          node creator-v1/test/portal-offline-preview.mjs > evidence/studio-v115/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for _ in $(seq 1 75); do
+            if curl --fail --silent http://127.0.0.1:4178/__ready > /dev/null; then ready=1; break; fi
+            sleep .2
+          done
+          test "$ready" -eq 1
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          node creator-v1/test/capture-studio-visual-v115.mjs --chrome "$chrome" --output evidence/studio-v115
+      - name: Capture exact-head source-only status
+        if: always()
+        run: |
+          echo "V115 SOURCE PREVIEW ONLY, DEFAULT-OFF, NO DEPLOY OR D1 MIGRATION" >> "$GITHUB_STEP_SUMMARY"
+          echo "This job does not test actual WebGL2 world authoring or physical iPhone Safari." >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: creator-studio-v115-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/studio-v115/
+          if-no-files-found: ignore
