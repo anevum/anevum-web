@@ -160,7 +160,7 @@ export function Phase1JoinPage(){
      <div className="av52-entry-index" aria-hidden="true"><span>TRANSMISSION 001 / ANEVUM</span><i/></div>
      <p className="kicker">ANEVUM / THE MEMBER NETWORK</p>
      <h1 id="phase1-join-title">ENTER THE<br/><em>CONTINUANCE.</em></h1>
-     <p className="av52-hero-copy">A home for things people make. Discover worlds, find your people, and leave something of your own.</p>
+     <p className="av52-hero-copy">Discover independently made games, apps and creative experiments. Join free to make a private member space and take part in ANEVUM as it grows.</p>
      <div className="av52-entry-counters" aria-hidden="true"><span><b>01</b> IDENTIFY</span><span><b>02</b> VERIFY</span><span><b>03</b> CREATE</span></div>
      <div className="join-chapters" aria-label="Three-step membership">
        <div><span>01</span><strong>Join</strong><small>Enter your email.</small></div>
@@ -169,9 +169,9 @@ export function Phase1JoinPage(){
      </div>
      <aside className="av123-member-promise" aria-label="What membership offers">
        <span className="av123-promise-label">ANEVUM / YOUR CONTINUANCE</span>
-       <strong>Explore freely. Join when you're ready.</strong>
-       <p>Your member space gives discoveries and creations a place to return to. Creator publishing requires separate review.</p>
-       <div className="av123-promise-points"><span>Private member identity</span><span>Saved discoveries</span><span>Earned recognition</span></div>
+       <strong>Explore first. Join when something catches your eye.</strong>
+       <p>Make a private profile and keep track of the projects that interest you. Creator publishing requires separate review.</p>
+       <div className="av123-promise-points"><span>Private member identity</span><span>Saved discoveries</span><span>Eligible recognition</span></div>
        <Link to="/guide">Read the field guide <span aria-hidden="true">↗</span></Link>
      </aside>
    </div>
@@ -205,7 +205,12 @@ export function Phase1JoinPage(){
          :serviceUnavailable?"Member access is temporarily unavailable."
          :"Member registration is currently paused."}</p>
        <h2>{codeSent?"CHECK YOUR INBOX.":requiresEmailVerification?"VERIFY YOUR EMAIL.":"YOUR STORY STARTS HERE."}</h2>
-       <p className="join-lead">{codeSent?"Your access code is on its way. Enter all eight digits below to continue.":requiresEmailVerification?"Your sign-in provider did not verify your email. Confirm the email on this session before opening your ANEVUM profile.":"A place to discover, publish and belong. No password. No cost to join."}</p>
+       <p className="join-lead">{codeSent?"Your access code is on its way. Enter all eight digits below to continue.":requiresEmailVerification?"Your sign-in provider did not verify your email. Confirm the email on this session before opening your ANEVUM profile.":"Join free to create your member identity. No password required; creator publishing is still in testing."}</p>
+       {!codeSent&&!requiresEmailVerification&&<aside className="av133-join-context" aria-label="Why join ANEVUM">
+         <strong>WHAT YOU GET AS A MEMBER</strong>
+         <p>Explore public creations without signing up. Membership gives you a space to return to your discoveries and take part as the community develops.</p>
+         <div className="av133-join-perks"><span>Private profile</span><span>Saved discoveries</span><span>Eligible recognition</span></div>
+       </aside>}
        {oauthFeedback&&<p role="alert" className="av12-join-error">{oauthFeedback}</p>}
        {requiresEmailVerification&&<div className="join-service-note" role="status">
          <strong>EMAIL VERIFICATION REQUIRED</strong>
