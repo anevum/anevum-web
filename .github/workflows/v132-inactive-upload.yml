@@ -1,0 +1,110 @@
+name: ANEVUM V132 Protected Inactive Upload
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v132-inactive-upload.yml'
+      - 'creator-v1/ops/v132-inactive-upload.mjs'
+      - 'creator-v1/test/v132-inactive-upload.test.mjs'
+      - 'docs/production/v132-inactive-upload.md'
+  push:
+    branches:
+      - ops/v132-collections-inactive-release-20261023-003
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: anevum-v132-inactive-immutable-upload
+  cancel-in-progress: false
+jobs:
+  verify-inactive:
+    if: github.repository == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      CLOUDFLARE_API_TOKEN: ''
+      CLOUDFLARE_API_KEY: ''
+      CLOUDFLARE_ACCOUNT_ID: ''
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prove upload verifier is GET-only and fail-closed
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+          node --check creator-v1/ops/v132-inactive-upload.mjs
+          node --test creator-v1/test/v132-inactive-upload.test.mjs
+      - name: Never activate anything as part of verification
+        run: echo 'V132_INACTIVE_UPLOAD_SOURCE_CHECKED; NO_CREDENTIALS; NO_UPLOAD; NO_TRAFFIC_CHANGE' >> "$GITHUB_STEP_SUMMARY"
+  inactive-version-only:
+    needs: verify-inactive
+    if: >-
+      github.repository == 'anevum/anevum-web' &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/ops/v132-collections-inactive-release-20261023-003' &&
+      github.event.head_commit.message == 'release(v132): upload sealed collections candidate inactive only'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned release tooling without rebuilding V131
+        run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - name: Retrieve exactly source-locked V132 compiled package
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12547361119'
+          run-id: 40060370329
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v132-review
+          merge-multiple: true
+      - name: Require one-use marker, exact successful QA and current V131 readback
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          node creator-v1/ops/v132-inactive-upload.mjs before \
+            "$RUNNER_TEMP/v132-review" \
+            "$RUNNER_TEMP/v132-before.json" \
+            "$RUNNER_TEMP/v132-upload.json"
+      - name: Upload exactly one immutable version, no traffic or route changes
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          test -s "$RUNNER_TEMP/v132-before.json"
+          test -s "$RUNNER_TEMP/v132-upload.json"
+          npx --no-install wrangler versions upload --no-bundle --no-upload-source-maps --keep-vars --strict \
+            --config "$RUNNER_TEMP/v132-upload.json" \
+            --message 'V132 reviewed member collections / inactive only / V131 gateway unchanged'
+      - name: Independently verify public V131 unchanged, all bindings and routes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          node creator-v1/ops/v132-inactive-upload.mjs after \
+            "$RUNNER_TEMP/v132-review" \
+            "$RUNNER_TEMP/v132-before.json" \
+            "$RUNNER_TEMP/v132-inactive-receipt.json"
+          echo 'V132_INACTIVE_ONLY=VERIFIED; V131_PUBLIC=100%; CONTROLLER_PUBLIC=100%; TRAFFIC_CHANGED=NO' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v132-inactive-upload-receipt-${{ github.sha }}
+          path: ${{ runner.temp }}/v132-inactive-receipt.json
+          retention-days: 14
+          if-no-files-found: warn
