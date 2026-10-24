@@ -459,3 +459,21 @@ html[data-av-next-visual="v134"] .av79-navigation .av79-navigation-search:focus-
   .av134-lab .av134-live-frame {min-height:240px;flex:none}
   html[data-av-next-visual="v134"] .av79-navigation {border-radius:15px}
 }
+
+/* Visual review pass: compact mobile IDE while preserving horizontal code scroll. */
+@media (max-width:760px) {
+  .av134-lab .av134-source {min-height:320px}
+  .av134-lab .av134-code-shell {min-height:260px}
+}
+@media (max-width:430px) {
+  .av134-lab .av134-source {min-height:275px}
+  .av134-lab .av134-code-shell {min-height:215px}
+}
+.av134-lab .av134-file-icon {
+  clip-path:polygon(0 0,67% 0,100% 32%,100% 100%,0 100%);
+  border-radius:3px;
+  box-shadow:inset 0 1px rgba(255,255,255,.1);
+}
+.av134-lab .av134-file-icon--html {background:rgba(255,151,100,.17)}
+.av134-lab .av134-file-icon--css {background:rgba(102,167,255,.18)}
+.av134-lab .av134-file-icon--typescript {background:rgba(167,137,255,.18)}
