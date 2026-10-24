@@ -220,7 +220,10 @@ export function WorldComposerReviewV115(){
      <label className="cvs-search"><Icon name="search" size={15}/><input type="search" value={treeQuery} onChange={event=>setTreeQuery(event.target.value)} placeholder="Find object…" aria-label="Filter world objects"/></label>
      <div className="cvw-tree">{filtered.map(item=><button key={item.id} type="button"
       aria-pressed={selected===item.id} className={'cvw-tree-node'+(selected===item.id?' is-selected':'')}
-      onClick={()=>{dispatch({type:'SELECT',id:item.id});setPanel('closed')}}><span className="cvw-node-glyph" aria-hidden="true">◇</span><span>{item.name}<small>{item.kind} · {item.material}</small></span></button>)}
+      onClick={()=>{dispatch({type:'SELECT',id:item.id});setPanel('closed')}}><span className={'cvw-node-glyph is-'+item.kind} aria-hidden="true"><Icon name={{
+        island:'mountain',spire:'building-2',bridge:'route',waterfall:'waves',
+        starship:'rocket',sphere:'circle-dot',light:'sun',cube:'box'
+       }[item.kind]||'box'} size={18}/></span><span>{item.name}<small>{item.kind} · {item.material}</small></span></button>)}
       {filtered.length===0&&<p className="cvs-muted">No matching objects.</p>}
      </div>
      <div className="cvw-add-panel"><span className="cvs-subheading">ADD PRIMITIVE</span><div className="cvw-primitive-grid">
