@@ -375,6 +375,10 @@ camera_manifest={
 with open(os.path.join(root,"camera-manifest.json"),"w",encoding="utf8") as f:
     json.dump(camera_manifest,f,indent=2)
 blend_source=os.path.join(root,"continuance-institute-atrium-v136014.blend")
+# Render-farm temporary matte paths must not break the delivered editable source.
+# Pack the approved first-party image before preserving the scene.
+if opts.backdrop:
+    bpy.ops.file.pack_all()
 bpy.ops.wm.save_as_mainfile(filepath=blend_source)
 for i in range(1,opts.frames+1):
     scene.frame_set(i)
