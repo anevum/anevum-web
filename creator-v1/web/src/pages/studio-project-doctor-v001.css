@@ -28,7 +28,7 @@
 .cpd-orbit-satellite{position:absolute;top:24%;right:7%;width:6px;height:6px;background:#d5b3e9;border-radius:50%;box-shadow:0 0 12px #d5b3e9}
 .cpd-orbit-caption{font:8px/1.5 ui-monospace,monospace;letter-spacing:.08em;color:var(--cpd-muted);text-align:center;margin-top:4px}
 .cpd-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px clamp(16px,3vw,26px);border-top:1px solid #47566c;background:#111b2a88;flex-wrap:wrap}
-.cpd-toolbar-meta{display:flex;gap:8px;align-items:center;color:var(--cpd-soft);font:700 10px/1.4 ui-monospace,monospace;letter-spacing:.07em}
+.cpd-toolbar-meta{display:flex;flex-wrap:wrap;column-gap:8px;row-gap:4px;align-items:center;color:var(--cpd-soft);font:700 10px/1.4 ui-monospace,monospace;letter-spacing:.07em}
 .cpd-local-dot{width:7px;height:7px;border-radius:50%;background:#b9dfcb;box-shadow:0 0 0 3px #b9dfcb1a}
 .cpd-meta-sep{color:var(--cpd-copper)}
 .cpd-button,.cpd-copy{min-height:44px;display:inline-flex;align-items:center;justify-content:space-between;gap:20px;padding:10px 16px;border-radius:5px;background:var(--cpd-bone);border:1px solid var(--cpd-bone);color:#101827;font-weight:750;font-size:12px;transition:background .16s ease,transform .16s ease}
