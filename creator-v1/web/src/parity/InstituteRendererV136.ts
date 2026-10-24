@@ -17,13 +17,13 @@ import {fetchStageScene} from './CinematicStageGeometryV136';
 import {convertBlenderCamera,type CinemaPose} from './CinematicCameraRegistrationV136';
 export type InstituteInput={sector:SceneSector;density:number;verified:boolean;animated:boolean;saveData:boolean};
 export type InstituteMetrics={tier:string;family:string;models:number;drawCalls:number;triangles:number;frameMs:number;renderMs:number;gpuMs:number|null;geometries:number;textures:number;scale:number;contextLosses:number};
-type Family={root:T.Group;weight:number;lastUsed:number;geometries:Set<T.BufferGeometry>;materials:Set<T.Material>};
+type Family={root:T.Group;weight:number;lastUsed:number;geometries:Set<T.BufferGeometry>;materials:Set<T.Material>;stage:boolean};
 const stageEnabled=import.meta.env.VITE_PARITY_V136_SHARED_SCENE_QA==='true';
 const families:SceneGeometry[]=['atrium','archive','forge','relay'];
 const stripVersion=(s:string)=>s.replace(/^#version 300 es\n/,'');
 export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:InstituteInput,onState:(ready:boolean,metrics:InstituteMetrics)=>void){
  let disposed=false,input=initial,frame:SceneFrame=frameFor(sceneProfile(initial.sector),initial.density);
- let stageSamples:readonly CinemaPose[]|null=null;
+ let stageSamples:readonly CinemaPose[]|null=null,stageUnavailable=false;
  let animation=0,last=0,phase=0,drawnAt=0,frameSum=0,samples=0,slowSamples=0,scale=1,losses=0;
  let budget=instituteBudget(canvas.clientWidth,window.devicePixelRatio,initial.saveData);
  const renderer=new T.WebGLRenderer({canvas,alpha:false,antialias:false,powerPreference:'high-performance',preserveDrawingBuffer:false});
@@ -72,30 +72,37 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
  function release(family:Family){scene.remove(family.root);family.root.traverse(node=>{if(node instanceof T.InstancedMesh)node.dispose()});family.geometries.forEach(g=>g.dispose());family.materials.forEach(m=>m.dispose())}
  function evict(){if(cache.size<=budget.maxCachedFamilies)return;const candidates=[...cache].filter(([name,f])=>name!==sceneProfile(input.sector).geometry&&f.weight<.01).sort((a,b)=>a[1].lastUsed-b[1].lastUsed);while(cache.size>budget.maxCachedFamilies&&candidates.length){const [name,f]=candidates.shift()!;release(f);cache.delete(name)}}
  async function load(family:SceneGeometry){
-  if(cache.has(family)||pending.has(family)||disposed)return;
+  if(disposed)return;
+  const wantsStage=stageEnabled&&family==='atrium'&&input.sector==='hero'&&input.animated&&!input.saveData&&!stageUnavailable;
+  const loaded=cache.get(family);
+  if(loaded&&(!stageEnabled||family!=='atrium'||loaded.stage===wantsStage))return;
+  if(loaded){release(loaded);cache.delete(family);if(family==='atrium')stageSamples=null}
+  if(pending.has(family))return;
   const controller=new AbortController();pending.set(family,controller);
   try{
    // The alternate geometry path is strictly local, immutable-hash-verified and
    // available only in a deliberately flagged CI/staging build. Production still
    // resolves the exact same eight v136-011 source GLBs as before.
    let stage:Awaited<ReturnType<typeof fetchStageScene>>=null;
-   if(stageEnabled&&family==='atrium'&&input.sector==='hero'&&!input.saveData){
+   if(wantsStage){
     canvas.dataset.cinemaStage='loading';
     try{stage=await fetchStageScene(budget.tier,controller.signal)}
-    catch{if(controller.signal.aborted)return;canvas.dataset.cinemaStage='fallback'}
+    catch{if(controller.signal.aborted)return;stageUnavailable=true;canvas.dataset.cinemaStage='fallback'}
    }
    const asset=instituteAsset(family,budget.tier);
    let gltf:Awaited<ReturnType<typeof loader.parseAsync>>|null=null;
    if(stage){
     try{gltf=await loader.parseAsync(stage.buffer,'')}
-    catch{stage=null;canvas.dataset.cinemaStage='fallback'}
+    catch{stage=null;stageUnavailable=true;canvas.dataset.cinemaStage='fallback'}
    }
    if(!stage){
+    if(wantsStage)stageUnavailable=true;
     const response=await fetch(asset.url,{signal:controller.signal,credentials:'omit',cache:'force-cache'});
     if(!response.ok)throw Error('Environment model unavailable');
     const bytes=await response.arrayBuffer();if(bytes.byteLength!==asset.bytes)throw Error('Environment asset length mismatch');
     gltf=await loader.parseAsync(bytes,'');
    }
+   if(controller.signal.aborted||disposed)return;
    if(!gltf)throw Error('Environment scene did not parse');
    if(stage){
     stageSamples=stage.manifest.cameraSamples.map(sample=>convertBlenderCamera(sample));
@@ -118,11 +125,11 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
     b.matrices.forEach((matrix,index)=>mesh.setMatrixAt(index,matrix));mesh.computeBoundingSphere();root.add(mesh);
     const m=b.material as T.MeshStandardMaterial;if(m.metalness>.6){m.normalMap=alloySurface;m.normalScale.set(.35,.2);m.needsUpdate=true}m.userData.originalOpacity=m.opacity;m.userData.originalTransparent=m.transparent;m.userData.originalDepthWrite=m.depthWrite;
    }
-   const f={root,weight:0,lastUsed:performance.now(),geometries,materials};
+   const f:Family={root,weight:0,lastUsed:performance.now(),geometries,materials,stage:Boolean(stage)};
    if(disposed){release(f);return}
    cache.set(family,f);scene.add(root);evict();schedule();
   }catch(error){if(!disposed&&!(error instanceof DOMException&&error.name==='AbortError')){canvas.dataset.assetState='unavailable';schedule()}}
-  finally{pending.delete(family)}
+  finally{if(pending.get(family)===controller)pending.delete(family)}
  }
  function resize(){
   budget=instituteBudget(canvas.clientWidth,window.devicePixelRatio,input.saveData);
@@ -157,7 +164,7 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
   // no cinematic frame sequence is approved and the live models remain unchanged.
   const cameraSamplesForStage=stageSamples;
   const qaCamera=Boolean(stageEnabled&&cameraSamplesForStage&&cameraSamplesForStage.length>=4&&
-   input.sector==='hero'&&family==='atrium'&&input.animated);
+   input.sector==='hero'&&family==='atrium'&&cache.get('atrium')?.stage===true&&input.animated);
   if(qaCamera&&cameraSamplesForStage){
    const layer=document.querySelector<HTMLElement>('[data-cinematic-v136]');
    const travel=Number(layer?.dataset.cameraProgress??0);
@@ -219,7 +226,19 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
  }).catch(()=>{if(!disposed){canvas.dataset.textureState='procedural';schedule()}});
  resize();void load(sceneProfile(input.sector).geometry);schedule();
  return {
-  update(next:InstituteInput){const resizeNeeded=next.saveData!==input.saveData;input=next;if(resizeNeeded)resize();if(!input.animated)pointer.set(0,0);schedule()},
+  update(next:InstituteInput){
+   const previouslyStage=stageEnabled&&input.sector==='hero'&&input.animated&&!input.saveData;
+   const nextStage=stageEnabled&&next.sector==='hero'&&next.animated&&!next.saveData;
+   if(stageEnabled&&(previouslyStage!==nextStage||(input.sector!=='hero'&&next.sector==='hero'))){
+    pending.get('atrium')?.abort();pending.delete('atrium');
+    const old=cache.get('atrium');if(old){release(old);cache.delete('atrium')}
+    stageSamples=null;stageUnavailable=false;
+    delete canvas.dataset.cinemaStage;delete canvas.dataset.cinemaRevision;
+    delete canvas.dataset.cinemaCameraProgress;
+   }
+   const resizeNeeded=next.saveData!==input.saveData;
+   input=next;if(resizeNeeded)resize();if(!input.animated)pointer.set(0,0);schedule();
+  },
   dispose(){disposed=true;textureRequest.abort();cancelAnimationFrame(animation);cancelAnimationFrame(timerPoll);if(gpuQuery)gl.deleteQuery(gpuQuery);pending.forEach(p=>p.abort());pending.clear();meshopt.dispose();resizeObserver.disconnect();window.removeEventListener('pointermove',move);document.removeEventListener('visibilitychange',visibility);canvas.removeEventListener('webglcontextlost',lost);cache.forEach(release);cache.clear();environment.dispose();anchors.dispose();anchorGeometry.dispose();anchorMaterial.dispose();alloySurface.dispose();backgroundGeometry.dispose();backgroundMaterial.dispose();bloom?.dispose();composer.dispose();renderer.dispose()}
  };
 }
