@@ -23,7 +23,7 @@ test("V133 is the original canonical route, not a replacement site",()=>{
 
 test("V133 tells guests what ANEVUM is before asking for an account",()=>{
   assert.match(home,/Find something <em>worth trying\.<\/em>/);
-  assert.match(home,/independently made games, useful apps and creative experiments/);
+  assert.match(home,/independent games, useful apps and creative experiments/);
   assert.match(home,/Explore real projects/);
   assert.match(home,/Join the early community/);
   assert.match(home,/to="\/discover"/);
