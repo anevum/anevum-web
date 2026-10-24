@@ -1,0 +1,93 @@
+name: Creator Studio V115 P1 WebGL2 World Composer QA
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/world-composer/**'
+      - 'creator-v1/web/src/App.tsx'
+      - 'creator-v1/web/src/pages/WorldCanvasV115.tsx'
+      - 'creator-v1/web/src/pages/world-webgl2-v115.ts'
+      - 'creator-v1/web/src/pages/WorldComposerReviewV115.tsx'
+      - 'creator-v1/web/src/pages/world-composer-v115.css'
+      - 'creator-v1/test/world-composer-v115.test.mjs'
+      - 'creator-v1/test/capture-world-webgl2-v115.mjs'
+      - '.github/workflows/creator-studio-v115-webgl2-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: creator-studio-webgl2-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  world-composer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install existing pinned dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Strict document, command, security and renderer model tests
+        run: |
+          node --test creator-v1/test/world-composer-v115.test.mjs
+          node --test creator-v1/test/creator-studio-visual-v115.test.mjs
+          node --test creator-v1/test/studio-visual-scenes-v112.test.mjs
+          node --test creator-v1/test/studio-interface-builder-v113.test.mjs
+          node --check creator-v1/test/capture-world-webgl2-v115.mjs
+      - name: Strict React TypeScript
+        run: npm run check:creator-v1-web
+      - name: Verify P1 GPU editor never enters default OFF build
+        env:
+          VITE_CREATOR_WORLD_WEBGL2_V115: 'false'
+          VITE_CREATOR_VISUAL_REVIEW_V115: 'false'
+        run: |
+          npm run build:creator-v1-web:staging
+          if grep -R -l --include='*.js' 'data-world-composer-v115' creator-v1/dist/react-staging; then
+            echo 'World Composer leaked into default-OFF public bundle' >&2
+            exit 1
+          fi
+      - name: Build isolated GPU review, no V111 database feature activation
+        env:
+          VITE_CREATOR_WORLD_WEBGL2_V115: 'true'
+          VITE_CREATOR_VISUAL_REVIEW_V115: 'false'
+          VITE_CREATOR_WORKSPACE_V109: 'false'
+          VITE_CREATOR_FILE_TREE_V111: 'false'
+          VITE_CREATOR_VISUAL_SCENE_V112: 'false'
+          VITE_CREATOR_INTERFACE_BUILDER_V113: 'false'
+          VITE_NATIVE_CREATOR_STUDIO_V095: 'false'
+        run: |
+          npm run build:creator-v1-web:staging
+          if ! grep -R -l --include='*.js' 'data-world-composer-v115' creator-v1/dist/react-staging; then
+            echo 'Feature-ON review world not found in compiled bundle' >&2
+            exit 1
+          fi
+      - name: Compiled Chromium synthetic WebGL2 interaction and 1440/390/320 captures
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/world-webgl2-v115
+          node creator-v1/test/portal-offline-preview.mjs > evidence/world-webgl2-v115/fixture.log 2>&1 &
+          fixture_pid=$!
+          trap 'kill "$fixture_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for _ in $(seq 1 75); do
+            if curl --fail --silent http://127.0.0.1:4178/__ready >/dev/null; then ready=1; break; fi
+            sleep .2
+          done
+          test "$ready" -eq 1
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          node creator-v1/test/capture-world-webgl2-v115.mjs --chrome "$chrome" --output evidence/world-webgl2-v115
+      - name: Record release boundary
+        if: always()
+        run: |
+          echo "Real WebGL2 local-only synthetic prototype, default OFF; NO CLOUD GPU, DB, AI, GPU SERVER OR DEPLOY" >> "$GITHUB_STEP_SUMMARY"
+          echo "Software-emulated Chromium GPU is not physical Safari/real-account acceptance." >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: world-webgl2-v115-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/world-webgl2-v115/
+          if-no-files-found: ignore
