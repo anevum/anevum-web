@@ -115,7 +115,7 @@ try{
  await until(()=>evaluate('document.querySelector(".csi-input")?.value.includes("border-color: #071727")'),'Actual source replacement');
  await click('.csi-toolbar-actions button[aria-label="Editor settings"]');
  await until(()=>evaluate('!!document.querySelector(".csi-settings")'),'Editor configuration controls');
- await click('.csi-settings input[type=checkbox]:last-of-type');
+ await click('.csi-settings .csi-check:last-of-type input');
  assert.ok(await evaluate('!!document.querySelector(".csi-editor.is-wrapped")'),'Word wrap updated');
  await photo('v119-desktop-source-ide-1440');
  await click('.csn-workspace-tabs button:nth-child(4)');
