@@ -38,6 +38,15 @@ for(const [kind,id] of [['badge','accessibility_builder'],['medal','first_light'
 db.prepare('INSERT INTO member_role_grants(user_id,role,granted_at,granted_by,reviewed_by,evidence_ref) VALUES(?,?,?,?,?,?)')
  .run(author.id,'curator',1120,'synthetic_moderation','synthetic_independent_reviewer','test-only-role-evidence');
 env.CANONICAL_RECOGNITION_ENABLED='true';env.CANONICAL_VERIFIED_ROLES_ENABLED='true';
+// Reader is a public participant who has expressly hidden badges and all public
+// numerical statistics. An actually issued but undisplayed award remains hidden.
+// Stress an allowed 80-character display name without fabricating a new account.
+db.prepare("UPDATE member_creator_profiles SET display_name=? WHERE user_id=?")
+ .run('Fixture Reader With An Extended Public Display Name For Responsive Identity Checks',reader.id);
+db.prepare("INSERT INTO member_space_settings(user_id,featured_json,show_stats) VALUES(?,'[]',0)").run(reader.id);
+db.prepare("UPDATE member_recognition_preferences SET badge_mode='hidden',badge_ids_json='[]',aura='none' WHERE user_id=?").run(reader.id);
+db.prepare('INSERT INTO member_recognition_grants(user_id,kind,recognition_id,earned_at,granted_by,evidence_ref,reviewed_by) VALUES(?,?,?,?,?,?,?)')
+ .run(reader.id,'badge','accessibility_builder',1121,'fixture_issuer','reader-only-reviewed-evidence','fixture_reviewer');
 const origin='https://a.anevum.com';
 const request=(path,method='GET',body)=>new Request(origin+path,{
  method,headers:{origin,...(body?{'content-type':'application/json'}:{})},
@@ -58,6 +67,16 @@ assert.equal(reply.status,201);const replyId=(await reply.json()).id;
 assert.equal((await canonicalForums(request('/api/v1/member/forum-review','POST',{
  targetKind:'reply',targetId:replyId,action:'publish'
 }),env,reviewer,1003)).status,200);
+// Verify actual server projection before the compiled browser touches it. An
+// issued award does not override this member's deliberately hidden selection.
+const approvedReplies=await canonicalForums(request('/api/v1/community/threads/'+threadId+'/replies'),env);
+assert.equal(approvedReplies.status,200);
+const publicReply=(await approvedReplies.json()).items[0].author;
+assert.equal(publicReply.level,null,'Show-stats opt-out hides earned level numbers');
+assert.equal(publicReply.reputation,undefined,'Show-stats opt-out removes reputation and contribution counts');
+assert.equal(publicReply.badgeDisplay?.mode,'hidden','Chosen hidden display setting survives projection');
+assert.deepEqual(publicReply.earnedBadges,[],'Privately earned hidden badges must not leak through forum responses');
+assert.equal(publicReply.handle,'orbit_reader');
 // Twenty-four extra approved forum entries exercise verified pagination.
 for(let i=0;i<24;i++)db.prepare("INSERT INTO member_forum_threads(id,author_id,client_request_id,topic,title,body,status,created_at,published_at,updated_at) VALUES(?,?,?,?,?,?,'published',?,?,?)")
  .run(id(),author.id,id(),'games','Synthetic forum discussion '+String(i).padStart(2,'0'),
@@ -120,7 +139,8 @@ function connect(url){
 }
 const result={fixture:'synthetic',widths:[],authorCards:false,authorDossiers:false,
  publicWallLinks:false,contributionDisclosure:false,compactHeight:null,
- customizedAura:false,visibleEarnedArt:false,threadNavigation:false,
+ customizedAura:false,visibleEarnedArt:false,privateOptOutProtected:false,
+ longNameCompact:false,keyboardDisclosure:false,threadNavigation:false,
  homeWayfinder:false,pagination:false,privateThreadExcluded:false};
 let client=null;
 try{
@@ -164,18 +184,38 @@ try{
  assert.equal(await evaluate("!!document.querySelector('.cf-detail .cf-author .av61-specimen .level-emblem')"),true);
  assert.equal(await evaluate("!!document.querySelector('.cf-detail .cf-author-dossier--detail .cf-author-dossier-visit')"),true);
  assert.equal(await evaluate("!!document.querySelector('.cf-detail .cf-author-dossier--reply')"),true);
+ const replyIdentity=await evaluate("(()=>{const e=document.querySelector('.cf-detail .cf-author-dossier--reply');return {publicName:e?.getAttribute('aria-label'),level:!!e?.querySelector('.av61-specimen'),rep:!!e?.querySelector('.av81-reputation-token'),badges:!!e?.querySelector('.av65-badge-rack'),details:!!e?.querySelector('details'),wall:e?.querySelector('.cf-author-dossier-visit')?.getAttribute('href')}})()");
+ assert.equal(replyIdentity.level,false,'Opted-out public reply must not expose level');
+ assert.equal(replyIdentity.rep,false,'Opted-out public reply must not expose reputation');
+ assert.equal(replyIdentity.badges,false,'Hidden earned badge must not appear in reply identity');
+ assert.equal(replyIdentity.details,false,'No empty or inferred detail panel for the opted-out member');
+ assert.equal(replyIdentity.wall,'/@orbit_reader','Public wall navigation remains available without statistics');
+ assert.ok(replyIdentity.publicName?.includes('Extended Public Display Name'),'Full public name remains exposed to assistive technology');
+ result.privateOptOutProtected=true;
  result.threadNavigation=true;
  await client.send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
  await evaluate("(()=>{const e=document.querySelector('.cf-detail');window.scrollTo(0,e.getBoundingClientRect().top+window.scrollY-82)})()");
  await delay(220);
  const detailShot=await client.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
  writeFileSync(join(out,'forum-detail-390.png'),Buffer.from(detailShot.data,'base64'));
+ const longNameLayout=await evaluate("(()=>{const e=document.querySelector('.cf-detail .cf-author-dossier--reply');const r=e?.getBoundingClientRect();const n=e?.querySelector('.av61-member-name');const ns=n?.getBoundingClientRect();return {height:r?.height,overflow:e?.scrollWidth>e?.clientWidth+2,nameHeight:ns?.height,fontSize:n?parseFloat(getComputedStyle(n).fontSize):0,fullName:e?.getAttribute('aria-label')}})()");
+ assert.equal(longNameLayout.overflow,false,'An opted-out reader with a long name must not overflow the phone');
+ assert.ok(longNameLayout.height<180,'Even a long display name should stay compact: '+JSON.stringify(longNameLayout));
+ assert.ok(longNameLayout.fontSize>0&&longNameLayout.nameHeight<=longNameLayout.fontSize*2.8,'The visible name may wrap at most two lines');
+ result.longNameCompact=true;
  const beforeExpand=await evaluate("(()=>{const e=document.querySelector('.cf-detail .cf-author-dossier--detail');const d=e?.querySelector('details');return {height:e?.getBoundingClientRect().height,closed:!d?.open,links:e?.querySelectorAll('a').length,colors:e?.getAttribute('data-aura')}})()");
  assert.ok(beforeExpand.closed,'The additional author dossier should be collapsed on entry');
  assert.ok(beforeExpand.height<170,'Compact customized member bar must remain short on phone: '+JSON.stringify(beforeExpand));
  assert.equal(beforeExpand.links,1,'Single canonical public wall action, no nested links');
  result.compactHeight=beforeExpand.height;
- const disclosures=await evaluate("(()=>{const entry=document.querySelector('.cf-detail .cf-author-dossier--detail details');if(!entry)return {open:false,counts:0};entry.querySelector('summary').click();return {open:entry.open,counts:entry.querySelectorAll('.cf-author-dossier-activity>span').length,chosen:entry.innerText.includes('Nebula'),award:entry.innerText.includes('Open Door')}})()");
+ // Exercise native disclosure with an actual CDP Enter key, not a synthetic
+ // click. Browser accessibility state must stay correct when opened.
+ await evaluate("document.querySelector('.cf-detail .cf-author-dossier--detail summary').focus()");
+ await client.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
+ await client.send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
+ const disclosures=await evaluate("(()=>{const entry=document.querySelector('.cf-detail .cf-author-dossier--detail details');if(!entry)return {open:false,counts:0};return {open:entry.open,counts:entry.querySelectorAll('.cf-author-dossier-activity>span').length,chosen:entry.innerText.includes('Nebula'),award:entry.innerText.includes('Open Door'),label:entry.querySelector('summary')?.getAttribute('aria-label')}})()");
+ assert.equal(disclosures.label,'Public profile details for Fixture orbit_writer','The screen-reader label is accurate in both open and closed states');
+ result.keyboardDisclosure=disclosures.open;
  assert.equal(disclosures.open,true);
  assert.equal(disclosures.counts,4,'Only four bounded, public approved-activity counters');
  assert.equal(disclosures.chosen,true,'Public cosmetic choice is readable when expanded');

@@ -45,7 +45,7 @@ test('public wall link cannot become arbitrary or private URL and never wraps an
 });
 test('native detail disclosure and variants are wired in every genuine forum placement',()=>{
  assert.match(card,/<details className="cf-author-dossier-details">/);
- assert.match(card,/<summary aria-label=\{'Show public profile details for '/);
+ assert.match(card,/<summary aria-label=\{'Public profile details for '/);
  for(const variant of ['stream','detail','reply'])assert.ok(forums.includes('variant="'+variant+'"'),'Missing forum variant '+variant);
  assert.match(highlights,/variant="highlight"/);
  for(const variant of ['stream','detail','reply','highlight'])assert.ok(card.includes("'"+variant+"'"));
@@ -84,8 +84,18 @@ test('collapsed author strip uses two accessible icon actions, not a full-width 
  assert.match(card,/cf-author-dossier-visit/);
  assert.match(card,/cf-author-dossier-details/);
  assert.match(card,/View public member wall of/);
- assert.match(card,/Show public profile details for/);
+ assert.match(card,/Public profile details for/);
+ assert.doesNotMatch(card,/Show public profile details for/,'Native disclosure name stays accurate both open and closed');
  assert.match(css,/grid-template-columns:minmax\(0,1fr\) 44px 44px/);
  assert.match(css,/\.cf-author-dossier-details:not\(\[open\]\)\{height:0\}/);
  assert.doesNotMatch(card,/VIEW WALL|CONTRIBUTION RECORD|PUBLIC MEMBER/);
+});
+
+test('publicly chosen long names stay compact without hiding earned cosmetic artwork',()=>{
+ assert.match(css,/\.cf-author-dossier \.cf-author \.av61-member-name\{/);
+ assert.match(css,/-webkit-line-clamp:2/);
+ assert.match(css,/overflow:hidden!important/);
+ assert.match(css,/\.cf-author-dossier \.cf-author \.av65-badge-rack/);
+ assert.match(css,/\.cf-author-dossier \.cf-author \.av61-specimen \.level-emblem/);
+ assert.match(card,/aria-label=\{'Public profile of '\+displayName\}/);
 });

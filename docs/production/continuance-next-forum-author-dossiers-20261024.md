@@ -34,3 +34,10 @@ The optional expanded panel provides legible public level/role/reputation/aura/c
 Synthetic browser QA now installs recognition/verified-role migrations **only inside its temporary in-memory SQLite fixture**, seeds independently reviewed *test-only* earned marks and a selected Nebula aura for the approved public author, then checks their actual browser-rendered insignia and accent at 1440/1024/390/320px, mobile collapsed height, one profile link, disclosure expansion, read-only privacy constraints, and preserved hidden private member behavior. Live migrations, production configuration, and user accounts remain untouched.
 
 Protected PR scope stays the same eight files; dedicated exact-head CI and owner acceptance still gate release.
+
+
+## Continuation 016 — public privacy choices, long names and keyboard disclosure
+
+Source-only continuation of #700 on the existing default-off NEXT stack, without touching release or authorization. A public reply participant was seeded in the synthetic browser fixture with **a genuinely issued but explicitly hidden earned badge**, `show_stats=0` and a long yet valid public display name. Both the server response and actual compiled reply card must omit progression numbers, reputation, earned badge artwork and an empty extra details panel while retaining the member's correct public wall link and full accessible name. This tests a real opt-out scenario, not an absent author record. The visible name is clamped to two lines in a scoped rule so 320/390 layouts remain compact; the full accessible name and profile link are preserved.
+
+The summary control's accessible name is now state-neutral ("Public profile details for ..."), so native Enter/Space open and close states never misleadingly announce "Show" while open. The browser fixture exercises the details with a real Chromium keyboard event and confirms the expanded selected-aura and independently earned labels. No new fetches, D1 tables, account mutations, role or reward issuance, consent changes, global styles or V131 release effects. The strict eight-file guard remains in force.

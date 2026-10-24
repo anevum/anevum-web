@@ -43,8 +43,8 @@ export function ForumAuthorCard({author,variant='stream'}:{
     </svg>
   </Link>}
   {hasDetails&&<details className="cf-author-dossier-details">
-    <summary aria-label={'Show public profile details for '+displayName}
-      title="More public profile details">
+    <summary aria-label={'Public profile details for '+displayName}
+      title="Public profile details">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
        strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
        <circle cx="5" cy="12" r="1.25"/><circle cx="12" cy="12" r="1.25"/><circle cx="19" cy="12" r="1.25"/>

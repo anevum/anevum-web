@@ -157,3 +157,13 @@
  .cf-author-dossier-award{border-color:CanvasText;background:Canvas;color:CanvasText!important;box-shadow:none}
  .cf-author-dossier-facts strong,.cf-author-dossier-activity strong{color:CanvasText}
 }
+
+/* 016: a long user-selected public display name must not force the icon
+   controls or earned cosmetics off the visible edge at 320px. Full identity
+   remains available to assistive tech via the universal card's aria-label. */
+.cf-author-dossier .cf-author .av61-member-name{
+ display:-webkit-box!important;-webkit-box-orient:vertical;
+ -webkit-line-clamp:2;line-clamp:2;overflow:hidden!important;
+ min-width:0;max-width:100%;
+}
+.cf-author-dossier .cf-author .av65-name-line{min-width:0}
