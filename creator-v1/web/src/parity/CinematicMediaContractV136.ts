@@ -1,5 +1,4 @@
 /** V136.014. Authored media only. No member data, code execution, remote URLs or private APIs. */
-import {cinematicFrameIndex,unit} from './cinematic-director-v136';
 export type CinematicAsset={path:string;bytes:number;sha256:string;width?:number;height?:number};
 export type CinematicFrameSet={width:number;height:number;bytes:number;frames:CinematicAsset[]};
 export type CinematicSequence={
@@ -63,7 +62,9 @@ export function approvedCinematicVideo(value:unknown):CinematicVideoSet|null {
 }
 export function frameAt(sequence:CinematicSequence,tier:'desktop'|'mobile',progress:number):CinematicAsset{
  const set=sequence[tier];
- return set.frames[cinematicFrameIndex(unit(progress),sequence.count)];
+ const normalized=Number.isFinite(progress)?Math.max(0,Math.min(1,progress)):0;
+ const index=Math.min(sequence.count-1,Math.floor(normalized*sequence.count));
+ return set.frames[index];
 }
 export function allowMotion(input:CinematicModeInput){
  return input.enabled&&!input.reducedMotion&&!input.saveData&&!input.paused&&!input.forcedColors&&input.visible;
