@@ -105,7 +105,7 @@ export function CinematicLandingPage(){
         <div className="av79-hero-content">
           <span className="av79-kicker"><i aria-hidden="true"/> ANEVUM / A WORLD OF THINGS PEOPLE MAKE</span>
           <span className="av114-arrival-chapter">THE CONTINUANCE INSTITUTE <span aria-hidden="true">/</span> FIRST CONTACT</span>
-          <span className="av133-hero-purpose">INDEPENDENT GAMES <span aria-hidden="true">/</span> APPS <span aria-hidden="true">/</span> CREATIVE EXPERIMENTS</span>
+          <span className="av133-hero-purpose">GAMES <span aria-hidden="true">/</span> APPS <span aria-hidden="true">/</span> CREATIVE EXPERIMENTS</span>
           <h1 id="av79-home-heading">Find something <em>worth trying.</em></h1>
           <p>Discover independent games, useful apps and creative experiments. Explore real projects for free, then join when something catches your eye.</p>
           <div className="av79-hero-actions">
