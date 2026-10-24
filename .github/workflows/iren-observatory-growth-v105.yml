@@ -5,6 +5,9 @@ on:
       - "creator-v1/operations/anevum-iren-staff-observatory-v105.mjs"
       - "creator-v1/operations/anevum-iren-staff-observatory-v106.mjs"
       - "creator-v1/operations/anevum-observatory-continuance-v106-assets.mjs"
+      - "creator-v1/operations/anevum-observatory-rum-v106-assets.mjs"
+      - "creator-v1/analytics/cloudflare-rum-observatory-v106.mjs"
+      - "creator-v1/test/cloudflare-rum-observatory-v106.test.mjs"
       - "creator-v1/test/staff-observatory-continuance-v106.test.mjs"
       - "creator-v1/test/capture-staff-continuance-v106.mjs"
       - "creator-v1/analytics/growth-events-v1.mjs"
@@ -29,6 +32,9 @@ jobs:
           node --check creator-v1/operations/anevum-iren-staff-observatory-v105.mjs
           node --check creator-v1/operations/anevum-iren-staff-observatory-v106.mjs
           node --check creator-v1/operations/anevum-observatory-continuance-v106-assets.mjs
+          node --check creator-v1/operations/anevum-observatory-rum-v106-assets.mjs
+          node --check creator-v1/analytics/cloudflare-rum-observatory-v106.mjs
+          node --check creator-v1/test/cloudflare-rum-observatory-v106.test.mjs
           node --check creator-v1/test/staff-observatory-continuance-v106.test.mjs
           node --check creator-v1/test/capture-staff-continuance-v106.mjs
           node --check creator-v1/analytics/growth-events-v1.mjs
@@ -39,6 +45,7 @@ jobs:
         run: |
           node --test creator-v1/test/staff-observatory-growth-v105.test.mjs
           node --test creator-v1/test/staff-observatory-continuance-v106.test.mjs
+          node --test creator-v1/test/cloudflare-rum-observatory-v106.test.mjs
           node --test creator-v1/test/growth-events-v1.test.mjs
           node --test creator-v1/test/staff-observatory-cleanup-v104.test.mjs
       - name: Inspect actual Chromium growth experience at 1440, 390, and 320
@@ -69,6 +76,8 @@ jobs:
           test -s "$RUNNER_TEMP/observatory-v106/operations-next-reviewer-phone.png"
           test -s "$RUNNER_TEMP/observatory-v106/growth-next-owner-desktop.png"
           test -s "$RUNNER_TEMP/observatory-v106/growth-next-owner-phone.png"
+          test -s "$RUNNER_TEMP/observatory-v106/rum-next-owner-desktop.png"
+          test -s "$RUNNER_TEMP/observatory-v106/rum-next-owner-phone.png"
           test -s "$RUNNER_TEMP/observatory-v106/growth-next-owner-small-phone.png"
           test -s "$RUNNER_TEMP/observatory-v106/growth-next-reviewer-phone.png"
           test -s "$RUNNER_TEMP/observatory-v106/acceptance.json"
