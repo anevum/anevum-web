@@ -13,6 +13,7 @@ import {IrenGuidedContinuance} from "./IrenGuidedContinuance";
 import {VerifiedStaffShortcut} from "./VerifiedStaffShortcut";
 import {LivingWorldProvider,useLivingWorld,type WorldSector} from "../parity/LivingWorldState";
 import {LivingWorldField} from "../parity/LivingWorldField";
+import {ConsoleWayfinderV136} from "../parity/ConsoleWayfinderV136";
 
 const FullParityHeader=import.meta.env.VITE_PARITY_V136_FULL==="true" ? lazy(()=>import("../parity/ParityHeaderV136").then(m=>({default:m.ParityHeaderV136}))) : null;
 /** ANEVUM V009 — one public navigation system across every Creator V1 page.
@@ -51,6 +52,9 @@ export function Shell(){
   return FullParityHeader?<LivingWorldProvider><ShellContent/></LivingWorldProvider>:<ShellContent/>;
 }
 function worldSector(pathname:string,search:string):WorldSector{
+  if(pathname==="/community")return "community";
+  if(pathname==="/creators")return "creators";
+  if(pathname==="/studio")return "studio";
   if(pathname!=="/discover")return "hero";
   const category=new URLSearchParams(search).get("category");
   const valid:WorldSector[]=["games","tools","automation","research","creative","learning","libraries","other"];
@@ -119,7 +123,7 @@ function ShellContent(){
     items[next]?.focus();
   }
   const home=location.pathname==="/";
-  const parityFullBleed=Boolean(FullParityHeader&&(home||location.pathname==="/discover"));
+  const parityFullBleed=Boolean(FullParityHeader&&["/","/discover","/community","/creators","/studio"].includes(location.pathname));
   // PARITY destinations own a full-bleed spatial canvas, not a nested page box.
   // Legacy routes retain their protected frame until individually transformed.
   // One stable route surface keeps navigation, IREN and launcher mounted.
@@ -220,6 +224,7 @@ function ShellContent(){
       </div>
     </dialog>
     <IrenGuidedContinuance memberId={canonicalMember?canonicalSession?.user?.id||null:null}/>
+    {FullParityHeader&&<ConsoleWayfinderV136 onOpenSearch={()=>setLauncherOpen(true)}/> }
     <PortalLauncher open={launcherOpen} onClose={()=>setLauncherOpen(false)}/>
     <main id="main" tabIndex={-1} className="site-main av9-main">
       {!parityFullBleed&&<VisualKitAtmosphere room={publicVisualRoom(location.pathname)}/>}
