@@ -52,6 +52,10 @@ if (import.meta.env.VITE_PARITY_V136 === "true") {
   void import("./next-visual-primitives-v135.css");
   void import("./parity-v136.css");
 }
+if (import.meta.env.VITE_PARITY_V136_FULL === "true") {
+  document.documentElement.dataset.avParity = "v136-full";
+  void import("./parity/visual-foundation-v136.css");
+}
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "") || "/"}>
