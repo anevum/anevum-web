@@ -42,7 +42,7 @@
 
 /* V001.4: information hierarchy and explicit, consent-preserving issue navigation. */
 .cpd-filters{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.cpd-filters button,.cpd-jump{border:1px solid #54778b;border-radius:7px;background:#17374c;color:#d9ecf8;font:600 .72rem/1.4 inherit;cursor:pointer;padding:9px 12px;min-height:40px}
+.cpd-filters button,.cpd-jump{border:1px solid #54778b;border-radius:7px;background:#17374c;color:#d9ecf8;font-size:.72rem;font-weight:600;line-height:1.4;font-family:inherit;cursor:pointer;padding:9px 12px;min-height:40px}
 .cpd-filters button[aria-pressed="true"]{border-color:#a9e8ef;background:#275468;color:#f1fdff}
 .cpd-filters button:hover,.cpd-jump:hover{background:#2a536a;border-color:#9ccde0}
 .cpd-filters button:focus-visible,.cpd-jump:focus-visible{outline:2px solid #c4f1fa;outline-offset:2px}
