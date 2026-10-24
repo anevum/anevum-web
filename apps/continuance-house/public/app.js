@@ -282,6 +282,7 @@ function bind() {
     state.fridge = !state.fridge;
     document.body.classList.toggle("fridge-preview", state.fridge);
     document.querySelector("#fridge-mode").textContent = state.fridge ? "← Exit fridge preview" : "◫ Fridge display preview";
+    if (state.fridge) window.scrollTo(0, 0);
   });
   document.querySelector("#mobile-iren").addEventListener("click", () => {
     mobileOpen(!document.querySelector(".iren-panel").classList.contains("is-mobile-open"));

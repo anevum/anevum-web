@@ -160,6 +160,7 @@ try {
   await cdp.evaluate('document.querySelector(".mobile-nav [data-view=family]").click()');
   await cdp.evaluate('document.querySelector("#fridge-mode").click()');
   assert.equal(await cdp.evaluate('document.body.classList.contains("fridge-preview")'), true);
+  await eventually(() => cdp.evaluate("window.scrollY === 0"));
   await cdp.screenshot("family-fridge-1024.png");
   await cdp.evaluate('document.querySelector("#fridge-mode").click()');
   assert.equal(await cdp.evaluate('document.body.classList.contains("fridge-preview")'), false);
