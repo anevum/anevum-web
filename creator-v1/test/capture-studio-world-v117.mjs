@@ -198,9 +198,9 @@ try{
  await change('.cvw-vector:first-of-type label:nth-child(2) input','6');
  await until(()=>evaluate('Number(document.querySelector(".cvw-vector input[type=number]").parentElement.parentElement.querySelectorAll("input")[1].value)===6'),'Starcraft vertical transform');
  await photo('v117-live-starcraft-320');
- await setSize(1440,900);
- await photo('v117-live-starcraft-1440');
- await setSize(320,720);
+ // The compiled 1440 desktop scene and mobile craft have both been captured.
+ // Avoid a redundant 2x GPU screenshot immediately after context restoration:
+ // SwiftShader can stall the CDP capture command on this extra resize cycle.
 
  await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
  assert.equal(await evaluate('matchMedia("(prefers-reduced-motion: reduce)").matches'),true);
