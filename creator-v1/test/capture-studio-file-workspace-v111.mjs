@@ -12,7 +12,7 @@ mkdirSync(output,{recursive:true});
 const base='http://127.0.0.1:4178',memberId='00000000000000000000000000000099';
 const seedId='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',createdId='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const fileNodes=new Map(),fileVersions=new Map(),filePosts=[],filePatches=[];
-const folderId='cccccccc-cccc-4ccc-8ccc-ccccccccccc1',sourceId='dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+const folderId='cccccccc-cccc-4ccc-8ccc-ccccccccccc1',sourceId='dddddddd-dddd-4ddd-8ddd-dddddddddddd',source2Id='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
 const now=1792700000,identity={id:seedId,title:'Signal Atlas',summary:'Private synthetic project for V110 browser verification.',
  slug:'signal-atlas',description:'An offline test record.',category:'games',status:'draft',revision:1,
  freeToUse:true,license:'',sourceUrl:null,demoUrl:null,aiDisclosure:'',humanContribution:'',
@@ -85,7 +85,7 @@ try{
     }
     if(!nodeId&&method==='POST'){
      const input=JSON.parse(e.request.postData||'{}');filePosts.push(input);
-     const id=input.kind==='folder'?folderId:sourceId;
+     const id=input.kind==='folder'?folderId:fileNodes.has(sourceId)?source2Id:sourceId;
      const node={id,projectId,parentId:input.parentId,name:input.name,kind:input.kind,
       revision:1,deletedAt:null,updatedAt:now,content:input.kind==='folder'?null:''};
      fileNodes.set(id,node);
@@ -294,6 +294,54 @@ try{
  assert.equal(sourceMobile.overflow,false,'No source workspace horizontal overflow at 320px');
  assert.ok(sourceMobile.left>=-1&&sourceMobile.right<=321,'Source editor within 320px viewport');
  await snap('mobile-320-private-source-editor');
+ // V121: two existing private files, genuine independent revision mounts.
+ await send('Emulation.setDeviceMetricsOverride',{width:1440,height:900,deviceScaleFactor:1,mobile:false});
+ await pause(150);
+ await click('.csf-tree-actions button[title="Create text source file"]');
+ assert.equal(await setValue('.csf-create input','logic.ts'),'logic.ts');
+ await click('.csf-create button[type="submit"]');
+ await until(()=>evaluate('document.querySelectorAll(".csf-tab").length===2'),'Two real private source tabs');
+ const logicCode='export function assembleWorld() {\n  return "safe source";\n}\n';
+ await until(()=>visible('.csf-editor-mount.is-primary .csf-source'),'New private source editor');
+ assert.equal(await setTextArea('.csf-editor-mount.is-primary .csf-source',logicCode),logicCode);
+ await until(()=>evaluate('document.querySelector(".csf-editor-mount.is-primary .csf-editor h3")?.textContent.includes("Unsaved")'),'New source marked unsaved');
+ assert.equal(filePatches.length,3,'Creating/editing a second source did not auto-save');
+ await click('.csf-split-toggle');
+ await until(()=>evaluate('document.querySelectorAll(".csf-editor-mount:not([hidden])").length===2'),'Two real visible independent source mounts');
+ assert.ok(await evaluate('!!document.querySelector(".csf-editor-decks.is-split")'),'Actual split layout');
+ await until(()=>evaluate('getComputedStyle(document.querySelector(".csf-tree")).display==="none"'),'Split focus hides the file explorer to reclaim code width');
+ assert.equal(await evaluate('document.querySelector(".csf-editor-mount.is-secondary .csf-source")?.value.includes("First Signal")'),true,'Secondary retains its private content');
+ await click('.csf-editor-mount.is-primary .csi-toolbar-actions button[aria-label="Document outline"]');
+ await until(()=>evaluate('document.querySelector(".csf-editor-mount.is-primary .csi-outline-item")?.textContent.includes("assembleWorld")'),'Live TS outline from private draft');
+ await click('.csf-editor-mount.is-primary .csi-outline-item:first-child');
+ await until(()=>evaluate('document.querySelector(".csf-editor-mount.is-primary .csi-status")?.textContent.includes("Ln 1")'),'Outline navigates to private declaration');
+ const splitDesktop=await evaluate('(()=>{const d=document.querySelector(".csf-editor-decks");return {width:d.clientWidth,panes:[...d.querySelectorAll(".csf-editor-mount:not([hidden])")].map(e=>e.getBoundingClientRect().width)}})()');
+ assert.ok(splitDesktop.panes.length===2&&splitDesktop.panes.every(w=>w>=260),'Readable split at 1440 '+JSON.stringify(splitDesktop));
+ await snap('desktop-v121-private-split-source');
+ await click('.csf-editor-mount.is-primary .csf-editor-title button.csw-strong');
+ await until(()=>evaluate('document.querySelector(".csf-editor-mount.is-primary .csf-editor")?.textContent.includes("Saved private revision 2.")'),'Independent canonical source save');
+ assert.equal(fileNodes.get(source2Id).content,logicCode,'Only the selected source revision was written');
+ assert.ok(fileNodes.get(sourceId).content.includes('First Signal'),'Secondary source revision unchanged');
+ await click('.csf-split-toggle');
+ await until(()=>evaluate('!document.querySelector(".csf-editor-decks.is-split")'),'Single view restored');
+ await until(()=>evaluate('getComputedStyle(document.querySelector(".csf-tree")).display!=="none"'),'Single view restores private project Explorer');
+ await click('.csf-tab button:first-child');
+ await until(()=>evaluate('document.querySelector(".csf-editor-mount.is-primary .csf-source")?.value.includes("First Signal")'),'First tab restored');
+ await click('.csf-split-toggle');
+ await until(()=>evaluate('document.querySelectorAll(".csf-editor-mount:not([hidden])").length===2'),'Split reopened');
+ await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
+ await pause(150);
+ const mobileSplit=await evaluate('(()=>{const d=document.querySelector(".csf-editor-decks"),panes=[...d.querySelectorAll(".csf-editor-mount:not([hidden])")].map(e=>e.getBoundingClientRect()),root=document.querySelector(".csw-root");return {panes:panes.map(r=>({top:r.top,bottom:r.bottom,width:r.width})),overflow:root.scrollWidth>root.clientWidth+2}})()');
+ assert.equal(mobileSplit.overflow,false,'Mobile split avoids horizontal overflow');
+ const mobileViewControl=await evaluate('(()=>{const e=document.querySelector(".csf-view-toolbar .csf-split-toggle"),r=e.getBoundingClientRect();return {left:r.left,right:r.right,visible:getComputedStyle(e).display!=="none"}})()');
+ assert.ok(mobileViewControl.visible&&mobileViewControl.left>=-1&&mobileViewControl.right<=391,
+  'Mobile Single view toggle stays visible without horizontal scrolling '+JSON.stringify(mobileViewControl));
+ assert.equal(mobileSplit.panes.length,2);
+ assert.ok(mobileSplit.panes[1].top>=mobileSplit.panes[0].bottom-1,'Mobile private panes stack vertically');
+ await snap('mobile-v121-private-stacked-split');
+ await click('.csf-split-toggle');
+ await until(()=>evaluate('!document.querySelector(".csf-editor-decks.is-split")'),'Mobile split resets without losing files');
+
  await send('Network.deleteCookies',{url:base,name:'anevum_offline_visual_fixture'});
  await navigate('/studio/workspace');
  await until(()=>evaluate('document.body.textContent.includes("Sign in to open your workspace.")'),'Guest view denies private workspace');
@@ -302,7 +350,7 @@ try{
  assert.equal(failures.length,0,'No synthetic browser runtime exceptions '+failures.join('; '));
  const result={source:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),
   status:'PASS',syntheticOnly:true,realMemberAcceptance:false,providerCalls:0,
-  createdProject:createdId,createdRequests:posts.length,openedTabs:2,foldersCreated:1,sourceFilesCreated:1,sourceSaves:filePatches.filter(x=>!x.deleted).length,trashMoves:filePatches.filter(x=>x.deleted).length,restores:1,mobile,mobileLayouts,sourceMobile,guestDenied:true};
+  createdProject:createdId,createdRequests:posts.length,openedTabs:2,foldersCreated:1,sourceFilesCreated:2,sourceSaves:filePatches.filter(x=>!x.deleted).length,trashMoves:filePatches.filter(x=>x.deleted).length,restores:1,mobile,mobileLayouts,sourceMobile,guestDenied:true};
  writeFileSync(join(output,'acceptance.json'),JSON.stringify(result,null,2));
  console.log(JSON.stringify(result));
 }catch(error){

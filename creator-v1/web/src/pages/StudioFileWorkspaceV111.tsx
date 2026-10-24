@@ -1,5 +1,6 @@
 import {useEffect,useMemo,useRef,useState,type ReactNode,type FormEvent} from 'react';
 import {Link} from 'react-router-dom';
+import {Icon} from '../components/Icons';
 import {PREFIX} from '../../../workbench-alpha/document.mjs';
 import {classifyFile,SECTIONS} from '../../../studio-next/project-tree-v116.mjs';
 import {StudioCodeEditorV119} from './StudioCodeEditorV119';
@@ -17,6 +18,7 @@ import {
 } from '../lib/studio-files-v111';
 import './studio-file-workspace-v111.css';
 import './studio-file-workspace-v116.css';
+import './studio-layout-v121.css';
 
 const MAX_OPEN=8;
 type Props={
@@ -62,6 +64,7 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
  const [selectedFolder,setSelectedFolder]=useState<string|null>(null);
  const [openIds,setOpenIds]=useState<string[]>([]);
  const [activeId,setActiveId]=useState<string|null>(null);
+ const [splitId,setSplitId]=useState<string|null>(null);
  const [dirtyIds,setDirtyIds]=useState<Set<string>>(()=>new Set());
  const [createKind,setCreateKind]=useState<StudioNodeKind|null>(null);
  const [createName,setCreateName]=useState('');
@@ -169,6 +172,17 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
   }
  }
   const selectedFolderNode=nodes.find(n=>n.id===selectedFolder)||null;
+ const secondaryId=activeId&&splitId&&splitId!==activeId&&openIds.includes(splitId)?splitId:null;
+ function activateTab(id:string){
+  if(!confirmLeavingFolder())return;
+  if(id===splitId&&activeId&&activeId!==id)setSplitId(activeId);
+  setActiveId(id);
+ }
+ function toggleSplit(){
+  if(secondaryId){setSplitId(null);return;}
+  if(!activeId||openIds.length<2)return;
+  setSplitId(openIds.find(id=>id!==activeId)||null);
+ }
  function confirmLeavingFolder(){
   return !selectedFolder||!dirtyIds.has('folder:'+selectedFolder)||
    window.confirm('Discard unsaved folder property changes before navigating away?');
@@ -183,6 +197,7 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
    const next=openIds.filter(id=>id!==node.id);
    setOpenIds(next);
    if(activeId===node.id)setActiveId(next.at(-1)||null);
+   if(splitId===node.id)setSplitId(null);
   }
   setTrashNodes(old=>[node,...old.filter(n=>n.id!==node.id)]);
   setTrashAttempt(n=>n+1);
@@ -211,7 +226,10 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
   if(!confirmLeavingFolder())return;
   setMessage('');
   setSelectedFolder(node.parentId);
-  if(openIds.includes(node.id)){setActiveId(node.id);return;}
+  if(openIds.includes(node.id)){
+   if(node.id===splitId&&activeId&&activeId!==node.id)setSplitId(activeId);
+   setActiveId(node.id);return;
+  }
   if(openIds.length>=MAX_OPEN){setMessage('Close a source tab before opening another (8-file limit).');return;}
   setOpenIds(old=>[...old,node.id]);setActiveId(node.id);
  }
@@ -221,11 +239,14 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
   setOpenIds(next);
   setDirtyIds(old=>{if(!old.has(id))return old;const nextDirty=new Set(old);nextDirty.delete(id);return nextDirty;});
   if(activeId===id)setActiveId(next.at(-1)||null);
+  if(splitId===id)setSplitId(null);
+  else if(splitId&&splitId===next.at(-1)&&activeId===id)
+   setSplitId(next.find(other=>other!==splitId)||null);
  }
  function closeAllFiles(){
   if(!confirmLeavingFolder())return;
   if(openIds.some(id=>dirtyIds.has(id))&&!window.confirm('Discard unsaved source edits in all open file tabs?'))return;
-  setOpenIds([]);setActiveId(null);
+  setOpenIds([]);setActiveId(null);setSplitId(null);
   setDirtyIds(old=>new Set([...old].filter(id=>id.startsWith('folder:'))));
  }
  function selectFolder(node:StudioFileNode){
@@ -274,7 +295,7 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
   finally{setCreateBusy(false);}
  }
  function cancelCreate(){if(createBusy)return;setPendingCreate(null);setCreateKind(null);setCreateName('');setMessage('');}
- return <section className="csf-root" aria-label={'Private files for '+projectTitle} data-studio-file-tree="v111">
+ return <section className={'csf-root'+(secondaryId?' is-split':'')} aria-label={'Private files for '+projectTitle} data-studio-file-tree="v111">
   <header className="csf-header">
    <div><p className="csw-eyebrow">PRIVATE SOURCE / FILE SYSTEM V111</p>
     <h2>{projectTitle}</h2>
@@ -378,10 +399,7 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
      {openIds.map(id=>{
       const node=nodes.find(n=>n.id===id);
       return <div className={'csf-tab'+(id===activeId?' is-active':'')} key={id}>
-       <button type="button" aria-current={id===activeId?'page':undefined} onClick={()=>{
-        if(!confirmLeavingFolder())return;
-        setActiveId(id);
-       }}>
+       <button type="button" aria-current={id===activeId?'page':undefined} onClick={()=>activateTab(id)}>
         <StudioFileIconV119 name={node?.name||'Unavailable file'}/>{node?.name||'Unavailable file'}{dirtyIds.has(id)?' ●':''}</button>
        <button className="csf-tab-close" type="button" aria-label={'Close '+(node?.name||'source file')}
         onClick={()=>closeFile(id)}>×</button>
@@ -389,6 +407,22 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
      })}
      {!!openIds.length&&<button className="csf-close-all" type="button" onClick={closeAllFiles}>Close all</button>}
     </nav>
+    {activeId&&<div className="csf-view-toolbar" role="group" aria-label="Source editor layout controls">
+     {activeId&&<button type="button" className="csf-split-toggle" aria-label={secondaryId?'Return to single editor':'Split open source editors'}
+      aria-pressed={!!secondaryId} disabled={!secondaryId&&openIds.length<2}
+      title={secondaryId?'Return to single editor':'Show two already-open source files'}
+      onClick={toggleSplit}><Icon name="columns" size={15}/>{secondaryId?'Single view':'Split view'}</button>}
+     {secondaryId&&<label className="csf-split-picker">Right pane
+      <select aria-label="Secondary editor file" value={secondaryId} onChange={event=>setSplitId(event.target.value)}>
+       {openIds.filter(id=>id!==activeId).map(id=>{
+        const name=nodes.find(n=>n.id===id)?.name||'Unavailable file';
+        return <option key={id} value={id}>{name}</option>;
+       })}
+      </select></label>}
+    </div>}
+    {secondaryId&&<p className="csf-split-focus-note" role="status">
+     <Icon name="columns" size={14}/> Split focus · Explorer hidden. Use Quick Open for files or Single view to return. Each file saves independently.
+    </p>}
     {!activeId&&selectedFolderNode&&<FolderInspectorV111 key={selectedFolderNode.id}
      projectId={projectId} folder={selectedFolderNode} nodes={nodes} editable={canEdit}
      onUpdated={upsert} onMessage={setMessage} onDeleted={markedDeleted} onDirty={dirty=>setDirty('folder:'+selectedFolderNode.id,dirty)}/>}
@@ -398,10 +432,16 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
      <p>Open a text file from Explorer, create a folder, or start a new file. All edits are saved manually to a private revision.</p>
      <p className="csf-muted">This is private text storage, not an executable app runtime. The existing Studio editor, uploader, and moderation path remain separate.</p>
     </div>}
-    {openIds.map(id=><div key={id} className="csf-editor-mount" hidden={id!==activeId}>
-     <SourceEditorV111 projectId={projectId} nodeId={id} nodes={nodes} editable={canEdit}
-      onDirty={dirty=>setDirty(id,dirty)} onUpdated={upsert} onDeleted={markedDeleted}/>
-    </div>)}
+    <div className={'csf-editor-decks'+(secondaryId?' is-split':'')} hidden={!activeId} aria-label="Source editor panes">
+     {openIds.map(id=><div key={id} className={'csf-editor-mount'+(id===activeId?' is-primary':id===secondaryId?' is-secondary':'')}
+      hidden={id!==activeId&&id!==secondaryId}>
+      {secondaryId&&<div className="csf-pane-heading"><Icon name="file-code" size={14}/>
+       <strong>{nodes.find(node=>node.id===id)?.name||'Source file'}</strong>
+       <span>{id===activeId?'PRIMARY':'SECONDARY'} · independent draft</span></div>}
+      <SourceEditorV111 projectId={projectId} nodeId={id} nodes={nodes} editable={canEdit}
+       onDirty={dirty=>setDirty(id,dirty)} onUpdated={upsert} onDeleted={markedDeleted}/>
+     </div>)}
+    </div>
 
    </main>
   </div>
