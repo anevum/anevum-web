@@ -1,4 +1,4 @@
-import {type FormEvent} from 'react';
+import {type FormEvent,type KeyboardEvent} from 'react';
 import {Link} from 'react-router-dom';
 import {CosmicArtwork} from '../components/CosmicArtwork';
 import {Icon} from '../components/Icons';
@@ -53,6 +53,36 @@ const scenes:Record<Category,CosmicScene>={
   research:'research',learning:'learning',automation:'automation',other:'other'
 };
 const featured:Category[]=['games','tools','creative','research'];
+
+/** Directional focus follows the actual responsive card positions: the same
+ * four gateways work with Tab, arrows and assistive technology without a
+ * second, canvas-only focus tree. Arrow keys move only within this rail.
+ */
+function focusNearestWorld(event:KeyboardEvent<HTMLButtonElement>){
+  const axis=event.key;
+  if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(axis))return;
+  const current=event.currentTarget;
+  const rail=current.closest('.p136-discover-featured');
+  if(!rail)return;
+  const rect=current.getBoundingClientRect();
+  const sourceX=rect.left+rect.width/2,sourceY=rect.top+rect.height/2;
+  const options=Array.from(rail.querySelectorAll<HTMLButtonElement>('.p136-discover-world'))
+    .filter(button=>button!==current&&!button.disabled)
+    .map(button=>{
+      const box=button.getBoundingClientRect();
+      const dx=box.left+box.width/2-sourceX,dy=box.top+box.height/2-sourceY;
+      const primary=axis==='ArrowLeft'?-dx:axis==='ArrowRight'?dx:axis==='ArrowUp'?-dy:dy;
+      const cross=axis==='ArrowLeft'||axis==='ArrowRight'?Math.abs(dy):Math.abs(dx);
+      return {button,primary,cross,score:primary+cross*2};
+    })
+    .filter(item=>item.primary>12&&item.cross<=item.primary*2.2)
+    .sort((a,b)=>a.score-b.score);
+  if(!options.length)return;
+  event.preventDefault();
+  options[0].button.focus();
+  options[0].button.scrollIntoView({block:'nearest',inline:'nearest'});
+}
+
 
 export function ParityDiscoverV136(props:ParityDiscoverProps){
   const {
@@ -123,7 +153,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
             const item=channels.find(ch=>ch.id===id);
             if(!item)return null;
             return <button type="button" key={id} className={'p136-discover-world p136-discover-world--'+id+(category===id?' is-active':'')}
-              aria-pressed={category===id} onClick={()=>onCategory(id)}>
+              aria-pressed={category===id} onClick={()=>onCategory(id)} onKeyDown={focusNearestWorld}>
               <CosmicArtwork scene={scenes[id]}/>
               <span className="p136-discover-world-shade" aria-hidden="true"/>
               <span className="p136-discover-world-top">FIELD / 0{index+1}<Icon name="arrow" size={17}/></span>
