@@ -8,6 +8,8 @@ on:
       - creator-v1/agent-quality-lab/**
       - creator-v1/web/src/pages/StudioProjectDoctorV001.tsx
       - creator-v1/web/src/pages/StudioFileWorkspaceV111.tsx
+      - creator-v1/web/src/pages/StudioSceneComposerV112.tsx
+      - creator-v1/web/src/pages/StudioInterfaceBuilderV113.tsx
       - creator-v1/web/src/pages/studio-project-doctor-v001.css
       - creator-v1/test/studio-project-doctor-ui-v001.test.mjs
       - creator-v1/workbench-alpha/document.mjs
@@ -19,6 +21,8 @@ on:
       - creator-v1/agent-quality-lab/**
       - creator-v1/web/src/pages/StudioProjectDoctorV001.tsx
       - creator-v1/web/src/pages/StudioFileWorkspaceV111.tsx
+      - creator-v1/web/src/pages/StudioSceneComposerV112.tsx
+      - creator-v1/web/src/pages/StudioInterfaceBuilderV113.tsx
       - creator-v1/web/src/pages/studio-project-doctor-v001.css
       - creator-v1/test/studio-project-doctor-ui-v001.test.mjs
       - creator-v1/workbench-alpha/document.mjs
