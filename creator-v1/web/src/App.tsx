@@ -37,6 +37,7 @@ const WorkbenchAlphaPage=lazy(()=>import("./pages/WorkbenchAlpha").then(m=>({def
 const NativeCreatorStudioPage=lazy(()=>import("./pages/NativeCreatorStudio").then(m=>({default:m.NativeCreatorStudioPage})));
 const CreatorWorkspacePage=lazy(()=>import("./pages/CreatorStudioWorkspaceV109").then(m=>({default:m.CreatorStudioWorkspacePage})));
 const StudioAchievementsPage=lazy(()=>import("./pages/StudioAchievementsV114").then(m=>({default:m.StudioAchievementsPage})));
+const ProjectMarkConnectV115=lazy(()=>import("./pages/ProjectMarkConnectV115").then(m=>({default:m.ProjectMarkConnectV115})));
 const NativePackagePlayerPage=lazy(()=>import("./pages/NativeCreatorStudio").then(m=>({default:m.NativePackagePlayerPage})));
 const creatorFallback=<LoadingState label="Opening Creator Studio"/>;
 const PublicBoardsPage = lazy(() => import("./pages/PublicBoardsPage").then(mod=>({default:mod.PublicBoardsPage})));
@@ -105,6 +106,7 @@ export default function App(){
     <Route path="studio/packages/review" element={<Suspense fallback={creatorFallback}><NativeCreatorStudioPage mode="review"/></Suspense>}/>
     <Route path="studio/packages/:projectId" element={<Suspense fallback={creatorFallback}><NativeCreatorStudioPage mode="edit"/></Suspense>}/>
     <Route path="projects/package/:projectId" element={<Suspense fallback={creatorFallback}><NativePackagePlayerPage/></Suspense>}/>
+    <Route path="connect/marks" element={import.meta.env.VITE_PROJECT_MARK_BRIDGE_V115==='true'?<Suspense fallback={creatorFallback}><ProjectMarkConnectV115/></Suspense>:<Navigate to="/" replace/>}/>
     <Route path="studio" element={nativeCreatorEnabled?<Suspense fallback={creatorFallback}><NativeCreatorStudioPage/></Suspense>:<CanonicalStudioPage/>}/>
     <Route path="studio/records" element={<CanonicalStudioPage/>}/>
     <Route path="studio/new" element={<CanonicalStudioPage mode="new"/>}/>
