@@ -14,6 +14,8 @@ on:
       - 'creator-v1/world-composer/document.mjs'
       - 'creator-v1/world-composer/document.d.mts'
       - 'creator-v1/web/src/pages/world-geometry-v117.ts'
+      - 'creator-v1/web/src/pages/StudioTransformPadV117.tsx'
+      - 'creator-v1/web/src/pages/studio-world-v117.css'
       - 'creator-v1/web/src/pages/world-sky-v115.ts'
       - 'creator-v1/web/src/pages/world-webgl2-v115.ts'
       - 'creator-v1/web/src/pages/WorldCanvasV115.tsx'
