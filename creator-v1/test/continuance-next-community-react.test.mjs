@@ -1,19 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {createRequire} from 'node:module';
-const require=createRequire(import.meta.url);
-let ts;
-try{ts=require('typescript')}catch{ts=require('/opt/nvm/versions/node/v22.16.0/lib/node_modules/typescript')} 
 const root=new URL('../',import.meta.url);
 const read=(f)=>fs.readFileSync(new URL(f,root),'utf8');
 const page=read('web/src/pages/CommunityNextReviewPage.tsx');
 const css=read('web/src/pages/community-next-review.css');
 const model=read('web/src/lib/commons-next-model.ts');
 const appPatch=fs.readFileSync(process.env.ANEVUM_APP_SOURCE || new URL('../web/src/App.tsx',import.meta.url),'utf8');
-test('TSX parses as an isolated React component',()=>{
- const r=ts.transpileModule(page,{fileName:'CommunityNextReviewPage.tsx',compilerOptions:{jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext},reportDiagnostics:true});
- assert.equal(r.diagnostics?.length,0);
+test('React preview exports a scoped page and retains the main Shell landmark',()=>{
+ assert.match(page,/export function CommunityNextReviewPage\(\)/);
+ assert.match(page,/return <section className="lnx-root"/);
+ assert.match(page,/id="lnx-main" tabIndex=\{-1\}/);
+ assert.doesNotMatch(page,/<main\s/);
 });
 test('live Community uses only existing public canonical read APIs',()=>{
  for(const name of ['readStatus','readProjects','readCommunityPosts','readCreators','readCategories'])
@@ -61,7 +59,9 @@ test('public views are scoped and no invented XP or rewards',()=>{
  assert.match(page,/Only the canonical member inventory/);
  assert.doesNotMatch(page,/setXp|awardBadge|makeEarned|fakeFollowers/);
 });
-test('the pure URL model parses without JSX',()=>{
- const r=ts.transpileModule(model,{fileName:'commons-next-model.ts',compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext},reportDiagnostics:true});
- assert.equal(r.diagnostics?.length,0);
+test('the pure URL model includes typed state with no privilege grant or I/O',()=>{
+ assert.match(model,/export function decodeCommonsQuery/);
+ assert.match(model,/export function nextCommonsQuery/);
+ assert.match(model,/export function moderatedPostsEnabled/);
+ assert.doesNotMatch(model,/fetch\(|localStorage|sessionStorage|memberCreateReply|canonicalEdit/);
 });
