@@ -38,6 +38,11 @@ import "./canonical-email.css";
 import "./staging-integration-v013.css";
 import "./community-home-v014.css";
 
+// A separately reviewed NEXT style layer. Default and V131 builds keep it off.
+if (import.meta.env.VITE_NEXT_VISUAL_SYSTEM === "true") {
+  document.documentElement.dataset.avNextVisual = "v134";
+  void import("./continuance-next-visual-v134.css");
+}
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "") || "/"}>
