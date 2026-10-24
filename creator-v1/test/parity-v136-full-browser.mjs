@@ -78,11 +78,12 @@ try{
     record('responsive arrival '+width,layout);
     await page.getByRole('link',{name:'Explore projects',exact:true}).click();
     await page.waitForURL(base+'/discover');
+    await page.locator('.av73-discover').waitFor();
     assert.equal(await page.locator('.av73-discover').count(),1);
     await page.goto(base,{waitUntil:'networkidle'});
     await page.getByRole('link',{name:'Join the community',exact:true}).click();
     await page.waitForURL(base+'/join');
-    assert.ok(await page.getByRole('heading',{name:/ENTER THE\s*CONTINUANCE\./i}).count()>0);
+    await page.getByRole('heading',{name:/ENTER THE\s*CONTINUANCE\./i}).waitFor();
     await page.goto(base,{waitUntil:'networkidle'});
     await page.getByRole('button',{name:'Open IREN companion',exact:true}).click();
     assert.equal(await page.locator('.ir80-dock').count(),1);
