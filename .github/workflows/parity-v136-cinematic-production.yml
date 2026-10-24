@@ -1,0 +1,79 @@
+name: PARITY V136 Cinematic Production QA
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/parity-v136-cinematic-production.yml'
+      - 'creator-v1/graphics/author-cinematic-institute-v136.py'
+      - 'creator-v1/graphics/encode-cinematic-v136.mjs'
+      - 'creator-v1/graphics/inspect-cinematic-candidate-v136.mjs'
+      - 'creator-v1/graphics/smoke-cinematic-v136.mjs'
+      - 'creator-v1/test/parity-v136-media-contract.test.mjs'
+      - 'creator-v1/web/src/parity/CinematicMediaContractV136.ts'
+      - 'creator-v1/web/src/parity/CinematicFramesV136.tsx'
+      - 'creator-v1/web/src/parity/CinematicVideoV136.tsx'
+      - 'creator-v1/web/src/parity/CinematicArrivalV136.tsx'
+      - 'docs/production/parity-v136-cinematic-production-20261024.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: cinematic-v136-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  candidate-media-pipeline:
+    if: github.repository == 'anevum/anevum-web' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'anevum/anevum-web')
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify local FFmpeg and original Blender authoring syntax
+        run: |
+          ffmpeg -version | head -n 2
+          ffprobe -version | head -n 2
+          python3 -m py_compile creator-v1/graphics/author-cinematic-institute-v136.py
+      - name: Frame-accurate source, approval and runtime security contracts
+        run: |
+          node --experimental-strip-types --test creator-v1/test/parity-v136-media-contract.test.mjs
+          node --experimental-strip-types --test creator-v1/test/parity-v136-cinematic.test.mjs
+      - name: Encode real short footage and verify both image/video derivatives
+        run: node creator-v1/graphics/smoke-cinematic-v136.mjs
+
+  authored-scene-preview:
+    if: github.repository == 'anevum/anevum-web' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'anevum/anevum-web')
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install offline authored scene renderer
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y blender ffmpeg
+          blender --version | head -n 2
+      - name: Render four original Blender Institute camera frames (PREVIEW only)
+        run: blender --background --python creator-v1/graphics/author-cinematic-institute-v136.py -- --out "$RUNNER_TEMP/continuance-blender" --quality preview --frames 4
+      - name: Encode desktop/mobile artwork and MP4/WebM without external APIs
+        run: node creator-v1/graphics/encode-cinematic-v136.mjs --frames "$RUNNER_TEMP/continuance-blender" --out "$RUNNER_TEMP/continuance-cinematic" --fps 8
+      - name: Verify file hashes, frame chronology, native source resolution and video codecs
+        run: node creator-v1/graphics/inspect-cinematic-candidate-v136.mjs --candidate "$RUNNER_TEMP/continuance-cinematic"
+      - name: Publish reviewer-only render source and playback derivatives
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-v136-original-cinematic-PREVIEW-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            ${{ runner.temp }}/continuance-blender/
+            ${{ runner.temp }}/continuance-cinematic/
+          retention-days: 14
+          if-no-files-found: warn
