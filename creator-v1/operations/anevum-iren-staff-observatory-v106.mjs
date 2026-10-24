@@ -5,12 +5,17 @@
  */
 import previous from './anevum-iren-staff-observatory-v105.mjs';
 import {NEXT_CSS,NEXT_CLIENT} from './anevum-observatory-continuance-v106-assets.mjs';
+import {RUM_CSS,RUM_CLIENT} from './anevum-observatory-rum-v106-assets.mjs';
+import {fetchRumAggregates} from '../analytics/cloudflare-rum-observatory-v106.mjs';
 
 const ORIGIN='https://anevum.com';
 const BASE='/staff/observatory';
 const GROWTH=BASE+'/growth';
 const CSS=BASE+'/continuance-v106.css';
 const CLIENT=BASE+'/continuance-v106.js';
+const RUM_CSS_PATH=BASE+'/rum.css';
+const RUM_SCRIPT=BASE+'/rum.js';
+const RUM_API=BASE+'/rum/api';
 const PRIVATE_HEADERS={
  'cache-control':'private, no-store',
  'x-content-type-options':'nosniff',
@@ -60,6 +65,18 @@ const RANGES='<div class="ci-range-tools" aria-label="Registration chart control
  '<button class="ci-export" type="button" id="ci-export" disabled>Export verified CSV</button>'+
  '<div class="ci-range-status" id="ci-range-status" role="status" aria-live="polite">Awaiting verified registration records.</div></div>';
 
+
+const RUM_PANEL='<section id="ci-rum" aria-labelledby="ci-rum-heading"><div class="heading"><div><div class="eyebrow gold">CLOUDFLARE RUM / EXTERNAL SOURCE</div><h2 id="ci-rum-heading">Browser visit signal</h2></div><span>Separate from members, funnels and unique people</span></div>'+
+ '<article class="ci-rum-panel"><div class="ci-rum-head"><div><div class="eyebrow gold">SOURCE / WEB ANALYTICS</div><h3>Acquisition atmosphere.</h3>'+
+ '<p>Thirty UTC calendar dates of browser beacon visits and page-load events. These are estimates, not deduplicated people or activated ANEVUM members.</p></div>'+
+ '<span id="ci-rum-state" class="ci-rum-state" role="status" data-state="unavailable">NOT CONNECTED</span></div>'+
+ '<div id="ci-rum-values" class="ci-rum-values" hidden></div>'+
+ '<div id="ci-rum-chart" class="ci-rum-chart" role="img" aria-label="Browser-beacon visit trend unavailable" hidden></div>'+
+ '<div id="ci-rum-note" class="ci-rum-note" role="status" aria-live="polite">Checking read-only Cloudflare analytics availability. No visitor estimates will be invented.</div>'+
+ '<details id="ci-rum-daily" class="ci-rum-details" hidden><summary>Exact provider-reported UTC dates</summary><table id="ci-rum-table"></table></details>'+
+ '<div id="ci-rum-warning" class="ci-rum-disclaimer">Browser visits, page loads and unique visitors are different metrics. Campaign attribution, registration conversion, bot classification and action retention are not connected.</div>'+
+ '</article></section>';
+
 /** Pure HTML decoration for exact trusted V104/V105 page templates, not arbitrary HTML. */
 export function decorateObservatoryHtml(html,page){
  if(typeof html!=='string'||!['operations','growth'].includes(page))
@@ -80,6 +97,8 @@ export function decorateObservatoryHtml(html,page){
    '<section class="workspace active" id="overview" aria-labelledby="overview-title">',
    '<section class="workspace active" id="overview" aria-labelledby="overview-title">'+HERO);
  } else {
+  output=replaceExactlyOnce(output,'</head>',
+   '<link rel="stylesheet" href="'+RUM_CSS_PATH+'"><script src="'+RUM_SCRIPT+'" defer></script></head>');
   output=replaceExactlyOnce(output,'<body><div class="shell">',
     '<body class="ci-next"><a class="ci-skip" href="#ci-growth-main">Skip to growth intelligence</a><div class="shell">');
   output=replaceExactlyOnce(output,'<div class="brand"><div><small>ANEVUM / IREN</small>',
@@ -91,6 +110,8 @@ export function decorateObservatoryHtml(html,page){
   output=replaceExactlyOnce(output,
    '<div class="layout"><article class="panel"><div class="panel-head"><div><div class="eyebrow gold">SIGNAL / 30 UTC CALENDAR DATES',
    RANGES+'<div class="layout"><article class="panel"><div class="panel-head"><div><div class="eyebrow gold">SIGNAL / 30 UTC CALENDAR DATES');
+  output=replaceExactlyOnce(output,'<section id="coverage" aria-labelledby="coverage-heading">',
+   RUM_PANEL+'<section id="coverage" aria-labelledby="coverage-heading">');
  }
  return output;
 }
@@ -116,14 +137,23 @@ export default {
   let url;try{url=new URL(request.url)}catch{return deny(404,'Not found')}
   if(url.origin!==ORIGIN||url.protocol!=='https:'||url.username||url.password)
    return previous.fetch(request,env);
-  if(url.pathname===CSS||url.pathname===CLIENT){
+  if(url.pathname===CSS||url.pathname===CLIENT||url.pathname===RUM_CSS_PATH||url.pathname===RUM_SCRIPT){
    if(request.method!=='GET')return deny(405,'Method not allowed');
    if(url.search)return deny(400,'Unexpected query');
    const denial=await staffGate(request,env);
    if(denial)return denial;
-   return new Response(url.pathname===CSS?NEXT_CSS:NEXT_CLIENT,{
-    headers:{...PRIVATE_HEADERS,'content-type':url.pathname===CSS?'text/css; charset=utf-8':'application/javascript; charset=utf-8'}
-   });
+   const css=url.pathname===CSS||url.pathname===RUM_CSS_PATH;
+   const content=url.pathname===CSS?NEXT_CSS:url.pathname===CLIENT?NEXT_CLIENT:url.pathname===RUM_CSS_PATH?RUM_CSS:RUM_CLIENT;
+   return new Response(content,{headers:{...PRIVATE_HEADERS,'content-type':css?'text/css; charset=utf-8':'application/javascript; charset=utf-8'}});
+  }
+  if(url.pathname===RUM_API){
+   if(request.method!=='GET')return deny(405,'Method not allowed');
+   if(url.search)return deny(400,'Unexpected query');
+   const denial=await staffGate(request,env);if(denial)return denial;
+   try{
+    const data=await fetchRumAggregates(env);
+    return new Response(JSON.stringify(data),{headers:{...PRIVATE_HEADERS,'content-type':'application/json; charset=utf-8'}});
+   }catch{return deny(503,'Browser visit analytics temporarily unavailable')}
   }
   const isOperations=url.pathname===BASE||url.pathname===BASE+'/';
   const isGrowth=url.pathname===GROWTH||url.pathname===GROWTH+'/';
