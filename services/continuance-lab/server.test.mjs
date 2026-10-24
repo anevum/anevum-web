@@ -61,6 +61,8 @@ test('diagnose is unauthorized by default and does not leak source on success',a
     const text=await reply.text();
     assert.equal(reply.status,200);
     assert.equal(JSON.parse(text).format,'anevum.blocks.v1');
+    assert.equal(JSON.parse(text).brief.status,'no_structural_warnings');
+    assert.deepEqual(JSON.parse(text).brief.recommendations,[]);
     assert.equal(JSON.parse(text).sourceBytes,Buffer.byteLength(source));
     assert.ok(!text.includes(source));
   });
@@ -86,6 +88,10 @@ test('reliably identifies actual narrative and UI defects without editing conten
     assert.ok(result.findings.some(x=>x.code==='page.unreachable'));
     assert.ok(result.findings.some(x=>x.code==='button.unlabeled'));
     assert.ok(result.findings.some(x=>x.code==='button.inert'));
+    assert.equal(result.brief.schema,'anevum.project-doctor.brief.v001');
+    assert.equal(result.brief.status,'review');
+    assert.ok(result.brief.recommendations.every(x=>typeof x.nextStep==='string'));
+    assert.ok(!JSON.stringify(result.brief).includes('Private project text'));
   });
 });
 
