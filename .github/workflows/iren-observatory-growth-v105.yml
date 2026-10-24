@@ -1,0 +1,57 @@
+name: ANEVUM IREN Observatory V105 Growth QA
+on:
+  pull_request:
+    paths:
+      - "creator-v1/operations/anevum-iren-staff-observatory-v105.mjs"
+      - "creator-v1/test/staff-observatory-growth-v105.test.mjs"
+      - "creator-v1/test/capture-staff-growth-v105.mjs"
+      - ".github/workflows/iren-observatory-growth-v105.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  growth-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify isolated growth Worker and fixture syntax
+        run: |
+          node --check creator-v1/operations/anevum-iren-staff-observatory-v105.mjs
+          node --check creator-v1/test/staff-observatory-growth-v105.test.mjs
+          node --check creator-v1/test/capture-staff-growth-v105.mjs
+      - name: Check aggregate metrics, owner/reviewer authorization, and legacy protection
+        run: |
+          node --test creator-v1/test/staff-observatory-growth-v105.test.mjs
+          node --test creator-v1/test/staff-observatory-cleanup-v104.test.mjs
+      - name: Inspect actual Chromium growth experience at 1440, 390, and 320
+        shell: bash
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$chrome"
+          node creator-v1/test/capture-staff-growth-v105.mjs "$chrome" "$RUNNER_TEMP/growth-v105"
+          test -s "$RUNNER_TEMP/growth-v105/owner-desktop.png"
+          test -s "$RUNNER_TEMP/growth-v105/owner-phone.png"
+          test -s "$RUNNER_TEMP/growth-v105/owner-small-phone.png"
+          test -s "$RUNNER_TEMP/growth-v105/reviewer-phone.png"
+          test -s "$RUNNER_TEMP/growth-v105/offline-phone.png"
+          test -s "$RUNNER_TEMP/growth-v105/acceptance.json"
+      - name: Assert synthetic-only evidence and no production calls
+        run: |
+          node --input-type=module - "$RUNNER_TEMP/growth-v105/acceptance.json" <<'JS'
+          import {readFileSync} from 'node:fs';
+          const data=JSON.parse(readFileSync(process.argv[2],'utf8'));
+          if(!data.pass||data.productionRequests!==0||data.productionWrites!==0||data.evidence.length!==5||data.evidence.some(x=>!x.syntheticOnly))throw Error('V105_ISOLATED_PROOF_FAILED');
+          console.log('V105_ISOLATED_CAPTURE_RECEIPT=PASS');
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: iren-growth-observatory-v105-visual-review
+          path: ${{ runner.temp }}/growth-v105/
+          retention-days: 14
+          if-no-files-found: warn
