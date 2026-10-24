@@ -1,0 +1,48 @@
+name: ANEVUM V115 Achievement Bridge Source QA
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/canonical-auth/migrations/0016_project_mark_bridge_v115.sql'
+      - 'creator-v1/canonical-auth/project-mark-bridge-v115.mjs'
+      - 'creator-v1/canonical-auth/worker.mjs'
+      - 'creator-v1/sdk/achievement-bridge-v115/**'
+      - 'creator-v1/test/project-mark-bridge-v115.test.mjs'
+      - 'creator-v1/web/src/components/ProjectMarksV115.tsx'
+      - 'creator-v1/web/src/pages/ProjectMarkConnectV115.tsx'
+      - 'creator-v1/web/src/pages/project-marks-v115.css'
+      - 'creator-v1/web/src/pages/Phase1MemberPage.tsx'
+      - 'creator-v1/web/src/pages/Phase1PublicMemberPage.tsx'
+      - 'creator-v1/web/src/App.tsx'
+      - '.github/workflows/creator-project-marks-v115-qa.yml'
+permissions:
+  contents: read
+concurrency:
+  group: creator-project-marks-v115-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  bridge-source-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install declared repository dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Real SQLite consent publisher replay and privacy tests
+        run: node --test creator-v1/test/project-mark-bridge-v115.test.mjs creator-v1/test/creator-achievements-v114.test.mjs creator-v1/test/creator-achievements-v114-worker.test.mjs
+      - name: Typecheck actual Creator V1 React
+        run: npm run check:creator-v1-web
+      - name: Build default-OFF React
+        run: npm run build:creator-v1-web:staging
+      - name: Build opt-in frontend only
+        env:
+          VITE_PROJECT_MARK_BRIDGE_V115: 'true'
+          VITE_CREATOR_ACHIEVEMENTS_V114: 'true'
+        run: npm run build:creator-v1-web:staging
+      - name: Source-only safety receipt
+        run: echo 'V115_UNAPPLIED_APPROVAL_PROVISIONING_ONLY_NO_LIVE_GRANTS_NO_GLOBAL_XP_NO_DEPLOYMENT' >> "$GITHUB_STEP_SUMMARY"
