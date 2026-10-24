@@ -66,6 +66,8 @@ test('V118 browser authoring gains keyboard history, bounded export and real mob
  assert.match(page,/cvw-action-short/);
  assert.match(css,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
  assert.match(css,/\.cvw-root \.cvs-mode-header\{display:none\}/);
+ assert.match(css,/\.cvw-root \.csn-site-nav\{display:none\}/);
+ assert.match(css,/\.cvs-project-actions \.cvs-primary:disabled/);
  assert.match(css,/prefers-reduced-motion:reduce/);
  assert.match(css,/forced-colors:active/);
  assert.doesNotMatch(page,/\bfetch\s*\(|\blocalStorage\b|\bsessionStorage\b|dangerouslySetInnerHTML|\beval\s*\(|new Function/);
