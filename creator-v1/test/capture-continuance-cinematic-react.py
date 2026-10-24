@@ -56,12 +56,12 @@ with sync_playwright() as p:
         check(f'{width} initial HTTP 200', response is not None and response.status == 200)
         check(f'{width} Arrival heading visible', page.get_by_role('heading', name='A UNIVERSE IN THE MAKING.', level=1).is_visible())
         check(f'{width} canonical mark visible', page.locator('.cnr-brandmark svg, svg.cnr-brandmark').count() == 1)
-        check(f'{width} Arrival image loaded', page.locator('.cnr-hero > .cnr-art img').evaluate('(image) => image.complete && image.naturalWidth >= 768'))
+        check(f'{width} Arrival image loaded', page.locator('.cnr-hero > .cnr-art img').evaluate('(image) => image.complete && image.naturalWidth > 0 && /-(768|1536)\.webp/.test(image.currentSrc)'))
         check(f'{width} no arrival x-overflow', page.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'))
         page.screenshot(path=str(EVIDENCE / f'arrival-{width}.png'), full_page=True, animations='disabled')
         page.get_by_role('button', name='Enter ANEVUM').click()
         check(f'{width} Discover heading after real button', page.get_by_role('heading', name='FIND THE UNEXPECTED.', level=1).is_visible())
-        check(f'{width} Discover original responsive artwork loaded', page.locator('.cnr-discover-hero > .cnr-art img').evaluate('(image) => image.complete && image.naturalWidth >= 768'))
+        check(f'{width} Discover original responsive artwork loaded', page.locator('.cnr-discover-hero > .cnr-art img').evaluate('(image) => image.complete && image.naturalWidth > 0 && /-(768|1536)\.webp/.test(image.currentSrc)'))
         check(f'{width} four field cards present', page.locator('button.cnr-room').count() == 4)
         check(f'{width} no Discover x-overflow', page.evaluate('document.documentElement.scrollWidth <= window.innerWidth + 1'))
         page.screenshot(path=str(EVIDENCE / f'discover-{width}.png'), full_page=True, animations='disabled')
@@ -90,7 +90,12 @@ with sync_playwright() as p:
     reduced.goto(url, wait_until='networkidle')
     check('OS reduced motion immediately stops animation', reduced.locator('.cnr-root[data-still=true]').count() == 1)
     reduced.emulate_media(reduced_motion='no-preference')
-    check('live reduced-motion preference is observed', reduced.locator('.cnr-root[data-still=false]').count() == 1)
+    try:
+        reduced.wait_for_function('document.querySelector(".cnr-root")?.getAttribute("data-still") === "false"', timeout=5000)
+        resumed_on_media_change = True
+    except Exception:
+        resumed_on_media_change = False
+    check('live reduced-motion preference is observed', resumed_on_media_change)
     ctx.close()
     browser.close()
 server.shutdown()
