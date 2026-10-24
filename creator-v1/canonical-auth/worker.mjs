@@ -115,6 +115,10 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     // Only signed provider notifications may bypass the browser Origin check.
     if(supportV2Hook){
       if(request.method!=='POST')return fail(request,405);
+      // Webhooks have no browser Origin, but require the same canonical
+      // identity issuer and schema boundary as authenticated member routes.
+      if(!canonicalConfigState(env).operational || !await canonicalSchemaReady(env) ||
+         !await canonicalCreatorSchemaReady(env.MEMBER_DB))return fail(request,404);
       return safeResponse(await supportV2Webhook(request,env));
     }
     if(ownSupportV2&&!((path===SUPPORT_API&&request.method==='GET')||
