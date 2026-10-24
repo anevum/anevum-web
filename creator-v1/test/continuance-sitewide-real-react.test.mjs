@@ -87,6 +87,10 @@ test('Commons cinematic markup preserves true published feeds, moderation, and s
   assert.match(community,/ch7-hub.*av-next-commons/);
   assert.match(community,/scene="creative" priority=\{cinematicNextEnabled\} sizes=/);
   assert.match(community,/<ContinuanceSignalAtlas\/>/);
+  assert.doesNotMatch(community,/Every idea has|ch7-categories|ch7-field-art|01 \/ FIND YOUR FIELD/);
+  assert.match(community,/ch7-portals ch7-portals-plain/);
+  assert.match(community,/ch7-sidebar ch7-sidebar-editorial/);
+  assert.match(community,/setCategory/);
   assert.match(community,/readCommunityPosts/);
   assert.match(community,/readCreators/);
   assert.match(community,/readStatus/);
