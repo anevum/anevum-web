@@ -175,7 +175,7 @@ try{
  assert.ok(beforeExpand.height<170,'Compact customized member bar must remain short on phone: '+JSON.stringify(beforeExpand));
  assert.equal(beforeExpand.links,1,'Single canonical public wall action, no nested links');
  result.compactHeight=beforeExpand.height;
- const disclosures=await evaluate("(()=>{const entry=document.querySelector('.cf-detail .cf-author-dossier--detail details');if(!entry)return {open:false,counts:0};entry.querySelector('summary').click();return {open:entry.open,counts:entry.querySelectorAll('.cf-author-dossier-activity>span').length,chosen:entry.innerText.includes('Nebula'),award:entry.innerText.includes('Accessibility Builder')}})()");
+ const disclosures=await evaluate("(()=>{const entry=document.querySelector('.cf-detail .cf-author-dossier--detail details');if(!entry)return {open:false,counts:0};entry.querySelector('summary').click();return {open:entry.open,counts:entry.querySelectorAll('.cf-author-dossier-activity>span').length,chosen:entry.innerText.includes('Nebula'),award:entry.innerText.includes('Open Door')}})()");
  assert.equal(disclosures.open,true);
  assert.equal(disclosures.counts,4,'Only four bounded, public approved-activity counters');
  assert.equal(disclosures.chosen,true,'Public cosmetic choice is readable when expanded');
