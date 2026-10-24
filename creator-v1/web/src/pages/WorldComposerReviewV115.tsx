@@ -9,9 +9,11 @@ import {WorldCanvasV115} from './WorldCanvasV115';
 import {StudioModeRailV116,StudioTopModesV116,StudioFileTreeV116,type StudioFileChoice,type StudioModeV116} from './StudioNavigationV116';
 import {StudioAssetShelfV116,type StudioAsset} from './StudioAssetShelfV116';
 import {StudioOtherModesV116} from './StudioOtherModesV116';
+import {StudioTransformPadV117} from './StudioTransformPadV117';
 import './creator-studio-visual-v115.css';
 import './world-composer-v115.css';
 import './studio-next-v116.css';
+import './studio-world-v117.css';
 
 /** Review-only P1 GPU workspace. All edits stay in React memory; explicit
  * exported document text never reaches canonical member DB or publication.
@@ -104,6 +106,11 @@ export function WorldComposerReviewV115(){
   setFileNotice(file.path+' — sample structure only; no member file opened.');
   setPanel('closed');
  }
+ function nudge(delta:Vec3){
+  if(!node)return;
+  const position=node.position.map((value,i)=>clamp(value+delta[i],-40,40)) as Vec3;
+  command({type:'SET_TRANSFORM',id:node.id,field:'position',value:position});
+ }
  function transform(field:'position'|'rotation'|'scale',index:0|1|2,value:number){
   if(!node||!Number.isFinite(value))return;
   const min=field==='scale'?0.1:field==='rotation'?-6.284:-40;
@@ -170,11 +177,7 @@ export function WorldComposerReviewV115(){
      <div className="cvw-stage" role="region" aria-label="Live world composer">
       <WorldCanvasV115 document={scene} camera={camera} selection={selected}
        onCamera={setCamera} onSelect={id=>dispatch({type:'SELECT',id})}
-       onNudge={delta=>{
-        if(!node)return;
-        const position=node.position.map((v,i)=>clamp(v+delta[i],-40,40)) as Vec3;
-        command({type:'SET_TRANSFORM',id:node.id,field:'position',value:position});
-       }}/>
+       onNudge={nudge}/>
       <div className="cvw-selection-chip"><span>SELECTED OBJECT</span><strong>{node?.name||'None'}</strong></div>
       <div className="csn-scene-light">
        <button type="button" aria-expanded={lightingOpen} aria-controls="csn-floating-lighting" onClick={()=>setLightingOpen(v=>!v)}>SCENE LIGHTING <span aria-hidden="true">{lightingOpen?'⌃':'⌄'}</span></button>
@@ -214,6 +217,8 @@ export function WorldComposerReviewV115(){
         max={field==='scale'?6:field==='rotation'?6.284:40}
         onChange={event=>transform(field,i as 0|1|2,event.target.valueAsNumber)}/></label>)}</div>
       </fieldset>)}
+      <StudioTransformPadV117 position={node.position} onMove={nudge}
+       onFrame={()=>setCamera(c=>({...c,target:[...node.position] as Vec3,distance:Math.min(c.distance,20)}))}/>
       <label className="cvw-select">Material <select value={node.material} onChange={e=>command({type:'SET_MATERIAL',id:node.id,material:e.target.value as WorldMaterial})}>
        {MATERIALS.map(m=><option value={m} key={m}>{m}</option>)}</select></label>
       <button type="button" className="cvw-remove" onClick={()=>command({type:'DELETE_NODE',id:node.id})}>Remove selected object</button>
