@@ -89,8 +89,8 @@ export function decorateObservatoryHtml(html,page){
   output=replaceExactlyOnce(output,'</header>\n<main><section class="hero"',
     '</header>'+SPINE('growth')+'\n<main id="ci-growth-main"><section class="hero"');
   output=replaceExactlyOnce(output,
-   '<div class="layout"><article class="panel"><div class="panel-head"><div class="eyebrow gold">SIGNAL / 30 UTC CALENDAR DATES',
-   RANGES+'<div class="layout"><article class="panel"><div class="panel-head"><div class="eyebrow gold">SIGNAL / 30 UTC CALENDAR DATES');
+   '<div class="layout"><article class="panel"><div class="panel-head"><div><div class="eyebrow gold">SIGNAL / 30 UTC CALENDAR DATES',
+   RANGES+'<div class="layout"><article class="panel"><div class="panel-head"><div><div class="eyebrow gold">SIGNAL / 30 UTC CALENDAR DATES');
  }
  return output;
 }
