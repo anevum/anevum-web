@@ -65,7 +65,7 @@ async function fit(page,label){
  const sizes=await page.evaluate(()=>({w:innerWidth,document:document.documentElement.scrollWidth}));
  assert.ok(sizes.document<=sizes.w+1,label+' '+JSON.stringify(sizes));log(label);
 }
-async function snap(page,name){await page.screenshot({path:join(output,name+'.png'),fullPage:true,animations:'disabled'});captures.push(name+'.png')}
+async function snap(page,name){await page.locator('.avsaved-header').evaluate(header=>{if(header.querySelector('.avsaved-fixture-marker'))return;const marker=document.createElement('p');marker.className='avsaved-fixture-marker';marker.textContent='SYNTHETIC BROWSER TEST / NOT DEPLOYED';marker.style.cssText='font:600 11px/1.4 sans-serif;letter-spacing:.06em;color:#ffe0af;margin:0 0 14px';header.prepend(marker)});await page.screenshot({path:join(output,name+'.png'),fullPage:true,animations:'disabled'});captures.push(name+'.png')}
 try{
  for(const width of [1440,390,320]){
   const {ctx,page,state}=await fixture(width);
@@ -77,10 +77,10 @@ try{
   await page.getByRole('combobox',{name:'Saved category'}).selectOption('games');
   await page.waitForFunction(()=>document.querySelectorAll('.avsaved-card').length===2);
   assert.equal(await page.locator('.avsaved-card').count(),2);log(width+' category filter');
-  await page.getByRole('textbox',{name:'Search saved work'}).fill('Orbital');
+  await page.getByRole('searchbox',{name:'Search saved work'}).fill('Orbital');
   await page.waitForFunction(()=>document.querySelectorAll('.avsaved-card').length===1);
   assert.equal(await page.locator('.avsaved-card').count(),1);log(width+' literal search intersects category');
-  await page.getByRole('textbox',{name:'Search saved work'}).fill('xxxxxxxxxxx');
+  await page.getByRole('searchbox',{name:'Search saved work'}).fill('xxxxxxxxxxx');
   await page.getByRole('heading',{name:'No matches in the projects loaded.'}).waitFor();
   await page.getByRole('button',{name:'Show all saved projects'}).click();
   await page.waitForFunction(()=>document.querySelectorAll('.avsaved-card').length===3);log(width+' clear filters recovers');
@@ -96,9 +96,8 @@ try{
  await page.getByRole('combobox',{name:'Saved category'}).selectOption('tools');
  await page.waitForFunction(()=>document.querySelectorAll('.avsaved-card').length===1);
  await page.getByRole('button',{name:'REMOVE',exact:true}).click();
- await page.getByRole('button',{name:'Show all saved projects'}).waitFor();
- await page.getByRole('button',{name:'Show all saved projects'}).click();
  await page.waitForFunction(()=>document.querySelectorAll('.avsaved-card').length===2);
+ assert.equal(await page.getByRole('combobox',{name:'Saved category'}).inputValue(),'all');
  assert.equal(state.writes.length,1);
  log('removal retains server action and restores category after last item');await ctx.close();
  const guest=await fixture(390,'guest');
