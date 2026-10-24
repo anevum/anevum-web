@@ -36,6 +36,15 @@ export function StudioCommandPaletteV120({items,onChoose,onClose,initialMode='fi
   if(item.disabled)return;
   onChoose(item);
  }
+ function trapDialogFocus(event:KeyboardEvent<HTMLElement>){
+  if(event.key!=='Tab')return;
+  const elements=Array.from(root.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled)')||[])
+   .filter(element=>element.getClientRects().length>0);
+  if(!elements.length)return;
+  const first=elements[0],last=elements[elements.length-1];
+  if(event.shiftKey&&window.document.activeElement===first){event.preventDefault();last.focus();}
+  else if(!event.shiftKey&&window.document.activeElement===last){event.preventDefault();first.focus();}
+ }
  function handleKey(event:KeyboardEvent<HTMLInputElement>){
   if(event.key==='ArrowDown'){
    event.preventDefault();setActive(a=>(a+1)%Math.max(1,results.length));
@@ -50,7 +59,7 @@ export function StudioCommandPaletteV120({items,onChoose,onClose,initialMode='fi
  const shown=results[Math.min(active,Math.max(0,results.length-1))];
  return <div className="csp-backdrop" ref={root} onMouseDown={event=>{if(event.target===event.currentTarget)onClose();}}
   data-studio-command-palette="v120">
-  <section className="csp-modal" role="dialog" aria-modal="true" aria-label={title}>
+  <section className="csp-modal" role="dialog" aria-modal="true" aria-label={title} onKeyDown={trapDialogFocus}>
    <div className="csp-head"><span className="csp-head-icon"><Icon name="command" size={18}/></span>
     <strong>{title}</strong><span className="csp-shortcut">ESC to close</span>
     <button type="button" aria-label="Close command palette" onClick={onClose}><Icon name="close" size={17}/></button>
