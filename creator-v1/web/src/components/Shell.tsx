@@ -92,13 +92,14 @@ export function Shell(){
     navigate(trimmed?"/discover?q="+encodeURIComponent(trimmed):"/discover");
   }
   const home=location.pathname==="/";
-  // One stable route surface: the navigation, IREN and launcher never unmount.
-  // React 19.3 paints a brief native crossfade between destinations, while
-  // older browsers and reduced-motion users retain ordinary navigation.
-  const routeSurface=home?<Outlet/>:
+  const parityFullBleed=Boolean(FullParityHeader&&(home||location.pathname==="/discover"));
+  // PARITY destinations own a full-bleed spatial canvas, not a nested page box.
+  // Legacy routes retain their protected frame until individually transformed.
+  // One stable route surface keeps navigation, IREN and launcher mounted.
+  const routeSurface=home||parityFullBleed?<Outlet/>:
     <div className="av5-site-frame av9-unified-frame"><div className="av5-site-content"><Outlet/></div></div>;
   return <div className={"site-shell site-shell--cinematic av9-shell"+(home?" site-shell--home":"")}>
-    {!(FullParityHeader&&home)&&<ContinuanceWorldStage path={location.pathname}/>}
+    {!parityFullBleed&&<ContinuanceWorldStage path={location.pathname}/>}
     {FullParityHeader?<Suspense fallback={<header className="p136-header" aria-label="ANEVUM navigation loading"/>}><FullParityHeader memberDestination={memberDestination} canonicalMember={canonicalMember} query={query} onQuery={setQuery} onSearch={search} onOpenLauncher={()=>setLauncherOpen(true)} onOpenIren={()=>window.dispatchEvent(new Event("anevum:iren-open"))} menuOpen={menuOpen} onToggleMenu={()=>setMenuOpen(v=>!v)} menuButton={menuButton}/></Suspense>:<header className="site-header av9-header">
       <div className="header-inner av9-header-inner">
         <Link to="/" className="brand-lockup av9-brand" aria-label="ANEVUM homepage">
@@ -185,8 +186,8 @@ export function Shell(){
     <IrenGuidedContinuance memberId={canonicalMember?canonicalSession?.user?.id||null:null}/>
     <PortalLauncher open={launcherOpen} onClose={()=>setLauncherOpen(false)}/>
     <main id="main" tabIndex={-1} className="site-main av9-main">
-      {!(FullParityHeader&&home)&&<VisualKitAtmosphere room={publicVisualRoom(location.pathname)}/>}
-      {FullParityHeader?<ViewTransition>{routeSurface}</ViewTransition>:routeSurface}
+      {!parityFullBleed&&<VisualKitAtmosphere room={publicVisualRoom(location.pathname)}/>}
+      {FullParityHeader?<ViewTransition enter="p136-route" exit="p136-route" update="p136-route">{routeSurface}</ViewTransition>:routeSurface}
     </main>
     <footer className="site-footer av9-footer">
       <span>ANEVUM / A WORLD OF THINGS PEOPLE MAKE</span>
