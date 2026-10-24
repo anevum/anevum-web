@@ -1,0 +1,38 @@
+/* V136.013: opt-in cinematic poster over the one persistent WebGL scene.
+   Only the hero owns this layer; no shadow navigation, canvas or pointer traps. */
+html[data-av-parity="v136-full"] .p136-cinematic-arrival {
+  position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;
+  opacity:var(--cinema-opacity,1);isolation:isolate;
+  contain:paint;background:#05101e;
+}
+html[data-av-parity="v136-full"] .p136-cinematic-art,
+html[data-av-parity="v136-full"] .p136-cinematic-art img,
+html[data-av-parity="v136-full"] .p136-cinematic-luminance,
+html[data-av-parity="v136-full"] .p136-cinematic-vignette {
+  position:absolute;inset:0;width:100%;height:100%;display:block;
+}
+html[data-av-parity="v136-full"] .p136-cinematic-art img {
+  object-fit:cover;object-position:67% 45%;
+  transform:scale(1.065) translate3d(0,var(--cinema-offset,0%),0);
+  will-change:transform;
+}
+html[data-av-parity="v136-full"] .p136-cinematic-luminance {
+  background:radial-gradient(ellipse at 78% 36%,#78ceff16,transparent 48%);
+  mix-blend-mode:screen;
+}
+html[data-av-parity="v136-full"] .p136-cinematic-vignette {
+  background:linear-gradient(90deg,#0207128f,transparent 72%),
+    linear-gradient(0deg,#030a17e8,transparent 42%,#030a171e);
+}
+@media (max-width:820px) {
+  html[data-av-parity="v136-full"] .p136-cinematic-art img {object-position:67% 38%}
+  html[data-av-parity="v136-full"] .p136-cinematic-vignette {
+    background:linear-gradient(0deg,#020712ef 6%,#020712b0 35%,transparent 82%);
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  html[data-av-parity="v136-full"] .p136-cinematic-art img {transform:none;will-change:auto}
+}
+@media (forced-colors:active) {
+  html[data-av-parity="v136-full"] .p136-cinematic-arrival {display:none!important}
+}
