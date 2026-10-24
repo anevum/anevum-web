@@ -74,7 +74,10 @@
     };
     return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p[name]||p.spark}</svg>`;
   };
-  const logo=`<svg class="brand-mark" viewBox="0 0 120 120" fill="none" aria-hidden="true"><circle cx="60" cy="60" r="27" stroke="currentColor" stroke-width="9"/><ellipse cx="60" cy="60" rx="49" ry="18" transform="rotate(-22 60 60)" stroke="currentColor" stroke-width="6"/><path d="M59 3v30M59 86v30" stroke="currentColor" stroke-width="4"/><circle cx="105" cy="27" r="5" fill="currentColor"/></svg>`;
+  // Geometry is transcribed from the existing repository OrbitalMark.tsx.
+  // The mask makes the two actual core-cut circles transparent at any backdrop.
+  const officialOrbitalMark = (className,maskId) => `<svg class="${className}" viewBox="0 0 512 512" fill="none" aria-hidden="true" focusable="false"><defs><mask id="${maskId}" maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512"><rect width="512" height="512" fill="white"/><circle cx="269" cy="251" r="34" fill="black"/><circle cx="239" cy="230" r="8" fill="black" opacity=".82"/></mask></defs><g mask="url(#${maskId})"><ellipse cx="256" cy="256" rx="188" ry="76" transform="rotate(-17 256 256)" stroke="currentColor" stroke-width="34" stroke-linecap="round"/><path d="M256 56 274 211 326 256 274 301 256 456 238 301 186 256 238 211Z" fill="currentColor"/><circle cx="256" cy="256" r="72" fill="currentColor"/><circle cx="391" cy="132" r="20" fill="currentColor"/></g></svg>`;
+  const logo=officialOrbitalMark('brand-mark','anext-brand-mark-cut');
   const palettes=[
     {key:'origin',name:'Origin',style:'linear-gradient(135deg,#7f7bcc,#e9b98a 80%)'},
     {key:'cinder',name:'Cinder',style:'linear-gradient(135deg,#8f3853,#eeb486 80%)'},
@@ -106,7 +109,7 @@
   const toasts=(label)=>{state.toast=label;const toast=document.getElementById('toast');if(toast)toast.innerHTML=`<strong>Local concept interaction</strong>${html(label)} <button type="button" aria-label="Dismiss notice" data-dismiss="1" class="text-button">Dismiss</button>`;if(toast)toast.hidden=false;};
   const assetStars=()=>{let seed=981332;let s='';for(let i=0;i<52;i++){seed=(seed*1664525+1013904223)>>>0;const x=(seed%990)/10;seed=(seed*1664525+1013904223)>>>0;const y=(seed%970)/10;seed=(seed*1664525+1013904223)>>>0;const op=.25+(seed%66)/100;const sz=(seed%7===0)?'3px':'1.5px';s+=`<i style="left:${x}%;top:${y}%;--s:${sz};--o:${Math.min(.98,op)};--delay:-${(i%13)*.37}s;--t:${3+(i%9)/2}s" aria-hidden="true"></i>`;}return s;};
   const STARS=assetStars();
-  const sigil=`<svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><circle cx="50" cy="50" r="24" stroke="currentColor" stroke-width="4"/><ellipse cx="50" cy="50" rx="42" ry="12" transform="rotate(-22 50 50)" stroke="currentColor" stroke-width="3"/><path d="M50 2v25m0 46v25" stroke="currentColor" stroke-width="2"/><circle cx="88" cy="25" r="3" fill="currentColor"/></svg>`;
+  const sigil=officialOrbitalMark('cover-sigil-mark','anext-cover-mark-cut');
   const coverArt=()=>`<div class="profile-cover-art"></div><div class="cover-rays"></div><div class="cover-grid"></div><div class="banner-starfield" aria-hidden="true">${STARS}</div><div class="cover-orbital" aria-hidden="true"><i class="orbit one"></i><i class="orbit two"></i><i class="orbit three"></i><i class="orbit-dot"></i></div>`;
   const portrait=(person,frame=state.frame)=>`<div class="profile-portrait ${'frame-'+html(frame)}" aria-hidden="true"><span class="portrait-inner">${html(person.initial||'N')}</span></div>`;
   const pageClasses=()=>`page ${state.motion==='off'?'motion-off':state.motion==='gentle'?'motion-gentle motion-on':'motion-on'}`;
