@@ -155,16 +155,16 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
   }
   // QA-only genuine shared-source camera. It is NOT a claim of visual parity:
   // no cinematic frame sequence is approved and the live models remain unchanged.
-  const samples=stageSamples;
-  const qaCamera=Boolean(stageEnabled&&samples&&samples.length>=4&&
+  const cameraSamplesForStage=stageSamples;
+  const qaCamera=Boolean(stageEnabled&&cameraSamplesForStage&&cameraSamplesForStage.length>=4&&
    input.sector==='hero'&&family==='atrium'&&input.animated);
-  if(qaCamera&&samples){
+  if(qaCamera&&cameraSamplesForStage){
    const layer=document.querySelector<HTMLElement>('[data-cinematic-v136]');
    const travel=Number(layer?.dataset.cameraProgress??0);
    const normalized=Number.isFinite(travel)?T.MathUtils.clamp(travel,0,1):0;
-   const index=normalized*(samples.length-1),left=Math.floor(index),
-    right=Math.min(samples.length-1,left+1),t=index-left;
-   const a=samples[left],b=samples[right];
+   const index=normalized*(cameraSamplesForStage.length-1),left=Math.floor(index),
+    right=Math.min(cameraSamplesForStage.length-1,left+1),t=index-left;
+   const a=cameraSamplesForStage[left],b=cameraSamplesForStage[right];
    const position=new T.Vector3(...a.position).lerp(new T.Vector3(...b.position),t);
    const forward=new T.Vector3(...a.forward).lerp(new T.Vector3(...b.forward),t).normalize();
    const up=new T.Vector3(...a.up).lerp(new T.Vector3(...b.up),t).normalize();
