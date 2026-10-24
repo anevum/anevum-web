@@ -49,3 +49,16 @@
 @media(max-width:650px){.au26-page{padding:18px 15px}.au26-masthead{min-height:0;display:block;padding:29px 21px;border-radius:13px}.au26-masthead>svg{height:66px;width:66px;margin-bottom:20px}.au26-masthead h1{font-size:clamp(35px,10vw,51px)}.au26-updates{padding:40px 0}.au26-entry{padding:19px}.au26-optin{padding:20px}.au26-entry-meta{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.au26-page *, .au26-page *::before, .au26-page *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 @media(forced-colors:active){.au26-masthead,.au26-entry,.au26-optin{background:Canvas;color:CanvasText;border:2px solid CanvasText}}
+
+.au26-weekly{padding:0 0 clamp(38px,5vw,72px)}
+.au26-weekly .au26-section-heading>p{font-size:13px;color:#c8d9e4;margin-top:9px;line-height:1.5}
+.au26-weekly-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.au26-weekly-card{min-width:0;padding:clamp(20px,3vw,33px);border:1px solid #577a93;border-radius:12px;
+ background:linear-gradient(143deg,#13283d,#0b1727);box-shadow:inset 0 1px #effaff10}
+.au26-weekly-card .au26-kicker{font-size:9px;letter-spacing:.08em}
+.au26-weekly-card h3{font-size:clamp(20px,2.5vw,29px);line-height:1.2;margin:15px 0 10px;letter-spacing:-.028em}
+.au26-weekly-card h3 a{color:#f4f1e9;text-decoration:none}
+.au26-weekly-card h3 a:hover{text-decoration:underline}
+.au26-weekly-card>p{font-size:13px;line-height:1.65;color:#d4e3ea;margin-bottom:15px;overflow-wrap:anywhere}
+.au26-weekly-author{display:block;font-size:11px;color:#e6cfa8;overflow-wrap:anywhere}
+@media(max-width:700px){.au26-weekly-grid{grid-template-columns:1fr}}

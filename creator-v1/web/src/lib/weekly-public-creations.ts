@@ -64,3 +64,17 @@ export function selectWeeklyPublicCreations(source:unknown,now=Date.now()):Weekl
  }
  return {source:'approved-public-projects',items:picked,windowStart:new Date(earliest).toISOString(),windowEnd:new Date(now).toISOString()};
 }
+
+/**
+ * Read only ANEVUM's existing approved/public catalogue. Browser session or
+ * account identity is never forwarded. Failure simply omits the highlights.
+ */
+export async function readWeeklyPublicCreations(signal?:AbortSignal,now=Date.now()):Promise<WeeklyPublicCreations>{
+ const response=await fetch('/api/v1/boards',{method:'GET',credentials:'omit',cache:'no-store',
+  redirect:'error',headers:{Accept:'application/json'},signal});
+ if(!response.ok||!/^application\/json(?:\s*;|$)/i.test(response.headers.get('content-type')||''))
+  throw new Error('Public weekly catalogue unavailable');
+ const raw=await response.text();
+ if(raw.length>80000)throw new Error('Public weekly catalogue response too large');
+ return selectWeeklyPublicCreations(JSON.parse(raw),now);
+}

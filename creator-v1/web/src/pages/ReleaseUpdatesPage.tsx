@@ -4,15 +4,22 @@ import {OrbitalMark} from '../components/OrbitalMark';
 import {EmailUpdatesOptIn} from '../components/EmailUpdatesOptIn';
 import {readReleaseFeed,type ReleaseBulletin} from '../lib/release-bulletins';
 import {markPublicReleaseSeen} from '../lib/public-release-read-state';
+import {readWeeklyPublicCreations,type WeeklyPublicCreations} from '../lib/weekly-public-creations';
 import '../release-updates-v026.css';
 type State='loading'|'ready'|'error';
 const labels:Record<ReleaseBulletin['kind'],string>={release:'Release',patch:'Patch notes',notice:'Announcement',maintenance:'Maintenance'};
 export function ReleaseUpdatesPage(){
  const [state,setState]=useState<State>('loading');
  const [entries,setEntries]=useState<ReleaseBulletin[]>([]);
+ const [weekly,setWeekly]=useState<WeeklyPublicCreations|null>(null);
  useEffect(()=>{
   const controller=new AbortController();
   readReleaseFeed(controller.signal).then(data=>{setEntries(data.entries);setState('ready');if(data.entries[0])markPublicReleaseSeen(data.entries[0].id)}).catch(()=>{if(!controller.signal.aborted)setState('error')});
+  return()=>controller.abort();
+ },[]);
+ useEffect(()=>{
+  const controller=new AbortController();
+  readWeeklyPublicCreations(controller.signal).then(setWeekly).catch(()=>{});
   return()=>controller.abort();
  },[]);
  return <div className="au26-page">
@@ -29,6 +36,17 @@ export function ReleaseUpdatesPage(){
     {entry.audience==='testers'&&<small>Tester-facing public update. This page does not grant tester permissions.</small>}
    </article>)}</div>}
   </section>
+  {weekly&&weekly.items.length>0&&<section className="au26-weekly" aria-labelledby="au26-weekly-title">
+   <div className="au26-section-heading"><span className="au26-kicker">PUBLISHED / LAST SEVEN DAYS</span>
+    <h2 id="au26-weekly-title">New from the network</h2>
+    <p>Recently approved public projects, not popularity rankings or promoted placements.</p></div>
+   <div className="au26-weekly-grid">{weekly.items.map(item=><article key={item.id} className="au26-weekly-card">
+    <span className="au26-kicker">VERIFIED PUBLIC RELEASE / {item.publishedAt.slice(0,10)}</span>
+    <h3><Link to={item.url}>{item.title}</Link></h3>
+    <p>{item.summary||'A new public creation from the ANEVUM network.'}</p>
+    <span className="au26-weekly-author">By {item.creatorName} · @{item.creatorHandle}</span>
+   </article>)}</div>
+  </section>}
   <EmailUpdatesOptIn/>
  </div>;
 }

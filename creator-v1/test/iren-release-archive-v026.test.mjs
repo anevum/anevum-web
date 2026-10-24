@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {parseReleaseFeed} from '../web/src/lib/release-bulletins.ts';
+import {selectWeeklyPublicCreations} from '../web/src/lib/weekly-public-creations.ts';
 
 const data=JSON.parse(fs.readFileSync(new URL('../web/public/communications/updates.v1.json',import.meta.url),'utf8'));
 const component=fs.readFileSync(new URL('../web/src/components/IrenGuidedContinuance.tsx',import.meta.url),'utf8');
@@ -45,4 +46,21 @@ test('email content remains separate from member signup and is explicitly gated'
  assert.match(optin,/type="checkbox" checked=\{releases\}/);
  assert.match(optin,/type="checkbox" checked=\{weekly\}/);
  assert.doesNotMatch(optin,/automatically subscribe|subscribe after sign in/i);
+});
+
+test('weekly spotlight only uses current approved public release entries',()=>{
+ const now=Date.parse('2026-10-24T12:00:00Z');
+ const project={id:'new-1',title:'Open Creation',summary:'A creator project',creatorName:'Creator',
+  creatorHandle:'creatorx',category:'creative',publishedAt:new Date(now-86400000).toISOString()};
+ const publicBoards={source:'approved-public-projects',qualityRankingAvailable:false,latestReleases:[project]};
+ const output=selectWeeklyPublicCreations(publicBoards,now);
+ assert.equal(output.items.length,1);
+ assert.equal(output.items[0].url,'/projects/new-1');
+ assert.equal(output.items[0].creatorName,'Creator');
+ assert.equal(selectWeeklyPublicCreations({...publicBoards,latestReleases:[]},now).items.length,0);
+ assert.throws(()=>selectWeeklyPublicCreations({...publicBoards,source:'unreviewed'},now));
+ const archiveSource=fs.readFileSync(new URL('../web/src/pages/ReleaseUpdatesPage.tsx',import.meta.url),'utf8');
+ assert.match(archiveSource,/readWeeklyPublicCreations/);
+ assert.match(archiveSource,/weekly&&weekly\.items\.length>0/);
+ assert.match(archiveSource,/Recently approved public projects/);
 });
