@@ -15,6 +15,7 @@ import {EarnedRewardVault} from './EarnedRewardVault';
 import {useMemberRevalidation} from '../lib/useMemberRevalidation';
 import {CreatorPackageGallery,packageGalleryUIEnabled} from './CreatorPackageGallery';
 import {VerifiedStaffShortcut} from './VerifiedStaffShortcut';
+import {MemberCollectionNav,MEMBER_COLLECTION_NAV_REVIEW} from './MemberCollectionNav';
 
 type Tab='overview'|'profile'|'appearance'|'awards'|'wall'|'creations';
 export function SpaceProgress({space,handle=null}:{space:MemberSpace;handle?:string|null}){
@@ -37,6 +38,7 @@ function MemberSpaceDashboardView({profile,editor}:{profile:CanonicalProfile;edi
  const [wallLoading,setWallLoading]=useState(true),[wallReady,setWallReady]=useState(false),[wallError,setWallError]=useState('');
  const [error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false);
  const spaceRequestVersion=useRef(0),wallRequestVersion=useRef(0);
+ const moreNav=useRef<HTMLDetailsElement>(null);
  const [featured,setFeatured]=useState<string[]>([]),[showStats,setShowStats]=useState(true);
  const [recognitionAvailable,setRecognitionAvailable]=useState(false);
  const revalidation=useMemberRevalidation();
@@ -93,7 +95,10 @@ function MemberSpaceDashboardView({profile,editor}:{profile:CanonicalProfile;edi
       level={space.stats?.level} featuredAwards={space.featuredAwards}
       earnedBadges={space.earnedBadges} badgeDisplay={space.badgeDisplay}/>}</div></div>
   </header>
-  <div className="ms-toolbar"><nav aria-label="My space sections">{([['overview','Dashboard'],['wall','My wall'],...(packageGalleryUIEnabled?[['creations','Creations']]:[]),['profile','Edit profile'],['appearance','Appearance'],['awards','Awards & stats']] as [Tab,string][]).map(([key,label])=><button key={key} data-iren-anchor={key==='awards'?"awards":undefined} aria-current={tab===key?'page':undefined} onClick={()=>{setTab(key);setNotice('')}}>{label}</button>)}</nav><div className="ms-toolbar-links"><Link to="/community">COMMUNITY ↗</Link> <Link data-iren-anchor="studio" to="/studio">CREATOR STUDIO ↗</Link> <Link to="/support">SUPPORT ANEVUM ↗</Link> {profile.visibility==='public'?<Link to={'/@'+profile.handle}>VIEW PUBLIC WALL ↗</Link>:<button onClick={()=>setTab('profile')}>VISIBILITY SETTINGS</button>} <VerifiedStaffShortcut location="profile"/></div></div>
+  <MemberCollectionNav current="space"/>
+  {MEMBER_COLLECTION_NAV_REVIEW?<div className="ms-toolbar ms-toolbar-next"><nav aria-label="My space sections">{([["overview","Overview"],["wall","My wall"],...(packageGalleryUIEnabled?[["creations","Creations"]]:[]),["awards","Player card"]] as [Tab,string][]).map(([key,label])=><button type="button" key={key} data-iren-anchor={key==="awards"?"awards":undefined} aria-current={tab===key?"page":undefined} onClick={()=>{setTab(key);setNotice("")}}>{label}</button>)}</nav>
+   <details className="ms-toolbar-more" ref={moreNav}><summary>Profile &amp; tools</summary><div className="ms-toolbar-more-content"><button type="button" aria-current={tab==="profile"?"page":undefined} onClick={()=>{setTab("profile");setNotice("");moreNav.current?.removeAttribute("open")}}>Edit profile</button><button type="button" aria-current={tab==="appearance"?"page":undefined} onClick={()=>{setTab("appearance");setNotice("");moreNav.current?.removeAttribute("open")}}>Appearance</button><Link to="/community">Community</Link><Link data-iren-anchor="studio" to="/studio">Creator Studio</Link><Link to="/support">Support ANEVUM</Link>{profile.visibility==="public"?<Link to={"/@"+profile.handle}>Public profile</Link>:<button type="button" onClick={()=>{setTab("profile");moreNav.current?.removeAttribute("open")}}>Privacy settings</button>}<VerifiedStaffShortcut location="profile"/></div></details>
+  </div>:<div className="ms-toolbar"><nav aria-label="My space sections">{([['overview','Dashboard'],['wall','My wall'],...(packageGalleryUIEnabled?[['creations','Creations']]:[]),['profile','Edit profile'],['appearance','Appearance'],['awards','Awards & stats']] as [Tab,string][]).map(([key,label])=><button key={key} data-iren-anchor={key==='awards'?"awards":undefined} aria-current={tab===key?'page':undefined} onClick={()=>{setTab(key);setNotice('')}}>{label}</button>)}</nav><div className="ms-toolbar-links"><Link to="/community">COMMUNITY ↗</Link> <Link data-iren-anchor="studio" to="/studio">CREATOR STUDIO ↗</Link> <Link to="/support">SUPPORT ANEVUM ↗</Link> {profile.visibility==='public'?<Link to={'/@'+profile.handle}>VIEW PUBLIC WALL ↗</Link>:<button onClick={()=>setTab('profile')}>VISIBILITY SETTINGS</button>} <VerifiedStaffShortcut location="profile"/></div></div>}
 
   <div className="ms-body">
    {loading&&<p role="status">Opening your space…</p>}
@@ -103,8 +108,8 @@ function MemberSpaceDashboardView({profile,editor}:{profile:CanonicalProfile;edi
     <div className="ir80-member-main">
       <section className="ir80-member-intro">
         <span className="kicker">YOUR SPACE / YOUR CONTINUANCE</span>
-        <h2>What will you make of it?</h2>
-        <p>Your wall, player identity, work and earned recognition belong together. Start somewhere useful, or ask IREN to show you around.</p>
+        <h2>{MEMBER_COLLECTION_NAV_REVIEW?"Your space, made simple.":"What will you make of it?"}</h2>
+        <p>{MEMBER_COLLECTION_NAV_REVIEW?"See your wall and activity here. Saved work, evolution and awards are organized above.":"Your wall, player identity, work and earned recognition belong together. Start somewhere useful, or ask IREN to show you around."}</p>
         <div className="ir80-member-actions">
           <button type="button" className="ms-primary" onClick={()=>window.dispatchEvent(new Event("anevum:iren-tour"))}>TAKE THE GUIDED TOUR ↗</button>
           <button type="button" onClick={()=>window.dispatchEvent(new Event("anevum:iren-open"))}>ASK IREN ↗</button>
@@ -114,7 +119,7 @@ function MemberSpaceDashboardView({profile,editor}:{profile:CanonicalProfile;edi
         <button type="button" onClick={()=>setTab("wall")}><span>01 / YOUR WALL</span><strong>Share a signal.</strong><small>{wallError?'Wall temporarily unavailable':!wallReady?'Loading your wall…':posts.length+' '+(posts.length===1?'entry':'entries')+' saved'} · Open your wall</small></button>
         <Link to="/discover"><span>02 / DISCOVER</span><strong>Find something new.</strong><small>Browse genuine games, apps and creative work</small></Link>
         <Link to="/community"><span>03 / COMMUNITY</span><strong>Meet the makers.</strong><small>Explore approved discussions and people</small></Link>
-        <button type="button" onClick={()=>setTab("appearance")}><span>04 / PERSONALIZE</span><strong>Shape your presence.</strong><small>Portrait, banner and profile atmosphere</small></button>
+        {!MEMBER_COLLECTION_NAV_REVIEW&&<button type="button" onClick={()=>setTab("appearance")}><span>04 / PERSONALIZE</span><strong>Shape your presence.</strong><small>Portrait, banner and profile atmosphere</small></button>}
       </section>
     </div>
     <aside className="ir80-member-aside">
@@ -134,7 +139,27 @@ function MemberSpaceDashboardView({profile,editor}:{profile:CanonicalProfile;edi
     !wallReady?<p role="status">Loading your verified wall…</p>:
     <><MemberWall posts={posts} owner onChanged={refresh} identity={{handle:profile.handle,displayName:profile.displayName,avatar:Boolean(space?.media.avatar),avatarVersion:space?.media.avatar,level:space?.stats?.level??null,featuredAwards:space?.featuredAwards??[],earnedBadges:space?.earnedBadges,badgeDisplay:space?.badgeDisplay,distinctions:space?.distinctions,aura:space?.aura,role:space?.role,reputation:space?.showStats?space.reputation:undefined,earnedAura:space?.showStats?space.earnedAura:undefined,constellation:space?.constellation,supporterAppearance:space?.supporterAppearance}}/>
       {wallLoading&&<p role="status">Refreshing your wall…</p>}</>)}
-   {tab==='awards'&&space&&<><PlayerCardStudio profile={profile} space={space} onAvailabilityChange={setRecognitionAvailable} onSaved={refresh}/><EarnedRewardVault level={space.stats?.level??null} fallbackBadges={space.awards.filter(item=>item.earnedAt!==null).map(item=>item.id)} title="Your earned discoveries"/><div className="ms-overview-grid"><section className="ms-card"><span className="kicker">YOUR ACHIEVEMENT CABINET</span><h2>Small signals. Lasting marks.</h2><p>{recognitionAvailable?'Your original founding milestones, retained in the earned archive. Select your display badges in the Player Card Studio above.':'Earn these once through your saved activity. Choose which earned awards appear on your wall.'}</p><div className="ms-award-grid">{space.awards.filter(award=>award.earnedAt!==null).map(award=><label className={'ms-award '+(award.earnedAt?'is-earned':'is-locked')} key={award.id}><span className="ms-award-symbol" aria-hidden="true"><AwardEmblem award={award.id} earned={Boolean(award.earnedAt)}/></span><strong>{award.name}</strong><p>{award.detail}</p><small>{award.earnedAt?'EARNED · +'+award.xp+' XP':'TO EARN · '+award.xp+' XP'}</small>{!recognitionAvailable&&<span><input type="checkbox" checked={featured.includes(award.id)} disabled={!award.earnedAt||busy} onChange={e=>setFeatured(v=>e.target.checked?[...v,award.id]:v.filter(id=>id!==award.id))}/> {award.earnedAt?'Feature on my wall':'Not earned yet'}</span>}</label>)}</div><label className="ms-setting"><input type="checkbox" checked={showStats} disabled={busy} onChange={e=>setShowStats(e.target.checked)}/><span><strong>Show my level and stats on my public wall</strong><small>Your profile must also be public.</small></span></label><button className="ms-primary" disabled={busy} onClick={()=>void saveDisplay()}>{busy?'SAVING…':'SAVE STATS VISIBILITY'}</button></section><aside><SpaceProgress space={space}/><section className="ms-card"><h3>Earned, once.</h3><p>These member milestones start your progress. Repeating an action never grants extra XP. Your level does not grant moderation powers.</p><p>Game achievements and Creator Studio activity will connect here as those features become available.</p></section></aside></div></>}
+   {tab==='awards'&&space&&(MEMBER_COLLECTION_NAV_REVIEW?
+    <div className="mc-member-awards-view">
+     <section className="mc-card-editor">
+      <details>
+       <summary>Customize your player card</summary>
+       <p>Choose how verified information and earned recognition appear on your card.</p>
+       <PlayerCardStudio profile={profile} space={space} onAvailabilityChange={setRecognitionAvailable} onSaved={refresh}/>
+      </details>
+     </section>
+     <EarnedRewardVault level={space.stats?.level??null} fallbackBadges={space.awards.filter(item=>item.earnedAt!==null).map(item=>item.id)} title="Your earned rewards"/>
+     <section className="ms-card mc-display-settings" aria-label="Public profile display settings">
+      <span className="kicker">PROFILE VISIBILITY / YOUR CHOICE</span><h2>Public display settings</h2>
+      <p>Choose whether your level and verified stats appear on your public wall. Your overall profile visibility is controlled separately.</p>
+      <label className="ms-setting"><input type="checkbox" checked={showStats} disabled={busy} onChange={e=>setShowStats(e.target.checked)}/><span><strong>Show my level and stats publicly</strong><small>Your profile must also be public.</small></span></label>
+      {!recognitionAvailable&&space.awards.some(award=>award.earnedAt!==null)&&<details className="mc-award-preferences"><summary>Choose founding milestone highlights</summary><div className="mc-award-selectors">
+       {space.awards.filter(award=>award.earnedAt!==null).map(award=><label key={award.id}><input type="checkbox" checked={featured.includes(award.id)} disabled={busy} onChange={e=>setFeatured(v=>e.target.checked?[...v,award.id]:v.filter(id=>id!==award.id))}/><span>{award.name}</span></label>)}
+      </div></details>}
+      <button type="button" className="ms-primary" disabled={busy} onClick={()=>void saveDisplay()}>{busy?'SAVING…':'SAVE DISPLAY SETTINGS'}</button>
+     </section>
+    </div>:
+<><PlayerCardStudio profile={profile} space={space} onAvailabilityChange={setRecognitionAvailable} onSaved={refresh}/><EarnedRewardVault level={space.stats?.level??null} fallbackBadges={space.awards.filter(item=>item.earnedAt!==null).map(item=>item.id)} title="Your earned discoveries"/><div className="ms-overview-grid"><section className="ms-card"><span className="kicker">YOUR ACHIEVEMENT CABINET</span><h2>Small signals. Lasting marks.</h2><p>{recognitionAvailable?'Your original founding milestones, retained in the earned archive. Select your display badges in the Player Card Studio above.':'Earn these once through your saved activity. Choose which earned awards appear on your wall.'}</p><div className="ms-award-grid">{space.awards.filter(award=>award.earnedAt!==null).map(award=><label className={'ms-award '+(award.earnedAt?'is-earned':'is-locked')} key={award.id}><span className="ms-award-symbol" aria-hidden="true"><AwardEmblem award={award.id} earned={Boolean(award.earnedAt)}/></span><strong>{award.name}</strong><p>{award.detail}</p><small>{award.earnedAt?'EARNED · +'+award.xp+' XP':'TO EARN · '+award.xp+' XP'}</small>{!recognitionAvailable&&<span><input type="checkbox" checked={featured.includes(award.id)} disabled={!award.earnedAt||busy} onChange={e=>setFeatured(v=>e.target.checked?[...v,award.id]:v.filter(id=>id!==award.id))}/> {award.earnedAt?'Feature on my wall':'Not earned yet'}</span>}</label>)}</div><label className="ms-setting"><input type="checkbox" checked={showStats} disabled={busy} onChange={e=>setShowStats(e.target.checked)}/><span><strong>Show my level and stats on my public wall</strong><small>Your profile must also be public.</small></span></label><button className="ms-primary" disabled={busy} onClick={()=>void saveDisplay()}>{busy?'SAVING…':'SAVE STATS VISIBILITY'}</button></section><aside><SpaceProgress space={space}/><section className="ms-card"><h3>Earned, once.</h3><p>These member milestones start your progress. Repeating an action never grants extra XP. Your level does not grant moderation powers.</p><p>Game achievements and Creator Studio activity will connect here as those features become available.</p></section></aside></div></>)}
    <footer className="ms-footer"><span>MEMBER SINCE {new Date(profile.createdAt*1000).toLocaleDateString(undefined,{month:'long',year:'numeric'})}</span><a href="/api/v1/member/account-export" download>DOWNLOAD MY DATA ↓</a><button onClick={async()=>{try{const result=await canonicalAuthClient.signOut();if(result.error)throw Error('Sign out unavailable');window.location.assign('/join')}catch{setError('Could not sign out. Try again.')}}}>SIGN OUT</button></footer>
   </div>
  </section>;
