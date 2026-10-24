@@ -147,7 +147,7 @@ function flyingCraft(){
  return {craftHull:hull,craftFins:fins};
 }
 function gateway(){
- const arch:number[]=[],columns:number[]=[];
+ const arch:number[]=[];
  const steps=20,rx=2.1,ry=2.85;
  const ring=(i:number,inner:boolean,z:number):Vertex=>{
   const t=i/steps*Math.PI;
@@ -159,7 +159,7 @@ function gateway(){
   quad(arch,ring(i,true,-.21),ring(i+1,true,-.21),ring(i+1,true,.21),ring(i,true,.21));
  }
  // Tower-like portal pylons can be drawn with ordinary cube parts.
- return {gatewayArch:arch,gatewayColumn:columns};
+ return {gatewayArch:arch};
 }
 export function buildCinematicMeshes():Record<string,number[]>{
  const island=cliff(),tower=spire(),craft=flyingCraft(),gate=gateway();
