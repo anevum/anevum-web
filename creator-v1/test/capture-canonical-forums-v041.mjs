@@ -96,7 +96,7 @@ assert.equal(publicReply.badgeDisplay?.mode,'hidden','Chosen hidden display sett
 assert.deepEqual(publicReply.earnedBadges,[],'Privately earned hidden badges must not leak through forum responses');
 assert.equal(publicReply.handle,'orbit_reader');
 assert.equal(publicReply.supporterAppearance,undefined,'Unconsented reply must never inherit supporter visuals');
-const publicThread=(await (await canonicalForums(request('/api/v1/community/threads/'+threadId),env)).json()).author;
+const publicThread=(await (await canonicalForums(request('/api/v1/community/threads/'+threadId),env)).json()).thread.author;
 assert.deepEqual(publicThread.supporterAppearance,{seal:'orbit',frame:'stellar',aura:'eclipse'},
  'Verified opted-in supporter frame reaches thread details');
 // Twenty-four extra approved forum entries exercise verified pagination.

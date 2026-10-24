@@ -62,7 +62,7 @@ test('only consented, verified public subscriber appearance reaches list and det
   assert.equal(member.stripe_customer_id,undefined);assert.equal(member.unlocks,undefined);
   assert.equal(list.items.find(x=>x.author.handle==='test_no_consent').author.supporterAppearance,undefined);
   const detail=await (await canonicalForums(req('/api/v1/community/threads/'+thread),f.env)).json();
-  assert.deepEqual(detail.author.supporterAppearance,canonical.selected);
+  assert.deepEqual(detail.thread.author.supporterAppearance,canonical.selected);
  }finally{f.db.close()}
 });
 
@@ -70,11 +70,11 @@ test('public supporter consent is independent from show_stats, and instant opt-o
  const f=setup();try{
   f.seed('author');f.support('author');const thread=f.post('author');
   f.db.prepare("INSERT INTO member_space_settings(user_id,featured_json,show_stats) VALUES(?,'[]',0)").run('author');
-  let card=(await (await canonicalForums(req('/api/v1/community/threads/'+thread),f.env)).json()).author;
+  let card=(await (await canonicalForums(req('/api/v1/community/threads/'+thread),f.env)).json()).thread.author;
   assert.equal(card.level,null,'Stats opt-out remains enforced');
   assert.deepEqual(card.supporterAppearance,{seal:'orbit',frame:'stellar',aura:'eclipse'});
   f.db.prepare('UPDATE supporter_visibility SET public_insignia=0 WHERE member_user_id=?').run('author');
-  card=(await (await canonicalForums(req('/api/v1/community/threads/'+thread),f.env)).json()).author;
+  card=(await (await canonicalForums(req('/api/v1/community/threads/'+thread),f.env)).json()).thread.author;
   assert.equal(card.supporterAppearance,undefined,'Consent revocation is effective without caching');
   f.db.prepare('UPDATE supporter_visibility SET public_insignia=1 WHERE member_user_id=?').run('author');
   f.db.prepare("UPDATE member_creator_profiles SET visibility='private' WHERE user_id=?").run('author');
@@ -112,7 +112,7 @@ test('disabled and missing supporter schema remain invisible without breaking de
     assert.equal((await publicForumSupporterAppearanceMap(f.env,['author'],NOW)).size,0);
     const response=await canonicalForums(req('/api/v1/community/threads/'+thread),f.env);
     assert.equal(response.status,200);
-    assert.equal((await response.json()).author.supporterAppearance,undefined);
+    assert.equal((await response.json()).thread.author.supporterAppearance,undefined);
    }
   }finally{f.db.close()}
  }
