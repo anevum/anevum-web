@@ -90,3 +90,25 @@ The feature-off Studio-local panel provides severity filters (all/warnings/infor
 The panel also offers "Copy source-free diagnostic brief". This action is user-initiated and requires browser clipboard permission; it copies only the diagnostic summary, severity counts, structural paths and up to four curated suggestions. The raw project text, canonical UUIDs, secrets, member identifiers and complete source are omitted. Clipboard refusal results in a visible error without fallback transmission. **This is not a direct IREN integration**: the creator may independently choose whether and where to paste the short summary.
 
 The research test suite verifies stable ID resolution under reordering, malicious-looking text as inert data, invalid/stale location refusal, explicit human action for clipboard writes and keyboard focus. These source-only UI controls remain gated by VITE_STUDIO_PROJECT_DOCTOR_V001 (default OFF) and still require parent PR #658's authorization, migration, backup and release gates before any account-facing rollout.
+
+
+## V001.7: offline guided repair help (source-only)
+
+Project Doctor now includes a deliberately **non-LLM** assistance layer in creator-v1/agent-quality-lab/project-doctor-guidance-v001.mjs. Every existing supported diagnostic code has a curated, immutable entry describing:
+
+- Why the structural warning or informational notice matters.
+- Two short manual correction steps to consider in the existing visual editor.
+- What to inspect or test afterward.
+- Why clearing a structural warning does **not** certify that an application works, is accessible, or is secure.
+
+The existing NEXT-styled finding card shows a native collapsed details/summary disclosure, "Understand and verify". It expands locally when a creator requests help; no call to a model or external service, user-code execution, automatic source patch, saved revision write, telemetry collection, new database, or new credential is necessary. The panel labels this path "LOCAL RULES / NO AI REQUESTS / NO AUTO-EDITS", and the header states "0 MODEL CALLS".
+
+This module only matches known diagnostic codes. It never interpolates project content, user prompts, UUIDs, secrets or file paths into instructions. Unknown codes return null instead of requesting a hosted model. The guide data and step arrays are frozen. Canonical scene and interface documents still use the existing local read-only diagnostic engine, with existing source bounds and human navigation.
+
+**Cost boundary:** This guidance has zero LLM inference cost and no self-hosted weights or GPU. This does **not** mean ANEVUM incurs zero browser/network infrastructure or Railway hosting charges. The existing Railway staging API remains separately hosted but is not needed for these instructions. Advanced coding models, cloud inference, and continual learning remain unimplemented and must not be activated automatically.
+
+**Future model admission gate (not implemented):** Any later hosted model path must be explicitly requested and consented to by the authenticated creator, with owner/project/source permission checks, global and per-account quotas, a genuine provider billing hard-stop, secret storage only on the trusted server, minimal selected-file context, and an approved exact-model evaluation. Avoid fallbacks that silently transform local guidance into billable provider calls.
+
+CI includes project-doctor-guidance-v001.test.mjs validating complete code coverage, immutable data, unknown/untrusted code rejection, no source reflection, no model/provider requests and preserved source. The synthetic Creator Studio Chromium fixture opens guide disclosures, checks offline labels and absence of unexpected writes, and captures full and mobile detail screenshots. These are synthetic CI evidence, not real-member acceptance or public release authorization.
+
+Keep VITE_STUDIO_PROJECT_DOCTOR_V001 default OFF until protected Creator Studio PR #658's member-auth, version-bound edits, D1 backup/restore, native-device testing, and owner review gates are satisfied.
