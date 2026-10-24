@@ -10,6 +10,7 @@ import {SpaceProgress} from '../components/MemberSpaceDashboard';
 import {CreatorPackageGallery} from '../components/CreatorPackageGallery';
 import {EarnedRewardVault} from '../components/EarnedRewardVault';
 import {safePlayerAura,safeVerifiedRole} from '../lib/player-recognition';
+import {OrbitalMark} from '../components/OrbitalMark';
 
 
 const cinematicNextEnabled=import.meta.env.VITE_CONTINUANCE_CINEMATIC_SITEWIDE==="true";
@@ -43,6 +44,8 @@ function PublicMemberWorld({memberHandle}:{memberHandle:string}){
  const transientFailure=resource.state==='error'&&
   ![401,403,404].includes((resource.error as {status?:number}).status??0);
  if(!data)return <section className={"av12-public-world"+(cinematicNextEnabled?" av-next-private-boundary":"")}>
+  {cinematicNextEnabled&&<div className="av-next-private-sigil" aria-hidden="true"><OrbitalMark/></div>}
+  {cinematicNextEnabled&&<span className="av-next-private-kicker">ANEVUM / MEMBER WORLDS</span>}
   <h1 id="av12-world-heading">{resource.state==='loading'&&valid?'OPENING THIS WORLD…':transientFailure?'PUBLIC WORLD UNAVAILABLE.':'A PRIVATE WORLD.'}</h1>
   <p role={resource.state==='loading'||transientFailure?'status':undefined}>{resource.state==='loading'&&valid?'Finding this member’s public world…':transientFailure?'The public profile service could not be reached. No private information has been exposed.':'This profile is not published, does not exist, or cannot be viewed right now. We never reveal which of those is the reason.'}</p>
   {transientFailure&&<button className="av12-world-back" type="button" onClick={()=>setProfileRetry(value=>value+1)}>TRY AGAIN ↗</button>}
