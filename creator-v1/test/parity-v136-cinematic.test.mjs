@@ -48,7 +48,9 @@ test('react hero uses only one passive opt-in presentation layer',()=>{
  assert.ok(hero.includes('<CinematicArrivalV136/>'));
  assert.ok(hero.indexOf('<CinematicArrivalV136/>')<hero.indexOf('<div className="p136-hero-shade"'));
  assert.ok(arrival.includes("import.meta.env.VITE_PARITY_V136_CINEMATIC==='true'"),'Cinema requires explicit build opt-in');
- assert.ok(arrival.includes('hasApprovedSequence:false'),'No motion sequence shipped');
+ assert.ok(arrival.includes('approvedCinematicSequence(manifest.sequence)'),'Only manifest-approved media can play');
+ assert.ok(arrival.includes('approvedCinematicVideo('),'Video requires reviewed manifest');
+ assert.ok(arrival.includes('VITE_PARITY_V136_NATIVE_VIDEO'),'Video requires explicit CSP-ready build flag');
  assert.ok(arrival.includes('aria-hidden="true"'));
  assert.ok(arrival.includes('onError={()=>setPosterFailed(true)}'));
  assert.ok(arrival.includes("useLivingWorld"));
