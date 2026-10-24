@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>ANEVUM | Creator Workbench Alpha Concept</title>
+<style>
+:root {color-scheme:dark;--bg:#070d19;--panel:#0d1728;--raised:#14243c;--raised2:#1a2c45;--line:#263951;--line2:#334861;--ink:#edf4ff;--muted:#aec0da;--soft:#829ab5;--cyan:#a6e7ef;--cyan2:#6dbbc9;--violet:#c6b3f0;--rose:#d8b8a0;--good:#8ed7b5;--bad:#ffadac;--shadow:0 18px 55px #01040d8a;--sans:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+* {box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+body{overflow-x:hidden}
+button,textarea,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.45}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+svg{display:block}
+a{color:var(--cyan)}
+button{border:0;background:none}
+.shell{position:relative;min-height:100svh;isolation:isolate}
+.shell:before{position:fixed;content:"";inset:-30%;z-index:-2;pointer-events:none;background:radial-gradient(ellipse at 10% 8%,#17375865 0,transparent 34%),radial-gradient(ellipse at 87% 11%,#36294e55,transparent 29%),radial-gradient(ellipse at 62% 90%,#123b4555,transparent 32%)}
+.shell:after{position:fixed;content:"";inset:0;z-index:-1;pointer-events:none;opacity:.10;background-image:linear-gradient(#9bd0f515 1px,transparent 1px),linear-gradient(90deg,#9bd0f515 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(to bottom,#000,transparent 77%)}
+.top{height:69px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid #40587461;background:#080e1dcf;backdrop-filter:blur(18px);gap:16px;position:sticky;top:0;z-index:20}
+.identity,.topright,.brandmark,.workspaceTop,.row,.statusrow,.tools,.projectHead,.navtitle,.capsule,.up-title{display:flex;align-items:center}
+.identity{gap:13px;min-width:0}.brandmark{gap:10px}.emblem{width:38px;height:38px;flex:none;filter:drop-shadow(0 0 8px #85d8f043)}
+.brandname{font-size:12px;letter-spacing:.18em;font-weight:750}.brand-sub{font-size:9px;letter-spacing:.17em;color:#90abc7;margin-top:3px}
+.separator{height:26px;width:1px;background:var(--line2);margin:0 8px}
+.trail{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.trail strong{font-weight:650;color:var(--ink)}
+.pill{border:1px solid #6484a07b;padding:7px 10px;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.09em;color:var(--cyan);white-space:nowrap}
+.pill::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--cyan);margin-right:6px;box-shadow:0 0 9px #9df0f2}
+.topright{gap:14px;min-width:0}.safeNotice{font-size:10px;color:var(--muted);max-width:190px;line-height:1.3;text-align:right}
+.avatar{width:32px;height:32px;border:1px solid #4d7d93;border-radius:10px;display:grid;place-items:center;background:linear-gradient(140deg,#2d4e65,#15223b);font-weight:750;color:var(--cyan);font-size:12px;flex:none}
+.page{display:grid;grid-template-columns:228px minmax(0,1fr) 350px;min-height:calc(100svh - 69px)}
+.side{border-right:1px solid var(--line);background:#0a1423ca;min-width:0;display:flex;flex-direction:column}
+.side-top{padding:24px 17px 17px}
+.overline{font-size:9px;font-weight:750;letter-spacing:.17em;color:#8aa5c6;text-transform:uppercase}
+.projectMini{padding:15px 13px;border:1px solid #41617c81;border-radius:13px;background:linear-gradient(150deg,#172b45,#0c172a);margin-top:12px;box-shadow:inset 0 1px #ffffff14}
+.projectBadge{color:var(--cyan);font-size:10px;letter-spacing:.12em;font-weight:800}
+.projectTitle{font-family:Georgia,serif;font-size:19px;letter-spacing:-.025em;margin:7px 0 5px}
+.projectDesc{color:var(--muted);font-size:11px;line-height:1.6}
+.segline{height:1px;background:var(--line);margin:8px 15px 17px}
+.sideGroup{padding:0 12px 16px}
+.sideLabel{padding:0 9px 9px;font-size:10px;letter-spacing:.15em;font-weight:800;color:#839cba}
+.sideBtn{width:100%;min-height:40px;text-align:left;display:flex;align-items:center;gap:11px;padding:0 10px;color:var(--muted);border-radius:9px;font-size:12px;transition:background .16s,color .16s}
+.sideBtn:hover,.sideBtn.active{background:#213c53a8;color:var(--ink)}
+.sideBtn.active{box-shadow:inset 2px 0 var(--cyan)}
+.ico{width:16px;height:16px;flex:none;display:grid;place-items:center;color:var(--cyan);font-weight:700;font-size:16px}
+.count{margin-left:auto;border-radius:8px;background:#2c4260;color:#cbdcec;font-size:10px;padding:2px 6px}
+.fileItem{padding:9px 11px;font-family:ui-monospace,Menlo,monospace;font-size:11px;display:flex;gap:9px;color:#b7cbe2;border-radius:8px}
+.fileItem:hover{background:#1b2f49}
+.sideBottom{margin-top:auto;padding:15px;border-top:1px solid var(--line)}
+.usage{display:flex;justify-content:space-between;font-size:10px;color:var(--muted)}
+.usageBar{height:4px;background:#2c3e57;border-radius:10px;margin:10px 0;overflow:hidden}
+.usageBar>span{display:block;width:16%;height:100%;background:linear-gradient(90deg,#83cddd,#d5c2f6)}
+.main{min-width:0;display:flex;flex-direction:column}
+.workspaceTop{padding:20px 22px 13px;gap:10px;justify-content:space-between;flex-wrap:wrap}
+.workspaceName{font-family:Georgia,serif;font-size:clamp(20px,2.1vw,28px);line-height:1.15;letter-spacing:-.03em}
+.workspaceMeta{margin-top:8px;font-size:11px;color:var(--muted);display:flex;gap:13px;flex-wrap:wrap}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--good);margin-right:5px}
+.toolbar{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.btn{min-height:36px;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 13px;border:1px solid #39526e;border-radius:9px;background:#172941;color:#d8e8f6;font-size:11px;font-weight:680;letter-spacing:.01em;transition:transform .15s,background .15s,border .15s;white-space:nowrap}
+.btn:hover:not(:disabled){background:#284565;border-color:#6c90aa;transform:translateY(-1px)}
+.btn.primary{background:linear-gradient(135deg,#a6e7ef,#8abac7);color:#061721;border-color:transparent;box-shadow:0 7px 18px #5ebec32a}
+.btn.primary:hover{background:linear-gradient(135deg,#d8fbff,#9ed8e0)}
+.btn.ghost{background:transparent;color:var(--muted)}
+.btn.tiny{padding:6px 9px;min-height:30px;font-size:10px}
+.btn.violet{border-color:#756f99;background:#292945;color:#e1d9fa}
+.tabRow{display:flex;align-items:center;gap:4px;padding:0 22px;border-bottom:1px solid var(--line)}
+.tab{padding:13px 15px 12px;min-width:84px;color:#99b0c9;font-size:12px;border-bottom:2px solid transparent;font-weight:650}
+.tab:hover{color:var(--ink)}
+.tab.active{color:var(--cyan);border-color:var(--cyan)}
+.viewportLine{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:12px 22px;flex-wrap:wrap}
+.deviceTabs{display:flex;gap:3px;background:#0a1426;padding:4px;border:1px solid #263951;border-radius:10px}
+.deviceTabs button{min-height:30px;padding:6px 12px;border-radius:7px;font-size:11px;color:#a1b7d2}
+.deviceTabs button.active{background:#25425d;color:#d7f8fb}
+.hint{font-size:10px;color:var(--soft);line-height:1.5}
+.stageZone{padding:6px 22px 18px;flex:1;display:flex;flex-direction:column}
+.stageShell{width:100%;min-height:310px;border:1px solid #36526c;background:#081224;border-radius:14px;box-shadow:0 20px 50px #0209148c,inset 0 1px #ffffff13;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.stageChrome{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #304861;background:#0d1a2c;min-height:37px;padding:0 12px;gap:10px}
+.stageDots{display:flex;gap:5px}.stageDots span{width:7px;height:7px;background:#54718a;border-radius:50%}
+.stageUrl{font-size:10px;color:#9eb5cb;font-family:ui-monospace,Menlo,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stageBadge{font-size:9px;color:#b2ecd5;white-space:nowrap}
+.previewWell{flex:1;display:grid;place-items:center;position:relative;padding:18px;min-height:340px;background:radial-gradient(circle at 48% 50%,#20395844,transparent 64%),#060e1d}
+.previewWell:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.13;background:linear-gradient(#cceafa11 1px,transparent 1px),linear-gradient(90deg,#cceafa11 1px,transparent 1px);background-size:24px 24px}
+.deviceFrame{position:relative;z-index:1;width:min(100%,690px);height:310px;border:1px solid #517c93;border-radius:6px;overflow:hidden;transition:width .28s,height .28s,border-radius .28s;box-shadow:0 0 36px #4a9cb11b}
+.deviceFrame.phone{width:min(100%,240px);height:385px;border-width:7px;border-radius:23px;box-shadow:0 12px 44px #000b,0 0 25px #54b7c01c}
+.deviceFrame.tablet{width:min(100%,480px);height:330px;border-width:5px;border-radius:14px}
+.deviceFrame iframe{width:100%;height:100%;border:0;display:block;background:#0a1a2d}
+.stageFoot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 13px;background:#0d192a;border-top:1px solid #283c54;font-size:10px;color:var(--muted)}
+.stageFoot .signal{color:var(--good)}
+.view{display:none}.view.active{display:block}
+.codeView,.visualView{padding:14px 22px 24px;flex:1}
+.editorSurface{border:1px solid var(--line2);border-radius:12px;background:#0c1526;min-height:430px;overflow:hidden}
+.editorHeader{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--cyan)}
+#sourceView{display:block;width:100%;padding:18px 18px 24px;min-height:370px;resize:vertical;border:0;background:transparent;color:#c9dbed;font-size:11px;line-height:1.65;font-family:ui-monospace,Menlo,monospace;white-space:pre;tab-size:2}
+.visualIntro{font-size:12px;color:var(--muted);margin:0 0 15px;line-height:1.7}
+.objectGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.objectTile{border:1px solid var(--line);background:#101e32;padding:14px;text-align:left;border-radius:11px;min-height:90px}
+.objectTile.selected{border-color:#82d9e7;background:#19364b}
+.objectIcon{font-size:20px;margin-bottom:9px}.objectTile strong{font-size:12px;display:block}.objectTile span{font-size:10px;color:var(--muted)}
+.inspector{border:1px solid var(--line);background:#0e192b;border-radius:12px;padding:15px;margin-top:13px}
+.inspectorHead{display:flex;justify-content:space-between;font-size:13px;font-weight:750;margin-bottom:16px}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.control{display:flex;flex-direction:column;gap:7px;min-width:0}
+.control label{font-size:10px;color:var(--muted)}
+.control select,.control input{height:35px;max-width:100%;border:1px solid #49617a;border-radius:8px;padding:7px 9px;background:#142640;color:var(--ink);font-size:12px}
+.control.full{grid-column:1/-1}
+.timeline{margin-top:14px;border:1px solid var(--line);border-radius:10px;padding:13px;display:flex;flex-direction:column;gap:10px;color:var(--muted);font-size:11px}
+.track{display:grid;grid-template-columns:80px 1fr;align-items:center;gap:8px}.trackRail{height:12px;border-radius:10px;background:repeating-linear-gradient(90deg,#233953 0,#233953 19%,#42637b 20%);position:relative}.trackRail:after{content:"";position:absolute;left:38%;height:16px;width:2px;background:var(--violet);top:-2px;box-shadow:0 0 8px #d3baff}
+.bottomPanel{border-top:1px solid var(--line);background:#0b1525;padding:15px 22px 19px}
+.bottomTitle{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px}
+.bottomTitle strong{font-size:12px}
+.checkList{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.check{display:flex;gap:8px;align-items:flex-start;border:1px solid #2d435a;border-radius:9px;background:#122139;padding:9px;min-width:0}
+.check .symbol{color:var(--cyan);font-size:12px;flex:none}
+.check strong{font-size:10px;display:block;font-weight:670}
+.check span{font-size:9px;color:#a4b9d1;display:block;line-height:1.5;margin-top:3px}
+.right{border-left:1px solid var(--line);background:linear-gradient(180deg,#111e31,#0b1526);display:flex;flex-direction:column;min-width:0;max-height:calc(100svh - 69px);position:sticky;top:69px}
+.rightHead{padding:18px 16px 15px;border-bottom:1px solid var(--line)}
+.up-title{gap:9px}
+.agentOrb{width:35px;height:35px;border-radius:50%;display:grid;place-items:center;border:1px solid #78c8d7;background:radial-gradient(circle at 35% 30%,#c4eeff,#2b809a 35%,#162642 72%);box-shadow:0 0 20px #70d4ed2f}
+.agentOrb:after{content:"";width:12px;height:12px;border:2px solid #0f3652;border-radius:50%;box-shadow:inset 0 0 6px #fff7}
+.agentName{font-size:13px;font-weight:750}.agentSub{font-size:10px;color:var(--muted);margin-top:4px}
+.provider{display:flex;align-items:center;justify-content:space-between;padding:10px 11px;margin-top:14px;border:1px solid #32495f;border-radius:10px;background:#16243a}
+.provider strong{font-size:11px}.provider small{display:block;color:var(--muted);font-size:10px;margin-top:4px}
+.provider button{font-size:10px;color:var(--cyan);text-decoration:underline;text-underline-offset:3px}
+.thread{overflow:auto;flex:1;min-height:130px;padding:19px 16px;display:flex;flex-direction:column;gap:13px}
+.bubble{font-size:12px;line-height:1.65;padding:12px 13px;border-radius:12px;max-width:96%;white-space:pre-wrap}
+.bubble.assistant{align-self:flex-start;border:1px solid #3a5274;background:#1a2b43;color:#dfebfa}
+.bubble.user{align-self:flex-end;background:#2a4359;color:#e7f5ff}
+.bubble.system{background:transparent;color:#b4c4db;border-left:2px solid #91d6dc;border-radius:0;padding:2px 10px;font-size:11px}
+.proposal{border:1px solid #7fb9c97d;border-radius:11px;background:#152a3d;padding:13px;margin:0}
+.proposalLabel{font-size:9px;color:#9fe8ef;letter-spacing:.14em;font-weight:800}
+.proposal strong{display:block;font-size:12px;margin:10px 0 6px}
+.proposal p{color:#c5d5e7;font-size:11px;line-height:1.65;margin:0 0 11px}
+.chiprow{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 12px}
+.chip{border:1px solid #35546c;background:#14253a;padding:7px 10px;border-radius:99px;font-size:10px;color:#bbd8e7}
+.chip:hover{border-color:#87c7d1;color:#fff}
+.composer{border-top:1px solid var(--line);padding:13px 15px 14px}
+.composerBox{display:flex;gap:8px;align-items:flex-end;border:1px solid #45627b;background:#14253b;border-radius:11px;padding:9px}
+.composer textarea{width:100%;min-height:46px;max-height:126px;resize:vertical;background:transparent;border:0;outline:0;line-height:1.45;font-size:12px}
+.send{width:34px;height:34px;flex:none;border-radius:8px;display:grid;place-items:center;background:var(--cyan);color:#06242c;font-weight:900;font-size:16px}
+.composerFoot{display:flex;align-items:center;justify-content:space-between;font-size:9px;color:#819bb7;margin-top:9px;gap:7px}
+.statusstrip{min-height:29px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid #274155;padding:7px 15px;background:#0a1423;font-size:10px;color:#a0b9d2}
+.mobileTabs{display:none}
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,30px);background:#28445b;border:1px solid #7eb8c9;color:#e7fbff;border-radius:10px;padding:12px 17px;font-size:12px;box-shadow:var(--shadow);z-index:70;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:calc(100vw - 32px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.modalBackdrop{position:fixed;inset:0;background:#020713cf;z-index:60;display:none;place-items:center;padding:20px;backdrop-filter:blur(5px)}
+.modalBackdrop.open{display:grid}
+.modal{background:#13243b;border:1px solid #54758f;box-shadow:var(--shadow);border-radius:16px;padding:23px;max-width:460px;width:100%}
+.modal h2{font-family:Georgia,serif;font-size:24px;margin:0 0 11px}
+.modal p{font-size:12px;color:var(--muted);line-height:1.7;margin:0 0 15px}
+.modalFoot{display:flex;justify-content:flex-end;gap:9px;margin-top:14px}
+.modal .option{border:1px solid #37526c;padding:12px;border-radius:10px;margin:9px 0;background:#172a41;font-size:12px}
+.modal .option b{display:block}.modal .option small{color:var(--muted);font-size:11px;display:block;margin-top:3px}
+.tinyTech{font-family:ui-monospace,Menlo,monospace}
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+@media(max-width:1250px){.page{grid-template-columns:190px minmax(0,1fr) 315px}.brand-sub{display:none}.safeNotice{display:none}.checkList{grid-template-columns:repeat(2,minmax(0,1fr))}.side-top{padding:18px 10px}.projectMini{padding:12px 9px}}
+@media(max-width:1020px){.page{grid-template-columns:minmax(0,1fr) 310px}.side{display:none}.workspaceTop{padding:17px}.tabRow{padding:0 15px}.viewportLine{padding:12px 15px}.stageZone{padding:6px 15px 18px}.bottomPanel{padding:15px}.right{max-height:calc(100svh - 69px)}}
+@media(max-width:760px){.top{height:61px;padding:0 12px}.identity{gap:6px}.emblem{width:33px;height:33px}.brandname{font-size:10px}.trail,.separator,.topright .avatar{display:none}.pill{font-size:9px;padding:7px 8px}.page{display:block;min-height:calc(100svh - 110px)}.main{display:none}.main.mobile-active{display:flex}.right{display:none;position:relative;top:auto;max-height:none;min-height:calc(100svh - 110px);border:0}.right.mobile-active{display:flex}.rightHead{padding:14px}.thread{min-height:calc(100svh - 380px);max-height:none}.workspaceTop{padding:14px 12px 8px}.workspaceName{font-size:24px}.workspaceMeta{font-size:10px;gap:9px}.toolbar .btn:not(.primary){display:none}.tabRow{padding:0 9px;overflow-x:auto}.tab{padding:13px 8px;min-width:74px}.viewportLine{padding:9px 12px;gap:7px}.stageZone{padding:5px 10px 14px}.previewWell{min-height:360px;padding:9px}.deviceFrame{height:270px}.deviceFrame.phone{height:375px;width:min(100%,225px)}.deviceFrame.tablet{height:280px}.stageFoot{font-size:9px}.checkList{grid-template-columns:1fr 1fr}.bottomPanel{padding:12px}.mobileTabs{position:sticky;bottom:0;z-index:35;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));height:60px;border-top:1px solid #496178;background:#081426ed;backdrop-filter:blur(18px);padding-bottom:env(safe-area-inset-bottom);min-height:calc(60px + env(safe-area-inset-bottom))}.mobileTabs button{color:#a9bed5;font-size:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:48px}.mobileTabs button.active{color:var(--cyan);background:#263e574a}.mobileTabs button b{font-size:16px}.codeView,.visualView{padding:12px}.objectGrid{grid-template-columns:1fr 1fr}.modal{padding:18px}}
+@media(max-width:390px){.brandname{font-size:9px}.brand-sub{display:none}.pill{font-size:8px}.toolbar .btn.primary{font-size:10px;padding:7px 9px}.workspaceName{font-size:22px}.previewWell{min-height:310px}.deviceFrame.phone{height:330px;width:min(100%,195px)}.deviceFrame{height:240px}.checkList{grid-template-columns:1fr}.tools{flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header class="top">
+  <div class="identity">
+    <div class="brandmark"><svg class="emblem" viewBox="0 0 48 48" aria-hidden="true"><defs><linearGradient id="arc" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#97e5ed"/><stop offset="1" stop-color="#b4a9ed"/></linearGradient></defs><circle cx="24" cy="24" r="18" stroke="url(#arc)" stroke-width="1.4" fill="none"/><ellipse cx="24" cy="24" rx="11" ry="20" transform="rotate(42 24 24)" fill="none" stroke="#749fbe" stroke-width=".9"/><circle cx="24" cy="24" r="5" fill="#82d7dd"/><circle cx="38" cy="11" r="2.8" fill="#edd1ac"/></svg><div><div class="brandname">ANEVUM</div><div class="brand-sub">CONTINUANCE INSTITUTE</div></div></div>
+    <div class="separator"></div><div class="trail">CREATOR / <strong>WORKBENCH</strong></div>
+  </div>
+  <div class="topright"><div class="safeNotice">Interactive concept only.<br>No account, AI API, or publishing connection.</div><span class="pill">DESIGN ALPHA</span><span class="avatar">A</span></div>
+</header>
+<div class="page">
+<aside class="side">
+  <div class="side-top"><div class="overline">Current Workspace</div>
+    <div class="projectMini"><div class="projectBadge">◈ PROJECT 001</div><div class="projectTitle">Signal Drift</div><div class="projectDesc">A pocket-sized starfield arcade prototype. Build, play and revise.</div></div>
+  </div>
+  <div class="segline"></div>
+  <div class="sideGroup"><div class="sideLabel">WORKSPACE</div>
+    <button class="sideBtn active" data-mainview="preview"><span class="ico">◉</span> Live preview</button>
+    <button class="sideBtn" data-mainview="visual"><span class="ico">◇</span> Visual editor</button>
+    <button class="sideBtn" data-mainview="code"><span class="ico">⌘</span> Project files <span class="count">1</span></button>
+    <button class="sideBtn" id="sideChecks"><span class="ico">✓</span> Compatibility</button>
+    <button class="sideBtn" id="sideHistory"><span class="ico">◷</span> Time Shards <span class="count" id="revisionCount">1</span></button>
+  </div>
+  <div class="segline"></div>
+  <div class="sideGroup"><div class="sideLabel">INSTITUTE TOOLS</div>
+    <button class="sideBtn" id="sideIren"><span class="ico">✦</span> IREN guidance</button>
+    <button class="sideBtn" id="sidePassport"><span class="ico">▣</span> Project Passport</button>
+    <button class="sideBtn" id="sideReview"><span class="ico">↗</span> Review pathway</button>
+  </div>
+  <div class="sideBottom"><div class="usage"><span>Prototype workspace</span><span id="usageLabel">Local only</span></div><div class="usageBar"><span></span></div><div class="hint">Nothing is stored on ANEVUM servers by this concept.</div></div>
+</aside>
+<main class="main mobile-active" id="mainPane">
+ <div class="workspaceTop">
+  <div><div class="workspaceName">Signal Drift <span style="color:#87cdd5;font-size:.6em;vertical-align:middle">/ V001</span></div><div class="workspaceMeta"><span><span class="dot"></span><span id="saveText">Local demonstration</span></span><span id="revisionLabel">Working revision 01</span><span>Private concept</span></div></div>
+  <div class="toolbar"><button class="btn ghost" id="undoBtn" title="Undo a simulated change">↶ Undo</button><button class="btn ghost" id="redoBtn" title="Redo a simulated change">↷ Redo</button><button class="btn" id="exportBtn">↓ Export HTML</button><button class="btn primary" id="prepareBtn">✓ Check package</button></div>
+ </div>
+ <nav class="tabRow" aria-label="Workbench views">
+  <button class="tab active" data-mainview="preview">◉ &nbsp; Preview</button>
+  <button class="tab" data-mainview="visual">◇ &nbsp; Visual</button>
+  <button class="tab" data-mainview="code">⌘ &nbsp; Files</button>
+ </nav>
+ <section class="view active" id="view-preview">
+  <div class="viewportLine"><div class="deviceTabs" aria-label="Preview viewport"><button class="active" data-device="desktop">Desktop</button><button data-device="tablet">Tablet</button><button data-device="phone">Phone</button></div><span class="hint">Responsive lens · simulated, not device certified</span></div>
+  <div class="stageZone"><div class="stageShell"><div class="stageChrome"><div class="stageDots"><span></span><span></span><span></span></div><span class="stageUrl">isolated.preview / signal-drift / local-concept</span><span class="stageBadge">● PRIVATE DEMO</span></div>
+   <div class="previewWell"><div class="deviceFrame" id="deviceFrame"><iframe id="gameFrame" sandbox="allow-scripts" title="Sample playable Signal Drift game"></iframe></div></div>
+   <div class="stageFoot"><span><span class="signal">●</span> Interactive sample running in a sandboxed iframe</span><button class="btn tiny" id="restartBtn">↻ Restart</button></div>
+  </div></div>
+ </section>
+ <section class="view" id="view-visual"><div class="visualView"><p class="visualIntro">Object controls change the local sample and its generated HTML. This is a limited demonstration of Selection-to-Intent, not a full scene engine or an authenticated save.</p>
+ <div class="objectGrid">
+ <button class="objectTile selected" data-object="ship"><div class="objectIcon">⌁</div><strong>Signal craft</strong><span>Player · controllable</span></button>
+ <button class="objectTile" data-object="world"><div class="objectIcon">◌</div><strong>Starfield</strong><span>Environment · palette</span></button>
+ <button class="objectTile" data-object="signal"><div class="objectIcon">✧</div><strong>Signal beacon</strong><span>Collectible · objective</span></button>
+ <button class="objectTile" data-object="hud"><div class="objectIcon">▤</div><strong>HUD</strong><span>Score · guidance</span></button>
+ </div>
+ <div class="inspector"><div class="inspectorHead"><span id="selectedTitle">Signal craft / Inspector</span><span class="pill" style="padding:4px 7px">TYPED PROPERTIES</span></div><div class="controls" id="propertyControls"></div></div>
+ <div class="timeline"><div style="display:flex;justify-content:space-between"><strong style="color:#e0ebf8">Animation timeline</strong><span>Future native engine integration</span></div><div class="track"><span>Craft glow</span><div class="trackRail"></div></div><div class="track"><span>Beacon pulse</span><div class="trackRail" style="filter:hue-rotate(50deg)"></div></div><span>Tracks are illustrative. This static HTML demo uses CSS animation, not native saved keyframes.</span></div>
+ </div></section>
+ <section class="view" id="view-code"><div class="codeView"><div class="editorSurface"><div class="editorHeader"><span>index.html</span><span>Generated preview source · read-only</span></div><textarea id="sourceView" readonly spellcheck="false" aria-label="Generated HTML source"></textarea></div><div class="hint" style="margin-top:10px">This sample exports a standalone browser-ready HTML document. Full source editing, multi-file diffs and ZIP builds are implementation work, not active in this concept.</div></div></section>
+ <div class="bottomPanel" id="checksPanel">
+   <div class="bottomTitle"><strong>COMPATIBILITY / PROJECT PASSPORT</strong><span class="hint">Demonstration only · no server validation</span></div>
+   <div class="checkList">
+    <div class="check"><div class="symbol">✓</div><div><strong>Browser entrypoint</strong><span>Generated index.html sample</span></div></div>
+    <div class="check"><div class="symbol">◉</div><div><strong>Private sandbox</strong><span>Iframe sample, not hosted certification</span></div></div>
+    <div class="check"><div class="symbol">◌</div><div><strong>Phone check</strong><span>Viewport simulation only</span></div></div>
+    <div class="check"><div class="symbol">◌</div><div><strong>Rights &amp; security</strong><span>Not independently reviewed</span></div></div>
+    <div class="check"><div class="symbol">◌</div><div><strong>Package SHA / quota</strong><span>Requires real V004/V005 pipeline</span></div></div>
+    <div class="check"><div class="symbol">◌</div><div><strong>Publish clearance</strong><span>Requires staff review; not available here</span></div></div>
+   </div>
+ </div>
+</main>
+<aside class="right" id="aiPane">
+ <div class="rightHead"><div class="up-title"><span class="agentOrb" aria-hidden="true"></span><div><div class="agentName">Workbench Assistant</div><div class="agentSub">Concept conversation · no AI requests</div></div></div>
+ <div class="provider"><div><strong>Provider: Demo simulation</strong><small>No account or API key connected</small></div><button id="connectBtn">Connect ▸</button></div>
+ </div>
+ <div class="thread" id="thread" aria-live="polite"><div class="bubble system">ANEVUM / CREATE CHANNEL — private simulation. Try a prompt to preview the proposed patch-and-review interaction.</div><div class="bubble assistant">I can help you shape Signal Drift. Select a project object or ask for a change. I'll propose an edit; you decide whether to apply it.</div></div>
+ <div class="chiprow"><button class="chip" data-prompt="Make the ship glow brighter">✧ Brighter ship</button><button class="chip" data-prompt="Change the starfield to violet">◈ Violet sky</button><button class="chip" data-prompt="Make the beacon move faster">⇢ Faster beacon</button></div>
+ <form class="composer" id="chatForm"><label class="sr-only" for="chatPrompt">Propose a change</label><div class="composerBox"><textarea id="chatPrompt" placeholder="Describe a change to this game..." maxlength="400" rows="2"></textarea><button class="send" type="submit" title="Simulate proposed change">↑</button></div><div class="composerFoot"><span>Nothing is sent to a model.</span><span>Review before apply</span></div></form>
+ <div class="statusstrip"><span>IREN · contextual guidance available</span><span class="tinyTech">LOCAL / NON-PRODUCTION</span></div>
+</aside>
+</div>
+<nav class="mobileTabs" aria-label="Mobile workbench tools"><button class="active" data-mobile="preview"><b>◉</b> Preview</button><button data-mobile="visual"><b>◇</b> Visual</button><button data-mobile="code"><b>⌘</b> Files</button><button data-mobile="ai"><b>✦</b> AI</button></nav>
+<div class="toast" id="toast" role="status"></div>
+<div class="modalBackdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal"><h2 id="modalTitle"></h2><div id="modalContent"></div><div class="modalFoot"><button class="btn" id="modalClose">Close</button></div></div></div>
+</div>
+<script>
+(function(){
+"use strict";
+const model={sky:"#112b53",accent:"#9deaff",glow:14,speed:2,beacon:"#f4ca8b",hud:true};
+let revision=1,undo=[],redo=[],selected="ship",pending=null,activeView="preview",mobileView="preview",currentDevice="desktop";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const clone=()=>JSON.parse(JSON.stringify(model));
+const toast=s=>{const e=$("#toast");e.textContent=s;e.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("show"),2500)};
+function makeHtml(){
+const config=JSON.stringify(model).replace(/</g,"\\u003c");
+return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Signal Drift</title><style>'+
+'*{box-sizing:border-box}html,body{height:100%;margin:0;overflow:hidden;font:12px system-ui;color:#e4f4ff;background:'+model.sky+'}'+
+'body{display:flex;flex-direction:column;user-select:none;touch-action:none}#game{position:relative;flex:1;overflow:hidden;background:radial-gradient(ellipse at 46% 26%,#416b8e55,transparent 70%),'+model.sky+'}'+
+'#game:before{content:"";position:absolute;inset:0;opacity:.35;background-image:radial-gradient(#c8ecff 1px,transparent 1px);background-size:31px 37px;animation:drift 14s linear infinite}@keyframes drift{to{background-position:0 148px}}'+
+'#title{position:absolute;z-index:3;left:14px;top:13px;font-size:9px;letter-spacing:.17em;color:#c5dcea}#count{position:absolute;z-index:3;right:12px;top:12px;font-size:12px;font-weight:800;color:#f9d8a9}'+
+'#ship{width:35px;height:35px;position:absolute;left:45%;top:55%;transform:translate(-50%,-50%);border-radius:7px 70% 7px 70%;background:linear-gradient(135deg,#edfaff,'+model.accent+' 45%,#246b89);box-shadow:0 0 '+model.glow+'px '+model.accent+';border:1px solid #ecffff;transition:box-shadow .2s}'+
+'#ship:after{content:"";position:absolute;inset:10px;border:2px solid #1c4265;border-radius:50%}'+
+'#beacon{position:absolute;left:70%;top:35%;width:28px;height:28px;background:'+model.beacon+';clip-path:polygon(50% 0,65% 36%,100% 50%,65% 64%,50% 100%,35% 64%,0 50%,35% 36%);filter:drop-shadow(0 0 10px '+model.beacon+');animation:pulse 1.5s ease-in-out infinite alternate}@keyframes pulse{to{opacity:.58;transform:scale(.80)}}'+
+'.control{position:absolute;bottom:12px;width:44px;height:44px;border-radius:12px;background:#183958bb;border:1px solid #75adc2;color:#e9f8ff;z-index:4;font-size:22px;touch-action:none}#left{left:13px}#right{left:64px}#up{right:64px}#down{right:13px}#help{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:9px;color:#d5e9fcbb;white-space:nowrap}@media(max-width:450px){#help{display:none}}'+
+'</style></head><body><div id="game"><span id="title">ANEVUM / SIGNAL DRIFT</span>'+ (model.hud?'<span id="count">SIGNALS 00</span>':'') +'<span id="ship"></span><span id="beacon"></span><button id="left" class="control" aria-label="Move left">‹</button><button id="right" class="control" aria-label="Move right">›</button><button id="up" class="control" aria-label="Move up">⌃</button><button id="down" class="control" aria-label="Move down">⌄</button><div id="help">Arrow keys or touch controls · collect the beacon</div></div><script>'+
+'(function(){var ship=document.getElementById("ship"),orb=document.getElementById("beacon"),root=document.getElementById("game"),count=0,x=.45,y=.55,speed='+model.speed+',target={x:.7,y:.35},pressed={};function clamp(v){return Math.max(.06,Math.min(.94,v));}function randomTarget(){target.x=.15+Math.random()*.7;target.y=.15+Math.random()*.65;orb.style.left=target.x*100+"%";orb.style.top=target.y*100+"%";}function tick(){var k=.0045*speed;if(pressed.ArrowLeft||pressed.left)x-=k;if(pressed.ArrowRight||pressed.right)x+=k;if(pressed.ArrowUp||pressed.up)y-=k;if(pressed.ArrowDown||pressed.down)y+=k;x=clamp(x);y=clamp(y);ship.style.left=x*100+"%";ship.style.top=y*100+"%";if(Math.abs(x-target.x)<.075&&Math.abs(y-target.y)<.10){count++;var el=document.getElementById("count");if(el)el.textContent="SIGNALS "+String(count).padStart(2,"0");randomTarget();}requestAnimationFrame(tick);}window.addEventListener("keydown",function(e){if(e.key.indexOf("Arrow")===0){pressed[e.key]=true;e.preventDefault();}});window.addEventListener("keyup",function(e){pressed[e.key]=false;});["left","right","up","down"].forEach(function(k){var el=document.getElementById(k);el.addEventListener("pointerdown",function(e){el.setPointerCapture(e.pointerId);pressed[k]=true;});["pointerup","pointercancel","lostpointercapture"].forEach(function(t){el.addEventListener(t,function(){pressed[k]=false;});});});requestAnimationFrame(tick);})();'+
+'<\/script></body></html>';
+}
+function render(){
+$("#gameFrame").srcdoc=makeHtml();
+$("#sourceView").value=makeHtml().replace(/></g,">\n<");
+$("#revisionLabel").textContent="Working revision "+String(revision).padStart(2,"0");
+$("#revisionCount").textContent=String(revision);
+$("#undoBtn").disabled=!undo.length;$("#redoBtn").disabled=!redo.length;
+const title=$("#selectedTitle");title.textContent={ship:"Signal craft",world:"Starfield",signal:"Signal beacon",hud:"HUD"}[selected]+" / Inspector";
+const controls=$("#propertyControls");controls.innerHTML="";
+const entries={ship:[["glow","Glow radius (px)","number",2,40],["accent","Craft color","color"]],world:[["sky","Sky color","color"],["speed","Craft speed","number",1,8]],signal:[["beacon","Beacon color","color"]],hud:[["hud","Visible scoreboard","select",["Yes","No"]]]}[selected];
+entries.forEach(a=>{const wrap=document.createElement("div");wrap.className="control";const l=document.createElement("label");l.textContent=a[1];const input=document.createElement(a[2]==="select"?"select":"input");input.id="prop-"+a[0];if(a[2]==="select"){a[3].forEach((x,i)=>{const option=document.createElement("option");option.textContent=x;option.value=String(i===0);input.appendChild(option)});input.value=String(model[a[0]]);}else{input.type=a[2];if(a[2]==="number"){input.min=a[3];input.max=a[4];}input.value=model[a[0]];}input.addEventListener("change",()=>{const next=a[2]==="color"?input.value:a[2]==="number"?Math.min(a[4],Math.max(a[3],Number(input.value))):input.value==="true";change({[a[0]]:next},"Manual inspector change")});l.htmlFor=input.id;wrap.append(l,input);controls.appendChild(wrap)});
+}
+function change(patch,reason){undo.push(clone());if(undo.length>25)undo.shift();redo=[];Object.assign(model,patch);revision++;render();toast(reason+" · local revision "+revision)}
+function view(name){activeView=name;document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="view-"+name));document.querySelectorAll("[data-mainview]").forEach(x=>x.classList.toggle("active",x.dataset.mainview===name));if(window.innerWidth<=760)mobile(name);}
+function mobile(name){mobileView=name;const isAI=name==="ai";$("#mainPane").classList.toggle("mobile-active",!isAI);$("#aiPane").classList.toggle("mobile-active",isAI);document.querySelectorAll("[data-mobile]").forEach(x=>x.classList.toggle("active",x.dataset.mobile===name));if(!isAI)activeView=name;if(isAI){setTimeout(()=>$("#chatPrompt").focus(),30)}}
+function device(name){currentDevice=name;$("#deviceFrame").className="deviceFrame "+(name==="desktop"?"":name);document.querySelectorAll("[data-device]").forEach(x=>x.classList.toggle("active",x.dataset.device===name));toast(name.charAt(0).toUpperCase()+name.slice(1)+" simulated viewport");}
+function modal(title,html){$("#modalTitle").textContent=title;$("#modalContent").innerHTML=html;$("#modalBackdrop").classList.add("open");$("#modalClose").focus()}
+function closeModal(){$("#modalBackdrop").classList.remove("open")}
+function bubble(type,text){const e=document.createElement("div");e.className="bubble "+type;e.textContent=text;$("#thread").appendChild(e);$("#thread").scrollTop=$("#thread").scrollHeight;}
+function plan(t){const p=t.toLowerCase();if(/violet|purple|night|sky|background/.test(p))return{patch:{sky:"#352757"},desc:"Change the starfield palette to deep orbital violet.",files:"index.html · CSS background"};if(/fast|quick|speed|slow/.test(p))return{patch:{speed:/slow/.test(p)?1:5},desc:/slow/.test(p)?"Reduce the craft movement speed for easier touch controls.":"Increase craft movement speed while retaining keyboard and touch input.",files:"index.html · movement config"};if(/beacon|signal|gold/.test(p))return{patch:{beacon:"#92ffd6"},desc:"Give the signal beacon a mint-colored highlight.",files:"index.html · collectible style"};if(/hud|score/.test(p))return{patch:{hud:!model.hud},desc:"Toggle the score HUD in the game preview.",files:"index.html · scoreboard"};return{patch:{accent:"#bcacff",glow:29},desc:"Strengthen the craft's optical glow and switch its accent to orbital violet.",files:"index.html · craft appearance"};}
+function proposal(t){if(pending){toast("Review the existing proposal first");return}bubble("user",t);const result=plan(t);bubble("assistant","I found a small local change we can test. It will not update your project until you approve it.");pending=result;const card=document.createElement("div");card.className="proposal";card.innerHTML='<div class="proposalLabel">PROPOSED CHANGE / DEMO</div><strong>'+esc(result.desc)+'</strong><p>'+esc(result.files)+'<br>This is a scripted demonstration, not an AI-generated code diff.</p><div class="row" style="gap:8px"><button class="btn primary tiny apply">Apply change</button><button class="btn ghost tiny reject">Discard</button></div>';$("#thread").appendChild(card);$("#thread").scrollTop=$("#thread").scrollHeight;card.querySelector(".apply").addEventListener("click",()=>{change(result.patch,"Proposed change applied");card.querySelector(".row").innerHTML='<span style="color:#9be0be;font-size:11px">✓ Applied to sample working copy</span>';pending=null;bubble("assistant","The preview has updated. Test it, ask for another change, or inspect the source. This demonstration has no cloud save.")});card.querySelector(".reject").addEventListener("click",()=>{card.querySelector(".row").innerHTML='<span style="color:#aebfd5;font-size:11px">Proposal discarded</span>';pending=null});}
+document.querySelectorAll("[data-mainview]").forEach(b=>b.addEventListener("click",()=>view(b.dataset.mainview)));
+document.querySelectorAll("[data-mobile]").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.mobile!=="ai")view(b.dataset.mobile);mobile(b.dataset.mobile)}));
+document.querySelectorAll("[data-device]").forEach(b=>b.addEventListener("click",()=>device(b.dataset.device)));
+document.querySelectorAll("[data-object]").forEach(b=>b.addEventListener("click",()=>{selected=b.dataset.object;document.querySelectorAll("[data-object]").forEach(o=>o.classList.toggle("selected",o===b));render()}));
+document.querySelectorAll("[data-prompt]").forEach(b=>b.addEventListener("click",()=>proposal(b.dataset.prompt)));
+$("#chatForm").addEventListener("submit",e=>{e.preventDefault();const t=$("#chatPrompt").value.trim();if(!t)return;$("#chatPrompt").value="";proposal(t)});
+$("#chatPrompt").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("#chatForm").requestSubmit()}});
+$("#restartBtn").addEventListener("click",()=>{$("#gameFrame").srcdoc=makeHtml();toast("Game restarted")});
+$("#undoBtn").addEventListener("click",()=>{if(!undo.length)return;redo.push(clone());Object.assign(model,undo.pop());revision++;render();toast("Undo created revision "+revision)});
+$("#redoBtn").addEventListener("click",()=>{if(!redo.length)return;undo.push(clone());Object.assign(model,redo.pop());revision++;render();toast("Redo created revision "+revision)});
+$("#exportBtn").addEventListener("click",()=>{const b=new Blob([makeHtml()],{type:"text/html;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="signal-drift-sample.html";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast("Exported a real standalone HTML sample")});
+$("#prepareBtn").addEventListener("click",()=>modal("Compatibility checkpoint",'<p>This design can export a standalone browser HTML sample, but the real V005 checker and V004 storage/review systems are <b>not connected</b> in this file.</p><div class="option"><b>Local demo: index.html generated</b><small>Actual ZIP safety, SHA, quotas, runtime testing and independent review must run in the staged ANEVUM backend.</small></div><div class="option"><b>Next action: alpha implementation</b><small>Connect this interface to an owner-bound workspace and the existing V004/V005 contracts before any live publish option appears.</small></div>'));
+$("#connectBtn").addEventListener("click",()=>modal("Connect an AI provider",'<p>Intended alpha connection: a supported provider API credential, explicit project-sharing consent, cost caps and server-side encryption. This concept does not request or accept secrets.</p><div class="option"><b>OpenAI API · proposed</b><small>Separately billed API credentials. Not the same as embedding a ChatGPT chat.</small></div><div class="option"><b>Anthropic API · proposed</b><small>Separate provider adapter after the first provider is verified.</small></div><div class="option"><b>External agent uplink · later</b><small>Revocable project-scoped tool grants, never full account access.</small></div>'));
+$("#sideChecks").addEventListener("click",()=>{$("#checksPanel").scrollIntoView({behavior:"smooth",block:"nearest"});toast("These are illustrative checks, not release certification")});
+$("#sideHistory").addEventListener("click",()=>modal("Time Shards · Local revisions",'<p>Current local concept revision: <strong>'+revision+'</strong>. This view proposes an auditable history with user/AI attribution, before-and-after hashes, and safe restore. Only undo/redo are active here.</p><div class="option"><b>Immutable release principle</b><small>Reverting a private draft creates a new working revision. It never silently changes the live reviewed build.</small></div>'));
+$("#sideIren").addEventListener("click",()=>modal("IREN · Institute guidance",'<p>IREN would explain compatibility problems, permissions, review status and where to go next. It should remain independent from the external AI model currently selected for code generation.</p><div class="option"><b>Try this:</b><small>Open the Visual tab, select the Signal craft, and change the glow. Then return to Preview to test the result.</small></div>'));
+$("#sidePassport").addEventListener("click",()=>modal("Project Passport",'<p><b>Signal Drift</b> · Private concept · Local revision '+revision+'</p><div class="option"><b>Runtime</b><small>Standalone HTML demo; browser-only; no external packages.</small></div><div class="option"><b>Validation</b><small>Not scanned or independently approved. Mobile preview is a simulation.</small></div><div class="option"><b>Publication</b><small>Not submitted. Ownership, credits, security and staff approval not recorded.</small></div>'));
+$("#sideReview").addEventListener("click",()=>modal("From creation to publication",'<p>The intended workflow is: saved working revision → deterministic package → server validation → immutable private test → rights and credits → independent staff approval → canonical public player and eligible creator wall.</p><div class="option"><b>There is no publish control in this prototype.</b><small>The creator may request review; a connected AI agent cannot self-approve or publish.</small></div>'));
+$("#modalClose").addEventListener("click",closeModal);$("#modalBackdrop").addEventListener("click",e=>{if(e.target===$("#modalBackdrop"))closeModal()});window.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
+render();
+})();
+</script>
+</body>
+</html>
