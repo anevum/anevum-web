@@ -158,8 +158,11 @@ export function WorldComposerReviewV115(){
       <p className="cvs-explorer-note">Navigation shows a local project fixture. Verified V111 files and revisions remain separate; this browser preview does not persist changes.</p>
     </aside>
     <div className="cvw-workspace">
-     <div className="cvs-mode-header"><div className="cvs-mode-label"><span>SCENE COMPOSER / REAL GEOMETRY</span><strong>Sky Archipelago — editable world</strong></div><span className="cvs-chip"><i/> PRIVATE GPU REVIEW</span></div>
-     <div className="cvw-toolbar"><span>ORBIT · PICK · TRANSFORM</span><div>
+     <StudioTopModesV116 mode={mode} onChange={setMode}/>
+     <div className="cvs-mode-header"><div className="cvs-mode-label"><span>WORKSPACE / {mode.toUpperCase()}</span><strong>{mode==='Scene'||mode==='Playtest'?'Sky Archipelago':mode==='Scripts'?'Script Editor':mode==='Assets'?'Asset Foundry':mode==='Interface'?'Interface Builder':'Publish & Deploy'}</strong></div><span className="cvs-chip"><i/> LOCAL DESIGN REVIEW</span></div>
+     {fileNotice&&<div className="csn-file-notice" role="status"><span>{fileNotice}</span><button type="button" onClick={()=>setFileNotice('')} aria-label="Dismiss file notice">×</button></div>}
+     {(mode==='Scene'||mode==='Playtest')?<>
+     <div className="cvw-toolbar"><span>{mode==='Playtest'?'3D VISUAL PLAYTEST / NO SCRIPTS':'SELECT · MOVE · ROTATE · SCALE'}</span><div>
       <button type="button" aria-label="Zoom camera in" onClick={()=>setCamera(c=>({...c,distance:clamp(c.distance-2,4,80)}))}>Zoom +</button>
       <button type="button" aria-label="Zoom camera out" onClick={()=>setCamera(c=>({...c,distance:clamp(c.distance+2,4,80)}))}>Zoom −</button>
       <button type="button" onClick={()=>setCamera(scene.camera)}>Reset camera</button>
@@ -173,17 +176,29 @@ export function WorldComposerReviewV115(){
         command({type:'SET_TRANSFORM',id:node.id,field:'position',value:position});
        }}/>
       <div className="cvw-selection-chip"><span>SELECTED OBJECT</span><strong>{node?.name||'None'}</strong></div>
+      <div className="csn-scene-light">
+       <button type="button" aria-expanded={lightingOpen} aria-controls="csn-floating-lighting" onClick={()=>setLightingOpen(v=>!v)}>SCENE LIGHTING <span aria-hidden="true">{lightingOpen?'⌃':'⌄'}</span></button>
+       {lightingOpen&&<div id="csn-floating-lighting"><div className="csn-light-visual"><span/><span/><span/></div>
+        <label>Time of day <select value={scene.environment.sky} onChange={e=>command({type:'SET_ENVIRONMENT',sky:e.target.value as 'day'|'night',sunIntensity:scene.environment.sunIntensity})}>
+         <option value="day">Daylight</option><option value="night">Nebula night</option></select></label>
+        <label>Sun intensity <input type="range" min={0} max={2} step={.05} value={scene.environment.sunIntensity}
+         onChange={e=>command({type:'SET_ENVIRONMENT',sky:scene.environment.sky,sunIntensity:Number(e.target.value)})}/></label>
+       </div>}
+      </div>
      </div>
-     <div className="cvw-world-footer"><span>ACTUAL MESH DRAW CALLS · OBJECT PICKING · CAMERA ORBIT</span>
+     <div className="cvw-world-footer"><span>GPU WEBGL2 / CAMERA & OBJECT EDITOR</span>
       <span>{scene.nodes.length} OBJECTS / MAX 64</span>
       <span>{new TextEncoder().encode(source).length.toLocaleString()} / 32,768 BYTES</span></div>
+     {mode==='Scene'&&<StudioAssetShelfV116 onAdd={addAsset} expanded={assetShelfOpen} onToggle={()=>setAssetShelfOpen(v=>!v)}/>}
+     {mode==='Playtest'&&<div className="csn-playtest-note" role="status">Visual playtest uses the live WebGL2 camera and objects. Game scripts, collision, networking and publishing are not active in this review.</div>}
      {showSource&&<section className="cvw-source"><div><strong>ANEVUM_WORLD_V1</strong><span>Read-only encoded document / no save</span></div>
       <textarea aria-label="Read-only ANEVUM world document" readOnly value={source} rows={7} onFocus={event=>event.currentTarget.select()}/></section>}
      {error&&<p role="alert" className="cvw-error">{error}</p>}
+     </>:<StudioOtherModesV116 mode={mode} onAdd={addAsset}/>}
      <div className="cvw-mobile-tabs" role="group" aria-label="Mobile world editor panels">
       <button type="button" aria-pressed={panel==='objects'} onClick={()=>setPanel('objects')}>Objects</button>
       <button type="button" aria-pressed={panel==='inspector'} onClick={()=>setPanel('inspector')}>Inspector</button>
-      <button type="button" onClick={()=>window.dispatchEvent(new Event('anevum:iren-open'))}>IREN</button>
+      <button type="button" onClick={()=>{setInspectorTab('iren');setPanel('inspector')}}>IREN</button>
      </div>
     </div>
     <aside className={'cvw-inspector cvs-pane'+(panel==='inspector'?' is-mobile-open':'')} aria-label="World object inspector">
@@ -215,7 +230,7 @@ export function WorldComposerReviewV115(){
     </aside>
     {panel!=='closed'&&<button className="cvw-backdrop" type="button" aria-label="Close mobile panel" onClick={()=>setPanel('closed')}/>}
    </div>
-   <footer className="cvs-status"><span><i/> WEBGL2 WORLD COMPOSER / REVIEW</span><span>NO AI CALLS · NO CLOUD GPU · NO DATABASE WRITES</span><span>ACTUAL 3D, SYNTHETIC ONLY</span></footer>
+   <footer className="cvs-status"><span><i/> CREATOR STUDIO / INSTRUMENT GLASS</span><span>LOCAL GPU · NO MEMBER WRITES · NO CLOUD GPU</span><span>{mode.toUpperCase()} / {scene.nodes.length} OBJECTS / UNSAVED SAMPLE</span></footer>
   </div>
  </section>;
 }
