@@ -7,7 +7,8 @@ import {NEXT_CSS,NEXT_CLIENT} from '../operations/anevum-observatory-continuance
 const ORIGIN='https://anevum.com/staff/observatory';
 const counts={members:31,verified:22,new7d:4,prior7d:2,new30d:11,creatorProfiles:6,publishedProjects:5,pendingProjects:2,projectSaves:8,projectVotes:13,projectComments:7,forumThreads:3,forumReplies:12,wallPosts:2};
 function fixture(role='owner',outage=false){
- const db={prepare(sql){return{bind(){return this},
+ const queries=[];
+ const db={prepare(sql){queries.push(sql);return{bind(){return this},
   async first(){
    if(sql.includes('SELECT g.role FROM staff_access_grants'))return role==='none'?null:{role};
    if(outage)throw Error('Unavailable');
@@ -18,7 +19,7 @@ function fixture(role='owner',outage=false){
  }}};
  const env={MEMBER_DB:db,APEX_AUTH:{async fetch(){return new Response(JSON.stringify({session:{id:'fixture-session',userId:'fixture-staff',expiresAt:new Date(Date.now()+60000).toISOString()},user:{id:'fixture-staff',emailVerified:true}}),{headers:{'content-type':'application/json'}})}}};
  const req=(route='',method='GET',cookie=true)=>new Request(ORIGIN+route,{method,headers:cookie?{cookie:'staff=fixture'}:{}});
- return {env,req};
+ return {env,req,queries};
 }
 test('V106 client parses, uses motion safeguards, and does not initiate analytics network traffic',()=>{
  assert.doesNotThrow(()=>new Script(NEXT_CLIENT));
@@ -70,9 +71,12 @@ test('invalid pages cannot be transformed into authorized Observatory pages',()=
  assert.throws(()=>decorateObservatoryHtml('not Observatory','operations'),/verified HTML anchor/);
  assert.throws(()=>decorateObservatoryHtml('<body class="ci-next">','growth'),/duplicate decoration/);
 });
-test('unavailable staff records do not expose themed JavaScript',async()=>{
+test('staff-cleared static assets do not require live aggregate records',async()=>{
  const f=fixture('owner',true);
- const bad=await worker.fetch(f.req('/continuance-v106.js'),f.env);
- assert.equal(bad.status,503);
- assert.ok((await bad.json()).error);
+ const result=await worker.fetch(f.req('/continuance-v106.js'),f.env);
+ assert.equal(result.status,200);
+ assert.match(await result.text(),/ci-motion/);
+ assert.ok(f.queries.length>=1);
+ assert.ok(f.queries.every(sql=>sql.includes('SELECT g.role FROM staff_access_grants')),
+  'Static assets must not perform overview aggregate queries');
 });
