@@ -89,15 +89,28 @@ try {
     const response = await fetch(base + "api/session");
     return response.ok;
   });
+  // Explicit localhost port is more portable across Ubuntu Chrome wrappers
+  // than the optional DevToolsActivePort sidecar created with port=0.
+  const debugPort = 9222;
+  let chromeErrors = "";
   chrome = spawn(findChrome(), [
     "--headless=new", "--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage",
     "--no-first-run", "--no-default-browser-check",
-    "--remote-debugging-port=0", "--user-data-dir=" + tmp, "about:blank"
-  ], { stdio: "ignore" });
-  const debugPort = await eventually(async () => {
-    const raw = await readFile(join(tmp, "DevToolsActivePort"), "utf8");
-    return Number(raw.split("\n")[0]) || false;
+    "--remote-debugging-address=127.0.0.1", "--remote-debugging-port=" + debugPort,
+    "--user-data-dir=" + tmp, "about:blank"
+  ], { stdio: ["ignore", "ignore", "pipe"] });
+  chrome.stderr?.on("data", (chunk) => {
+    chromeErrors = (chromeErrors + chunk.toString()).slice(-5000);
   });
+  try {
+    await eventually(async () => {
+      if (chrome.exitCode !== null) throw new Error("Chrome exited with " + chrome.exitCode);
+      const result = await fetch("http://127.0.0.1:" + debugPort + "/json/list");
+      return result.ok;
+    }, 15000);
+  } catch (error) {
+    throw new Error("Unable to connect to local Chrome DevTools: " + error.message + "\n" + chromeErrors);
+  }
   const pages = await (await fetch("http://127.0.0.1:" + debugPort + "/json/list")).json();
   const page = pages.find((item) => item.type === "page");
   assert.ok(page?.webSocketDebuggerUrl, "Chrome must expose a page debugging target");
