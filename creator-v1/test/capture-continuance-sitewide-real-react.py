@@ -82,7 +82,7 @@ with sync_playwright() as p:
         page.on("console",lambda m:console_errors.append(m.text) if m.type=="error" else None)
         page.on("requestfailed",lambda r:failed_requests.append(r.url))
         page.on("request",lambda r:external.append(r.url) if not r.url.startswith(base) else None)
-        page.goto(base+"/",wait_until="networkidle",timeout=60000)
+        page.goto(base+"/",wait_until="domcontentloaded",timeout=30000)
         try:
             page.locator(".av-next-cinema").wait_for(timeout=12000)
         except Exception:
@@ -118,7 +118,7 @@ with sync_playwright() as p:
         errors.extend([f"{width}: "+x for x in page_errors])
         ctx.close()
     ctx=browser.new_context(viewport={"width":390,"height":844},reduced_motion="reduce")
-    page=ctx.new_page();page.goto(base+"/",wait_until="networkidle")
+    page=ctx.new_page();page.goto(base+"/",wait_until="domcontentloaded",timeout=30000)
     check("OS reduced motion preserves homepage",page.locator(".av79-home").count()==1)
     check("OS reduced motion disables decorative motion",page.evaluate("""() => { const a=document.querySelector('.av125-signal-atlas .av125-atlas-beacon-sweep');return !a || getComputedStyle(a).animationName==='none' || getComputedStyle(a).animationDuration==='0s';}"""))
     check("No manual motion control under reduced motion",page.locator(".av125-motion-toggle").count()==0)
