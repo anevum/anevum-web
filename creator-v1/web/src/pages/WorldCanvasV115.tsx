@@ -22,6 +22,7 @@ export function WorldCanvasV115({document,camera,selection,onCamera,onSelect}:Pr
  const current=useRef<Props>({document,camera,selection,onCamera,onSelect});
  const [status,setStatus]=useState<Status>('initializing');
  const [reason,setReason]=useState('');
+ const [restartKey,setRestartKey]=useState(0);
  current.current={document,camera,selection,onCamera,onSelect};
  function schedule(){
   if(frame.current!==null||documentVisibilityHidden())return;
@@ -76,8 +77,8 @@ export function WorldCanvasV115({document,camera,selection,onCamera,onSelect}:Pr
    if(frame.current!==null)cancelAnimationFrame(frame.current);
    frame.current=null;engine.current?.dispose();engine.current=null;
   };
-  // Mount once. Latest world and camera are held in current for every draw.
- },[]);
+  // Recreate GPU resources only after an explicit retry; ordinary edits use refs.
+ },[restartKey]);
  useEffect(()=>{if(status==='webgl2')schedule();},[document,camera,selection,status]);
  function orbit(dx:number,dy:number){
   const p=current.current;
@@ -115,6 +116,13 @@ export function WorldCanvasV115({document,camera,selection,onCamera,onSelect}:Pr
   if(status!=='webgl2')return;
   event.preventDefault();zoom(Math.sign(event.deltaY)*Math.max(.5,Math.abs(event.deltaY)*.015));
  }
+ function retryGraphics(){
+  gesture.current=null;
+  if(frame.current!==null){cancelAnimationFrame(frame.current);frame.current=null;}
+  engine.current?.dispose();engine.current=null;
+  setStatus('initializing');setReason('');
+  setRestartKey(value=>value+1);
+ }
  function keydown(event:KeyboardEvent<HTMLCanvasElement>){
   if(status!=='webgl2')return;
   if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','-','0'].includes(event.key))event.preventDefault();
@@ -127,7 +135,7 @@ export function WorldCanvasV115({document,camera,selection,onCamera,onSelect}:Pr
   if(event.key==='0')current.current.onCamera(current.current.document.camera);
  }
  return <div className={"cvw-canvas-container"+(document.environment.sky==="night"?" is-night":"")} data-world-canvas-v115={status} data-camera-yaw={camera.yaw.toFixed(3)}>
-  <canvas ref={ref} className="cvw-world-canvas" tabIndex={0}
+  <canvas key={restartKey} ref={ref} className="cvw-world-canvas" tabIndex={0}
    aria-label="Interactive WebGL2 world. Drag to orbit; mouse wheel or plus and minus to zoom; arrow keys rotate; click an object to select. The scene hierarchy offers an accessible alternate selection method."
    onPointerDown={down} onPointerMove={move} onPointerUp={up}
    onPointerCancel={()=>{gesture.current=null;}}
@@ -139,6 +147,7 @@ export function WorldCanvasV115({document,camera,selection,onCamera,onSelect}:Pr
     status==='unsupported'?'WebGL2 unavailable on this device':'World renderer unavailable'}</strong>
    <p>{reason||'Your objects and document are still accessible in the hierarchy and Inspector.'}</p>
    <p>Use the object hierarchy and transform inputs while the 3D viewport is unavailable.</p>
+   {status!=='initializing'&&<button type="button" className="cvw-retry-graphics" onClick={retryGraphics}>Retry graphics on a fresh canvas</button>}
   </div>}
   {status==='webgl2'&&<div className="cvw-renderer-live" role="status">
    <span className="cvw-signal-dot"/> WEBGL2 / LOCAL DEVICE GPU
