@@ -11,6 +11,7 @@ test('Project Doctor mounts only in the existing private Studio source workspace
  assert.match(workspace,/studioProjectDoctorEnabled&&/);
  assert.match(workspace,/content\.startsWith\(PREFIX\)\|\|content\.startsWith\(UI_PREFIX\)/);
  assert.match(workspace,/source=\{content\}/);
+ assert.match(workspace,/savedSource=\{base\.content\|\|''\}/);
  assert.match(workspace,/revision=\{base\.revision\}/);
  assert.match(workspace,/dirty=\{dirty\}/);
 });
@@ -31,9 +32,15 @@ test('UI and styles retain explicit mobile and reduced-motion coverage',()=>{
  assert.match(ui,/item\.nextStep/);
  assert.match(ui,/projectDoctorBrief\(result\)/);
  assert.match(ui,/brief\?\.headline/);
+ assert.match(ui,/compareProjectDoctorSources\(savedSource,source\)/);
+ assert.match(ui,/source!==savedSource/);
+ assert.match(ui,/comparison\.counts\.introduced/);
+ assert.match(ui,/comparison\.counts\.noLongerReported/);
+ assert.match(ui,/no longer reported/);
  assert.match(ui,/Suggested next step:/);
  assert.match(css,/\.cpd-next-step/);
  assert.match(css,/@media\(max-width:570px\)/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
  assert.match(css,/:focus-visible/);
+ assert.match(css,/\.cpd-diff-metrics/);
 });
