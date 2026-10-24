@@ -4,6 +4,7 @@ import {Icon} from '../components/Icons';
 import {OrbitalMark} from '../components/OrbitalMark';
 import {CosmicArtwork} from '../components/CosmicArtwork';
 import {useLivingWorld} from './LivingWorldState';
+import {CinematicArrivalV136} from './CinematicArrivalV136';
 import {projectDetailPath} from '../lib/navigation';
 import type {Project, Category} from '../lib/api';
 import type {CosmicScene} from '../components/CosmicIllustration';
@@ -64,6 +65,7 @@ export function ParityPortalV136({projects,catalogueState,signedIn,verifiedCount
   function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();navigate(search.trim()?'/discover?q='+encodeURIComponent(search.trim()):'/discover');}
   return <div className="p136-portal" data-parity-v136="full">
     <section className="p136-hero" aria-labelledby="p136-hero-title">
+      <CinematicArrivalV136/>
       <div className="p136-hero-shade" aria-hidden="true"/>
       <div className="p136-hero-content">
         <p className="p136-hero-register">THE CONTINUANCE INSTITUTE <span> / </span> FIRST CONTACT</p>
