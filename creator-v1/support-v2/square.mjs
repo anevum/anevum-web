@@ -52,7 +52,7 @@ export function trustedCheckoutUrl(value){
   }catch{return null;}
 }
 export async function squareCall(env,path,{method='GET',body,fetcher=fetch}={}){
-  if(!sandboxReady(env)||!/^\/v2\/(?:catalog\/object\/[A-Za-z0-9_-]+|online-checkout\/payment-links|payments\/[A-Za-z0-9_-]+)$/.test(path))
+  if(!sandboxReady(env)||!/^\/v2\/(?:catalog\/object\/[A-Za-z0-9_-]+|online-checkout\/payment-links|payments\/[A-Za-z0-9_-]+|subscriptions\/search|subscriptions\/[A-Za-z0-9_-]+(?:\/cancel)?|refunds\/[A-Za-z0-9_-]+|disputes\/[A-Za-z0-9_-]+)$/.test(path))
     throw Error('Square sandbox unavailable');
   const response=await fetcher(SQUARE_API+path,{
     method,redirect:'error',headers:{
