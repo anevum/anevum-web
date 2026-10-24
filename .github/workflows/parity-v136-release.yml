@@ -13,6 +13,9 @@ on:
       - 'creator-v1/web/src/components/Shell.tsx'
       - 'creator-v1/web/src/pages/CinematicLandingPage.tsx'
       - 'creator-v1/web/public/assets/parity-v136/**'
+      - 'creator-v1/web/public/assets/institute/**'
+      - 'creator-v1/graphics/**'
+      - 'package.json'
   push:
     branches: ['release/parity-v136-home-navigation-20261024-001', 'release/parity-v136-living-world-20261024-005']
 permissions:
@@ -49,6 +52,7 @@ jobs:
       - name: Existing data, collections, rewards and auth contracts
         run: |
           node --experimental-strip-types --test creator-v1/test/member-collections-v011.test.mjs creator-v1/test/saved-works-organization-v010.test.mjs creator-v1/test/canonical-saved-works-v009.test.mjs creator-v1/test/member-space-resilience-v101.test.mjs creator-v1/test/earned-reward-media-v075.test.mjs creator-v1/test/apex-worker-bundle-v117.test.mjs
+      - run: node creator-v1/graphics/inspect-institute-assets.mjs
       - run: npm run check:creator-v1-web
       - run: npm run build:creator-v1-web
       - run: |

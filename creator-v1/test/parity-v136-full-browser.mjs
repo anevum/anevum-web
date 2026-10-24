@@ -25,7 +25,7 @@ const server=createServer((req,res)=>{
 });
 await new Promise(done=>server.listen(0,'127.0.0.1',done));
 const base='http://127.0.0.1:'+server.address().port;
-const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+const browser=await chromium.launch({headless:true,args:['--no-sandbox','--enable-webgl','--enable-unsafe-swiftshader','--use-angle=swiftshader']});
 const fixture={id:'v136-ci-fixture',title:'SYNTHETIC CI PROJECT',summary:'Loopback fixture only; not a real release.',
   category:'games',freeToUse:true,license:'MIT',publishedAt:'2026-10-24T12:00:00Z',creatorName:'CI fixture',creatorHandle:null};
 const packageFixture={id:'123e4567-e89b-42d3-a456-426614174000',
@@ -226,6 +226,46 @@ try{
     await page.keyboard.press('Escape');
     await page.waitForFunction(()=>!document.querySelector('.p136-artifact-lens[open]'));
     record('approved package Artifact Lens / canonical player path / Escape / unchanged URL');
+    await context.close();
+  }
+  // Exercise the actual production Three.js module and compressed GLBs,
+  // rather than treating the retained standalone shader test as mesh evidence.
+  for(const width of [1440,390]){
+    const {page,context}=await contextFor(width,{motion:'reduce'});
+    await page.goto(base,{waitUntil:'domcontentloaded'});
+    await page.waitForFunction(()=>{
+      const canvas=document.querySelector('.p136-living-canvas');
+      return canvas?.dataset.engine==='three'&&canvas.dataset.assetState==='ready';
+    },null,{timeout:30000});
+    await page.evaluate(()=>{document.querySelector('.p136-living-canvas').dataset.acceptanceIdentity='persistent'});
+    const snapshots=[];
+    for(const [route,family] of [['/','atrium'],['/discover','archive'],['/discover?category=games','forge'],['/community','relay']]){
+      if(route==='/discover')await page.locator('.p136-console-wayfinder').getByRole('link',{name:'Discover',exact:true}).click();
+      if(route.includes('category'))await page.getByRole('button',{name:/Games Independent play/i}).first().click();
+      if(route==='/community')await page.locator('.p136-console-wayfinder').getByRole('link',{name:'Commons',exact:true}).click();
+      await page.waitForFunction(family=>{
+        const c=document.querySelector('.p136-living-canvas');
+        const metrics=c?.dataset.metrics?JSON.parse(c.dataset.metrics):null;
+        return c?.dataset.assetState==='ready'&&metrics?.family===family;
+      },family,{timeout:30000});
+      const metrics=await page.locator('.p136-living-canvas').evaluate(c=>({
+        ...JSON.parse(c.dataset.metrics),width:c.width,height:c.height,identity:c.dataset.acceptanceIdentity
+      }));
+      assert.equal(metrics.identity,'persistent','Same canvas survives navigation');
+      assert.ok(metrics.models>=1&&metrics.models<=2,'Bounded model cache');
+      assert.ok(metrics.triangles>3000,'Actual modeled architecture was drawn');
+      assert.ok(metrics.width*metrics.height<=(width<850?650000:1800000)+2500,'Bounded GPU resolution');
+      assert.equal(await page.locator('.p136-living-canvas').count(),1,'One environment canvas');
+      await page.screenshot({path:join(out,'institute-'+family+'-'+width+'.png'),animations:'disabled'});
+      snapshots.push(metrics);
+    }
+    const lost=await page.locator('.p136-living-canvas').evaluate(c=>{
+      const ext=c.getContext('webgl2')?.getExtension('WEBGL_lose_context');ext?.loseContext();return !!ext;
+    });
+    assert.equal(lost,true,'Runner can exercise real context loss');
+    await page.locator('.p136-living-world[data-renderer="vector"]').waitFor();
+    assert.equal(await page.getByRole('heading',{level:1}).count(),1,'DOM remains usable after GPU loss');
+    record('real mesh families / compressed assets / one context / cache / GPU loss '+width,{snapshots,softwareGPU:true});
     await context.close();
   }
   const {page,context}=await contextFor(390,{motion:'no-preference',forceVector:true});

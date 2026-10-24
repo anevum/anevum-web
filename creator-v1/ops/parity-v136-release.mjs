@@ -21,6 +21,12 @@ const load=p=>JSON.parse(readFileSync(p,'utf8'));
 const save=(p,v)=>writeFileSync(p,JSON.stringify(v,null,2)+'\n');
 const stable=x=>JSON.stringify(x,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b))):v);
 const allowed=new Set([
+ 'package.json',
+ 'creator-v1/graphics/build-institute-assets.mjs',
+ 'creator-v1/graphics/inspect-institute-assets.mjs',
+ 'docs/production/parity-v136-webgl-asset-overhaul-20261024.md',
+ ...['InstituteRendererV136.ts','InstituteAssetManifestV136.ts','institute-optics-v136.css'].map(x=>'creator-v1/web/src/parity/'+x),
+ ...['manifest.json',...['atrium','archive','forge','relay'].flatMap(f=>['mobile','desktop'].map(t=>f+'-'+t+'.glb'))].map(x=>'creator-v1/web/public/assets/institute/v136-011/'+x),
  '.github/workflows/parity-v136-release.yml','creator-v1/ops/parity-v136-release.mjs',
  '.github/workflows/parity-v136-scene-qa.yml',
  'creator-v1/test/parity-v136-scene-director.test.mjs',
@@ -61,6 +67,12 @@ const allowed=new Set([
 ]);
 export function source(){
  git('merge-base','--is-ancestor',BASE,'HEAD');
+ // Allow this renderer's pinned additions without permitting collateral changes
+ // to auth/runtime dependencies through the package.json allowlist.
+ const baseline=JSON.parse(git('show',BASE+':package.json')),current=load('package.json');
+ const additions={dependencies:{three:'0.180.0'},devDependencies:{'@types/three':'0.180.0','@gltf-transform/core':'4.2.1','@gltf-transform/extensions':'4.2.1',meshoptimizer:'0.24.0'}};
+ for(const field of ['dependencies','devDependencies'])assert.deepEqual(current[field],{...baseline[field],...additions[field]},'Only pinned graphics dependencies may change');
+ assert.deepEqual(current.scripts,baseline.scripts,'Build and protected-system commands preserved');
  const changed=git('diff','--name-only',BASE,'HEAD').split('\n').filter(Boolean);
  assert.ok(changed.length);for(const p of changed)assert.ok(allowed.has(p),'Unreviewed release change '+p);
  assert.equal(git('diff','--name-only','--','creator-v1/web/src','creator-v1/apex-prelaunch','creator-v1/canonical-auth'),'','Uncommitted application edits');

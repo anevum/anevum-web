@@ -60,3 +60,7 @@ Earlier NEXT/legacy experiments remain reference material. **An open PR is not a
 ### Reconciliation refresh
 
 The public spatial branch #725 advanced after the first consolidation commit. This refresh merges its newer exact-head package Artifact Lens and approved-player regression assertions from `9c8cab31faa48680f9922e734d3c90e6cd135b8d`, preserving the anonymous private-Studio assertion and detailed browser error diagnostics. It is recorded as an additional merge parent; keep using the consolidated PR for future website work.
+
+### V136.011 authoritative continuation
+
+Session `ANEVUM.WEB.BUILD.2026-10-24.002.WEBGL-ASSET-OVERHAUL` continues on this same branch and PR #727. The [implementation register](parity-v136-webgl-asset-overhaul-20261024.md) distinguishes source-completed mesh/asset/UI work, exact-head verification, future product work and unchanged production. Public GPU input remains route profiles plus sanitized approved aggregates only; no private Studio payload enters it.
