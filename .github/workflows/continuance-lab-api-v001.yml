@@ -12,9 +12,6 @@ on:
       - creator-v1/test/studio-project-doctor-ui-v001.test.mjs
       - creator-v1/workbench-alpha/document.mjs
       - creator-v1/interface-builder/document.mjs
-      - Dockerfile
-      - .dockerignore
-      - railway.json
       - .github/workflows/continuance-lab-api-v001.yml
   pull_request:
     paths:
@@ -26,9 +23,6 @@ on:
       - creator-v1/test/studio-project-doctor-ui-v001.test.mjs
       - creator-v1/workbench-alpha/document.mjs
       - creator-v1/interface-builder/document.mjs
-      - Dockerfile
-      - .dockerignore
-      - railway.json
       - .github/workflows/continuance-lab-api-v001.yml
 
 permissions:
@@ -46,4 +40,4 @@ jobs:
       - name: Validate diagnostic library and API
         run: node --test creator-v1/agent-quality-lab/project-doctor-v001.test.mjs services/continuance-lab/server.test.mjs creator-v1/test/studio-project-doctor-ui-v001.test.mjs
       - name: Validate minimal isolation image
-        run: docker build -t continuance-lab-v001:test .
+        run: docker build --file services/continuance-lab/Dockerfile -t continuance-lab-v001:test .
