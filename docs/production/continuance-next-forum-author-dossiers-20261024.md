@@ -23,3 +23,14 @@ Make real community participants recognizable in moderated forum posts, detailed
 A separate exact-head CI workflow enforces a narrow, eight-file scope against #679; runs the new source contracts plus canonical forum privacy tests, strict TypeScript check, a default-off compiled build, and the existing real Chromium browser forum fixture with expanded desktop/mobile captures. The fixture uses temporary test-only identities and only staff-approved synthetic posts/replies, with a hidden account to verify opt-out. Screenshots are labelled test data.
 
 Owner review must still check readability, chosen visual direction, 1440/390/320px layouts, keyboard focus, contrast, screen-reader labels, real Safari and signed-in privacy. The PR cannot be merged until the existing #676–#679 stack and OV03 guard are reconciled without weakening protection. V131 production is left live and unchanged.
+
+
+## Continuation 015 — compact personalized identity strip (owner-directed)
+
+Owner feedback rejected the tall nested dossier with full-width View Wall button, repeated text statistics and an oversized contribution grid. The real `ForumAuthorCard` now presents a compact, single-row identity strip built on `CompactMemberIdentity`, with a responsive 44px profile action and 44px native disclosure action. It retains the author's actual avatar, level specimen, chosen aura glow, constellation insignia, display-selected earned badge/medal/ribbon art, independently verified role, and any public supporter styling passed by the existing shared identity. No new profile fetch, write, reward or private read is introduced.
+
+The optional expanded panel provides legible public level/role/reputation/aura/constellation, chosen earned titles and four credited/capped contribution counters without occupying feed space by default. The person's selected cosmetic aura subtly tints the card edge and focus treatment; users without an aura retain the standard neutral style. No fabricated followers, personal biography, prestige, or earned marks.
+
+Synthetic browser QA now installs recognition/verified-role migrations **only inside its temporary in-memory SQLite fixture**, seeds independently reviewed *test-only* earned marks and a selected Nebula aura for the approved public author, then checks their actual browser-rendered insignia and accent at 1440/1024/390/320px, mobile collapsed height, one profile link, disclosure expansion, read-only privacy constraints, and preserved hidden private member behavior. Live migrations, production configuration, and user accounts remain untouched.
+
+Protected PR scope stays the same eight files; dedicated exact-head CI and owner acceptance still gate release.

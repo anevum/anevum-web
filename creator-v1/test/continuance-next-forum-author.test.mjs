@@ -25,13 +25,14 @@ test('forum author dossier uses only existing visibility-approved public fields'
   assert.ok(!card.includes(denied),'Unexpected author data fetch or grant: '+denied);
 });
 test('public card never invents counts, unearned ranks, badges or XP',()=>{
- assert.match(card,/reputation&&<details/);
+ assert.match(card,/hasDetails&&<details/);
+ assert.match(card,/reputation&&<>/);
  assert.match(card,/creditedContributionCount\(reputation\.stats\.discussions/);
  assert.match(card,/creditedContributionCount\(reputation\.stats\.replies/);
  assert.match(card,/creditedContributionCount\(reputation\.stats\.appreciations/);
  assert.match(card,/creditedContributionCount\(reputation\.stats\.badges/);
  assert.match(card,/Object\.hasOwn\(BADGE_CATALOG,id\)/);
- assert.match(card,/\.slice\(0,2\)/);
+ assert.match(card,/\.slice\(0,3\)/);
  assert.doesNotMatch(card,/\bsetXp\b|awardBadge\(|followersCount|Math\.random|Date\.now\(/);
 });
 test('public wall link cannot become arbitrary or private URL and never wraps another link',()=>{
@@ -44,11 +45,12 @@ test('public wall link cannot become arbitrary or private URL and never wraps an
 });
 test('native detail disclosure and variants are wired in every genuine forum placement',()=>{
  assert.match(card,/<details className="cf-author-dossier-details">/);
- assert.match(card,/<summary>CONTRIBUTION RECORD/);
+ assert.match(card,/<summary aria-label=\{'Show public profile details for '/);
  for(const variant of ['stream','detail','reply'])assert.ok(forums.includes('variant="'+variant+'"'),'Missing forum variant '+variant);
  assert.match(highlights,/variant="highlight"/);
  for(const variant of ['stream','detail','reply','highlight'])assert.ok(card.includes("'"+variant+"'"));
  assert.match(css,/\.cf-author-dossier-details>summary/);
+ assert.match(css,/\.cf-author-dossier-details:not\(\[open\]\)\{height:0\}/);
  assert.match(css,/:focus-visible/);
  assert.match(css,/@media\(max-width:540px\)/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
@@ -60,4 +62,28 @@ test('component introduces no unscoped global styles or data-writing controls',(
  assert.doesNotMatch(card,/onSubmit|onClick|<button|\b(?:POST|PUT|DELETE|PATCH)\b/);
  assert.match(card,/Public profile of/);
  assert.match(card,/PUBLIC MEMBER/);
+});
+
+test('compact identity preserves member-chosen visuals instead of replacing them with generic tags',()=>{
+ assert.match(card,/data-aura=\{aura\}/);
+ assert.match(card,/safePlayerAura\(author\.aura\)/);
+ assert.match(card,/CompactMemberIdentity member=\{author\} className="cf-author" size="compact" interactive=\{false\}/);
+ assert.match(css,/\.cf-author-dossier\[data-aura="aurora"\]/);
+ assert.match(css,/\.cf-author-dossier\[data-aura="nebula"\]/);
+ assert.match(css,/\.cf-author-dossier \.cf-author \.av65-aura-field/);
+ assert.match(css,/\.cf-author-dossier \.cf-author \.av61-photo \.ms-portrait/);
+ assert.match(css,/\.cf-author-dossier \.cf-author \.av61-specimen \.level-emblem/);
+ assert.match(css,/\.cf-author-dossier \.cf-author \.av65-badge-rack/);
+ assert.match(css,/\.cf-author-dossier \.cf-author \.av61-supporter/);
+ assert.match(card,/earned\.ribbons\.map/);
+ assert.doesNotMatch(css,/\.cf-author-dossier \.cf-author \.av65-badge-rack\{display:none/);
+});
+test('collapsed author strip uses two accessible icon actions, not a full-width wall row',()=>{
+ assert.match(card,/cf-author-dossier-visit/);
+ assert.match(card,/cf-author-dossier-details/);
+ assert.match(card,/View public member wall of/);
+ assert.match(card,/Show public profile details for/);
+ assert.match(css,/grid-template-columns:minmax\(0,1fr\) 44px 44px/);
+ assert.match(css,/\.cf-author-dossier-details:not\(\[open\]\)\{height:0\}/);
+ assert.doesNotMatch(card,/VIEW WALL|CONTRIBUTION RECORD|PUBLIC MEMBER/);
 });
