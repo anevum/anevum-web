@@ -23,6 +23,7 @@ const load=p=>JSON.parse(readFileSync(p,'utf8'));
 const save=(p,v)=>writeFileSync(p,JSON.stringify(v,null,2)+'\n');
 const stable=x=>JSON.stringify(x,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b))):v);
 const allowed=new Set([
+ 'creator-v1/ops/parity-v136-asset-pair.mjs','creator-v1/test/parity-v136-asset-pair.test.mjs',
  'creator-v1/web/src/pages/NativeCreatorStudio.tsx',
  'creator-v1/source-ide/language-v119.mjs','creator-v1/source-ide/language-v119.d.mts',
  'creator-v1/test/source-archive-v136.test.mjs','creator-v1/test/csp-meshopt-v136.test.mjs',
@@ -143,8 +144,10 @@ async function after(out){
  const v=await get(ROOT+'/versions/'+added[0].id);
  assert.deepEqual(signatures(v.resources.bindings),signatures(original.original.resources.bindings));
  assert.deepEqual(v.resources.script_runtime,original.original.resources.script_runtime);
- assert.equal(v.annotations?.['workers/message'],'PARITY V136 frontend '+git('rev-parse','HEAD')+'; V131 gateway unchanged; INACTIVE');
- const result={status:'VERIFIED_INACTIVE_PARITY_VERSION',version:v.id,number:v.number,source:git('rev-parse','HEAD'),gatewaySha256:GATEWAY,rollback:[LIVE_V136_003,LIVE_V136_005,V131,V132],trafficChanged:false,controllerChanged:false,bindingsPreserved:true,routesPreserved:true,memberDataChanged:false};
+ const packageManifest=load(join(out,'manifest.json'));
+ const label=packageManifest.releaseVariant==='baseline-assets-only'?'baseline-assets-only':'frontend';
+ assert.equal(v.annotations?.['workers/message'],'PARITY V136 '+label+' '+git('rev-parse','HEAD')+'; V131 gateway unchanged; INACTIVE');
+ const result={status:'VERIFIED_INACTIVE_PARITY_VERSION',releaseVariant:packageManifest.releaseVariant||'candidate',frontendSourceHead:packageManifest.frontendSourceHead||git('rev-parse','HEAD'),sharedAssetsSha256:packageManifest.sharedAssetsSha256||null,version:v.id,number:v.number,source:git('rev-parse','HEAD'),gatewaySha256:GATEWAY,rollback:[LIVE_V136_003,LIVE_V136_005,V131,V132],trafficChanged:false,controllerChanged:false,bindingsPreserved:true,routesPreserved:true,memberDataChanged:false};
  save(join(out,'inactive-receipt.json'),result);return result;
 }
 const [cmd,...args]=process.argv.slice(2);

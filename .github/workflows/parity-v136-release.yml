@@ -4,6 +4,8 @@ on:
     paths:
       - '.github/workflows/parity-v136-release.yml'
       - 'creator-v1/ops/parity-v136-release.mjs'
+      - 'creator-v1/ops/parity-v136-asset-pair.mjs'
+      - 'creator-v1/test/parity-v136-asset-pair.test.mjs'
       - 'creator-v1/test/parity-v136-full-browser.mjs'
       - 'creator-v1/test/parity-v136-discover-browser.mjs'
       - 'creator-v1/web/src/pages/DiscoverPage.tsx'
@@ -55,7 +57,7 @@ jobs:
         run: |
           node --experimental-strip-types --test creator-v1/test/member-collections-v011.test.mjs creator-v1/test/saved-works-organization-v010.test.mjs creator-v1/test/canonical-saved-works-v009.test.mjs creator-v1/test/member-space-resilience-v101.test.mjs creator-v1/test/earned-reward-media-v075.test.mjs creator-v1/test/apex-worker-bundle-v117.test.mjs
       - run: node creator-v1/graphics/inspect-institute-assets.mjs
-      - run: node --experimental-strip-types --test creator-v1/test/source-archive-v136.test.mjs creator-v1/test/csp-meshopt-v136.test.mjs
+      - run: node --experimental-strip-types --test creator-v1/test/source-archive-v136.test.mjs creator-v1/test/csp-meshopt-v136.test.mjs creator-v1/test/parity-v136-asset-pair.test.mjs
       - run: npm run check:creator-v1-web
       - run: npm run build:creator-v1-web
       - run: |
@@ -75,10 +77,28 @@ jobs:
           path: ${{ runner.temp }}/v131-preserved
           merge-multiple: true
       - run: node creator-v1/ops/parity-v136-release.mjs package "$RUNNER_TEMP/v131-preserved/v131-package" creator-v1/dist/web "$RUNNER_TEMP/parity-package"
+      - name: Recover exact verified baseline frontend package
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12568230255'
+          run-id: 40114163357
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v136-baseline
+          merge-multiple: true
+      - name: Recover exact previous canary asset package
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12571882717'
+          run-id: 40123000259
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v136-previous-canary
+          merge-multiple: true
+      - name: Preserve baseline HTML and build identical shared asset inventories
+        run: node creator-v1/ops/parity-v136-asset-pair.mjs "$RUNNER_TEMP/v136-baseline" "$RUNNER_TEMP/v136-previous-canary" "$RUNNER_TEMP/parity-package" "$RUNNER_TEMP/parity-paired"
       - uses: actions/upload-artifact@v4
         with:
           name: parity-v136-package-${{ github.event.pull_request.head.sha || github.sha }}
-          path: ${{ runner.temp }}/parity-package
+          path: ${{ runner.temp }}/parity-paired
           retention-days: 14
       - uses: actions/upload-artifact@v4
         if: always()
@@ -108,23 +128,39 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: parity-v136-package-${{ github.sha }}
-          path: ${{ runner.temp }}/parity-package
-      - name: Fresh immutable production preflight
+          path: ${{ runner.temp }}/parity-paired
+      - name: Fresh immutable baseline preflight
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: node creator-v1/ops/parity-v136-release.mjs before "$RUNNER_TEMP/parity-package"
-      - name: Upload verified frontend over unchanged gateway; zero traffic
+        run: node creator-v1/ops/parity-v136-release.mjs before "$RUNNER_TEMP/parity-paired/baseline"
+      - name: Upload unchanged baseline frontend plus shared assets; zero traffic
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx --no-install wrangler versions upload --no-bundle --no-upload-source-maps --keep-vars --strict --config "$RUNNER_TEMP/parity-package/upload.json" --message "PARITY V136 frontend $GITHUB_SHA; V131 gateway unchanged; INACTIVE"
+        run: npx --no-install wrangler versions upload --no-bundle --no-upload-source-maps --keep-vars --strict --config "$RUNNER_TEMP/parity-paired/baseline/upload.json" --message "PARITY V136 baseline-assets-only $GITHUB_SHA; V131 gateway unchanged; INACTIVE"
       - name: Verify immutable bindings and original live traffic
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: node creator-v1/ops/parity-v136-release.mjs after "$RUNNER_TEMP/parity-package"
+        run: node creator-v1/ops/parity-v136-release.mjs after "$RUNNER_TEMP/parity-paired/baseline"
+      - name: Fresh immutable candidate preflight
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: node creator-v1/ops/parity-v136-release.mjs before "$RUNNER_TEMP/parity-paired/candidate"
+      - name: Upload verified candidate with identical shared assets; zero traffic
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --no-install wrangler versions upload --no-bundle --no-upload-source-maps --keep-vars --strict --config "$RUNNER_TEMP/parity-paired/candidate/upload.json" --message "PARITY V136 frontend $GITHUB_SHA; V131 gateway unchanged; INACTIVE"
+      - name: Verify candidate bindings and unchanged production allocation
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: node creator-v1/ops/parity-v136-release.mjs after "$RUNNER_TEMP/parity-paired/candidate"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: parity-v136-inactive-receipt-${{ github.sha }}
-          path: ${{ runner.temp }}/parity-package/inactive-receipt.json
+          path: |
+            ${{ runner.temp }}/parity-paired/baseline/inactive-receipt.json
+            ${{ runner.temp }}/parity-paired/candidate/inactive-receipt.json
+            ${{ runner.temp }}/parity-paired/asset-pair-report.json
           retention-days: 14

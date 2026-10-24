@@ -68,3 +68,11 @@ Public HEAD/GET and version-pinned readbacks currently return Cloudflare 403 / `
 - Future Studio work: authorized server project-file persistence, complete existing V115–V122 native integration, richer asset management and dimensional sandbox preview. Existing upload/ownership/moderation/publication remain unchanged.
 - Required before broad promotion: physical Safari/touch/high-DPR testing, actual-account isolation acceptance, screen-reader/high-contrast review, input/CLS and GPU/memory soak measurements. No claim those have passed.
 - Obsolete integrated lanes: #723 represented by #725; #725/#726 already included in #727. Separate Studio/announcements/payment/family branches remain outside this increment. No second renderer introduced.
+
+## Split-version asset compatibility increment
+
+Read-only comparison of the exact provider-linked package artifacts established that their only conflicting shared path is `index.html`, while each build has different hashed chunks. V136.003 lacks 16 candidate entrypoint assets and V136.005 lacks 14. This is an offline inventory finding, not a claim that a live request returned 404. Existing affinity behavior is unverified because public readbacks return 1010.
+
+`parity-v136-asset-pair.mjs` now constructs two frontend packages: byte-identical verified V136.003 HTML with additive static assets, and the current candidate HTML. Both have the same complete old/new asset inventory. It fails closed on any differing shared static path, symlinks, stale output, wrong pinned source, inventory digest, gateway bytes or changed earned media. Four local tests exercise both HTML entrypoints, cross-version chunk availability, collisions, symlinks and stale output. Actual retained packages produce 489 identical shared files, preserve baseline entrypoint bytes and all 152 earned-media hashes.
+
+The protected workflow now downloads the exact old verified packages, builds this pair, and uploads baseline-assets-only and candidate versions independently at zero traffic, with a fresh strict before/after provider check for each. A pair does not authorize activation or change live allocation. Any earlier unpaired inactive candidate is superseded for canary use. Both new versions must have matching shared inventory receipts and pass deployed readbacks before the original 99/1 pair can be replaced.
