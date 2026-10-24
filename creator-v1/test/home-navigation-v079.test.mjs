@@ -64,7 +64,9 @@ test("V115 first visit keeps four actual destinations without promoting an alpha
   "av79-member-invitation","CompactMemberIdentity"
  ])assert.ok(home.includes(token),"Missing homepage contract: "+token);
  assert.doesNotMatch(home,/<WorldGatewayDeck|<LiveSignalModules|<CommunityHomeFeed|<MemberForumHighlights/);
- assert.doesNotMatch(home,/CosmicArtwork|fakeUser|fakeProject|fakeActivity|sampleProjects|sampleRatings|dangerouslySetInnerHTML/);
+ assert.doesNotMatch(home,/fakeUser|fakeProject|fakeActivity|sampleProjects|sampleRatings|dangerouslySetInnerHTML/);
+ assert.match(home,/cinematicNextEnabled&&<CosmicArtwork scene="games" priority sizes="100vw"/);
+ assert.match(home,/VITE_CONTINUANCE_CINEMATIC_SITEWIDE/);
  assert.doesNotMatch(home,/Play a game|FEATURED RELEASE|const firstGame=/);
  const entries=home.slice(home.indexOf("const gateways=["),home.indexOf("] as const;",home.indexOf("const gateways=[")));
  assert.equal((entries.match(/title:"(?:Discover|Connect|Create)"/g)||[]).length,3);

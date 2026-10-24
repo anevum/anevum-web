@@ -1,0 +1,91 @@
+name: ANEVUM NEXT Sitewide React Integration QA
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/web/src/pages/CinematicLandingPage.tsx'
+      - 'creator-v1/web/src/pages/DiscoverPage.tsx'
+      - 'creator-v1/web/src/components/CosmicArtwork.tsx'
+      - 'creator-v1/web/src/components/Shell.tsx'
+      - 'creator-v1/web/src/sitewide-cinematic-next.css'
+      - 'creator-v1/web/src/main.tsx'
+      - 'creator-v1/test/continuance-sitewide-real-react.test.mjs'
+      - 'creator-v1/test/capture-continuance-sitewide-real-react.py'
+      - 'creator-v1/test/continuance-signal-atlas-v125.test.mjs'
+      - 'creator-v1/test/home-navigation-v079.test.mjs'
+      - '.github/workflows/continuance-sitewide-react-integration.yml'
+permissions:
+  contents: read
+concurrency:
+  group: next-real-react-integration-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  review:
+    if: github.repository == 'anevum/anevum-web' && github.event.pull_request.head.repo.full_name == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CLOUDFLARE_API_TOKEN: ''
+      CLOUDFLARE_API_KEY: ''
+      CLOUDFLARE_ACCOUNT_ID: ''
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Exact-head isolation review and source diff
+        shell: bash
+        env:
+          PARENT_HEAD: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/continuance-sitewide-real-react
+          git rev-parse HEAD | tee evidence/continuance-sitewide-real-react/source-sha.txt
+          merge_base="$(git merge-base "$PARENT_HEAD" HEAD)"
+          git diff --name-status "$merge_base" HEAD > evidence/continuance-sitewide-real-react/source-diff.txt
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          const allow=/^(creator-v1\/web\/src\/pages\/(?:CinematicLandingPage|DiscoverPage)\.tsx|creator-v1\/web\/src\/components\/(?:CosmicArtwork|Shell)\.tsx|creator-v1\/web\/src\/sitewide-cinematic-next\.css|creator-v1\/web\/src\/main\.tsx|creator-v1\/test\/(?:continuance-sitewide-real-react\.test\.mjs|capture-continuance-sitewide-real-react\.py|continuance-signal-atlas-v125\.test\.mjs|home-navigation-v079\.test\.mjs)|\.github\/workflows\/continuance-sitewide-react-integration\.yml)$/;
+          const lines=fs.readFileSync('evidence/continuance-sitewide-real-react/source-diff.txt','utf8').trim().split('\n').filter(Boolean);
+          if(!lines.length)throw Error('No changes');
+          for(const line of lines){const [status,path]=line.split('\t');if(!['A','M'].includes(status)||!allow.test(path))throw Error('Unexpected source change: '+line);}
+          console.log('Allowed exact-head source changes:',lines.length);
+          JS
+      - name: Install existing pinned dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: TypeScript, current source contracts and historical home contracts
+        run: |
+          set -euo pipefail
+          npm run check:creator-v1-web
+          node --test creator-v1/test/continuance-sitewide-real-react.test.mjs
+          node --test creator-v1/test/continuance-signal-atlas-v125.test.mjs creator-v1/test/home-navigation-v079.test.mjs creator-v1/test/home-first-contact-v111.test.mjs creator-v1/test/continuance-reconciliation-v124.test.mjs
+      - name: Verify normal production-format build has NO cinematic review stylesheet
+        run: |
+          set -euo pipefail
+          npm run build:creator-v1-web
+          CN_SITEWIDE_CHECK_DIST=disabled node --test creator-v1/test/continuance-sitewide-real-react.test.mjs
+      - name: Build the explicit design-preview variant with original auth and catalogue routes
+        run: |
+          set -euo pipefail
+          VITE_CONTINUANCE_CINEMATIC_SITEWIDE=true npm run build:creator-v1-web
+          CN_SITEWIDE_CHECK_DIST=enabled node --test creator-v1/test/continuance-sitewide-real-react.test.mjs
+      - name: Install isolated browser tools
+        run: |
+          python -m pip install playwright==1.64.1
+          python -m playwright install --with-deps chromium
+      - name: Exercise real compiled React and capture 2x and 3x evidence
+        run: python creator-v1/test/capture-continuance-sitewide-real-react.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: continuance-sitewide-real-react-source-review
+          path: |
+            evidence/continuance-sitewide-real-react
+          retention-days: 14

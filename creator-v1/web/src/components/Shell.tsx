@@ -16,6 +16,8 @@ import {VerifiedStaffShortcut} from "./VerifiedStaffShortcut";
  * This component is presentation only. Private routes remain MemberGate-owned;
  * no signup capability or session is inferred from an account shortcut.
  */
+const cinematicNextEnabled=import.meta.env.VITE_CONTINUANCE_CINEMATIC_SITEWIDE==="true";
+
 const desktopNav = [
   {to:"/",label:"Home"},
   {to:"/discover",label:"Discover"},
@@ -91,7 +93,7 @@ export function Shell(){
     navigate(trimmed?"/discover?q="+encodeURIComponent(trimmed):"/discover");
   }
   const home=location.pathname==="/";
-  return <div className={"site-shell site-shell--cinematic av9-shell"+(home?" site-shell--home":"")}>
+  return <div className={"site-shell site-shell--cinematic av9-shell"+(home?" site-shell--home":"")+(cinematicNextEnabled?" av-next-site-shell":"")}>
     <ContinuanceWorldStage path={location.pathname}/>
     <header className="site-header av9-header">
       <div className="header-inner av9-header-inner">

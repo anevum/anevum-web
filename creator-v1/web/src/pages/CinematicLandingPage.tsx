@@ -5,6 +5,7 @@ import {useResource} from "../lib/useResource";
 import {projectDetailPath} from "../lib/navigation";
 import {Icon} from "../components/Icons";
 import {ContinuanceSignalAtlas} from "../components/ContinuanceSignalAtlas";
+import {CosmicArtwork} from "../components/CosmicArtwork";
 import {CompactMemberIdentity} from "../components/CompactMemberIdentity";
 import {useOwnPlayerCard} from "../lib/useOwnPlayerCard";
 import {canonicalAuthClient} from "../lib/canonical-beta";
@@ -17,6 +18,7 @@ import {publicCreatorHandle} from "../lib/public-creator-handle";
  * This page never opens up private submissions or moderation records.
  */
 type PublicSnapshot={status:Status|null;projects:Project[];creators:Creator[]};
+const cinematicNextEnabled=import.meta.env.VITE_CONTINUANCE_CINEMATIC_SITEWIDE==="true";
 const gateways=[
   {to:"/discover",title:"Discover",detail:"Find ideas, worlds and original work",icon:"explore",eyebrow:"01 / EXPLORE"},
   {to:"/studio",title:"Create",detail:"Open the Studio workspace (testing)",icon:"create",eyebrow:"02 / MAKE"},
@@ -48,7 +50,6 @@ function CreatorSignature({project,creators}:{project:Project;creators:readonly 
 export function CinematicLandingPage(){
   const [lastVerified,setLastVerified]=useState<PublicSnapshot|null>(null);
   const [revision,setRevision]=useState(0);
-  const [scenePaused,setScenePaused]=useState(false);
   const ownCard=useOwnPlayerCard();
   const {data:session}=canonicalAuthClient.useSession();
   const signedIn=Boolean(session?.user?.id&&session.user.emailVerified===true);
@@ -86,10 +87,11 @@ export function CinematicLandingPage(){
   const showcase=projects.filter(project=>project.category!=="games").slice(0,3);
   const verified=Boolean(snapshot);
 
-  return <div className="anevum-cinema av9-home av79-home" data-scene-paused={scenePaused}>
+  return <div className={"anevum-cinema av9-home av79-home"+(cinematicNextEnabled?" av-next-cinema":"")}>
     <div className="cinema-content av79-home-content">
-      <section className={"av79-hero av114-arrival av115-arrival av125-arrival"+(scenePaused?" av125-is-paused":"")} data-iren-anchor="arrival" aria-labelledby="av79-home-heading">
+      <section className="av79-hero av114-arrival av115-arrival av125-arrival" data-iren-anchor="arrival" aria-labelledby="av79-home-heading">
         <div className="av114-arrival-scene" aria-hidden="true">
+          {cinematicNextEnabled&&<CosmicArtwork scene="games" priority sizes="100vw" className="av-next-arrival-art"/>}
           <span className="av114-arrival-stars"/>
           <span className="av114-arrival-planet"><i/></span>
           <span className="av114-arrival-ring av114-arrival-ring--one"/>
@@ -121,14 +123,6 @@ export function CinematicLandingPage(){
             <a className="av124-hero-wayfinder" href="#wayfinder" aria-label="Jump to the ANEVUM Wayfinder">
               <span>Find your way</span><span aria-hidden="true">↓</span>
             </a>
-            <button className="av125-motion-toggle" type="button"
-              aria-pressed={scenePaused}
-              aria-label={scenePaused?"Resume decorative background animation":"Pause decorative background animation"}
-              onClick={()=>setScenePaused(previous=>!previous)}>
-              <span className="av125-motion-indicator" aria-hidden="true"/>
-              {scenePaused?"RESUME MOTION":"PAUSE MOTION"}
-            </button>
-            <span className="av125-motion-note">REDUCED MOTION</span>
           </div>
         </div>
         <aside className="av115-iren-console" aria-label="IREN arrival orientation">

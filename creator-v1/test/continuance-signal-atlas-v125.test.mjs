@@ -22,11 +22,10 @@ test("V125 visually upgrades only genuine approved homepage, not the auth or cre
  assert.equal((shell.match(/<IrenGuidedContinuance memberId=/g)||[]).length,1);
  assert.doesNotMatch(home,/Play a game|FEATURED RELEASE|const firstGame=/);
 });
-test("Actual motion control is accessible and does not fetch, store or track visitor state",()=>{
- assert.match(home,/aria-pressed=\{scenePaused\}/);
- assert.match(home,/setScenePaused\(previous=>!previous\)/);
- assert.match(home,/av125-is-paused/);
- assert.match(css,/animation-play-state:paused!important/);
+test("Decorative animation follows reduced-motion without any manual motion control",()=>{
+ assert.doesNotMatch(home,/scenePaused|av125-motion-toggle|PAUSE MOTION|RESUME MOTION/);
+ assert.match(home,/href="#wayfinder"/);
+ assert.match(css,/@media\(prefers-reduced-motion:no-preference\)/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
  assert.match(css,/@media\(forced-colors:active\)/);
  assert.doesNotMatch(atlas,/fetch\(|localStorage|sessionStorage|window\.|setInterval|canvas|getUserMedia/);
