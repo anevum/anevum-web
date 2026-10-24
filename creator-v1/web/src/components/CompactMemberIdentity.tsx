@@ -96,7 +96,7 @@ export function CompactMemberIdentity({member,href,className='',size='standard',
  const artworkHandle=href==='/member'?null:member.handle;
  const classNames='av61-identity av61-identity--'+size+' av65-player-card av65-player-card--'+size+
  ' av78-player-card av81-player-card av92-player-card av65-aura--'+aura+
- ' av81-role--'+(role??'none')+' av81-earned--'+earnedAura+' p136-spatial-profile'+
+ ' av81-role--'+(role??'none')+' av81-earned--'+earnedAura+
  (channel?' av65-player-card--channel':'')+(className?' '+className:'');
  const face=<>
   {aura!=='none'&&<span className="av65-aura-field" aria-hidden="true"/>}
