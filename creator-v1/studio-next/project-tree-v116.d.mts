@@ -1,0 +1,14 @@
+export type StudioFileEntry={id:string;projectId:string;parentId:string|null;name:string;kind:'folder'|'text';deletedAt:null};
+export type StudioTreeNode=StudioFileEntry&{role:string;path:string;depth:number;children:StudioTreeNode[]};
+export type StudioTree={version:'ANEVUM_STUDIO_TREE_V1';projectId:string;total:number;roots:StudioTreeNode[]};
+export declare const PROJECT_STRUCTURE_VERSION:'ANEVUM_STUDIO_TREE_V1';
+export declare const MAX_ENTRIES:100;
+export declare const MAX_FOLDER_DEPTH:12;
+export declare const FILE_KINDS:Readonly<Record<string,string>>;
+export declare const SECTIONS:Readonly<string[]>;
+export declare function classifyFile(name:unknown):string;
+export declare function validateProjectNodes(items:unknown,projectId:string):StudioFileEntry[];
+export declare function buildProjectTree(items:unknown,projectId:string):StudioTree;
+export declare function flattenTree(roots:StudioTreeNode[]):StudioTreeNode[];
+export declare function searchTree(roots:StudioTreeNode[],term:string):StudioTreeNode[];
+export declare function projectTreeTemplate():{projectId:string;items:StudioFileEntry[];mainWorldId:string};
