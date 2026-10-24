@@ -262,7 +262,7 @@ export function WorldComposerReviewV115(){
       <textarea aria-label="Read-only ANEVUM world document" readOnly value={source} rows={7} onFocus={event=>event.currentTarget.select()}/>
       {exportNotice&&<p className="csn-export-notice" role="status">{exportNotice}</p>}</section>}
      {error&&<p role="alert" className="cvw-error">{error}</p>}
-     </>:<StudioOtherModesV116 mode={mode} onAdd={addAsset}/>}
+     </>:<StudioOtherModesV116 mode={mode} onAdd={addAsset} onNavigate={setMode}/>}
      <div className="cvw-mobile-tabs" role="group" aria-label="Mobile world editor panels">
       <button type="button" aria-pressed={panel==='objects'} onClick={()=>setPanel('objects')}>Objects</button>
       <button type="button" aria-pressed={panel==='inspector'} onClick={()=>setPanel('inspector')}>Inspector</button>
