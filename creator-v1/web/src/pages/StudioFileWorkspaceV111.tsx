@@ -201,7 +201,7 @@ export function StudioFileWorkspaceV111({projectId,projectTitle,status,visible,o
     onClick={()=>folder?selectFolder(node):openFile(node)}>
     <span aria-hidden="true" className={'csf-node-icon'+(folder?' is-folder':' is-'+classifyFile(node.name))}>{folder?(isOpen?'▾':'▸'):'◇'}</span>
     <span className="csf-node-name">{node.name}</span>
-     {!folder&&<span className="csf-file-kind" aria-hidden="true">{classifyFile(node.name)==='world'?'3D':classifyFile(node.name)==='interface'?'UI':classifyFile(node.name)==='script'?'CODE':''}</span>
+     {!folder&&<span className="csf-file-kind" aria-hidden="true">{classifyFile(node.name)==='world'?'3D':classifyFile(node.name)==='interface'?'UI':classifyFile(node.name)==='script'?'CODE':''}</span>}
     {(dirtyIds.has(node.id)||dirtyIds.has('folder:'+node.id))&&<span className="csf-unsaved-marker" aria-label="Unsaved edits">●</span>}
    </button>;
    if(!folder||!isOpen)return[row];
