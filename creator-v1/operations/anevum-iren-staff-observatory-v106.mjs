@@ -80,7 +80,9 @@ const RANGES='<div class="ci-range-tools" aria-label="Registration chart control
  '<button type="button" data-ci-days="14" aria-pressed="false" disabled>14D</button>'+
  '<button type="button" data-ci-days="30" aria-pressed="true" disabled>30D</button></div>'+
  '<button class="ci-export" type="button" id="ci-export" disabled>Export verified CSV</button>'+
- '<div class="ci-range-status" id="ci-range-status" role="status" aria-live="polite">Awaiting verified registration records.</div></div>';
+ '<button class="ci-export ci-copy-brief" type="button" id="ci-copy-brief" disabled>Copy internal signal brief</button>'+
+ '<div class="ci-range-status" id="ci-range-status" role="status" aria-live="polite">Awaiting verified registration records.</div>'+
+ '<label class="ci-brief-fallback" id="ci-brief-fallback" for="ci-brief-output" hidden>Copy this source-qualified note manually<textarea readonly id="ci-brief-output" rows="3" aria-label="Source-qualified registration brief"></textarea></label></div>';
 
 
 const RUM_PANEL='<section id="ci-rum" aria-labelledby="ci-rum-heading"><div class="heading"><div><div class="eyebrow gold">CLOUDFLARE RUM / EXTERNAL SOURCE</div><h2 id="ci-rum-heading">Browser visit signal</h2></div><span>Separate from members, funnels and unique people</span></div>'+
