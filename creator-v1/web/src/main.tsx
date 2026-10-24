@@ -42,6 +42,7 @@ import "./community-home-v014.css";
 if (import.meta.env.VITE_NEXT_VISUAL_SYSTEM === "true") {
   document.documentElement.dataset.avNextVisual = "v134";
   void import("./continuance-next-visual-v134.css");
+  void import("./next-visual-primitives-v135.css");
 }
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
