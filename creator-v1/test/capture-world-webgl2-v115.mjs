@@ -77,6 +77,11 @@ try{
  listeners.set('Runtime.exceptionThrown',e=>errors.push(e.exceptionDetails?.exception?.description||e.exceptionDetails?.text||'Uncaught browser exception'));
  listeners.set('Network.requestWillBeSent',e=>requests.push({url:e.request?.url,method:e.request?.method}));
  await send('Emulation.setDeviceMetricsOverride',{width:1440,height:900,deviceScaleFactor:2,mobile:false});
+ // In screenshot-only Chromium QA, honor OS reduced motion so perpetual
+ // WebGL invalidation does not starve CDP capture on software SwiftShader.
+ // Actual browser product animation is unchanged; editor operations still
+ // trigger fresh GPU frames and real mouse/keyboard interaction tests.
+ await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
  await send('Page.navigate',{url:origin+'/creator/studio/world-review'});
  await until(()=>evaluate('!!document.querySelector("[data-world-composer-v115]")'),'World Composer route');
  await until(()=>evaluate('document.querySelector("[data-world-canvas-v115]")?.dataset.worldCanvasV115==="webgl2"'),'Real WebGL2 shader initialization');

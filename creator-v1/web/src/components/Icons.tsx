@@ -42,7 +42,14 @@ const paths: Record<string, string> = {
   'list-checks': "M9 5h12 M9 12h12 M9 19h12 m-8-3 2 2 4-4 M2 5h3 M2 12h3 M2 19h3",
   'list-tree': "M6 3v15 M6 7h5 M11 7h10 M6 13h5 M11 13h10 M6 19h5 M11 19h10",
   columns: "M3 4h18v16H3z M12 4v16",
-  panel: "M3 3h18v18H3z M3 8h18"
+  panel: "M3 3h18v18H3z M3 8h18",
+  sun: "M12 4V2 M12 22v-2 M4 12H2 M22 12h-2 M5.6 5.6l1.5 1.5 M16.9 16.9l1.5 1.5 M18.4 5.6l-1.5 1.5 M7.1 16.9l-1.5 1.5 M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10z",
+  mountain: "m2 20 7-13 4 6 3-5 6 12z M6 20h12",
+  'building-2': "M4 22V9h8v13 M12 4h8v18 M7 12h2 M7 16h2 M15 8h2 M15 12h2 M15 16h2 M3 22h19",
+  rocket: "M5 18c0-4 6-12 14-14 0 8-8 14-12 14z M13 11l3 3 M5 16l-3 6 6-3 M8 18l-1 4",
+  waves: "M2 8c3-3 5 3 8 0s5 3 8 0 4 0 4 0 M2 14c3-3 5 3 8 0s5 3 8 0 4 0 4 0 M2 20c3-3 5 3 8 0s5 3 8 0 4 0 4 0",
+  'circle-dot': "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",
+  route: "M4 4h.01 M20 20h.01 M4 4v10a4 4 0 0 0 4 4h7a4 4 0 0 0 4-4V9 M16 12l3-3 3 3"
 };
 export function Icon({ name, size = 18 }: { name: string; size?: number }) {
   return <svg aria-hidden="true" viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={paths[name] || paths.explore} /></svg>;
