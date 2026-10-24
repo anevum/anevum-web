@@ -16,8 +16,16 @@ assert.ok(existsSync(join(build,'index.html')),'Build the flagged React preview 
 mkdirSync(output,{recursive:true});
 const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp','.woff2':'font/woff2','.ico':'image/x-icon'};
 const errors=[],forbidden=[],requests=[],checks=[],captures=[];
+const timeline=[],serverRequests=[];
+const mark=(kind,detail={})=>{
+  if(timeline.length<450)timeline.push({ms:Date.now(),kind,...detail});
+};
+const pathOnly=raw=>{try{const url=new URL(raw,base);return url.pathname+url.search;}catch{return String(raw).slice(0,120);}};
 const sourceHead=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
 const server=createServer((req,res)=>{
+  const observed={ms:Date.now(),method:req.method,path:req.url};
+  if(serverRequests.length<450)serverRequests.push(observed);
+  res.once('finish',()=>{observed.status=res.statusCode;observed.finished=Date.now()});
   if(!['GET','HEAD'].includes(req.method)){forbidden.push({method:req.method,path:req.url});res.writeHead(405).end();return;}
   const url=new URL(req.url,'http://127.0.0.1');
   let file=resolve(build,'.'+decodeURIComponent(url.pathname));
@@ -44,9 +52,12 @@ async function visitCommons(page,query=''){
   // Readiness is the rendered application state, not 500ms of network silence.
   // https://playwright.dev/docs/api/class-page#page-goto
   const expected=new URL('/__review/commons'+query,base);
+  mark('hard-navigation-start',{from:pathOnly(page.url()),to:pathOnly(expected.href)});
   const response=await page.goto(expected.href,{waitUntil:'domcontentloaded'});
+  mark('hard-navigation-dom-ready',{status:response?.status(),to:pathOnly(page.url())});
   assert.equal(response?.status(),200,'Compiled document must load successfully');
   await readyCommons(page);
+  mark('hard-navigation-app-ready',{url:pathOnly(page.url())});
   assert.equal(page.url(),expected.href,'The requested public review state must be restored');
 }
 async function closeGlobalLauncher(page){
@@ -82,7 +93,15 @@ async function fixture(width=1440,height=1000,reducedMotion='reduce'){
     forbidden.push({path:url.pathname,reason:'Unexpected or private API'});await json({error:'No fixture for this endpoint'},403);return;
   });
   const page=await context.newPage();
-  page.on('pageerror',error=>errors.push(error.message));
+  page.on('pageerror',error=>{errors.push(error.message);mark('pageerror',{message:error.message})});
+  page.on('crash',()=>mark('page-crash'));
+  page.on('close',()=>mark('page-close'));
+  page.on('domcontentloaded',()=>mark('domcontentloaded',{url:pathOnly(page.url())}));
+  page.on('framenavigated',frame=>{if(frame===page.mainFrame())mark('main-frame-navigated',{url:pathOnly(frame.url())})});
+  page.on('request',request=>{if(request.isNavigationRequest())mark('navigation-request',{method:request.method(),url:pathOnly(request.url())})});
+  page.on('response',response=>{if(response.request().isNavigationRequest())mark('navigation-response',{status:response.status(),url:pathOnly(response.url())})});
+  page.on('requestfailed',request=>mark('requestfailed',{url:pathOnly(request.url()),error:request.failure()?.errorText}));
+  page.on('console',message=>{if(message.type()==='error')mark('console-error',{text:message.text().slice(0,150)})});
   await visitCommons(page);
   return {context,page};
 }
@@ -99,6 +118,7 @@ async function capture(page,name){
 }
 try{
   browser=await ({chromium,webkit}[engine]).launch({headless:true});
+  browser.on('disconnected',()=>mark('browser-disconnected'));
   for(const [width,height] of [[1440,1000],[390,844],[320,720],[390,460]]){
     const f=await fixture(width,height);
     await openQuick(f.page);
@@ -187,7 +207,9 @@ try{
   await page.keyboard.press('Enter');
   await page.waitForURL(url=>url.searchParams.get('view')==='atlas');
   await page.waitForFunction(()=>document.activeElement?.id==='lnx-main');
+  mark('history-back-start',{from:pathOnly(page.url())});
   await page.goBack({waitUntil:'domcontentloaded'});
+  mark('history-back-returned',{to:pathOnly(page.url())});
   await page.waitForURL(url=>url.searchParams.get('category')==='research'&&url.searchParams.get('view')==='signals');
   await readyCommons(page);
   await page.waitForFunction(()=>document.activeElement?.id==='lnx-main');
@@ -229,18 +251,24 @@ try{
   assert.deepEqual(errors,[],'Uncaught browser errors');
   assert.deepEqual(forbidden,[],'External requests, unknown APIs or account writes');
   record('No external, private-data or mutating requests');
-  writeFileSync(join(output,'navigator-review.json'),JSON.stringify({session:'ANEVUM.WEB.BUILD.2026-10-23.008.LIVING-COMMONS-QUICK-NAVIGATOR',sourceHead,engine,syntheticFixtures:true,compiledReact:true,productionAcceptance:false,checks,captures,requests,errors,forbidden},null,2)+'\n');
+  writeFileSync(join(output,'navigator-review.json'),JSON.stringify({session:'ANEVUM.WEB.BUILD.2026-10-23.009.WEBKIT-NAVIGATION-DIAGNOSTIC',sourceHead,engine,syntheticFixtures:true,compiledReact:true,productionAcceptance:false,checks,captures,requests,errors,forbidden,timeline,serverRequests},null,2)+'\n');
   console.log(JSON.stringify({result:'PASS',engine,checks:checks.length,captures:captures.length}));
 }catch(error){
-  let focusState=null;
+  mark('failure',{error:String(error)});
+  let focusState=null,serverProbe=null;
+  const within=(promise,ms)=>Promise.race([promise,new Promise(resolve=>setTimeout(()=>resolve(null),ms))]);
+  try{
+    const response=await within(fetch(base+'/__review/commons?category=tools&q=signal'),3000);
+    serverProbe=response?{status:response.status,bytes:(await within(response.arrayBuffer(),3000))?.byteLength}:null;
+  }catch(probeError){serverProbe={error:String(probeError)}}
   try{
     const page=browser?.contexts().flatMap(context=>context.pages()).at(-1);
     if(page){
-      focusState=await page.evaluate(()=>({active:{tag:document.activeElement?.tagName,id:document.activeElement?.id,className:document.activeElement?.className},openDialogs:Array.from(document.querySelectorAll('dialog[open]')).map(el=>({id:el.id,className:el.className}))}));
-      await page.screenshot({path:join(output,'navigator-failure-state.png')});
+      focusState=await within(page.evaluate(()=>({url:location.href,readyState:document.readyState,active:{tag:document.activeElement?.tagName,id:document.activeElement?.id},openDialogs:Array.from(document.querySelectorAll('dialog[open]')).map(el=>el.id||el.className)})),2500);
+      await within(page.screenshot({path:join(output,'navigator-failure-state.png'),timeout:2500}),2800);
     }
   }catch{}
-  writeFileSync(join(output,'navigator-failure.json'),JSON.stringify({sourceHead,engine,checks,captures,errors,forbidden,focusState,error:String(error),stack:error.stack},null,2)+'\n');
+  writeFileSync(join(output,'navigator-failure.json'),JSON.stringify({sourceHead,engine,checks,captures,errors,forbidden,focusState,serverProbe,timeline,serverRequests,requests,error:String(error),stack:error.stack},null,2)+'\n');
   throw error;
 }finally{
   if(browser)await browser.close();
