@@ -22,6 +22,7 @@ const save=(p,v)=>writeFileSync(p,JSON.stringify(v,null,2)+'\n');
 const stable=x=>JSON.stringify(x,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b))):v);
 const allowed=new Set([
  '.github/workflows/parity-v136-release.yml','creator-v1/ops/parity-v136-release.mjs',
+ '.github/workflows/parity-v136-scene-qa.yml',
  'creator-v1/test/parity-v136-discover-browser.mjs',
  'creator-v1/test/parity-v136-scene-director.test.mjs',
  'creator-v1/test/parity-v136-spatial-render-browser.mjs',
