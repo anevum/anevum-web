@@ -84,3 +84,35 @@
  .cvw-root .csn-shelf-head{min-height:39px}
  .cvw-root .csn-asset-thumbnail{height:73px}
 }
+
+
+/* A contextual inspector for non-world authoring modes. Previous builds
+ * incorrectly left an unrelated 3D spire transform visible in UI and Code.
+ */
+.csn-context-panel{display:flex;flex-direction:column;gap:17px;padding:15px 12px;
+ min-width:0;color:#d0e5f2}
+.csn-context-mode-head{display:grid;gap:8px}
+.csn-context-mode-head>span{font-size:9px;letter-spacing:.12em;color:#e7c890;font-weight:750}
+.csn-context-mode-head h2{font-size:19px;line-height:1.15;color:#f1fbff;letter-spacing:-.015em}
+.csn-context-mode-head p{font-size:11px;line-height:1.6;color:#b6cddf;margin:0}
+.csn-context-metadata{border:1px solid #416781;border-radius:9px;
+ background:linear-gradient(155deg,#132d45,#0d2137);overflow:hidden}
+.csn-context-metadata>div{display:grid;gap:4px;padding:11px 10px;border-bottom:1px solid rgba(128,183,214,.17)}
+.csn-context-metadata>div:last-child{border-bottom:0}
+.csn-context-metadata span{color:#b5ccdf;font-size:9px;letter-spacing:.035em}
+.csn-context-metadata strong{font-size:11px;line-height:1.4;color:#e8f9ff;overflow-wrap:anywhere}
+.csn-context-guidance{padding:13px 11px;border-radius:8px;border-left:2px solid #dfc18d;
+ background:#172b40;display:grid;gap:9px}
+.csn-context-guidance strong{color:#f1d8a7;font-size:9px;letter-spacing:.105em}
+.csn-context-guidance p{margin:0;color:#c1d6e5;font-size:11px;line-height:1.65}
+.csn-context-next{display:flex;align-items:center;justify-content:space-between;gap:8px;
+ padding:11px 12px;border:1px solid #6292b1;border-radius:8px;background:#21445e;
+ min-height:44px;color:#eefbff;font-size:11px;font-weight:700}
+.csn-context-next:hover{background:#2c5977;border-color:#92d3ec}
+.csn-context-next span{font-size:18px;line-height:1}
+.csn-context-footer{margin-top:auto;border-top:1px solid #385b73;padding-top:15px;
+ line-height:1.6;color:#a2bed0;font-size:9px;letter-spacing:.08em}
+.csn-context-panel :focus-visible{outline:2px solid #9beaff;outline-offset:3px}
+@media(max-width:1040px){
+ .csn-context-panel{padding:15px;max-width:340px;width:100%;margin:0 auto}
+}
