@@ -34,6 +34,8 @@ jobs:
           chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
           test -n "$chrome"
           node creator-v1/test/capture-staff-growth-v105.mjs "$chrome" "$RUNNER_TEMP/growth-v105"
+          test -s "$RUNNER_TEMP/growth-v105/campaign-owner-desktop.png"
+          test -s "$RUNNER_TEMP/growth-v105/campaign-owner-phone.png"
           test -s "$RUNNER_TEMP/growth-v105/owner-desktop.png"
           test -s "$RUNNER_TEMP/growth-v105/owner-phone.png"
           test -s "$RUNNER_TEMP/growth-v105/owner-small-phone.png"
