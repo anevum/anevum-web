@@ -24,8 +24,9 @@ const scenes: Record<Project["category"], CosmicScene> = {
   creative:"creative", learning:"learning", libraries:"libraries", other:"other"
 };
 
-export function ProjectCard({ project, returnTo = "/discover", presentation = "visual" }: {
+export function ProjectCard({ project, returnTo = "/discover", presentation = "visual", onInspect }: {
   project: Project; returnTo?: string; presentation?: "visual" | "editorial";
+  onInspect?:(project:Project)=>void;
 }) {
   const href=projectDetailPath(project.id,returnTo);
   const handle=publicCreatorHandle(project.creatorHandle);
@@ -43,6 +44,7 @@ export function ProjectCard({ project, returnTo = "/discover", presentation = "v
         member={{handle,displayName:credit,
           source:"creator-channel",avatar:false,level:null,featuredAwards:[]}}/>:
         <span className="av73-project-card-author av79-unlinked-project" aria-label="Creator profile not publicly linked">Public creator channel not linked. <strong>{credit}</strong></span>}
+      {onInspect&&<button type="button" className="p136-artifact-inspect-button" onClick={()=>onInspect(project)} aria-label={'Inspect '+project.title}>Inspect</button>}
       <Link className="av73-project-card-action" to={href}>View project <Icon name="arrow" size={16}/></Link>
     </div>
   </article>;
@@ -64,6 +66,7 @@ export function ProjectCard({ project, returnTo = "/discover", presentation = "v
             member={{handle,displayName:credit,
               source:"creator-channel",avatar:false,level:null,featuredAwards:[]}}/>:
             <span className="creator-inline av79-unlinked-project" aria-label="Creator profile not publicly linked">Public creator channel not linked. <strong>{credit}</strong></span>}
+          {onInspect&&<button type="button" className="p136-artifact-inspect-button" onClick={()=>onInspect(project)} aria-label={'Inspect '+project.title}>Inspect</button>}
           <Link className="project-arrow" to={href} aria-label={`View ${project.title}`}><Icon name="arrow" size={16} /></Link>
         </footer>
       </div>
