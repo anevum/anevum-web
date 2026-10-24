@@ -44,9 +44,9 @@ test('project tree rejects cross-project leaks, cycles, duplicates and malformed
  assert.throws(()=>build(nodes),/Invalid filename/);
  nodes=copy();nodes.push({...nodes[0]});
  assert.throws(()=>build(nodes),/Duplicate/);
- nodes=copy();nodes[0].parentId=nodes[1].id;nodes[1].parentId=nodes[0].id;
+ nodes=copy();nodes[0].parentId=nodes[4].id;nodes[4].parentId=nodes[0].id;
  assert.throws(()=>build(nodes),/Dangling|Cycle|nonfolder/i);
- nodes=copy();nodes[1].parentId=nodes[1].id;
+ nodes=copy();nodes[0].parentId=nodes[0].id;
  assert.throws(()=>build(nodes),/Cycle/);
  nodes=copy();nodes[1].parentId='20000000-0000-4000-8000-000000000999';
  assert.throws(()=>build(nodes),/Dangling/);
@@ -99,7 +99,7 @@ test('separate source and security boundaries stay explicit',()=>{
  }
  assert.match(page,/Save revision/);
  assert.match(page,/disabled className="cvs-primary"/);
- assert.match(nav,/V111 member\/role/);
+ assert.match(nav,/V111 revisioned service/);
  assert.match(modes,/Text is local to this preview/);
  assert.match(page,/PRIVATE · UNSAVED/);
 });
