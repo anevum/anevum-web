@@ -88,3 +88,14 @@ Source remains in draft PR #679; every new screenshot/test receipt must be bound
 ### Continuation 011: compiled browser focus regression
 
 The first exact-head compiled Chromium browser run caught an interaction with the existing shared Shell: Shell deliberately focuses `#main` for every search-param navigation. That applied to the map/list selector too, causing focus to leave the pressed button. The scoped Commons page now schedules selected-button focus restoration after Shell's route effect for presentation-only URL transitions (including Back and reset-to-device-default). Content-changing navigation still retains its established content-focus behavior. The original browser assertion was preserved and expanded to verify map, list and reset focus; no global Shell or member route was changed.
+
+
+## Continuation 013 — evidence-backed post author cards
+
+Session: `ANEVUM.WEB.BUILD.2026-10-24.013.POST-AUTHOR-DOSSIERS`.
+
+The real opt-in Living Commons Signal Board replaces one-line discussion author bylines with a compact, responsive, distinctly structured author dossier. Each approved post shows the author's published display name, normalized @handle (when valid), a direct public creator-channel link, and the actual discussion field. When separately present in existing **public** APIs, it also shows creator-directory-approved release counts and the authoritative `verified-creator-ledger` public level, currently equipped or current Evolution artifact, and up to two self-featured earned awards. The viewer receives no invented follower counts, online presence, profession, unearned badges, recognition points or inferred roles. A missing or unavailable optional dossier does not suppress the post, claim level zero, or fall back to private-member APIs.
+
+The existing `readPublicShowcases` endpoint accepts a deduplicated batch of up to 10 validated handles; its public response enforces `source=verified-creator-ledger`, key/handle matching and verified record validation. The request only occurs if the approved discussion API is actually open and contains visible authors. A second bounded read of the existing creator directory provides public published-release counts when an author exists on that first page. Neither public-read failure blocks discussions. The original moderation gate, canonical read-only route, one IREN, protected default-off preview and zero account writes are unchanged.
+
+The compiled React browser fixture has labelled synthetic public profiles including a demonstrably verified-level and equipped-artifact positive state, an absent-optional-recognition state, a 503-public-profile outage, and closed-discussions never performing a showcase read. Keyboard, 1440px/390px layouts, direct profile links, data isolation and no external/private/mutating requests remain mandatory. This is a reviewable draft, not a live ANEVUM release or owner visual acceptance.

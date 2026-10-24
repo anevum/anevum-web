@@ -210,3 +210,40 @@
   .lnx-root .lnx-atlas-controls>.lnx-atlas-auto{grid-column:1/-1;min-height:44px}
 }
 @media(forced-colors:active){.lnx-root .lnx-active-filters>.lnx-filter-chip{border-color:ButtonText}}
+
+/* Continuation 013 — meaningful, truthful profile identity on approved posts.
+   Compact by default; no client-generated followers, titles, levels or awards. */
+.lnx-root .lnx-thread-author{display:grid;gap:12px;margin:17px 0 13px;padding:17px 18px 15px;min-width:0;overflow:hidden;border:1px solid #5e6882;border-radius:8px;background:radial-gradient(ellipse at 100% 0%,#66517535,transparent 62%),linear-gradient(135deg,#202e42,#151f30)}
+.lnx-root .lnx-author-heading{display:flex;align-items:center;gap:12px;min-width:0;flex-wrap:wrap}
+.lnx-root .lnx-author-portrait{position:relative;display:grid;place-items:center;flex:none;width:55px;height:55px;overflow:hidden;border:1px solid #d2b48d;border-radius:50%;background:radial-gradient(circle at 24% 18%,#927693,#3a3759 55%,#111b2c 85%);color:#f6e9d2;font:400 25px/1 Georgia,serif}
+.lnx-root .lnx-author-portrait-orbit{position:absolute;width:46px;height:20px;border:1px solid #e9c49b75;border-radius:50%;transform:rotate(-31deg);pointer-events:none}
+.lnx-root .lnx-author-names{display:grid;min-width:0;gap:2px;flex:1 1 130px}
+.lnx-root .lnx-author-register{font:9px/1.45 ui-monospace,monospace;color:var(--lnx-copper);letter-spacing:.1em}
+.lnx-root .lnx-author-names strong{font:400 clamp(17px,2vw,21px)/1.2 Georgia,serif;letter-spacing:-.01em;overflow-wrap:anywhere}
+.lnx-root .lnx-author-names small{font:11px/1.4 ui-monospace,monospace;color:var(--lnx-soft);overflow-wrap:anywhere}
+.lnx-root .lnx-author-profile-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:none;min-height:44px;padding:10px 12px;border:1px solid #8a8a9d;border-radius:5px;background:#28374e;color:#f8e1ba;font:11px/1.3 ui-monospace,monospace;text-decoration:none}
+.lnx-root .lnx-author-profile-link:hover{background:#3b465e;border-color:#e4c49a}
+.lnx-root .lnx-author-facts{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;min-width:0}
+.lnx-root .lnx-author-facts>span{display:flex;flex:1 1 135px;flex-direction:column;gap:3px;min-width:0;border:1px solid #42556f;border-radius:4px;padding:9px 11px;background:#152338}
+.lnx-root .lnx-author-facts small,.lnx-root .lnx-author-recognition small{font:9px/1.45 ui-monospace,monospace;letter-spacing:.06em;color:#bbc4d4}
+.lnx-root .lnx-author-facts strong{font:12px/1.4 system-ui,sans-serif;color:#f3e7d8;overflow-wrap:anywhere}
+.lnx-root .lnx-author-facts>.lnx-author-level{flex-direction:row;align-items:center;gap:7px;padding:5px 9px}
+.lnx-root .lnx-author-level>span:first-child{display:grid;place-items:center;flex:none;min-width:36px}
+.lnx-root .lnx-author-level>span:last-child{display:grid;gap:2px;min-width:0}
+.lnx-root .lnx-author-recognition{display:flex;flex-wrap:wrap;gap:7px;align-items:stretch}
+.lnx-root .lnx-author-artifact{display:grid;gap:2px;flex:1 1 175px;padding:10px 12px;border-left:2px solid #bfa88b;background:#2b293b;border-radius:0 4px 4px 0}
+.lnx-root .lnx-author-artifact strong{font:12px/1.4 Georgia,serif;color:#f5ddba;overflow-wrap:anywhere}
+.lnx-root .lnx-author-award{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid #7b6e8b;border-radius:5px;background:#30283e;color:#efe1f8;font:11px/1.4 system-ui,sans-serif;overflow-wrap:anywhere}
+.lnx-root .lnx-author-award>span{color:#dec393;font-size:17px}
+.lnx-root .lnx-thread-foot{border-top:1px solid #47536a;padding-top:11px}
+@media(max-width:530px){
+ .lnx-root .lnx-thread-author{padding:14px 12px}
+ .lnx-root .lnx-author-heading{gap:10px}
+ .lnx-root .lnx-author-portrait{width:48px;height:48px;font-size:22px}
+ .lnx-root .lnx-author-profile-link{flex:1 1 100%;justify-content:space-between}
+ .lnx-root .lnx-author-facts>span{flex:1 1 115px}
+ .lnx-root .lnx-author-award{width:100%}
+}
+@media(forced-colors:active){
+ .lnx-root .lnx-thread-author,.lnx-root .lnx-author-facts>span,.lnx-root .lnx-author-award,.lnx-root .lnx-author-profile-link{border-color:CanvasText}
+}

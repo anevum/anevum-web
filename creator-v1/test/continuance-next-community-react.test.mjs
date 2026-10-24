@@ -90,3 +90,26 @@ test('Project filter chips remove a discipline or search independently and prese
  assert.match(page,/Clear all filters/);
  assert.match(css,/\.lnx-root \.lnx-active-filters>\.lnx-filter-chip/);
 });
+
+test('approved post author cards show only published, optionally verified creator data',()=>{
+ for(const name of ['readPublicShowcases','publicCreatorHandle','ThreadAuthorCard','PublicCreatorShowcase','publishedProjects','featuredAwards','equippedArtifact','currentArtifact'])
+  assert.ok(page.includes(name),'Missing public post-author contract: '+name);
+ assert.match(page,/postHandles\.length\s*\?\s*readPublicShowcases\(postHandles, signal\)/);
+ assert.match(page,/\.slice\(0, 10\)/);
+ assert.match(page,/showcase\.handle === handle/);
+ assert.match(page,/visibleLevel !== null/);
+ assert.match(page,/className="lnx-thread-author"/);
+ assert.match(page,/className="lnx-author-recognition"/);
+ assert.match(page,/aria-label=\{'Public author card: ' \+ name\}/);
+ assert.match(css,/\.lnx-root \.lnx-thread-author/);
+ assert.match(css,/@media\(forced-colors:active\)/);
+ for(const disallowed of ['followersCount','followUser(','sendMessage(','memberCreateReply','fakeXP','mockedRole'])
+  assert.doesNotMatch(page,new RegExp(disallowed.replace(/[()]/g,'\\$&')));
+});
+test('author-dossier fetch is secondary to moderated published discussions and avoids private member linking',()=>{
+ assert.match(page,/const discussionAvailable = status\.state === 'ready' && moderatedPostsEnabled\(status\.data\)/);
+ assert.match(page,/const visiblePostItems = discussions\.state === 'ready'/);
+ assert.match(page,/\.filter\(\(handle\): handle is string => handle !== null\)/);
+ assert.match(page,/publicDossiers\.state === 'ready' \? publicDossiers\.data\.items : \{\}/);
+ assert.doesNotMatch(page,/readMemberCommunity|canonicalSpace\(|privateProfile|onClick=\{follow/);
+});

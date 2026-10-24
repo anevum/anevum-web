@@ -6,13 +6,15 @@ import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } 
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
-  readCategories, readCommunityPosts, readCreators, readProjects, readStatus,
+  readCategories, readCommunityPosts, readCreators, readProjects, readPublicShowcases, readStatus,
   type Category, type CommunityPost, type CommunityPostSort,
-  type Creator, type PageResult, type Project
+  type Creator, type PageResult, type Project, type PublicCreatorShowcase
 } from '../lib/api';
 import { useResource } from '../lib/useResource';
 import { projectDetailPath } from '../lib/navigation';
 import { OrbitalMark } from '../components/OrbitalMark';
+import { LevelEmblem } from '../components/LevelEmblem';
+import { publicCreatorHandle } from '../lib/public-creator-handle';
 import {
   COMMONS_DISTRICTS, decodeCommonsQuery, nextCommonsQuery, moderatedPostsEnabled,
   commonsDiscoverPath, commonsCreatorsPath, normalizeCommonsSearch, type CommonsPreviewView
@@ -58,14 +60,64 @@ function ProjectSignal({item, returnTo}: {item: Project; returnTo: string}) {
   </article>;
 }
 
-function ThreadSignal({item, returnTo}: {item: CommunityPost; returnTo: string}) {
+/** The author card reads approved public creator metadata only. A post's score,
+ * account age and writing NEVER mint XP, followers, awards or a staff title. */
+function ThreadAuthorCard({post, creator, showcase}: {
+  post: CommunityPost; creator?: Creator; showcase?: PublicCreatorShowcase;
+}) {
+  const handle = publicCreatorHandle(post.authorHandle);
+  const name = post.authorName?.trim() || creator?.displayName || (handle ? '@' + handle : 'Community author');
+  const visibleLevel = showcase && showcase.handle === handle &&
+    Number.isSafeInteger(showcase.level) && showcase.level >= 1 && showcase.level <= 30 ? showcase.level : null;
+  const verifiedArtifact = visibleLevel !== null
+    ? (showcase?.equippedArtifact?.name || showcase?.currentArtifact || '').trim().slice(0, 90) : '';
+  const featured = visibleLevel !== null && Array.isArray(showcase?.featuredAwards)
+    ? showcase.featuredAwards.slice(0, 2) : [];
+  const publicWorks = creator && creator.handle === handle && Number.isSafeInteger(creator.publishedProjects) &&
+    creator.publishedProjects >= 0 ? creator.publishedProjects : null;
+  const channel = handle ? creatorRoute(handle) : null;
+  return <aside className="lnx-thread-author" aria-label={'Public author card: ' + name}>
+    <div className="lnx-author-heading">
+      <span className="lnx-author-portrait" aria-hidden="true">
+        <span className="lnx-author-portrait-orbit"/>{name.charAt(0).toUpperCase()}
+      </span>
+      <div className="lnx-author-names">
+        <span className="lnx-author-register">PUBLIC DISCUSSION AUTHOR</span>
+        <strong>{name}</strong>
+        {handle && <small>@{handle}</small>}
+      </div>
+      {channel && <Link className="lnx-author-profile-link" to={channel} aria-label={'Explore public creator channel for ' + name}>
+        Explore profile <span aria-hidden="true">↗</span>
+      </Link>}
+    </div>
+    <div className="lnx-author-facts">
+      <span className="lnx-author-topic"><small>CONVERSATION FIELD</small><strong>{post.topic}</strong></span>
+      {publicWorks !== null && <span className="lnx-author-works"><small>PUBLISHED WORKS</small><strong>{publicWorks} approved {publicWorks === 1 ? 'release' : 'releases'}</strong></span>}
+      {visibleLevel !== null && <span className="lnx-author-level">
+        <span aria-hidden="true"><LevelEmblem level={visibleLevel} handle={handle} size={35}/></span>
+        <span><small>VERIFIED PROGRESSION</small><strong>Level {String(visibleLevel).padStart(2, '0')}</strong></span>
+      </span>}
+    </div>
+    {(verifiedArtifact || featured.length > 0) && <div className="lnx-author-recognition" aria-label="Publicly verified creator recognition">
+      {verifiedArtifact && <span className="lnx-author-artifact"><small>{showcase?.equippedArtifact ? 'EQUIPPED EVOLUTION' : 'CURRENT EVOLUTION'}</small><strong>{verifiedArtifact}</strong></span>}
+      {featured.map(award => <span key={award.key} className="lnx-author-award" title={award.description} aria-label={'Earned award: ' + award.name + '. ' + award.description}>
+        <span aria-hidden="true">✦</span>{award.name}
+      </span>)}
+    </div>}
+  </aside>;
+}
+
+function ThreadSignal({item, returnTo, creator, showcase}: {
+  item: CommunityPost; returnTo: string; creator?: Creator; showcase?: PublicCreatorShowcase;
+}) {
   const path = '/community/posts/' + encodeURIComponent(item.id);
   return <article className="lnx-thread-card">
     <div className="lnx-thread-meta"><span>{item.topic}</span><time dateTime={item.publishedAt}>{presentDate(item.publishedAt)}</time></div>
     <h3><Link to={path}>{item.title}</Link></h3>
     <p>{item.excerpt}</p>
     {item.project && <div className="lnx-thread-project">RELATED WORK <Link to={projectDetailPath(item.project.id, returnTo)}>{item.project.title}</Link></div>}
-    <div className="lnx-thread-foot"><Link to={creatorRoute(item.authorHandle)}>{item.authorName || '@' + item.authorHandle}</Link><span>{item.replyCount} approved {item.replyCount === 1 ? 'reply' : 'replies'}</span></div>
+    <ThreadAuthorCard post={item} creator={creator} showcase={showcase}/>
+    <div className="lnx-thread-foot"><span>{item.replyCount} approved {item.replyCount === 1 ? 'reply' : 'replies'}</span><span>{item.score} public {item.score === 1 ? 'reaction' : 'reactions'}</span></div>
   </article>;
 }
 
@@ -186,9 +238,27 @@ export function CommunityNextReviewPage() {
     }
   }, [view === 'signals', discussionAvailable, sort, revision.discussions]);
   const districtCounts = useResource(async signal => view === 'atlas' ? readCategories(signal) : {categories: []}, [view === 'atlas', revision.categories]);
-  const creators = useResource(async signal => view === 'people' ? readCreators({q: q || undefined, limit: '24'}, signal) : {
-    items: [], count: 0, nextCursor: null
-  } as PageResult<Creator>, [view === 'people', q, revision.creators]);
+  const visiblePostItems = discussions.state === 'ready' && discussions.data.availability === 'available'
+    ? discussions.data.items : [];
+  const postHandles = [...new Set(visiblePostItems
+    .map(item => publicCreatorHandle(item.authorHandle))
+    .filter((handle): handle is string => handle !== null))].slice(0, 10);
+  const postSignature = postHandles.join(',');
+  // Bounded public-only batch: unavailable or opted-out recognition is omitted.
+  // This must never block, alter or fabricate the already approved discussion list.
+  const publicDossiers = useResource(async signal => postHandles.length
+    ? readPublicShowcases(postHandles, signal)
+    : {source: 'verified-creator-ledger' as const, items: {} as Record<string, PublicCreatorShowcase>},
+    [postSignature, revision.discussions]);
+  const needPublicCreatorCounts = view === 'signals' && visiblePostItems.length > 0;
+  const creators = useResource(async signal => view === 'people' ? readCreators({q: q || undefined, limit: '24'}, signal)
+    : needPublicCreatorCounts ? readCreators({limit: '24'}, signal)
+    : {items: [], count: 0, nextCursor: null} as PageResult<Creator>,
+    [view, q, needPublicCreatorCounts, revision.creators]);
+  const publicCreatorIndex = new Map(
+    creators.state === 'ready' ? creators.data.items.map(item => [item.handle, item] as const) : []
+  );
+  const publicShowcaseIndex = publicDossiers.state === 'ready' ? publicDossiers.data.items : {};
   const results = projectFeed.state === 'ready' ? projectFeed.data.items : [];
   const selected = COMMONS_DISTRICTS.find(d => d.id === category);
   const counts = useMemo(() => new Map(districtCounts.state === 'ready' ? districtCounts.data.categories.map(x => [x.category, x.count] as const) : []), [districtCounts]);
@@ -271,7 +341,12 @@ export function CommunityNextReviewPage() {
           {status.state === 'ready' && discussions.state === 'loading' && <LoadingSignals label="Loading approved discussions…" kind="threads"/>}
           {status.state === 'ready' && discussions.state === 'error' && <RealEmpty error title="Discussions temporarily unavailable" detail="The conversation couldn’t be loaded. Your place in the collection is still here." action={retryButton('discussions', 'Retry discussions')}/>}
           {status.state === 'ready' && discussions.state === 'ready' && discussions.data.availability === 'closed' && <RealEmpty title="Public conversations not available yet" detail="You can keep exploring published projects and their creators while conversations are closed."/>}
-          {status.state === 'ready' && discussions.state === 'ready' && discussions.data.availability === 'available' && (discussions.data.items.length ? <div className="lnx-thread-list">{discussions.data.items.map(item => <ThreadSignal key={item.id} item={item} returnTo={discoverPath}/>)}</div> : <RealEmpty title="No approved discussions yet" detail="The first reviewed conversations will appear here when they are published."/>)}
+          {status.state === 'ready' && discussions.state === 'ready' && discussions.data.availability === 'available' && (discussions.data.items.length ? <div className="lnx-thread-list">{discussions.data.items.map(item => {
+              const handle = publicCreatorHandle(item.authorHandle);
+              return <ThreadSignal key={item.id} item={item} returnTo={discoverPath}
+                creator={handle ? publicCreatorIndex.get(handle) : undefined}
+                showcase={handle ? publicShowcaseIndex[handle] : undefined}/>;
+            })}</div> : <RealEmpty title="No approved discussions yet" detail="The first reviewed conversations will appear here when they are published."/>)}
           </section>
         </>}
         {view === 'atlas' && <>

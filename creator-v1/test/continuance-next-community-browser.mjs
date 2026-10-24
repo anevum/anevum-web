@@ -55,6 +55,11 @@ const posts=[
   {id:'making-discussion',title:'Building tools that leave room to think',excerpt:'How do you decide which interaction belongs in the first version, and which can wait?',authorHandle:'ada_rivers',authorName:'Ada Rivers',topic:'making',publishedAt:'2026-10-22T16:00:00Z',score:2,replyCount:1,project:projects[2]}
 ];
 const categoryNames=['games','tools','creative','libraries','research','learning','automation','other'];
+// Completely fictional test-only public creator dossiers. Never used as live users.
+const approvedDossiers={
+  mira_chen:{handle:'mira_chen',level:7,currentArtifact:'Explorer Plate',equippedArtifact:{name:'Orbital Specimen',series:'Evolution'},featuredAwards:[{key:'research-notes',name:'Curious Signal',description:'Synthetic test-only earned award'}],earnedAwardCount:1},
+  ada_rivers:{handle:'ada_rivers',level:3,currentArtifact:'Interface Seed',equippedArtifact:null,featuredAwards:[],earnedAwardCount:0}
+};
 const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp','.jpg':'image/jpeg','.woff':'font/woff','.woff2':'font/woff2','.ico':'image/x-icon'};
 const forbidden=[];
 const requests=[];
@@ -119,6 +124,15 @@ async function fixture({width=1440,height=1000,scenario='ready',reducedMotion='r
     if(path==='/api/v1/community/posts'){
       if(state.scenario==='posts-404'){await json({error:'Closed'},404);return;}
       await json({items:state.scenario==='empty'?[]:posts,count:state.scenario==='empty'?0:posts.length,nextCursor:null,sort:url.searchParams.get('sort')||'new'});return;
+    }
+    if(path==='/api/v1/community/showcases'){
+      if(state.scenario==='showcase-error'){await json({error:'Synthetic public profile service unavailable'},503);return;}
+      const requested=(url.searchParams.get('handles')||'').split(',').filter(Boolean);
+      assert.ok(requested.length<=10,'Browser fixture enforces <=10 public author lookups');
+      const items=state.scenario==='no-showcase'?{}:Object.fromEntries(
+        requested.filter(handle=>Object.hasOwn(approvedDossiers,handle)).map(handle=>[handle,approvedDossiers[handle]])
+      );
+      await json({source:'verified-creator-ledger',items});return;
     }
     if(path==='/api/v1/categories'){
       await json({categories:categoryNames.map(category=>({category,count:projects.filter(p=>p.category===category).length}))});return;
@@ -229,6 +243,37 @@ try {
     record('Creator search continuation and section-specific Context Lens');
     await f.close();
 
+    const authorCards=await fixture();
+    await open(authorCards.page);
+    await settled(authorCards.page,'.lnx-thread-author');
+    await authorCards.page.getByText('Orbital Specimen',{exact:true}).waitFor();
+    assert.equal(await authorCards.page.locator('.lnx-thread-author').count(),2);
+    assert.equal(await authorCards.page.locator('.lnx-author-level').count(),2,'Only verified public levels display');
+    assert.equal(await authorCards.page.locator('.lnx-author-award').count(),1,'Only the explicitly featured earned award displays');
+    assert.equal(await authorCards.page.locator('.lnx-author-works').count(),2,'Only published creator-directory counts display');
+    assert.equal(await authorCards.page.locator('.lnx-author-profile-link').count(),2);
+    assert.equal(authorCards.state.requests.filter(x=>x.path==='/api/v1/community/showcases').length,1,'Bounded public dossier batch only');
+    await capture(authorCards.page,'post-author-dossiers-1440');
+    record('Post authors display verified level, equipped artifact, chosen award and published works');
+    await authorCards.close();
+
+    const withoutAwards=await fixture({scenario:'no-showcase'});
+    await open(withoutAwards.page);
+    await settled(withoutAwards.page,'.lnx-thread-author');
+    await withoutAwards.page.waitForFunction(()=>document.querySelectorAll('.lnx-author-works').length===2);
+    assert.equal(await withoutAwards.page.locator('.lnx-author-level,.lnx-author-award,.lnx-author-artifact').count(),0);
+    assert.equal(await withoutAwards.page.locator('.lnx-thread-author').count(),2);
+    record('Creators without public recognition retain useful cards without fabricated awards');
+    await withoutAwards.close();
+
+    const unavailableAwards=await fixture({scenario:'showcase-error'});
+    await open(unavailableAwards.page);
+    await settled(unavailableAwards.page,'.lnx-thread-author');
+    await unavailableAwards.page.waitForFunction(()=>document.querySelectorAll('.lnx-author-works').length===2);
+    assert.equal(await unavailableAwards.page.locator('.lnx-author-level,.lnx-author-award,.lnx-author-artifact').count(),0);
+    record('Optional public showcase outage never hides approved posts or leaks private member data');
+    await unavailableAwards.close();
+
     const filters=await fixture();
     await open(filters.page,'?category=research&q=field');
     await settled(filters.page,'.lnx-project-card');
@@ -268,7 +313,10 @@ try {
         record('Empty records stay empty without synthetic substitutes');
       }else{
         await visibleText(f.page,'Public conversations not available yet');
-        if(scenario==='closed')assert.equal(f.state.requests.filter(r=>r.path==='/api/v1/community/posts').length,0);
+        if(scenario==='closed'){
+          assert.equal(f.state.requests.filter(r=>r.path==='/api/v1/community/posts').length,0);
+          assert.equal(f.state.requests.filter(r=>r.path==='/api/v1/community/showcases').length,0);
+        }
         record(scenario+' fails closed');
       }
       await f.close();
@@ -363,6 +411,14 @@ try {
     record('Mobile Atlas exposes accurate list and optional map controls');
     record('Local district navigation restores content focus and viewport position');
     await mobile.close();
+
+    const mobileAuthor=await fixture({width:390,height:844});
+    await open(mobileAuthor.page);
+    await mobileAuthor.page.getByText('Orbital Specimen',{exact:true}).waitFor();
+    await noOverflow(mobileAuthor.page,'Post author dossiers mobile 390');
+    await capture(mobileAuthor.page,'post-author-dossiers-390',{fullPage:false});
+    record('Richer post author cards retain mobile layout and public-profile navigation');
+    await mobileAuthor.close();
 
     const motion=await fixture({reducedMotion:'no-preference'});
     await open(motion.page);
