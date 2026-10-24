@@ -29,7 +29,7 @@ test("V133 tells guests what ANEVUM is before asking for an account",()=>{
   assert.match(home,/to="\/discover"/);
   assert.match(home,/to={signedIn\?"\/member":"\/join"}/);
   assert.match(home,/Free to explore\. No account required\./);
-  assert.match(home,/Studio publishing is still in testing\./);
+  assert.match(home,/Creator publishing is still in testing\./);
   assert.match(home,/aria-label="Visitor access and creator publishing status"/);
 });
 
