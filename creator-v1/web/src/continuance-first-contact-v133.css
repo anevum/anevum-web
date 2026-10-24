@@ -277,8 +277,14 @@
   .av133-first-look-core {width:86px}
   .av133-first-look-copy {padding:14px}
   .av133-first-look-bottom>a {min-height:46px}
-  .av133-hero-purpose {font-size:8px}
-  .av9-shell .av79-home .av133-arrival h1 {font-size:clamp(37px,10vw,42px)!important}
+  /* On 320px the explanatory copy and two primary actions must remain above
+     IREN's working arrival control within a 720px screen. */
+  .av9-shell .av79-home .av133-arrival .av114-arrival-chapter {display:none}
+  .av9-shell .av79-home .av133-arrival .av79-kicker {font-size:9px;letter-spacing:.018em}
+  .av133-hero-purpose {font-size:8px;margin-top:9px}
+  .av9-shell .av79-home .av133-arrival h1 {font-size:clamp(37px,10vw,42px)!important;margin:12px 0 10px!important}
+  .av9-shell .av79-home .av133-arrival .av79-hero-actions {margin-top:12px}
+  .av9-shell .av79-home .av133-arrival {padding-block:18px 14px}
 }
 @media(prefers-reduced-motion:reduce) {
   .av133-first-look *, .av133-arrival .av79-hero-actions a {
