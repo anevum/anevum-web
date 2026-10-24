@@ -3,6 +3,7 @@
  * Settlement adapter: Square SANDBOX ONLY. Inactive by default.
  * Never infer a payment, reward, or bank deposit from the browser redirect.
  */
+import {boundedText} from './request-body.mjs';
 import {SUPPORT_API,SUPPORT_HOOK,SUPPORT_OFFERS,sandboxReady,variationId,
   createSandboxCheckout,verifySquareWebhook,verifiedSquarePayment,squareCall} from '../support-v2/square.mjs';
 
@@ -174,8 +175,8 @@ async function status(env,user,now){
 async function checkout(request,env,user,now,fetcher){
  if(!await enabled(env))return error(404,'Supporter checkout is not enabled');
  if(!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type')||''))return error(400,'Invalid request');
- const raw=await request.text();
- if(raw.length>64)return error(413,'Request too large');
+ const raw=await boundedText(request,64);
+ if(raw===null)return error(413,'Request too large');
  let data;
  try{data=JSON.parse(raw)}catch{return error(400,'Invalid request')}
  if(!data||typeof data!=='object'||Array.isArray(data)||
@@ -192,10 +193,11 @@ async function checkout(request,env,user,now,fetcher){
   if(closure)return error(409,'Account closure is in progress');
   const intentId=crypto.randomUUID();
   const claimed=await dbRows(db,
-    'INSERT INTO support_v2_checkout_guards(member_user_id,intent_id,expires_at_ms,created_at_ms) VALUES(?,?,?,?) '+
+    'INSERT INTO support_v2_checkout_guards(member_user_id,intent_id,expires_at_ms,created_at_ms) '+
+    'SELECT ?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM member_account_closure_guards WHERE member_user_id=? AND expires_at_ms>?) '+
     'ON CONFLICT(member_user_id) DO UPDATE SET intent_id=excluded.intent_id,expires_at_ms=excluded.expires_at_ms,created_at_ms=excluded.created_at_ms '+
-    'WHERE support_v2_checkout_guards.expires_at_ms<? RETURNING intent_id',
-    user.id,intentId,now+7200000,now,now);
+    'WHERE support_v2_checkout_guards.expires_at_ms<? AND NOT EXISTS(SELECT 1 FROM member_account_closure_guards WHERE member_user_id=? AND expires_at_ms>?) RETURNING intent_id',
+    user.id,intentId,now+7200000,now,user.id,now,now,user.id,now);
   if(claimed.length!==1||claimed[0].intent_id!==intentId)
     return error(409,'A checkout is already in progress. Do not open another payment session');
   await execute(db,
@@ -240,16 +242,15 @@ export async function supportV2Member(request,env,user,{fetcher=fetch,now=Date.n
  if(url.pathname===SUPPORT_API&&request.method==='GET')return status(env,user,now);
  if(url.pathname===SUPPORT_API+'/checkout'&&request.method==='POST')return checkout(request,env,user,now,fetcher);
  if(url.pathname===SUPPORT_API+'/cancel'&&request.method==='POST'){
-  if(request.headers.get('content-length')&&!/^(?:0)$/.test(request.headers.get('content-length')))return error(400,'Empty request required');
+  if(request.body){const empty=await boundedText(request,1);if(empty!=='')return error(400,'Empty request required');}
   return cancel(env,user,now,fetcher);
  }
  return error(404,'Unknown supporter route');
 }
 export async function supportV2Webhook(request,env,{fetcher=fetch,now=Date.now()}={}){
  if(request.method!=='POST'||!await enabled(env))return error(404,'Not found');
- let raw;
- try{raw=await request.text()}catch{return error(400,'Invalid webhook body')}
- if(raw.length===0||raw.length>100000)return error(413,'Invalid webhook body');
+ const raw=await boundedText(request,100000);
+ if(raw===null||raw.length===0)return error(413,'Invalid webhook body');
  if(!await verifySquareWebhook(raw,request.headers.get('x-square-hmacsha256-signature'),env))
   return error(403,'Invalid webhook signature');
  let event;
