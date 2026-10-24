@@ -109,6 +109,54 @@ html[data-av-parity="v136-full"] .p136-discover-hero-copy{
   background:linear-gradient(0deg,#030b16ab,transparent 50%),
              linear-gradient(135deg,#ffffff0b,transparent 40%);
 }
+/* Full-bleed console flow: no isolated homepage boxes between destinations. */
+html[data-av-parity="v136-full"] .p136-portal{
+  max-width:none;margin:0;padding:0;
+}
+html[data-av-parity="v136-full"] .p136-hero{
+  min-height:620px;border:0;border-radius:0;box-shadow:none;
+}
+html[data-av-parity="v136-full"] .p136-hero-content{
+  padding-left:clamp(30px,5vw,104px);
+}
+html[data-av-parity="v136-full"] .p136-discover,
+html[data-av-parity="v136-full"] .p136-next{
+  margin-top:0;border:0;border-radius:0;box-shadow:none;
+  background:linear-gradient(180deg,#061428ee,#050e1bf7 78%,#040a15);
+  padding:clamp(22px,3vw,45px) clamp(22px,5vw,96px);
+}
+html[data-av-parity="v136-full"] .p136-next{
+  border-top:1px solid #73a6d945;
+  background:linear-gradient(180deg,#061428e8,#030915);
+}
+html[data-av-parity="v136-full"] .p136-discover-hero-art,
+html[data-av-parity="v136-full"] .p136-scene{
+  display:none!important;
+}
+@media (max-width:820px){
+  html[data-av-parity="v136-full"] .p136-hero{min-height:0}
+  html[data-av-parity="v136-full"] .p136-hero-content{
+    padding:118px 28px 32px;
+  }
+  html[data-av-parity="v136-full"] .p136-discover,
+  html[data-av-parity="v136-full"] .p136-next{
+    padding:26px 22px;
+  }
+}
+@media (max-width:520px){
+  html[data-av-parity="v136-full"] .p136-hero-content{
+    padding:93px 18px 26px;
+  }
+  html[data-av-parity="v136-full"] .p136-discover,
+  html[data-av-parity="v136-full"] .p136-next{
+    padding:24px 16px;
+  }
+}
+@media (max-width:350px){
+  html[data-av-parity="v136-full"] .p136-hero-content{
+    padding:85px 14px 22px;
+  }
+}
 @media (max-width:820px){
   .p136-living-world{top:62px}
 }
