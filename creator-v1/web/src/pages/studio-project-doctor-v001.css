@@ -38,3 +38,14 @@
 .cpd-diff-metrics span{flex:1 1 130px;display:grid;gap:4px;min-height:60px;background:#183448;border:1px solid #3a6178;border-radius:6px;padding:9px 12px;font-size:.66rem;color:#d0e1ec}
 .cpd-diff-metrics strong{font-size:1.3rem;line-height:1.1;font-variant-numeric:tabular-nums;color:#e4f7ff}
 @media(max-width:570px){.cpd-diff{padding:11px}.cpd-diff-metrics span{flex-basis:100px}}
+
+
+/* V001.4: information hierarchy and explicit, consent-preserving issue navigation. */
+.cpd-filters{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.cpd-filters button,.cpd-jump{border:1px solid #54778b;border-radius:7px;background:#17374c;color:#d9ecf8;font:600 .72rem/1.4 inherit;cursor:pointer;padding:9px 12px;min-height:40px}
+.cpd-filters button[aria-pressed="true"]{border-color:#a9e8ef;background:#275468;color:#f1fdff}
+.cpd-filters button:hover,.cpd-jump:hover{background:#2a536a;border-color:#9ccde0}
+.cpd-filters button:focus-visible,.cpd-jump:focus-visible{outline:2px solid #c4f1fa;outline-offset:2px}
+.cpd-jump{display:inline-flex;align-items:center;justify-content:center;align-self:start;width:fit-content;margin-top:3px;min-height:40px}
+.cpd-filter-empty{margin:0;padding:14px 10px;border:1px dashed #466b7d;border-radius:6px;font-size:.75rem;color:#c9dce6}
+@media(max-width:570px){.cpd-filters button{flex:1 1 100px}.cpd-jump{width:100%}}
