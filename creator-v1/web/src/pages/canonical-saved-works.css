@@ -66,7 +66,7 @@
 .avsaved-content[data-view=list] .avsaved-card p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font:400 12px/1.5 var(--av9-body,Inter,sans-serif);margin:0 0 9px}
 .avsaved-content[data-view=list] .avsaved-card-maker{margin:0;font-size:10px}
 .avsaved-content[data-view=list] .avsaved-card-actions{grid-column:2;grid-row:1 / span 4;display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:7px;margin:0}
-.avsaved-content[data-view=list] .avsaved-card-actions a,.avsaved-content[data-view=list] .avsaved-card-actions button{flex:none;min-height:43px;padding:10px 12px;white-space:nowrap}
+.avsaved-content[data-view=list] .avsaved-card-actions a,.avsaved-content[data-view=list] .avsaved-card-actions button{flex:none;min-height:48px;padding:10px 12px;white-space:nowrap}
 .avsaved-filter-empty{padding:20px;background:#151c28;border:1px solid #bbb0bc55;border-radius:12px}
 .avsaved-filter-empty h2{font:550 19px/1.3 var(--av9-body,Inter,sans-serif);margin:0 0 8px}
 .avsaved-filter-empty p{font-size:13px;line-height:1.6;color:#c7bdc7}
