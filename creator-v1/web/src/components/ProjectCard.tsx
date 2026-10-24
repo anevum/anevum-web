@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import {VisualEdge} from "./NextVisualPrimitivesV135";
 import {CompactMemberIdentity} from "./CompactMemberIdentity";
 import type { Project } from "../lib/api";
 import { Icon } from "./Icons";
@@ -31,6 +32,7 @@ export function ProjectCard({ project, returnTo = "/discover", presentation = "v
   const handle=publicCreatorHandle(project.creatorHandle);
   const credit=project.creatorName||"ANEVUM member";
   if(presentation==="editorial")return <article className="project-card av73-project-card">
+    <VisualEdge tone={project.category==="games"?"violet":project.category==="research"?"mint":"cyan"}/>
     <div className="av73-project-card-top">
       <span className="av73-project-card-category">{labels[project.category] || "Project"}</span>
       <span>{project.freeToUse?"Creator marks free":"Published project"}</span>
@@ -48,6 +50,7 @@ export function ProjectCard({ project, returnTo = "/discover", presentation = "v
   </article>;
   return (
     <article className="project-card depth-hover-card" onPointerMove={e=>applyPointerDepth(e,8)} onPointerLeave={clearPointerDepth}>
+      <VisualEdge tone={project.category==="creative"?"copper":project.category==="games"?"violet":"cyan"}/>
       <Link className="project-art" to={href} aria-label={`Open ${project.title}`}>
         <CosmicArtwork scene={scenes[project.category]}/>
         <span className="cw-card-art-overlay" aria-hidden="true" />
