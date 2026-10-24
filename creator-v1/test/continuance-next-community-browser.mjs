@@ -331,8 +331,13 @@ try {
     assert.equal(await map.getAttribute('aria-pressed'),'true');
     record('Atlas spatial layout survives copyable URL and hard reload on a phone');
     await list.click();
+    // Router URL can advance before React reconciles aria-pressed; require
+    // both list-selection and focus before reading the final selected state.
+    await mobile.page.waitForFunction(() => {
+      const selected=document.querySelector('.lnx-atlas-controls button[aria-pressed="true"]');
+      return selected?.textContent?.includes('Accessible list') && document.activeElement===selected;
+    });
     assert.equal(await list.getAttribute('aria-pressed'),'true');
-    await mobile.page.waitForFunction(() => document.querySelector('.lnx-atlas-controls button[aria-pressed="true"]')===document.activeElement);
     assert.equal(await list.evaluate(el=>el===document.activeElement),true,'List selection retains keyboard focus despite Shell navigation');
     assert.equal(new URL(mobile.page.url()).searchParams.get('atlas'),'list');
     await mobile.page.goBack();
