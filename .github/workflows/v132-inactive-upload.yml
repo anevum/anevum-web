@@ -38,8 +38,36 @@ jobs:
           npm install --ignore-scripts --no-audit --no-fund --package-lock=false
           node --check creator-v1/ops/v132-inactive-upload.mjs
           node --test creator-v1/test/v132-inactive-upload.test.mjs
+      - name: Fetch the exact reviewed sealed V132 Worker and frontend
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12547361119'
+          run-id: 40060370329
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v132-verification
+          merge-multiple: true
+      - name: Verify every original artwork, compiled asset and preserved V131 gateway hash
+        run: |
+          node creator-v1/ops/v132-inactive-upload.mjs check "$RUNNER_TEMP/v132-verification"
+      - name: Exercise no-credential upload dry-run without touching Cloudflare
+        run: |
+          node --input-type=module <<'JS'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          import {resolve} from 'node:path';
+          const root=resolve(process.env.RUNNER_TEMP,'v132-verification');
+          const config=JSON.parse(readFileSync('creator-v1/wrangler.apex-prelaunch.jsonc','utf8'));
+          config.$schema=resolve('node_modules/wrangler/config-schema.json');
+          config.main=resolve(root,'worker-bundle/gateway.js');
+          config.no_bundle=true;
+          config.assets.directory=resolve(root,'compiled-web');
+          config.routes=[];config.workers_dev=false;config.preview_urls=false;
+          config.vars={CANONICAL_XP_TEST_ENABLED:'false',CANONICAL_CREATOR_UPLOADS_ENABLED:'false'};
+          writeFileSync(resolve(process.env.RUNNER_TEMP,'v132-inactive-dryrun.json'),JSON.stringify(config));
+          JS
+          npx --no-install wrangler versions upload --dry-run --no-bundle --no-upload-source-maps \
+            --config "$RUNNER_TEMP/v132-inactive-dryrun.json"
       - name: Never activate anything as part of verification
-        run: echo 'V132_INACTIVE_UPLOAD_SOURCE_CHECKED; NO_CREDENTIALS; NO_UPLOAD; NO_TRAFFIC_CHANGE' >> "$GITHUB_STEP_SUMMARY"
+        run: echo 'V132_INACTIVE_UPLOAD_SOURCE_CHECKED; SEALED_BUNDLE=PASS; NO_CREDENTIALS; NO_UPLOAD; NO_TRAFFIC_CHANGE' >> "$GITHUB_STEP_SUMMARY"
   inactive-version-only:
     needs: verify-inactive
     if: >-
