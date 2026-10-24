@@ -2,7 +2,7 @@ import {useState, type FormEvent} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import {Icon} from '../components/Icons';
 import {OrbitalMark} from '../components/OrbitalMark';
-import {ParityScene} from './ParityScene';
+import {useLivingWorld} from './LivingWorldState';
 import {CosmicArtwork} from '../components/CosmicArtwork';
 import {projectDetailPath} from '../lib/navigation';
 import type {Project, Category} from '../lib/api';
@@ -33,7 +33,7 @@ function PublicProjectCard({project}:{project:Project}){
   const meta=types[project.category];
   return <article className={'p136-project-card p136-tone-'+meta.tone}>
     <Link to={projectDetailPath(project.id,'/')} className="p136-project-media" aria-label={'View '+project.title}>
-      <CosmicArtwork scene={meta.scene}/><span className="p136-project-art-note">ANEVUM CATEGORY ILLUSTRATION</span><span className="p136-kind">{meta.label}</span>
+      <CosmicArtwork scene={meta.scene} seed={project.id}/><span className="p136-project-art-note">DYNAMIC ANEVUM FIELD / NOT CREATOR COVER</span><span className="p136-kind">{meta.label}</span>
     </Link>
     <div className="p136-project-body">
       <span className="p136-project-meta">{project.freeToUse?'FREE TO USE':'PROJECT DIRECTORY'} <span> / </span> APPROVED PUBLIC WORK</span>
@@ -47,11 +47,11 @@ function PublicProjectCard({project}:{project:Project}){
 }
 export function ParityPortalV136({projects,catalogueState,signedIn,verifiedCount}:Props){
   const navigate=useNavigate(),[search,setSearch]=useState('');
-  const [paused,setPaused]=useState(false);
+  const {paused,setPaused}=useLivingWorld();
   function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();navigate(search.trim()?'/discover?q='+encodeURIComponent(search.trim()):'/discover');}
   return <div className="p136-portal" data-parity-v136="full">
     <section className="p136-hero" aria-labelledby="p136-hero-title">
-      <ParityScene paused={paused}/><div className="p136-hero-shade" aria-hidden="true"/>
+      <div className="p136-hero-shade" aria-hidden="true"/>
       <div className="p136-hero-content">
         <p className="p136-hero-register">THE CONTINUANCE INSTITUTE <span> / </span> FIRST CONTACT</p>
         <h1 id="p136-hero-title">Independent worlds.<em>Made to continue.</em></h1>
@@ -105,7 +105,7 @@ export function ParityPortalV136({projects,catalogueState,signedIn,verifiedCount
         </div>}
       <div className="p136-passages">
         {passages.map(item=><Link key={item.title} to={item.to} className={'p136-passage p136-tone-'+item.tone}>
-          <CosmicArtwork scene={item.scene}/><span className="p136-passage-shade"/>
+          <CosmicArtwork scene={item.scene} seed={item.to}/><span className="p136-passage-shade"/>
           <span className="p136-passage-copy"><strong>{item.title}</strong><small>{item.detail}</small></span><Icon name="arrow" size={18}/>
         </Link>)}
       </div>
