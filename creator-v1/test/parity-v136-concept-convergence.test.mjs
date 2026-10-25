@@ -121,11 +121,11 @@ test('full backup preserves Markdown and playable archive uses canonical MIME co
 test('source tree offers real validated rename and confirmed removal, not cosmetic file commands',()=>{
  const operations=source('../web/src/parity/workbench-file-ops-v136.ts');
  const workbenchCss=source('../web/src/parity/artifact-workbench-v136.css');
- assert.match(operations,/safeSourcePath\(next\)/);
+ assert.match(operations,/isSafePath\(next\)/);
  assert.match(operations,/previous==='index\.html'/);
  assert.match(operations,/path==='index\.html'/);
  assert.match(operations,/path\.toLowerCase\(\)===next\.toLowerCase\(\)/);
- assert.match(ide,/renameLocalSource\(files,renamingFile,target\)/);
+ assert.match(ide,/renameLocalSource\(files,renamingFile,target,safePath\)/);
  assert.match(ide,/removeLocalSource\(files,deletingFile\)/);
  assert.match(ide,/onClick=\{beginRename\}/);
  assert.match(ide,/Confirm remove file/);

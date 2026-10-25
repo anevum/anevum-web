@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {unzipSync,strFromU8} from 'fflate';
-import {sourceArchive} from '../web/src/parity/source-archive-v136.ts';
+import {sourceArchive,safeSourcePath} from '../web/src/parity/source-archive-v136.ts';
 import {inspectLocalBrowserBuild} from '../web/src/lib/native-compatibility-v101.ts';
 test('source archive preserves file paths and passes the existing native compatibility inspector',async()=>{
  const files={'index.html':'<!doctype html><html><head><link rel="stylesheet" href="styles.css"></head><body><h1>LOCAL TEST ONLY</h1><script src="scripts/main.js"></script></body></html>','styles.css':'body { color: #e9f7ff; }','scripts/main.js':'document.body.dataset.ready="yes";'};
@@ -40,16 +40,16 @@ test('local file moves preserve bytes and safety, removal never removes entrypoi
  const {renameLocalSource,removeLocalSource}=await import('../web/src/parity/workbench-file-ops-v136.ts');
  const files={'index.html':'<!doctype html><title>Local</title>',
   'styles.css':'body{color:white}', 'assets/notes.md':'# My author notes'};
- const renamed=renameLocalSource(files,'assets/notes.md','docs/reference.md');
+ const renamed=renameLocalSource(files,'assets/notes.md','docs/reference.md',safeSourcePath);
  assert.equal(renamed['docs/reference.md'],files['assets/notes.md']);
  assert.ok(!('assets/notes.md' in renamed));
  assert.deepEqual(Object.keys(renamed),['index.html','styles.css','docs/reference.md']);
  assert.equal(files['assets/notes.md'],'# My author notes','Local move never mutates source state');
- assert.equal(renameLocalSource(renamed,'docs/reference.md','docs/reference.md'),renamed);
+ assert.equal(renameLocalSource(renamed,'docs/reference.md','docs/reference.md',safeSourcePath),renamed);
  for(const path of ['../notes.md','docs/private.env','index.html','Styles.css']){
-  assert.throws(()=>renameLocalSource(renamed,'docs/reference.md',path));
+  assert.throws(()=>renameLocalSource(renamed,'docs/reference.md',path,safeSourcePath));
  }
- assert.throws(()=>renameLocalSource(files,'index.html','main.html'));
+ assert.throws(()=>renameLocalSource(files,'index.html','main.html',safeSourcePath));
  assert.throws(()=>removeLocalSource(files,'index.html'));
  const removed=removeLocalSource(renamed,'docs/reference.md');
  assert.deepEqual(Object.keys(removed),['index.html','styles.css']);

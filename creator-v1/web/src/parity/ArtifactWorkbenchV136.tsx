@@ -119,7 +119,7 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
  function commitRename(){
   if(disabled||!renamingFile)return;
   try{
-   const target=renameDraft.trim(),updated=renameLocalSource(files,renamingFile,target);
+   const target=renameDraft.trim(),updated=renameLocalSource(files,renamingFile,target,safePath);
    setRenamingFile(null);
    if(updated===files)return;
    importVersion.current++;
