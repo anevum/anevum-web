@@ -246,3 +246,40 @@ html[data-av-parity="v136-full"] .p136030-build-details>summary:focus-visible{ou
   background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none;
  }
 }
+
+/* V136.034 / Institute Studio command convergence.
+   Surface the existing scriptless layout preview and truthful local diagnostics
+   as actual tools, never imply a compiled Run or permitted public Deploy. */
+html[data-av-parity="v136-full"] .p136-workbench-command .p136034-preview-command{
+ min-height:44px;padding:.6rem 1rem;border:1px solid #ae92f2a6;border-radius:7px;
+ background:linear-gradient(125deg,#43316b,#222e68 58%,#13395c);color:#f4eaff;
+ font:700 12px/1.4 var(--font-body,system-ui,sans-serif);
+ box-shadow:inset 0 1px #fff2,0 0 0 1px #663ad825;
+}
+html[data-av-parity="v136-full"] .p136-workbench-command .p136034-preview-command[aria-pressed="true"]{
+ border-color:#a3e9ff;background:linear-gradient(120deg,#2b687a,#194a69);color:#ebfbff;
+}
+html[data-av-parity="v136-full"] .p136-workbench-command .p136034-diagnostics-command{
+ min-height:44px;padding:.55rem .9rem;border-color:#7d9cb27e;background:#101f35;
+ color:#c9dfec;font:650 11px/1.4 ui-monospace,monospace;
+}
+html[data-av-parity="v136-full"] .p136-workbench-command :is(.p136034-preview-command,.p136034-diagnostics-command):focus-visible{
+ outline:3px solid #8de9ff;outline-offset:2px;
+}
+html[data-av-parity="v136-full"] .p136034-preview-mode{
+ margin:0;padding:11px 16px;border-bottom:1px solid #8ed1e854;
+ background:linear-gradient(90deg,#123449,#18233e);color:#d4ecf6;
+ font:500 12px/1.6 var(--font-body,system-ui,sans-serif);
+}
+@media(max-width:650px){
+ html[data-av-parity="v136-full"] .p136-workbench-command .p136034-preview-command{
+  flex:1 1 140px;justify-content:center;
+ }
+ html[data-av-parity="v136-full"] .p136034-preview-mode{font-size:12px;line-height:1.65;}
+}
+@media(forced-colors:active){
+ html[data-av-parity="v136-full"] .p136-workbench-command :is(.p136034-preview-command,.p136034-diagnostics-command),
+ html[data-av-parity="v136-full"] .p136034-preview-mode{
+  background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none;
+ }
+}
