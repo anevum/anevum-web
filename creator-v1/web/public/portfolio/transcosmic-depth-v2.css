@@ -135,3 +135,27 @@ html,body{background:var(--tc-void);color:var(--tc-bone)}
     max-width:100%;white-space:nowrap;line-height:1.4
   }
 }
+
+/* V136.041 / the author's actual Transcosmic work is a complete destination,
+   not a leftover half-width fourth card with an empty grid cell beside it. */
+.project-transcosmic{grid-column:1/-1}
+@media(min-width:851px){
+  .project-transcosmic .project-hit{
+    display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,.65fr);
+    align-items:stretch;min-width:0
+  }
+  .project-transcosmic .project-visual{height:clamp(430px,36vw,610px)}
+  .project-transcosmic .project-meta{
+    padding:clamp(29px,3.6vw,62px);
+    border-top:0;border-left:1px solid var(--tc-line);
+    display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:28px
+  }
+  .project-transcosmic .project-meta h3{font-size:clamp(44px,5vw,83px);line-height:1.02}
+  .project-transcosmic .project-meta h3 span{font-size:clamp(12px,1.4vw,20px)}
+  .project-transcosmic .project-meta p{font-size:clamp(15px,1.4vw,20px);max-width:330px;line-height:1.55}
+  .project-transcosmic .project-meta .eyebrow{line-height:1.6}
+}
+@media(min-width:621px) and (max-width:850px){
+  .project-transcosmic .project-hit{display:grid;grid-template-columns:1fr}
+  .project-transcosmic .project-meta{border-left:0;border-top:1px solid var(--tc-line)}
+}
