@@ -21,7 +21,7 @@ export const FUNNEL_EVENT_DEFINITIONS = Object.freeze({
 const SAFE_KEYS = new Set(['name','origin','occurred_at_utc','consent','device','route_group','release_cohort']);
 const DEVICES = new Set(['mobile','desktop','tablet','unknown']);
 const ROUTES = new Set(['landing','discover','community','account','studio','play','other']);
-const RELEASE_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
+const RELEASE_RE = /^V[0-9]{1,3}(?:[.-][0-9]{1,3})?$/;
 
 function canonicalUtcTimestamp(value) {
   if (typeof value !== 'string' ||
