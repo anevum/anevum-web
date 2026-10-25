@@ -91,6 +91,9 @@ async function run(width,height,motion='no-preference') {
   assert.equal(await page.locator('.institute-backdrop').getAttribute('src'),'/portfolio/assets/transcosmic-continuum.svg');
   const initialState=await page.locator('[data-universe-stage="0"]').getAttribute('aria-pressed');
   assert.equal(initialState,'true');
+  assert.equal(await universe.getAttribute('data-render-realm'),'threshold','Initial portal occupies threshold geometry');
+  const thresholdVertices=Number(await universe.getAttribute('data-realm-vertices'));
+  assert.ok(thresholdVertices>10000,'Threshold is true three-dimensional geometry');
   await page.screenshot({path:join(output,'transcosmic-hero-'+width+'-'+motion+'.png'),animations:'disabled'});
   await page.locator('[data-universe-stage="1"]').click();
   assert.equal(await page.locator('[data-universe-stage="1"]').getAttribute('aria-pressed'),'true');
@@ -98,16 +101,33 @@ async function run(width,height,motion='no-preference') {
   await page.waitForFunction(()=>Number(document.querySelector('[data-transcosmic-field]')?.dataset.cameraTravel)>.30,
     null,{timeout:30000});
   const archiveTravel=Number(await universe.getAttribute('data-camera-travel'));
+  assert.equal(await universe.getAttribute('data-render-realm'),'archive',
+    'Archive must draw its own separate GPU geometry, not recolor the tunnel');
+  const archiveVertices=Number(await universe.getAttribute('data-realm-vertices'));
+  assert.ok(archiveVertices>3000 && archiveVertices!==thresholdVertices,'Archive has real distinct mesh');
+  await page.screenshot({path:join(output,'transcosmic-archive-'+width+'.png'),animations:'disabled'});
   await page.locator('[data-universe-stage="2"]').click();
   assert.equal(await page.locator('[data-universe-name]').innerText(),'THE CONTINUUM');
   await page.waitForFunction(()=>Number(document.querySelector('[data-transcosmic-field]')?.dataset.cameraTravel)>.70,
     null,{timeout:30000});
   const beyondTravel=Number(await universe.getAttribute('data-camera-travel'));
+  assert.equal(await universe.getAttribute('data-render-realm'),'beyond',
+    'Beyond must draw real planetary-space geometry, not repeat the same tunnel');
+  const beyondVertices=Number(await universe.getAttribute('data-realm-vertices'));
+  assert.ok(beyondVertices>1000 && beyondVertices!==archiveVertices && beyondVertices!==thresholdVertices,
+    'All three destinations have their own 3D mesh');
   assert.ok(beyondTravel>archiveTravel,'Viewport camera must actually travel through 3D space');
   await page.screenshot({path:join(output,'transcosmic-beyond-'+width+'.png'),animations:'disabled'});
   await page.locator('[data-universe-stage="0"]').click();
+  await page.locator('[data-universe-stage="1"]').focus();
+  await page.keyboard.press('Enter');
+  assert.equal(await page.locator('[data-universe-stage="1"]').getAttribute('aria-pressed'),'true',
+    'Keyboard selection remains native and accessible');
+  assert.equal(await page.locator('[data-universe-name]').innerText(),'THE ARCHIVE');
+  await page.locator('[data-universe-stage="0"]').click();
   note('single GPU Transcosmic field / actual camera viewpoints / bounded pixels '+width,
-    {mode:firstMode,sceneDepth:firstDepth,pixels,archiveTravel,beyondTravel,reducedMotion:motion==='reduce'});
+    {mode:firstMode,sceneDepth:firstDepth,pixels,archiveTravel,beyondTravel,
+      realmVertices:[thresholdVertices,archiveVertices,beyondVertices],reducedMotion:motion==='reduce'});
   note('layout '+width+'px',shape);
   // Reproduce actual reading/scrolling so lazy-loaded images and reveal states
   // are visible in full-page screenshots, instead of falsely appearing blank.
