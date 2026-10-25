@@ -128,8 +128,11 @@ try{
       assert.equal(result.anchor,"studio-tools","Hidden Studio link falls back to visible Profile & tools");
       assert.equal(result.hiddenPrimary,true,"Closed details cannot be highlighted");
     }else {
-      assert.equal(result.anchor,width===390?"navigation":"navigation-desktop",
-       "Wayfinder targets the currently painted V136 menu control");
+      // The V136 wide header can display BOTH the regular nav and its Menu.
+      // If Menu is painted, it remains the actual Wayfinder control even at
+      // 1440px. Fall back to desktop navigation only when Menu is CSS-hidden.
+      assert.equal(result.anchor,result.hiddenPrimary?"navigation-desktop":"navigation",
+       "Wayfinder must select the first genuinely painted V136 navigation control");
     }
     await page.screenshot({path:join(output,"member-"+width+"-step-"+step+".png"),animations:"disabled"});
     report.widths.push({width,...result});
