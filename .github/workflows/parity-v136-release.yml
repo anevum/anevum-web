@@ -21,7 +21,7 @@ on:
       - 'creator-v1/web/src/pages/NativeCreatorStudio.tsx'
       - 'creator-v1/source-ide/**'
   push:
-    branches: ['release/parity-v136-home-navigation-20261024-001', 'release/parity-v136-living-world-20261024-005', 'release/parity-v136-institute-20261024-011']
+    branches: ['release/parity-v136-home-navigation-20261024-001', 'release/parity-v136-living-world-20261024-005', 'release/parity-v136-institute-20261024-011', 'release/parity-v136-unified-ui-20261025-004']
 permissions:
   contents: read
   actions: read
@@ -31,13 +31,17 @@ concurrency:
 jobs:
   verify-package:
     if: >-
-      github.event_name == 'pull_request' || (github.event.head_commit.message == 'release(parity-v136): upload verified homepage candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified living-world candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified institute candidate')
+      github.event_name == 'pull_request' || (github.event.head_commit.message == 'release(parity-v136): upload verified homepage candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified living-world candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified institute candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified unified UI candidate')
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
       CLOUDFLARE_API_TOKEN: ''
       WRANGLER_SEND_METRICS: 'false'
       VITE_PARITY_V136_FULL: 'true'
+      VITE_PARITY_V136_CINEMATIC: 'true'
+      VITE_PARITY_V136_HORIZON_QA: 'false'
+      VITE_PARITY_V136_SHARED_SCENE_QA: 'false'
+      VITE_PARITY_V136_NATIVE_VIDEO: 'false'
       VITE_IREN_SPATIAL_GUIDE: 'true'
       VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
       VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
@@ -52,6 +56,8 @@ jobs:
         with:
           node-version: '22'
       - run: node creator-v1/ops/parity-v136-release.mjs source
+      - name: Exact reviewed UI bytes and protected release boundaries
+        run: node --test creator-v1/test/parity-v136-release-scope.test.mjs
       - name: Controller input mapping and repeat safety
         run: node --experimental-strip-types --test creator-v1/test/parity-v136-controller.test.mjs
       - run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
@@ -113,7 +119,7 @@ jobs:
   upload-inactive:
     needs: verify-package
     if: >-
-      github.event_name == 'push' && (github.event.head_commit.message == 'release(parity-v136): upload verified homepage candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified living-world candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified institute candidate')
+      github.event_name == 'push' && (github.event.head_commit.message == 'release(parity-v136): upload verified homepage candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified living-world candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified institute candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified unified UI candidate')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:

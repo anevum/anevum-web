@@ -45,6 +45,8 @@ if (import.meta.env.VITE_PARITY_V136_FULL === "true") {
   await import("./parity/visual-foundation-v136.css");
   await import("./parity/concept-convergence-v136017.css");
 }
+// Final presentation layer applies to every public route, not only QA-only parity.
+await import("./parity/sitewide-interface-v136.css");
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "") || "/"}>

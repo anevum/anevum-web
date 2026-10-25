@@ -1,6 +1,7 @@
-import {useEffect,useRef,useState,type ComponentType,type ReactNode} from 'react';
+import {useEffect,useMemo,useRef,useState,type ComponentType,type ReactNode} from 'react';
 import {strToU8} from 'fflate';
 import {sourceArchive,playableSourceArchive,localOnlySourcePaths,safeSourcePath,SOURCE_LIMITS} from './source-archive-v136';
+import {renameLocalSource,removeLocalSource,sourceReferencesToReview,unresolvedLocalSourceLinks,sourcePreviewDocument} from './workbench-file-ops-v136';
 import {Icon} from '../components/Icons';
 import {FileGlyphV136017,FolderGlyphV136017,fileKind} from './FileGlyphV136017';
 import {editorLanguage} from '../../../source-ide/language-v119.mjs';
@@ -42,12 +43,50 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
  const [name,setName]=useState(''),[note,setNote]=useState(''),[dirty,setDirty]=useState(true),[plain,setPlain]=useState(()=>matchMedia('(max-width: 767px)').matches);
  const [Editor,setEditor]=useState<ComponentType<MonacoSourceProps>|null>(null),[editorError,setEditorError]=useState(false);
  const [inspector,setInspector]=useState(true),importVersion=useRef(0);
+ const [quickOpen,setQuickOpen]=useState(false),[fileQuery,setFileQuery]=useState(''),[fileChoice,setFileChoice]=useState(0);
+ const [cursor,setCursor]=useState({line:1,column:1});
+ const [previewDevice,setPreviewDevice]=useState<'desktop'|'phone'>('desktop');
+ const [renamingFile,setRenamingFile]=useState<string|null>(null),[renameDraft,setRenameDraft]=useState('');
+ const [deletingFile,setDeletingFile]=useState<string|null>(null);
+ const quickInput=useRef<HTMLInputElement>(null),quickButton=useRef<HTMLButtonElement>(null);
   const [collapsedFolders,setCollapsedFolders]=useState<Set<string>>(()=>new Set());
  useEffect(()=>{let alive=true;if(!plain)void import('./MonacoSourceV136').then(m=>{if(alive)setEditor(()=>m.default)}).catch(()=>{if(alive)setEditorError(true)});return()=>{alive=false}},[plain]);
  useEffect(()=>()=>{importVersion.current++},[]);
  const entries=Object.entries(files),total=entries.reduce((n,[,text])=>n+strToU8(text).length,0);
   const explorerTree=sourceExplorerTree(entries.map(([path])=>path));
+ const matchingPaths=entries.map(([path])=>path).filter(path=>path.toLowerCase().includes(fileQuery.trim().toLowerCase()));
+ useEffect(()=>{if(quickOpen)quickInput.current?.focus()},[quickOpen]);
+ function closeQuickOpen(){setQuickOpen(false);requestAnimationFrame(()=>quickButton.current?.focus())}
+ function selectFile(path:string){
+  setActive(path);setRenamingFile(null);setDeletingFile(null);
+ }
+ function choosePath(path:string){
+  selectFile(path);
+  setCollapsedFolders(previous=>new Set([...previous].filter(folder=>!path.startsWith(folder+'/'))));
+  closeQuickOpen();
+ }
+ /** Dependency links inspect actual source rather than changing any code.
+  * Opening a reference explicitly cancels the pending rename/removal.
+  * Focus moves to the existing real file tab for keyboard continuity. */
+ function inspectReference(path:string,previous:string){
+  if(!Object.hasOwn(files,path))return;
+  selectFile(path);
+  setCollapsedFolders(previousFolders=>new Set([...previousFolders].filter(folder=>!path.startsWith(folder+'/'))));
+  setNote('Inspect '+path+' for local references to '+previous+'. The pending file operation was canceled; no source was rewritten.');
+  requestAnimationFrame(()=>document.getElementById('p136-source-tab-'+path)?.focus());
+ }
  const localOnlyPaths=localOnlySourcePaths(files);
+ const unresolvedLinks=useMemo(()=>unresolvedLocalSourceLinks(files,safePath),[files]);
+ const previewHtml=useMemo(()=>sourcePreviewDocument(files),[files]);
+ const renameReferences=renamingFile?sourceReferencesToReview(files,renamingFile):[];
+ const removalReferences=deletingFile?sourceReferencesToReview(files,deletingFile):[];
+ function inspectUnresolvedLink(path:string,target:string){
+  if(!Object.hasOwn(files,path))return;
+  selectFile(path);
+  setCollapsedFolders(folders=>new Set([...folders].filter(folder=>!path.startsWith(folder+'/'))));
+  setNote('Review missing local reference '+target+' in '+path+'. No source was rewritten or uploaded.');
+  requestAnimationFrame(()=>document.getElementById('p136-source-tab-'+path)?.focus());
+ }
  const problems:string[]=[];
  if(!('index.html' in files))problems.push('A root index.html entrypoint is required.');
  for(const [path,text] of entries){
@@ -63,7 +102,7 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
   if(!safePath(path)){setNote('Use a relative HTML, CSS, JS, JSON, Markdown or text path, such as assets/data.json.');return;}
   if(path in files){setActive(path);setNote('That file already exists.');return;}
   if(entries.length>=MAX_FILES){setNote('This local workbench supports up to 24 source files.');return;}
-  setFiles(current=>({...current,[path]:''}));setActive(path);setName('');setDirty(true);onDirty();
+  setFiles(current=>({...current,[path]:''}));selectFile(path);setName('');setDirty(true);onDirty();
  }
  async function importFiles(selected:FileList|null){
   if(disabled||!selected)return;const version=++importVersion.current;
@@ -74,7 +113,7 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
    if(version!==importVersion.current)return;
    const next={...files,...Object.fromEntries(incoming)};
    if(Object.keys(next).length>MAX_FILES||Object.values(next).reduce((n,t)=>n+strToU8(t).length,0)>MAX_TOTAL)throw Error('The local source workspace is limited to 1 MiB and 24 files.');
-   setFiles(next);setActive(incoming[0]?.[0]||active);setDirty(true);onDirty();setNote('Files read locally. Nothing was uploaded.');
+   setFiles(next);selectFile(incoming[0]?.[0]||active);setDirty(true);onDirty();setNote('Files read locally. Nothing was uploaded.');
   }catch(error){if(version===importVersion.current)setNote(error instanceof Error?error.message:'Files could not be opened.');}
  }
  function packageSource(){
@@ -94,6 +133,41 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
    setTimeout(()=>URL.revokeObjectURL(url),1000);
    setNote('Complete source downloaded, including local-only notes. This did not upload or prepare a playable build.');
   }catch(error){setNote(error instanceof Error?error.message:'Full source could not be downloaded.')}
+ }
+ function beginRename(){
+  if(disabled||active==='index.html')return;
+  setDeletingFile(null);setRenamingFile(active);setRenameDraft(active);setNote('');
+ }
+ function commitRename(){
+  if(disabled||!renamingFile)return;
+  try{
+   const references=sourceReferencesToReview(files,renamingFile);
+   const target=renameDraft.trim(),updated=renameLocalSource(files,renamingFile,target,safePath);
+   setRenamingFile(null);
+   if(updated===files)return;
+   importVersion.current++;
+   setFiles(updated);selectFile(target);
+   setCollapsedFolders(previous=>new Set([...previous].filter(folder=>!target.startsWith(folder+'/'))));
+   setDirty(true);onDirty();
+   setNote('Local source renamed. '+(references.length?
+    'References may need repair in: '+references.join(', ')+'. No linked source was rewritten. ':
+    'No direct static references were detected; check dynamic imports manually. ')+
+    'Any previously prepared archive is invalid.');
+  }catch(error){setNote(error instanceof Error?error.message:'Could not rename this local source.')}
+ }
+ function commitRemoval(){
+  if(disabled||!deletingFile)return;
+  try{
+   const references=sourceReferencesToReview(files,deletingFile);
+   const updated=removeLocalSource(files,deletingFile);
+   importVersion.current++;
+   setFiles(updated);selectFile('index.html');
+   setDirty(true);onDirty();
+   setNote('Local source removed from this session. '+(references.length?
+    'References to the removed file still exist in: '+references.join(', ')+'. ':
+    'No direct static references were detected. ')+
+    'Any previously prepared archive is invalid.');
+  }catch(error){setNote(error instanceof Error?error.message:'Could not remove this local source.')}
  }
  function toggleFolder(path:string){
    setCollapsedFolders(previous=>{
@@ -118,14 +192,17 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
    }
    return <button key={node.path} type="button" className="p136017-tree-file"
     aria-label={node.path} title={node.path} aria-pressed={node.path===active}
-    onClick={()=>setActive(node.path)}
+    onClick={()=>selectFile(node.path)}
     style={{paddingLeft:8+Math.min(depth,5)*13}}>
     <span className={'p136-file-mark is-'+fileKind(node.path)} aria-hidden="true"><FileGlyphV136017 path={node.path}/></span>
     <span className="p136017-tree-name">{node.name}</span>
    </button>;
   }
-  return <section className="p136-workbench" aria-label="Artifact source workbench" data-artifact-workbench="v136.011">
-  <header className="p136-workbench-head"><div><span>CONTINUANCE / ARTIFACT WORKBENCH</span><h2>Make the source.</h2></div><span className="p136-source-state">{dirty?'LOCAL CHANGES':'ARCHIVE PREPARED'}</span></header>
+  return <section className="p136-workbench" aria-label="Artifact source workbench" data-artifact-workbench="v136.011"
+   onKeyDownCapture={e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='p'){
+    e.preventDefault();setFileQuery('');setFileChoice(0);setQuickOpen(true);
+   }}}>
+  <header className="p136-workbench-head"><div><span>ANEVUM / CREATOR STUDIO</span><h2>Code workspace</h2></div><span className="p136-source-state">{dirty?'LOCAL CHANGES':'ARCHIVE PREPARED'}</span></header>
   <div className="p136017-source-functionbar" aria-hidden="true">
    <span className="p136017-functionmark">SOURCE / LOCAL</span>
    <span>FILES · VALIDATION · ARCHIVE</span>
@@ -137,26 +214,109 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
    <label className="p136-source-import">Open text files<input disabled={disabled} type="file" multiple accept=".html,.css,.js,.json,.txt,.md" onChange={e=>void importFiles(e.target.files)}/></label>
    <button type="button" aria-pressed={plain} onClick={()=>setPlain(v=>!v)}>Accessible text editor</button>
    <button type="button" aria-expanded={inspector} onClick={()=>setInspector(v=>!v)}>Inspector</button>
+   <button ref={quickButton} type="button" aria-expanded={quickOpen} aria-controls="p136-quick-open" aria-keyshortcuts="Control+p Meta+p"
+    onClick={()=>{setFileQuery('');setFileChoice(0);setQuickOpen(v=>!v)}}>Open file…</button>
   </div>
+  {quickOpen&&<div className="p136-source-quick-open" id="p136-quick-open">
+   <label htmlFor="p136-file-query">Find a local source file <span>↑ ↓ to choose · Enter to open · Esc to close</span></label>
+   <input ref={quickInput} id="p136-file-query" type="search" value={fileQuery} autoComplete="off"
+    role="combobox" aria-expanded="true" aria-controls="p136-file-matches" aria-autocomplete="list"
+    aria-activedescendant={matchingPaths.length?'p136-file-choice-'+fileChoice:undefined}
+    onChange={e=>{setFileQuery(e.target.value);setFileChoice(0)}}
+    onKeyDown={e=>{
+     if(e.key==='Escape'){e.preventDefault();closeQuickOpen()}
+     else if(e.key==='Enter'&&matchingPaths[fileChoice]){e.preventDefault();choosePath(matchingPaths[fileChoice])}
+     else if(['ArrowDown','ArrowUp'].includes(e.key)&&matchingPaths.length){e.preventDefault();setFileChoice(i=>(i+(e.key==='ArrowDown'?1:-1)+matchingPaths.length)%matchingPaths.length)}
+    }}/>
+   <div id="p136-file-matches" role="listbox" aria-label="Matching local source files">
+    {matchingPaths.map((path,index)=><button key={path} type="button" role="option" tabIndex={-1}
+     id={'p136-file-choice-'+index} aria-selected={index===fileChoice} onClick={()=>choosePath(path)}>
+     <FileGlyphV136017 path={path}/><span>{path}</span><small>{editorLanguage(path)}</small></button>)}
+   </div>
+   {matchingPaths.length===0&&<p role="status">No matching local source files.</p>}
+   <button type="button" onClick={closeQuickOpen}>Close file search</button>
+  </div>}
   {localOnlyPaths.length>0&&<p className="p136017-local-only-note" role="status">
     LOCAL NOTES / {localOnlyPaths.join(', ')} — kept in complete source downloads, excluded from playable ZIPs.
    </p>}
    <div className="p136-workbench-layout" data-inspector={inspector}>
-   <aside className="p136-source-explorer" aria-label="Local source files"><strong>PROJECT FILES</strong>
+   <aside className="p136-source-explorer" aria-label="Local source files"><strong>PROJECT EXPLORER</strong>
     <div className="p136-source-add"><label className="visually-hidden" htmlFor="p136-source-new">New file path</label><input id="p136-source-new" placeholder="assets/data.json" value={name} onChange={e=>setName(e.target.value)} maxLength={120} disabled={disabled}/><button type="button" onClick={add} disabled={disabled} aria-label="Create source file">+</button></div>
     <nav aria-label="Source file explorer" className="p136017-source-tree">{explorerTree.map(node=>explorerRow(node,0))}</nav>
    </aside>
    <div className="p136-source-stage">
-    <div className="p136017-source-ledge"><span>EDITOR / {active}</span><span>LOCAL · NOT EXECUTED</span></div>
-    <div className="p136-source-tabs" role="tablist" aria-label="Open source files">{entries.map(([path])=><button key={path} type="button" role="tab" id={'p136-source-tab-'+path} aria-selected={path===active} aria-controls="p136-source-panel" tabIndex={path===active?0:-1}
-     onKeyDown={e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const i=entries.findIndex(([p])=>p===active),next=e.key==='Home'?0:e.key==='End'?entries.length-1:(i+(e.key==='ArrowLeft'?-1:1)+entries.length)%entries.length;setActive(entries[next][0]);requestAnimationFrame(()=>document.getElementById('p136-source-tab-'+entries[next][0])?.focus())}}
-     onClick={()=>setActive(path)}><FileGlyphV136017 path={path}/><span>{path}</span></button>)}</div>
-    <div id="p136-source-panel" role="tabpanel" aria-labelledby={'p136-source-tab-'+active}>
-     {!plain&&Editor&&!editorError?<Editor files={files} active={active} disabled={disabled} onChange={change}/>:<label className="p136-source-fallback"><span className="visually-hidden">Edit source {active}</span><textarea spellCheck={false} autoCapitalize="off" autoCorrect="off" value={files[active]} onChange={e=>change(active,e.target.value)} disabled={disabled}/></label>}
+    <div className="p136017-source-ledge">
+     <span>EDITOR / {active}</span>
+     <div className="p136017-file-operations" role="group" aria-label="Selected local source actions">
+      <button type="button" disabled={disabled||active==='index.html'} onClick={beginRename}>Rename file</button>
+      <button type="button" disabled={disabled||active==='index.html'}
+       onClick={()=>{setRenamingFile(null);setDeletingFile(active);setNote('')}}>Remove file</button>
+     </div><span>LOCAL · NOT EXECUTED</span>
     </div>
-    <footer className="p136-source-status"><span>{editorLanguage(active).toUpperCase()}</span><span>{files[active].split('\n').length} lines</span><span>{strToU8(files[active]).length.toLocaleString()} bytes</span><span>{plain||editorError?'TEXT EDITOR':Editor?'MONACO':'LOADING MONACO'}</span></footer>
+    {renamingFile&&<form className="p136017-file-mutation" onSubmit={event=>{event.preventDefault();commitRename()}}>
+     <label htmlFor="p136017-file-rename">Rename local source: {renamingFile}</label>
+     <div className="p136017-ref-audit" role="status" aria-live="polite" data-source-reference-audit="rename">
+      <strong>LINK AUDIT / {renameReferences.length} STATIC REFERENCE {renameReferences.length===1?'SOURCE':'SOURCES'}</strong>
+      {renameReferences.length?
+       <><p>These authored files reference {renamingFile}. A rename can break their links; no code will be rewritten automatically.</p>
+        <ul>{renameReferences.map(path=><li key={path}><button type="button"
+         onClick={()=>inspectReference(path,renamingFile)}>Inspect {path}</button></li>)}</ul></>:
+       <p>No direct local path references detected. Dynamic paths are not inspected.</p>}
+     </div>
+     <input id="p136017-file-rename" autoFocus autoComplete="off" spellCheck={false} maxLength={120}
+      value={renameDraft} onChange={event=>setRenameDraft(event.target.value)}
+      onKeyDown={event=>{if(event.key==='Escape'){event.preventDefault();setRenamingFile(null)}}}/>
+     <button type="submit" disabled={disabled}>Save file path</button>
+     <button type="button" onClick={()=>setRenamingFile(null)}>Cancel rename</button>
+    </form>}
+    {deletingFile&&<div className="p136017-file-mutation" role="group" aria-label="Confirm local file removal">
+     <p>Remove {deletingFile} from this in-memory workspace? This action has no undo. Export source first if needed.</p>
+     <div className="p136017-ref-audit" role="status" aria-live="polite" data-source-reference-audit="remove">
+      <strong>LINK AUDIT / {removalReferences.length} STATIC REFERENCE {removalReferences.length===1?'SOURCE':'SOURCES'}</strong>
+      {removalReferences.length?
+       <><p>The following authored files may still refer to {deletingFile} after removal. No source code is modified.</p>
+        <ul>{removalReferences.map(path=><li key={path}><button type="button"
+         onClick={()=>inspectReference(path,deletingFile)}>Inspect {path}</button></li>)}</ul></>:
+       <p>No direct local path references detected. Dynamic paths are not inspected.</p>}
+     </div>
+     <button type="button" disabled={disabled} onClick={commitRemoval}>Confirm remove file</button>
+     <button type="button" onClick={()=>setDeletingFile(null)}>Keep file</button>
+    </div>}
+    <div className="p136-source-tabs" role="tablist" aria-label="Open source files">{entries.map(([path])=><button key={path} type="button" role="tab" id={'p136-source-tab-'+path} aria-selected={path===active} aria-controls="p136-source-panel" tabIndex={path===active?0:-1}
+     onKeyDown={e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const i=entries.findIndex(([p])=>p===active),next=e.key==='Home'?0:e.key==='End'?entries.length-1:(i+(e.key==='ArrowLeft'?-1:1)+entries.length)%entries.length;selectFile(entries[next][0]);requestAnimationFrame(()=>document.getElementById('p136-source-tab-'+entries[next][0])?.focus())}}
+     onClick={()=>selectFile(path)}><FileGlyphV136017 path={path}/><span>{path}</span></button>)}</div>
+    <div id="p136-source-panel" role="tabpanel" aria-labelledby={'p136-source-tab-'+active}>
+     {!plain&&Editor&&!editorError?<Editor files={files} active={active} disabled={disabled} onChange={change} onCursor={(line,column)=>setCursor({line,column})}/>:<label className="p136-source-fallback"><span className="visually-hidden">Edit source {active}</span><textarea spellCheck={false} autoCapitalize="off" autoCorrect="off" value={files[active]} onChange={e=>change(active,e.target.value)} disabled={disabled}/></label>}
+    </div>
+    <footer className="p136-source-status">{!plain&&Editor&&!editorError&&<span data-source-cursor>Ln {cursor.line}, Col {cursor.column}</span>}<span>{editorLanguage(active).toUpperCase()}</span><span>{files[active].split('\n').length} lines</span><span>{strToU8(files[active]).length.toLocaleString()} bytes</span><span>{plain||editorError?'TEXT EDITOR':Editor?'MONACO':'LOADING MONACO'}</span></footer>
    </div>
-   {inspector&&<aside className="p136-source-inspector" aria-label="Source and build diagnostics"><strong>BUILD INSPECTOR</strong><span className="p136017-inspector-disclosure">VALIDATION / LOCAL SOURCE</span><dl><dt>Source files</dt><dd>{entries.length} / {MAX_FILES}</dd><dt>Expanded text</dt><dd>{(total/1024).toFixed(1)} KiB / 1024 KiB</dd><dt>Entrypoint</dt><dd>{files['index.html']?'index.html':'Missing'}</dd><dt>Publication</dt><dd>Private upload required</dd><dt>Local-only source notes</dt><dd>{localOnlyPaths.length}</dd></dl><h3>Local findings</h3>{problems.length?<ul>{problems.map(p=><li key={p}>{p}</li>)}</ul>:<p>No issues found by the available text checks.</p>}<p>JavaScript is edited as text. This view does not compile, run, save to your account or publish source.</p><h3>Live preview</h3><p>Prepare the archive, then use the existing private playtest. Executable previews stay in ANEVUM’s isolated runtime.</p></aside>}
+   {inspector&&<aside className="p136-source-inspector" aria-label="Source and build diagnostics">
+    <div className="p136037-preview" data-source-preview="local" aria-label="Isolated local HTML and CSS preview">
+     <header className="p136037-preview-header">
+      <div><strong>LIVE PREVIEW</strong><span>HTML + CSS / LOCAL</span></div>
+      <div className="p136037-preview-devices" role="group" aria-label="Preview device size">
+       <button type="button" aria-label="Desktop preview" aria-pressed={previewDevice==='desktop'} onClick={()=>setPreviewDevice('desktop')}>Desktop</button>
+       <button type="button" aria-label="Phone preview" aria-pressed={previewDevice==='phone'} onClick={()=>setPreviewDevice('phone')}>Phone</button>
+      </div>
+     </header>
+     <div className="p136037-preview-viewport" data-source-preview-device={previewDevice}>
+      <iframe title="Isolated local HTML and CSS preview" data-source-preview-frame
+       sandbox="" referrerPolicy="no-referrer" loading="eager" srcDoc={previewHtml}/>
+     </div>
+     <p>Read-only HTML/CSS view. JavaScript and remote resources are blocked; executable playtests use the existing private sandbox.</p>
+    </div>
+    <strong>BUILD INSPECTOR</strong><span className="p136017-inspector-disclosure">VALIDATION / LOCAL SOURCE</span><dl><dt>Source files</dt><dd>{entries.length} / {MAX_FILES}</dd><dt>Expanded text</dt><dd>{(total/1024).toFixed(1)} KiB / 1024 KiB</dd><dt>Entrypoint</dt><dd>{files['index.html']?'index.html':'Missing'}</dd><dt>Publication</dt><dd>Private upload required</dd><dt>Local-only source notes</dt><dd>{localOnlyPaths.length}</dd></dl><h3>Local findings</h3>{problems.length?<ul>{problems.map(p=><li key={p}>{p}</li>)}</ul>:<p>No issues found by the available text checks.</p>}
+    <div className="p136017-source-link-diagnostics" data-source-link-diagnostics="local" aria-label="Local link diagnostics">
+     <h3>Source links / {unresolvedLinks.length} missing</h3>
+     {unresolvedLinks.length?
+      <ul>{unresolvedLinks.map(link=><li key={link.source+'|'+link.target}>
+       <button type="button" onClick={()=>inspectUnresolvedLink(link.source,link.target)}
+        aria-label={'Inspect '+link.source+' missing reference '+link.target}>Inspect {link.source}</button>
+       <span>Missing: {link.target}</span>
+      </li>)}</ul>:
+      <p>No missing static local references detected.</p>}
+     <p>Static HTML, CSS and JavaScript links only. Dynamic paths and remote resources are not inspected; packaging still uses the existing compatibility checks.</p>
+    </div><p>JavaScript is edited as text. This view does not compile, run, save to your account or publish source.</p><h3>Live preview</h3><p>Prepare the archive, then use the existing private playtest. Executable previews stay in ANEVUM’s isolated runtime.</p></aside>}
   </div>
   {note&&<p className="p136-source-notice" role="status">{note}</p>}
   <p className="p136-source-privacy">Source stays in this workspace’s memory until you prepare and explicitly upload an archive. Export before leaving; signing out or changing routes clears it.</p>

@@ -16,7 +16,7 @@ import {ArtifactLensV136,type ArtifactSelection} from './ArtifactLensV136';
  * PARITY V136.004 / Discover. The original DiscoverPage continues to own
  * URL params, public-only endpoints, cursor pagination, package visibility
  * and server-backed catalogue states. This is presentation, not a data fork.
- * Local ANEVUM category imagery never represents a creator-uploaded cover.
+ * Category interface panels never represent creator-uploaded covers.
  */
 type Channel={id:Category;label:string;description:string;mark:string};
 type ResourceState='loading'|'ready'|'error';
@@ -119,7 +119,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
         </div>
         <div className="p136-discover-readout-foot"><span>EXPLORE / CONNECT / CONTINUE</span><Icon name="explore" size={18}/></div>
       </aside>
-      <p className="p136-discover-art-note">GENERATED ENVIRONMENT / NOT CREATOR ARTWORK</p>
+      <p className="p136-discover-art-note">REAL PUBLIC CATALOGUE / NO PAID PLACEMENT</p>
     </section>
 
     <div className="p136-discover-main">
@@ -175,7 +175,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
               <span className="p136-discover-world-shade" aria-hidden="true"/>
               <span className="p136-discover-world-top">FIELD / 0{index+1}<Icon name="arrow" size={17}/></span>
               <span className="p136-discover-world-copy"><strong>{item.label}</strong><small>{item.description}</small></span>
-              <span className="p136-discover-world-art-note">PROCEDURAL CATEGORY FIELD</span>
+              <span className="p136-discover-world-art-note">BROWSE / CATEGORY</span>
             </button>;
           })}
         </div>

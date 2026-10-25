@@ -88,7 +88,8 @@ try{
         siteIren:document.querySelectorAll('.ir80-dock').length,
         renderer:document.querySelector('.p136-living-world')?.dataset.renderer,
         source:document.querySelector('.p136-living-world')?.dataset.source,
-        generated:document.querySelectorAll('.p136-discover-world .cw-live-glyph[data-generated="procedural"]').length,
+        nativeFields:document.querySelectorAll('.p136-discover-world .av136-index-field[data-presentation="native-index"]').length,
+        decorativeImages:document.querySelectorAll('.p136-discover-world img').length,
         font:getComputedStyle(document.querySelector('.p136-discover-hero h1')).fontFamily,
         railScroll:getComputedStyle(document.querySelector('.p136-discover-featured')).overflowX,
         scrollSnap:getComputedStyle(document.querySelector('.p136-discover-featured')).scrollSnapType
@@ -98,7 +99,8 @@ try{
     assert.equal(layout.headings,1,'A single page heading');
     assert.equal(layout.worlds,4,'Four real filter gateways');
     assert.equal(layout.siteIren,1,'Single shared IREN');
-    assert.equal(layout.generated,4,'Category gateways are procedural, not fixed AI images');
+    assert.equal(layout.nativeFields,4,'All four gateways render native interface panels');
+    assert.equal(layout.decorativeImages,0,'No decorative AI image elements in the category gateways');
     assert.ok(['webgl','vector'].includes(layout.renderer),'A live world renderer exists');
     assert.equal(layout.source,'verified','World uses actual public aggregate fixtures');
     if(width<=600){

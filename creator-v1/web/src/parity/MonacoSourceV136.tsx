@@ -1,5 +1,9 @@
-import {useEffect,useRef} from 'react';
+import {useEffect,useRef,useId} from 'react';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
+// The modular API does not register navigation/editing keybindings itself.
+// Load the first-party core commands explicitly; a colored editor div alone
+// is not a working IDE (Ctrl+End, arrows, selection, Tab and deletion).
+import 'monaco-editor/esm/vs/editor/browser/coreCommands.js';
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import 'monaco-editor/esm/vs/basic-languages/html/html.contribution.js';
 import 'monaco-editor/esm/vs/basic-languages/css/css.contribution.js';
@@ -17,14 +21,15 @@ import {editorLanguage} from '../../../source-ide/language-v119.mjs';
  * Models are unique to this mounted, session-bound workspace and disposed.
  * All editor and worker assets are built locally, without CDN credentials. */
 (self as typeof self&{MonacoEnvironment?:{getWorker:(moduleId:string,label:string)=>Worker}}).MonacoEnvironment={getWorker:(_moduleId,label)=>label==='json'?new JsonWorker():new EditorWorker()};
-export type MonacoSourceProps={files:Record<string,string>;active:string;disabled:boolean;onChange:(name:string,value:string)=>void};
+export type MonacoSourceProps={files:Record<string,string>;active:string;disabled:boolean;onChange:(name:string,value:string)=>void;onCursor?:(line:number,column:number)=>void};
 export default function MonacoSourceV136(props:MonacoSourceProps){
  const container=useRef<HTMLDivElement>(null),instance=useRef<monaco.editor.IStandaloneCodeEditor|null>(null);
- const models=useRef(new Map<string,monaco.editor.ITextModel>()),current=useRef(props),scope=useRef(crypto.randomUUID());
+ const models=useRef(new Map<string,monaco.editor.ITextModel>()),current=useRef(props),scope=useId();
+ const viewStates=useRef(new Map<string,monaco.editor.ICodeEditorViewState>()),shown=useRef(props.active);
  current.current=props;
  const modelFor=(name:string)=>{
   let model=models.current.get(name);
-  if(!model){model=monaco.editor.createModel(current.current.files[name],editorLanguage(name),monaco.Uri.parse('inmemory://anevum/'+scope.current+'/'+name));models.current.set(name,model)}
+  if(!model){model=monaco.editor.createModel(current.current.files[name],editorLanguage(name),monaco.Uri.parse('inmemory://anevum/'+encodeURIComponent(scope)+'/'+name));models.current.set(name,model)}
   return model;
  };
  useEffect(()=>{
@@ -38,19 +43,32 @@ export default function MonacoSourceV136(props:MonacoSourceProps){
   const editor=monaco.editor.create(container.current,{model:modelFor(current.current.active),theme:'continuance-v136',automaticLayout:true,
    fontFamily:'"Cascadia Code","SFMono-Regular",Consolas,monospace',fontSize:13,lineHeight:22,tabSize:2,
    minimap:{enabled:false},scrollBeyondLastLine:false,readOnly:current.current.disabled,accessibilitySupport:'auto',
+   // Monaco 0.55's automatic WordHighlighter leaves a rejected Delayer on
+   // rapid model disposal. This bounded text workbench supplies no semantic
+   // occurrence service; retain syntax colors, native Find and selection.
+   occurrencesHighlight:'off',
    ariaLabel:'Source editor for '+current.current.active,wordWrap:'off',renderLineHighlight:'line',padding:{top:12},
    stickyScroll:{enabled:true},smoothScrolling:!matchMedia('(prefers-reduced-motion: reduce)').matches});
   instance.current=editor;
   const listener=editor.onDidChangeModelContent(()=>{
    const p=current.current,value=editor.getValue();if(value!==p.files[p.active])p.onChange(p.active,value);
   });
-  return()=>{listener.dispose();editor.dispose();instance.current=null;models.current.forEach(m=>m.dispose());models.current.clear()};
+  const cursor=editor.onDidChangeCursorPosition(event=>current.current.onCursor?.(event.position.lineNumber,event.position.column));
+  return()=>{cursor.dispose();listener.dispose();editor.dispose();instance.current=null;models.current.forEach(m=>m.dispose());models.current.clear();viewStates.current.clear()};
  },[]);
  useEffect(()=>{
   const editor=instance.current;if(!editor)return;
+  if(shown.current!==props.active){
+   const saved=editor.saveViewState();if(saved)viewStates.current.set(shown.current,saved);
+  }
   const model=modelFor(props.active);if(model.getValue()!==props.files[props.active])model.setValue(props.files[props.active]);
-  editor.setModel(model);editor.updateOptions({readOnly:props.disabled,ariaLabel:'Source editor for '+props.active});
-  for(const [name,m] of models.current)if(!(name in props.files)){m.dispose();models.current.delete(name)}
+  if(editor.getModel()!==model){
+   editor.setModel(model);
+   const saved=viewStates.current.get(props.active);if(saved)editor.restoreViewState(saved);
+  }
+  shown.current=props.active;
+  editor.updateOptions({readOnly:props.disabled,ariaLabel:'Source editor for '+props.active});
+  for(const [name,m] of models.current)if(!(name in props.files)){m.dispose();models.current.delete(name);viewStates.current.delete(name)}
   if(props.active.endsWith('.json')){
    try{JSON.parse(props.files[props.active]);monaco.editor.setModelMarkers(model,'continuance',[])}
    catch{monaco.editor.setModelMarkers(model,'continuance',[{message:'Invalid JSON. Check the structure before packaging.',severity:monaco.MarkerSeverity.Error,startLineNumber:1,startColumn:1,endLineNumber:1,endColumn:2}])}

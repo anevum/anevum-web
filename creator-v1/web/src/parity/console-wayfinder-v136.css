@@ -15,6 +15,15 @@
 .p136-console-command kbd{font:500 9px system-ui;color:#a6bdd4}
 .p136-console-wayfinder :is(a,button):focus-visible{outline:2px solid #94eaff;outline-offset:2px}
 html[data-av-parity="v136-full"] .site-footer{padding-bottom:92px}
+/* Keep focused controls and deep links above the existing phone/tablet dock. */
+html[data-av-parity="v136-full"]{
+ scroll-padding-block-start:82px;
+ scroll-padding-block-end:calc(100px + env(safe-area-inset-bottom,0px));
+}
+html[data-av-parity="v136-full"] .site-main :is(a,button,input,textarea,select,[id]){
+ scroll-margin-block-start:82px;
+ scroll-margin-block-end:calc(100px + env(safe-area-inset-bottom,0px));
+}
 @media(max-width:1100px){.p136-console-ident{display:none}.p136-console-wayfinder{max-width:790px}}
 @media(max-width:660px){
  .p136-console-wayfinder{left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));transform:none;width:auto;gap:4px;padding:5px 6px;border-radius:14px}
@@ -54,4 +63,86 @@ html[data-av-parity="v136-full"] .ir80-companion:not(.ir88-companion-expanded):n
 }
 @media(forced-colors:active){
  .p136-console-ir,.p136-console-member,.p136-console-member-orbit{background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none}
+}
+
+
+/* V136.017.041 / UI-FIRST DESKTOP SIDEBAR.
+ * At wide viewports the concept-board left navigation occupies the real
+ * unused outer gutter instead of floating over the five functional homepage
+ * destination cards. Mid-size and phone controller dock stays intact. */
+@media(min-width:1900px){
+ .p136-console-wayfinder{
+  position:fixed;top:101px;bottom:auto;left:14px;right:auto;
+  transform:none;width:174px;max-width:174px;
+  max-height:calc(100svh - 115px);min-height:0;
+  display:flex;flex-direction:column;align-items:stretch;
+  gap:8px;padding:9px;border-radius:12px;overflow-y:auto;
+  background:linear-gradient(150deg,#0b203beF,#07142beF);
+  box-shadow:inset 0 1px #daefff36,0 12px 35px #000a,0 0 22px #3486ff24;
+ }
+ .p136-console-ident{display:none}
+ .p136-console-stations{
+  flex:0 0 auto;width:100%;min-width:0;
+  display:flex;flex-direction:column;align-items:stretch;gap:4px;
+ }
+ .p136-console-station{
+  flex:0 0 auto;justify-content:flex-start;width:100%;min-height:50px;
+  padding:8px 10px;gap:9px;border-radius:8px;
+ }
+ .p136-console-title{display:grid;gap:1px}
+ .p136-console-title strong{font-size:11px}
+ .p136-console-title small{font-size:9px}
+ .p136-console-selection{
+  top:18%;bottom:18%;left:1px;right:auto;
+  width:2px;height:auto;
+ }
+ .p136-console-utilities{
+  width:100%;min-width:0;flex:0 0 auto;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:4px;padding-top:8px;border-top:1px solid #86bff849;
+ }
+ .p136-console-command,.p136-console-ir,.p136-console-member{
+  width:100%;min-width:0;min-height:44px;gap:0;padding:5px;
+  display:flex;align-items:center;justify-content:center;
+ }
+ .p136-console-command span,.p136-console-command kbd,
+ .p136-console-ir>span:last-child{display:none}
+ .p136-console-member-orbit{width:28px;height:28px}
+}
+
+/* V136.023 / The same console owns a real gutter on normal desktop screens.
+ * Never cover the catalogue, board filters or project sharing controls.
+ * Authoring keeps its existing hidden dock and full editor width. */
+@media(min-width:1280px) and (max-width:1899px){
+ html[data-av-parity="v136-full"] .p136-console-wayfinder{
+  top:84px;bottom:auto;left:10px;right:auto;transform:none;
+  width:72px;max-width:72px;max-height:calc(100svh - 100px);
+  display:flex;flex-direction:column;align-items:stretch;
+  gap:8px;padding:7px;border-radius:11px;overflow-y:auto;
+ }
+ html[data-av-parity="v136-full"] .p136-console-ident{display:none}
+ html[data-av-parity="v136-full"] .p136-console-title{display:grid}
+ html[data-av-parity="v136-full"] .p136-console-title strong{font-size:9px}
+ html[data-av-parity="v136-full"] .p136-console-title small{display:none}
+ html[data-av-parity="v136-full"] .p136-console-stations{
+  flex:none;display:flex;flex-direction:column;gap:4px;
+ }
+ html[data-av-parity="v136-full"] .p136-console-station{
+  flex:none;flex-direction:column;gap:4px;width:100%;min-height:56px;padding:7px 4px;
+ }
+ html[data-av-parity="v136-full"] .p136-console-selection{
+  top:18%;bottom:18%;left:1px;right:auto;width:2px;height:auto;
+ }
+ html[data-av-parity="v136-full"] .p136-console-utilities{
+  display:flex;flex-direction:column;gap:4px;padding-top:7px;border-top:1px solid #86bff849;
+ }
+ html[data-av-parity="v136-full"] :is(.p136-console-command,.p136-console-ir,.p136-console-member){
+  justify-content:center;width:100%;min-width:0;min-height:44px;padding:7px;gap:0;
+ }
+ html[data-av-parity="v136-full"] .p136-console-command :is(span,kbd),
+ html[data-av-parity="v136-full"] .p136-console-ir>span:last-child{display:none}
+ html[data-av-parity="v136-full"] .av9-shell:not(:has([data-artifact-workbench="v136.011"]))>.site-main{
+  padding-inline-start:92px;
+ }
+ html[data-av-parity="v136-full"] .site-footer{padding-inline-start:112px;padding-bottom:32px}
 }

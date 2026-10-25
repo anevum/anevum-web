@@ -2,7 +2,18 @@
 
 Session: \`ANEVUM.WEB.BUILD.2026-10-25.001.OPEN-SIGNAL-HOSTING-BRIDGE\`
 
-**Status: draft, source only. No storage provider, Worker route, bucket, migrations, secrets, release toggles or production traffic changed.** This change stacks after Open Signal sharing PR #736 and its existing V136 visual/release lineage. Do not merge the stacked diff independently.
+**Status: draft, source only. No storage provider, Worker route, bucket, migrations, secrets, release toggles or production traffic changed.**
+
+## Unified V136.025 integration checkpoint — October 25, 2026
+
+- The authoritative V136 overhaul development branch is PR #735 at its owner-reviewed V136.025 merge. This is a **source-level development reconciliation** only, not a production merge, public-feature release or change to an immutable V136.024 canary artifact.
+- PR #736 Open Signal sharing is **already present in the V136.025 parent by identical file content**, though its historical PR remains a draft. Do not create a second share panel, duplicate a release registry or re-introduce an old ProjectCard component.
+- Source from this hosting bridge is grafted onto the V136.025 parent **without replacing** newer real React UI, first-party type-default thumbnails, preserved creator-uploaded covers, improved mobile navigation, concept-led Studio/Discover/Commons styling, or the one existing WebGL renderer. No generated stock illustration/filler artwork is allowed back into public listings.
+- V136.026 Discover grid/list and URL-state work is pending in PR #748; it remains authoritative for that exact route. This hosting integration does not change DiscoverPage, ProjectCard, ParityDiscoverV136, query state or browser history and can coexist with its later accepted changes.
+- Release operations (PR #742), Stripe retirement (PR #739) and IREN-onboarding corrections (PR #747) remain independent. This hosting PR does not change provider commerce, member privileges, support-agent behavior, or deployment flags.
+- Merge this hosting PR **only after exact-head CI and Studio mobile/keyboard/real-member review** and through the parent V136 development sequence. Keep #325 the sole technical queue, #331 the discovery owner, #335 the visual-acceptance authority and #333 the production go/no-go authority. `Open Signal` is an internal feature family, not a parallel platform or top navigation destination.
+
+ This change stacks after Open Signal sharing PR #736 and its existing V136 visual/release lineage. Do not merge the stacked diff independently.
 
 ## Truthful baseline: three existing lanes, different authority
 

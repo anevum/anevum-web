@@ -29,7 +29,7 @@ test('homepage retains canonical public-data fields and real routes',()=>{
   'projectDetailPath(project.id','to="/discover"','to="/community"',
   'to="/studio"',"signedIn?'/member':'/join'",
   "signal.source==='verified'","catalogueState==='error'",
-  'DYNAMIC ANEVUM FIELD / NOT CREATOR COVER',"new Event('anevum:iren-open')"
+  'CATEGORY INDEX / NOT CREATOR COVER',"new Event('anevum:iren-open')"
  ])assert.ok(hero.includes(expected),'Missing public action/safety: '+expected);
  assert.ok(!/Date\.now|Math\.random|fakeProjects|sampleProjects|simulatedMembers/.test(hero),
   'No invented live catalogue or member data');
@@ -93,7 +93,7 @@ test('real permitted local files form disclosure folders without creating synthe
  assert.match(ide,/aria-label=\{'Folder '\+node\.name\}/);
  assert.match(ide,/aria-expanded=\{expanded\}/);
  assert.match(ide,/aria-label=\{node\.path\}/);
- assert.match(ide,/onClick=\{\(\)=>setActive\(node\.path\)\}/);
+ assert.match(ide,/onClick=\{\(\)=>selectFile\(node\.path\)\}/);
  assert.match(glyph,/export function FolderGlyphV136017/);
  assert.match(css,/\.p136017-source-tree \.p136017-tree-folder/);
 });
@@ -116,4 +116,128 @@ test('full backup preserves Markdown and playable archive uses canonical MIME co
  assert.match(ide,/sourceArchive\(files\)/);
  assert.match(ide,/onClick=\{downloadSource\}/);
  assert.match(ide,/excluded from playable ZIPs/);
+});
+
+test('source tree offers real validated rename and confirmed removal, not cosmetic file commands',()=>{
+ const operations=source('../web/src/parity/workbench-file-ops-v136.ts');
+ const workbenchCss=source('../web/src/parity/artifact-workbench-v136.css');
+ assert.match(operations,/isSafePath\(next\)/);
+ assert.match(operations,/previous==='index\.html'/);
+ assert.match(operations,/path==='index\.html'/);
+ assert.match(operations,/path\.toLowerCase\(\)===next\.toLowerCase\(\)/);
+ assert.match(ide,/renameLocalSource\(files,renamingFile,target,safePath\)/);
+ assert.match(ide,/removeLocalSource\(files,deletingFile\)/);
+ assert.match(ide,/onClick=\{beginRename\}/);
+ assert.match(ide,/Confirm remove file/);
+ assert.match(ide,/setDirty\(true\);onDirty\(\)/);
+ assert.match(workbenchCss,/\.p136017-file-mutation/);
+});
+
+test('Creator Studio rename and removal show actual local link audit without rewritten imports',()=>{
+ const helper=source('../web/src/parity/workbench-file-ops-v136.ts');
+ const localCss=source('../web/src/parity/artifact-workbench-v136.css');
+ assert.match(ide,/sourceReferencesToReview\(files,renamingFile\)/);
+ assert.match(ide,/sourceReferencesToReview\(files,deletingFile\)/);
+ assert.match(ide,/data-source-reference-audit="rename"/);
+ assert.match(ide,/data-source-reference-audit="remove"/);
+ assert.match(ide,/No direct local path references detected/);
+ assert.match(localCss,/\.p136017-ref-audit/);
+ assert.ok(!/fetch\(|eval\(|localStorage|sessionStorage/.test(helper),'Reference audit is pure local calculation');
+});
+
+test('dependency warnings navigate into a real source tab and cancel pending operations',()=>{
+ const css=source('../web/src/parity/artifact-workbench-v136.css');
+ assert.match(ide,/function inspectReference\(path:string,previous:string\)/);
+ assert.match(ide,/onClick=\{\(\)=>inspectReference\(path,renamingFile\)\}/);
+ assert.match(ide,/onClick=\{\(\)=>inspectReference\(path,deletingFile\)\}/);
+ assert.match(ide,/The pending file operation was canceled/);
+ assert.match(ide,/document\.getElementById\('p136-source-tab-'\+path\)/);
+ assert.match(css,/\.p136017-ref-audit li button/);
+});
+
+
+test('inspector surfaces advisory missing static source links and real editor navigation',()=>{
+ const ops=source('../web/src/parity/workbench-file-ops-v136.ts');
+ const styles=source('../web/src/parity/artifact-workbench-v136.css');
+ assert.match(ops,/export function unresolvedLocalSourceLinks/);
+ assert.match(ops,/sourceReferencePath\(source,value\)/);
+ assert.match(ide,/useMemo\(\(\)=>unresolvedLocalSourceLinks\(files,safePath\),\[files\]\)/);
+ assert.match(ide,/data-source-link-diagnostics="local"/);
+ assert.match(ide,/onClick=\{\(\)=>inspectUnresolvedLink\(link.source,link.target\)\}/);
+ assert.match(ide,/Static HTML, CSS and JavaScript links only/);
+ assert.match(styles,/\.p136017-source-link-diagnostics/);
+ assert.ok(!/fetch\(|eval\(|localStorage|sessionStorage/.test(ops),
+  'Diagnostic module cannot create new execution or network capabilities');
+});
+
+
+test('V136 public covers prefer verified creator media and use one first-party type default contract',()=>{
+ const thumb=source('../web/src/components/ProjectThumbnail.tsx');
+ const fallback=source('../web/src/lib/project-thumbnails.ts');
+ const homepage=source('../web/src/parity/ParityPortalV136.tsx');
+ const detail=source('../web/src/parity/ArtifactLensV136.tsx');
+ const publicCard=source('../web/src/components/ProjectCard.tsx');
+ const packages=source('../web/src/components/CreatorPackageGallery.tsx');
+ assert.match(thumb,/safePackageCover\(uploadedUrl\)/);
+ assert.match(thumb,/setFailedUrl\(verified\)/);
+ assert.match(thumb,/data-thumbnail-source=/);
+ for(const category of ['games','tools','automation','research','creative','learning','libraries','other','game','app','simulation','story']){
+  assert.ok(fallback.includes(category+':{asset:'),'Every actual category has a deterministic thumbnail: '+category);
+ }
+ assert.match(homepage,/<ProjectThumbnail kind=\{project\.category\}/);
+ assert.match(detail,/<ProjectThumbnail kind=\{item\.category\}/);
+ assert.match(publicCard,/<ProjectThumbnail kind=\{project\.category\}/);
+ assert.match(packages,/uploadedUrl=\{work\.coverUrl\}/);
+ assert.ok(!/fetch\(|localStorage|sessionStorage|eval\(/.test(thumb));
+});
+
+
+test('V136 Commons and real creator/member profiles use safe type covers and addressable sections',()=>{
+ const community=source('../web/src/pages/CommunityPage.tsx');
+ const creators=source('../web/src/pages/CreatorsPage.tsx');
+ const member=source('../web/src/pages/Phase1PublicMemberPage.tsx');
+ const shell=source('../web/src/components/Shell.tsx');
+ const discover=source('../web/src/parity/ParityDiscoverV136.tsx');
+ assert.match(community,/data-parity-community="v136\.017"/);
+ assert.match(community,/<ProjectThumbnail kind=\{item\.category\} title=\{item\.title\}/);
+ assert.match(community,/<ProjectThumbnail kind=\{field\.id\}/);
+ assert.ok(!community.includes('CosmicArtwork'));
+ assert.match(community,/setSearchParams\(params\)/);
+ assert.match(community,/chooseView\(item\.id\)/);
+ assert.match(creators,/data-parity-creators="v136\.017"/);
+ assert.match(creators,/id="p136-creators-index"/);
+ assert.match(creators,/p136-creators-register-panel/);
+ assert.match(creators,/id="p136-creator-releases"/);
+ assert.match(creators,/id="p136-creator-discussions"/);
+ assert.match(member,/p136-public-member/);
+ assert.match(member,/space\.media\.banner&&<MemberCoverMedia/);
+ assert.match(member,/id="member-world-wall"/);
+ assert.match(member,/id="member-world-creations"/);
+ assert.match(member,/id="member-world-recognition"/);
+ assert.match(shell,/const parityProfile=/);
+ assert.match(shell,/!publicSpatial&&!parityFullBleed&&<ContinuanceWorldStage/);
+ assert.ok(!discover.includes('GENERATED ENVIRONMENT / NOT CREATOR ARTWORK'));
+ assert.match(css,/V136\.017\.042/);
+ assert.match(css,/\.p136-community \.ch7-entry-art>\.av136-project-thumbnail/);
+ assert.match(css,/\.p136-creators-hero/);
+ assert.match(css,/\.p136-profile-wayfinder/);
+});
+
+
+test('V136 public boards remove generated art and use functional URL-addressable public filters',()=>{
+ const boards=source('../web/src/pages/PublicBoardsPage.tsx');
+ const shell=source('../web/src/components/Shell.tsx');
+ assert.match(boards,/data-parity-boards="v136\.017"/);
+ assert.match(boards,/ProjectThumbnail kind=\{item\.category\} title=\{item\.title\}/);
+ assert.ok(!boards.includes('CosmicArtwork'));
+ assert.match(boards,/readPublicBoards\(signal\)/);
+ assert.match(boards,/setSearchParams\(params\)/);
+ assert.match(boards,/function chooseCategory\(next:CategoryFilter\)/);
+ assert.match(boards,/if\(next==="latest"\)params\.delete\("view"\)/);
+ assert.match(boards,/if\(next==="all"\)params\.delete\("category"\)/);
+ assert.match(shell,/\"\/boards\"\]\.includes\(location\.pathname\)/);
+ assert.match(css,/V136\.017\.045/);
+ assert.match(css,/\.p136-boards \.cnb-type-cover/);
+ assert.ok(!/url\(\s*['"]?https?:|@import\s+url|@font-face/.test(css),
+   'V136 concept CSS cannot add remote fonts or media');
 });

@@ -4,6 +4,9 @@ on:
     paths:
       - '.github/workflows/parity-v136-scene-qa.yml'
       - 'creator-v1/web/src/parity/SceneDirectorV136.ts'
+      - 'creator-v1/web/src/parity/InstituteHorizonV136017.ts'
+      - 'creator-v1/web/src/parity/InstituteCitadelsV136017.ts'
+      - 'creator-v1/test/parity-v136-citadel-geometry.test.mjs'
       - 'creator-v1/web/src/parity/CinematicArrivalV136.tsx'
       - 'creator-v1/web/src/parity/CinematicFramesV136.tsx'
       - 'creator-v1/web/src/parity/CinematicVideoV136.tsx'
@@ -58,6 +61,13 @@ on:
       - 'creator-v1/web/src/parity/artifact-lens-v136.css'
       - 'creator-v1/web/src/parity/ParityDiscoverV136.tsx'
       - 'creator-v1/web/src/components/ProjectCard.tsx'
+      - 'creator-v1/web/src/components/ProjectThumbnail.tsx'
+      - 'creator-v1/web/src/lib/project-thumbnails.ts'
+      - 'creator-v1/web/public/assets/default-thumbnails/**'
+      - 'creator-v1/test/parity-v136-thumbnails.test.mjs'
+      - 'creator-v1/test/parity-v136-integrated-overhaul.test.mjs'
+      - 'creator-v1/web/AGENTS.md'
+      - 'docs/production/ACTIVE-V136-WEB-OVERHAUL.md'
       - 'creator-v1/web/src/components/CreatorPackageGallery.tsx'
 permissions:
   contents: read
@@ -76,6 +86,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ''
       VITE_PARITY_V136_FULL: 'true'
       VITE_PARITY_V136_CINEMATIC: 'true'
+      VITE_PARITY_V136_HORIZON_QA: 'true'
       VITE_IREN_SPATIAL_GUIDE: 'true'
       VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
       VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
@@ -93,6 +104,12 @@ jobs:
         run: |
           node creator-v1/graphics/inspect-cinematic-v136.mjs
           node --experimental-strip-types --test creator-v1/test/parity-v136-cinematic.test.mjs
+      - name: V136.019 approved creator thumbnail priority and type-specific defaults
+        run: |
+          node --experimental-strip-types --test creator-v1/test/parity-v136-thumbnails.test.mjs
+          node --experimental-strip-types --test creator-v1/test/parity-v136-member-world.test.mjs
+          node --experimental-strip-types --test creator-v1/test/parity-v136-integrated-overhaul.test.mjs
+          python3 -c "import xml.etree.ElementTree as ET; from pathlib import Path; a=list(Path('creator-v1/web/public/assets/default-thumbnails').glob('*.svg')); assert len(a)==10; [ET.parse(p) for p in a]"
       - name: Runtime media approval and single-renderer contract
         run: node --experimental-strip-types --test creator-v1/test/parity-v136-media-contract.test.mjs
       - name: Spatial cinema registration math and GPU-to-vector reveal
@@ -107,6 +124,8 @@ jobs:
         run: node --experimental-strip-types --test creator-v1/test/parity-v136-scene-director.test.mjs
       - name: Install unchanged project dependencies
         run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - name: Assert deterministic original citadel instances and GPU budgets
+        run: node --experimental-strip-types --test creator-v1/test/parity-v136-citadel-geometry.test.mjs
       - name: Inspect all original compressed models and device budgets
         run: node creator-v1/graphics/inspect-institute-assets.mjs
       - name: Verify source archive through canonical native compatibility inspector

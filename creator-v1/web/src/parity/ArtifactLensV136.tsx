@@ -1,8 +1,7 @@
 import {useEffect,useRef} from 'react';
 import {Link} from 'react-router-dom';
-import {CosmicArtwork} from '../components/CosmicArtwork';
+import {ProjectThumbnail} from '../components/ProjectThumbnail';
 import {Icon} from '../components/Icons';
-import type {CosmicScene} from '../components/CosmicIllustration';
 import type {Project} from '../lib/api';
 import type {CreatorPackageCard} from '../lib/creator-package-gallery-v010';
 import {projectDetailPath} from '../lib/navigation';
@@ -19,11 +18,6 @@ export type ArtifactSelection=
  | {kind:'package';work:CreatorPackageCard};
 const packageSector:Record<string,WorldSector>={
   game:'games',app:'tools',simulation:'research',story:'creative'
-};
-const scenes:Record<WorldSector,CosmicScene>={
-  hero:'hero',portal:'portal',games:'games',tools:'tools',creative:'creative',
-  libraries:'libraries',automation:'automation',research:'research',
-  learning:'learning',other:'other',community:'portal',creators:'portal',studio:'creative'
 };
 function publicSector(selection:ArtifactSelection):WorldSector{
   return selection.kind==='project'?selection.project.category:
@@ -53,7 +47,6 @@ export function ArtifactLensV136({selection,returnTo,onClose}:{
   const sector=publicSector(selection);
   const item=selection.kind==='project'?selection.project:selection.work;
   const isProject=selection.kind==='project';
-  const hasCover=!isProject&&Boolean(selection.work.coverUrl);
   const creator=isProject?publicCreatorHandle(selection.project.creatorHandle):null;
   const detail=isProject?projectDetailPath(selection.project.id,returnTo):null;
   const published=dateLabel(item.publishedAt);
@@ -79,13 +72,10 @@ export function ArtifactLensV136({selection,returnTo,onClose}:{
           aria-label="Close artifact details"><Icon name="close" size={20}/></button>
       </header>
       <div className="p136-artifact-lens-grid">
-        <div className="p136-artifact-lens-visual" aria-label={hasCover?'Creator supplied artwork':'Generated category environment'}>
-          {hasCover
-            ?<img src={selection.kind==='package'?selection.work.coverUrl||'':''} alt={'Creator artwork for '+item.title} loading="eager" decoding="async" referrerPolicy="same-origin"/>
-            :<CosmicArtwork scene={scenes[sector]} seed={item.id}/>}
-          <span className="p136-artifact-lens-art-note">
-            {hasCover?'CREATOR-SUPPLIED COVER':'GENERATED CATEGORY FIELD / NOT CREATOR ARTWORK'}
-          </span>
+        <div className="p136-artifact-lens-visual" aria-label="Creator thumbnail if supplied; otherwise ANEVUM default">
+          <ProjectThumbnail kind={item.category} title={item.title}
+            uploadedUrl={selection.kind==='package'?selection.work.coverUrl:null} priority decorative/>
+          <span className="p136-artifact-lens-art-note">CREATOR IMAGE IF AVAILABLE / ANEVUM DEFAULT OTHERWISE</span>
           <span className="p136-artifact-lens-visual-lines" aria-hidden="true"/>
         </div>
         <div className="p136-artifact-lens-info">
