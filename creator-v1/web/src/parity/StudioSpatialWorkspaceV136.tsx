@@ -38,7 +38,13 @@ export function StudioSpatialWorkspaceV136({memberId,children}:{
 }){
   const location=useLocation();
   const [railOpen,setRailOpen]=useState(()=>typeof window!=='undefined'&&
+    !location.pathname.startsWith('/studio/packages')&&
     window.matchMedia('(min-width: 1024px)').matches);
+  // The canonical authoring workbench already contains its own file explorer.
+  // Keep the private records rail reopenable but collapse it on build routes.
+  useEffect(()=>{
+    if(location.pathname.startsWith('/studio/packages'))setRailOpen(false);
+  },[location.pathname]);
   const [query,setQuery]=useState('');
   const [refresh,setRefresh]=useState(0);
   const [directory,setDirectory]=useState<ReadState<PrivateDirectory>>({

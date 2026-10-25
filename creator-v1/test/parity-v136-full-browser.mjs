@@ -253,8 +253,36 @@ try{
       assert.equal(await page.locator('.av095-drop strong').filter({hasText:'Choose a ZIP or HTML file'}).count(),1,
        'Diagnostics never override existing private package/archive invalidation');
     }
-    const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1);
-    assert.equal(overflow,false,'Workbench has no horizontal page overflow');
+    assert.equal(await page.locator('.p136-console-wayfinder').isVisible(),false,
+      'A redundant fixed site dock must never cover the mobile or desktop code editor');
+    const overflow=await page.evaluate(()=>{
+      const allowed=document.documentElement.clientWidth+1;
+      const excess=document.documentElement.scrollWidth-allowed;
+      // Ignore SVG drawing bounds. Paths inside oversized viewBoxes can
+      // exceed the viewport even when their parent does not affect layout.
+      // Report real HTML boxes and the actual Studio/header boundaries.
+      const offenders=[...document.body.querySelectorAll('*')]
+        .filter(node=>node instanceof HTMLElement)
+        .map(node=>{
+          const rect=node.getBoundingClientRect(),style=getComputedStyle(node);
+          return {tag:node.tagName,cls:typeof node.className==='string'?node.className.slice(0,110):'',
+            right:Math.round(rect.right*100)/100,left:Math.round(rect.left*100)/100,
+            width:Math.round(rect.width*100)/100,
+            scrollWidth:node.scrollWidth,clientWidth:node.clientWidth,
+            position:style.position,overflowX:style.overflowX};
+        }).filter(x=>x.right>allowed&&x.width>0)
+        .sort((a,b)=>b.right-a.right).slice(0,15);
+      const boundaries=['.p136-header','.p136-header-inner','.p136-header-actions',
+        '.p136-studio-console','.p136-studio-console-stage','.p136-workbench']
+        .map(selector=>{
+          const node=document.querySelector(selector),rect=node?.getBoundingClientRect();
+          return {selector,right:rect?Math.round(rect.right*100)/100:null,
+            width:rect?Math.round(rect.width*100)/100:null};
+        });
+      return {excess,viewport:innerWidth,scrollWidth:document.documentElement.scrollWidth,
+        offenders,boundaries};
+    });
+    assert.ok(overflow.excess<=0,'Workbench must not expand the document horizontally: '+JSON.stringify({width,...overflow}));
     record('session-bound source workstation / real editor / native ZIP compatibility / stale archive invalidation '+width,{monaco:width===1440,uploads:0});
     await context.close();
   }
@@ -572,7 +600,7 @@ try{
       },family,{timeout:30000});
       // Model readiness is independent of React's lazy route module. Capture
       // the functioning route, never a Suspense/loading screen over a ready mesh.
-      if(family==='atrium')await page.getByRole('heading',{level:1,name:/Independent worlds/i}).waitFor();
+      if(family==='atrium')await page.getByRole('heading',{level:1,name:/A creative universe/i}).waitFor();
       else if(family==='relay')await page.locator('#ch7-hero-title').waitFor();
       else await page.locator('#p136-discover-title').waitFor();
       await page.waitForFunction(()=>document.querySelector('.p136-living-canvas')?.dataset.textureState!=='loading',null,{timeout:20000});

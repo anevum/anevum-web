@@ -169,3 +169,24 @@ test('inspector surfaces advisory missing static source links and real editor na
  assert.ok(!/fetch\(|eval\(|localStorage|sessionStorage/.test(ops),
   'Diagnostic module cannot create new execution or network capabilities');
 });
+
+
+test('V136 public covers prefer verified creator media and use one first-party type default contract',()=>{
+ const thumb=source('../web/src/components/ProjectThumbnail.tsx');
+ const fallback=source('../web/src/lib/project-thumbnails.ts');
+ const homepage=source('../web/src/parity/ParityPortalV136.tsx');
+ const detail=source('../web/src/parity/ArtifactLensV136.tsx');
+ const publicCard=source('../web/src/components/ProjectCard.tsx');
+ const packages=source('../web/src/components/CreatorPackageGallery.tsx');
+ assert.match(thumb,/safePackageCover\(uploadedUrl\)/);
+ assert.match(thumb,/setFailedUrl\(verified\)/);
+ assert.match(thumb,/data-thumbnail-source=/);
+ for(const category of ['games','tools','automation','research','creative','learning','libraries','other','game','app','simulation','story']){
+  assert.ok(fallback.includes(category+':{asset:'),'Every actual category has a deterministic thumbnail: '+category);
+ }
+ assert.match(homepage,/<ProjectThumbnail kind=\{project\.category\}/);
+ assert.match(detail,/<ProjectThumbnail kind=\{item\.category\}/);
+ assert.match(publicCard,/<ProjectThumbnail kind=\{project\.category\}/);
+ assert.match(packages,/uploadedUrl=\{work\.coverUrl\}/);
+ assert.ok(!/fetch\(|localStorage|sessionStorage|eval\(/.test(thumb));
+});

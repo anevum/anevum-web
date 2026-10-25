@@ -65,6 +65,9 @@ const allowed=new Set([
  ...['LivingWorldState.tsx','LivingWorldField.tsx','LivingWorldGlyph.tsx','living-world-shaders.ts','living-world-v136.css'].map(x=>'creator-v1/web/src/parity/'+x),
  'creator-v1/web/src/parity/ParityDiscoverV136.tsx',
  'creator-v1/web/src/parity/parity-discover-v136.css',
+ // UI-only fixed category covers; creator-uploaded imagery remains the priority.
+ 'creator-v1/web/src/parity/CategoryCoverV136.tsx',
+ 'creator-v1/web/src/parity/category-cover-v136.css',
  'creator-v1/test/parity-v136-full-browser.mjs','docs/production/parity-v136-release-20261024.md',
  'creator-v1/web/src/main.tsx','creator-v1/web/vite.config.ts',
  'creator-v1/web/src/parity/ControllerBridgeV136.tsx',

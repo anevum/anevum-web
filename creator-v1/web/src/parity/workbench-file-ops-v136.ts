@@ -93,3 +93,31 @@ export function unresolvedLocalSourceLinks(
  }
  return result;
 }
+
+
+/** Display-only local HTML preview. Execution belongs to the canonical
+ * isolated private playtest, never this sandboxed inspector. */
+export function sourcePreviewDocument(files:Record<string,string>):string{
+ const original=typeof files['index.html']==='string'?files['index.html']:
+  '<main><h1>Root index.html required</h1></main>';
+ const markup=original
+  .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi,'')
+  .replace(/<script\b[^>]*\/\s*>/gi,'')
+  .replace(/<link\b[^>]*>/gi,tag=>{
+   if(!/\brel\s*=\s*(?:"stylesheet"|'stylesheet')/i.test(tag))return '';
+   const href=tag.match(/\bhref\s*=\s*(?:"([^"]{1,240})"|'([^']{1,240})')/i)?.slice(1).find(Boolean);
+   const path=href?sourceReferencePath('index.html',href):null;
+   if(!path||!path.endsWith('.css')||!Object.hasOwn(files,path))return '';
+   return '<style data-local-preview-stylesheet="'+path+'">'+
+    files[path].replace(/<\/style\b/gi,'<\\/style')+'</style>';
+  });
+ const policy='default-src &#39;none&#39;; script-src &#39;none&#39;; '+
+  'style-src &#39;unsafe-inline&#39;; img-src data:; font-src data:; '+
+  'connect-src &#39;none&#39;; frame-src &#39;none&#39;; '+
+  'form-action &#39;none&#39;; base-uri &#39;none&#39;';
+ const meta='<meta http-equiv="Content-Security-Policy" content="'+policy+'">'+
+  '<meta name="viewport" content="width=device-width, initial-scale=1">';
+ return /<head\b[^>]*>/i.test(markup)?
+  markup.replace(/<head\b[^>]*>/i,m=>m+meta):
+  '<!doctype html><head>'+meta+'</head>'+markup;
+}

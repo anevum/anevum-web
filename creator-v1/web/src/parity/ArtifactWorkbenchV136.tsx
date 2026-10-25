@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useRef,useState,type ComponentType,type ReactNode} from 'react';
 import {strToU8} from 'fflate';
 import {sourceArchive,playableSourceArchive,localOnlySourcePaths,safeSourcePath,SOURCE_LIMITS} from './source-archive-v136';
-import {renameLocalSource,removeLocalSource,sourceReferencesToReview,unresolvedLocalSourceLinks} from './workbench-file-ops-v136';
+import {renameLocalSource,removeLocalSource,sourceReferencesToReview,unresolvedLocalSourceLinks,sourcePreviewDocument} from './workbench-file-ops-v136';
 import {Icon} from '../components/Icons';
 import {FileGlyphV136017,FolderGlyphV136017,fileKind} from './FileGlyphV136017';
 import {editorLanguage} from '../../../source-ide/language-v119.mjs';
@@ -45,6 +45,7 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
  const [inspector,setInspector]=useState(true),importVersion=useRef(0);
  const [quickOpen,setQuickOpen]=useState(false),[fileQuery,setFileQuery]=useState(''),[fileChoice,setFileChoice]=useState(0);
  const [cursor,setCursor]=useState({line:1,column:1});
+ const [previewDevice,setPreviewDevice]=useState<'desktop'|'phone'>('desktop');
  const [renamingFile,setRenamingFile]=useState<string|null>(null),[renameDraft,setRenameDraft]=useState('');
  const [deletingFile,setDeletingFile]=useState<string|null>(null);
  const quickInput=useRef<HTMLInputElement>(null),quickButton=useRef<HTMLButtonElement>(null);
@@ -76,6 +77,7 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
  }
  const localOnlyPaths=localOnlySourcePaths(files);
  const unresolvedLinks=useMemo(()=>unresolvedLocalSourceLinks(files,safePath),[files]);
+ const previewHtml=useMemo(()=>sourcePreviewDocument(files),[files]);
  const renameReferences=renamingFile?sourceReferencesToReview(files,renamingFile):[];
  const removalReferences=deletingFile?sourceReferencesToReview(files,deletingFile):[];
  function inspectUnresolvedLink(path:string,target:string){
@@ -200,7 +202,7 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
    onKeyDownCapture={e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='p'){
     e.preventDefault();setFileQuery('');setFileChoice(0);setQuickOpen(true);
    }}}>
-  <header className="p136-workbench-head"><div><span>CONTINUANCE / ARTIFACT WORKBENCH</span><h2>Make the source.</h2></div><span className="p136-source-state">{dirty?'LOCAL CHANGES':'ARCHIVE PREPARED'}</span></header>
+  <header className="p136-workbench-head"><div><span>ANEVUM / CREATOR STUDIO</span><h2>Code workspace</h2></div><span className="p136-source-state">{dirty?'LOCAL CHANGES':'ARCHIVE PREPARED'}</span></header>
   <div className="p136017-source-functionbar" aria-hidden="true">
    <span className="p136017-functionmark">SOURCE / LOCAL</span>
    <span>FILES · VALIDATION · ARCHIVE</span>
@@ -238,7 +240,7 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
     LOCAL NOTES / {localOnlyPaths.join(', ')} — kept in complete source downloads, excluded from playable ZIPs.
    </p>}
    <div className="p136-workbench-layout" data-inspector={inspector}>
-   <aside className="p136-source-explorer" aria-label="Local source files"><strong>PROJECT FILES</strong>
+   <aside className="p136-source-explorer" aria-label="Local source files"><strong>PROJECT EXPLORER</strong>
     <div className="p136-source-add"><label className="visually-hidden" htmlFor="p136-source-new">New file path</label><input id="p136-source-new" placeholder="assets/data.json" value={name} onChange={e=>setName(e.target.value)} maxLength={120} disabled={disabled}/><button type="button" onClick={add} disabled={disabled} aria-label="Create source file">+</button></div>
     <nav aria-label="Source file explorer" className="p136017-source-tree">{explorerTree.map(node=>explorerRow(node,0))}</nav>
    </aside>
@@ -288,7 +290,22 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
     </div>
     <footer className="p136-source-status">{!plain&&Editor&&!editorError&&<span data-source-cursor>Ln {cursor.line}, Col {cursor.column}</span>}<span>{editorLanguage(active).toUpperCase()}</span><span>{files[active].split('\n').length} lines</span><span>{strToU8(files[active]).length.toLocaleString()} bytes</span><span>{plain||editorError?'TEXT EDITOR':Editor?'MONACO':'LOADING MONACO'}</span></footer>
    </div>
-   {inspector&&<aside className="p136-source-inspector" aria-label="Source and build diagnostics"><strong>BUILD INSPECTOR</strong><span className="p136017-inspector-disclosure">VALIDATION / LOCAL SOURCE</span><dl><dt>Source files</dt><dd>{entries.length} / {MAX_FILES}</dd><dt>Expanded text</dt><dd>{(total/1024).toFixed(1)} KiB / 1024 KiB</dd><dt>Entrypoint</dt><dd>{files['index.html']?'index.html':'Missing'}</dd><dt>Publication</dt><dd>Private upload required</dd><dt>Local-only source notes</dt><dd>{localOnlyPaths.length}</dd></dl><h3>Local findings</h3>{problems.length?<ul>{problems.map(p=><li key={p}>{p}</li>)}</ul>:<p>No issues found by the available text checks.</p>}
+   {inspector&&<aside className="p136-source-inspector" aria-label="Source and build diagnostics">
+    <div className="p136037-preview" data-source-preview="local" aria-label="Isolated local HTML and CSS preview">
+     <header className="p136037-preview-header">
+      <div><strong>LIVE PREVIEW</strong><span>HTML + CSS / LOCAL</span></div>
+      <div className="p136037-preview-devices" role="group" aria-label="Preview device size">
+       <button type="button" aria-label="Desktop preview" aria-pressed={previewDevice==='desktop'} onClick={()=>setPreviewDevice('desktop')}>Desktop</button>
+       <button type="button" aria-label="Phone preview" aria-pressed={previewDevice==='phone'} onClick={()=>setPreviewDevice('phone')}>Phone</button>
+      </div>
+     </header>
+     <div className="p136037-preview-viewport" data-source-preview-device={previewDevice}>
+      <iframe title="Isolated local HTML and CSS preview" data-source-preview-frame
+       sandbox="" referrerPolicy="no-referrer" loading="eager" srcDoc={previewHtml}/>
+     </div>
+     <p>Read-only HTML/CSS view. JavaScript and remote resources are blocked; executable playtests use the existing private sandbox.</p>
+    </div>
+    <strong>BUILD INSPECTOR</strong><span className="p136017-inspector-disclosure">VALIDATION / LOCAL SOURCE</span><dl><dt>Source files</dt><dd>{entries.length} / {MAX_FILES}</dd><dt>Expanded text</dt><dd>{(total/1024).toFixed(1)} KiB / 1024 KiB</dd><dt>Entrypoint</dt><dd>{files['index.html']?'index.html':'Missing'}</dd><dt>Publication</dt><dd>Private upload required</dd><dt>Local-only source notes</dt><dd>{localOnlyPaths.length}</dd></dl><h3>Local findings</h3>{problems.length?<ul>{problems.map(p=><li key={p}>{p}</li>)}</ul>:<p>No issues found by the available text checks.</p>}
     <div className="p136017-source-link-diagnostics" data-source-link-diagnostics="local" aria-label="Local link diagnostics">
      <h3>Source links / {unresolvedLinks.length} missing</h3>
      {unresolvedLinks.length?
