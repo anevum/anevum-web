@@ -15,6 +15,8 @@ const home=read("web/src/parity/ParityPortalV136.tsx");
 const start=read("web/src/pages/StartPage.tsx");
 const app=read("web/src/App.tsx");
 const join=read("web/src/pages/Phase1JoinPage.tsx");
+const status=read("web/src/pages/StatusPage.tsx");
+const statusStyles=read("web/src/pages/status-focus-v136.css");
 
 test("new first-visit guidance compiles as valid TSX and belongs to existing arrival",()=>{
  for(const source of [first,home,start])assert.doesNotThrow(()=>
@@ -61,4 +63,19 @@ test("Start Here no longer asserts retired launch restrictions or invents access
  assert.match(start,/EXPLORE CREATOR STUDIO/);
  assert.match(start,/to: "\/status"/);
  assert.match(join,/function submitEmail|async function submitEmail/);
+});
+
+test("a truthful public Now Next Exploring focus stays separate from verified service status",()=>{
+ assert.doesNotThrow(()=>parse(status,{sourceType:"module",plugins:["typescript","jsx"]}));
+ assert.match(status,/import "\.\/status-focus-v136\.css"/);
+ assert.match(status,/<section id="development-focus"/);
+ assert.match(status,/>01 \/ NOW</);
+ assert.match(status,/>02 \/ NEXT</);
+ assert.match(status,/>03 \/ EXPLORING</);
+ assert.match(status,/verified service capabilities above are the source of truth/i);
+ assert.match(status,/Open feature voting and a universal feedback inbox are not active capabilities/i);
+ assert.doesNotMatch(status,/<button[^>]*>\s*Vote|\bonVote\b|createFeedback\(/i);
+ assert.match(status,/readStatus\(signal\)/);
+ assert.match(statusStyles,/@media\(max-width:520px\)/);
+ assert.match(statusStyles,/focus-visible/);
 });
