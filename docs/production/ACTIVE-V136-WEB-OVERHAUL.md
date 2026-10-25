@@ -169,3 +169,16 @@ All Back-navigation and remaining acceptance groups stay enabled; rerun at head.
 Screenshot review additionally found the inspection status crossing the small
 first-contact label on phones. The inspection control moves up, with a compiled
 rectangle-clearance assertion; its existing 44px target is retained.
+
+## V136.024 — integration and controlled production rollout
+Scoped session: `ANEVUM.WEB.RELEASE.2026-10-25.004.CONTROLLED-UI-ROLLOUT`.
+Owner now authorizes merging and controlled deployment. #738 reviewed head
+`34ab7886` merged into this owning development branch at `b63109b4`, preserving
+the verified tree and original rollback references. Main remains unchanged.
+Prepare the existing sealed frontend-only V136 package on
+`release/parity-v136-unified-ui-20261025-004`; require exact release-mode CI,
+inactive upload receipts, backend/binding/route invariance and native-browser
+verification before broad promotion. No experimental QA geometry/video flags,
+private uploader/publication changes, financial operations or data migrations.
+The next UI development slice remains creator-directory search/card/empty-state
+convergence; keep ongoing development separate from the immutable release head.

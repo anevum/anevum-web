@@ -3,7 +3,8 @@
 Coordination session: `ANEVUM.ANEVUM.PACKAGE.2026-10-25.001.UNIFIED-WORKSTREAM-CONTINUITY`.
 Scoped implementation: `ANEVUM.WEB.UPDATE.2026-10-25.002.UNIFIED-UI-INTEGRATION`.
 Verified discovery date: October 25, 2026 (America/New_York).
-Status: **ACTIVE DEVELOPMENT. NOT released, merged, deployed or visually accepted.**
+Status: **ACTIVE DEVELOPMENT. #738 merged into website development; controlled
+frontend release authorized. New production promotion not yet verified.**
 
 This is an evidence index and continuation checkpoint, not another task board.
 [Canonical engineering #325](https://github.com/anevum/anevum-web/issues/325)
@@ -68,7 +69,9 @@ Integration order:
 4. Repair canonical thumbnail callers and source/browser assertions together.
 5. Obtain exact-head CI and actual screenshots before considering a subsequent
    baseline update. Recheck remote heads; do not overwrite concurrent work.
-6. Keep all production/release/publication gates closed. No merge is authorized.
+6. Owner subsequently authorized merging and controlled deployment on October
+   25. Release through exact-head validation and the sealed frontend package;
+   publication/privacy gates and forbidden QA flags remain unchanged.
 
 ## Resolved overlap and actual code
 
@@ -223,3 +226,27 @@ remain strict. Full exact-head browser verification is required for this correct
 The actual 320px capture also exposed inspection-status/first-contact overlap;
 the mobile inspection control moves up 22–26px, with a strict rectangle-clearance
 assertion. This preserves its 44px target and the compact headline position.
+
+## V136.024 — owner-authorized integration and controlled rollout
+
+Scoped session: `ANEVUM.WEB.RELEASE.2026-10-25.004.CONTROLLED-UI-ROLLOUT`.
+Owner instructed: “Continue and begin merging and deploying updating as you
+continue development and implementation.” This supersedes earlier draft-only
+authorization; it does not waive security, privacy or release verification.
+#738 exact reviewed `34ab7886` merged into the existing #735 development branch
+at `b63109b47db27bcb380b9a40da4024ff64f1862c`; tree remains
+`3418ca66c294093c170718e825c59f2b3282257b`. Main is unchanged.
+Source passed 1,753 regressions, 76 compiled page captures, 45 full V136 groups,
+errors=[] and forbidden=[]; actual 1536/1440/390/320 captures were reviewed.
+The release branch is `release/parity-v136-unified-ui-20261025-004`.
+New public UI/media/test/document paths are admitted only at reviewed Git blob
+hashes, including exact deletions; protected backend paths remain forbidden.
+The frozen V132 packaging job remains unchanged and describes its original
+V131/V132-only source contract. The V136 release runs its preserved collections,
+guest/disabled/account and earned-media checks against the current frontend.
+Use release-mode flags with both geometry QA flags and native video disabled.
+Upload an inactive paired package, verify original Worker/bindings/routes and
+rollback assets, then perform a measured live rollout with native-browser checks.
+Current provider baseline is deployment `f2f950d8-8ec6-42cd-80c2-06681ad2fcf9`
+and the recorded V136.003 99% / V136.005 1% split. Do not infer new live state
+until a provider receipt and real browser checks establish it.

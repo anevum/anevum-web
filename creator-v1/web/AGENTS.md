@@ -24,8 +24,12 @@ reference boards; do not restart prior work or infer release acceptance.
   Do not weaken exact-head assertions because historic tests mention art
   that has intentionally been retired; replace stale expectations with
   equivalent real UI verification.
-- This is still a **draft**: no main/production merge, traffic change,
-  new release capability or relaxation of QA-only WebGL flags/allowlists.
+- Owner authorized merging and controlled deployment on October 25 in the
+  unified session. #738 is merged into the existing website development branch.
+  Release through the existing frontend-only package/preflight process; preserve
+  exact backend bytes, bindings, private publication gates and rollback versions.
+  Private QA geometry/video flags remain forbidden in release. Newly reviewed
+  UI paths require their exact pinned blobs; do not grant directory-wide access.
 - Open Signal #736 is explicitly included only in the unified integration draft;
   its original sibling branch and all release/publication gates remain unchanged.
 
