@@ -1,0 +1,50 @@
+name: V136 Unified UI Public Read-Only Live Smoke
+on:
+  push:
+    branches: ['ops/parity-v136-live-smoke-20261025-004']
+permissions:
+  contents: read
+jobs:
+  live-assets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Verify both active versions and immutable chunks over public GET only
+        shell: bash
+        run: |
+          python3 - <<'PYTHON'
+          import concurrent.futures,hashlib,json,pathlib,urllib.request,datetime
+          EXPECTED={'baseline': {'htmlSha256': 'd1b656827c980931446469935d96379c2637bd18b62fd1c75f9da91b9904f847', 'assets': [{'path': '/assets/index-DvtHsOlq.js', 'sha256': '1c2dcc63c9f4252fb82cf28036e8b09e1cab9e30fae5c72947c1a3526d1a22df'}, {'path': '/assets/jsx-runtime-BZII8Ktx.js', 'sha256': '82a9886950fe0479237cb6d754c6606c2c83325cedef117fb70c99eaee8556fe'}, {'path': '/assets/Icons-BTeSxo5l.js', 'sha256': 'ac0e7ecd9655ea9505cbd450c1b684585353ae044ec4ebc56766c0b19d22ff82'}, {'path': '/assets/read-deadline-Bo8SGLM9.js', 'sha256': '49e78cef9a54bf4c184c894a9cfdb34dc560535c7dd389419fcfee789d68b316'}, {'path': '/assets/useResource-BCMRf_s2.js', 'sha256': '28a5901a200f6c1d91cde2613171cb036014acb78d52292e14e3c5df3b988cf3'}, {'path': '/assets/canonical-beta-BWhP2gIO.js', 'sha256': '9c8257b71b6027920847254d3f368af927250865cdd078a226fb3ce4905a8882'}, {'path': '/assets/navigation-Cuiexp91.js', 'sha256': '017b119c8766457a155833f99ef455d21488a43b7d55e0a0aead7848f67bcb5e'}, {'path': '/assets/CosmicArtwork-AHNtY1Ao.js', 'sha256': '578e3bd3125fd68d1bf6b516fa1726c420fc36d06d003b61625acb227cb2b39a'}, {'path': '/assets/NativeCreatorStudio-DwjOdNBp.js', 'sha256': '986ef42bb5a85dfbfae9405327d75c1396a3ba00c9bdf10163ef46a1cbda975d'}, {'path': '/assets/NativeCreatorStudio-Dtyaez7E.css', 'sha256': '767578f449fc3365e16b27dedf3ab53acc5798c6a0c3378c6454c07016adb444'}, {'path': '/assets/index-C06NWSWn.css', 'sha256': 'b98e45e93dd80eb64af5bdf882edd3eb56011fe94e335aae92908f593300bb59'}]}, 'candidate': {'htmlSha256': 'd1534955dc33a8cd8786f862e662635be24f6fc86101f0305ac215ed0b3740a9', 'assets': [{'path': '/assets/index-CPYt_K2q.js', 'sha256': 'ffbb90388228ccaacb1d2291209e047cb7c82faa2b67654cdc17ecd55baa8408'}, {'path': '/assets/rolldown-runtime-XKyaHtl9.js', 'sha256': '548d1dbf321e7d2ae804fcc158b588706a7c52f8ca175de1490c6ccb4dbe55b7'}, {'path': '/assets/jsx-runtime-D65ibrDb.js', 'sha256': 'ff13e718c9a6807ae79135ab51da9de8a56f51e4724a0326e1ba26a8dfc9df30'}, {'path': '/assets/chunk-OB3PAWPO-DQID1OE-.js', 'sha256': '81fe9953a135971df8c9c4c77a39f617dbef9deb08939d02f5b26605e24c785c'}, {'path': '/assets/OrbitalMark-72S7Mzb6.js', 'sha256': '796d6d442d7aeaf1daf05c117ee44845c4cc5c901e0507da84105341d41296a8'}, {'path': '/assets/Icons-CfJ1u8T_.js', 'sha256': 'd93634bfd81b2430e28d7c6d3f35e05040bd0cb3a62ca2907d9b185183552bd4'}, {'path': '/assets/ProjectThumbnail-DuDF9OK1.js', 'sha256': '831bcf7cf8c1f3b1f4b0848a30167dd5b8e597416b53f9c3c2fba71e9ec7258e'}, {'path': '/assets/CosmicArtwork-UdkR2K4v.js', 'sha256': 'dfd3ce8783307913d82d5e9cf5957c134d8faec19ae13960da13aec896ca0060'}, {'path': '/assets/native-creator-v095-BV1lu4lO.js', 'sha256': 'f35b5346fe59fc6c4fbbbb2fbf31efedc728b765ebb85eb1fd6e3938a43266ca'}, {'path': '/assets/States-pRKaI5y2.js', 'sha256': '3c9c7eb42f063ff7a160cee52c0ee3d309ea85055004485c28eaac0886dfb26b'}, {'path': '/assets/canonical-beta-B0iSNCUp.js', 'sha256': '6ab82e100a16ee9dcd671104eb1bb68ab6899d9457464b0da90be23e7b06aed5'}, {'path': '/assets/preload-helper-BZ1Pz5am.js', 'sha256': '8820987e6a8afb54d776f21e305917e1ecf83cef678b4db38c2e5a405d04a8bf'}, {'path': '/assets/SceneDirectorV136-D1VGjyOK.js', 'sha256': '8917803b9fd71d816bbcd60a5c1c5d744023e7d24e03ad19250eb231f0fd8ca5'}, {'path': '/assets/read-deadline-Bo8SGLM9.js', 'sha256': '49e78cef9a54bf4c184c894a9cfdb34dc560535c7dd389419fcfee789d68b316'}, {'path': '/assets/useResource-3v7AUCdl.js', 'sha256': '1f6388604d261160bb97a7ef1bc60370e70b768e326b007e3ac9d2946e23752f'}, {'path': '/assets/NativeCreatorStudio-CyFoJspq.js', 'sha256': '7c8b91826573a606de58b29bdcceef5b9616133222ad4687bcfcc0fcd7368a36'}, {'path': '/assets/States-cX7a98Zs.css', 'sha256': '7a5c39b6703eab811a7d6561667fa1e6001086311d10fb412ef40bc27974a0e1'}, {'path': '/assets/NativeCreatorStudio-Dtyaez7E.css', 'sha256': '767578f449fc3365e16b27dedf3ab53acc5798c6a0c3378c6454c07016adb444'}, {'path': '/assets/index-EcGTNdu6.css', 'sha256': '8c96fc07cea98825af143debe9be390aa2a5b70584b5291f38392c540fd15b73'}]}}
+          VERSIONS={'baseline':'ec5f106b-482c-4415-9c66-d6f8daf219ad','candidate':'cedb7ac1-74ca-4fcd-9a40-ce56964f1785'}
+          OUT=pathlib.Path('/tmp/ui-live-smoke');OUT.mkdir(exist_ok=True)
+          def request(variant,path):
+           headers={'Cloudflare-Workers-Version-Overrides':'anevum-apex-prelaunch-gateway="'+VERSIONS[variant]+'"','Cache-Control':'no-cache','Accept-Encoding':'identity'}
+           with urllib.request.urlopen(urllib.request.Request('https://anevum.com'+path,headers=headers),timeout=25) as response:
+            assert response.status==200,(path,response.status)
+            return response.read(),response.headers.get('Content-Type','')
+          checks=[];failure=None
+          try:
+           for variant in VERSIONS:
+            target=EXPECTED[variant];entry=target['assets'][0]['path']
+            for path in ['/','/discover','/community','/creators','/projects/alpha_5764a892052647b6953b4cf6a9053c0f']:
+             body,kind=request(variant,path);assert 'text/html' in kind,(variant,path,kind)
+             assert entry.encode() in body,('Wrong frontend/version override',variant,path)
+             digest=hashlib.sha256(body).hexdigest();checks.append({'variant':variant,'path':path,'entrypointCorrect':True,'htmlSha256':digest,'htmlByteIdentical':digest==target['htmlSha256']})
+            def asset(item):
+             body,kind=request(variant,item['path']);digest=hashlib.sha256(body).hexdigest()
+             assert digest==item['sha256'],('Asset byte mismatch',variant,item['path'],digest)
+             return {'variant':variant,'path':item['path'],'sha256':digest,'status':'PASS'}
+            with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:checks.extend(pool.map(asset,target['assets']))
+          except Exception as error:
+           failure=repr(error)
+          finally:
+           result={'session':'ANEVUM.WEB.RELEASE.2026-10-25.004.CONTROLLED-UI-ROLLOUT','source':'4dfaed54fed606713a99b87c3152beddbcbc31f3','at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'versions':VERSIONS,'checks':checks,'failure':failure,'productionWrites':False,'authenticatedRequests':False}
+           (OUT/'receipt.json').write_text(json.dumps(result,indent=2));print(json.dumps({'checks':len(checks),'failure':failure}))
+          if failure:raise SystemExit(1)
+          PYTHON
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v136-unified-ui-live-smoke-${{ github.sha }}
+          path: /tmp/ui-live-smoke
+          retention-days: 14
