@@ -51,10 +51,11 @@ jobs:
         run: |
           npm run check:creator-v1-web
           npm run build:creator-v1-web:staging
-      - name: Install headless Chromium acceptance tooling
+      - name: Reuse runner Chrome with isolated Playwright driver
         run: |
           npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
-          npx playwright install --with-deps chromium
+          command -v google-chrome
+          google-chrome --version
       - name: Verify real DOM targets for steps 4/7 on member page
         run: node creator-v1/test/iren-first-user-v137-browser.mjs
       - name: Store source-pinned browser evidence
