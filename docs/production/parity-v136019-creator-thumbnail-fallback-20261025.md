@@ -51,3 +51,8 @@ Protected V132 and release source allowlists remain fail closed; their rejection
 Private and public member spaces now use one failed-media fallback for uploaded portraits and banners. Verified account media loads normally; a failed portrait returns to the existing native OrbitalMark, and a failed banner reveals the already-present native cover instead of a broken image element. The original versions and private/public media routes are retained. There is no new image source, media upload route or AI image generation.
 
 Public profiles gain an actual section index for the member's public wall, biography, verified recognition, and—only if the approved package gallery is enabled—browser creations. Each target is a real in-page anchor, not an imagined feed or data count. The private and public identity surfaces receive responsive, accessible Institute-native panels, maintaining aura/theme accents and creator-uploaded imagery. All media, identity, authentication, wall availability, and publication gates remain server-owned. These changes are a draft visual integration pending browser verification.
+
+
+## V136.021 QA fixture route correction
+
+A previously observed compiled Community screenshot failure was the offline fixture's path whitelist, not a missing default asset: `/creator/assets/default-thumbnails/games.svg` was rejected while the image component and positioning rendered correctly. The loopback-only fixture now permits exactly ten approved `default-thumbnails/<kind>.svg` paths, with its existing path normalization, static-file existence requirement, and unchanged public/private API route behavior. This preserves strict file provenance without widening access to arbitrary directories or user uploads.

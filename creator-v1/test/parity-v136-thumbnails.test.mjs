@@ -62,3 +62,12 @@ test('real public cards, saved works, community, and inspector use the same medi
  const legacy=readFileSync(new URL('../web/src/lib/api.ts',import.meta.url),'utf8');
  assert.doesNotMatch(legacy,/coverUrl\s*:/,'Legacy API does not yet expose an approved cover');
 });
+
+
+test('isolated browser fixture serves only the ten reviewed default SVGs, not arbitrary asset paths',()=>{
+ const fixture=readFileSync(new URL('./portal-offline-preview.mjs',import.meta.url),'utf8');
+ assert.match(fixture,/default-thumbnails\\\/\(\?:games\|tools\|automation\|research\|creative\|learning\|libraries\|other\|simulation\|story\)\\\.svg/);
+ assert.match(fixture,/if\(!\\/\^assets\\/);
+ assert.match(fixture,/!existsSync\(path\)/);
+ assert.doesNotMatch(fixture,/default-thumbnails\\\/\[\^\\/\]\+/);
+});
