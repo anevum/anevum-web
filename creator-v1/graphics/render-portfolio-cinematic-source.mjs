@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Render original portfolio Institute SVG into deterministic high-res source
+ * Render the new Transcosmic fallback SVG into deterministic high-res source
  * frames, then hand off to the existing approved V136.014 FFmpeg encoder.
  * This creates only OFFLINE, UNREVIEWED candidates. No public assets are
  * written, no traffic or CSP rules are changed and no new runtime is added.
@@ -18,7 +18,7 @@ import {dirname,resolve,join} from 'node:path';
 import {createHash} from 'node:crypto';
 const here=dirname(fileURLToPath(import.meta.url));
 const root=resolve(here,'../web/public/portfolio');
-const source=join(root,'assets','continuance-horizon.svg');
+const source=join(root,'assets','transcosmic-continuum.svg');
 const argv=process.argv.slice(2);
 const opt=(name,fallback=null)=>{
  const n=argv.indexOf('--'+name);
@@ -65,8 +65,8 @@ for(let i=1;i<=frames;i++){
 const report={
  status:'UNREVIEWED_NOT_FOR_PRODUCTION',
  project:'portfolio.anevum.com / canonical anevum.com/portfolio/',
- kind:'original SVG-to-2.5D camera-study source frames',
- source:'creator-v1/web/public/portfolio/assets/continuance-horizon.svg',
+ kind:'Transcosmic static-fallback SVG-to-2.5D camera-study frames (NOT live WebGL scene)',
+ source:'creator-v1/web/public/portfolio/assets/transcosmic-continuum.svg',
  sourceSha256:createHash('sha256').update(svg).digest('hex'),
  sourceVector:true,
  masterRaster:{width:3840,height:2160,bytes:statSync(image).size},
