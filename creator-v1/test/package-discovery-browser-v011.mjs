@@ -87,9 +87,14 @@ export async function capturePackageDiscoveryV011({client,base,evaluate,until,sc
    await evaluate('document.querySelector(".portal-discover-results").scrollIntoView({block:"start",behavior:"instant"})');
    await screenshot('package-discovery-v011-grid-'+width);
    await evaluate('[...document.querySelectorAll(".portal-result-actions button")].find(x=>x.textContent.includes("LIST")).click()');
-   const compact=await evaluate(`([...document.querySelectorAll('.portal-discover-results .av010-work-card')].map(x=>({
+   // React can commit the list-mode DOM after the synchronous click returns
+   // to the CDP caller. Wait for the actual four compact cards and hidden
+   // covers, not a fixed delay or a weakened layout assertion.
+   const compactState=`([...document.querySelectorAll('.portal-discover-results .av010-work-card')].map(x=>({
     compact:x.classList.contains('av010-work-card--compact'),cover:getComputedStyle(x.querySelector('.av010-work-cover')).display
-   })))`);
+   })))`;
+   await until(()=>evaluate(`(x=>x.length===4&&x.every(card=>card.compact&&card.cover==='none'))(${compactState})`));
+   const compact=await evaluate(compactState);
    assert.equal(compact.length,4);assert.ok(compact.every(x=>x.compact&&x.cover==='none'));
    assert.equal((await state()).overflow,false);
    await screenshot('package-discovery-v011-list-'+width);
