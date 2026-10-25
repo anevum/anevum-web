@@ -1,0 +1,73 @@
+/** V136.017 authored compositional UI source safety, Node 22, no browser/network.
+ * The full Chromium QA separately tests actual pixels, responsive layout and routes.
+ */
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const source=p=>readFileSync(new URL(p,import.meta.url),'utf8');
+const hero=source('../web/src/parity/ParityPortalV136.tsx');
+const art=source('../web/src/parity/ContinuanceInstrumentV136017.tsx');
+const studio=source('../web/src/parity/StudioSpatialWorkspaceV136.tsx');
+const ide=source('../web/src/parity/ArtifactWorkbenchV136.tsx');
+const css=source('../web/src/parity/concept-convergence-v136017.css');
+const main=source('../web/src/main.tsx');
+test('original Arrival optical instrument is non-interactive and independent of remote files',()=>{
+ assert.match(art,/aria-hidden="true"/);
+ assert.match(art,/data-art="continuance-original-optics"/);
+ assert.match(art,/<svg viewBox="0 0 840 690"/);
+ assert.match(art,/const ticks=Array\.from\(\{length:48\}/);
+ assert.ok(!/<canvas\b|<iframe\b|onClick|onKeyDown|fetch\(|window\.|localStorage|navigator\.|import\(|http:/i.test(art),
+  'Artwork cannot own a renderer, unsafe execution or real navigation');
+ assert.match(hero,/import \{ContinuanceInstrumentV136017\}/);
+ assert.match(hero,/<ContinuanceInstrumentV136017\/>/);
+ assert.match(hero,/id="p136-hero-title"/);
+ assert.match(hero,/THE CONTINUANCE INSTITUTE/);
+});
+test('homepage retains canonical public-data fields and real routes',()=>{
+ for(const expected of [
+  'projectDetailPath(project.id','to="/discover"','to="/community"',
+  'to="/studio"',"signedIn?'/member':'/join'",
+  "signal.source==='verified'","catalogueState==='error'",
+  'DYNAMIC ANEVUM FIELD / NOT CREATOR COVER',"new Event('anevum:iren-open')"
+ ])assert.ok(hero.includes(expected),'Missing public action/safety: '+expected);
+ assert.ok(!/Date\.now|Math\.random|fakeProjects|sampleProjects|simulatedMembers/.test(hero),
+  'No invented live catalogue or member data');
+});
+test('Studio navigation follows actual verified record state and preserves permissions',()=>{
+ assert.match(studio,/data-studio-console="v136\.009"/);
+ assert.match(studio,/className="p136017-studio-quicknav"/);
+ assert.match(studio,/<NavLink to="\/studio\/records">/);
+ assert.match(studio,/<NavLink to="\/studio\/packages">/);
+ assert.match(studio,/current\?\.phase==='ready'\?projects\.length/);
+ assert.match(studio,/PRIVATE RECORDS NOT YET LOADED/);
+ assert.match(studio,/current\?\.data\?\.canReview===true/);
+ assert.match(studio,/Protected by your verified session/);
+ assert.ok(!/fetch\(|localStorage|window\.sessionStorage|publish\(/.test(studio.slice(studio.indexOf('return <div className="p136-studio-console"'))),
+  'No new account/network operation inside pure visual shell');
+});
+test('Monaco retains local source/real packaging and no fake code execution',()=>{
+ assert.match(ide,/data-artifact-workbench="v136\.011"/);
+ assert.match(ide,/p136017-source-functionbar/);
+ assert.match(ide,/p136017-source-ledge/);
+ assert.match(ide,/LOCAL · NOT EXECUTED/);
+ assert.match(ide,/sourceArchive\(files\)/);
+ assert.match(ide,/onPackage\(archive\)/);
+ assert.match(ide,/onDirty\(\)/);
+ assert.match(ide,/private-upload controls still apply/);
+ assert.match(ide,/JavaScript is edited as text\. This view does not compile, run, save to your account or publish source\./);
+ assert.ok(!/iframe srcDoc|eval\(|new Function\(/.test(ide));
+});
+test('concept pass is scoped, responsive, and loaded after original V136 foundation',()=>{
+ const old='await import("./parity/visual-foundation-v136.css");';
+ const next='await import("./parity/concept-convergence-v136017.css");';
+ assert.ok(main.indexOf(next)>main.indexOf(old)&&main.includes('VITE_PARITY_V136_FULL === "true"'));
+ assert.match(css,/html\[data-av-parity="v136-full"\] \.p136-hero/);
+ assert.match(css,/html\[data-av-parity="v136-full"\] \.p136-studio-console/);
+ assert.match(css,/html\[data-av-parity="v136-full"\] \.p136-workbench/);
+ assert.match(css,/@media\(max-width:820px\)/);
+ assert.match(css,/@media\(max-width:520px\)/);
+ assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+ assert.match(css,/@media\(forced-colors:active\)/);
+ assert.ok(!/url\(\s*['"]?https?:|@import\s+url|@font-face/.test(css),
+  'No new remote font/textures or CSP dependencies');
+});
