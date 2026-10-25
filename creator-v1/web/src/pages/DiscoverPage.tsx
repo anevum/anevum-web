@@ -134,7 +134,7 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
       nextCursor={resource.state==="ready"?resource.data.projects.nextCursor:null}
     />
   </Suspense>;
-  return <div data-iren-anchor="discover" className="portal-discover av73-discover">
+  return <div data-iren-anchor="discover" className="portal-discover av73-discover" data-discovery-phase="v136.026">
     {immersive?<PortalHeading
       eyebrow={world?.eyebrow||"THE PORTALS / EVERYTHING WORTH TRYING"}
       title={world?.title||"EXPLORE THE"} accent={world?.accent||"UNIVERSE."}
