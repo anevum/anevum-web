@@ -40,7 +40,7 @@ test('full-flag Discover uses the same URL state, approved real media and access
  assert.match(page,/placeholder="Search projects\.\.\."/);
  assert.match(page,/view==='compact'&&<input type="hidden" name="view" value="list"\/>/);
  assert.match(page,/onCategory\(ch\.id\)/);
- assert.match(page,/aria-label=\{item\.label\+' — '\+item\.description\}/);
+ assert.match(page,/aria-label=\{item\.label\+' '\+item\.description\}/);
  assert.match(page,/onToggleFree/);
  assert.match(page,/packageProjects\.map\(project=><WorkCard/);
  assert.match(page,/legacyProjects\.map\(project=><ProjectCard/);
