@@ -243,8 +243,21 @@ try{
       assert.equal(await page.locator('.av095-drop strong').filter({hasText:'Choose a ZIP or HTML file'}).count(),1,
        'Diagnostics never override existing private package/archive invalidation');
     }
-    const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1);
-    assert.equal(overflow,false,'Workbench has no horizontal page overflow');
+    assert.equal(await page.locator('.p136-console-wayfinder').isVisible(),false,
+      'A redundant fixed site dock must never cover the mobile or desktop code editor');
+    const overflow=await page.evaluate(()=>{
+      const allowed=document.documentElement.clientWidth+1;
+      const excess=document.documentElement.scrollWidth-allowed;
+      const offenders=[...document.body.querySelectorAll('*')].map(node=>{
+        const rect=node.getBoundingClientRect(),style=getComputedStyle(node);
+        return {tag:node.tagName,cls:typeof node.className==='string'?node.className.slice(0,125):'',
+          right:Math.round(rect.right),left:Math.round(rect.left),width:Math.round(rect.width),
+          position:style.position,overflowX:style.overflowX};
+      }).filter(x=>x.right>allowed&&x.width>0)
+        .sort((a,b)=>b.right-a.right).slice(0,16);
+      return {excess,viewport:innerWidth,scrollWidth:document.documentElement.scrollWidth,offenders};
+    });
+    assert.ok(overflow.excess<=0,'Workbench must not expand the document horizontally: '+JSON.stringify({width,...overflow}));
     record('session-bound source workstation / real editor / native ZIP compatibility / stale archive invalidation '+width,{monaco:width===1440,uploads:0});
     await context.close();
   }

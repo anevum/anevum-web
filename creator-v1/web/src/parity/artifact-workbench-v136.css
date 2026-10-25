@@ -166,3 +166,36 @@ html[data-av-parity="v136-full"] .p136037-preview :is(button,iframe):focus-visib
  html[data-av-parity="v136-full"] .p136037-preview-viewport{height:265px}
 }
 @media(forced-colors:active){html[data-av-parity="v136-full"] :is(.p136037-preview,.p136037-preview-devices button,.p136037-preview-viewport iframe){background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none}}
+
+
+/* V136.017.038 — The fixed site-wide gamepad dock obscures the 320px code
+ * editor and its independent tab strip. Studio already includes the actual
+ * route quicknav, top account/IREN links and an accessible project rail.
+ * Suppress only that redundant fixed dock while real authoring is visible. */
+html[data-av-parity="v136-full"] body:has(.p136-studio-console [data-artifact-workbench="v136.011"]) .p136-console-wayfinder{
+ display:none;
+}
+/* The preview is an independent flexible panel, never allowed to enlarge
+ * the surrounding private Studio stage on narrow viewport widths. */
+html[data-av-parity="v136-full"] .p136037-preview,
+html[data-av-parity="v136-full"] .p136037-preview-header,
+html[data-av-parity="v136-full"] .p136037-preview-viewport,
+html[data-av-parity="v136-full"] .p136037-preview>p{
+ min-width:0;max-width:100%;
+}
+html[data-av-parity="v136-full"] .p136037-preview-header>div:first-child{
+ min-width:0;max-width:100%;
+}
+@media(max-width:520px){
+ html[data-av-parity="v136-full"] .p136-workbench-layout,
+ html[data-av-parity="v136-full"] .p136-source-inspector,
+ html[data-av-parity="v136-full"] .p136-source-stage{
+  min-width:0;max-width:100%;
+ }
+ html[data-av-parity="v136-full"] .p136037-preview-viewport{
+  overflow:hidden;
+ }
+}
+@media(forced-colors:active){
+ html[data-av-parity="v136-full"] .p136037-preview{border-color:CanvasText;}
+}
