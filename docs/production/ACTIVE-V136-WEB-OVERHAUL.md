@@ -182,3 +182,34 @@ verification before broad promotion. No experimental QA geometry/video flags,
 private uploader/publication changes, financial operations or data migrations.
 The next UI development slice remains creator-directory search/card/empty-state
 convergence; keep ongoing development separate from the immutable release head.
+
+## V136.025 — Creator Directory functional convergence (development draft)
+Scoped session: `ANEVUM.WEB.UPDATE.2026-10-25.005.CREATOR-DISCOVERY-CONVERGENCE`.
+New isolated continuation branch:
+`build/parity-v136-creator-directory-20261025-025`, started from
+verified website development head `20161bae20e7f369d4d7edfadcb4316ecccac3cf`.
+It does not change the immutable V136.024 release head, live traffic, or main.
+
+Implemented in source: URL-owned `q`, `cursor` and `view` (grid/list),
+Enter/click search submission, search cursor reset, saved layout on search,
+Back/Forward and cursor pagination, labeled controls, real approved creator
+identity cards, responsive one-column phone cards, Institute blue/cyan native
+search/results/empty-state surfaces, keyboard focus and reduced-motion
+handling. The server read remains the existing `readCreators` public endpoint.
+Page counts are explicitly per-page, never claimed to be total members.
+Missing/empty results never substitute fictional creators or invented avatars.
+No data API, uploads, profile privacy, identity/XP, finance or 3D changes.
+
+Verification added: source-contract test
+`creator-v1/test/parity-v136025-creator-directory.test.mjs` and new complete
+browser acceptance groups at 1440/390/320. The browser test fixture adds
+two **synthetic loopback-only** creator channels to exercise cards, layout,
+query search, empty cursor pages, clearing filters, Back and no overflow.
+Before exact-head CI, this is **IMPLEMENTED SOURCE, TESTS NOT YET RUN**.
+Do not describe the UX as production-released, native Safari/Xbox-accepted or
+owner visually approved until independent exact-head evidence exists.
+
+The V136.024 controlled release and #742 read-only smoke remain separate.
+The #742 credential-free public HTTP client received HTTP 403 on the
+unchanged baseline before comparison; no valid app regression or smoke pass was
+established by that result. Preserve production safety gates and allowlists.
