@@ -53,8 +53,14 @@
   function choose(key, focus = false) {
     if (!Object.prototype.hasOwnProperty.call(chapters, key)) return;
     const data = chapters[key];
+    const changed = current !== key;
     current = key;
     stage.dataset.heroProject = key;
+    if (changed && !reduced.matches && !saveData && !root.classList.contains('motion-paused')) {
+      stage.classList.remove('reel-sweep');
+      void stage.offsetWidth; // restart a deliberate transition after a real choice
+      stage.classList.add('reel-sweep');
+    }
     name.textContent = data.name;
     summary.textContent = data.summary;
     index.textContent = data.index + ' / 04';
