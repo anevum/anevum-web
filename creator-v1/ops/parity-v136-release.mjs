@@ -47,6 +47,7 @@ const allowed=new Set([
  // V136.017 public-directory and profile UI; no permissions, schema or API changes.
  'creator-v1/web/src/pages/CreatorsPage.tsx',
  'creator-v1/web/src/pages/Phase1PublicMemberPage.tsx',
+ 'creator-v1/web/src/pages/PublicBoardsPage.tsx',
  'creator-v1/web/src/pages/CanonicalStudioPage.tsx',
  'creator-v1/web/src/components/CompactMemberIdentity.tsx',
  'creator-v1/web/src/parity/SpatialSurfaceV136.tsx',

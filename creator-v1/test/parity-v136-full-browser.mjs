@@ -71,6 +71,9 @@ async function contextFor(width,{motion='reduce',state='empty',forceVector=false
         path==='/api/v1/status'?{features:{communityPosts:false},counts:{publishedProjects:0,publishedCreators:0}}:
         path==='/api/v1/creators'?page([]):
         path==='/api/v1/categories'?{categories:[]}:
+        path==='/api/v1/boards'?{source:'approved-public-projects',qualityRankingAvailable:false,
+          latestReleases:[fixture],firstLooks:[fixture],
+          publishingCreators:[{handle:'qa_creator',displayName:'SYNTHETIC QA MAKER',publishedProjects:1}]}:
         path==='/api/v1/community/threads'?{items:[],nextCursor:null}:
         path==='/api/v1/community/members'||path==='/api/v1/community/activity'?{items:[],nextCursor:null}:null;
       const recognized=value!==null||path==='/api/v1/member/auth/get-session';
@@ -719,6 +722,28 @@ try{
     assert.ok(creatorWidth.scroll<=creatorWidth.client+2,'Creator directory overflow at '+width+'px '+JSON.stringify(creatorWidth));
     await page.screenshot({path:join(out,'public-creators-'+width+'.png'),animations:'disabled'});
     record('V136 public Commons and creator directory '+width+'px',{communityWidth,creatorWidth});
+    await context.close();
+  }
+
+  // V136.017.045: real published-only Boards with controlled URL history, not rankings.
+  for(const width of [1440,390,320]){
+    const {page,context}=await contextFor(width,{state:'project',forceVector:true});
+    await page.goto(base+'/boards',{waitUntil:'domcontentloaded'});
+    await page.locator('.p136-boards[data-parity-boards="v136.017"]').waitFor();
+    await page.locator('.p136-boards .cnb-project-art .p136-category-cover[data-cover-source="default"]').waitFor();
+    assert.equal(await page.locator('.p136-boards .cw-artwork').count(),0,
+      'Public Boards uses authored type covers and an original field, never generated illustrations');
+    await page.getByRole('button',{name:/FIRST LOOKS/}).click();
+    await page.waitForURL(/\/boards\?view=firstLooks$/);
+    await page.getByRole('button',{name:'GAMES',exact:true}).click();
+    await page.waitForURL(/\/boards\?view=firstLooks&category=games$/);
+    assert.equal(await page.getByRole('button',{name:'GAMES',exact:true}).getAttribute('aria-pressed'),'true');
+    await page.goBack({waitUntil:'domcontentloaded'});
+    await page.waitForFunction(()=>document.querySelector('.p136-boards .cnb-filters button[aria-pressed="true"]')?.textContent?.trim()==='EVERYTHING');
+    await page.screenshot({path:join(out,'public-boards-'+width+'.png'),animations:'disabled'});
+    const geometry=await page.locator('.p136-boards').evaluate(el=>({client:el.clientWidth,scroll:el.scrollWidth}));
+    assert.ok(geometry.scroll<=geometry.client+2,'Boards overflow at '+width+'px '+JSON.stringify(geometry));
+    record('V136 public Boards categories/history and default covers '+width+'px',{geometry});
     await context.close();
   }
   assert.deepEqual(errors,[]);assert.deepEqual(forbidden,[]);

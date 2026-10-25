@@ -232,3 +232,22 @@ test('V136 Commons and real creator/member profiles use safe type covers and add
  assert.match(css,/\.p136-creators-hero/);
  assert.match(css,/\.p136-profile-wayfinder/);
 });
+
+
+test('V136 public boards remove generated art and use functional URL-addressable public filters',()=>{
+ const boards=source('../web/src/pages/PublicBoardsPage.tsx');
+ const shell=source('../web/src/components/Shell.tsx');
+ assert.match(boards,/data-parity-boards="v136\.017"/);
+ assert.match(boards,/CategoryCoverV136 category=\{item\.category\} title=\{item\.title\}/);
+ assert.ok(!boards.includes('CosmicArtwork'));
+ assert.match(boards,/readPublicBoards\(signal\)/);
+ assert.match(boards,/setSearchParams\(params\)/);
+ assert.match(boards,/function chooseCategory\(next:CategoryFilter\)/);
+ assert.match(boards,/if\(next==="latest"\)params\.delete\("view"\)/);
+ assert.match(boards,/if\(next==="all"\)params\.delete\("category"\)/);
+ assert.match(shell,/\"\/boards\"\]\.includes\(location\.pathname\)/);
+ assert.match(css,/V136\.017\.045/);
+ assert.match(css,/\.p136-boards \.cnb-type-cover/);
+ assert.ok(!/url\(\s*['"]?https?:|@import\s+url|@font-face/.test(css),
+   'V136 concept CSS cannot add remote fonts or media');
+});

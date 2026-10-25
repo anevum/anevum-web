@@ -1,6 +1,6 @@
 import {useEffect,useState} from "react";
-import {Link,useLocation} from "react-router-dom";
-import {CosmicArtwork} from "../components/CosmicArtwork";
+import {Link,useLocation,useSearchParams} from "react-router-dom";
+import {CategoryCoverV136} from "../parity/CategoryCoverV136";
 import {readPublicBoards,type Category,type Creator,type Project} from "../lib/api";
 import {useResource} from "../lib/useResource";
 import "./community-network.css";
@@ -21,6 +21,10 @@ function readingView(search:string):BoardId {
   const value=new URLSearchParams(search).get("view");
   return value==="firstLooks"||value==="publishing"?value:"latest";
 }
+function readingCategory(search:string):CategoryFilter {
+  const requested=new URLSearchParams(search).get("category");
+  return FILTERS.some(item=>item.id===requested)?requested as CategoryFilter:"all";
+}
 function date(value:string|null){
   const time=Date.parse(value||"");
   return Number.isFinite(time)?
@@ -30,8 +34,8 @@ function date(value:string|null){
 function ProjectRow({item}:{item:Project}){
   return <article className="cnb-project" key={item.id}>
     <Link className="cnb-project-art" to={"/projects/"+encodeURIComponent(item.id)} aria-label={"Explore "+item.title}>
-      <CosmicArtwork scene={item.category}/>
-      <span>CATEGORY ARTWORK</span>
+      <div className="cnb-type-cover"><CategoryCoverV136 category={item.category} title={item.title}/></div>
+      <span className="cnb-project-type-caption">TYPE DEFAULT / {item.category.toUpperCase()}</span>
     </Link>
     <div className="cnb-project-body">
       <small>{item.category.toUpperCase()} / {date(item.publishedAt)}</small>
@@ -64,19 +68,35 @@ function CreatorRow({item,index}:{item:Creator;index:number}){
  */
 export function PublicBoardsPage(){
   const location=useLocation();
+  const [,setSearchParams]=useSearchParams();
   const [active,setActive]=useState<BoardId>(()=>readingView(location.search));
-  useEffect(()=>{setActive(readingView(location.search));setCategory("all");},[location.search]);
-  const [category,setCategory]=useState<CategoryFilter>("all");
+  const [category,setCategory]=useState<CategoryFilter>(()=>readingCategory(location.search));
+  useEffect(()=>{
+    setActive(readingView(location.search));
+    setCategory(readingCategory(location.search));
+  },[location.search]);
   const [revision,setRevision]=useState(0);
   const resource=useResource(signal=>readPublicBoards(signal),[revision]);
   const board=BOARDS.find(item=>item.id===active)!;
   const contents=resource.state==="ready"?resource.data:null;
   const projects=contents?(active==="firstLooks"?contents.firstLooks:contents.latestReleases):[];
   const visible=category==="all"?projects:projects.filter(p=>p.category===category);
-  function choose(next:BoardId){setActive(next);setCategory("all");}
-  return <div className="cnb-hub">
+  function choose(next:BoardId){
+    setActive(next);setCategory("all");
+    const params=new URLSearchParams(location.search);
+    if(next==="latest")params.delete("view");else params.set("view",next);
+    params.delete("category");
+    setSearchParams(params);
+  }
+  function chooseCategory(next:CategoryFilter){
+    setCategory(next);
+    const params=new URLSearchParams(location.search);
+    if(next==="all")params.delete("category");else params.set("category",next);
+    setSearchParams(params);
+  }
+  return <div className="cnb-hub p136-boards" data-parity-boards="v136.017">
     <header className="cnb-hero">
-      <div className="cnb-hero-art" aria-hidden="true"><CosmicArtwork scene="portal"/></div>
+      <div className="cnb-hero-art" aria-hidden="true"><span className="p136-boards-field-grid"/><span className="p136-boards-field-cross"/></div>
       <div className="cnb-hero-content">
         <span className="cnb-kicker">ANEVUM / COMMUNITY SIGNAL</span>
         <h1>THE PEOPLE <em>BEHIND THE WORK.</em></h1>
@@ -108,7 +128,7 @@ export function PublicBoardsPage(){
 
       {active!=="publishing"&&<div className="cnb-filters" role="group" aria-label="Filter displayed publications">
         {FILTERS.map(item=><button key={item.id} type="button" aria-pressed={category===item.id}
-          onClick={()=>setCategory(item.id)}>{item.label}</button>)}
+          onClick={()=>chooseCategory(item.id)}>{item.label}</button>)}
       </div>}
       {resource.state==="loading"&&<div className="cnb-empty" role="status">CONNECTING TO APPROVED PUBLIC RECORDS…</div>}
       {resource.state==="error"&&<div className="cnb-empty" role="alert">
