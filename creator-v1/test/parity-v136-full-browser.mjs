@@ -317,6 +317,18 @@ try{
     await page.getByRole('heading',{name:'Transmit a creation.'}).waitFor();
     await page.getByRole('button',{name:'Artifact source workbench',exact:true}).click();
     const workbench=page.locator('[data-artifact-workbench="v136.011"]');await workbench.waitFor();
+    await workbench.getByRole('button',{name:'Open file…',exact:true}).click();
+    const fileSearch=workbench.getByRole('combobox',{name:/Find a local source file/});
+    await fileSearch.fill('styles');
+    assert.equal(await workbench.getByRole('option').count(),1,'Quick open filters actual local file paths');
+    await fileSearch.press('Enter');
+    assert.equal(await workbench.getByRole('tab',{name:'styles.css',exact:true}).getAttribute('aria-selected'),'true');
+    await workbench.getByRole('button',{name:'Open file…',exact:true}).click();
+    await fileSearch.fill('no-such-source-file');
+    await workbench.getByText('No matching local source files.',{exact:true}).waitFor();
+    await fileSearch.press('Escape');
+    assert.equal(await workbench.getByRole('combobox').count(),0,'Escape closes local source search');
+    await workbench.getByRole('tab',{name:'index.html',exact:true}).click();
     assert.equal(await page.locator('.p136017-studio-quicknav').count(),1,'Private Studio uses the actual command rail');
     assert.equal(await page.locator('.p136017-studio-quicknav a[href="/studio/records"]').count(),1,'Project library remains real route navigation');
     assert.equal(await workbench.locator('.p136017-source-functionbar').count(),1,'Local source instrumentation is available');
@@ -324,6 +336,20 @@ try{
       'Authoring instrument describes the current real file, never a simulated preview');
     if(width===1440){
       await page.locator('[data-source-editor="monaco"]').waitFor({timeout:30000});
+      const input=workbench.locator('.monaco-editor textarea');
+      await input.press('Control+End');
+      await page.waitForFunction(()=>!document.querySelector('[data-source-cursor]')?.textContent.includes('Ln 1,'));
+      const position=await workbench.locator('[data-source-cursor]').innerText();
+      await workbench.getByRole('tab',{name:'styles.css',exact:true}).click();
+      await workbench.getByRole('tab',{name:'index.html',exact:true}).click();
+      assert.equal(await workbench.locator('[data-source-cursor]').innerText(),position,
+        'Switching Monaco models restores the real cursor position for each local file');
+      await input.press('Control+p');
+      await fileSearch.fill('main.js');
+      await fileSearch.press('ArrowDown');
+      await fileSearch.press('Enter');
+      assert.equal(await workbench.getByRole('tab',{name:'main.js',exact:true}).getAttribute('aria-selected'),'true',
+        'Quick open works directly from Monaco without invoking browser print');
       await workbench.locator('#p136-source-new').fill('assets/notes.md');
       await workbench.getByRole('button',{name:'Create source file',exact:true}).click();
       const folder=workbench.getByRole('button',{name:'Folder assets',exact:true});
@@ -414,7 +440,7 @@ try{
   // 3D architectural parity. Capture both renderings in the same authenticated-
   // free loopback context and publish original PNGs for independent art review.
   if(process.env.VITE_PARITY_V136_CINEMATIC==='true'){
-    for(const width of [1440,390]){
+    for(const width of [1536,1440,390,320]){
       const {page,context}=await contextFor(width,{motion:'no-preference'});
       await page.goto(base,{waitUntil:'domcontentloaded'});
       const inspect=page.getByRole('button',{name:'Inspect live 3D scene'});

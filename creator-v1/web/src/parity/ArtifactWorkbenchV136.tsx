@@ -42,11 +42,22 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
  const [name,setName]=useState(''),[note,setNote]=useState(''),[dirty,setDirty]=useState(true),[plain,setPlain]=useState(()=>matchMedia('(max-width: 767px)').matches);
  const [Editor,setEditor]=useState<ComponentType<MonacoSourceProps>|null>(null),[editorError,setEditorError]=useState(false);
  const [inspector,setInspector]=useState(true),importVersion=useRef(0);
+ const [quickOpen,setQuickOpen]=useState(false),[fileQuery,setFileQuery]=useState(''),[fileChoice,setFileChoice]=useState(0);
+ const [cursor,setCursor]=useState({line:1,column:1});
+ const quickInput=useRef<HTMLInputElement>(null),quickButton=useRef<HTMLButtonElement>(null);
   const [collapsedFolders,setCollapsedFolders]=useState<Set<string>>(()=>new Set());
  useEffect(()=>{let alive=true;if(!plain)void import('./MonacoSourceV136').then(m=>{if(alive)setEditor(()=>m.default)}).catch(()=>{if(alive)setEditorError(true)});return()=>{alive=false}},[plain]);
  useEffect(()=>()=>{importVersion.current++},[]);
  const entries=Object.entries(files),total=entries.reduce((n,[,text])=>n+strToU8(text).length,0);
   const explorerTree=sourceExplorerTree(entries.map(([path])=>path));
+ const matchingPaths=entries.map(([path])=>path).filter(path=>path.toLowerCase().includes(fileQuery.trim().toLowerCase()));
+ useEffect(()=>{if(quickOpen)quickInput.current?.focus()},[quickOpen]);
+ function closeQuickOpen(){setQuickOpen(false);requestAnimationFrame(()=>quickButton.current?.focus())}
+ function choosePath(path:string){
+  setActive(path);
+  setCollapsedFolders(previous=>new Set([...previous].filter(folder=>!path.startsWith(folder+'/'))));
+  closeQuickOpen();
+ }
  const localOnlyPaths=localOnlySourcePaths(files);
  const problems:string[]=[];
  if(!('index.html' in files))problems.push('A root index.html entrypoint is required.');
@@ -124,7 +135,10 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
     <span className="p136017-tree-name">{node.name}</span>
    </button>;
   }
-  return <section className="p136-workbench" aria-label="Artifact source workbench" data-artifact-workbench="v136.011">
+  return <section className="p136-workbench" aria-label="Artifact source workbench" data-artifact-workbench="v136.011"
+   onKeyDownCapture={e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='p'){
+    e.preventDefault();setFileQuery('');setFileChoice(0);setQuickOpen(true);
+   }}}>
   <header className="p136-workbench-head"><div><span>CONTINUANCE / ARTIFACT WORKBENCH</span><h2>Make the source.</h2></div><span className="p136-source-state">{dirty?'LOCAL CHANGES':'ARCHIVE PREPARED'}</span></header>
   <div className="p136017-source-functionbar" aria-hidden="true">
    <span className="p136017-functionmark">SOURCE / LOCAL</span>
@@ -137,7 +151,28 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
    <label className="p136-source-import">Open text files<input disabled={disabled} type="file" multiple accept=".html,.css,.js,.json,.txt,.md" onChange={e=>void importFiles(e.target.files)}/></label>
    <button type="button" aria-pressed={plain} onClick={()=>setPlain(v=>!v)}>Accessible text editor</button>
    <button type="button" aria-expanded={inspector} onClick={()=>setInspector(v=>!v)}>Inspector</button>
+   <button ref={quickButton} type="button" aria-expanded={quickOpen} aria-controls="p136-quick-open" aria-keyshortcuts="Control+p Meta+p"
+    onClick={()=>{setFileQuery('');setFileChoice(0);setQuickOpen(v=>!v)}}>Open file…</button>
   </div>
+  {quickOpen&&<div className="p136-source-quick-open" id="p136-quick-open">
+   <label htmlFor="p136-file-query">Find a local source file <span>↑ ↓ to choose · Enter to open · Esc to close</span></label>
+   <input ref={quickInput} id="p136-file-query" type="search" value={fileQuery} autoComplete="off"
+    role="combobox" aria-expanded="true" aria-controls="p136-file-matches" aria-autocomplete="list"
+    aria-activedescendant={matchingPaths.length?'p136-file-choice-'+fileChoice:undefined}
+    onChange={e=>{setFileQuery(e.target.value);setFileChoice(0)}}
+    onKeyDown={e=>{
+     if(e.key==='Escape'){e.preventDefault();closeQuickOpen()}
+     else if(e.key==='Enter'&&matchingPaths[fileChoice]){e.preventDefault();choosePath(matchingPaths[fileChoice])}
+     else if(['ArrowDown','ArrowUp'].includes(e.key)&&matchingPaths.length){e.preventDefault();setFileChoice(i=>(i+(e.key==='ArrowDown'?1:-1)+matchingPaths.length)%matchingPaths.length)}
+    }}/>
+   <div id="p136-file-matches" role="listbox" aria-label="Matching local source files">
+    {matchingPaths.map((path,index)=><button key={path} type="button" role="option" tabIndex={-1}
+     id={'p136-file-choice-'+index} aria-selected={index===fileChoice} onClick={()=>choosePath(path)}>
+     <FileGlyphV136017 path={path}/><span>{path}</span><small>{editorLanguage(path)}</small></button>)}
+   </div>
+   {matchingPaths.length===0&&<p role="status">No matching local source files.</p>}
+   <button type="button" onClick={closeQuickOpen}>Close file search</button>
+  </div>}
   {localOnlyPaths.length>0&&<p className="p136017-local-only-note" role="status">
     LOCAL NOTES / {localOnlyPaths.join(', ')} — kept in complete source downloads, excluded from playable ZIPs.
    </p>}
@@ -152,9 +187,9 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
      onKeyDown={e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const i=entries.findIndex(([p])=>p===active),next=e.key==='Home'?0:e.key==='End'?entries.length-1:(i+(e.key==='ArrowLeft'?-1:1)+entries.length)%entries.length;setActive(entries[next][0]);requestAnimationFrame(()=>document.getElementById('p136-source-tab-'+entries[next][0])?.focus())}}
      onClick={()=>setActive(path)}><FileGlyphV136017 path={path}/><span>{path}</span></button>)}</div>
     <div id="p136-source-panel" role="tabpanel" aria-labelledby={'p136-source-tab-'+active}>
-     {!plain&&Editor&&!editorError?<Editor files={files} active={active} disabled={disabled} onChange={change}/>:<label className="p136-source-fallback"><span className="visually-hidden">Edit source {active}</span><textarea spellCheck={false} autoCapitalize="off" autoCorrect="off" value={files[active]} onChange={e=>change(active,e.target.value)} disabled={disabled}/></label>}
+     {!plain&&Editor&&!editorError?<Editor files={files} active={active} disabled={disabled} onChange={change} onCursor={(line,column)=>setCursor({line,column})}/>:<label className="p136-source-fallback"><span className="visually-hidden">Edit source {active}</span><textarea spellCheck={false} autoCapitalize="off" autoCorrect="off" value={files[active]} onChange={e=>change(active,e.target.value)} disabled={disabled}/></label>}
     </div>
-    <footer className="p136-source-status"><span>{editorLanguage(active).toUpperCase()}</span><span>{files[active].split('\n').length} lines</span><span>{strToU8(files[active]).length.toLocaleString()} bytes</span><span>{plain||editorError?'TEXT EDITOR':Editor?'MONACO':'LOADING MONACO'}</span></footer>
+    <footer className="p136-source-status">{!plain&&Editor&&!editorError&&<span data-source-cursor>Ln {cursor.line}, Col {cursor.column}</span>}<span>{editorLanguage(active).toUpperCase()}</span><span>{files[active].split('\n').length} lines</span><span>{strToU8(files[active]).length.toLocaleString()} bytes</span><span>{plain||editorError?'TEXT EDITOR':Editor?'MONACO':'LOADING MONACO'}</span></footer>
    </div>
    {inspector&&<aside className="p136-source-inspector" aria-label="Source and build diagnostics"><strong>BUILD INSPECTOR</strong><span className="p136017-inspector-disclosure">VALIDATION / LOCAL SOURCE</span><dl><dt>Source files</dt><dd>{entries.length} / {MAX_FILES}</dd><dt>Expanded text</dt><dd>{(total/1024).toFixed(1)} KiB / 1024 KiB</dd><dt>Entrypoint</dt><dd>{files['index.html']?'index.html':'Missing'}</dd><dt>Publication</dt><dd>Private upload required</dd><dt>Local-only source notes</dt><dd>{localOnlyPaths.length}</dd></dl><h3>Local findings</h3>{problems.length?<ul>{problems.map(p=><li key={p}>{p}</li>)}</ul>:<p>No issues found by the available text checks.</p>}<p>JavaScript is edited as text. This view does not compile, run, save to your account or publish source.</p><h3>Live preview</h3><p>Prepare the archive, then use the existing private playtest. Executable previews stay in ANEVUM’s isolated runtime.</p></aside>}
   </div>
