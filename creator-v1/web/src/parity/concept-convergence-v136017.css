@@ -988,3 +988,18 @@ html[data-av-parity="v136-full"] .p136-hero-rail a:is(:hover,:focus-visible){bor
   min-width:37px;padding-inline:6px;
  }
 }
+
+
+/* V136.017.040 — the approved desktop headline is two authored lines.
+ * The first line must use the real scene column, not an arbitrary 730px
+ * text clamp that makes it wrap into two and adds an accidental third line.
+ * The IREN panel remains in the adjacent grid column; no overlay or clipping. */
+@media(min-width:1051px){
+ html[data-av-parity="v136-full"] .p136-hero-content{
+  width:100%;max-width:none;
+  padding-right:clamp(16px,2vw,28px);
+ }
+ html[data-av-parity="v136-full"] .p136-hero h1{
+  width:100%;max-width:100%;
+ }
+}

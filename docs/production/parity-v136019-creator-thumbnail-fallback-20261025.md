@@ -37,3 +37,10 @@ No member auth, privacy, upload, publish, payment or production flags are modifi
 
 ## Still pending
 Production-appropriate browser screenshot comparisons and server-side support for older project cover URLs. Production traffic is not changed. The stacked release source allowlist intentionally remains fail-closed pending review.
+
+
+## V136.020 — QA remediation and concept preservation (2026-10-25)
+
+The community browser capture now validates the first-party native Community hero rather than requiring its deleted promotional raster. Published project media is asserted against the shared `ProjectThumbnail` component, including its load state, category and default source. The full PARITY browser harness validates `native-institute` arrival and the single modeled WebGL canvas, rather than waiting for an intentionally retired poster `<img>`. Same-context native-overlay / real-3D comparison, scroll handoff, reduced-motion behavior, and navigation remain under strict assertions. The latest separate concept-led desktop wayfinder geometry and CSS are merged without replacing Creator Studio work.
+
+Protected V132 and release source allowlists remain fail closed; their rejection of the broad ongoing design branch is not treated as production approval. Do not deploy or mark visual parity complete without exact-head browser evidence.

@@ -286,9 +286,9 @@ try{
     record('session-bound source workstation / real editor / native ZIP compatibility / stale archive invalidation '+width,{monaco:width===1440,uploads:0});
     await context.close();
   }
-  // Direct evidence gate: poster presentation is NOT proof of underlying
-  // 3D architectural parity. Capture both renderings in the same authenticated-
-  // free loopback context and publish original PNGs for independent art review.
+  // Direct evidence gate: native interface decoration is NOT proof of
+  // 3D architectural parity. Capture the native overlay and modeled scene
+  // in the same loopback context for independent visual comparison.
   if(process.env.VITE_PARITY_V136_CINEMATIC==='true'){
     for(const width of [1536,1440,390,320]){
       const {page,context}=await contextFor(width,{motion:'no-preference'});
@@ -298,10 +298,10 @@ try{
       await page.waitForFunction(()=>{
         const control=document.querySelector('[data-cinematic-inspection="v136.017"]');
         const canvas=document.querySelector('.p136-living-canvas');
-        const poster=document.querySelector('.p136-cinematic-art img');
+        const native=document.querySelector('[data-arrival-surface="native-interface"]');
         return control?.getAttribute('data-scene-readiness')==='ready'&&
-          canvas?.dataset.assetState==='ready'&&
-          poster?.complete&&poster?.naturalWidth>0;
+          canvas?.dataset.assetState==='ready'&&Boolean(native)&&
+          !native.querySelector('img,picture');
       },null,{timeout:60000});
       const reality=await page.evaluate(()=>{
         const world=document.querySelector('.p136-living-world');
@@ -323,7 +323,7 @@ try{
         'The 3D screenshot must contain real modeled geometry: '+JSON.stringify(reality));
       if(openExterior)assert.ok(reality.metrics.triangles<=(width<850?10000:25000)+128,
         'Actual exterior render excludes the occluding Atrium roof; only bounded horizon plus compositor quads: '+JSON.stringify(reality.metrics));
-      const first=await page.screenshot({path:join(out,'arrival-poster-review-'+width+'.png'),
+      const first=await page.screenshot({path:join(out,'arrival-native-interface-review-'+width+'.png'),
         fullPage:false,animations:'disabled'});
       assert.equal(await inspect.isDisabled(),false,'Loaded model enables live inspection');
       await inspect.click();
@@ -335,7 +335,7 @@ try{
       const live=await page.screenshot({path:join(out,'arrival-real-webgl-review-'+width+'.png'),
         fullPage:false,animations:'disabled'});
       assert.ok(live.length>10000,'The actual scene capture cannot be empty');
-      assert.ok(!first.equals(live),'Live model screenshot must not be identical to the cinematic poster');
+      assert.ok(!first.equals(live),'Live model screenshot must differ from the native interface overlay');
       const liveHeroPaint=await page.locator('.p136-hero').evaluate(node=>{
         const style=getComputedStyle(node);
         return {image:style.backgroundImage,color:style.backgroundColor};
@@ -369,7 +369,7 @@ try{
         record('live desktop to mobile to desktop QA geometry reallocation / one canvas',
           {tierRestored:'desktop',rendererCount:1});
       }
-      record('direct same-context poster vs real WebGL '+(openExterior?'Institute exterior':'Atrium')+' visual evidence '+width,{
+      record('direct same-context native interface vs real WebGL '+(openExterior?'Institute exterior':'Atrium')+' visual evidence '+width,{
         width,renderer:reality.renderer,models:reality.metrics.models,
         triangles:reality.metrics.triangles,drawCalls:reality.metrics.drawCalls,
         composition:openExterior?'QA open Institute':'canonical Atrium',
@@ -397,23 +397,31 @@ try{
     });
     assert.ok(layout.scroll<=width+1,'No horizontal overflow: '+JSON.stringify(layout));
     if(process.env.VITE_PARITY_V136_CINEMATIC==='true'){
-      const cinema=page.locator('[data-cinematic-v136="poster-pilot"]');
-      assert.equal(await cinema.count(),1,'One authored cinematic presentation layer');
-      const cinemaRead=await cinema.evaluate(node=>{
-        const image=node.querySelector('img');
-        return {hidden:node.getAttribute('aria-hidden'),pointerEvents:getComputedStyle(node).pointerEvents,
-          imageLoaded:Boolean(image?.complete&&image?.naturalWidth>0),mode:node.dataset.mode,
-          imageSrc:image?.currentSrc};
-      });
-      assert.equal(cinemaRead.hidden,'true','Cinematic artwork is decorative, not fake content');
-      assert.equal(cinemaRead.pointerEvents,'none','Cinematic layer cannot block real navigation');
-      assert.ok(cinemaRead.imageLoaded,'Verified same-origin cinematic poster loads');
-      assert.equal(cinemaRead.mode,'poster','Unapproved motion must remain disabled');
-      assert.ok(cinemaRead.imageSrc.startsWith(base+'/assets/parity-v136/'),'Only approved original source artwork');
+      const cinema=page.locator('[data-cinematic-v136="native-institute"]');
+      assert.equal(await cinema.count(),1,'One authored native Institute presentation layer');
+      const cinemaRead=await cinema.evaluate(node=>({
+        hidden:node.getAttribute('aria-hidden'),
+        pointerEvents:getComputedStyle(node).pointerEvents,
+        native:Boolean(node.querySelector('[data-arrival-surface="native-interface"]')),
+        retiredImages:node.querySelectorAll('img,picture').length,
+        mode:node.dataset.mode
+      }));
+      assert.equal(cinemaRead.hidden,'true','Native arrival framing is decorative, not invented content');
+      assert.equal(cinemaRead.pointerEvents,'none','Native interface cannot block real navigation');
+      assert.ok(cinemaRead.native,'The first-party native Institute interface is mounted');
+      assert.equal(cinemaRead.retiredImages,0,'Removed promotional posters must not be requested');
+      assert.equal(cinemaRead.mode,'poster','Legacy static-mode token retains reduced-motion behavior');
     } else assert.equal(await page.locator('[data-cinematic-v136]').count(),0,'Cinematic pilot is opt-in');
 
     assert.equal(layout.h1Count,1);assert.equal(layout.dockCount,1,'One canonical IREN companion');
     assert.equal(await page.locator('.p136-console-wayfinder').count(),1,'Exactly one persistent console wayfinder');
+    if(width>=1900){
+      const rail=await page.locator('.p136-hero-rail').boundingBox();
+      const wayfinder=await page.locator('.p136-console-wayfinder').boundingBox();
+      assert.ok(rail&&wayfinder&&wayfinder.x+wayfinder.width+4<rail.x,
+        'The wide-screen console rail must live in the outer gutter, not obscure actionable hero tiles: '+
+        JSON.stringify({rail,wayfinder}));
+    }
     assert.equal(await page.locator('.p136-studio-console').count(),0,'Private Studio explorer never appears for anonymous visitor');
     assert.equal(await page.locator('.p136-console-wayfinder a[data-station]').count(),5,'Five real route stations');
     assert.equal(await page.locator('.p136-console-wayfinder').getByRole('button',{name:'Open IREN companion'}).count(),1,
@@ -661,9 +669,9 @@ try{
   if(process.env.VITE_PARITY_V136_CINEMATIC==='true'){
     const {page,context}=await contextFor(1440,{motion:'no-preference',forceVector:true});
     await page.goto(base,{waitUntil:'networkidle'});
-    const cinema=page.locator('[data-cinematic-v136="poster-pilot"]');await cinema.waitFor();
+    const cinema=page.locator('[data-cinematic-v136="native-institute"]');await cinema.waitFor();
     const opacity=()=>cinema.evaluate(el=>Number.parseFloat(getComputedStyle(el).opacity));
-    assert.ok(await opacity()>.9,'Arrival poster begins visible');
+    assert.ok(await opacity()>.9,'Native interface overlay begins visible');
     // Simulate the loading status only. The actual GPU geometry is tested in
     // its separate compiled GLB browser acceptance; this tests fade timing.
     await page.evaluate(()=>{
@@ -674,22 +682,22 @@ try{
       window.scrollTo(0,550);
     });
     await page.waitForFunction(()=>document.querySelector('[data-cinematic-v136]')?.dataset.handoff==='hold');
-    assert.ok(await opacity()>.95,'Cinema does not reveal an incompletely loaded 3D model');
+    assert.ok(await opacity()>.95,'Native overlay does not reveal an incompletely loaded 3D model');
     await page.evaluate(()=>{
       const canvas=document.querySelector('.p136-living-world .p136-living-canvas');
       if(canvas)canvas.dataset.assetState='ready';
     });
     await page.waitForFunction(()=>{
-      const layer=document.querySelector('[data-cinematic-v136="poster-pilot"]');
+      const layer=document.querySelector('[data-cinematic-v136="native-institute"]');
       return layer&&Number.parseFloat(getComputedStyle(layer).opacity)<.5;
     });
-    assert.ok(await opacity()<.5,'Poster reveals one canonical live environment on native scroll');
+    assert.ok(await opacity()<.5,'Native overlay reveals one canonical live environment on scroll');
     await page.screenshot({path:join(out,'cinematic-handoff-scroll-1440.png'),animations:'disabled'});
     await page.evaluate(()=>window.scrollTo(0,0));
     await page.locator('.p136-button--primary').click();
     await page.waitForURL(/\/discover(?:\?|$)/);
     assert.equal(await page.locator('.p136-living-canvas').count(),1,'No duplicate WebGL renderer after cinematic navigation');
-    record('cinematic art-to-world fade / accessible real Discover action / one renderer');
+    record('native interface-to-world fade / accessible real Discover action / one renderer');
     await context.close();
   }
   const {page,context}=await contextFor(390,{motion:'no-preference',forceVector:true});
