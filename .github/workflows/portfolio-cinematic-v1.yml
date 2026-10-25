@@ -21,6 +21,7 @@ jobs:
         run: |
           node --check creator-v1/web/public/portfolio/app.js
           node --check creator-v1/web/public/portfolio/hero-reel-v2.js
+          node --check creator-v1/test/portfolio-cinematic-v1-browser.mjs
       - name: Verify source, assets, accessibility, and gated motion
         run: node --test creator-v1/test/portfolio-cinematic-v1.test.mjs
       - name: Install isolated Chromium test tools
