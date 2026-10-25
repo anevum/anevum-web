@@ -103,19 +103,23 @@ function BuildCard({project,review=false,onDecision}:{project:NativeProject;revi
  const playableDraft=!!project.draftReleaseId&&(pending||ready)&&!expired;
  const label=project.status==='suspended'?'Suspended':pending?'Update in review':expired?'Private test expired':ready?'Private build ready':pretty(project.status);
  return <article className="st-panel av095-build-card" data-native-project={project.id}>
-  <div className="av095-card-cover">{project.coverUrl?<img alt={'Cover for '+project.title} src={project.coverUrl} loading="lazy" referrerPolicy="no-referrer"/>:<div className="av095-record-art" aria-hidden="true"><i/><i/><i/></div>}<span>{project.category} / {label}</span></div>
+  <div className="av095-card-cover">{project.coverUrl?<img alt={'Cover for '+project.title} src={project.coverUrl} loading="lazy" referrerPolicy="no-referrer"/>:SourceWorkbench?<div className="av136032-record-blank"><small>NO COVER UPLOADED</small><strong>{pretty(project.category)}</strong></div>:<div className="av095-record-art" aria-hidden="true"><i/><i/><i/></div>}<span>{project.category} / {label}</span></div>
   <div className="av095-card-body"><p className="st-kicker">{project.version?'BUILD '+String(project.version).padStart(2,'0'):'PROJECT RECORD'}</p><h2>{project.draftTitle||project.title}</h2><p>{project.draftSummary||project.summary}</p>
+   {SourceWorkbench&&<div className="av136032-release-flags" aria-label="Project revision status">
+    {project.liveReleaseId?<span>{project.status==='suspended'?'Approved release suspended':'Approved public release retained'}</span>:<span>Not publicly released</span>}
+    {project.draftReleaseId&&<span>{pending?'Private revision in review':expired?'Temporary private test expired':ready?'Private revision ready':'Private revision retained'}</span>}
+   </div>}
    {project.liveReleaseId&&pending&&<p className="av095-live-note">The approved version remains live while this update is reviewed.</p>}
    {project.retention&&<p className="st-muted">{project.retention==='saved'?'Saved private draft':expired?'Temporary preview expired':'Temporary private test — save it to keep it'}</p>}
    {project.reviewReason&&<p className="st-error">Reviewer note: {project.reviewReason}</p>}
-   <div className="av095-actions">
+   <div className="av095-actions av136032-build-actions">
     {playableDraft&&<Link className="st-action av095-primary" to={nativePlayerPath(project.id,true)}>{review?'Review playable build':'Private playtest'}</Link>}
     {project.liveReleaseId&&project.status==='published'&&<Link className="st-action" to={nativePlayerPath(project.id)}>Play live version</Link>}
     {!review&&!pending&&project.status!=='suspended'&&<Link className="st-action" to={nativeBuildPath(project.id)}>{ready?'Replace private build':'Upload revision'}</Link>}
     {!review&&ready&&project.draftReleaseId&&<>
      {!expired&&project.retention==='test'&&<button className="st-action" onClick={()=>onDecision({project,releaseId:project.draftReleaseId!,action:'save'})}>Save draft</button>}
      {!expired&&<button className="st-action" onClick={()=>onDecision({project,releaseId:project.draftReleaseId!,action:'submit'})}>Submit for review</button>}
-     <button className="st-action" onClick={()=>onDecision({project,releaseId:project.draftReleaseId!,action:'discard'})}>Discard private build</button>
+     <button className="st-action av136032-discard" onClick={()=>onDecision({project,releaseId:project.draftReleaseId!,action:'discard'})}>Discard private build</button>
     </>}
     {review&&project.liveReleaseId&&['published','suspended'].includes(project.status)&&<button className="st-action" onClick={()=>onDecision({project,releaseId:project.liveReleaseId!,action:project.status==='suspended'?'restore':'suspend'})}>{project.status==='suspended'?'Restore release':'Suspend release'}</button>}
    </div>
@@ -124,16 +128,37 @@ function BuildCard({project,review=false,onDecision}:{project:NativeProject;revi
 }
 function BuildLibrary({memberId}:{memberId:string}){
  const library=useRead('library:'+memberId,true,signal=>readNativeLibrary(memberId,signal));
+ // Unpublished projects and review state never enter public/shareable URLs.
  const [search,setSearch]=useState(''),[decision,setDecision]=useState<Decision|null>(null);
- const items=library.data?.projects||[],visible=items.filter(p=>(p.title+' '+(p.draftTitle||'')+' '+p.summary).toLowerCase().includes(search.trim().toLowerCase()));
+ const [status,setStatus]=useState<'all'|'private'|'review'|'live'>('all'),[view,setView]=useState<'grid'|'list'>('grid');
+ const items=library.data?.projects||[];
+ const inReview=(p:NativeProject)=>p.draftStatus==='pending_review'||p.status==='pending_review';
+ const privateBuild=(p:NativeProject)=>!inReview(p)&&((!!p.draftReleaseId)||(!p.liveReleaseId&&p.status!=='suspended'));
+ const live=(p:NativeProject)=>!!p.liveReleaseId&&p.status==='published';
+ const counts={all:items.length,private:items.filter(privateBuild).length,review:items.filter(inReview).length,live:items.filter(live).length};
+ const scoped=SourceWorkbench?items.filter(p=>status==='all'||status==='private'&&privateBuild(p)||status==='review'&&inReview(p)||status==='live'&&live(p)):items;
+ const term=search.trim().toLowerCase();
+ const visible=scoped.filter(p=>(p.title+' '+(p.draftTitle||'')+' '+p.summary).toLowerCase().includes(term));
  return <>
   <section className="st-panel av095-library-head"><div><p className="st-kicker">YOUR PLAYABLE ARCHIVE</p><h2>Build privately. Release deliberately.</h2><p>Saved drafts, exact versions, review decisions, and live releases stay attached to the same project.</p></div><Link className="st-action av095-primary" to="/studio/packages/new">Upload a build</Link></section>
   {library.data?.usage&&<section className="av095-storage" aria-label="Private build storage"><div><strong>{bytes(library.data.usage.memberPhysicalBytes)} / {bytes(library.data.usage.memberPhysicalLimit)}</strong><span>Private storage, including files awaiting cleanup</span></div><progress max={library.data.usage.memberPhysicalLimit} value={Math.min(library.data.usage.memberPhysicalBytes,library.data.usage.memberPhysicalLimit)}/><p>Temporary tests last 48 hours. Saving retains a draft. Replacing a draft never removes the approved public version.</p></section>}
+  {SourceWorkbench&&<section className="av136032-library-tools" aria-label="Build library controls">
+   <div className="av136032-toolbar"><div><p className="st-kicker">REVISIONS / WORKSPACE</p><div className="av136032-filter-buttons" role="group" aria-label="Filter your build statuses">
+    {([{id:'all',label:'All'},{id:'private',label:'Private'},{id:'review',label:'In review'},{id:'live',label:'Live'}] as const).map(tab=><button key={tab.id} type="button" data-native-filter={tab.id} aria-pressed={status===tab.id} onClick={()=>setStatus(tab.id)}><span>{tab.label}</span><span className="av136032-tab-count">{counts[tab.id]}</span></button>)}
+   </div></div><div className="av136032-view-buttons" role="group" aria-label="Build library layout">
+    <button type="button" data-library-view="grid" aria-pressed={view==='grid'} onClick={()=>setView('grid')}>Grid</button>
+    <button type="button" data-library-view="list" aria-pressed={view==='list'} onClick={()=>setView('list')}>List</button>
+   </div></div>
+   <p className="av136032-library-explanation">A project can appear in both Live and In review while an approved release remains available. Filters do not change builds or permissions.</p>
+  </section>}
   <label className="st-field av095-search"><span>Find your build</span><input type="search" maxLength={100} value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search your project titles"/></label>
+  {SourceWorkbench&&!library.loading&&!library.error&&<p className="av136032-library-count" role="status">{visible.length} {visible.length===1?'build':'builds'} shown · {items.length} in your archive</p>}
   {library.loading&&<p role="status">Loading your saved builds…</p>}
   {library.error&&<div role="alert" className="st-error"><p>{library.error}</p><button className="st-action" onClick={library.reload}>Reload builds</button></div>}
-  {!library.loading&&!library.error&&!visible.length&&<div className="st-empty"><h2>{items.length?'No matching builds.':'Your first playable work starts here.'}</h2><p>{items.length?'Clear the search to see your archive.':'Upload a browser build to make a private playtest. Nothing is published automatically.'}</p></div>}
-  <div className="av095-build-grid">{visible.map(p=><BuildCard key={p.id} project={p} onDecision={setDecision}/>)}</div>
+  {!library.loading&&!library.error&&!visible.length&&<div className="st-empty"><h2>{items.length?'No matching builds.':'Your first playable work starts here.'}</h2><p>{items.length?'Change the current view or search to see other revisions.':'Upload a browser build to make a private playtest. Nothing is published automatically.'}</p>
+   {SourceWorkbench&&items.length>0&&(status!=='all'||!!term)&&<button type="button" className="st-action" onClick={()=>{setSearch('');setStatus('all')}}>Show all builds</button>}
+  </div>}
+  <div className={'av095-build-grid'+(SourceWorkbench?' av136032-build-grid':'')} data-layout={SourceWorkbench?view:undefined}>{!library.loading&&!library.error&&visible.map(p=><BuildCard key={p.id} project={p} onDecision={setDecision}/>)}</div>
   {decision&&<DecisionDialog decision={decision} onClose={()=>setDecision(null)} onComplete={()=>{setDecision(null);library.reload();}}/>}
  </>;
 }

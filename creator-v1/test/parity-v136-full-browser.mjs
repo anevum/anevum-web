@@ -37,6 +37,13 @@ const packageFixture={id:'123e4567-e89b-42d3-a456-426614174000',
   title:'SYNTHETIC APPROVED PACKAGE',summary:'Loopback-only approved package inspection fixture.',
   category:'game',version:1,status:'published',draft_status:null,cover_url:null,
   play_url:'/upload/v3/play/123e4567-e89b-42d3-a456-426614174000',published_at:1792843200};
+// Three fabricated records exist only inside the loopback acceptance browser.
+// Test both a published version and a separate, unpublished revision together.
+const nativeStudioLibraryFixture=[
+  {id:'11111111-1111-4111-8111-111111111111',title:'SYNTHETIC LIVE WORK',summary:'Offline published browser fixture only.',category:'game',status:'published',version:1,updatedAt:1792870000,publishedAt:1792860000,coverUrl:null,liveReleaseId:'44444444-4444-4444-8444-444444444444',draftReleaseId:null,draftStatus:null},
+  {id:'22222222-2222-4222-8222-222222222222',title:'SYNTHETIC PRIVATE WORK',summary:'Unsubmitted private browser fixture only.',category:'app',status:'ready',version:1,updatedAt:1792870001,publishedAt:null,coverUrl:null,liveReleaseId:null,draftReleaseId:'55555555-5555-4555-8555-555555555555',draftStatus:'ready',retention:'saved'},
+  {id:'33333333-3333-4333-8333-333333333333',title:'SYNTHETIC REVIEW WORK',summary:'Offline private revision pending while prior release remains approved.',category:'simulation',status:'published',version:2,updatedAt:1792870002,publishedAt:1792860000,coverUrl:null,liveReleaseId:'66666666-6666-4666-8666-666666666666',draftReleaseId:'77777777-7777-4777-8777-777777777777',draftStatus:'pending_review'}
+];
 const COVER_ROUTE='/upload/v3/api/v1/packages/covers/'+packageFixture.id;
 const COVER_FIXTURE='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900"><rect width="1600" height="900" fill="#124b79"/><path d="M150 150L1450 750" stroke="#c0f4ff" stroke-width="70"/></svg>';
 const record=(name,data={})=>{checks.push({name,...data});console.log('PASS '+name);};
@@ -57,6 +64,12 @@ async function contextFor(width,{motion='reduce',state='empty',forceVector=false
     // endpoint is contacted during this loopback-only acceptance.
     if(state==='studio'&&url.pathname==='/upload/v3/api/v1/packages/native/session'){
       await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({contract:'native-creator-v095',memberId:'00000000000000000000000000000099',canUpload:true,canReview:false,resourceProtection:true})});return;
+    }
+    if(state==='studio'&&url.pathname==='/upload/v3/api/v1/packages/native/mine'){
+      await route.fulfill({status:200,contentType:'application/json',
+        body:JSON.stringify({contract:'native-creator-v095',memberId:'00000000000000000000000000000099',
+          projects:nativeStudioLibraryFixture,usage:{memberPhysicalBytes:8192,memberPhysicalLimit:209715200,
+            pilotPhysicalBytes:8192,pilotPhysicalLimit:209715200,cleanupPending:0}})});return;
     }
     if(url.pathname===COVER_ROUTE){
       // A first-party synthetic cover fixture; no external calls or real member media.
@@ -120,8 +133,59 @@ try{
   for(const width of [1440,390,320]){
     const {page,context}=await contextFor(width,{state:'studio',forceVector:true});
     page.setDefaultTimeout(45000);
+
+    // V136.032: verify the real, compiled private archive before editing.
+    // Filtering/search/layout must neither transmit unpublished data nor call
+    // upload/review APIs. Its "live + pending" overlap is intentional.
+    const nativeReads=[];
+    page.on('request',request=>{if(new URL(request.url()).pathname==='/upload/v3/api/v1/packages/native/mine')nativeReads.push(request.method());});
+    await page.goto(base+'/studio/packages',{waitUntil:'domcontentloaded'});
+    const buildRows=page.locator('[data-native-project]');
+    await page.waitForFunction(()=>document.querySelectorAll('[data-native-project]').length===3);
+    const controls=page.locator('.av136032-library-tools');
+    await controls.waitFor();
+    assert.equal(await controls.locator('[data-native-filter="all"]').getAttribute('aria-pressed'),'true');
+    assert.deepEqual(await controls.locator('.av136032-tab-count').allInnerTexts(),['3','1','1','2']);
+    assert.equal(await page.locator('.av136032-record-blank').count(),3,'No invented creator artwork in empty-media fixture');
+    const initialReads=nativeReads.length;
+    assert.ok(initialReads>0&&nativeReads.every(method=>method==='GET'),'Read-only, member-bound inventory');
+    const filter=async (name,count)=>{
+      await controls.locator('[data-native-filter="'+name+'"]').click();
+      await page.waitForFunction(expected=>document.querySelectorAll('[data-native-project]').length===expected,count);
+      assert.equal(await controls.locator('[data-native-filter="'+name+'"]').getAttribute('aria-pressed'),'true');
+    };
+    await filter('private',1);
+    assert.match(await buildRows.first().innerText(),/SYNTHETIC PRIVATE WORK/);
+    await filter('review',1);
+    assert.match(await buildRows.first().innerText(),/SYNTHETIC REVIEW WORK/);
+    await filter('live',2);
+    assert.match(await page.locator('[data-native-project="33333333-3333-4333-8333-333333333333"]').innerText(),
+      /approved public release retained/i,'Pending update never hides the live release');
+    await page.locator('.av095-search input').fill('NONE MATCHES THIS PRIVATE ARCHIVE');
+    await page.waitForFunction(()=>document.querySelectorAll('[data-native-project]').length===0);
+    await page.getByRole('button',{name:'Show all builds'}).click();
+    await page.waitForFunction(()=>document.querySelectorAll('[data-native-project]').length===3);
+    await page.locator('.av095-search input').fill('SyNtHeTiC PrIvAtE');
+    await page.waitForFunction(()=>document.querySelectorAll('[data-native-project]').length===1);
+    assert.match(await buildRows.first().innerText(),/SYNTHETIC PRIVATE WORK/,'Search remains case-insensitive');
+    await page.locator('.av095-search input').fill('');
+    await page.waitForFunction(()=>document.querySelectorAll('[data-native-project]').length===3);
+    await controls.locator('[data-library-view="list"]').click();
+    await page.waitForFunction(()=>document.querySelector('.av136032-build-grid')?.getAttribute('data-layout')==='list');
+    assert.equal(await controls.locator('[data-library-view="list"]').getAttribute('aria-pressed'),'true');
+    assert.equal(await buildRows.first().evaluate(el=>getComputedStyle(el).display),width>650?'grid':'block',
+      'List actually changes card geometry at the selected CSS breakpoint');
+    assert.equal(await page.locator('.av095-search input').evaluate(el=>Number.parseFloat(getComputedStyle(el).fontSize)),16,
+      'Mobile search avoids Safari zoom and preserves readable desktop sizing');
+    assert.equal(await page.evaluate(()=>location.pathname==='/studio/packages'&&!location.search),true,
+      'Unpublished filtering state never enters a public/shareable URL');
+    assert.equal(nativeReads.length,initialReads,'Local controls must not refetch or transmit private inventory');
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,
+      'Creator archive must not overflow at '+width+' CSS pixels');
+    await page.screenshot({path:join(out,'studio-archive-list-'+width+'.png'),animations:'disabled',timeout:90000});
     await page.goto(base+'/studio/packages/new',{waitUntil:'domcontentloaded'});
     await page.getByRole('heading',{name:'Transmit a creation.'}).waitFor();
+
     await page.getByRole('button',{name:'Artifact source workbench',exact:true}).click();
     const workbench=page.locator('[data-artifact-workbench="v136.011"]');await workbench.waitFor();
     await workbench.getByRole('button',{name:'Open file…',exact:true}).click();
