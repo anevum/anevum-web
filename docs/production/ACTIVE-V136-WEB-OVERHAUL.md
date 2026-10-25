@@ -265,3 +265,32 @@ are **not** implied by source commits. #335 owns concept visual acceptance;
 #333 owns any future sealed release; #337 remains responsible for uncapped
 XP/product implementation, not this UI slice. Main, providers, Stripe draft
 #739, auth, D1, publishing and baseline/canary remain unchanged.
+
+## V136.027 — real Commons URL and identity continuity (isolated draft)
+Session: `ANEVUM.WEB.UPDATE.2026-10-25.007.COMMONS-URL-IDENTITY-CONTINUITY`.
+Stack: `build/parity-v136-commons-20261025-027` builds upon V136.026
+Discover candidate #748. Parent V136 development #735 remains isolated from
+this source pending its own review and exact-head CI.
+
+**Implemented in draft:** public Community tabs, approved project category,
+moderated discussion sort and creator name/handle search now derive entirely
+from validated URL parameters (`view`, `category`, `sort`, `q`).
+Back/Forward, reload and share preserve relevant selections. View changes clear
+filters that would otherwise remain invisible in another tab. No additional
+query parameters are accepted by the API. Input is capped at 72 characters
+and the mobile search uses native 16px text to avoid iOS zoom.
+Unlinked legacy authors and invalid creator handles cannot generate fabricated
+`/creators/null` routes. Public counters describe **approved publication**
+instead of implying legal identity verification. Actual `readStatus`,
+`readProjects`, `readCreators` and separately gated `readCommunityPosts`
+remain canonical; moderation and forum posting remain server controlled.
+No made-up activity, rankings, avatars or extra front-end data stores.
+
+**QA gate:** source assertions and compiled local Chromium test with explicitly
+synthetic approved fixture records at 1440/390/320, URL/Back/category/sort/q,
+real API reads, invalid-handle fallback, feature-disabled discussions, no
+write/external calls, no layout overflow, 12 labelled captures. Tests and
+new CI are proposed source until actual exact-head receipts pass.
+Owner did not approve this unseen slice merely by accepting V136.026.
+No production release, backend, D1, auth, member XP, payment, publisher
+or feature-flag modification. Sealed V136.024 candidate #741 remains intact.

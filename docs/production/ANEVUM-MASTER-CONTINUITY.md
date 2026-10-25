@@ -314,3 +314,25 @@ package uploads remain under existing independent acceptance; this slice
 does not enable them. Production release source guard is still authoritative;
 no payments, auth, user privacy, backend, D1, publishing or traffic changes.
 #331 owns Discover behavior, #335 aesthetic acceptance, #333 release go/no-go.
+
+## V136.027 — Commons URL/privacy follow-through (October 25, 2026)
+Session `ANEVUM.WEB.UPDATE.2026-10-25.007.COMMONS-URL-IDENTITY-CONTINUITY`.
+Source branch `build/parity-v136-commons-20261025-027` is stacked on
+V136.026 Discover review source; development owner #735 and release #333
+remain separate. Existing Commons pages keep the same visual composition,
+real categories, member integrations and server-gated moderated discussions.
+
+Implementation: canonical URL parameters are the only source for Community
+view, project category, discussion order and public creator search. A view
+switch clears irrelevant hidden filters. Browser history and shared links
+restore selections. Creator credits without an approved public handle become
+text, never an inferred channel route. The approved-public counters do not
+conflate published-work review with identity verification. 16px phone search.
+A new source test and full-flag loopback browser test cover three viewport
+widths, real API responses, no fabricated activity or private backend access.
+
+Current state is DRAFT DEVELOPMENT, **NOT released**. The preceding #748
+Discover exact-head focused acceptance has passed in CI, but its parent merge
+requires the full spatial regression and source review after a small accessible
+category-name correction. No provider, main, #741 release lane, billing,
+auth, database, moderation or traffic changes are authorized here.
