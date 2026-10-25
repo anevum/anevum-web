@@ -4,6 +4,7 @@ import {canonicalMethods,type CanonicalMethods} from "../lib/canonical-beta";
 import {memberHealth,type MemberHealth} from "../lib/member-api";
 import {useResource} from "../lib/useResource";
 import {ErrorState,LoadingState} from "../components/States";
+import "./status-focus-v136.css";
 
 /** V091 / Status is evidence from the current read-only public API plus
  * independent, live canonical capability checks. Do not advertise a sign-in
@@ -78,6 +79,18 @@ export function StatusPage(){
             ?<a href="/staff">{item.action} <span aria-hidden="true">↗</span></a>
             :<Link to={item.to}>{item.action} <span aria-hidden="true">↗</span></Link>}
         </article>)}</div>
+    </section>
+    <section id="development-focus" className="v136-public-focus" aria-labelledby="v136-public-focus-title">
+      <header className="v136-public-focus-head">
+        <div><span>ANEVUM / PRODUCT DEVELOPMENT</span><h2 id="v136-public-focus-title">What we're working toward.</h2>
+          <p>These are development priorities, not release dates or promises of available features. The verified service capabilities above are the source of truth for what works today.</p></div>
+      </header>
+      <ol className="v136-public-focus-list">
+        <li><span>01 / NOW</span><strong>Make first visits clearer.</strong><p>Improve homepage explanations, mobile navigation, profile clarity and the existing IREN tour using real first-time feedback.</p></li>
+        <li><span>02 / NEXT</span><strong>Prove creator workflows.</strong><p>Validate accessible Studio editing and controlled pilot uploads before expanding approved publication access.</p></li>
+        <li><span>03 / EXPLORING</span><strong>Make feedback easier to follow.</strong><p>Research moderated feature requests and public roadmap input. Open feature voting and a universal feedback inbox are not active capabilities.</p></li>
+      </ol>
+      <div className="v136-public-focus-foot"><Link to="/start">Choose a starting path</Link><Link to="/community">Explore community participation</Link></div>
     </section>
     <p className="v091-status-note">Public counts are genuine, but do not include private drafts or unpublished projects. Account and Studio checks are read-only; this page neither opens access nor changes member records.</p>
   </div>;
