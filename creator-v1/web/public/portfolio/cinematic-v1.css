@@ -232,7 +232,8 @@ body{background:#050917}
  .project-visual,.project-anevum .project-visual{height:clamp(290px,77vw,390px)}
  .project-anevum .project-meta{padding:25px}
  .project-meta h3,.project-anevum .project-meta h3{font-size:38px}
- .project-meta{min-height:auto}
+ .project-meta{min-height:auto;flex-direction:column;align-items:flex-start}
+ .project-state{max-width:100%;width:auto;flex-shrink:0}
  .process-showcase{padding-top:65px;padding-bottom:72px}
  .process-visual{min-height:290px}
  .process-visual-tag,.process-visual-readout{font-size:8px}
@@ -255,6 +256,10 @@ body{background:#050917}
  .hero h1{font-size:clamp(48px,12.3vw,56px)}
  .hero-proof span{font-size:7px}
  .hero-footer>span:first-child{display:none}
+ .philosophy-statement{font-size:clamp(40px,13vw,49px)!important;line-height:1.04;max-width:100%}
+ .philosophy-statement em{display:inline-block;max-width:100%;overflow-wrap:anywhere}
+ .portrait-signature{right:8px;bottom:0;font-size:clamp(54px,17vw,76px)}
+ .project-meta{flex-direction:column;align-items:flex-start;gap:12px}
  .process-controls{gap:5px}.process-controls button{padding:10px 7px}
 }
 @media(prefers-reduced-motion:reduce){
