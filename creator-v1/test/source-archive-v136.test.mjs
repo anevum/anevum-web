@@ -35,3 +35,25 @@ test('Markdown notes are backed up but excluded from the canonical playable ZIP'
  const report=await inspectLocalBrowserBuild(archive);
  assert.equal(report.playableCandidate,true,JSON.stringify(report));
 });
+
+test('local file moves preserve bytes and safety, removal never removes entrypoint',async()=>{
+ const {renameLocalSource,removeLocalSource}=await import('../web/src/parity/workbench-file-ops-v136.ts');
+ const files={'index.html':'<!doctype html><title>Local</title>',
+  'styles.css':'body{color:white}', 'assets/notes.md':'# My author notes'};
+ const renamed=renameLocalSource(files,'assets/notes.md','docs/reference.md');
+ assert.equal(renamed['docs/reference.md'],files['assets/notes.md']);
+ assert.ok(!('assets/notes.md' in renamed));
+ assert.deepEqual(Object.keys(renamed),['index.html','styles.css','docs/reference.md']);
+ assert.equal(files['assets/notes.md'],'# My author notes','Local move never mutates source state');
+ assert.equal(renameLocalSource(renamed,'docs/reference.md','docs/reference.md'),renamed);
+ for(const path of ['../notes.md','docs/private.env','index.html','Styles.css']){
+  assert.throws(()=>renameLocalSource(renamed,'docs/reference.md',path));
+ }
+ assert.throws(()=>renameLocalSource(files,'index.html','main.html'));
+ assert.throws(()=>removeLocalSource(files,'index.html'));
+ const removed=removeLocalSource(renamed,'docs/reference.md');
+ assert.deepEqual(Object.keys(removed),['index.html','styles.css']);
+ assert.ok(Object.hasOwn(renamed,'docs/reference.md'));
+ const zipped=unzipSync(new Uint8Array(await sourceArchive(removed).arrayBuffer()));
+ assert.deepEqual(Object.keys(zipped),['index.html','styles.css']);
+});

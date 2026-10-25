@@ -15,3 +15,39 @@ html[data-av-parity="v136-full"] .p136-workbench,.p136-workbench{margin:22px 0;m
 .p136-source-quick-open [role="listbox"]{max-height:240px;overflow:auto;margin:8px 0;display:grid;gap:3px}
 .p136-source-quick-open [role="option"]{display:flex;align-items:center;gap:9px;text-align:left;min-width:0;background:transparent;border-color:transparent}.p136-source-quick-open [role="option"][aria-selected="true"]{background:#244466;border-color:#80d7ff80;box-shadow:inset 2px 0 #9ceaff}.p136-source-quick-open [role="option"] svg{width:20px;height:20px;flex:none}.p136-source-quick-open [role="option"] span{overflow-wrap:anywhere;min-width:0}.p136-source-quick-open small{margin-left:auto;color:#bbcee0;font:10px ui-monospace,monospace}
 @media(forced-colors:active){.p136-workbench,.p136-workbench :is(button,input,textarea),.p136-source-stage,.p136-source-inspector,.p136-source-explorer,.p136-source-quick-open{background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none}}
+
+/* V136.017.025 — real local-file operations share Studio's machined editor rail.
+ * The entrypoint is immutable; rename/remove require deliberate, visible UI. */
+html[data-av-parity="v136-full"] .p136017-source-ledge{flex-wrap:wrap}
+html[data-av-parity="v136-full"] .p136017-file-operations{
+ display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-left:auto
+}
+html[data-av-parity="v136-full"] .p136017-file-operations button{
+ min-height:27px;padding:3px 8px;white-space:nowrap;
+ background:linear-gradient(155deg,#173a51,#0b2233);border:1px solid #82bdd65c;
+ color:#c5e9f7;font:650 10px/1.2 ui-monospace,monospace;letter-spacing:.025em
+}
+html[data-av-parity="v136-full"] .p136017-file-operations button:disabled{opacity:.35}
+html[data-av-parity="v136-full"] .p136017-file-mutation{
+ display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:12px 15px;
+ background:linear-gradient(145deg,#12314a,#071824);border-bottom:1px solid #72adc480
+}
+html[data-av-parity="v136-full"] .p136017-file-mutation :is(label,p){
+ margin:0;flex-basis:100%;color:#bcdff0;font:11px/1.6 ui-monospace,monospace;
+ overflow-wrap:anywhere
+}
+html[data-av-parity="v136-full"] .p136017-file-mutation input{
+ flex:1 1 205px;min-width:0;min-height:40px;padding:6px 10px;
+ color:#ebf8ff;background:#06101d;border:1px solid #8accdf83;
+ font:12px ui-monospace,monospace
+}
+html[data-av-parity="v136-full"] .p136017-file-mutation button{min-height:39px}
+@media(max-width:520px){
+ html[data-av-parity="v136-full"] .p136017-source-ledge>span:last-child{display:none}
+ html[data-av-parity="v136-full"] .p136017-file-operations{margin-left:0}
+}
+@media(forced-colors:active){
+ html[data-av-parity="v136-full"] .p136017-file-mutation,
+ html[data-av-parity="v136-full"] .p136017-file-mutation input,
+ html[data-av-parity="v136-full"] .p136017-file-operations button{background:Canvas;color:CanvasText;border-color:CanvasText}
+}

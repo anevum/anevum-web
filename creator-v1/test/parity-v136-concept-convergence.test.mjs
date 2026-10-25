@@ -93,7 +93,7 @@ test('real permitted local files form disclosure folders without creating synthe
  assert.match(ide,/aria-label=\{'Folder '\+node\.name\}/);
  assert.match(ide,/aria-expanded=\{expanded\}/);
  assert.match(ide,/aria-label=\{node\.path\}/);
- assert.match(ide,/onClick=\{\(\)=>setActive\(node\.path\)\}/);
+ assert.match(ide,/onClick=\{\(\)=>selectFile\(node\.path\)\}/);
  assert.match(glyph,/export function FolderGlyphV136017/);
  assert.match(css,/\.p136017-source-tree \.p136017-tree-folder/);
 });
@@ -116,4 +116,18 @@ test('full backup preserves Markdown and playable archive uses canonical MIME co
  assert.match(ide,/sourceArchive\(files\)/);
  assert.match(ide,/onClick=\{downloadSource\}/);
  assert.match(ide,/excluded from playable ZIPs/);
+});
+
+test('source tree offers real validated rename and confirmed removal, not cosmetic file commands',()=>{
+ const operations=source('../web/src/parity/workbench-file-ops-v136.ts');
+ assert.match(operations,/safeSourcePath\(next\)/);
+ assert.match(operations,/previous==='index\.html'/);
+ assert.match(operations,/path==='index\.html'/);
+ assert.match(operations,/path\.toLowerCase\(\)===next\.toLowerCase\(\)/);
+ assert.match(ide,/renameLocalSource\(files,renamingFile,target\)/);
+ assert.match(ide,/removeLocalSource\(files,deletingFile\)/);
+ assert.match(ide,/onClick=\{beginRename\}/);
+ assert.match(ide,/Confirm remove file/);
+ assert.match(ide,/setDirty\(true\);onDirty\(\)/);
+ assert.match(css,/\.p136017-file-mutation/);
 });

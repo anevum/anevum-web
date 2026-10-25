@@ -1,6 +1,7 @@
 import {useEffect,useRef,useState,type ComponentType,type ReactNode} from 'react';
 import {strToU8} from 'fflate';
 import {sourceArchive,playableSourceArchive,localOnlySourcePaths,safeSourcePath,SOURCE_LIMITS} from './source-archive-v136';
+import {renameLocalSource,removeLocalSource} from './workbench-file-ops-v136';
 import {Icon} from '../components/Icons';
 import {FileGlyphV136017,FolderGlyphV136017,fileKind} from './FileGlyphV136017';
 import {editorLanguage} from '../../../source-ide/language-v119.mjs';
@@ -44,6 +45,8 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
  const [inspector,setInspector]=useState(true),importVersion=useRef(0);
  const [quickOpen,setQuickOpen]=useState(false),[fileQuery,setFileQuery]=useState(''),[fileChoice,setFileChoice]=useState(0);
  const [cursor,setCursor]=useState({line:1,column:1});
+ const [renamingFile,setRenamingFile]=useState<string|null>(null),[renameDraft,setRenameDraft]=useState('');
+ const [deletingFile,setDeletingFile]=useState<string|null>(null);
  const quickInput=useRef<HTMLInputElement>(null),quickButton=useRef<HTMLButtonElement>(null);
   const [collapsedFolders,setCollapsedFolders]=useState<Set<string>>(()=>new Set());
  useEffect(()=>{let alive=true;if(!plain)void import('./MonacoSourceV136').then(m=>{if(alive)setEditor(()=>m.default)}).catch(()=>{if(alive)setEditorError(true)});return()=>{alive=false}},[plain]);
@@ -53,8 +56,11 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
  const matchingPaths=entries.map(([path])=>path).filter(path=>path.toLowerCase().includes(fileQuery.trim().toLowerCase()));
  useEffect(()=>{if(quickOpen)quickInput.current?.focus()},[quickOpen]);
  function closeQuickOpen(){setQuickOpen(false);requestAnimationFrame(()=>quickButton.current?.focus())}
+ function selectFile(path:string){
+  setActive(path);setRenamingFile(null);setDeletingFile(null);
+ }
  function choosePath(path:string){
-  setActive(path);
+  selectFile(path);
   setCollapsedFolders(previous=>new Set([...previous].filter(folder=>!path.startsWith(folder+'/'))));
   closeQuickOpen();
  }
@@ -74,7 +80,7 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
   if(!safePath(path)){setNote('Use a relative HTML, CSS, JS, JSON, Markdown or text path, such as assets/data.json.');return;}
   if(path in files){setActive(path);setNote('That file already exists.');return;}
   if(entries.length>=MAX_FILES){setNote('This local workbench supports up to 24 source files.');return;}
-  setFiles(current=>({...current,[path]:''}));setActive(path);setName('');setDirty(true);onDirty();
+  setFiles(current=>({...current,[path]:''}));selectFile(path);setName('');setDirty(true);onDirty();
  }
  async function importFiles(selected:FileList|null){
   if(disabled||!selected)return;const version=++importVersion.current;
@@ -85,7 +91,7 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
    if(version!==importVersion.current)return;
    const next={...files,...Object.fromEntries(incoming)};
    if(Object.keys(next).length>MAX_FILES||Object.values(next).reduce((n,t)=>n+strToU8(t).length,0)>MAX_TOTAL)throw Error('The local source workspace is limited to 1 MiB and 24 files.');
-   setFiles(next);setActive(incoming[0]?.[0]||active);setDirty(true);onDirty();setNote('Files read locally. Nothing was uploaded.');
+   setFiles(next);selectFile(incoming[0]?.[0]||active);setDirty(true);onDirty();setNote('Files read locally. Nothing was uploaded.');
   }catch(error){if(version===importVersion.current)setNote(error instanceof Error?error.message:'Files could not be opened.');}
  }
  function packageSource(){
@@ -105,6 +111,33 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
    setTimeout(()=>URL.revokeObjectURL(url),1000);
    setNote('Complete source downloaded, including local-only notes. This did not upload or prepare a playable build.');
   }catch(error){setNote(error instanceof Error?error.message:'Full source could not be downloaded.')}
+ }
+ function beginRename(){
+  if(disabled||active==='index.html')return;
+  setDeletingFile(null);setRenamingFile(active);setRenameDraft(active);setNote('');
+ }
+ function commitRename(){
+  if(disabled||!renamingFile)return;
+  try{
+   const target=renameDraft.trim(),updated=renameLocalSource(files,renamingFile,target);
+   setRenamingFile(null);
+   if(updated===files)return;
+   importVersion.current++;
+   setFiles(updated);selectFile(target);
+   setCollapsedFolders(previous=>new Set([...previous].filter(folder=>!target.startsWith(folder+'/'))));
+   setDirty(true);onDirty();
+   setNote('Local source renamed. Review relative imports or links; any previously prepared archive is invalid.');
+  }catch(error){setNote(error instanceof Error?error.message:'Could not rename this local source.')}
+ }
+ function commitRemoval(){
+  if(disabled||!deletingFile)return;
+  try{
+   const updated=removeLocalSource(files,deletingFile);
+   importVersion.current++;
+   setFiles(updated);selectFile('index.html');
+   setDirty(true);onDirty();
+   setNote('Local source removed from this session. Any previously prepared archive is invalid.');
+  }catch(error){setNote(error instanceof Error?error.message:'Could not remove this local source.')}
  }
  function toggleFolder(path:string){
    setCollapsedFolders(previous=>{
@@ -129,7 +162,7 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
    }
    return <button key={node.path} type="button" className="p136017-tree-file"
     aria-label={node.path} title={node.path} aria-pressed={node.path===active}
-    onClick={()=>setActive(node.path)}
+    onClick={()=>selectFile(node.path)}
     style={{paddingLeft:8+Math.min(depth,5)*13}}>
     <span className={'p136-file-mark is-'+fileKind(node.path)} aria-hidden="true"><FileGlyphV136017 path={node.path}/></span>
     <span className="p136017-tree-name">{node.name}</span>
@@ -182,10 +215,30 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
     <nav aria-label="Source file explorer" className="p136017-source-tree">{explorerTree.map(node=>explorerRow(node,0))}</nav>
    </aside>
    <div className="p136-source-stage">
-    <div className="p136017-source-ledge"><span>EDITOR / {active}</span><span>LOCAL · NOT EXECUTED</span></div>
+    <div className="p136017-source-ledge">
+     <span>EDITOR / {active}</span>
+     <div className="p136017-file-operations" role="group" aria-label="Selected local source actions">
+      <button type="button" disabled={disabled||active==='index.html'} onClick={beginRename}>Rename file</button>
+      <button type="button" disabled={disabled||active==='index.html'}
+       onClick={()=>{setRenamingFile(null);setDeletingFile(active);setNote('')}}>Remove file</button>
+     </div><span>LOCAL · NOT EXECUTED</span>
+    </div>
+    {renamingFile&&<form className="p136017-file-mutation" onSubmit={event=>{event.preventDefault();commitRename()}}>
+     <label htmlFor="p136017-file-rename">Rename local source: {renamingFile}</label>
+     <input id="p136017-file-rename" autoFocus autoComplete="off" spellCheck={false} maxLength={120}
+      value={renameDraft} onChange={event=>setRenameDraft(event.target.value)}
+      onKeyDown={event=>{if(event.key==='Escape'){event.preventDefault();setRenamingFile(null)}}}/>
+     <button type="submit" disabled={disabled}>Save file path</button>
+     <button type="button" onClick={()=>setRenamingFile(null)}>Cancel rename</button>
+    </form>}
+    {deletingFile&&<div className="p136017-file-mutation" role="group" aria-label="Confirm local file removal">
+     <p>Remove {deletingFile} from this in-memory workspace? This action has no undo. Export source first if needed.</p>
+     <button type="button" disabled={disabled} onClick={commitRemoval}>Confirm remove file</button>
+     <button type="button" onClick={()=>setDeletingFile(null)}>Keep file</button>
+    </div>}
     <div className="p136-source-tabs" role="tablist" aria-label="Open source files">{entries.map(([path])=><button key={path} type="button" role="tab" id={'p136-source-tab-'+path} aria-selected={path===active} aria-controls="p136-source-panel" tabIndex={path===active?0:-1}
-     onKeyDown={e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const i=entries.findIndex(([p])=>p===active),next=e.key==='Home'?0:e.key==='End'?entries.length-1:(i+(e.key==='ArrowLeft'?-1:1)+entries.length)%entries.length;setActive(entries[next][0]);requestAnimationFrame(()=>document.getElementById('p136-source-tab-'+entries[next][0])?.focus())}}
-     onClick={()=>setActive(path)}><FileGlyphV136017 path={path}/><span>{path}</span></button>)}</div>
+     onKeyDown={e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const i=entries.findIndex(([p])=>p===active),next=e.key==='Home'?0:e.key==='End'?entries.length-1:(i+(e.key==='ArrowLeft'?-1:1)+entries.length)%entries.length;selectFile(entries[next][0]);requestAnimationFrame(()=>document.getElementById('p136-source-tab-'+entries[next][0])?.focus())}}
+     onClick={()=>selectFile(path)}><FileGlyphV136017 path={path}/><span>{path}</span></button>)}</div>
     <div id="p136-source-panel" role="tabpanel" aria-labelledby={'p136-source-tab-'+active}>
      {!plain&&Editor&&!editorError?<Editor files={files} active={active} disabled={disabled} onChange={change} onCursor={(line,column)=>setCursor({line,column})}/>:<label className="p136-source-fallback"><span className="visually-hidden">Edit source {active}</span><textarea spellCheck={false} autoCapitalize="off" autoCorrect="off" value={files[active]} onChange={e=>change(active,e.target.value)} disabled={disabled}/></label>}
     </div>

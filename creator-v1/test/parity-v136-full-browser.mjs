@@ -140,6 +140,25 @@ try{
       assert.equal(await workbench.getByRole('button',{name:'assets/notes.md',exact:true}).count(),0,'Collapsing a folder hides only its file buttons');
       await folder.click();
       assert.equal(await workbench.getByRole('button',{name:'assets/notes.md',exact:true}).count(),1,'Expanding restores the real source file');
+      await workbench.getByRole('button',{name:'Rename file',exact:true}).click();
+      await workbench.locator('#p136017-file-rename').fill('assets/reference.md');
+      await workbench.getByRole('button',{name:'Save file path',exact:true}).click();
+      assert.equal(await workbench.getByRole('button',{name:'assets/notes.md',exact:true}).count(),0);
+      assert.equal(await workbench.getByRole('button',{name:'assets/reference.md',exact:true}).count(),1,
+       'Renaming a local source changes the actual source tree, not a presentation label');
+      await workbench.locator('#p136-source-new').fill('assets/scratch.js');
+      await workbench.getByRole('button',{name:'Create source file',exact:true}).click();
+      await workbench.getByRole('button',{name:'Remove file',exact:true}).click();
+      await workbench.getByRole('button',{name:'Keep file',exact:true}).click();
+      assert.equal(await workbench.getByRole('button',{name:'assets/scratch.js',exact:true}).count(),1,
+       'Cancel keeps the real local source untouched');
+      await workbench.getByRole('button',{name:'Remove file',exact:true}).click();
+      await workbench.getByRole('button',{name:'Confirm remove file',exact:true}).click();
+      assert.equal(await workbench.getByRole('button',{name:'assets/scratch.js',exact:true}).count(),0,
+       'Confirmed removal drops only the selected local source');
+      assert.equal(await workbench.getByRole('button',{name:'Rename file',exact:true}).isDisabled(),true,
+       'The canonical root entrypoint cannot be renamed');
+
     }
     else assert.equal(await page.locator('[data-source-editor="monaco"]').count(),0,'Phone uses accessible text editor without Monaco allocation');
     assert.equal(await page.locator('.p136-living-world').getAttribute('data-enabled'),'false','Private source never enters public GPU');
