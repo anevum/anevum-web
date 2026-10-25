@@ -169,3 +169,34 @@ test('inspector surfaces advisory missing static source links and real editor na
  assert.ok(!/fetch\(|eval\(|localStorage|sessionStorage/.test(ops),
   'Diagnostic module cannot create new execution or network capabilities');
 });
+
+
+test('all V136 public discovery covers use authored type defaults or actual uploaded covers, never generated category art',()=>{
+ const cover=source('../web/src/parity/CategoryCoverV136.tsx');
+ const coverCss=source('../web/src/parity/category-cover-v136.css');
+ const homepage=source('../web/src/parity/ParityPortalV136.tsx');
+ const discover=source('../web/src/parity/ParityDiscoverV136.tsx');
+ const detail=source('../web/src/parity/ArtifactLensV136.tsx');
+ const publicCard=source('../web/src/components/ProjectCard.tsx');
+ const packages=source('../web/src/components/CreatorPackageGallery.tsx');
+ assert.match(cover,/data-cover-source=\{hasCover\?'creator':'default'\}/);
+ assert.match(cover,/onError=\{\(\)=>setFailedUrl\(coverUrl\?\?null\)\}/);
+ assert.match(cover,/role="img"/);
+ for(const category of ['games','tools','automation','research','creative','learning','libraries','other','game','app','simulation','story']){
+  assert.ok(cover.includes(category+':{label:'),'Every real category has a deterministic thumbnail: '+category);
+ }
+ assert.match(coverCss,/\.p136-category-cover--violet/);
+ assert.match(coverCss,/\.p136-category-cover--cyan/);
+ assert.match(coverCss,/\.p136-category-cover--mint/);
+ assert.match(homepage,/<CategoryCoverV136 category=\{project\.category\}/);
+ assert.match(homepage,/<CategoryCoverV136 category=\{item\.scene\}/);
+ assert.match(discover,/<CategoryCoverV136 category=\{id\}/);
+ assert.match(detail,/<CategoryCoverV136 category=\{item\.category\}/);
+ assert.match(publicCard,/VITE_PARITY_V136_FULL==="true"\s*\?<CategoryCoverV136/);
+ assert.match(packages,/VITE_PARITY_V136_FULL==='true'\s*\?<CategoryCoverV136/);
+ for(const [name,code] of [['homepage',homepage],['discovery',discover],['details',detail]]){
+  assert.ok(!code.includes('CosmicArtwork'),'V136 '+name+' must not create category illustrations');
+ }
+ assert.ok(!/fetch\(|localStorage|sessionStorage|eval\(/.test(cover),
+  'Default covers are static first-party UI, with no telemetry or external art retrieval');
+});

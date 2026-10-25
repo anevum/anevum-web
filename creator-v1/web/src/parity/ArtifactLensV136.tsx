@@ -1,8 +1,7 @@
 import {useEffect,useRef} from 'react';
 import {Link} from 'react-router-dom';
-import {CosmicArtwork} from '../components/CosmicArtwork';
+import {CategoryCoverV136} from './CategoryCoverV136';
 import {Icon} from '../components/Icons';
-import type {CosmicScene} from '../components/CosmicIllustration';
 import type {Project} from '../lib/api';
 import type {CreatorPackageCard} from '../lib/creator-package-gallery-v010';
 import {projectDetailPath} from '../lib/navigation';
@@ -19,11 +18,6 @@ export type ArtifactSelection=
  | {kind:'package';work:CreatorPackageCard};
 const packageSector:Record<string,WorldSector>={
   game:'games',app:'tools',simulation:'research',story:'creative'
-};
-const scenes:Record<WorldSector,CosmicScene>={
-  hero:'hero',portal:'portal',games:'games',tools:'tools',creative:'creative',
-  libraries:'libraries',automation:'automation',research:'research',
-  learning:'learning',other:'other',community:'portal',creators:'portal',studio:'creative'
 };
 function publicSector(selection:ArtifactSelection):WorldSector{
   return selection.kind==='project'?selection.project.category:
@@ -79,12 +73,11 @@ export function ArtifactLensV136({selection,returnTo,onClose}:{
           aria-label="Close artifact details"><Icon name="close" size={20}/></button>
       </header>
       <div className="p136-artifact-lens-grid">
-        <div className="p136-artifact-lens-visual" aria-label={hasCover?'Creator supplied artwork':'Generated category environment'}>
-          {hasCover
-            ?<img src={selection.kind==='package'?selection.work.coverUrl||'':''} alt={'Creator artwork for '+item.title} loading="eager" decoding="async" referrerPolicy="same-origin"/>
-            :<CosmicArtwork scene={scenes[sector]} seed={item.id}/>}
+        <div className="p136-artifact-lens-visual" aria-label="Project cover">
+          <CategoryCoverV136 category={item.category}
+            coverUrl={isProject?null:selection.work.coverUrl} title={item.title}/>
           <span className="p136-artifact-lens-art-note">
-            {hasCover?'CREATOR-SUPPLIED COVER':'GENERATED CATEGORY FIELD / NOT CREATOR ARTWORK'}
+            {hasCover?'CREATOR COVER / TYPE DEFAULT IF UNAVAILABLE':'ANEVUM TYPE DEFAULT / NO COVER UPLOADED'}
           </span>
           <span className="p136-artifact-lens-visual-lines" aria-hidden="true"/>
         </div>

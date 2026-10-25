@@ -1,0 +1,104 @@
+/* ANEVUM PARITY V136.017 — actual uploaded thumbnail or fixed type-default.
+ * No generated artwork, externally loaded art, fake project screenshot or
+ * algorithmic illustration in these public discovery surfaces.
+ */
+.p136-category-cover{
+ --cover-accent:#7edcff;--cover-mid:#174e70;
+ position:absolute;inset:0;display:block;box-sizing:border-box;
+ width:100%;height:100%;min-width:0;overflow:hidden;isolation:isolate;
+ color:#effaff;background:#061526;
+}
+.p136-category-cover--violet{--cover-accent:#ae91ff;--cover-mid:#403373}
+.p136-category-cover--cyan{--cover-accent:#70d9ff;--cover-mid:#15557a}
+.p136-category-cover--mint{--cover-accent:#83e9ce;--cover-mid:#185750}
+.p136-category-cover--rose{--cover-accent:#eb9edc;--cover-mid:#67335f}
+.p136-category-cover--gold{--cover-accent:#f4ce86;--cover-mid:#735628}
+.p136-category-cover--slate{--cover-accent:#c2d7ed;--cover-mid:#304660}
+.p136-category-cover-bg{
+ position:absolute;inset:0;display:block;overflow:hidden;
+ background:linear-gradient(135deg,#06101f 0%,var(--cover-mid) 125%);
+}
+.p136-category-cover-bg::before{
+ content:"";position:absolute;inset:-1px;
+ background:
+  linear-gradient(90deg,transparent 48%,color-mix(in srgb,var(--cover-accent) 13%,transparent) 50%,transparent 52%),
+  linear-gradient(0deg,transparent 48%,color-mix(in srgb,var(--cover-accent) 9%,transparent) 50%,transparent 52%),
+  repeating-linear-gradient(0deg,transparent 0 28px,#8dcdf60c 29px 30px);
+ opacity:.7;pointer-events:none;
+}
+.p136-category-cover-bg::after{
+ content:"";position:absolute;top:8%;left:10%;right:10%;height:1px;
+ background:linear-gradient(90deg,var(--cover-accent),transparent);
+ opacity:.55;pointer-events:none;
+}
+.p136-category-cover-corners{
+ position:absolute;inset:8%;border:1px solid color-mix(in srgb,var(--cover-accent) 32%,transparent);
+ border-radius:3px;box-shadow:inset 0 1px #ffffff0f;
+}
+.p136-category-cover-icon{
+ position:absolute;left:50%;top:43%;transform:translate(-50%,-50%);
+ width:92px;height:92px;display:grid;place-items:center;
+ border:1px solid color-mix(in srgb,var(--cover-accent) 62%,transparent);
+ border-radius:20px;background:linear-gradient(155deg,#15233eec,#071327d9);
+ box-shadow:0 0 0 8px #040e2015,0 12px 33px #0009,inset 0 1px #ffffff26;
+ color:var(--cover-accent);
+}
+.p136-category-cover-icon svg{max-width:72%;max-height:72%;filter:drop-shadow(0 0 9px color-mix(in srgb,var(--cover-accent) 40%,transparent))}
+.p136-category-cover-identity{
+ position:absolute;left:16px;right:16px;bottom:12px;
+ display:flex;align-items:flex-end;justify-content:space-between;gap:9px;
+ text-shadow:0 1px 10px #000b;
+}
+.p136-category-cover-identity strong{
+ font:750 clamp(10px,1vw,15px)/1.2 Inter,system-ui,sans-serif;
+ letter-spacing:.06em;color:#e8f8ff;text-transform:uppercase;
+}
+.p136-category-cover-identity small{
+ font:650 8px/1.5 ui-monospace,monospace;letter-spacing:.08em;
+ color:var(--cover-accent);white-space:nowrap;
+}
+.p136-category-cover>img{
+ position:absolute!important;inset:0!important;
+ width:100%!important;height:100%!important;
+ max-width:none!important;object-fit:cover!important;display:block;
+}
+/* Allow existing source, chip and card controls to remain readable. */
+.p136-discover-world>.p136-category-cover{z-index:-2}
+.p136-project-media>.p136-category-cover,
+.project-art>.p136-category-cover,
+.p136-passage>.p136-category-cover,
+.p136-artifact-lens-visual>.p136-category-cover,
+.av010-work-cover>.p136-category-cover{z-index:0}
+.p136-project-media .p136-category-cover-identity,
+.p136-passage .p136-category-cover-identity,
+.project-art .p136-category-cover-identity{bottom:13px}
+.p136-passage>.p136-category-cover .p136-category-cover-identity{opacity:.45}
+.p136-discover-world>.p136-category-cover .p136-category-cover-icon{top:40%}
+.p136-discover-world>.p136-category-cover .p136-category-cover-identity{opacity:.42}
+.p136-artifact-lens-visual>.p136-category-cover .p136-category-cover-icon{width:130px;height:130px}
+.p136-artifact-lens-visual>.p136-category-cover .p136-category-cover-identity strong{font-size:18px}
+@media(max-width:540px){
+ .p136-category-cover-icon{width:66px;height:66px;border-radius:13px}
+ .p136-category-cover-icon svg{width:35px;height:35px}
+ .p136-category-cover-identity{left:10px;right:10px;bottom:9px}
+ .p136-category-cover-identity strong{font-size:10px}
+ .p136-category-cover-identity small{font-size:7px}
+}
+@media(prefers-reduced-motion:reduce){.p136-category-cover *{animation:none!important;transition:none!important}}
+@media(forced-colors:active){
+ .p136-category-cover,.p136-category-cover-bg,.p136-category-cover-icon,.p136-category-cover-corners{
+  background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none;
+ }
+ .p136-category-cover-identity :is(strong,small){color:CanvasText}
+}
+
+/* The default itself identifies its category; avoid double-printed notes
+ * competing with that real visual content. */
+html[data-av-parity="v136-full"] .p136-project-media:has(.p136-category-cover) .p136-project-art-note,
+html[data-av-parity="v136-full"] .project-art:has(.p136-category-cover) .cw-project-art-disclosure,
+html[data-av-parity="v136-full"] .p136-discover-world:has(.p136-category-cover) .p136-discover-world-art-note{
+ display:none;
+}
+html[data-av-parity="v136-full"] .p136-artifact-lens-visual>.p136-category-cover .p136-category-cover-identity{
+ bottom:69px;
+}

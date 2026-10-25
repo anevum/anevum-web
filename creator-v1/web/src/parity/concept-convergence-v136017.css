@@ -962,3 +962,29 @@ html[data-av-parity="v136-full"] .p136-hero-rail a:is(:hover,:focus-visible){bor
 }
 @media(prefers-reduced-motion:reduce){html[data-av-parity="v136-full"] .p136-hero-rail a{transition:none!important}}
 @media(forced-colors:active){html[data-av-parity="v136-full"] :is(.p136-hero-rail a,.p136-button--primary,.p136-button--signal){background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none}}
+
+
+/* V136.017.039 — preserve original 320px header fit. The compact concept
+ * font declaration must not override the narrower phone's real nav geometry:
+ * logo, search, member space and menu all remain usable at 320 CSS pixels.
+ * Do not mask this with html/body overflow-x clipping. */
+@media(max-width:350px){
+ html[data-av-parity="v136-full"] .p136-header-inner{
+  padding-inline:7px;gap:5px;
+ }
+ html[data-av-parity="v136-full"] .p136-brand{
+  padding-right:0;gap:5px;min-width:0;
+ }
+ html[data-av-parity="v136-full"] .p136-brand-mark{
+  width:30px;height:30px;flex:none;
+ }
+ html[data-av-parity="v136-full"] .p136-brand strong{
+  font-size:16px;letter-spacing:.14em;
+ }
+ html[data-av-parity="v136-full"] .p136-header-actions{
+  gap:4px;
+ }
+ html[data-av-parity="v136-full"] .p136-header-actions>*{
+  min-width:37px;padding-inline:6px;
+ }
+}

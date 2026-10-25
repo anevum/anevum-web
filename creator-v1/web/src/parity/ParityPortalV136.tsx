@@ -2,7 +2,7 @@ import {useState, type FormEvent} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import {Icon} from '../components/Icons';
 import {OrbitalMark} from '../components/OrbitalMark';
-import {CosmicArtwork} from '../components/CosmicArtwork';
+import {CategoryCoverV136} from './CategoryCoverV136';
 import {useLivingWorld} from './LivingWorldState';
 import {CinematicArrivalV136} from './CinematicArrivalV136';
 import {ContinuanceInstrumentV136017} from './ContinuanceInstrumentV136017';
@@ -11,8 +11,8 @@ import type {Project, Category} from '../lib/api';
 import type {CosmicScene} from '../components/CosmicIllustration';
 
 /** PARITY V136.002: new homepage composition using real approved catalogue records.
- * All orbital imagery and generic category art are illustrative, never claimed
- * as a creator's own work or a live signal.
+ * Public catalogue records use neutral type-default covers, never fabricated
+ * creator uploads, guessed activity or synthetic project screenshots.
  */
 type Props={projects:readonly Project[];catalogueState:'loading'|'ready'|'error';signedIn:boolean;verifiedCount:number|null};
 const types:Record<Category,{label:string;scene:CosmicScene;tone:string}>={
@@ -48,7 +48,7 @@ function PublicProjectCard({project}:{project:Project}){
   const meta=types[project.category];
   return <article className={'p136-project-card p136-tone-'+meta.tone}>
     <Link to={projectDetailPath(project.id,'/')} className="p136-project-media" aria-label={'View '+project.title}>
-      <CosmicArtwork scene={meta.scene} seed={project.id}/><span className="p136-project-art-note">DYNAMIC ANEVUM FIELD / NOT CREATOR COVER</span><span className="p136-kind">{meta.label}</span>
+      <CategoryCoverV136 category={project.category} title={project.title}/><span className="p136-project-art-note">ANEVUM TYPE DEFAULT / NO CREATOR COVER</span><span className="p136-kind">{meta.label}</span>
     </Link>
     <div className="p136-project-body">
       <span className="p136-project-meta">{project.freeToUse?'FREE TO USE':'PROJECT DIRECTORY'} <span> / </span> APPROVED PUBLIC WORK</span>
@@ -135,7 +135,7 @@ export function ParityPortalV136({projects,catalogueState,signedIn,verifiedCount
         </div>}
       <div className="p136-passages">
         {passages.map(item=><Link key={item.title} to={item.to} className={'p136-passage p136-tone-'+item.tone}>
-          <CosmicArtwork scene={item.scene} seed={item.to}/><span className="p136-passage-shade"/>
+          <CategoryCoverV136 category={item.scene}/><span className="p136-passage-shade"/>
           <span className="p136-passage-copy"><strong>{item.title}</strong><small>{item.detail}</small></span><Icon name="arrow" size={18}/>
         </Link>)}
       </div>

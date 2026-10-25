@@ -1,6 +1,6 @@
 import {useEffect,useState,type FormEvent,type KeyboardEvent} from 'react';
 import {Link} from 'react-router-dom';
-import {CosmicArtwork} from '../components/CosmicArtwork';
+import {CategoryCoverV136} from './CategoryCoverV136';
 import {Icon} from '../components/Icons';
 import {ProjectCard} from '../components/ProjectCard';
 import {WorkCard} from '../components/CreatorPackageGallery';
@@ -8,7 +8,6 @@ import {PageNav} from '../components/PageNav';
 import {ErrorState,LoadingState} from '../components/States';
 import type {Category,Project} from '../lib/api';
 import type {CreatorPackageCard} from '../lib/creator-package-gallery-v010';
-import type {CosmicScene} from '../components/CosmicIllustration';
 import './parity-discover-v136.css';
 import {ArtifactLensV136,type ArtifactSelection} from './ArtifactLensV136';
 
@@ -50,10 +49,6 @@ export type ParityDiscoverProps={
   nextCursor:string|null;
 };
 
-const scenes:Record<Category,CosmicScene>={
-  games:'games',tools:'tools',creative:'creative',libraries:'libraries',
-  research:'research',learning:'learning',automation:'automation',other:'other'
-};
 const featured:Category[]=['games','tools','creative','research'];
 
 /** Directional focus follows the actual responsive card positions: the same
@@ -171,11 +166,11 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
             if(!item)return null;
             return <button type="button" key={id} className={'p136-discover-world p136-discover-world--'+id+(category===id?' is-active':'')}
               aria-pressed={category===id} onClick={()=>onCategory(id)} onKeyDown={focusNearestWorld}>
-              <CosmicArtwork scene={scenes[id]}/>
+              <CategoryCoverV136 category={id}/>
               <span className="p136-discover-world-shade" aria-hidden="true"/>
               <span className="p136-discover-world-top">FIELD / 0{index+1}<Icon name="arrow" size={17}/></span>
               <span className="p136-discover-world-copy"><strong>{item.label}</strong><small>{item.description}</small></span>
-              <span className="p136-discover-world-art-note">PROCEDURAL CATEGORY FIELD</span>
+              <span className="p136-discover-world-art-note">ANEVUM TYPE / DEFAULT COVER</span>
             </button>;
           })}
         </div>

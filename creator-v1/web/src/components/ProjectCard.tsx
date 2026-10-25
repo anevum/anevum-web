@@ -3,6 +3,7 @@ import {CompactMemberIdentity} from "./CompactMemberIdentity";
 import type { Project } from "../lib/api";
 import { Icon } from "./Icons";
 import {CosmicArtwork} from "./CosmicArtwork";
+import {CategoryCoverV136} from "../parity/CategoryCoverV136";
 import type {CosmicScene} from "./CosmicIllustration";
 import { projectDetailPath } from "../lib/navigation";
 import { publicCreatorHandle } from "../lib/public-creator-handle";
@@ -51,10 +52,12 @@ export function ProjectCard({ project, returnTo = "/discover", presentation = "v
   return (
     <article className="project-card depth-hover-card" onPointerMove={e=>applyPointerDepth(e,8)} onPointerLeave={clearPointerDepth}>
       <Link className="project-art" to={href} aria-label={`Open ${project.title}`}>
-        <CosmicArtwork scene={scenes[project.category]} seed={project.id}/>
+        {import.meta.env.VITE_PARITY_V136_FULL==="true"
+         ?<CategoryCoverV136 category={project.category} title={project.title}/>
+         :<CosmicArtwork scene={scenes[project.category]} seed={project.id}/>} 
         <span className="cw-card-art-overlay" aria-hidden="true" />
         <span className="project-kind">{labels[project.category] || "Project"}</span>
-        <span className="cw-project-art-disclosure">{import.meta.env.VITE_PARITY_V136_FULL==="true"?"PROCEDURAL CATEGORY FIELD / NOT UPLOADED COVER":"CATEGORY ILLUSTRATION"}</span>
+        <span className="cw-project-art-disclosure">{import.meta.env.VITE_PARITY_V136_FULL==="true"?"ANEVUM TYPE DEFAULT / NO CREATOR COVER":"CATEGORY ILLUSTRATION"}</span>
       </Link>
       <div className="project-card-body">
         <div className="project-card-topline"><span>{project.freeToUse ? "FREE" : "EXTERNAL"}</span><span>{project.category.toUpperCase()}</span></div>
