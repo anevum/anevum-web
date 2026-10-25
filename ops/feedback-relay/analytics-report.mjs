@@ -99,9 +99,9 @@ export function composeAnalyticsEvidenceReport({
       status: 'UNAVAILABLE',
     }),
     source_quality: Object.freeze({
-      registration: METRIC_COVERAGE.registrations,
-      creator_records: METRIC_COVERAGE.creator_records,
-      page_loads: METRIC_COVERAGE.rum_page_loads,
+      registration: accounts.status,
+      creator_records: creator.status,
+      page_loads: rum.status,
       unique_visitors: METRIC_COVERAGE.unique_visitors,
       campaign_attribution: METRIC_COVERAGE.social_to_signup_attribution,
     }),
