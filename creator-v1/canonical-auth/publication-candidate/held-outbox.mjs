@@ -51,6 +51,16 @@ export async function recordHeldStudioPublication(db, {submissionId, reviewerId,
   const intent = await prepareStudioPublicationIntent({
     submission,project,reviewerId,reason,reviewedAt
   });
+  // A staging reviewer must have a separate, active, independently verified
+  // canonical grant. The caller-supplied ID alone is never sufficient, and
+  // cosmetic member designation/XP is never publication authority.
+  const grants = await query(db,
+    'SELECT g.reviewer_user_id FROM member_studio_publication_reviewer_grants g ' +
+    'JOIN "user" reviewer ON reviewer.id=g.reviewer_user_id ' +
+    'WHERE g.reviewer_user_id=? AND reviewer.emailVerified=1 ' +
+    'AND g.revoked_at IS NULL AND g.granted_at<=? LIMIT 1',
+    [reviewerId, intent.review.reviewedAt]);
+  if (grants.length!==1) throw new Error('Independent verified reviewer grant required');
   const prior = (await query(db,
     'SELECT r.id,r.idempotency_key,r.fingerprint,r.status,' +
     'o.status AS outbox_status,o.fingerprint AS outbox_fingerprint ' +
@@ -91,13 +101,16 @@ export async function recordHeldStudioPublication(db, {submissionId, reviewerId,
     'SELECT ?,s.id,s.project_id,s.user_id,?,s.project_revision,?,?,?,?,?,\'held\' ' +
     'FROM member_studio_submissions s ' +
     'JOIN member_studio_projects p ON p.id=s.project_id AND p.user_id=s.user_id ' +
-    'JOIN "user" reviewer ON reviewer.id=? ' +
+    'JOIN "user" reviewer ON reviewer.id=? AND reviewer.emailVerified=1 ' +
+    'JOIN member_studio_publication_reviewer_grants g ' +
+    'ON g.reviewer_user_id=reviewer.id AND g.revoked_at IS NULL ' +
+    'AND g.granted_at<=? ' +
     'WHERE s.id=? AND s.status=\'pending_review\' ' +
     'AND p.status=\'pending_review\' AND p.revision=? ' +
     'AND s.project_revision=? AND s.user_id<>? RETURNING id',
     [reviewId, reviewerId, intent.idempotencyKey, intent.fingerprint,
       safeSnapshot, intent.review.reason, intent.review.reviewedAt,
-      reviewerId, submissionId, intent.source.revision, intent.source.revision, reviewerId]);
+      reviewerId, intent.review.reviewedAt, submissionId, intent.source.revision, intent.source.revision, reviewerId]);
   if (inserted.length !== 1 || inserted[0].id !== reviewId)
     throw new Error('Source submission changed during held-review preparation');
   return Object.freeze({
@@ -122,16 +135,20 @@ export async function auditHeldStudioPublicationOutbox(db, {limit=100}={}) {
     'o.idempotency_key AS outbox_key,o.project_id AS outbox_project,'+
     'r.status AS review_status,r.fingerprint AS review_fingerprint,'+
     'r.idempotency_key AS review_key,r.project_id AS review_project,'+
-    'r.owner_user_id AS review_owner,r.reviewer_user_id,r.project_revision AS review_revision,'+
+    'r.owner_user_id AS review_owner,r.reviewer_user_id,r.created_at AS reviewed_at,'+
+    'r.project_revision AS review_revision,'+
     's.project_id AS submission_project,s.user_id AS submission_owner,'+
     's.project_revision AS submission_revision,s.status AS submission_status,'+
     'p.user_id AS project_owner,p.revision AS project_revision,p.status AS project_status,'+
-    'reviewer.emailVerified AS reviewer_verified '+
+    'reviewer.emailVerified AS reviewer_verified,g.revoked_at AS grant_revoked,'+
+    'g.granted_at AS grant_created,g.reviewer_user_id AS grant_reviewer '+
     'FROM member_studio_publication_outbox o '+
     'LEFT JOIN member_studio_publication_reviews r ON r.id=o.review_id '+
     'LEFT JOIN member_studio_submissions s ON s.id=r.submission_id '+
     'LEFT JOIN member_studio_projects p ON p.id=r.project_id '+
     'LEFT JOIN "user" reviewer ON reviewer.id=r.reviewer_user_id '+
+    'LEFT JOIN member_studio_publication_reviewer_grants g '+
+      'ON g.reviewer_user_id=reviewer.id '+
     'ORDER BY o.created_at DESC,o.id DESC LIMIT ?', [limit+1]);
   const orphanReviews = await query(db,
     'SELECT r.id FROM member_studio_publication_reviews r '+
@@ -163,6 +180,11 @@ export async function auditHeldStudioPublicationOutbox(db, {limit=100}={}) {
       if (!row.reviewer_user_id || row.reviewer_verified!==1 ||
           row.reviewer_user_id===row.review_owner)
         errors.push('reviewer_not_verified');
+      if (row.grant_reviewer!==row.reviewer_user_id ||
+          row.grant_revoked!==null ||
+          !Number.isSafeInteger(row.grant_created) ||
+          row.grant_created>row.reviewed_at)
+        errors.push('independent_grant_missing_or_revoked');
     }
     if (errors.length) findings.push(Object.freeze({receiptId:row.id,errors:Object.freeze(errors)}));
   }
