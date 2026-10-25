@@ -168,7 +168,7 @@ async function run(width,height,motion='no-preference') {
   assert.match(await page.locator('#case-title').innerText(),/Transcosmic/i);
   await page.locator('.case-close').click();
   await page.locator('#project-dialog').waitFor({state:'hidden'});
-  await page.locator('[data-project="anevum"]').click();
+  await page.locator('.project-hit[data-project="anevum"]').click();
   await page.locator('#project-dialog[open]').waitFor({state:'visible'});
   assert.match(page.url(),/project=anevum/);
   assert.match(await page.locator('#case-title').innerText(),/ANEVUM/i);
