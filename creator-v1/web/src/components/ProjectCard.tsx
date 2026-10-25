@@ -2,9 +2,7 @@ import { Link } from "react-router-dom";
 import {CompactMemberIdentity} from "./CompactMemberIdentity";
 import type { Project } from "../lib/api";
 import { Icon } from "./Icons";
-import {CosmicArtwork} from "./CosmicArtwork";
-import {CategoryCoverV136} from "../parity/CategoryCoverV136";
-import type {CosmicScene} from "./CosmicIllustration";
+import {ProjectThumbnail} from "./ProjectThumbnail";
 import { projectDetailPath } from "../lib/navigation";
 import { publicCreatorHandle } from "../lib/public-creator-handle";
 import {applyPointerDepth,clearPointerDepth} from "../lib/pointer-depth";
@@ -18,11 +16,6 @@ const labels: Record<string, string> = {
   learning: "Learning",
   libraries: "Open source",
   other: "Project"
-};
-
-const scenes: Record<Project["category"], CosmicScene> = {
-  games:"games", tools:"tools", automation:"automation", research:"research",
-  creative:"creative", learning:"learning", libraries:"libraries", other:"other"
 };
 
 export function ProjectCard({ project, returnTo = "/discover", presentation = "visual", onInspect }: {
@@ -52,12 +45,10 @@ export function ProjectCard({ project, returnTo = "/discover", presentation = "v
   return (
     <article className="project-card depth-hover-card" onPointerMove={e=>applyPointerDepth(e,8)} onPointerLeave={clearPointerDepth}>
       <Link className="project-art" to={href} aria-label={`Open ${project.title}`}>
-        {import.meta.env.VITE_PARITY_V136_FULL==="true"
-         ?<CategoryCoverV136 category={project.category} title={project.title}/>
-         :<CosmicArtwork scene={scenes[project.category]} seed={project.id}/>} 
+        <ProjectThumbnail kind={project.category} title={project.title} decorative/>
         <span className="cw-card-art-overlay" aria-hidden="true" />
         <span className="project-kind">{labels[project.category] || "Project"}</span>
-        <span className="cw-project-art-disclosure">{import.meta.env.VITE_PARITY_V136_FULL==="true"?"ANEVUM TYPE DEFAULT / NO CREATOR COVER":"CATEGORY ILLUSTRATION"}</span>
+        <span className="cw-project-art-disclosure">{import.meta.env.VITE_PARITY_V136_FULL==="true"?"CATEGORY INDEX / DEFAULT THUMBNAIL":"CATEGORY INDEX"}</span>
       </Link>
       <div className="project-card-body">
         <div className="project-card-topline"><span>{project.freeToUse ? "FREE" : "EXTERNAL"}</span><span>{project.category.toUpperCase()}</span></div>

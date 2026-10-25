@@ -2,7 +2,7 @@ import {useState} from "react";
 import {Link} from "react-router-dom";
 import type {Project} from "../lib/api";
 import {selectPlayer} from "../lib/player-registry";
-import {CosmicArtwork} from "./CosmicArtwork";
+import {ProjectThumbnail} from "./ProjectThumbnail";
 import {CompactMemberIdentity} from "./CompactMemberIdentity";
 import "./project-player-shell.css";
 
@@ -35,7 +35,7 @@ export function ProjectPlayerShell({project,demo,source}:{
 
   return <div className="avp-stage-column">
     <section className={"avp-stage avp-stage--"+selection.kind+(longTitle?" avp-stage--long-title":"")} aria-labelledby="avp-project-title">
-      <div className="avp-stage-art" aria-hidden="true"><CosmicArtwork scene={project.category} priority/></div>
+      <div className="avp-stage-art" aria-hidden="true"><ProjectThumbnail kind={project.category} title={project.title} priority decorative/></div>
       <div className="avp-stage-shade" aria-hidden="true"/>
       <div className="avp-stage-top">
         <span>ANEVUM / EXPERIENCE SYSTEMS</span>

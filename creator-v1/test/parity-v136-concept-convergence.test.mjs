@@ -29,7 +29,7 @@ test('homepage retains canonical public-data fields and real routes',()=>{
   'projectDetailPath(project.id','to="/discover"','to="/community"',
   'to="/studio"',"signedIn?'/member':'/join'",
   "signal.source==='verified'","catalogueState==='error'",
-  'ANEVUM TYPE DEFAULT / NO CREATOR COVER',"new Event('anevum:iren-open')"
+  'CATEGORY INDEX / NOT CREATOR COVER',"new Event('anevum:iren-open')"
  ])assert.ok(hero.includes(expected),'Missing public action/safety: '+expected);
  assert.ok(!/Date\.now|Math\.random|fakeProjects|sampleProjects|simulatedMembers/.test(hero),
   'No invented live catalogue or member data');
@@ -171,32 +171,22 @@ test('inspector surfaces advisory missing static source links and real editor na
 });
 
 
-test('all V136 public discovery covers use authored type defaults or actual uploaded covers, never generated category art',()=>{
- const cover=source('../web/src/parity/CategoryCoverV136.tsx');
- const coverCss=source('../web/src/parity/category-cover-v136.css');
+test('V136 public covers prefer verified creator media and use one first-party type default contract',()=>{
+ const thumb=source('../web/src/components/ProjectThumbnail.tsx');
+ const fallback=source('../web/src/lib/project-thumbnails.ts');
  const homepage=source('../web/src/parity/ParityPortalV136.tsx');
- const discover=source('../web/src/parity/ParityDiscoverV136.tsx');
  const detail=source('../web/src/parity/ArtifactLensV136.tsx');
  const publicCard=source('../web/src/components/ProjectCard.tsx');
  const packages=source('../web/src/components/CreatorPackageGallery.tsx');
- assert.match(cover,/data-cover-source=\{hasCover\?'creator':'default'\}/);
- assert.match(cover,/onError=\{\(\)=>setFailedUrl\(coverUrl\?\?null\)\}/);
- assert.match(cover,/role="img"/);
+ assert.match(thumb,/safePackageCover\(uploadedUrl\)/);
+ assert.match(thumb,/setFailedUrl\(verified\)/);
+ assert.match(thumb,/data-thumbnail-source=/);
  for(const category of ['games','tools','automation','research','creative','learning','libraries','other','game','app','simulation','story']){
-  assert.ok(cover.includes(category+':{label:'),'Every real category has a deterministic thumbnail: '+category);
+  assert.ok(fallback.includes(category+':{asset:'),'Every actual category has a deterministic thumbnail: '+category);
  }
- assert.match(coverCss,/\.p136-category-cover--violet/);
- assert.match(coverCss,/\.p136-category-cover--cyan/);
- assert.match(coverCss,/\.p136-category-cover--mint/);
- assert.match(homepage,/<CategoryCoverV136 category=\{project\.category\}/);
- assert.match(homepage,/<CategoryCoverV136 category=\{item\.scene\}/);
- assert.match(discover,/<CategoryCoverV136 category=\{id\}/);
- assert.match(detail,/<CategoryCoverV136 category=\{item\.category\}/);
- assert.match(publicCard,/VITE_PARITY_V136_FULL==="true"\s*\?<CategoryCoverV136/);
- assert.match(packages,/VITE_PARITY_V136_FULL==='true'\s*\?<CategoryCoverV136/);
- for(const [name,code] of [['homepage',homepage],['discovery',discover],['details',detail]]){
-  assert.ok(!code.includes('CosmicArtwork'),'V136 '+name+' must not create category illustrations');
- }
- assert.ok(!/fetch\(|localStorage|sessionStorage|eval\(/.test(cover),
-  'Default covers are static first-party UI, with no telemetry or external art retrieval');
+ assert.match(homepage,/<ProjectThumbnail kind=\{project\.category\}/);
+ assert.match(detail,/<ProjectThumbnail kind=\{item\.category\}/);
+ assert.match(publicCard,/<ProjectThumbnail kind=\{project\.category\}/);
+ assert.match(packages,/uploadedUrl=\{work\.coverUrl\}/);
+ assert.ok(!/fetch\(|localStorage|sessionStorage|eval\(/.test(thumb));
 });

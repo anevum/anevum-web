@@ -4,6 +4,7 @@ import {readCommunityPosts,readPublicShowcases,type Category,type CommunityPost,
 import {useResource} from "../lib/useResource";
 import {projectDetailPath} from "../lib/navigation";
 import {CosmicArtwork} from "./CosmicArtwork";
+import {ProjectThumbnail} from "./ProjectThumbnail";
 import type {CosmicScene} from "./CosmicIllustration";
 import {Icon} from "./Icons";
 import {ErrorState,LoadingState} from "./States";
@@ -35,7 +36,6 @@ const categories:readonly {name:string;id:Category;scene:CosmicScene}[]=[
   {name:"Automation",id:"automation",scene:"automation"},
   {name:"Other Worlds",id:"other",scene:"other"}
 ];
-const categoryScene=Object.fromEntries(categories.map(c=>[c.id,c.scene])) as Record<Category,CosmicScene>;
 function dateOrder(raw:string|null|undefined){
   const value=raw?Date.parse(raw):0;
   return Number.isFinite(value)?value:0;
@@ -54,8 +54,8 @@ function ProjectEntry({project,creators,showcases,priority=false}:{project:Proje
     <div className="av6-feed-record"><span>PUBLIC INDEX <b>/</b> PROJECT <b>/</b> {project.category.toUpperCase()}</span><time dateTime={project.publishedAt||undefined}>{dateLabel(project.publishedAt)}</time></div>
     <div className="av6-feed-item-body">
       <Link to={href} className="av6-feed-art" aria-label={"Open "+title}>
-        <CosmicArtwork scene={categoryScene[project.category]} priority={priority}/>
-        <span>CATEGORY ILLUSTRATION</span>
+        <ProjectThumbnail kind={project.category} title={project.title} priority={priority} decorative/>
+        <span>ANEVUM DEFAULT THUMBNAIL</span>
       </Link>
       <div className="av6-feed-description">
         <span className="av6-feed-eyebrow">{project.freeToUse?"FREE TO EXPLORE":"PUBLISHED PROJECT"}</span>

@@ -1,6 +1,6 @@
 import {useEffect,useState,type FormEvent,type KeyboardEvent} from 'react';
 import {Link} from 'react-router-dom';
-import {CategoryCoverV136} from './CategoryCoverV136';
+import {CosmicArtwork} from '../components/CosmicArtwork';
 import {Icon} from '../components/Icons';
 import {ProjectCard} from '../components/ProjectCard';
 import {WorkCard} from '../components/CreatorPackageGallery';
@@ -8,6 +8,7 @@ import {PageNav} from '../components/PageNav';
 import {ErrorState,LoadingState} from '../components/States';
 import type {Category,Project} from '../lib/api';
 import type {CreatorPackageCard} from '../lib/creator-package-gallery-v010';
+import type {CosmicScene} from '../components/CosmicIllustration';
 import './parity-discover-v136.css';
 import {ArtifactLensV136,type ArtifactSelection} from './ArtifactLensV136';
 
@@ -15,7 +16,7 @@ import {ArtifactLensV136,type ArtifactSelection} from './ArtifactLensV136';
  * PARITY V136.004 / Discover. The original DiscoverPage continues to own
  * URL params, public-only endpoints, cursor pagination, package visibility
  * and server-backed catalogue states. This is presentation, not a data fork.
- * Local ANEVUM category imagery never represents a creator-uploaded cover.
+ * Category interface panels never represent creator-uploaded covers.
  */
 type Channel={id:Category;label:string;description:string;mark:string};
 type ResourceState='loading'|'ready'|'error';
@@ -49,6 +50,10 @@ export type ParityDiscoverProps={
   nextCursor:string|null;
 };
 
+const scenes:Record<Category,CosmicScene>={
+  games:'games',tools:'tools',creative:'creative',libraries:'libraries',
+  research:'research',learning:'learning',automation:'automation',other:'other'
+};
 const featured:Category[]=['games','tools','creative','research'];
 
 /** Directional focus follows the actual responsive card positions: the same
@@ -114,7 +119,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
         </div>
         <div className="p136-discover-readout-foot"><span>EXPLORE / CONNECT / CONTINUE</span><Icon name="explore" size={18}/></div>
       </aside>
-      <p className="p136-discover-art-note">GENERATED ENVIRONMENT / NOT CREATOR ARTWORK</p>
+      <p className="p136-discover-art-note">REAL PUBLIC CATALOGUE / NO PAID PLACEMENT</p>
     </section>
 
     <div className="p136-discover-main">
@@ -166,11 +171,11 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
             if(!item)return null;
             return <button type="button" key={id} className={'p136-discover-world p136-discover-world--'+id+(category===id?' is-active':'')}
               aria-pressed={category===id} onClick={()=>onCategory(id)} onKeyDown={focusNearestWorld}>
-              <CategoryCoverV136 category={id}/>
+              <CosmicArtwork scene={scenes[id]}/>
               <span className="p136-discover-world-shade" aria-hidden="true"/>
               <span className="p136-discover-world-top">FIELD / 0{index+1}<Icon name="arrow" size={17}/></span>
               <span className="p136-discover-world-copy"><strong>{item.label}</strong><small>{item.description}</small></span>
-              <span className="p136-discover-world-art-note">ANEVUM TYPE / DEFAULT COVER</span>
+              <span className="p136-discover-world-art-note">BROWSE / CATEGORY</span>
             </button>;
           })}
         </div>

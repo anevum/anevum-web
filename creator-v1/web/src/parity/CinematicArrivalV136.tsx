@@ -7,9 +7,9 @@ import {CinematicVideoV136} from './CinematicVideoV136';
 import manifest from '../../public/assets/cinematic-v136/arrival/manifest.json';
 import './cinematic-arrival-v136.css';
 
-/** An art-directed layer on the one live Institute canvas.
+/** A native interface arrival on the one live Institute canvas.
  * No duplicate renderer, fake page state, forced intro or private signal.
- * Frame and video are inaccessible until a reviewed manifest explicitly approves them.
+ * No generated image poster is fetched. Future frame or video media remains approval-gated.
  */
 const enabled=import.meta.env.VITE_PARITY_V136_CINEMATIC==='true';
 const nativeVideoFlag=import.meta.env.VITE_PARITY_V136_NATIVE_VIDEO==='true';
@@ -17,12 +17,10 @@ const stageCamera=import.meta.env.VITE_PARITY_V136_SHARED_SCENE_QA==='true';
 const approvedSequence=approvedCinematicSequence(manifest.sequence);
 const videoCandidate=(manifest as unknown as {video?:unknown}).video;
 const approvedVideo=approvedCinematicVideo(videoCandidate);
-const asset=(path:string)=>import.meta.env.BASE_URL+path;
 type ViewMode='off'|'poster'|'sequence'|'video';
 export function CinematicArrivalV136(){
  const stage=useRef<HTMLDivElement>(null);
  const {paused}=useLivingWorld();
- const [posterFailed,setPosterFailed]=useState(false);
  const [frameFailed,setFrameFailed]=useState(false);
  const [videoFailed,setVideoFailed]=useState(false);
  const [mode,setMode]=useState<ViewMode>('poster');
@@ -35,7 +33,7 @@ export function CinematicArrivalV136(){
  const onFrameFault=useCallback(()=>setFrameFailed(true),[]);
  const onVideoFault=useCallback(()=>setVideoFailed(true),[]);
  useEffect(()=>{
-  if(!enabled||posterFailed)return;
+  if(!enabled)return;
   const element=stage.current;
   const hero=element?.closest<HTMLElement>('.p136-hero');
   if(!element||!hero)return;
@@ -108,16 +106,16 @@ export function CinematicArrivalV136(){
    observe?.disconnect();
    if(raf)window.cancelAnimationFrame(raf);
   };
- },[paused,posterFailed,frameFailed,videoFailed,inspecting]);
- if(!enabled||posterFailed)return null;
+ },[paused,frameFailed,videoFailed,inspecting]);
+ if(!enabled)return null;
  return <><div ref={stage} className="p136-cinematic-arrival"
-    aria-hidden="true" data-cinematic-v136="poster-pilot" data-mode={mode} data-handoff="fallback">
-   <picture className="p136-cinematic-art">
-    <source media="(max-width: 680px)" srcSet={asset(manifest.posters.mobile.path)}/>
-    <img src={asset(manifest.posters.desktop.path)} width={manifest.posters.desktop.width}
-     height={manifest.posters.desktop.height} decoding="async" fetchPriority="high"
-     alt="" onError={()=>setPosterFailed(true)} draggable={false}/>
-   </picture>
+    aria-hidden="true" data-cinematic-v136="native-institute" data-mode={mode} data-handoff="fallback">
+   <div className="p136-cinematic-art p136-native-institute" data-arrival-surface="native-interface" aria-hidden="true">
+    <span className="p136-native-institute__grid"/>
+    <span className="p136-native-institute__ring"/>
+    <span className="p136-native-institute__aperture"/>
+    <span className="p136-native-institute__scan"/>
+   </div>
    {mode==='sequence'&&approvedSequence&&
     <CinematicFramesV136 sequence={approvedSequence} progress={progress} onFault={onFrameFault}/>}
    {mode==='video'&&approvedVideo&&nativeVideoFlag&&

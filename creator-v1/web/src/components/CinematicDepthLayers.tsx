@@ -1,22 +1,11 @@
-import {CinematicAtmosphere} from "./CinematicAtmosphere";
 import {CinematicPortalFX} from "./CinematicPortalFX";
 
-/**
- * V011 — original artwork *passes* for V009's established cinematic portal.
- *
- * Real HTML/React content remains above this decorative layer. The scene is
- * assembled from the already-committed alpha WebP haze/dust at desktop and
- * phone dimensions, an offscreen-suspended canvas emissive pass, and original
- * near-field architectural silhouettes. No composited screenshot, copied
- * user/project covers, fake avatars or fictional activity is used.
- *
- * A full newly commissioned environment painting is STILL REQUIRED for final
- * owner fidelity acceptance. This is a material depth pass, not that master.
+/** Native emissive foreground only. Retired the static WebP haze and dust.
+ * No creator media, uploaded assets, or public application behavior changes.
  */
 export function CinematicDepthLayers(){
   return <div className="av11-depth-layers" aria-hidden="true"
-      data-environment-passes="haze,dust,emissive,foreground">
-    <div className="av11-depth-atmosphere"><CinematicAtmosphere/></div>
+      data-environment-passes="emissive,foreground">
     <span className="av11-depth-ambient" />
     <div className="av11-depth-emissive"><CinematicPortalFX/></div>
     <svg className="av11-depth-foreground" xmlns="http://www.w3.org/2000/svg"
