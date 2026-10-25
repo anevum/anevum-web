@@ -42,15 +42,20 @@ void main(){
  vec3 star=normalize(vec3(-0.7,0.78,0.48));
  float daylight=max(0.0,dot(n,star));
  float limb=pow(1.0-max(0.0,dot(n,eye)),3.2);
- float layer=horizonNoise(n*6.4)+0.35*horizonNoise(n*14.0);
- float bands=0.5+0.5*sin(n.y*34.0+n.x*6.0+layer*7.0);
- float cloud=horizonNoise(n*18.0+vec3(1.7,0.2,0.8));
- vec3 cobalt=vec3(0.035,0.075,0.22);
- vec3 violet=vec3(0.21,0.13,0.43);
- vec3 upper=vec3(0.1,0.24,0.48);
- vec3 body=mix(cobalt,violet,clamp(bands*.74+layer*.19,0.0,1.0));
- body=mix(body,upper,smoothstep(0.52,0.78,cloud)*.54);
- body*=0.42+0.85*daylight;
+ // Three noise samples, as before: spend their frequency range on warped
+ // cloud filaments instead of large blurred cells. No texture or extra loop.
+ float weather=horizonNoise(n*8.0);
+ float filament=horizonNoise(n*38.0+vec3(weather*3.0,n.y*4.0,1.7));
+ float detail=horizonNoise(n*82.0+vec3(filament,0.2,0.8));
+ float bands=0.5+0.5*sin(n.y*68.0+n.x*4.0+weather*8.0+filament*2.5);
+ float cloud=smoothstep(.47,.72,filament+detail*.20);
+ vec3 cobalt=vec3(0.025,0.055,0.16);
+ vec3 violet=vec3(0.24,0.10,0.36);
+ vec3 upper=vec3(0.20,0.33,0.57);
+ vec3 body=mix(cobalt,violet,clamp(bands*.60+weather*.21,0.0,1.0));
+ body=mix(body,upper,cloud*.49);
+ body+=vec3(.16,.08,.20)*pow(bands,7.0)*(.3+detail*.7);
+ body*=0.30+0.98*daylight;
  body+=vec3(0.13,0.24,0.56)*limb*(0.6+uPublicDensity*.08);
  body+=vec3(0.09,0.06,0.21)*pow(bands,5.0)*daylight;
  gl_FragColor=vec4(body,1.0);

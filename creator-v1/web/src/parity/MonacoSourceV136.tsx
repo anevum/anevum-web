@@ -43,6 +43,10 @@ export default function MonacoSourceV136(props:MonacoSourceProps){
   const editor=monaco.editor.create(container.current,{model:modelFor(current.current.active),theme:'continuance-v136',automaticLayout:true,
    fontFamily:'"Cascadia Code","SFMono-Regular",Consolas,monospace',fontSize:13,lineHeight:22,tabSize:2,
    minimap:{enabled:false},scrollBeyondLastLine:false,readOnly:current.current.disabled,accessibilitySupport:'auto',
+   // Monaco 0.55's automatic WordHighlighter leaves a rejected Delayer on
+   // rapid model disposal. This bounded text workbench supplies no semantic
+   // occurrence service; retain syntax colors, native Find and selection.
+   occurrencesHighlight:'off',
    ariaLabel:'Source editor for '+current.current.active,wordWrap:'off',renderLineHighlight:'line',padding:{top:12},
    stickyScroll:{enabled:true},smoothScrolling:!matchMedia('(prefers-reduced-motion: reduce)').matches});
   instance.current=editor;
