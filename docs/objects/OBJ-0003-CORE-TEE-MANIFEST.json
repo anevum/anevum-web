@@ -33,13 +33,13 @@
       "file": "obj-0003-front-300dpi.png",
       "width": 2100,
       "height": 1700,
-      "sha256": "298fe4d0f4e6439e7de50f8ede7e34f82adb19ddff6c40f81951faaf9b095872"
+      "sha256": "2d33b74d9e4b9162ffb64457df6ca76ded488b81fd4f067d212a15f762becf7e"
     },
     "back": {
       "file": "obj-0003-back-300dpi.png",
       "width": 4500,
       "height": 5400,
-      "sha256": "04f4d4fafe78271c43110f6c161fc4d5fee930cd0b0e38aad1f617d4ea56dc43"
+      "sha256": "c6af64be83b7a388a892031f376236eaaa9f51b8aef26f5a83166f17393c7755"
     }
   },
   "commercial_gate": "requires founder decision about Fourthwall Stripe Connect payout vs non-Stripe alternate",
