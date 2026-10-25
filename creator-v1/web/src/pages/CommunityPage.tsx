@@ -160,7 +160,7 @@ export function CommunityPage() {
   }
   return <div className="ch7-hub">
     <section data-iren-anchor="community" className="ch7-hero" aria-labelledby="ch7-hero-title">
-      <div className="ch7-hero-art" aria-hidden="true"><CosmicArtwork scene="creative"/></div>
+      
       <div className="ch7-hero-copy"><span className="ch7-kicker">ANEVUM / COMMUNITY / PUBLIC DISCUSSIONS</span>
         <h1 id="ch7-hero-title">Made by people.<br/><em>Better together.</em></h1>
         <p>A gathering place for independent games, art, useful software, ideas and the people who make them. Discover something worth exploring. Help something new take shape.</p>
