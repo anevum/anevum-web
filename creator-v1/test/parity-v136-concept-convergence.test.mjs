@@ -81,7 +81,7 @@ test('original file-type glyphs decorate real Monaco tabs and explorer, not sour
   assert.ok(glyph.includes("'"+name+"'"),'missing visual language: '+name);
  }
  assert.match(ide,/FileGlyphV136017 path=\{path\}/);
- assert.match(ide,/fileKind\(path\)/);
+ assert.match(ide,/fileKind\(node\.path\)/);
  assert.ok(!/fetch\(|onClick|onSubmit|localStorage|sessionStorage|document\./.test(glyph),
   'file-type SVGs cannot own any editor or private project behavior');
 });
@@ -96,4 +96,13 @@ test('real permitted local files form disclosure folders without creating synthe
  assert.match(ide,/onClick=\{\(\)=>setActive\(node\.path\)\}/);
  assert.match(glyph,/export function FolderGlyphV136017/);
  assert.match(css,/\.p136017-source-tree \.p136017-tree-folder/);
+});
+
+test('the real nested Studio workbench uses container-width geometry, not just viewport breakpoints',()=>{
+ assert.match(css,/\.av095-upload-grid:has\(\.p136-workbench\)/);
+ assert.match(css,/\.p136-studio-console-layout:has\(\.p136-workbench\)/);
+ assert.match(css,/container-type:inline-size/);
+ assert.match(css,/container-name:continuance-source/);
+ assert.match(css,/@container continuance-source \(max-width:960px\)/);
+ assert.match(css,/@container continuance-source \(max-width:620px\)/);
 });

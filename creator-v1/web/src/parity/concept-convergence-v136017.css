@@ -769,3 +769,79 @@ html[data-av-parity="v136-full"] .p136017-tree-file[aria-pressed="true"] .p13601
  html[data-av-parity="v136-full"] .p136017-folder-glyph{color:CanvasText;filter:none}
  html[data-av-parity="v136-full"] .p136017-tree-chevron{border-color:CanvasText}
 }
+
+/* V136.017.004 — ACTUAL Studio authoring geometry from 1440px browser review.
+ * The browser capture of .017.002 revealed an editor only ~55px wide:
+ * viewport breakpoints ignored the nested canonical Studio + upload panel grids.
+ * Open local authoring now takes the useful Studio stage width, but its
+ * original upload form, context guide, private rail and permission gates stay.
+ */
+html[data-av-parity="v136-full"] .p136-studio-console-stage .av095-upload-grid:has(.p136-workbench) {
+  grid-template-columns:minmax(0,1fr);
+  align-items:start;
+}
+html[data-av-parity="v136-full"] .p136-studio-console-stage .av095-upload-grid:has(.p136-workbench)>* {
+  min-width:0;
+}
+html[data-av-parity="v136-full"] .p136-studio-console-stage .av095-upload-grid:has(.p136-workbench)>.av095-guide {
+  grid-column:1;
+}
+/* Let the actual source area own the majority of the authenticated stage.
+ * The member navigator stays available on desktop, with a one-column
+ * fallback when it was intentionally collapsed by the user.
+ */
+@media(min-width:861px) {
+  html[data-av-parity="v136-full"] .p136-studio-console[data-explorer-open="true"] .p136-studio-console-layout:has(.p136-workbench) {
+    grid-template-columns:clamp(190px,15.5vw,230px) minmax(0,1fr);
+  }
+  html[data-av-parity="v136-full"] .p136-studio-console[data-explorer-open="false"] .p136-studio-console-layout:has(.p136-workbench) {
+    grid-template-columns:minmax(0,1fr);
+  }
+}
+/* The source workbench has its own width. Global viewport media queries
+ * cannot know how much of that width the canonical Studio shell consumed. */
+html[data-av-parity="v136-full"] .p136-workbench {
+  container-type:inline-size;
+  container-name:continuance-source;
+}
+@container continuance-source (max-width:960px) {
+  html[data-av-parity="v136-full"] .p136-workbench-layout {
+    grid-template-columns:minmax(158px,25%) minmax(0,1fr);
+  }
+  html[data-av-parity="v136-full"] .p136-workbench-layout[data-inspector="false"] {
+    grid-template-columns:minmax(158px,25%) minmax(0,1fr);
+  }
+  html[data-av-parity="v136-full"] .p136-source-inspector {
+    grid-column:1/-1;
+    border-left:0;
+    border-top:1px solid #a3d1e769;
+  }
+}
+@container continuance-source (max-width:620px) {
+  html[data-av-parity="v136-full"] .p136-workbench-layout,
+  html[data-av-parity="v136-full"] .p136-workbench-layout[data-inspector="false"] {
+    display:block;
+  }
+  html[data-av-parity="v136-full"] .p136-source-explorer {
+    border-right:0;border-bottom:1px solid #97cae76b;
+  }
+  html[data-av-parity="v136-full"] .p136-source-explorer nav {
+    display:flex;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-inline:contain;
+  }
+  html[data-av-parity="v136-full"] .p136-source-explorer nav button {
+    flex:0 0 auto;
+  }
+  html[data-av-parity="v136-full"] .p136-source-inspector {
+    border-left:0;border-top:1px solid #a3d1e769;
+  }
+  html[data-av-parity="v136-full"] .p136-source-stage {
+    min-width:0;width:100%;
+  }
+}
+/* The new measured desktop layout remains legible in forced-colors mode. */
+@media(forced-colors:active) {
+  html[data-av-parity="v136-full"] .p136-source-explorer,
+  html[data-av-parity="v136-full"] .p136-source-inspector {
+    border-color:CanvasText;
+  }
+}

@@ -342,6 +342,20 @@ try{
     assert.equal(await page.getByRole('button',{name:'Prepare private playtest',exact:true}).isDisabled(),true,'Archive creation never confirms publication rights or uploads');
     const workstationLayout=await workbench.evaluate(node=>({width:node.getBoundingClientRect().width,height:node.getBoundingClientRect().height,pageHeight:document.documentElement.scrollHeight}));
     assert.ok(workstationLayout.height<2400,'Workbench dimensions remain bounded: '+JSON.stringify(workstationLayout));
+    const visualWidth=await workbench.evaluate(node=>{
+      const editor=node.querySelector('.p136-source-stage');
+      const guide=node.closest('.av095-upload-grid')?.querySelector('.av095-guide');
+      const panel=node.closest('.av095-upload-grid')?.querySelector('.st-panel');
+      const box=editor?.getBoundingClientRect();
+      const guideBox=guide?.getBoundingClientRect();
+      const panelBox=panel?.getBoundingClientRect();
+      return {editor:box?.width||0,guideTop:guideBox?.top||0,
+        panelBottom:panelBox?.bottom||0,container:node.getBoundingClientRect().width};
+    });
+    assert.ok(visualWidth.editor>=(width===1440?440:width===390?255:190),
+      'Code editor must be usable inside real nested Studio layout: '+JSON.stringify({width,...visualWidth}));
+    if(width===1440)assert.ok(visualWidth.guideTop>=visualWidth.panelBottom-2,
+      'Protocol guide belongs below the active editor, never beside and compressing it: '+JSON.stringify(visualWidth));
     if(width<650){
       const explorerFits=await workbench.locator('.p136-source-explorer nav button').evaluateAll(nodes=>nodes.every(button=>{
         const label=button.lastElementChild,range=document.createRange();range.selectNodeContents(label);

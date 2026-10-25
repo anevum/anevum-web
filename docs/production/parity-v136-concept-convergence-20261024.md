@@ -45,3 +45,11 @@ The first-party source workbench groups actual permitted local source paths into
 Actual Monaco tabs, source content, 24-file/128 KiB/1 MiB limits, ZIP/archive integrity, privacy boundaries, private uploading and isolated playtesting are unchanged. The browser regression exercises real nested source creation, folder collapse/expand, genuine archive preparation and stale-archive invalidation.
 
 This is a subsequent draft visual/interaction increment, not proof of final concept fidelity. Owner side-by-side visual approval, real 3D master acceptance, physical Safari/Xbox checks and performance gates remain open.
+
+## V136.017.004 — real 1440px authoring layout defect and regression gate
+
+The V136.017.002 **real Chromium 1440×960 source-editor screenshot** showed roughly a 55px-wide Monaco pane: the canonical Studio navigation, two-column native build upload shell, local file explorer and source inspector all claimed space concurrently. This violated the concept and made editing impractical despite green generic route tests.
+
+The fix is scoped to the full-visual source workbench when it is actually open. The existing Studio member navigator is narrower but remains present; the native upload guide moves below the authoring panel without disappearing. The workbench uses its own **CSS container inline-size** to switch between three-pane, explorer/editor + lower inspector, and narrow stacked layouts independently from screen-wide breakpoints. Native upload form, privacy and canonical Studio source ownership remain unchanged.
+
+Compiled Chromium regression now asserts minimum real editor width (desktop 440px, 390 phone 255px, 320 phone 190px) and below-editor guide placement at 1440px. An obsolete source-text unit assertion was repaired to target the actual new `node.path` explorer implementation. Physical-device and owner-reviewed art matching remain separate release gates.
