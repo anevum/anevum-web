@@ -5,6 +5,8 @@ on:
       - '.github/workflows/parity-v136-scene-qa.yml'
       - 'creator-v1/web/src/parity/SceneDirectorV136.ts'
       - 'creator-v1/web/src/parity/InstituteHorizonV136017.ts'
+      - 'creator-v1/web/src/parity/InstituteCitadelsV136017.ts'
+      - 'creator-v1/test/parity-v136-citadel-geometry.test.mjs'
       - 'creator-v1/web/src/parity/CinematicArrivalV136.tsx'
       - 'creator-v1/web/src/parity/CinematicFramesV136.tsx'
       - 'creator-v1/web/src/parity/CinematicVideoV136.tsx'
@@ -109,6 +111,8 @@ jobs:
         run: node --experimental-strip-types --test creator-v1/test/parity-v136-scene-director.test.mjs
       - name: Install unchanged project dependencies
         run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - name: Assert deterministic original citadel instances and GPU budgets
+        run: node --experimental-strip-types --test creator-v1/test/parity-v136-citadel-geometry.test.mjs
       - name: Inspect all original compressed models and device budgets
         run: node creator-v1/graphics/inspect-institute-assets.mjs
       - name: Verify source archive through canonical native compatibility inspector

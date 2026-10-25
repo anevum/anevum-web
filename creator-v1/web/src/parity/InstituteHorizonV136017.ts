@@ -8,6 +8,7 @@
  */
 import * as T from 'three';
 import type {AssetTier} from './InstituteAssetManifestV136';
+import {createInstituteCitadels} from './InstituteCitadelsV136017';
 
 const planetVertex=`
 varying vec3 vHorizonNormal;
@@ -70,8 +71,8 @@ void main(){
 `;
 
 export const HORIZON_QA_BUDGET={
- desktop:{triangles:18000,drawCalls:4},
- mobile:{triangles:7000,drawCalls:4}
+ desktop:{triangles:25000,drawCalls:10},
+ mobile:{triangles:10000,drawCalls:10}
 } as const;
 
 /** Independently disposable optional root: never enters the four-family GLB
@@ -113,13 +114,16 @@ export function createInstituteHorizon(tier:AssetTier){
   orbits.add(ring);
  }
  root.add(orbits);
+ const citadels=createInstituteCitadels(tier);
+ root.add(citadels.root);
  root.updateMatrixWorld(true);
  let triangles=0,drawCalls=0;
  root.traverse(object=>{
   if(!(object instanceof T.Mesh))return;
   drawCalls++;
   const geometry=object.geometry;
-  triangles+=(geometry.index?.count??geometry.attributes.position.count)/3;
+  triangles+=(geometry.index?.count??geometry.attributes.position.count)/3*
+   (object instanceof T.InstancedMesh?object.count:1);
  });
  const budget=HORIZON_QA_BUDGET[tier];
  if(triangles>budget.triangles||drawCalls>budget.drawCalls){
@@ -137,8 +141,11 @@ export function createInstituteHorizon(tier:AssetTier){
   update(publicDensity:number,elapsedSeconds:number,motionAllowed:boolean){
    signal.value=Math.max(0,Math.min(1,Number.isFinite(publicDensity)?publicDensity:0));
    if(motionAllowed)orbits.rotation.z=.22+Math.sin(elapsedSeconds*.024)*.035;
+   else orbits.rotation.z=.22;
+   citadels.update(elapsedSeconds,motionAllowed);
   },
   dispose(){
+   root.remove(citadels.root);citadels.dispose();
    root.traverse(object=>{
     if(object instanceof T.Mesh){
      object.geometry.dispose();
