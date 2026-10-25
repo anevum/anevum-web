@@ -16,9 +16,10 @@
   <link rel="icon" type="image/svg+xml" href="/portfolio/assets/favicon.svg">
   <link rel="stylesheet" href="/portfolio/styles.css">
   <link rel="stylesheet" href="/portfolio/cinematic-v1.css">
+  <link rel="stylesheet" href="/portfolio/hero-reel-v2.css">
   <link rel="preload" href="/portfolio/assets/display.woff" as="font" type="font/woff" crossorigin>
   <script src="/portfolio/app.js" defer></script>
-  <script src="/portfolio/cinematic-v1.js" defer></script>
+  <script src="/portfolio/hero-reel-v2.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -30,21 +31,46 @@
     <div class="header-actions"><button class="motion-button" id="motion-toggle" type="button" aria-pressed="false" aria-label="Pause animation"><span class="motion-icon" aria-hidden="true">Ⅱ</span><span class="motion-label">Motion</span></button><a class="header-contact" href="#contact">Let’s talk <span aria-hidden="true">↗</span></a></div>
   </header>
   <main id="main">
-    <section class="hero" id="top" aria-labelledby="hero-title">
-      <div class="hero-grid" aria-hidden="true"></div>
-      <div class="hero-art institute-environment" id="hero-art" aria-hidden="true">
-        <img class="institute-backdrop" src="/portfolio/assets/continuance-horizon.svg" alt="" width="1920" height="1080" fetchpriority="high" decoding="async">
-        <div class="institute-atmosphere"></div><div class="institute-scanline"></div>
-        <div class="institute-reticle"><span>INSTITUTE / ENVIRONMENT 01</span><i></i><span>ORIGINAL VISUAL STUDY</span></div>
-        <div class="institute-datum"><span>DESIGN / SOFTWARE / STORY</span><span>ART-DIRECTED EXPERIENCE</span></div>
+    <section class="hero hero-v2" id="top" aria-labelledby="hero-title">
+      <div class="hero-v2-atmosphere" aria-hidden="true">
+        <div class="hero-v2-halo"></div><div class="hero-v2-dust"></div>
+        <div class="hero-v2-streak streak-one"></div><div class="hero-v2-streak streak-two"></div>
       </div>
-      <div class="hero-copy">
-        <div class="eyebrow hero-eyebrow"><span class="status-dot" aria-hidden="true"></span> THE WORK OF DEVON AKINS / 2026</div>
-        <h1 id="hero-title"><span>Imagination,</span><em>engineered.</em><span class="title-star" aria-hidden="true">✳</span></h1>
-        <p class="hero-description">I’m a founder, designer, developer and author. I build thoughtful interfaces, practical systems and fictional worlds—then test the work against reality.</p><div class="hero-proof"><span>ANEVUM / FOUNDER</span><span>DESIGN + ENGINEERING</span><span>WRITING + WORLDBUILDING</span></div>
-        <div class="hero-buttons"><a class="button primary" href="#work">Explore selected work <span aria-hidden="true">↘</span></a><a class="text-link" href="#contact">Discuss a project <span aria-hidden="true">↗</span></a></div>
+      <div class="hero-copy hero-v2-copy">
+        <div class="hero-v2-eyebrow"><span class="signal-live" aria-hidden="true"></span><span>DEVON AKINS / INDEPENDENT CREATIVE TECHNOLOGIST</span></div>
+        <h1 id="hero-title"><span class="hero-word">Imagination,</span><em class="hero-word hero-word-accent">made tangible.</em></h1>
+        <p class="hero-description">I design and build digital products, connected systems, and interactive worlds. Founder of ANEVUM. Every project starts with a question: <strong>what if this actually existed?</strong></p>
+        <div class="hero-v2-actions">
+          <a class="button primary" href="#work">Explore the work <span aria-hidden="true">↘</span></a>
+          <a class="hero-v2-secondary" href="#contact">Work with me <span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="hero-v2-credibility" aria-label="Areas of practice">
+          <span>PRODUCT DESIGN</span><span>ENGINEERING</span><span>CREATIVE SYSTEMS</span>
+        </div>
       </div>
-      <div class="hero-footer"><span>BASED IN FLORIDA. BUILDING BEYOND IT.</span><a href="#work">SCROLL TO EXPLORE <span aria-hidden="true">↓</span></a><span class="hero-index">A PORTFOLIO, AND A POINT OF VIEW.</span></div>
+      <div class="hero-v2-reel" data-hero-project="anevum" aria-label="Featured portfolio projects">
+        <div class="reel-aura" aria-hidden="true"></div>
+        <div class="reel-echo reel-echo-left" aria-hidden="true"></div>
+        <div class="reel-echo reel-echo-right" aria-hidden="true"></div>
+        <div class="reel-main">
+          <div class="reel-main-top"><span class="reel-control-lights" aria-hidden="true"><i></i><i></i><i></i></span><span class="reel-window-label">FEATURED / REAL PROJECT WORK</span><span class="reel-cross" aria-hidden="true">⊞</span></div>
+          <div class="reel-main-screen">
+            <img data-reel-image src="/portfolio/assets/anevum-interface.webp" alt="Actual ANEVUM interface design prototype, featuring synthetic review content" width="1440" height="900" fetchpriority="high" decoding="async">
+            <div class="reel-transcosmic-art" hidden aria-hidden="true"><span class="reel-transcosmic-orbit"></span><span class="reel-transcosmic-core"></span><strong>TRANSCOSMIC</strong><small>FICTION / WORLDBUILDING</small></div>
+            <div class="reel-glass" aria-hidden="true"></div>
+          </div>
+          <div class="reel-main-bottom"><span id="reel-project-status">ANEVUM / PRODUCT IN DEVELOPMENT</span><button type="button" id="reel-open" data-project="anevum" aria-label="Open ANEVUM case study">VIEW CASE STUDY <span aria-hidden="true">↗</span></button></div>
+        </div>
+        <div class="reel-chapter-head"><span class="reel-chapter-index" id="reel-chapter-index">01 / 04</span><div><strong id="reel-chapter-name">ANEVUM</strong><p id="reel-chapter-summary">A platform for people who make things.</p></div></div>
+        <div class="reel-controls" role="group" aria-label="Choose a featured project">
+          <button type="button" data-hero-select="anevum" class="active" aria-pressed="true" aria-label="Show ANEVUM"><span>01</span> ANEVUM</button>
+          <button type="button" data-hero-select="fold" aria-pressed="false" aria-label="Show The Fold"><span>02</span> THE FOLD</button>
+          <button type="button" data-hero-select="rhen" aria-pressed="false" aria-label="Show RHEN"><span>03</span> RHEN</button>
+          <button type="button" data-hero-select="transcosmic" aria-pressed="false" aria-label="Show Transcosmic"><span>04</span> TRANSCOSMIC</button>
+        </div>
+        <div class="reel-direction" aria-hidden="true"><span>SELECT AN EXHIBIT</span><span>DESIGN / CODE / STORY</span></div>
+      </div>
+      <div class="hero-v2-footer"><span>BASED IN FLORIDA / BUILDING BEYOND IT.</span><a href="#work">SCROLL TO EXPLORE <span aria-hidden="true">↓</span></a><span>01 — SELECTED WORK / 2026</span></div>
     </section>
 
     <div class="ticker" aria-hidden="true"><div><span>DESIGN</span><b>—</b><span>BUILD</span><b>—</b><span>VERIFY</span><b>—</b><span>DOCUMENT</span><b>—</b><span>CONTINUE</span><b>—</b><span>DESIGN</span><b>—</b><span>BUILD</span><b>—</b></div></div>
@@ -96,7 +122,7 @@
     <section class="process-showcase section-shell" id="process" aria-labelledby="process-title">
       <div class="section-top reveal"><span class="eyebrow">03 / HOW I WORK</span><span class="section-side">From possibility to something usable.</span></div>
       <div class="process-stage">
-        <div class="process-visual reveal" aria-hidden="true"><div class="process-visual-field"><img src="/portfolio/assets/continuance-horizon.svg" loading="lazy" alt="" width="1920" height="1080"><div class="process-visual-grid"></div><div class="process-trace trace-a"></div><div class="process-trace trace-b"></div></div><span class="process-visual-tag">FIELD / DESIGN × SYSTEMS</span><span class="process-visual-readout">REAL WORK<br>VISIBLE DECISIONS</span></div>
+        <div class="process-visual reveal" aria-hidden="true"><div class="process-visual-field"><img src="/portfolio/assets/anevum-interface.webp" loading="lazy" alt="" width="1440" height="900"><div class="process-visual-grid"></div><div class="process-trace trace-a"></div><div class="process-trace trace-b"></div></div><span class="process-visual-tag">FIELD / DESIGN × SYSTEMS</span><span class="process-visual-readout">REAL WORK<br>VISIBLE DECISIONS</span></div>
         <div class="process-copy reveal">
           <span class="eyebrow">A PRACTICE, NOT A TEMPLATE.</span>
           <h2 id="process-title">Give ideas<br><em>a working form.</em></h2>
