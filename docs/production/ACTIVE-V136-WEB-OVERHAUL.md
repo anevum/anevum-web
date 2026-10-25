@@ -139,3 +139,10 @@ Local typecheck, default/full frontend builds and 113 targeted tests passed.
 Browser acceptance is pending CI: no local Chromium is installed, its download
 failed, and Work native browser cannot reach loopback. Live native-browser
 observations are of the deployed V136 homepage/Discover, not this candidate.
+
+The a6837404 integration passed complete Node 22 regression (1,753/1,753) and
+Creator V1 compiled captures. Full V136 screenshot review then caught Boards
+Back-navigation leaving Games selected after the URL reset. A direct URL-owned
+selection correction is in the next checkpoint; strict assertions remain.
+Public UI/Boards/Open Signal checks run before GPU stress, with all old groups
+retained. Release source guards remain closed; source-only draft #738.

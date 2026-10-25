@@ -187,3 +187,15 @@ Update this index and the active handoff at every substantial increment.
 Private infrastructure/family/feedback notes belong in the access-controlled master
 checkpoint, never public issue bodies or source. No new product doctrine or board.
 
+
+## Browser-discovered correction — after a6837404
+Exact code checkpoint a6837404 passed 1,753 Node 22 regressions, Creator V1
+compiled page captures and 15 complete workflows. Spatial CI 40200865470
+then exposed a genuine Boards Back-navigation defect: URL reverted while
+Games remained selected. The correction makes board/category derive directly
+from location.search, removing mirrored optimistic state. The existing strict
+Back assertion is retained. Public Community/Boards/Open Signal browser groups
+now run before expensive scene stress; no test group was removed. Exact new
+head browser acceptance is required. PARITY/V132 release source gates remain
+blocked and unchanged. Screenshot evidence at a6837404 establishes the real
+1536/1440/390/320 UI and source editor, not final owner concept acceptance.

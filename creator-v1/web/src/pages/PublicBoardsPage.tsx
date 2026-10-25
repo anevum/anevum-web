@@ -1,4 +1,4 @@
-import {useEffect,useState} from "react";
+import {useState} from "react";
 import {Link,useLocation,useSearchParams} from "react-router-dom";
 import {ProjectThumbnail} from "../components/ProjectThumbnail";
 import {readPublicBoards,type Category,type Creator,type Project} from "../lib/api";
@@ -69,12 +69,10 @@ function CreatorRow({item,index}:{item:Creator;index:number}){
 export function PublicBoardsPage(){
   const location=useLocation();
   const [,setSearchParams]=useSearchParams();
-  const [active,setActive]=useState<BoardId>(()=>readingView(location.search));
-  const [category,setCategory]=useState<CategoryFilter>(()=>readingCategory(location.search));
-  useEffect(()=>{
-    setActive(readingView(location.search));
-    setCategory(readingCategory(location.search));
-  },[location.search]);
+  // The URL is the only selection state. Mirrored optimistic state could
+  // survive a Back navigation while the address had already been restored.
+  const active=readingView(location.search);
+  const category=readingCategory(location.search);
   const [revision,setRevision]=useState(0);
   const resource=useResource(signal=>readPublicBoards(signal),[revision]);
   const board=BOARDS.find(item=>item.id===active)!;
@@ -82,14 +80,12 @@ export function PublicBoardsPage(){
   const projects=contents?(active==="firstLooks"?contents.firstLooks:contents.latestReleases):[];
   const visible=category==="all"?projects:projects.filter(p=>p.category===category);
   function choose(next:BoardId){
-    setActive(next);setCategory("all");
     const params=new URLSearchParams(location.search);
     if(next==="latest")params.delete("view");else params.set("view",next);
     params.delete("category");
     setSearchParams(params);
   }
   function chooseCategory(next:CategoryFilter){
-    setCategory(next);
     const params=new URLSearchParams(location.search);
     if(next==="all")params.delete("category");else params.set("category",next);
     setSearchParams(params);

@@ -381,6 +381,78 @@ try{
       await context.close();
     }
   }
+  // V136.017.042 loopback-only full-browser UI acceptance.
+  for(const width of [1440,390,320]){
+    const {page,context}=await contextFor(width,{state:'project',forceVector:true});
+    await page.goto(base+'/community',{waitUntil:'domcontentloaded'});
+    await page.locator('.p136-community[data-parity-community="v136.017"]').waitFor();
+    await page.locator('.p136-community .ch7-entry-art .av136-project-thumbnail[data-thumbnail-source="default"]').waitFor();
+    assert.equal(await page.locator('.p136-community .ch7-hero .cw-artwork, .p136-community .ch7-entry-art .cw-artwork, .p136-community .ch7-field-art .cw-artwork').count(),0,
+      'Migrated public Community panels cannot display generated art');
+    const communityWidth=await page.locator('.p136-community').evaluate(el=>({client:el.clientWidth,scroll:el.scrollWidth}));
+    assert.ok(communityWidth.scroll<=communityWidth.client+2,'Community overflow at '+width+'px '+JSON.stringify(communityWidth));
+    await page.getByRole('button',{name:'PEOPLE',exact:true}).click();
+    await page.waitForURL(/\/community\?view=people$/);
+    assert.equal(await page.getByRole('button',{name:'PEOPLE',exact:true}).getAttribute('aria-pressed'),'true');
+    await page.goBack({waitUntil:'domcontentloaded'});
+    // React Router restores the URL before the location-driven view effect
+    // commits. Wait for the actual DOM state rather than racing a microtask.
+    await page.waitForFunction(()=>document.querySelector('.p136-community .ch7-tabs button')?.getAttribute('aria-pressed')==='true');
+    assert.equal(await page.getByRole('button',{name:'LATEST',exact:true}).getAttribute('aria-pressed'),'true');
+    await page.screenshot({path:join(out,'public-community-'+width+'.png'),animations:'disabled'});
+    await page.goto(base+'/creators',{waitUntil:'domcontentloaded'});
+    await page.locator('.p136-creators[data-parity-creators="v136.017"]').waitFor();
+    await page.getByRole('link',{name:/Community spaces/}).waitFor();
+    const creatorWidth=await page.locator('.p136-creators').evaluate(el=>({client:el.clientWidth,scroll:el.scrollWidth}));
+    assert.ok(creatorWidth.scroll<=creatorWidth.client+2,'Creator directory overflow at '+width+'px '+JSON.stringify(creatorWidth));
+    await page.screenshot({path:join(out,'public-creators-'+width+'.png'),animations:'disabled'});
+    record('V136 public Commons and creator directory '+width+'px',{communityWidth,creatorWidth});
+    await context.close();
+  }
+
+  // V136.017.045: real published-only Boards with controlled URL history, not rankings.
+  for(const width of [1440,390,320]){
+    const {page,context}=await contextFor(width,{state:'project',forceVector:true});
+    await page.goto(base+'/boards',{waitUntil:'domcontentloaded'});
+    await page.locator('.p136-boards[data-parity-boards="v136.017"]').waitFor();
+    await page.locator('.p136-boards .cnb-project-art .av136-project-thumbnail[data-thumbnail-source="default"]').waitFor();
+    assert.equal(await page.locator('.p136-boards .cw-artwork').count(),0,
+      'Public Boards uses authored type covers and an original field, never generated illustrations');
+    await page.getByRole('button',{name:/FIRST LOOKS/}).click();
+    await page.waitForURL(/\/boards\?view=firstLooks$/);
+    await page.getByRole('button',{name:'GAMES',exact:true}).click();
+    await page.waitForURL(/\/boards\?view=firstLooks&category=games$/);
+    assert.equal(await page.getByRole('button',{name:'GAMES',exact:true}).getAttribute('aria-pressed'),'true');
+    await page.goBack({waitUntil:'domcontentloaded'});
+    await page.waitForFunction(()=>document.querySelector('.p136-boards .cnb-filters button[aria-pressed="true"]')?.textContent?.trim()==='EVERYTHING');
+    await page.screenshot({path:join(out,'public-boards-'+width+'.png'),animations:'disabled'});
+    const geometry=await page.locator('.p136-boards').evaluate(el=>({client:el.clientWidth,scroll:el.scrollWidth}));
+    assert.ok(geometry.scroll<=geometry.client+2,'Boards overflow at '+width+'px '+JSON.stringify(geometry));
+    record('V136 public Boards categories/history and default covers '+width+'px',{geometry});
+    await context.close();
+  }
+  // Unified stack: Open Signal is available only for an approved public record.
+  for(const width of [1440,390,320]){
+    const {page,context}=await contextFor(width,{state:'project',forceVector:true});
+    await page.goto(base+'/projects/'+fixture.id,{waitUntil:'domcontentloaded'});
+    const kit=page.locator('.avp-launch-kit');await kit.waitFor();
+    assert.equal(await kit.getByRole('textbox',{name:'Shareable public project link'}).inputValue(),base+'/projects/'+fixture.id);
+    await kit.getByRole('button',{name:'Copy announcement',exact:true}).click();
+    await kit.getByRole('status').waitFor();
+    await kit.getByText('Embeddable project link',{exact:true}).click();
+    const embed=await kit.locator('textarea').inputValue();
+    assert.ok(embed.includes('/projects/'+fixture.id));
+    assert.ok(!/<(?:script|iframe|img)\b/i.test(embed));
+    const size=await page.evaluate(()=>({client:innerWidth,scroll:document.documentElement.scrollWidth}));
+    assert.ok(size.scroll<=size.client+2,'Project/share overflow at '+width+'px '+JSON.stringify(size));
+    await page.screenshot({path:join(out,'open-signal-'+width+'.png'),animations:'disabled'});
+    await page.goto(base+'/projects/unpublished-ci-fixture',{waitUntil:'domcontentloaded'});
+    await page.getByRole('heading',{name:'PROJECT NOT AVAILABLE'}).waitFor();
+    assert.equal(await page.locator('.avp-launch-kit').count(),0,'Unapproved/missing record must not offer a launch kit');
+    record('Unified Open Signal/publication boundary '+width+'px',{size});
+    await context.close();
+  }
+
   for(const width of [1920,1536,1440,1024,768,390,320]){
     const {page,context}=await contextFor(width);
     await page.goto(base,{waitUntil:'networkidle'});
@@ -734,77 +806,6 @@ try{
   await page.screenshot({path:join(out,'vector-fallback-390.png'),animations:'disabled'});
   record('WebGL unavailable / procedural vector fallback / pause / reduced motion / keyboard / menu focus / search',focus);await context.close();
 
-  // V136.017.042 loopback-only full-browser UI acceptance.
-  for(const width of [1440,390,320]){
-    const {page,context}=await contextFor(width,{state:'project',forceVector:true});
-    await page.goto(base+'/community',{waitUntil:'domcontentloaded'});
-    await page.locator('.p136-community[data-parity-community="v136.017"]').waitFor();
-    await page.locator('.p136-community .ch7-entry-art .av136-project-thumbnail[data-thumbnail-source="default"]').waitFor();
-    assert.equal(await page.locator('.p136-community .ch7-hero .cw-artwork, .p136-community .ch7-entry-art .cw-artwork, .p136-community .ch7-field-art .cw-artwork').count(),0,
-      'Migrated public Community panels cannot display generated art');
-    const communityWidth=await page.locator('.p136-community').evaluate(el=>({client:el.clientWidth,scroll:el.scrollWidth}));
-    assert.ok(communityWidth.scroll<=communityWidth.client+2,'Community overflow at '+width+'px '+JSON.stringify(communityWidth));
-    await page.getByRole('button',{name:'PEOPLE',exact:true}).click();
-    await page.waitForURL(/\/community\?view=people$/);
-    assert.equal(await page.getByRole('button',{name:'PEOPLE',exact:true}).getAttribute('aria-pressed'),'true');
-    await page.goBack({waitUntil:'domcontentloaded'});
-    // React Router restores the URL before the location-driven view effect
-    // commits. Wait for the actual DOM state rather than racing a microtask.
-    await page.waitForFunction(()=>document.querySelector('.p136-community .ch7-tabs button')?.getAttribute('aria-pressed')==='true');
-    assert.equal(await page.getByRole('button',{name:'LATEST',exact:true}).getAttribute('aria-pressed'),'true');
-    await page.screenshot({path:join(out,'public-community-'+width+'.png'),animations:'disabled'});
-    await page.goto(base+'/creators',{waitUntil:'domcontentloaded'});
-    await page.locator('.p136-creators[data-parity-creators="v136.017"]').waitFor();
-    await page.getByRole('link',{name:/Community spaces/}).waitFor();
-    const creatorWidth=await page.locator('.p136-creators').evaluate(el=>({client:el.clientWidth,scroll:el.scrollWidth}));
-    assert.ok(creatorWidth.scroll<=creatorWidth.client+2,'Creator directory overflow at '+width+'px '+JSON.stringify(creatorWidth));
-    await page.screenshot({path:join(out,'public-creators-'+width+'.png'),animations:'disabled'});
-    record('V136 public Commons and creator directory '+width+'px',{communityWidth,creatorWidth});
-    await context.close();
-  }
-
-  // V136.017.045: real published-only Boards with controlled URL history, not rankings.
-  for(const width of [1440,390,320]){
-    const {page,context}=await contextFor(width,{state:'project',forceVector:true});
-    await page.goto(base+'/boards',{waitUntil:'domcontentloaded'});
-    await page.locator('.p136-boards[data-parity-boards="v136.017"]').waitFor();
-    await page.locator('.p136-boards .cnb-project-art .av136-project-thumbnail[data-thumbnail-source="default"]').waitFor();
-    assert.equal(await page.locator('.p136-boards .cw-artwork').count(),0,
-      'Public Boards uses authored type covers and an original field, never generated illustrations');
-    await page.getByRole('button',{name:/FIRST LOOKS/}).click();
-    await page.waitForURL(/\/boards\?view=firstLooks$/);
-    await page.getByRole('button',{name:'GAMES',exact:true}).click();
-    await page.waitForURL(/\/boards\?view=firstLooks&category=games$/);
-    assert.equal(await page.getByRole('button',{name:'GAMES',exact:true}).getAttribute('aria-pressed'),'true');
-    await page.goBack({waitUntil:'domcontentloaded'});
-    await page.waitForFunction(()=>document.querySelector('.p136-boards .cnb-filters button[aria-pressed="true"]')?.textContent?.trim()==='EVERYTHING');
-    await page.screenshot({path:join(out,'public-boards-'+width+'.png'),animations:'disabled'});
-    const geometry=await page.locator('.p136-boards').evaluate(el=>({client:el.clientWidth,scroll:el.scrollWidth}));
-    assert.ok(geometry.scroll<=geometry.client+2,'Boards overflow at '+width+'px '+JSON.stringify(geometry));
-    record('V136 public Boards categories/history and default covers '+width+'px',{geometry});
-    await context.close();
-  }
-  // Unified stack: Open Signal is available only for an approved public record.
-  for(const width of [1440,390,320]){
-    const {page,context}=await contextFor(width,{state:'project',forceVector:true});
-    await page.goto(base+'/projects/'+fixture.id,{waitUntil:'domcontentloaded'});
-    const kit=page.locator('.avp-launch-kit');await kit.waitFor();
-    assert.equal(await kit.getByRole('textbox',{name:'Shareable public project link'}).inputValue(),base+'/projects/'+fixture.id);
-    await kit.getByRole('button',{name:'Copy announcement',exact:true}).click();
-    await kit.getByRole('status').waitFor();
-    await kit.getByText('Embeddable project link',{exact:true}).click();
-    const embed=await kit.locator('textarea').inputValue();
-    assert.ok(embed.includes('/projects/'+fixture.id));
-    assert.ok(!/<(?:script|iframe|img)\b/i.test(embed));
-    const size=await page.evaluate(()=>({client:innerWidth,scroll:document.documentElement.scrollWidth}));
-    assert.ok(size.scroll<=size.client+2,'Project/share overflow at '+width+'px '+JSON.stringify(size));
-    await page.screenshot({path:join(out,'open-signal-'+width+'.png'),animations:'disabled'});
-    await page.goto(base+'/projects/unpublished-ci-fixture',{waitUntil:'domcontentloaded'});
-    await page.getByRole('heading',{name:'PROJECT NOT AVAILABLE'}).waitFor();
-    assert.equal(await page.locator('.avp-launch-kit').count(),0,'Unapproved/missing record must not offer a launch kit');
-    record('Unified Open Signal/publication boundary '+width+'px',{size});
-    await context.close();
-  }
   assert.deepEqual(errors,[]);assert.deepEqual(forbidden,[]);
 }catch(error){
   for(const context of browser.contexts())for(const page of context.pages()){
