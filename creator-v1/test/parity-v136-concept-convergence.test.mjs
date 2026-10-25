@@ -109,7 +109,7 @@ test('the real nested Studio workbench uses container-width geometry, not just v
 
 test('full backup preserves Markdown and playable archive uses canonical MIME contract',()=>{
  const archive=source('../web/src/parity/source-archive-v136.ts');
- assert.match(archive,/import \{assetMime\} from/);
+ assert.match(archive,/path\.endsWith\('\.md'\)/);
  assert.match(archive,/export function localOnlySourcePaths/);
  assert.match(archive,/export function playableSourceArchive/);
  assert.match(ide,/playableSourceArchive\(files\)/);
