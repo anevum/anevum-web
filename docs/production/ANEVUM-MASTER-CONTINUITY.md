@@ -250,3 +250,30 @@ rollback assets, then perform a measured live rollout with native-browser checks
 Current provider baseline is deployment `f2f950d8-8ec6-42cd-80c2-06681ad2fcf9`
 and the recorded V136.003 99% / V136.005 1% split. Do not infer new live state
 until a provider receipt and real browser checks establish it.
+
+## V136.025 — isolated Creator Directory next slice (draft)
+
+Session `ANEVUM.WEB.UPDATE.2026-10-25.005.CREATOR-DISCOVERY-CONVERGENCE`
+continues the already merged website development baseline
+`20161bae20e7f369d4d7edfadcb4316ecccac3cf`, not the immutable
+release candidate `4dfaed54fed606713a99b87c3152beddbcbc31f3`.
+New branch: `build/parity-v136-creator-directory-20261025-025`.
+
+Scope is only the actual public `/creators` screen, central Institute CSS,
+new source contracts, browser QA and this continuity. Search, paginated
+server data and a grid/list choice share the URL; search clears stale cursors
+and does not create a new backend endpoint. Phone identity tiles and search
+are made genuinely usable, using existing safe creator-channel portraits,
+read-only approved public results, focus affordances and deterministic empty
+states. The older published creator/legacy profile identity split persists.
+No synthetic members, badges, follower counts or extra personal media are
+shown in the application.
+
+Browser fixture data is loopback-only. Exact-head type/build/complete regression
+and screenshots are required before review, then CI and a distinct release
+scope/rollback decision before any traffic activation. The contemporaneous
+HTTP 403 from PR #742's GET-only client precedes the application and remains
+unresolved; never count it as a smoke pass. PR #739 Stripe retirement is an
+independent draft, and old provider account obligations/secrets require their
+own controlled cleanup. No production, provider, finance, database, main-branch,
+permission or account mutation is implied by this slice.
