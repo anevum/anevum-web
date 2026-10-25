@@ -187,7 +187,7 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
             </div>
           </div>
           {shown>0&&
-            <section aria-label="Published project results" className={view==="covers"?"portal-discover-results":"portal-discover-results portal-discover-compact"}>
+            <section aria-label="Published project results" data-layout={view==="compact"?"list":"grid"} className={view==="covers"?"portal-discover-results":"portal-discover-results portal-discover-compact"}>
               {packageProjects.map(p=><WorkCard key={'package:'+p.id} work={p} mode="public" compact={view==="compact"}/>)}
               {legacyProjects.map(p=><ProjectCard key={'catalogue:'+p.id} project={p} returnTo={current} presentation="editorial"/>)}
             </section>}
