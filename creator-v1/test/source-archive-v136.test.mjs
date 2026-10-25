@@ -111,3 +111,20 @@ test('advisory source-link diagnostics identify missing local dependencies witho
  assert.deepEqual(unresolvedLocalSourceLinks({'index.html':'<a href="/discover">Go</a>'},safeSourcePath),[],
   'Browser routes are not local source files');
 });
+
+
+test('concept-led Studio preview renders local HTML and CSS without executable scripts',async()=>{
+ const {sourcePreviewDocument}=await import('../web/src/parity/workbench-file-ops-v136.ts');
+ const files={'index.html':'<!doctype html><head><link rel="stylesheet" href="styles.css"><link rel="preload" href="https://bad.example/"></head><body><h1>Creator work</h1><script>window.evil=true</script></body>',
+  'styles.css':'h1 { color: #71eaff; }'};
+ const snapshot=JSON.stringify(files),out=sourcePreviewDocument(files);
+ assert.match(out,/Content-Security-Policy/);
+ assert.match(out,/default-src &#39;none&#39;/);
+ assert.match(out,/script-src &#39;none&#39;/);
+ assert.match(out,/data-local-preview-stylesheet="styles.css"/);
+ assert.match(out,/<h1>Creator work<\/h1>/);
+ assert.doesNotMatch(out,/<script/);
+ assert.doesNotMatch(out,/<link/);
+ assert.doesNotMatch(out,/bad\.example/);
+ assert.equal(JSON.stringify(files),snapshot);
+});

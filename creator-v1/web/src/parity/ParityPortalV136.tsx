@@ -79,8 +79,8 @@ export function ParityPortalV136({projects,catalogueState,signedIn,verifiedCount
       </div>
       <div className="p136-hero-content">
         <p className="p136-hero-register"><span className="p136017-register-emblem" aria-hidden="true">✧</span> THE CONTINUANCE INSTITUTE <span> / </span> FIRST CONTACT</p>
-        <h1 id="p136-hero-title"><span>Independent worlds.</span><em>Made to continue.</em></h1>
-        <p className="p136-hero-intro">Discover independent games, useful software and creative experiments. Explore real work, meet the people behind it, and build what comes next.</p>
+        <h1 id="p136-hero-title"><span>A creative universe.</span><em>Without limits.</em></h1>
+        <p className="p136-hero-intro"><strong>Build. Share. Play. Learn. Belong.</strong> Discover original games, useful software and creative projects. Meet the people behind them and start making your own.</p>
         <div className="p136-hero-actions" data-arrival-commands="primary">
           <Link to="/discover" className="p136-button p136-button--primary">Explore projects <Icon name="arrow" size={20}/></Link>
           <Link to={signedIn?'/member':'/join'} className="p136-button p136-button--signal">{signedIn?'My member space':'Join the community'} <Icon name="arrow" size={18}/></Link>
@@ -105,10 +105,12 @@ export function ParityPortalV136({projects,catalogueState,signedIn,verifiedCount
         <button type="button" className="p136-iren-cta" onClick={()=>window.dispatchEvent(new Event('anevum:iren-open'))}>Open IREN <Icon name="arrow" size={17}/></button>
       </aside>
       <nav className="p136-hero-rail" aria-label="ANEVUM destinations">
-        <span className="p136017-rail-overline" aria-hidden="true">SELECT A DESTINATION <span> / </span> THE CONTINUANCE INSTITUTE</span>
-        <Link to="/creators"><Icon name="people" size={21}/><span><strong>Creators</strong><small>People shaping new work</small></span></Link>
-        <Link to="/community"><Icon name="community" size={21}/><span><strong>Community</strong><small>Ideas and discussions</small></span></Link>
-        <Link to="/studio"><Icon name="create" size={21}/><span><strong>Creator Studio</strong><small>Tools for building</small></span></Link>
+        <span className="p136017-rail-overline" aria-hidden="true">EXPLORE YOUR UNIVERSE <span> / </span> REAL DESTINATIONS</span>
+        <Link to="/studio"><Icon name="create" size={21}/><span><strong>Create</strong><small>Build with Studio tools</small></span></Link>
+        <Link to="/discover?category=games"><Icon name="games" size={21}/><span><strong>Play</strong><small>Find playable worlds</small></span></Link>
+        <Link to="/discover?category=tools"><Icon name="library" size={21}/><span><strong>Build</strong><small>Explore apps and tools</small></span></Link>
+        <Link to="/community"><Icon name="community" size={21}/><span><strong>Connect</strong><small>Join discussions</small></span></Link>
+        <Link to="/creators"><Icon name="people" size={21}/><span><strong>Belong</strong><small>Meet real creators</small></span></Link>
       </nav>
     </section>
     <section className="p136-discover" aria-labelledby="p136-discover-title">

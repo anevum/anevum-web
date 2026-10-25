@@ -536,7 +536,7 @@ try{
       },family,{timeout:30000});
       // Model readiness is independent of React's lazy route module. Capture
       // the functioning route, never a Suspense/loading screen over a ready mesh.
-      if(family==='atrium')await page.getByRole('heading',{level:1,name:/Independent worlds/i}).waitFor();
+      if(family==='atrium')await page.getByRole('heading',{level:1,name:/A creative universe/i}).waitFor();
       else if(family==='relay')await page.locator('#ch7-hero-title').waitFor();
       else await page.locator('#p136-discover-title').waitFor();
       await page.waitForFunction(()=>document.querySelector('.p136-living-canvas')?.dataset.textureState!=='loading',null,{timeout:20000});
