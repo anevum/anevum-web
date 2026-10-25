@@ -3,8 +3,8 @@
 Coordination session: `ANEVUM.ANEVUM.PACKAGE.2026-10-25.001.UNIFIED-WORKSTREAM-CONTINUITY`.
 Scoped implementation: `ANEVUM.WEB.UPDATE.2026-10-25.002.UNIFIED-UI-INTEGRATION`.
 Verified discovery date: October 25, 2026 (America/New_York).
-Status: **ACTIVE DEVELOPMENT. #738 merged into website development; controlled
-frontend release authorized. New production promotion not yet verified.**
+Status: **ACTIVE DEVELOPMENT. #738 and #745 merged into website development;
+V136.026 Discover under isolated review. New production promotion not verified.**
 
 This is an evidence index and continuation checkpoint, not another task board.
 [Canonical engineering #325](https://github.com/anevum/anevum-web/issues/325)
@@ -253,9 +253,11 @@ until a provider receipt and real browser checks establish it.
 
 ## V136.025 — creator directory source, acceptance and release boundary (2026-10-25)
 Session `ANEVUM.WEB.UPDATE.2026-10-25.005.CREATOR-DISCOVERY-CONVERGENCE`.
-Development branch `build/parity-v136-creator-directory-20261025-025`, draft
-[#745](https://github.com/anevum/anevum-web/pull/745), stacked on #735
-`20161bae20e7f369d4d7edfadcb4316ecccac3cf`. No main or production merge.
+Development branch `build/parity-v136-creator-directory-20261025-025`,
+owner-reviewed [#745](https://github.com/anevum/anevum-web/pull/745), based on
+#735 `20161bae20e7f369d4d7edfadcb4316ecccac3cf`, merged **only** into
+#735 development at `9e1a82d250e0b5a2eca0f1555e3110cdba7c6dae`.
+No main or production merge.
 
 Implemented: bounded read-only Creator Directory cards, native Institute styles,
 responsive/grid/list presentation, shareable URL search and pagination, true
@@ -274,14 +276,41 @@ PASS. Focused directory full-flag browser
 [40212833188](https://github.com/anevum/anevum-web/actions/runs/40212833188)
 PASS with [12 labelled fixture screenshots](https://github.com/anevum/anevum-web/actions/runs/40212833188/artifacts/12606154516),
 three viewport geometry receipts, zero overflow, page errors or outgoing
-non-read requests. Post-copy exact-head runs remain required.
-The screenshot fixture is synthetic loopback-only; visual review by owner #335
-is not automatic from CI passing. Physical iPhone Safari, Xbox/controller,
-production authenticated roles and future performance gates remain open.
+non-read requests. Final V136.025 source `fafa1d643c` passed nine exact-head
+functional/safety workflows, including the full compiled browser and creator
+regressions; its 320px dock correction also passed focused browser QA.
+Owner confirmed the directory's present visual phase; PR #745 then merged into
+development. Synthetic screenshot fixtures remain loopback-only; physical
+iPhone Safari, Xbox/controller, production member roles and future performance
+gates remain open.
 
-Release source guard rejects unreviewed draft files by design; it must not
+Release source guard rejects unreviewed development files by design; it must not
 be weakened to turn this source into a deploy. The already sealed #741 candidate
 and recorded rollout/rollback stay distinct. The #742 read-only HTTP 403
 preceded the application. Stripe migration #739 remains isolated, and no
 auth, database, uploading, public publishing, XP, payment, infrastructure or
 traffic mutation occurred here. Release owner #333 retains the gate.
+
+## V136.026 — source-backed Discover continuity (October 25, 2026)
+Session `ANEVUM.WEB.UPDATE.2026-10-25.006.DISCOVERY-LAYOUT-CONTINUITY`.
+Branch `build/parity-v136-discovery-20261025-026`, exact parent #735 merge
+`9e1a82d250e0b5a2eca0f1555e3110cdba7c6dae`.
+Status: draft feature slice, NOT deployed. PR and CI receipt are required
+before development integration; preserve the sealed #741 release candidate.
+
+Purpose: URL-owned Grid/List selection across canonical and full-flag Discover;
+filters, approved project query, free declaration and cursor retain existing
+API and truth boundaries. Search/category/free changes clear stale cursor;
+layout changes preserve all data parameters and do not trigger a catalogue
+read. True compact List is one full-width project per row, not two stacked
+visual cards. Search and controls are iPhone-readable and accessible. User
+covers and authored type fallbacks remain the only media; no fabricated
+creators, prices, rankings, followers, artwork or new data feeds are added.
+
+New source assertions and a separate compiled Chromium loopback fixture test
+cover the public API, search, category, marked-free, pagination, URL history,
+0 results and 1440/390/320 layouts with screenshot receipts. Feature-flag
+package uploads remain under existing independent acceptance; this slice
+does not enable them. Production release source guard is still authoritative;
+no payments, auth, user privacy, backend, D1, publishing or traffic changes.
+#331 owns Discover behavior, #335 aesthetic acceptance, #333 release go/no-go.
