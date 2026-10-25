@@ -213,3 +213,10 @@ real console/content rectangles and focused mobile sharing controls.
 No source, API, auth, account, WebGL architecture, permission, publication or
 provider changes; no release allowlist changes. Local compiler/contracts pass;
 exact-head CI and screenshot comparison remain required before acceptance.
+
+The first V136.023 run at `d9f0f300` passed Creator V1 verification and
+mobile/Commons/source-workstation checks. Its Boards forward-selection assertion
+raced React's render after the URL changed; the captured DOM subsequently showed
+Games correctly selected. Browser checks now wait for the rendered People/Games
+selection before asserting it. Back-navigation checks and all acceptance groups
+remain strict. Full exact-head browser verification is required for this correction.

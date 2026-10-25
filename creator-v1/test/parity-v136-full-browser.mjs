@@ -409,6 +409,7 @@ try{
     }
     await page.getByRole('button',{name:'PEOPLE',exact:true}).click();
     await page.waitForURL(/\/community\?view=people$/);
+    await page.locator('.p136-community .ch7-tabs button[aria-pressed="true"]').filter({hasText:'PEOPLE'}).waitFor();
     assert.equal(await page.getByRole('button',{name:'PEOPLE',exact:true}).getAttribute('aria-pressed'),'true');
     await page.goBack({waitUntil:'domcontentloaded'});
     // React Router restores the URL before the location-driven view effect
@@ -438,6 +439,9 @@ try{
     await page.waitForURL(/\/boards\?view=firstLooks$/);
     await page.getByRole('button',{name:'GAMES',exact:true}).click();
     await page.waitForURL(/\/boards\?view=firstLooks&category=games$/);
+    // Router history changes before React commits the URL-derived selection.
+    // Wait for the rendered state; retain the exact selection assertion below.
+    await page.locator('.p136-boards .cnb-filters button[aria-pressed="true"]').filter({hasText:'GAMES'}).waitFor();
     assert.equal(await page.getByRole('button',{name:'GAMES',exact:true}).getAttribute('aria-pressed'),'true');
     await page.goBack({waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>document.querySelector('.p136-boards .cnb-filters button[aria-pressed="true"]')?.textContent?.trim()==='EVERYTHING');

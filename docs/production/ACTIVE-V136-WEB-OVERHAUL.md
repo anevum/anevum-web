@@ -160,3 +160,9 @@ real console/content rectangles and focused mobile sharing controls.
 No source, API, auth, account, WebGL architecture, permission, publication or
 provider changes; no release allowlist changes. Local compiler/contracts pass;
 exact-head CI and screenshot comparison remain required before acceptance.
+
+V136.023 follow-up: `d9f0f300` passed Creator V1 verification, source editor,
+mobile arrival and Commons checks. A Boards test raced the React commit after
+the correct URL was set; the captured rendered DOM showed Games selected.
+People/Games checks now wait for rendered selection and retain exact assertions.
+All Back-navigation and remaining acceptance groups stay enabled; rerun at head.
