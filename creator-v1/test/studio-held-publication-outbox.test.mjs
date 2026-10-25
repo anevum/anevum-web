@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {fixture} from './helpers/canonical-fixture.mjs';
-import {recordHeldStudioPublication} from '../canonical-auth/publication-candidate/held-outbox.mjs';
+import {recordHeldStudioPublication,auditHeldStudioPublicationOutbox} from '../canonical-auth/publication-candidate/held-outbox.mjs';
 
 const migration = name => readFileSync(new URL('../canonical-auth/migrations/'+name, import.meta.url),'utf8');
 const heldMigration = readFileSync(new URL(
@@ -170,4 +170,47 @@ test('direct SQL cannot create held reviews referencing withdrawn receipts',asyn
     assert.equal(inspect(f).reviews.length,0);
     assert.equal(inspect(f).outbox.length,0);
   }finally{f.db.close();}
+});
+
+
+test('private read-only audit verifies redacted held and cancelled rows',async()=>{
+  const f=staged();try{
+    const empty=await auditHeldStudioPublicationOutbox(f.env.MEMBER_DB);
+    assert.equal(empty.healthy,true);assert.equal(empty.checked,0);
+    assert.equal(empty.scanComplete,true);
+    await recordHeldStudioPublication(f.env.MEMBER_DB,review());
+    const held=await auditHeldStudioPublicationOutbox(f.env.MEMBER_DB);
+    assert.equal(held.healthy,true);
+    assert.equal(held.checked,1);assert.equal(held.held,1);
+    assert.equal(held.cancelled,0);assert.equal(held.projectionEnabled,false);
+    assert.equal(held.publicationAuthorized,false);
+    assert.ok(!JSON.stringify(held).includes(owner));
+    assert.ok(!JSON.stringify(held).includes('example.org'));
+    f.db.prepare("UPDATE member_studio_projects SET status='draft',revision=revision+1,updated_at=? WHERE id=?")
+      .run(createdAt+400,pid);
+    const cancelled=await auditHeldStudioPublicationOutbox(f.env.MEMBER_DB);
+    assert.equal(cancelled.healthy,true);
+    assert.equal(cancelled.held,0);assert.equal(cancelled.cancelled,1);
+  }finally{f.db.close();}
+});
+test('private audit flags mismatched status and missing companion without repairing anything',async()=>{
+  const f=staged();try{
+    await recordHeldStudioPublication(f.env.MEMBER_DB,review());
+    f.db.prepare("UPDATE member_studio_publication_outbox SET status='cancelled',cancelled_at=?")
+      .run(createdAt+200);
+    const unsafe=await auditHeldStudioPublicationOutbox(f.env.MEMBER_DB);
+    assert.equal(unsafe.healthy,false);
+    assert.ok(unsafe.findings[0]?.errors.includes('status_mismatch'));
+    assert.equal(unsafe.projectionEnabled,false);
+    assert.equal(f.db.prepare('SELECT status FROM member_studio_publication_reviews').get().status,'held');
+  }finally{f.db.close();}
+  const g=staged();try{
+    await recordHeldStudioPublication(g.env.MEMBER_DB,review());
+    g.db.prepare('DELETE FROM member_studio_publication_outbox').run();
+    const missing=await auditHeldStudioPublicationOutbox(g.env.MEMBER_DB);
+    assert.equal(missing.healthy,false);
+    assert.deepEqual(missing.findings[0]?.errors,['outbox_missing']);
+    await assert.rejects(auditHeldStudioPublicationOutbox(g.env.MEMBER_DB,{limit:0}),/Invalid private outbox audit limit/);
+    await assert.rejects(auditHeldStudioPublicationOutbox(g.env.MEMBER_DB,{limit:251}),/Invalid private outbox audit limit/);
+  }finally{g.db.close();}
 });
