@@ -5,6 +5,48 @@
 -- Initial status is held; SQL has deliberately NO ready/applied/published state.
 PRAGMA foreign_keys=ON;
 
+-- This is an independent PRIVATE permission ledger for a future publication
+-- reviewer, not cosmetic member_role_grants, XP or a public handle. No grants
+-- exist by default; only an explicitly audited admin process may create one.
+CREATE TABLE IF NOT EXISTS member_studio_publication_reviewer_grants (
+ reviewer_user_id TEXT PRIMARY KEY NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+ granted_by_user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
+ verified_by_user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
+ evidence_ref TEXT NOT NULL CHECK(length(evidence_ref) BETWEEN 25 AND 240),
+ granted_at INTEGER NOT NULL CHECK(granted_at>0),
+ revoked_at INTEGER,
+ CHECK(granted_by_user_id<>verified_by_user_id),
+ CHECK(reviewer_user_id<>granted_by_user_id AND reviewer_user_id<>verified_by_user_id),
+ CHECK(revoked_at IS NULL OR revoked_at>=granted_at)
+);
+CREATE INDEX IF NOT EXISTS idx_member_studio_publication_reviewer_active
+ ON member_studio_publication_reviewer_grants(reviewer_user_id,granted_at)
+ WHERE revoked_at IS NULL;
+
+-- A direct DB seed must contain two distinct VERIFIED grantors. No API or
+-- operator grant writer is provided by this prototype.
+CREATE TRIGGER IF NOT EXISTS trg_member_studio_publication_grant_guard
+ BEFORE INSERT ON member_studio_publication_reviewer_grants
+ WHEN NOT EXISTS (
+   SELECT 1 FROM "user" nominee
+   JOIN "user" grantor ON grantor.id=NEW.granted_by_user_id
+   JOIN "user" approver ON approver.id=NEW.verified_by_user_id
+   WHERE nominee.id=NEW.reviewer_user_id AND nominee.emailVerified=1
+     AND grantor.emailVerified=1 AND approver.emailVerified=1
+     AND nominee.id<>grantor.id AND nominee.id<>approver.id
+     AND grantor.id<>approver.id
+ )
+ BEGIN SELECT RAISE(ABORT,'independent verified reviewer grant required'); END;
+
+CREATE TRIGGER IF NOT EXISTS trg_member_studio_publication_grant_immutable
+ BEFORE UPDATE OF reviewer_user_id,granted_by_user_id,verified_by_user_id,
+   evidence_ref,granted_at ON member_studio_publication_reviewer_grants
+ BEGIN SELECT RAISE(ABORT,'reviewer grant evidence is immutable'); END;
+CREATE TRIGGER IF NOT EXISTS trg_member_studio_publication_grant_no_rearm
+ BEFORE UPDATE OF revoked_at ON member_studio_publication_reviewer_grants
+ WHEN OLD.revoked_at IS NOT NULL OR NEW.revoked_at IS NULL
+ BEGIN SELECT RAISE(ABORT,'reviewer grant cannot be rearmed'); END;
+
 CREATE TABLE IF NOT EXISTS member_studio_publication_reviews (
  id TEXT PRIMARY KEY NOT NULL CHECK(length(id)=36),
  submission_id TEXT NOT NULL UNIQUE REFERENCES member_studio_submissions(id) ON DELETE CASCADE,
@@ -62,7 +104,11 @@ CREATE TRIGGER IF NOT EXISTS trg_member_studio_publication_review_guard
    SELECT 1 FROM member_studio_submissions s
    JOIN member_studio_projects p ON p.id=s.project_id
    JOIN "user" reviewer ON reviewer.id=NEW.reviewer_user_id
-   WHERE s.id=NEW.submission_id AND s.project_id=NEW.project_id
+   JOIN member_studio_publication_reviewer_grants g
+     ON g.reviewer_user_id=reviewer.id AND g.revoked_at IS NULL
+     AND g.granted_at<=NEW.created_at
+   WHERE reviewer.emailVerified=1
+     AND s.id=NEW.submission_id AND s.project_id=NEW.project_id
      AND s.user_id=NEW.owner_user_id AND s.project_revision=NEW.project_revision
      AND p.id=NEW.project_id AND p.user_id=NEW.owner_user_id
      AND p.status='pending_review' AND p.revision=NEW.project_revision
@@ -102,6 +148,43 @@ CREATE TRIGGER IF NOT EXISTS trg_member_studio_publication_reviewer_removed
    UPDATE member_studio_publication_outbox
      SET status='cancelled',cancelled_at=NEW.created_at
      WHERE review_id=NEW.id AND status='held';
+ END;
+
+-- Revocation, removal, or loss of verified identity invalidates outstanding
+-- held review rows, even if the creator's submission is unchanged.
+CREATE TRIGGER IF NOT EXISTS trg_member_studio_publication_grant_revoked
+ AFTER UPDATE OF revoked_at ON member_studio_publication_reviewer_grants
+ WHEN NEW.revoked_at IS NOT NULL
+ BEGIN
+   UPDATE member_studio_publication_reviews SET status='cancelled'
+    WHERE reviewer_user_id=NEW.reviewer_user_id AND status='held';
+   UPDATE member_studio_publication_outbox
+    SET status='cancelled',cancelled_at=MAX(created_at,NEW.revoked_at)
+    WHERE review_id IN (SELECT id FROM member_studio_publication_reviews
+     WHERE reviewer_user_id=NEW.reviewer_user_id) AND status='held';
+ END;
+
+CREATE TRIGGER IF NOT EXISTS trg_member_studio_publication_grant_removed
+ AFTER DELETE ON member_studio_publication_reviewer_grants
+ BEGIN
+   UPDATE member_studio_publication_reviews SET status='cancelled'
+    WHERE reviewer_user_id=OLD.reviewer_user_id AND status='held';
+   UPDATE member_studio_publication_outbox
+    SET status='cancelled',cancelled_at=MAX(created_at,CAST(strftime('%s','now') AS INTEGER))
+    WHERE review_id IN (SELECT id FROM member_studio_publication_reviews
+     WHERE reviewer_user_id=OLD.reviewer_user_id) AND status='held';
+ END;
+
+CREATE TRIGGER IF NOT EXISTS trg_member_studio_publication_reviewer_unverified
+ AFTER UPDATE OF emailVerified ON "user"
+ WHEN NEW.emailVerified<>1
+ BEGIN
+   UPDATE member_studio_publication_reviews SET status='cancelled'
+    WHERE reviewer_user_id=NEW.id AND status='held';
+   UPDATE member_studio_publication_outbox
+    SET status='cancelled',cancelled_at=MAX(created_at,CAST(strftime('%s','now') AS INTEGER))
+    WHERE review_id IN (SELECT id FROM member_studio_publication_reviews
+     WHERE reviewer_user_id=NEW.id) AND status='held';
  END;
 
 -- A creator withdrawal, re-edit, rejection or staff change-request makes the
