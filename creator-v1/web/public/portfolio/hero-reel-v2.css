@@ -44,7 +44,7 @@
 .hero-v2-streak.streak-two {top:67%;right:-15%;transform:rotate(24deg);width:68vw;opacity:.22;background:linear-gradient(90deg,transparent,#b98bff,transparent)}
 .hero-v2-copy {
   position:relative;z-index:7;width:min(60%,860px);max-width:900px;
-  padding-top:15px;pointer-events:auto;
+  padding-top:15px;pointer-events:none;
 }
 .hero-v2-eyebrow {display:flex;align-items:center;gap:12px;font:clamp(9px,.78vw,11px)/1.4 'Courier New',monospace;letter-spacing:.16em;color:#a8c9e8;max-width:610px}
 .hero-v2-eyebrow .signal-live{display:block;flex:0 0 7px;width:7px;height:7px;background:#82f9ef;border-radius:50%;box-shadow:0 0 16px #4eecc7b2}
@@ -68,6 +68,7 @@
 }
 .hero.hero-v2 .hero-description strong{color:#f2f8ff;font-weight:600}
 .hero-v2-actions{display:flex;align-items:center;flex-wrap:wrap;gap:27px;margin-top:30px}
+.hero-v2-actions a{pointer-events:auto}
 .hero-v2-actions .button.primary{
   background:linear-gradient(105deg,#c4f6ff,#73d8ff 89%);border:1px solid #d4fcff;
   border-radius:3px;padding:17px 22px;min-height:52px;font:12px Body,Arial,sans-serif;letter-spacing:.02em;
