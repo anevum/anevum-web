@@ -42,6 +42,9 @@ test('frozen receipt produces deterministic private non-publishing intent', asyn
 test('no self-approval, false reviewers or stale/withdrawn records', async () => {
   await rejects({reviewerId: 'canonical-owner-opaque-42'}, /Authors cannot approve/);
   await rejects({reviewerId: ''}, /reviewer/);
+  await rejects({reviewerId: 'reviewer\nother'}, /reviewer/);
+  await rejects({reviewerId: 'reviewer other'}, /reviewer/);
+  await rejects({submission: {...fixture().submission, user_id: 'owner\nother'}}, /canonical owner/);
   await rejects({submission: {...fixture().submission, status: 'withdrawn'}}, /submission status/);
   await rejects({project: {...fixture().project, status: 'draft'}}, /project status/);
   await rejects({project: {...fixture().project, revision: 5}}, /project revision/);
