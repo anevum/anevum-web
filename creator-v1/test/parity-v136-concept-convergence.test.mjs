@@ -202,7 +202,8 @@ test('V136 Commons and real creator/member profiles use safe type covers and add
  assert.match(community,/<ProjectThumbnail kind=\{item\.category\} title=\{item\.title\}/);
  assert.match(community,/<ProjectThumbnail kind=\{field\.id\}/);
  assert.ok(!community.includes('CosmicArtwork'));
- assert.match(community,/setSearchParams\(params\)/);
+ assert.match(community,/setSearchParams\(current => \{/);
+ assert.match(community,/const view = asView\(params\.toString\(\)\)/);
  assert.match(community,/chooseView\(item\.id\)/);
  assert.match(creators,/data-parity-creators="v136\.017"/);
  assert.match(creators,/id="p136-creators-index"/);
