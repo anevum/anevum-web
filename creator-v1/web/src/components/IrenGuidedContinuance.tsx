@@ -454,6 +454,15 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     // responsive breakpoint. Prefer a painted, measurable control instead.
     const isVisible=(target:HTMLElement|null):target is HTMLElement=>{
       if(!target||!target.isConnected||!target.getClientRects().length)return false;
+      // An author stylesheet may give descendants of closed <details> a
+      // nonzero DOMRect, although they are not interactable. Respect every
+      // closed disclosure ancestor; only its direct summary is eligible.
+      for(let ancestor=target.parentElement;ancestor;ancestor=ancestor.parentElement){
+        if(ancestor.matches('details:not([open])')){
+          const summary=ancestor.querySelector(':scope > summary');
+          if(!summary?.contains(target))return false;
+        }
+      }
       const style=window.getComputedStyle(target);
       const rect=target.getBoundingClientRect();
       return style.display!=="none"&&style.visibility!=="hidden"&&
@@ -476,11 +485,16 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
       const target=large
         ?container.querySelector<HTMLElement>('h1,h2,h3,[role="heading"]')||container
         :container;
-      const rect=target.getBoundingClientRect();
+      let rect=target.getBoundingClientRect();
       if(!scrolled){
         scrolled=true;
-        if(rect.top<78||rect.bottom>window.innerHeight-160||rect.left<8||rect.right>window.innerWidth-8)
+        if(rect.top<78||rect.bottom>window.innerHeight-160||rect.left<8||rect.right>window.innerWidth-8){
           target.scrollIntoView({behavior:reduced?"instant":"smooth",block:"center",inline:"nearest"});
+          // Layout and nested scroll offsets can change synchronously (and
+          // may continue changing during smooth motion). Never spotlight
+          // the stale pre-scroll rectangle; scroll events update it again.
+          rect=target.getBoundingClientRect();
+        }
       }
       const left=clamp(rect.left-7,8,window.innerWidth-8);
       const right=clamp(rect.right+7,8,window.innerWidth-8);
