@@ -6,6 +6,7 @@ on:
       - 'creator-v1/test/iren-first-user-v137-browser.mjs'
       - 'creator-v1/web/src/components/IrenGuidedContinuance.tsx'
       - 'creator-v1/web/src/components/MemberSpaceDashboard.tsx'
+      - 'creator-v1/web/src/member-collection-nav.css'
       - 'creator-v1/web/src/components/Shell.tsx'
       - 'creator-v1/web/src/parity/ParityHeaderV136.tsx'
       - 'creator-v1/test/iren-guided-v080.test.mjs'
