@@ -1,0 +1,53 @@
+/* ANEVUM / PORTFOLIO — Cinematic Institute V1. Concept-led, additive and reversible. */
+:root{--bg:#050816;--paper:#f0f5ff;--muted:#a9b7d6;--copper:#72e4f6;--violet:#b2a1ff;--line:rgba(144,186,255,.22);--accent:#72e4f6;--pad:clamp(20px,5.5vw,96px)}
+html{scroll-padding-top:90px}body{background:#050816;color:var(--paper);font-family:Body,Arial,sans-serif}
+body::after{opacity:.022;mix-blend-mode:screen}
+::selection{background:#8ddff3;color:#061021}
+.site-header{background:rgba(5,9,24,.72)!important;border-bottom:1px solid rgba(160,193,255,.18);backdrop-filter:blur(24px);box-shadow:0 15px 55px rgba(0,0,0,.12)}
+.identity{color:#fff}.identity-note{color:#9db3d8}.site-header nav a{color:#dceaff}.site-header a:hover{color:#7ce5f9}
+.header-contact,.button.primary{background:linear-gradient(115deg,#c1f9ff,#76d9ff);color:#07101d!important;border:1px solid #d8fcff;box-shadow:0 0 35px #58d2ff32;transition:transform .3s,box-shadow .3s}
+.header-contact:hover,.button.primary:hover{box-shadow:0 0 45px #58d2ff77;transform:translateY(-3px)}
+.motion-button{background:#101a32;color:#d8e5ff;border:1px solid #84b2e655}
+.hero{position:relative;background:radial-gradient(ellipse at 74% 30%,#34247585,transparent 43%),radial-gradient(ellipse at 48% 61%,#006fa442,transparent 52%),linear-gradient(155deg,#090d23 10%,#050915 80%);isolation:isolate;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,#050915ef 2%,#071022c2 43%,#07102214 80%),linear-gradient(180deg,transparent 60%,#050816 100%);z-index:1}
+.hero::after{content:"";pointer-events:none;position:absolute;inset:-20%;z-index:0;background:repeating-linear-gradient(90deg,transparent 0 10%,#76ceff13 calc(10% + 1px),transparent calc(10% + 2px) 20%),radial-gradient(ellipse at 77% 42%,#a984ff35,transparent 35%);transform:perspective(700px) rotateX(22deg) translate3d(0,var(--cinematic-drift,0px),0);transition:transform .25s ease-out}
+.hero-grid{opacity:.13;background-image:linear-gradient(#87bbef33 1px,transparent 1px),linear-gradient(90deg,#87bbef33 1px,transparent 1px);background-size:60px 60px}
+.hero-art{filter:hue-rotate(130deg) saturate(.85);opacity:.50;mix-blend-mode:screen}
+.hero-copy,.hero-footer{position:relative;z-index:5}
+.hero-copy{max-width:1000px}.hero-eyebrow{color:#91eaff}.hero h1{letter-spacing:-.045em;text-shadow:0 10px 80px #01040f}.hero h1 em{color:#92daff;text-shadow:0 0 55px #4baeff50}
+.hero-description{color:#d4def4;max-width:650px}.hero-description em{color:#aeeaff}
+.art-caption,.orbit-label{opacity:.7}.hero-footer{color:#a7bde2;border-color:#9bcfff42}
+.ticker{background:#0b1730;color:#a6dffe;border-color:#6a9be54f}.ticker b{color:#bca7ff}
+.section-shell{background-color:#060b1a}.section-top{border-color:#85adf044}.eyebrow,.visual-index,.visual-caption,.section-side{color:#97b5e5}
+h2 em,.philosophy-statement em,.about h2 em,.contact h2 em{color:#a9ceff}
+.work{background:linear-gradient(180deg,#050816,#0a1230 48%,#060b19)}
+.work-heading p,.capability-intro p,.about-copy p,.contact-heading p{color:#bac6df}
+.work-tools{border-color:#87b5ef44}.filters button{border-color:#6c9dc747;color:#d5e2f5}.filters button.active{background:#81dfff;color:#081524}
+.project{border-color:#89abdd44}.project-hit{background:#0c1730}.project-visual{isolation:isolate;border-color:#77a8ec55}
+.project-visual::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(140deg,#00152222,transparent 48%,#572ebc2a),linear-gradient(0deg,#060a19af,transparent 30%);z-index:2}
+.project-visual img{filter:saturate(.9) contrast(1.07)}
+.anevum-visual{background:radial-gradient(ellipse at 55% 44%,#17599a,#101746 55%,#050b18)}
+.fold-visual{background:radial-gradient(ellipse at 64% 34%,#735dc0,#22214a 60%,#080d21)}
+.rhen-visual{background:radial-gradient(ellipse at 62% 38%,#19466f,#111b39 55%,#07101f)}
+.transcosmic-visual{background:radial-gradient(ellipse at 62% 39%,#40408b,#171336 60%,#05081a)}
+.project-meta{background:#0b142a;color:#ecf5ff}.project-state{border-color:#6cbbef88;color:#9dcff6}
+.project-hit:hover .project-visual img{transform:scale(1.035)}.project-hit:focus-visible{outline:2px solid #8ee7ff}
+.capabilities,.philosophy{background:#080e22}.capability{border-color:#83b5e245}.capability-body p,.philosophy-grid p{color:#bdcbe6}
+.playground{background:#080d20}.play-scene{background:radial-gradient(circle at 53% 40%,#303d83,#0b1027 70%)}
+.about{background:linear-gradient(105deg,#070e23,#0b1730)}.portrait-panel{box-shadow:0 15px 70px #0009}.portrait-frame{border-color:#86d9ff88}
+.contact{background:radial-gradient(ellipse at 85% 35%,#3e2d8d55,transparent 42%),linear-gradient(145deg,#101d41,#050a18)}
+.email-link{color:#b7eaff}.contact-grid{border-color:#81b7e54f}
+.scroll-progress{background:#92ecff}
+:focus-visible{outline-color:#8cecff!important}
+.cinema-tag{display:inline-flex;align-items:center;gap:9px;font:10px/1.5 monospace;letter-spacing:.13em;color:#a5dcff;text-transform:uppercase}
+.cinema-tag::before{content:"";width:20px;height:1px;background:#a5dcff}
+.cinema-orbit{position:absolute;z-index:0;pointer-events:none;inset:0;opacity:.70;overflow:hidden;contain:paint}
+.cinema-orbit::before{content:"";position:absolute;right:-17vw;top:8%;width:min(82vw,1080px);aspect-ratio:1;border:1px solid #90beff51;border-radius:50%;box-shadow:0 0 0 20px #809fff0a,0 0 0 45px #a393f910,0 0 140px #4d68df49,inset 0 0 130px #3a46b84a;background:radial-gradient(circle at 43% 37%,#78c5fd38,#5b4ad72b 31%,#090b2708 55%,transparent 65%);transform:rotate(-18deg);animation:cinema-orbit 50s linear infinite}
+.cinema-orbit::after{content:"";position:absolute;right:10%;top:19%;height:min(65vw,700px);width:33%;border-left:2px solid #8cdcff3b;border-right:1px solid #907fff6b;transform:skew(-21deg) rotate(-9deg);box-shadow:0 0 70px #598fed22}
+.cinema-beacon{position:absolute;top:20%;right:16%;width:6px;height:6px;border-radius:50%;background:#b5fdff;box-shadow:0 0 40px 12px #64c7feaa;z-index:2;pointer-events:none}
+@keyframes cinema-orbit{to{transform:rotate(342deg)}}
+.motion-paused .cinema-orbit::before{animation-play-state:paused}
+@media(max-width:900px){.hero::before{background:linear-gradient(180deg,#05081788,#06102acc 48%,#050816 100%)}.hero-art{opacity:.25}.cinema-orbit::before{right:-65vw;top:9%;width:140vw}.cinema-beacon{right:9%}.work{background:#060d21}}
+@media(max-width:600px){.cinema-orbit::before{right:-83vw;top:15%;width:165vw}.cinema-orbit::after{right:-22%;top:19%;height:45%;width:72%}.hero-copy{padding-top:90px}.hero h1{font-size:clamp(57px,15vw,100px)}.header-contact{min-width:44px}}
+@media(prefers-reduced-motion:reduce){.cinema-orbit::before{animation:none}.hero::after{transition:none}}
+@media print{.cinema-orbit,.cinema-beacon{display:none}}
