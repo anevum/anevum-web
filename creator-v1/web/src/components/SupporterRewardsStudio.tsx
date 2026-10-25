@@ -34,7 +34,7 @@ function validPayload(value:unknown):value is Rewards{
 }
 const groups=[
  {key:'seal' as const,items:'seals' as const,title:'Supporter seals',
-  description:'Distinctive collector marks that evolve with your subscription age.'},
+  description:'Distinctive collector marks that evolve with your future recognition eligibility.'},
  {key:'frame' as const,items:'frames' as const,title:'Portrait frames',
   description:'Tactile ornamentation for your profile picture.'},
  {key:'aura' as const,items:'auras' as const,title:'Wall atmospheres',
@@ -99,7 +99,7 @@ export function SupporterRewardsStudio({memberId}:{memberId:string|null|undefine
  return <section className="av34-studio" aria-labelledby="av34-title">
   <div className="av34-intro"><span className="av32-index">03 / THE COLLECTOR'S STUDIO</span>
    <h2 id="av34-title">Marks of <em>continuance.</em></h2>
-   <p>Support ANEVUM and build a visual identity around the orbit. These are cosmetic subscription rewards, never earned XP, levels, merit awards, or preferential community access.</p>
+   <p>Support ANEVUM and build a visual identity around the orbit. These are cosmetic cosmetic concepts, never earned XP, levels, merit awards, or preferential community access.</p>
   </div>
   <div className="av34-grid">
    <div className="av34-collection" aria-label="Supporter cosmetic collection">
@@ -135,7 +135,7 @@ export function SupporterRewardsStudio({memberId}:{memberId:string|null|undefine
     </div>
     <div className="av34-preview-copy">
      <h3>Personalize the signal.</h3>
-     <p>{subscribed?'Choose unlocked designs, then save them. To share these visuals publicly, enable the profile insignia above and publish your wall.':'Preview the collection. Your rewards unlock when an eligible subscription is verified. No rewards are sold separately.'}</p>
+     <p>{subscribed?'Choose unlocked designs, then save them. To share these visuals publicly, enable the profile insignia above and publish your wall.':'Preview the collection. Your rewards unlock when an approved recognition program is verified. No rewards are sold separately.'}</p>
      {subscribed&&<p className="av34-tenure">{unlocked?.days??0} COMPLETED DAYS IN CURRENT SUBSCRIPTION</p>}
      <button className="av32-primary" type="button" disabled={!subscribed||!dirty||saving||loading} onClick={()=>void save()}>
       {saving?'SAVING…':subscribed?(dirty?'SAVE COSMETIC CHOICES':'REWARDS UP TO DATE'):'JOIN TO UNLOCK'}

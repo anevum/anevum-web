@@ -17,17 +17,10 @@ const req=(method='GET',payload,origin=ORIGIN)=>new Request(ORIGIN+PATH,{
  body:payload===undefined?undefined:JSON.stringify(payload)
 });
 const confirmation={confirmation:PHRASE,memberEmail:person.email};
-function setup({enabled=true,commerce=false}={}){
+function setup({enabled=true}={}){
  const {db,env}=fixture();
  db.exec(readFileSync(new URL('../canonical-auth/migrations/0006_supporter_commerce.sql',import.meta.url),'utf8'));
  env.CANONICAL_ACCOUNT_CLOSURE_ENABLED=enabled?'true':'false';
- if(commerce)Object.assign(env,{
-  CANONICAL_SUPPORTER_COMMERCE_ENABLED:'true',
-  CANONICAL_STRIPE_SECRET_KEY:'sk_test_'+('m'.repeat(40)),
-  CANONICAL_STRIPE_WEBHOOK_SECRET:'whsec_'+('w'.repeat(40)),
-  CANONICAL_STRIPE_MONTHLY_PRICE_ID:'price_ClosingMonth12345',
-  CANONICAL_STRIPE_ANNUAL_PRICE_ID:'price_ClosingYear12345'
- });
  for(const p of [person,stranger]){
   db.prepare('INSERT INTO user(id,name,email,emailVerified,createdAt,updatedAt) VALUES(?,?,?,1,?,?)')
    .run(p.id,p.name,p.email,NOW-DAY,NOW-DAY);
@@ -113,8 +106,8 @@ test('even an abandoned or completed payment intent blocks automated deletion',a
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM user WHERE id=?').get(person.id).n,1);
  }finally{db.close()}
 });
-test('concurrent Checkout guard blocks deletion and closure guard blocks new Stripe Checkout',async()=>{
- const {db,env}=setup({commerce:true});
+test('historical checkout guards protect deletion and retired payment endpoint stays unreachable',async()=>{
+ const {db,env}=setup();
  try{
   db.prepare('INSERT INTO supporter_checkout_guards(member_user_id,billing_interval,request_nonce,expires_at_ms,created_at_ms) VALUES(?,?,?,?,?)')
    .run(person.id,'month','nonce_active_checkout',NOW+100000,NOW-10000);
@@ -122,13 +115,13 @@ test('concurrent Checkout guard blocks deletion and closure guard blocks new Str
   db.prepare('DELETE FROM supporter_checkout_guards WHERE member_user_id=?').run(person.id);
   db.prepare('INSERT INTO member_account_closure_guards(member_user_id,request_nonce,expires_at_ms,created_at_ms) VALUES(?,?,?,?)')
    .run(person.id,'nonce_account_closing',NOW+600000,NOW);
-  let stripeCalls=0;
+  let providerCalls=0;
   const attempt=await supporterMember(new Request(ORIGIN+'/api/v1/member/supporter/checkout',{
    method:'POST',headers:{origin:ORIGIN,'content-type':'application/json'},
    body:JSON.stringify({interval:'month'})
-  }),env,person,{now:NOW,http:async()=>{stripeCalls++;throw Error('Stripe must not be called');}});
-  assert.equal(attempt.status,409);
-  assert.equal(stripeCalls,0);
+  }),env,person,{now:NOW,http:async()=>{providerCalls++;throw Error('Payment provider must not be contacted');}});
+  assert.equal(attempt.status,404);
+  assert.equal(providerCalls,0);
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM supporter_checkout_intents').get().n,0);
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM user WHERE id=?').get(person.id).n,1);
  }finally{db.close()}
