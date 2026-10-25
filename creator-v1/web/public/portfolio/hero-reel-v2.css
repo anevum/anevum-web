@@ -5,7 +5,7 @@
  */
 :root {
   --reel-blue:#87cfff;--reel-purple:#a49aff;--reel-bg:#030712;
-  --reel-live:#8df4f5;--reel-motion-x:0px;--reel-motion-y:0px;--reel-scroll:0;
+  --reel-live:#8df4f5;--reel-motion-x:0px;--reel-motion-y:0px;--reel-scroll:0;--reel-offset-x:0px;--reel-offset-y:0px;--reel-zoom:1.025;
 }
 .hero.hero-v2 {
   min-height:min(920px,100svh);
@@ -33,7 +33,7 @@
   position:absolute;right:-23vw;top:-42%;width:95vw;aspect-ratio:1;
   border-radius:50%;opacity:.72;
   background:radial-gradient(circle,#5584ff00 23%,#8a8fff17 39%,#5daeff1a 42%,#626ed100 48%);
-  filter:blur(9px);transform:translateX(calc(var(--reel-motion-x) * -.36));
+  filter:blur(9px);transform:translateX(var(--reel-motion-x));
 }
 .hero-v2-dust {
   position:absolute;inset:0;opacity:.26;mix-blend-mode:screen;
@@ -102,12 +102,12 @@
   border:1px solid color-mix(in srgb,var(--reel-tone) 55%,#849ec5);
   border-radius:7px;background:#0a1226;
   box-shadow:0 0 0 1px #b9e4ff26,0 42px 80px #01030cc9,0 0 80px color-mix(in srgb,var(--reel-tone) 24%,transparent),inset 0 0 35px #90b4ff22;
-  transform:perspective(1100px) rotateY(-10deg) rotateX(3deg) rotateZ(-3.5deg) translate3d(calc(var(--reel-motion-x) * .52),calc(var(--reel-motion-y) * -.45 + var(--reel-scroll) * 35px),0);
+  transform:perspective(1100px) rotateY(-10deg) rotateX(3deg) rotateZ(-3.5deg) translate3d(var(--reel-offset-x),var(--reel-offset-y),0);
   transition:transform .6s cubic-bezier(.2,.75,.25,1),border-color .35s,box-shadow .35s,opacity .28s;
   will-change:auto;
 }
 .reel-main:hover,.reel-main:focus-within{
-  transform:perspective(1100px) rotateY(-3deg) rotateX(1deg) rotateZ(-1.2deg) translate3d(calc(var(--reel-motion-x) * .25),calc(var(--reel-motion-y) * -.24),22px);
+  transform:perspective(1100px) rotateY(-3deg) rotateX(1deg) rotateZ(-1.2deg) translate3d(var(--reel-offset-x),var(--reel-offset-y),22px);
   box-shadow:0 45px 95px #01030ce8,0 0 87px color-mix(in srgb,var(--reel-tone) 35%,transparent);
 }
 .reel-main-top{
@@ -123,7 +123,7 @@
 .reel-main-screen>img{
   width:100%;height:100%;display:block;object-fit:cover;object-position:50% 0%;filter:contrast(1.04) saturate(.95);
   transition:opacity .25s,filter .45s,transform .9s cubic-bezier(.22,.7,.16,1);
-  transform:scale(calc(1.025 + var(--reel-scroll) * .04));
+  transform:scale(var(--reel-zoom));
 }
 .hero-v2-reel[data-hero-project="fold"] .reel-main-screen>img,
 .hero-v2-reel[data-hero-project="rhen"] .reel-main-screen>img{object-fit:contain;object-position:center center;transform:scale(.95);filter:drop-shadow(0 10px 35px #000b) saturate(.95)}
