@@ -99,7 +99,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
   const filtered=Boolean(query||category||cursor||freeOnly);
   const clearHref=view==='compact'?'/discover?view=list':'/discover';
   const countLabel=resourceState==='ready'?'APPROVED PROJECT CATALOGUE':packagesInScope&&packageState==='ready'?'AVAILABLE BROWSER RELEASES':'READING THE PUBLIC INDEX';
-  return <div data-iren-anchor="discover" className="portal-discover av73-discover p136-discovery" data-parity-discover="v136.004">
+  return <div data-iren-anchor="discover" className="portal-discover av73-discover p136-discovery" data-parity-discover="v136.004" data-discovery-phase="v136.026">
     <section className="p136-discover-hero" aria-labelledby="p136-discover-title">
       <div className="p136-discover-hero-grid" aria-hidden="true"/>
       <div className="p136-discover-hero-copy">
