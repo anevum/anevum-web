@@ -23,7 +23,7 @@ const DESKTOP_PLACES:readonly Place[]=[
  {x:10.9,y:.0,z:-30,r:1.66,scale:.72}
 ];
 const MOBILE_PLACES:readonly Place[]=[
- {x:3.8,y:-2.7,z:-19,r:1.85,scale:.85},
+ {x:7.1,y:-2.7,z:-19,r:1.85,scale:.85},
  {x:1.1,y:-3.3,z:-28,r:1.52,scale:.70}
 ];
 function batch(name:string,geometry:T.BufferGeometry,material:T.Material,poses:InstancePose[]):Batch{
