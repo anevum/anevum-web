@@ -66,10 +66,38 @@ try{
    const bubble=page.locator('.ir97-speech-bubble[aria-label="IREN guide, step '+step+' of 7"]');
    await bubble.waitFor({timeout:24000});
    if(step===4||step===7){
-    await page.waitForFunction(()=>{
-     return !!document.querySelector(".ir97-target-halo")&&
-       document.querySelector(".ir97-target-halo").getBoundingClientRect().width>0;
-    },null,{timeout:12000});
+    try{
+     await page.waitForFunction(()=>{
+      return !!document.querySelector(".ir97-target-halo")&&
+        document.querySelector(".ir97-target-halo").getBoundingClientRect().width>0;
+     },null,{timeout:9000});
+    }catch(error){
+     const diagnostic=await page.evaluate(({step})=>{
+      const rectOf=e=>{const r=e?.getBoundingClientRect();return r?{
+       left:r.left,top:r.top,width:r.width,height:r.height}:null;};
+      const selectors=step===4?["studio","studio-tools"]:["navigation","navigation-desktop"];
+      const targets=selectors.map(s=>{
+       const el=document.querySelector('[data-iren-anchor="'+s+'"]');
+       return {anchor:s,present:Boolean(el),rect:rectOf(el),
+        rects:el?.getClientRects().length||0,
+        display:el?getComputedStyle(el).display:null,
+        visibility:el?getComputedStyle(el).visibility:null,
+        detailsOpen:el?.closest("details")?.open??null};
+      });
+      return {step,path:location.pathname,search:location.search,
+       bodySize:document.body.scrollHeight,viewport:[innerWidth,innerHeight],
+       targets,halos:document.querySelectorAll(".ir97-target-halo").length,
+       bubble:document.querySelector(".ir97-speech-bubble")?.getAttribute("aria-label"),
+       guideText:document.querySelector(".ir97-bubble-line")?.textContent,
+       onMain:!!document.getElementById("main"),
+       toolbar:!!document.querySelector(".ms-toolbar-next"),
+       collection:!!document.querySelector(".mc-hub-nav")};
+     },{step});
+     await page.screenshot({path:join(output,"failed-"+width+"-step-"+step+".png"),animations:"disabled"}).catch(()=>{});
+     report.diagnostics=report.diagnostics||[];
+     report.diagnostics.push(diagnostic);
+     throw Error("IREN_V137_MISSING_SPOTLIGHT "+JSON.stringify(diagnostic)+" / "+String(error));
+    }
     await sleep(700);
     const result=await page.evaluate(({step,width})=>{
      const visible=e=>!!e&&e.isConnected&&e.getClientRects().length>0&&
