@@ -270,7 +270,7 @@
         travel=motionEnabled()?travel+(destination-travel)*.14:destination;
         stage.dataset.cameraTravel=travel.toFixed(3);
         const phone=box.width<650;
-        const eye=[(phone?.7:-.25)+eased[0]*.85+travel*2.1,eased[1]*.62+travel*.45,9-travel*21];
+        const eye=[(phone?.7:-.25)+eased[0]*.85+travel*2.1,eased[1]*.62+travel*.45,9-travel*56];
         const target=[(phone?.4:4.1)+travel*.70,Math.sin(time*.035)*.26,-38-travel*37];
         const vp=cameraMatrix(eye,target,width/height);
         gl.disable(gl.BLEND);gl.disable(gl.DEPTH_TEST);
