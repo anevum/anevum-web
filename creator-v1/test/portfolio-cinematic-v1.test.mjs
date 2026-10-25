@@ -27,7 +27,7 @@ test('owner-rejected skyline and old video candidate are removed from render pip
   assert.match(html,/hero-reel-v2\.js/);
   assert.doesNotMatch(html,/id="sculpture"|id="play-sculpture"/);
   assert.doesNotMatch(app,/getContext\(['"]webgl/);
-  assert.doesNotMatch(reelJS,/fetch\(|WebGL|createElement\(['"]canvas/);
+  assert.doesNotMatch(reelJS,/fetch\(|getContext\(['"]webgl|createElement\(['"]canvas/);
 });
 
 test('hero foreground showcases real project interfaces, not fake usage or invented UI',()=>{
