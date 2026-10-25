@@ -108,6 +108,12 @@ try{
   assert.ok(geometry.rootWidth<=geometry.rootClient+2,
    'Directory must not overflow at '+width+': '+JSON.stringify(geometry));
   assert.ok(geometry.cardWidth>=240,'Readable cards at '+width);
+  // A genuine 320px full-page capture revealed that the fixed bottom dock
+  // crossed the duplicated hero count card. At 320, the actual count remains
+  // in the result toolbar, where it can be reached by normal scrolling.
+  const readout=directory.locator('.p136-creators-register-panel');
+  assert.equal(await readout.isVisible(),width>=360,
+    'Creator index readout must not sit under the 320px fixed dock');
   assert.equal(geometry.columns,width>=1161?3:1,
    'Correct desktop/mobile grid density at '+width);
   assert.equal(await directory.locator('.portal-creator-grid').getAttribute('data-layout'),'grid');
