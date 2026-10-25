@@ -26,7 +26,9 @@ test("Orbital Underground visual identity and responsive routes are shared site-
 });
 test("Explore has real public queries, category filters, meaningful layout toggle and pagination",()=>{
  const s=read("web/src/pages/DiscoverPage.tsx");
- for(const part of ["readProjects","readCategories","PageNav","selectCategory","setView","aria-pressed","portal-discover-results"])assert.ok(s.includes(part),part);
+ for(const part of ["readProjects","readCategories","PageNav","selectCategory","chooseView","aria-pressed","portal-discover-results"])assert.ok(s.includes(part),part);
+  assert.match(s,/const view=params\.get\("view"\)==="list"\?"compact":"covers"/);
+  assert.doesNotMatch(s,/\[view,setView\]=useState/);
  assert.match(s,/cursor:cursor\|\|undefined/);
  assert.doesNotMatch(s,/sampleVotes|sampleLikes|Math\.random/);
 });
