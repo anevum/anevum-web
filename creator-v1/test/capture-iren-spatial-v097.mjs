@@ -266,10 +266,27 @@ try{
  await check("separate-tour-before-member",'!localStorage.getItem("anevum.iren.guided-continuance.v080.00000000000000000000000000000099")');
  await evaluate('window.dispatchEvent(new Event("anevum:iren-tour"))');
  const lines=["Your ANEVUM identity and profile","Your levels and awards","Your wall starts private","Create privately here","Find approved games","Meet the makers","The Wayfinder takes"];
+ // Check painted targets rather than accepting a stale or unrelated halo.
+ const alignedAnchor=(primary,fallback)=>`(()=>{
+   const canSee=e=>!!e&&!!e.getClientRects().length&&
+     getComputedStyle(e).display!=="none"&&getComputedStyle(e).visibility!=="hidden";
+   const target=[document.querySelector('[data-iren-anchor="${primary}"]'),
+     document.querySelector('[data-iren-anchor="${fallback}"]')].find(canSee);
+   const halo=document.querySelector(".ir97-target-halo");
+   if(!target||!halo)return false;
+   const r=target.getBoundingClientRect(),h=halo.getBoundingClientRect();
+   const x=Math.max(8,Math.min(innerWidth-8,r.left+r.width/2));
+   const y=Math.max(8,Math.min(innerHeight-8,r.top+r.height/2));
+   return r.width>0&&r.height>0&&h.width>0&&h.height>0&&
+     Math.abs(x-(h.left+h.width/2))<=Math.max(12,r.width*.08)&&
+     Math.abs(y-(h.top+h.height/2))<=Math.max(12,r.height*.08);
+ })()`;
  for(let i=0;i<lines.length;i++){
    await until(()=>evaluate('document.querySelector(".ir97-bubble-line")?.textContent.includes('+JSON.stringify(lines[i])+')'),14000);
    await until(()=>evaluate('!!document.querySelector(".ir97-target-halo")'),6000);
    await pause(800);
+   if(i===3)await check("member-step-4-visible-studio-anchor",alignedAnchor("studio","studio-tools"));
+   if(i===6)await check("member-step-7-visible-wayfinder-anchor",alignedAnchor("navigation","navigation-desktop"));
    await check("member-guide-no-modal-"+i,'(()=>{const p=document.querySelector(".ir97-guide-layer"),b=document.querySelector(".ir97-speech-bubble");return !!p&&!!b&&getComputedStyle(p).pointerEvents==="none"&&b.getAttribute("aria-modal")===null})()');
    await check("member-bubble-bounds-"+i,'(()=>{const r=document.querySelector(".ir97-speech-bubble")?.getBoundingClientRect();return !!r&&r.left>=0&&r.top>=0&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1})()');
    if([0,3,6].includes(i))await capture("iren-member-"+(i+1)+"-390");
@@ -280,6 +297,30 @@ try{
  await check("guest-progress-preserved",'JSON.parse(localStorage.getItem("anevum.iren.guided-continuance.v080.visitor")||"null")?.status==="completed"');
  evidence.push({width:390,height:844,syntheticMemberTour:"PASS",memberSteps:7,privateWorld:"PASS",separateTourProgress:"PASS",offlineFixtureOnly:true});
  console.log("IREN_V097_SYNTHETIC_MEMBER_7_STEP_PASS_390");
+
+ // Repeat at desktop width, where the mobile Menu is hidden and a visible
+ // primary navigation target must replace it. This is synthetic and isolated.
+ await send("Emulation.setDeviceMetricsOverride",{width:1440,height:900,deviceScaleFactor:1,mobile:false});
+ await send("Page.navigate",{url:base+"/creator/account"});
+ await until(()=>evaluate('!!document.querySelector(".ms-dashboard")&&!!document.querySelector(".ir80-dock")'),18000);
+ await evaluate('window.dispatchEvent(new Event("anevum:iren-tour"))');
+ for(let i=0;i<lines.length;i++){
+   await until(()=>evaluate('document.querySelector(".ir97-bubble-line")?.textContent.includes('+JSON.stringify(lines[i])+')'),14000);
+   if(i===3||i===6){
+     await until(()=>evaluate('!!document.querySelector(".ir97-target-halo")'),6000);
+     await pause(800);
+     await check("desktop-step-"+(i+1)+"-visible-target",
+       alignedAnchor(i===3?"studio":"navigation",i===3?"studio-tools":"navigation-desktop"));
+     await capture("iren-member-"+(i+1)+"-1440");
+   }
+   await evaluate('document.querySelector("[data-iren-next]").click()');
+ }
+ await until(()=>evaluate('!document.querySelector(".ir97-speech-bubble")'));
+ evidence.push({width:1440,height:900,syntheticMemberTour:"PASS",memberSteps:7,
+   highlightedTargets:[4,7],offlineFixtureOnly:true});
+ console.log("IREN_V097_SYNTHETIC_MEMBER_7_STEP_PASS_1440");
+ await send("Emulation.setDeviceMetricsOverride",{width:390,height:844,deviceScaleFactor:1,mobile:true});
+
  // Exercise the actual compiled renderer with the OS motion preference and
  // with WebGL unavailable. These remain loopback synthetic evidence only.
  await send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:"reduce"}]});

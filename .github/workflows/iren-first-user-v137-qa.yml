@@ -1,0 +1,70 @@
+name: IREN V137 First-Member Spotlight Regression
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/iren-first-user-v137-qa.yml'
+      - 'creator-v1/test/iren-first-user-v137-browser.mjs'
+      - 'creator-v1/web/src/components/IrenGuidedContinuance.tsx'
+      - 'creator-v1/web/src/components/MemberSpaceDashboard.tsx'
+      - 'creator-v1/web/src/member-collection-nav.css'
+      - 'creator-v1/web/src/components/Shell.tsx'
+      - 'creator-v1/web/src/parity/ParityHeaderV136.tsx'
+      - 'creator-v1/test/iren-guided-v080.test.mjs'
+permissions:
+  contents: read
+concurrency:
+  group: iren-v137-first-member-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  actual-compiled-member:
+    if: github.repository == 'anevum/anevum-web' && github.event.pull_request.head.repo.full_name == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    env:
+      VITE_PARITY_V136_FULL: 'true'
+      VITE_IREN_SPATIAL_GUIDE: 'true'
+      VITE_MEMBER_COLLECTION_NAV_REVIEW: 'true'
+      VITE_PARITY_V136_CINEMATIC: 'false'
+      VITE_PARITY_V136_HORIZON_QA: 'false'
+      VITE_PARITY_V136_SHARED_SCENE_QA: 'false'
+      VITE_PARITY_V136_NATIVE_VIDEO: 'false'
+      CLOUDFLARE_API_TOKEN: ''
+      CLOUDFLARE_API_KEY: ''
+      CLOUDFLARE_ACCOUNT_ID: ''
+      WRANGLER_SEND_METRICS: 'false'
+      ANEVUM_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Require exact source head
+        run: test "$(git rev-parse HEAD)" = "$ANEVUM_SOURCE_SHA"
+      - name: Install pinned dependencies without package scripts
+        run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - name: Verify canonical guided anchors and privacy boundaries
+        run: node --experimental-strip-types --test creator-v1/test/iren-guided-v080.test.mjs creator-v1/test/iren-spatial-v097.test.mjs
+      - name: Typecheck and compile current V136 + V132 member + spatial IREN
+        run: |
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web:staging
+      - name: Reuse runner Chrome with isolated Playwright driver
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
+          command -v google-chrome
+          google-chrome --version
+      - name: Verify real DOM targets for steps 4/7 on member page
+        run: node creator-v1/test/iren-first-user-v137-browser.mjs
+      - name: Store source-pinned browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: iren-v137-member-targets-${{ github.event.pull_request.head.sha }}
+          path: evidence/iren-v137/first-member-targets/
+          retention-days: 14
+          if-no-files-found: warn
+# No actual account, external API, Cloudflare deployment or database mutation.
