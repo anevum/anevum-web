@@ -491,3 +491,14 @@ html[data-av-parity="v136-full"] .ms-public :is(button,a):focus-visible{
     color:CanvasText;background:Canvas;border-color:CanvasText;box-shadow:none;
   }
 }
+
+
+/* V136.025 mobile screenshot fix: at 320px the persistent bottom command
+ * dock crosses the hero's duplicated count card. The same real, page-scoped
+ * count remains available in the results toolbar; no data is hidden from
+ * browsing. Keep the readout intact at 390px and above. */
+@media(max-width:359px){
+  html[data-av-parity="v136-full"] .p136-creators[data-directory-phase="v136.025"] .p136-creators-register-panel{
+    display:none;
+  }
+}
