@@ -277,3 +277,28 @@ unresolved; never count it as a smoke pass. PR #739 Stripe retirement is an
 independent draft, and old provider account obligations/secrets require their
 own controlled cleanup. No production, provider, finance, database, main-branch,
 permission or account mutation is implied by this slice.
+
+## V136.025 — isolated creator-directory UI convergence (2026-10-25)
+Session: `ANEVUM.WEB.UPDATE.2026-10-25.005.CREATOR-DISCOVERY-CONVERGENCE`.
+Code branch: `build/parity-v136-creator-directory-20261025-025`.
+Base: #735 development commit `20161bae20e7f369d4d7edfadcb4316ecccac3cf`.
+Status: ACTIVE DEVELOPMENT / source and compiled-browser assertions proposed;
+no exact-head completed CI, owner screenshot acceptance or production release
+may be inferred from this source-only commit.
+
+Scope: real `/creators` search, URL-owned Grid/List, responsive public
+channel cards, trustworthy zero-results and pagination states, accessible
+controls, and media-free native Institute styling. Public source of truth
+remains `readCreators` and `CompactMemberIdentity`; no new community identity
+or dataset was minted. CI-only synthetic fixture creators are isolated inside
+the loopback Playwright harness, which tests desktop 1440 and phones 390/320.
+An additional source contract guards routing, CSS, privacy and real data use.
+Any failed exact-head test or real screenshot defect remains open work.
+
+Release isolation: PR #741's immutable candidate `4dfaed54` is not updated by
+this branch; recorded live V58/V59 traffic split is not changed by source work.
+Draft public HTTP smoke #742 returned HTTP 403 before the baseline request and
+is not a successful rollout verification. Stripe retirement #739, protected
+backend, auth, payments, publishing and private member media remain outside
+this UI scope. Next gate: draft PR, exact-head CI and direct screenshot review
+against the approved V136 concept boards, before an owner-controlled integration.
