@@ -17,7 +17,7 @@ const call=(url,input=request,token=TOKEN)=>fetch(url+'/v1/infer',{method:'POST'
  headers:{'authorization':'Bearer '+token,'content-type':'application/json'},body:JSON.stringify(input)});
 
 test('backend address cannot be arbitrary network host or cloud',()=>{
-  for (const url of ['https://api.openai.com','http://192.168.1.10:11434','http://localhost.evil.com','http://localhost:11434/other','http://user:pw@localhost:11434','file:///tmp/a']) {
+  for (const url of ['https://api.openai.com','http://192.168.1.10:11434','http://localhost.evil.com','http://localhost:11434','http://localhost:11434/other','http://user:pw@localhost:11434','file:///tmp/a']) {
     assert.equal(parseLocalEndpoint(url),null,url);
   }
   assert.equal(parseLocalEndpoint(endpoint),'http://127.0.0.1:11434/api/generate');

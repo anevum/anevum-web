@@ -31,7 +31,7 @@ export function parseLocalEndpoint(value) {
   try {
     const url=new URL(value);
     const h=url.hostname.toLowerCase();
-    if (url.protocol !== 'http:' || !['127.0.0.1','localhost','[::1]'].includes(h) ||
+    if (url.protocol !== 'http:' || !['127.0.0.1','[::1]'].includes(h) ||
         url.username || url.password || url.search || url.hash || (url.pathname !== '/' && url.pathname !== '')) return null;
     return new URL('/api/generate',url.origin).toString();
   } catch { return null; }

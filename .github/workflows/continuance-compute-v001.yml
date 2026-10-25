@@ -1,4 +1,4 @@
-name: Continuance Compute V001 Local Contract
+name: Continuance Compute V001.1 Local Contract
 
 on:
   pull_request:
@@ -32,5 +32,9 @@ jobs:
           node --check services/continuance-compute/ollama.mjs
           node --check services/continuance-compute/server.mjs
           node --check services/continuance-compute/benchmark.mjs
-          node --test services/continuance-compute/server.test.mjs
+          node --check services/continuance-compute/benchmark-fixtures.mjs
+          node --check services/continuance-compute/job-contract.mjs
+          node --test services/continuance-compute/server.test.mjs services/continuance-compute/development.test.mjs
           node services/continuance-compute/benchmark.mjs --list
+          node services/continuance-compute/benchmark.mjs --list --suite=extended
+          node services/continuance-compute/benchmark.mjs --list --suite=extended --partition=reserved
