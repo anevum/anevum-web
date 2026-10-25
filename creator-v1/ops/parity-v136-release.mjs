@@ -32,7 +32,7 @@ const allowed=new Set([
  'creator-v1/graphics/build-institute-assets.mjs',
  'creator-v1/graphics/inspect-institute-assets.mjs','creator-v1/graphics/build-institute-textures.mjs',
  'docs/production/parity-v136-webgl-asset-overhaul-20261024.md',
- ...['InstituteRendererV136.ts','InstituteMaterialsV136.ts','CspMeshoptDecoderV136.ts','MeshoptDecodeWorkerV136.ts','meshopt-reference-v136.d.ts','InstituteAssetManifestV136.ts','institute-optics-v136.css'].map(x=>'creator-v1/web/src/parity/'+x),
+ ...['InstituteRendererV136.ts','InstituteHorizonV136017.ts','InstituteMaterialsV136.ts','CspMeshoptDecoderV136.ts','MeshoptDecodeWorkerV136.ts','meshopt-reference-v136.d.ts','InstituteAssetManifestV136.ts','institute-optics-v136.css'].map(x=>'creator-v1/web/src/parity/'+x),
  ...['manifest.json','texture-manifest.json','THIRD_PARTY_NOTICES.md',...['mobile','desktop'].flatMap(t=>['astc_rgba','bc7_rgba','etc2_rgba'].map(f=>'alloy-normal-'+t+'-'+f+'.ktx')),...['atrium','archive','forge','relay'].flatMap(f=>['mobile','desktop'].map(t=>f+'-'+t+'.glb'))].map(x=>'creator-v1/web/public/assets/institute/v136-011/'+x),
  '.github/workflows/parity-v136-release.yml','creator-v1/ops/parity-v136-release.mjs',
  '.github/workflows/parity-v136-scene-qa.yml',
@@ -108,6 +108,8 @@ const allowed=new Set([
 export function source(){
  // Staged cinematic geometry/video are reviewed artifacts only. Never permit
  // deployment or packaging with either private QA or unapproved media flags.
+ assert.notEqual(process.env.VITE_PARITY_V136_HORIZON_QA,'true',
+  'Unapproved planetary art QA must be disabled in release');
  assert.notEqual(process.env.VITE_PARITY_V136_SHARED_SCENE_QA,'true',
   'Shared cinematic scene QA flag must be disabled in release');
  assert.notEqual(process.env.VITE_PARITY_V136_NATIVE_VIDEO,'true',

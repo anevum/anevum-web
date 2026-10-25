@@ -433,6 +433,10 @@ try{
       assert.equal(reality.renderer,'webgl','Actual Three.js scene, not vector fallback');
       assert.equal(reality.canvasCount,1,'One persistent 3D scene / one GPU context');
       assert.equal(reality.metrics.family,'atrium','The scene still uses the canonical Atrium family');
+      if(process.env.VITE_PARITY_V136_HORIZON_QA==='true'){
+        assert.equal(await page.locator('.p136-living-canvas').getAttribute('data-horizon'),
+          'qa-only','The same original canvas owns the approved QA-only planetary horizon');
+      }
       assert.ok(reality.metrics.models>=1&&reality.metrics.triangles>10000&&reality.metrics.drawCalls>0,
         'The 3D screenshot must contain real modeled geometry: '+JSON.stringify(reality));
       const first=await page.screenshot({path:join(out,'arrival-poster-review-'+width+'.png'),

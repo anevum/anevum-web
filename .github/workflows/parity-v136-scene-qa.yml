@@ -4,6 +4,7 @@ on:
     paths:
       - '.github/workflows/parity-v136-scene-qa.yml'
       - 'creator-v1/web/src/parity/SceneDirectorV136.ts'
+      - 'creator-v1/web/src/parity/InstituteHorizonV136017.ts'
       - 'creator-v1/web/src/parity/CinematicArrivalV136.tsx'
       - 'creator-v1/web/src/parity/CinematicFramesV136.tsx'
       - 'creator-v1/web/src/parity/CinematicVideoV136.tsx'
@@ -76,6 +77,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ''
       VITE_PARITY_V136_FULL: 'true'
       VITE_PARITY_V136_CINEMATIC: 'true'
+      VITE_PARITY_V136_HORIZON_QA: 'true'
       VITE_IREN_SPATIAL_GUIDE: 'true'
       VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
       VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
