@@ -64,10 +64,10 @@ async function run(width,height,motion='no-preference') {
     const el=document.documentElement;
     const hero=document.querySelector('#hero-title').getBoundingClientRect();
     const intro=document.querySelector('.hero-description').getBoundingClientRect();
-    const button=document.querySelector('.hero-buttons .button').getBoundingClientRect();
+    const button=document.querySelector('.hero-v2-actions .button').getBoundingClientRect();
     const header=document.querySelector('.site-header').getBoundingClientRect();
     const offenders = [...document.body.querySelectorAll('*')].map(element=>({element,box:element.getBoundingClientRect()})).filter(entry=>entry.box.width>0&&entry.box.right>innerWidth+1&&entry.box.left>=-2).slice(0,18).map(({element,box})=>({tag:element.tagName,cls:String(element.className||'').slice(0,80),id:element.id,right:Math.round(box.right),left:Math.round(box.left),width:Math.round(box.width),position:getComputedStyle(element).position}));
-    const footer=document.querySelector('.hero-footer').getBoundingClientRect();
+    const footer=document.querySelector('.hero-v2-footer').getBoundingClientRect();
     return {scrollWidth:el.scrollWidth,viewport:innerWidth,offenders,hero:{x:hero.x,y:hero.y,right:hero.right,bottom:hero.bottom},intro:{x:intro.x,right:intro.right},button:{x:button.x,right:button.right,y:button.y},footer:{top:footer.top,bottom:footer.bottom},headerBottom:header.bottom,mainCount:document.querySelectorAll('main').length,sculptures:document.querySelectorAll('canvas').length};
   });
   assert.ok(shape.scrollWidth <= shape.viewport + 1, 'overflow '+width+': '+JSON.stringify(shape));
@@ -96,7 +96,94 @@ async function run(width,height,motion='no-preference') {
   if (motion!=='reduce') assert.ok(revealed.visible >= revealed.total-2, 'Missing scroll reveals: '+JSON.stringify(revealed));
   note('real scroll reveal '+width,revealed);
   await page.screenshot({path:join(output,'portfolio-'+width+'-'+motion+'.png'),fullPage:true,animations:'disabled'});
-  await page.locator('[data-project="anevum"]').click();
+  // Real featured project controls, no dummy animation or synthetic dashboard.
+  for(const [key,title] of [['fold','THE FOLD'],['rhen','RHEN'],['transcosmic','TRANSCOSMIC'],['anevum','ANEVUM']]) {
+    await page.locator('[data-hero-select="'+key+'"]').click();
+    assert.equal(await page.locator('.hero-v2-reel').getAttribute('data-hero-project'),key);
+    assert.equal((await page.locator('#reel-chapter-name').innerText()).trim(),title);
+    assert.equal(await page.locator('[data-hero-select="'+key+'"]').getAttribute('aria-pressed'),'true');
+    assert.equal(await page.locator('#reel-open').getAttribute('data-project'),key);
+    if(key==='transcosmic') {
+      assert.equal(await page.locator('[data-reel-image]').isVisible(),false);
+      assert.equal(await page.locator('.reel-transcosmic-art').isVisible(),true);
+    } else {
+      assert.equal(await page.locator('[data-reel-image]').isVisible(),true);
+      assert.match(await page.locator('[data-reel-image]').getAttribute('src'),new RegExp('/'+(key==='anevum'?'anevum-interface':key==='fold'?'fold-interface':'rhen-interface')+'\\.webp
+  await page.locator('#project-dialog[open]').waitFor({state:'visible'});
+  assert.match(page.url(),/project=anevum/);
+  assert.match(await page.locator('#case-title').innerText(),/ANEVUM/i);
+  await page.locator('[data-case-direction="1"]').click();
+  assert.match(await page.locator('#case-title').innerText(),/Fold/i);
+  assert.match(page.url(),/project=fold/);
+  await page.locator('.case-close').click();
+  await page.locator('#project-dialog').waitFor({state:'hidden'});
+  await page.waitForURL(url => !new URL(url).searchParams.has('project'));
+  assert.doesNotMatch(page.url(),/project=/);
+  note('project story open/next/close '+width);
+  await page.locator('[data-process="make"]').click();
+  assert.equal(await page.locator('#process-heading').innerText(),'Make something someone can use.');
+  await page.locator('[data-process="verify"]').click();
+  assert.equal(await page.locator('[data-process="verify"]').getAttribute('aria-pressed'),'true');
+  note('interactive process '+width);
+  await page.locator('[data-filter="product"]').click();
+  assert.equal(await page.locator('.project:visible').count(),2);
+  await page.locator('[data-filter="experience"]').click();
+  assert.equal(await page.locator('.project:visible').count(),2);
+  await page.locator('[data-filter="all"]').click();
+  assert.equal(await page.locator('.project:visible').count(),4);
+  note('project filters '+width);
+  const motionInitial = await page.locator('#motion-toggle').getAttribute('aria-pressed');
+  await page.locator('#motion-toggle').click();
+  assert.equal(await page.locator('#motion-toggle').getAttribute('aria-pressed'),motionInitial === 'true' ? 'false' : 'true');
+  await page.locator('#motion-toggle').click();
+  assert.equal(await page.locator('#motion-toggle').getAttribute('aria-pressed'),motionInitial);
+  note('motion toggle '+width);
+  if (width<=850) {
+    await page.locator('.mobile-nav summary').click();
+    assert.equal(await page.locator('.mobile-nav').getAttribute('open'),'');
+    await page.locator('.mobile-nav a[href="#about"]').click();
+    assert.equal(await page.locator('.mobile-nav').getAttribute('open'),null);
+    note('mobile menu '+width);
+  }
+  await page.goto(origin+'/portfolio/?project=rhen',{waitUntil:'domcontentloaded'});
+  await page.locator('#project-dialog[open]').waitFor({state:'visible'});
+  assert.equal((await page.locator('#case-title').innerText()).toLowerCase(),'rhen');
+  await page.keyboard.press('Escape');
+  await page.locator('#project-dialog').waitFor({state:'hidden'});
+  note('direct case links / escape '+width);
+  await context.close();
+}
+
+try {
+  for(const [width,height,motion] of [[1440,900,'no-preference'],[390,844,'no-preference'],[320,740,'reduce'],[1920,1080,'no-preference']]) {
+    try {await run(width,height,motion);}catch(e){failures.push({width,message:e.message,stack:e.stack});console.error('FAIL '+width+' '+e.stack);}
+  }
+} finally {
+  await browser.close();
+  await new Promise(resolve=>server.close(resolve));
+  writeFileSync(join(output,'acceptance.json'),JSON.stringify({checks,errors,forbidden,failures},null,2));
+}
+assert.equal(forbidden.length,0,'external or non-read-only calls: '+JSON.stringify(forbidden));
+assert.equal(errors.length,0,'browser errors: '+JSON.stringify(errors));
+assert.equal(failures.length,0,'browser acceptance failures: '+JSON.stringify(failures));
+console.log('PASS entire portfolio cinematic browser acceptance');
+));
+    }
+  }
+  note('featured real-work chapter controls '+width);
+  await page.locator('[data-hero-select="anevum"]').focus();
+  await page.keyboard.press('ArrowRight');
+  assert.equal(await page.locator('.hero-v2-reel').getAttribute('data-hero-project'),'fold');
+  await page.keyboard.press('Home');
+  assert.equal(await page.locator('.hero-v2-reel').getAttribute('data-hero-project'),'anevum');
+  note('hero keyboard chapter navigation '+width);
+  await page.locator('#reel-open').click();
+  await page.locator('#project-dialog[open]').waitFor({state:'visible'});
+  assert.match(await page.locator('#case-title').innerText(),/ANEVUM/);
+  await page.locator('.case-close').click();
+  await page.locator('#project-dialog').waitFor({state:'hidden'});
+  note('hero case-study CTA '+width);
+  await page.locator('.project-hit[data-project="anevum"]').click();
   await page.locator('#project-dialog[open]').waitFor({state:'visible'});
   assert.match(page.url(),/project=anevum/);
   assert.match(await page.locator('#case-title').innerText(),/ANEVUM/i);
