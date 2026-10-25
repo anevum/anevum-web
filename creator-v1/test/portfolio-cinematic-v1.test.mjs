@@ -29,7 +29,9 @@ test('original high-resolution scalable Institute artwork is first-party and rem
   assert.match(html, /assets\/continuance-horizon\.svg/);
   assert.match(artwork, /<svg[^>]*viewBox="0 0 1920 1080"/);
   assert.match(artwork, /<\/svg>\s*$/);
-  assert.doesNotMatch(artwork, /<script|<foreignObject|https?:\/\/|onload=/i);
+  // The SVG namespace is an identifier, not an external resource fetch.
+  assert.match(artwork, /xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
+  assert.doesNotMatch(artwork.replace('xmlns="http://www.w3.org/2000/svg"', ''), /<script|<foreignObject|https?:\/\/|onload=|<image|<use[^>]+href=/i);
   assert.match(css, /\.institute-backdrop\{/);
   assert.match(css, /@media\(prefers-reduced-motion:reduce\)/);
 });
