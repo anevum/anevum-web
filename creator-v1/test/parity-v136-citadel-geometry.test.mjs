@@ -29,6 +29,21 @@ for(const tier of ['desktop','mobile']){
   const geology=c.root.getObjectByName('Suspension geology');
   assert.equal(geology.count,tier==='desktop'?12:6,'Main islands plus actual hanging rock shards');
   const positions=geology.geometry.attributes.position;
+  const geologyColors=geology.geometry.attributes.color;
+  assert.ok(geologyColors&&geologyColors.count===positions.count,
+   'Each actual fractured rock vertex carries a baked mineral stratum color');
+  assert.equal(geology.material.vertexColors,true,
+   'Original geology uses real surface vertex colors rather than an overlaid image');
+  assert.ok(geology.instanceColor&&geology.instanceColor.count===geology.count,
+   'Each hanging shard has a separate baked authored mineral tint');
+  let lowLight=0,highLight=0,lowSamples=0,highSamples=0;
+  for(let i=0;i<positions.count;i++){
+   const energy=geologyColors.getX(i)+geologyColors.getY(i)+geologyColors.getZ(i);
+   if(positions.getY(i)<-1.15){lowLight+=energy;lowSamples++}
+   if(positions.getY(i)>.45){highLight+=energy;highSamples++}
+  }
+  assert.ok(lowSamples>0&&highSamples>0&&highLight/highSamples>lowLight/lowSamples*1.3,
+   'Physically higher strata must be optically distinguishable from deep broken rock');
   let lowerRadius=0,upperRadius=0;
   for(let i=0;i<positions.count;i++){
    const radius=Math.hypot(positions.getX(i),positions.getZ(i));
@@ -44,6 +59,9 @@ for(const tier of ['desktop','mobile']){
    'Auric spire is a modeled stepped object rather than a painted triangle');
   const windows=c.root.getObjectByName('Photonic window inlays');
   assert.ok(windows.instanceColor,'Real instanced light fixtures carry authored colors');
+  assert.ok(windows.geometry.parameters.height/windows.geometry.parameters.width>=2,
+   'Window inlays must read as vertical cathedral apertures, not dots');
+  assert.equal(windows.geometry.index.count/3,12,'Longer inlays reuse their original fixed triangle batch');
   const released=new Set();
   c.root.traverse(mesh=>{if(mesh instanceof T.InstancedMesh){
    mesh.geometry.addEventListener('dispose',()=>released.add(mesh.geometry));

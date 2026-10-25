@@ -51,11 +51,31 @@ function fracturedGeology(segments:number){
   const fracture=1+.14*Math.sin(a*3+y*1.7)+.09*Math.cos(a*7-y*2.3);
   positions.setXYZ(i,x*fracture,y+.09*Math.sin(a*5)*Math.hypot(x,z),z*fracture);
  }
+ // Baked structural mineral strata. Colors follow the ACTUAL modeled face
+ // positions and fractured ledges: no sampled image, shader uniforms, random
+ // source, per-frame CPU calculation or additional material/draw batch.
+ const ochre=new T.Color(0x8e755c);
+ const deep=new T.Color(0x182437);
+ const slate=new T.Color(0x536b80);
+ const tint=new T.Color();
+ const vertexColors=new Float32Array(positions.count*3);
+ for(let i=0;i<positions.count;i++){
+  const x=positions.getX(i),y=positions.getY(i),z=positions.getZ(i);
+  const angle=Math.atan2(z,x);
+  const elevation=T.MathUtils.smoothstep((y+1.60)/2.62,.04,.92);
+  const grain=.88+.12*(.5+.5*Math.cos(angle*6.0+y*4.8));
+  const seam=Math.exp(-Math.pow((y+.27)*11.0,2))*.18+
+   Math.exp(-Math.pow((y-.20)*12.0,2))*.23;
+  tint.copy(deep).lerp(slate,elevation).multiplyScalar(grain);
+  tint.lerp(ochre,Math.min(.28,seam));
+  vertexColors.set([tint.r,tint.g,tint.b],i*3);
+ }
+ geometry.setAttribute('color',new T.Float32BufferAttribute(vertexColors,3));
  positions.needsUpdate=true;geometry.computeVertexNormals();return geometry;
 }
 export function createInstituteCitadels(tier:AssetTier){
  const mobile=tier==='mobile',places=mobile?MOBILE_PLACES:DESKTOP_PLACES;
- const dark=new T.MeshStandardMaterial({color:0x303749,metalness:.18,roughness:.88,flatShading:true});
+ const dark=new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,metalness:.16,roughness:.86,flatShading:true});
  const alloy=new T.MeshStandardMaterial({color:0x607e92,metalness:.76,roughness:.37,
   emissive:0x102538,emissiveIntensity:.20});
  const auric=new T.MeshStandardMaterial({color:0xae8f63,metalness:.83,roughness:.33});
@@ -119,7 +139,7 @@ export function createInstituteCitadels(tier:AssetTier){
   batch('Auric crown spires',section([[0,-.59],[.24,-.59],[.27,-.52],
    [.30,-.45],[.18,-.38],[.16,-.33],[.10,-.08],
    [.07,.18],[0,.59]],8),auric,spires),
-  batch('Photonic window inlays',new T.BoxGeometry(.12,.095,.08),photonic,windowSlits)
+  batch('Photonic window inlays',new T.BoxGeometry(.095,.22,.075),photonic,windowSlits)
  ];
  let triangles=0;
  const assets=new Set<T.BufferGeometry>(),surfaces=new Set<T.Material>();
@@ -135,6 +155,12 @@ export function createInstituteCitadels(tier:AssetTier){
    matrix.rotation.set(...(pose.rotation??[0,0,0]));
    matrix.updateMatrix();
    instanced.setMatrixAt(i,matrix.matrix);
+   if(material===dark){
+    // Mineral weathering varies between individual original hanging shards,
+    // with vertex-baked rock strata preserved underneath every instance tint.
+    instanced.setColorAt(i,new T.Color(i%5===0?0xffffff:
+     i%3===0?0xe3c9ab:i%2===0?0xb6d8ee:0xc5d0dd));
+   }
    if(material===photonic){
     // Architectural light fixtures alternate cool glass and warm under-deck
     // illumination; this is fixed authored detail, never activity telemetry.
