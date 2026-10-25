@@ -232,6 +232,8 @@ async function runWithoutWebGL(){
   assert.equal(await backdrop.getAttribute('src'),'/portfolio/assets/transcosmic-continuum.svg');
   assert.ok(Number(await backdrop.evaluate(element=>getComputedStyle(element).opacity))>.95,
     'WebGL-denied site retains visible first-party scalable scene');
+  assert.match(await page.locator('.universe-disclaimer').innerText(),/STATIC ART FALLBACK \/ 3D NOT AVAILABLE/,
+    'The site must not claim that its 3D runtime is available when blocked');
   assert.equal(await page.locator('canvas[data-depth-canvas]').count(),1,
     'Semantic DOM and single nonfunctional canvas remain, not an extra renderer');
   assert.ok(await page.getByRole('heading',{name:/I BUILD WORLDS THAT WORK/i}).isVisible());
