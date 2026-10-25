@@ -51,7 +51,7 @@ export function CreatorsPage(){
       <div className="p136-creators-hero-copy">
         <span className="p136-creators-register">THE CONTINUANCE INSTITUTE / PUBLIC PEOPLE</span>
         <h1 id="p136-creators-hero-title">Meet the people <em>building what comes next.</em></h1>
-        <p>Explore original releases and the verified public creator channels behind them. No imaginary people, followers, portraits or activity.</p>
+        <p>Explore approved original releases and the public creator channels behind them. No imaginary people, followers, portraits or activity.</p>
         <nav className="p136-creators-hero-actions" aria-label="Explore creator spaces">
           <a href="#p136-creators-index">Find creators <Icon name="search" size={16}/></a>
           <Link to="/community?view=people">Community spaces <Icon name="people" size={16}/></Link>
@@ -59,9 +59,9 @@ export function CreatorsPage(){
         </nav>
       </div>
       <aside className="p136-creators-register-panel" aria-label="Public channel index information">
-        <span>PUBLIC CHANNEL DIRECTORY / VERIFIED</span>
+        <span>PUBLIC CHANNEL DIRECTORY / APPROVED WORK</span>
         <strong>{data.state==="ready"?data.data.items.length:"—"}</strong>
-        <p>{data.state==="error"?"The directory could not be loaded.":data.state==="loading"?"Reading the public creator index…":"Approved creator channels on this page, not a sitewide member count."}</p>
+        <p>{data.state==="error"?"The directory could not be loaded.":data.state==="loading"?"Reading the public creator index…":"Public channels with approved work on this page, not a sitewide member count."}</p>
         <Link to="/discover">Explore public work <Icon name="arrow" size={15}/></Link>
       </aside>
     </section>:<PortalHeading eyebrow="CREATOR CHANNELS / ORIGINAL WORK" title="MEET THE" accent="MAKERS." description="Discover the people behind the games, apps, creative experiments and useful software. Real work comes first. No fabricated followers or channels." index="CREATORS / 002" action={{to:"/create",label:"MAKE YOUR FIRST PROJECT"}}/>}
@@ -90,7 +90,7 @@ export function CreatorsPage(){
         {data.state==="error"&&<ErrorState title="CREATOR CHANNELS UNAVAILABLE" detail="The real public directory could not be loaded. We do not substitute demo profiles."/>}
         {data.state==="ready"&&<>
           <div className="portal-result-toolbar p136-creators-result-toolbar">
-            <div><span className="kicker">PUBLIC INDEX / APPROVED CREATOR CHANNELS</span>
+            <div><span className="kicker">PUBLIC INDEX / CHANNELS WITH APPROVED WORK</span>
               <strong role="status">{data.data.items.length} published {data.data.items.length===1?"creator channel":"creator channels"} on this page</strong>
             </div>
             <div className="p136-creators-result-actions">
