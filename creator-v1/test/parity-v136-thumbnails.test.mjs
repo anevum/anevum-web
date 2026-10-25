@@ -66,8 +66,10 @@ test('real public cards, saved works, community, and inspector use the same medi
 
 test('isolated browser fixture serves only the ten reviewed default SVGs, not arbitrary asset paths',()=>{
  const fixture=readFileSync(new URL('./portal-offline-preview.mjs',import.meta.url),'utf8');
- assert.match(fixture,/default-thumbnails\\\/\(\?:games\|tools\|automation\|research\|creative\|learning\|libraries\|other\|simulation\|story\)\\\.svg/);
- assert.match(fixture,/if\(!\\/\^assets\\/);
- assert.match(fixture,/!existsSync\(path\)/);
- assert.doesNotMatch(fixture,/default-thumbnails\\\/\[\^\\/\]\+/);
+ assert.ok(fixture.includes(String.raw`default-thumbnails\/(?:games|tools|automation|research|creative|learning|libraries|other|simulation|story)\.svg`),
+  'The fixture may serve only the ten first-party type SVGs');
+ assert.ok(fixture.includes('!existsSync(path)'), 'Requested static assets must exist');
+ assert.ok(fixture.includes('return json(res,{error:"not-found"},404)'), 'Unknown asset paths must fail closed');
+ assert.ok(!fixture.includes(String.raw`default-thumbnails\/[a-zA-Z0-9._-]+`),
+  'A wildcard path would widen the test source allowlist');
 });
