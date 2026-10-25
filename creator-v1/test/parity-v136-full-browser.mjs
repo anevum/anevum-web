@@ -10,6 +10,8 @@ const build=resolve('creator-v1/dist/web');
 const {chromium}=createRequire(import.meta.url)('playwright');
 const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.webp':'image/webp','.png':'image/png','.jpg':'image/jpeg','.woff2':'font/woff2'};
 const errors=[],forbidden=[],checks=[];
+const studioOnly=process.argv.includes('--studio-only');
+let accepted=false;
 mkdirSync(out,{recursive:true});
 const server=createServer((req,res)=>{
   if(!['GET','HEAD'].includes(req.method)){res.writeHead(405);res.end();return;}
@@ -214,6 +216,14 @@ try{
        'Confirmed removal drops only the selected local source');
       assert.equal(await workbench.getByRole('button',{name:'Rename file',exact:true}).isDisabled(),true,
        'The canonical root entrypoint cannot be renamed');
+      const monacoPosition=await workbench.locator('[data-source-cursor]').innerText();
+      await workbench.getByRole('button',{name:'Focus layout preview',exact:true}).click();
+      assert.equal(await workbench.locator('[data-source-editor="monaco"]').count(),1,
+        'Preview focus retains the mounted Monaco model');
+      await workbench.getByRole('button',{name:'Return to source editor',exact:true}).click();
+      await workbench.locator('[data-source-editor="monaco"]').waitFor({state:'visible'});
+      assert.equal(await workbench.locator('[data-source-cursor]').innerText(),monacoPosition,
+        'Returning from preview preserves the actual Monaco cursor');
 
     }
     else assert.equal(await page.locator('[data-source-editor="monaco"]').count(),0,'Phone uses accessible text editor without Monaco allocation');
@@ -270,6 +280,55 @@ try{
       assert.equal(await page.locator('.av095-drop strong').filter({hasText:'Choose a ZIP or HTML file'}).count(),1,
        'Diagnostics never override existing private package/archive invalidation');
     }
+    const preview=workbench.locator('[data-source-preview="local"]');
+    assert.equal(await workbench.locator('.p136030-build-details').evaluate(e=>e.open),width===1440,
+      'Phone defaults keep advanced checks available behind a real disclosure');
+    const previewFrame=workbench.frameLocator('[data-source-preview-frame]');
+    const previewCss=':root { --qa-breakpoint: wide; } body { margin:0; background:#06101d; color:#fff; font:24px system-ui; } main { padding:24px; } @media(max-width:400px) { :root { --qa-breakpoint: phone; } } @media(max-width:340px) { :root { --qa-breakpoint: small; } }';
+    await workbench.locator('.p136-source-fallback textarea').fill(previewCss);
+    await workbench.getByRole('button',{name:'Prepare build archive',exact:true}).click();
+    await page.locator('.p136-source-state').filter({hasText:'ARCHIVE PREPARED'}).waitFor();
+    const assertViewport=async(expected,label)=>{
+      let state;
+      const stop=Date.now()+12000;
+      do{
+        state=await previewFrame.locator('html').evaluate(e=>({
+          width:innerWidth,breakpoint:getComputedStyle(e).getPropertyValue('--qa-breakpoint').trim()
+        }));
+        if(state.width===expected&&state.breakpoint===label)break;
+        await new Promise(resolve=>setTimeout(resolve,50));
+      }while(Date.now()<stop);
+      assert.deepEqual(state,{width:expected,breakpoint:label},'Preview must use actual CSS media-query widths');
+    };
+    await preview.getByRole('button',{name:'Phone preview',exact:true}).click();
+    await assertViewport(390,'phone');
+    await preview.getByRole('button',{name:'Small phone preview',exact:true}).press('Enter');
+    await assertViewport(320,'small');
+    await preview.getByRole('button',{name:'Desktop preview',exact:true}).click();
+    await assertViewport(1280,'wide');
+    assert.equal(await preview.locator('iframe').getAttribute('sandbox'),'','Layout frame remains opaque-origin/scriptless');
+    assert.equal(await previewFrame.locator('script').count(),0);
+    assert.equal(await preview.locator('iframe').count(),1,'One existing preview, never a second runtime');
+    await preview.getByRole('button',{name:'Focus layout preview',exact:true}).click();
+    await workbench.locator('[data-preview-focused="true"]').waitFor();
+    assert.equal(await workbench.locator('.p136-source-stage').isVisible(),false);
+    assert.equal(await workbench.locator('.p136-source-stage textarea').count(),1,'Focus mode retains the mounted real source editor');
+    if(width<650){await preview.getByRole('button',{name:'Phone preview',exact:true}).click();await assertViewport(390,'phone');}
+    await preview.scrollIntoViewIfNeeded();
+    const previewGeometry=await preview.evaluate(node=>{
+      const r=node.getBoundingClientRect(),frame=node.querySelector('iframe');
+      return {panel:{width:r.width,height:r.height},frame:{width:frame?.offsetWidth,height:frame?.offsetHeight}};
+    });
+    writeFileSync(join(out,'studio-preview-geometry-'+width+'.json'),JSON.stringify(previewGeometry,null,2));
+    const previewCaptureStarted=Date.now();
+    await page.screenshot({path:join(out,'studio-layout-preview-'+width+'.png'),fullPage:false,animations:'disabled',timeout:90000});
+    console.log('STUDIO_PREVIEW_CAPTURE '+JSON.stringify({width,elapsedMs:Date.now()-previewCaptureStarted,...previewGeometry}));
+    await preview.getByRole('button',{name:'Return to source editor',exact:true}).press('Escape');
+    await workbench.locator('[data-preview-focused="false"]').waitFor();
+    await page.waitForFunction(()=>document.activeElement?.id==='p136-source-tab-styles.css');
+    assert.equal(await workbench.locator('.p136-source-fallback textarea').inputValue(),previewCss,'Return preserves the creator source');
+    assert.equal(await page.locator('.p136-source-state').innerText(),'ARCHIVE PREPARED','Preview controls cannot invalidate or mutate source/archive');
+    assert.equal(await page.getByRole('button',{name:'Prepare private playtest',exact:true}).isDisabled(),true,'Layout preview grants no upload or publication rights');
     assert.equal(await page.locator('.p136-console-wayfinder').isVisible(),false,
       'A redundant fixed site dock must never cover the mobile or desktop code editor');
     const overflow=await page.evaluate(()=>{
@@ -303,6 +362,9 @@ try{
     record('session-bound source workstation / real editor / native ZIP compatibility / stale archive invalidation '+width,{monaco:width===1440,uploads:0});
     await context.close();
   }
+  // Local/focused Studio QA reuses the same private loopback fixture and all
+  // Studio assertions above. Normal full Spatial CI retains every group below.
+  if(!studioOnly){
   // Direct evidence gate: native interface decoration is NOT proof of
   // 3D architectural parity. Capture the native overlay and modeled scene
   // in the same loopback context for independent visual comparison.
@@ -917,7 +979,9 @@ try{
   await page.screenshot({path:join(out,'vector-fallback-390.png'),animations:'disabled'});
   record('WebGL unavailable / procedural vector fallback / pause / reduced motion / keyboard / menu focus / search',focus);await context.close();
 
+  }
   assert.deepEqual(errors,[]);assert.deepEqual(forbidden,[]);
+  accepted=true;
 }catch(error){
   for(const context of browser.contexts())for(const page of context.pages()){
     await page.screenshot({path:join(out,'failure.png'),fullPage:true}).catch(()=>{});
@@ -925,6 +989,8 @@ try{
   }
   throw error;
 }finally{
-  writeFileSync(join(out,'acceptance.json'),JSON.stringify({source:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),checks,errors,forbidden,fixtureOnly:true},null,2)+'\n');
+  // Generated screenshot receipts are outputs, not a source modification.
+  const sourceChanges=execFileSync('git',['status','--porcelain','--untracked-files=all','--','.',':(exclude)evidence/**'],{encoding:'utf8'}).trim();
+  writeFileSync(join(out,'acceptance.json'),JSON.stringify({source:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),workingTreeDirty:Boolean(sourceChanges),status:accepted?'PASS':'FAIL',scope:studioOnly?'studio-only':'full',checks,errors,forbidden,fixtureOnly:true},null,2)+'\n');
   await browser.close();await new Promise(done=>server.close(done));
 }

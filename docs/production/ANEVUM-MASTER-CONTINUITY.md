@@ -5,7 +5,7 @@ Current session: `ANEVUM.ANEVUM.PACKAGE.2026-10-25.002.UNIFIED-OVERHAUL-WORK-CON
 Historical integration session: `ANEVUM.WEB.UPDATE.2026-10-25.002.UNIFIED-UI-INTEGRATION`.
 Verified discovery date: October 25, 2026 (America/New_York).
 Status: **ACTIVE DEVELOPMENT. #738 and #745 merged into website development;
-V136.026 merged and verified in development; #750 Commons and stacked V136.028/.029 under review. Production unchanged by this session.**
+V136.026 merged and verified in development; #750 Commons and stacked V136.028/.029/.030 under review. Production unchanged by this session.**
 
 This is an evidence index and continuation checkpoint, not another task board.
 [Canonical engineering #325](https://github.com/anevum/anevum-web/issues/325)
@@ -423,3 +423,42 @@ in the existing browser context. No write, account switching or independent
 publication journey; #742's blocked exact-version HTTP test remains open.
 No deployments, traffic, main, sealed candidate, payment or infrastructure
 mutation. Creator Studio interface/preview guidance is the next bounded UI slice.
+
+## Current Studio continuation — V136.030
+Session `ANEVUM.ANEVUM.PACKAGE.2026-10-25.002.UNIFIED-OVERHAUL-WORK-CONTINUATION`.
+#752 `d73f140fbbc0d207f19e9442279efdb089470334` is now VERIFIED DEVELOPMENT
+within its ACTIVE DRAFT: all eleven development workflows PASS, including
+1,771/1,771 main regressions and full Spatial 40231069764. Focused directory
+receipt/15 original captures are artifact 12612981883; spatial artifact
+12613761603. No creative approval or production promotion inferred.
+
+Next stacked branch `build/parity-v136-studio-preview-20261025-030` implements
+actual 1280/390/320 CSS layout viewports, scale-to-fit readout and a single
+preview-focus surface with mounted editor retention and keyboard return.
+Existing source sanitizer, opaque iframe, private source/archive lifecycle and
+upload/review rights remain unchanged. Layout preview and executable private
+playtest are clearly distinguished. Mobile size failures were corrected via
+a bounded embedded preview and real expandable build checks; no assertions
+were weakened. Local TypeScript/full build, 28 archive/privacy/concept checks
+and the complete Studio browser sequence at 1440/390/320 pass, including real
+media queries, scriptless frame, source/archive preservation and zero outbound
+unauthorized requests/errors. Six original compiled captures reviewed.
+
+Local receipts explicitly mark uncommitted source; exact-head pinned CI and
+owner creative review remain pending. Focused CI reuses existing Studio tests;
+normal full Spatial CI preserves every group. Production/main/#741/traffic,
+provider configuration, auth/data/media/upload/publication/payments unchanged.
+No new infrastructure or payment audit is claimed. Next UI slice is the actual
+Studio archive/upload form and existing compatibility/rights/playtest guidance.
+
+
+### V136.030 pinned-browser screenshot failure under investigation
+Exact source bea05ce35c7288f1fbfd6c3f9157d372ac8a9355 passed nine development
+workflows, including Creator V1 40232997056. Focused Studio 40232997294 and full
+Spatial 40232997114 both reached the focused-preview capture and failed at its
+30-second screenshot timeout; errors=[] / forbidden=[], clean source receipt
+FAIL. No pinned-browser acceptance is claimed. The original editor capture
+already had a bounded 90-second software-rendering budget. Give the new preview
+capture that same budget, retaining every assertion and required image, and log
+capture geometry/elapsed time to distinguish rendering delay from UI failure.
+Fresh exact-head CI is required. Main/production/#741/traffic remain unchanged.
