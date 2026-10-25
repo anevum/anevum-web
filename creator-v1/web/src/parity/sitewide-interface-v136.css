@@ -462,7 +462,7 @@ html[data-av-parity="v136-full"] .ms-public :is(button,a):focus-visible{
   .p136-creators .p136-creators-search-icon{width:43px}
   :is(.p136-creators,html[data-av-parity="v136-full"] .p136-creators) .p136-creators-search input{
     width:calc(100% - 43px);flex:1 1 calc(100% - 43px);min-height:51px;
-    font-size:13px;
+    font-size:16px; /* Avoid browser input zoom on iPhone-sized screens. */
   }
   :is(.p136-creators,html[data-av-parity="v136-full"] .p136-creators) .p136-creators-search button{
     width:100%;min-width:0;min-height:45px;border-radius:0 0 8px 8px!important;
