@@ -63,7 +63,7 @@ test("canonical progression remains capped at thirty while model artwork require
  assert.match(levels,/canonicalAuthClient\.useSession/);
  assert.doesNotMatch(levels,/LevelCollection|30 LIVING SPECIMENS/);
  assert.match(panel,/useMemberProgression/);
- assert.match(panel,/30 PERMANENT LEVELS/);
+ assert.match(panel,/30 CURRENT LEVELS/);
  assert.match(engine,/maxLevel:artifactSeriesLength/);
  assert.match(engine,/Math\.min\(artifactSeriesLength/);
 });
