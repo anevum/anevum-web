@@ -81,3 +81,8 @@ html[data-av-parity="v136-full"] .av136032-build-grid[data-layout="list"] .av095
 html[data-av-parity="v136-full"] .av136032-build-grid[data-layout="list"] .av095-card-body{min-width:0;padding:1.25rem}
 html[data-av-parity="v136-full"] .av136032-build-grid[data-layout="list"] .av095-card-body h2{font-size:clamp(1.15rem,2vw,1.5rem)}
 @media(max-width:650px){html[data-av-parity="v136-full"] .av136032-build-grid[data-layout="list"] .av095-build-card{display:block}html[data-av-parity="v136-full"] .av136032-build-grid[data-layout="list"] .av095-card-cover{aspect-ratio:16/7;min-height:90px;border-right:0;border-bottom:1px solid rgba(161,194,213,.2)}}
+
+/* Honest, empty media treatment; never synthesize a creator cover. */
+html[data-av-parity="v136-full"] .av136032-record-blank{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:.4rem;padding:1.25rem;background:rgba(11,27,44,.78);color:var(--st-muted)}
+html[data-av-parity="v136-full"] .av136032-record-blank small{font:600 .62rem/1.4 ui-monospace,monospace;letter-spacing:.12em;color:var(--st-muted)}
+html[data-av-parity="v136-full"] .av136032-record-blank strong{font:600 clamp(1rem,2vw,1.3rem)/1.2 var(--font-body,system-ui,sans-serif);text-transform:capitalize;color:var(--st-text)}
