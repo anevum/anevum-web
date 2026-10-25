@@ -54,7 +54,7 @@ export function ProjectCard({ project, returnTo = "/discover", presentation = "v
         <CosmicArtwork scene={scenes[project.category]} seed={project.id}/>
         <span className="cw-card-art-overlay" aria-hidden="true" />
         <span className="project-kind">{labels[project.category] || "Project"}</span>
-        <span className="cw-project-art-disclosure">{import.meta.env.VITE_PARITY_V136_FULL==="true"?"PROCEDURAL CATEGORY FIELD / NOT UPLOADED COVER":"CATEGORY ILLUSTRATION"}</span>
+        <span className="cw-project-art-disclosure">{import.meta.env.VITE_PARITY_V136_FULL==="true"?"CATEGORY INDEX / NOT AN UPLOADED COVER":"CATEGORY INDEX"}</span>
       </Link>
       <div className="project-card-body">
         <div className="project-card-topline"><span>{project.freeToUse ? "FREE" : "EXTERNAL"}</span><span>{project.category.toUpperCase()}</span></div>

@@ -11,21 +11,19 @@ const main=get("web/src/main.tsx");
 const css=get("web/src/visual-kit-v010.css");
 const importer=get("tools/import_visual_kit_v010.py");
 
-test("V010 layer is valid TSX and degrades to the V009 shell without optional art",()=>{
+test("V136.018 retires optional raster kit without touching site navigation",()=>{
  assert.doesNotThrow(()=>parse(kit,{sourceType:"module",plugins:["typescript","jsx"]}));
- assert.match(kit,/if\(!ready\|\|!room\)return null/);
- assert.match(kit,/status!=="MOUNTED"/);
- assert.match(kit,/manifest\.version!=="V010"/);
- assert.match(kit,/image\.naturalWidth>=1920/);
- assert.match(kit,/credentials:"omit"/);
- assert.match(kit,/return null; \/\/ account/);
+ assert.match(kit,/export async function checkVisualKit/);
+ assert.match(kit,/Promise<boolean>\{return false;/);
+ assert.match(kit,/export function VisualKitAtmosphere/);
+ assert.match(kit,/return null/);
+ assert.match(kit,/export function publicVisualRoom/);
+ assert.doesNotMatch(kit,/new Image\(|fetch\(|\.webp|assets\/anevum-kit/);
  assert.match(shell,/<VisualKitAtmosphere room=\{publicVisualRoom\(location\.pathname\)\}/);
  assert.match(hero,/<VisualKitAtmosphere room="home" placement="hero"\/>/);
  assert.match(main,/visual-kit-v010\.css/);
 });
-test("V010 preserves original master images, brand, and data access",()=>{
- const original=get("web/src/components/CosmicArtwork.tsx");
- assert.match(original,/assets\/cinematic\//);
+test("V010 retirement keeps original brand and protected account boundary",()=>{
  assert.match(shell,/OrbitalMark/);
  assert.doesNotMatch(kit+css,/https?:\/\/|RHEN TERMINAL|brokerage|setMemberXp|unlockAward|localStorage|sessionStorage/);
  assert.match(css,/prefers-reduced-motion:reduce/);
@@ -42,16 +40,9 @@ test("V010 installer locks V004 provenance and never bulk-promotes optional art"
  assert.doesNotMatch(importer,/production\/creator-v1|anevum\.com|wrangler deploy/);
  assert.doesNotMatch(importer,/SELECTED\s*=\s*\([\s\S]*"brand\/anevum-current-orbital-mark\.svg"/);
 });
-test("optional pack is mounted only after manifest and media verification",()=>{
+test("optional pack cannot mount even when a historical manifest exists",()=>{
  const manifest=new URL("../web/public/assets/anevum-kit/manifest.json",import.meta.url);
- if(existsSync(manifest)){
-   const data=JSON.parse(readFileSync(manifest,"utf8"));
-   assert.equal(data.version,"V010");
-   assert.equal(data.status,"MOUNTED");
-   assert.equal(data.primary_cinematic_masters_replaced,false);
-   assert.equal(data.synthetic_community_content,false);
-   assert.equal(data.assets.length,28);
- }else{
-   assert.match(kit,/if\(!response\.ok/);
- }
+ assert.match(kit,/return false/);
+ assert.doesNotMatch(kit,/fetch\(|new Image\(|backgrounds\/|textures\//);
+ if(existsSync(manifest))assert.ok(readFileSync(manifest).length>0,'Historical asset provenance remains readable');
 });

@@ -11,7 +11,7 @@ import type {Project, Category} from '../lib/api';
 import type {CosmicScene} from '../components/CosmicIllustration';
 
 /** PARITY V136.002: new homepage composition using real approved catalogue records.
- * All orbital imagery and generic category art are illustrative, never claimed
+ * All spatial category instruments are native interface elements, never claimed
  * as a creator's own work or a live signal.
  */
 type Props={projects:readonly Project[];catalogueState:'loading'|'ready'|'error';signedIn:boolean;verifiedCount:number|null};
@@ -48,7 +48,7 @@ function PublicProjectCard({project}:{project:Project}){
   const meta=types[project.category];
   return <article className={'p136-project-card p136-tone-'+meta.tone}>
     <Link to={projectDetailPath(project.id,'/')} className="p136-project-media" aria-label={'View '+project.title}>
-      <CosmicArtwork scene={meta.scene} seed={project.id}/><span className="p136-project-art-note">DYNAMIC ANEVUM FIELD / NOT CREATOR COVER</span><span className="p136-kind">{meta.label}</span>
+      <CosmicArtwork scene={meta.scene} seed={project.id}/><span className="p136-project-art-note">CATEGORY INDEX / NOT CREATOR COVER</span><span className="p136-kind">{meta.label}</span>
     </Link>
     <div className="p136-project-body">
       <span className="p136-project-meta">{project.freeToUse?'FREE TO USE':'PROJECT DIRECTORY'} <span> / </span> APPROVED PUBLIC WORK</span>
