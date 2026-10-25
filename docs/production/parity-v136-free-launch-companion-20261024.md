@@ -7,13 +7,15 @@ Branch: \`build/parity-v136-free-launch-companion-20261024-018\`
 Stacked base: the existing V136.017.003 Creator Studio nested-file explorer, PR #735.
 Status: **DRAFT SOURCE / NOT PRODUCTION ACTIVATED**. Release authority remains with the existing V136 rollout gates.
 
+**Existing authority (do not supersede):** [Creator Product Doctrine #344](https://github.com/anevum/anevum-web/issues/344) is the locked identity, safety and business charter; [engineering queue #325](https://github.com/anevum/anevum-web/issues/325) remains the sole canonical technical board; [discovery/community owner #331](https://github.com/anevum/anevum-web/issues/331) owns the overlapping P0 experience; [publishing #329](https://github.com/anevum/anevum-web/issues/329) and [reviews/progression #330/#337](https://github.com/anevum/anevum-web/issues/330) own their respective rights and rewards; [launch operations #308](https://github.com/anevum/anevum-web/issues/308) controls the January 1, 2027 target. **This document is a scoped implementation contract and future capability inventory, not another platform charter, feature backlog or launch calendar.**
+
 ## Product decision (additive; no redesign)
 
 Creators should be able to **create, describe, launch, share, demonstrate, collect feedback on, improve and relaunch** meaningful work without buying ranking, expedited listing or permanent page retention.
 
 ANEVUM is **not** becoming a separate launch-directory website or adding a second UX system. Open Signal is a cross-cutting product *capability*, distributed across the existing Discover, approved project passports, Commons, public boards, creator profiles, Creator Studio, Artifact Lens, and IREN. Keep their current URL hierarchy and PARITY V136 graphics, responsive CSS, spatial navigation, controller mappings, WebGL scene, and first-party truth and permission boundaries.
 
-Core functionality is free subject to published, reasonable quotas, security checks, moderation, storage and abuse controls. "Free" does **not** promise unlimited GPU, video transcoding, LLM tokens, storage, emails, promotional impressions or immediate approval.
+As reaffirmed by the October 2026 founder direction, core launch/discovery functionality is free subject to published, reasonable quotas, security checks, moderation, storage and abuse controls. "Free" does **not** promise unlimited GPU, video transcoding, LLM tokens, storage, emails, promotional impressions or immediate approval.
 
 ## Relevant competitor features, adapted to ANEVUM instead of copied
 
@@ -48,7 +50,7 @@ Important: the V136 visual/source work is still in draft PRs, and production upl
 
 ## Delivery sequence — future separate PRs and gates
 
-### Gate A — Free listing, scheduling and new launch editions
+### Gate A — Free listing, scheduling and new launch editions (existing #329/#331; scheduling conditional after P0)
 
 1. Reuse the verified Studio project record and existing public project passport. Support ordinary HTTPS link-only projects **as well as** uploaded/browser-native projects, preserving ownership and external-link safety.
 2. Introduce explicit draft \`launch_intent\`, \`requested_date\`, \`approved_publication_id\` and review state. A scheduled intent is *never* treated as an approved/public launch.
@@ -58,7 +60,7 @@ Important: the V136 visual/source work is still in draft PRs, and production upl
 
 **Acceptance:** direct link-only creator draft -> valid ownership -> staff review -> genuine public passport -> indexed release, with rejected drafts unlisted and rollback verified.
 
-### Gate B — Community usefulness instead of manufactured votes
+### Gate B — Community usefulness instead of manufactured votes (existing #330/#331/#337; honest reviews are P0, rankings conditional)
 
 1. Extend existing Commons and member engagement **without** bridging legacy and canonical identities. Ratings only from server-verified accounts when authorized.
 2. Product questions, bug reports, beta-tester requests, creator replies, verified fixes and helpful-feedback acknowledgment.
@@ -67,7 +69,7 @@ Important: the V136 visual/source work is still in draft PRs, and production upl
 
 **Acceptance:** no self-boost bypass, two-account cross-user isolation, replay protection, privacy safeguards, traceable ranking source, graceful zero-data views.
 
-### Gate C — Distribution surfaces and machine-readable discoverability
+### Gate C — Distribution surfaces and machine-readable discoverability (post-P0 optional improvements under #331)
 
 1. Add first-party OpenGraph and structured-data/JSON-LD metadata to actual server responses for approved projects; structured types reflect actual project category and do not assert unverified ratings.
 2. Approved-only sitemap, RSS/Atom release streams and a documented read-only public API with versioned contracts, caching and safe bounded pagination.
@@ -77,7 +79,7 @@ Important: the V136 visual/source work is still in draft PRs, and production upl
 
 **Acceptance:** crawler fetch sees sanitized real data with cache freshness, unpublished/revoked projects disappear from public feeds, no private data or fake awards.
 
-### Gate D — Creator analytics, tester programs and retention
+### Gate D — Creator analytics, tester programs and retention (post-P0 unless required for existing acceptance)
 
 1. Server-owned, privacy-minimized project impression/open/play/referral counts with bot filtering and unambiguous definitions; no fingerprinting or cross-site tracking pixels.
 2. Dashboard showing only measured and adequately sampled values, time window and "unavailable" instead of invented zeros. Do not claim exact unique-human traffic unless proven.
@@ -89,7 +91,8 @@ Important: the V136 visual/source work is still in draft PRs, and production upl
 
 ## Cross-cutting protections / no-change list
 
-- No new top-level destination, second project registry, competing homepage, duplicate canvas or CSS overhaul.
+- No new top-level destination, second project registry, competing homepage, duplicate canvas or CSS overhaul. The existing locked positioning is 'a world of things people make'; Open Signal is an internal capability name, not a new public product.
+- Creator-hosted first is locked by #344; optional isolated upload/playable browser infrastructure does not authorize turning ANEVUM into unrestricted code hosting, video hosting or an app store.
 - Do not modify protected Command/RHEN, brokerage, credentials, payment processor, supporter entitlements or existing XP/badge eligibility.
 - No account creation, upload capability, moderation, rights or public publishing is unlocked in this branch.
 - Use existing Cloudflare Worker/D1/R2 and routes **only** when a future change has audited limits, migrations, backups and owner approval.
@@ -102,4 +105,4 @@ Important: the V136 visual/source work is still in draft PRs, and production upl
 
 Track only genuinely verified counts: approved makers/release submissions, successful external-link and playable openings, creator-to-feedback cycle completion, repeat maker releases, retained creators, useful feedback accepted, content reporting and false-positive moderation, API/cache cost per project, page LCP/INP/CLS, and conversion from first Discover visit to a real project experience.
 
-Adoption and network effects, **not** a long feature checklist, establish competitiveness. Launch this program by improving one complete creator-to-audience loop and publishing real evidence of use.
+The existing authentic creator A -> staff -> guest -> independent member B review/save journey remains the immediate P0 acceptance gate. Adoption and network effects, **not** a long feature checklist, establish competitiveness. Launch this program by improving one complete creator-to-audience loop and publishing real evidence of use.
