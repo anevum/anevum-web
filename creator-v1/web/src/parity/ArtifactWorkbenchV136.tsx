@@ -58,7 +58,7 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
   try{const archive=sourceArchive(files);onPackage(archive);if(download){const url=URL.createObjectURL(archive),anchor=document.createElement('a');anchor.href=url;anchor.download=archive.name;anchor.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}setDirty(false);setNote('Archive prepared below. The existing compatibility checks, rights confirmation and private-upload controls still apply.')}
   catch(error){setNote(error instanceof Error?error.message:'Source archive could not be prepared.')}
  }
- return <section className="p136-workbench" aria-label="Artifact source workbench" data-artifact-workbench="v136.017">
+ return <section className="p136-workbench" aria-label="Artifact source workbench" data-artifact-workbench="v136.011">
   <header className="p136-workbench-head"><div><span>CONTINUANCE / ARTIFACT WORKBENCH</span><h2>Make the source.</h2></div><span className="p136-source-state">{dirty?'LOCAL CHANGES':'ARCHIVE PREPARED'}</span></header>
   <div className="p136017-source-functionbar" aria-hidden="true">
    <span className="p136017-functionmark">SOURCE / LOCAL</span>
