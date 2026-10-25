@@ -134,8 +134,8 @@ html[data-av-parity="v136-full"] .p136017-worldmark-rule {
 }
 html[data-av-parity="v136-full"] .p136-hero-content {
   z-index:3;grid-row:1;position:relative;
-  width:min(100%,810px);max-width:810px;
-  align-self:center;padding:105px 15px 105px clamp(34px,5vw,92px);
+  width:min(100%,980px);max-width:980px;
+  align-self:center;padding:91px 15px 91px clamp(30px,4vw,68px);
 }
 html[data-av-parity="v136-full"] .p136-hero-content::before {
   content:"";position:absolute;z-index:-1;pointer-events:none;
@@ -155,9 +155,9 @@ html[data-av-parity="v136-full"] .p136017-register-emblem {
 }
 html[data-av-parity="v136-full"] .p136-hero h1 {
   font-family:Inter,"Segoe UI",system-ui,sans-serif;
-  font-weight:760;font-size:clamp(52px,5vw,91px);
+  font-weight:760;font-size:clamp(52px,4.3vw,76px);
   letter-spacing:-.076em;line-height:.99;
-  max-width:850px;text-shadow:0 8px 40px #000b,0 0 36px #86c8f32b;
+  max-width:920px;text-shadow:0 8px 40px #000b,0 0 36px #86c8f32b;
   text-wrap:balance;
 }
 html[data-av-parity="v136-full"] .p136-hero h1>span {
