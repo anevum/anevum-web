@@ -95,11 +95,19 @@ async function run(width,height,motion='no-preference') {
   await page.locator('[data-universe-stage="1"]').click();
   assert.equal(await page.locator('[data-universe-stage="1"]').getAttribute('aria-pressed'),'true');
   assert.equal(await page.locator('[data-universe-name]').innerText(),'THE ARCHIVE');
+  await page.waitForFunction(()=>Number(document.querySelector('[data-transcosmic-field]')?.dataset.cameraTravel)>.30,
+    null,{timeout:30000});
+  const archiveTravel=Number(await universe.getAttribute('data-camera-travel'));
   await page.locator('[data-universe-stage="2"]').click();
   assert.equal(await page.locator('[data-universe-name]').innerText(),'THE CONTINUUM');
+  await page.waitForFunction(()=>Number(document.querySelector('[data-transcosmic-field]')?.dataset.cameraTravel)>.70,
+    null,{timeout:30000});
+  const beyondTravel=Number(await universe.getAttribute('data-camera-travel'));
+  assert.ok(beyondTravel>archiveTravel,'Viewport camera must actually travel through 3D space');
   await page.screenshot({path:join(output,'transcosmic-beyond-'+width+'.png'),animations:'disabled'});
   await page.locator('[data-universe-stage="0"]').click();
-  note('single GPU Transcosmic field / actual camera viewpoints / bounded pixels '+width,{mode:firstMode,sceneDepth:firstDepth,pixels});
+  note('single GPU Transcosmic field / actual camera viewpoints / bounded pixels '+width,
+    {mode:firstMode,sceneDepth:firstDepth,pixels,archiveTravel,beyondTravel,reducedMotion:motion==='reduce'});
   note('layout '+width+'px',shape);
   // Reproduce actual reading/scrolling so lazy-loaded images and reveal states
   // are visible in full-page screenshots, instead of falsely appearing blank.
