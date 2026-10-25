@@ -68,3 +68,13 @@ node --test tests/feedback-relay.test.mjs tests/analytics-evidence.test.mjs test
 **Correction that must remain locked:** `user.createdAt` is ISO-formatted SQLite TEXT. Earlier analytics incorrectly compared it against numeric epoch seconds and reported no new users. Always use `unixepoch(createdAt)` for rolling windows and `date(createdAt)` for daily groups. Never reintroduce numeric comparisons without first verifying underlying storage.
 
 **Limits and next approval gates:** Query templates and report composition have no provider credentials or live hooks. Only a reviewed staff-only ingestion adapter may execute them against governed sources, with least-privilege bindings, rate limits, secret handling and audits. No production event collector, OAuth consent, direct Facebook/LinkedIn personal-profile ingestion, user tracking, billing, D1 migration or deployment is included in this source-only PR. New behavioral events require a documented privacy/consent design, test-account exclusion and independently approved release.
+
+## Product activation funnel — schema ready, collector disabled
+
+`funnel-contract.mjs` defines the future authoritative event vocabulary across acquisition, registration, creator actions and meaningful return visits. Each event is marked as either server-verified (for account creation, verification, saved projects, received uploads and publication) or consented-client (for landing-page impressions, signup starts, Studio UI views, upload initiation and return intent). The schema strictly allows categorical route/device/release tags, not email addresses, user IDs, raw URLs, IP addresses, device fingerprints or arbitrary visitor payloads.
+
+`CLIENT_EVENT_COLLECTION_ENABLED = false` and all normalized events carry `authorized_to_collect: false`. The module has **no instrumentation side effects**. `qualifiedFunnelRate` reports conversion only for explicitly comparable complete cohorts. Missing sources and zero denominators are not silently interpreted as 0% conversion. The schema alone does not create a legal basis to collect or retain events.
+
+`tests/funnel-contract.test.mjs` and the Feedback Relay CI workflow validate origin authority, privacy field rejection, opt-in enforcement and honest missing-denominator handling.
+
+**Activation requirements**: privacy and data-retention approval; legal/consent review; documented test-account treatment; disabled-by-default deployment flag; authenticated back-end event issuance; rate limiting and replay protection; independent Observatory staff acceptance. Never use account totals divided by RUM page-load samples as a conversion rate.
