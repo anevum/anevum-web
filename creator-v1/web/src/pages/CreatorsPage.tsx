@@ -15,6 +15,8 @@ import {CelestialEmblem} from "../components/CelestialEmblem";
 import {achievementMotif,seriesOneMotif} from "../lib/artifact-art";
 import {ContextDiscussions} from "../components/ContextDiscussions";
 import {Icon} from "../components/Icons";
+import {OrbitalMark} from "../components/OrbitalMark";
+import {creatorChannelPath,creatorDirectoryReturnPath,safeReturnPath} from "../lib/navigation";
 
 export function CreatorsPage(){
   const [params,setParams]=useSearchParams();
@@ -22,6 +24,7 @@ export function CreatorsPage(){
   // The URL owns layout, search and cursor: Back, Forward and shared links
   // restore the same directory instead of a second optimistic state.
   const view=params.get("view")==="list"?"list":"grid";
+  const directoryReturn=safeReturnPath("/creators"+(params.size?"?"+params.toString():""));
   const clearHref=view==="list"?"/creators?view=list":"/creators";
   const [draft,setDraft]=useState(q);
   useEffect(()=>setDraft(q),[q]);
@@ -103,7 +106,7 @@ export function CreatorsPage(){
           </div>
           {data.data.items.length?
             <section aria-label="Published creator channels" className="portal-creator-grid" data-layout={view}>{data.data.items.map((c,i)=>
-              <Link className="portal-creator-tile" to={"/creators/"+encodeURIComponent(c.handle)} key={c.handle}>
+              <Link className="portal-creator-tile" to={creatorChannelPath(c.handle,directoryReturn)} key={c.handle}>
                 <span className="portal-creator-tile-top"><span>CREATOR CHANNEL</span><span>{String(i+1).padStart(2,"0")} / RESULT</span></span>
                 <CompactMemberIdentity interactive={false} size="standard" className="av65-directory-channel" member={{handle:c.handle,displayName:c.displayName,avatar:false,level:null,featuredAwards:[],source:'creator-channel'}}/>
                 <span className="portal-creator-tile-meta">{c.publishedProjects} PUBLISHED {c.publishedProjects===1?"PROJECT":"PROJECTS"}</span>
@@ -141,6 +144,7 @@ export function CreatorPage(){
 function CreatorIdentityPage({handle}:{handle:string}){
   const [params]=useSearchParams();
   const cursor=params.get("cursor")||"";
+  const directoryReturn=creatorDirectoryReturnPath(params.get("from"));
   const data=useResource(async signal=>{
     const identity=await resolveCreatorRoute(handle,
       async()=>(await readCreator(handle,signal)).creator,
@@ -165,10 +169,10 @@ function CreatorIdentityPage({handle}:{handle:string}){
   const current=path+(params.size?"?"+params.toString():"");
   const detailed=channel.state==="ready"?channel.data:null;
   const earned=detailed?.achievements?.filter(a=>a.earned)||[];
-  return <div className="portal-creator-channel p136-creator-channel" data-parity-profile="creator">
-    <Link to="/creators" className="project-return">← ALL PUBLIC CREATORS</Link>
+  return <div className="portal-creator-channel p136-creator-channel" data-parity-profile="creator" data-channel-phase="v136.029">
+    <Link to={directoryReturn} className="project-return">← ALL PUBLIC CREATORS</Link>
     <section className="portal-channel-banner">
-      <div className="portal-channel-avatar" aria-hidden="true"><span className="cw-letter-avatar">{profile.displayName.slice(0,1).toUpperCase()}</span></div>
+      <div className="portal-channel-avatar" aria-hidden="true">{import.meta.env.VITE_PARITY_V136_FULL==="true"?<OrbitalMark/>:<span className="cw-letter-avatar">{profile.displayName.slice(0,1).toUpperCase()}</span>}</div>
       <div className="portal-channel-identity">
         <span className="kicker">ANEVUM / PUBLIC CREATOR CHANNEL</span>
         <h1>{profile.displayName}</h1><p className="portal-channel-handle">@{profile.handle}</p>
@@ -186,7 +190,7 @@ function CreatorIdentityPage({handle}:{handle:string}){
     <div className="portal-browse-layout portal-channel-content">
       <div className="portal-browse-main">
         <section className="portal-box" id="p136-creator-releases">
-          <header className="portal-box-header"><div><span className="kicker">ORIGINAL WORK / PUBLIC RELEASES</span><h2>FROM THIS MAKER</h2></div><span className="portal-hall-stamp">{profile.publishedProjects} RELEASES</span></header>
+          <header className="portal-box-header"><div><span className="kicker">ORIGINAL WORK / PUBLIC RELEASES</span><h2>FROM THIS MAKER</h2></div><span className="portal-hall-stamp">{profile.publishedProjects} {profile.publishedProjects===1?"RELEASE":"RELEASES"}</span></header>
           {projects.items.length?
             <div className="portal-discover-results">{projects.items.map(p=><ProjectCard key={p.id} project={p} returnTo={current} presentation="editorial"/>)}</div>:
             <EmptyState title={cursor?"NO MORE PUBLIC RELEASES":"NO PUBLIC RELEASES AVAILABLE"} detail="Only currently approved published projects appear here. Private drafts cannot be browsed."/>}

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {safeReturnPath,projectDetailPath,cursorRoute} from "../web/src/lib/navigation.ts";
+import {safeReturnPath,projectDetailPath,cursorRoute,creatorChannelPath,creatorDirectoryReturnPath} from "../web/src/lib/navigation.ts";
 
 test("only whitelisted public routes survive return-path sanitization",()=>{
   assert.equal(safeReturnPath("/"),"/");
@@ -56,4 +56,16 @@ test("return context remains route-scoped and cannot forward private or arbitrar
   assert.equal(safeReturnPath("/community?view=people&q="+"x".repeat(73)),"/community?view=people");
   assert.equal(safeReturnPath("/community?view=conversations&sort=private"),"/community?view=conversations");
   assert.equal(safeReturnPath("/community?view=unknown&q=secret"),"/community");
+});
+
+test("directory context survives channel and project return without accepting nested/private targets",()=>{
+  const directory="/creators?q=Nova&view=list&cursor=page_2";
+  const channel=creatorChannelPath("nova",directory);
+  assert.equal(creatorDirectoryReturnPath(new URL(channel,"https://anevum.invalid").searchParams.get("from")),directory);
+  const project=projectDetailPath("published_project",channel);
+  assert.equal(safeReturnPath(new URL(project,"https://anevum.invalid").searchParams.get("from")),channel);
+  for(const unsafe of ["https://evil.example/creators","//evil.example/creators","/account","/creators/nova?from=/account","/creators#private"])
+    assert.equal(creatorDirectoryReturnPath(unsafe),"/creators");
+  assert.equal(safeReturnPath("/creators/nova?from=%2Faccount"),"/creators/nova");
+  assert.equal(creatorDirectoryReturnPath("/creators?token=secret&view=list"),"/creators?view=list");
 });

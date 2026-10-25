@@ -18,6 +18,11 @@ const people=[
  {handle:'qa_maker',displayName:'SYNTHETIC CI MAKER',publishedProjects:1},
  {handle:'fixture_lab',displayName:'SYNTHETIC CI LAB',publishedProjects:2}
 ];
+const release={id:'ci-channel-release',title:'SYNTHETIC CHANNEL RELEASE',
+ summary:'Loopback-only published work for creator-channel navigation acceptance.',
+ description:'Synthetic local browser fixture, never a public creator release.',
+ category:'tools',creatorHandle:'qa_maker',creatorName:'SYNTHETIC CI MAKER',
+ publishedAt:'2026-10-25T12:00:00Z',freeToUse:true,license:'MIT',demoUrl:null,sourceUrl:null};
 const report={contract:'v136.025-loopback-directory',status:'INCOMPLETE',syntheticFixture:true,
  commit:process.env.ANEVUM_SOURCE_SHA||null,widths:[],rejections:[]};
 assert.ok(existsSync(join(root,'index.html')),'Full-flag compiled V136 frontend required');
@@ -64,6 +69,15 @@ try{
     await route.abort();return;
    }
    if(url.pathname.startsWith('/api/')){
+    if(url.pathname==='/api/v1/creators/qa_maker'){
+     await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({creator:people[0]})});return;
+    }
+    if(url.pathname==='/api/v1/projects'){
+     await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({items:[release],count:1,nextCursor:null})});return;
+    }
+    if(url.pathname==='/api/v1/projects/'+release.id){
+     await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({item:release})});return;
+    }
     if(url.pathname==='/api/v1/creators'){
      const q=(url.searchParams.get('q')||'').trim().toLowerCase();
      const cursor=url.searchParams.get('cursor');
@@ -138,6 +152,41 @@ try{
   assert.equal(await cards.count(),1,'Search filters the approved public fixture');
   assert.match(await cards.first().innerText(),/SYNTHETIC CI MAKER/);
   assert.equal(new URL(page.url()).searchParams.has('cursor'),false,'Search resets cursor');
+  // Exercise the actual keyboard directory -> channel -> project -> channel
+  // -> filtered directory journey, including nested public return context.
+  await cards.first().press('Enter');
+  const channel=page.locator('.p136-creator-channel[data-channel-phase="v136.029"]');
+  await channel.waitFor();
+  const channelURL=new URL(page.url());
+  const channelPath=channelURL.pathname+channelURL.search;
+  assert.equal(channelURL.searchParams.get('from'),'/creators?q=QA&view=list');
+  const titleStyle=await channel.locator('.portal-channel-identity h1').evaluate(e=>({
+   family:getComputedStyle(e).fontFamily,weight:getComputedStyle(e).fontWeight
+  }));
+  assert.match(titleStyle.family,/sans-serif/);assert.ok(Number(titleStyle.weight)>=700);
+  assert.equal(await channel.locator('.portal-channel-avatar svg').count(),1,'Native channel fallback, never an invented portrait');
+  const channelGeometry=await page.evaluate(()=>({width:innerWidth,document:document.documentElement.scrollWidth}));
+  assert.ok(channelGeometry.document<=channelGeometry.width+2,'Creator channel must fit '+width);
+  await channel.getByRole('heading',{name:release.title,exact:true}).waitFor();
+  const workLayout=await channel.locator('.portal-discover-results').evaluate(e=>({
+   columns:getComputedStyle(e).gridTemplateColumns.split(' ').filter(Boolean).length,
+   width:e.getBoundingClientRect().width,card:e.querySelector('.project-card').getBoundingClientRect().width
+  }));
+  assert.equal(workLayout.columns,1,'Channel work uses the available editorial row');
+  assert.ok(workLayout.card>=workLayout.width-2,'A sparse grid must not squeeze actual project content');
+  await page.evaluate(()=>window.scrollTo(0,0));
+  await page.screenshot({path:join(output,'creator-channel-'+width+'.png'),fullPage:true,animations:'disabled',timeout:30000});
+  await channel.getByRole('link',{name:'View project',exact:true}).click();
+  await page.locator('.portal-project').waitFor();
+  const returnProject=page.locator('.portal-crumbs').getByRole('link',{name:/BACK TO CREATOR/});
+  assert.equal(await returnProject.getAttribute('href'),channelPath);
+  await returnProject.click();await channel.waitFor();
+  const returnDirectory=channel.getByRole('link',{name:/ALL PUBLIC CREATORS/});
+  assert.equal(await returnDirectory.getAttribute('href'),'/creators?q=QA&view=list');
+  await returnDirectory.click();await cards.first().waitFor();
+  await directory.locator('.portal-creator-grid[data-layout="list"]').waitFor();
+  assert.equal(await page.getByRole('searchbox',{name:'Search published creators'}).inputValue(),'QA');
+  assert.equal(await cards.count(),1);
   await page.getByRole('searchbox',{name:'Search published creators'}).fill('unlisted-name');
   await page.getByRole('searchbox',{name:'Search published creators'}).press('Enter');
   await page.getByRole('heading',{name:'No matching creators yet.'}).waitFor();
@@ -149,7 +198,7 @@ try{
   await page.getByRole('heading',{name:'No public creator channels yet.'}).waitFor();
   await page.screenshot({path:join(output,'creators-unpublished-'+width+'.png'),fullPage:true,animations:'disabled',timeout:30000});
   assert.deepEqual(errors,[],'No runtime exceptions at '+width);
-  report.widths.push({width,geometry,screenshots:4,checks:'PASS'});
+  report.widths.push({width,geometry,channelGeometry,screenshots:5,checks:'PASS'});
   console.log('PASS directory full-flag '+width+'px: '+JSON.stringify(geometry));
   await context.close();
  }
