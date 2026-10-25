@@ -55,3 +55,19 @@ test("IREN Wayfinder utility spans both columns and keeps its action on phones",
  assert.match(styles,/@media\(max-width:650px\)\s*\{[\s\S]*?\.ir80-wayfinder-action\s*\{[^}]*grid-column:2;/);
  assert.doesNotMatch(styles,/\.ir80-wayfinder-action\s*\{display:none/);
 });
+
+test("IREN uses visible responsive controls for Creator Studio and Wayfinder (external tester regression)",()=>{
+  // The redesigned member toolbar places Studio inside a closed details panel;
+  // the desktop header hides the mobile Menu trigger. Neither is highlightable.
+  assert.match(tour,/id:"studio",route:"\/member",anchor:'\[data-iren-anchor="studio"\]',fallback:'\[data-iren-anchor="studio-tools"\]'/);
+  assert.match(member,/<summary data-iren-anchor="studio-tools">Profile &amp; tools<\/summary>/);
+  assert.match(tour,/id:"wayfinder",route:"\/community",anchor:'\[data-iren-anchor="navigation"\]',fallback:'\[data-iren-anchor="navigation-desktop"\]'/);
+  assert.match(shell,/<nav data-iren-anchor="navigation-desktop" className="desktop-nav av9-primary"/);
+  assert.match(shell,/<button data-iren-anchor="navigation"/);
+  // Hidden responsive branches and collapsed details must never be spotlighted.
+  assert.match(tour,/getClientRects\(\)\.length/);
+  assert.match(tour,/getComputedStyle\(target\)/);
+  assert.match(tour,/isVisible\(primary\)/);
+  assert.match(tour,/isVisible\(fallback\)/);
+  assert.match(tour,/rect\.left<8\|\|rect\.right>window\.innerWidth-8/);
+});
