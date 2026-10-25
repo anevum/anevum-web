@@ -106,3 +106,62 @@ export async function recordHeldStudioPublication(db, {submissionId, reviewerId,
     publicationAuthorized:false, projectionEnabled:false
   });
 }
+
+
+/**
+ * Private, read-only held-ledger audit. This detects orphaned/mismatched rows
+ * and revoked/stale held submissions before a future projection design is
+ * reviewed. No source metadata, user identity or sensitive URLs are emitted.
+ */
+export async function auditHeldStudioPublicationOutbox(db, {limit=100}={}) {
+  validateDb(db);
+  if (!Number.isSafeInteger(limit) || limit < 1 || limit > 250)
+    throw new Error('Invalid private outbox audit limit');
+  const entries = await query(db,
+    'SELECT o.id,o.status AS outbox_status,o.fingerprint AS outbox_fingerprint,'+
+    'o.idempotency_key AS outbox_key,o.project_id AS outbox_project,'+
+    'r.status AS review_status,r.fingerprint AS review_fingerprint,'+
+    'r.idempotency_key AS review_key,r.project_id AS review_project,'+
+    'r.owner_user_id AS review_owner,r.reviewer_user_id,r.project_revision AS review_revision,'+
+    's.project_id AS submission_project,s.user_id AS submission_owner,'+
+    's.project_revision AS submission_revision,s.status AS submission_status,'+
+    'p.user_id AS project_owner,p.revision AS project_revision,p.status AS project_status,'+
+    'reviewer.emailVerified AS reviewer_verified '+
+    'FROM member_studio_publication_outbox o '+
+    'LEFT JOIN member_studio_publication_reviews r ON r.id=o.review_id '+
+    'LEFT JOIN member_studio_submissions s ON s.id=r.submission_id '+
+    'LEFT JOIN member_studio_projects p ON p.id=r.project_id '+
+    'LEFT JOIN "user" reviewer ON reviewer.id=r.reviewer_user_id '+
+    'ORDER BY o.created_at DESC,o.id DESC LIMIT ?', [limit]);
+  const findings=[];
+  let held=0,cancelled=0;
+  for (const row of entries) {
+    if (row.outbox_status==='held') held++;
+    else if (row.outbox_status==='cancelled') cancelled++;
+    const errors=[];
+    if (!row.review_status) errors.push('review_missing');
+    if (row.outbox_status!==row.review_status) errors.push('status_mismatch');
+    if (row.outbox_fingerprint!==row.review_fingerprint ||
+        row.outbox_key!==row.review_key ||
+        row.outbox_project!==row.review_project) errors.push('outbox_receipt_mismatch');
+    if (row.outbox_status==='held') {
+      if (row.project_status!=='pending_review'||row.submission_status!=='pending_review')
+        errors.push('source_not_pending');
+      if (row.review_revision!==row.project_revision ||
+          row.review_revision!==row.submission_revision) errors.push('revision_mismatch');
+      if (row.review_owner!==row.project_owner||
+          row.review_owner!==row.submission_owner||
+          row.review_project!==row.submission_project)
+        errors.push('source_owner_mismatch');
+      if (!row.reviewer_user_id || row.reviewer_verified!==1 ||
+          row.reviewer_user_id===row.review_owner)
+        errors.push('reviewer_not_verified');
+    }
+    if (errors.length) findings.push(Object.freeze({receiptId:row.id,errors:Object.freeze(errors)}));
+  }
+  return Object.freeze({
+    checked:entries.length,held,cancelled,healthy:findings.length===0,
+    findings:Object.freeze(findings),
+    projectionEnabled:false,publicationAuthorized:false
+  });
+}
