@@ -7,6 +7,7 @@ const read=path=>readFileSync(new URL(path,root),'utf8');
 const html=read('index.html');
 const css=read('cinematic-v1.css');
 const reelCSS=read('hero-reel-v2.css');
+const polishCSS=read('portfolio-polish-v3.css');
 const reelJS=read('hero-reel-v2.js');
 const app=read('app.js');
 
@@ -97,6 +98,18 @@ test('scripts parse, CSS braces balance, and real process states remain',()=>{
   assert.match(reelCSS,/\.reel-main/);
 });
 
+
+test('prismatic cinema is an original decorative layer, not skyline or pointer-blocking UI',()=>{
+  assert.match(html,/class="hero-v3-prism"/);
+  assert.match(html,/portfolio-polish-v3\.css/);
+  assert.match(polishCSS,/\.hero-v3-prism\{/);
+  assert.match(polishCSS,/pointer-events:none/);
+  assert.match(polishCSS,/prefers-reduced-motion:reduce/);
+  assert.match(polishCSS,/\.motion-paused/);
+  assert.match(polishCSS,/\.project-transcosmic\{grid-column:1 \/ -1\}/);
+  assert.match(polishCSS,/\.reel-controls::after/);
+  assert.doesNotMatch(polishCSS,/https?:\/\/|url\(/);
+});
 test('links point to real anchors, not non-existent site sections',()=>{
   const ids=new Set([...html.matchAll(/\sid="([^"]+)"/g)].map(match=>match[1]));
   for(const match of html.matchAll(/href="#([^"]+)"/g)) assert.ok(ids.has(match[1]),'#'+match[1]+' missing');
