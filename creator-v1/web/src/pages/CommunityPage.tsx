@@ -7,7 +7,7 @@ import {
 } from "../lib/api";
 import { useResource } from "../lib/useResource";
 import { projectDetailPath } from "../lib/navigation";
-import { CategoryCoverV136 } from "../parity/CategoryCoverV136";
+import {ProjectThumbnail} from "../components/ProjectThumbnail";
 import { Icon } from "../components/Icons";
 import { LoadingState, ErrorState } from "../components/States";
 import "./community-hub-v007.css";
@@ -59,7 +59,7 @@ function ProjectEntry({ item }: { item: Project }) {
   const field = fields.find(field => field.id === item.category);
   return <article className="ch7-entry ch7-project">
     <Link className="ch7-entry-art" to={destination} aria-label={"Explore " + item.title}>
-      <CategoryCoverV136 category={item.category} title={item.title}/>
+      <ProjectThumbnail kind={item.category} title={item.title} decorative/>
       <span className="ch7-type-label">{field?.label || "Project"} / APPROVED RELEASE</span>
     </Link>
     <div className="ch7-entry-copy">
@@ -168,7 +168,6 @@ export function CommunityPage() {
   }
   return <div className="ch7-hub p136-community" data-parity-community="v136.017">
     <section data-iren-anchor="community" className="ch7-hero" aria-labelledby="ch7-hero-title">
-      <div className="ch7-hero-art" aria-hidden="true"><span className="p136-community-hero-lines"/><span className="p136-community-hero-axis"/></div>
       <div className="ch7-hero-copy"><span className="ch7-kicker">ANEVUM / COMMUNITY / PUBLIC DISCUSSIONS</span>
         <h1 id="ch7-hero-title">Made by people.<br/><em>Better together.</em></h1>
         <p>A gathering place for independent games, art, useful software, ideas and the people who make them. Discover something worth exploring. Help something new take shape.</p>
@@ -263,7 +262,7 @@ export function CommunityPage() {
       <aside className="ch7-sidebar" aria-label="Community guide">
         <section className="ch7-panel"><span className="ch7-kicker">01 / FIND YOUR FIELD</span><h3>Every idea has <em>a place.</em></h3>
           <div className="ch7-categories">{fields.map(field => <Link key={field.id} to={"/discover?category=" + field.id}>
-            <span className="ch7-field-art" aria-hidden="true"><CategoryCoverV136 category={field.id}/></span><span>{field.label}</span><Icon name="arrow" size={14}/>
+            <span className="ch7-field-art" aria-hidden="true"><ProjectThumbnail kind={field.id} title={field.label} decorative/></span><span>{field.label}</span><Icon name="arrow" size={14}/>
           </Link>)}</div>
         </section>
         <section className="ch7-panel"><span className="ch7-kicker">02 / MEET THE MAKERS</span><h3>Behind the <em>work.</em></h3>

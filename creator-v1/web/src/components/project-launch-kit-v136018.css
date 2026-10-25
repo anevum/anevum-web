@@ -1,0 +1,35 @@
+/* Additive launch-sharing controls inside the existing project passport.
+   No global themes, top navigation, canvas, or project rendering changes. */
+.avp-launch-kit{min-width:0}
+.avp-launch-kit p{line-height:1.5}
+.avp-launch-kit-label{display:block;margin:.85rem 0 .35rem;font-size:.68rem;letter-spacing:.1em;font-weight:650}
+.avp-launch-kit input,.avp-launch-kit textarea{
+  box-sizing:border-box;display:block;width:100%;min-width:0;padding:.65rem .7rem;
+  color:inherit;font:inherit;font-size:.8rem;line-height:1.45;resize:vertical;
+  border-radius:8px;border:1px solid rgba(133,183,202,.32);
+  background:rgba(9,24,38,.6);
+}
+.avp-launch-kit input:focus-visible,.avp-launch-kit textarea:focus-visible,
+.avp-launch-kit button:focus-visible,.avp-launch-kit summary:focus-visible{
+  outline:2px solid currentColor;outline-offset:3px
+}
+.avp-launch-kit-actions{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.6rem}
+.avp-launch-kit button{
+  max-width:100%;padding:.55rem .85rem;min-height:2.5rem;
+  color:inherit;background:rgba(82,148,167,.13);
+  border:1px solid rgba(125,184,199,.32);border-radius:8px;
+  cursor:pointer;font:inherit;font-size:.79rem
+}
+.avp-launch-kit button:hover{background:rgba(82,148,167,.24)}
+.avp-launch-kit-embed{margin-top:1rem}
+.avp-launch-kit-embed summary{cursor:pointer;font-size:.82rem}
+.avp-launch-kit-embed p{margin:.6rem 0}
+.avp-launch-kit-embed textarea{overflow-wrap:anywhere}
+.avp-launch-kit-embed button{margin-top:.5rem}
+.avp-launch-kit-notice{font-size:.76rem;overflow-wrap:anywhere}
+@media(forced-colors:active){
+ .avp-launch-kit input,.avp-launch-kit textarea,.avp-launch-kit button{
+  border:1px solid ButtonText;background:Canvas;color:CanvasText
+ }
+ .avp-launch-kit button:hover{background:Highlight;color:HighlightText}
+}
