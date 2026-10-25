@@ -9,6 +9,7 @@ const hero=source('../web/src/parity/ParityPortalV136.tsx');
 const art=source('../web/src/parity/ContinuanceInstrumentV136017.tsx');
 const studio=source('../web/src/parity/StudioSpatialWorkspaceV136.tsx');
 const ide=source('../web/src/parity/ArtifactWorkbenchV136.tsx');
+const glyph=source('../web/src/parity/FileGlyphV136017.tsx');
 const css=source('../web/src/parity/concept-convergence-v136017.css');
 const main=source('../web/src/main.tsx');
 test('original Arrival optical instrument is non-interactive and independent of remote files',()=>{
@@ -70,4 +71,17 @@ test('concept pass is scoped, responsive, and loaded after original V136 foundat
  assert.match(css,/@media\(forced-colors:active\)/);
  assert.ok(!/url\(\s*['"]?https?:|@import\s+url|@font-face/.test(css),
   'No new remote font/textures or CSP dependencies');
+});
+
+
+test('original file-type glyphs decorate real Monaco tabs and explorer, not source content or filenames',()=>{
+ assert.match(glyph,/export function FileGlyphV136017/);
+ assert.match(glyph,/aria-hidden="true" focusable="false"/);
+ for(const name of ['html','css','javascript','json','markdown','text']){
+  assert.ok(glyph.includes("'"+name+"'"),'missing visual language: '+name);
+ }
+ assert.match(ide,/FileGlyphV136017 path=\{path\}/);
+ assert.match(ide,/fileKind\(path\)/);
+ assert.ok(!/fetch\(|onClick|onSubmit|localStorage|sessionStorage|document\./.test(glyph),
+  'file-type SVGs cannot own any editor or private project behavior');
 });
