@@ -19,7 +19,7 @@ const people=[
  {handle:'fixture_lab',displayName:'SYNTHETIC CI LAB',publishedProjects:2}
 ];
 const report={contract:'v136.025-loopback-directory',status:'INCOMPLETE',syntheticFixture:true,
- commit:process.env.GITHUB_SHA||null,widths:[],rejections:[]};
+ commit:process.env.ANEVUM_SOURCE_SHA||null,widths:[],rejections:[]};
 assert.ok(existsSync(join(root,'index.html')),'Full-flag compiled V136 frontend required');
 mkdirSync(output,{recursive:true});
 const server=createServer((req,res)=>{
