@@ -36,7 +36,7 @@ try{
   if(service.exitCode!==null)throw Error("OFFLINE_FIXTURE_EXITED "+log);
   const r=await fetch(base+"/__ready");return r.ok;
  },20000);
- browser=await chromium.launch({headless:true,
+ browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_BIN||"/usr/bin/google-chrome",
   args:["--no-sandbox","--enable-webgl","--enable-unsafe-swiftshader","--use-angle=swiftshader"]});
  for(const width of [390,1440]){
   const context=await browser.newContext({
