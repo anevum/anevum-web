@@ -80,14 +80,21 @@ async function run(width,height,motion='no-preference') {
   note('layout '+width+'px',shape);
   // Reproduce actual reading/scrolling so lazy-loaded images and reveal states
   // are visible in full-page screenshots, instead of falsely appearing blank.
-  await page.evaluate(async () => {
+  const revealed = await page.evaluate(async () => {
     const sleep = ms => new Promise(resolve=>setTimeout(resolve,ms));
-    const step=Math.max(300,Math.floor(innerHeight*0.8));
+    const prevBehavior = document.documentElement.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = 'auto';
+    const step=Math.max(300,Math.floor(innerHeight*0.75));
     for(let y=0;y<document.documentElement.scrollHeight;y+=step){
-      scrollTo(0,y);await sleep(65);
+      scrollTo({top:y,behavior:'instant'});await sleep(110);
     }
-    scrollTo(0,0);await sleep(550);
+    scrollTo({top:document.documentElement.scrollHeight,behavior:'instant'});await sleep(250);
+    scrollTo({top:0,behavior:'instant'});await sleep(600);
+    document.documentElement.style.scrollBehavior = prevBehavior;
+    return {total:document.querySelectorAll('.reveal').length,visible:document.querySelectorAll('.reveal.visible').length};
   });
+  if (motion!=='reduce') assert.ok(revealed.visible >= revealed.total-2, 'Missing scroll reveals: '+JSON.stringify(revealed));
+  note('real scroll reveal '+width,revealed);
   await page.screenshot({path:join(output,'portfolio-'+width+'-'+motion+'.png'),fullPage:true,animations:'disabled'});
   await page.locator('[data-project="anevum"]').click();
   await page.locator('#project-dialog[open]').waitFor({state:'visible'});
