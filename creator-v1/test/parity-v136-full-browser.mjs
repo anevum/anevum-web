@@ -404,6 +404,13 @@ try{
 
     assert.equal(layout.h1Count,1);assert.equal(layout.dockCount,1,'One canonical IREN companion');
     assert.equal(await page.locator('.p136-console-wayfinder').count(),1,'Exactly one persistent console wayfinder');
+    if(width>=1900){
+      const rail=await page.locator('.p136-hero-rail').boundingBox();
+      const wayfinder=await page.locator('.p136-console-wayfinder').boundingBox();
+      assert.ok(rail&&wayfinder&&wayfinder.x+wayfinder.width+4<rail.x,
+        'The wide-screen console rail must live in the outer gutter, not obscure actionable hero tiles: '+
+        JSON.stringify({rail,wayfinder}));
+    }
     assert.equal(await page.locator('.p136-studio-console').count(),0,'Private Studio explorer never appears for anonymous visitor');
     assert.equal(await page.locator('.p136-console-wayfinder a[data-station]').count(),5,'Five real route stations');
     assert.equal(await page.locator('.p136-console-wayfinder').getByRole('button',{name:'Open IREN companion'}).count(),1,
