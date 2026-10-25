@@ -1,0 +1,303 @@
+/* ANEVUM / Portfolio V136.040 — original single-canvas Transcosmic field.
+   True perspective WebGL2 geometry and 3D star volumes; no CDN, no telemetry,
+   no video or audio, no publication features. Decorative; semantic DOM remains.
+*/
+(() => {
+  'use strict';
+  const stage = document.querySelector('[data-transcosmic-field]');
+  const canvas = stage?.querySelector('canvas[data-depth-canvas]');
+  if (!stage || !canvas) return;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const saveData = navigator.connection?.saveData === true;
+  const weakDevice = Number(navigator.deviceMemory || 4) <= 2;
+  const root = document.documentElement;
+  const selectors = [...document.querySelectorAll('[data-universe-stage]')];
+  const liveName = document.querySelector('[data-universe-name]');
+  const liveDescription = document.querySelector('[data-universe-description]');
+  const scenes = [
+    ['THE THRESHOLD', 'An opening into work, worlds, and unfinished possibilities.'],
+    ['THE ARCHIVE', 'Many disciplines. One continuing record of what becomes real.'],
+    ['THE CONTINUUM', 'Beyond a single screen, story, product, or lifetime.']
+  ];
+  let sector = 0;
+  let visible = true;
+  let disposed = false;
+  let frame = 0;
+  let lastTime = 0;
+  let clock = 0;
+  let pointer = [0, 0];
+  let eased = [0, 0];
+  let travel = 0;
+  let gl = null;
+  let drawScene = null;
+  const motionEnabled = () => !document.hidden && visible && !saveData &&
+    !reduced.matches && !root.classList.contains('motion-paused');
+  const describe = value => {
+    sector = value;
+    selectors.forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.universeStage) === sector)));
+    if (liveName) liveName.textContent = scenes[sector][0];
+    if (liveDescription) liveDescription.textContent = scenes[sector][1];
+    stage.dataset.viewStage = String(sector);
+    requestFrame();
+  };
+  selectors.forEach(button => button.addEventListener('click', () => describe(Number(button.dataset.universeStage))));
+  describe(0);
+  const mul = (a,b) => {
+    const out = new Float32Array(16);
+    for(let c=0;c<4;c++) for(let r=0;r<4;r++) for(let k=0;k<4;k++) out[c*4+r] += a[k*4+r]*b[c*4+k];
+    return out;
+  };
+  const norm = v => {const d=Math.hypot(...v)||1;return v.map(x=>x/d);};
+  const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+  const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+  const cameraMatrix=(eye,target,ratio) => {
+    const z=norm(eye.map((v,i)=>v-target[i]));
+    const x=norm(cross([0,1,0],z)),y=cross(z,x);
+    const view=new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-dot(x,eye),-dot(y,eye),-dot(z,eye),1]);
+    const f=1/Math.tan((ratio<.72?68:56)*Math.PI/360), n=.3,far=500;
+    const projection=new Float32Array([f/ratio,0,0,0,0,f,0,0,0,0,(far+n)/(n-far),-1,0,0,2*far*n/(n-far),0]);
+    return mul(projection,view);
+  };
+  const rand = (()=>{let n=81723;return ()=>{n=(n*1664525+1013904223)>>>0;return n/4294967296;};})();
+  const vertices=[];
+  const triangle=(a,b,c) => {vertices.push(...a,...b,...c);};
+  const position=(p,n,color,kind)=>[...p,...n,...color,kind];
+  function ring(cx,cy,cz,r,tube,phase,kind,span=Math.PI*2){
+    const steps=span===Math.PI*2?136:116, side=9;
+    const colors=kind===3?[.58,.77,.95]:kind===2?[.97,.76,.47]:kind===1?[.34,.56,.77]:[.23,.33,.44];
+    const rotate=(p)=>[p[0]*Math.cos(phase)+p[2]*Math.sin(phase),p[1],p[2]*Math.cos(phase)-p[0]*Math.sin(phase)];
+    const sample=(i,j)=>{
+      const a=(i/steps)*span-(span===Math.PI*2?0:Math.PI*.08);
+      const b=(j/side)*Math.PI*2;
+      const radial=r+tube*Math.cos(b);
+      const p=rotate([radial*Math.cos(a),radial*Math.sin(a)*.88,tube*Math.sin(b)]);
+      const nn=norm(rotate([Math.cos(a)*Math.cos(b),Math.sin(a)*Math.cos(b),Math.sin(b)]));
+      return position([p[0]+cx,p[1]+cy,p[2]+cz],nn,colors,kind);
+    };
+    for(let i=0;i<steps;i++)for(let j=0;j<side;j++){
+      const a=sample(i,j),b=sample(i+1,j),c=sample(i+1,j+1),d=sample(i,j+1);
+      triangle(a,b,d);triangle(b,c,d);
+    }
+  }
+  function sphere(cx,cy,cz,r,color,kind){
+    const rows=24,columns=36;
+    const point=(i,j)=>{
+      const v=i/rows*Math.PI,u=j/columns*2*Math.PI;
+      const n=[Math.sin(v)*Math.cos(u),Math.cos(v),Math.sin(v)*Math.sin(u)];
+      return position([cx+r*n[0],cy+r*n[1],cz+r*n[2]],n,color,kind);
+    };
+    for(let i=0;i<rows;i++) for(let j=0;j<columns;j++){
+      const a=point(i,j),b=point(i+1,j),c=point(i+1,j+1),d=point(i,j+1);
+      triangle(a,b,d);triangle(b,c,d);
+    }
+  }
+  // The aperture is a volume, not a flat billboard. Successive rings occupy
+  // actual distances, so orbit, dolly and pointer shifts change their parallax.
+  for(let i=0;i<9;i++){
+    const z=-22-i*19;
+    const x=4.9+Math.sin(i*.78)*1.7, y=.15+Math.cos(i*.57)*.7;
+    const radius=10.6+i*.95;
+    ring(x,y,z,radius,i===0?.57:.42,i*.17,0);
+    ring(x,y,z-.45,radius-.6,.085,i*.17,2);
+    if(i<7)ring(x,y,z+1.6,radius+1.0,.11,-i*.17,3,Math.PI*1.61);
+    if(i<6)ring(x,y,z-2.7,radius*.77,.075,i*.3,1,Math.PI*1.92);
+  }
+  // Distant worlds exist beyond the aperture, on different depth planes,
+  // rather than a giant glowing orb covering the actual project material.
+  sphere(8.5,3.4,-106,5.8,[.39,.48,.67],0);
+  sphere(-7.2,-3.8,-147,8.4,[.40,.28,.52],0);
+  sphere(9.2,-5.4,-193,7.1,[.48,.38,.32],2);
+  ring(8.5,3.4,-106,8.7,.12,.44,2);
+  const mesh=new Float32Array(vertices);
+  const stars=[];
+  for(let i=0;i<(weakDevice?2500:6800);i++){
+    const z=-8-Math.pow(rand(),.63)*310;
+    const spread=30+Math.abs(z)*.40;
+    const x=(rand()-.5)*spread*2, y=(rand()-.5)*spread;
+    const t=rand();
+    stars.push(x,y,z,t<.17?.92:t<.5?.67:.40,t<.2?.72:t<.55?.77:.57,t<.3?.49:.9,.65+rand()*2.5);
+  }
+  const starBuffer=new Float32Array(stars);
+  const compile=(type,source)=>{const shader=gl.createShader(type);gl.shaderSource(shader,source);gl.compileShader(shader);if(!gl.getShaderParameter(shader,gl.COMPILE_STATUS)){const info=gl.getShaderInfoLog(shader);gl.deleteShader(shader);throw Error('Transcosmic shader: '+info);}return shader;};
+  const program=(vert,frag)=>{const a=compile(gl.VERTEX_SHADER,vert),b=compile(gl.FRAGMENT_SHADER,frag);const out=gl.createProgram();gl.attachShader(out,a);gl.attachShader(out,b);gl.linkProgram(out);gl.deleteShader(a);gl.deleteShader(b);if(!gl.getProgramParameter(out,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(out));return out;};
+  const skyVertex=`#version 300 es
+    precision highp float;
+    out vec2 vUv;
+    void main(){vec2 p=vec2(gl_VertexID==1?3.:-1.,gl_VertexID==2?3.:-1.);vUv=p*.5+.5;gl_Position=vec4(p,0.,1.);}`;
+  const skyFrag=`#version 300 es
+    precision highp float;
+    in vec2 vUv;out vec4 pixel;
+    uniform vec2 uResolution;uniform float uTime;uniform vec2 uPointer;uniform float uTravel;
+    float hash(vec2 x){return fract(sin(dot(x,vec2(127.1,311.7)))*43758.5453123);}
+    float noise(vec2 x){vec2 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+1.),f.x),f.y);}
+    void main(){
+      vec2 uv=gl_FragCoord.xy/uResolution.xy;
+      vec2 p=(uv-.5)*vec2(uResolution.x/uResolution.y,1.);
+      p-=vec2(.26+uPointer.x*.07,-.03+uPointer.y*.035);
+      float r=length(p),a=atan(p.y,p.x);
+      float drift=uTime*.003;
+      float strata=noise(p*3.+drift)*.60+noise(p*7.3-drift*2.)*.24+noise(p*17.1)*.16;
+      float flowing=exp(-abs(r-(.40+.13*sin(a*2.1+strata*4.)))*3.5);
+      float cloud=pow(max(0.,strata-.29),1.65)*flowing;
+      vec3 ink=vec3(.008,.011,.026);
+      ink+=vec3(.08,.07,.17)*cloud*.82;
+      ink+=vec3(.015,.10,.13)*pow(max(0.,cloud-.08),1.5);
+      ink+=vec3(.14,.09,.075)*exp(-abs(r-.22)*8.)*strata*.24;
+      float spine=exp(-r*4.5)*(.06+.05*sin(a*6.+strata*5.));
+      ink+=vec3(.06,.16,.19)*spine;
+      for(int l=0;l<3;l++){
+        float scale=l==0?155.:l==1?310.:620.;
+        vec2 q=uv*scale+vec2(float(l)*17.3,float(l)*31.1);
+        vec2 cell=floor(q), f=fract(q)-.5;
+        vec2 jitter=vec2(hash(cell+2.1),hash(cell+19.3))-.5;
+        float dist=length(f-jitter*.76);
+        float strength=step(.988,hash(cell+float(l)*9.))*(l==0?.52:l==1?.25:.10);
+        float star=exp(-dist*dist*280.)*strength;
+        ink+=vec3(.50,.73,1.)*star;
+      }
+      // Deep space and high contrast around actual text, not a stock galaxy.
+      float textClear=smoothstep(.03,.73,uv.x);
+      ink*=mix(.39,1.0,textClear);
+      float vignette=1.-smoothstep(.35,1.16,length((uv-.5)*vec2(1.16,1.)));
+      ink*=.57+.43*vignette;
+      pixel=vec4(ink,1.);
+    }`;
+  const meshVertex=`#version 300 es
+    precision highp float;
+    layout(location=0) in vec3 aPosition;
+    layout(location=1) in vec3 aNormal;
+    layout(location=2) in vec3 aColor;
+    layout(location=3) in float aKind;
+    uniform mat4 uVP;uniform float uTime;uniform float uTravel;
+    out vec3 vColor;out vec3 vNormal;out float vKind;out float vDistance;out vec3 vWorld;
+    void main(){
+      vec3 p=aPosition;
+      float spin=uTime*.016*(aKind>2.5?1.:-.23);
+      p.xy+=vec2(sin(p.z*.022+spin),cos(p.z*.017-spin))*.08;
+      vWorld=p;vColor=aColor;vNormal=aNormal;vKind=aKind;
+      vDistance=length(p-vec3(0.,0.,8.-uTravel*18.));
+      gl_Position=uVP*vec4(p,1.);
+    }`;
+  const meshFrag=`#version 300 es
+    precision highp float;
+    in vec3 vColor,vNormal,vWorld;in float vKind,vDistance;
+    out vec4 pixel;uniform float uTime;
+    void main(){
+      vec3 n=normalize(vNormal);
+      vec3 sun=normalize(vec3(-.27,.75,.8));
+      float diff=max(dot(n,sun),0.);
+      float edge=pow(1.-abs(dot(n,normalize(vec3(.1,.0,1.)))),2.);
+      float grain=sin(vWorld.x*17.4+sin(vWorld.y*11.3))*sin(vWorld.y*10.8+vWorld.z*.21)*.095;
+      float cool=clamp(diff*.74+edge*.35+.10+grain,0.,1.);
+      vec3 color=vColor*cool;
+      color+=vColor*(vKind>1.5?.38:.04)*pow(max(0.,diff),2.);
+      if(vKind>2.5)color+=vec3(.13,.26,.32)*(.27+.17*sin(uTime*.21+vWorld.z));
+      float fog=exp(-pow(vDistance/190.,1.8));
+      color=mix(vec3(.005,.013,.027),color,fog);
+      pixel=vec4(color,1.);
+    }`;
+  const starVertex=`#version 300 es
+    precision highp float;
+    layout(location=0) in vec3 aPosition;
+    layout(location=1) in vec3 aColor;
+    layout(location=2) in float aSize;
+    uniform mat4 uVP;uniform vec3 uCamera;uniform float uTime;
+    out vec3 vColor;out float vAlpha;
+    void main(){
+      vec3 p=aPosition;
+      p.xy+=vec2(sin(aPosition.z*.027+uTime*.05),cos(aPosition.z*.029-uTime*.043))*.2;
+      gl_Position=uVP*vec4(p,1.);
+      float depth=length(p-uCamera);
+      gl_PointSize=clamp(aSize*55./max(15.,depth),1.,5.);
+      vColor=aColor;vAlpha=clamp(1.8-depth/400.,.1,1.);
+    }`;
+  const starFrag=`#version 300 es
+    precision highp float;
+    in vec3 vColor;in float vAlpha;out vec4 pixel;
+    void main(){float d=length(gl_PointCoord-.5);float core=pow(max(0.,1.-d*2.),2.8);if(core<.015)discard;pixel=vec4(vColor,core*vAlpha*.88);}`;
+  function init(){
+    if(disposed)return;
+    try {
+      gl=canvas.getContext('webgl2',{alpha:false,antialias:false,powerPreference:'default',depth:true,stencil:false,preserveDrawingBuffer:false});
+      if(!gl)throw Error('WebGL2 not available');
+      const sky=program(skyVertex,skyFrag),solid=program(meshVertex,meshFrag),dust=program(starVertex,starFrag);
+      const vao=gl.createVertexArray();gl.bindVertexArray(vao);
+      const meshBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,meshBuffer);gl.bufferData(gl.ARRAY_BUFFER,mesh,gl.STATIC_DRAW);
+      const stride=10*4;
+      gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,stride,0);
+      gl.enableVertexAttribArray(1);gl.vertexAttribPointer(1,3,gl.FLOAT,false,stride,3*4);
+      gl.enableVertexAttribArray(2);gl.vertexAttribPointer(2,3,gl.FLOAT,false,stride,6*4);
+      gl.enableVertexAttribArray(3);gl.vertexAttribPointer(3,1,gl.FLOAT,false,stride,9*4);
+      gl.bindVertexArray(null);
+      const dustVAO=gl.createVertexArray();gl.bindVertexArray(dustVAO);
+      const dustBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,dustBuffer);gl.bufferData(gl.ARRAY_BUFFER,starBuffer,gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,3,gl.FLOAT,false,7*4,0);
+      gl.enableVertexAttribArray(1);gl.vertexAttribPointer(1,3,gl.FLOAT,false,7*4,3*4);
+      gl.enableVertexAttribArray(2);gl.vertexAttribPointer(2,1,gl.FLOAT,false,7*4,6*4);
+      gl.bindVertexArray(null);
+      gl.disable(gl.CULL_FACE);
+      gl.enable(gl.DEPTH_TEST);
+      gl.depthFunc(gl.LEQUAL);
+      const uniforms=(program,names)=>Object.fromEntries(names.map(name=>[name,gl.getUniformLocation(program,name)]));
+      const skyU=uniforms(sky,['uResolution','uTime','uPointer','uTravel']);
+      const meshU=uniforms(solid,['uVP','uTime','uTravel']);
+      const starU=uniforms(dust,['uVP','uCamera','uTime']);
+      let lastWidth=0,lastHeight=0;
+      drawScene=(time)=>{
+        const box=canvas.getBoundingClientRect();
+        const budget=weakDevice?820000:1650000;
+        const requested=Math.min(devicePixelRatio||1,weakDevice?1:1.5);
+        const factor=Math.min(requested,Math.sqrt(budget/Math.max(1,box.width*box.height)));
+        const width=Math.max(1,Math.floor(box.width*factor)),height=Math.max(1,Math.floor(box.height*factor));
+        if(width!==lastWidth||height!==lastHeight){canvas.width=lastWidth=width;canvas.height=lastHeight=height;gl.viewport(0,0,width,height);}
+        const smooth=(target,current)=>current+(target-current)*.055;
+        eased[0]=smooth(pointer[0],eased[0]);eased[1]=smooth(pointer[1],eased[1]);
+        const progress=Math.max(0,Math.min(1,window.scrollY/Math.max(stage.parentElement?.clientHeight||1,1)));
+        travel=smooth(sector*.38+progress*.31,travel);
+        const phone=box.width<650;
+        const eye=[(phone?.7:-.25)+eased[0]*.85+travel*2.1,eased[1]*.62+travel*.45,9-travel*21];
+        const target=[(phone?.4:4.1)+travel*.70,Math.sin(time*.035)*.26,-38-travel*37];
+        const vp=cameraMatrix(eye,target,width/height);
+        gl.disable(gl.BLEND);gl.disable(gl.DEPTH_TEST);
+        gl.useProgram(sky);
+        gl.uniform2f(skyU.uResolution,width,height);
+        gl.uniform1f(skyU.uTime,time);gl.uniform2f(skyU.uPointer,eased[0],eased[1]);gl.uniform1f(skyU.uTravel,travel);
+        gl.drawArrays(gl.TRIANGLES,0,3);
+        gl.enable(gl.DEPTH_TEST);gl.clear(gl.DEPTH_BUFFER_BIT);
+        gl.useProgram(dust);gl.uniformMatrix4fv(starU.uVP,false,vp);gl.uniform3f(starU.uCamera,...eye);gl.uniform1f(starU.uTime,time);
+        gl.bindVertexArray(dustVAO);gl.depthMask(false);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);gl.drawArrays(gl.POINTS,0,starBuffer.length/7);
+        gl.disable(gl.BLEND);gl.depthMask(true);
+        gl.useProgram(solid);gl.uniformMatrix4fv(meshU.uVP,false,vp);gl.uniform1f(meshU.uTime,time);gl.uniform1f(meshU.uTravel,travel);
+        gl.bindVertexArray(vao);gl.drawArrays(gl.TRIANGLES,0,mesh.length/10);
+        gl.bindVertexArray(null);
+        if(stage.dataset.renderMode!=='webgl2'){stage.dataset.renderMode='webgl2';stage.dataset.sceneDepth='perspective';}
+        stage.dataset.renderPixels=String(width*height);
+      };
+      requestFrame();
+    }catch(err){stage.dataset.renderMode='fallback';stage.dataset.sceneDepth='static';gl=null;drawScene=null;}
+  }
+  function render(now){
+    frame=0;if(disposed||!drawScene)return;
+    const moving=motionEnabled();
+    if(moving)clock+=Math.min(55,Math.max(0,now-lastTime||16))*.001;
+    lastTime=now;
+    try{drawScene(clock);}catch(err){stage.dataset.renderMode='fallback';drawScene=null;return;}
+    if(moving)requestFrame();
+  }
+  function requestFrame(){if(!frame&&drawScene&&!disposed)frame=requestAnimationFrame(render);}
+  const onPointer=event=>{
+    if(event.pointerType==='touch')return;
+    pointer=[(event.clientX/Math.max(1,innerWidth)-.5)*2,(event.clientY/Math.max(1,innerHeight)-.5)*2];
+    if(!motionEnabled())return;
+    requestFrame();
+  };
+  document.addEventListener('pointermove',onPointer,{passive:true});
+  addEventListener('scroll',requestFrame,{passive:true});addEventListener('resize',requestFrame,{passive:true});
+  document.addEventListener('visibilitychange',requestFrame);
+  reduced.addEventListener?.('change',requestFrame);
+  document.querySelector('#motion-toggle')?.addEventListener('click',()=>requestAnimationFrame(requestFrame));
+  if('IntersectionObserver' in window)new IntersectionObserver(entries=>{visible=Boolean(entries[0]?.isIntersecting);if(visible)requestFrame();},{rootMargin:'120px'}).observe(stage);
+  canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();if(frame)cancelAnimationFrame(frame);frame=0;drawScene=null;stage.dataset.renderMode='fallback';});
+  canvas.addEventListener('webglcontextrestored',init);
+  init();
+})();
