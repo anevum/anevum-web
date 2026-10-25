@@ -25,6 +25,7 @@ export function FirstVisitClarityV136({signedIn}:{signedIn:boolean}){
       <details>
         <summary>Do I need to sign up to explore?</summary>
         <p>No. Public Discover, creator channels and approved work are open to browse. An account is for your own identity and eligible member activities.</p>
+        <Link to="/discover">Browse public work</Link>
         <Link to={signedIn?"/member":"/join"}>{signedIn?"Open my space":"Check member access"}</Link>
       </details>
       <details>
