@@ -19,8 +19,10 @@ type Batch={name:string;geometry:T.BufferGeometry;material:T.Material;poses:Inst
 // These intentionally stagger in front of the actual hero camera instead.
 // Screen-space composition is authored against the real responsive hero camera.
 // Desktop: a raised foreground stronghold between the body copy and IREN.
-// Mobile: architecture lifts above the main headline rather than vanishing
-// behind the CTAs. Both tiers keep secondary islands physically farther away.
+// Mobile: both islands must sit above the opening headline, not merely the
+// main island. The secondary deck used to intersect the actual title in
+// Chromium at 390px even though both platform centers passed the frustum test.
+// Both tiers keep secondary islands physically farther away.
 const DESKTOP_PLACES:readonly Place[]=[
  {x:4.9,y:1.55,z:-16,r:4.3,scale:1.44},
  {x:1.7,y:-2.1,z:-18,r:1.90,scale:.80},
@@ -28,7 +30,7 @@ const DESKTOP_PLACES:readonly Place[]=[
 ];
 const MOBILE_PLACES:readonly Place[]=[
  {x:5.9,y:7.7,z:-21,r:2.30,scale:.94},
- {x:.9,y:1.7,z:-25,r:1.37,scale:.72}
+ {x:.9,y:8.5,z:-25,r:1.37,scale:.72}
 ];
 function batch(name:string,geometry:T.BufferGeometry,material:T.Material,poses:InstancePose[]):Batch{
  return {name,geometry,material,poses};

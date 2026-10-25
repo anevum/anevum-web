@@ -126,6 +126,18 @@ test('real composed QA scene keeps floating outposts in both actual camera frust
    'Primary '+tier+' platform must occupy the right-hand art field');
   assert.ok(mainNdc.y>(tier==='mobile'?.19:-.02)&&mainNdc.y<.40,
    'Primary '+tier+' platform must rise above the CTA/navigation foot');
+  if(tier==='mobile'){
+   // The actual 390px visual review revealed that the secondary platform
+   // intersected the headline despite the PRIMARY island passing tests.
+   // Inspect its real world-space matrix, not just the center frustum count.
+   const secondaryMatrix=new T.Matrix4();deck.getMatrixAt(1,secondaryMatrix);
+   const secondaryNdc=new T.Vector3().setFromMatrixPosition(
+    new T.Matrix4().multiplyMatrices(deck.matrixWorld,secondaryMatrix)).project(camera);
+   assert.ok(secondaryNdc.x<-.22&&secondaryNdc.x>-.75,
+    'Mobile secondary outpost must sit in the opposite visual column: '+JSON.stringify(secondaryNdc.toArray()));
+   assert.ok(secondaryNdc.y>.25&&secondaryNdc.y<.60,
+    'Mobile secondary outpost must clear the opening headline: '+JSON.stringify(secondaryNdc.toArray()));
+  }
   const opticalRadius=body.geometry.parameters.radius/
    (planetCenter.distanceTo(camera.position)*Math.tan(T.MathUtils.degToRad(camera.fov/2)));
   assert.ok(opticalRadius<(tier==='mobile'?.26:.38),
