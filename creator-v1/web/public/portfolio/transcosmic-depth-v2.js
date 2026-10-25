@@ -140,13 +140,17 @@
   };
   const archiveStart=vertices.length/10;
   for(let i=0;i<8;i++){
-    const z=-24-i*21,span=12.8+i*.6;
+    const z=-38-i*21,span=11.0+i*.6;
     const height=15+i*1.5;
     // Deliberate negative space through which the camera can actually fly.
     prism(5-span,0,z,1.6,height,2.4,[.28,.40,.53],0);
     prism(5+span,0,z,1.6,height,2.4,[.28,.40,.53],0);
-    prism(5,8.3+i*.42,z-.3,span*2.2,.68,2.1,[.45,.38,.30],2);
-    prism(5,-8.6-i*.35,z,span*1.9,.42,1.7,[.26,.36,.50],0);
+    // Break the lintels into hovering fragments; the observatory is not
+    // an enclosed rectangular hallway or a conventional office building.
+    for(const side of [-1,1]){
+      prism(5+side*span*.49,8.3+i*.42,z-.3,span*.72,.48,1.7,[.45,.38,.30],2);
+      prism(5+side*span*.49,-8.6-i*.35,z,span*.69,.36,1.5,[.26,.36,.50],0);
+    }
     ring(5,0,z-3.2,7.0+i*.4,.13,i*.085,2,Math.PI*1.92);
     ring(5,0,z-4.5,4.0+i*.29,.085,-i*.10,3,Math.PI*1.72);
     for(const side of [-1,1]){
@@ -162,11 +166,11 @@
   // Beyond: actual large worlds and planetary halos on distant planes,
   // with long sightlines. No second renderer or stock illustration.
   const beyondStart=vertices.length/10;
-  sphere(6.0,1.6,-61,13.0,[.26,.31,.55],0);
-  sphere(-21,-8.1,-114,16.0,[.40,.23,.47],0);
-  sphere(28,10.3,-153,19.4,[.38,.42,.50],0);
-  sphere(2,15,-227,12.0,[.58,.38,.26],2);
-  ring(6,1.6,-61,18.9,.16,-.43,2,Math.PI*1.87);
+  sphere(6.0,1.6,-71,9.3,[.30,.35,.60],4);
+  sphere(-21,-8.1,-114,16.0,[.50,.30,.52],4);
+  sphere(28,10.3,-153,19.4,[.38,.48,.58],4);
+  sphere(2,15,-227,12.0,[.58,.38,.26],4);
+  ring(6,1.6,-71,14.2,.13,-.43,2,Math.PI*1.87);
   ring(-21,-8.1,-114,22.8,.13,.55,3,Math.PI*1.74);
   ring(28,10.3,-153,27.5,.15,-.21,2,Math.PI*1.91);
   for(let i=0;i<18;i++){
@@ -295,11 +299,21 @@
       vec3 sun=normalize(vec3(-.27,.75,.8));
       float diff=max(dot(n,sun),0.);
       float edge=pow(1.-abs(dot(n,normalize(vec3(.1,.0,1.)))),2.);
-      float grain=sin(vWorld.x*17.4+sin(vWorld.y*11.3))*sin(vWorld.y*10.8+vWorld.z*.21)*.095;
+      float grain=sin(vWorld.x*17.4+sin(vWorld.y*11.3))*sin(vWorld.y*10.8+vWorld.z*.21)*(vKind>3.5?.018:.095);
       float cool=clamp(diff*.74+edge*.35+.10+grain,0.,1.);
       vec3 color=vColor*cool;
       color+=vColor*(vKind>1.5?.38:.04)*pow(max(0.,diff),2.);
-      if(vKind>2.5)color+=vec3(.13,.26,.32)*(.27+.17*sin(uTime*.21+vWorld.z));
+      if(vKind>2.5&&vKind<3.5)color+=vec3(.13,.26,.32)*(.27+.17*sin(uTime*.21+vWorld.z));
+      if(vKind>3.5){
+        // Spherical worlds require planet-scale material, directional day/night
+        // shading and atmospheric rim, not the torus' high-frequency metal.
+        float bands=sin(vWorld.y*.47+sin(vWorld.x*.30)*.8+sin(vWorld.z*.26)*.65);
+        float clouds=smoothstep(.15,.92,bands);
+        float atmosphere=pow(max(0.,1.-abs(n.z)),3.2);
+        color=mix(vColor*.16,vColor*1.17,clamp(diff*.87+.20,0.,1.));
+        color+=vec3(.06,.08,.15)*clouds*.25;
+        color+=vec3(.095,.14,.26)*atmosphere*.48;
+      }
       float fog=exp(-pow(vDistance/190.,1.8));
       color=mix(vec3(.005,.013,.027),color,fog);
       pixel=vec4(color,1.);
@@ -376,7 +390,7 @@
             : [(phone?4:0)+eased[0]*1.2,1.7+eased[1]*.8,7-travel*25];
         const target=sector===0
           ? [(phone?.4:4.1)+travel*.70,Math.sin(time*.035)*.26,-38-travel*37]
-          : sector===1 ? [5,1.5,-93] : [6,-.5,-112];
+          : sector===1 ? [5,1.5,-93] : [phone?3.0:-5.0,-.5,-120];
         const vp=cameraMatrix(eye,target,width/height);
         gl.disable(gl.BLEND);gl.disable(gl.DEPTH_TEST);
         gl.useProgram(sky);
