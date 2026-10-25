@@ -21,10 +21,10 @@ export const METRIC_COVERAGE = Object.freeze({
 export function registrationSnapshotSQL() {
   return `SELECT datetime('now') AS observed_at_utc,
     count(*) AS account_records,
-    sum(CASE WHEN emailVerified = 1 THEN 1 ELSE 0 END) AS verified_account_records,
-    sum(CASE WHEN unixepoch(createdAt) >= unixepoch('now', '-1 day') THEN 1 ELSE 0 END) AS created_last_24h,
-    sum(CASE WHEN unixepoch(createdAt) >= unixepoch('now', '-7 days') THEN 1 ELSE 0 END) AS created_last_7d,
-    sum(CASE WHEN unixepoch(createdAt) >= unixepoch('now', '-30 days') THEN 1 ELSE 0 END) AS created_last_30d
+    coalesce(sum(CASE WHEN emailVerified = 1 THEN 1 ELSE 0 END), 0) AS verified_account_records,
+    coalesce(sum(CASE WHEN unixepoch(createdAt) >= unixepoch('now', '-1 day') THEN 1 ELSE 0 END), 0) AS created_last_24h,
+    coalesce(sum(CASE WHEN unixepoch(createdAt) >= unixepoch('now', '-7 days') THEN 1 ELSE 0 END), 0) AS created_last_7d,
+    coalesce(sum(CASE WHEN unixepoch(createdAt) >= unixepoch('now', '-30 days') THEN 1 ELSE 0 END), 0) AS created_last_30d
   FROM user`;
 }
 
