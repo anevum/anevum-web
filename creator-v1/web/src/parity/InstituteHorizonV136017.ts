@@ -83,7 +83,13 @@ export function createInstituteHorizon(tier:AssetTier,citadelFactory:typeof crea
  const latitude=mobile?22:42,longitude=mobile?40:72;
  const root=new T.Group();
  root.name='QA / CONTINUANCE PLANETARY HORIZON';
- root.position.set(mobile?10:17,12,-35);
+ // The planet needs a distant offset, but the modeled architecture is
+ // positioned directly in camera/world coordinates. Do NOT translate the
+ // entire root: that silently shifts citadels out of the camera frustum.
+ const orbitalBody=new T.Group();
+ orbitalBody.name='Planet + illuminated observation rings';
+ orbitalBody.position.set(mobile?10:17,12,-35);
+ root.add(orbitalBody);
  const signal={value:0};
  const body=new T.Mesh(
   new T.SphereGeometry(14.6,longitude,latitude),
@@ -91,7 +97,7 @@ export function createInstituteHorizon(tier:AssetTier,citadelFactory:typeof crea
    uniforms:{uPublicDensity:signal},fog:false,depthWrite:true,toneMapped:false})
  );
  body.name='Original gas giant / no texture or telemetry';
- root.add(body);
+ orbitalBody.add(body);
  const atmosphere=new T.Mesh(
   new T.SphereGeometry(14.91,longitude,latitude),
   new T.ShaderMaterial({vertexShader:planetVertex,fragmentShader:atmosphereFragment,
@@ -99,7 +105,7 @@ export function createInstituteHorizon(tier:AssetTier,citadelFactory:typeof crea
    blending:T.AdditiveBlending,fog:false,toneMapped:false})
  );
  atmosphere.name='Atmospheric limb';
- root.add(atmosphere);
+ orbitalBody.add(atmosphere);
  const orbits=new T.Group();orbits.rotation.set(.41,-.12,.22);
  orbits.name='Two engineered auric observation rings';
  for(const [radius,tube,opacity,color] of [
@@ -113,7 +119,7 @@ export function createInstituteHorizon(tier:AssetTier,citadelFactory:typeof crea
   ring.rotation.set(.58,.16,.28);
   orbits.add(ring);
  }
- root.add(orbits);
+ orbitalBody.add(orbits);
  const citadels=citadelFactory(tier);
  root.add(citadels.root);
  root.updateMatrixWorld(true);
