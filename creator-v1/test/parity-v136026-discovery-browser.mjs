@@ -171,10 +171,17 @@ try{
   // A category and free toggle keep the selected view, but reset stale cursors.
   await discovery.locator('.p136-discover-category-nav').getByRole('button',{name:'Games',exact:true}).click();
   await checkParams(page,{view:'list',category:'games',cursor:null});
+  // A URL update precedes React's awaited public catalogue response. The
+  // prior two-card DOM may disappear into a real loading state between reads.
+  await page.waitForFunction(()=>document.querySelectorAll('.p136-discover-results article.project-card').length===1);
   await page.getByRole('heading',{name:'SYNTHETIC ORBIT GAME',exact:true}).waitFor();
   assert.equal(await cards.count(),1);
   await discovery.locator('.p136-discover-availability').getByRole('button',{name:/Marked free/}).click();
   await checkParams(page,{view:'list',category:'games',free:'1'});
+  // The second filter must reach the approved public API with the free bit
+  // before acceptance; retaining one stale card alone is insufficient.
+  await page.waitForFunction(()=>document.querySelectorAll('.p136-discover-results article.project-card').length===1);
+  assert.ok(requests.some(read=>read.cat==='games'&&read.free),'Marked-free filter reaches the real project query');
   assert.equal(await cards.count(),1);
   const search=discovery.locator('.p136-discover-search-form').getByRole('searchbox',{name:'Search published projects'});
   await search.fill('ORBIT');
