@@ -146,3 +146,17 @@ Back-navigation leaving Games selected after the URL reset. A direct URL-owned
 selection correction is in the next checkpoint; strict assertions remain.
 Public UI/Boards/Open Signal checks run before GPU stress, with all old groups
 retained. Release source guards remain closed; source-only draft #738.
+
+## V136.023 — UI density and console clearance (draft)
+Scoped session: `ANEVUM.WEB.UPDATE.2026-10-25.003.UI-DENSITY-AND-CONSOLE-CLEARANCE`.
+Continues verified #738 `ba18a065` without modifying #735/#737/#736.
+Removes the 220–330px former poster reservation above mobile arrival text;
+retains native optics and actual inspect/route controls. Embedded public member
+activity/forum panels use the existing Institute typography/materials. Normal
+desktop console has a reserved left gutter; private source authoring retains
+its full editor width. Phone/tablet focus and deep links reserve dock clearance.
+Strict compiled checks cover heading/action placement, actual panel styles,
+real console/content rectangles and focused mobile sharing controls.
+No source, API, auth, account, WebGL architecture, permission, publication or
+provider changes; no release allowlist changes. Local compiler/contracts pass;
+exact-head CI and screenshot comparison remain required before acceptance.

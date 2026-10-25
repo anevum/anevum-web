@@ -391,6 +391,22 @@ try{
       'Migrated public Community panels cannot display generated art');
     const communityWidth=await page.locator('.p136-community').evaluate(el=>({client:el.clientWidth,scroll:el.scrollWidth}));
     assert.ok(communityWidth.scroll<=communityWidth.client+2,'Community overflow at '+width+'px '+JSON.stringify(communityWidth));
+    await page.locator('.mc-activity .mc-empty h3').waitFor();
+    const widgetStyle=await page.locator('.mc-activity').evaluate(panel=>({
+      font:getComputedStyle(panel.querySelector('h2')).fontFamily,
+      emptyFont:getComputedStyle(panel.querySelector('.mc-empty h3')).fontFamily,
+      radius:parseFloat(getComputedStyle(panel).borderRadius)
+    }));
+    assert.ok(!/Georgia|serif(?:,|$)/i.test(widgetStyle.font.replaceAll('sans-serif','')),'Community widget uses Institute typography');
+    assert.ok(!/Georgia|serif(?:,|$)/i.test(widgetStyle.emptyFont.replaceAll('sans-serif','')),'Empty state uses the same functional typography');
+    assert.ok(widgetStyle.radius<=12,'Community panel matches shared compact materials');
+    if(width>=1280){
+      const clearance=await page.evaluate(()=>({
+        nav:document.querySelector('.p136-console-wayfinder').getBoundingClientRect().toJSON(),
+        content:document.querySelector('.p136-community').getBoundingClientRect().toJSON()
+      }));
+      assert.ok(clearance.nav.right+6<=clearance.content.left,'Console remains outside public content: '+JSON.stringify(clearance));
+    }
     await page.getByRole('button',{name:'PEOPLE',exact:true}).click();
     await page.waitForURL(/\/community\?view=people$/);
     assert.equal(await page.getByRole('button',{name:'PEOPLE',exact:true}).getAttribute('aria-pressed'),'true');
@@ -445,6 +461,15 @@ try{
     assert.ok(!/<(?:script|iframe|img)\b/i.test(embed));
     const size=await page.evaluate(()=>({client:innerWidth,scroll:document.documentElement.scrollWidth}));
     assert.ok(size.scroll<=size.client+2,'Project/share overflow at '+width+'px '+JSON.stringify(size));
+    if(width<650){
+      const copy=kit.getByRole('button',{name:'Copy embed HTML',exact:true});
+      await copy.evaluate(el=>{el.focus();el.scrollIntoView({block:'end',behavior:'instant'});});
+      const clearance=await page.evaluate(()=>({
+        control:document.querySelector('.avp-launch-kit-embed button').getBoundingClientRect().toJSON(),
+        dock:document.querySelector('.p136-console-wayfinder').getBoundingClientRect().toJSON()
+      }));
+      assert.ok(clearance.control.bottom+6<=clearance.dock.top,'Focused share control clears mobile dock: '+JSON.stringify(clearance));
+    }
     await page.screenshot({path:join(out,'open-signal-'+width+'.png'),animations:'disabled'});
     await page.goto(base+'/projects/unpublished-ci-fixture',{waitUntil:'domcontentloaded'});
     await page.getByRole('heading',{name:'PROJECT NOT AVAILABLE'}).waitFor();
@@ -472,6 +497,12 @@ try{
         h1Count:document.querySelectorAll('h1').length,dockCount:document.querySelectorAll('.ir80-dock').length};
     });
     assert.ok(layout.scroll<=width+1,'No horizontal overflow: '+JSON.stringify(layout));
+    if(width<650){
+      const compact=await page.locator('.p136-hero-content h1').boundingBox();
+      assert.ok(compact&&compact.y-layout.hero.y<230,'Mobile heading cannot reserve a poster-sized blank area');
+      assert.ok(layout.primary.bottom<844-100,'Primary action is available above the phone console');
+    }
+
     if(process.env.VITE_PARITY_V136_CINEMATIC==='true'){
       const cinema=page.locator('[data-cinematic-v136="native-institute"]');
       assert.equal(await cinema.count(),1,'One authored native Institute presentation layer');
@@ -491,7 +522,7 @@ try{
 
     assert.equal(layout.h1Count,1);assert.equal(layout.dockCount,1,'One canonical IREN companion');
     assert.equal(await page.locator('.p136-console-wayfinder').count(),1,'Exactly one persistent console wayfinder');
-    if(width>=1900){
+    if(width>=1280){
       const rail=await page.locator('.p136-hero-rail').boundingBox();
       const wayfinder=await page.locator('.p136-console-wayfinder').boundingBox();
       assert.ok(rail&&wayfinder&&wayfinder.x+wayfinder.width+4<rail.x,
