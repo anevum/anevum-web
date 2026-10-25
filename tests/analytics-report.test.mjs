@@ -41,6 +41,9 @@ test('multi-source report remains source-labeled and distinguishes account, reco
 test('no input means unavailable, not zero',()=>{
   const got=composeAnalyticsEvidenceReport(times);
   assert.equal(got.accounts.status,'UNAVAILABLE');
+  assert.equal(got.source_quality.registration,'UNAVAILABLE');
+  assert.equal(got.source_quality.creator_records,'UNAVAILABLE');
+  assert.equal(got.source_quality.page_loads,'UNAVAILABLE');
   assert.equal(got.accounts.accounts,null);
   assert.equal(got.creator.records,null);
   assert.equal(got.rum.capturedPageLoadSamples,null);
