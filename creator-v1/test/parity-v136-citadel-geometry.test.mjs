@@ -10,7 +10,7 @@ for(const tier of ['desktop','mobile']){
   assert.equal(c.drawCalls,6,'Original architecture stays batched, not hundreds of draw calls');
   assert.equal(c.root.children.length,c.drawCalls);
   assert.ok(c.instanceCount>=45);
-  assert.ok(c.triangles>=500&&c.triangles<7500,
+  assert.ok(c.triangles>=500&&c.triangles<10000,
    'Bounded detailed architecture rather than empty decorative scaffolding');
   let actualTriangles=0,actualInstances=0;
   c.root.traverse(node=>{
@@ -23,11 +23,29 @@ for(const tier of ['desktop','mobile']){
   });
   assert.equal(c.triangles,actualTriangles);
   assert.equal(c.instanceCount,actualInstances);
+  const geology=c.root.getObjectByName('Suspension geology');
+  assert.equal(geology.count,tier==='desktop'?9:4,'Main islands plus actual hanging rock shards');
+  const positions=geology.geometry.attributes.position;
+  let lowerRadius=0,upperRadius=0;
+  for(let i=0;i<positions.count;i++){
+   const radius=Math.hypot(positions.getX(i),positions.getZ(i));
+   if(positions.getY(i)<-.8)lowerRadius=Math.max(lowerRadius,radius);
+   if(positions.getY(i)>.5)upperRadius=Math.max(upperRadius,radius);
+  }
+  assert.ok(upperRadius>lowerRadius*3,'Geology tapers downward, not toward the deck');
+  const windows=c.root.getObjectByName('Photonic window inlays');
+  assert.ok(windows.instanceColor,'Real instanced light fixtures carry authored colors');
+  const released=new Set();
+  c.root.traverse(mesh=>{if(mesh instanceof T.InstancedMesh){
+   mesh.geometry.addEventListener('dispose',()=>released.add(mesh.geometry));
+   mesh.material.addEventListener('dispose',()=>released.add(mesh.material));
+  }});
   const snapshot=c.root.rotation.y;
   c.update(100,true);assert.notEqual(c.root.rotation.y,snapshot);
   c.update(100,false);assert.equal(c.root.rotation.y,0);
   c.dispose();
   assert.equal(c.root.children.length,0,'Own all geometry/materials and free instances on navigation');
+  assert.equal(released.size,10,'Six geometry and four shared material resources are released');
  });
 }
 

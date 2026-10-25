@@ -29,13 +29,31 @@ const MOBILE_PLACES:readonly Place[]=[
 function batch(name:string,geometry:T.BufferGeometry,material:T.Material,poses:InstancePose[]):Batch{
  return {name,geometry,material,poses};
 }
+/** Revolved architectural sections share one indexed mesh per material batch.
+ * Radius/height profiles form terraces and cornices rather than painted detail. */
+function section(profile:readonly (readonly [number,number])[],segments:number){
+ return new T.LatheGeometry(profile.map(([r,y])=>new T.Vector2(r,y)),segments);
+}
+function fracturedGeology(segments:number){
+ const geometry=section([[0,-1.15],[.13,-.95],[.28,-.48],[.44,-.27],
+  [.64,.08],[.79,.20],[1,.68],[.80,1],[0,1.02]],segments);
+ const positions=geometry.attributes.position;
+ for(let i=0;i<positions.count;i++){
+  const x=positions.getX(i),y=positions.getY(i),z=positions.getZ(i),a=Math.atan2(z,x);
+  // Continuous angular deformation keeps the seam closed, with no random seed
+  // or per-frame geometry uploads. Flat normals expose original rock facets.
+  const fracture=1+.14*Math.sin(a*3+y*1.7)+.09*Math.cos(a*7-y*2.3);
+  positions.setXYZ(i,x*fracture,y+.09*Math.sin(a*5)*Math.hypot(x,z),z*fracture);
+ }
+ positions.needsUpdate=true;geometry.computeVertexNormals();return geometry;
+}
 export function createInstituteCitadels(tier:AssetTier){
  const mobile=tier==='mobile',places=mobile?MOBILE_PLACES:DESKTOP_PLACES;
- const dark=new T.MeshStandardMaterial({color:0x111c30,metalness:.35,roughness:.69});
+ const dark=new T.MeshStandardMaterial({color:0x263048,metalness:.18,roughness:.88,flatShading:true});
  const alloy=new T.MeshStandardMaterial({color:0x42637d,metalness:.76,roughness:.29,
   emissive:0x09172c,emissiveIntensity:.23});
  const auric=new T.MeshStandardMaterial({color:0x8b7152,metalness:.83,roughness:.33});
- const photonic=new T.MeshBasicMaterial({color:0x7fdcff,toneMapped:false});
+ const photonic=new T.MeshBasicMaterial({color:0xffffff,toneMapped:false});
  const root=new T.Group();root.name='QA / SUSPENDED CONTINUANCE OUTPOSTS';
  const deck:InstancePose[]=[],suspended:InstancePose[]=[],towers:InstancePose[]=[];
  const spires:InstancePose[]=[],windowSlits:InstancePose[]=[],halos:InstancePose[]=[];
@@ -43,7 +61,15 @@ export function createInstituteCitadels(tier:AssetTier){
  for(const place of places){
   deck.push({position:[place.x,place.y,place.z],scale:[place.r,.90*place.scale,place.r]});
   suspended.push({position:[place.x,place.y-1.20*place.scale,place.z],
-   scale:[place.r*.66,place.scale,place.r*.66],rotation:[Math.PI,0,0]});
+   scale:[place.r*.81,place.scale,place.r*.81]});
+  // Broken hanging shards give each island a geological silhouette, rather
+  // than a single smooth inverted cone beneath a flat circular platform.
+  for(let shard=0;shard<(mobile?1:2);shard++){
+   const a=shard*2.7+.65;
+   suspended.push({position:[place.x+Math.cos(a)*place.r*.58,
+    place.y-1.12*place.scale,place.z+Math.sin(a)*place.r*.58],
+    scale:[place.r*.18,place.scale*.7,place.r*.22],rotation:[.12,a,.17]});
+  }
   halos.push({position:[place.x,place.y+.26*place.scale,place.z],
    scale:[place.r*1.04,place.r*1.04,place.r*1.04],rotation:[Math.PI/2,0,0]});
   const count=mobile?3:5;
@@ -74,11 +100,14 @@ export function createInstituteCitadels(tier:AssetTier){
   }
  }
  const batches:Batch[]=[
-  batch('Floating deck strata',new T.CylinderGeometry(1,1.10,.28,mobile?10:14),alloy,deck),
-  batch('Suspension geology',new T.ConeGeometry(1,2.15,mobile?10:14),dark,suspended),
+  batch('Floating deck strata',section([[0,-.22],[.72,-.22],[.74,-.13],
+   [1.08,-.13],[1.08,-.04],[.87,-.04],[.87,.10],[1,.10],[1,.17],[0,.17]],mobile?10:14),alloy,deck),
+  batch('Suspension geology',fracturedGeology(mobile?8:10),dark,suspended),
   batch('Ring railings',new T.TorusGeometry(1,.017,4,mobile?32:48),photonic,halos),
-  batch('Cathedral finial towers',new T.CylinderGeometry(.12,.22,towerHeight,8),alloy,towers),
-  batch('Auric crown spires',new T.ConeGeometry(.20,1.18,8),auric,spires),
+  batch('Cathedral finial towers',section([[0,-1.25],[.28,-1.25],[.28,-1.08],
+   [.19,-.97],[.15,.58],[.27,.62],[.27,.72],[.12,.76],[.10,1.25],[0,1.25]],8),alloy,towers),
+  batch('Auric crown spires',section([[0,-.59],[.22,-.59],[.22,-.49],
+   [.12,-.40],[.06,.14],[0,.59]],8),auric,spires),
   batch('Photonic window inlays',new T.BoxGeometry(.12,.095,.08),photonic,windowSlits)
  ];
  let triangles=0;
@@ -95,6 +124,12 @@ export function createInstituteCitadels(tier:AssetTier){
    matrix.rotation.set(...(pose.rotation??[0,0,0]));
    matrix.updateMatrix();
    instanced.setMatrixAt(i,matrix.matrix);
+   if(material===photonic){
+    // Architectural light fixtures alternate cool glass and warm under-deck
+    // illumination; this is fixed authored detail, never activity telemetry.
+    instanced.setColorAt(i,new T.Color(name==='Ring railings'?0xffbd79:
+     i%7===0?0xffcf91:i%3===0?0xb7a2ff:0x7fdcff));
+   }
   }
   instanced.instanceMatrix.needsUpdate=true;
   instanced.computeBoundingSphere();
