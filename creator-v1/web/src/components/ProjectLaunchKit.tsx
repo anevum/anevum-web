@@ -10,7 +10,7 @@ export function ProjectLaunchKit({project}:{project:Pick<Project,"id"|"title">})
   const [notice,setNotice]=useState("");
   const origin=typeof window==="undefined"?"https://anevum.com":window.location.origin;
   let kit:ReturnType<typeof buildProjectLaunchKit>;
-  try{kit=buildProjectLaunchKit(project,origin);}catch{return null;}
+  try{kit=buildProjectLaunchKit(project,origin,import.meta.env.BASE_URL);}catch{return null;}
   const nativeShare=typeof navigator!=="undefined"&&typeof navigator.share==="function";
 
   async function copy(value:string,what:"link"|"badge"){
