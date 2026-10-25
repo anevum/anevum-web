@@ -229,7 +229,13 @@ function ShellContent(){
             <Icon name="arrow" size={16}/>
           </Link>)}
           <button type="button" className="ir80-wayfinder-entry"
-            onClick={()=>{setMenuOpen(false);window.dispatchEvent(new Event("anevum:iren-open"));}}>
+            onClick={()=>{setMenuOpen(false);window.requestAnimationFrame(()=>{
+              // The IREN panel remembers its opener. Use the persistent menu
+              // trigger after the dialog closes, so returning never focuses
+              // an entry inside a closed dialog.
+              menuButton.current?.focus({preventScroll:true});
+              window.dispatchEvent(new Event("anevum:iren-open"));
+            });}}>
             <span className="av79-destination-icon"><Icon name="star" size={21}/></span>
             <span><strong>IREN / Field assistant</strong><small>Get help or take a guided tour at any time</small></span>
             <span className="ir80-wayfinder-action">OPEN IREN HELP</span>

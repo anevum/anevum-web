@@ -451,6 +451,30 @@ provider configuration, auth/data/media/upload/publication/payments unchanged.
 No new infrastructure or payment audit is claimed. Next UI slice is the actual
 Studio archive/upload form and existing compatibility/rights/playtest guidance.
 
+### Unified continuation — V136.031 Studio archive handoff
+Session `ANEVUM.ANEVUM.PACKAGE.2026-10-25.002.UNIFIED-OVERHAUL-WORK-CONTINUATION`.
+#753 `bea05ce35c7288f1fbfd6c3f9157d372ac8a9355` is the saved V136.030 preview
+increment on #752. Clean committed local 1440/390/320 Studio receipt PASS,
+including mounted Monaco/cursor retention; pinned CI still pending. #752's
+eleven development workflows and 1,771 main regressions remain green. No new
+creative acceptance found for the UI drafts; no merge or release inferred.
+
+New branch `build/parity-v136-studio-handoff-20261025-031` advances the existing
+archive-to-uploader workflow. A real prepared archive offers keyboard focus to
+the title field without remounting source. Three named form sections distinguish
+build compatibility, creator-provided details/cover, and the private playtest.
+Preparation guidance uses actual current file/check/metadata/rights state.
+Unchanged upload rights, compatibility, replacement and independent-review
+gates remain authoritative; source edits still invalidate archive and rights.
+Local TypeScript/build and 81 targeted contracts pass; compiled Studio checks
+PASS at 1440/390/320, errors=[] / forbidden=[]. Nine local synthetic compiled
+images inspected; these are uncommitted-source receipts, not pinned CI. No upload or
+private data action. Exact-head CI and creative review remain open.
+
+Production, main, sealed #741, traffic, provider configuration, payment and
+private data unchanged. Next bounded UI slice is existing Studio library and
+revision-action presentation, not a replacement publishing architecture.
+
 
 ### V136.030 pinned-browser screenshot failure under investigation
 Exact source bea05ce35c7288f1fbfd6c3f9157d372ac8a9355 passed nine development
@@ -462,3 +486,9 @@ already had a bounded 90-second software-rendering budget. Give the new preview
 capture that same budget, retaining every assertion and required image, and log
 capture geometry/elapsed time to distinguish rendering delay from UI failure.
 Fresh exact-head CI is required. Main/production/#741/traffic remain unchanged.
+
+V136.031 also corrects the observed 320px IREN-dock overlap on the private
+form: only its idle presentation yields the authoring controls. The existing
+Wayfinder still opens the same IREN panel; closing returns focus to the
+persistent menu trigger, not an entry inside a closed dialog. The compiled
+all-width flow verifies action hit points and real assistant access/return.

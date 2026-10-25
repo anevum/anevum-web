@@ -1,4 +1,4 @@
-name: PARITY V136.030 Studio Layout Preview QA
+name: PARITY V136 Studio Authoring QA
 on:
   pull_request:
     paths:
@@ -7,6 +7,9 @@ on:
       - 'creator-v1/web/src/parity/SourcePreviewV136.tsx'
       - 'creator-v1/web/src/parity/artifact-workbench-v136.css'
       - 'creator-v1/web/src/parity/workbench-file-ops-v136.ts'
+      - 'creator-v1/web/src/pages/NativeCreatorStudio.tsx'
+      - 'creator-v1/web/src/pages/native-creator-v095.css'
+      - 'creator-v1/web/src/components/Shell.tsx'
       - 'creator-v1/test/parity-v136-full-browser.mjs'
       - 'creator-v1/test/source-archive-v136.test.mjs'
 permissions:
