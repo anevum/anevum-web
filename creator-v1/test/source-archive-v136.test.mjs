@@ -82,5 +82,7 @@ test('source link audit resolves relative paths, rejects external URLs, keeps au
  assert.deepEqual(sourceReferencesToReview(files,'assets/theme.css'),['styles.css','scripts/main.js']);
  assert.deepEqual(sourceReferencesToReview(files,'scripts/main.js'),['index.html']);
  assert.deepEqual(sourceReferencesToReview(files,'missing.css'),[]);
+ assert.ok(!sourceReferencesToReview(files,'styles.css').includes('notes.txt'),
+  'Documentation containing CSS-like examples cannot masquerade as a live code dependency');
  assert.equal(JSON.stringify(files),snapshot,'Audit cannot mutate local source files');
 });

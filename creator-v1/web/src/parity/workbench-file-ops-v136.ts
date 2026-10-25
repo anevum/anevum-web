@@ -47,11 +47,13 @@ export function sourceReferencesToReview(files:Record<string,string>,previous:st
  if(!Object.hasOwn(files,previous))return [];
  const references:string[]=[];
  for(const [owner,content] of Object.entries(files)){
-  if(owner===previous)continue;
+  if(owner===previous||!/\.(?:html|css|js|json)$/i.test(owner))continue;
   // Each match is bounded to one logical line to avoid collecting entire
   // user documents or accidentally treating arbitrary multiline text as URLs.
   const quoted=content.matchAll(/["'`]([^"'`\r\n]{1,240})["'`]/g);
-  const cssUrls=content.matchAll(/url\(\s*([^\s"'()]{1,240})\s*\)/gi);
+  const cssUrls=owner.endsWith('.css')?
+   content.matchAll(/url\(\s*([^\s"'()]{1,240})\s*\)/gi):
+   [][Symbol.iterator]();
   if([...quoted,...cssUrls].some(match=>sourceReferencePath(owner,match[1])===previous))references.push(owner);
  }
  return references;
