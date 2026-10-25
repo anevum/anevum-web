@@ -6,6 +6,7 @@ on:
       - "ops/feedback-relay/**"
       - "tests/feedback-relay.test.mjs"
       - "tests/analytics-evidence.test.mjs"
+      - "tests/analytics-report.test.mjs"
       - ".github/workflows/feedback-relay-contract.yml"
   push:
     branches: [main]
@@ -13,6 +14,7 @@ on:
       - "ops/feedback-relay/**"
       - "tests/feedback-relay.test.mjs"
       - "tests/analytics-evidence.test.mjs"
+      - "tests/analytics-report.test.mjs"
       - ".github/workflows/feedback-relay-contract.yml"
 
 permissions:
@@ -28,4 +30,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - run: node --test tests/feedback-relay.test.mjs tests/analytics-evidence.test.mjs
+      - run: node --test tests/feedback-relay.test.mjs tests/analytics-evidence.test.mjs tests/analytics-report.test.mjs
