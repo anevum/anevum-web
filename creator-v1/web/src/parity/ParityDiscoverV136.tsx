@@ -97,6 +97,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
   // Route/filter changes invalidate the local inspection, never the data API.
   useEffect(()=>setInspected(null),[current]);
   const filtered=Boolean(query||category||cursor||freeOnly);
+  const clearHref=view==='compact'?'/discover?view=list':'/discover';
   const countLabel=resourceState==='ready'?'APPROVED PROJECT CATALOGUE':packagesInScope&&packageState==='ready'?'AVAILABLE BROWSER RELEASES':'READING THE PUBLIC INDEX';
   return <div data-iren-anchor="discover" className="portal-discover av73-discover p136-discovery" data-parity-discover="v136.004">
     <section className="p136-discover-hero" aria-labelledby="p136-discover-title">
@@ -140,10 +141,11 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
                 event.preventDefault();onSearchValue(event.currentTarget.value);
               }
             }}
-            placeholder="Search games, software, art, research..." />
+            placeholder="Search projects..." />
+          {view==='compact'&&<input type="hidden" name="view" value="list"/>}
           {category&&<input type="hidden" name="category" value={category}/>}
           {freeOnly&&<input type="hidden" name="free" value="1"/>}
-          <button type="submit" onClick={event=>{
+          <button type="submit" aria-label="Search published projects" onClick={event=>{
             event.preventDefault();
             const field=event.currentTarget.form?.elements.namedItem("q") as HTMLInputElement|null;
             onSearchValue(field?.value??draft);
@@ -156,7 +158,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
               aria-describedby="p136-free-disclosure" className={freeOnly?'is-selected':''}>Marked free <span aria-hidden="true">{freeOnly?'✓':'+'}</span></button>
             <small id="p136-free-disclosure">Creator-declared, not an independent price check.</small>
           </div>
-          {filtered&&<Link to="/discover" className="p136-discover-reset">Clear filters <Icon name="close" size={14}/></Link>}
+          {filtered&&<Link to={clearHref} className="p136-discover-reset">Clear filters <Icon name="close" size={14}/></Link>}
         </div>
       </section>
 
@@ -191,7 +193,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
           <div><span className="p136-discover-kicker">{countLabel}{freeOnly?' / MARKED FREE':''}</span>
             <h2 id="p136-index-heading">{query?'Search results':activeLabel?activeLabel+' releases':'Published worlds & work'}</h2>
             {query&&<p className="p136-discover-query">Searching for “{query}”</p>}
-            {resultsReady&&<p className="p136-discover-count">{shown} approved {shown===1?'release':'releases'} on this page</p>}
+            {resultsReady&&<p className="p136-discover-count" role="status">{shown} approved {shown===1?'release':'releases'} on this page</p>}
           </div>
           <div className="p136-discover-layout-switch" role="group" aria-label="Choose project layout">
             <button type="button" aria-pressed={view==='covers'} className={view==='covers'?'is-active':''} onClick={()=>onView('covers')}><Icon name="explore" size={15}/> Grid</button>
@@ -212,7 +214,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
           <div><span className="p136-discover-kicker">A REAL INDEX / NO FABRICATED RESULTS</span>
             <h3>{cursor?'No additional releases on this page.':filtered?'No matching projects yet.':'No approved projects yet.'}</h3>
             <p>Try a different search or category. Only approved public work is listed; private drafts stay private.</p>
-            <div className="p136-discover-empty-actions"><Link to="/discover">Explore all work</Link><Link to="/guide">Read the field guide</Link></div>
+            <div className="p136-discover-empty-actions"><Link to={clearHref}>Explore all work</Link><Link to="/guide">Read the field guide</Link></div>
           </div>
         </div>}
         {packagesInScope&&packagesCount===100&&<p className="p136-discover-status">Browser upload search covers the latest 100 approved releases.</p>}
