@@ -251,54 +251,37 @@ Current provider baseline is deployment `f2f950d8-8ec6-42cd-80c2-06681ad2fcf9`
 and the recorded V136.003 99% / V136.005 1% split. Do not infer new live state
 until a provider receipt and real browser checks establish it.
 
-## V136.025 — isolated Creator Directory next slice (draft)
+## V136.025 — creator directory source, acceptance and release boundary (2026-10-25)
+Session `ANEVUM.WEB.UPDATE.2026-10-25.005.CREATOR-DISCOVERY-CONVERGENCE`.
+Development branch `build/parity-v136-creator-directory-20261025-025`, draft
+[#745](https://github.com/anevum/anevum-web/pull/745), stacked on #735
+`20161bae20e7f369d4d7edfadcb4316ecccac3cf`. No main or production merge.
 
-Session `ANEVUM.WEB.UPDATE.2026-10-25.005.CREATOR-DISCOVERY-CONVERGENCE`
-continues the already merged website development baseline
-`20161bae20e7f369d4d7edfadcb4316ecccac3cf`, not the immutable
-release candidate `4dfaed54fed606713a99b87c3152beddbcbc31f3`.
-New branch: `build/parity-v136-creator-directory-20261025-025`.
+Implemented: bounded read-only Creator Directory cards, native Institute styles,
+responsive/grid/list presentation, shareable URL search and pagination, true
+empty/error states and accessibility. Real approved public `readCreators` and
+`CompactMemberIdentity` remain the sole sources of channel identity; no new
+API, fabricated member/media/metrics, private content or payment dependencies.
+Shorter phone placeholder avoids truncation. The sidebar uses "30 CURRENT
+LEVELS", accurately describing the **implemented** 30-level backend, while
+#337's approved **future** unlimited design is explicitly still pending.
+No reward XP computation or storage is touched.
 
-Scope is only the actual public `/creators` screen, central Institute CSS,
-new source contracts, browser QA and this continuity. Search, paginated
-server data and a grid/list choice share the URL; search clears stale cursors
-and does not create a new backend endpoint. Phone identity tiles and search
-are made genuinely usable, using existing safe creator-channel portraits,
-read-only approved public results, focus affordances and deterministic empty
-states. The older published creator/legacy profile identity split persists.
-No synthetic members, badges, follower counts or extra personal media are
-shown in the application.
+Verified `8e4fbc66`: full Creator V1 Verify PASS (1,761/1,761), V083, V081,
+V084, V091, V095, V096 PASS; full compiled Spatial QA
+[40211155640](https://github.com/anevum/anevum-web/actions/runs/40211155640)
+PASS. Focused directory full-flag browser
+[40212833188](https://github.com/anevum/anevum-web/actions/runs/40212833188)
+PASS with [12 labelled fixture screenshots](https://github.com/anevum/anevum-web/actions/runs/40212833188/artifacts/12606154516),
+three viewport geometry receipts, zero overflow, page errors or outgoing
+non-read requests. Post-copy exact-head runs remain required.
+The screenshot fixture is synthetic loopback-only; visual review by owner #335
+is not automatic from CI passing. Physical iPhone Safari, Xbox/controller,
+production authenticated roles and future performance gates remain open.
 
-Browser fixture data is loopback-only. Exact-head type/build/complete regression
-and screenshots are required before review, then CI and a distinct release
-scope/rollback decision before any traffic activation. The contemporaneous
-HTTP 403 from PR #742's GET-only client precedes the application and remains
-unresolved; never count it as a smoke pass. PR #739 Stripe retirement is an
-independent draft, and old provider account obligations/secrets require their
-own controlled cleanup. No production, provider, finance, database, main-branch,
-permission or account mutation is implied by this slice.
-
-## V136.025 — isolated creator-directory UI convergence (2026-10-25)
-Session: `ANEVUM.WEB.UPDATE.2026-10-25.005.CREATOR-DISCOVERY-CONVERGENCE`.
-Code branch: `build/parity-v136-creator-directory-20261025-025`.
-Base: #735 development commit `20161bae20e7f369d4d7edfadcb4316ecccac3cf`.
-Status: ACTIVE DEVELOPMENT / source and compiled-browser assertions proposed;
-no exact-head completed CI, owner screenshot acceptance or production release
-may be inferred from this source-only commit.
-
-Scope: real `/creators` search, URL-owned Grid/List, responsive public
-channel cards, trustworthy zero-results and pagination states, accessible
-controls, and media-free native Institute styling. Public source of truth
-remains `readCreators` and `CompactMemberIdentity`; no new community identity
-or dataset was minted. CI-only synthetic fixture creators are isolated inside
-the loopback Playwright harness, which tests desktop 1440 and phones 390/320.
-An additional source contract guards routing, CSS, privacy and real data use.
-Any failed exact-head test or real screenshot defect remains open work.
-
-Release isolation: PR #741's immutable candidate `4dfaed54` is not updated by
-this branch; recorded live V58/V59 traffic split is not changed by source work.
-Draft public HTTP smoke #742 returned HTTP 403 before the baseline request and
-is not a successful rollout verification. Stripe retirement #739, protected
-backend, auth, payments, publishing and private member media remain outside
-this UI scope. Next gate: draft PR, exact-head CI and direct screenshot review
-against the approved V136 concept boards, before an owner-controlled integration.
+Release source guard rejects unreviewed draft files by design; it must not
+be weakened to turn this source into a deploy. The already sealed #741 candidate
+and recorded rollout/rollback stay distinct. The #742 read-only HTTP 403
+preceded the application. Stripe migration #739 remains isolated, and no
+auth, database, uploading, public publishing, XP, payment, infrastructure or
+traffic mutation occurred here. Release owner #333 retains the gate.
