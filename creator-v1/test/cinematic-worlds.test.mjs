@@ -27,12 +27,14 @@ test("native category panels cover all published categories without pretending t
   const artwork=read("web/src/components/CosmicArtwork.tsx");
   const home=read("web/src/pages/HomePage.tsx");
   const card=read("web/src/components/ProjectCard.tsx");
+  const presets=read("web/src/lib/project-thumbnails.ts");
   for(const category of ["games","tools","automation","research","creative","learning","libraries","other"]){
     assert.match(svg,new RegExp(category+":"));
     assert.ok(home.includes('id:"'+category+'"'),category);
     assert.ok(artwork.includes(category+':{'),category);
-    assert.ok(card.includes(category+':"'+category+'"'),category);
+    assert.ok(presets.includes(category+':{'),category);
   }
+  assert.match(card,/<ProjectThumbnail kind=\{project.category\}/);
   assert.match(svg,/viewBox="0 0 1600 700"/);
   assert.match(artwork,/aria-hidden=\{title\?undefined:true\}/);
   assert.match(svg,/useId\(\)/);
@@ -65,14 +67,14 @@ test("secondary pages share the same world art while preserving genuine content 
   const community=read("web/src/pages/CommunityPage.tsx");
   const css=read("web/src/cinematic-subpages.css");
   // V091 creator headers now prioritize verified identity over category art.
-  for(const section of [heading,projectPlayer,community])
-    assert.match(section,/CosmicArtwork/);
+  for(const section of [heading,community])assert.match(section,/CosmicArtwork/);
+  assert.match(projectPlayer,/ProjectThumbnail/);
   assert.doesNotMatch(creators,/CosmicArtwork|cw-channel-scene/);
   assert.match(project,/safeExternal/);
   assert.match(project,/MemberEngagementPanel/);
   assert.match(project,/ProjectPlayerShell/);
-  assert.match(projectPlayer,/CosmicArtwork/);
-  assert.match(projectPlayer,/scene={project.category}/);
+  assert.match(projectPlayer,/ProjectThumbnail/);
+  assert.match(projectPlayer,/kind=\{project.category\}/);
   assert.match(creators,/memberCreatorProfile/);
   assert.match(creators,/detailed\?\.achievements/);
   assert.match(community,/readProjects/);
