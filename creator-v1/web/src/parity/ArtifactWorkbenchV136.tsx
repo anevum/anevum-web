@@ -217,6 +217,21 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
   </div>
   <div className="p136-workbench-command">
    <button type="button" disabled={disabled||!files['index.html']||total>MAX_TOTAL} onClick={()=>packageSource()}><Icon name="create" size={16}/> Prepare build archive</button>
+   <button type="button" className="p136034-preview-command" aria-pressed={previewFocused}
+    aria-label={previewFocused?'Return to source editor from layout preview':'Open focused HTML/CSS layout preview'}
+    onClick={()=>{if(previewFocused)returnToEditor();else{setInspector(true);setPreviewFocused(true)}}}>
+    {previewFocused?'Return to code':'Preview HTML/CSS'}
+   </button>
+   <button type="button" className="p136034-diagnostics-command"
+    aria-label={'Open local build checks: '+(problems.length+unresolvedLinks.length)+' findings'}
+    onClick={()=>{
+     setInspector(true);setPreviewFocused(false);setDiagnosticsOpen(true);
+     requestAnimationFrame(()=>{
+      const summary=document.querySelector<HTMLElement>('.p136030-build-details > summary');
+      summary?.scrollIntoView({block:'nearest'});
+      summary?.focus({preventScroll:true});
+     });
+    }}>Build checks · {problems.length+unresolvedLinks.length}</button>
    <button type="button" disabled={disabled||!files['index.html']||total>MAX_TOTAL} onClick={downloadSource}>Download complete source</button>
    <label className="p136-source-import">Open text files<input disabled={disabled} type="file" multiple accept=".html,.css,.js,.json,.txt,.md" onChange={e=>void importFiles(e.target.files)}/></label>
    <button type="button" aria-pressed={plain} onClick={()=>setPlain(v=>!v)}>Accessible text editor</button>
@@ -224,6 +239,9 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
    <button ref={quickButton} type="button" aria-expanded={quickOpen} aria-controls="p136-quick-open" aria-keyshortcuts="Control+p Meta+p"
     onClick={()=>{setPreviewFocused(false);setFileQuery('');setFileChoice(0);setQuickOpen(v=>!v)}}>Open file…</button>
   </div>
+  {previewFocused&&<p className="p136034-preview-mode" role="status">
+   Focused HTML/CSS layout only. Scripts, external resources and publishing remain disabled. Choose a real CSS viewport below; press Escape or Return to code to resume the mounted editor.
+  </p>}
   {quickOpen&&<div className="p136-source-quick-open" id="p136-quick-open">
    <label htmlFor="p136-file-query">Find a local source file <span>↑ ↓ to choose · Enter to open · Esc to close</span></label>
    <input ref={quickInput} id="p136-file-query" type="search" value={fileQuery} autoComplete="off"
