@@ -108,6 +108,68 @@
   sphere(-7.2,-3.8,-147,8.4,[.40,.28,.52],0);
   sphere(9.2,-5.4,-193,7.1,[.48,.38,.32],2);
   ring(8.5,3.4,-106,8.7,.12,.44,2);
+  const thresholdVertices=vertices.length/10;
+
+  // Separate real 3D regions, not a color filter on one repeated tunnel.
+  // Archive: a receding observatory of floating archival monoliths, radial
+  // instruments, and a central stellar record. Each object occupies a depth.
+  const prism=(cx,cy,cz,w,h,d,color,kind=0)=>{
+    const x0=cx-w/2,x1=cx+w/2,y0=cy-h/2,y1=cy+h/2,z0=cz-d/2,z1=cz+d/2;
+    const faces=[
+      [[0,0,1],[[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]]],
+      [[0,0,-1],[[x1,y0,z0],[x0,y0,z0],[x0,y1,z0],[x1,y1,z0]]],
+      [[1,0,0],[[x1,y0,z1],[x1,y0,z0],[x1,y1,z0],[x1,y1,z1]]],
+      [[-1,0,0],[[x0,y0,z0],[x0,y0,z1],[x0,y1,z1],[x0,y1,z0]]],
+      [[0,1,0],[[x0,y1,z1],[x1,y1,z1],[x1,y1,z0],[x0,y1,z0]]],
+      [[0,-1,0],[[x0,y0,z0],[x1,y0,z0],[x1,y0,z1],[x0,y0,z1]]]
+    ];
+    faces.forEach(([n,points])=>{
+      const [a,b,c,d]=points.map(p=>position(p,n,color,kind));
+      triangle(a,b,d);triangle(b,c,d);
+    });
+  };
+  const archiveStart=vertices.length/10;
+  for(let i=0;i<8;i++){
+    const z=-24-i*21,span=12.8+i*.6;
+    const height=15+i*1.5;
+    // Deliberate negative space through which the camera can actually fly.
+    prism(5-span,0,z,1.6,height,2.4,[.28,.40,.53],0);
+    prism(5+span,0,z,1.6,height,2.4,[.28,.40,.53],0);
+    prism(5,8.3+i*.42,z-.3,span*2.2,.68,2.1,[.45,.38,.30],2);
+    prism(5,-8.6-i*.35,z,span*1.9,.42,1.7,[.26,.36,.50],0);
+    ring(5,0,z-3.2,7.0+i*.4,.13,i*.085,2,Math.PI*1.92);
+    ring(5,0,z-4.5,4.0+i*.29,.085,-i*.10,3,Math.PI*1.72);
+    for(const side of [-1,1]){
+      const sx=5+side*(span-1.4);
+      prism(sx,3.9,z+2,.28,2.7,.26,[.86,.63,.35],2);
+      prism(sx,-3.9,z+2,.28,2.7,.26,[.86,.63,.35],2);
+    }
+  }
+  sphere(5,1.2,-184,8.3,[.40,.43,.61],0);
+  ring(5,1.2,-184,12.0,.20,.18,3);
+  const archiveVertices=vertices.length/10-archiveStart;
+
+  // Beyond: actual large worlds and planetary halos on distant planes,
+  // with long sightlines. No second renderer or stock illustration.
+  const beyondStart=vertices.length/10;
+  sphere(6.0,1.6,-61,13.0,[.26,.31,.55],0);
+  sphere(-21,-8.1,-114,16.0,[.40,.23,.47],0);
+  sphere(28,10.3,-153,19.4,[.38,.42,.50],0);
+  sphere(2,15,-227,12.0,[.58,.38,.26],2);
+  ring(6,1.6,-61,18.9,.16,-.43,2,Math.PI*1.87);
+  ring(-21,-8.1,-114,22.8,.13,.55,3,Math.PI*1.74);
+  ring(28,10.3,-153,27.5,.15,-.21,2,Math.PI*1.91);
+  for(let i=0;i<18;i++){
+    const z=-85-i*11,theta=i*2.3999;
+    const x=8+Math.cos(theta)*(12+i*.55),y=Math.sin(theta)*(9+i*.3);
+    sphere(x,y,z,.95+(i%4)*.29,[.37+.025*(i%5),.42,.60],0);
+  }
+  const beyondVertices=vertices.length/10-beyondStart;
+  const realmRanges=[
+    {name:'threshold',start:0,count:thresholdVertices},
+    {name:'archive',start:archiveStart,count:archiveVertices},
+    {name:'beyond',start:beyondStart,count:beyondVertices}
+  ];
   const mesh=new Float32Array(vertices);
   const stars=[];
   for(let i=0;i<(weakDevice?2500:6800);i++){
@@ -127,7 +189,7 @@
   const skyFrag=`#version 300 es
     precision highp float;
     in vec2 vUv;out vec4 pixel;
-    uniform vec2 uResolution;uniform float uTime;uniform vec2 uPointer;uniform float uTravel;
+    uniform vec2 uResolution;uniform float uTime;uniform vec2 uPointer;uniform float uTravel;uniform float uRealm;
     float hash(vec2 x){return fract(sin(dot(x,vec2(127.1,311.7)))*43758.5453123);}
     float noise(vec2 x){vec2 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+1.),f.x),f.y);}
     void main(){
@@ -156,6 +218,28 @@
       ink+=vec3(.070,.066,.155)*disk*1.2;
       ink+=vec3(.061,.123,.165)*darkLane*exp(-gr*3.3)*.82;
       ink+=vec3(.19,.107,.071)*exp(-gr*8.)*(.28+grain2*.55);
+      // Three distinct spatial destinations. A threshold is a portal; the
+      // archive is a lit observatory; beyond is an immense spiral gulf.
+      float archiveMode=step(.5,uRealm)*(1.-step(1.5,uRealm));
+      float beyondMode=step(1.5,uRealm);
+      vec2 observatory=(uv-vec2(.67,.52))*vec2(uResolution.x/uResolution.y,1.);
+      float vault=exp(-abs(length(observatory)-.37)*7.);
+      float filaments=abs(sin(atan(observatory.y,observatory.x)*18.0+gr*13.));
+      vec3 archiveSky=vec3(.008,.017,.036)
+        +vec3(.19,.13,.075)*vault*(.18+.36*pow(filaments,13.))
+        +vec3(.025,.067,.080)*pow(max(0.,strata-.13),2.)*1.4;
+      ink=mix(ink,archiveSky,archiveMode*.91);
+      vec2 gulf=(uv-vec2(.76,.55))*vec2(uResolution.x/uResolution.y,1.);
+      float radius=length(gulf),angle=atan(gulf.y,gulf.x);
+      float dustField=noise(gulf*5.2+uTime*.004);
+      float spiral=.5+.5*cos(angle*4.-radius*21.+dustField*3.);
+      float galacticDisk=exp(-radius*2.3);
+      vec3 beyondSky=vec3(.010,.006,.037)
+        +vec3(.080,.050,.20)*galacticDisk*(.2+.65*spiral)
+        +vec3(.020,.13,.18)*pow(spiral,3.)*galacticDisk*.7
+        +vec3(.18,.080,.054)*exp(-radius*8.)*.9
+        +vec3(.05,.065,.105)*pow(max(0.,noise(gulf*13.)-.22),2.);
+      ink=mix(ink,beyondSky,beyondMode*.92);
       for(int l=0;l<3;l++){
         float scale=l==0?155.:l==1?310.:620.;
         vec2 q=uv*scale+vec2(float(l)*17.3,float(l)*31.1);
@@ -250,7 +334,7 @@
       gl.enable(gl.DEPTH_TEST);
       gl.depthFunc(gl.LEQUAL);
       const uniforms=(program,names)=>Object.fromEntries(names.map(name=>[name,gl.getUniformLocation(program,name)]));
-      const skyU=uniforms(sky,['uResolution','uTime','uPointer','uTravel']);
+      const skyU=uniforms(sky,['uResolution','uTime','uPointer','uTravel','uRealm']);
       const meshU=uniforms(solid,['uVP','uTime','uTravel']);
       const starU=uniforms(dust,['uVP','uCamera','uTime']);
       let lastWidth=0,lastHeight=0;
@@ -270,21 +354,32 @@
         travel=motionEnabled()?travel+(destination-travel)*.14:destination;
         stage.dataset.cameraTravel=travel.toFixed(3);
         const phone=box.width<650;
-        const eye=[(phone?.7:-.25)+eased[0]*.85+travel*2.1,eased[1]*.62+travel*.45,9-travel*56];
-        const target=[(phone?.4:4.1)+travel*.70,Math.sin(time*.035)*.26,-38-travel*37];
+        // Camera changes are physically distinct and source-pinned. The
+        // Archive faces monoliths; Beyond looks between actual planets.
+        const eye=sector===0
+          ? [(phone?.7:-.25)+eased[0]*.85+travel*2.1,eased[1]*.62+travel*.45,9-travel*56]
+          : sector===1
+            ? [(phone?5:2.4)+eased[0]*1.1,3.2+eased[1]*.9,12-travel*19]
+            : [(phone?4:0)+eased[0]*1.2,1.7+eased[1]*.8,7-travel*25];
+        const target=sector===0
+          ? [(phone?.4:4.1)+travel*.70,Math.sin(time*.035)*.26,-38-travel*37]
+          : sector===1 ? [5,1.5,-93] : [6,-.5,-112];
         const vp=cameraMatrix(eye,target,width/height);
         gl.disable(gl.BLEND);gl.disable(gl.DEPTH_TEST);
         gl.useProgram(sky);
         gl.uniform2f(skyU.uResolution,width,height);
-        gl.uniform1f(skyU.uTime,time);gl.uniform2f(skyU.uPointer,eased[0],eased[1]);gl.uniform1f(skyU.uTravel,travel);
+        gl.uniform1f(skyU.uTime,time);gl.uniform2f(skyU.uPointer,eased[0],eased[1]);gl.uniform1f(skyU.uTravel,travel);gl.uniform1f(skyU.uRealm,sector);
         gl.drawArrays(gl.TRIANGLES,0,3);
         gl.enable(gl.DEPTH_TEST);gl.clear(gl.DEPTH_BUFFER_BIT);
         gl.useProgram(dust);gl.uniformMatrix4fv(starU.uVP,false,vp);gl.uniform3f(starU.uCamera,...eye);gl.uniform1f(starU.uTime,time);
         gl.bindVertexArray(dustVAO);gl.depthMask(false);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);gl.drawArrays(gl.POINTS,0,starBuffer.length/7);
         gl.disable(gl.BLEND);gl.depthMask(true);
         gl.useProgram(solid);gl.uniformMatrix4fv(meshU.uVP,false,vp);gl.uniform1f(meshU.uTime,time);gl.uniform1f(meshU.uTravel,travel);
-        gl.bindVertexArray(vao);gl.drawArrays(gl.TRIANGLES,0,mesh.length/10);
+        const selected=realmRanges[sector];
+        gl.bindVertexArray(vao);gl.drawArrays(gl.TRIANGLES,selected.start,selected.count);
         gl.bindVertexArray(null);
+        stage.dataset.renderRealm=selected.name;
+        stage.dataset.realmVertices=String(selected.count);
         if(stage.dataset.renderMode!=='webgl2'){stage.dataset.renderMode='webgl2';stage.dataset.sceneDepth='perspective';}
         stage.dataset.renderPixels=String(width*height);
       };
