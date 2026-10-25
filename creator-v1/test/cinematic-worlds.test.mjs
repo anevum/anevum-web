@@ -22,7 +22,7 @@ test("homepage never invents projects, accounts, levels, prices or usage metrics
   assert.doesNotMatch(home,/Math\.random|sampleVotes|nova_demo|fakeMessage|example\.com|15000\s*XP/);
   assert.doesNotMatch(card,/Math\.random|sampleVotes|fakeMessage/);
 });
-test("original deterministic illustration supports all published content categories",()=>{
+test("native category panels cover all published categories without pretending to be creator covers",()=>{
   const svg=read("web/src/components/CosmicIllustration.tsx");
   const artwork=read("web/src/components/CosmicArtwork.tsx");
   const home=read("web/src/pages/HomePage.tsx");
@@ -30,7 +30,7 @@ test("original deterministic illustration supports all published content categor
   for(const category of ["games","tools","automation","research","creative","learning","libraries","other"]){
     assert.match(svg,new RegExp(category+":"));
     assert.ok(home.includes('id:"'+category+'"'),category);
-    assert.ok(artwork.includes(category+':"'),category);
+    assert.ok(artwork.includes(category+':{'),category);
     assert.ok(card.includes(category+':"'+category+'"'),category);
   }
   assert.match(svg,/viewBox="0 0 1600 700"/);
@@ -92,23 +92,16 @@ test("mobile QA preserves both primary hero actions without overlap by secondary
   assert.match(css,/\.signal-strip\{display:none\}/);
 });
 
-test("real responsive WebP originals are part of the app, with SVG fallback and real Vite base paths",()=>{
+test("native index replaces promotional raster references with responsive, keyboard-visible panels",()=>{
  const art=read("web/src/components/CosmicArtwork.tsx");
  const main=read("web/src/main.tsx");
- const css=read("web/src/cinematic-raster-art.css");
- const start=read("web/src/pages/StartPage.tsx");
- for(const filename of ["hero/portal-world.webp","hero/skyward-city.webp","categories/apps.webp","categories/games.webp","categories/creative.webp","categories/learning.webp","categories/libraries.webp","categories/automation.webp","categories/research.webp","categories/other.webp"]){
-   assert.ok(existsSync(new URL("../web/public/assets/cinematic/"+filename,import.meta.url)),filename);
- }
- assert.match(art,/import.meta.env.BASE_URL/);
- assert.match(art,/onError=\{\(\)=>setFailed\(true\)\}/);
- assert.match(art,/CosmicIllustration scene=\{scene\}/);
- assert.match(art,/loading=\{priority\?"eager":"lazy"\}/);
- assert.match(main,/cinematic-raster-art.css/);
- assert.match(start,/cw-start-portal-art/);
- assert.match(css,/prefers-reduced-motion/);
+ const css=read("web/src/parity/sitewide-interface-v136.css");
+ assert.match(art,/data-presentation="native-index"/);
+ assert.doesNotMatch(art,/<img\b|<picture\b|\.webp|community-portals\/|assets\/cinematic\//);
+ assert.match(main,/sitewide-interface-v136\.css/);
+ assert.match(css,/prefers-reduced-motion:reduce/);
+ assert.match(css,/:focus-visible/);
 });
-
 test("the isolated offline browser fixture serves nested cinematic WebP without traversal or public API impersonation",()=>{
  const f=read("test/portal-offline-preview.mjs");
  assert.match(f,/cinematic\\\//);

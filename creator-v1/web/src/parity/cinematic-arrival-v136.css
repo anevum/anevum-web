@@ -60,3 +60,56 @@ html[data-av-parity="v136-full"] .p136-cinematic-vignette {
 @media (forced-colors:active) {
   html[data-av-parity="v136-full"] :is(.p136-cinematic-video,.p136-cinematic-frames){display:none!important}
 }
+
+/* V136.018: native spatial optics rather than a generated poster. */
+html[data-av-parity="v136-full"] .p136-native-institute{
+ position:absolute;inset:0;isolation:isolate;display:block;overflow:hidden;pointer-events:none;
+ background:radial-gradient(ellipse at 72% 42%,#42beef2b,transparent 56%),
+ radial-gradient(ellipse at 63% 36%,#ab8af81e,transparent 57%),
+ linear-gradient(120deg,#07172b,#112841 50%,#040e1e);
+}
+html[data-av-parity="v136-full"] .p136-native-institute::before{
+ content:"";position:absolute;inset:0;opacity:.32;
+ background:repeating-linear-gradient(90deg,transparent 0 65px,#7dc4f52c 66px 67px),
+ repeating-linear-gradient(0deg,transparent 0 65px,#7dc4f51a 66px 67px);
+ mask-image:linear-gradient(90deg,transparent 20%,black 60%,transparent);
+}
+html[data-av-parity="v136-full"] .p136-native-institute__grid{
+ position:absolute;left:15%;right:-15%;bottom:-35%;height:77%;
+ transform:perspective(700px) rotateX(69deg);transform-origin:50% 75%;
+ background:repeating-linear-gradient(90deg,transparent 0 70px,#8accff40 71px 72px),
+ repeating-linear-gradient(0deg,transparent 0 70px,#8accff31 71px 72px);
+ mask-image:linear-gradient(0deg,black 25%,transparent);
+}
+html[data-av-parity="v136-full"] .p136-native-institute__ring{
+ position:absolute;right:16%;top:12%;width:min(34vw,560px);min-width:200px;aspect-ratio:1;border-radius:50%;
+ border:1px solid #82daff8c;
+ box-shadow:inset 0 0 26px #53c2ff24,0 0 38px #50aaff24,
+  0 0 0 29px #97aaff0d,0 0 0 30px #a3dfff48,
+  0 0 0 71px #50aaff08,0 0 0 72px #a0c9ff25;
+ animation:av136-native-orbit 35s linear infinite;
+ transform:rotateX(58deg) rotateZ(-29deg);
+}
+html[data-av-parity="v136-full"] .p136-native-institute__aperture{
+ position:absolute;right:24%;top:28%;width:min(18vw,305px);min-width:110px;aspect-ratio:1;
+ border-radius:24% 42% 31% 47%;border:1px solid #b8f4ff6d;
+ background:radial-gradient(circle,#7ff3ff24,transparent 66%);
+ transform:rotate(-26deg);
+ box-shadow:inset 0 0 40px #48b0ff3d,0 0 65px #a88aff31;
+}
+html[data-av-parity="v136-full"] .p136-native-institute__scan{
+ position:absolute;left:50%;right:13%;top:19%;height:1px;opacity:.5;
+ background:linear-gradient(90deg,transparent,#a8f1ff,transparent);
+ box-shadow:0 0 20px 8px #6bbcff20;animation:av136-native-scan 15s ease-in-out infinite alternate;
+}
+@keyframes av136-native-orbit{from{transform:rotateX(58deg) rotateZ(-29deg)}to{transform:rotateX(58deg) rotateZ(331deg)}}
+@keyframes av136-native-scan{from{transform:translateY(0)}to{transform:translateY(170px)}}
+@media(max-width:720px){
+ html[data-av-parity="v136-full"] .p136-native-institute__ring{right:-12%;top:28%;width:70vw;min-width:190px}
+ html[data-av-parity="v136-full"] .p136-native-institute__aperture{right:2%;top:39%;width:37vw;min-width:90px}
+ html[data-av-parity="v136-full"] .p136-native-institute__grid{left:-20%;right:-40%}
+}
+@media(prefers-reduced-motion:reduce){
+ html[data-av-parity="v136-full"] :is(.p136-native-institute__ring,.p136-native-institute__scan){animation:none!important}
+}
+@media(forced-colors:active){html[data-av-parity="v136-full"] .p136-native-institute{display:none!important}}
