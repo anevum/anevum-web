@@ -12,6 +12,7 @@ const styles=read("web/src/iren-guided-v080.css");
 const bootstrap=read("web/src/main.tsx");
 const discover=read("web/src/pages/DiscoverPage.tsx");
 const community=read("web/src/pages/CommunityPage.tsx");
+const parityHeader=read("web/src/parity/ParityHeaderV136.tsx");
 
 test("IREN V080 JSX parses and stylesheet loads last",()=>{
  for(const source of [tour,shell,member,editor,discover,community]){
@@ -64,6 +65,11 @@ test("IREN uses visible responsive controls for Creator Studio and Wayfinder (ex
   assert.match(tour,/id:"wayfinder",route:"\/community",anchor:'\[data-iren-anchor="navigation"\]',fallback:'\[data-iren-anchor="navigation-desktop"\]'/);
   assert.match(shell,/<nav data-iren-anchor="navigation-desktop" className="desktop-nav av9-primary"/);
   assert.match(shell,/<button data-iren-anchor="navigation"/);
+  // V136 replaces the legacy Shell header; the actual rendered header needs
+  // the same semantic targets, not merely selectors in dead fallback source.
+  assert.match(parityHeader,/<nav data-iren-anchor="navigation-desktop"/);
+  assert.match(parityHeader,/<button data-iren-anchor="navigation" ref=\{menuButton\}/);
+  assert.doesNotThrow(()=>parse(parityHeader,{sourceType:"module",plugins:["typescript","jsx"]}));
   // Hidden responsive branches and collapsed details must never be spotlighted.
   assert.match(tour,/getClientRects\(\)\.length/);
   assert.match(tour,/getComputedStyle\(target\)/);
