@@ -183,60 +183,50 @@ private uploader/publication changes, financial operations or data migrations.
 The next UI development slice remains creator-directory search/card/empty-state
 convergence; keep ongoing development separate from the immutable release head.
 
-## V136.025 — Creator Directory functional convergence (development draft)
-Scoped session: `ANEVUM.WEB.UPDATE.2026-10-25.005.CREATOR-DISCOVERY-CONVERGENCE`.
-New isolated continuation branch:
-`build/parity-v136-creator-directory-20261025-025`, started from
-verified website development head `20161bae20e7f369d4d7edfadcb4316ecccac3cf`.
-It does not change the immutable V136.024 release head, live traffic, or main.
+## V136.025 — Creator Directory functional convergence (active draft)
+Session: `ANEVUM.WEB.UPDATE.2026-10-25.005.CREATOR-DISCOVERY-CONVERGENCE`
+Owner PR: [#745](https://github.com/anevum/anevum-web/pull/745)
+Continuation branch: `build/parity-v136-creator-directory-20261025-025`
+Development parent #735: `20161bae20e7f369d4d7edfadcb4316ecccac3cf`.
 
-Implemented in source: URL-owned `q`, `cursor` and `view` (grid/list),
-Enter/click search submission, search cursor reset, saved layout on search,
-Back/Forward and cursor pagination, labeled controls, real approved creator
-identity cards, responsive one-column phone cards, Institute blue/cyan native
-search/results/empty-state surfaces, keyboard focus and reduced-motion
-handling. The server read remains the existing `readCreators` public endpoint.
-Page counts are explicitly per-page, never claimed to be total members.
-Missing/empty results never substitute fictional creators or invented avatars.
-No data API, uploads, profile privacy, identity/XP, finance or 3D changes.
+Implemented: real server-approved `readCreators` channel cards; URL-owned query,
+cursor and Grid/List mode; Back/Forward restoration; new-search cursor reset;
+honest per-page counts, empty/end-of-cursor and load/error states; accessible
+native search and responsive 1440/390/320 layouts; zero invented published
+creators and no generated filler thumbnails. Actual uploaded creator media,
+profiles, approval/privacy and canonical backend behavior stay unchanged.
+The short "Search creators..." placeholder avoids 320px phone truncation;
+the search still has its explicit full accessible label.
 
-Verification added: source-contract test
-`creator-v1/test/parity-v136025-creator-directory.test.mjs` and new complete
-browser acceptance groups at 1440/390/320. The browser test fixture adds
-two **synthetic loopback-only** creator channels to exercise cards, layout,
-query search, empty cursor pages, clearing filters, Back and no overflow.
-Before exact-head CI, this is **IMPLEMENTED SOURCE, TESTS NOT YET RUN**.
-Do not describe the UX as production-released, native Safari/Xbox-accepted or
-owner visually approved until independent exact-head evidence exists.
+**Verified prior stable source** `8e4fbc66`: 1,761/1,761 complete Creator V1
+regression tests PASS; full six-viewport V136 compiled browser
+[run 40211155640](https://github.com/anevum/anevum-web/actions/runs/40211155640)
+PASS, 48 recorded browser checks including actual directory geometry at 1440
+(3 tracks), 390 and 320 (1 track), zero JS exceptions and zero forbidden
+network activity. Independent focused browser
+[run 40212833188](https://github.com/anevum/anevum-web/actions/runs/40212833188)
+PASS with [12 screenshots and JSON acceptance](https://github.com/anevum/anevum-web/actions/runs/40212833188/artifacts/12606154516):
+real React/Vite UI, two labelled **synthetic loopback-only** test channels,
+Grid/List, paging, URL history, searches, no results and no published creators,
+without horizontal overflow. These records are not deployed production content.
 
-The V136.024 controlled release and #742 read-only smoke remain separate.
-The #742 credential-free public HTTP client received HTTP 403 on the
-unchanged baseline before comparison; no valid app regression or smoke pass was
-established by that result. Preserve production safety gates and allowlists.
+**Current refinement**: search copy and guest XP copy now state
+"30 CURRENT LEVELS" rather than suggesting a permanent product cap; existing
+auth/progression runtime does clamp at 30 today whereas the locked longer-term
+#337 product decision is uncapped with a first 60-artifact series. This
+change does **not** implement uncapped progression or alter the XP ledger,
+thresholds, awards or rate. #337 owns the backend/data reconciliation.
+The focused browser's source receipt now pins the checked-out exact head
+instead of GitHub's synthetic pull-request merge SHA.
 
-## V136.025 — creator directory convergence (source-only draft)
-Scoped session: `ANEVUM.WEB.UPDATE.2026-10-25.005.CREATOR-DISCOVERY-CONVERGENCE`.
-Continuation source: `build/parity-v136-creator-directory-20261025-025`, branched at
-`20161bae20e7f369d4d7edfadcb4316ecccac3cf` from the #735 development
-branch. This work is separate from immutable rollout candidate `4dfaed54` and
-any production traffic decision.
+Current post-copy exact-head CI still requires its own PASS receipts and owner
+1440px/390px/320px side-by-side visual review under #335. No physical Safari,
+Xbox, authenticated member A/reviewer/guest/B acceptance or final reference
+art acceptance has been granted. Draft status is deliberate.
 
-Implemented in this bounded increment: creator directory layout and search state
-owned by `/creators?q=&cursor=&view=`; real API remains `readCreators` and
-approved public channel metadata only. Grid/list selection preserves query and
-cursor, search resets pagination, Back restores the URL-defined layout.
-No new profiles, counters, media, badges, rankings, member data or public endpoint.
-Search has an explicitly associated accessible label and a responsive phone input.
-Existing `CompactMemberIdentity` retains its real portrait fallback and
-noninteractive identity inside a single clickable creator-channel card.
-`sitewide-interface-v136.css` now scopes native blue/cyan panels, responsive
-cards, list density, search, empty/error differentiation, focus indication,
-forced colors and reduced motion to this real route. No new bitmap media.
-
-Acceptance added to `parity-v136-full-browser.mjs` at 1440, 390 and 320 px:
-loopback-only synthetic approved-channel fixtures, URL/history grid/list changes,
-search filtering, cursor preservation/reset, responsive geometry and zero
-fabricated production records. Source contracts are in
-`parity-v136025-creator-directory.test.mjs`. Local complete builds/browser
-screenshots and exact-head CI must be obtained before labeling this verified.
-The 1% canary and baseline remain isolated; Stripe draft #739 is unchanged.
+**Release isolation**: V136.024 immutable candidate #741, recorded V58/V59
+traffic, provider settings, Stripe retirement draft #739 and main are untouched.
+Targeted release source allowlist correctly rejects this not-yet-authorized
+draft source; do not add broad exemptions or promote traffic. #742 GET-only
+public smoke received HTTP 403 before reaching the baseline app; no successful
+production comparison is implied. Owner go/no-go stays under #333.
