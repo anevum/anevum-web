@@ -30,6 +30,7 @@ jobs:
       CLOUDFLARE_API_KEY: ''
       CLOUDFLARE_ACCOUNT_ID: ''
       WRANGLER_SEND_METRICS: 'false'
+      ANEVUM_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,6 +39,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Pin exact source rather than pull-request merge ref
+        run: test "$(git rev-parse HEAD)" = "$ANEVUM_SOURCE_SHA"
       - name: Verify public directory source and privacy contracts
         run: node --test creator-v1/test/parity-v136025-creator-directory.test.mjs
       - name: Install pinned frontend dependencies
