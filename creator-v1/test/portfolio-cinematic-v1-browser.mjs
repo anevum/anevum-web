@@ -128,6 +128,20 @@ async function run(width,height,motion='no-preference') {
   note('single GPU Transcosmic field / actual camera viewpoints / bounded pixels '+width,
     {mode:firstMode,sceneDepth:firstDepth,pixels,archiveTravel,beyondTravel,
       realmVertices:[thresholdVertices,archiveVertices,beyondVertices],reducedMotion:motion==='reduce'});
+  // ANEVUM and Transcosmic are real principal projects, not two unequal
+  // rows with a dead empty column on wide screens.
+  const fullWidthWork=await page.evaluate(()=>{
+    const anevum=document.querySelector('.project-anevum').getBoundingClientRect();
+    const transcosmic=document.querySelector('.project-transcosmic').getBoundingClientRect();
+    const visual=document.querySelector('.project-transcosmic .project-visual').getBoundingClientRect();
+    return {anevumWidth:anevum.width,transcosmicWidth:transcosmic.width,
+      visualHeight:visual.height,transcosmicRight:transcosmic.right};
+  });
+  assert.ok(Math.abs(fullWidthWork.anevumWidth-fullWidthWork.transcosmicWidth)<3,
+    'Transcosmic must occupy the whole work row at '+width+': '+JSON.stringify(fullWidthWork));
+  assert.ok(fullWidthWork.transcosmicRight<=width+1 &&
+    fullWidthWork.visualHeight>=250,'Real project exhibit fits the viewport');
+  note('full-width principal Transcosmic project / no empty portfolio row '+width,fullWidthWork);
   note('layout '+width+'px',shape);
   // Reproduce actual reading/scrolling so lazy-loaded images and reveal states
   // are visible in full-page screenshots, instead of falsely appearing blank.
