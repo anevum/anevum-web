@@ -108,7 +108,9 @@ test('prismatic cinema is an original decorative layer, not skyline or pointer-b
   assert.match(polishCSS,/\.motion-paused/);
   assert.match(polishCSS,/\.project-transcosmic\{grid-column:1 \/ -1\}/);
   assert.match(polishCSS,/\.reel-controls::after/);
-  assert.doesNotMatch(polishCSS,/https?:\/\/|url\(/);
+  assert.match(polishCSS,/url\("\/portfolio\/assets\/hero-chroma-v3\.avif"\)/);
+  assert.ok(existsSync(new URL('assets/hero-chroma-v3.avif',root)));
+  assert.doesNotMatch(polishCSS,/https?:\/\//);
 });
 test('links point to real anchors, not non-existent site sections',()=>{
   const ids=new Set([...html.matchAll(/\sid="([^"]+)"/g)].map(match=>match[1]));
