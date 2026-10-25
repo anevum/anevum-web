@@ -22,7 +22,23 @@ html[data-av-parity="v136-full"] {
  * Their data, account controls and moderation remain owned by each component. */
 html[data-av-parity="v136-full"] .p136-community{
  --av6-editorial:var(--p-body);--av6-interface:var(--p-body);
+ --ch7-paper:var(--p-body);--av9-display:var(--p-body);
  --av6-index:ui-monospace,monospace;
+}
+/* Important declarations reverse cascade-layer priority. Override the old
+ * important editorial fonts inside their owning layer, only on this surface. */
+@layer legacy{
+ html[data-av-parity="v136-full"] .p136-community .ch7-hero .ch7-hero-copy h1{
+  font:750 clamp(38px,4.1vw,65px)/1.045 Inter,system-ui,sans-serif!important;
+ }
+ html[data-av-parity="v136-full"] .p136-community .ch7-entry-copy h3{
+  font:720 clamp(22px,2vw,28px)/1.12 Inter,system-ui,sans-serif!important;
+ }
+ @media(max-width:640px){
+  html[data-av-parity="v136-full"] .p136-community .ch7-hero .ch7-hero-copy h1{
+   font-size:clamp(35px,9.8vw,51px)!important;
+  }
+ }
 }
 html[data-av-parity="v136-full"] .p136-community :is(.mc-own,.mc-activity,.mc-directory,.cf-forums){
  border:1px solid #528cba70;border-radius:10px;

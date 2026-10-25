@@ -6,7 +6,7 @@ import {
   type Creator, type Project
 } from "../lib/api";
 import { useResource } from "../lib/useResource";
-import { projectDetailPath } from "../lib/navigation";
+import { projectDetailPath, safeReturnPath } from "../lib/navigation";
 import {ProjectThumbnail} from "../components/ProjectThumbnail";
 import {publicCreatorHandle} from "../lib/public-creator-handle";
 import { Icon } from "../components/Icons";
@@ -55,8 +55,8 @@ const asDate = (value: string | null | undefined) => {
 };
 const creatorPath = (handle: string) => "/creators/" + encodeURIComponent(handle);
 
-function ProjectEntry({ item }: { item: Project }) {
-  const destination = projectDetailPath(item.id, "/community");
+function ProjectEntry({ item, returnTo }: { item: Project; returnTo: string }) {
+  const destination = projectDetailPath(item.id, returnTo);
   const field = fields.find(field => field.id === item.category);
   const handle = publicCreatorHandle(item.creatorHandle);
   const credit = item.creatorName || (handle ? "@"+handle : "ANEVUM member");
@@ -80,7 +80,7 @@ function ProjectEntry({ item }: { item: Project }) {
   </article>;
 }
 
-function ConversationEntry({ item }: { item: CommunityPost }) {
+function ConversationEntry({ item, returnTo }: { item: CommunityPost; returnTo: string }) {
   const destination = "/community/posts/" + encodeURIComponent(item.id);
   const handle = publicCreatorHandle(item.authorHandle);
   const credit = item.authorName || (handle ? "@"+handle : "Community member");
@@ -90,7 +90,7 @@ function ConversationEntry({ item }: { item: CommunityPost }) {
       <div className="ch7-meta"><span>DISCUSSION / {item.topic.toUpperCase()}</span><time dateTime={item.publishedAt}>{asDate(item.publishedAt)}</time></div>
       <h3><Link to={destination}>{item.title}</Link></h3>
       <p>{item.excerpt}</p>
-      {item.project && <div className="ch7-project-context">ABOUT <Link to={projectDetailPath(item.project.id, "/community")}>{item.project.title}</Link></div>}
+      {item.project && <div className="ch7-project-context">ABOUT <Link to={projectDetailPath(item.project.id, returnTo)}>{item.project.title}</Link></div>}
       <div className="ch7-byline"><span className="ch7-avatar" aria-hidden="true">{credit.charAt(0).toUpperCase()}</span>
         <span>BY {handle ? <Link to={creatorPath(handle)}>{credit}</Link> :
           <span aria-label="Public author channel not linked">{credit}</span>}</span>
@@ -115,6 +115,7 @@ export function CommunityPage() {
   // Public state belongs to the address, not an unsynchronised local replica.
   // Back/Forward and shared links restore view, category, order and people search.
   const [params, setSearchParams] = useSearchParams();
+  const returnTo = safeReturnPath("/community" + (params.size ? "?" + params.toString() : ""));
   const view = asView(params.toString());
   const requestedCategory = params.get("category");
   const category: Category | "all" = fields.some(field => field.id === requestedCategory)
@@ -278,8 +279,8 @@ export function CommunityPage() {
         {!loading && !failed && (view === "people" ? <div className="ch7-people">
           {creatorItems.map(item => <CreatorEntry item={item} key={item.handle}/>)}
         </div> : <div className="ch7-stream" aria-live="polite">
-          {entries.map(entry => entry.kind === "project" ? <ProjectEntry key={entry.id} item={entry.value}/> :
-            <ConversationEntry key={entry.id} item={entry.value}/>)}
+          {entries.map(entry => entry.kind === "project" ? <ProjectEntry key={entry.id} item={entry.value} returnTo={returnTo}/> :
+            <ConversationEntry key={entry.id} item={entry.value} returnTo={returnTo}/>)}
         </div>)}
         {!loading && !failed && (view === "people" ? creatorItems.length === 0 : entries.length === 0) && <div className="ch7-empty" role="status">
           <span className="ch7-kicker">COMMUNITY / PUBLIC RECORD</span>

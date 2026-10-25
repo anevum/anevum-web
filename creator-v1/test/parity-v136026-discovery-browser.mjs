@@ -98,6 +98,10 @@ try{
      await route.fulfill({status:200,contentType:'application/json',
       body:JSON.stringify({categories:[{category:'games',count:1},{category:'tools',count:1}]})});return;
     }
+    const project=projects.find(item=>path==='/api/v1/projects/'+item.id);
+    if(project){
+     await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({item:project})});return;
+    }
     if(path==='/api/v1/status'){
      await route.fulfill({status:200,contentType:'application/json',
       body:JSON.stringify({features:{communityPosts:false},counts:{publishedProjects:0,publishedCreators:0}})});return;
@@ -164,6 +168,18 @@ try{
   assert.equal(requests.length,beforeView,'Layout-only changes must not re-query public catalogue');
   await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({path:join(destination,'discover-list-'+width+'.png'),fullPage:true,animations:'disabled'});
+  await list.getByRole('link',{name:'View project',exact:true}).first().click();
+  await page.locator('.portal-project').waitFor();
+  assert.equal(await page.locator('a[href*="/creators/null"]').count(),0,'Project credit must not fabricate a null channel');
+  assert.equal(await page.getByLabel('Public creator channel not linked',{exact:true}).count(),1);
+  const returnLink=page.locator('.portal-crumbs').getByRole('link',{name:/BACK TO RESULTS/});
+  assert.equal(await returnLink.getAttribute('href'),'/discover?view=list');
+  await returnLink.click();
+  await list.waitFor();
+  assert.equal(await list.locator('article.project-card').count(),2);
+  // Recover the original List history entry before the preserved Grid Back test.
+  await page.goBack();await page.locator('.portal-project').waitFor();
+  await page.goBack();await list.waitFor();
   await page.goBack({waitUntil:'domcontentloaded'});
   await page.locator('.p136-discover-results[data-layout="grid"]').waitFor();
   await discovery.locator('.p136-discover-layout-switch').getByRole('button',{name:'List',exact:true}).click();

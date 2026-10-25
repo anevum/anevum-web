@@ -23,6 +23,20 @@ export function safeReturnPath(raw: string | null | undefined): string {
     if (/^[a-z]{2,24}$/.test(category)) params.set("category", category);
     if (url.searchParams.get("free") === "1") params.set("free", "1");
   }
+  if ((route === "/discover" || route === "/creators") && url.searchParams.get("view") === "list")
+    params.set("view", "list");
+  if (route === "/community") {
+    const view = url.searchParams.get("view");
+    if (view === "projects" || view === "conversations" || view === "people") {
+      params.set("view", view);
+      const category = url.searchParams.get("category") || "";
+      if (view === "projects" && /^(games|tools|creative|libraries|research|learning|automation|other)$/.test(category))
+        params.set("category", category);
+      if (view === "conversations" && url.searchParams.get("sort") === "hot") params.set("sort", "hot");
+      const q = (url.searchParams.get("q") || "").trim();
+      if (view === "people" && q && q.length <= 72 && !/[\u0000-\u001f\u007f]/.test(q)) params.set("q", q);
+    }
+  }
   if (route !== "/") {
     const cursor = url.searchParams.get("cursor") || "";
     if (cursorPattern.test(cursor)) params.set("cursor", cursor);

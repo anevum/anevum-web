@@ -1,7 +1,8 @@
 # ANEVUM Master Continuity — public engineering index
 
 Coordination session: `ANEVUM.ANEVUM.PACKAGE.2026-10-25.001.UNIFIED-WORKSTREAM-CONTINUITY`.
-Scoped implementation: `ANEVUM.WEB.UPDATE.2026-10-25.002.UNIFIED-UI-INTEGRATION`.
+Current session: `ANEVUM.ANEVUM.PACKAGE.2026-10-25.002.UNIFIED-OVERHAUL-WORK-CONTINUATION`.
+Historical integration session: `ANEVUM.WEB.UPDATE.2026-10-25.002.UNIFIED-UI-INTEGRATION`.
 Verified discovery date: October 25, 2026 (America/New_York).
 Status: **ACTIVE DEVELOPMENT. #738 and #745 merged into website development;
 V136.026 merged and verified in development; #750 Commons under review. New production promotion not verified.**
@@ -27,12 +28,12 @@ Use LOCKED, PRODUCTION, VERIFIED DRAFT, ACTIVE DEVELOPMENT, PROPOSED, RESEARCH,
 BLOCKED, SUPERSEDED, UNKNOWN. Record verification scope and time with every status.
 
 Devon is product/creative/release owner. Implementation ownership follows the
-existing component and PR contracts, not a newly invented team. Current reviewed
-candidate is isolated branch `integrate/unified-continuity-20261025-001`,
-based on immutable #735 head `988b7447633044a3c07de5ee3a4773f43c97412a`.
-Original #735/#737/#736 source branches are unchanged.
+existing component and PR contracts. Current development is #735 `888bf4cc`;
+#750 `2bf7504c` and stacked V136.028 remain isolated drafts. The older
+`integrate/unified-continuity-20261025-001` was merged through #738.
+The lineage matrix below records its historical input state, not current heads.
 
-## Source and lineage matrix
+## Historical source and lineage matrix
 
 | PR | Observed base / SHA | Observed branch / head | Discovery status |
 |---|---|---|---|
@@ -360,3 +361,33 @@ UNKNOWN: fresh provider traffic and live authenticated end-to-end acceptance.
 Historical infrastructure observations above were not re-queried here; no
 claim of current full infrastructure audit. Release guards and #741 remain
 sealed; upstream #742 HTTP 403 is not successful end-to-end verification.
+
+## V136.028 current implementation and provider correction
+
+| Track | Verified current checkpoint | Classification |
+|---|---|---|
+| Website development #735 | `888bf4ccbdbe04442c166dea9f84bc2529eea2d1`, #748 merged | VERIFIED DEVELOPMENT |
+| Commons #750 | `2bf7504c7b74a1f3c834b4381a9dcfdb4cd5501b`, both source histories preserved | ACTIVE DRAFT |
+| Browse return / typography V136.028 | `build/parity-v136-browse-return-20261025-028`, stacked on #750 | ACTIVE DRAFT |
+| Sealed release #741 | `4dfaed54fed606713a99b87c3152beddbcbc31f3`, immutable | PRODUCTION 1% candidate |
+| Stripe retirement #739 | `126915b6386c7b447bdd0de137a8bc46acc2f9e8`, unmerged | ACTIVE DRAFT |
+| Public HTTP #742 | Prior upstream 403 not accepted as application evidence | UNKNOWN end-to-end |
+
+V136.028 implements safe route-scoped project return continuity for Discovery,
+creator directory and Commons; removes fabricated null author-channel links
+from the project player/actions; corrects legacy important-font layer priority
+only inside full-flag Commons. TypeScript/full frontend build and 152 targeted
+regressions pass. Extended compiled Discover and Commons 1440/390/320 browser
+checks pass, including real detail/return, strict original history/filter checks,
+font family/weight, truthful identity, zero overflow/errors/forbidden calls.
+Local Chromium 153 and synthetic loopback records are not physical Safari/Xbox
+or production authenticated acceptance. Fresh pinned CI and owner creative
+approval remain open. Original two V136 concept boards were re-inspected.
+
+Fresh read-only Cloudflare gateway deployment `77ceaf3d-5bfb-4f07-b64d-1655a3093065`
+confirms baseline `ec5f106b-482c-4415-9c66-d6f8daf219ad` at 99% and sealed
+V136.024 candidate `cedb7ac1-74ca-4fcd-9a40-ce56964f1785` at 1%. This
+supersedes the historical `f2f950d8` traffic description above; that earlier
+deployment remains rollback history. No traffic expansion, provider mutation,
+main merge, account/media/database/payment/publishing change was performed.
+Other infrastructure observations remain historical, not freshly verified.
