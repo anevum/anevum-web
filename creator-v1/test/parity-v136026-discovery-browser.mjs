@@ -206,8 +206,10 @@ try{
   await checkParams(page,{view:'list',q:null,category:null,cursor:null});
   await page.getByRole('heading',{name:'No approved projects yet.'}).waitFor();
   assert.equal(await cards.count(),0);
+  await page.evaluate(()=>window.scrollTo(0,0));
+  await page.screenshot({path:join(destination,'discover-no-public-'+width+'.png'),fullPage:true,animations:'disabled'});
   assert.deepEqual(errors,[],'No runtime page errors at '+width);
-  report.widths.push({width,initial,screenshots:4,networkReads:requests.length,checks:'PASS'});
+  report.widths.push({width,initial,screenshots:6,networkReads:requests.length,checks:'PASS'});
   console.log('PASS Discover public URL/grid/list at '+width+'px: '+JSON.stringify(initial));
   await context.close();
  }
