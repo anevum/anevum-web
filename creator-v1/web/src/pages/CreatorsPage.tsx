@@ -72,7 +72,7 @@ export function CreatorsPage(){
           <form className="portal-wide-search p136-creators-search" role="search" action="/creators" method="get" onSubmit={search}>
             <label htmlFor="p136-creator-query" className="visually-hidden">Search published creators</label>
             <span className="p136-creators-search-icon" aria-hidden="true"><Icon name="search" size={19}/></span>
-            <input id="p136-creator-query" name="q" type="search" placeholder="Search published creator names..." maxLength={80}
+            <input id="p136-creator-query" name="q" type="search" aria-label="Search published creators" placeholder="Search published creator names..." maxLength={80}
               value={draft} onChange={event=>setDraft(event.target.value)}
               onKeyDown={event=>{
                 if(event.key==="Enter"&&!event.nativeEvent.isComposing){
