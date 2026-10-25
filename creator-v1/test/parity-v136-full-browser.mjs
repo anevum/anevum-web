@@ -35,8 +35,10 @@ const packageFixture={id:'123e4567-e89b-42d3-a456-426614174000',
   title:'SYNTHETIC APPROVED PACKAGE',summary:'Loopback-only approved package inspection fixture.',
   category:'game',version:1,status:'published',draft_status:null,cover_url:null,
   play_url:'/upload/v3/play/123e4567-e89b-42d3-a456-426614174000',published_at:1792843200};
+const COVER_ROUTE='/upload/v3/api/v1/packages/covers/'+packageFixture.id;
+const COVER_FIXTURE='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900"><rect width="1600" height="900" fill="#124b79"/><path d="M150 150L1450 750" stroke="#c0f4ff" stroke-width="70"/></svg>';
 const record=(name,data={})=>{checks.push({name,...data});console.log('PASS '+name);};
-async function contextFor(width,{motion='reduce',state='empty',forceVector=false}={}){
+async function contextFor(width,{motion='reduce',state='empty',forceVector=false,cover='missing'}={}){
   const context=await browser.newContext({viewport:{width,height:width===1536?1024:width<650?844:960},// CI tests CSS-pixel geometry at 1x to bound software-WebGL capture memory;
     // device-pixel 2x visual checks are a separate physical-device gate.
     deviceScaleFactor:1,reducedMotion:motion});
@@ -54,10 +56,18 @@ async function contextFor(width,{motion='reduce',state='empty',forceVector=false
     if(state==='studio'&&url.pathname==='/upload/v3/api/v1/packages/native/session'){
       await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({contract:'native-creator-v095',memberId:'00000000000000000000000000000099',canUpload:true,canReview:false,resourceProtection:true})});return;
     }
+    if(url.pathname===COVER_ROUTE){
+      // A first-party synthetic cover fixture; no external calls or real member media.
+      await route.fulfill(cover==='provided'
+        ?{status:200,contentType:'image/svg+xml',body:COVER_FIXTURE}
+        :{status:404,contentType:'text/plain',body:'Missing thumbnail fixture'});
+      return;
+    }
     if(url.pathname==='/upload/v3/api/v1/packages/projects'){
       const published=state==='package';
+      const candidate={...packageFixture,cover_url:cover==='missing'?null:COVER_ROUTE};
       await route.fulfill({status:published?200:404,contentType:'application/json',
-        body:JSON.stringify(published?{projects:[packageFixture]}:{error:'CI optional uploader disabled'})});
+        body:JSON.stringify(published?{projects:[candidate]}:{error:'CI optional uploader disabled'})});
       return;
     }
     if(url.pathname.startsWith('/api/')){
@@ -512,6 +522,32 @@ try{
     await page.keyboard.press('Escape');
     await page.waitForFunction(()=>!document.querySelector('.p136-artifact-lens[open]'));
     record('approved package Artifact Lens / canonical player path / Escape / unchanged URL');
+    await context.close();
+  }
+  // The uploaded original must beat the category default; an unreadable
+  // canonical cover must fall back to the correct type, without external fetch.
+  for(const cover of ['provided','broken','missing']){
+    const {page,context}=await contextFor(390,{state:'package',cover});
+    await page.goto(base+'/discover',{waitUntil:'domcontentloaded'});
+    await page.getByRole('heading',{name:packageFixture.title,exact:true}).waitFor();
+    const thumb=page.locator('.av010-work-card .av136-project-thumbnail').first();
+    await thumb.waitFor();
+    const expected=cover==='provided'?'creator':'default';
+    await page.waitForFunction(expected=>{
+      const image=document.querySelector('.av010-work-card .av136-project-thumbnail');
+      return image?.dataset.thumbnailSource===expected&&image.complete&&image.naturalWidth>0;
+    },expected,{timeout:15000});
+    assert.equal(await thumb.getAttribute('data-thumbnail-source'),expected);
+    assert.equal(await thumb.getAttribute('data-thumbnail-kind'),'games');
+    const src=await thumb.getAttribute('src');
+    if(expected==='creator')assert.equal(src,COVER_ROUTE,'Approved creator image has priority');
+    else assert.match(src,/\/assets\/default-thumbnails\/games\.svg$/,
+      'Missing or broken thumbnail resolves to its own type-specific SVG');
+    const requests=await page.evaluate(()=>performance.getEntriesByType('resource')
+      .map(entry=>entry.name).filter(url=>url.includes('/assets/default-thumbnails/')));
+    assert.ok(expected==='creator'||requests.some(url=>url.endsWith('/games.svg')),
+      'Fallback must be fetched as a real first-party image');
+    record('creator thumbnail source '+cover+' / '+expected);
     await context.close();
   }
   // Exercise the actual production Three.js module and compressed GLBs,
