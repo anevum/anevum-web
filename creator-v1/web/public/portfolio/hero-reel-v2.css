@@ -147,7 +147,7 @@
 .reel-controls button{
   min-width:0;text-align:left;display:flex;align-items:center;gap:7px;justify-content:center;
   background:#101a35b8;color:#afc0e0;border:1px solid #92b7e24a;backdrop-filter:blur(12px);
-  padding:13px 7px;font:9px/1.2 'Courier New',monospace;letter-spacing:.06em;
+  padding:13px 7px;font:10px/1.2 'Courier New',monospace;letter-spacing:.06em;
   transition:background .25s,border-color .25s,color .25s;cursor:pointer;
 }
 .reel-controls button span{color:#9daee4}
@@ -205,7 +205,7 @@
   .hero-v2-credibility{margin-top:23px;gap:9px 14px;padding-top:12px}
   .hero-v2-credibility span{font-size:8px}
   .hero-v2-credibility span+span::before{padding-right:13px}
-  .hero-v2-reel{width:calc(100% + 22px);height:420px;margin:39px -11px 0;top:auto;right:auto}
+  .hero-v2-reel{width:calc(100% + 22px);height:477px;margin:39px -11px 0;top:auto;right:auto}
   .reel-aura{top:0;filter:blur(29px);opacity:.86}
   .reel-echo-left{left:6%;width:82%;height:62%;transform:rotate(-7deg) translate(-13px,0)}
   .reel-echo-right{width:75%;height:59%;right:6%;transform:rotate(5deg) translate(5px,-6px)}
@@ -216,12 +216,12 @@
   .reel-main-bottom{min-height:40px;padding:0 8px}
   .reel-main-bottom span{font-size:7px;letter-spacing:0}
   #reel-open{font-size:7px;min-height:32px;padding:6px;gap:4px}
-  .reel-chapter-head{top:68%;left:8%;right:5%;grid-template-columns:54px 1fr;gap:6px}
+  .reel-chapter-head{top:65%;left:8%;right:5%;grid-template-columns:54px 1fr;gap:6px}
   .reel-chapter-head strong{font-size:26px}
   .reel-chapter-head p{font-size:11px}
   .reel-chapter-index{font-size:10px}
-  .reel-controls{top:83%;left:5%;width:90%;gap:4px}
-  .reel-controls button{padding:11px 3px;gap:4px;font-size:7px}
+  .reel-controls{top:78%;left:5%;width:90%;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .reel-controls button{padding:11px 8px;min-height:39px;gap:8px;font-size:10px}
   .reel-controls button span{font-size:8px}
   .reel-direction{display:none}
   .hero-v2-footer{margin-top:14px;padding-top:15px;gap:8px;font-size:8px}
@@ -234,11 +234,11 @@
   .hero-v2-credibility{gap:7px 9px}
   .hero-v2-credibility span{font-size:7px}
   .hero-v2-credibility span+span::before{padding-right:8px}
-  .hero-v2-reel{height:400px;width:calc(100% + 18px);margin-inline:-9px}
+  .hero-v2-reel{height:451px;width:calc(100% + 18px);margin-inline:-9px}
   .reel-main{min-height:227px}
-  .reel-chapter-head{top:66%}
-  .reel-controls{top:82%;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
-  .reel-controls button{min-height:31px;padding:6px 4px;letter-spacing:0;font-size:8px}
+  .reel-chapter-head{top:64%}
+  .reel-controls{top:77%;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
+  .reel-controls button{min-height:37px;padding:8px 6px;letter-spacing:0;font-size:9px}
   .hero-v2-footer{font-size:7px}
 }
 @media(prefers-reduced-motion:reduce){
