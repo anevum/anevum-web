@@ -132,10 +132,17 @@ export async function auditHeldStudioPublicationOutbox(db, {limit=100}={}) {
     'LEFT JOIN member_studio_submissions s ON s.id=r.submission_id '+
     'LEFT JOIN member_studio_projects p ON p.id=r.project_id '+
     'LEFT JOIN "user" reviewer ON reviewer.id=r.reviewer_user_id '+
-    'ORDER BY o.created_at DESC,o.id DESC LIMIT ?', [limit]);
-  const findings=[];
+    'ORDER BY o.created_at DESC,o.id DESC LIMIT ?', [limit+1]);
+  const orphanReviews = await query(db,
+    'SELECT r.id FROM member_studio_publication_reviews r '+
+    'LEFT JOIN member_studio_publication_outbox o ON o.review_id=r.id '+
+    'WHERE o.id IS NULL ORDER BY r.created_at DESC,r.id DESC LIMIT ?', [limit+1]);
+  // A bounded scan cannot be treated as complete if additional records exist.
+  const scanComplete = entries.length<=limit && orphanReviews.length<=limit;
+  const findings=orphanReviews.slice(0,limit).map(row=>
+    Object.freeze({receiptId:row.id,errors:Object.freeze(['outbox_missing'])}));
   let held=0,cancelled=0;
-  for (const row of entries) {
+  for (const row of entries.slice(0,limit)) {
     if (row.outbox_status==='held') held++;
     else if (row.outbox_status==='cancelled') cancelled++;
     const errors=[];
@@ -160,7 +167,8 @@ export async function auditHeldStudioPublicationOutbox(db, {limit=100}={}) {
     if (errors.length) findings.push(Object.freeze({receiptId:row.id,errors:Object.freeze(errors)}));
   }
   return Object.freeze({
-    checked:entries.length,held,cancelled,healthy:findings.length===0,
+    checked:Math.min(entries.length,limit),held,cancelled,
+    scanComplete,healthy:scanComplete && findings.length===0,
     findings:Object.freeze(findings),
     projectionEnabled:false,publicationAuthorized:false
   });
