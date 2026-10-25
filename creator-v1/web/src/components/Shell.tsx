@@ -142,9 +142,15 @@ function ShellContent(){
   // PARITY destinations own a full-bleed spatial canvas, not a nested page box.
   // Legacy routes retain their protected frame until individually transformed.
   // One stable route surface keeps navigation, IREN and launcher mounted.
+  // Private playable build authoring belongs inside the same session-bound
+  // workstation as canonical project records. The isolated player does not.
   const studioWorkspace=Boolean(FullParityHeader&&canonicalMember&&
     (location.pathname==="/studio"||location.pathname==="/studio/records"||
     location.pathname==="/studio/new"||location.pathname==="/studio/review"||
+    location.pathname==="/studio/packages"||
+    location.pathname==="/studio/packages/new"||
+    location.pathname==="/studio/packages/review"||
+    /^\/studio\/packages\/[0-9a-f-]{36}$/.test(location.pathname)||
     /^\/studio\/[0-9a-f-]{36}$/.test(location.pathname)));
   const routeSurface=studioWorkspace?
     <StudioSpatialWorkspaceV136 key={canonicalSession?.user?.id||"unavailable"} memberId={canonicalSession?.user?.id||""}>
