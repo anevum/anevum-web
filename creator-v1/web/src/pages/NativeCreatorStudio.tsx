@@ -173,7 +173,7 @@ function BuildUpload({memberId,projectId}:{memberId:string;projectId?:string}){
  const [compatibility,setCompatibility]=useState<LocalCompatibilityReport|null>(null);
  const [compatibilityError,setCompatibilityError]=useState(''),[checkingCompatibility,setCheckingCompatibility]=useState(false);
  const compatibilityVersion=useRef(0);
- const detailsTitle=useRef<HTMLInputElement>(null);
+ const detailsTitle=useRef<HTMLInputElement>(null),buildFileInput=useRef<HTMLInputElement>(null);
  const initialized=useRef<string|null>(null);
  useEffect(()=>{if(project&&initialized.current!==project.id){initialized.current=project.id;setTitle(project.draftTitle||project.title);setSummary(project.draftSummary||project.summary);setCategory(project.draftCategory||project.category);}},[project]);
  useEffect(()=>{if(!cover){setCoverUrl(null);return;}const url=URL.createObjectURL(cover);setCoverUrl(url);return()=>URL.revokeObjectURL(url);},[cover]);
@@ -233,7 +233,7 @@ function BuildUpload({memberId,projectId}:{memberId:string;projectId?:string}){
   {SourceWorkbench&&<div className="av095-source-entry"><button type="button" className="st-action" aria-expanded={sourceOpen} onClick={()=>{setSourceStarted(true);setSourceOpen(v=>!v)}}>Artifact source workbench</button><p className="st-muted">Edit a self-contained browser build here, or upload an export from your existing tools.</p></div>}
   {SourceWorkbench&&sourceStarted&&<div hidden={!sourceOpen}><Suspense fallback={<p role="status">Opening the local source workbench…</p>}><SourceWorkbench disabled={busy}
    onDirty={()=>{setSourceDirty(true);if(sourceFile){setFile(null);setSourceFile(false)}setRights(false)}}
-   onPackage={archive=>{setFile(archive);setSourceFile(true);setSourceDirty(false);setRights(false);setError('')}}/></Suspense>
+   onPackage={archive=>{if(buildFileInput.current)buildFileInput.current.value='';setFile(archive);setSourceFile(true);setSourceDirty(false);setRights(false);setError('')}}/></Suspense>
    {sourceFile&&file&&<div className="av136031-source-handoff">
     <div><strong>Archive prepared on this device.</strong><p>Your source stays open. Add the details for this version below.</p></div>
     <button type="button" className="st-action" disabled={busy} onClick={()=>{
@@ -247,7 +247,21 @@ function BuildUpload({memberId,projectId}:{memberId:string;projectId?:string}){
     <legend className="visually-hidden">Prepare a private browser build</legend>
     <section className="av136031-build-step" aria-labelledby="av136031-file-heading">
     <header><span aria-hidden="true">01</span><div><h3 id="av136031-file-heading">Browser build</h3><p>Choose your export. Compatibility checks run locally before any upload.</p></div></header>
-    <label className="av095-drop"><span className="st-kicker">01 / EXPORTED BROWSER BUILD</span><strong>{file?file.name:'Choose a ZIP or HTML file'}</strong><span>{file?bytes(file.size):'ZIP up to 20 MiB · HTML up to 5 MiB'}</span><input type="file" accept=".zip,.html,application/zip,text/html" required={!file} onChange={e=>{setSourceFile(false);setFile(e.target.files?.[0]||null);setRights(false);setError('');}}/></label>
+    {SourceWorkbench?<div className="av095-drop av136033-build-picker" data-selected-source={sourceFile&&file?'workbench':file?'device':'none'}>
+     <span className="st-kicker">01 / EXPORTED BROWSER BUILD</span>
+     <strong>{file?file.name:'Choose a ZIP or HTML file'}</strong>
+     <span>{file?bytes(file.size):'ZIP up to 20 MiB · HTML up to 5 MiB'}</span>
+     {sourceFile&&file&&<p className="av136033-prepared-note" role="status">Prepared in your source workbench. This archive is already selected; no second file selection is needed.</p>}
+     <details className="av136033-file-alternative" open={!sourceFile}>
+      <summary>{sourceFile&&file?'Use a different browser export instead':'Select a browser export from your device'}</summary>
+      <label><span className="visually-hidden">Browser ZIP or HTML export</span>
+       <input ref={buildFileInput} aria-label="Browser ZIP or HTML export" type="file" accept=".zip,.html,application/zip,text/html" required={!file} onChange={e=>{
+        const chosen=e.target.files?.[0];if(!chosen)return;
+        setSourceFile(false);setFile(chosen);setRights(false);setError('');
+       }}/>
+      </label>
+     </details>
+    </div>:<label className="av095-drop"><span className="st-kicker">01 / EXPORTED BROWSER BUILD</span><strong>{file?file.name:'Choose a ZIP or HTML file'}</strong><span>{file?bytes(file.size):'ZIP up to 20 MiB · HTML up to 5 MiB'}</span><input type="file" accept=".zip,.html,application/zip,text/html" required={!file} onChange={e=>{setSourceFile(false);setFile(e.target.files?.[0]||null);setRights(false);setError('');}}/></label>}
     {file&&<section className="av095-preflight" aria-label="Local compatibility findings" aria-live="polite">
      <p className="st-kicker">LOCAL COMPATIBILITY / ADVISORY</p>
      {checkingCompatibility&&<p role="status">Inspecting browser package structure on this device…</p>}
