@@ -132,8 +132,23 @@ try{
   assert.ok(initial.document<=initial.viewport+2,
    'Discovery must not horizontally overflow: '+JSON.stringify(initial));
   assert.equal(initial.columns,width>=1201?3:1,'Grid layout density at '+width);
+  const gateway=discovery.locator('.p136-discover-featured .p136-discover-world').first();
+  const gatewayState=await gateway.evaluate(element=>{
+   const core=element.querySelector('.av136-index-field');
+   const overlay=element.querySelector('.p136-discover-world-copy strong');
+   const description=element.querySelector('.p136-discover-world-copy small');
+   return {label:element.getAttribute('aria-label'),nativeCount:element.querySelectorAll('.av136-index-field').length,
+    indexVisible:!!core&&getComputedStyle(core).display!=='none',
+    duplicateHidden:!!overlay&&getComputedStyle(overlay).display==='none',
+    descriptionVisible:!!description&&getComputedStyle(description).display!=='none'};
+  });
+  assert.equal(gatewayState.nativeCount,1,'One native category instrument is displayed');
+  assert.ok(gatewayState.label?.includes('Games'),'Gateway retains useful accessible name');
+  assert.ok(gatewayState.indexVisible&&gatewayState.duplicateHidden&&gatewayState.descriptionVisible,
+   'Native category name and separate description must not overlap at '+width+': '+JSON.stringify(gatewayState));
   assert.equal(await discovery.locator('.av136-project-thumbnail[data-thumbnail-source="default"]').count(),2,
    'Legacy projects use approved first-party type defaults, not fabricated uploaded covers');
+  await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({path:join(destination,'discover-grid-'+width+'.png'),fullPage:true,animations:'disabled'});
   // Grid/list changes are URL-only; the server reads are unchanged.
   const beforeView=requests.length;
@@ -147,6 +162,7 @@ try{
   assert.equal(await list.evaluate(e=>getComputedStyle(e).gridTemplateColumns.split(' ').filter(Boolean).length),1,
    'One full-width result per List row at '+width);
   assert.equal(requests.length,beforeView,'Layout-only changes must not re-query public catalogue');
+  await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({path:join(destination,'discover-list-'+width+'.png'),fullPage:true,animations:'disabled'});
   await page.goBack({waitUntil:'domcontentloaded'});
   await page.locator('.p136-discover-results[data-layout="grid"]').waitFor();
@@ -165,6 +181,7 @@ try{
   await search.press('Enter');
   await checkParams(page,{view:'list',category:'games',free:'1',q:'ORBIT',cursor:null});
   assert.equal(await cards.count(),1);
+  await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({path:join(destination,'discover-filtered-'+width+'.png'),fullPage:true,animations:'disabled'});
   await discovery.getByRole('link',{name:/Clear filters/}).click();
   await checkParams(page,{view:'list',q:null,category:null,free:null,cursor:null});
@@ -173,6 +190,7 @@ try{
   await page.getByRole('link',{name:/NEXT PAGE/i}).click();
   await checkParams(page,{view:'list',cursor:'ci-page-2'});
   await page.getByRole('heading',{name:'No additional releases on this page.'}).waitFor();
+  await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({path:join(destination,'discover-page-end-'+width+'.png'),fullPage:true,animations:'disabled'});
   await page.goBack({waitUntil:'domcontentloaded'});
   await page.getByRole('heading',{name:'SYNTHETIC ORBIT GAME',exact:true}).waitFor();
@@ -181,6 +199,7 @@ try{
   await refreshedSearch.press('Enter');
   await checkParams(page,{q:'unknown-discovery',cursor:null,view:'list'});
   await page.getByRole('heading',{name:'No matching projects yet.'}).waitFor();
+  await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({path:join(destination,'discover-no-matches-'+width+'.png'),fullPage:true,animations:'disabled'});
   published=false;
   await discovery.getByRole('link',{name:/Clear filters/}).click();
