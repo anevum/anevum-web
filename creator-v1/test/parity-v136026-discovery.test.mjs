@@ -40,6 +40,7 @@ test('full-flag Discover uses the same URL state, approved real media and access
  assert.match(page,/placeholder="Search projects\.\.\."/);
  assert.match(page,/view==='compact'&&<input type="hidden" name="view" value="list"\/>/);
  assert.match(page,/onCategory\(ch\.id\)/);
+ assert.match(page,/aria-label=\{item\.label\+' — '\+item\.description\}/);
  assert.match(page,/onToggleFree/);
  assert.match(page,/packageProjects\.map\(project=><WorkCard/);
  assert.match(page,/legacyProjects\.map\(project=><ProjectCard/);
@@ -56,6 +57,8 @@ test('Discover list is a single dense column at every width and mobile search av
  assert.match(css,/\.av73-project-card\{\s*min-width:0;min-height:0;display:flex/);
  assert.match(css,/@media \(max-width:600px\)\{/);
  assert.match(css,/\.p136-discover-search-form input\{font-size:16px\}/);
+ assert.match(css,/V136\.026 visual verification/);
+ assert.match(css,/\.p136-discover-world-copy strong\{\s*display:none/);
  assert.match(css,/prefers-reduced-motion:reduce/);
  assert.doesNotMatch(css,/@import\s+url|url\(\s*['"]?https?:|@font-face/);
 });
