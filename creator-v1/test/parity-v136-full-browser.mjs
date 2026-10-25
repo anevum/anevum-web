@@ -312,7 +312,7 @@ try{
   // pilot fixture. Packaging is local; POST, publication and remote runtime
   // execution remain forbidden in this acceptance context.
   for(const width of [1440,390,320]){
-    const {page,context}=await contextFor(width,{state:'studio'});
+    const {page,context}=await contextFor(width,{state:'studio',forceVector:true});
     await page.goto(base+'/studio/packages/new',{waitUntil:'domcontentloaded'});
     await page.getByRole('heading',{name:'Transmit a creation.'}).waitFor();
     await page.getByRole('button',{name:'Artifact source workbench',exact:true}).click();
@@ -364,7 +364,10 @@ try{
       assert.equal(explorerFits,true,'Phone source file labels never overlap neighbouring controls');
     }
     await workbench.scrollIntoViewIfNeeded();
-    await page.screenshot({path:join(out,'artifact-workbench-'+width+'.png'),fullPage:false,animations:'disabled'});
+    // Private source editing does not need to compete for GPU resources with
+    // prior public WebGL stress tests. Retain genuine browser screenshot QA.
+    await page.screenshot({path:join(out,'artifact-workbench-'+width+'.png'),
+      fullPage:false,animations:'disabled',timeout:90000});
     if(width===1440)await workbench.getByRole('button',{name:'Accessible text editor',exact:true}).click();
     await workbench.getByRole('button',{name:/styles\.css$/}).click();
     await workbench.locator('.p136-source-fallback textarea').fill('body { color: #ffffff; background: #06101d; }');
