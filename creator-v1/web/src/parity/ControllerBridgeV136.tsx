@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react';
-import {advanceControllerRepeat, controllerTargetScore, noControllerRepeat, readControllerIntent, type ControllerDirection} from './controller-input-v136';
+import {advanceControllerRepeat, controllerTargetScore, nextConsoleStationIndex, noControllerRepeat, readControllerIntent, type ControllerDirection} from './controller-input-v136';
 import './controller-bridge-v136.css';
 
 type Connection = 'absent' | 'ready' | 'unmapped';
@@ -66,6 +66,17 @@ export function ControllerBridgeV136({navigationEnabled}: {navigationEnabled: bo
       const current = document.activeElement;
       // An editor or text entry retains ordinary keyboard and input semantics.
       if (isTextEntry(current)) return;
+      // The five-station console is an ordered navigation group. Respect its
+      // native arrow-key order in both the phone dock and desktop side rail;
+      // arbitrary nearby cards must never steal a focused station move.
+      if (scope === document && current instanceof HTMLElement &&
+          current.matches('.p136-console-wayfinder a[data-station]')) {
+        const wayfinder = current.closest<HTMLElement>('.p136-console-wayfinder');
+        const stations = Array.from(wayfinder?.querySelectorAll<HTMLElement>('a[data-station]') ?? [])
+          .filter(visibleInteractive);
+        const next = nextConsoleStationIndex(stations.indexOf(current), stations.length, direction);
+        if (next !== null) {setFocus(stations[next]); return;}
+      }
       const candidates = Array.from(scope.querySelectorAll<HTMLElement>(INTERACTIVE))
         .filter(visibleInteractive).slice(0, 450);
       if (!candidates.length) return;
