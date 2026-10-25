@@ -295,6 +295,14 @@ try{
     assert.equal(await page.locator('.p136-living-world').getAttribute('data-enabled'),'false','Private source never enters public GPU');
     await workbench.getByRole('button',{name:'Prepare build archive',exact:true}).click();
     await page.locator('.av095-drop strong').filter({hasText:'continuance-build.zip'}).waitFor();
+    const picker=page.locator('.av136033-build-picker');
+    assert.equal(await picker.getAttribute('data-selected-source'),'workbench','Source workbench ZIP is the actual selected build');
+    assert.equal(await picker.locator('details').evaluate(node=>node.open),false,'Prepared ZIP closes unused native chooser');
+    assert.equal(await picker.locator('input[type=file]').isVisible(),false,'Browser cannot claim No file chosen when ZIP is already prepared');
+    assert.match(await picker.locator('.av136033-prepared-note').innerText(),/already selected/i);
+    await picker.locator('summary').click();
+    assert.equal(await picker.locator('input[type=file]').isVisible(),true,'Creator can deliberately replace the prepared ZIP');
+    await picker.locator('summary').click();
     await page.getByText('Browser build candidate',{exact:true}).waitFor();
     assert.equal(await page.getByRole('button',{name:'Prepare private playtest',exact:true}).isDisabled(),true,'Archive creation never confirms publication rights or uploads');
     const workstationLayout=await workbench.evaluate(node=>({width:node.getBoundingClientRect().width,height:node.getBoundingClientRect().height,pageHeight:document.documentElement.scrollHeight}));
@@ -332,6 +340,8 @@ try{
     await workbench.getByRole('button',{name:/styles\.css$/}).click();
     await workbench.locator('.p136-source-fallback textarea').fill('body { color: #ffffff; background: #06101d; }');
     await page.locator('.av095-drop strong').filter({hasText:'Choose a ZIP or HTML file'}).waitFor();
+    assert.equal(await picker.getAttribute('data-selected-source'),'none','Editing revokes the in-memory archive selection');
+    assert.equal(await picker.locator('input[type=file]').isVisible(),true,'Creator can import a device export after invalidation');
     assert.equal(await page.locator('.p136-source-state').innerText(),'LOCAL CHANGES','Editing invalidates the previously prepared archive');
     if(width===1440){
       const diagnostics=workbench.locator('[data-source-link-diagnostics="local"]');
@@ -437,6 +447,17 @@ try{
     await workbench.getByRole('button',{name:'Prepare build archive',exact:true}).click();
     await page.getByText('Browser build candidate',{exact:true}).waitFor();
     assert.equal(await rights.isChecked(),false,'Preparing a new revision never reuses a previous rights confirmation');
+    assert.equal(await upload.isDisabled(),true);
+    assert.equal(await picker.getAttribute('data-selected-source'),'workbench','Repackaging binds the new source file');
+    await picker.locator('summary').click();
+    await picker.locator('input[type=file]').setInputFiles({name:'synthetic-alternate.html',mimeType:'text/html',
+      buffer:Buffer.from('<!doctype html><html lang="en"><head><title>Alternate fixture</title></head><body><main>Local browser test</main></body></html>')});
+    await page.locator('.av095-drop strong').filter({hasText:'synthetic-alternate.html'}).waitFor();
+    assert.equal(await picker.getAttribute('data-selected-source'),'device','Manual replacement binds the actual chosen file');
+    assert.equal(await picker.locator('input[type=file]').evaluate(node=>node.files?.[0]?.name),'synthetic-alternate.html',
+      'Switching sources keeps the real file input mounted and selected');
+    assert.equal(await picker.locator('.av136033-prepared-note').count(),0,'Device selection removes the stale workbench claim');
+    assert.equal(await rights.isChecked(),false,'Alternate build requires a fresh rights confirmation');
     assert.equal(await upload.isDisabled(),true);
     assert.equal(await page.locator('.p136-console-wayfinder').isVisible(),false,
       'A redundant fixed site dock must never cover the mobile or desktop code editor');
