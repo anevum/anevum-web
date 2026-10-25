@@ -96,7 +96,7 @@ function openProject(key, trigger) {
   lastProjectTrigger = trigger || lastProjectTrigger || document.activeElement;
   document.querySelector('#case-number').textContent = `PROJECT ${project.number} / SELECTED WORK`;
   const visual = project.art
-    ? '<div class="case-image case-art transcosmic-visual"><div class="cosmic-orbit" aria-hidden="true"></div><div class="cosmic-planet" aria-hidden="true"></div><div class="cosmic-moon" aria-hidden="true"></div><div class="cosmic-title" aria-hidden="true"><span>THE</span>TRANSCOSMIC<small>A UNIVERSE IN THE MAKING.</small></div></div>'
+    ? '<div class="case-image case-art transcosmic-visual"><div class="transcosmic-portal-thumb" aria-hidden="true"></div><div class="cosmic-title" aria-hidden="true"><span>THE</span>TRANSCOSMIC<small>A UNIVERSE IN THE MAKING.</small></div></div>'
     : `<div class="case-image ${project.phone ? 'phone' : ''}"><img src="${project.image}" alt="${project.alt}"></div>`;
   document.querySelector('#case-content').innerHTML = `
     <div class="case-intro"><div><span class="eyebrow">${project.category}</span><h2 id="case-title">${project.title}</h2></div><p>${project.tagline}</p></div>
@@ -174,9 +174,9 @@ document.querySelector('#brief-form').addEventListener('submit', event => {
   document.querySelector('#form-status').textContent = 'If your email app did not open, email devon@anevum.com directly. Your message has not been sent by this site.';
 });
 
-// The previous two unrelated WebGL sculpture renderers were retired from the
-// portfolio. The decorative Institute environment is now a cheap static-vector
-// scene with opt-in progressive motion, driven by cinematic-v1.js.
+// Both old isolated sculpture renderers remain retired. The portfolio's sole
+// decorative 3D field is managed by transcosmic-depth-v2.js; case-study
+// dialogs, record content and native interactions remain regular accessible DOM.
 const processFrames = Object.freeze({
   understand: ['01 / RESEARCH','Find the real problem.','Establish the constraints, explore the people and systems involved, and decide what should be built first.'],
   make: ['02 / DESIGN + CODE','Make something someone can use.','Build the smallest working version, refine the hierarchy and interactions, and connect the interface to real behavior.'],
