@@ -58,8 +58,13 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
   try{const archive=sourceArchive(files);onPackage(archive);if(download){const url=URL.createObjectURL(archive),anchor=document.createElement('a');anchor.href=url;anchor.download=archive.name;anchor.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}setDirty(false);setNote('Archive prepared below. The existing compatibility checks, rights confirmation and private-upload controls still apply.')}
   catch(error){setNote(error instanceof Error?error.message:'Source archive could not be prepared.')}
  }
- return <section className="p136-workbench" aria-label="Artifact source workbench" data-artifact-workbench="v136.011">
+ return <section className="p136-workbench" aria-label="Artifact source workbench" data-artifact-workbench="v136.017">
   <header className="p136-workbench-head"><div><span>CONTINUANCE / ARTIFACT WORKBENCH</span><h2>Make the source.</h2></div><span className="p136-source-state">{dirty?'LOCAL CHANGES':'ARCHIVE PREPARED'}</span></header>
+  <div className="p136017-source-functionbar" aria-hidden="true">
+   <span className="p136017-functionmark">SOURCE / LOCAL</span>
+   <span>FILES · VALIDATION · ARCHIVE</span>
+   <span>01 / WORKBENCH</span>
+  </div>
   <div className="p136-workbench-command">
    <button type="button" disabled={disabled||!files['index.html']||total>MAX_TOTAL} onClick={()=>packageSource()}><Icon name="create" size={16}/> Prepare build archive</button>
    <button type="button" disabled={disabled||!files['index.html']||total>MAX_TOTAL} onClick={()=>packageSource(true)}>Download source archive</button>
@@ -72,7 +77,9 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
     <div className="p136-source-add"><label className="visually-hidden" htmlFor="p136-source-new">New file path</label><input id="p136-source-new" placeholder="assets/data.json" value={name} onChange={e=>setName(e.target.value)} maxLength={120} disabled={disabled}/><button type="button" onClick={add} disabled={disabled} aria-label="Create source file">+</button></div>
     <nav aria-label="Source file explorer">{entries.map(([path])=><button key={path} type="button" aria-pressed={path===active} onClick={()=>setActive(path)}><span className={'p136-file-mark is-'+editorLanguage(path)} aria-hidden="true">{fileMark(path)}</span><span>{path}</span></button>)}</nav>
    </aside>
-   <div className="p136-source-stage"><div className="p136-source-tabs" role="tablist" aria-label="Open source files">{entries.map(([path])=><button key={path} type="button" role="tab" id={'p136-source-tab-'+path} aria-selected={path===active} aria-controls="p136-source-panel" tabIndex={path===active?0:-1}
+   <div className="p136-source-stage">
+    <div className="p136017-source-ledge"><span>EDITOR / {active}</span><span>LOCAL · NOT EXECUTED</span></div>
+    <div className="p136-source-tabs" role="tablist" aria-label="Open source files">{entries.map(([path])=><button key={path} type="button" role="tab" id={'p136-source-tab-'+path} aria-selected={path===active} aria-controls="p136-source-panel" tabIndex={path===active?0:-1}
      onKeyDown={e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const i=entries.findIndex(([p])=>p===active),next=e.key==='Home'?0:e.key==='End'?entries.length-1:(i+(e.key==='ArrowLeft'?-1:1)+entries.length)%entries.length;setActive(entries[next][0]);requestAnimationFrame(()=>document.getElementById('p136-source-tab-'+entries[next][0])?.focus())}}
      onClick={()=>setActive(path)}>{path}</button>)}</div>
     <div id="p136-source-panel" role="tabpanel" aria-labelledby={'p136-source-tab-'+active}>
@@ -80,7 +87,7 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
     </div>
     <footer className="p136-source-status"><span>{editorLanguage(active).toUpperCase()}</span><span>{files[active].split('\n').length} lines</span><span>{strToU8(files[active]).length.toLocaleString()} bytes</span><span>{plain||editorError?'TEXT EDITOR':Editor?'MONACO':'LOADING MONACO'}</span></footer>
    </div>
-   {inspector&&<aside className="p136-source-inspector" aria-label="Source and build diagnostics"><strong>BUILD INSPECTOR</strong><dl><dt>Source files</dt><dd>{entries.length} / {MAX_FILES}</dd><dt>Expanded text</dt><dd>{(total/1024).toFixed(1)} KiB / 1024 KiB</dd><dt>Entrypoint</dt><dd>{files['index.html']?'index.html':'Missing'}</dd><dt>Publication</dt><dd>Private upload required</dd></dl><h3>Local findings</h3>{problems.length?<ul>{problems.map(p=><li key={p}>{p}</li>)}</ul>:<p>No issues found by the available text checks.</p>}<p>JavaScript is edited as text. This view does not compile, run, save to your account or publish source.</p><h3>Live preview</h3><p>Prepare the archive, then use the existing private playtest. Executable previews stay in ANEVUM’s isolated runtime.</p></aside>}
+   {inspector&&<aside className="p136-source-inspector" aria-label="Source and build diagnostics"><strong>BUILD INSPECTOR</strong><span className="p136017-inspector-disclosure">VALIDATION / LOCAL SOURCE</span><dl><dt>Source files</dt><dd>{entries.length} / {MAX_FILES}</dd><dt>Expanded text</dt><dd>{(total/1024).toFixed(1)} KiB / 1024 KiB</dd><dt>Entrypoint</dt><dd>{files['index.html']?'index.html':'Missing'}</dd><dt>Publication</dt><dd>Private upload required</dd></dl><h3>Local findings</h3>{problems.length?<ul>{problems.map(p=><li key={p}>{p}</li>)}</ul>:<p>No issues found by the available text checks.</p>}<p>JavaScript is edited as text. This view does not compile, run, save to your account or publish source.</p><h3>Live preview</h3><p>Prepare the archive, then use the existing private playtest. Executable previews stay in ANEVUM’s isolated runtime.</p></aside>}
   </div>
   {note&&<p className="p136-source-notice" role="status">{note}</p>}
   <p className="p136-source-privacy">Source stays in this workspace’s memory until you prepare and explicitly upload an archive. Export before leaving; signing out or changing routes clears it.</p>
