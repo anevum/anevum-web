@@ -30,7 +30,7 @@ const journeys = [
     id: "connect", number: "03", icon: "community", label: "I WANT TO TAKE PART",
     eyebrow: "FOR THE COMMUNITY",
     title: "BELONG WITHOUT HAVING TO BUILD.",
-    description: "Browse approved community activity, get to know other makers and explore eligible member features. You do not have to publish software to belong here.",
+    description: "Browse approved community activity, get to know other makers and explore eligible member features. You do not have to be a developer to belong here.",
     primary: { to: "/community", label: "EXPLORE THE COMMUNITY" },
     secondary: { to: "/guide", label: "TRY THE FREE FIELD GUIDE" },
     note: "Posting and moderation depend on verified accounts, permissions and current service availability. Consult Status for a live check."
