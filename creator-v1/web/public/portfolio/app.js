@@ -24,6 +24,22 @@ if ('IntersectionObserver' in window && !motionPaused) {
     entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); observer.unobserve(entry.target); } });
   }, { threshold: 0.07, rootMargin: '0px 0px -20px 0px' });
   document.querySelectorAll('.reveal').forEach(element => observer.observe(element));
+  // A true WebGL environment can cause short IntersectionObserver delays on
+  // slow/software GPUs. Native scroll must never leave real project records
+  // invisible just because someone moves through the site quickly.
+  const revealCurrentlyVisible = () => {
+    const top=-120,bottom=innerHeight+120;
+    document.querySelectorAll('.reveal:not(.visible)').forEach(element => {
+      const box=element.getBoundingClientRect();
+      if (box.top<bottom && box.bottom>top && box.width>0 && box.height>0) {
+        element.classList.add('visible');
+        observer.unobserve(element);
+      }
+    });
+  };
+  window.addEventListener('scroll',revealCurrentlyVisible,{passive:true});
+  window.addEventListener('resize',revealCurrentlyVisible,{passive:true});
+  requestAnimationFrame(revealCurrentlyVisible);
 }
 
 let progressScheduled = false;
