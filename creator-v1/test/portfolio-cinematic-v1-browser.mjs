@@ -66,7 +66,9 @@ async function run(width,height,motion='no-preference') {
     const intro=document.querySelector('.hero-description').getBoundingClientRect();
     const button=document.querySelector('.hero-buttons .button').getBoundingClientRect();
     const header=document.querySelector('.site-header').getBoundingClientRect();
-    return {scrollWidth:el.scrollWidth,viewport:innerWidth,hero:{x:hero.x,y:hero.y,right:hero.right,bottom:hero.bottom},intro:{x:intro.x,right:intro.right},button:{x:button.x,right:button.right,y:button.y},headerBottom:header.bottom,mainCount:document.querySelectorAll('main').length,sculptures:document.querySelectorAll('canvas').length};
+    const offenders = [...document.body.querySelectorAll('*')].map(element=>({element,box:element.getBoundingClientRect()})).filter(entry=>entry.box.width>0&&entry.box.right>innerWidth+1&&entry.box.left>=-2).slice(0,18).map(({element,box})=>({tag:element.tagName,cls:String(element.className||'').slice(0,80),id:element.id,right:Math.round(box.right),left:Math.round(box.left),width:Math.round(box.width),position:getComputedStyle(element).position}));
+    const footer=document.querySelector('.hero-footer').getBoundingClientRect();
+    return {scrollWidth:el.scrollWidth,viewport:innerWidth,offenders,hero:{x:hero.x,y:hero.y,right:hero.right,bottom:hero.bottom},intro:{x:intro.x,right:intro.right},button:{x:button.x,right:button.right,y:button.y},footer:{top:footer.top,bottom:footer.bottom},headerBottom:header.bottom,mainCount:document.querySelectorAll('main').length,sculptures:document.querySelectorAll('canvas').length};
   });
   assert.ok(shape.scrollWidth <= shape.viewport + 1, 'overflow '+width+': '+JSON.stringify(shape));
   assert.equal(shape.mainCount,1);
@@ -76,6 +78,16 @@ async function run(width,height,motion='no-preference') {
   assert.ok(shape.hero.y>=shape.headerBottom-1,'header obscures hero at '+width);
   assert.ok(shape.button.x>=-1 && shape.button.right<=width+1,'hero CTA clipped at '+width);
   note('layout '+width+'px',shape);
+  // Reproduce actual reading/scrolling so lazy-loaded images and reveal states
+  // are visible in full-page screenshots, instead of falsely appearing blank.
+  await page.evaluate(async () => {
+    const sleep = ms => new Promise(resolve=>setTimeout(resolve,ms));
+    const step=Math.max(300,Math.floor(innerHeight*0.8));
+    for(let y=0;y<document.documentElement.scrollHeight;y+=step){
+      scrollTo(0,y);await sleep(65);
+    }
+    scrollTo(0,0);await sleep(550);
+  });
   await page.screenshot({path:join(output,'portfolio-'+width+'-'+motion+'.png'),fullPage:true,animations:'disabled'});
   await page.locator('[data-project="anevum"]').click();
   await page.locator('#project-dialog[open]').waitFor({state:'visible'});
@@ -86,6 +98,7 @@ async function run(width,height,motion='no-preference') {
   assert.match(page.url(),/project=fold/);
   await page.locator('.case-close').click();
   await page.locator('#project-dialog').waitFor({state:'hidden'});
+  await page.waitForURL(url => !new URL(url).searchParams.has('project'));
   assert.doesNotMatch(page.url(),/project=/);
   note('project story open/next/close '+width);
   await page.locator('[data-process="make"]').click();
