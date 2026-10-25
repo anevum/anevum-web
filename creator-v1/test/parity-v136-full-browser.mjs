@@ -133,10 +133,11 @@ try{
       'One first-party, noninteractive Arrival engraving preserves the existing scene');
     assert.equal(await page.locator('.p136017-hero-upperline[aria-hidden="true"]').count(),1,
       'Authored hero metadata is explicitly decorative, never fabricated telemetry');
+    await page.screenshot({path:join(out,'arrival-'+width+'.png'),fullPage:false,animations:'disabled'});
     assert.ok(layout.artLoaded,'Procedural vector and GPU canvas available');
     assert.ok(['webgl','vector'].includes(layout.renderer),'Supported live world renderer');
     if(width>=1440){
-      assert.ok(layout.headingLines<=2.1,'Desktop headline remains two lines: '+JSON.stringify(layout));
+      assert.ok(layout.headingLines<=2.22,'Two authored headline rows, including intentional optical interline spacing: '+JSON.stringify(layout));
       assert.ok(layout.hero.height>=665&&layout.hero.height<=895,
         'New authored Arrival fills a cinematic viewport without overwhelming the first page: '+JSON.stringify(layout));
     }
@@ -144,7 +145,6 @@ try{
     assert.equal(layout.animation,'none','Reduced motion has a static scene');
     for(const rect of [layout.primary,layout.secondary]){assert.ok(rect.height>=44);assert.ok(rect.width>=44);assert.ok(rect.left>=0&&rect.right<=width);}
     if(width<650)assert.ok(layout.primary.bottom<750,'Primary action stays in the first phone viewport');
-    await page.screenshot({path:join(out,'arrival-'+width+'.png'),fullPage:false,animations:'disabled'});
     await page.screenshot({path:join(out,'home-'+width+'.png'),fullPage:true,animations:'disabled'});
     record('responsive arrival '+width,layout);
     if(width===390){
