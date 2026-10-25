@@ -14,7 +14,7 @@ import {canonicalRecognition} from './recognition.mjs';
 import {canonicalRecognitionCatalog} from './recognition-catalog.mjs';
 import {matchRewardMedia,earnedRewardMedia,matchRewardInventory,earnedRewardInventory} from './reward-media.mjs';
 import {boundedText} from "./request-body.mjs";
-import {supporterMember,supporterWebhook} from "./supporter.mjs";
+import {supporterMember} from "./supporter.mjs";
 import {supporterRewardsRoute} from "./supporter-rewards.mjs";
 import {canonicalAccountClosure} from "./account-closure.mjs";
 import {publicSupporterTelemetry,PUBLIC_TELEMETRY_PATH} from "./public-supporter-telemetry.mjs";
@@ -155,8 +155,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
      const ownRecognition=path===CANONICAL_PREFIX+'/recognition';
      if(ownRecognition&&env.CANONICAL_RECOGNITION_ENABLED!=='true')return fail(request,404);
     const ownProgression=/^\/api\/v1\/member\/(?:progression|notifications(?:\/ack)?)$/.test(path);
-    const ownSupporter=/^\/api\/v1\/member\/supporter(?:\/(?:checkout|portal|webhook|rewards))?$/.test(path);
-    const supporterHook=path===CANONICAL_PREFIX+"/supporter/webhook";
+    const ownSupporter=/^\/api\/v1\/member\/supporter(?:\/rewards)?$/.test(path);
     const ownProfile=path===PROFILE;
     const ownExport=path===EXPORT;
     const ownClosure=path===CLOSURE;
@@ -187,8 +186,7 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
     if(ownStudioReview && !["GET","POST"].includes(request.method))return fail(request,405);
     if(ownStudio && !["GET","HEAD","POST","PATCH","PUT","DELETE"].includes(request.method))return fail(request,405);
     if(ownClosure && !["GET","POST"].includes(request.method))return fail(request,405);
-    if(ownSupporter && !((["/supporter","/supporter/rewards"].some(suffix=>path===CANONICAL_PREFIX+suffix)&&["GET","PATCH"].includes(request.method)) ||
-      (["/supporter/checkout","/supporter/portal","/supporter/webhook"].some(suffix=>path===CANONICAL_PREFIX+suffix)&&request.method==="POST")))return fail(request,405);
+    if(ownSupporter && !["GET","PATCH"].includes(request.method))return fail(request,405);
     if((path===HEALTH||path===METHODS)&&!READ_METHODS.has(request.method))
       return safeJson(request,{error:"Read-only endpoint"},405);
 
@@ -260,10 +258,6 @@ export function createCanonicalStageWorker({authFactory=createCanonicalAuth}={})
       const clean=new Request(request.url,{method:request.method,headers:{accept:"application/json"}});
       return safeResponse(await canonicalPublicCreator(clean,env,canonicalRequestOrigin(env),publicHandle[1]));
     }
-
-    // Stripe does not send a browser Origin. This exact endpoint relies on
-    // raw-body HMAC verification, test-mode lock and a durable event ledger.
-    if(supporterHook)return safeResponse(await supporterWebhook(request,env));
 
     if(ownProfile && ["POST","PATCH"].includes(request.method) && !sameOriginMutation(request,env))
       return safeJson(request,{error:"Same-origin request required"},403);

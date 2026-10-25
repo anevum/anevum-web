@@ -2,7 +2,7 @@
  * ANEVUM V034 / SUPPORTER COLLECTIBLES
  * Cosmetic, revocable recognition. Never XP, earned levels, moderation power,
  * discovery priority or rights over another creator's work.
- * Tier age is measured from the verified Stripe subscription start, not from
+ * Tier age is measured from the server-verified recognition eligibility start, not from
  * checkout redirects or user-provided timestamps; annual plans don't skip tiers.
  */
 export const SUPPORTER_SEALS=Object.freeze([

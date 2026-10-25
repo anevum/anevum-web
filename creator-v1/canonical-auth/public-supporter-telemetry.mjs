@@ -2,7 +2,7 @@
  * ANEVUM V040 / PRIVACY-SAFE SUPPORTER TRANSPARENCY AGGREGATES
  *
  * Never publish raw member IDs, small-cohort totals, private file sizes,
- * user-generated content, Stripe identifiers or financial records.
+ * user-generated content, payment-provider identifiers or financial records.
  *
  * Public measurements are independent lower-bound buckets, subject to at
  * least 25 DISTINCT contributors in the relevant cohort. The date and

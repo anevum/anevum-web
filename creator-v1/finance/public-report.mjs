@@ -1,7 +1,7 @@
 /**
  * ANEVUM / PRIVATE -> PUBLIC FINANCIAL REPORT / V038
  *
- * This module NEVER fetches Stripe/Cloudflare/Railway data, stores raw invoices,
+ * This module NEVER fetches payment-provider/Cloudflare/Railway data, stores raw invoices,
  * or publishes on its own. It converts a complete, manually reconciled,
  * owner-approved PRIVATE ledger into an allowlisted aggregate-only report.
  * The private ledger must remain outside source control and public servers.
@@ -102,20 +102,20 @@ function parseMovements(entries){
  return result;
 }
 function reconcile(actual,expected){
- exactKeys(expected,['grossCents','feeCents','refundCents','disputeCents','netCents','taxLiabilityReserveCents','taxReserveEvidenceSha256','stripeBalanceEvidenceSha256'],'reconciliation');
+ exactKeys(expected,['grossCents','feeCents','refundCents','disputeCents','netCents','taxLiabilityReserveCents','taxReserveEvidenceSha256','processorBalanceEvidenceSha256'],'reconciliation');
  if(expected.taxLiabilityReserveCents!==null){
    nonnegativeAmount(expected.taxLiabilityReserveCents,'reconciliation.taxLiabilityReserveCents');
    digest(expected.taxReserveEvidenceSha256,'reconciliation.taxReserveEvidenceSha256');
  }else{
    ensure(expected.taxReserveEvidenceSha256===null,'unverified tax reserve must not have attestation');
  }
- digest(expected.stripeBalanceEvidenceSha256,'reconciliation.stripeBalanceEvidenceSha256');
+ digest(expected.processorBalanceEvidenceSha256,'reconciliation.processorBalanceEvidenceSha256');
  for(const k of ['grossCents','refundCents','disputeCents'])
   nonnegativeAmount(expected[k],'reconciliation.'+k);
  for(const k of ['feeCents','netCents'])
   integer(expected[k],'reconciliation.'+k,{signed:true});
  for(const k of ['grossCents','feeCents','refundCents','disputeCents','netCents'])
-  ensure(actual[k]===expected[k],'Stripe reconciliation mismatch for '+k);
+  ensure(actual[k]===expected[k],'payment-provider reconciliation mismatch for '+k);
 }
 function reviewPeriod(period,reviewedAt,mode){
  ensure(['closed-month','month-to-date'].includes(mode),'invalid reporting mode');
@@ -174,7 +174,7 @@ export function buildPublicFinanceReport(privateLedger){
    'unapproved goal must remain null');
  const operating=safeExpense?costsCents:null;
  const net=safeReceipts?movement.netCents:null;
- // Gross Stripe cash less Stripe fees/refunds is NOT all spendable income:
+ // Gross payment-provider cash less payment-provider fees/refunds is NOT all spendable income:
  // sales tax collected for a government may still be owed after settlement.
  // Publish available-to-operate cash and a funding coverage bar only when
  // that specific remaining tax reserve has independently been reconciled.
@@ -182,7 +182,7 @@ export function buildPublicFinanceReport(privateLedger){
    ?privateLedger.reconciliation.taxLiabilityReserveCents:null;
  ensure(!review.taxReserveReviewed||(
    safeReceipts&&taxReserve!==null
- ),'tax reserve cannot be called verified without complete Stripe reconciliation');
+ ),'tax reserve cannot be called verified without complete payment-provider reconciliation');
  const available=net!==null&&taxReserve!==null?net-taxReserve:null;
  const coverage=operating!==null&&operating>0&&available!==null
    ?Math.round(available/operating*10000)/100

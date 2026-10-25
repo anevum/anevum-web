@@ -12,7 +12,7 @@ export default function SupporterCollectionPage() {
     </nav>
     <SupporterRewardsStudio memberId={memberId}/>
     {!memberId && <p className="av45-collection-note">
-      Collectibles are cosmetic previews. Verified supporters will be able to choose unlocked items when the membership program opens.
+      These collectibles are previews only. Enrollment and paid unlocks are unavailable; no payment is requested.
     </p>}
   </div>;
 }

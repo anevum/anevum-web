@@ -20,16 +20,15 @@ test('short invitation does not inline technical dashboards or large collection 
  assert.match(home,/to="\/support\/transparency"/);
  assert.match(home,/to="\/support\/collection"/);
 });
-test('payment status and prices remain honest and fail-closed',()=>{
- assert.match(home,/billing\?\.available/);
- assert.match(home,/!id\|\|!billing\?\.available\|\|checking\|\|busy/);
- assert.match(home,/checkout\.stripe\.com/);
- assert.match(home,/billing\.stripe\.com/);
- assert.match(home,/ENROLLMENT NOT OPEN/);
- assert.match(home,/Memberships and live payments are not open/);
- assert.match(home,/interval==='year'\?'\$36':'\$5'/);
- assert.match(home,/updateDisplay\(show:boolean\)/);
- assert.match(home,/supporter\?'portal':'checkout'/);
+test('retired payment flows and proposed charges are absent from public support',()=>{
+ assert.equal(home.includes('checkout.stripe.com'),false);
+ assert.equal(home.includes('billing.stripe.com'),false);
+ assert.equal(home.includes('$36')||home.includes('$5'),false);
+ assert.equal(home.includes('Open test checkout')||home.includes('Manage test membership'),false);
+ assert.equal(home.includes('/api/v1/member/supporter/checkout'),false);
+ assert.equal(home.includes('/api/v1/member/supporter/portal'),false);
+ assert.equal(home.includes('Payment enrollment is closed'),true);
+ assert.equal(home.includes('to="/join"'),true);
 });
 test('three route surfaces preserve real transparency and private cosmetics',()=>{
  assert.match(app,/path="support" element=\{<SupporterPage\/>\}/);

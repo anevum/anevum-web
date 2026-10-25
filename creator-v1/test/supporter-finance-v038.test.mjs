@@ -23,7 +23,7 @@ function ledger(){
   ],
   reconciliation:{
    grossCents:4100,feeCents:208,refundCents:500,disputeCents:0,
-   netCents:3392,taxLiabilityReserveCents:100,taxReserveEvidenceSha256:SHA2,stripeBalanceEvidenceSha256:SHA3
+   netCents:3392,taxLiabilityReserveCents:100,taxReserveEvidenceSha256:SHA2,processorBalanceEvidenceSha256:SHA3
   },
   activeSupporters:{activeCount:3,asOf:'2026-10-03T15:50:00Z',evidenceSha256:SHA},
   goal:{monthlyTargetCents:6000,evidenceSha256:SHA2}
@@ -39,7 +39,7 @@ test('production source stays unverified while no ledgers or invoices are approv
  assert.equal(base.approvedMonthlyTargetCents,null);
  assert.equal(base.cashCoveragePercent,null);
 });
-test('verified synthetic month calculates exact cash gross, Stripe fees, refund, net and costs',()=>{
+test('verified synthetic month calculates exact cash gross, payment-provider fees, refund, net and costs',()=>{
  const report=buildPublicFinanceReport(ledger());
  assert.equal(report.published,true);
  assert.equal(report.period,'2026-09');
@@ -76,7 +76,7 @@ test('partial expense coverage never creates verified operating cost or funding 
  assert.equal(out.receipts.netCents,3392);
  assert.equal(out.cashCoveragePercent,null);
 });
-test('partial Stripe reconciliation never displays made-up income or supporter count',()=>{
+test('partial payment-provider reconciliation never displays made-up income or supporter count',()=>{
  const input=ledger();
  input.review.supporterCoverageComplete=false;
  input.review.balanceReconciled=false;
@@ -94,7 +94,7 @@ test('partial Stripe reconciliation never displays made-up income or supporter c
 });
 test('reconciliation mismatch, duplicate transaction and invalid signs fail closed',()=>{
  let x=ledger();x.reconciliation.netCents++;
- assert.throws(()=>buildPublicFinanceReport(x),/Stripe reconciliation mismatch/);
+ assert.throws(()=>buildPublicFinanceReport(x),/payment-provider reconciliation mismatch/);
  x=ledger();x.supporterMovements[1].id=x.supporterMovements[0].id;
  assert.throws(()=>buildPublicFinanceReport(x),/duplicate supporter/);
  x=ledger();x.supporterMovements[2].amountCents=500;
@@ -125,7 +125,7 @@ test('zero receipts require explicit reviewed reconciliation and are not inferre
  const input=ledger();
  input.supporterMovements=[];
  input.reconciliation={
-  grossCents:0,feeCents:0,refundCents:0,disputeCents:0,netCents:0,taxLiabilityReserveCents:0,taxReserveEvidenceSha256:SHA2,stripeBalanceEvidenceSha256:SHA
+  grossCents:0,feeCents:0,refundCents:0,disputeCents:0,netCents:0,taxLiabilityReserveCents:0,taxReserveEvidenceSha256:SHA2,processorBalanceEvidenceSha256:SHA
  };
  const output=buildPublicFinanceReport(input);
  assert.equal(output.receipts.netCents,0);
@@ -134,7 +134,7 @@ test('zero receipts require explicit reviewed reconciliation and are not inferre
  assert.equal(output.cashCoveragePercent,0);
 });
 
-test('verified Stripe cash is not called spendable until sales-tax reserves are reviewed',()=>{
+test('verified payment-provider cash is not called spendable until sales-tax reserves are reviewed',()=>{
  const input=ledger();
  input.review.taxReserveReviewed=false;
  input.reconciliation.taxLiabilityReserveCents=null;
