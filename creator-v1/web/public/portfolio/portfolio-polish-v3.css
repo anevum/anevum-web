@@ -6,6 +6,16 @@
   position:absolute;inset:0;z-index:2;overflow:hidden;isolation:isolate;
   pointer-events:none;contain:paint;mix-blend-mode:screen;
 }
+/* An original, highly compressed first-party glass study lifts the background.
+   It is noninteractive, softly focused and never claims to be product UI. */
+.hero-v3-prism::before{
+  content:"";position:absolute;top:2%;right:-14%;width:77%;height:90%;z-index:-1;
+  background:url("/portfolio/assets/hero-chroma-v3.avif") center center / cover no-repeat;
+  opacity:.79;filter:saturate(1.27) contrast(1.14) blur(1.4px);
+  mask-image:radial-gradient(ellipse at 58% 49%,#000 0%,#000 45%,#000a 64%,transparent 82%);
+  transform:scale(1.075) translate3d(var(--reel-motion-x,0px),var(--reel-motion-y,0px),0);
+  pointer-events:none;
+}
 .hero-v3-prism .prism-plane{
   position:absolute;display:block;pointer-events:none;
   transform-origin:60% 50%;
@@ -123,7 +133,8 @@
   .hero-v3-prism .prism-glint{top:72%;right:-60%;width:900px}
 }
 @media(max-width:620px){
-  .hero-v3-prism{opacity:.39}
+  .hero-v3-prism{opacity:.61}
+  .hero-v3-prism::before{top:33%;right:-58%;width:170%;height:60%;opacity:.72;filter:saturate(1.2) contrast(1.07) blur(2px)}
   .hero-v3-prism .prism-arc-a{width:720px;height:650px;top:27%;right:-112%}
   .hero-v3-prism .prism-arc-b{width:720px;height:560px;top:41%;right:-103%}
   .hero-v3-prism .prism-arc-c{display:none}
@@ -136,7 +147,7 @@
   .project-transcosmic .project-meta h3{font-size:34px}
 }
 @media(prefers-reduced-motion:reduce){
-  .hero-v3-prism .prism-plane,
+  .hero-v3-prism .prism-plane,.hero-v3-prism::before,
   .hero-v2-eyebrow,.hero.hero-v2 h1,.hero.hero-v2 .hero-description,
   .hero-v2-actions,.hero-v2-reel{animation:none!important}
   .reel-controls::after{transition:none}
