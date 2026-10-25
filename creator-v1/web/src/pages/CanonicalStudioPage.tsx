@@ -9,6 +9,7 @@ import {
  type StudioReviewProject,type StudioReviewHistory,type StudioReviewManifest,type StudioReviewReceipt
 } from '../lib/canonical-studio';
 import './canonical-studio.css';
+import './studio-hosting-v136019.css';
 import {readWithDeadline} from '../../../shared/read-deadline.mjs';
 import {nativeCreatorEnabled} from '../lib/native-creator-v095';
 import {workbenchAlphaEnabled} from '../lib/workbench-alpha';
