@@ -57,3 +57,13 @@ test('local file moves preserve bytes and safety, removal never removes entrypoi
  const zipped=unzipSync(new Uint8Array(await sourceArchive(removed).arrayBuffer()));
  assert.deepEqual(Object.keys(zipped),['index.html','styles.css']);
 });
+
+test('local source reference review is read-only and never rewrites creator code',async()=>{
+ const {sourceReferencesToReview}=await import('../web/src/parity/workbench-file-ops-v136.ts');
+ const files={'index.html':'<link href="styles.css"><script src="scripts/app.js"></script>',
+  'styles.css':'body{color:white}', 'scripts/app.js':'import "../styles.css";'};
+ const before=JSON.stringify(files);
+ assert.deepEqual(sourceReferencesToReview(files,'styles.css'),['index.html']);
+ assert.deepEqual(sourceReferencesToReview(files,'scripts/app.js'),['index.html']);
+ assert.equal(JSON.stringify(files),before);
+});
