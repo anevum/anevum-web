@@ -29,7 +29,7 @@ test('homepage retains canonical public-data fields and real routes',()=>{
   'projectDetailPath(project.id','to="/discover"','to="/community"',
   'to="/studio"',"signedIn?'/member':'/join'",
   "signal.source==='verified'","catalogueState==='error'",
-  'ANEVUM TYPE DEFAULT / NO CREATOR COVER',"new Event('anevum:iren-open')"
+  'CATEGORY INDEX / NOT CREATOR COVER',"new Event('anevum:iren-open')"
  ])assert.ok(hero.includes(expected),'Missing public action/safety: '+expected);
  assert.ok(!/Date\.now|Math\.random|fakeProjects|sampleProjects|simulatedMembers/.test(hero),
   'No invented live catalogue or member data');
@@ -171,34 +171,24 @@ test('inspector surfaces advisory missing static source links and real editor na
 });
 
 
-test('all V136 public discovery covers use authored type defaults or actual uploaded covers, never generated category art',()=>{
- const cover=source('../web/src/parity/CategoryCoverV136.tsx');
- const coverCss=source('../web/src/parity/category-cover-v136.css');
+test('V136 public covers prefer verified creator media and use one first-party type default contract',()=>{
+ const thumb=source('../web/src/components/ProjectThumbnail.tsx');
+ const fallback=source('../web/src/lib/project-thumbnails.ts');
  const homepage=source('../web/src/parity/ParityPortalV136.tsx');
- const discover=source('../web/src/parity/ParityDiscoverV136.tsx');
  const detail=source('../web/src/parity/ArtifactLensV136.tsx');
  const publicCard=source('../web/src/components/ProjectCard.tsx');
  const packages=source('../web/src/components/CreatorPackageGallery.tsx');
- assert.match(cover,/data-cover-source=\{hasCover\?'creator':'default'\}/);
- assert.match(cover,/onError=\{\(\)=>setFailedUrl\(coverUrl\?\?null\)\}/);
- assert.match(cover,/role="img"/);
+ assert.match(thumb,/safePackageCover\(uploadedUrl\)/);
+ assert.match(thumb,/setFailedUrl\(verified\)/);
+ assert.match(thumb,/data-thumbnail-source=/);
  for(const category of ['games','tools','automation','research','creative','learning','libraries','other','game','app','simulation','story']){
-  assert.ok(cover.includes(category+':{label:'),'Every real category has a deterministic thumbnail: '+category);
+  assert.ok(fallback.includes(category+':{asset:'),'Every actual category has a deterministic thumbnail: '+category);
  }
- assert.match(coverCss,/\.p136-category-cover--violet/);
- assert.match(coverCss,/\.p136-category-cover--cyan/);
- assert.match(coverCss,/\.p136-category-cover--mint/);
- assert.match(homepage,/<CategoryCoverV136 category=\{project\.category\}/);
- assert.match(homepage,/<CategoryCoverV136 category=\{item\.scene\}/);
- assert.match(discover,/<CategoryCoverV136 category=\{id\}/);
- assert.match(detail,/<CategoryCoverV136 category=\{item\.category\}/);
- assert.match(publicCard,/VITE_PARITY_V136_FULL==="true"\s*\?<CategoryCoverV136/);
- assert.match(packages,/VITE_PARITY_V136_FULL==='true'\s*\?<CategoryCoverV136/);
- for(const [name,code] of [['homepage',homepage],['discovery',discover],['details',detail]]){
-  assert.ok(!code.includes('CosmicArtwork'),'V136 '+name+' must not create category illustrations');
- }
- assert.ok(!/fetch\(|localStorage|sessionStorage|eval\(/.test(cover),
-  'Default covers are static first-party UI, with no telemetry or external art retrieval');
+ assert.match(homepage,/<ProjectThumbnail kind=\{project\.category\}/);
+ assert.match(detail,/<ProjectThumbnail kind=\{item\.category\}/);
+ assert.match(publicCard,/<ProjectThumbnail kind=\{project\.category\}/);
+ assert.match(packages,/uploadedUrl=\{work\.coverUrl\}/);
+ assert.ok(!/fetch\(|localStorage|sessionStorage|eval\(/.test(thumb));
 });
 
 
@@ -209,8 +199,8 @@ test('V136 Commons and real creator/member profiles use safe type covers and add
  const shell=source('../web/src/components/Shell.tsx');
  const discover=source('../web/src/parity/ParityDiscoverV136.tsx');
  assert.match(community,/data-parity-community="v136\.017"/);
- assert.match(community,/<CategoryCoverV136 category=\{item\.category\} title=\{item\.title\}/);
- assert.match(community,/<CategoryCoverV136 category=\{field\.id\}/);
+ assert.match(community,/<ProjectThumbnail kind=\{item\.category\} title=\{item\.title\}/);
+ assert.match(community,/<ProjectThumbnail kind=\{field\.id\}/);
  assert.ok(!community.includes('CosmicArtwork'));
  assert.match(community,/setSearchParams\(params\)/);
  assert.match(community,/chooseView\(item\.id\)/);
@@ -220,15 +210,15 @@ test('V136 Commons and real creator/member profiles use safe type covers and add
  assert.match(creators,/id="p136-creator-releases"/);
  assert.match(creators,/id="p136-creator-discussions"/);
  assert.match(member,/p136-public-member/);
- assert.match(member,/space\.media\.banner&&<img/);
- assert.match(member,/id="p136-member-wall"/);
- assert.match(member,/id="p136-member-creations"/);
- assert.match(member,/id="p136-member-recognition"/);
+ assert.match(member,/space\.media\.banner&&<MemberCoverMedia/);
+ assert.match(member,/id="member-world-wall"/);
+ assert.match(member,/id="member-world-creations"/);
+ assert.match(member,/id="member-world-recognition"/);
  assert.match(shell,/const parityProfile=/);
  assert.match(shell,/!publicSpatial&&!parityFullBleed&&<ContinuanceWorldStage/);
  assert.ok(!discover.includes('GENERATED ENVIRONMENT / NOT CREATOR ARTWORK'));
  assert.match(css,/V136\.017\.042/);
- assert.match(css,/\.p136-community \.ch7-entry-art>\.p136-category-cover/);
+ assert.match(css,/\.p136-community \.ch7-entry-art>\.av136-project-thumbnail/);
  assert.match(css,/\.p136-creators-hero/);
  assert.match(css,/\.p136-profile-wayfinder/);
 });
@@ -238,7 +228,7 @@ test('V136 public boards remove generated art and use functional URL-addressable
  const boards=source('../web/src/pages/PublicBoardsPage.tsx');
  const shell=source('../web/src/components/Shell.tsx');
  assert.match(boards,/data-parity-boards="v136\.017"/);
- assert.match(boards,/CategoryCoverV136 category=\{item\.category\} title=\{item\.title\}/);
+ assert.match(boards,/ProjectThumbnail kind=\{item\.category\} title=\{item\.title\}/);
  assert.ok(!boards.includes('CosmicArtwork'));
  assert.match(boards,/readPublicBoards\(signal\)/);
  assert.match(boards,/setSearchParams\(params\)/);

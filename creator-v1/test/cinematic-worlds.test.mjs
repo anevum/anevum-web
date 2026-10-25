@@ -18,21 +18,23 @@ test("homepage never invents projects, accounts, levels, prices or usage metrics
   assert.match(home,/creators\.map/);
   assert.match(home,/portal\.state==="ready"/);
   assert.match(home,/CATEGORY/);
-  assert.match(card,/CATEGORY ILLUSTRATION/);
+  assert.match(card,/CATEGORY INDEX/);
   assert.doesNotMatch(home,/Math\.random|sampleVotes|nova_demo|fakeMessage|example\.com|15000\s*XP/);
   assert.doesNotMatch(card,/Math\.random|sampleVotes|fakeMessage/);
 });
-test("original deterministic illustration supports all published content categories",()=>{
+test("native category panels cover all published categories without pretending to be creator covers",()=>{
   const svg=read("web/src/components/CosmicIllustration.tsx");
   const artwork=read("web/src/components/CosmicArtwork.tsx");
   const home=read("web/src/pages/HomePage.tsx");
   const card=read("web/src/components/ProjectCard.tsx");
+  const presets=read("web/src/lib/project-thumbnails.ts");
   for(const category of ["games","tools","automation","research","creative","learning","libraries","other"]){
     assert.match(svg,new RegExp(category+":"));
     assert.ok(home.includes('id:"'+category+'"'),category);
-    assert.ok(artwork.includes(category+':"'),category);
-    assert.ok(card.includes(category+':"'+category+'"'),category);
+    assert.ok(artwork.includes(category+':{'),category);
+    assert.ok(presets.includes(category+':{'),category);
   }
+  assert.match(card,/<ProjectThumbnail kind=\{project.category\}/);
   assert.match(svg,/viewBox="0 0 1600 700"/);
   assert.match(artwork,/aria-hidden=\{title\?undefined:true\}/);
   assert.match(svg,/useId\(\)/);
@@ -64,20 +66,18 @@ test("secondary pages share the same world art while preserving genuine content 
   const creators=read("web/src/pages/CreatorsPage.tsx");
   const community=read("web/src/pages/CommunityPage.tsx");
   const css=read("web/src/cinematic-subpages.css");
-  // The preserved legacy heading/player retain their illustration contract.
-  // V136.017 deliberately replaces public Community illustration with authored
-  // type-default covers; the real moderation and public-data assertions below remain.
-  for(const section of [heading,projectPlayer])
-    assert.match(section,/CosmicArtwork/);
-  assert.doesNotMatch(community,/CosmicArtwork/);
-  assert.match(community,/CategoryCoverV136/);
+  // V091 creator headers now prioritize verified identity over category art.
+  assert.match(heading,/CosmicArtwork/);
+  assert.doesNotMatch(community,/CosmicArtwork|CategoryCoverV136/);
+  assert.match(community,/ProjectThumbnail/);
   assert.match(community,/data-parity-community="v136\.017"/);
+  assert.match(projectPlayer,/ProjectThumbnail/);
   assert.doesNotMatch(creators,/CosmicArtwork|cw-channel-scene/);
   assert.match(project,/safeExternal/);
   assert.match(project,/MemberEngagementPanel/);
   assert.match(project,/ProjectPlayerShell/);
-  assert.match(projectPlayer,/CosmicArtwork/);
-  assert.match(projectPlayer,/scene={project.category}/);
+  assert.match(projectPlayer,/ProjectThumbnail/);
+  assert.match(projectPlayer,/kind=\{project.category\}/);
   assert.match(creators,/memberCreatorProfile/);
   assert.match(creators,/detailed\?\.achievements/);
   assert.match(community,/readProjects/);
@@ -97,23 +97,16 @@ test("mobile QA preserves both primary hero actions without overlap by secondary
   assert.match(css,/\.signal-strip\{display:none\}/);
 });
 
-test("real responsive WebP originals are part of the app, with SVG fallback and real Vite base paths",()=>{
+test("native index replaces promotional raster references with responsive, keyboard-visible panels",()=>{
  const art=read("web/src/components/CosmicArtwork.tsx");
  const main=read("web/src/main.tsx");
- const css=read("web/src/cinematic-raster-art.css");
- const start=read("web/src/pages/StartPage.tsx");
- for(const filename of ["hero/portal-world.webp","hero/skyward-city.webp","categories/apps.webp","categories/games.webp","categories/creative.webp","categories/learning.webp","categories/libraries.webp","categories/automation.webp","categories/research.webp","categories/other.webp"]){
-   assert.ok(existsSync(new URL("../web/public/assets/cinematic/"+filename,import.meta.url)),filename);
- }
- assert.match(art,/import.meta.env.BASE_URL/);
- assert.match(art,/onError=\{\(\)=>setFailed\(true\)\}/);
- assert.match(art,/CosmicIllustration scene=\{scene\}/);
- assert.match(art,/loading=\{priority\?"eager":"lazy"\}/);
- assert.match(main,/cinematic-raster-art.css/);
- assert.match(start,/cw-start-portal-art/);
- assert.match(css,/prefers-reduced-motion/);
+ const css=read("web/src/parity/sitewide-interface-v136.css");
+ assert.match(art,/data-presentation="native-index"/);
+ assert.doesNotMatch(art,/<img\b|<picture\b|\.webp|community-portals\/|assets\/cinematic\//);
+ assert.match(main,/sitewide-interface-v136\.css/);
+ assert.match(css,/prefers-reduced-motion:reduce/);
+ assert.match(css,/:focus-visible/);
 });
-
 test("the isolated offline browser fixture serves nested cinematic WebP without traversal or public API impersonation",()=>{
  const f=read("test/portal-offline-preview.mjs");
  assert.match(f,/cinematic\\\//);
@@ -150,4 +143,13 @@ test("the in-viewport feature illustration loads eagerly with the hero rather th
   const s=read("web/src/pages/HomePage.tsx");
   assert.match(s,/<CosmicArtwork scene="hero" priority\/>/);
   assert.match(s,/<CosmicArtwork scene="portal" priority\/>/);
+});
+
+test("V136.019 supplied thumbnails take priority over local vector defaults",()=>{
+  const thumbnail=read("web/src/components/ProjectThumbnail.tsx");
+  const mapping=read("web/src/lib/project-thumbnails.ts");
+  assert.match(thumbnail,/safePackageCover\(uploadedUrl\)/);
+  assert.match(thumbnail,/onError=\{uploaded\?/);
+  assert.match(mapping,/assets\/default-thumbnails\//);
+  assert.match(read("web/src/components/CreatorPackageGallery.tsx"),/uploadedUrl=\{work\.coverUrl\}/);
 });

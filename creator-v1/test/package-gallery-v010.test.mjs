@@ -116,3 +116,12 @@ test('member UI is opt-in and uses canonical existing wall instead of creating a
  assert.match(app,/path="projects\/package\/:projectId"/,
    'Native player links target a registered canonical React route');
 });
+
+test('gallery uses shared thumbnail with creator-cover priority and failed-image fallback',async()=>{
+ const media=await readFile(new URL('../web/src/components/ProjectThumbnail.tsx',import.meta.url),'utf8');
+ const gallery=await readFile(new URL('../web/src/components/CreatorPackageGallery.tsx',import.meta.url),'utf8');
+ assert.match(gallery,/ProjectThumbnail kind=\{work\.category\}/);
+ assert.match(gallery,/uploadedUrl=\{work\.coverUrl\}/);
+ assert.match(media,/safePackageCover\(uploadedUrl\)/);
+ assert.match(media,/setFailedUrl\(verified\)/);
+});
