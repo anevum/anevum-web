@@ -27,15 +27,22 @@ if ('IntersectionObserver' in window && !motionPaused) {
   // A true WebGL environment can cause short IntersectionObserver delays on
   // slow/software GPUs. Native scroll must never leave real project records
   // invisible just because someone moves through the site quickly.
+  let lastRevealedScrollY=window.scrollY;
   const revealCurrentlyVisible = () => {
-    const top=-120,bottom=innerHeight+120;
+    const currentY=window.scrollY;
+    // Sweep the ENTIRE traversed interval, not only the destination viewport.
+    // A 3D frame can overlap one scroll event and jump over a small heading.
+    const scanTop=Math.min(lastRevealedScrollY,currentY)-120;
+    const scanBottom=Math.max(lastRevealedScrollY,currentY)+innerHeight+120;
     document.querySelectorAll('.reveal:not(.visible)').forEach(element => {
       const box=element.getBoundingClientRect();
-      if (box.top<bottom && box.bottom>top && box.width>0 && box.height>0) {
+      const top=box.top+currentY,bottom=box.bottom+currentY;
+      if (top<scanBottom && bottom>scanTop && box.width>0 && box.height>0) {
         element.classList.add('visible');
         observer.unobserve(element);
       }
     });
+    lastRevealedScrollY=currentY;
   };
   window.addEventListener('scroll',revealCurrentlyVisible,{passive:true});
   window.addEventListener('resize',revealCurrentlyVisible,{passive:true});
