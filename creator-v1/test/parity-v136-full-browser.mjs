@@ -859,6 +859,26 @@ try{
     assert.equal(layout.animation,'none','Reduced motion has a static scene');
     for(const rect of [layout.primary,layout.secondary]){assert.ok(rect.height>=44);assert.ok(rect.width>=44);assert.ok(rect.left>=0&&rect.right<=width);}
     if(width<650)assert.ok(layout.primary.bottom<750,'Primary action stays in the first phone viewport');
+    // V136.035: real category links must not be hidden beneath an unrelated
+    // second layer of placeholder numerals and repeated default index names.
+    const categoryPlates=page.locator('.p136-passages .p136-passage');
+    assert.equal(await categoryPlates.count(),4,'Four existing discovery categories remain linked');
+    assert.deepEqual(await categoryPlates.evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href'))),
+      ['/discover?category=games','/discover?category=tools','/discover?category=creative','/discover?category=research'],
+      'Public category destinations stay unchanged');
+    assert.equal(await categoryPlates.locator('.cw-artwork, .av136-index-field').count(),0,
+      'Category links cannot render duplicate fallback cover art or giant numeric captions');
+    assert.equal(await categoryPlates.locator('.p136035-category-surface[aria-hidden="true"]').count(),4,
+      'New background is noninteractive and never claims to be creator media');
+    const categoryGeometry=await categoryPlates.evaluateAll(nodes=>nodes.map(node=>{
+      const body=node.querySelector('.p136-passage-copy'),heading=body.querySelector('strong'),summary=body.querySelector('small');
+      const r=node.getBoundingClientRect(),h=heading.getBoundingClientRect(),d=summary.getBoundingClientRect();
+      return {height:r.height,copyOverflows:body.scrollWidth>body.clientWidth+1,
+       titleOverflows:heading.scrollWidth>heading.clientWidth+1,detailOverflows:summary.scrollWidth>summary.clientWidth+1,
+       titleBelowDetail:h.bottom>d.top+1,right:r.right};
+    }));
+    assert.ok(categoryGeometry.every(x=>x.height>=120&&!x.copyOverflows&&!x.titleOverflows&&!x.detailOverflows&&!x.titleBelowDetail&&x.right<=width+1),
+      'Category text must fit without overlap or horizontal clipping at '+width+'px: '+JSON.stringify(categoryGeometry));
     await page.screenshot({path:join(out,'home-'+width+'.png'),fullPage:true,animations:'disabled'});
     record('responsive arrival '+width,layout);
     if(width===390){
