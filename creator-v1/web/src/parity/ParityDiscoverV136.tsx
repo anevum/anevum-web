@@ -172,7 +172,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
             const item=channels.find(ch=>ch.id===id);
             if(!item)return null;
             return <button type="button" key={id} className={'p136-discover-world p136-discover-world--'+id+(category===id?' is-active':'')}
-              aria-pressed={category===id} aria-label={item.label+' — '+item.description}
+              aria-pressed={category===id} aria-label={item.label+' '+item.description}
               onClick={()=>onCategory(id)} onKeyDown={focusNearestWorld}>
               <CosmicArtwork scene={scenes[id]}/>
               <span className="p136-discover-world-shade" aria-hidden="true"/>
