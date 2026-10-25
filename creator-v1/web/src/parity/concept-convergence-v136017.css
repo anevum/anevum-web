@@ -728,3 +728,44 @@ html[data-av-parity="v136-full"] .p136-source-tabs button span {
   filter:none;color:CanvasText!important;
  }
 }
+
+/* V136.017.003 — nested navigation built exclusively from real local files. */
+html[data-av-parity="v136-full"] .p136017-source-tree .p136017-tree-group{
+ display:grid;gap:3px;min-width:0;
+}
+html[data-av-parity="v136-full"] .p136017-source-tree .p136017-tree-folder{
+ display:flex;align-items:center;gap:9px;min-width:0;min-height:38px;
+ color:#b1e7f5;font-weight:700;border-color:transparent;
+ background:linear-gradient(100deg,#102e4366,transparent);
+}
+html[data-av-parity="v136-full"] .p136017-source-tree .p136017-tree-folder:hover{
+ border-color:#9bd9ef65;background:#24496370;
+}
+html[data-av-parity="v136-full"] .p136017-tree-chevron{
+ display:inline-block;flex:none;width:7px;height:7px;
+ border-right:1.5px solid #afe5f7;border-bottom:1.5px solid #afe5f7;
+ transform:rotate(-45deg);transition:transform .14s;
+}
+html[data-av-parity="v136-full"] .p136017-tree-folder[aria-expanded="true"] .p136017-tree-chevron{transform:rotate(45deg)}
+html[data-av-parity="v136-full"] .p136017-folder-glyph{
+ display:block;flex:none;width:19px;height:19px;color:#e0bb70;
+ filter:drop-shadow(0 0 4px #d4a95332);
+}
+html[data-av-parity="v136-full"] .p136017-source-tree .p136017-tree-file{min-width:0}
+html[data-av-parity="v136-full"] .p136017-tree-name{
+ flex:1;min-width:0;overflow-wrap:anywhere;text-align:left;
+}
+html[data-av-parity="v136-full"] .p136017-tree-file[aria-pressed="true"] .p136017-tree-name{color:#f0fbff}
+@media(max-width:650px){
+ html[data-av-parity="v136-full"] .p136017-source-tree .p136017-tree-group{
+  display:flex;flex-direction:column;flex:0 0 auto;align-items:stretch;
+ }
+ html[data-av-parity="v136-full"] .p136017-source-tree button{max-width:230px}
+}
+@media(prefers-reduced-motion:reduce){
+ html[data-av-parity="v136-full"] .p136017-tree-chevron{transition:none}
+}
+@media(forced-colors:active){
+ html[data-av-parity="v136-full"] .p136017-folder-glyph{color:CanvasText;filter:none}
+ html[data-av-parity="v136-full"] .p136017-tree-chevron{border-color:CanvasText}
+}

@@ -322,7 +322,18 @@ try{
     assert.equal(await workbench.locator('.p136017-source-functionbar').count(),1,'Local source instrumentation is available');
     assert.ok((await workbench.locator('.p136017-source-ledge').innerText()).includes('index.html'),
       'Authoring instrument describes the current real file, never a simulated preview');
-    if(width===1440)await page.locator('[data-source-editor="monaco"]').waitFor({timeout:30000});
+    if(width===1440){
+      await page.locator('[data-source-editor="monaco"]').waitFor({timeout:30000});
+      await workbench.locator('#p136-source-new').fill('assets/notes.md');
+      await workbench.getByRole('button',{name:'Create source file',exact:true}).click();
+      const folder=workbench.getByRole('button',{name:'Folder assets',exact:true});
+      await folder.waitFor();
+      assert.equal(await workbench.getByRole('button',{name:'assets/notes.md',exact:true}).count(),1,'Nested local source is listed under its real folder');
+      await folder.click();
+      assert.equal(await workbench.getByRole('button',{name:'assets/notes.md',exact:true}).count(),0,'Collapsing a folder hides only its file buttons');
+      await folder.click();
+      assert.equal(await workbench.getByRole('button',{name:'assets/notes.md',exact:true}).count(),1,'Expanding restores the real source file');
+    }
     else assert.equal(await page.locator('[data-source-editor="monaco"]').count(),0,'Phone uses accessible text editor without Monaco allocation');
     assert.equal(await page.locator('.p136-living-world').getAttribute('data-enabled'),'false','Private source never enters public GPU');
     await workbench.getByRole('button',{name:'Prepare build archive',exact:true}).click();

@@ -85,3 +85,15 @@ test('original file-type glyphs decorate real Monaco tabs and explorer, not sour
  assert.ok(!/fetch\(|onClick|onSubmit|localStorage|sessionStorage|document\./.test(glyph),
   'file-type SVGs cannot own any editor or private project behavior');
 });
+
+test('real permitted local files form disclosure folders without creating synthetic projects',()=>{
+ assert.match(ide,/function sourceExplorerTree\(paths:string\[\]\)/);
+ assert.match(ide,/const parts=path\.split/);
+ assert.match(ide,/sourceExplorerTree\(entries\.map/);
+ assert.match(ide,/aria-label=\{'Folder '\+node\.name\}/);
+ assert.match(ide,/aria-expanded=\{expanded\}/);
+ assert.match(ide,/aria-label=\{node\.path\}/);
+ assert.match(ide,/onClick=\{\(\)=>setActive\(node\.path\)\}/);
+ assert.match(glyph,/export function FolderGlyphV136017/);
+ assert.match(css,/\.p136017-source-tree \.p136017-tree-folder/);
+});

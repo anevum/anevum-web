@@ -37,3 +37,11 @@ No backend, auth, private D1/R2, memberships, XP, checkout, payments, publishing
 ## Acceptance and follow-up
 
 Run Node source test and existing full Chromium seven-size + private Studio source browser suite. Capture \`arrival-1536.png\`, \`arrival-390.png\`, \`artifact-workbench-1440.png\` and \`artifact-workbench-390.png\` from the exact commit. Verify no horizontal overflow, readable and clickable CTAs, mobile first screen, keyboard/controller and single IREN/Wayfinder/scene. Resolve visual discrepancy tickets before calling 017 final concept fidelity. Keep draft PR open until independent art/functional acceptance.
+
+## V136.017.003 — Studio IDE source navigation (draft)
+
+The first-party source workbench groups actual permitted local source paths into a deterministic folder-first tree. New source paths like `assets/notes.md` are represented as a real `assets` folder with a selectable file. It adds a matching original SVG folder engraving, collapse/expand controls with `aria-expanded`, and keyboard-focusable file navigation. No synthetic project entries or remote tree service exist.
+
+Actual Monaco tabs, source content, 24-file/128 KiB/1 MiB limits, ZIP/archive integrity, privacy boundaries, private uploading and isolated playtesting are unchanged. The browser regression exercises real nested source creation, folder collapse/expand, genuine archive preparation and stale-archive invalidation.
+
+This is a subsequent draft visual/interaction increment, not proof of final concept fidelity. Owner side-by-side visual approval, real 3D master acceptance, physical Safari/Xbox checks and performance gates remain open.

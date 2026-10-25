@@ -1,8 +1,8 @@
-import {useEffect,useRef,useState,type ComponentType} from 'react';
+import {useEffect,useRef,useState,type ComponentType,type ReactNode} from 'react';
 import {strToU8} from 'fflate';
 import {sourceArchive,safeSourcePath,SOURCE_LIMITS} from './source-archive-v136';
 import {Icon} from '../components/Icons';
-import {FileGlyphV136017,fileKind} from './FileGlyphV136017';
+import {FileGlyphV136017,FolderGlyphV136017,fileKind} from './FileGlyphV136017';
 import {editorLanguage} from '../../../source-ide/language-v119.mjs';
 import type {MonacoSourceProps} from './MonacoSourceV136';
 import './artifact-workbench-v136.css';
@@ -13,6 +13,27 @@ const initialFiles:Record<string,string>={
  'styles.css':':root { color-scheme: dark; font-family: system-ui, sans-serif; }\nbody { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #06101d; color: #e9f7ff; }\nmain { max-width: 40rem; padding: 2rem; }\nh1 { color: #8bdfff; }\n',
  'main.js':'"use strict";\n// Write browser code here. Run only through the private playtest sandbox.\n'
 };
+
+/** Folder rows come only from real, safe, local source names; ZIP bytes and
+ * publishing ownership remain with the existing source archive and uploader. */
+type ExplorerNode={path:string;name:string;folder:boolean;children:ExplorerNode[]};
+function sourceExplorerTree(paths:string[]):ExplorerNode[]{
+ const root:ExplorerNode={path:'',name:'',folder:true,children:[]};
+ for(const path of paths){
+  const parts=path.split('/');let parent=root;
+  for(let index=0;index<parts.length;index++){
+   const subpath=parts.slice(0,index+1).join('/');
+   let node=parent.children.find(entry=>entry.path===subpath);
+   if(!node){node={path:subpath,name:parts[index],folder:index<parts.length-1,children:[]};parent.children.push(node);}
+   parent=node;
+  }
+ }
+ const sort=(children:ExplorerNode[])=>{
+  children.sort((a,b)=>(Number(b.folder)-Number(a.folder))||a.name.localeCompare(b.name));
+  children.forEach(child=>sort(child.children));
+ };
+ sort(root.children);return root.children;
+}
 /** Original Studio V119 language grammar is reused from PR #709's source.
  * This bounded workbench composes a local archive for the existing uploader;
  * it does not activate V111 file APIs, execute code, persist source or publish. */
@@ -21,9 +42,11 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
  const [name,setName]=useState(''),[note,setNote]=useState(''),[dirty,setDirty]=useState(true),[plain,setPlain]=useState(()=>matchMedia('(max-width: 767px)').matches);
  const [Editor,setEditor]=useState<ComponentType<MonacoSourceProps>|null>(null),[editorError,setEditorError]=useState(false);
  const [inspector,setInspector]=useState(true),importVersion=useRef(0);
+  const [collapsedFolders,setCollapsedFolders]=useState<Set<string>>(()=>new Set());
  useEffect(()=>{let alive=true;if(!plain)void import('./MonacoSourceV136').then(m=>{if(alive)setEditor(()=>m.default)}).catch(()=>{if(alive)setEditorError(true)});return()=>{alive=false}},[plain]);
  useEffect(()=>()=>{importVersion.current++},[]);
  const entries=Object.entries(files),total=entries.reduce((n,[,text])=>n+strToU8(text).length,0);
+  const explorerTree=sourceExplorerTree(entries.map(([path])=>path));
  const problems:string[]=[];
  if(!('index.html' in files))problems.push('A root index.html entrypoint is required.');
  for(const [path,text] of entries){
@@ -58,7 +81,37 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
   try{const archive=sourceArchive(files);onPackage(archive);if(download){const url=URL.createObjectURL(archive),anchor=document.createElement('a');anchor.href=url;anchor.download=archive.name;anchor.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}setDirty(false);setNote('Archive prepared below. The existing compatibility checks, rights confirmation and private-upload controls still apply.')}
   catch(error){setNote(error instanceof Error?error.message:'Source archive could not be prepared.')}
  }
- return <section className="p136-workbench" aria-label="Artifact source workbench" data-artifact-workbench="v136.011">
+ 
+  function toggleFolder(path:string){
+   setCollapsedFolders(previous=>{
+    const next=new Set(previous);
+    if(next.has(path))next.delete(path);else next.add(path);
+    return next;
+   });
+  }
+  function explorerRow(node:ExplorerNode,depth:number):ReactNode{
+   if(node.folder){
+    const expanded=!collapsedFolders.has(node.path);
+    return <div className="p136017-tree-group" key={node.path}>
+     <button type="button" className="p136017-tree-folder" aria-expanded={expanded}
+      aria-label={'Folder '+node.name} onClick={()=>toggleFolder(node.path)}
+      style={{paddingLeft:8+Math.min(depth,5)*13}}>
+      <span className="p136017-tree-chevron" aria-hidden="true"/>
+      <FolderGlyphV136017 open={expanded}/>
+      <span className="p136017-tree-name">{node.name}</span>
+     </button>
+     {expanded&&node.children.map(child=>explorerRow(child,depth+1))}
+    </div>;
+   }
+   return <button key={node.path} type="button" className="p136017-tree-file"
+    aria-label={node.path} title={node.path} aria-pressed={node.path===active}
+    onClick={()=>setActive(node.path)}
+    style={{paddingLeft:8+Math.min(depth,5)*13}}>
+    <span className={'p136-file-mark is-'+fileKind(node.path)} aria-hidden="true"><FileGlyphV136017 path={node.path}/></span>
+    <span className="p136017-tree-name">{node.name}</span>
+   </button>;
+  }
+  return <section className="p136-workbench" aria-label="Artifact source workbench" data-artifact-workbench="v136.011">
   <header className="p136-workbench-head"><div><span>CONTINUANCE / ARTIFACT WORKBENCH</span><h2>Make the source.</h2></div><span className="p136-source-state">{dirty?'LOCAL CHANGES':'ARCHIVE PREPARED'}</span></header>
   <div className="p136017-source-functionbar" aria-hidden="true">
    <span className="p136017-functionmark">SOURCE / LOCAL</span>
@@ -75,7 +128,7 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
   <div className="p136-workbench-layout" data-inspector={inspector}>
    <aside className="p136-source-explorer" aria-label="Local source files"><strong>PROJECT FILES</strong>
     <div className="p136-source-add"><label className="visually-hidden" htmlFor="p136-source-new">New file path</label><input id="p136-source-new" placeholder="assets/data.json" value={name} onChange={e=>setName(e.target.value)} maxLength={120} disabled={disabled}/><button type="button" onClick={add} disabled={disabled} aria-label="Create source file">+</button></div>
-    <nav aria-label="Source file explorer">{entries.map(([path])=><button key={path} type="button" aria-pressed={path===active} onClick={()=>setActive(path)}><span className={'p136-file-mark is-'+fileKind(path)} aria-hidden="true"><FileGlyphV136017 path={path}/></span><span>{path}</span></button>)}</nav>
+    <nav aria-label="Source file explorer" className="p136017-source-tree">{explorerTree.map(node=>explorerRow(node,0))}</nav>
    </aside>
    <div className="p136-source-stage">
     <div className="p136017-source-ledge"><span>EDITOR / {active}</span><span>LOCAL · NOT EXECUTED</span></div>
