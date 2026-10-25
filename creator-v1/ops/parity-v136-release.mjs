@@ -106,6 +106,7 @@ const allowed=new Set([
   'creator-v1/web/src/parity/workbench-file-ops-v136.ts',
   'creator-v1/web/src/parity/concept-convergence-v136017.css',
   'creator-v1/test/parity-v136-concept-convergence.test.mjs',
+  'creator-v1/test/cinematic-worlds.test.mjs',
   'docs/production/parity-v136-concept-convergence-20261024.md',
  'creator-v1/web/src/components/Shell.tsx',
  'creator-v1/web/src/parity/ConsoleWayfinderV136.tsx',

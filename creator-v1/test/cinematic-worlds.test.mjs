@@ -64,9 +64,14 @@ test("secondary pages share the same world art while preserving genuine content 
   const creators=read("web/src/pages/CreatorsPage.tsx");
   const community=read("web/src/pages/CommunityPage.tsx");
   const css=read("web/src/cinematic-subpages.css");
-  // V091 creator headers now prioritize verified identity over category art.
-  for(const section of [heading,projectPlayer,community])
+  // The preserved legacy heading/player retain their illustration contract.
+  // V136.017 deliberately replaces public Community illustration with authored
+  // type-default covers; the real moderation and public-data assertions below remain.
+  for(const section of [heading,projectPlayer])
     assert.match(section,/CosmicArtwork/);
+  assert.doesNotMatch(community,/CosmicArtwork/);
+  assert.match(community,/CategoryCoverV136/);
+  assert.match(community,/data-parity-community="v136\.017"/);
   assert.doesNotMatch(creators,/CosmicArtwork|cw-channel-scene/);
   assert.match(project,/safeExternal/);
   assert.match(project,/MemberEngagementPanel/);
