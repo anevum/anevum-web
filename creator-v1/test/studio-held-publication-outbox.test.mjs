@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {fixture} from './helpers/canonical-fixture.mjs';
 import {recordHeldStudioPublication,auditHeldStudioPublicationOutbox} from '../canonical-auth/publication-candidate/held-outbox.mjs';
+import {holdReviewForCanonicalSession} from '../canonical-auth/publication-candidate/held-review-gate.mjs';
 
 const migration = name => readFileSync(new URL('../canonical-auth/migrations/'+name, import.meta.url),'utf8');
 const heldMigration = readFileSync(new URL(
@@ -289,5 +290,114 @@ test('no misleading held review may be seeded by SQL without a grant',()=>{
       'Independent review has not been granted.',createdAt+100,'held'
     ),/stale or unverified publication receipt/);
     assert.equal(inspect(f).reviews.length,0);assert.equal(inspect(f).outbox.length,0);
+  }finally{f.db.close();}
+});
+
+
+const HELD_PATH='https://a.anevum.com/api/v1/member/studio/review/held-intent';
+const heldRequest=(body={submissionId:sid,reason:review().reason},options={})=>
+  new Request(options.url||HELD_PATH,{
+    method:options.method||'POST',
+    headers:{
+      'content-type':'application/json','origin':'https://a.anevum.com',
+      'sec-fetch-site':'same-origin',
+      'cookie':'legacy_member=forged; __Secure-anevum_can_stage.session_token=offline-only',
+      ...(options.headers||{})
+    },
+    ...(options.method==='GET'?{}:{body:JSON.stringify(body)})
+  });
+const trustedSession=async()=>({
+  user:{id:actor,emailVerified:true},
+  session:{id:'offline-auth-session',userId:actor}
+});
+function gated(){
+  const f=staged();
+  return {...f,env:{
+    ...f.env,CANONICAL_CREATOR_STUDIO_ENABLED:'true',
+    CANONICAL_STUDIO_HELD_REVIEW_ENABLED:'true'
+  }};
+}
+test('held reviewer adapter is disabled by default and never becomes a route',async()=>{
+  const f=staged();try{
+    await assert.rejects(holdReviewForCanonicalSession(
+      heldRequest(),f.env,{getCanonicalSession:trustedSession,now:createdAt+100}
+    ),/not activated/);
+    assert.equal(inspect(f).reviews.length,0);
+    assert.equal(inspect(f).outbox.length,0);
+  }finally{f.db.close();}
+});
+test('same-origin Better Auth reviewer session gates one held insert and stable replay',async()=>{
+  const f=gated();try{
+    let calls=0;
+    const session=async({headers})=>{
+      calls++;
+      assert.equal(headers.get('authorization'),null);
+      assert.equal(headers.get('cookie'),'__Secure-anevum_can_stage.session_token=offline-only');
+      return trustedSession();
+    };
+    const first=await holdReviewForCanonicalSession(heldRequest(),f.env,{
+      getCanonicalSession:session,now:createdAt+100
+    });
+    assert.equal(first.status,'held');assert.equal(first.replayed,false);
+    assert.equal(first.publicationAuthorized,false);
+    assert.equal(first.projectionEnabled,false);
+    const replay=await holdReviewForCanonicalSession(heldRequest(),f.env,{
+      getCanonicalSession:session,now:createdAt+500
+    });
+    assert.equal(replay.replayed,true);
+    assert.equal(replay.receiptId,first.receiptId);
+    assert.equal(calls,2);
+    assert.equal(inspect(f).outbox.length,1);
+    assert.equal((await auditHeldStudioPublicationOutbox(f.env.MEMBER_DB)).healthy,true);
+  }finally{f.db.close();}
+});
+test('held reviewer gate refuses cross-site, wrong host, query, bearer and forged body identity',async()=>{
+  const f=gated();try{
+    const cases=[
+      heldRequest(undefined,{headers:{origin:'https://example.org'}}),
+      heldRequest(undefined,{headers:{'sec-fetch-site':'cross-site'}}),
+      heldRequest(undefined,{url:'https://anevum.com/api/v1/member/studio/review/held-intent'}),
+      heldRequest(undefined,{url:HELD_PATH+'?approve=true'}),
+      heldRequest(undefined,{headers:{authorization:'Bearer forged'}}),
+      heldRequest({...{submissionId:sid,reason:review().reason},reviewerId:owner})
+    ];
+    for(const request of cases)
+      await assert.rejects(holdReviewForCanonicalSession(request,f.env,{
+        getCanonicalSession:trustedSession,now:createdAt+100
+      }));
+    assert.equal(inspect(f).outbox.length,0);
+  }finally{f.db.close();}
+});
+test('held reviewer gate rejects an anonymous or mismatched current Better Auth session',async()=>{
+  const f=gated();try{
+    for(const session of [null,
+      {user:{id:actor,emailVerified:false},session:{id:'x',userId:actor}},
+      {user:{id:actor,emailVerified:true},session:{id:'x',userId:owner}},
+      {user:{id:owner,emailVerified:true},session:{id:'x',userId:owner}}
+    ]){
+      await assert.rejects(holdReviewForCanonicalSession(heldRequest(),f.env,{
+        getCanonicalSession:async()=>session,now:createdAt+100
+      }));
+    }
+    assert.equal(inspect(f).reviews.length,0);
+  }finally{f.db.close();}
+});
+test('same-origin held reviewer intent refuses stale, revoked and conflicting retries',async()=>{
+  const f=gated();try{
+    const initial=await holdReviewForCanonicalSession(heldRequest(),f.env,{
+      getCanonicalSession:trustedSession,now:createdAt+100
+    });
+    assert.equal(initial.status,'held');
+    const different=heldRequest({submissionId:sid,
+      reason:'Another meaningfully different independent review explanation.'});
+    await assert.rejects(holdReviewForCanonicalSession(different,f.env,{
+      getCanonicalSession:trustedSession,now:createdAt+200
+    }),/idempotency conflict/);
+    f.db.prepare('UPDATE member_studio_publication_reviewer_grants SET revoked_at=? WHERE reviewer_user_id=?')
+      .run(createdAt+250,actor);
+    await assert.rejects(holdReviewForCanonicalSession(heldRequest(),f.env,{
+      getCanonicalSession:trustedSession,now:createdAt+300
+    }),/Independent verified reviewer grant/);
+    assert.equal(inspect(f).outbox[0].status,'cancelled');
   }finally{f.db.close();}
 });
