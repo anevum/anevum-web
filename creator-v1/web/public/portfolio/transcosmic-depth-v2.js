@@ -224,26 +224,29 @@
       ink+=vec3(.19,.107,.071)*exp(-gr*8.)*(.28+grain2*.55);
       // Three distinct spatial destinations. A threshold is a portal; the
       // archive is a lit observatory; beyond is an immense spiral gulf.
-      float archiveMode=step(.5,uRealm)*(1.-step(1.5,uRealm));
-      float beyondMode=step(1.5,uRealm);
-      vec2 observatory=(uv-vec2(.67,.52))*vec2(uResolution.x/uResolution.y,1.);
-      float vault=exp(-abs(length(observatory)-.37)*7.);
-      float filaments=abs(sin(atan(observatory.y,observatory.x)*18.0+gr*13.));
-      vec3 archiveSky=vec3(.008,.017,.036)
-        +vec3(.19,.13,.075)*vault*(.18+.36*pow(filaments,13.))
-        +vec3(.025,.067,.080)*pow(max(0.,strata-.13),2.)*1.4;
-      ink=mix(ink,archiveSky,archiveMode*.91);
-      vec2 gulf=(uv-vec2(.76,.55))*vec2(uResolution.x/uResolution.y,1.);
-      float radius=length(gulf),angle=atan(gulf.y,gulf.x);
-      float dustField=noise(gulf*5.2+uTime*.004);
-      float spiral=.5+.5*cos(angle*4.-radius*21.+dustField*3.);
-      float galacticDisk=exp(-radius*2.3);
-      vec3 beyondSky=vec3(.010,.006,.037)
-        +vec3(.080,.050,.20)*galacticDisk*(.2+.65*spiral)
-        +vec3(.020,.13,.18)*pow(spiral,3.)*galacticDisk*.7
-        +vec3(.18,.080,.054)*exp(-radius*8.)*.9
-        +vec3(.05,.065,.105)*pow(max(0.,noise(gulf*13.)-.22),2.);
-      ink=mix(ink,beyondSky,beyondMode*.92);
+      // Uniform realm branching skips expensive secondary nebula passes
+      // when those universes are not on screen (important for mobile GPUs).
+      if(uRealm>.5 && uRealm<1.5){
+        vec2 observatory=(uv-vec2(.67,.52))*vec2(uResolution.x/uResolution.y,1.);
+        float vault=exp(-abs(length(observatory)-.37)*7.);
+        float filaments=abs(sin(atan(observatory.y,observatory.x)*18.0+gr*13.));
+        vec3 archiveSky=vec3(.008,.017,.036)
+          +vec3(.19,.13,.075)*vault*(.18+.36*pow(filaments,13.))
+          +vec3(.025,.067,.080)*pow(max(0.,strata-.13),2.)*1.4;
+        ink=mix(ink,archiveSky,.91);
+      }else if(uRealm>1.5){
+        vec2 gulf=(uv-vec2(.76,.55))*vec2(uResolution.x/uResolution.y,1.);
+        float radius=length(gulf),angle=atan(gulf.y,gulf.x);
+        float dustField=noise(gulf*5.2+uTime*.004);
+        float spiral=.5+.5*cos(angle*4.-radius*21.+dustField*3.);
+        float galacticDisk=exp(-radius*2.3);
+        vec3 beyondSky=vec3(.010,.006,.037)
+          +vec3(.080,.050,.20)*galacticDisk*(.2+.65*spiral)
+          +vec3(.020,.13,.18)*pow(spiral,3.)*galacticDisk*.7
+          +vec3(.18,.080,.054)*exp(-radius*8.)*.9
+          +vec3(.05,.065,.105)*pow(max(0.,noise(gulf*13.)-.22),2.);
+        ink=mix(ink,beyondSky,.92);
+      }
       for(int l=0;l<3;l++){
         float scale=l==0?155.:l==1?310.:620.;
         vec2 q=uv*scale+vec2(float(l)*17.3,float(l)*31.1);
