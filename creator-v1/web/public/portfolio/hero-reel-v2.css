@@ -254,3 +254,11 @@
 }
 
 .motion-paused .hero-v2-reel.reel-sweep .reel-main-screen::before,.motion-paused .hero-v2-reel.reel-sweep .reel-main{animation:none!important}
+
+/* Desktop stage hit testing: the copy's transparent layout box must not block
+   real project controls positioned behind its unused horizontal space. */
+@media(min-width:901px){
+  .hero-v2-copy{pointer-events:none!important}
+  .hero-v2-copy a,.hero-v2-copy button{pointer-events:auto!important}
+  .hero-v2-reel .reel-controls button,.hero-v2-reel #reel-open{pointer-events:auto;position:relative;z-index:10}
+}
