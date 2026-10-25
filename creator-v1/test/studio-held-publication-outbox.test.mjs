@@ -22,7 +22,7 @@ function setup() {
   const f = fixture();
   f.db.exec(migration('0008_private_creator_studio.sql'));
   f.db.exec(migration('0009_private_review_snapshots.sql'));
-  for (const user of [owner, actor]) {
+  for (const user of [owner, actor, 'pilot-carol', 'pilot-dana']) {
     f.db.prepare('INSERT INTO "user"(id,name,email,emailVerified,createdAt,updatedAt) VALUES(?,?,?,1,100,100)')
       .run(user,user,user+'@fixture.invalid');
   }
@@ -50,7 +50,16 @@ function setup() {
     'Designed and implemented by pilot Alice','pending_review',createdAt);
   return f;
 }
-function staged() {const f=setup();f.db.exec(heldMigration);return f;}
+function staged({grant=true}={}) {
+  const f=setup();f.db.exec(heldMigration);
+  // Three separately verified identities plus the submitting owner:
+  // reviewer Bob, grantor Carol, independent verifier Dana.
+  if(grant)f.db.prepare(
+    'INSERT INTO member_studio_publication_reviewer_grants('+
+    'reviewer_user_id,granted_by_user_id,verified_by_user_id,evidence_ref,granted_at) VALUES(?,?,?,?,?)'
+  ).run(actor,'pilot-carol','pilot-dana','fixture-evidence-for-independent-review-20261025',createdAt-100);
+  return f;
+}
 function inspect(f) {
   return {
     reviews:f.db.prepare('SELECT * FROM member_studio_publication_reviews').all(),
@@ -213,4 +222,72 @@ test('private audit flags mismatched status and missing companion without repair
     await assert.rejects(auditHeldStudioPublicationOutbox(g.env.MEMBER_DB,{limit:0}),/Invalid private outbox audit limit/);
     await assert.rejects(auditHeldStudioPublicationOutbox(g.env.MEMBER_DB,{limit:251}),/Invalid private outbox audit limit/);
   }finally{g.db.close();}
+});
+
+
+test('held review requires a two-person, verified, time-bound private reviewer grant',async()=>{
+  const f=staged({grant:false});try{
+    await assert.rejects(recordHeldStudioPublication(f.env.MEMBER_DB,review()),
+      /Independent verified reviewer grant required/);
+    const row=f.db.prepare('INSERT INTO member_studio_publication_reviewer_grants('+
+      'reviewer_user_id,granted_by_user_id,verified_by_user_id,evidence_ref,granted_at) VALUES(?,?,?,?,?)');
+    const evidence='proof-of-independent-review-20261025';
+    assert.throws(()=>row.run(actor,actor,'pilot-dana',evidence,createdAt-100),/CHECK|independent/);
+    assert.throws(()=>row.run(actor,'pilot-carol','pilot-carol',evidence,createdAt-100),/CHECK|independent/);
+    f.db.prepare('UPDATE "user" SET emailVerified=0 WHERE id=?').run('pilot-dana');
+    assert.throws(()=>row.run(actor,'pilot-carol','pilot-dana',evidence,createdAt-100),/independent verified/);
+    f.db.prepare('UPDATE "user" SET emailVerified=1 WHERE id=?').run('pilot-dana');
+    row.run(actor,'pilot-carol','pilot-dana',evidence,createdAt-100);
+    const first=await recordHeldStudioPublication(f.env.MEMBER_DB,review());
+    assert.equal(first.status,'held');
+    assert.equal((await auditHeldStudioPublicationOutbox(f.env.MEMBER_DB)).healthy,true);
+    assert.throws(()=>f.db.prepare(
+      'UPDATE member_studio_publication_reviewer_grants SET evidence_ref=?'
+    ).run('modified-private-evidence-not-allowed'),/immutable/);
+  }finally{f.db.close();}
+});
+test('revoking independent review authority cancels existing held records and blocks replay',async()=>{
+  const f=staged();try{
+    await recordHeldStudioPublication(f.env.MEMBER_DB,review());
+    f.db.prepare('UPDATE member_studio_publication_reviewer_grants SET revoked_at=? WHERE reviewer_user_id=?')
+      .run(createdAt+110,actor);
+    const {reviews,outbox}=inspect(f);
+    assert.equal(reviews[0].status,'cancelled');
+    assert.equal(outbox[0].status,'cancelled');
+    assert.equal((await auditHeldStudioPublicationOutbox(f.env.MEMBER_DB)).healthy,true);
+    await assert.rejects(recordHeldStudioPublication(f.env.MEMBER_DB,review()),/Independent verified reviewer grant/);
+    assert.throws(()=>f.db.prepare(
+      'UPDATE member_studio_publication_reviewer_grants SET revoked_at=NULL WHERE reviewer_user_id=?'
+    ).run(actor),/rearmed/);
+  }finally{f.db.close();}
+});
+test('reviewer unverified or deleted grant cannot preserve held publication intent',async()=>{
+  const f=staged();try{
+    await recordHeldStudioPublication(f.env.MEMBER_DB,review());
+    f.db.prepare('UPDATE "user" SET emailVerified=0 WHERE id=?').run(actor);
+    const {reviews,outbox}=inspect(f);
+    assert.equal(reviews[0].status,'cancelled');assert.equal(outbox[0].status,'cancelled');
+    await assert.rejects(recordHeldStudioPublication(f.env.MEMBER_DB,review()),/Independent verified reviewer grant/);
+  }finally{f.db.close();}
+  const g=staged();try{
+    await recordHeldStudioPublication(g.env.MEMBER_DB,review());
+    g.db.prepare('DELETE FROM member_studio_publication_reviewer_grants WHERE reviewer_user_id=?').run(actor);
+    const rows=inspect(g);
+    assert.equal(rows.reviews[0].status,'cancelled');assert.equal(rows.outbox[0].status,'cancelled');
+    await assert.rejects(recordHeldStudioPublication(g.env.MEMBER_DB,review()),/Independent verified reviewer grant/);
+  }finally{g.db.close();}
+});
+test('no misleading held review may be seeded by SQL without a grant',()=>{
+  const f=staged({grant:false});try{
+    const sql='INSERT INTO member_studio_publication_reviews ('+
+      'id,submission_id,project_id,owner_user_id,reviewer_user_id,project_revision,'+
+      'idempotency_key,fingerprint,snapshot_json,reviewer_reason,created_at,status) '+
+      'VALUES (?,?,?,?,?,?,?,?,?,?,?,?)';
+    assert.throws(()=>f.db.prepare(sql).run(
+      crypto.randomUUID(),sid,pid,owner,actor,4,'canonical-studio:'+sid+':4',
+      'e'.repeat(64),JSON.stringify({candidate:true}),
+      'Independent review has not been granted.',createdAt+100,'held'
+    ),/stale or unverified publication receipt/);
+    assert.equal(inspect(f).reviews.length,0);assert.equal(inspect(f).outbox.length,0);
+  }finally{f.db.close();}
 });
