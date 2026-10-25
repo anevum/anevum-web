@@ -14,7 +14,7 @@ function html(value:string):string{
 
 /** Caller supplies the real current origin: previews share previews, never
  * falsely claim their test projects are published on the production domain. */
-export function buildProjectLaunchKit(project:ShareablePublishedProject,origin:string):ProjectLaunchKit{
+export function buildProjectLaunchKit(project:ShareablePublishedProject,origin:string,basePath="/"):ProjectLaunchKit{
   if(!project||typeof project.id!=="string"||
     !/^[A-Za-z0-9_-]{1,128}$/.test(project.id))
     throw new Error("A verified public project identifier is required");
@@ -27,7 +27,10 @@ export function buildProjectLaunchKit(project:ShareablePublishedProject,origin:s
   if((base.protocol!=="https:"&&!(base.protocol==="http:"&&local))||
     base.username||base.password||base.pathname!=="/"||base.search||base.hash)
     throw new Error("Unsafe public project origin");
-  const url=new URL("/projects/"+encodeURIComponent(project.id),base.origin).href;
+  // Vite previews may mount under /creator/; preserve that real route prefix.
+  if(!/^\/(?:[A-Za-z0-9_-]+\/)*$/.test(basePath))
+    throw new Error("Invalid project route prefix");
+  const url=new URL(basePath+"projects/"+encodeURIComponent(project.id),base.origin).href;
   return Object.freeze({
     url,
     shareText:"Explore "+title+" on ANEVUM: "+url,
