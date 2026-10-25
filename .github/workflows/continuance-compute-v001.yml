@@ -1,0 +1,36 @@
+name: Continuance Compute V001 Local Contract
+
+on:
+  pull_request:
+    paths:
+      - 'services/continuance-compute/**'
+      - '.github/workflows/continuance-compute-v001.yml'
+  push:
+    branches:
+      - 'research/continuance-hybrid-compute-v001-20261024'
+    paths:
+      - 'services/continuance-compute/**'
+      - '.github/workflows/continuance-compute-v001.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  local-source-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and policy tests, no model or network required
+        run: |
+          node --check services/continuance-compute/policy.mjs
+          node --check services/continuance-compute/ollama.mjs
+          node --check services/continuance-compute/server.mjs
+          node --check services/continuance-compute/benchmark.mjs
+          node --test services/continuance-compute/server.test.mjs
+          node services/continuance-compute/benchmark.mjs --list
