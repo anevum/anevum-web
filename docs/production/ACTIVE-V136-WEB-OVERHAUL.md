@@ -3,8 +3,8 @@ Session: `ANEVUM.WEB.UPDATE.2026-10-25.001.SITEWIDE-OVERHAUL-SYNCHRONIZATION`
 Updated: 2026-10-25
 **Owner development baseline: draft PR #735 — Concept Convergence II, head `20161bae20`.**
 **Current bounded continuation: draft PR #745 — V136.025 Creator Directory.**
-**Sitewide integration: PR #738 was merged into the #735 development branch, preserving selected #737/#736 contributions. Those historical PRs need no blind re-import.**
-Status: V136.025 is DRAFT / **not merged, visually accepted, or deployed**. The sealed V136.024 controlled candidate in #741 is a separate release lane; consult provider receipts for actual traffic.
+**Sitewide integration: PR #738 was merged into the #735 development branch, preserving selected changes from PR #737 and #736. Those historical PRs need no blind re-import.**
+Status: V136.025 is DRAFT / **NOT released**, not merged or visually accepted. The sealed V136.024 controlled candidate in #741 is a separate release lane; consult provider receipts for actual traffic.
 
 ## Read this first
 This is the active handoff for the October 24–25 sitewide overhaul. It supersedes earlier
