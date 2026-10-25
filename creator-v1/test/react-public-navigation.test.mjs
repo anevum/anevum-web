@@ -34,3 +34,26 @@ test("cursor controls preserve search and category context",()=>{
   assert.equal(cursorRoute("/creators",new URLSearchParams("q=nov"),"nova"),"/creators?q=nov&cursor=nova");
   assert.equal(cursorRoute("/discover",new URLSearchParams("category=tools&free=1&cursor=a"),"h"),"/discover?category=tools&free=1&cursor=h");
 });
+
+test("new public browse layouts and Commons filters survive project round trips",()=>{
+  for (const route of [
+    "/discover?q=orbit&category=games&free=1&view=list&cursor=page_2",
+    "/creators?q=nova&view=list&cursor=nova",
+    "/community?view=projects&category=games",
+    "/community?view=conversations&sort=hot",
+    "/community?view=people&q=Nova"
+  ]) {
+    const path=projectDetailPath("published_project",route);
+    assert.equal(safeReturnPath(new URL(path,"https://anevum.invalid").searchParams.get("from")),route);
+  }
+});
+
+test("return context remains route-scoped and cannot forward private or arbitrary queries",()=>{
+  assert.equal(safeReturnPath("/discover?view=private&sort=hot&token=secret"),"/discover");
+  assert.equal(safeReturnPath("/creators/nova?view=list&q=secret"),"/creators/nova");
+  assert.equal(safeReturnPath("/community?view=projects&category=private&sort=hot&q=secret&token=secret"),"/community?view=projects");
+  assert.equal(safeReturnPath("/community?view=people&q=bad%0Aquery&category=games"),"/community?view=people");
+  assert.equal(safeReturnPath("/community?view=people&q="+"x".repeat(73)),"/community?view=people");
+  assert.equal(safeReturnPath("/community?view=conversations&sort=private"),"/community?view=conversations");
+  assert.equal(safeReturnPath("/community?view=unknown&q=secret"),"/community");
+});

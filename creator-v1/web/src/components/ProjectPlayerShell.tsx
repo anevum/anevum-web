@@ -5,6 +5,7 @@ import {selectPlayer} from "../lib/player-registry";
 import {ProjectThumbnail} from "./ProjectThumbnail";
 import {CompactMemberIdentity} from "./CompactMemberIdentity";
 import "./project-player-shell.css";
+import {publicCreatorHandle} from "../lib/public-creator-handle";
 
 /** The public stage opens safe creator-hosted links. It never executes creator code. */
 export function ProjectPlayerShell({project,demo,source}:{
@@ -12,6 +13,8 @@ export function ProjectPlayerShell({project,demo,source}:{
 }){
   const selection=selectPlayer(project.category,Boolean(demo),Boolean(source));
   const primary=demo||source;
+  const handle=publicCreatorHandle(project.creatorHandle);
+  const credit=project.creatorName||"ANEVUM member";
   const longTitle=project.title.length>50;
   const longSummary=project.summary.length>240;
   const [shareStatus,setShareStatus]=useState("");
@@ -67,10 +70,12 @@ export function ProjectPlayerShell({project,demo,source}:{
       </div>
     </section>
     <div className="avp-stage-identity">
-      <Link className="avp-creator-credit" to={"/creators/"+encodeURIComponent(project.creatorHandle)}>
-        <CompactMemberIdentity interactive={false} size="compact" className="av65-project-channel" member={{handle:project.creatorHandle,displayName:project.creatorName,avatar:false,level:null,featuredAwards:[],source:'creator-channel'}}/>
+      {handle?<Link className="avp-creator-credit" to={"/creators/"+encodeURIComponent(handle)}>
+        <CompactMemberIdentity interactive={false} size="compact" className="av65-project-channel" member={{handle,displayName:credit,avatar:false,level:null,featuredAwards:[],source:'creator-channel'}}/>
         <span aria-hidden="true">↗</span>
-      </Link>
+      </Link>:<div className="avp-creator-credit" aria-label="Public creator channel not linked">
+        <span><strong>{credit}</strong><br/><small>Public creator channel not linked</small></span>
+      </div>}
       <nav className="avp-stage-shortcuts" aria-label="Project participation">
         <a href="#avp-participation">PARTICIPATE</a>
         <a href="#avp-discussion">COMMUNITY</a>

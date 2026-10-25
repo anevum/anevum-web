@@ -2,6 +2,10 @@ name: PARITY V136.026 Public Discover Browser QA
 on:
   pull_request:
     paths:
+      - 'creator-v1/web/src/lib/navigation.ts'
+      - 'creator-v1/web/src/pages/ProjectPage.tsx'
+      - 'creator-v1/web/src/components/ProjectPlayerShell.tsx'
+      - 'creator-v1/web/src/parity/concept-convergence-v136017.css'
       - '.github/workflows/parity-v136026-discovery.yml'
       - 'creator-v1/web/src/pages/DiscoverPage.tsx'
       - 'creator-v1/web/src/parity/ParityDiscoverV136.tsx'

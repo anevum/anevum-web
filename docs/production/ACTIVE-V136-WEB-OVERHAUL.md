@@ -2,7 +2,7 @@
 Session: `ANEVUM.WEB.UPDATE.2026-10-25.001.SITEWIDE-OVERHAUL-SYNCHRONIZATION`
 Updated: 2026-10-25
 **Owner development baseline: draft PR #735 — Concept Convergence II, head `888bf4cc` after #748 integration.**
-**Current bounded continuation: draft PR #750 — V136.027 Commons URL and identity continuity.**
+**Current bounded continuation: V136.028 — public browse return paths, truthful project identity and Commons typography, stacked on draft #750.**
 **Sitewide integration: PR #738 was merged into the #735 development branch, preserving selected changes from PR #737 and #736. Those historical PRs need no blind re-import.**
 Status: V136.025 and owner-approved V136.026 are **IMPLEMENTED / VERIFIED DEVELOPMENT**, merged into #735. V136.027 remains **ACTIVE DRAFT / NOT released**. The sealed V136.024 controlled candidate in #741 is a separate release lane; consult provider receipts for actual traffic.
 
@@ -103,12 +103,12 @@ Do not duplicate those components on the current #735/#745 development baseline.
 ## DEFINITIONS AND SOURCE-OF-TRUTH
 - **Design authority:** approved Oct 24 V136 boards referenced in PR #714,
   and the V136.017 concept convergence notes.
-- **Active implementation:** #735 at `20161bae20` owns the development baseline
-  after #738's reviewed UI integration. #745 is the next isolated Creator
-  Directory draft. #737 and #736 are retained historical source branches; their
-  selected changes were reconciled through #738, not independently deployed.
-  #741's sealed V136.024 candidate remains a separate controlled release lane.
-  No #745 main/production merge or provider traffic change was made.
+- **Active implementation:** #735 at `888bf4cc` owns the development baseline
+  after reviewed #738/#741/#745/#748 integration. #750 Commons at `2bf7504c`
+  and stacked V136.028 remain draft review work. #737/#736 are historical;
+  their selected changes were reconciled through #738. Do not re-import them.
+  #741 sealed release source `4dfaed54` remains a separate release lane.
+  Development integration is not production promotion.
 - **UI and category media:** `creator-v1/web/src/parity/sitewide-interface-v136.css`,
   `creator-v1/web/src/components/ProjectThumbnail.tsx`,
   `creator-v1/web/src/lib/project-thumbnails.ts`.
@@ -324,3 +324,41 @@ return links, which currently discard layout/Commons filters. Keep it scoped
 to existing public routes, with strict privacy/navigation regression coverage.
 No main, sealed #741, provider, canary, authentication, payment, database or
 publication changes. The previous public HTTP 403 remains unresolved evidence.
+
+## V136.028 — public journey continuity and actual Commons typography
+Session: `ANEVUM.ANEVUM.PACKAGE.2026-10-25.002.UNIFIED-OVERHAUL-WORK-CONTINUATION`.
+Branch `build/parity-v136-browse-return-20261025-028`, stacked only on
+#750 `2bf7504c7b74a1f3c834b4381a9dcfdb4cd5501b`. ACTIVE DRAFT.
+
+Implemented: project detail return links retain Discover/creator-directory List
+mode and route-scoped Commons project/category, discussion sort or people search
+context. Unknown fields, private routes, control characters and external targets
+remain excluded by the existing public return sanitizer. Commons project cards
+and linked discussion projects now pass their real filtered return context.
+The player credit and project channel action reuse publicCreatorHandle, so
+missing/null/undefined/invalid channels stay truthful and unlinked.
+
+Actual compiled screenshots revealed legacy important font declarations beat
+the new unlayered V136 styles. A narrowly scoped correction inside the existing
+legacy layer restores Institute sans typography and strong heading weights;
+no global cascade reset or flag-off restyle. Both original concept boards
+(Creator Universe Dashboard and Neon UI Showcase) were visually re-inspected.
+
+Local verification: TypeScript and full-flag production build PASS; 152 targeted
+public navigation/player/V136/media/moderation contracts PASS. Extended real
+compiled Discover and Commons browser tests both PASS at 1440/390/320, including
+actual project-detail navigation and return, original Back/filter tests, missing
+identity, rendered font family/weight, no overflow, no page errors, forbidden=[].
+Reviewed desktop and narrow-phone Commons screenshots after the cascade fix.
+All records are explicitly synthetic loopback fixtures. Local browser is
+Chromium 153; pinned CI Chromium and broad exact-head checks remain required.
+The existing browser workflows now watch their real navigation/player/CSS
+dependencies. Owner creative acceptance is still pending; not merged/released.
+
+Read-only Cloudflare receipt now supersedes the older provider snapshot:
+gateway deployment `77ceaf3d-5bfb-4f07-b64d-1655a3093065` remains at baseline
+`ec5f106b-482c-4415-9c66-d6f8daf219ad` 99% / sealed V136.024 candidate
+`cedb7ac1-74ca-4fcd-9a40-ce56964f1785` 1%. No provider writes were made.
+Stripe retirement #739 at `126915b6` remains a separate unmerged source track.
+Next bounded UI slice: public Creator channel identity/work hierarchy, preserving
+actual profile-service capabilities, uploaded media and private/public routing.

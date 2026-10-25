@@ -95,6 +95,10 @@ try{
       items:filtered,count:filtered.length,nextCursor:null
      })});return;
     }
+    const project=projects.find(item=>path==='/api/v1/projects/'+item.id);
+    if(project){
+     await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({item:project})});return;
+    }
     if(path==='/api/v1/creators'){
      const q=(url.searchParams.get('q')||'').trim().toLowerCase();
      requests.push({type:'creators',q});
@@ -144,6 +148,11 @@ try{
    hubWidth:Math.round(element.getBoundingClientRect().width)
   }));
   assert.ok(geometry.document<=geometry.viewport+2,'No sideways Commons scroll: '+JSON.stringify(geometry));
+  const headingStyle=await hub.locator('#ch7-hero-title').evaluate(element=>({
+   family:getComputedStyle(element).fontFamily,weight:getComputedStyle(element).fontWeight
+  }));
+  assert.match(headingStyle.family,/sans-serif/,'Commons uses the approved Institute typography');
+  assert.ok(Number(headingStyle.weight)>=700,'Legacy serif/weight declarations cannot override V136: '+JSON.stringify(headingStyle));
   await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({path:join(destination,'commons-all-'+width+'.png'),fullPage:true,animations:'disabled'});
   const tabs=hub.locator('.ch7-tabs');
@@ -161,6 +170,19 @@ try{
   assert.equal(await hub.getByRole('heading',{name:'SYNTHETIC COMMONS UTILITY',exact:true}).count(),0);
   await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({path:join(destination,'commons-projects-games-'+width+'.png'),fullPage:true,animations:'disabled'});
+  await entries.getByRole('link',{name:'OPEN PROJECT',exact:true}).click();
+  await page.locator('.portal-project').waitFor();
+  const back=page.locator('.portal-crumbs').getByRole('link',{name:/BACK TO RESULTS/});
+  assert.equal(await back.getAttribute('href'),'/community?view=projects&category=games');
+  await back.click();
+  await hub.waitFor();
+  await checkParams(page,{view:'projects',category:'games'});
+  await page.waitForFunction(()=>document.querySelectorAll('.ch7-stream .ch7-project').length===1);
+  assert.equal(await hub.locator('.ch7-field-filter select').inputValue(),'games');
+  // Return-link navigation adds its own history entry. Restore the prior
+  // filtered results before exercising the existing category Back contract.
+  await page.goBack();await page.locator('.portal-project').waitFor();
+  await page.goBack();await hub.waitFor();
   await page.goBack({waitUntil:'domcontentloaded'});
   await checkParams(page,{view:'projects',category:null});
   await page.waitForFunction(()=>document.querySelectorAll('.ch7-stream .ch7-project').length===2);
