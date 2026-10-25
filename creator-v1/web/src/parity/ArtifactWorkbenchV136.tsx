@@ -64,6 +64,16 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
   setCollapsedFolders(previous=>new Set([...previous].filter(folder=>!path.startsWith(folder+'/'))));
   closeQuickOpen();
  }
+ /** Dependency links inspect actual source rather than changing any code.
+  * Opening a reference explicitly cancels the pending rename/removal.
+  * Focus moves to the existing real file tab for keyboard continuity. */
+ function inspectReference(path:string,previous:string){
+  if(!Object.hasOwn(files,path))return;
+  selectFile(path);
+  setCollapsedFolders(previousFolders=>new Set([...previousFolders].filter(folder=>!path.startsWith(folder+'/'))));
+  setNote('Inspect '+path+' for local references to '+previous+'. The pending file operation was canceled; no source was rewritten.');
+  requestAnimationFrame(()=>document.getElementById('p136-source-tab-'+path)?.focus());
+ }
  const localOnlyPaths=localOnlySourcePaths(files);
  const renameReferences=renamingFile?sourceReferencesToReview(files,renamingFile):[];
  const removalReferences=deletingFile?sourceReferencesToReview(files,deletingFile):[];
@@ -239,7 +249,8 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
       <strong>LINK AUDIT / {renameReferences.length} STATIC REFERENCE {renameReferences.length===1?'SOURCE':'SOURCES'}</strong>
       {renameReferences.length?
        <><p>These authored files reference {renamingFile}. A rename can break their links; no code will be rewritten automatically.</p>
-        <ul>{renameReferences.map(path=><li key={path}>{path}</li>)}</ul></>:
+        <ul>{renameReferences.map(path=><li key={path}><button type="button"
+         onClick={()=>inspectReference(path,renamingFile)}>Inspect {path}</button></li>)}</ul></>:
        <p>No direct local path references detected. Dynamic paths are not inspected.</p>}
      </div>
      <input id="p136017-file-rename" autoFocus autoComplete="off" spellCheck={false} maxLength={120}
@@ -254,7 +265,8 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
       <strong>LINK AUDIT / {removalReferences.length} STATIC REFERENCE {removalReferences.length===1?'SOURCE':'SOURCES'}</strong>
       {removalReferences.length?
        <><p>The following authored files may still refer to {deletingFile} after removal. No source code is modified.</p>
-        <ul>{removalReferences.map(path=><li key={path}>{path}</li>)}</ul></>:
+        <ul>{removalReferences.map(path=><li key={path}><button type="button"
+         onClick={()=>inspectReference(path,deletingFile)}>Inspect {path}</button></li>)}</ul></>:
        <p>No direct local path references detected. Dynamic paths are not inspected.</p>}
      </div>
      <button type="button" disabled={disabled} onClick={commitRemoval}>Confirm remove file</button>

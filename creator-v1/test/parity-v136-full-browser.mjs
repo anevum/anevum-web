@@ -147,11 +147,26 @@ try{
       const renameAudit=workbench.locator('[data-source-reference-audit="rename"]');
       assert.match(await renameAudit.innerText(),/index\.html/);
       assert.match(await renameAudit.innerText(),/no code will be rewritten automatically/i);
+      // A dependency chip is real editor navigation, not a decorative badge.
+      await renameAudit.getByRole('button',{name:'Inspect index.html',exact:true}).click();
+      assert.equal(await workbench.getByRole('tab',{name:'index.html',exact:true}).getAttribute('aria-selected'),'true');
+      assert.equal(await renameAudit.count(),0,'Reference navigation cancels the pending rename');
+      assert.equal(await workbench.getByRole('tab',{name:'styles.css',exact:true}).count(),1,'No source was renamed');
+      assert.match(await workbench.locator('.p136-source-notice').innerText(),/pending file operation was canceled/);
+      await workbench.getByRole('tab',{name:'styles.css',exact:true}).click();
+      await workbench.getByRole('button',{name:'Rename file',exact:true}).click();
+      assert.match(await renameAudit.innerText(),/index\.html/);
       await workbench.getByRole('button',{name:'Cancel rename',exact:true}).click();
       assert.equal(await renameAudit.count(),0,'Canceled rename closes the dependency notice');
       await workbench.getByRole('button',{name:'Remove file',exact:true}).click();
       const removalAudit=workbench.locator('[data-source-reference-audit="remove"]');
       assert.match(await removalAudit.innerText(),/index\.html/);
+      await removalAudit.getByRole('button',{name:'Inspect index.html',exact:true}).click();
+      assert.equal(await workbench.getByRole('tab',{name:'index.html',exact:true}).getAttribute('aria-selected'),'true');
+      assert.equal(await removalAudit.count(),0,'Reference navigation cancels the pending removal');
+      assert.equal(await workbench.getByRole('tab',{name:'styles.css',exact:true}).count(),1,'Dependency inspection cannot delete source');
+      await workbench.getByRole('tab',{name:'styles.css',exact:true}).click();
+      await workbench.getByRole('button',{name:'Remove file',exact:true}).click();
       await workbench.getByRole('button',{name:'Keep file',exact:true}).click();
       await workbench.getByRole('tab',{name:'assets/notes.md',exact:true}).click();
       await workbench.getByRole('button',{name:'Rename file',exact:true}).click();

@@ -144,3 +144,13 @@ test('Creator Studio rename and removal show actual local link audit without rew
  assert.match(localCss,/\.p136017-ref-audit/);
  assert.ok(!/fetch\(|eval\(|localStorage|sessionStorage/.test(helper),'Reference audit is pure local calculation');
 });
+
+test('dependency warnings navigate into a real source tab and cancel pending operations',()=>{
+ const css=source('../web/src/parity/artifact-workbench-v136.css');
+ assert.match(ide,/function inspectReference\(path:string,previous:string\)/);
+ assert.match(ide,/onClick=\{\(\)=>inspectReference\(path,renamingFile\)\}/);
+ assert.match(ide,/onClick=\{\(\)=>inspectReference\(path,deletingFile\)\}/);
+ assert.match(ide,/The pending file operation was canceled/);
+ assert.match(ide,/document\.getElementById\('p136-source-tab-'\+path\)/);
+ assert.match(css,/\.p136017-ref-audit li button/);
+});
