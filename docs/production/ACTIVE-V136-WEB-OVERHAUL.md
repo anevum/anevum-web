@@ -1,9 +1,10 @@
 # ACTIVE — ANEVUM PARITY V136 unified website overhaul
 Session: `ANEVUM.WEB.UPDATE.2026-10-25.001.SITEWIDE-OVERHAUL-SYNCHRONIZATION`
 Updated: 2026-10-25
-**Current owner workstream: PR #735 — Concept Convergence II.**
-**Sitewide contributions: PR #737 / V136.018–.021; divergent source branch, not yet incorporated into #735.**
-Status: DRAFT ENGINEERING; **NOT released, owner-approved, or deployed**.
+**Owner development baseline: draft PR #735 — Concept Convergence II, head `20161bae20`.**
+**Current bounded continuation: draft PR #745 — V136.025 Creator Directory.**
+**Sitewide integration: PR #738 was merged into the #735 development branch, preserving selected changes from PR #737 and #736. Those historical PRs need no blind re-import.**
+Status: V136.025 is DRAFT / **NOT released**, not merged or visually accepted. The sealed V136.024 controlled candidate in #741 is a separate release lane; consult provider receipts for actual traffic.
 
 ## Read this first
 This is the active handoff for the October 24–25 sitewide overhaul. It supersedes earlier
@@ -75,8 +76,9 @@ social proof, or published work to make it look busy.
   avatar/banner error handling without changing the media APIs.
 - V136.021 QA: loopback browser fixture permits exactly the ten reviewed
   static default SVG paths; no wildcard media access.
-The separate Open Signal PR #736 is a sibling: it is **not** implicitly
-included and requires its own branch reconciliation and acceptance later.
+The Open Signal #736 source changes were explicitly reconciled in the unified
+#738 integration; the sibling PR itself was not implicitly merged or released.
+Do not duplicate those components on the current #735/#745 development baseline.
 
 ## NEXT WORK, IN ORDER
 1. Confirm the consolidated exact-head source tests and browser screenshots,
@@ -101,10 +103,12 @@ included and requires its own branch reconciliation and acceptance later.
 ## DEFINITIONS AND SOURCE-OF-TRUTH
 - **Design authority:** approved Oct 24 V136 boards referenced in PR #714,
   and the V136.017 concept convergence notes.
-- **Active implementation:** #735 owns the latest baseline; #737 remains a divergent
-  sitewide contribution. The reviewed draft assembly is on
-  `integrate/unified-continuity-20261025-001`, with #736 Open Signal included
-  explicitly. No source branch, history, main or production merge occurred.
+- **Active implementation:** #735 at `20161bae20` owns the development baseline
+  after #738's reviewed UI integration. #745 is the next isolated Creator
+  Directory draft. #737 and #736 are retained historical source branches; their
+  selected changes were reconciled through #738, not independently deployed.
+  #741's sealed V136.024 candidate remains a separate controlled release lane.
+  No #745 main/production merge or provider traffic change was made.
 - **UI and category media:** `creator-v1/web/src/parity/sitewide-interface-v136.css`,
   `creator-v1/web/src/components/ProjectThumbnail.tsx`,
   `creator-v1/web/src/lib/project-thumbnails.ts`.
@@ -182,3 +186,51 @@ verification before broad promotion. No experimental QA geometry/video flags,
 private uploader/publication changes, financial operations or data migrations.
 The next UI development slice remains creator-directory search/card/empty-state
 convergence; keep ongoing development separate from the immutable release head.
+
+## V136.025 — Creator Directory functional convergence (active draft)
+Session: `ANEVUM.WEB.UPDATE.2026-10-25.005.CREATOR-DISCOVERY-CONVERGENCE`
+Owner PR: [#745](https://github.com/anevum/anevum-web/pull/745)
+Continuation branch: `build/parity-v136-creator-directory-20261025-025`
+Development parent #735: `20161bae20e7f369d4d7edfadcb4316ecccac3cf`.
+
+Implemented: real server-approved `readCreators` channel cards; URL-owned query,
+cursor and Grid/List mode; Back/Forward restoration; new-search cursor reset;
+honest per-page counts, empty/end-of-cursor and load/error states; accessible
+native search and responsive 1440/390/320 layouts; zero invented published
+creators and no generated filler thumbnails. Actual uploaded creator media,
+profiles, approval/privacy and canonical backend behavior stay unchanged.
+The short "Search creators..." placeholder avoids 320px phone truncation;
+the search still has its explicit full accessible label.
+
+**Verified prior stable source** `8e4fbc66`: 1,761/1,761 complete Creator V1
+regression tests PASS; full six-viewport V136 compiled browser
+[run 40211155640](https://github.com/anevum/anevum-web/actions/runs/40211155640)
+PASS, 48 recorded browser checks including actual directory geometry at 1440
+(3 tracks), 390 and 320 (1 track), zero JS exceptions and zero forbidden
+network activity. Independent focused browser
+[run 40212833188](https://github.com/anevum/anevum-web/actions/runs/40212833188)
+PASS with [12 screenshots and JSON acceptance](https://github.com/anevum/anevum-web/actions/runs/40212833188/artifacts/12606154516):
+real React/Vite UI, two labelled **synthetic loopback-only** test channels,
+Grid/List, paging, URL history, searches, no results and no published creators,
+without horizontal overflow. These records are not deployed production content.
+
+**Current refinement**: search copy and guest XP copy now state
+"30 CURRENT LEVELS" rather than suggesting a permanent product cap; existing
+auth/progression runtime does clamp at 30 today whereas the locked longer-term
+#337 product decision is uncapped with a first 60-artifact series. This
+change does **not** implement uncapped progression or alter the XP ledger,
+thresholds, awards or rate. #337 owns the backend/data reconciliation.
+The focused browser's source receipt now pins the checked-out exact head
+instead of GitHub's synthetic pull-request merge SHA.
+
+Current post-copy exact-head CI still requires its own PASS receipts and owner
+1440px/390px/320px side-by-side visual review under #335. No physical Safari,
+Xbox, authenticated member A/reviewer/guest/B acceptance or final reference
+art acceptance has been granted. Draft status is deliberate.
+
+**Release isolation**: V136.024 immutable candidate #741, recorded V58/V59
+traffic, provider settings, Stripe retirement draft #739 and main are untouched.
+Targeted release source allowlist correctly rejects this not-yet-authorized
+draft source; do not add broad exemptions or promote traffic. #742 GET-only
+public smoke received HTTP 403 before reaching the baseline app; no successful
+production comparison is implied. Owner go/no-go stays under #333.
