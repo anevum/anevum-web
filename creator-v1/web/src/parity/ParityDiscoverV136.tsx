@@ -205,7 +205,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
           detail="Published project data is temporarily unavailable. No sample projects were substituted."/>}
         {packagesInScope&&packageState==='loading'&&<p className="p136-discover-status" role="status">Checking approved browser uploads…</p>}
         {packagesInScope&&packageState==='error'&&<p className="p136-discover-status" role="status">Uploaded browser releases are temporarily unavailable.</p>}
-        {resultsReady&&shown>0&&<div className={'p136-discover-results'+(view==='compact'?' p136-discover-results--compact':'')}>
+        {resultsReady&&shown>0&&<div data-layout={view==='compact'?'list':'grid'} className={'p136-discover-results'+(view==='compact'?' p136-discover-results--compact':'')}>
           {packageProjects.map(project=><WorkCard key={'package:'+project.id} work={project} mode="public" compact={view==='compact'} onInspect={work=>setInspected({kind:'package',work})}/>)}
           {legacyProjects.map(project=><ProjectCard key={'catalogue:'+project.id} project={project} returnTo={current} presentation={view==='compact'?'editorial':'visual'} onInspect={project=>setInspected({kind:'project',project})}/>)}
         </div>}
