@@ -63,7 +63,7 @@ export function rumPageLoadSQL(sinceUtc) {
   const since = validateUtcStart(sinceUtc);
   return `SELECT toDate(timestamp) AS utc_day,
     if(requestPath LIKE '/cdn-cgi/access/%' OR requestPath LIKE '/staff%' OR requestPath LIKE '/workspace%', 'restricted',
-      if(requestPath = '/', 'home', 'other_public')) AS route_group,
+      if(requestPath = '/', 'home', 'other_nonstaff')) AS route_group,
     deviceType,
     count() AS recorded_samples,
     sum(sampleInterval) AS sample_weighted_page_loads
