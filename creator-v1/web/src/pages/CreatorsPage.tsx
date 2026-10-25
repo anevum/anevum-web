@@ -19,16 +19,34 @@ import {Icon} from "../components/Icons";
 export function CreatorsPage(){
   const [params,setParams]=useSearchParams();
   const q=params.get("q")||"",cursor=params.get("cursor")||"";
+  // The URL owns layout, search and cursor: Back, Forward and shared links
+  // restore the same directory instead of a second optimistic state.
+  const view=params.get("view")==="list"?"list":"grid";
+  const clearHref=view==="list"?"/creators?view=list":"/creators";
   const [draft,setDraft]=useState(q);
   useEffect(()=>setDraft(q),[q]);
   const data=useResource(signal=>readCreators({q:q||undefined,cursor:cursor||undefined,limit:"24"},signal),[q,cursor]);
-  function search(event:FormEvent){
-    event.preventDefault();
+  function submitSearch(value:string){
     const next=new URLSearchParams();
-    if(draft.trim())next.set("q",draft.trim());
+    const term=value.trim().slice(0,80);
+    if(term)next.set("q",term);
+    if(view==="list")next.set("view","list");
+    // A different search cannot inherit an old pagination cursor.
     setParams(next);
   }
-  return <div className="portal-creators p136-creators" data-parity-creators="v136.017">
+  function search(event:FormEvent<HTMLFormElement>){
+    event.preventDefault();
+    const field=event.currentTarget.elements.namedItem("q") as HTMLInputElement|null;
+    submitSearch(field?.value??draft);
+  }
+  function chooseView(nextView:"grid"|"list"){
+    const next=new URLSearchParams(params);
+    if(nextView==="list")next.set("view","list");
+    else next.delete("view");
+    // Layout changes keep the approved data query and cursor untouched.
+    setParams(next);
+  }
+  return <div className="portal-creators p136-creators" data-parity-creators="v136.017" data-directory-phase="v136.025">
     {import.meta.env.VITE_PARITY_V136_FULL==="true"?<section className="p136-creators-hero" aria-labelledby="p136-creators-hero-title">
       <div className="p136-creators-hero-copy">
         <span className="p136-creators-register">THE CONTINUANCE INSTITUTE / PUBLIC PEOPLE</span>
@@ -51,17 +69,40 @@ export function CreatorsPage(){
       <div className="portal-browse-main">
         <section className="portal-box portal-search-hall" id="p136-creators-index">
           <header className="portal-box-header"><div><span className="kicker">PUBLIC CREATOR DIRECTORY</span><h2>FIND YOUR PEOPLE</h2></div><span className="portal-hall-stamp">CHANNELS / ACTIVE</span></header>
-          <form className="portal-wide-search" role="search" onSubmit={search}>
-            <input type="search" aria-label="Search published creators" placeholder="SEARCH CREATOR NAMES..." maxLength={80} value={draft} onChange={e=>setDraft(e.target.value)}/>
-            <button type="submit">FIND MAKERS ↗</button>
+          <form className="portal-wide-search p136-creators-search" role="search" action="/creators" method="get" onSubmit={search}>
+            <label htmlFor="p136-creator-query" className="visually-hidden">Search published creators</label>
+            <span className="p136-creators-search-icon" aria-hidden="true"><Icon name="search" size={19}/></span>
+            <input id="p136-creator-query" name="q" type="search" placeholder="Search published creator names..." maxLength={80}
+              value={draft} onChange={event=>setDraft(event.target.value)}
+              onKeyDown={event=>{
+                if(event.key==="Enter"&&!event.nativeEvent.isComposing){
+                  event.preventDefault();submitSearch(event.currentTarget.value);
+                }
+              }}/>
+            <button type="submit" onClick={event=>{
+              event.preventDefault();
+              const field=event.currentTarget.form?.elements.namedItem("q") as HTMLInputElement|null;
+              submitSearch(field?.value??draft);
+            }}>Find creators <Icon name="arrow" size={16}/></button>
           </form>
         </section>
         {data.state==="loading"&&<LoadingState label="Finding actual published creators"/>}
         {data.state==="error"&&<ErrorState title="CREATOR CHANNELS UNAVAILABLE" detail="The real public directory could not be loaded. We do not substitute demo profiles."/>}
         {data.state==="ready"&&<>
-          <div className="portal-result-toolbar"><div><span className="kicker">ORIGINAL PEOPLE / ORIGINAL PROJECTS</span><strong>{data.data.items.length} VERIFIED CREATOR {data.data.items.length===1?"CHANNEL":"CHANNELS"} ON THIS PAGE</strong></div>{(q||cursor)&&<Link className="portal-toolbar-link" to="/creators">CLEAR SEARCH</Link>}</div>
+          <div className="portal-result-toolbar p136-creators-result-toolbar">
+            <div><span className="kicker">PUBLIC INDEX / APPROVED CREATOR CHANNELS</span>
+              <strong role="status">{data.data.items.length} published {data.data.items.length===1?"creator channel":"creator channels"} on this page</strong>
+            </div>
+            <div className="p136-creators-result-actions">
+              <div className="p136-creators-view-switch" role="group" aria-label="Choose creator directory layout">
+                <button type="button" aria-pressed={view==="grid"} className={view==="grid"?"is-active":""} onClick={()=>chooseView("grid")}>Grid</button>
+                <button type="button" aria-pressed={view==="list"} className={view==="list"?"is-active":""} onClick={()=>chooseView("list")}>List</button>
+              </div>
+              {(q||cursor)&&<Link className="portal-toolbar-link" to={clearHref}>Clear search</Link>}
+            </div>
+          </div>
           {data.data.items.length?
-            <section aria-label="Published creator channels" className="portal-creator-grid">{data.data.items.map((c,i)=>
+            <section aria-label="Published creator channels" className="portal-creator-grid" data-layout={view}>{data.data.items.map((c,i)=>
               <Link className="portal-creator-tile" to={"/creators/"+encodeURIComponent(c.handle)} key={c.handle}>
                 <span className="portal-creator-tile-top"><span>CREATOR CHANNEL</span><span>{String(i+1).padStart(2,"0")} / RESULT</span></span>
                 <CompactMemberIdentity interactive={false} size="standard" className="av65-directory-channel" member={{handle:c.handle,displayName:c.displayName,avatar:false,level:null,featuredAwards:[],source:'creator-channel'}}/>
@@ -69,10 +110,18 @@ export function CreatorsPage(){
                 <span className="portal-creator-tile-cta">VISIT CHANNEL <span aria-hidden="true">↗</span></span>
               </Link>
             )}</section>:
-            <div className="portal-true-empty"><span className="portal-empty-symbol" aria-hidden="true">✳</span>
-              <div><span className="kicker">A BLANK PAGE IS NOT A FAKE COMMUNITY</span><h2>{q?"NO MATCHING MAKERS YET.":"THE FIRST MAKERS ARE ON THEIR WAY."}</h2>
-                <p>Creator channels become visible with staff-approved original work. Search another name or explore the real project catalogue.</p><div className="portal-empty-actions"><Link className="button secondary" to="/creators">ALL CREATORS</Link><Link className="button secondary" to="/discover">EXPLORE PROJECTS</Link><Link className="button secondary" to="/guide">FREE FIELD GUIDE</Link></div>
-              </div></div>}
+            <div className="portal-true-empty p136-creators-empty" role="status">
+              <span className="portal-empty-symbol" aria-hidden="true"><Icon name="search" size={30}/></span>
+              <div><span className="kicker">PUBLIC DIRECTORY / VERIFIED DATA ONLY</span>
+                <h2>{cursor?"No further channels on this page.":q?"No matching creators yet.":"No public creator channels yet."}</h2>
+                <p>{cursor?"Return to the first page or refine your search.":q?"Try another name or browse all approved creators.":"Creator channels appear when their original work is approved for public release."} Private accounts and unpublished projects are not listed.</p>
+                <div className="portal-empty-actions">
+                  {(q||cursor)&&<Link className="button secondary" to={clearHref}>Browse all creators</Link>}
+                  <Link className="button secondary" to="/discover">Explore published work</Link>
+                  <Link className="button secondary" to="/guide">Publishing guide</Link>
+                </div>
+              </div>
+            </div>}
           <PageNav route="/creators" search={params} nextCursor={data.data.nextCursor} label="Creator directory"/>
         </>}
       </div>
