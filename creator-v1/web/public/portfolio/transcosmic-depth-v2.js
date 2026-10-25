@@ -24,6 +24,7 @@
   let disposed = false;
   let frame = 0;
   let lastTime = 0;
+  let lastDrawTime = 0;
   let clock = 0;
   let pointer = [0, 0];
   let eased = [0, 0];
@@ -63,7 +64,8 @@
   const triangle=(a,b,c) => {vertices.push(...a,...b,...c);};
   const position=(p,n,color,kind)=>[...p,...n,...color,kind];
   function ring(cx,cy,cz,r,tube,phase,kind,span=Math.PI*2){
-    const steps=span===Math.PI*2?136:116, side=9;
+    const steps=span===Math.PI*2?(weakDevice?72:136):(weakDevice?64:116);
+    const side=weakDevice?6:9;
     const colors=kind===3?[.58,.77,.95]:kind===2?[.97,.76,.47]:kind===1?[.34,.56,.77]:[.23,.33,.44];
     const rotate=(p)=>[p[0]*Math.cos(phase)+p[2]*Math.sin(phase),p[1],p[2]*Math.cos(phase)-p[0]*Math.sin(phase)];
     const sample=(i,j)=>{
@@ -79,8 +81,10 @@
       triangle(a,b,d);triangle(b,c,d);
     }
   }
-  function sphere(cx,cy,cz,r,color,kind){
-    const rows=24,columns=36;
+  function sphere(cx,cy,cz,r,color,kind,lod=1){
+    // Small far-world satellites should not cost a full hero-sized sphere.
+    const rows=lod===0?11:weakDevice?16:24;
+    const columns=lod===0?18:weakDevice?24:36;
     const point=(i,j)=>{
       const v=i/rows*Math.PI,u=j/columns*2*Math.PI;
       const n=[Math.sin(v)*Math.cos(u),Math.cos(v),Math.sin(v)*Math.sin(u)];
@@ -162,7 +166,7 @@
   for(let i=0;i<18;i++){
     const z=-85-i*11,theta=i*2.3999;
     const x=8+Math.cos(theta)*(12+i*.55),y=Math.sin(theta)*(9+i*.3);
-    sphere(x,y,z,.95+(i%4)*.29,[.37+.025*(i%5),.42,.60],0);
+    sphere(x,y,z,.95+(i%4)*.29,[.37+.025*(i%5),.42,.60],0,0);
   }
   const beyondVertices=vertices.length/10-beyondStart;
   const realmRanges=[
@@ -389,6 +393,10 @@
   function render(now){
     frame=0;if(disposed||!drawScene)return;
     const moving=motionEnabled();
+    // Cap low-memory devices to roughly 24fps. On reduced motion, Pause, or
+    // a keyboard viewpoint change, always render the destination immediately.
+    if(weakDevice&&moving&&lastDrawTime&&now-lastDrawTime<40){requestFrame();return;}
+    lastDrawTime=now;
     if(moving)clock+=Math.min(55,Math.max(0,now-lastTime||16))*.001;
     lastTime=now;
     try{drawScene(clock);}catch(err){stage.dataset.renderMode='fallback';drawScene=null;return;}
