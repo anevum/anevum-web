@@ -131,6 +131,15 @@ test('rejected vector skyline is replaced by a true one-field Transcosmic world'
   assert.match(cosmos, /const stars=\[\]/);
   assert.match(cosmos, /gl\.drawArrays\(gl\.TRIANGLES/);
   assert.match(cosmos, /gl\.drawArrays\(gl\.POINTS/);
+  assert.match(cosmos, /const realmRanges=/);
+  assert.match(cosmos, /name:'threshold'/);
+  assert.match(cosmos, /name:'archive'/);
+  assert.match(cosmos, /name:'beyond'/);
+  assert.match(cosmos, /stage\.dataset\.renderRealm=selected\.name/);
+  assert.match(cosmos, /stage\.dataset\.realmVertices=String\(selected\.count\)/);
+  assert.match(cosmos, /const archiveStart=vertices\.length\/10/);
+  assert.match(cosmos, /const beyondStart=vertices\.length\/10/);
+  assert.match(cosmos, /gl\.uniform1f\(skyU\.uRealm,sector\)/);
   assert.match(cosmos, /gl\.uniformMatrix4fv/);
   assert.match(cosmos, /gl\.depthFunc\(gl\.LEQUAL\)/);
   assert.match(cosmos, /Math\.sqrt\(budget\//);
