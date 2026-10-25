@@ -39,7 +39,7 @@ test('visible channels and absence states are based on existing verified API onl
   assert.match(page,/data\.state==="error"&&<ErrorState/);
   assert.match(page,/data\.state==="ready"&&<>/);
   assert.match(page,/data\.data\.items\.map\(\(c,i\)=>/);
-  assert.match(page,/to=\{"\/creators\/"\+encodeURIComponent\(c\.handle\)\}/);
+  assert.match(page,/to=\{creatorChannelPath\(c\.handle,directoryReturn\)\}/);
   assert.match(page,/<CompactMemberIdentity interactive=\{false\} size="standard"/);
   assert.match(page,/source:'creator-channel'/);
   assert.match(page,/publishedProjects/);

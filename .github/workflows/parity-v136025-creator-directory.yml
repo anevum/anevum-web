@@ -2,6 +2,8 @@ name: PARITY V136.025 Public Creator Directory Browser QA
 on:
   pull_request:
     paths:
+      - 'creator-v1/web/src/lib/navigation.ts'
+      - 'creator-v1/web/src/parity/concept-convergence-v136017.css'
       - '.github/workflows/parity-v136025-creator-directory.yml'
       - 'creator-v1/web/src/pages/CreatorsPage.tsx'
       - 'creator-v1/web/src/parity/sitewide-interface-v136.css'

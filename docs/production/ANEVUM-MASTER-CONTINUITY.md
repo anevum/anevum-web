@@ -5,7 +5,7 @@ Current session: `ANEVUM.ANEVUM.PACKAGE.2026-10-25.002.UNIFIED-OVERHAUL-WORK-CON
 Historical integration session: `ANEVUM.WEB.UPDATE.2026-10-25.002.UNIFIED-UI-INTEGRATION`.
 Verified discovery date: October 25, 2026 (America/New_York).
 Status: **ACTIVE DEVELOPMENT. #738 and #745 merged into website development;
-V136.026 merged and verified in development; #750 Commons under review. New production promotion not verified.**
+V136.026 merged and verified in development; #750 Commons and stacked V136.028/.029 under review. Production unchanged by this session.**
 
 This is an evidence index and continuation checkpoint, not another task board.
 [Canonical engineering #325](https://github.com/anevum/anevum-web/issues/325)
@@ -391,3 +391,35 @@ supersedes the historical `f2f950d8` traffic description above; that earlier
 deployment remains rollback history. No traffic expansion, provider mutation,
 main merge, account/media/database/payment/publishing change was performed.
 Other infrastructure observations remain historical, not freshly verified.
+
+## V136.029 — latest bounded UI draft and refreshed operating evidence
+Session `ANEVUM.ANEVUM.PACKAGE.2026-10-25.002.UNIFIED-OVERHAUL-WORK-CONTINUATION`.
+`build/parity-v136-creator-channel-20261025-029` starts exactly from #751
+`ac984db0d758e61a87adbf7a6e619682aecb8c37`; no source history rewrite.
+Public directory search/List/cursor survives channel/project round trips under
+strict route-scoped return sanitization. Real channel hierarchy/native Orbital
+fallback and full-width editorial release rows replace legacy style collisions
+and the screenshot-confirmed sparse-grid defect. Existing private/public/media/
+identity resolver/earned rewards/publication boundaries remain unchanged.
+
+Local TypeScript/full frontend and 171 targeted regressions pass. Extended
+compiled 1440/390/320 directory/channel/project return checks pass with actual
+keyboard navigation, typography, release-row geometry, zero overflow/errors/
+forbidden calls and 15 synthetic-loopback captures. New exact-head CI and owner
+creative acceptance pending. #751 passes 1,770 main regressions plus focused
+Discover/Commons and all returned ancillary suites; full spatial 40229597078
+now PASS. All ten development workflows are green; the live-release source
+guard remains closed. #750 passes all nine exact-head workflows.
+
+Fresh metadata inventory: Cloudflare 102 scripts, one Pages project, 11 D1,
+five R2 buckets and 40 zone Worker routes; apex wrappers remain in place.
+Gateway deployment `77ceaf3d` still 99% baseline / 1% sealed V136.024.
+Railway diagnostics staging SLEEPING; Core staging and RHEN/RHEN Archive
+production list no live services; inspected pending patches zero. Supabase
+ANEVUM ACTIVE_HEALTHY / Command INACTIVE. These are scoped provider metadata,
+not exhaustive app, billing, private data, security or cross-provider audits.
+Public Work-browser homepage/Discovery/project-player/Commons reads succeeded
+in the existing browser context. No write, account switching or independent
+publication journey; #742's blocked exact-version HTTP test remains open.
+No deployments, traffic, main, sealed candidate, payment or infrastructure
+mutation. Creator Studio interface/preview guidance is the next bounded UI slice.

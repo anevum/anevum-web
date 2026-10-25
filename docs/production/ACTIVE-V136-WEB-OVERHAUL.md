@@ -2,7 +2,7 @@
 Session: `ANEVUM.WEB.UPDATE.2026-10-25.001.SITEWIDE-OVERHAUL-SYNCHRONIZATION`
 Updated: 2026-10-25
 **Owner development baseline: draft PR #735 — Concept Convergence II, head `888bf4cc` after #748 integration.**
-**Current bounded continuation: V136.028 — public browse return paths, truthful project identity and Commons typography, stacked on draft #750.**
+**Current bounded continuation: V136.029 — public creator-channel navigation and Institute presentation, stacked on draft #751.**
 **Sitewide integration: PR #738 was merged into the #735 development branch, preserving selected changes from PR #737 and #736. Those historical PRs need no blind re-import.**
 Status: V136.025 and owner-approved V136.026 are **IMPLEMENTED / VERIFIED DEVELOPMENT**, merged into #735. V136.027 remains **ACTIVE DRAFT / NOT released**. The sealed V136.024 controlled candidate in #741 is a separate release lane; consult provider receipts for actual traffic.
 
@@ -362,3 +362,57 @@ gateway deployment `77ceaf3d-5bfb-4f07-b64d-1655a3093065` remains at baseline
 Stripe retirement #739 at `126915b6` remains a separate unmerged source track.
 Next bounded UI slice: public Creator channel identity/work hierarchy, preserving
 actual profile-service capabilities, uploaded media and private/public routing.
+
+## V136.029 — public creator channel and complete browse return journey
+Session: `ANEVUM.ANEVUM.PACKAGE.2026-10-25.002.UNIFIED-OVERHAUL-WORK-CONTINUATION`.
+Branch `build/parity-v136-creator-channel-20261025-029`, parent #751
+`ac984db0d758e61a87adbf7a6e619682aecb8c37`. ACTIVE DRAFT, not integrated.
+
+Directory search/layout/cursor now travel through a real creator channel and
+its project page, returning to the same filtered directory. Nested context is
+restricted to the public directory; private/external/nested-channel targets and
+unknown query fields remain excluded. Existing identity resolver, independent
+canonical-member redirect, optional profile service, real publication data and
+server-earned recognition remain authoritative. No new API or account writes.
+
+The legacy channel DTO has no uploaded portrait field. Its full-flag fallback
+now uses the existing native OrbitalMark, preserving canonical member portraits
+and flag-off presentation. Scoped corrections inside the existing CSS layer
+restore Institute heading hierarchy. Screenshot review exposed a single project
+squeezed into a three-column grid: channel releases now use the full editorial
+row, with native panel surfaces, readable titles and factual singular/plural
+release copy. No imaginary media, badges, people, rankings or counters.
+
+Local: TypeScript/full-flag build and 171 targeted navigation/creator/player/V136
+contracts PASS. Extended compiled directory -> channel -> project -> channel ->
+filtered List journey passes at 1440/390/320, including real keyboard activation,
+font family/weight, full-width release row and no overflow/errors/non-read calls.
+15 original synthetic loopback captures include channel views at every width.
+Actual desktop/320px review drove the grid correction. Fresh exact-head CI and
+owner visual acceptance remain required; source is not production functionality.
+
+#751 exact `ac984db0` now passes Creator V1 Verify 40229596951 (1,770/1,770
+main regressions), focused Discover 40229596998 and Commons 40229597162,
+plus V081/V083/V084/V091/V095/V096. Original 18 Discover and 12 Commons
+CI captures and receipts inspected. Full spatial 40229597078 now PASS; all ten
+development workflows are green. Release source job remains deliberately closed. #750
+`2bf7504c` passes all nine workflows including full spatial 40228884590; its
+48-group receipt has errors=[] / forbidden=[]. Both drafts await owner review.
+
+Fresh read-only operating inventory: Cloudflare lists 102 Worker scripts, one
+Pages project, 11 D1 databases and five R2 buckets; zone has 40 Worker routes.
+Apex routes use the existing native-frame/profile wrappers; do not mistake the
+absence of a Workers Custom Domain entry for missing apex routing. Gateway
+deployment remains `77ceaf3d`, baseline 99% / sealed V136.024 candidate 1%.
+Railway: Continuance Lab staging diagnostics SLEEPING, no pending patch; Core
+staging has no live services or pending patch; RHEN and RHEN Archive inspected
+production environments have no services. Supabase ANEVUM is ACTIVE_HEALTHY,
+Command INACTIVE; metadata only, not database/security/application acceptance.
+
+Work's existing browser loaded public homepage, Discovery, published project
+and its player shell, and Commons. It retained an existing signed-in context:
+no independent guest/A/B test, publishing or account mutation was performed.
+This does not resolve #742's exact-version upstream HTTP 403. Production,
+main, #741, routes/bindings, databases, payments and canary percentage unchanged.
+Next bounded UI work: existing Creator Studio workspace hierarchy and preview/
+publishing guidance, retaining Monaco, real source operations and server gates.

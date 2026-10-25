@@ -41,7 +41,23 @@ export function safeReturnPath(raw: string | null | undefined): string {
     const cursor = url.searchParams.get("cursor") || "";
     if (cursorPattern.test(cursor)) params.set("cursor", cursor);
   }
+  const directory = url.searchParams.get("from");
+  if (handle.test(route) && directory && /^\/creators(?:\?|$)/.test(directory))
+    params.set("from", creatorDirectoryReturnPath(directory));
   return route + (params.size ? "?" + params.toString() : "");
+}
+
+export function creatorDirectoryReturnPath(raw: string | null | undefined): string {
+  // Only the public directory can be carried through a creator channel.
+  // Checking the route before sanitizing prevents nested channel recursion.
+  if (!raw || !/^\/creators(?:\?|$)/.test(raw)) return "/creators";
+  const path = safeReturnPath(raw);
+  return path === "/creators" || path.startsWith("/creators?") ? path : "/creators";
+}
+
+export function creatorChannelPath(handle: string, directory: string): string {
+  return "/creators/" + encodeURIComponent(handle) + "?" +
+    new URLSearchParams({from:creatorDirectoryReturnPath(directory)}).toString();
 }
 
 export function projectDetailPath(id: string, returnTo: string): string {
