@@ -71,3 +71,16 @@ test("IREN uses visible responsive controls for Creator Studio and Wayfinder (ex
   assert.match(tour,/isVisible\(fallback\)/);
   assert.match(tour,/rect\.left<8\|\|rect\.right>window\.innerWidth-8/);
 });
+
+test("IREN resolves visible responsive anchors when Studio tools are collapsed or the mobile menu is hidden",()=>{
+  assert.match(tour,/fallback:'\\[data-iren-anchor="studio-tools"\\]'/);
+  assert.match(tour,/fallback:'\\[data-iren-anchor="navigation-desktop"\\]'/);
+  assert.match(member,/<summary data-iren-anchor="studio-tools">Profile &amp; tools<\\/summary>/);
+  assert.match(shell,/<nav data-iren-anchor="navigation-desktop" className="desktop-nav av9-primary"/);
+  assert.match(tour,/const isVisible=\\(target:HTMLElement\\|null\\)/);
+  assert.match(tour,/target\\.getClientRects\\(\\)\\.length/);
+  assert.match(tour,/isVisible\\(primary\\)/);
+  assert.match(tour,/isVisible\\(fallback\\)/);
+  assert.match(tour,/rect\\.left<8\\|\\|rect\\.right>window\\.innerWidth-8/);
+  assert.match(tour,/setSpotlight\\(null\\)/);
+});
