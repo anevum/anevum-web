@@ -77,13 +77,12 @@ jobs:
           sudo apt-get install -y blender ffmpeg python3-numpy
           python3 -c 'import numpy; print("NumPy", numpy.__version__)'
           blender --version | head -n 2
-      - name: Convert approved first-party PARITY V136 environmental matte
+      - name: Verify native arrival and retired artwork invariants
         run: |
-          node creator-v1/graphics/inspect-cinematic-v136.mjs
-          ffmpeg -hide_banner -loglevel error -nostdin -y -i creator-v1/web/public/assets/parity-v136/institute-1672.webp -frames:v 1 "$RUNNER_TEMP/continuance-original-matte.png"
-      - name: Render four authored Blender Institute camera frames with cinematic backdrop (PREVIEW only)
-        run: PYTHONPATH=/usr/lib/python3/dist-packages blender --background --python creator-v1/graphics/author-cinematic-institute-v136.py -- --out "$RUNNER_TEMP/continuance-blender" --quality preview --frames 4 --backdrop "$RUNNER_TEMP/continuance-original-matte.png"
-      - name: Encode desktop/mobile artwork and MP4/WebM without external APIs
+          node --experimental-strip-types --test creator-v1/test/parity-v136-sitewide-art-retirement.test.mjs
+      - name: Render four authored all-3D Institute camera frames (PREVIEW only)
+        run: PYTHONPATH=/usr/lib/python3/dist-packages blender --background --python creator-v1/graphics/author-cinematic-institute-v136.py -- --out "$RUNNER_TEMP/continuance-blender" --quality preview --frames 4
+      - name: Encode original all-3D frames and MP4/WebM without external APIs
         run: node creator-v1/graphics/encode-cinematic-v136.mjs --frames "$RUNNER_TEMP/continuance-blender" --out "$RUNNER_TEMP/continuance-cinematic" --fps 8
       - name: Verify file hashes, frame chronology, native source resolution and video codecs
         run: node creator-v1/graphics/inspect-cinematic-candidate-v136.mjs --candidate "$RUNNER_TEMP/continuance-cinematic"

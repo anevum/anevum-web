@@ -1,6 +1,6 @@
 import {useEffect,useRef} from 'react';
 import {Link} from 'react-router-dom';
-import {CategoryCoverV136} from './CategoryCoverV136';
+import {ProjectThumbnail} from '../components/ProjectThumbnail';
 import {Icon} from '../components/Icons';
 import type {Project} from '../lib/api';
 import type {CreatorPackageCard} from '../lib/creator-package-gallery-v010';
@@ -47,7 +47,6 @@ export function ArtifactLensV136({selection,returnTo,onClose}:{
   const sector=publicSector(selection);
   const item=selection.kind==='project'?selection.project:selection.work;
   const isProject=selection.kind==='project';
-  const hasCover=!isProject&&Boolean(selection.work.coverUrl);
   const creator=isProject?publicCreatorHandle(selection.project.creatorHandle):null;
   const detail=isProject?projectDetailPath(selection.project.id,returnTo):null;
   const published=dateLabel(item.publishedAt);
@@ -73,12 +72,10 @@ export function ArtifactLensV136({selection,returnTo,onClose}:{
           aria-label="Close artifact details"><Icon name="close" size={20}/></button>
       </header>
       <div className="p136-artifact-lens-grid">
-        <div className="p136-artifact-lens-visual" aria-label="Project cover">
-          <CategoryCoverV136 category={item.category}
-            coverUrl={isProject?null:selection.work.coverUrl} title={item.title}/>
-          <span className="p136-artifact-lens-art-note">
-            {hasCover?'CREATOR COVER / TYPE DEFAULT IF UNAVAILABLE':'ANEVUM TYPE DEFAULT / NO COVER UPLOADED'}
-          </span>
+        <div className="p136-artifact-lens-visual" aria-label="Creator thumbnail if supplied; otherwise ANEVUM default">
+          <ProjectThumbnail kind={item.category} title={item.title}
+            uploadedUrl={selection.kind==='package'?selection.work.coverUrl:null} priority decorative/>
+          <span className="p136-artifact-lens-art-note">CREATOR IMAGE IF AVAILABLE / ANEVUM DEFAULT OTHERWISE</span>
           <span className="p136-artifact-lens-visual-lines" aria-hidden="true"/>
         </div>
         <div className="p136-artifact-lens-info">

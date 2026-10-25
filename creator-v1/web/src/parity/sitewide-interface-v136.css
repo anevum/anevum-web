@@ -1,0 +1,271 @@
+/* ANEVUM / PARITY V136.018 — functional public interface convergence.
+ * Retires promotional artwork without affecting uploaded media or account APIs.
+ * Centralizes shared surfaces for discovery, community, member and creator spaces.
+ */
+:root{
+  --av136-ink:#edf5ff;
+  --av136-muted:#a6bad2;
+  --av136-line:rgba(122,191,237,.32);
+  --av136-glass:linear-gradient(145deg,rgba(15,30,48,.97),rgba(6,14,27,.97));
+  --av136-edge:rgba(125,205,255,.72);
+}
+.cw-artwork.av136-index-field{
+  position:relative;isolation:isolate;box-sizing:border-box;display:grid;
+  grid-template-rows:auto 1fr auto;overflow:hidden;width:100%;height:100%;
+  min-height:130px;background:
+    linear-gradient(118deg,rgba(34,71,103,.36),transparent 52%),
+    repeating-linear-gradient(90deg,transparent 0 53px,rgba(90,176,232,.12) 54px 55px),
+    repeating-linear-gradient(0deg,transparent 0 53px,rgba(90,176,232,.09) 54px 55px),
+    linear-gradient(145deg,#091724,#050b17 75%);
+  border:1px solid rgba(127,201,245,.34);border-radius:inherit;color:#d9f3ff;
+  box-shadow:inset 0 1px rgba(241,250,255,.14),inset 0 0 52px rgba(18,113,165,.09);
+  text-decoration:none;
+}
+.av136-index-field::before,.av136-index-field::after{
+  content:"";position:absolute;pointer-events:none;width:30px;height:30px;z-index:0;
+  border-color:rgba(132,225,255,.85);border-style:solid;
+}
+.av136-index-field::before{left:12px;top:12px;border-width:1px 0 0 1px}
+.av136-index-field::after{right:12px;bottom:12px;border-width:0 1px 1px 0}
+.av136-index-field__top,.av136-index-field__foot{
+  position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;
+  gap:8px;min-width:0;margin:0;padding:17px 19px;color:#9dcced;
+  font:700 9px/1.3 "IBM Plex Mono",Consolas,monospace;letter-spacing:.13em;
+}
+.av136-index-field__top{border-bottom:1px solid rgba(135,206,255,.18)}
+.av136-index-field__foot{border-top:1px solid rgba(135,206,255,.18)}
+.av136-index-field__core{position:relative;z-index:1;display:flex;flex-direction:column;
+  justify-content:center;align-items:flex-start;gap:5px;min-width:0;padding:clamp(16px,2.3vw,34px)}
+.av136-index-field__number{
+  color:rgba(129,226,255,.8);font:500 clamp(36px,5vw,72px)/1 "IBM Plex Mono",Consolas,monospace;
+  letter-spacing:-.08em;text-shadow:0 0 24px rgba(88,177,255,.24)}
+.av136-index-field__name{font:700 clamp(11px,1.5vw,16px)/1.2 Inter,system-ui,sans-serif;
+  letter-spacing:.18em;overflow-wrap:anywhere}
+.av136-index-field__signal{display:block;flex-shrink:0;width:7px;height:7px;
+  border-radius:50%;background:#7de8ff;box-shadow:0 0 13px rgba(116,231,255,.5)}
+a:hover>.av136-index-field,a:focus-visible>.av136-index-field,
+button:hover>.av136-index-field,button:focus-visible>.av136-index-field{
+  border-color:rgba(179,235,255,.78);box-shadow:inset 0 0 65px rgba(40,165,216,.16),0 0 0 1px rgba(120,220,255,.23)}
+/* Genuine app records stay first; category panels are never portrayed as a release cover. */
+.cinema-world-art>.av136-index-field,.cinema-world-tile-art>.av136-index-field,
+.cinema-recent-art>.av136-index-field,.cinema-latest-img>.av136-index-field,
+.ch7-entry-art>.av136-index-field,.ch7-field-art>.av136-index-field{
+  height:100%;border:0;border-radius:inherit}
+.cinema-world-art .av136-index-field__core,.cinema-world-tile-art .av136-index-field__core,
+.ch7-entry-art .av136-index-field__core{padding:clamp(12px,2vw,22px)}
+.cinema-world-art .av136-index-field__number,.cinema-world-tile-art .av136-index-field__number,
+.ch7-entry-art .av136-index-field__number{font-size:clamp(32px,4vw,58px)}
+.ch7-field-art .av136-index-field__top,.ch7-field-art .av136-index-field__foot,
+.cinema-recent-art .av136-index-field__top,.cinema-recent-art .av136-index-field__foot,
+.cinema-latest-img .av136-index-field__top,.cinema-latest-img .av136-index-field__foot{display:none}
+.ch7-field-art .av136-index-field__number,.cinema-recent-art .av136-index-field__number,
+.cinema-latest-img .av136-index-field__number{font-size:24px}
+.ch7-field-art .av136-index-field__name,.cinema-recent-art .av136-index-field__name,
+.cinema-latest-img .av136-index-field__name{font-size:9px}
+.ch7-field-art .av136-index-field__core,.cinema-recent-art .av136-index-field__core,
+.cinema-latest-img .av136-index-field__core{padding:8px}
+.ch7-field-art .av136-index-field{min-height:52px}
+.av136-recognition-summary{display:grid;align-content:start;gap:11px;
+  border:1px solid var(--av136-line);border-radius:13px;
+  padding:clamp(15px,2vw,24px);background:var(--av136-glass)}
+.av136-recognition-summary strong{color:var(--av136-ink);font:650 17px/1.4 Inter,system-ui,sans-serif}
+.av136-recognition-summary p{font:400 13px/1.65 Inter,system-ui,sans-serif;color:var(--av136-muted);margin:0}
+.av136-recognition-summary a{color:#8de0ff;font:700 11px/1.5 Inter,system-ui,sans-serif;text-decoration:none}
+.av136-recognition-summary a:focus-visible{outline:2px solid #a9e7ff;outline-offset:4px}
+/* Community: real feed, people, discussions and counts replace the decorative hero panel. */
+.ch7-hub .ch7-hero{border-color:var(--av136-line);border-radius:16px;
+  background:
+    linear-gradient(90deg,rgba(8,21,37,.97) 0%,rgba(10,29,47,.95) 62%,rgba(13,28,45,.98) 100%),
+    repeating-linear-gradient(90deg,transparent 0 55px,#6cccfb15 56px 57px);
+  box-shadow:inset 0 1px rgba(239,247,255,.12),0 20px 52px rgba(1,7,17,.45)}
+.ch7-hub .ch7-hero::before{background:
+    repeating-linear-gradient(90deg,transparent 0 75px,rgba(102,174,236,.07) 76px 77px),
+    repeating-linear-gradient(0deg,transparent 0 75px,rgba(102,174,236,.05) 76px 77px);
+  mask-image:linear-gradient(90deg,transparent,black 55%)}
+.ch7-hub .ch7-hero h1{font-family:Inter,"Segoe UI",system-ui,sans-serif;font-weight:700;
+  letter-spacing:-.055em}
+.ch7-hub .ch7-hero h1 em{font-style:normal;color:#9fdefd}
+.ch7-hub .ch7-status,.ch7-hub .ch7-main,.ch7-hub .ch7-panel,
+.ch7-hub .ch7-values{border-radius:14px;border-color:var(--av136-line);background:var(--av136-glass)}
+.ch7-hub .ch7-portals>a{border-radius:11px;border-color:var(--av136-line);
+  background:var(--av136-glass)}
+.ch7-hub :is(a,button,input,select,textarea):focus-visible{outline:2px solid #8de0ff;outline-offset:3px}
+.ch7-hub .ch7-tabs{border-radius:10px}
+.ch7-hub .ch7-tabs button{border-radius:7px}
+.ch7-hub .ch7-tabs button[aria-pressed="true"]{background:#1b516c;color:#ebf9ff}
+/* Personal and public spaces: user banners are preserved above native profile framing. */
+.ms-dashboard .ms-cover,.ms-public .ms-cover{
+  isolation:isolate;border:1px solid var(--av136-line);border-radius:14px 14px 0 0;
+  background:
+    linear-gradient(130deg,rgba(13,43,66,.66),rgba(7,15,29,.96)),
+    repeating-linear-gradient(90deg,transparent 0 63px,rgba(116,203,255,.17) 64px 65px);
+}
+.ms-dashboard .ms-cover::after,.ms-public .ms-cover::after{content:"";position:absolute;
+  pointer-events:none;inset:12px;border:1px solid rgba(141,209,255,.18);
+  clip-path:polygon(0 0,100% 0,100% 88%,95% 100%,0 100%)}
+.ms-dashboard .ms-cover-art,.ms-public .ms-cover-art{object-fit:cover;position:absolute;inset:0;
+  width:100%;height:100%;z-index:-1}
+.ms-dashboard .ms-cover-shade,.ms-public .ms-cover-shade{pointer-events:none;
+  background:linear-gradient(0deg,rgba(3,11,24,.96),rgba(3,11,24,.52) 54%,rgba(3,11,24,.12))}
+.ms-dashboard .ms-visibility,.ms-public .ms-visibility{border-color:var(--av136-line)}
+.ms-dashboard .ms-toolbar{border-color:var(--av136-line);
+  background:linear-gradient(180deg,#0e1d2b,#081421)}
+.ms-dashboard .ms-toolbar nav button[aria-current="page"]{color:#e8f8ff;
+  background:linear-gradient(145deg,#18435a,#122639);box-shadow:inset 0 1px #bbf3ff38}
+.ms-dashboard :is(button,a,input,textarea,select):focus-visible,
+.ms-public :is(button,a,input,textarea,select):focus-visible{outline:2px solid #8de0ff;outline-offset:3px}
+.portal-creator-tile,.portal-channel-banner,.portal-box,.portal-sidebox{
+  border-color:var(--av136-line);box-shadow:inset 0 1px rgba(235,247,255,.1),0 15px 38px rgba(0,7,19,.24)}
+/* Discover: catalogue controls and category selection have consistent depth. */
+.p136-discovery .p136-discover-world{border-color:var(--av136-line);
+  background:linear-gradient(155deg,#102339,#070f1c)}
+.p136-discovery .p136-discover-world[aria-pressed="true"]{border-color:#a6e3ff;
+  box-shadow:0 0 0 1px #a3e6ff8f,inset 0 0 32px #3fb9ff22}
+.p136-discovery .p136-discover-world>.av136-index-field{height:100%}
+.p136-discovery .p136-discover-world-art-note{background:rgba(3,13,25,.72);
+  border:1px solid rgba(124,213,251,.25);padding:5px 7px;border-radius:4px}
+@media(max-width:720px){
+ .av136-index-field__top,.av136-index-field__foot{padding:10px 12px;font-size:8px}
+ .av136-index-field__core{padding:15px}
+ .av136-index-field__number{font-size:34px}
+ .av136-index-field__name{font-size:11px}
+ .ch7-hub .ch7-hero{border-radius:13px}
+ .ms-dashboard .ms-cover,.ms-public .ms-cover{border-radius:12px 12px 0 0}
+ .av136-recognition-summary{padding:16px}
+}
+@media(prefers-reduced-motion:reduce){
+ .av136-index-field,.av136-index-field *{transition:none!important;animation:none!important}
+}
+
+/* V136.019 / One image contract across every public card: creator if approved, type fallback otherwise. */
+.av136-project-thumbnail{display:block;width:100%;height:100%;min-width:0;min-height:0;
+  object-fit:cover;object-position:center;background:#071321;image-rendering:auto}
+.project-art>.av136-project-thumbnail,
+.p136-project-media>.av136-project-thumbnail,
+.ch7-entry-art>.av136-project-thumbnail,
+.av6-feed-art>.av136-project-thumbnail,
+.avp-stage-art>.av136-project-thumbnail,
+.p136-artifact-lens-visual>.av136-project-thumbnail{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ch7-entry-art>.av136-project-thumbnail{z-index:0;filter:brightness(.8)}
+.ch7-entry-art>span:not(.cw-artwork){z-index:2}
+.p136-artifact-lens-visual>.av136-project-thumbnail{display:block}
+.cinema-world-art>.av136-project-thumbnail,
+.cinema-world-tile-art>.av136-project-thumbnail,
+.cinema-recent-art>.av136-project-thumbnail,
+.cinema-latest-img>.av136-project-thumbnail,
+.avsaved-art>.av136-project-thumbnail{display:block;width:100%;height:100%;object-fit:cover}
+.av010-work-cover>.av136-project-thumbnail{position:absolute;inset:0}
+.av136-project-thumbnail[data-thumbnail-source="creator"]{object-fit:cover}
+@media(prefers-reduced-motion:reduce){.av136-project-thumbnail{animation:none!important;transition:none!important}}
+
+/* V136.021: native member-world and private identity parity. Genuine uploaded
+   portraits and banners always sit above this fixed Institute interface. */
+html[data-av-parity="v136-full"] :is(.ms-dashboard,.ms-public){
+  --ms-line:rgba(114,195,242,.28);--ms-muted:#afc5dc;
+  --ms-surface:#0a1a2b;color:#e9f5ff;
+  border-color:rgba(126,202,248,.48);border-radius:16px;
+  background:linear-gradient(135deg,rgba(15,33,53,.96),rgba(5,14,28,.98));
+  box-shadow:0 26px 72px #0008,inset 0 1px rgba(228,248,255,.12)
+}
+html[data-av-parity="v136-full"] :is(.ms-dashboard,.ms-public) :is(h1,h2,h3){
+  font-family:Inter,"Segoe UI",system-ui,sans-serif;
+  font-weight:700;letter-spacing:-.035em;color:#f0faff
+}
+html[data-av-parity="v136-full"] :is(.ms-dashboard,.ms-public) .kicker{
+  color:#9fdcff;font:700 10px/1.5 "IBM Plex Mono",Consolas,monospace;
+  letter-spacing:.13em
+}
+html[data-av-parity="v136-full"] :is(.ms-dashboard,.ms-public) .ms-cover{
+  border-bottom:1px solid rgba(136,205,251,.32);
+  background:radial-gradient(ellipse at 74% 26%,rgba(var(--av92-cover-rgb,135,169,222),.23),transparent 53%),
+    repeating-linear-gradient(90deg,transparent 0 71px,rgba(108,182,236,.10) 72px 73px),
+    linear-gradient(140deg,#0e2b42,#061426 58%,#091d32);
+  min-height:clamp(290px,34vw,370px)
+}
+html[data-av-parity="v136-full"] :is(.ms-dashboard,.ms-public) .ms-cover-shade{
+  background:linear-gradient(180deg,rgba(4,13,26,.34),rgba(4,13,26,.04) 36%,rgba(3,11,23,.9) 100%),
+    radial-gradient(ellipse at 10% 92%,rgba(var(--av92-cover-rgb,135,169,222),.14),transparent 54%)
+}
+html[data-av-parity="v136-full"] :is(.ms-dashboard,.ms-public) .ms-visibility{
+  border-radius:6px;border-color:rgba(145,221,255,.46);
+  background:rgba(3,17,32,.84);color:#b8e8ff;
+  font:750 9px/1.5 "IBM Plex Mono",Consolas,monospace;
+  letter-spacing:.11em;padding:7px 11px
+}
+html[data-av-parity="v136-full"] .ms-dashboard .ms-cover-edit{
+  background:rgba(4,20,37,.85);border-color:rgba(140,220,255,.45);
+  box-shadow:inset 0 1px rgba(221,250,255,.1)
+}
+html[data-av-parity="v136-full"] :is(.ms-dashboard,.ms-public) .ms-portrait{
+  border-radius:15px;background:linear-gradient(150deg,#1a4560,#07182d);
+  box-shadow:0 0 0 3px #05111f,0 0 28px rgba(var(--av92-cover-rgb,135,169,222),.2)
+}
+html[data-av-parity="v136-full"] .ms-dashboard .ms-toolbar{
+  border-color:rgba(125,194,238,.29);
+  background:linear-gradient(180deg,#10243a,#081728);padding:12px 19px
+}
+html[data-av-parity="v136-full"] .ms-dashboard .ms-toolbar nav button[aria-current="page"]{
+  background:linear-gradient(140deg,#194660,#0e2b43);color:#e8faff;
+  border-color:rgba(143,226,255,.52)
+}
+html[data-av-parity="v136-full"] :is(.ms-dashboard,.ms-public) :is(.ms-card,.ms-progress,.ms-image-editor,.ms-wall){
+  border-radius:12px;border-color:rgba(137,205,251,.26);
+  background:linear-gradient(145deg,rgba(17,39,61,.92),rgba(8,20,36,.94));
+  box-shadow:inset 0 1px rgba(225,247,255,.09),0 14px 28px #0004
+}
+html[data-av-parity="v136-full"] .ms-dashboard .ms-body{padding:clamp(15px,2.3vw,30px)}
+html[data-av-parity="v136-full"] .ms-dashboard :is(button,a):focus-visible,
+html[data-av-parity="v136-full"] .ms-public :is(button,a):focus-visible{
+  outline:3px solid #8be9ff;outline-offset:3px
+}
+/* Real public profile navigation, not a decorative or synthetic activity rail. */
+.ms-public-index{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;
+  padding:1px;margin:0;border-bottom:1px solid rgba(114,195,242,.35);
+  background:rgba(103,176,225,.25);min-width:0
+}
+.ms-public-index>a{
+  display:flex;flex-direction:column;justify-content:center;gap:5px;
+  min-width:0;min-height:91px;padding:15px clamp(12px,1.5vw,23px);
+  background:linear-gradient(160deg,#102b44,#071727);
+  color:#edf9ff;text-decoration:none;
+  transition:background .2s,box-shadow .2s
+}
+.ms-public-index>a:hover,.ms-public-index>a:focus-visible{
+  background:linear-gradient(150deg,#194761,#0d253b);
+  box-shadow:inset 0 2px #9adfff
+}
+.ms-public-index a small{
+  font:750 9px/1.4 "IBM Plex Mono",Consolas,monospace;
+  color:#8cd7ff;letter-spacing:.11em
+}
+.ms-public-index a strong{
+  font:730 16px/1.25 Inter,system-ui,sans-serif;
+  color:#f0fbff;letter-spacing:-.015em
+}
+.ms-public-index a span{color:#b6cce2;font:450 11px/1.4 Inter,system-ui,sans-serif}
+.ms-public-wall-region,.ms-public-body #member-world-about,
+.ms-public-creations,.ms-public-recognition{scroll-margin-top:100px;min-width:0}
+.ms-public-creations,.ms-public-recognition{padding:0 clamp(18px,2.5vw,30px)}
+@media(max-width:850px){
+  .ms-public-index{grid-template-columns:repeat(2,minmax(0,1fr))}
+  html[data-av-parity="v136-full"] :is(.ms-dashboard,.ms-public) .ms-cover{min-height:300px}
+}
+@media(max-width:430px){
+  .ms-public-index>a{min-height:82px;padding:11px}
+  .ms-public-index a strong{font-size:14px}
+  .ms-public-index a small{font-size:8px;letter-spacing:.05em}
+  .ms-public-index a span{font-size:10px}
+  html[data-av-parity="v136-full"] :is(.ms-dashboard,.ms-public) .ms-cover{min-height:280px}
+  html[data-av-parity="v136-full"] .ms-dashboard .ms-toolbar{padding:9px}
+}
+@media(prefers-reduced-motion:reduce){
+  .ms-public-index>a{transition:none!important}
+}
+@media(forced-colors:active){
+  .ms-public-index,.ms-public-index>a{
+    color:CanvasText;background:Canvas;border:1px solid CanvasText;box-shadow:none
+  }
+  .ms-public-index a :is(small,strong,span){color:CanvasText}
+}

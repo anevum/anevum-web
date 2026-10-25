@@ -1,6 +1,6 @@
 import {useEffect,useState} from "react";
 import {Link,useLocation,useSearchParams} from "react-router-dom";
-import {CategoryCoverV136} from "../parity/CategoryCoverV136";
+import {ProjectThumbnail} from "../components/ProjectThumbnail";
 import {readPublicBoards,type Category,type Creator,type Project} from "../lib/api";
 import {useResource} from "../lib/useResource";
 import "./community-network.css";
@@ -34,7 +34,7 @@ function date(value:string|null){
 function ProjectRow({item}:{item:Project}){
   return <article className="cnb-project" key={item.id}>
     <Link className="cnb-project-art" to={"/projects/"+encodeURIComponent(item.id)} aria-label={"Explore "+item.title}>
-      <div className="cnb-type-cover"><CategoryCoverV136 category={item.category} title={item.title}/></div>
+      <div className="cnb-type-cover"><ProjectThumbnail kind={item.category} title={item.title} decorative/></div>
       <span className="cnb-project-type-caption">TYPE DEFAULT / {item.category.toUpperCase()}</span>
     </Link>
     <div className="cnb-project-body">

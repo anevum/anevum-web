@@ -105,14 +105,14 @@ try {
     await until(() => evaluate('document.readyState==="complete" && !!document.querySelector(".ch7-hub")'));
     await until(() => evaluate('(()=>{const n=document.querySelector(".ch7-status strong");return !!n && n.textContent!=="—" && !!document.querySelector(".ch7-tabs button")})()'));
     await delay(450);
-    const state = await evaluate('(()=>({title:document.querySelector(".ch7-hero h1")?.textContent,tabs:document.querySelectorAll(".ch7-tabs button").length,columns:!!document.querySelector(".ch7-columns"),art:!!document.querySelector(".ch7-hero-art img"),overflow:document.documentElement.scrollWidth>innerWidth+1,iframe:document.querySelectorAll("iframe").length}))()');
+    const state = await evaluate('(()=>({title:document.querySelector(".ch7-hero h1")?.textContent,tabs:document.querySelectorAll(".ch7-tabs button").length,columns:!!document.querySelector(".ch7-columns"),native:!!document.querySelector(".ch7-hero-copy")&&!document.querySelector(".ch7-hero-art img"),retiredImages:document.querySelectorAll(".ch7-hero-art img").length,overflow:document.documentElement.scrollWidth>innerWidth+1,iframe:document.querySelectorAll("iframe").length}))()');
     await screenshot("community-v007-top", width);
     if (state.overflow) {
       const offenders = await evaluate('([...document.querySelectorAll("body *")].map(el=>({name:el.tagName.toLowerCase()+"."+String(el.className).slice(0,70),left:Math.round(el.getBoundingClientRect().left),right:Math.round(el.getBoundingClientRect().right)})).filter(x=>x.left< -1||x.right>innerWidth+1).slice(0,25))');
       console.log("V007_OVERFLOW_OFFENDERS_" + width + "=" + JSON.stringify(offenders));
     }
     if (!state.title?.includes("Made by people") || state.tabs !== 4 || !state.columns ||
-        !state.art || state.overflow || state.iframe)
+        !state.native || state.retiredImages!==0 || state.overflow || state.iframe)
       throw Error("V007_COMMUNITY_LAYOUT_" + width + ":" + JSON.stringify(state));
 
     await evaluate('document.querySelector(".ch7-tabs button:nth-child(2)").click()');
@@ -120,8 +120,8 @@ try {
     await evaluate('document.querySelector(".ch7-tabs-row").scrollIntoView({block:"start"})');
     await delay(350);
     if (await evaluate('document.documentElement.scrollWidth>innerWidth+1')) throw Error("V007_PROJECTS_OVERFLOW_" + width);
-    const artFrame = await evaluate('(()=>{const link=document.querySelector(".ch7-entry-art"),image=link?.querySelector(".cw-artwork");if(!link||!image)return null;const a=link.getBoundingClientRect(),b=image.getBoundingClientRect();return {width:a.width,artWidth:b.width,height:a.height,artHeight:b.height}})()');
-    if (!artFrame || Math.abs(artFrame.width-artFrame.artWidth)>2 || Math.abs(artFrame.height-artFrame.artHeight)>2)
+    const artFrame = await evaluate('(()=>{const link=document.querySelector(".ch7-entry-art"),image=link?.querySelector(".av136-project-thumbnail");if(!link||!image)return null;const a=link.getBoundingClientRect(),b=image.getBoundingClientRect();return {width:a.width,artWidth:b.width,height:a.height,artHeight:b.height,loaded:image.complete&&image.naturalWidth>0,type:image.dataset.thumbnailKind,source:image.dataset.thumbnailSource}})()');
+    if (!artFrame || !artFrame.loaded || artFrame.type!=="games" || artFrame.source!=="default" || Math.abs(artFrame.width-artFrame.artWidth)>2 || Math.abs(artFrame.height-artFrame.artHeight)>2)
       throw Error("V007_PROJECT_ART_COVER_" + width + ":" + JSON.stringify(artFrame));
     await screenshot("community-v007-projects", width);
 
