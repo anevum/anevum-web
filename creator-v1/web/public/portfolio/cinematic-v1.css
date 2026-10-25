@@ -85,7 +85,7 @@ body{background:#050917}
 .hero-proof span{padding:7px 11px;font:9px/1.45 "Courier New",monospace;letter-spacing:.1em;border:1px solid #98bafa4a;background:#0a1735ab;color:#d7edff}
 .hero-buttons{margin-top:30px;display:flex;flex-wrap:wrap;align-items:center;gap:19px;max-width:none}
 .hero-buttons .text-link{color:#dbf5ff;font-size:13px;padding:11px 0;text-decoration-color:#6fa0d66b}
-.hero-footer{border-color:#8fc7f042;color:#b6cdec;font-size:10px}
+.hero-footer{position:absolute!important;bottom:30px;left:var(--pad);right:var(--pad);margin:0;border-color:#8fc7f042;color:#b6cdec;font-size:10px}
 .hero-footer a{color:#ddf9ff}
 .ticker{padding:16px 0;background:#0c1530;border-color:#88bffc40}
 .ticker div{gap:30px;min-width:max-content}.ticker span{font-size:12px;letter-spacing:.2em;font-weight:600}.ticker b{font-size:14px}
