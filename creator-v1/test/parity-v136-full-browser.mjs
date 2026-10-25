@@ -692,6 +692,32 @@ try{
   await page.goto(base,{waitUntil:'networkidle'});
   await page.screenshot({path:join(out,'vector-fallback-390.png'),animations:'disabled'});
   record('WebGL unavailable / procedural vector fallback / pause / reduced motion / keyboard / menu focus / search',focus);await context.close();
+
+  // V136.017.042 loopback-only full-browser UI acceptance.
+  for(const width of [1440,390,320]){
+    const {page,context}=await contextFor(width,{state:'project',forceVector:true});
+    await page.goto(base+'/community',{waitUntil:'domcontentloaded'});
+    await page.locator('.p136-community[data-parity-community="v136.017"]').waitFor();
+    await page.locator('.p136-community .ch7-entry-art .p136-category-cover[data-cover-source="default"]').waitFor();
+    assert.equal(await page.locator('.p136-community .ch7-hero .cw-artwork, .p136-community .ch7-entry-art .cw-artwork, .p136-community .ch7-field-art .cw-artwork').count(),0,
+      'Migrated public Community panels cannot display generated art');
+    const communityWidth=await page.locator('.p136-community').evaluate(el=>({client:el.clientWidth,scroll:el.scrollWidth}));
+    assert.ok(communityWidth.scroll<=communityWidth.client+2,'Community overflow at '+width+'px '+JSON.stringify(communityWidth));
+    await page.getByRole('button',{name:'PEOPLE',exact:true}).click();
+    await page.waitForURL(/\/community\?view=people$/);
+    assert.equal(await page.getByRole('button',{name:'PEOPLE',exact:true}).getAttribute('aria-pressed'),'true');
+    await page.goBack({waitUntil:'domcontentloaded'});
+    assert.equal(await page.getByRole('button',{name:'LATEST',exact:true}).getAttribute('aria-pressed'),'true');
+    await page.screenshot({path:join(out,'public-community-'+width+'.png'),animations:'disabled'});
+    await page.goto(base+'/creators',{waitUntil:'domcontentloaded'});
+    await page.locator('.p136-creators[data-parity-creators="v136.017"]').waitFor();
+    await page.getByRole('link',{name:/Community spaces/}).waitFor();
+    const creatorWidth=await page.locator('.p136-creators').evaluate(el=>({client:el.clientWidth,scroll:el.scrollWidth}));
+    assert.ok(creatorWidth.scroll<=creatorWidth.client+2,'Creator directory overflow at '+width+'px '+JSON.stringify(creatorWidth));
+    await page.screenshot({path:join(out,'public-creators-'+width+'.png'),animations:'disabled'});
+    record('V136 public Commons and creator directory '+width+'px',{communityWidth,creatorWidth});
+    await context.close();
+  }
   assert.deepEqual(errors,[]);assert.deepEqual(forbidden,[]);
 }catch(error){
   for(const context of browser.contexts())for(const page of context.pages()){

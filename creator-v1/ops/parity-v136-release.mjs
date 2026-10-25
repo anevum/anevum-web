@@ -44,6 +44,9 @@ const allowed=new Set([
  'creator-v1/test/parity-v136-discover-browser.mjs',
  'creator-v1/web/src/pages/DiscoverPage.tsx',
  'creator-v1/web/src/pages/CommunityPage.tsx',
+ // V136.017 public-directory and profile UI; no permissions, schema or API changes.
+ 'creator-v1/web/src/pages/CreatorsPage.tsx',
+ 'creator-v1/web/src/pages/Phase1PublicMemberPage.tsx',
  'creator-v1/web/src/pages/CanonicalStudioPage.tsx',
  'creator-v1/web/src/components/CompactMemberIdentity.tsx',
  'creator-v1/web/src/parity/SpatialSurfaceV136.tsx',

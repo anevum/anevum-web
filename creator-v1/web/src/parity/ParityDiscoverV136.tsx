@@ -114,7 +114,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
         </div>
         <div className="p136-discover-readout-foot"><span>EXPLORE / CONNECT / CONTINUE</span><Icon name="explore" size={18}/></div>
       </aside>
-      <p className="p136-discover-art-note">GENERATED ENVIRONMENT / NOT CREATOR ARTWORK</p>
+      <p className="p136-discover-art-note">ANEVUM / APPROVED PUBLIC WORK</p>
     </section>
 
     <div className="p136-discover-main">

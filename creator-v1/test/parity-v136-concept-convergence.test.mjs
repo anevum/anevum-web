@@ -200,3 +200,35 @@ test('all V136 public discovery covers use authored type defaults or actual uplo
  assert.ok(!/fetch\(|localStorage|sessionStorage|eval\(/.test(cover),
   'Default covers are static first-party UI, with no telemetry or external art retrieval');
 });
+
+
+test('V136 Commons and real creator/member profiles use safe type covers and addressable sections',()=>{
+ const community=source('../web/src/pages/CommunityPage.tsx');
+ const creators=source('../web/src/pages/CreatorsPage.tsx');
+ const member=source('../web/src/pages/Phase1PublicMemberPage.tsx');
+ const shell=source('../web/src/components/Shell.tsx');
+ const discover=source('../web/src/parity/ParityDiscoverV136.tsx');
+ assert.match(community,/data-parity-community="v136\.017"/);
+ assert.match(community,/<CategoryCoverV136 category=\{item\.category\} title=\{item\.title\}/);
+ assert.match(community,/<CategoryCoverV136 category=\{field\.id\}/);
+ assert.ok(!community.includes('CosmicArtwork'));
+ assert.match(community,/setSearchParams\(params\)/);
+ assert.match(community,/chooseView\(item\.id\)/);
+ assert.match(creators,/data-parity-creators="v136\.017"/);
+ assert.match(creators,/id="p136-creators-index"/);
+ assert.match(creators,/p136-creators-register-panel/);
+ assert.match(creators,/id="p136-creator-releases"/);
+ assert.match(creators,/id="p136-creator-discussions"/);
+ assert.match(member,/p136-public-member/);
+ assert.match(member,/space\.media\.banner&&<img/);
+ assert.match(member,/id="p136-member-wall"/);
+ assert.match(member,/id="p136-member-creations"/);
+ assert.match(member,/id="p136-member-recognition"/);
+ assert.match(shell,/const parityProfile=/);
+ assert.match(shell,/!publicSpatial&&!parityFullBleed&&<ContinuanceWorldStage/);
+ assert.ok(!discover.includes('GENERATED ENVIRONMENT / NOT CREATOR ARTWORK'));
+ assert.match(css,/V136\.017\.042/);
+ assert.match(css,/\.p136-community \.ch7-entry-art>\.p136-category-cover/);
+ assert.match(css,/\.p136-creators-hero/);
+ assert.match(css,/\.p136-profile-wayfinder/);
+});

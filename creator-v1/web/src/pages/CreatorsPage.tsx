@@ -14,6 +14,7 @@ import {EmptyState,ErrorState,LoadingState} from "../components/States";
 import {CelestialEmblem} from "../components/CelestialEmblem";
 import {achievementMotif,seriesOneMotif} from "../lib/artifact-art";
 import {ContextDiscussions} from "../components/ContextDiscussions";
+import {Icon} from "../components/Icons";
 
 export function CreatorsPage(){
   const [params,setParams]=useSearchParams();
@@ -27,11 +28,28 @@ export function CreatorsPage(){
     if(draft.trim())next.set("q",draft.trim());
     setParams(next);
   }
-  return <div className="portal-creators">
-    <PortalHeading eyebrow="CREATOR CHANNELS / ORIGINAL WORK" title="MEET THE" accent="MAKERS." description="Discover the people behind the games, apps, creative experiments and useful software. Real work comes first. No fabricated followers or channels." index="CREATORS / 002" action={{to:"/create",label:"MAKE YOUR FIRST PROJECT"}}/>
+  return <div className="portal-creators p136-creators" data-parity-creators="v136.017">
+    {import.meta.env.VITE_PARITY_V136_FULL==="true"?<section className="p136-creators-hero" aria-labelledby="p136-creators-hero-title">
+      <div className="p136-creators-hero-copy">
+        <span className="p136-creators-register">THE CONTINUANCE INSTITUTE / PUBLIC PEOPLE</span>
+        <h1 id="p136-creators-hero-title">Meet the people <em>building what comes next.</em></h1>
+        <p>Explore original releases and the verified public creator channels behind them. No imaginary people, followers, portraits or activity.</p>
+        <nav className="p136-creators-hero-actions" aria-label="Explore creator spaces">
+          <a href="#p136-creators-index">Find creators <Icon name="search" size={16}/></a>
+          <Link to="/community?view=people">Community spaces <Icon name="people" size={16}/></Link>
+          <Link to="/studio">Open Creator Studio <Icon name="arrow" size={16}/></Link>
+        </nav>
+      </div>
+      <aside className="p136-creators-register-panel" aria-label="Public channel index information">
+        <span>PUBLIC CHANNEL DIRECTORY / VERIFIED</span>
+        <strong>{data.state==="ready"?data.data.items.length:"—"}</strong>
+        <p>{data.state==="error"?"The directory could not be loaded.":data.state==="loading"?"Reading the public creator index…":"Approved creator channels on this page, not a sitewide member count."}</p>
+        <Link to="/discover">Explore public work <Icon name="arrow" size={15}/></Link>
+      </aside>
+    </section>:<PortalHeading eyebrow="CREATOR CHANNELS / ORIGINAL WORK" title="MEET THE" accent="MAKERS." description="Discover the people behind the games, apps, creative experiments and useful software. Real work comes first. No fabricated followers or channels." index="CREATORS / 002" action={{to:"/create",label:"MAKE YOUR FIRST PROJECT"}}/>}
     <div className="portal-browse-layout">
       <div className="portal-browse-main">
-        <section className="portal-box portal-search-hall">
+        <section className="portal-box portal-search-hall" id="p136-creators-index">
           <header className="portal-box-header"><div><span className="kicker">PUBLIC CREATOR DIRECTORY</span><h2>FIND YOUR PEOPLE</h2></div><span className="portal-hall-stamp">CHANNELS / ACTIVE</span></header>
           <form className="portal-wide-search" role="search" onSubmit={search}>
             <input type="search" aria-label="Search published creators" placeholder="SEARCH CREATOR NAMES..." maxLength={80} value={draft} onChange={e=>setDraft(e.target.value)}/>
@@ -45,7 +63,7 @@ export function CreatorsPage(){
           {data.data.items.length?
             <section aria-label="Published creator channels" className="portal-creator-grid">{data.data.items.map((c,i)=>
               <Link className="portal-creator-tile" to={"/creators/"+encodeURIComponent(c.handle)} key={c.handle}>
-                <span className="portal-creator-tile-top"><span>CREATOR CHANNEL</span><span>{String(i+1).padStart(2,"0")} / ORBIT</span></span>
+                <span className="portal-creator-tile-top"><span>CREATOR CHANNEL</span><span>{String(i+1).padStart(2,"0")} / RESULT</span></span>
                 <CompactMemberIdentity interactive={false} size="standard" className="av65-directory-channel" member={{handle:c.handle,displayName:c.displayName,avatar:false,level:null,featuredAwards:[],source:'creator-channel'}}/>
                 <span className="portal-creator-tile-meta">{c.publishedProjects} PUBLISHED {c.publishedProjects===1?"PROJECT":"PROJECTS"}</span>
                 <span className="portal-creator-tile-cta">VISIT CHANNEL <span aria-hidden="true">↗</span></span>
@@ -98,7 +116,7 @@ function CreatorIdentityPage({handle}:{handle:string}){
   const current=path+(params.size?"?"+params.toString():"");
   const detailed=channel.state==="ready"?channel.data:null;
   const earned=detailed?.achievements?.filter(a=>a.earned)||[];
-  return <div className="portal-creator-channel">
+  return <div className="portal-creator-channel p136-creator-channel" data-parity-profile="creator">
     <Link to="/creators" className="project-return">← ALL PUBLIC CREATORS</Link>
     <section className="portal-channel-banner">
       <div className="portal-channel-avatar" aria-hidden="true"><span className="cw-letter-avatar">{profile.displayName.slice(0,1).toUpperCase()}</span></div>
@@ -111,16 +129,21 @@ function CreatorIdentityPage({handle}:{handle:string}){
         </div>
       </div>
     </section>
+    <nav className="p136-profile-wayfinder" aria-label="Public creator channel sections">
+      <a href="#p136-creator-releases">Published work <Icon name="explore" size={16}/></a>
+      <a href="#p136-creator-discussions">Discussions <Icon name="community" size={16}/></a>
+      <Link to="/community?view=people">Meet the community <Icon name="arrow" size={16}/></Link>
+    </nav>
     <div className="portal-browse-layout portal-channel-content">
       <div className="portal-browse-main">
-        <section className="portal-box">
+        <section className="portal-box" id="p136-creator-releases">
           <header className="portal-box-header"><div><span className="kicker">ORIGINAL WORK / PUBLIC RELEASES</span><h2>FROM THIS MAKER</h2></div><span className="portal-hall-stamp">{profile.publishedProjects} RELEASES</span></header>
           {projects.items.length?
             <div className="portal-discover-results">{projects.items.map(p=><ProjectCard key={p.id} project={p} returnTo={current} presentation="editorial"/>)}</div>:
             <EmptyState title={cursor?"NO MORE PUBLIC RELEASES":"NO PUBLIC RELEASES AVAILABLE"} detail="Only currently approved published projects appear here. Private drafts cannot be browsed."/>}
           <PageNav route={path} search={params} nextCursor={projects.nextCursor} label="Creator project releases"/>
         </section>
-        <ContextDiscussions creator={profile.handle}/>
+        <div id="p136-creator-discussions"><ContextDiscussions creator={profile.handle}/></div>
       </div>
       <aside className="portal-sidebar">
         {detailed&&<section className="portal-sidebox portal-creator-level">

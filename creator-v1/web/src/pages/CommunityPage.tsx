@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import {
   readCommunityPosts, readCreators, readProjects, readStatus,
   type Category, type CommunityPost, type CommunityPostSort,
@@ -7,7 +7,7 @@ import {
 } from "../lib/api";
 import { useResource } from "../lib/useResource";
 import { projectDetailPath } from "../lib/navigation";
-import { CosmicArtwork } from "../components/CosmicArtwork";
+import { CategoryCoverV136 } from "../parity/CategoryCoverV136";
 import { Icon } from "../components/Icons";
 import { LoadingState, ErrorState } from "../components/States";
 import "./community-hub-v007.css";
@@ -59,8 +59,8 @@ function ProjectEntry({ item }: { item: Project }) {
   const field = fields.find(field => field.id === item.category);
   return <article className="ch7-entry ch7-project">
     <Link className="ch7-entry-art" to={destination} aria-label={"Explore " + item.title}>
-      <CosmicArtwork scene={item.category}/>
-      <span>{field?.label || "Project"} / APPROVED RELEASE</span>
+      <CategoryCoverV136 category={item.category} title={item.title}/>
+      <span className="ch7-type-label">{field?.label || "Project"} / APPROVED RELEASE</span>
     </Link>
     <div className="ch7-entry-copy">
       <div className="ch7-meta"><span>PROJECT / {item.category.toUpperCase()}</span><time dateTime={item.publishedAt || undefined}>{asDate(item.publishedAt)}</time></div>
@@ -105,6 +105,7 @@ function CreatorEntry({ item }: { item: Creator }) {
 
 export function CommunityPage() {
   const location = useLocation();
+  const [, setSearchParams] = useSearchParams();
   const [view, setView] = useState<View>(() => asView(location.search));
   const [category, setCategory] = useState<Category | "all">("all");
   const [sort, setSort] = useState<CommunityPostSort>("new");
@@ -154,19 +155,26 @@ export function CommunityPage() {
     : view === "projects" ? projects.state === "error"
     : view === "conversations" ? status.state === "error" || (enabled && conversations.state === "error")
     : projects.state === "error" || (enabled && conversations.state === "error");
+  function chooseView(next: View) {
+    setView(next);
+    const params = new URLSearchParams(location.search);
+    if (next === "all") params.delete("view");
+    else params.set("view", next);
+    setSearchParams(params);
+  }
   function searchCreators(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setCreatorQuery(creatorInput.trim().slice(0, 72));
   }
-  return <div className="ch7-hub">
+  return <div className="ch7-hub p136-community" data-parity-community="v136.017">
     <section data-iren-anchor="community" className="ch7-hero" aria-labelledby="ch7-hero-title">
-      <div className="ch7-hero-art" aria-hidden="true"><CosmicArtwork scene="creative"/></div>
+      <div className="ch7-hero-art" aria-hidden="true"><span className="p136-community-hero-lines"/><span className="p136-community-hero-axis"/></div>
       <div className="ch7-hero-copy"><span className="ch7-kicker">ANEVUM / COMMUNITY / PUBLIC DISCUSSIONS</span>
         <h1 id="ch7-hero-title">Made by people.<br/><em>Better together.</em></h1>
         <p>A gathering place for independent games, art, useful software, ideas and the people who make them. Discover something worth exploring. Help something new take shape.</p>
         <div className="ch7-hero-actions"><Link className="ch7-button ch7-button-primary" to="/discover">EXPLORE THE WORK <Icon name="arrow" size={15}/></Link>
           <a className="ch7-button" href="#ch7-stream" onClick={event => {
-            setView("conversations");
+            chooseView("conversations");
             const forum=document.getElementById("cf-title");
             if(forum){event.preventDefault();forum.scrollIntoView({block:"start",
               behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});}
@@ -197,7 +205,7 @@ export function CommunityPage() {
 
         <div className="ch7-tabs-row"><div className="ch7-tabs" role="group" aria-label="Choose a community view">
           {views.map(item => <button key={item.id} type="button" aria-pressed={view === item.id}
-            title={item.hint} onClick={() => setView(item.id)}>{item.label}</button>)}</div>
+            title={item.hint} onClick={() => chooseView(item.id)}>{item.label}</button>)}</div>
           <button className="ch7-refresh" type="button" disabled={loading} onClick={() => setRevision(current => current + 1)}>↻ REFRESH</button>
         </div>
     {view==="all"&&<PublicMemberActivity revision={revision}/>}
@@ -255,7 +263,7 @@ export function CommunityPage() {
       <aside className="ch7-sidebar" aria-label="Community guide">
         <section className="ch7-panel"><span className="ch7-kicker">01 / FIND YOUR FIELD</span><h3>Every idea has <em>a place.</em></h3>
           <div className="ch7-categories">{fields.map(field => <Link key={field.id} to={"/discover?category=" + field.id}>
-            <span className="ch7-field-art" aria-hidden="true"><CosmicArtwork scene={field.id}/></span><span>{field.label}</span><Icon name="arrow" size={14}/>
+            <span className="ch7-field-art" aria-hidden="true"><CategoryCoverV136 category={field.id}/></span><span>{field.label}</span><Icon name="arrow" size={14}/>
           </Link>)}</div>
         </section>
         <section className="ch7-panel"><span className="ch7-kicker">02 / MEET THE MAKERS</span><h3>Behind the <em>work.</em></h3>
