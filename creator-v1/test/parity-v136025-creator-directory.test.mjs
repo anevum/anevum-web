@@ -23,7 +23,7 @@ test('creator directory routes, data and search stay URL-owned and read-only',()
   assert.match(page,/function chooseView\(nextView:"grid"\|"list"\)/);
   assert.match(page,/const next=new URLSearchParams\(params\)/);
   assert.match(page,/setParams\(next\)/);
-  assert.match(page,/aria-label="Search published creators"/);
+  assert.match(page,/<label htmlFor="p136-creator-query" className="visually-hidden">Search published creators<\/label>/);
   assert.match(page,/aria-pressed=\{view==="grid"\}/);
   assert.match(page,/aria-pressed=\{view==="list"\}/);
   assert.match(page,/data-layout=\{view\}/);
