@@ -2,7 +2,6 @@ import {useState, type FormEvent} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import {Icon} from '../components/Icons';
 import {OrbitalMark} from '../components/OrbitalMark';
-import {CosmicArtwork} from '../components/CosmicArtwork';
 import {ProjectThumbnail} from '../components/ProjectThumbnail';
 import {useLivingWorld} from './LivingWorldState';
 import {CinematicArrivalV136} from './CinematicArrivalV136';
@@ -27,10 +26,10 @@ const types:Record<Category,{label:string;scene:CosmicScene;tone:string}>={
   other:{label:'Independent work',scene:'other',tone:'violet'}
 };
 const passages=[
-  {title:'Games & worlds',detail:'Explore independent games and experiments',to:'/discover?category=games',scene:'games' as CosmicScene,tone:'violet'},
-  {title:'Tools & applications',detail:'Discover useful software people are making',to:'/discover?category=tools',scene:'tools' as CosmicScene,tone:'cyan'},
-  {title:'Creative works',detail:'Explore art, experiences and experiments',to:'/discover?category=creative',scene:'creative' as CosmicScene,tone:'auric'},
-  {title:'Open knowledge',detail:'Explore research, learning and open source',to:'/discover?category=research',scene:'research' as CosmicScene,tone:'mint'}
+  {title:'Games & worlds',detail:'Explore independent games and experiments',to:'/discover?category=games',tone:'violet'},
+  {title:'Tools & applications',detail:'Discover useful software people are making',to:'/discover?category=tools',tone:'cyan'},
+  {title:'Creative works',detail:'Explore art, experiences and experiments',to:'/discover?category=creative',tone:'auric'},
+  {title:'Open knowledge',detail:'Explore research, learning and open source',to:'/discover?category=research',tone:'mint'}
 ];
 /** A reproducible ambient wave derived from public content volume, not
  * a synthetic activity graph or fabricated IREN usage signal.
@@ -136,7 +135,7 @@ export function ParityPortalV136({projects,catalogueState,signedIn,verifiedCount
         </div>}
       <div className="p136-passages">
         {passages.map(item=><Link key={item.title} to={item.to} className={'p136-passage p136-tone-'+item.tone}>
-          <CosmicArtwork scene={item.scene} seed={item.to}/><span className="p136-passage-shade"/>
+          <span className="p136035-category-surface" aria-hidden="true"/>
           <span className="p136-passage-copy"><strong>{item.title}</strong><small>{item.detail}</small></span><Icon name="arrow" size={18}/>
         </Link>)}
       </div>
