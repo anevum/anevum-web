@@ -1,0 +1,42 @@
+name: ANEVUM Creator Held Publication Outbox QA
+
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/canonical-auth/publication-candidate/**'
+      - 'creator-v1/canonical-auth/studio-publication-contract.mjs'
+      - 'creator-v1/canonical-auth/migrations/0008_private_creator_studio.sql'
+      - 'creator-v1/canonical-auth/migrations/0009_private_review_snapshots.sql'
+      - 'creator-v1/test/studio-held-publication-outbox.test.mjs'
+      - 'creator-v1/test/studio-publication-contract.test.mjs'
+      - '.github/workflows/creator-v1-held-publication-outbox-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: creator-v1-held-outbox-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  held-outbox-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify candidate is syntax-only and unactivated
+        run: |
+          set -euo pipefail
+          node --check creator-v1/canonical-auth/publication-candidate/held-outbox.mjs
+          node --check creator-v1/canonical-auth/studio-publication-contract.mjs
+          test ! -e creator-v1/canonical-auth/migrations/0014_held_publication_outbox.sql
+      - name: Exercise disposable canonical SQLite and held-only publication contracts
+        run: |
+          set -euo pipefail
+          node --test creator-v1/test/studio-publication-contract.test.mjs creator-v1/test/studio-held-publication-outbox.test.mjs
