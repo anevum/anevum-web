@@ -204,6 +204,10 @@ async function run(width,height,motion='no-preference') {
   assert.equal(await dossier.getAttribute('data-dossier-kind'),'art');
   assert.match(await page.locator('[data-dossier-proof]').innerText(),/NOT GAMEPLAY/);
   await page.locator('.dossier-body').screenshot({path:join(output,'portfolio-project-dossier-'+width+'.png'),animations:'disabled'});
+  // Screenshot capture can move native focus; explicitly place focus on the
+  // active selector before testing its keyboard Home shortcut.
+  await page.locator('[data-dossier-select="transcosmic"]').focus();
+  assert.equal(await page.locator('[data-dossier-select="transcosmic"]').evaluate(el => el === document.activeElement),true);
   await page.keyboard.press('Home');
   assert.equal(await dossier.getAttribute('data-dossier-project'),'anevum');
   assert.equal(await page.locator('[data-dossier-select="anevum"]').getAttribute('aria-pressed'),'true');
