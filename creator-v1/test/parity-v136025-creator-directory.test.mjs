@@ -46,6 +46,10 @@ test('visible channels and absence states are based on existing verified API onl
   assert.match(page,/cursor\?"No further channels on this page\."/);
   assert.match(page,/q\?"No matching creators yet\."/);
   assert.match(page,/Private accounts and unpublished projects are not listed/);
+  assert.match(page,/PUBLIC CHANNEL DIRECTORY \/ APPROVED WORK/);
+  assert.match(page,/PUBLIC INDEX \/ CHANNELS WITH APPROVED WORK/);
+  // Staff-approved published work does not confer verified human identity.
+  assert.doesNotMatch(page,/PUBLIC CHANNEL DIRECTORY \/ VERIFIED|verified public creator channels/i);
   assert.doesNotMatch(page,/createdAt:\s*new Date|SYNTHETIC QA|fictional creator/i);
 });
 
