@@ -505,6 +505,10 @@ try{
       const compact=await page.locator('.p136-hero-content h1').boundingBox();
       assert.ok(compact&&compact.y-layout.hero.y<230,'Mobile heading cannot reserve a poster-sized blank area');
       assert.ok(layout.primary.bottom<844-100,'Primary action is available above the phone console');
+      const inspection=await page.locator('.p136017-scene-inspection').boundingBox();
+      const register=await page.locator('.p136-hero-register').boundingBox();
+      if(inspection)assert.ok(register&&inspection.y+inspection.height+8<=register.y,
+        'Mobile inspection status stays clear of the first-contact label: '+JSON.stringify({inspection,register}));
     }
 
     if(process.env.VITE_PARITY_V136_CINEMATIC==='true'){

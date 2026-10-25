@@ -220,3 +220,6 @@ raced React's render after the URL changed; the captured DOM subsequently showed
 Games correctly selected. Browser checks now wait for the rendered People/Games
 selection before asserting it. Back-navigation checks and all acceptance groups
 remain strict. Full exact-head browser verification is required for this correction.
+The actual 320px capture also exposed inspection-status/first-contact overlap;
+the mobile inspection control moves up 22–26px, with a strict rectangle-clearance
+assertion. This preserves its 44px target and the compact headline position.

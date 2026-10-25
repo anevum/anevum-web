@@ -931,13 +931,13 @@ html[data-av-parity="v136-full"] .p136017-local-only-note{
  overflow-wrap:anywhere;
 }
 @media(max-width:820px){
- html[data-av-parity="v136-full"] .p136017-scene-inspection{top:60px;right:20px}
+ html[data-av-parity="v136-full"] .p136017-scene-inspection{top:34px;right:20px}
  html[data-av-parity="v136-full"] .p136017-scene-inspection button{
   min-height:44px;font-size:9px;padding:7px 11px;
  }
 }
 @media(max-width:520px){
- html[data-av-parity="v136-full"] .p136017-scene-inspection{top:54px;right:17px}
+ html[data-av-parity="v136-full"] .p136017-scene-inspection{top:32px;right:17px}
  html[data-av-parity="v136-full"] .p136017-scene-inspection-status{font-size:7px}
 }
 @media(prefers-reduced-motion:reduce){

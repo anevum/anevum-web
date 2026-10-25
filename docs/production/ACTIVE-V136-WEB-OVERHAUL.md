@@ -166,3 +166,6 @@ mobile arrival and Commons checks. A Boards test raced the React commit after
 the correct URL was set; the captured rendered DOM showed Games selected.
 People/Games checks now wait for rendered selection and retain exact assertions.
 All Back-navigation and remaining acceptance groups stay enabled; rerun at head.
+Screenshot review additionally found the inspection status crossing the small
+first-contact label on phones. The inspection control moves up, with a compiled
+rectangle-clearance assertion; its existing 44px target is retained.
