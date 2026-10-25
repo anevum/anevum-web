@@ -9,11 +9,13 @@ import {
  type StudioReviewProject,type StudioReviewHistory,type StudioReviewManifest,type StudioReviewReceipt
 } from '../lib/canonical-studio';
 import './canonical-studio.css';
+import './studio-hosting-v136019.css';
 import {readWithDeadline} from '../../../shared/read-deadline.mjs';
 import {nativeCreatorEnabled} from '../lib/native-creator-v095';
 import {workbenchAlphaEnabled} from '../lib/workbench-alpha';
 import {NativeStudioNavigation} from './NativeCreatorStudio';
 import {resolveStudioEntry} from '../lib/studio-entry-read';
+import {studioHostingPaths} from '../lib/studio-hosting-v136019';
 const WorkbenchAlphaEntryGate=lazy(()=>import('./WorkbenchAlpha').then(m=>({default:m.WorkbenchAlphaEntryGate})));
 
 const CATEGORY_GUIDE:Record<StudioCategory,string>={
@@ -329,7 +331,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
      </div>)}
     </section>}
     {project&&<StudioReceipts projectId={project.id} revision={project.revision}/>}
-    {project&&<StudioUploader project={project} uploadsReady={uploadsReady}
+    {project&&<StudioUploader project={project} demoUrl={draft.demoUrl} sourceUrl={draft.sourceUrl} uploadsReady={uploadsReady}
      onAssetsChanged={setAssetSummary} onProjectChanged={setProject}/>}
     <section className="st-panel">
      <p className="st-kicker">04 / REVIEW READINESS</p><h2>SUBMISSION CHECK.</h2>
@@ -385,8 +387,8 @@ function StudioReceipts({projectId,revision}:{projectId:string;revision:number})
  </section>;
 }
 
-function StudioUploader({project,uploadsReady,onAssetsChanged,onProjectChanged}:{
- project:StudioProject;uploadsReady:boolean;onAssetsChanged:(assets:StudioAsset[])=>void;
+function StudioUploader({project,demoUrl,sourceUrl,uploadsReady,onAssetsChanged,onProjectChanged}:{
+ project:StudioProject;demoUrl:string|null;sourceUrl:string|null;uploadsReady:boolean;onAssetsChanged:(assets:StudioAsset[])=>void;
  onProjectChanged:(project:StudioProject)=>void
 }){
  const [assets,setAssets]=useState<StudioAsset[]>([]);
@@ -465,7 +467,21 @@ function StudioUploader({project,uploadsReady,onAssetsChanged,onProjectChanged}:
   catch(e){setError(showError(e));}finally{setBusy(false);}
  }
  function dropped(e:DragEvent<HTMLDivElement>){e.preventDefault();setDrag(false);accept(e.dataTransfer.files);}
+ const hosting=studioHostingPaths({demoUrl,sourceUrl,storageReady,uploadsReady,
+   nativeStudioEnabled:nativeCreatorEnabled,nativeCanUpload:false});
  return <section className="st-panel st-assets">
+  <section className="av019-hosting-guide" aria-label="Hosting options and capabilities">
+   <p className="st-kicker">ANEVUM / OPEN SIGNAL / HOSTING</p>
+   <h3>One project, several ways to host it.</h3>
+   <p className="st-muted">Hosting and publication are separate. Only independently approved releases belong in Discover. Available storage remains limited by the actual server quota.</p>
+   <div className="av019-hosting-options">
+    {hosting.map(option=><article key={option.id} className="av019-hosting-option" data-hosting-status={option.status}>
+     <div><strong>{option.title}</strong><span>{option.status==='planned'?'Planned':option.status==='linked'?'Link attached':option.status==='ready'?'Available':'Restricted'}</span></div>
+     <p>{option.explanation}</p>
+     {option.actionPath&&<Link to={option.actionPath}>{option.actionLabel} →</Link>}
+    </article>)}
+   </div>
+  </section>
   <p className="st-kicker">FILES / PRIVATE QUARANTINE</p><h2>THE ASSET VAULT.</h2>
   {!uploadsReady&&<p className="st-muted">New uploads are paused or not provisioned. Existing private file records remain available below. Private download/removal requires the original isolated R2 binding.</p>}
    <p className="st-muted">Images / PDF: 10 MiB. MP3 / WAV / MP4 / WebM / ZIP: 20 MiB. TXT / MD: 1 MiB. 20 files per project, 100 MiB per member.</p>

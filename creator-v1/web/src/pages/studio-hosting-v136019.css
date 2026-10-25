@@ -1,0 +1,14 @@
+
+/* Additive hosting capability readout inside the existing private vault. */
+.av019-hosting-guide{margin-bottom:1.35rem;border-bottom:1px solid rgba(135,181,200,.22);padding-bottom:1.35rem}
+.av019-hosting-guide h3{margin:.3rem 0 .45rem}
+.av019-hosting-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}
+.av019-hosting-option{min-width:0;border:1px solid rgba(128,176,191,.22);border-radius:10px;padding:.95rem;background:rgba(31,63,83,.09)}
+.av019-hosting-option>div{display:flex;align-items:baseline;flex-wrap:wrap;justify-content:space-between;gap:.45rem}
+.av019-hosting-option strong{font-size:.91rem}
+.av019-hosting-option span{font-size:.68rem;letter-spacing:.04em;text-transform:uppercase;opacity:.84}
+.av019-hosting-option p{line-height:1.55;overflow-wrap:anywhere;margin:.6rem 0;font-size:.82rem}
+.av019-hosting-option a{display:inline-block;margin-top:.2rem;min-height:32px}
+.av019-hosting-option[data-hosting-status="planned"]{border-style:dashed}
+@media(max-width:710px){.av019-hosting-options{grid-template-columns:minmax(0,1fr)}}
+@media(forced-colors:active){.av019-hosting-option{background:Canvas;border:1px solid CanvasText}}
