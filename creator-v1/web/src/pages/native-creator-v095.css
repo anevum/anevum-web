@@ -86,3 +86,15 @@ html[data-av-parity="v136-full"] .av136032-build-grid[data-layout="list"] .av095
 html[data-av-parity="v136-full"] .av136032-record-blank{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:.4rem;padding:1.25rem;background:rgba(11,27,44,.78);color:var(--st-muted)}
 html[data-av-parity="v136-full"] .av136032-record-blank small{font:600 .62rem/1.4 ui-monospace,monospace;letter-spacing:.12em;color:var(--st-muted)}
 html[data-av-parity="v136-full"] .av136032-record-blank strong{font:600 clamp(1rem,2vw,1.3rem)/1.2 var(--font-body,system-ui,sans-serif);text-transform:capitalize;color:var(--st-text)}
+
+/* V136.033 - a locally prepared ZIP is already selected. Hide the native
+   chooser's misleading "No file chosen" until a creator deliberately replaces it. */
+html[data-av-parity="v136-full"] .av136033-build-picker{cursor:default}
+html[data-av-parity="v136-full"] .av136033-prepared-note{max-width:65ch;margin:.25rem 0 0;padding:.65rem .85rem;border-left:2px solid var(--st-cyan);background:rgba(60,142,178,.1);color:var(--st-text);font-size:.85rem;line-height:1.6}
+html[data-av-parity="v136-full"] .av136033-file-alternative{width:100%;min-width:0;margin-top:.4rem}
+html[data-av-parity="v136-full"] .av136033-file-alternative summary{display:list-item;list-style:disclosure-closed;cursor:pointer;min-height:44px;padding:.65rem .5rem;color:var(--st-cyan);font-size:.875rem;line-height:1.5}
+html[data-av-parity="v136-full"] .av136033-file-alternative[open] summary{list-style:disclosure-open}
+html[data-av-parity="v136-full"] .av136033-file-alternative summary:focus-visible{outline:2px solid var(--st-cyan);outline-offset:2px}
+html[data-av-parity="v136-full"] .av136033-file-alternative label{display:block;max-width:100%;padding:.45rem 0}
+html[data-av-parity="v136-full"] .av136033-file-alternative input{width:100%;max-width:100%;font-size:16px;min-height:44px}
+@media(forced-colors:active){html[data-av-parity="v136-full"] .av136033-prepared-note{background:Canvas;color:CanvasText;border-color:CanvasText}}
