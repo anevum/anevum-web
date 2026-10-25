@@ -100,10 +100,11 @@ async function run(width,height,motion='no-preference') {
   await page.locator('[data-filter="all"]').click();
   assert.equal(await page.locator('.project:visible').count(),4);
   note('project filters '+width);
+  const motionInitial = await page.locator('#motion-toggle').getAttribute('aria-pressed');
   await page.locator('#motion-toggle').click();
-  assert.equal(await page.locator('#motion-toggle').getAttribute('aria-pressed'),'true');
+  assert.equal(await page.locator('#motion-toggle').getAttribute('aria-pressed'),motionInitial === 'true' ? 'false' : 'true');
   await page.locator('#motion-toggle').click();
-  assert.equal(await page.locator('#motion-toggle').getAttribute('aria-pressed'),'false');
+  assert.equal(await page.locator('#motion-toggle').getAttribute('aria-pressed'),motionInitial);
   note('motion toggle '+width);
   if (width<=850) {
     await page.locator('.mobile-nav summary').click();
