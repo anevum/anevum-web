@@ -41,8 +41,8 @@
     && !reducedMotion.matches && !saveData && !document.hidden && visible;
   const syncVideo = () => {
     if (!video) return;
-    if (enabled()) video.play().catch(() => { video.pause(); });
-    else video.pause();
+    if (enabled() && video.paused) video.play().catch(() => { video.pause(); });
+    else if (!enabled() && !video.paused) video.pause();
   };
 
   function render() {
@@ -106,19 +106,19 @@
   // without inventing routes or replacing browser history.
   const navLinks = [...document.querySelectorAll('.site-header nav a[href^="#"]')];
   if ('IntersectionObserver' in window && navLinks.length) {
-    new IntersectionObserver(entries => {
-      const visibleSections = entries.filter(entry => entry.isIntersecting)
-        .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-      const current = visibleSections[0]?.target.id;
-      if (!current) return;
-      navLinks.forEach(link => {
-        if (link.hash.slice(1) === current) link.setAttribute('aria-current', 'location');
-        else link.removeAttribute('aria-current');
-      });
-    }, { rootMargin: '-20% 0px -55% 0px', threshold: [0, .25, .5] })
-      .observe(document.querySelector('#work'));
-    // The other two sections are observed with a single owner, not a second
-    // observer or renderer.
+    const sectionObserver = new IntersectionObserver(entries => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        navLinks.forEach(link => {
+          if (link.hash.slice(1) === entry.target.id) link.setAttribute('aria-current', 'location');
+          else link.removeAttribute('aria-current');
+        });
+      }
+    }, { rootMargin: '-25% 0px -60% 0px', threshold: 0 });
+    ['work','process','about'].forEach(id => {
+      const section = document.getElementById(id);
+      if (section) sectionObserver.observe(section);
+    });
   }
 
   queueRender();
