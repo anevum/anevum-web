@@ -2,6 +2,7 @@ import {useEffect,useRef,useState,type ComponentType} from 'react';
 import {strToU8} from 'fflate';
 import {sourceArchive,safeSourcePath,SOURCE_LIMITS} from './source-archive-v136';
 import {Icon} from '../components/Icons';
+import {FileGlyphV136017,fileKind} from './FileGlyphV136017';
 import {editorLanguage} from '../../../source-ide/language-v119.mjs';
 import type {MonacoSourceProps} from './MonacoSourceV136';
 import './artifact-workbench-v136.css';
@@ -12,7 +13,6 @@ const initialFiles:Record<string,string>={
  'styles.css':':root { color-scheme: dark; font-family: system-ui, sans-serif; }\nbody { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #06101d; color: #e9f7ff; }\nmain { max-width: 40rem; padding: 2rem; }\nh1 { color: #8bdfff; }\n',
  'main.js':'"use strict";\n// Write browser code here. Run only through the private playtest sandbox.\n'
 };
-const fileMark=(name:string)=>name.endsWith('.html')?'<>':name.endsWith('.css')?'#':name.endsWith('.js')?'JS':name.endsWith('.json')?'{}':'T';
 /** Original Studio V119 language grammar is reused from PR #709's source.
  * This bounded workbench composes a local archive for the existing uploader;
  * it does not activate V111 file APIs, execute code, persist source or publish. */
@@ -75,13 +75,13 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
   <div className="p136-workbench-layout" data-inspector={inspector}>
    <aside className="p136-source-explorer" aria-label="Local source files"><strong>PROJECT FILES</strong>
     <div className="p136-source-add"><label className="visually-hidden" htmlFor="p136-source-new">New file path</label><input id="p136-source-new" placeholder="assets/data.json" value={name} onChange={e=>setName(e.target.value)} maxLength={120} disabled={disabled}/><button type="button" onClick={add} disabled={disabled} aria-label="Create source file">+</button></div>
-    <nav aria-label="Source file explorer">{entries.map(([path])=><button key={path} type="button" aria-pressed={path===active} onClick={()=>setActive(path)}><span className={'p136-file-mark is-'+editorLanguage(path)} aria-hidden="true">{fileMark(path)}</span><span>{path}</span></button>)}</nav>
+    <nav aria-label="Source file explorer">{entries.map(([path])=><button key={path} type="button" aria-pressed={path===active} onClick={()=>setActive(path)}><span className={'p136-file-mark is-'+fileKind(path)} aria-hidden="true"><FileGlyphV136017 path={path}/></span><span>{path}</span></button>)}</nav>
    </aside>
    <div className="p136-source-stage">
     <div className="p136017-source-ledge"><span>EDITOR / {active}</span><span>LOCAL · NOT EXECUTED</span></div>
     <div className="p136-source-tabs" role="tablist" aria-label="Open source files">{entries.map(([path])=><button key={path} type="button" role="tab" id={'p136-source-tab-'+path} aria-selected={path===active} aria-controls="p136-source-panel" tabIndex={path===active?0:-1}
      onKeyDown={e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const i=entries.findIndex(([p])=>p===active),next=e.key==='Home'?0:e.key==='End'?entries.length-1:(i+(e.key==='ArrowLeft'?-1:1)+entries.length)%entries.length;setActive(entries[next][0]);requestAnimationFrame(()=>document.getElementById('p136-source-tab-'+entries[next][0])?.focus())}}
-     onClick={()=>setActive(path)}>{path}</button>)}</div>
+     onClick={()=>setActive(path)}><FileGlyphV136017 path={path}/><span>{path}</span></button>)}</div>
     <div id="p136-source-panel" role="tabpanel" aria-labelledby={'p136-source-tab-'+active}>
      {!plain&&Editor&&!editorError?<Editor files={files} active={active} disabled={disabled} onChange={change}/>:<label className="p136-source-fallback"><span className="visually-hidden">Edit source {active}</span><textarea spellCheck={false} autoCapitalize="off" autoCorrect="off" value={files[active]} onChange={e=>change(active,e.target.value)} disabled={disabled}/></label>}
     </div>
