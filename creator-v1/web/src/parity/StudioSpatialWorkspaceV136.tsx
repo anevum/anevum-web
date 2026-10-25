@@ -112,7 +112,7 @@ export function StudioSpatialWorkspaceV136({memberId,children}:{
     location.pathname.startsWith('/studio/packages')?'PLAYABLE WORKSPACE':
     location.pathname==='/studio/review'?'REVIEW DESK':
     selectedId?'PROJECT EDITOR':'CREATOR WORKSPACE';
-  return <div className="p136-studio-console" data-studio-console="v136.017" data-explorer-open={railOpen}>
+  return <div className="p136-studio-console" data-studio-console="v136.009" data-explorer-open={railOpen}>
     <div className="p136-studio-console-head">
       <div className="p136-studio-console-led" aria-hidden="true"/>
       <div className="p136-studio-console-headline">
