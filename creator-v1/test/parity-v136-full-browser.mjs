@@ -635,6 +635,25 @@ try{
     for(const rect of [layout.primary,layout.secondary]){assert.ok(rect.height>=44);assert.ok(rect.width>=44);assert.ok(rect.left>=0&&rect.right<=width);}
     if(width<650)assert.ok(layout.primary.bottom<750,'Primary action stays in the first phone viewport');
     await page.screenshot({path:join(out,'home-'+width+'.png'),fullPage:true,animations:'disabled'});
+    // External first-time tester clarity: practical information must be opt-in,
+    // truthful and reachable without creating a second Wayfinder or account.
+    const intro=page.locator('[data-first-visit-guide="v136"]');
+    assert.equal(await intro.count(),1,'Exactly one first-visit orientation panel');
+    assert.equal(await intro.getByRole('heading',{name:'What can you actually do here?'}).count(),1);
+    assert.equal(await intro.getByRole('link',{name:'Check what works now'}).getAttribute('href'),'/status');
+    assert.equal(await intro.locator('details[open]').count(),0,'All quick answers default to collapsed');
+    if([320,390,1440].includes(width)){
+      const question=intro.locator('summary').nth(1);
+      await question.click();
+      assert.equal(await intro.locator('details[open]').count(),1,'Native disclosure reveals one selected answer');
+      assert.equal(await intro.getByRole('link',{name:'See current Studio availability'}).getAttribute('href'),'/status');
+      assert.equal(await page.locator('.p136-console-wayfinder').count(),1,'Expanding help cannot duplicate navigation');
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),
+        'First-visit disclosure must not cause horizontal overflow');
+      await page.screenshot({path:join(out,'first-visit-open-'+width+'.png'),fullPage:false,animations:'disabled'});
+      await question.click();
+      assert.equal(await intro.locator('details[open]').count(),0,'Help can be closed without navigation');
+    }
     record('responsive arrival '+width,layout);
     if(width===390){
       const stations=page.locator('.p136-console-wayfinder a[data-station]');
@@ -659,6 +678,16 @@ try{
     assert.equal(await page.locator('.ir80-dock').count(),1);
     await page.waitForFunction(()=>!!document.querySelector('.ir80-guide-layer,.ir123-tour,.ir92-tour,.ir87-panel'));
     record('canonical Discover / Join / IREN '+width);
+    if(width===390){
+      await page.goto(base+'/start',{waitUntil:'domcontentloaded'});
+      await page.getByRole('heading',{name:'WHAT BRINGS YOU HERE?'}).waitFor();
+      await page.getByRole('button',{name:/I MAKE THINGS/i}).click();
+      assert.equal(await page.getByRole('link',{name:/EXPLORE CREATOR STUDIO/i}).getAttribute('href'),'/studio');
+      assert.equal(await page.getByText('Joining ANEVUM does not automatically grant upload or publication access.',{exact:false}).count(),1);
+      assert.equal(await page.getByText('The public discussion board and open member registration are not live yet.',{exact:true}).count(),0,
+        'Start Here cannot assert outdated closed registration');
+      record('first-visit Start Here capability boundaries / no account side effects');
+    }
     await context.close();
   }
   // Public destinations share the single WebGL canvas, while canonical
