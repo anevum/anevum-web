@@ -27,7 +27,7 @@ test('portfolio page remains independently accessible and has accurate metadata'
 });
 
 test('original high-resolution scalable Institute artwork is first-party and remains a fallback', () => {
-  assert.match(html, /class="hero-art institute-environment"/);
+  assert.match(html, /class="hero-art institute-environment transcosmic-field"/);
   assert.match(html, /assets\/transcosmic-continuum\.svg/);
   assert.doesNotMatch(html, /assets\/continuance-horizon\.svg/);
   assert.match(artwork, /<svg[^>]*viewBox="0 0 1920 1080"/);
