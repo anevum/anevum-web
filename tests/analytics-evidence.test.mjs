@@ -67,7 +67,7 @@ test('RUM reports are explicitly grouped by route category and device, not user 
   assert.match(query, /\/cdn-cgi\/access\//);
   assert.match(query, /'restricted'/);
   assert.match(query, /'home'/);
-  assert.match(query, /'other_public'/);
+  assert.match(query, /'other_nonstaff'/);
   assert.match(query, /deviceType/);
   assert.match(query, /'2026-10-18T00:00:00Z'/);
 });
