@@ -18,7 +18,7 @@ test("homepage never invents projects, accounts, levels, prices or usage metrics
   assert.match(home,/creators\.map/);
   assert.match(home,/portal\.state==="ready"/);
   assert.match(home,/CATEGORY/);
-  assert.match(card,/CATEGORY ILLUSTRATION/);
+  assert.match(card,/CATEGORY INDEX/);
   assert.doesNotMatch(home,/Math\.random|sampleVotes|nova_demo|fakeMessage|example\.com|15000\s*XP/);
   assert.doesNotMatch(card,/Math\.random|sampleVotes|fakeMessage/);
 });

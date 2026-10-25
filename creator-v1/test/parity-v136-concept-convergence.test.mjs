@@ -29,7 +29,7 @@ test('homepage retains canonical public-data fields and real routes',()=>{
   'projectDetailPath(project.id','to="/discover"','to="/community"',
   'to="/studio"',"signedIn?'/member':'/join'",
   "signal.source==='verified'","catalogueState==='error'",
-  'DYNAMIC ANEVUM FIELD / NOT CREATOR COVER',"new Event('anevum:iren-open')"
+  'CATEGORY INDEX / NOT CREATOR COVER',"new Event('anevum:iren-open')"
  ])assert.ok(hero.includes(expected),'Missing public action/safety: '+expected);
  assert.ok(!/Date\.now|Math\.random|fakeProjects|sampleProjects|simulatedMembers/.test(hero),
   'No invented live catalogue or member data');
