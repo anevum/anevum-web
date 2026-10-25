@@ -193,3 +193,8 @@ The fully passing `fe6075f2` browser evidence was visually reviewed at 1536×102
 ## V136.017.029 — local source reference review utility
 
 Adds a read-only helper to identify obvious file references before rename operations, with no automatic rewriting of creator-authored source. This is a conservative reference scan, not a complete JavaScript/CSS/HTML parser. The draft remains QA-only and must pass exact-head checks before acceptance.
+
+
+## V136.017.030 — in-place authored-source dependency warning (draft)
+
+The real Creator Studio's existing rename and confirmed-remove dialogs now display a read-only **link audit** derived exclusively from the current bounded in-memory source map. It resolves statically quoted HTML/CSS/JS local paths in each referencing file's directory, including sibling, `../` and root-relative references, without interpreting remote URLs as local. Any matching source filenames are displayed before the change and repeated in the post-action notice; there is no automatic source rewrite, execution, upload, persistence, or additional API. The empty result explicitly states that dynamic paths are not inspected. Node regression tests verify relative path resolution and immutability, and the existing compiled 1440px Studio Chromium acceptance now tests a real `index.html` → `styles.css` dependency in both rename and removal prompts, plus cancellation. Scoped alloy warning styling includes forced-colors fallback. Strict release allowlist, 24-file/128KiB/1MiB limits, private session and release-forbidden WebGL flags remain unchanged. Actual exact-head CI is required for acceptance.

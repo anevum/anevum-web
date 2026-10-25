@@ -140,6 +140,20 @@ try{
       assert.equal(await workbench.getByRole('button',{name:'assets/notes.md',exact:true}).count(),0,'Collapsing a folder hides only its file buttons');
       await folder.click();
       assert.equal(await workbench.getByRole('button',{name:'assets/notes.md',exact:true}).count(),1,'Expanding restores the real source file');
+      // An existing index.html reference must be displayed before a creator
+      // renames or removes styles.css; the audit does not silently edit HTML.
+      await workbench.getByRole('tab',{name:'styles.css',exact:true}).click();
+      await workbench.getByRole('button',{name:'Rename file',exact:true}).click();
+      const renameAudit=workbench.locator('[data-source-reference-audit="rename"]');
+      assert.match(await renameAudit.innerText(),/index\.html/);
+      assert.match(await renameAudit.innerText(),/no code will be rewritten automatically/i);
+      await workbench.getByRole('button',{name:'Cancel rename',exact:true}).click();
+      assert.equal(await renameAudit.count(),0,'Canceled rename closes the dependency notice');
+      await workbench.getByRole('button',{name:'Remove file',exact:true}).click();
+      const removalAudit=workbench.locator('[data-source-reference-audit="remove"]');
+      assert.match(await removalAudit.innerText(),/index\.html/);
+      await workbench.getByRole('button',{name:'Keep file',exact:true}).click();
+      await workbench.getByRole('tab',{name:'assets/notes.md',exact:true}).click();
       await workbench.getByRole('button',{name:'Rename file',exact:true}).click();
       await workbench.locator('#p136017-file-rename').fill('assets/reference.md');
       await workbench.getByRole('button',{name:'Save file path',exact:true}).click();

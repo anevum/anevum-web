@@ -51,3 +51,30 @@ html[data-av-parity="v136-full"] .p136017-file-mutation button{min-height:39px}
  html[data-av-parity="v136-full"] .p136017-file-mutation input,
  html[data-av-parity="v136-full"] .p136017-file-operations button{background:Canvas;color:CanvasText;border-color:CanvasText}
 }
+
+/* V136.017.030 — local link audit, actual authored paths only. */
+html[data-av-parity="v136-full"] .p136017-file-mutation .p136017-ref-audit{
+ flex-basis:100%;min-width:0;max-width:100%;
+ padding:10px 13px;border:1px solid #c6a9796b;border-radius:4px;
+ background:linear-gradient(110deg,#42311b82,#152735c9);
+ color:#f5dfb8;
+}
+html[data-av-parity="v136-full"] .p136017-ref-audit strong{
+ font:700 10px/1.6 ui-monospace,monospace;letter-spacing:.10em;color:#f2d9ad;
+}
+html[data-av-parity="v136-full"] .p136017-ref-audit p{
+ margin:4px 0 0;font:11px/1.6 ui-monospace,monospace;color:#e4dccd;
+}
+html[data-av-parity="v136-full"] .p136017-ref-audit ul{
+ display:flex;flex-wrap:wrap;gap:4px 11px;margin:7px 0 0;padding:0;list-style:none
+}
+html[data-av-parity="v136-full"] .p136017-ref-audit li{
+ min-width:0;overflow-wrap:anywhere;padding:2px 7px;border:1px solid #d2b8896e;border-radius:3px;
+ background:#090f1bb8;color:#f4e1ba;font:11px/1.6 ui-monospace,monospace;
+}
+@media(forced-colors:active){
+ html[data-av-parity="v136-full"] .p136017-file-mutation .p136017-ref-audit,
+ html[data-av-parity="v136-full"] .p136017-ref-audit li{
+  background:Canvas;color:CanvasText;border-color:CanvasText
+ }
+}

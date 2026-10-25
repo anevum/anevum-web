@@ -25,11 +25,34 @@ export function removeLocalSource(files:Record<string,string>,path:string){
  const next={...files};delete next[path];return next;
 }
 
-/** Preview the source links that need manual review after a file move.
- * Does not rewrite user-authored imports, HTML, or CSS.
+/** Conservative static path audit for real, local authored files.
+ * Resolve quoted references from each referencing file's own directory:
+ * HTML href/src, JS imports, JSON strings, CSS url(), and ordinary quoted
+ * paths. Ignore external schemes, traversal above root, and fragments.
+ * This warns the creator; it deliberately DOES NOT rewrite source text.
  */
-export function sourceReferencesToReview(files:Record<string,string>,previous:string){
- const escaped=previous.replace(/[.*+?^$\{\}()|[\]\\]/g,'\\$&');
- const matcher=new RegExp('(?:^|[\\"\\\x27\\(\\s])(?:\\./|/)?'+escaped+'(?=[\\"\\\x27\\)\\s?#]|$)','m');
- return Object.entries(files).filter(([path,body])=>path!==previous&&matcher.test(body)).map(([path])=>path);
+function sourceReferencePath(owner:string,reference:string):string|null{
+ const raw=reference.trim().split(/[?#]/,1)[0];
+ if(!raw||raw.startsWith('//')||raw.startsWith('#')||
+  /^[a-z][a-z\d+.-]*:/i.test(raw)||/[\s\\]/.test(raw))return null;
+ const parts=raw.startsWith('/')?[]:owner.split('/').slice(0,-1);
+ for(const token of raw.split('/')){
+  if(!token||token==='.')continue;
+  if(token==='..'){if(!parts.length)return null;parts.pop();continue;}
+  parts.push(token);
+ }
+ return parts.join('/');
+}
+export function sourceReferencesToReview(files:Record<string,string>,previous:string):string[]{
+ if(!Object.hasOwn(files,previous))return [];
+ const references:string[]=[];
+ for(const [owner,content] of Object.entries(files)){
+  if(owner===previous)continue;
+  // Each match is bounded to one logical line to avoid collecting entire
+  // user documents or accidentally treating arbitrary multiline text as URLs.
+  const quoted=content.matchAll(/["'`]([^"'`\r\n]{1,240})["'`]/g);
+  const cssUrls=content.matchAll(/url\(\s*([^\s"'()]{1,240})\s*\)/gi);
+  if([...quoted,...cssUrls].some(match=>sourceReferencePath(owner,match[1])===previous))references.push(owner);
+ }
+ return references;
 }

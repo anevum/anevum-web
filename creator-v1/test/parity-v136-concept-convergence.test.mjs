@@ -132,3 +132,15 @@ test('source tree offers real validated rename and confirmed removal, not cosmet
  assert.match(ide,/setDirty\(true\);onDirty\(\)/);
  assert.match(workbenchCss,/\.p136017-file-mutation/);
 });
+
+test('Creator Studio rename and removal show actual local link audit without rewritten imports',()=>{
+ const helper=source('../web/src/parity/workbench-file-ops-v136.ts');
+ const localCss=source('../web/src/parity/artifact-workbench-v136.css');
+ assert.match(ide,/sourceReferencesToReview\(files,renamingFile\)/);
+ assert.match(ide,/sourceReferencesToReview\(files,deletingFile\)/);
+ assert.match(ide,/data-source-reference-audit="rename"/);
+ assert.match(ide,/data-source-reference-audit="remove"/);
+ assert.match(ide,/No direct local path references detected/);
+ assert.match(localCss,/\.p136017-ref-audit/);
+ assert.ok(!/fetch\(|eval\(|localStorage|sessionStorage/.test(helper),'Reference audit is pure local calculation');
+});

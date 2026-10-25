@@ -63,7 +63,24 @@ test('local source reference review is read-only and never rewrites creator code
  const files={'index.html':'<link href="styles.css"><script src="scripts/app.js"></script>',
   'styles.css':'body{color:white}', 'scripts/app.js':'import "../styles.css";'};
  const before=JSON.stringify(files);
- assert.deepEqual(sourceReferencesToReview(files,'styles.css'),['index.html']);
+ assert.deepEqual(sourceReferencesToReview(files,'styles.css'),['index.html','scripts/app.js']);
  assert.deepEqual(sourceReferencesToReview(files,'scripts/app.js'),['index.html']);
  assert.equal(JSON.stringify(files),before);
+});
+
+test('source link audit resolves relative paths, rejects external URLs, keeps authored contents untouched',async()=>{
+ const {sourceReferencesToReview}=await import('../web/src/parity/workbench-file-ops-v136.ts');
+ const files={
+  'index.html':'<link href="./styles.css"><script src="/scripts/main.js"></script>',
+  'styles.css':'@import "assets/theme.css";',
+  'assets/theme.css':'body{color:#fff}',
+  'scripts/main.js':"import '../assets/theme.css'; const remote='https://example.org/styles.css';",
+  'notes.txt':'url(styles.css) and a dynamic src assembled by JavaScript are not executed'
+ };
+ const snapshot=JSON.stringify(files);
+ assert.deepEqual(sourceReferencesToReview(files,'styles.css'),['index.html']);
+ assert.deepEqual(sourceReferencesToReview(files,'assets/theme.css'),['styles.css','scripts/main.js']);
+ assert.deepEqual(sourceReferencesToReview(files,'scripts/main.js'),['index.html']);
+ assert.deepEqual(sourceReferencesToReview(files,'missing.css'),[]);
+ assert.equal(JSON.stringify(files),snapshot,'Audit cannot mutate local source files');
 });

@@ -1,7 +1,7 @@
 import {useEffect,useRef,useState,type ComponentType,type ReactNode} from 'react';
 import {strToU8} from 'fflate';
 import {sourceArchive,playableSourceArchive,localOnlySourcePaths,safeSourcePath,SOURCE_LIMITS} from './source-archive-v136';
-import {renameLocalSource,removeLocalSource} from './workbench-file-ops-v136';
+import {renameLocalSource,removeLocalSource,sourceReferencesToReview} from './workbench-file-ops-v136';
 import {Icon} from '../components/Icons';
 import {FileGlyphV136017,FolderGlyphV136017,fileKind} from './FileGlyphV136017';
 import {editorLanguage} from '../../../source-ide/language-v119.mjs';
@@ -65,6 +65,8 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
   closeQuickOpen();
  }
  const localOnlyPaths=localOnlySourcePaths(files);
+ const renameReferences=renamingFile?sourceReferencesToReview(files,renamingFile):[];
+ const removalReferences=deletingFile?sourceReferencesToReview(files,deletingFile):[];
  const problems:string[]=[];
  if(!('index.html' in files))problems.push('A root index.html entrypoint is required.');
  for(const [path,text] of entries){
@@ -119,6 +121,7 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
  function commitRename(){
   if(disabled||!renamingFile)return;
   try{
+   const references=sourceReferencesToReview(files,renamingFile);
    const target=renameDraft.trim(),updated=renameLocalSource(files,renamingFile,target,safePath);
    setRenamingFile(null);
    if(updated===files)return;
@@ -126,17 +129,24 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
    setFiles(updated);selectFile(target);
    setCollapsedFolders(previous=>new Set([...previous].filter(folder=>!target.startsWith(folder+'/'))));
    setDirty(true);onDirty();
-   setNote('Local source renamed. Review relative imports or links; any previously prepared archive is invalid.');
+   setNote('Local source renamed. '+(references.length?
+    'References may need repair in: '+references.join(', ')+'. No linked source was rewritten. ':
+    'No direct static references were detected; check dynamic imports manually. ')+
+    'Any previously prepared archive is invalid.');
   }catch(error){setNote(error instanceof Error?error.message:'Could not rename this local source.')}
  }
  function commitRemoval(){
   if(disabled||!deletingFile)return;
   try{
+   const references=sourceReferencesToReview(files,deletingFile);
    const updated=removeLocalSource(files,deletingFile);
    importVersion.current++;
    setFiles(updated);selectFile('index.html');
    setDirty(true);onDirty();
-   setNote('Local source removed from this session. Any previously prepared archive is invalid.');
+   setNote('Local source removed from this session. '+(references.length?
+    'References to the removed file still exist in: '+references.join(', ')+'. ':
+    'No direct static references were detected. ')+
+    'Any previously prepared archive is invalid.');
   }catch(error){setNote(error instanceof Error?error.message:'Could not remove this local source.')}
  }
  function toggleFolder(path:string){
@@ -225,6 +235,13 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
     </div>
     {renamingFile&&<form className="p136017-file-mutation" onSubmit={event=>{event.preventDefault();commitRename()}}>
      <label htmlFor="p136017-file-rename">Rename local source: {renamingFile}</label>
+     <div className="p136017-ref-audit" role="status" aria-live="polite" data-source-reference-audit="rename">
+      <strong>LINK AUDIT / {renameReferences.length} STATIC REFERENCE {renameReferences.length===1?'SOURCE':'SOURCES'}</strong>
+      {renameReferences.length?
+       <><p>These authored files reference {renamingFile}. A rename can break their links; no code will be rewritten automatically.</p>
+        <ul>{renameReferences.map(path=><li key={path}>{path}</li>)}</ul></>:
+       <p>No direct local path references detected. Dynamic paths are not inspected.</p>}
+     </div>
      <input id="p136017-file-rename" autoFocus autoComplete="off" spellCheck={false} maxLength={120}
       value={renameDraft} onChange={event=>setRenameDraft(event.target.value)}
       onKeyDown={event=>{if(event.key==='Escape'){event.preventDefault();setRenamingFile(null)}}}/>
@@ -233,6 +250,13 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
     </form>}
     {deletingFile&&<div className="p136017-file-mutation" role="group" aria-label="Confirm local file removal">
      <p>Remove {deletingFile} from this in-memory workspace? This action has no undo. Export source first if needed.</p>
+     <div className="p136017-ref-audit" role="status" aria-live="polite" data-source-reference-audit="remove">
+      <strong>LINK AUDIT / {removalReferences.length} STATIC REFERENCE {removalReferences.length===1?'SOURCE':'SOURCES'}</strong>
+      {removalReferences.length?
+       <><p>The following authored files may still refer to {deletingFile} after removal. No source code is modified.</p>
+        <ul>{removalReferences.map(path=><li key={path}>{path}</li>)}</ul></>:
+       <p>No direct local path references detected. Dynamic paths are not inspected.</p>}
+     </div>
      <button type="button" disabled={disabled} onClick={commitRemoval}>Confirm remove file</button>
      <button type="button" onClick={()=>setDeletingFile(null)}>Keep file</button>
     </div>}
