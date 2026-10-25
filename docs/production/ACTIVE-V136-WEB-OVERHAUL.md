@@ -476,3 +476,15 @@ from the previous read-only inventory, not a fresh infrastructure audit here.
 Next bounded UI work: the existing Studio archive/upload form hierarchy and
 clear progress through private compatibility/rights/playtest steps, preserving
 all canonical server capability and independent-review gates.
+
+
+### V136.030 pinned-browser screenshot failure under investigation
+Exact source bea05ce35c7288f1fbfd6c3f9157d372ac8a9355 passed nine development
+workflows, including Creator V1 40232997056. Focused Studio 40232997294 and full
+Spatial 40232997114 both reached the focused-preview capture and failed at its
+30-second screenshot timeout; errors=[] / forbidden=[], clean source receipt
+FAIL. No pinned-browser acceptance is claimed. The original editor capture
+already had a bounded 90-second software-rendering budget. Give the new preview
+capture that same budget, retaining every assertion and required image, and log
+capture geometry/elapsed time to distinguish rendering delay from UI failure.
+Fresh exact-head CI is required. Main/production/#741/traffic remain unchanged.

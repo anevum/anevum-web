@@ -315,7 +315,14 @@ try{
     assert.equal(await workbench.locator('.p136-source-stage textarea').count(),1,'Focus mode retains the mounted real source editor');
     if(width<650){await preview.getByRole('button',{name:'Phone preview',exact:true}).click();await assertViewport(390,'phone');}
     await preview.scrollIntoViewIfNeeded();
-    await page.screenshot({path:join(out,'studio-layout-preview-'+width+'.png'),fullPage:false,animations:'disabled'});
+    const previewGeometry=await preview.evaluate(node=>{
+      const r=node.getBoundingClientRect(),frame=node.querySelector('iframe');
+      return {panel:{width:r.width,height:r.height},frame:{width:frame?.offsetWidth,height:frame?.offsetHeight}};
+    });
+    writeFileSync(join(out,'studio-preview-geometry-'+width+'.json'),JSON.stringify(previewGeometry,null,2));
+    const previewCaptureStarted=Date.now();
+    await page.screenshot({path:join(out,'studio-layout-preview-'+width+'.png'),fullPage:false,animations:'disabled',timeout:90000});
+    console.log('STUDIO_PREVIEW_CAPTURE '+JSON.stringify({width,elapsedMs:Date.now()-previewCaptureStarted,...previewGeometry}));
     await preview.getByRole('button',{name:'Return to source editor',exact:true}).press('Escape');
     await workbench.locator('[data-preview-focused="false"]').waitFor();
     await page.waitForFunction(()=>document.activeElement?.id==='p136-source-tab-styles.css');
