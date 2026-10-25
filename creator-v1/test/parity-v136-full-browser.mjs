@@ -37,7 +37,9 @@ const packageFixture={id:'123e4567-e89b-42d3-a456-426614174000',
   play_url:'/upload/v3/play/123e4567-e89b-42d3-a456-426614174000',published_at:1792843200};
 const record=(name,data={})=>{checks.push({name,...data});console.log('PASS '+name);};
 async function contextFor(width,{motion='reduce',state='empty',forceVector=false}={}){
-  const context=await browser.newContext({viewport:{width,height:width===1536?1024:width<650?844:960},deviceScaleFactor:width===1536?1:2,reducedMotion:motion});
+  const context=await browser.newContext({viewport:{width,height:width===1536?1024:width<650?844:960},// CI tests CSS-pixel geometry at 1x to bound software-WebGL capture memory;
+    // device-pixel 2x visual checks are a separate physical-device gate.
+    deviceScaleFactor:1,reducedMotion:motion});
   if(forceVector)await context.addInitScript(()=>{
     const original=HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext=function(kind,...args){
