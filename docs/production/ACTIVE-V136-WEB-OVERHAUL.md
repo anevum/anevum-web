@@ -213,3 +213,30 @@ The V136.024 controlled release and #742 read-only smoke remain separate.
 The #742 credential-free public HTTP client received HTTP 403 on the
 unchanged baseline before comparison; no valid app regression or smoke pass was
 established by that result. Preserve production safety gates and allowlists.
+
+## V136.025 — creator directory convergence (source-only draft)
+Scoped session: `ANEVUM.WEB.UPDATE.2026-10-25.005.CREATOR-DISCOVERY-CONVERGENCE`.
+Continuation source: `build/parity-v136-creator-directory-20261025-025`, branched at
+`20161bae20e7f369d4d7edfadcb4316ecccac3cf` from the #735 development
+branch. This work is separate from immutable rollout candidate `4dfaed54` and
+any production traffic decision.
+
+Implemented in this bounded increment: creator directory layout and search state
+owned by `/creators?q=&cursor=&view=`; real API remains `readCreators` and
+approved public channel metadata only. Grid/list selection preserves query and
+cursor, search resets pagination, Back restores the URL-defined layout.
+No new profiles, counters, media, badges, rankings, member data or public endpoint.
+Search has an explicitly associated accessible label and a responsive phone input.
+Existing `CompactMemberIdentity` retains its real portrait fallback and
+noninteractive identity inside a single clickable creator-channel card.
+`sitewide-interface-v136.css` now scopes native blue/cyan panels, responsive
+cards, list density, search, empty/error differentiation, focus indication,
+forced colors and reduced motion to this real route. No new bitmap media.
+
+Acceptance added to `parity-v136-full-browser.mjs` at 1440, 390 and 320 px:
+loopback-only synthetic approved-channel fixtures, URL/history grid/list changes,
+search filtering, cursor preservation/reset, responsive geometry and zero
+fabricated production records. Source contracts are in
+`parity-v136025-creator-directory.test.mjs`. Local complete builds/browser
+screenshots and exact-head CI must be obtained before labeling this verified.
+The 1% canary and baseline remain isolated; Stripe draft #739 is unchanged.
