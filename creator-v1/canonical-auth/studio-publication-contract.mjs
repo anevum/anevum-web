@@ -37,8 +37,11 @@ function matchUUID(value, field) {
   return value;
 }
 function safeId(value, field) {
-  // Better Auth canonical IDs are opaque. Never reinterpret them as handles.
-  return nonempty(value, 1, 128, field);
+  // Better Auth canonical IDs are opaque. Never reinterpret them as handles,
+  // accept whitespace, or permit control characters in durable outbox keys.
+  if (typeof value !== 'string' || !/^[A-Za-z0-9._:-]{1,128}$/.test(value))
+    throw new Error('Invalid ' + field);
+  return value;
 }
 function compare(a, b, field) {
   if (a !== b) throw new Error('Review receipt mismatch: ' + field);
