@@ -85,6 +85,200 @@ async function contextFor(width,{motion='reduce',state='empty',forceVector=false
   return {page,context};
 }
 try{
+  // The source workstation is reached only through a session-bound creator
+  // pilot fixture. Packaging is local; POST, publication and remote runtime
+  // execution remain forbidden in this acceptance context.
+  for(const width of [1440,390,320]){
+    const {page,context}=await contextFor(width,{state:'studio',forceVector:true});
+    await page.goto(base+'/studio/packages/new',{waitUntil:'domcontentloaded'});
+    await page.getByRole('heading',{name:'Transmit a creation.'}).waitFor();
+    await page.getByRole('button',{name:'Artifact source workbench',exact:true}).click();
+    const workbench=page.locator('[data-artifact-workbench="v136.011"]');await workbench.waitFor();
+    await workbench.getByRole('button',{name:'Open file…',exact:true}).click();
+    const fileSearch=workbench.getByRole('combobox',{name:/Find a local source file/});
+    await fileSearch.fill('styles');
+    assert.equal(await workbench.getByRole('option').count(),1,'Quick open filters actual local file paths');
+    await fileSearch.press('Enter');
+    assert.equal(await workbench.getByRole('tab',{name:'styles.css',exact:true}).getAttribute('aria-selected'),'true');
+    await workbench.getByRole('button',{name:'Open file…',exact:true}).click();
+    await fileSearch.fill('no-such-source-file');
+    await workbench.getByText('No matching local source files.',{exact:true}).waitFor();
+    await fileSearch.press('Escape');
+    assert.equal(await workbench.getByRole('combobox').count(),0,'Escape closes local source search');
+    await workbench.getByRole('tab',{name:'index.html',exact:true}).click();
+    assert.equal(await page.locator('.p136017-studio-quicknav').count(),1,'Private Studio uses the actual command rail');
+    assert.equal(await page.locator('.p136017-studio-quicknav a[href="/studio/records"]').count(),1,'Project library remains real route navigation');
+    assert.equal(await workbench.locator('.p136017-source-functionbar').count(),1,'Local source instrumentation is available');
+    assert.ok((await workbench.locator('.p136017-source-ledge').innerText()).includes('index.html'),
+      'Authoring instrument describes the current real file, never a simulated preview');
+    if(width===1440){
+      await page.locator('[data-source-editor="monaco"]').waitFor({timeout:30000});
+      // Chromium's native EditContext uses a textbox DIV. Its hidden readonly
+      // IME textarea is not the editor input. Enter through the actual tab order.
+      await workbench.getByRole('tab',{name:'index.html',exact:true}).press('Tab');
+      assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('aria-label')),'Source editor for index.html');
+      await page.keyboard.press('Control+End');
+      await page.waitForFunction(()=>/^Ln (?:[2-9]|[0-9]{2,}), Col [0-9]+$/.test(document.querySelector('[data-source-cursor]')?.textContent||''));
+      const position=await workbench.locator('[data-source-cursor]').innerText();
+      await workbench.getByRole('tab',{name:'styles.css',exact:true}).click();
+      await workbench.getByRole('tab',{name:'index.html',exact:true}).click();
+      assert.equal(await workbench.locator('[data-source-cursor]').innerText(),position,
+        'Switching Monaco models restores the real cursor position for each local file');
+      await workbench.getByRole('tab',{name:'index.html',exact:true}).press('Tab');
+      await page.keyboard.press('Control+p');
+      await fileSearch.fill('main.js');
+      await fileSearch.press('ArrowDown');
+      await fileSearch.press('Enter');
+      assert.equal(await workbench.getByRole('tab',{name:'main.js',exact:true}).getAttribute('aria-selected'),'true',
+        'Quick open works directly from Monaco without invoking browser print');
+      await workbench.locator('#p136-source-new').fill('assets/notes.md');
+      await workbench.getByRole('button',{name:'Create source file',exact:true}).click();
+      const folder=workbench.getByRole('button',{name:'Folder assets',exact:true});
+      await folder.waitFor();
+      assert.equal(await workbench.getByRole('button',{name:'assets/notes.md',exact:true}).count(),1,'Nested local source is listed under its real folder');
+      await folder.click();
+      assert.equal(await workbench.getByRole('button',{name:'assets/notes.md',exact:true}).count(),0,'Collapsing a folder hides only its file buttons');
+      await folder.click();
+      assert.equal(await workbench.getByRole('button',{name:'assets/notes.md',exact:true}).count(),1,'Expanding restores the real source file');
+    }
+    else assert.equal(await page.locator('[data-source-editor="monaco"]').count(),0,'Phone uses accessible text editor without Monaco allocation');
+    assert.equal(await page.locator('.p136-living-world').getAttribute('data-enabled'),'false','Private source never enters public GPU');
+    await workbench.getByRole('button',{name:'Prepare build archive',exact:true}).click();
+    await page.locator('.av095-drop strong').filter({hasText:'continuance-build.zip'}).waitFor();
+    await page.getByText('Browser build candidate',{exact:true}).waitFor();
+    assert.equal(await page.getByRole('button',{name:'Prepare private playtest',exact:true}).isDisabled(),true,'Archive creation never confirms publication rights or uploads');
+    const workstationLayout=await workbench.evaluate(node=>({width:node.getBoundingClientRect().width,height:node.getBoundingClientRect().height,pageHeight:document.documentElement.scrollHeight}));
+    assert.ok(workstationLayout.height<2400,'Workbench dimensions remain bounded: '+JSON.stringify(workstationLayout));
+    const visualWidth=await workbench.evaluate(node=>{
+      const editor=node.querySelector('.p136-source-stage');
+      const guide=node.closest('.av095-upload-grid')?.querySelector('.av095-guide');
+      const panel=node.closest('.av095-upload-grid')?.querySelector('.st-panel');
+      const box=editor?.getBoundingClientRect();
+      const guideBox=guide?.getBoundingClientRect();
+      const panelBox=panel?.getBoundingClientRect();
+      return {editor:box?.width||0,guideTop:guideBox?.top||0,
+        panelBottom:panelBox?.bottom||0,container:node.getBoundingClientRect().width};
+    });
+    assert.ok(visualWidth.editor>=(width===1440?440:width===390?255:190),
+      'Code editor must be usable inside real nested Studio layout: '+JSON.stringify({width,...visualWidth}));
+    if(width===1440)assert.ok(visualWidth.guideTop>=visualWidth.panelBottom-2,
+      'Protocol guide belongs below the active editor, never beside and compressing it: '+JSON.stringify(visualWidth));
+    if(width<650){
+      const explorerFits=await workbench.locator('.p136-source-explorer nav button').evaluateAll(nodes=>nodes.every(button=>{
+        const label=button.lastElementChild,range=document.createRange();range.selectNodeContents(label);
+        return range.getBoundingClientRect().right<=button.getBoundingClientRect().right+1;
+      }));
+      assert.equal(explorerFits,true,'Phone source file labels never overlap neighbouring controls');
+    }
+    // Show the actual nonempty source and syntax colors in review evidence;
+    // the newly-created Markdown note is deliberately blank, not an IDE demo.
+    await workbench.getByRole('tab',{name:'index.html',exact:true}).click();
+    await workbench.scrollIntoViewIfNeeded();
+    // Private source editing does not need to compete for GPU resources with
+    // prior public WebGL stress tests. Retain genuine browser screenshot QA.
+    await page.screenshot({path:join(out,'artifact-workbench-'+width+'.png'),
+      fullPage:false,animations:'disabled',timeout:90000});
+    if(width===1440)await workbench.getByRole('button',{name:'Accessible text editor',exact:true}).click();
+    await workbench.getByRole('button',{name:/styles\.css$/}).click();
+    await workbench.locator('.p136-source-fallback textarea').fill('body { color: #ffffff; background: #06101d; }');
+    await page.locator('.av095-drop strong').filter({hasText:'Choose a ZIP or HTML file'}).waitFor();
+    assert.equal(await page.locator('.p136-source-state').innerText(),'LOCAL CHANGES','Editing invalidates the previously prepared archive');
+    const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1);
+    assert.equal(overflow,false,'Workbench has no horizontal page overflow');
+    record('session-bound source workstation / real editor / native ZIP compatibility / stale archive invalidation '+width,{monaco:width===1440,uploads:0});
+    await context.close();
+  }
+  // Direct evidence gate: poster presentation is NOT proof of underlying
+  // 3D architectural parity. Capture both renderings in the same authenticated-
+  // free loopback context and publish original PNGs for independent art review.
+  if(process.env.VITE_PARITY_V136_CINEMATIC==='true'){
+    for(const width of [1536,1440,390,320]){
+      const {page,context}=await contextFor(width,{motion:'no-preference'});
+      await page.goto(base,{waitUntil:'domcontentloaded'});
+      const inspect=page.getByRole('button',{name:'Inspect live 3D scene'});
+      await inspect.waitFor();
+      await page.waitForFunction(()=>{
+        const control=document.querySelector('[data-cinematic-inspection="v136.017"]');
+        const canvas=document.querySelector('.p136-living-canvas');
+        const poster=document.querySelector('.p136-cinematic-art img');
+        return control?.getAttribute('data-scene-readiness')==='ready'&&
+          canvas?.dataset.assetState==='ready'&&
+          poster?.complete&&poster?.naturalWidth>0;
+      },null,{timeout:60000});
+      const reality=await page.evaluate(()=>{
+        const world=document.querySelector('.p136-living-world');
+        const canvas=document.querySelector('.p136-living-canvas');
+        return {renderer:world?.dataset.renderer,canvasCount:document.querySelectorAll('.p136-living-canvas').length,
+          modelState:canvas?.dataset.assetState,metrics:JSON.parse(canvas?.dataset.metrics||'{}')};
+      });
+      assert.equal(reality.renderer,'webgl','Actual Three.js scene, not vector fallback');
+      assert.equal(reality.canvasCount,1,'One persistent 3D scene / one GPU context');
+      assert.equal(reality.metrics.family,'atrium','The scene still uses the canonical Atrium family');
+      if(process.env.VITE_PARITY_V136_HORIZON_QA==='true'){
+        assert.equal(await page.locator('.p136-living-canvas').getAttribute('data-horizon'),
+          'qa-only','The same original canvas owns the approved QA-only planetary horizon');
+        assert.equal(await page.locator('.p136-living-canvas').getAttribute('data-horizon-composition'),
+          'open-institute','The QA exterior cannot be occluded by the legacy Atrium roof');
+      }
+      const openExterior=process.env.VITE_PARITY_V136_HORIZON_QA==='true';
+      assert.ok(reality.metrics.models>=1&&reality.metrics.triangles>(openExterior&&width<850?6000:10000)&&reality.metrics.drawCalls>0,
+        'The 3D screenshot must contain real modeled geometry: '+JSON.stringify(reality));
+      if(openExterior)assert.ok(reality.metrics.triangles<=(width<850?10000:25000)+128,
+        'Actual exterior render excludes the occluding Atrium roof; only bounded horizon plus compositor quads: '+JSON.stringify(reality.metrics));
+      const first=await page.screenshot({path:join(out,'arrival-poster-review-'+width+'.png'),
+        fullPage:false,animations:'disabled'});
+      assert.equal(await inspect.isDisabled(),false,'Loaded model enables live inspection');
+      await inspect.click();
+      await page.waitForFunction(()=>{
+        const cinema=document.querySelector('[data-cinematic-v136]');
+        return cinema?.dataset.inspection==='live'&&Number.parseFloat(getComputedStyle(cinema).opacity)<.05;
+      });
+      await page.waitForTimeout(400);
+      const live=await page.screenshot({path:join(out,'arrival-real-webgl-review-'+width+'.png'),
+        fullPage:false,animations:'disabled'});
+      assert.ok(live.length>10000,'The actual scene capture cannot be empty');
+      assert.ok(!first.equals(live),'Live model screenshot must not be identical to the cinematic poster');
+      const liveHeroPaint=await page.locator('.p136-hero').evaluate(node=>{
+        const style=getComputedStyle(node);
+        return {image:style.backgroundImage,color:style.backgroundColor};
+      });
+      assert.equal(liveHeroPaint.image,'none',
+        'Inspected WebGL cannot be concealed behind the old opaque hero gradient');
+      assert.ok(liveHeroPaint.color==='transparent'||liveHeroPaint.color==='rgba(0, 0, 0, 0)',
+        'Inspected stage must be transparent above one shared canvas: '+JSON.stringify(liveHeroPaint));
+      assert.equal(await page.locator('.p136-living-canvas').count(),1,'Inspection reuses one persistent GPU canvas');
+      assert.ok(await page.locator('.p136-button--primary').isVisible(),'Real public navigation remains accessible');
+      const reset=page.getByRole('button',{name:'Return to cinematic arrival'});
+      assert.equal(await reset.getAttribute('aria-pressed'),'true');
+      await reset.click();
+      await page.waitForFunction(()=>{
+        const cinema=document.querySelector('[data-cinematic-v136]');
+        return cinema?.dataset.inspection==='cinematic'&&Number.parseFloat(getComputedStyle(cinema).opacity)>.95;
+      });
+      await page.screenshot({path:join(out,'arrival-after-inspection-'+width+'.png'),
+        fullPage:false,animations:'disabled'});
+      if(width===1440&&process.env.VITE_PARITY_V136_HORIZON_QA==='true'){
+        const canvas=page.locator('.p136-living-canvas');
+        await page.waitForFunction(()=>
+          document.querySelector('.p136-living-canvas')?.dataset.horizonTier==='desktop');
+        await page.setViewportSize({width:390,height:844});
+        await page.waitForFunction(()=>
+          document.querySelector('.p136-living-canvas')?.dataset.horizonTier==='mobile');
+        assert.equal(await canvas.count(),1,'Viewport retiering keeps the original renderer');
+        await page.setViewportSize({width:1440,height:960});
+        await page.waitForFunction(()=>
+          document.querySelector('.p136-living-canvas')?.dataset.horizonTier==='desktop');
+        record('live desktop to mobile to desktop QA geometry reallocation / one canvas',
+          {tierRestored:'desktop',rendererCount:1});
+      }
+      record('direct same-context poster vs real WebGL '+(openExterior?'Institute exterior':'Atrium')+' visual evidence '+width,{
+        width,renderer:reality.renderer,models:reality.metrics.models,
+        triangles:reality.metrics.triangles,drawCalls:reality.metrics.drawCalls,
+        composition:openExterior?'QA open Institute':'canonical Atrium',
+        approvedConceptParity:false,realDeviceTested:false});
+      await context.close();
+    }
+  }
   for(const width of [1920,1536,1440,1024,768,390,320]){
     const {page,context}=await contextFor(width);
     await page.goto(base,{waitUntil:'networkidle'});
@@ -308,105 +502,6 @@ try{
     record('real mesh families / compressed assets / one context / cache / GPU loss '+width,{snapshots,softwareGPU:true});
     await context.close();
   }
-  // The source workstation is reached only through a session-bound creator
-  // pilot fixture. Packaging is local; POST, publication and remote runtime
-  // execution remain forbidden in this acceptance context.
-  for(const width of [1440,390,320]){
-    const {page,context}=await contextFor(width,{state:'studio',forceVector:true});
-    await page.goto(base+'/studio/packages/new',{waitUntil:'domcontentloaded'});
-    await page.getByRole('heading',{name:'Transmit a creation.'}).waitFor();
-    await page.getByRole('button',{name:'Artifact source workbench',exact:true}).click();
-    const workbench=page.locator('[data-artifact-workbench="v136.011"]');await workbench.waitFor();
-    await workbench.getByRole('button',{name:'Open file…',exact:true}).click();
-    const fileSearch=workbench.getByRole('combobox',{name:/Find a local source file/});
-    await fileSearch.fill('styles');
-    assert.equal(await workbench.getByRole('option').count(),1,'Quick open filters actual local file paths');
-    await fileSearch.press('Enter');
-    assert.equal(await workbench.getByRole('tab',{name:'styles.css',exact:true}).getAttribute('aria-selected'),'true');
-    await workbench.getByRole('button',{name:'Open file…',exact:true}).click();
-    await fileSearch.fill('no-such-source-file');
-    await workbench.getByText('No matching local source files.',{exact:true}).waitFor();
-    await fileSearch.press('Escape');
-    assert.equal(await workbench.getByRole('combobox').count(),0,'Escape closes local source search');
-    await workbench.getByRole('tab',{name:'index.html',exact:true}).click();
-    assert.equal(await page.locator('.p136017-studio-quicknav').count(),1,'Private Studio uses the actual command rail');
-    assert.equal(await page.locator('.p136017-studio-quicknav a[href="/studio/records"]').count(),1,'Project library remains real route navigation');
-    assert.equal(await workbench.locator('.p136017-source-functionbar').count(),1,'Local source instrumentation is available');
-    assert.ok((await workbench.locator('.p136017-source-ledge').innerText()).includes('index.html'),
-      'Authoring instrument describes the current real file, never a simulated preview');
-    if(width===1440){
-      await page.locator('[data-source-editor="monaco"]').waitFor({timeout:30000});
-      const input=workbench.locator('.monaco-editor textarea');
-      await input.press('Control+End');
-      await page.waitForFunction(()=>!document.querySelector('[data-source-cursor]')?.textContent.includes('Ln 1,'));
-      const position=await workbench.locator('[data-source-cursor]').innerText();
-      await workbench.getByRole('tab',{name:'styles.css',exact:true}).click();
-      await workbench.getByRole('tab',{name:'index.html',exact:true}).click();
-      assert.equal(await workbench.locator('[data-source-cursor]').innerText(),position,
-        'Switching Monaco models restores the real cursor position for each local file');
-      await input.press('Control+p');
-      await fileSearch.fill('main.js');
-      await fileSearch.press('ArrowDown');
-      await fileSearch.press('Enter');
-      assert.equal(await workbench.getByRole('tab',{name:'main.js',exact:true}).getAttribute('aria-selected'),'true',
-        'Quick open works directly from Monaco without invoking browser print');
-      await workbench.locator('#p136-source-new').fill('assets/notes.md');
-      await workbench.getByRole('button',{name:'Create source file',exact:true}).click();
-      const folder=workbench.getByRole('button',{name:'Folder assets',exact:true});
-      await folder.waitFor();
-      assert.equal(await workbench.getByRole('button',{name:'assets/notes.md',exact:true}).count(),1,'Nested local source is listed under its real folder');
-      await folder.click();
-      assert.equal(await workbench.getByRole('button',{name:'assets/notes.md',exact:true}).count(),0,'Collapsing a folder hides only its file buttons');
-      await folder.click();
-      assert.equal(await workbench.getByRole('button',{name:'assets/notes.md',exact:true}).count(),1,'Expanding restores the real source file');
-    }
-    else assert.equal(await page.locator('[data-source-editor="monaco"]').count(),0,'Phone uses accessible text editor without Monaco allocation');
-    assert.equal(await page.locator('.p136-living-world').getAttribute('data-enabled'),'false','Private source never enters public GPU');
-    await workbench.getByRole('button',{name:'Prepare build archive',exact:true}).click();
-    await page.locator('.av095-drop strong').filter({hasText:'continuance-build.zip'}).waitFor();
-    await page.getByText('Browser build candidate',{exact:true}).waitFor();
-    assert.equal(await page.getByRole('button',{name:'Prepare private playtest',exact:true}).isDisabled(),true,'Archive creation never confirms publication rights or uploads');
-    const workstationLayout=await workbench.evaluate(node=>({width:node.getBoundingClientRect().width,height:node.getBoundingClientRect().height,pageHeight:document.documentElement.scrollHeight}));
-    assert.ok(workstationLayout.height<2400,'Workbench dimensions remain bounded: '+JSON.stringify(workstationLayout));
-    const visualWidth=await workbench.evaluate(node=>{
-      const editor=node.querySelector('.p136-source-stage');
-      const guide=node.closest('.av095-upload-grid')?.querySelector('.av095-guide');
-      const panel=node.closest('.av095-upload-grid')?.querySelector('.st-panel');
-      const box=editor?.getBoundingClientRect();
-      const guideBox=guide?.getBoundingClientRect();
-      const panelBox=panel?.getBoundingClientRect();
-      return {editor:box?.width||0,guideTop:guideBox?.top||0,
-        panelBottom:panelBox?.bottom||0,container:node.getBoundingClientRect().width};
-    });
-    assert.ok(visualWidth.editor>=(width===1440?440:width===390?255:190),
-      'Code editor must be usable inside real nested Studio layout: '+JSON.stringify({width,...visualWidth}));
-    if(width===1440)assert.ok(visualWidth.guideTop>=visualWidth.panelBottom-2,
-      'Protocol guide belongs below the active editor, never beside and compressing it: '+JSON.stringify(visualWidth));
-    if(width<650){
-      const explorerFits=await workbench.locator('.p136-source-explorer nav button').evaluateAll(nodes=>nodes.every(button=>{
-        const label=button.lastElementChild,range=document.createRange();range.selectNodeContents(label);
-        return range.getBoundingClientRect().right<=button.getBoundingClientRect().right+1;
-      }));
-      assert.equal(explorerFits,true,'Phone source file labels never overlap neighbouring controls');
-    }
-    // Show the actual nonempty source and syntax colors in review evidence;
-    // the newly-created Markdown note is deliberately blank, not an IDE demo.
-    await workbench.getByRole('tab',{name:'index.html',exact:true}).click();
-    await workbench.scrollIntoViewIfNeeded();
-    // Private source editing does not need to compete for GPU resources with
-    // prior public WebGL stress tests. Retain genuine browser screenshot QA.
-    await page.screenshot({path:join(out,'artifact-workbench-'+width+'.png'),
-      fullPage:false,animations:'disabled',timeout:90000});
-    if(width===1440)await workbench.getByRole('button',{name:'Accessible text editor',exact:true}).click();
-    await workbench.getByRole('button',{name:/styles\.css$/}).click();
-    await workbench.locator('.p136-source-fallback textarea').fill('body { color: #ffffff; background: #06101d; }');
-    await page.locator('.av095-drop strong').filter({hasText:'Choose a ZIP or HTML file'}).waitFor();
-    assert.equal(await page.locator('.p136-source-state').innerText(),'LOCAL CHANGES','Editing invalidates the previously prepared archive');
-    const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1);
-    assert.equal(overflow,false,'Workbench has no horizontal page overflow');
-    record('session-bound source workstation / real editor / native ZIP compatibility / stale archive invalidation '+width,{monaco:width===1440,uploads:0});
-    await context.close();
-  }
   // Gamepad API fixture lives only in this local Chromium context. It never
   // changes the real controller status of a public production visitor.
   {
@@ -438,97 +533,6 @@ try{
     await page.waitForFunction(()=>!document.querySelector('.p136-controller-indicator'),null,{timeout:8000});
     record('synthetic Gamepad API / connected badge / D-pad DOM focus / A route / disconnected cleanup',{hardwareVerified:false});
     await context.close();
-  }
-  // Direct evidence gate: poster presentation is NOT proof of underlying
-  // 3D architectural parity. Capture both renderings in the same authenticated-
-  // free loopback context and publish original PNGs for independent art review.
-  if(process.env.VITE_PARITY_V136_CINEMATIC==='true'){
-    for(const width of [1536,1440,390,320]){
-      const {page,context}=await contextFor(width,{motion:'no-preference'});
-      await page.goto(base,{waitUntil:'domcontentloaded'});
-      const inspect=page.getByRole('button',{name:'Inspect live 3D scene'});
-      await inspect.waitFor();
-      await page.waitForFunction(()=>{
-        const control=document.querySelector('[data-cinematic-inspection="v136.017"]');
-        const canvas=document.querySelector('.p136-living-canvas');
-        const poster=document.querySelector('.p136-cinematic-art img');
-        return control?.getAttribute('data-scene-readiness')==='ready'&&
-          canvas?.dataset.assetState==='ready'&&
-          poster?.complete&&poster?.naturalWidth>0;
-      },null,{timeout:60000});
-      const reality=await page.evaluate(()=>{
-        const world=document.querySelector('.p136-living-world');
-        const canvas=document.querySelector('.p136-living-canvas');
-        return {renderer:world?.dataset.renderer,canvasCount:document.querySelectorAll('.p136-living-canvas').length,
-          modelState:canvas?.dataset.assetState,metrics:JSON.parse(canvas?.dataset.metrics||'{}')};
-      });
-      assert.equal(reality.renderer,'webgl','Actual Three.js scene, not vector fallback');
-      assert.equal(reality.canvasCount,1,'One persistent 3D scene / one GPU context');
-      assert.equal(reality.metrics.family,'atrium','The scene still uses the canonical Atrium family');
-      if(process.env.VITE_PARITY_V136_HORIZON_QA==='true'){
-        assert.equal(await page.locator('.p136-living-canvas').getAttribute('data-horizon'),
-          'qa-only','The same original canvas owns the approved QA-only planetary horizon');
-        assert.equal(await page.locator('.p136-living-canvas').getAttribute('data-horizon-composition'),
-          'open-institute','The QA exterior cannot be occluded by the legacy Atrium roof');
-      }
-      const openExterior=process.env.VITE_PARITY_V136_HORIZON_QA==='true';
-      assert.ok(reality.metrics.models>=1&&reality.metrics.triangles>(openExterior&&width<850?6000:10000)&&reality.metrics.drawCalls>0,
-        'The 3D screenshot must contain real modeled geometry: '+JSON.stringify(reality));
-      if(openExterior)assert.ok(reality.metrics.triangles<=(width<850?10000:25000)+128,
-        'Actual exterior render excludes the occluding Atrium roof; only bounded horizon plus compositor quads: '+JSON.stringify(reality.metrics));
-      const first=await page.screenshot({path:join(out,'arrival-poster-review-'+width+'.png'),
-        fullPage:false,animations:'disabled'});
-      assert.equal(await inspect.isDisabled(),false,'Loaded model enables live inspection');
-      await inspect.click();
-      await page.waitForFunction(()=>{
-        const cinema=document.querySelector('[data-cinematic-v136]');
-        return cinema?.dataset.inspection==='live'&&Number.parseFloat(getComputedStyle(cinema).opacity)<.05;
-      });
-      await page.waitForTimeout(400);
-      const live=await page.screenshot({path:join(out,'arrival-real-webgl-review-'+width+'.png'),
-        fullPage:false,animations:'disabled'});
-      assert.ok(live.length>10000,'The actual scene capture cannot be empty');
-      assert.ok(!first.equals(live),'Live model screenshot must not be identical to the cinematic poster');
-      const liveHeroPaint=await page.locator('.p136-hero').evaluate(node=>{
-        const style=getComputedStyle(node);
-        return {image:style.backgroundImage,color:style.backgroundColor};
-      });
-      assert.equal(liveHeroPaint.image,'none',
-        'Inspected WebGL cannot be concealed behind the old opaque hero gradient');
-      assert.ok(liveHeroPaint.color==='transparent'||liveHeroPaint.color==='rgba(0, 0, 0, 0)',
-        'Inspected stage must be transparent above one shared canvas: '+JSON.stringify(liveHeroPaint));
-      assert.equal(await page.locator('.p136-living-canvas').count(),1,'Inspection reuses one persistent GPU canvas');
-      assert.ok(await page.locator('.p136-button--primary').isVisible(),'Real public navigation remains accessible');
-      const reset=page.getByRole('button',{name:'Return to cinematic arrival'});
-      assert.equal(await reset.getAttribute('aria-pressed'),'true');
-      await reset.click();
-      await page.waitForFunction(()=>{
-        const cinema=document.querySelector('[data-cinematic-v136]');
-        return cinema?.dataset.inspection==='cinematic'&&Number.parseFloat(getComputedStyle(cinema).opacity)>.95;
-      });
-      await page.screenshot({path:join(out,'arrival-after-inspection-'+width+'.png'),
-        fullPage:false,animations:'disabled'});
-      if(width===1440&&process.env.VITE_PARITY_V136_HORIZON_QA==='true'){
-        const canvas=page.locator('.p136-living-canvas');
-        await page.waitForFunction(()=>
-          document.querySelector('.p136-living-canvas')?.dataset.horizonTier==='desktop');
-        await page.setViewportSize({width:390,height:844});
-        await page.waitForFunction(()=>
-          document.querySelector('.p136-living-canvas')?.dataset.horizonTier==='mobile');
-        assert.equal(await canvas.count(),1,'Viewport retiering keeps the original renderer');
-        await page.setViewportSize({width:1440,height:960});
-        await page.waitForFunction(()=>
-          document.querySelector('.p136-living-canvas')?.dataset.horizonTier==='desktop');
-        record('live desktop to mobile to desktop QA geometry reallocation / one canvas',
-          {tierRestored:'desktop',rendererCount:1});
-      }
-      record('direct same-context poster vs real WebGL '+(openExterior?'Institute exterior':'Atrium')+' visual evidence '+width,{
-        width,renderer:reality.renderer,models:reality.metrics.models,
-        triangles:reality.metrics.triangles,drawCalls:reality.metrics.drawCalls,
-        composition:openExterior?'QA open Institute':'canonical Atrium',
-        approvedConceptParity:false,realDeviceTested:false});
-      await context.close();
-    }
   }
   if(process.env.VITE_PARITY_V136_CINEMATIC==='true'){
     const {page,context}=await contextFor(1440,{motion:'no-preference',forceVector:true});

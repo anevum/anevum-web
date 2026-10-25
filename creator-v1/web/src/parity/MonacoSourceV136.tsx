@@ -1,4 +1,4 @@
-import {useEffect,useRef} from 'react';
+import {useEffect,useRef,useId} from 'react';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
 // The modular API does not register navigation/editing keybindings itself.
 // Load the first-party core commands explicitly; a colored editor div alone
@@ -24,12 +24,12 @@ import {editorLanguage} from '../../../source-ide/language-v119.mjs';
 export type MonacoSourceProps={files:Record<string,string>;active:string;disabled:boolean;onChange:(name:string,value:string)=>void;onCursor?:(line:number,column:number)=>void};
 export default function MonacoSourceV136(props:MonacoSourceProps){
  const container=useRef<HTMLDivElement>(null),instance=useRef<monaco.editor.IStandaloneCodeEditor|null>(null);
- const models=useRef(new Map<string,monaco.editor.ITextModel>()),current=useRef(props),scope=useRef(crypto.randomUUID());
+ const models=useRef(new Map<string,monaco.editor.ITextModel>()),current=useRef(props),scope=useId();
  const viewStates=useRef(new Map<string,monaco.editor.ICodeEditorViewState>()),shown=useRef(props.active);
  current.current=props;
  const modelFor=(name:string)=>{
   let model=models.current.get(name);
-  if(!model){model=monaco.editor.createModel(current.current.files[name],editorLanguage(name),monaco.Uri.parse('inmemory://anevum/'+scope.current+'/'+name));models.current.set(name,model)}
+  if(!model){model=monaco.editor.createModel(current.current.files[name],editorLanguage(name),monaco.Uri.parse('inmemory://anevum/'+encodeURIComponent(scope)+'/'+name));models.current.set(name,model)}
   return model;
  };
  useEffect(()=>{
