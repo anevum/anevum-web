@@ -107,6 +107,12 @@ try{
   await page.waitForURL(base+"/status");
   await page.locator(".v091-status-page").waitFor();
   assert.match(await page.locator(".v091-status-intro").innerText(),/actually live/i);
+  const focus=page.locator(".v136-public-focus");
+  assert.equal(await focus.locator("ol li").count(),3,"Public focus has Now / Next / Exploring");
+  assert.equal(await focus.getByRole("button",{name:/vote/i}).count(),0,"No fake voting control");
+  assert.match(await focus.innerText(),/not release dates or promises/i);
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),
+   "Status development focus stays responsive");
   await page.goto(base+"/start",{waitUntil:"domcontentloaded"});
   await page.getByRole("heading",{name:"WHAT BRINGS YOU HERE?"}).waitFor();
   await page.getByRole("button",{name:/I MAKE THINGS/}).click();
