@@ -190,12 +190,20 @@ try{
   assert.ok(requests.some(read=>read.cat==='games'&&read.free),'Marked-free filter reaches the real project query');
   assert.equal(await cards.count(),1);
   const search=discovery.locator('.p136-discover-search-form').getByRole('searchbox',{name:'Search published projects'});
+  const searchResponse=page.waitForResponse(response=>{
+    const url=new URL(response.url());
+    return url.pathname==='/api/v1/projects'&&url.searchParams.get('q')==='ORBIT'&&
+      url.searchParams.get('category')==='games'&&url.searchParams.get('free')==='1'&&
+      response.status()===200;
+  },{timeout:15000});
   await search.fill('ORBIT');
   await search.press('Enter');
   await checkParams(page,{view:'list',category:'games',free:'1',q:'ORBIT',cursor:null});
-  // Route transitions intentionally render a loading state until a genuine
-  // public API response arrives. Wait for the expected approved result,
-  // rather than reading the transient zero-card loading DOM.
+  await searchResponse;
+  // Route transitions intentionally render a loading state until the true
+  // response paints. A URL update or stale previous heading alone is not
+  // sufficient evidence that a filtered catalogue is ready.
+  await page.waitForFunction(()=>document.querySelectorAll('.p136-discover-results article.project-card').length===1);
   await page.getByRole('heading',{name:'SYNTHETIC ORBIT GAME',exact:true}).waitFor();
   assert.equal(await cards.count(),1);
   await page.evaluate(()=>window.scrollTo(0,0));
