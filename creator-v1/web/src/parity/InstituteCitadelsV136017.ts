@@ -20,11 +20,11 @@ type Batch={name:string;geometry:T.BufferGeometry;material:T.Material;poses:Inst
 const DESKTOP_PLACES:readonly Place[]=[
  {x:6.4,y:-2.6,z:-19,r:2.35,scale:1},
  {x:1.8,y:-4.0,z:-12,r:1.85,scale:.82},
- {x:10.9,y:.0,z:-30,r:1.66,scale:.72}
+ {x:10.9,y:.0,z:-21.5,r:1.66,scale:.72}
 ];
 const MOBILE_PLACES:readonly Place[]=[
  {x:7.1,y:-2.7,z:-19,r:1.85,scale:.85},
- {x:1.1,y:-3.3,z:-28,r:1.52,scale:.70}
+ {x:1.1,y:-3.3,z:-24,r:1.52,scale:.70}
 ];
 function batch(name:string,geometry:T.BufferGeometry,material:T.Material,poses:InstancePose[]):Batch{
  return {name,geometry,material,poses};

@@ -93,6 +93,22 @@ test('real composed QA scene keeps floating outposts in both actual camera frust
   }
   assert.ok(inView>=2,'Composed '+tier+' scene needs two real onscreen platforms: '+JSON.stringify(normalized));
   assert.ok(right>=1,'Composed '+tier+' scene needs an art-side island');
+  const atmosphere=environment.root.getObjectByName('Atmospheric limb');
+  assert.ok(atmosphere instanceof T.Mesh);
+  const atmosphericEdge=atmosphere.geometry.parameters.radius;
+  const skyline=environment.root.getObjectByName('Auric crown spires');
+  assert.ok(skyline instanceof T.InstancedMesh,'Check final tower crowns, not only island centers');
+  for(const [name,mesh,clearance] of [['platform',deck,1.5],['tower crown',skyline,.5]]){
+   for(let i=0;i<mesh.count;i++){
+    const local=new T.Matrix4();mesh.getMatrixAt(i,local);
+    const position=new T.Vector3().setFromMatrixPosition(
+     new T.Matrix4().multiplyMatrices(mesh.matrixWorld,local));
+    const distance=position.distanceTo(planetCenter);
+    assert.ok(distance>atmosphericEdge+clearance,
+     'Actual '+tier+' '+name+' cannot be occluded by the authored gas giant: '+
+      JSON.stringify({index:i,distance,atmosphericEdge,position:position.toArray()}));
+   }
+  }
   environment.dispose();
   assert.equal(environment.root.children.length,0,'Composed environment disposes all owned meshes');
  }
