@@ -293,6 +293,39 @@ try{
     }
     else assert.equal(await page.locator('[data-source-editor="monaco"]').count(),0,'Phone uses accessible text editor without Monaco allocation');
     assert.equal(await page.locator('.p136-living-world').getAttribute('data-enabled'),'false','Private source never enters public GPU');
+    // V136.034: the concept's Preview/Build checks navigation must use the
+    // actual mounted sandbox and static diagnostics, not claim Run/Deploy.
+    const mountedEditorCount=await workbench.locator('[data-source-editor="monaco"]').count();
+    const sourceBeforeCommand=await workbench.locator('.p136-source-state').innerText();
+    await workbench.getByRole('button',{name:'Open focused HTML/CSS layout preview',exact:true}).click();
+    await workbench.locator('[data-preview-focused="true"]').waitFor();
+    assert.equal(await workbench.locator('[data-source-editor="monaco"]').count(),mountedEditorCount,
+      'First-class Preview preserves any mounted Monaco editor');
+    assert.equal(await workbench.locator('[data-source-preview-frame]').count(),1,
+      'Preview command does not introduce another local/runtime frame');
+    assert.equal(await workbench.locator('[data-source-preview-frame]').getAttribute('sandbox'),'',
+      'Preview command retains scriptless opaque sandbox');
+    assert.match(await workbench.locator('.p136034-preview-mode').innerText(),/Scripts, external resources and publishing remain disabled/i);
+    const viewportLabel=await workbench.locator('.p136030-preview-readout').innerText();
+    assert.match(viewportLabel,width<768?/390 × 844 CSS px/:/1280 × 720 CSS px/,
+      'The existing viewport remains a real CSS width');
+    assert.equal(await workbench.locator('.p136-source-stage').isVisible(),false,
+      'Focused preview gives the actual layout the workbench width');
+    await page.keyboard.press('Escape');
+    await workbench.locator('[data-preview-focused="false"]').waitFor();
+    await page.waitForFunction(()=>document.activeElement?.id?.startsWith('p136-source-tab-'));
+    assert.equal(await workbench.locator('.p136-source-state').innerText(),sourceBeforeCommand,
+      'Preview/return does not modify source or invalidate prepared archives');
+    assert.equal(await workbench.locator('[data-source-editor="monaco"]').count(),mountedEditorCount,
+      'Editor remains mounted after preview exit');
+    await workbench.getByRole('button',{name:/Open local build checks:/}).click();
+    await page.waitForFunction(()=>document.querySelector('.p136030-build-details')?.open);
+    await page.waitForFunction(()=>document.activeElement?.tagName==='SUMMARY'&&
+      document.activeElement.textContent?.startsWith('Build checks'));
+    assert.equal(await workbench.locator('.p136-source-stage').isVisible(),true,
+      'Build checks open alongside the real code editor, not a duplicate IDE');
+    assert.equal(await page.locator('[data-source-editor="monaco"]').count(),mountedEditorCount,
+      'Diagnostics navigation retains the exact source editor instance');
     await workbench.getByRole('button',{name:'Prepare build archive',exact:true}).click();
     await page.locator('.av095-drop strong').filter({hasText:'continuance-build.zip'}).waitFor();
     const picker=page.locator('.av136033-build-picker');
