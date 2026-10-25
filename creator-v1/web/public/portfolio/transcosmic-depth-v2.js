@@ -253,7 +253,11 @@
         const smooth=(target,current)=>current+(target-current)*.055;
         eased[0]=smooth(pointer[0],eased[0]);eased[1]=smooth(pointer[1],eased[1]);
         const progress=Math.max(0,Math.min(1,window.scrollY/Math.max(stage.parentElement?.clientHeight||1,1)));
-        travel=smooth(sector*.38+progress*.31,travel);
+        const destination=sector*.38+progress*.31;
+        // View changes remain usable under reduced-motion and Pause: render
+        // the chosen camera once at its final position, never a 5% transition.
+        travel=motionEnabled()?travel+(destination-travel)*.14:destination;
+        stage.dataset.cameraTravel=travel.toFixed(3);
         const phone=box.width<650;
         const eye=[(phone?.7:-.25)+eased[0]*.85+travel*2.1,eased[1]*.62+travel*.45,9-travel*21];
         const target=[(phone?.4:4.1)+travel*.70,Math.sin(time*.035)*.26,-38-travel*37];
