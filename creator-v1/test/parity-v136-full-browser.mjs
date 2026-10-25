@@ -1107,19 +1107,36 @@ try{
     record('real mesh families / compressed assets / one context / cache / GPU loss '+width,{snapshots,softwareGPU:true});
     await context.close();
   }
-  // Gamepad API fixture lives only in this local Chromium context. It never
-  // changes the real controller status of a public production visitor.
-  {
-    const {page,context}=await contextFor(390);
+  // V136.038 controller target trace is synthetic-only. It observes real DOM
+  // click/focus events in compiled React without changing controller runtime,
+  // relaxing the intended route, or introducing external telemetry.
+  for(const width of [390,320,1440]){
+    const {page,context}=await contextFor(width);
     await context.addInitScript(()=>{
       const pad={index:0,connected:true,mapping:'standard',
         buttons:Array.from({length:17},()=>({pressed:false,value:0})),axes:[0,0]};
       window.__avGamepadFixture=pad;
       Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>[pad]});
+      window.__avControllerTrace={focus:[],clicks:[]};
+      const nearest=target=>target instanceof Element?target.closest('a[href],button'):null;
+      const describe=target=>{
+        const el=nearest(target);
+        return {tag:el?.tagName||null,label:el?.getAttribute('aria-label')||null,
+          href:el?.getAttribute('href')||null,route:location.pathname+location.search};
+      };
+      document.addEventListener('focusin',event=>{
+        const events=window.__avControllerTrace.focus;
+        if(events.length<36)events.push(describe(event.target));
+      },true);
+      document.addEventListener('click',event=>{
+        const events=window.__avControllerTrace.clicks;
+        if(events.length<12)events.push(describe(event.target));
+      },true);
     });
     await page.goto(base,{waitUntil:'networkidle'});
     await page.locator('[data-av-controller-status="ready"]').waitFor({timeout:10000});
     const stations=page.locator('.p136-console-wayfinder a[data-station]');
+    assert.equal(await stations.count(),5,'Real five-station Wayfinder at '+width);
     await stations.first().focus();
     const button=async(index,pressed)=>{
       await page.evaluate(({index,pressed})=>{
@@ -1130,13 +1147,49 @@ try{
     await button(15,true);
     await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='Discover',null,{timeout:5000});
     await button(15,false);
-    await page.waitForTimeout(150);
-    await button(0,true);
-    await page.waitForURL(base+'/discover',{timeout:8000});
-    await button(0,false);
+    // Two painted frames after D-pad release must leave the intended link
+    // focused. The next A edge must not activate a nearby category card.
+    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+    await page.waitForTimeout(180);
+    const focused=await page.evaluate(()=>({
+      label:document.activeElement?.getAttribute('aria-label')||null,
+      href:document.activeElement?.getAttribute('href')||null,
+      route:location.pathname+location.search
+    }));
+    assert.deepEqual(focused,{label:'Discover',href:'/discover',route:'/'},
+      'Gamepad A requires a settled canonical target before selection at '+width);
+    let navigationError=null;
+    try{
+      await button(0,true);
+      await page.waitForFunction(()=>location.pathname==='/discover',null,{timeout:8000});
+      // Holding A beyond the D-pad repeat threshold must still activate the
+      // route only once; do not interpret any extra filtered route as success.
+      await page.waitForTimeout(450);
+    }catch(error){navigationError=String(error);}
+    finally{await button(0,false);}
+    await page.waitForTimeout(220);
+    const observed=await page.evaluate(()=>({
+      route:location.pathname+location.search,
+      path:location.pathname,
+      search:location.search,
+      clicks:window.__avControllerTrace.clicks,
+      focus:window.__avControllerTrace.focus,
+      connected:window.__avGamepadFixture.connected
+    }));
+    writeFileSync(join(out,'controller-route-'+width+'.json'),JSON.stringify({
+      contract:'v136.038-controller-route-loopback',source:process.env.ANEVUM_SOURCE_SHA||null,
+      width,syntheticOnly:true,hardwareVerified:false,focused,navigationError,...observed
+    },null,2)+'\n');
+    assert.equal(navigationError,null,'Gamepad navigation failed at '+width+': '+JSON.stringify(observed));
+    assert.equal(observed.route,'/discover','Held A must end on exact focused route at '+width+': '+JSON.stringify(observed));
+    assert.equal(observed.clicks.length,1,'One A edge generates exactly one native click at '+width+': '+JSON.stringify(observed));
+    assert.equal(observed.clicks[0].href,'/discover',
+      'Gamepad selects focused Discover link, not another card at '+width+': '+JSON.stringify(observed));
+    await page.screenshot({path:join(out,'controller-route-'+width+'.png'),animations:'disabled'});
     await page.evaluate(()=>{window.__avGamepadFixture.connected=false;});
     await page.waitForFunction(()=>!document.querySelector('.p136-controller-indicator'),null,{timeout:8000});
-    record('synthetic Gamepad API / connected badge / D-pad DOM focus / A route / disconnected cleanup',{hardwareVerified:false});
+    record('synthetic Gamepad target focus / A single native click / exact stable route / cleanup '+width,{
+      focused,route:observed.route,clickCount:observed.clicks.length,hardwareVerified:false});
     await context.close();
   }
   if(process.env.VITE_PARITY_V136_CINEMATIC==='true'){
