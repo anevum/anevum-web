@@ -65,6 +65,9 @@ on:
       - 'creator-v1/web/src/lib/project-thumbnails.ts'
       - 'creator-v1/web/public/assets/default-thumbnails/**'
       - 'creator-v1/test/parity-v136-thumbnails.test.mjs'
+      - 'creator-v1/test/parity-v136-integrated-overhaul.test.mjs'
+      - 'creator-v1/web/AGENTS.md'
+      - 'docs/production/ACTIVE-V136-WEB-OVERHAUL.md'
       - 'creator-v1/web/src/components/CreatorPackageGallery.tsx'
 permissions:
   contents: read
@@ -105,6 +108,7 @@ jobs:
         run: |
           node --experimental-strip-types --test creator-v1/test/parity-v136-thumbnails.test.mjs
           node --experimental-strip-types --test creator-v1/test/parity-v136-member-world.test.mjs
+          node --experimental-strip-types --test creator-v1/test/parity-v136-integrated-overhaul.test.mjs
           python3 -c "import xml.etree.ElementTree as ET; from pathlib import Path; a=list(Path('creator-v1/web/public/assets/default-thumbnails').glob('*.svg')); assert len(a)==10; [ET.parse(p) for p in a]"
       - name: Runtime media approval and single-renderer contract
         run: node --experimental-strip-types --test creator-v1/test/parity-v136-media-contract.test.mjs
