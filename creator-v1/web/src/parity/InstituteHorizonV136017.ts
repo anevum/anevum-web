@@ -114,15 +114,15 @@ export function createInstituteHorizon(tier:AssetTier){
  }
  root.add(orbits);
  root.updateMatrixWorld(true);
- const triangles=root.children.reduce((n,child)=>{
-  if(child instanceof T.Group)
-   return n+child.children.reduce((sum,mesh)=>sum+(mesh instanceof T.Mesh?
-    (mesh.geometry.index?.count??mesh.geometry.attributes.position.count)/3:0),0);
-  return n+(child instanceof T.Mesh?
-   (child.geometry.index?.count??child.geometry.attributes.position.count)/3:0);
- },0);
+ let triangles=0,drawCalls=0;
+ root.traverse(object=>{
+  if(!(object instanceof T.Mesh))return;
+  drawCalls++;
+  const geometry=object.geometry;
+  triangles+=(geometry.index?.count??geometry.attributes.position.count)/3;
+ });
  const budget=HORIZON_QA_BUDGET[tier];
- if(triangles>budget.triangles||root.children.length>budget.drawCalls){
+ if(triangles>budget.triangles||drawCalls>budget.drawCalls){
   root.traverse(object=>{
    if(object instanceof T.Mesh){
     object.geometry.dispose();
@@ -133,7 +133,7 @@ export function createInstituteHorizon(tier:AssetTier){
   throw Error('Planetary QA environment exceeds fixed geometry budget');
  }
  return {
-  root,triangles,drawCalls:4,
+  root,triangles,drawCalls,
   update(publicDensity:number,elapsedSeconds:number,motionAllowed:boolean){
    signal.value=Math.max(0,Math.min(1,Number.isFinite(publicDensity)?publicDensity:0));
    if(motionAllowed)orbits.rotation.z=.22+Math.sin(elapsedSeconds*.024)*.035;
