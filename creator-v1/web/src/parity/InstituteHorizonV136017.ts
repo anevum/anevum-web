@@ -42,22 +42,21 @@ void main(){
  vec3 star=normalize(vec3(-0.7,0.78,0.48));
  float daylight=max(0.0,dot(n,star));
  float limb=pow(1.0-max(0.0,dot(n,eye)),3.2);
- // Three noise samples, as before: spend their frequency range on warped
- // cloud filaments instead of large blurred cells. No texture or extra loop.
- float weather=horizonNoise(n*8.0);
- float filament=horizonNoise(n*38.0+vec3(weather*3.0,n.y*4.0,1.7));
- float detail=horizonNoise(n*82.0+vec3(filament,0.2,0.8));
- float bands=0.5+0.5*sin(n.y*68.0+n.x*4.0+weather*8.0+filament*2.5);
- float cloud=smoothstep(.47,.72,filament+detail*.20);
- vec3 cobalt=vec3(0.025,0.055,0.16);
- vec3 violet=vec3(0.24,0.10,0.36);
- vec3 upper=vec3(0.20,0.33,0.57);
- vec3 body=mix(cobalt,violet,clamp(bands*.60+weather*.21,0.0,1.0));
- body=mix(body,upper,cloud*.49);
- body+=vec3(.16,.08,.20)*pow(bands,7.0)*(.3+detail*.7);
- body*=0.30+0.98*daylight;
- body+=vec3(0.13,0.24,0.56)*limb*(0.6+uPublicDensity*.08);
- body+=vec3(0.09,0.06,0.21)*pow(bands,5.0)*daylight;
+ // Keep the existing three deterministic noise samples, but prioritize
+ // fine horizontal belts over high-contrast splotches. No added sampler.
+ float weather=horizonNoise(n*6.0);
+ float filament=horizonNoise(n*36.0+vec3(weather*2.4,n.y*9.0,1.7));
+ float detail=horizonNoise(n*92.0+vec3(filament*.9,weather*.6,.8));
+ float belts=.5+.5*sin(n.y*78.0+n.x*8.0+weather*4.2+filament*1.8);
+ float cloud=smoothstep(.54,.77,filament+detail*.12);
+ vec3 deep=vec3(.018,.040,.118);
+ vec3 cobalt=vec3(.11,.125,.265);
+ vec3 slate=vec3(.22,.275,.39);
+ vec3 body=mix(deep,cobalt,clamp(belts*.75+weather*.14,0.0,1.0));
+ body=mix(body,slate,cloud*.41);
+ body+=vec3(.24,.13,.09)*pow(belts,8.0)*(.14+.23*detail)*daylight;
+ body*=.29+1.02*daylight;
+ body+=vec3(.11,.22,.48)*limb*(.64+uPublicDensity*.07);
  gl_FragColor=vec4(body,1.0);
 }
 `;
@@ -93,18 +92,18 @@ export function createInstituteHorizon(tier:AssetTier,citadelFactory:typeof crea
  // entire root: that silently shifts citadels out of the camera frustum.
  const orbitalBody=new T.Group();
  orbitalBody.name='Planet + illuminated observation rings';
- orbitalBody.position.set(mobile?10:17,12,-35);
+ orbitalBody.position.set(mobile?17.6:17.2,mobile?10.6:11.8,mobile?-42:-39.5);
  root.add(orbitalBody);
  const signal={value:0};
  const body=new T.Mesh(
-  new T.SphereGeometry(14.6,longitude,latitude),
+  new T.SphereGeometry(mobile?10.2:11.4,longitude,latitude),
   new T.ShaderMaterial({vertexShader:planetVertex,fragmentShader:planetFragment,
    uniforms:{uPublicDensity:signal},fog:false,depthWrite:true,toneMapped:false})
  );
  body.name='Original gas giant / no texture or telemetry';
  orbitalBody.add(body);
  const atmosphere=new T.Mesh(
-  new T.SphereGeometry(14.91,longitude,latitude),
+  new T.SphereGeometry(mobile?10.40:11.65,longitude,latitude),
   new T.ShaderMaterial({vertexShader:planetVertex,fragmentShader:atmosphereFragment,
    uniforms:{uPublicDensity:signal},transparent:true,depthWrite:false,
    blending:T.AdditiveBlending,fog:false,toneMapped:false})
@@ -114,7 +113,7 @@ export function createInstituteHorizon(tier:AssetTier,citadelFactory:typeof crea
  const orbits=new T.Group();orbits.rotation.set(.41,-.12,.22);
  orbits.name='Two engineered auric observation rings';
  for(const [radius,tube,opacity,color] of [
-  [19.9,.060,.36,0x9ed6ff],[22.3,.033,.22,0xb393ef]
+  [mobile?13.4:14.9,.060,.36,0x9ed6ff],[mobile?16.2:17.5,.033,.22,0xb393ef]
  ] as const){
   const ring=new T.Mesh(
    new T.TorusGeometry(radius,tube,mobile?4:6,mobile?72:144),

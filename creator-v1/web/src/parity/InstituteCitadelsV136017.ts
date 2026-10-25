@@ -17,14 +17,18 @@ type Batch={name:string;geometry:T.BufferGeometry;material:T.Material;poses:Inst
 // looks into -Z. The previous authoring draft placed outposts below y=-10,
 // several at or behind the camera (positive Z): invisible but still costly.
 // These intentionally stagger in front of the actual hero camera instead.
+// Screen-space composition is authored against the real responsive hero camera.
+// Desktop: a raised foreground stronghold between the body copy and IREN.
+// Mobile: architecture lifts above the main headline rather than vanishing
+// behind the CTAs. Both tiers keep secondary islands physically farther away.
 const DESKTOP_PLACES:readonly Place[]=[
- {x:6.0,y:-1.0,z:-18,r:4.0,scale:1.35},
- {x:1.8,y:-4.0,z:-12,r:1.85,scale:.82},
- {x:10.9,y:.0,z:-21.5,r:1.66,scale:.72}
+ {x:4.9,y:1.55,z:-16,r:4.3,scale:1.44},
+ {x:1.7,y:-2.1,z:-18,r:1.90,scale:.80},
+ {x:10.0,y:2.4,z:-24,r:1.70,scale:.72}
 ];
 const MOBILE_PLACES:readonly Place[]=[
- {x:7.1,y:-2.7,z:-19,r:1.85,scale:.85},
- {x:1.1,y:-3.3,z:-24,r:1.52,scale:.70}
+ {x:5.9,y:4.25,z:-21,r:2.05,scale:.88},
+ {x:.9,y:1.7,z:-25,r:1.37,scale:.72}
 ];
 function batch(name:string,geometry:T.BufferGeometry,material:T.Material,poses:InstancePose[]):Batch{
  return {name,geometry,material,poses};
@@ -35,7 +39,7 @@ function section(profile:readonly (readonly [number,number])[],segments:number){
  return new T.LatheGeometry(profile.map(([r,y])=>new T.Vector2(r,y)),segments);
 }
 function fracturedGeology(segments:number){
- const geometry=section([[0,-1.15],[.13,-.95],[.28,-.48],[.44,-.27],
+ const geometry=section([[0,-1.60],[.13,-1.35],[.28,-.48],[.44,-.27],
   [.64,.08],[.79,.20],[1,.68],[.80,1],[0,1.02]],segments);
  const positions=geometry.attributes.position;
  for(let i=0;i<positions.count;i++){
@@ -49,22 +53,22 @@ function fracturedGeology(segments:number){
 }
 export function createInstituteCitadels(tier:AssetTier){
  const mobile=tier==='mobile',places=mobile?MOBILE_PLACES:DESKTOP_PLACES;
- const dark=new T.MeshStandardMaterial({color:0x263048,metalness:.18,roughness:.88,flatShading:true});
- const alloy=new T.MeshStandardMaterial({color:0x42637d,metalness:.76,roughness:.29,
-  emissive:0x09172c,emissiveIntensity:.23});
- const auric=new T.MeshStandardMaterial({color:0x8b7152,metalness:.83,roughness:.33});
+ const dark=new T.MeshStandardMaterial({color:0x303749,metalness:.18,roughness:.88,flatShading:true});
+ const alloy=new T.MeshStandardMaterial({color:0x607e92,metalness:.76,roughness:.37,
+  emissive:0x102538,emissiveIntensity:.20});
+ const auric=new T.MeshStandardMaterial({color:0xae8f63,metalness:.83,roughness:.33});
  const photonic=new T.MeshBasicMaterial({color:0xffffff,toneMapped:false});
  const root=new T.Group();root.name='QA / SUSPENDED CONTINUANCE OUTPOSTS';
  const deck:InstancePose[]=[],suspended:InstancePose[]=[],towers:InstancePose[]=[];
  const spires:InstancePose[]=[],windowSlits:InstancePose[]=[],halos:InstancePose[]=[];
- const towerRadius=.20,towerHeight=2.50;
+ const towerRadius=.20,towerHeight=2.85;
  for(const place of places){
   deck.push({position:[place.x,place.y,place.z],scale:[place.r,.90*place.scale,place.r]});
   suspended.push({position:[place.x,place.y-1.20*place.scale,place.z],
    scale:[place.r*.81,place.scale,place.r*.81]});
   // Broken hanging shards give each island a geological silhouette, rather
   // than a single smooth inverted cone beneath a flat circular platform.
-  for(let shard=0;shard<(mobile?1:2);shard++){
+  for(let shard=0;shard<(mobile?2:3);shard++){
    const a=shard*2.7+.65;
    suspended.push({position:[place.x+Math.cos(a)*place.r*.58,
     place.y-1.12*place.scale,place.z+Math.sin(a)*place.r*.58],
@@ -104,8 +108,8 @@ export function createInstituteCitadels(tier:AssetTier){
    [1.08,-.13],[1.08,-.04],[.87,-.04],[.87,.10],[1,.10],[1,.17],[0,.17]],mobile?10:14),alloy,deck),
   batch('Suspension geology',fracturedGeology(mobile?8:10),dark,suspended),
   batch('Ring railings',new T.TorusGeometry(1,.017,4,mobile?32:48),photonic,halos),
-  batch('Cathedral finial towers',section([[0,-1.25],[.28,-1.25],[.28,-1.08],
-   [.19,-.97],[.15,.58],[.27,.62],[.27,.72],[.12,.76],[.10,1.25],[0,1.25]],8),alloy,towers),
+  batch('Cathedral finial towers',section([[0,-1.25],[.31,-1.25],[.34,-1.07],
+   [.19,-.94],[.16,.46],[.31,.62],[.31,.79],[.15,.83],[.11,1.25],[0,1.25]],8),alloy,towers),
   batch('Auric crown spires',section([[0,-.59],[.22,-.59],[.22,-.49],
    [.12,-.40],[.06,.14],[0,.59]],8),auric,spires),
   batch('Photonic window inlays',new T.BoxGeometry(.12,.095,.08),photonic,windowSlits)

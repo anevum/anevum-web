@@ -24,7 +24,7 @@ for(const tier of ['desktop','mobile']){
   assert.equal(c.triangles,actualTriangles);
   assert.equal(c.instanceCount,actualInstances);
   const geology=c.root.getObjectByName('Suspension geology');
-  assert.equal(geology.count,tier==='desktop'?9:4,'Main islands plus actual hanging rock shards');
+  assert.equal(geology.count,tier==='desktop'?12:6,'Main islands plus actual hanging rock shards');
   const positions=geology.geometry.attributes.position;
   let lowerRadius=0,upperRadius=0;
   for(let i=0;i<positions.count;i++){
@@ -109,6 +109,21 @@ test('real composed QA scene keeps floating outposts in both actual camera frust
    const visible=Math.abs(ndc.x)<.92&&Math.abs(ndc.y)<.92&&ndc.z>=-1&&ndc.z<=1;
    if(visible){inView++;if(ndc.x>0)right++;normalized.push([ndc.x,ndc.y,ndc.z]);}
   }
+  // Beyond frustum inclusion: the actual inspected screenshots showed the
+  // desktop stronghold too low and the mobile planet swallowing architecture.
+  // Lock useful hero-space anchors and optical scale for both art directions.
+  const mainWorld=new T.Matrix4();
+  deck.getMatrixAt(0,mainWorld);
+  const mainNdc=new T.Vector3().setFromMatrixPosition(
+   new T.Matrix4().multiplyMatrices(deck.matrixWorld,mainWorld)).project(camera);
+  assert.ok(mainNdc.x>.10&&mainNdc.x<.75,
+   'Primary '+tier+' platform must occupy the right-hand art field');
+  assert.ok(mainNdc.y>(tier==='mobile'?.08:-.02)&&mainNdc.y<.40,
+   'Primary '+tier+' platform must rise above the CTA/navigation foot');
+  const opticalRadius=body.geometry.parameters.radius/
+   (planetCenter.distanceTo(camera.position)*Math.tan(T.MathUtils.degToRad(camera.fov/2)));
+  assert.ok(opticalRadius<(tier==='mobile'?.40:.55),
+   'Distant gas giant must frame rather than dominate the entire arrival');
   assert.ok(inView>=2,'Composed '+tier+' scene needs two real onscreen platforms: '+JSON.stringify(normalized));
   assert.ok(right>=1,'Composed '+tier+' scene needs an art-side island');
   const atmosphere=environment.root.getObjectByName('Atmospheric limb');
