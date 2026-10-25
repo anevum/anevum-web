@@ -78,6 +78,23 @@ async function run(width,height,motion='no-preference') {
   assert.ok(shape.hero.y>=shape.headerBottom-1,'header obscures hero at '+width);
   assert.ok(shape.button.x>=-1 && shape.button.right<=width+1,'hero CTA clipped at '+width);
   note('layout '+width+'px',shape);
+  const polish = await page.evaluate(() => {
+    const region = document.querySelector('.project-grid').getBoundingClientRect();
+    const fiction = document.querySelector('.project-transcosmic').getBoundingClientRect();
+    const prism = document.querySelector('.hero-v3-prism');
+    return {
+      gridWidth:region.width, fictionWidth:fiction.width,
+      prismPresent:Boolean(prism),
+      prismPointer:prism ? getComputedStyle(prism).pointerEvents : null,
+      prismHidden:getComputedStyle(prism).display === 'none'
+    };
+  });
+  assert.equal(polish.prismPresent,true,'missing hero glass visual layer');
+  assert.equal(polish.prismPointer,'none','cinematic glass must never block real interactions');
+  if (width>=851) assert.ok(Math.abs(polish.fictionWidth-polish.gridWidth)<=3,
+    'the final fiction project leaves an empty desktop grid column: '+JSON.stringify(polish));
+  note('prismatic motion-safe scene and balanced project grid '+width,polish);
+
   // Reproduce actual reading/scrolling so lazy-loaded images and reveal states
   // are visible in full-page screenshots, instead of falsely appearing blank.
   const revealed = await page.evaluate(async () => {
