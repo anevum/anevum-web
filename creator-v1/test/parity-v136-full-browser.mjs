@@ -318,6 +318,7 @@ try{
       'Preview/return does not modify source or invalidate prepared archives');
     assert.equal(await workbench.locator('[data-source-editor="monaco"]').count(),mountedEditorCount,
       'Editor remains mounted after preview exit');
+    const diagnosticsInitiallyOpen=await workbench.locator('.p136030-build-details').evaluate(el=>el.open);
     await workbench.getByRole('button',{name:/Open local build checks:/}).click();
     await page.waitForFunction(()=>document.querySelector('.p136030-build-details')?.open);
     await page.waitForFunction(()=>document.activeElement?.tagName==='SUMMARY'&&
@@ -326,6 +327,13 @@ try{
       'Build checks open alongside the real code editor, not a duplicate IDE');
     assert.equal(await page.locator('[data-source-editor="monaco"]').count(),mountedEditorCount,
       'Diagnostics navigation retains the exact source editor instance');
+    // The command intentionally opens diagnostics; reset the disclosure after
+    // this check so subsequent mobile assertions still exercise the untouched
+    // phone default (closed) rather than state deliberately changed by QA.
+    if(!diagnosticsInitiallyOpen){
+      await workbench.locator('.p136030-build-details > summary').click();
+      await page.waitForFunction(()=>document.querySelector('.p136030-build-details')?.open===false);
+    }
     await workbench.getByRole('button',{name:'Prepare build archive',exact:true}).click();
     await page.locator('.av095-drop strong').filter({hasText:'continuance-build.zip'}).waitFor();
     const picker=page.locator('.av136033-build-picker');
