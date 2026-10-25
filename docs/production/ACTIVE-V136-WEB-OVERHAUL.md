@@ -1,10 +1,10 @@
 # ACTIVE — ANEVUM PARITY V136 unified website overhaul
 Session: `ANEVUM.WEB.UPDATE.2026-10-25.001.SITEWIDE-OVERHAUL-SYNCHRONIZATION`
 Updated: 2026-10-25
-**Owner development baseline: draft PR #735 — Concept Convergence II, head `20161bae20`.**
-**Current bounded continuation: draft PR #745 — V136.025 Creator Directory.**
+**Owner development baseline: draft PR #735 — Concept Convergence II, head `9e1a82d2` after #745 integration.**
+**Current bounded continuation: V136.026 — Discover URL-backed Grid/List and real catalogue cards, branch `build/parity-v136-discovery-20261025-026`.**
 **Sitewide integration: PR #738 was merged into the #735 development branch, preserving selected changes from PR #737 and #736. Those historical PRs need no blind re-import.**
-Status: V136.025 is DRAFT / **NOT released**, not merged or visually accepted. The sealed V136.024 controlled candidate in #741 is a separate release lane; consult provider receipts for actual traffic.
+Status: V136.025 was owner-verified and merged into development as `9e1a82d2`; V136.026 is DRAFT / **NOT released**. The sealed V136.024 controlled candidate in #741 is a separate release lane; consult provider receipts for actual traffic.
 
 ## Read this first
 This is the active handoff for the October 24–25 sitewide overhaul. It supersedes earlier
@@ -187,7 +187,7 @@ private uploader/publication changes, financial operations or data migrations.
 The next UI development slice remains creator-directory search/card/empty-state
 convergence; keep ongoing development separate from the immutable release head.
 
-## V136.025 — Creator Directory functional convergence (active draft)
+## V136.025 — Creator Directory functional convergence (verified and merged to development)
 Session: `ANEVUM.WEB.UPDATE.2026-10-25.005.CREATOR-DISCOVERY-CONVERGENCE`
 Owner PR: [#745](https://github.com/anevum/anevum-web/pull/745)
 Continuation branch: `build/parity-v136-creator-directory-20261025-025`
@@ -223,14 +223,45 @@ thresholds, awards or rate. #337 owns the backend/data reconciliation.
 The focused browser's source receipt now pins the checked-out exact head
 instead of GitHub's synthetic pull-request merge SHA.
 
-Current post-copy exact-head CI still requires its own PASS receipts and owner
-1440px/390px/320px side-by-side visual review under #335. No physical Safari,
-Xbox, authenticated member A/reviewer/guest/B acceptance or final reference
-art acceptance has been granted. Draft status is deliberate.
+Owner verified the V136.025 concept-phase directory after nine exact-head
+functional and safety workflows passed on `fafa1d643c755cbbd2722f2391428f32a297e4bc`.
+PR #745 merged **only** into the #735 development branch at
+`9e1a82d250e0b5a2eca0f1555e3110cdba7c6dae`. Public release and physical
+Safari/Xbox and signed-in A/reviewer/guest/B acceptance remain separate gates.
 
 **Release isolation**: V136.024 immutable candidate #741, recorded V58/V59
 traffic, provider settings, Stripe retirement draft #739 and main are untouched.
-Targeted release source allowlist correctly rejects this not-yet-authorized
-draft source; do not add broad exemptions or promote traffic. #742 GET-only
+Targeted release source allowlist correctly rejects this development-only
+source; do not add broad exemptions or promote traffic. #742 GET-only
 public smoke received HTTP 403 before reaching the baseline app; no successful
 production comparison is implied. Owner go/no-go stays under #333.
+
+## V136.026 — public Discover URL/search/list convergence (active development)
+Session: `ANEVUM.WEB.UPDATE.2026-10-25.006.DISCOVERY-LAYOUT-CONTINUITY`.
+Implementation branch: `build/parity-v136-discovery-20261025-026`.
+Parent baseline: exact #735 development merge `9e1a82d2` after #745.
+Status: DRAFT SOURCE, **NOT released**; no owner visual acceptance yet.
+
+Bounded functionality: the existing `DiscoverPage` owns approved public
+`readProjects` and optional approved `readPackageCatalogue`. The Grid/List
+selection is now URL-owned as `view=list` (Grid is the default), so shared
+links and Back/Forward restore it; category/free/search/cursor changes preserve
+view, while a genuinely new search/category/free selection clears stale cursor.
+Reset preserves the current List setting. No new endpoints or data model.
+Legacy and full-flag V136 paths share the same state and true index.
+List means one compact, full-width approved result per row, with editorial
+legacy project records and existing package-card compact presentation.
+Creators' actual approved uploaded package covers remain Grid priority;
+the existing first-party category fallback remains for missing media.
+Real counts state 'approved published', not verified creator identities.
+The mobile search field is 16px to avoid unwanted iPhone zoom.
+
+Acceptance: new source contracts and loopback-only full-flag Playwright QA at
+1440, 390, 320; synthetic fixture projects explicitly labelled as non-public,
+true Grid/List geometry, filter/free/search/pagination and history restoration,
+recorded screenshots, no external/private/non-read requests or runtime errors.
+Exact-head CI, screenshot review, parent merge and production authorization
+are **not** implied by source commits. #335 owns concept visual acceptance;
+#333 owns any future sealed release; #337 remains responsible for uncapped
+XP/product implementation, not this UI slice. Main, providers, Stripe draft
+#739, auth, D1, publishing and baseline/canary remain unchanged.
