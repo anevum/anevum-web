@@ -707,6 +707,9 @@ try{
     await page.waitForURL(/\/community\?view=people$/);
     assert.equal(await page.getByRole('button',{name:'PEOPLE',exact:true}).getAttribute('aria-pressed'),'true');
     await page.goBack({waitUntil:'domcontentloaded'});
+    // React Router restores the URL before the location-driven view effect
+    // commits. Wait for the actual DOM state rather than racing a microtask.
+    await page.waitForFunction(()=>document.querySelector('.p136-community .ch7-tabs button')?.getAttribute('aria-pressed')==='true');
     assert.equal(await page.getByRole('button',{name:'LATEST',exact:true}).getAttribute('aria-pressed'),'true');
     await page.screenshot({path:join(out,'public-community-'+width+'.png'),animations:'disabled'});
     await page.goto(base+'/creators',{waitUntil:'domcontentloaded'});
