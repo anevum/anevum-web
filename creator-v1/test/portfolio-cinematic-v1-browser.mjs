@@ -38,7 +38,7 @@ const server = createServer((req,res) => {
 });
 await new Promise(ok=>server.listen(0,'127.0.0.1',ok));
 const origin='http://127.0.0.1:'+server.address().port;
-const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-gpu-sandbox']});
+const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-gpu-sandbox','--enable-webgl','--enable-unsafe-swiftshader','--use-angle=swiftshader']});
 const note=(name,data={})=>{checks.push({name,...data});console.log('PASS '+name);};
 const failures=[];
 async function run(width,height,motion='no-preference') {
@@ -59,7 +59,7 @@ async function run(width,height,motion='no-preference') {
   await page.goto(origin+'/portfolio/',{waitUntil:'networkidle',timeout:45000});
   await page.locator('#hero-title').waitFor({state:'visible'});
   const title=await page.locator('#hero-title').innerText();
-  assert.match(title,/Imagination/i);
+  assert.match(title,/I BUILD/i);
   const shape=await page.evaluate(()=>{
     const el=document.documentElement;
     const hero=document.querySelector('#hero-title').getBoundingClientRect();
@@ -72,11 +72,34 @@ async function run(width,height,motion='no-preference') {
   });
   assert.ok(shape.scrollWidth <= shape.viewport + 1, 'overflow '+width+': '+JSON.stringify(shape));
   assert.equal(shape.mainCount,1);
-  assert.equal(shape.sculptures,0,'retired WebGL sculpture must not be present');
+  assert.equal(shape.sculptures,1,'exactly one authored three-dimensional field, no duplicate sculptures');
   assert.ok(shape.hero.x>=-1 && shape.hero.right<=width+1,'hero headline clipped at '+width+': '+JSON.stringify(shape));
   assert.ok(shape.intro.x>=-1 && shape.intro.right<=width+1,'intro copy clipped '+width);
   assert.ok(shape.hero.y>=shape.headerBottom-1,'header obscures hero at '+width);
   assert.ok(shape.button.x>=-1 && shape.button.right<=width+1,'hero CTA clipped at '+width);
+  // Transcosmic V136.040: verify actual GPU geometry and a working camera
+  // journey, not just a CSS gradient or an autoplay video.
+  const universe=page.locator('[data-transcosmic-field]');
+  await page.waitForFunction(()=>['webgl2','fallback'].includes(document.querySelector('[data-transcosmic-field]')?.dataset.renderMode),null,{timeout:45000});
+  const firstMode=await universe.getAttribute('data-render-mode');
+  const firstDepth=await universe.getAttribute('data-scene-depth');
+  assert.equal(firstMode,'webgl2','Source-pinned Chromium with software WebGL must render actual 3D at '+width);
+  assert.equal(firstDepth,'perspective','Deep field must use real perspective geometry');
+  const pixels=Number(await universe.getAttribute('data-render-pixels'));
+  assert.ok(pixels>0&&pixels<=1650000+1,'Bounded viewport pixels at '+width+': '+pixels);
+  assert.equal(await page.locator('canvas[data-depth-canvas]').count(),1);
+  assert.equal(await page.locator('.institute-backdrop').getAttribute('src'),'/portfolio/assets/transcosmic-continuum.svg');
+  const initialState=await page.locator('[data-universe-stage="0"]').getAttribute('aria-pressed');
+  assert.equal(initialState,'true');
+  await page.screenshot({path:join(output,'transcosmic-hero-'+width+'-'+motion+'.png'),animations:'disabled'});
+  await page.locator('[data-universe-stage="1"]').click();
+  assert.equal(await page.locator('[data-universe-stage="1"]').getAttribute('aria-pressed'),'true');
+  assert.equal(await page.locator('[data-universe-name]').innerText(),'THE ARCHIVE');
+  await page.locator('[data-universe-stage="2"]').click();
+  assert.equal(await page.locator('[data-universe-name]').innerText(),'THE CONTINUUM');
+  await page.screenshot({path:join(output,'transcosmic-beyond-'+width+'.png'),animations:'disabled'});
+  await page.locator('[data-universe-stage="0"]').click();
+  note('single GPU Transcosmic field / actual camera viewpoints / bounded pixels '+width,{mode:firstMode,sceneDepth:firstDepth,pixels});
   note('layout '+width+'px',shape);
   // Reproduce actual reading/scrolling so lazy-loaded images and reveal states
   // are visible in full-page screenshots, instead of falsely appearing blank.
@@ -96,6 +119,13 @@ async function run(width,height,motion='no-preference') {
   if (motion!=='reduce') assert.ok(revealed.visible >= revealed.total-2, 'Missing scroll reveals: '+JSON.stringify(revealed));
   note('real scroll reveal '+width,revealed);
   await page.screenshot({path:join(output,'portfolio-'+width+'-'+motion+'.png'),fullPage:true,animations:'disabled'});
+  // The author/worldbuilder hero entry opens the real existing case-story
+  // dialog; no concept link or fake secondary route is introduced.
+  await page.getByRole('button',{name:/Discover Transcosmic/i}).click();
+  await page.locator('#project-dialog[open]').waitFor({state:'visible'});
+  assert.match(await page.locator('#case-title').innerText(),/Transcosmic/i);
+  await page.locator('.case-close').click();
+  await page.locator('#project-dialog').waitFor({state:'hidden'});
   await page.locator('[data-project="anevum"]').click();
   await page.locator('#project-dialog[open]').waitFor({state:'visible'});
   assert.match(page.url(),/project=anevum/);
