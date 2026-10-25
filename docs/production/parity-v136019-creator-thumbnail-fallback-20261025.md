@@ -44,3 +44,10 @@ Production-appropriate browser screenshot comparisons and server-side support fo
 The community browser capture now validates the first-party native Community hero rather than requiring its deleted promotional raster. Published project media is asserted against the shared `ProjectThumbnail` component, including its load state, category and default source. The full PARITY browser harness validates `native-institute` arrival and the single modeled WebGL canvas, rather than waiting for an intentionally retired poster `<img>`. Same-context native-overlay / real-3D comparison, scroll handoff, reduced-motion behavior, and navigation remain under strict assertions. The latest separate concept-led desktop wayfinder geometry and CSS are merged without replacing Creator Studio work.
 
 Protected V132 and release source allowlists remain fail closed; their rejection of the broad ongoing design branch is not treated as production approval. Do not deploy or mark visual parity complete without exact-head browser evidence.
+
+
+## V136.021 — Real member profile navigation and upload-first identity (2026-10-25)
+
+Private and public member spaces now use one failed-media fallback for uploaded portraits and banners. Verified account media loads normally; a failed portrait returns to the existing native OrbitalMark, and a failed banner reveals the already-present native cover instead of a broken image element. The original versions and private/public media routes are retained. There is no new image source, media upload route or AI image generation.
+
+Public profiles gain an actual section index for the member's public wall, biography, verified recognition, and—only if the approved package gallery is enabled—browser creations. Each target is a real in-page anchor, not an imagined feed or data count. The private and public identity surfaces receive responsive, accessible Institute-native panels, maintaining aura/theme accents and creator-uploaded imagery. All media, identity, authentication, wall availability, and publication gates remain server-owned. These changes are a draft visual integration pending browser verification.

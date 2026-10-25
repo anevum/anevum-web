@@ -158,3 +158,114 @@ button:hover>.av136-index-field,button:focus-visible>.av136-index-field{
 .av010-work-cover>.av136-project-thumbnail{position:absolute;inset:0}
 .av136-project-thumbnail[data-thumbnail-source="creator"]{object-fit:cover}
 @media(prefers-reduced-motion:reduce){.av136-project-thumbnail{animation:none!important;transition:none!important}}
+
+/* V136.021: native member-world and private identity parity. Genuine uploaded
+   portraits and banners always sit above this fixed Institute interface. */
+html[data-av-parity="v136-full"] :is(.ms-dashboard,.ms-public){
+  --ms-line:rgba(114,195,242,.28);--ms-muted:#afc5dc;
+  --ms-surface:#0a1a2b;color:#e9f5ff;
+  border-color:rgba(126,202,248,.48);border-radius:16px;
+  background:linear-gradient(135deg,rgba(15,33,53,.96),rgba(5,14,28,.98));
+  box-shadow:0 26px 72px #0008,inset 0 1px rgba(228,248,255,.12)
+}
+html[data-av-parity="v136-full"] :is(.ms-dashboard,.ms-public) :is(h1,h2,h3){
+  font-family:Inter,"Segoe UI",system-ui,sans-serif;
+  font-weight:700;letter-spacing:-.035em;color:#f0faff
+}
+html[data-av-parity="v136-full"] :is(.ms-dashboard,.ms-public) .kicker{
+  color:#9fdcff;font:700 10px/1.5 "IBM Plex Mono",Consolas,monospace;
+  letter-spacing:.13em
+}
+html[data-av-parity="v136-full"] :is(.ms-dashboard,.ms-public) .ms-cover{
+  border-bottom:1px solid rgba(136,205,251,.32);
+  background:radial-gradient(ellipse at 74% 26%,rgba(var(--av92-cover-rgb,135,169,222),.23),transparent 53%),
+    repeating-linear-gradient(90deg,transparent 0 71px,rgba(108,182,236,.10) 72px 73px),
+    linear-gradient(140deg,#0e2b42,#061426 58%,#091d32);
+  min-height:clamp(290px,34vw,370px)
+}
+html[data-av-parity="v136-full"] :is(.ms-dashboard,.ms-public) .ms-cover-shade{
+  background:linear-gradient(180deg,rgba(4,13,26,.34),rgba(4,13,26,.04) 36%,rgba(3,11,23,.9) 100%),
+    radial-gradient(ellipse at 10% 92%,rgba(var(--av92-cover-rgb,135,169,222),.14),transparent 54%)
+}
+html[data-av-parity="v136-full"] :is(.ms-dashboard,.ms-public) .ms-visibility{
+  border-radius:6px;border-color:rgba(145,221,255,.46);
+  background:rgba(3,17,32,.84);color:#b8e8ff;
+  font:750 9px/1.5 "IBM Plex Mono",Consolas,monospace;
+  letter-spacing:.11em;padding:7px 11px
+}
+html[data-av-parity="v136-full"] .ms-dashboard .ms-cover-edit{
+  background:rgba(4,20,37,.85);border-color:rgba(140,220,255,.45);
+  box-shadow:inset 0 1px rgba(221,250,255,.1)
+}
+html[data-av-parity="v136-full"] :is(.ms-dashboard,.ms-public) .ms-portrait{
+  border-radius:15px;background:linear-gradient(150deg,#1a4560,#07182d);
+  box-shadow:0 0 0 3px #05111f,0 0 28px rgba(var(--av92-cover-rgb,135,169,222),.2)
+}
+html[data-av-parity="v136-full"] .ms-dashboard .ms-toolbar{
+  border-color:rgba(125,194,238,.29);
+  background:linear-gradient(180deg,#10243a,#081728);padding:12px 19px
+}
+html[data-av-parity="v136-full"] .ms-dashboard .ms-toolbar nav button[aria-current="page"]{
+  background:linear-gradient(140deg,#194660,#0e2b43);color:#e8faff;
+  border-color:rgba(143,226,255,.52)
+}
+html[data-av-parity="v136-full"] :is(.ms-dashboard,.ms-public) :is(.ms-card,.ms-progress,.ms-image-editor,.ms-wall){
+  border-radius:12px;border-color:rgba(137,205,251,.26);
+  background:linear-gradient(145deg,rgba(17,39,61,.92),rgba(8,20,36,.94));
+  box-shadow:inset 0 1px rgba(225,247,255,.09),0 14px 28px #0004
+}
+html[data-av-parity="v136-full"] .ms-dashboard .ms-body{padding:clamp(15px,2.3vw,30px)}
+html[data-av-parity="v136-full"] .ms-dashboard :is(button,a):focus-visible,
+html[data-av-parity="v136-full"] .ms-public :is(button,a):focus-visible{
+  outline:3px solid #8be9ff;outline-offset:3px
+}
+/* Real public profile navigation, not a decorative or synthetic activity rail. */
+.ms-public-index{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;
+  padding:1px;margin:0;border-bottom:1px solid rgba(114,195,242,.35);
+  background:rgba(103,176,225,.25);min-width:0
+}
+.ms-public-index>a{
+  display:flex;flex-direction:column;justify-content:center;gap:5px;
+  min-width:0;min-height:91px;padding:15px clamp(12px,1.5vw,23px);
+  background:linear-gradient(160deg,#102b44,#071727);
+  color:#edf9ff;text-decoration:none;
+  transition:background .2s,box-shadow .2s
+}
+.ms-public-index>a:hover,.ms-public-index>a:focus-visible{
+  background:linear-gradient(150deg,#194761,#0d253b);
+  box-shadow:inset 0 2px #9adfff
+}
+.ms-public-index a small{
+  font:750 9px/1.4 "IBM Plex Mono",Consolas,monospace;
+  color:#8cd7ff;letter-spacing:.11em
+}
+.ms-public-index a strong{
+  font:730 16px/1.25 Inter,system-ui,sans-serif;
+  color:#f0fbff;letter-spacing:-.015em
+}
+.ms-public-index a span{color:#b6cce2;font:450 11px/1.4 Inter,system-ui,sans-serif}
+.ms-public-wall-region,.ms-public-body #member-world-about,
+.ms-public-creations,.ms-public-recognition{scroll-margin-top:100px;min-width:0}
+.ms-public-creations,.ms-public-recognition{padding:0 clamp(18px,2.5vw,30px)}
+@media(max-width:850px){
+  .ms-public-index{grid-template-columns:repeat(2,minmax(0,1fr))}
+  html[data-av-parity="v136-full"] :is(.ms-dashboard,.ms-public) .ms-cover{min-height:300px}
+}
+@media(max-width:430px){
+  .ms-public-index>a{min-height:82px;padding:11px}
+  .ms-public-index a strong{font-size:14px}
+  .ms-public-index a small{font-size:8px;letter-spacing:.05em}
+  .ms-public-index a span{font-size:10px}
+  html[data-av-parity="v136-full"] :is(.ms-dashboard,.ms-public) .ms-cover{min-height:280px}
+  html[data-av-parity="v136-full"] .ms-dashboard .ms-toolbar{padding:9px}
+}
+@media(prefers-reduced-motion:reduce){
+  .ms-public-index>a{transition:none!important}
+}
+@media(forced-colors:active){
+  .ms-public-index,.ms-public-index>a{
+    color:CanvasText;background:Canvas;border:1px solid CanvasText;box-shadow:none
+  }
+  .ms-public-index a :is(small,strong,span){color:CanvasText}
+}
