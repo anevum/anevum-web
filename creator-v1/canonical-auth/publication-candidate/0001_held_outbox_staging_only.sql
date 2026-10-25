@@ -10,8 +10,8 @@ PRAGMA foreign_keys=ON;
 -- exist by default; only an explicitly audited admin process may create one.
 CREATE TABLE IF NOT EXISTS member_studio_publication_reviewer_grants (
  reviewer_user_id TEXT PRIMARY KEY NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
- granted_by_user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
- verified_by_user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE RESTRICT,
+ granted_by_user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+ verified_by_user_id TEXT NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
  evidence_ref TEXT NOT NULL CHECK(length(evidence_ref) BETWEEN 25 AND 240),
  granted_at INTEGER NOT NULL CHECK(granted_at>0),
  revoked_at INTEGER,
@@ -150,6 +150,10 @@ CREATE TRIGGER IF NOT EXISTS trg_member_studio_publication_reviewer_removed
      WHERE review_id=NEW.id AND status='held';
  END;
 
+-- Grantor/verifier account deletion cascades away the grant, triggering
+-- the same held-review cancellation as an explicit grant revocation. This
+-- avoids retaining a user's account solely for unpublished review evidence.
+-- A future approved audit ledger must separately define non-PII retention.
 -- Revocation, removal, or loss of verified identity invalidates outstanding
 -- held review rows, even if the creator's submission is unchanged.
 CREATE TRIGGER IF NOT EXISTS trg_member_studio_publication_grant_revoked
