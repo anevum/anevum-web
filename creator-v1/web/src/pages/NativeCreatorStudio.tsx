@@ -103,7 +103,7 @@ function BuildCard({project,review=false,onDecision}:{project:NativeProject;revi
  const playableDraft=!!project.draftReleaseId&&(pending||ready)&&!expired;
  const label=project.status==='suspended'?'Suspended':pending?'Update in review':expired?'Private test expired':ready?'Private build ready':pretty(project.status);
  return <article className="st-panel av095-build-card" data-native-project={project.id}>
-  <div className="av095-card-cover">{project.coverUrl?<img alt={'Cover for '+project.title} src={project.coverUrl} loading="lazy" referrerPolicy="no-referrer"/>:<div className="av095-record-art" aria-hidden="true"><i/><i/><i/></div>}<span>{project.category} / {label}</span></div>
+  <div className="av095-card-cover">{project.coverUrl?<img alt={'Cover for '+project.title} src={project.coverUrl} loading="lazy" referrerPolicy="no-referrer"/>:SourceWorkbench?<div className="av136032-record-blank"><small>NO COVER UPLOADED</small><strong>{pretty(project.category)}</strong></div>:<div className="av095-record-art" aria-hidden="true"><i/><i/><i/></div>}<span>{project.category} / {label}</span></div>
   <div className="av095-card-body"><p className="st-kicker">{project.version?'BUILD '+String(project.version).padStart(2,'0'):'PROJECT RECORD'}</p><h2>{project.draftTitle||project.title}</h2><p>{project.draftSummary||project.summary}</p>
    {SourceWorkbench&&<div className="av136032-release-flags" aria-label="Project revision status">
     {project.liveReleaseId?<span>{project.status==='suspended'?'Approved release suspended':'Approved public release retained'}</span>:<span>Not publicly released</span>}
@@ -132,8 +132,8 @@ function BuildLibrary({memberId}:{memberId:string}){
  const [search,setSearch]=useState(''),[decision,setDecision]=useState<Decision|null>(null);
  const [status,setStatus]=useState<'all'|'private'|'review'|'live'>('all'),[view,setView]=useState<'grid'|'list'>('grid');
  const items=library.data?.projects||[];
- const privateBuild=(p:NativeProject)=>(!!p.draftReleaseId&&p.draftStatus!=='pending_review')||(!p.liveReleaseId&&p.status!=='suspended');
  const inReview=(p:NativeProject)=>p.draftStatus==='pending_review'||p.status==='pending_review';
+ const privateBuild=(p:NativeProject)=>!inReview(p)&&((!!p.draftReleaseId)||(!p.liveReleaseId&&p.status!=='suspended'));
  const live=(p:NativeProject)=>!!p.liveReleaseId&&p.status==='published';
  const counts={all:items.length,private:items.filter(privateBuild).length,review:items.filter(inReview).length,live:items.filter(live).length};
  const scoped=SourceWorkbench?items.filter(p=>status==='all'||status==='private'&&privateBuild(p)||status==='review'&&inReview(p)||status==='live'&&live(p)):items;
