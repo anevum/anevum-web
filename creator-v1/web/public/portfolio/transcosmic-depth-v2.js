@@ -14,6 +14,12 @@
   const selectors = [...document.querySelectorAll('[data-universe-stage]')];
   const liveName = document.querySelector('[data-universe-name]');
   const liveDescription = document.querySelector('[data-universe-description]');
+  const modeNote = document.querySelector('.universe-disclaimer');
+  const markFallback=()=>{
+    stage.dataset.renderMode='fallback';
+    stage.dataset.sceneDepth='static';
+    if(modeNote)modeNote.textContent='STATIC ART FALLBACK / 3D NOT AVAILABLE';
+  };
   const scenes = [
     ['THE THRESHOLD', 'An opening into work, worlds, and unfinished possibilities.'],
     ['THE ARCHIVE', 'Many disciplines. One continuing record of what becomes real.'],
@@ -387,11 +393,14 @@
         gl.bindVertexArray(null);
         stage.dataset.renderRealm=selected.name;
         stage.dataset.realmVertices=String(selected.count);
-        if(stage.dataset.renderMode!=='webgl2'){stage.dataset.renderMode='webgl2';stage.dataset.sceneDepth='perspective';}
+        if(stage.dataset.renderMode!=='webgl2'){
+          stage.dataset.renderMode='webgl2';stage.dataset.sceneDepth='perspective';
+          if(modeNote)modeNote.textContent='ART-DIRECTED 3D STUDY / NOT A RELEASED GAME';
+        }
         stage.dataset.renderPixels=String(width*height);
       };
       requestFrame();
-    }catch(err){stage.dataset.renderMode='fallback';stage.dataset.sceneDepth='static';gl=null;drawScene=null;}
+    }catch(err){markFallback();gl=null;drawScene=null;}
   }
   function render(now){
     frame=0;if(disposed||!drawScene)return;
@@ -402,7 +411,7 @@
     lastDrawTime=now;
     if(moving)clock+=Math.min(55,Math.max(0,now-lastTime||16))*.001;
     lastTime=now;
-    try{drawScene(clock);}catch(err){stage.dataset.renderMode='fallback';drawScene=null;return;}
+    try{drawScene(clock);}catch(err){markFallback();drawScene=null;return;}
     if(moving)requestFrame();
   }
   function requestFrame(){if(!frame&&drawScene&&!disposed)frame=requestAnimationFrame(render);}
@@ -418,7 +427,7 @@
   reduced.addEventListener?.('change',requestFrame);
   document.querySelector('#motion-toggle')?.addEventListener('click',()=>requestAnimationFrame(requestFrame));
   if('IntersectionObserver' in window)new IntersectionObserver(entries=>{visible=Boolean(entries[0]?.isIntersecting);if(visible)requestFrame();},{rootMargin:'120px'}).observe(stage);
-  canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();if(frame)cancelAnimationFrame(frame);frame=0;drawScene=null;stage.dataset.renderMode='fallback';});
+  canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();if(frame)cancelAnimationFrame(frame);frame=0;drawScene=null;markFallback();});
   canvas.addEventListener('webglcontextrestored',init);
   init();
 })();
