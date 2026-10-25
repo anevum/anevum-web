@@ -124,3 +124,14 @@ html,body{background:var(--tc-void);color:var(--tc-bone)}
 .transcosmic-visual .cosmic-title small{color:#d4c3b1;letter-spacing:.19em}
 .case-art .transcosmic-portal-thumb{inset:0}
 @media(prefers-reduced-motion:reduce){.transcosmic-portal-thumb,.project-transcosmic .project-hit:hover .transcosmic-portal-thumb{transition:none;transform:none}}
+
+/* V136.040 screenshot-led mobile clearance.
+   The optional upper-right telemetry overlapped the real eyebrow at 320/390,
+   and the case-study text CTA wrapped into two lines at 320. */
+@media(max-width:650px){
+  .transcosmic-telemetry{display:none!important}
+  .hero.transcosmic-arrival .hero-buttons .text-link{
+    display:inline-flex;align-items:center;gap:8px;
+    max-width:100%;white-space:nowrap;line-height:1.4
+  }
+}
