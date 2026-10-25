@@ -474,6 +474,20 @@ try{
       });
       await page.screenshot({path:join(out,'arrival-after-inspection-'+width+'.png'),
         fullPage:false,animations:'disabled'});
+      if(width===1440&&process.env.VITE_PARITY_V136_HORIZON_QA==='true'){
+        const canvas=page.locator('.p136-living-canvas');
+        await page.waitForFunction(()=>
+          document.querySelector('.p136-living-canvas')?.dataset.horizonTier==='desktop');
+        await page.setViewportSize({width:390,height:844});
+        await page.waitForFunction(()=>
+          document.querySelector('.p136-living-canvas')?.dataset.horizonTier==='mobile');
+        assert.equal(await canvas.count(),1,'Viewport retiering keeps the original renderer');
+        await page.setViewportSize({width:1440,height:960});
+        await page.waitForFunction(()=>
+          document.querySelector('.p136-living-canvas')?.dataset.horizonTier==='desktop');
+        record('live desktop to mobile to desktop QA geometry reallocation / one canvas',
+          {tierRestored:'desktop',rendererCount:1});
+      }
       record('direct same-context poster vs real WebGL Atrium visual evidence '+width,{
         width,renderer:reality.renderer,models:reality.metrics.models,
         triangles:reality.metrics.triangles,drawCalls:reality.metrics.drawCalls,

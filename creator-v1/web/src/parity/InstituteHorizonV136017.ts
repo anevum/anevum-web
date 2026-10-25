@@ -137,7 +137,7 @@ export function createInstituteHorizon(tier:AssetTier){
   throw Error('Planetary QA environment exceeds fixed geometry budget');
  }
  return {
-  root,triangles,drawCalls,
+  root,tier,triangles,drawCalls,
   update(publicDensity:number,elapsedSeconds:number,motionAllowed:boolean){
    signal.value=Math.max(0,Math.min(1,Number.isFinite(publicDensity)?publicDensity:0));
    if(motionAllowed)orbits.rotation.z=.22+Math.sin(elapsedSeconds*.024)*.035;

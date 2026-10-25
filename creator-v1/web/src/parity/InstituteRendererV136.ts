@@ -58,8 +58,8 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
  for(let i=0;i<15;i++){anchorTransform.position.set(6.1+Math.sin(i*.8)*.2,.2+i*.19,-4-i*.8);anchorTransform.updateMatrix();anchors.setMatrixAt(i,anchorTransform.matrix)}
  scene.add(anchors);
  // QA-only visual convergence: shared context, separately bounded horizon.
- const horizon=horizonQA?createInstituteHorizon(budget.tier):null;
- if(horizon){scene.add(horizon.root);canvas.dataset.horizon='qa-only';}
+ let horizon=horizonQA?createInstituteHorizon(budget.tier):null;
+ if(horizon){scene.add(horizon.root);canvas.dataset.horizon='qa-only';canvas.dataset.horizonTier=budget.tier;}
  const backdrop=new T.Scene(),backgroundCamera=new T.Camera();
  const uniforms={u_resolution:{value:new T.Vector2(1,1)},u_pointer:{value:new T.Vector2()},u_time:{value:0},u_modeled:{value:1},
   u_density:{value:0},u_verified:{value:0},u_tone:{value:new T.Vector3()},u_pulse:{value:0},
@@ -145,7 +145,16 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
   finally{if(pending.get(family)===controller)pending.delete(family)}
  }
  function resize(){
+  // The pilot candidate must never retain desktop meshes when a TV/window
+  // transitions to a phone-sized viewport, or vice versa. This touches only
+  // the independently owned QA root, not the protected GLB family cache.
+  const priorTier=budget.tier;
   budget=instituteBudget(canvas.clientWidth,window.devicePixelRatio,input.saveData);
+  if(horizon&&priorTier!==budget.tier){
+   scene.remove(horizon.root);horizon.dispose();
+   horizon=createInstituteHorizon(budget.tier);
+   scene.add(horizon.root);canvas.dataset.horizonTier=budget.tier;
+  }
   const w=Math.max(1,canvas.clientWidth),h=Math.max(1,canvas.clientHeight),dpr=Math.min(budget.pixelRatio,Math.sqrt(budget.maxPixels/(w*h)))*scale;
   renderer.setPixelRatio(dpr);renderer.setSize(w,h,false);composer.setPixelRatio(dpr);composer.setSize(w,h);
   camera.aspect=w/h;camera.fov=w<650?62:48;camera.updateProjectionMatrix();if(bloom)bloom.enabled=budget.bloom&&scale>.7;
