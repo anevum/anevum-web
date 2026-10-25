@@ -908,3 +908,12 @@ html[data-av-parity="v136-full"] .p136017-local-only-note{
 @media(forced-colors:active){
  html[data-av-parity="v136-full"] .p136017-scene-inspection{display:none}
 }
+
+/* V136.017.009: the earlier opaque radial stage paint obscured the genuine
+ * fixed WebGL renderer, even when the cinematic poster opacity was zero.
+ * Only explicit ready-only inspection removes that paint; the original
+ * poster, metadata, orbital engraving, text shade and DOM controls remain.
+ */
+html[data-av-parity="v136-full"] .p136-hero:has(.p136017-scene-inspection button[aria-pressed="true"]){
+ background:transparent;
+}

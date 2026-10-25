@@ -452,6 +452,14 @@ try{
         fullPage:false,animations:'disabled'});
       assert.ok(live.length>10000,'The actual scene capture cannot be empty');
       assert.ok(!first.equals(live),'Live model screenshot must not be identical to the cinematic poster');
+      const liveHeroPaint=await page.locator('.p136-hero').evaluate(node=>{
+        const style=getComputedStyle(node);
+        return {image:style.backgroundImage,color:style.backgroundColor};
+      });
+      assert.equal(liveHeroPaint.image,'none',
+        'Inspected WebGL cannot be concealed behind the old opaque hero gradient');
+      assert.ok(liveHeroPaint.color==='transparent'||liveHeroPaint.color==='rgba(0, 0, 0, 0)',
+        'Inspected stage must be transparent above one shared canvas: '+JSON.stringify(liveHeroPaint));
       assert.equal(await page.locator('.p136-living-canvas').count(),1,'Inspection reuses one persistent GPU canvas');
       assert.ok(await page.locator('.p136-button--primary').isVisible(),'Real public navigation remains accessible');
       const reset=page.getByRole('button',{name:'Return to cinematic arrival'});
