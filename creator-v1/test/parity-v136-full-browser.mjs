@@ -80,7 +80,20 @@ async function contextFor(width,{motion='reduce',state='empty',forceVector=false
         path==='/api/v1/projects'?page(state==='project'?[fixture]:[]):
         path==='/api/v1/projects/'+fixture.id&&state==='project'?{item:{...fixture,description:fixture.summary,demoUrl:null,sourceUrl:null}}:
         path==='/api/v1/status'?{features:{communityPosts:false},counts:{publishedProjects:0,publishedCreators:0}}:
-        path==='/api/v1/creators'?page([]):
+        path==='/api/v1/creators'?(state==='creators'?(()=>{
+          // Public data fixture exists ONLY in the loopback compiled browser.
+          const people=[
+            {handle:'qa_maker',displayName:'SYNTHETIC CI MAKER',publishedProjects:1},
+            {handle:'fixture_lab',displayName:'SYNTHETIC CI LAB',publishedProjects:2}
+          ];
+          const search=(url.searchParams.get('q')||'').trim().toLowerCase();
+          const filtered=search?people.filter(item=>
+            item.displayName.toLowerCase().includes(search)||
+            item.handle.includes(search)):people;
+          const cursor=url.searchParams.get('cursor');
+          return {items:cursor?[]:filtered,count:cursor?0:filtered.length,
+            nextCursor:!cursor&&!search?'ci-next-page':null};
+        })():page([])):
         path==='/api/v1/categories'?{categories:[]}:
         path==='/api/v1/boards'?{source:'approved-public-projects',qualityRankingAvailable:false,
           latestReleases:[fixture],firstLooks:[fixture],
@@ -424,6 +437,65 @@ try{
     assert.ok(creatorWidth.scroll<=creatorWidth.client+2,'Creator directory overflow at '+width+'px '+JSON.stringify(creatorWidth));
     await page.screenshot({path:join(out,'public-creators-'+width+'.png'),animations:'disabled'});
     record('V136 public Commons and creator directory '+width+'px',{communityWidth,creatorWidth});
+    await context.close();
+  }
+
+  // V136.025: Creator Directory search, URL history, pagination and
+  // compact layouts tested with public-only synthetic loopback responses.
+  for(const width of [1440,390,320]){
+    const {page,context}=await contextFor(width,{state:'creators',forceVector:true});
+    await page.goto(base+'/creators',{waitUntil:'domcontentloaded'});
+    const directory=page.locator('.p136-creators[data-directory-phase="v136.025"]');
+    await directory.waitFor();
+    const cards=directory.locator('.portal-creator-tile');
+    await cards.first().waitFor();
+    assert.equal(await cards.count(),2,'Exactly the two loopback creator channels appear');
+    assert.equal(await directory.locator('.portal-creator-grid').getAttribute('data-layout'),'grid');
+    const geometry=await page.evaluate(()=>({
+      innerWidth:innerWidth,documentWidth:document.documentElement.scrollWidth,
+      rootWidth:document.querySelector('.p136-creators').scrollWidth,
+      rootClient:document.querySelector('.p136-creators').clientWidth,
+      gridColumns:getComputedStyle(document.querySelector('.p136-creators .portal-creator-grid')).gridTemplateColumns.split(' ').filter(Boolean).length,
+      cardWidth:document.querySelector('.p136-creators .portal-creator-tile').getBoundingClientRect().width
+    }));
+    assert.ok(geometry.documentWidth<=geometry.innerWidth+2,
+      'No page overflow at '+width+': '+JSON.stringify(geometry));
+    assert.ok(geometry.rootWidth<=geometry.rootClient+2,'No directory overflow at '+width);
+    assert.ok(geometry.cardWidth>=240,'Creator identity remains legible at '+width);
+    assert.equal(geometry.gridColumns,width>=1161?3:1,
+      'Grid tracks respond to phone/desktop viewport width '+width);
+    const list=page.getByRole('button',{name:'List',exact:true});
+    await list.click();
+    await page.waitForURL(/\/creators\?view=list$/);
+    await directory.locator('.portal-creator-grid[data-layout="list"]').waitFor();
+    assert.equal(await list.getAttribute('aria-pressed'),'true');
+    await page.goBack({waitUntil:'domcontentloaded'});
+    await directory.locator('.portal-creator-grid[data-layout="grid"]').waitFor();
+    assert.equal(await page.getByRole('button',{name:'Grid',exact:true}).getAttribute('aria-pressed'),'true',
+      'Browser Back restores URL-owned grid state');
+    await page.getByRole('button',{name:'List',exact:true}).click();
+    await directory.locator('.portal-creator-grid[data-layout="list"]').waitFor();
+    await page.getByRole('link',{name:/NEXT PAGE/}).click();
+    await page.waitForURL(/view=list&cursor=ci-next-page/);
+    await page.getByRole('heading',{name:'No further channels on this page.'}).waitFor();
+    await page.getByRole('searchbox',{name:'Search published creators'}).fill('QA');
+    await page.getByRole('button',{name:/Find creators/}).click();
+    await page.waitForURL(/\/creators\?q=QA&view=list$/);
+    await directory.locator('.portal-creator-grid[data-layout="list"]').waitFor();
+    assert.equal(await cards.count(),1,'Search is server-filtered with the fixture API');
+    assert.match(await cards.first().innerText(),/SYNTHETIC CI MAKER/);
+    assert.equal(new URL(page.url()).searchParams.has('cursor'),false,
+      'New search clears the old pagination cursor');
+    await page.getByRole('searchbox',{name:'Search published creators'}).fill('nonexistent');
+    await page.getByRole('searchbox',{name:'Search published creators'}).press('Enter');
+    await page.waitForURL(/q=nonexistent&view=list$/);
+    await page.getByRole('heading',{name:'No matching creators yet.'}).waitFor();
+    assert.equal(await directory.locator('.portal-creator-tile').count(),0);
+    await page.getByRole('link',{name:'Clear search'}).click();
+    await page.waitForURL(/\/creators\?view=list$/);
+    await directory.locator('.portal-creator-grid[data-layout="list"]').waitFor();
+    await page.screenshot({path:join(out,'public-creators-directory-'+width+'.png'),animations:'disabled'});
+    record('V136.025 Creator Directory interactive URL, search and responsive layouts '+width+'px',{geometry,syntheticFixture:true});
     await context.close();
   }
 
