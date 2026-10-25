@@ -407,35 +407,64 @@ try{
     record('synthetic Gamepad API / connected badge / D-pad DOM focus / A route / disconnected cleanup',{hardwareVerified:false});
     await context.close();
   }
-  // User-invoked live 3D reveals an existing, genuinely loaded scene
-  // without a second renderer or a claim of finished concept fidelity.
+  // Direct evidence gate: poster presentation is NOT proof of underlying
+  // 3D architectural parity. Capture both renderings in the same authenticated-
+  // free loopback context and publish original PNGs for independent art review.
   if(process.env.VITE_PARITY_V136_CINEMATIC==='true'){
-    const {page,context}=await contextFor(1440,{motion:'no-preference'});
-    await page.goto(base,{waitUntil:'domcontentloaded'});
-    const inspect=page.getByRole('button',{name:'Inspect live 3D scene'});
-    await inspect.waitFor();
-    await page.waitForFunction(()=>{
-      const control=document.querySelector('[data-cinematic-inspection="v136.017"]');
-      const canvas=document.querySelector('.p136-living-canvas');
-      return control?.getAttribute('data-scene-readiness')==='ready'&&
-        canvas?.dataset.assetState==='ready';
-    },null,{timeout:60000});
-    assert.equal(await inspect.isDisabled(),false,'Only loaded WebGL geometry enables the inspection button');
-    await inspect.click();
-    await page.waitForFunction(()=>{
-      const cinema=document.querySelector('[data-cinematic-v136]');
-      return cinema?.dataset.inspection==='live'&&Number.parseFloat(getComputedStyle(cinema).opacity)<.05;
-    });
-    assert.equal(await page.locator('.p136-living-canvas').count(),1,'Inspection reuses one persistent GPU canvas');
-    const reset=page.getByRole('button',{name:'Return to cinematic arrival'});
-    assert.equal(await reset.getAttribute('aria-pressed'),'true');
-    await reset.click();
-    await page.waitForFunction(()=>{
-      const cinema=document.querySelector('[data-cinematic-v136]');
-      return cinema?.dataset.inspection==='cinematic'&&Number.parseFloat(getComputedStyle(cinema).opacity)>.95;
-    });
-    record('opt-in real 3D inspection / cinematic reset / single persistent canvas');
-    await context.close();
+    for(const width of [1440,390]){
+      const {page,context}=await contextFor(width,{motion:'no-preference'});
+      await page.goto(base,{waitUntil:'domcontentloaded'});
+      const inspect=page.getByRole('button',{name:'Inspect live 3D scene'});
+      await inspect.waitFor();
+      await page.waitForFunction(()=>{
+        const control=document.querySelector('[data-cinematic-inspection="v136.017"]');
+        const canvas=document.querySelector('.p136-living-canvas');
+        const poster=document.querySelector('.p136-cinematic-art img');
+        return control?.getAttribute('data-scene-readiness')==='ready'&&
+          canvas?.dataset.assetState==='ready'&&
+          poster?.complete&&poster?.naturalWidth>0;
+      },null,{timeout:60000});
+      const reality=await page.evaluate(()=>{
+        const world=document.querySelector('.p136-living-world');
+        const canvas=document.querySelector('.p136-living-canvas');
+        return {renderer:world?.dataset.renderer,canvasCount:document.querySelectorAll('.p136-living-canvas').length,
+          modelState:canvas?.dataset.assetState,metrics:JSON.parse(canvas?.dataset.metrics||'{}')};
+      });
+      assert.equal(reality.renderer,'webgl','Actual Three.js scene, not vector fallback');
+      assert.equal(reality.canvasCount,1,'One persistent 3D scene / one GPU context');
+      assert.equal(reality.metrics.family,'atrium','The scene still uses the canonical Atrium family');
+      assert.ok(reality.metrics.models>=1&&reality.metrics.triangles>10000&&reality.metrics.drawCalls>0,
+        'The 3D screenshot must contain real modeled geometry: '+JSON.stringify(reality));
+      const first=await page.screenshot({path:join(out,'arrival-poster-review-'+width+'.png'),
+        fullPage:false,animations:'disabled'});
+      assert.equal(await inspect.isDisabled(),false,'Loaded model enables live inspection');
+      await inspect.click();
+      await page.waitForFunction(()=>{
+        const cinema=document.querySelector('[data-cinematic-v136]');
+        return cinema?.dataset.inspection==='live'&&Number.parseFloat(getComputedStyle(cinema).opacity)<.05;
+      });
+      await page.waitForTimeout(400);
+      const live=await page.screenshot({path:join(out,'arrival-real-webgl-review-'+width+'.png'),
+        fullPage:false,animations:'disabled'});
+      assert.ok(live.length>10000,'The actual scene capture cannot be empty');
+      assert.ok(!first.equals(live),'Live model screenshot must not be identical to the cinematic poster');
+      assert.equal(await page.locator('.p136-living-canvas').count(),1,'Inspection reuses one persistent GPU canvas');
+      assert.ok(await page.locator('.p136-button--primary').isVisible(),'Real public navigation remains accessible');
+      const reset=page.getByRole('button',{name:'Return to cinematic arrival'});
+      assert.equal(await reset.getAttribute('aria-pressed'),'true');
+      await reset.click();
+      await page.waitForFunction(()=>{
+        const cinema=document.querySelector('[data-cinematic-v136]');
+        return cinema?.dataset.inspection==='cinematic'&&Number.parseFloat(getComputedStyle(cinema).opacity)>.95;
+      });
+      await page.screenshot({path:join(out,'arrival-after-inspection-'+width+'.png'),
+        fullPage:false,animations:'disabled'});
+      record('direct same-context poster vs real WebGL Atrium visual evidence '+width,{
+        width,renderer:reality.renderer,models:reality.metrics.models,
+        triangles:reality.metrics.triangles,drawCalls:reality.metrics.drawCalls,
+        approvedConceptParity:false,realDeviceTested:false});
+      await context.close();
+    }
   }
   if(process.env.VITE_PARITY_V136_CINEMATIC==='true'){
     const {page,context}=await contextFor(1440,{motion:'no-preference',forceVector:true});
