@@ -1,0 +1,69 @@
+name: PARITY V136.026 First Visit Clarity QA
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/parity-v136026-first-visit.yml'
+      - 'creator-v1/web/src/parity/FirstVisitClarityV136.tsx'
+      - 'creator-v1/web/src/parity/first-visit-clarity-v136.css'
+      - 'creator-v1/web/src/parity/ParityPortalV136.tsx'
+      - 'creator-v1/web/src/pages/StartPage.tsx'
+      - 'creator-v1/web/src/pages/StatusPage.tsx'
+      - 'creator-v1/web/src/pages/status-focus-v136.css'
+      - 'creator-v1/test/parity-v136026-first-visit.test.mjs'
+      - 'creator-v1/test/parity-v136026-first-visit-browser.mjs'
+      - 'creator-v1/test/parity-v136-full-browser.mjs'
+permissions:
+  contents: read
+concurrency:
+  group: parity-v136026-first-visit-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  first-visit-compiled:
+    if: github.repository == 'anevum/anevum-web' && github.event.pull_request.head.repo.full_name == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      VITE_PARITY_V136_FULL: 'true'
+      VITE_PARITY_V136_CINEMATIC: 'false'
+      VITE_PARITY_V136_HORIZON_QA: 'false'
+      VITE_PARITY_V136_SHARED_SCENE_QA: 'false'
+      VITE_PARITY_V136_NATIVE_VIDEO: 'false'
+      CLOUDFLARE_API_TOKEN: ''
+      CLOUDFLARE_API_KEY: ''
+      CLOUDFLARE_ACCOUNT_ID: ''
+      WRANGLER_SEND_METRICS: 'false'
+      ANEVUM_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pin exact source
+        run: test "$(git rev-parse HEAD)" = "$ANEVUM_SOURCE_SHA"
+      - name: Install pinned dependencies without executing package scripts
+        run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - name: Source, access and honesty contracts
+        run: node --test creator-v1/test/parity-v136026-first-visit.test.mjs
+      - name: Typecheck and compile the real V136 full-flag React surface
+        run: |
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+      - name: Install isolated browser tooling
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
+          npx playwright install --with-deps chromium
+      - name: Run loopback guest journey at 1440, 390 and 320px
+        run: node creator-v1/test/parity-v136026-first-visit-browser.mjs
+      - name: Archive exact-head acceptance and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-v136026-first-visit-${{ github.event.pull_request.head.sha }}
+          path: evidence/parity-v136/first-visit-026/
+          retention-days: 14
+          if-no-files-found: warn
+# This workflow has no credentials, writes no platform data and never deploys.

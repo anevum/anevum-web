@@ -21,19 +21,19 @@ const journeys = [
     id: "make", number: "02", icon: "create", label: "I MAKE THINGS",
     eyebrow: "FOR THE MAKERS",
     title: "GIVE YOUR WORK A HOME.",
-    description: "ANEVUM is building creator channels and moderated project pages for independent games, software, research and experiments. Keep control of your own demo and source hosting.",
-    primary: { to: "/create", label: "VIEW CREATOR WORKSPACE" },
+    description: "Explore Studio tools and prepare work where your verified account allows it. Private drafts, pilot uploads and approved public releases are separate steps with their own permissions.",
+    primary: { to: "/studio", label: "EXPLORE CREATOR STUDIO" },
     secondary: { to: "/status", label: "CHECK LAUNCH READINESS" },
-    note: "Creator accounts and submissions are invitation-only during testing; public publishing is not open."
+    note: "Joining ANEVUM does not automatically grant upload or publication access. Check the live Status page before planning a release."
   },
   {
     id: "connect", number: "03", icon: "community", label: "I WANT TO TAKE PART",
     eyebrow: "FOR THE COMMUNITY",
     title: "BELONG WITHOUT HAVING TO BUILD.",
-    description: "Future participation includes useful feedback, saved projects, discussions and recognition for genuine contributions. You do not have to be a developer to belong here.",
-    primary: { to: "/community", label: "EXPLORE COMMUNITY PLANS" },
+    description: "Browse approved community activity, get to know other makers and explore eligible member features. You do not have to be a developer to belong here.",
+    primary: { to: "/community", label: "EXPLORE THE COMMUNITY" },
     secondary: { to: "/guide", label: "TRY THE FREE FIELD GUIDE" },
-    note: "The public discussion board and open member registration are not live yet."
+    note: "Posting and moderation depend on verified accounts, permissions and current service availability. Consult Status for a live check."
   }
 ] as const;
 
@@ -63,7 +63,7 @@ export function StartPage() {
       eyebrow="ANEVUM / YOUR FIRST VISIT"
       title="FIND YOUR"
       accent="WAY IN."
-      description="A creator-driven home for things people make. You can explore the site right now without an account or a project submission."
+      description="Discover original work and meet the people behind it. Public discovery is open without an account; member tools and publishing have separate access rules."
       index="START / 000"
       action={{to: "/discover", label: "SKIP STRAIGHT TO DISCOVERY"}}
     />
@@ -71,7 +71,7 @@ export function StartPage() {
       <div className="start-journey-intro">
         <span className="kicker">ENTRY POINT / CHOOSE YOUR PATH</span>
         <h2 id="start-journey-title">WHAT BRINGS YOU HERE?</h2>
-        <p>Choose a path to see what you can explore now and what is still being built.</p>
+        <p>Choose a path to explore existing destinations. Current service availability and publishing rules are checked separately.</p>
       </div>
       <div className="start-choice-grid" role="group" aria-label="Choose your ANEVUM starting point">
         {journeys.map(journey =>
@@ -131,7 +131,7 @@ export function StartPage() {
     <section className="start-outro">
       <span className="kicker">MORE THAN A MARKETPLACE</span>
       <h2>YOU DON'T HAVE TO PUBLISH<br/>TO HAVE A PLACE HERE.</h2>
-      <p>Explore freely today. As member access opens, save what matters, leave useful feedback and earn recognition through real contributions rather than spending money.</p>
+      <p>Explore public work for free. If registration is available, create a member space and discover eligible saved-work and community features. Public publishing and earned recognition retain their own verification rules.</p>
       <div><Link className="button secondary" to="/guide">FREE FIELD GUIDE</Link><Link className="button secondary" to="/levels">HOW LEVELS WORK</Link><Link className="button secondary" to="/status">WHAT'S LIVE NOW</Link></div>
     </section>
   </div>;

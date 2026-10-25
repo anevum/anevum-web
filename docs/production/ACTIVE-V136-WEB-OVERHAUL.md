@@ -234,3 +234,18 @@ Targeted release source allowlist correctly rejects this not-yet-authorized
 draft source; do not add broad exemptions or promote traffic. #742 GET-only
 public smoke received HTTP 403 before reaching the baseline app; no successful
 production comparison is implied. Owner go/no-go stays under #333.
+
+## V136.026 — first-user feedback and clarity (source-only)
+
+Session: `ANEVUM.WEB.UPDATE.2026-10-25.006.FIRST-VISIT-FEEDBACK-INTEGRATION`  
+Branch: `build/v136-first-visit-clarity-20261025-001`  
+Review: [draft PR #749](https://github.com/anevum/anevum-web/pull/749), based on existing #735 head `9e1a82d2` after #745 Creator Directory was merged into the website development lane.  
+User evidence: one external first-time builder's voluntarily submitted feedback; sanitized themes in [#719](https://github.com/anevum/anevum-web/issues/719#issuecomment-6401384015). This is one source group, not an aggregate conversion sample.
+
+**IMPLEMENTED IN DRAFT, NOT DEPLOYED:** Clearer real-capability homepage copy; optional native first-visit guide/FAQ after hero with real /start, /status, /community, /join/member links; corrected stale Start Here statements about registration and discussion availability; non-binding Now/Next/Exploring public priorities *below* verified live Status capabilities. First-visit source and compiled loopback browser tests added for 1440/390/320 and exact-head CI. No new service, model, renderer, IREN instance, generative art, analytics beacon or fake voting.
+
+**PRESERVE:** functioning signup/OTP, searchable public index, five-station Wayfinder, default-private member behavior, Studio uploader/publishing permissions, reviewed creator media-first thumbnails, native category defaults, current geometry, functional console and the owner-selected Oct 24 concepts.
+
+**SEPARATE WORK:** IREN step 4/7 patch [#747](https://github.com/anevum/anevum-web/pull/747) is unmerged and its focused browser acceptance failed during first-contact prerequisite (not yet proven fixed); Feedback Relay [#744](https://github.com/anevum/anevum-web/issues/744)/[#746](https://github.com/anevum/anevum-web/pull/746) owns lawful multi-channel intake and is not publicly enabled. Do not merge those unrelated branches blindly.
+
+**GATES:** exact-head QA/screenshot visual review pending, genuine iPhone/ordinary-member tour tests and owner visual approval remain outstanding. No main merge, production deployment, Cloudflare traffic shift, D1 migration, new upload/publication rights or feature voting. [Detailed acceptance design](V136-FIRST-VISIT-FEEDBACK-INTEGRATION-20261025.md).

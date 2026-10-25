@@ -285,3 +285,13 @@ and recorded rollout/rollback stay distinct. The #742 read-only HTTP 403
 preceded the application. Stripe migration #739 remains isolated, and no
 auth, database, uploading, public publishing, XP, payment, infrastructure or
 traffic mutation occurred here. Release owner #333 retains the gate.
+
+## October 25, 2026 — V136.026 first-visit clarity integration
+
+Scope: External first-user feedback integrated into the *existing* V136 frontend, not a separate product/restart. The human source is one voluntary participant and must not be counted as multiple testers. Sanitized themes [FDB-017–023](https://github.com/anevum/anevum-web/issues/719#issuecomment-6401384015): signup ease, useful search, IREN step 4/7 failures, first-page explanation, beginner navigation, hierarchy, roadmap/process ideas and potential future creator tests.
+
+**Source-only product implementation:** [draft PR #749](https://github.com/anevum/anevum-web/pull/749), branch `build/v136-first-visit-clarity-20261025-001`, based on #735 website head `9e1a82d250e0b5a2eca0f1555e3110cdba7c6dae` after #745 merged. Current work consists of a coherent optional first-visit orientation, native FAQ, better copy, updated truthful /start, and a separate non-binding development focus below /status read-only capability data. Adds Node and compiled React browser checks plus credential-free CI. No new public route or fake vote mechanism.
+
+**Protected parallel streams:** Source-only IREN responsive target [#747](https://github.com/anevum/anevum-web/pull/747) and Feedback Relay [#744](https://github.com/anevum/anevum-web/issues/744)/[#746](https://github.com/anevum/anevum-web/pull/746) are independent, not silently imported. The existing V136 concept convergence, renderer, Studio, search, native thumbnail precedence, auth, privacy, publisher review and guarded release pipeline remain authoritative. The IREN V097 browser run failed prior to signed-in assertions; do not call the tester bug resolved.
+
+**Release authority:** PR #749 remains DRAFT / NOT MERGED / NOT DEPLOYED. Exact-head QA, actual screenshot comparison with selected concept boards, real iPhone/member test and explicit owner acceptance are required. Production and sealed candidate #741 unchanged by this PR. [Detailed scope and evidence](V136-FIRST-VISIT-FEEDBACK-INTEGRATION-20261025.md).
