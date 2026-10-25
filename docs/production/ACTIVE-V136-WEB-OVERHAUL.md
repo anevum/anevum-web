@@ -2,7 +2,7 @@
 Session: `ANEVUM.WEB.UPDATE.2026-10-25.001.SITEWIDE-OVERHAUL-SYNCHRONIZATION`
 Updated: 2026-10-25
 **Owner development baseline: draft PR #735 — Concept Convergence II, head `888bf4cc` after #748 integration.**
-**Current bounded continuation: V136.029 — public creator-channel navigation and Institute presentation, stacked on draft #751.**
+**Current bounded continuation: V136.030 — actual Studio layout preview viewports and focused workspace, stacked on draft #752.**
 **Sitewide integration: PR #738 was merged into the #735 development branch, preserving selected changes from PR #737 and #736. Those historical PRs need no blind re-import.**
 Status: V136.025 and owner-approved V136.026 are **IMPLEMENTED / VERIFIED DEVELOPMENT**, merged into #735. V136.027 remains **ACTIVE DRAFT / NOT released**. The sealed V136.024 controlled candidate in #741 is a separate release lane; consult provider receipts for actual traffic.
 
@@ -416,3 +416,63 @@ This does not resolve #742's exact-version upstream HTTP 403. Production,
 main, #741, routes/bindings, databases, payments and canary percentage unchanged.
 Next bounded UI work: existing Creator Studio workspace hierarchy and preview/
 publishing guidance, retaining Monaco, real source operations and server gates.
+
+## V136.029 exact-head development verification — PASS
+#752 source `d73f140fbbc0d207f19e9442279efdb089470334` passed all eleven
+development workflows, including Creator V1 Verify 40231069669 (1,771/1,771
+main regressions), native Creator, focused directory/Discover/Commons and full
+Spatial 40231069764. Directory artifact 12612981883 has 15 original captures
+and PASS at 1440/390/320, with no rejected requests. Its exact-head machine
+receipt was inspected. Spatial artifact 12613761603 retains the broad compiled
+acceptance. The live-release source job remains deliberately closed. #750,
+#751 and #752 remain drafts; creative acceptance is not inferred from CI.
+
+## V136.030 — true CSS viewports and focused Studio layout preview
+Session: `ANEVUM.ANEVUM.PACKAGE.2026-10-25.002.UNIFIED-OVERHAUL-WORK-CONTINUATION`.
+Branch `build/parity-v136-studio-preview-20261025-030`, parent #752
+`d73f140fbbc0d207f19e9442279efdb089470334`. ACTIVE DRAFT.
+
+The existing opaque-origin, scriptless HTML/CSS preview now renders actual
+1280x720 desktop, 390x844 phone and 320x720 small-phone CSS viewports and
+scales them to fit, with real dimensions/fit readout. CSS media queries observe
+those actual widths, rather than the surrounding Inspector panel width. The
+same sourcePreviewDocument sanitizer/CSP remains authoritative; no script,
+remote resource, extra renderer or runtime permission was introduced.
+
+A real preview-focus control gives the existing frame the workspace. The source
+editor remains mounted; Escape from preview controls returns to the selected
+file tab. File search/selection and Inspector toggles exit focus coherently.
+Source, cursor/model state and prepared archive survive presentation changes.
+The UI distinguishes layout preview from the existing executable private
+playtest and points to the unchanged archive/upload form. Preview controls
+cannot confirm rights, upload files, publish, persist source or grant roles.
+
+Browser QA caught mobile workbench heights of 2,583px at 390 and 2,531px at
+320, exceeding the preserved 2,400px limit. Corrected the real layout: the
+embedded preview is bounded with keyboard-scrollable canvas; focus expands
+it. Advanced build checks use a genuine disclosure, initially collapsed on
+phones and expanded on desktop, with an actual findings count. The original
+height/width/source/privacy assertions remain strict and all now pass.
+
+Local: TypeScript, full-flag production frontend, 28 existing archive/privacy/
+concept contracts PASS. The complete existing Studio browser sequence passes
+at 1440/390/320, plus actual CSS media-query widths, one scriptless iframe,
+focus/keyboard return, mounted editor/source preservation, unchanged prepared
+archive and disabled private-playtest rights. Six compiled screenshots (editor
+and focused preview at each width) were inspected; errors=[] / forbidden=[].
+These are uncommitted local synthetic-fixture receipts, explicitly marked
+workingTreeDirty=true, not exact-head CI or real-member acceptance.
+
+A focused --studio-only mode reuses the existing harness/fixtures and complete
+Studio assertions. Normal Spatial CI keeps every original group. New focused
+CI requires the exact checked-out SHA, clean source tree, PASS and all three
+viewport groups; generated evidence outputs are excluded from source-dirtiness
+checks. Broad Spatial path filters include the actual preview component/CSS.
+No release allowlist expansion. Fresh exact-head CI and creative review remain.
+
+No main, production, canary, provider, account, publication, upload, payment,
+private family or model changes. Last provider receipt is unchanged evidence
+from the previous read-only inventory, not a fresh infrastructure audit here.
+Next bounded UI work: the existing Studio archive/upload form hierarchy and
+clear progress through private compatibility/rights/playtest steps, preserving
+all canonical server capability and independent-review gates.
