@@ -57,3 +57,29 @@ test('two responsive 3D planetary tiers include actual instanced geometry and ow
  assert.ok(planetCounts[1]<planetCounts[0]/2,
   'The mobile asset must materially reduce geometry, not just CSS scale');
 });
+
+test('floating source outposts occupy the real desktop and phone camera frustum, not an off-screen coordinate plane',async()=>{
+ const {frameFor,sceneProfile}=await import('../web/src/parity/SceneDirectorV136.ts');
+ const frame=frameFor(sceneProfile('hero'),.2);
+ for(const [tier,width,height] of [['desktop',1440,892],['mobile',390,782]]){
+  const art=createInstituteCitadels(tier);
+  const camera=new T.PerspectiveCamera(width<650?62:48,width/height,.1,95);
+  camera.position.set((frame.camera[0]-1.5)*1.8,2.8+(frame.camera[1]-1.5)*1.7,
+   13+(frame.camera[2]-4.5)*2);
+  camera.lookAt(width<650?2.5:0,2,-5);camera.updateProjectionMatrix();camera.updateMatrixWorld();
+  const deck=art.root.children.find(n=>n.name==='Floating deck strata');
+  assert.ok(deck instanceof T.InstancedMesh,'Frustum test must measure the actual instanced platform transforms');
+  let inView=0,right=0,visiblePositions=[];
+  for(let i=0;i<deck.count;i++){
+   const matrix=new T.Matrix4();deck.getMatrixAt(i,matrix);
+   const position=new T.Vector3().setFromMatrixPosition(matrix);
+   const ndc=position.clone().project(camera);
+   const appears=Math.abs(ndc.x)<.92&&Math.abs(ndc.y)<.92&&ndc.z>=-1&&ndc.z<=1;
+   if(appears){inView++;if(ndc.x>0)right++;visiblePositions.push([ndc.x,ndc.y,ndc.z]);}
+  }
+  assert.ok(inView>=2,'Real authored structures must be visible to the '+tier+
+   ' hero camera: '+JSON.stringify(visiblePositions));
+  assert.ok(right>=1,'At least one real floating outpost should occupy the art-side of the viewport');
+  art.dispose();
+ }
+});

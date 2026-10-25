@@ -13,14 +13,18 @@ type Place={x:number;y:number;z:number;r:number;scale:number};
 type InstancePose={position:[number,number,number];scale:[number,number,number];rotation?:[number,number,number]};
 type Batch={name:string;geometry:T.BufferGeometry;material:T.Material;poses:InstancePose[]};
 
+// The Institute camera occupies approximately (0.1, 3.1, 13.2) and
+// looks into -Z. The previous authoring draft placed outposts below y=-10,
+// several at or behind the camera (positive Z): invisible but still costly.
+// These intentionally stagger in front of the actual hero camera instead.
 const DESKTOP_PLACES:readonly Place[]=[
- {x:-11.2,y:-11.2,z:13,r:2.35,scale:1},
- {x:-5.2,y:-9.8,z:9,r:1.85,scale:.82},
- {x:2.7,y:-11.1,z:5,r:1.66,scale:.72}
+ {x:6.4,y:-2.6,z:-19,r:2.35,scale:1},
+ {x:1.8,y:-4.0,z:-12,r:1.85,scale:.82},
+ {x:10.9,y:.0,z:-30,r:1.66,scale:.72}
 ];
 const MOBILE_PLACES:readonly Place[]=[
- {x:-4.6,y:-10.1,z:8,r:1.85,scale:.85},
- {x:2.1,y:-11.5,z:4,r:1.52,scale:.70}
+ {x:3.8,y:-2.7,z:-19,r:1.85,scale:.85},
+ {x:1.1,y:-3.3,z:-28,r:1.52,scale:.70}
 ];
 function batch(name:string,geometry:T.BufferGeometry,material:T.Material,poses:InstancePose[]):Batch{
  return {name,geometry,material,poses};
