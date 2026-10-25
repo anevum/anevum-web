@@ -107,7 +107,7 @@ CREATE TRIGGER IF NOT EXISTS trg_member_studio_publication_review_guard
    JOIN member_studio_publication_reviewer_grants g
      ON g.reviewer_user_id=reviewer.id AND g.revoked_at IS NULL
      AND g.granted_at<=NEW.created_at
-   WHERE reviewer.emailVerified=1
+   WHERE NEW.status='held' AND reviewer.emailVerified=1
      AND s.id=NEW.submission_id AND s.project_id=NEW.project_id
      AND s.user_id=NEW.owner_user_id AND s.project_revision=NEW.project_revision
      AND p.id=NEW.project_id AND p.user_id=NEW.owner_user_id
