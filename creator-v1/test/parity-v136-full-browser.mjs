@@ -129,9 +129,17 @@ try{
     assert.equal(await page.getByRole('button',{name:'Search and quick navigation'}).count(),1,
       'Search command remains discoverable');
 
+    assert.equal(await page.locator('[data-art="continuance-original-optics"]').count(),1,
+      'One first-party, noninteractive Arrival engraving preserves the existing scene');
+    assert.equal(await page.locator('.p136017-hero-upperline[aria-hidden="true"]').count(),1,
+      'Authored hero metadata is explicitly decorative, never fabricated telemetry');
     assert.ok(layout.artLoaded,'Procedural vector and GPU canvas available');
     assert.ok(['webgl','vector'].includes(layout.renderer),'Supported live world renderer');
-    if(width>=1440){assert.ok(layout.headingLines<=2.1,'Desktop headline remains two lines: '+JSON.stringify(layout));assert.ok(layout.hero.height<=690,'Desktop hero retains concept density');}
+    if(width>=1440){
+      assert.ok(layout.headingLines<=2.1,'Desktop headline remains two lines: '+JSON.stringify(layout));
+      assert.ok(layout.hero.height>=665&&layout.hero.height<=895,
+        'New authored Arrival fills a cinematic viewport without overwhelming the first page: '+JSON.stringify(layout));
+    }
     assert.ok(!/Georgia|Cambria/.test(layout.headingFont),'Concept uses sans typography');
     assert.equal(layout.animation,'none','Reduced motion has a static scene');
     for(const rect of [layout.primary,layout.secondary]){assert.ok(rect.height>=44);assert.ok(rect.width>=44);assert.ok(rect.left>=0&&rect.right<=width);}
@@ -307,6 +315,11 @@ try{
     await page.getByRole('heading',{name:'Transmit a creation.'}).waitFor();
     await page.getByRole('button',{name:'Artifact source workbench',exact:true}).click();
     const workbench=page.locator('[data-artifact-workbench="v136.011"]');await workbench.waitFor();
+    assert.equal(await page.locator('.p136017-studio-quicknav').count(),1,'Private Studio uses the actual command rail');
+    assert.equal(await page.locator('.p136017-studio-quicknav a[href="/studio/records"]').count(),1,'Project library remains real route navigation');
+    assert.equal(await workbench.locator('.p136017-source-functionbar').count(),1,'Local source instrumentation is available');
+    assert.ok((await workbench.locator('.p136017-source-ledge').innerText()).includes('index.html'),
+      'Authoring instrument describes the current real file, never a simulated preview');
     if(width===1440)await page.locator('[data-source-editor="monaco"]').waitFor({timeout:30000});
     else assert.equal(await page.locator('[data-source-editor="monaco"]').count(),0,'Phone uses accessible text editor without Monaco allocation');
     assert.equal(await page.locator('.p136-living-world').getAttribute('data-enabled'),'false','Private source never enters public GPU');
