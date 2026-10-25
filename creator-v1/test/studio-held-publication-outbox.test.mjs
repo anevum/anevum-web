@@ -401,3 +401,23 @@ test('same-origin held reviewer intent refuses stale, revoked and conflicting re
     assert.equal(inspect(f).outbox[0].status,'cancelled');
   }finally{f.db.close();}
 });
+
+
+test('independent grantor or verifier account deletion revokes held review without blocking closure',async()=>{
+  for(const removed of ['pilot-carol','pilot-dana']){
+    const f=staged();try{
+      await recordHeldStudioPublication(f.env.MEMBER_DB,review());
+      const result=f.db.prepare('DELETE FROM "user" WHERE id=?').run(removed);
+      assert.equal(result.changes,1,'Independent authorizer account closure succeeds');
+      const records=inspect(f);
+      assert.equal(records.reviews[0].status,'cancelled');
+      assert.equal(records.outbox[0].status,'cancelled');
+      assert.equal(f.db.prepare(
+        'SELECT count(*) AS n FROM member_studio_publication_reviewer_grants'
+      ).get().n,0,'Revoked reviewer grants cannot survive signer deletion');
+      assert.equal((await auditHeldStudioPublicationOutbox(f.env.MEMBER_DB)).healthy,true);
+      await assert.rejects(recordHeldStudioPublication(f.env.MEMBER_DB,review()),
+        /Independent verified reviewer grant/);
+    }finally{f.db.close();}
+  }
+});
