@@ -1,0 +1,15 @@
+{
+  "name": "@anevum/continuance-compute",
+  "private": true,
+  "version": "0.1.1",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test server.test.mjs development.test.mjs",
+    "start": "node server.mjs",
+    "benchmark": "node benchmark.mjs",
+    "benchmark:extended": "node benchmark.mjs --suite=extended"
+  }
+}
