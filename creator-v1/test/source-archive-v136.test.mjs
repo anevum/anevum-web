@@ -18,3 +18,20 @@ test('local source composition cannot smuggle traversal, unsupported files or un
  assert.throws(()=>sourceArchive({...html,'large.txt':'x'.repeat(131073)}));
  assert.throws(()=>sourceArchive({...html,...Object.fromEntries(Array.from({length:25},(_,i)=>['file'+i+'.txt','x']))}));
 });
+
+test('Markdown notes are backed up but excluded from the canonical playable ZIP',async()=>{
+ const {playableSourceArchive}=await import('../web/src/parity/source-archive-v136.ts');
+ const files={
+  'index.html':'<!doctype html><html><body>Local example</body></html>',
+  'styles.css':'body { color: cyan; }',
+  'assets/notes.md':'# Local author notes'
+ };
+ const full=unzipSync(new Uint8Array(await sourceArchive(files).arrayBuffer()));
+ assert.equal(strFromU8(full['assets/notes.md']),files['assets/notes.md']);
+ const {archive,skipped}=playableSourceArchive(files);
+ assert.deepEqual(skipped,['assets/notes.md']);
+ const playable=unzipSync(new Uint8Array(await archive.arrayBuffer()));
+ assert.deepEqual(Object.keys(playable),['index.html','styles.css']);
+ const report=await inspectLocalBrowserBuild(archive);
+ assert.equal(report.playableCandidate,true,JSON.stringify(report));
+});

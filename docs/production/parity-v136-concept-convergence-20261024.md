@@ -53,3 +53,9 @@ The V136.017.002 **real Chromium 1440×960 source-editor screenshot** showed rou
 The fix is scoped to the full-visual source workbench when it is actually open. The existing Studio member navigator is narrower but remains present; the native upload guide moves below the authoring panel without disappearing. The workbench uses its own **CSS container inline-size** to switch between three-pane, explorer/editor + lower inspector, and narrow stacked layouts independently from screen-wide breakpoints. Native upload form, privacy and canonical Studio source ownership remain unchanged.
 
 Compiled Chromium regression now asserts minimum real editor width (desktop 440px, 390 phone 255px, 320 phone 190px) and below-editor guide placement at 1440px. An obsolete source-text unit assertion was repaired to target the actual new `node.path` explorer implementation. Physical-device and owner-reviewed art matching remain separate release gates.
+
+## V136.017.005 — local Markdown versus playable ZIP
+
+The exact-head Chromium test for V136.017.004 confirmed the nested Studio layout, then revealed a real browser-build incompatibility: creating `assets/notes.md` produced a ZIP rejected by the existing V003 native package parser. This is a legitimate upstream safety boundary, not a flaky timeout.
+
+The authoring workbench now distinguishes `Prepare build archive` (canonical MIME-supported files only, any skipped local-only Markdown explicitly listed) from `Download complete source` (all authored files, including Markdown). The current player and server MIME whitelist remain unchanged. A source-archive regression test proves the complete backup retains the Markdown, and the playable ZIP passes the V101 compatibility inspector. The browser test still uses a real nested Markdown source item and must now see an actual playable candidate, never a synthetic report.

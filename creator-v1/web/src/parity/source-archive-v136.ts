@@ -1,4 +1,5 @@
 import {zipSync,strToU8} from 'fflate';
+import {assetMime} from '../../../../site/alpha/v003/archive.mjs';
 export const SOURCE_LIMITS={file:131072,total:1048576,count:24} as const;
 export const safeSourcePath=(s:string)=>/^(?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_-]+\.(?:html|css|js|json|txt|md)$/.test(s)&&s.length<=120;
 /** Produces only a candidate for the canonical private uploader. No network. */
@@ -12,4 +13,17 @@ export function sourceArchive(files:Record<string,string>){
  }));
  if(Object.values(binary).reduce((n,b)=>n+b.length,0)>SOURCE_LIMITS.total)throw Error('Source workspace exceeds 1 MiB.');
  return new File([zipSync(binary,{level:6}) as Uint8Array<ArrayBuffer>],'continuance-build.zip',{type:'application/zip'});
+}
+
+/** Playable files use the existing canonical gateway's MIME allowlist.
+ * Markdown notes are retained in full-source downloads but never smuggled
+ * into a playable ZIP the canonical package validator would reject.
+ */
+export function localOnlySourcePaths(files:Record<string,string>):string[]{
+ return Object.keys(files).filter(path=>!assetMime(path));
+}
+export function playableSourceArchive(files:Record<string,string>){
+ const skipped=localOnlySourcePaths(files);
+ const deployable=Object.fromEntries(Object.entries(files).filter(([path])=>assetMime(path)));
+ return {archive:sourceArchive(deployable),skipped};
 }

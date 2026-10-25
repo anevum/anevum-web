@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState,type ComponentType,type ReactNode} from 'react';
 import {strToU8} from 'fflate';
-import {sourceArchive,safeSourcePath,SOURCE_LIMITS} from './source-archive-v136';
+import {sourceArchive,playableSourceArchive,localOnlySourcePaths,safeSourcePath,SOURCE_LIMITS} from './source-archive-v136';
 import {Icon} from '../components/Icons';
 import {FileGlyphV136017,FolderGlyphV136017,fileKind} from './FileGlyphV136017';
 import {editorLanguage} from '../../../source-ide/language-v119.mjs';
@@ -47,6 +47,7 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
  useEffect(()=>()=>{importVersion.current++},[]);
  const entries=Object.entries(files),total=entries.reduce((n,[,text])=>n+strToU8(text).length,0);
   const explorerTree=sourceExplorerTree(entries.map(([path])=>path));
+ const localOnlyPaths=localOnlySourcePaths(files);
  const problems:string[]=[];
  if(!('index.html' in files))problems.push('A root index.html entrypoint is required.');
  for(const [path,text] of entries){
@@ -76,13 +77,25 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
    setFiles(next);setActive(incoming[0]?.[0]||active);setDirty(true);onDirty();setNote('Files read locally. Nothing was uploaded.');
   }catch(error){if(version===importVersion.current)setNote(error instanceof Error?error.message:'Files could not be opened.');}
  }
- function packageSource(download=false){
+ function packageSource(){
   if(disabled||!files['index.html']||total>MAX_TOTAL)return;
-  try{const archive=sourceArchive(files);onPackage(archive);if(download){const url=URL.createObjectURL(archive),anchor=document.createElement('a');anchor.href=url;anchor.download=archive.name;anchor.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}setDirty(false);setNote('Archive prepared below. The existing compatibility checks, rights confirmation and private-upload controls still apply.')}
-  catch(error){setNote(error instanceof Error?error.message:'Source archive could not be prepared.')}
+  try{
+   const {archive,skipped}=playableSourceArchive(files);
+   onPackage(archive);setDirty(false);
+   setNote((skipped.length?'Playable ZIP excludes local-only notes: '+skipped.join(', ')+'. Download complete source separately. ':'')+
+    'The existing compatibility checks, rights confirmation and private-upload controls still apply.');
+  }catch(error){setNote(error instanceof Error?error.message:'Playable source archive could not be prepared.')}
  }
- 
-  function toggleFolder(path:string){
+ function downloadSource(){
+  if(disabled)return;
+  try{
+   const archive=sourceArchive(files),url=URL.createObjectURL(archive),anchor=document.createElement('a');
+   anchor.href=url;anchor.download='continuance-complete-source.zip';anchor.click();
+   setTimeout(()=>URL.revokeObjectURL(url),1000);
+   setNote('Complete source downloaded, including local-only notes. This did not upload or prepare a playable build.');
+  }catch(error){setNote(error instanceof Error?error.message:'Full source could not be downloaded.')}
+ }
+ function toggleFolder(path:string){
    setCollapsedFolders(previous=>{
     const next=new Set(previous);
     if(next.has(path))next.delete(path);else next.add(path);
@@ -120,12 +133,15 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
   </div>
   <div className="p136-workbench-command">
    <button type="button" disabled={disabled||!files['index.html']||total>MAX_TOTAL} onClick={()=>packageSource()}><Icon name="create" size={16}/> Prepare build archive</button>
-   <button type="button" disabled={disabled||!files['index.html']||total>MAX_TOTAL} onClick={()=>packageSource(true)}>Download source archive</button>
+   <button type="button" disabled={disabled||!files['index.html']||total>MAX_TOTAL} onClick={downloadSource}>Download complete source</button>
    <label className="p136-source-import">Open text files<input disabled={disabled} type="file" multiple accept=".html,.css,.js,.json,.txt,.md" onChange={e=>void importFiles(e.target.files)}/></label>
    <button type="button" aria-pressed={plain} onClick={()=>setPlain(v=>!v)}>Accessible text editor</button>
    <button type="button" aria-expanded={inspector} onClick={()=>setInspector(v=>!v)}>Inspector</button>
   </div>
-  <div className="p136-workbench-layout" data-inspector={inspector}>
+  {localOnlyPaths.length>0&&<p className="p136017-local-only-note" role="status">
+    LOCAL NOTES / {localOnlyPaths.join(', ')} — kept in complete source downloads, excluded from playable ZIPs.
+   </p>}
+   <div className="p136-workbench-layout" data-inspector={inspector}>
    <aside className="p136-source-explorer" aria-label="Local source files"><strong>PROJECT FILES</strong>
     <div className="p136-source-add"><label className="visually-hidden" htmlFor="p136-source-new">New file path</label><input id="p136-source-new" placeholder="assets/data.json" value={name} onChange={e=>setName(e.target.value)} maxLength={120} disabled={disabled}/><button type="button" onClick={add} disabled={disabled} aria-label="Create source file">+</button></div>
     <nav aria-label="Source file explorer" className="p136017-source-tree">{explorerTree.map(node=>explorerRow(node,0))}</nav>
@@ -140,7 +156,7 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
     </div>
     <footer className="p136-source-status"><span>{editorLanguage(active).toUpperCase()}</span><span>{files[active].split('\n').length} lines</span><span>{strToU8(files[active]).length.toLocaleString()} bytes</span><span>{plain||editorError?'TEXT EDITOR':Editor?'MONACO':'LOADING MONACO'}</span></footer>
    </div>
-   {inspector&&<aside className="p136-source-inspector" aria-label="Source and build diagnostics"><strong>BUILD INSPECTOR</strong><span className="p136017-inspector-disclosure">VALIDATION / LOCAL SOURCE</span><dl><dt>Source files</dt><dd>{entries.length} / {MAX_FILES}</dd><dt>Expanded text</dt><dd>{(total/1024).toFixed(1)} KiB / 1024 KiB</dd><dt>Entrypoint</dt><dd>{files['index.html']?'index.html':'Missing'}</dd><dt>Publication</dt><dd>Private upload required</dd></dl><h3>Local findings</h3>{problems.length?<ul>{problems.map(p=><li key={p}>{p}</li>)}</ul>:<p>No issues found by the available text checks.</p>}<p>JavaScript is edited as text. This view does not compile, run, save to your account or publish source.</p><h3>Live preview</h3><p>Prepare the archive, then use the existing private playtest. Executable previews stay in ANEVUM’s isolated runtime.</p></aside>}
+   {inspector&&<aside className="p136-source-inspector" aria-label="Source and build diagnostics"><strong>BUILD INSPECTOR</strong><span className="p136017-inspector-disclosure">VALIDATION / LOCAL SOURCE</span><dl><dt>Source files</dt><dd>{entries.length} / {MAX_FILES}</dd><dt>Expanded text</dt><dd>{(total/1024).toFixed(1)} KiB / 1024 KiB</dd><dt>Entrypoint</dt><dd>{files['index.html']?'index.html':'Missing'}</dd><dt>Publication</dt><dd>Private upload required</dd><dt>Local-only source notes</dt><dd>{localOnlyPaths.length}</dd></dl><h3>Local findings</h3>{problems.length?<ul>{problems.map(p=><li key={p}>{p}</li>)}</ul>:<p>No issues found by the available text checks.</p>}<p>JavaScript is edited as text. This view does not compile, run, save to your account or publish source.</p><h3>Live preview</h3><p>Prepare the archive, then use the existing private playtest. Executable previews stay in ANEVUM’s isolated runtime.</p></aside>}
   </div>
   {note&&<p className="p136-source-notice" role="status">{note}</p>}
   <p className="p136-source-privacy">Source stays in this workspace’s memory until you prepare and explicitly upload an archive. Export before leaving; signing out or changing routes clears it.</p>
