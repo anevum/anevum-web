@@ -16,6 +16,7 @@ import {instituteAsset,instituteBudget} from './InstituteAssetManifestV136';
 import {fetchStageScene} from './CinematicStageGeometryV136';
 import {convertBlenderCamera,type CinemaPose} from './CinematicCameraRegistrationV136';
 import {createInstituteHorizon} from './InstituteHorizonV136017';
+import {createInstituteCitadels} from './InstituteCitadelsV136017';
 export type InstituteInput={sector:SceneSector;density:number;verified:boolean;animated:boolean;saveData:boolean};
 export type InstituteMetrics={tier:string;family:string;models:number;drawCalls:number;triangles:number;frameMs:number;renderMs:number;gpuMs:number|null;geometries:number;textures:number;scale:number;contextLosses:number};
 type Family={root:T.Group;weight:number;lastUsed:number;geometries:Set<T.BufferGeometry>;materials:Set<T.Material>;stage:boolean};
@@ -58,7 +59,7 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
  for(let i=0;i<15;i++){anchorTransform.position.set(6.1+Math.sin(i*.8)*.2,.2+i*.19,-4-i*.8);anchorTransform.updateMatrix();anchors.setMatrixAt(i,anchorTransform.matrix)}
  scene.add(anchors);
  // QA-only visual convergence: shared context, separately bounded horizon.
- let horizon=horizonQA?createInstituteHorizon(budget.tier):null;
+ let horizon=horizonQA?createInstituteHorizon(budget.tier,createInstituteCitadels):null;
  if(horizon){scene.add(horizon.root);canvas.dataset.horizon='qa-only';canvas.dataset.horizonTier=budget.tier;}
  const backdrop=new T.Scene(),backgroundCamera=new T.Camera();
  const uniforms={u_resolution:{value:new T.Vector2(1,1)},u_pointer:{value:new T.Vector2()},u_time:{value:0},u_modeled:{value:1},
@@ -152,7 +153,7 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
   budget=instituteBudget(canvas.clientWidth,window.devicePixelRatio,input.saveData);
   if(horizon&&priorTier!==budget.tier){
    scene.remove(horizon.root);horizon.dispose();
-   horizon=createInstituteHorizon(budget.tier);
+   horizon=createInstituteHorizon(budget.tier,createInstituteCitadels);
    scene.add(horizon.root);canvas.dataset.horizonTier=budget.tier;
   }
   const w=Math.max(1,canvas.clientWidth),h=Math.max(1,canvas.clientHeight),dpr=Math.min(budget.pixelRatio,Math.sqrt(budget.maxPixels/(w*h)))*scale;

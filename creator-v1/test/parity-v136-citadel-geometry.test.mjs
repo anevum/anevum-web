@@ -34,7 +34,7 @@ for(const tier of ['desktop','mobile']){
 test('two responsive 3D planetary tiers include actual instanced geometry and own their resources',()=>{
  const planetCounts=[];
  for(const tier of ['desktop','mobile']){
-  const scene=createInstituteHorizon(tier);
+  const scene=createInstituteHorizon(tier,createInstituteCitadels);
   assert.equal(scene.tier,tier);
   assert.ok(scene.triangles>=4000&&scene.triangles<=HORIZON_QA_BUDGET[tier].triangles,
    'Combined sphere, atmosphere, rings and instances fit device budget');

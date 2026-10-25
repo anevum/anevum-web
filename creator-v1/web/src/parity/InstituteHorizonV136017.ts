@@ -8,7 +8,7 @@
  */
 import * as T from 'three';
 import type {AssetTier} from './InstituteAssetManifestV136';
-import {createInstituteCitadels} from './InstituteCitadelsV136017';
+import type {createInstituteCitadels} from './InstituteCitadelsV136017';
 
 const planetVertex=`
 varying vec3 vHorizonNormal;
@@ -78,7 +78,7 @@ export const HORIZON_QA_BUDGET={
 /** Independently disposable optional root: never enters the four-family GLB
  * cache and never becomes an unreviewed generic site-wide data source.
  */
-export function createInstituteHorizon(tier:AssetTier){
+export function createInstituteHorizon(tier:AssetTier,citadelFactory:typeof createInstituteCitadels){
  const mobile=tier==='mobile';
  const latitude=mobile?22:42,longitude=mobile?40:72;
  const root=new T.Group();
@@ -114,7 +114,7 @@ export function createInstituteHorizon(tier:AssetTier){
   orbits.add(ring);
  }
  root.add(orbits);
- const citadels=createInstituteCitadels(tier);
+ const citadels=citadelFactory(tier);
  root.add(citadels.root);
  root.updateMatrixWorld(true);
  let triangles=0,drawCalls=0;
