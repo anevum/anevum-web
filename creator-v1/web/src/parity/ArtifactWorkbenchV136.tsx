@@ -1,7 +1,7 @@
-import {useEffect,useRef,useState,type ComponentType,type ReactNode} from 'react';
+import {useEffect,useMemo,useRef,useState,type ComponentType,type ReactNode} from 'react';
 import {strToU8} from 'fflate';
 import {sourceArchive,playableSourceArchive,localOnlySourcePaths,safeSourcePath,SOURCE_LIMITS} from './source-archive-v136';
-import {renameLocalSource,removeLocalSource,sourceReferencesToReview} from './workbench-file-ops-v136';
+import {renameLocalSource,removeLocalSource,sourceReferencesToReview,unresolvedLocalSourceLinks} from './workbench-file-ops-v136';
 import {Icon} from '../components/Icons';
 import {FileGlyphV136017,FolderGlyphV136017,fileKind} from './FileGlyphV136017';
 import {editorLanguage} from '../../../source-ide/language-v119.mjs';
@@ -75,8 +75,16 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
   requestAnimationFrame(()=>document.getElementById('p136-source-tab-'+path)?.focus());
  }
  const localOnlyPaths=localOnlySourcePaths(files);
+ const unresolvedLinks=useMemo(()=>unresolvedLocalSourceLinks(files,safePath),[files]);
  const renameReferences=renamingFile?sourceReferencesToReview(files,renamingFile):[];
  const removalReferences=deletingFile?sourceReferencesToReview(files,deletingFile):[];
+ function inspectUnresolvedLink(path:string,target:string){
+  if(!Object.hasOwn(files,path))return;
+  selectFile(path);
+  setCollapsedFolders(folders=>new Set([...folders].filter(folder=>!path.startsWith(folder+'/'))));
+  setNote('Review missing local reference '+target+' in '+path+'. No source was rewritten or uploaded.');
+  requestAnimationFrame(()=>document.getElementById('p136-source-tab-'+path)?.focus());
+ }
  const problems:string[]=[];
  if(!('index.html' in files))problems.push('A root index.html entrypoint is required.');
  for(const [path,text] of entries){
@@ -280,7 +288,18 @@ export function ArtifactWorkbenchV136({disabled,onPackage,onDirty}:{disabled:boo
     </div>
     <footer className="p136-source-status">{!plain&&Editor&&!editorError&&<span data-source-cursor>Ln {cursor.line}, Col {cursor.column}</span>}<span>{editorLanguage(active).toUpperCase()}</span><span>{files[active].split('\n').length} lines</span><span>{strToU8(files[active]).length.toLocaleString()} bytes</span><span>{plain||editorError?'TEXT EDITOR':Editor?'MONACO':'LOADING MONACO'}</span></footer>
    </div>
-   {inspector&&<aside className="p136-source-inspector" aria-label="Source and build diagnostics"><strong>BUILD INSPECTOR</strong><span className="p136017-inspector-disclosure">VALIDATION / LOCAL SOURCE</span><dl><dt>Source files</dt><dd>{entries.length} / {MAX_FILES}</dd><dt>Expanded text</dt><dd>{(total/1024).toFixed(1)} KiB / 1024 KiB</dd><dt>Entrypoint</dt><dd>{files['index.html']?'index.html':'Missing'}</dd><dt>Publication</dt><dd>Private upload required</dd><dt>Local-only source notes</dt><dd>{localOnlyPaths.length}</dd></dl><h3>Local findings</h3>{problems.length?<ul>{problems.map(p=><li key={p}>{p}</li>)}</ul>:<p>No issues found by the available text checks.</p>}<p>JavaScript is edited as text. This view does not compile, run, save to your account or publish source.</p><h3>Live preview</h3><p>Prepare the archive, then use the existing private playtest. Executable previews stay in ANEVUM’s isolated runtime.</p></aside>}
+   {inspector&&<aside className="p136-source-inspector" aria-label="Source and build diagnostics"><strong>BUILD INSPECTOR</strong><span className="p136017-inspector-disclosure">VALIDATION / LOCAL SOURCE</span><dl><dt>Source files</dt><dd>{entries.length} / {MAX_FILES}</dd><dt>Expanded text</dt><dd>{(total/1024).toFixed(1)} KiB / 1024 KiB</dd><dt>Entrypoint</dt><dd>{files['index.html']?'index.html':'Missing'}</dd><dt>Publication</dt><dd>Private upload required</dd><dt>Local-only source notes</dt><dd>{localOnlyPaths.length}</dd></dl><h3>Local findings</h3>{problems.length?<ul>{problems.map(p=><li key={p}>{p}</li>)}</ul>:<p>No issues found by the available text checks.</p>}
+    <div className="p136017-source-link-diagnostics" data-source-link-diagnostics="local" aria-label="Local link diagnostics">
+     <h3>Source links / {unresolvedLinks.length} missing</h3>
+     {unresolvedLinks.length?
+      <ul>{unresolvedLinks.map(link=><li key={link.source+'|'+link.target}>
+       <button type="button" onClick={()=>inspectUnresolvedLink(link.source,link.target)}
+        aria-label={'Inspect '+link.source+' missing reference '+link.target}>Inspect {link.source}</button>
+       <span>Missing: {link.target}</span>
+      </li>)}</ul>:
+      <p>No missing static local references detected.</p>}
+     <p>Static HTML, CSS and JavaScript links only. Dynamic paths and remote resources are not inspected; packaging still uses the existing compatibility checks.</p>
+    </div><p>JavaScript is edited as text. This view does not compile, run, save to your account or publish source.</p><h3>Live preview</h3><p>Prepare the archive, then use the existing private playtest. Executable previews stay in ANEVUM’s isolated runtime.</p></aside>}
   </div>
   {note&&<p className="p136-source-notice" role="status">{note}</p>}
   <p className="p136-source-privacy">Source stays in this workspace’s memory until you prepare and explicitly upload an archive. Export before leaving; signing out or changing routes clears it.</p>

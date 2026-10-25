@@ -98,3 +98,30 @@ html[data-av-parity="v136-full"] .p136017-ref-audit li button:hover{
   background:ButtonFace;color:ButtonText;border-color:ButtonText;
  }
 }
+
+/* V136.017.034 — bounded in-memory link diagnostics inside existing inspector. */
+html[data-av-parity="v136-full"] .p136017-source-link-diagnostics{
+ border-top:1px solid #719ec25b;margin-top:14px;padding-top:10px;min-width:0;
+}
+html[data-av-parity="v136-full"] .p136017-source-link-diagnostics h3{margin:7px 0}
+html[data-av-parity="v136-full"] .p136017-source-link-diagnostics ul{
+ display:grid;gap:7px;padding:0;margin:9px 0;list-style:none;
+}
+html[data-av-parity="v136-full"] .p136017-source-link-diagnostics li{
+ display:grid;gap:3px;min-width:0;padding:8px;
+ border:1px solid #e0b97965;background:#322a214d;border-radius:4px;
+}
+html[data-av-parity="v136-full"] .p136017-source-link-diagnostics li button{
+ min-height:36px;padding:6px 9px;text-align:left;overflow-wrap:anywhere;
+ background:#1b384e;border:1px solid #8ec8e078;color:#e1f4ff;
+ font:650 11px/1.5 ui-monospace,monospace;
+}
+html[data-av-parity="v136-full"] .p136017-source-link-diagnostics li span{
+ color:#f2d6a6;font:11px/1.6 ui-monospace,monospace;overflow-wrap:anywhere;
+}
+@media(forced-colors:active){
+ html[data-av-parity="v136-full"] .p136017-source-link-diagnostics li,
+ html[data-av-parity="v136-full"] .p136017-source-link-diagnostics li button{
+  background:Canvas;color:CanvasText;border-color:CanvasText;
+ }
+}

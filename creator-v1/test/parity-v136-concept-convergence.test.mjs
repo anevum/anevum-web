@@ -154,3 +154,18 @@ test('dependency warnings navigate into a real source tab and cancel pending ope
  assert.match(ide,/document\.getElementById\('p136-source-tab-'\+path\)/);
  assert.match(css,/\.p136017-ref-audit li button/);
 });
+
+
+test('inspector surfaces advisory missing static source links and real editor navigation',()=>{
+ const ops=source('../web/src/parity/workbench-file-ops-v136.ts');
+ const styles=source('../web/src/parity/artifact-workbench-v136.css');
+ assert.match(ops,/export function unresolvedLocalSourceLinks/);
+ assert.match(ops,/sourceReferencePath\(source,value\)/);
+ assert.match(ide,/useMemo\(\(\)=>unresolvedLocalSourceLinks\(files,safePath\),\[files\]\)/);
+ assert.match(ide,/data-source-link-diagnostics="local"/);
+ assert.match(ide,/onClick=\{\(\)=>inspectUnresolvedLink\(link.source,link.target\)\}/);
+ assert.match(ide,/Static HTML, CSS and JavaScript links only/);
+ assert.match(styles,/\.p136017-source-link-diagnostics/);
+ assert.ok(!/fetch\(|eval\(|localStorage|sessionStorage/.test(ops),
+  'Diagnostic module cannot create new execution or network capabilities');
+});

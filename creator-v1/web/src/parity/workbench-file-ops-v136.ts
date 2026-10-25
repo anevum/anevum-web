@@ -58,3 +58,38 @@ export function sourceReferencesToReview(files:Record<string,string>,previous:st
  }
  return references;
 }
+
+/** A bounded advisory diagnostic; never evaluates the user's code or blocks
+ * the existing canonical native-compatibility inspection and private uploader.
+ * Unquoted JS dynamic paths, remote URLs and unsupported binary media are
+ * intentionally outside this static analysis.
+ */
+export type UnresolvedLocalSourceLink={source:string;target:string};
+export function unresolvedLocalSourceLinks(
+ files:Record<string,string>,isSafePath:SourcePathValidator
+):UnresolvedLocalSourceLink[]{
+ const result:UnresolvedLocalSourceLink[]=[],seen=new Set<string>();
+ for(const [source,content] of Object.entries(files)){
+  const values:string[]=[];
+  if(source.endsWith('.html')){
+   for(const match of content.matchAll(/<(?:script|link|a|img|source|iframe)\b[^>]{0,1024}?\b(?:src|href)\s*=\s*["']([^"'\r\n]{1,240})["']/gi))
+    values.push(match[1]);
+  }else if(source.endsWith('.css')){
+   for(const match of content.matchAll(/@import\s+["']([^"'\r\n]{1,240})["']/gi))
+    values.push(match[1]);
+   for(const match of content.matchAll(/url\(\s*(?:"([^"\r\n]{1,240})"|'([^'\r\n]{1,240})'|([^)"'\s]{1,240}))\s*\)/gi))
+    values.push(match[1]||match[2]||match[3]);
+  }else if(source.endsWith('.js')){
+   for(const match of content.matchAll(/\b(?:import\s*(?:\(\s*|[^'"\r\n]*?\bfrom\s*)?|export\s+[^'"\r\n]*?\bfrom\s*|require\s*\(\s*)["']([^'"\r\n]{1,240})["']/g))
+    values.push(match[1]);
+  }else continue;
+  for(const value of values){
+   const target=sourceReferencePath(source,value);
+   if(!target||!isSafePath(target)||Object.hasOwn(files,target))continue;
+   const key=source+'\0'+target;
+   if(seen.has(key))continue;
+   seen.add(key);result.push({source,target});
+  }
+ }
+ return result;
+}

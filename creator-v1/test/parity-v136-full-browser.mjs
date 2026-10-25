@@ -231,6 +231,18 @@ try{
     await workbench.locator('.p136-source-fallback textarea').fill('body { color: #ffffff; background: #06101d; }');
     await page.locator('.av095-drop strong').filter({hasText:'Choose a ZIP or HTML file'}).waitFor();
     assert.equal(await page.locator('.p136-source-state').innerText(),'LOCAL CHANGES','Editing invalidates the previously prepared archive');
+    if(width===1440){
+      const diagnostics=workbench.locator('[data-source-link-diagnostics="local"]');
+      assert.match(await diagnostics.innerText(),/0 missing/);
+      await workbench.locator('.p136-source-fallback textarea').fill('@import "assets/missing.css"; body { color: #ffffff; }');
+      await diagnostics.getByText('Missing: assets/missing.css',{exact:true}).waitFor();
+      await diagnostics.getByRole('button',{name:'Inspect styles.css missing reference assets/missing.css'}).click();
+      assert.equal(await workbench.getByRole('tab',{name:'styles.css',exact:true}).getAttribute('aria-selected'),'true',
+       'Inspector navigates to the real file containing the missing local source link');
+      assert.match(await workbench.locator('.p136-source-notice').innerText(),/No source was rewritten or uploaded/);
+      assert.equal(await page.locator('.av095-drop strong').filter({hasText:'Choose a ZIP or HTML file'}).count(),1,
+       'Diagnostics never override existing private package/archive invalidation');
+    }
     const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1);
     assert.equal(overflow,false,'Workbench has no horizontal page overflow');
     record('session-bound source workstation / real editor / native ZIP compatibility / stale archive invalidation '+width,{monaco:width===1440,uploads:0});

@@ -86,3 +86,28 @@ test('source link audit resolves relative paths, rejects external URLs, keeps au
   'Documentation containing CSS-like examples cannot masquerade as a live code dependency');
  assert.equal(JSON.stringify(files),snapshot,'Audit cannot mutate local source files');
 });
+
+
+test('advisory source-link diagnostics identify missing local dependencies without mutating source',async()=>{
+ const {unresolvedLocalSourceLinks}=await import('../web/src/parity/workbench-file-ops-v136.ts');
+ const files={
+  'index.html':'<link href="./styles.css"><script src="/scripts/main.js"></script><a href="docs/readme.html">Read</a>',
+  'styles.css':'@import "assets/theme.css"; .a{background:url(assets/texture.png)}',
+  'assets/theme.css':'body {color: white}',
+  'scripts/main.js':"import './helper.js'; import './helper.js'; export * from '../assets/theme.css'; const string='ghost.js';",
+  'docs/notes.md':'<script src="missing.js"></script>',
+  'scratch.txt':'import "ghost.js"'
+ };
+ const original=JSON.stringify(files);
+ assert.deepEqual(unresolvedLocalSourceLinks(files,safeSourcePath),[
+  {source:'index.html',target:'docs/readme.html'},
+  {source:'scripts/main.js',target:'scripts/helper.js'}
+ ]);
+ assert.equal(JSON.stringify(files),original,'Diagnostics may not rewrite creator source');
+ const moved={...files};delete moved['styles.css'];
+ assert.ok(unresolvedLocalSourceLinks(moved,safeSourcePath).some(link=>
+  link.source==='index.html'&&link.target==='styles.css'),
+  'After renaming a linked file the existing inspector detects the dangling HTML link');
+ assert.deepEqual(unresolvedLocalSourceLinks({'index.html':'<a href="/discover">Go</a>'},safeSourcePath),[],
+  'Browser routes are not local source files');
+});
