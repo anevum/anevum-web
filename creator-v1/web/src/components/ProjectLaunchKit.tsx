@@ -13,11 +13,11 @@ export function ProjectLaunchKit({project}:{project:Pick<Project,"id"|"title">})
   try{kit=buildProjectLaunchKit(project,origin,import.meta.env.BASE_URL);}catch{return null;}
   const nativeShare=typeof navigator!=="undefined"&&typeof navigator.share==="function";
 
-  async function copy(value:string,what:"link"|"badge"){
+  async function copy(value:string,what:"link"|"badge"|"announcement"){
     try{
       if(!navigator.clipboard?.writeText)throw new Error("Clipboard unavailable");
       await navigator.clipboard.writeText(value);
-      setNotice(what==="link"?"Project link copied.":"Embed link copied.");
+      setNotice(what==="link"?"Project link copied.":what==="announcement"?"Launch announcement copied.":"Embed link copied.");
     }catch{
       setNotice("Automatic copying is unavailable. Select the field and copy it manually.");
     }
@@ -42,6 +42,7 @@ export function ProjectLaunchKit({project}:{project:Pick<Project,"id"|"title">})
       onFocus={event=>event.currentTarget.select()} aria-label="Shareable public project link"/>
     <div className="avp-launch-kit-actions">
       <button type="button" onClick={()=>void copy(kit.url,"link")}>Copy link</button>
+      <button type="button" onClick={()=>void copy(kit.shareText,"announcement")}>Copy announcement</button>
       {nativeShare&&<button type="button" onClick={()=>void share()}>Share</button>}
     </div>
     <details className="avp-launch-kit-embed">
