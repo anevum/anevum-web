@@ -1,0 +1,143 @@
+/* PORTFOLIO V3 / ART-DIRECTED SPATIAL RHYTHM
+ * Decorative prismatic ribbons: no skyline, no third-party media, no canvas.
+ * All meaningful project content is real DOM and keyboard-operable.
+ */
+.hero-v3-prism{
+  position:absolute;inset:0;z-index:2;overflow:hidden;isolation:isolate;
+  pointer-events:none;contain:paint;mix-blend-mode:screen;
+}
+.hero-v3-prism .prism-plane{
+  position:absolute;display:block;pointer-events:none;
+  transform-origin:60% 50%;
+  will-change:auto;
+}
+.hero-v3-prism .prism-arc-a{
+  width:clamp(530px,72vw,1160px);height:clamp(450px,63vw,970px);
+  top:-23%;right:-28%;
+  clip-path:polygon(31% 2%,75% 0,100% 16%,61% 26%,89% 60%,56% 96%,34% 78%,43% 44%,8% 48%,0 26%);
+  background:
+    conic-gradient(from 208deg at 66% 44%,#2d55aa10,#9ccdfd60 38deg,#131c3824 92deg,#c2b5ff36 135deg,#c3f5ff26 166deg,#161d5910 195deg,#bfeeff48 258deg,#2c407016);
+  opacity:.67;filter:blur(3px) drop-shadow(0 0 65px #9cadff56);
+  transform:translate3d(var(--reel-motion-x,0px),var(--reel-motion-y,0px),0) rotate(-15deg);
+}
+.hero-v3-prism .prism-arc-b{
+  width:clamp(600px,75vw,1180px);height:clamp(400px,52vw,800px);
+  top:18%;right:-29%;
+  clip-path:polygon(1% 54%,41% 10%,89% 0%,98% 21%,70% 33%,38% 58%,96% 75%,75% 96%,39% 83%,0 65%);
+  background:linear-gradient(115deg,transparent 12%,#7d99ee05 21%,#a5e8ff37 39%,#f0e5ff65 43%,#869dfb12 46%,#b5baff3d 64%,#17215d00 80%);
+  opacity:.74;filter:blur(1px) drop-shadow(0 0 44px #80cafa56);
+  transform:rotate(-17deg);
+}
+.hero-v3-prism .prism-arc-c{
+  width:clamp(400px,52vw,850px);height:clamp(500px,68vw,1030px);
+  top:-29%;right:-15%;border-radius:47% 53% 68% 32% / 43% 38% 62% 57%;
+  background:conic-gradient(from 142deg at 50% 50%,transparent 0%,#c6f5ff00 19%,#d1e3fe5d 22%,#6877cc09 25%,transparent 42%,#a4a8ff5f 56%,#27286f0b 68%,transparent 85%);
+  mask-image:radial-gradient(ellipse at 52% 57%,transparent 49%,#000 50%,#000 58%,transparent 67%);
+  opacity:.75;filter:blur(2px);transform:rotate(18deg);
+}
+.hero-v3-prism .prism-glint{
+  width:clamp(600px,81vw,1350px);height:2px;right:-27%;top:48%;
+  background:linear-gradient(90deg,transparent,#88baff31 27%,#ddfeffbd 52%,#8e7cec3d 66%,transparent 100%);
+  filter:blur(.8px) drop-shadow(0 0 18px #9eccff);
+  transform:rotate(-29deg);
+}
+.hero-v3-prism .prism-lumen{
+  width:65%;height:80%;right:-10%;top:2%;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 53%,#6d7ce733 0%,#919efc0d 38%,transparent 66%);
+  filter:blur(70px);opacity:.74;
+}
+@media(prefers-reduced-motion:no-preference){
+  .hero-v3-prism .prism-arc-b{animation:prism-gentle-shift 20s ease-in-out infinite alternate}
+  .hero-v3-prism .prism-glint{animation:prism-glint-breathe 12s ease-in-out infinite alternate}
+  .hero-v2-eyebrow{animation:cinematic-entry .7s ease-out .1s both}
+  .hero.hero-v2 h1{animation:cinematic-entry .9s cubic-bezier(.2,.82,.2,1) .17s both}
+  .hero.hero-v2 .hero-description{animation:cinematic-entry .8s ease-out .27s both}
+  .hero-v2-actions{animation:cinematic-entry .8s ease-out .36s both}
+  .hero-v2-reel{animation:cinematic-reel-entry 1.15s cubic-bezier(.2,.9,.25,1) .23s both}
+}
+@keyframes prism-gentle-shift {
+  from{transform:translate3d(-13px,11px,0) rotate(-18deg);opacity:.58}
+  to{transform:translate3d(19px,-15px,0) rotate(-15deg);opacity:.85}
+}
+@keyframes prism-glint-breathe {from{opacity:.30}to{opacity:.71}}
+@keyframes cinematic-entry {
+  from{opacity:0;transform:translate3d(0,20px,0);filter:blur(5px)}
+  to{opacity:1;transform:translate3d(0,0,0);filter:blur(0)}
+}
+@keyframes cinematic-reel-entry {
+  from{opacity:0;transform:translate3d(80px,22px,0);filter:blur(12px)}
+  to{opacity:1;transform:translate3d(0,0,0);filter:blur(0)}
+}
+.motion-paused .hero-v3-prism .prism-plane{animation-play-state:paused!important}
+.motion-paused .hero-v2-eyebrow,
+.motion-paused .hero.hero-v2 h1,
+.motion-paused .hero.hero-v2 .hero-description,
+.motion-paused .hero-v2-actions,
+.motion-paused .hero-v2-reel{animation:none!important}
+.reel-controls{position:absolute}
+.reel-controls::after{
+  content:"";position:absolute;left:0;bottom:-7px;width:25%;height:2px;
+  background:linear-gradient(90deg,var(--reel-tone),#fff8);
+  box-shadow:0 0 12px var(--reel-tone);
+  transform:translateX(0);transition:transform .48s cubic-bezier(.2,.85,.25,1);
+  pointer-events:none;
+}
+.hero-v2-reel[data-hero-project="fold"] .reel-controls::after{transform:translateX(100%)}
+.hero-v2-reel[data-hero-project="rhen"] .reel-controls::after{transform:translateX(200%)}
+.hero-v2-reel[data-hero-project="transcosmic"] .reel-controls::after{transform:translateX(300%)}
+/* Remove the half-empty final desktop row; give the fiction project the
+ * same editorial importance as the software and research exhibits. */
+@media(min-width:851px){
+  .project-transcosmic{grid-column:1 / -1}
+  .project-transcosmic .project-hit{
+    display:grid;grid-template-columns:minmax(0,1.25fr) minmax(285px,.67fr);
+    align-items:stretch;min-height:470px;
+  }
+  .project-transcosmic .project-visual{height:100%;min-height:470px}
+  .project-transcosmic .project-meta{
+    display:flex;flex-direction:column;justify-content:center;align-items:flex-start;
+    min-height:470px;padding:clamp(32px,4vw,74px);gap:20px;
+    border-left:1px solid #87a5e54f;border-top:0;
+    background:radial-gradient(ellipse at 20% 40%,#30266c53,transparent 65%),linear-gradient(145deg,#0e1734,#070d22);
+  }
+  .project-transcosmic .project-meta h3{
+    font-size:clamp(44px,4.7vw,80px);letter-spacing:-.06em;line-height:1.05;
+  }
+  .project-transcosmic .project-meta p{font-size:clamp(15px,1.6vw,20px);max-width:310px;line-height:1.5}
+  .project-transcosmic .project-state{font-size:11px;max-width:100%;width:auto}
+  .project-transcosmic .cosmic-planet{width:275px;height:275px;left:calc(50% - 138px);top:55px}
+  .project-transcosmic .cosmic-orbit{top:86px}
+  .project-transcosmic .cosmic-moon{top:86px}
+  .project-transcosmic .cosmic-title{bottom:45px;font-size:clamp(39px,4.5vw,67px)}
+}
+@media(min-width:621px) and (max-width:850px){
+  .project-transcosmic{grid-column:1 / -1}
+  .project-transcosmic .project-visual{height:410px}
+  .project-transcosmic .project-meta{min-height:0}
+}
+@media(max-width:900px){
+  .hero-v3-prism{opacity:.65}
+  .hero-v3-prism .prism-arc-a{right:-70%;top:33%;width:950px;height:850px}
+  .hero-v3-prism .prism-arc-b{right:-80%;top:55%;width:950px}
+  .hero-v3-prism .prism-arc-c{right:-70%;top:20%;width:900px}
+  .hero-v3-prism .prism-glint{top:72%;right:-60%;width:900px}
+}
+@media(max-width:620px){
+  .hero-v3-prism{opacity:.39}
+  .hero-v3-prism .prism-arc-a{width:720px;height:650px;top:27%;right:-112%}
+  .hero-v3-prism .prism-arc-b{width:720px;height:560px;top:41%;right:-103%}
+  .hero-v3-prism .prism-arc-c{display:none}
+  .hero-v3-prism .prism-lumen{right:-55%;top:39%;width:115%;height:55%}
+  .reel-controls::after{bottom:-5px}
+  .project-transcosmic{grid-column:auto}
+  .project-transcosmic .project-hit{display:block;min-height:0}
+  .project-transcosmic .project-visual{height:clamp(290px,77vw,390px);min-height:0}
+  .project-transcosmic .project-meta{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:24px 20px;min-height:0;border-left:0;border-top:1px solid #87a5e54f}
+  .project-transcosmic .project-meta h3{font-size:34px}
+}
+@media(prefers-reduced-motion:reduce){
+  .hero-v3-prism .prism-plane,
+  .hero-v2-eyebrow,.hero.hero-v2 h1,.hero.hero-v2 .hero-description,
+  .hero-v2-actions,.hero-v2-reel{animation:none!important}
+  .reel-controls::after{transition:none}
+}
