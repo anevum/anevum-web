@@ -87,6 +87,12 @@ export async function capturePackageDiscoveryV011({client,base,evaluate,until,sc
    await evaluate('document.querySelector(".portal-discover-results").scrollIntoView({block:"start",behavior:"instant"})');
    await screenshot('package-discovery-v011-grid-'+width);
    await evaluate('[...document.querySelectorAll(".portal-result-actions button")].find(x=>x.textContent.includes("LIST")).click()');
+   // URL-owned React layout commits after the click. Observe the final compact
+   // cards before inspecting them; keep the strict class and hidden-cover gate.
+   await until(()=>evaluate(`new URLSearchParams(location.search).get('view')==='list'&&
+    document.querySelectorAll('.portal-discover-results .av010-work-card--compact').length===4&&
+    [...document.querySelectorAll('.portal-discover-results .av010-work-card')].every(x=>
+     getComputedStyle(x.querySelector('.av010-work-cover')).display==='none')`));
    const compact=await evaluate(`([...document.querySelectorAll('.portal-discover-results .av010-work-card')].map(x=>({
     compact:x.classList.contains('av010-work-card--compact'),cover:getComputedStyle(x.querySelector('.av010-work-cover')).display
    })))`);

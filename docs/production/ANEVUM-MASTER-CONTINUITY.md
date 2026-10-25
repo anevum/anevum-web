@@ -4,7 +4,7 @@ Coordination session: `ANEVUM.ANEVUM.PACKAGE.2026-10-25.001.UNIFIED-WORKSTREAM-C
 Scoped implementation: `ANEVUM.WEB.UPDATE.2026-10-25.002.UNIFIED-UI-INTEGRATION`.
 Verified discovery date: October 25, 2026 (America/New_York).
 Status: **ACTIVE DEVELOPMENT. #738 and #745 merged into website development;
-V136.026 Discover under isolated review. New production promotion not verified.**
+V136.026 merged and verified in development; #750 Commons under review. New production promotion not verified.**
 
 This is an evidence index and continuation checkpoint, not another task board.
 [Canonical engineering #325](https://github.com/anevum/anevum-web/issues/325)
@@ -336,3 +336,27 @@ Discover exact-head focused acceptance has passed in CI, but its parent merge
 requires the full spatial regression and source review after a small accessible
 category-name correction. No provider, main, #741 release lane, billing,
 auth, database, moderation or traffic changes are authorized here.
+
+## Current continuation — October 25, 2026
+Session `ANEVUM.ANEVUM.PACKAGE.2026-10-25.002.UNIFIED-OVERHAUL-WORK-CONTINUATION`.
+The earlier lineage tables are historical snapshots. Current authority is #735
+head `888bf4ccbdbe04442c166dea9f84bc2529eea2d1`, incorporating #748
+`b0b54bfc3cacfa9755f06be050baaba88acbc352` by guarded merge after owner
+visual approval and exact-head Creator V1, full spatial and focused Discover
+acceptance. Reviewed original 1440/390/320 screenshots; isolated synthetic
+fixtures, zero overflow/forbidden calls. #750 now targets #735; preserving
+Commons commits with a non-rewriting merge of that development parent.
+
+#750 at `073f01ba` passed focused Commons and spatial browser checks. Its
+Creator V1 run 40224267439 failed only after source/privacy regression success
+at an immediate post-click package List inspection. The harness now waits for
+the actual compact cards/hidden covers without relaxing acceptance. Current
+exact-head CI and Commons owner creative approval remain gates. Legacy serif
+cascade and detail-return browse-state loss are selected next UI corrections.
+
+LOCKED: Stripe retirement direction; #739 stays separate from UI. PRODUCTION:
+unchanged by this session. VERIFIED DEVELOPMENT: #748. ACTIVE DRAFT: #750.
+UNKNOWN: fresh provider traffic and live authenticated end-to-end acceptance.
+Historical infrastructure observations above were not re-queried here; no
+claim of current full infrastructure audit. Release guards and #741 remain
+sealed; upstream #742 HTTP 403 is not successful end-to-end verification.

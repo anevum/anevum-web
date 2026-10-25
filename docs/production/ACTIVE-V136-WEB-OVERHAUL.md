@@ -1,10 +1,10 @@
 # ACTIVE — ANEVUM PARITY V136 unified website overhaul
 Session: `ANEVUM.WEB.UPDATE.2026-10-25.001.SITEWIDE-OVERHAUL-SYNCHRONIZATION`
 Updated: 2026-10-25
-**Owner development baseline: draft PR #735 — Concept Convergence II, head `9e1a82d2` after #745 integration.**
-**Current bounded continuation: V136.026 — Discover URL-backed Grid/List and real catalogue cards, branch `build/parity-v136-discovery-20261025-026`.**
+**Owner development baseline: draft PR #735 — Concept Convergence II, head `888bf4cc` after #748 integration.**
+**Current bounded continuation: draft PR #750 — V136.027 Commons URL and identity continuity.**
 **Sitewide integration: PR #738 was merged into the #735 development branch, preserving selected changes from PR #737 and #736. Those historical PRs need no blind re-import.**
-Status: V136.025 was owner-verified and merged into development as `9e1a82d2`; V136.026 is DRAFT / **NOT released**. The sealed V136.024 controlled candidate in #741 is a separate release lane; consult provider receipts for actual traffic.
+Status: V136.025 and owner-approved V136.026 are **IMPLEMENTED / VERIFIED DEVELOPMENT**, merged into #735. V136.027 remains **ACTIVE DRAFT / NOT released**. The sealed V136.024 controlled candidate in #741 is a separate release lane; consult provider receipts for actual traffic.
 
 ## Read this first
 This is the active handoff for the October 24–25 sitewide overhaul. It supersedes earlier
@@ -294,3 +294,33 @@ new CI are proposed source until actual exact-head receipts pass.
 Owner did not approve this unseen slice merely by accepting V136.026.
 No production release, backend, D1, auth, member XP, payment, publisher
 or feature-flag modification. Sealed V136.024 candidate #741 remains intact.
+
+## Unified continuation — V136.026 integrated; V136.027 regression repair
+Session: `ANEVUM.ANEVUM.PACKAGE.2026-10-25.002.UNIFIED-OVERHAUL-WORK-CONTINUATION`.
+
+PR #748 source `b0b54bfc3cacfa9755f06be050baaba88acbc352` passed exact-head
+Creator V1 Verify (40223670854), Spatial QA (40223670846), focused Discover
+QA (40223670849), and the returned V081/V083/V084/V091/V095/V096 checks.
+Owner visual approval is recorded in #748. Original compiled 1440/390/320
+Grid/List screenshots and acceptance JSON were inspected; no overflow or
+forbidden requests. #748 merged using a guarded merge commit into #735 at
+`888bf4ccbdbe04442c166dea9f84bc2529eea2d1`. The targeted release failed
+solely at the unchanged reviewed-source guard; upload-inactive was skipped.
+
+PR #750 was retargeted from #748 to #735 after that merge. The development
+merge is incorporated as a second parent without rebasing, force-pushing,
+losing source commits or duplicating Discover. Previous Commons head `073f01ba`
+passed focused 40224267418 and Spatial 40224267651; original 12 Commons
+captures were inspected. Creator V1 run 40224267439 passed all source/privacy
+regressions, then failed the older package-discovery compact-layout assertion
+because it read before React committed the URL-owned List state. The harness
+now waits for the real selected URL, four compact cards and hidden covers,
+retaining the original strict assertions. Fresh exact-head broad CI is required.
+
+Commons creative acceptance remains pending. Screenshot review found legacy
+serif typography overriding the shared Institute styles. Next bounded work:
+repair that cascade and preserve the new browse state through project detail
+return links, which currently discard layout/Commons filters. Keep it scoped
+to existing public routes, with strict privacy/navigation regression coverage.
+No main, sealed #741, provider, canary, authentication, payment, database or
+publication changes. The previous public HTTP 403 remains unresolved evidence.
