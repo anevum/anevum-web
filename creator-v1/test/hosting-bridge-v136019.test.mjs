@@ -61,7 +61,7 @@ test('hosting readout is attached to verified Studio vault, not a public endpoin
  assert.match(page,/av019-hosting-options/);
  assert.match(page,/data-hosting-status=\{option\.status\}/);
  assert.match(resolver,/status:'planned'/);
- assert.match(resolver,/nativeCanUpload:false/===false?/studioHostingPaths/:/studioHostingPaths/);
+ assert.match(resolver,/nativeStudioEnabled/);
  assert.ok(!/fetch\(|localStorage|sessionStorage|postMessage|setInterval/.test(resolver));
  assert.match(css,/@media\(max-width:710px\)/);
  assert.ok(!/@font-face|@import|url\(\s*https?:/.test(css));
