@@ -145,6 +145,17 @@
       ink+=vec3(.14,.09,.075)*exp(-abs(r-.22)*8.)*strata*.24;
       float spine=exp(-r*4.5)*(.06+.05*sin(a*6.+strata*5.));
       ink+=vec3(.06,.16,.19)*spine;
+      // The horizon beyond the apertures contains a layered galactic arm,
+      // not a flat background photograph. Offset keeps text-space legible.
+      vec2 galaxy=(uv-vec2(.72,.52))*vec2(uResolution.x/uResolution.y,1.);
+      float gr=length(galaxy),ga=atan(galaxy.y,galaxy.x);
+      float grain2=noise(galaxy*6.+vec2(drift*5.,-drift*2.));
+      float arms=.5+.5*cos(ga*3.7-gr*19.+grain2*2.9+uTime*.018);
+      float darkLane=pow(arms,2.4)*(.43+grain2*.57);
+      float disk=exp(-pow(gr/.68,1.65))*(.22+darkLane*.78);
+      ink+=vec3(.070,.066,.155)*disk*1.2;
+      ink+=vec3(.061,.123,.165)*darkLane*exp(-gr*3.3)*.82;
+      ink+=vec3(.19,.107,.071)*exp(-gr*8.)*(.28+grain2*.55);
       for(int l=0;l<3;l++){
         float scale=l==0?155.:l==1?310.:620.;
         vec2 q=uv*scale+vec2(float(l)*17.3,float(l)*31.1);
