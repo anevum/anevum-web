@@ -10,8 +10,8 @@ for(const tier of ['desktop','mobile']){
   assert.equal(c.drawCalls,6,'Original architecture stays batched, not hundreds of draw calls');
   assert.equal(c.root.children.length,c.drawCalls);
   assert.ok(c.instanceCount>=45);
-  assert.ok(c.triangles>=500&&c.triangles<10000,
-   'Bounded detailed architecture rather than empty decorative scaffolding');
+  assert.ok(c.triangles>=500&&c.triangles<13000,
+   'More architecture, without growing the fixed total environment budget');
   let actualTriangles=0,actualInstances=0;
   c.root.traverse(node=>{
    if(!(node instanceof T.InstancedMesh))return;
@@ -33,6 +33,12 @@ for(const tier of ['desktop','mobile']){
    if(positions.getY(i)>.5)upperRadius=Math.max(upperRadius,radius);
   }
   assert.ok(upperRadius>lowerRadius*3,'Geology tapers downward, not toward the deck');
+  const towers=c.root.getObjectByName('Cathedral finial towers');
+  const crowns=c.root.getObjectByName('Auric crown spires');
+  assert.ok(towers.geometry.parameters.points.length>=18,
+   'Machined shaft, cornice and upper crown have genuine modeled facets');
+  assert.ok(crowns.geometry.parameters.points.length>=9,
+   'Auric spire is a modeled stepped object rather than a painted triangle');
   const windows=c.root.getObjectByName('Photonic window inlays');
   assert.ok(windows.instanceColor,'Real instanced light fixtures carry authored colors');
   const released=new Set();
@@ -118,11 +124,11 @@ test('real composed QA scene keeps floating outposts in both actual camera frust
    new T.Matrix4().multiplyMatrices(deck.matrixWorld,mainWorld)).project(camera);
   assert.ok(mainNdc.x>.10&&mainNdc.x<.75,
    'Primary '+tier+' platform must occupy the right-hand art field');
-  assert.ok(mainNdc.y>(tier==='mobile'?.08:-.02)&&mainNdc.y<.40,
+  assert.ok(mainNdc.y>(tier==='mobile'?.19:-.02)&&mainNdc.y<.40,
    'Primary '+tier+' platform must rise above the CTA/navigation foot');
   const opticalRadius=body.geometry.parameters.radius/
    (planetCenter.distanceTo(camera.position)*Math.tan(T.MathUtils.degToRad(camera.fov/2)));
-  assert.ok(opticalRadius<(tier==='mobile'?.40:.55),
+  assert.ok(opticalRadius<(tier==='mobile'?.26:.38),
    'Distant gas giant must frame rather than dominate the entire arrival');
   assert.ok(inView>=2,'Composed '+tier+' scene needs two real onscreen platforms: '+JSON.stringify(normalized));
   assert.ok(right>=1,'Composed '+tier+' scene needs an art-side island');

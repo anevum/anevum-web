@@ -27,7 +27,7 @@ const DESKTOP_PLACES:readonly Place[]=[
  {x:10.0,y:2.4,z:-24,r:1.70,scale:.72}
 ];
 const MOBILE_PLACES:readonly Place[]=[
- {x:5.9,y:4.25,z:-21,r:2.05,scale:.88},
+ {x:5.9,y:7.7,z:-21,r:2.30,scale:.94},
  {x:.9,y:1.7,z:-25,r:1.37,scale:.72}
 ];
 function batch(name:string,geometry:T.BufferGeometry,material:T.Material,poses:InstancePose[]):Batch{
@@ -39,7 +39,7 @@ function section(profile:readonly (readonly [number,number])[],segments:number){
  return new T.LatheGeometry(profile.map(([r,y])=>new T.Vector2(r,y)),segments);
 }
 function fracturedGeology(segments:number){
- const geometry=section([[0,-1.60],[.13,-1.35],[.28,-.48],[.44,-.27],
+ const geometry=section([[0,-1.60],[.10,-1.36],[.19,-1.12],[.28,-.48],[.44,-.27],
   [.64,.08],[.79,.20],[1,.68],[.80,1],[0,1.02]],segments);
  const positions=geometry.attributes.position;
  for(let i=0;i<positions.count;i++){
@@ -61,7 +61,7 @@ export function createInstituteCitadels(tier:AssetTier){
  const root=new T.Group();root.name='QA / SUSPENDED CONTINUANCE OUTPOSTS';
  const deck:InstancePose[]=[],suspended:InstancePose[]=[],towers:InstancePose[]=[];
  const spires:InstancePose[]=[],windowSlits:InstancePose[]=[],halos:InstancePose[]=[];
- const towerRadius=.20,towerHeight=2.85;
+ const towerRadius=.43,towerHeight=2.85;
  for(const place of places){
   deck.push({position:[place.x,place.y,place.z],scale:[place.r,.90*place.scale,place.r]});
   suspended.push({position:[place.x,place.y-1.20*place.scale,place.z],
@@ -83,7 +83,7 @@ export function createInstituteCitadels(tier:AssetTier){
    const px=place.x+(central?0:Math.cos(theta)*place.r*.64);
    const pz=place.z+(central?0:Math.sin(theta)*place.r*.64);
    const height=towerHeight*(central?1.52:1)*(0.84+place.scale*.16);
-   const width=place.scale*(central?1.3:.89);
+   const width=place.scale*(central?1.72:1.18);
    const foot=place.y+.30*place.scale;
    towers.push({position:[px,foot+height*.5,pz],scale:[width,height/towerHeight,width]});
    spires.push({position:[px,foot+height+.59*place.scale,pz],
@@ -108,10 +108,13 @@ export function createInstituteCitadels(tier:AssetTier){
    [1.08,-.13],[1.08,-.04],[.87,-.04],[.87,.10],[1,.10],[1,.17],[0,.17]],mobile?10:14),alloy,deck),
   batch('Suspension geology',fracturedGeology(mobile?8:10),dark,suspended),
   batch('Ring railings',new T.TorusGeometry(1,.017,4,mobile?32:48),photonic,halos),
-  batch('Cathedral finial towers',section([[0,-1.25],[.31,-1.25],[.34,-1.07],
-   [.19,-.94],[.16,.46],[.31,.62],[.31,.79],[.15,.83],[.11,1.25],[0,1.25]],8),alloy,towers),
-  batch('Auric crown spires',section([[0,-.59],[.22,-.59],[.22,-.49],
-   [.12,-.40],[.06,.14],[0,.59]],8),auric,spires),
+  batch('Cathedral finial towers',section([[0,-1.25],[.35,-1.25],[.43,-1.17],
+   [.43,-1.05],[.29,-.96],[.29,-.78],[.25,-.70],[.27,-.41],
+   [.24,-.15],[.24,.18],[.30,.32],[.39,.40],[.39,.53],
+   [.27,.61],[.23,.85],[.30,.94],[.14,1.03],[0,1.25]],8),alloy,towers),
+  batch('Auric crown spires',section([[0,-.59],[.24,-.59],[.27,-.52],
+   [.30,-.45],[.18,-.38],[.16,-.33],[.10,-.08],
+   [.07,.18],[0,.59]],8),auric,spires),
   batch('Photonic window inlays',new T.BoxGeometry(.12,.095,.08),photonic,windowSlits)
  ];
  let triangles=0;

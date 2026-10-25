@@ -42,21 +42,24 @@ void main(){
  vec3 star=normalize(vec3(-0.7,0.78,0.48));
  float daylight=max(0.0,dot(n,star));
  float limb=pow(1.0-max(0.0,dot(n,eye)),3.2);
- // Keep the existing three deterministic noise samples, but prioritize
- // fine horizontal belts over high-contrast splotches. No added sampler.
- float weather=horizonNoise(n*6.0);
- float filament=horizonNoise(n*36.0+vec3(weather*2.4,n.y*9.0,1.7));
- float detail=horizonNoise(n*92.0+vec3(filament*.9,weather*.6,.8));
- float belts=.5+.5*sin(n.y*78.0+n.x*8.0+weather*4.2+filament*1.8);
- float cloud=smoothstep(.54,.77,filament+detail*.12);
- vec3 deep=vec3(.018,.040,.118);
- vec3 cobalt=vec3(.11,.125,.265);
- vec3 slate=vec3(.22,.275,.39);
- vec3 body=mix(deep,cobalt,clamp(belts*.75+weather*.14,0.0,1.0));
- body=mix(body,slate,cloud*.41);
- body+=vec3(.24,.13,.09)*pow(belts,8.0)*(.14+.23*detail)*daylight;
- body*=.29+1.02*daylight;
- body+=vec3(.11,.22,.48)*limb*(.64+uPublicDensity*.07);
+ // Exactly three procedural noise samples, concentrated in latitude-flow
+ // bands rather than high-frequency mottling. The distant planet is a
+ // backdrop to authored architecture, never a foreground UI obstruction.
+ float weather=horizonNoise(n*3.8);
+ float filament=horizonNoise(n*14.0+vec3(weather*2.1,n.y*6.0,1.7));
+ float detail=horizonNoise(n*37.0+vec3(filament*.9,weather*.5,.8));
+ float flow=n.y*31.0+(weather-.5)*7.0+(filament-.5)*2.5;
+ float belts=.5+.5*sin(flow);
+ float sediment=smoothstep(.56,.91,belts);
+ float cloud=smoothstep(.55,.82,filament+detail*.10);
+ vec3 abyss=vec3(.016,.030,.072);
+ vec3 cobalt=vec3(.075,.126,.218);
+ vec3 silver=vec3(.19,.25,.34);
+ vec3 body=mix(abyss,cobalt,belts*.72+weather*.13);
+ body=mix(body,silver,cloud*.17+sediment*.16);
+ body+=vec3(.17,.11,.07)*pow(sediment,5.0)*(.18+.35*detail)*daylight;
+ body*=.30+.94*daylight;
+ body+=vec3(.13,.23,.49)*limb*(.65+uPublicDensity*.07);
  gl_FragColor=vec4(body,1.0);
 }
 `;
@@ -84,7 +87,7 @@ export const HORIZON_QA_BUDGET={
  */
 export function createInstituteHorizon(tier:AssetTier,citadelFactory:typeof createInstituteCitadels){
  const mobile=tier==='mobile';
- const latitude=mobile?22:42,longitude=mobile?40:72;
+ const latitude=mobile?20:36,longitude=mobile?36:60;
  const root=new T.Group();
  root.name='QA / CONTINUANCE PLANETARY HORIZON';
  // The planet needs a distant offset, but the modeled architecture is
@@ -92,18 +95,18 @@ export function createInstituteHorizon(tier:AssetTier,citadelFactory:typeof crea
  // entire root: that silently shifts citadels out of the camera frustum.
  const orbitalBody=new T.Group();
  orbitalBody.name='Planet + illuminated observation rings';
- orbitalBody.position.set(mobile?17.6:17.2,mobile?10.6:11.8,mobile?-42:-39.5);
+ orbitalBody.position.set(mobile?18.5:18.4,mobile?11.5:12.8,mobile?-42:-43);
  root.add(orbitalBody);
  const signal={value:0};
  const body=new T.Mesh(
-  new T.SphereGeometry(mobile?10.2:11.4,longitude,latitude),
+  new T.SphereGeometry(mobile?7.9:8.8,longitude,latitude),
   new T.ShaderMaterial({vertexShader:planetVertex,fragmentShader:planetFragment,
    uniforms:{uPublicDensity:signal},fog:false,depthWrite:true,toneMapped:false})
  );
  body.name='Original gas giant / no texture or telemetry';
  orbitalBody.add(body);
  const atmosphere=new T.Mesh(
-  new T.SphereGeometry(mobile?10.40:11.65,longitude,latitude),
+  new T.SphereGeometry(mobile?8.12:9.04,longitude,latitude),
   new T.ShaderMaterial({vertexShader:planetVertex,fragmentShader:atmosphereFragment,
    uniforms:{uPublicDensity:signal},transparent:true,depthWrite:false,
    blending:T.AdditiveBlending,fog:false,toneMapped:false})
@@ -113,7 +116,7 @@ export function createInstituteHorizon(tier:AssetTier,citadelFactory:typeof crea
  const orbits=new T.Group();orbits.rotation.set(.41,-.12,.22);
  orbits.name='Two engineered auric observation rings';
  for(const [radius,tube,opacity,color] of [
-  [mobile?13.4:14.9,.060,.36,0x9ed6ff],[mobile?16.2:17.5,.033,.22,0xb393ef]
+  [mobile?10.8:11.9,.056,.36,0x9ed6ff],[mobile?12.7:14.2,.032,.22,0xb393ef]
  ] as const){
   const ring=new T.Mesh(
    new T.TorusGeometry(radius,tube,mobile?4:6,mobile?72:144),
