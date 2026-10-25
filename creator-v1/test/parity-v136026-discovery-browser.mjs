@@ -176,10 +176,16 @@ try{
   await page.waitForFunction(()=>document.querySelectorAll('.p136-discover-results article.project-card').length===1);
   await page.getByRole('heading',{name:'SYNTHETIC ORBIT GAME',exact:true}).waitFor();
   assert.equal(await cards.count(),1);
+  // Register the response gate before clicking. An URL-only assertion can
+  // win the race against React dispatching the updated public catalogue GET.
+  const freeResponse=page.waitForResponse(response=>{
+    const url=new URL(response.url());
+    return url.pathname==='/api/v1/projects'&&url.searchParams.get('category')==='games'&&
+      url.searchParams.get('free')==='1'&&response.status()===200;
+  },{timeout:15000});
   await discovery.locator('.p136-discover-availability').getByRole('button',{name:/Marked free/}).click();
   await checkParams(page,{view:'list',category:'games',free:'1'});
-  // The second filter must reach the approved public API with the free bit
-  // before acceptance; retaining one stale card alone is insufficient.
+  await freeResponse;
   await page.waitForFunction(()=>document.querySelectorAll('.p136-discover-results article.project-card').length===1);
   assert.ok(requests.some(read=>read.cat==='games'&&read.free),'Marked-free filter reaches the real project query');
   assert.equal(await cards.count(),1);
