@@ -58,6 +58,8 @@ test("a project companion reuses existing verified data and layout without new e
   assert.match(page,/<ProjectLaunchKit key=\{p\.id\} project=\{p\}\/>/);
   assert.match(panel,/import\.meta\.env\.BASE_URL/);
   assert.match(panel,/navigator\.share/);
+  assert.match(panel,/Copy announcement/);
+  assert.match(panel,/kit\.shareText/);
   assert.match(panel,/navigator\.clipboard\?\.writeText/);
   assert.match(panel,/readOnly value=\{kit\.embedHtml\}/);
   assert.match(panel,/role="status"/);
