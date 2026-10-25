@@ -200,9 +200,60 @@ async function run(width,height,motion='no-preference') {
   await context.close();
 }
 
+async function runWithoutWebGL(){
+  // An explicit software-disabled context: the original authored SVG must
+  // carry the actual page, not a blank canvas or a fake execution claim.
+  const context=await browser.newContext({
+    viewport:{width:390,height:844},reducedMotion:'reduce',deviceScaleFactor:1
+  });
+  await context.addInitScript(()=>{
+    const native=HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext=function(type,...args){
+      if(type==='webgl2')return null;
+      return native.call(this,type,...args);
+    };
+  });
+  await context.route('**/*',async route=>{
+    const request=route.request();
+    if(!request.url().startsWith(origin+'/')||!['GET','HEAD'].includes(request.method())){
+      forbidden.push({width:390,mode:'webgl-denied',url:request.url(),method:request.method()});
+      await route.abort();return;
+    }
+    await route.continue();
+  });
+  const page=await context.newPage();
+  page.on('pageerror',error=>errors.push({width:390,mode:'webgl-denied',message:error.message}));
+  page.on('console',msg=>{
+    if(msg.type()==='error')errors.push({width:390,mode:'webgl-denied',message:msg.text()});
+  });
+  await page.goto(origin+'/portfolio/',{waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>document.querySelector('[data-transcosmic-field]')?.dataset.renderMode==='fallback');
+  const backdrop=page.locator('.transcosmic-field .institute-backdrop');
+  assert.equal(await backdrop.getAttribute('src'),'/portfolio/assets/transcosmic-continuum.svg');
+  assert.ok(Number(await backdrop.evaluate(element=>getComputedStyle(element).opacity))>.95,
+    'WebGL-denied site retains visible first-party scalable scene');
+  assert.equal(await page.locator('canvas[data-depth-canvas]').count(),1,
+    'Semantic DOM and single nonfunctional canvas remain, not an extra renderer');
+  assert.ok(await page.getByRole('heading',{name:/I BUILD WORLDS THAT WORK/i}).isVisible());
+  await page.locator('[data-universe-stage="2"]').click();
+  assert.equal(await page.locator('[data-universe-name]').innerText(),'THE CONTINUUM',
+    'Native viewpoints stay usable without WebGL');
+  await page.getByRole('button',{name:/Discover Transcosmic/i}).click();
+  await page.locator('#project-dialog[open]').waitFor({state:'visible'});
+  assert.match(await page.locator('#case-title').innerText(),/Transcosmic/);
+  await page.locator('.case-close').click();
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
+  await page.screenshot({path:join(output,'transcosmic-no-webgl-fallback-390.png'),animations:'disabled'});
+  note('authored static fallback with native controls and case story / 390px');
+  await context.close();
+}
 try {
   for(const [width,height,motion] of [[1440,900,'no-preference'],[390,844,'no-preference'],[320,740,'reduce'],[1920,1080,'no-preference']]) {
     try {await run(width,height,motion);}catch(e){failures.push({width,message:e.message,stack:e.stack});console.error('FAIL '+width+' '+e.stack);}
+  }
+  try{await runWithoutWebGL();}catch(e){
+    failures.push({width:390,mode:'webgl-denied',message:e.message,stack:e.stack});
+    console.error('FAIL no-WebGL fallback '+e.stack);
   }
 } finally {
   await browser.close();
