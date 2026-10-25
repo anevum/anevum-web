@@ -45,7 +45,10 @@ export async function holdReviewForCanonicalSession(request,env,{
   // Better Auth must resolve the current revoked/expired session. The only
   // headers it receives are first-party canonical cookies; legacy cookies and
   // Authorization cannot contribute to this decision.
-  const filtered=withoutForeignCookies(request,env);
+  // Sanitize a headers-only envelope. Cloning the original POST Request
+  // would acquire/lock its ReadableStream and prevent bounded JSON parsing.
+  const identityEnvelope=new Request(request.url,{method:'GET',headers:request.headers});
+  const filtered=withoutForeignCookies(identityEnvelope,env);
   const session=await getCanonicalSession({headers:filtered.headers});
   const member=session?.user,token=session?.session;
   if(member?.emailVerified!==true || !ID.test(member?.id||'') ||
