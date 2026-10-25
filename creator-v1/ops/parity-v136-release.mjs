@@ -95,6 +95,7 @@ const allowed=new Set([
   ...['CinematicArrivalV136.tsx','cinematic-director-v136.ts','cinematic-arrival-v136.css'].map(x=>'creator-v1/web/src/parity/'+x),
   'creator-v1/web/public/assets/cinematic-v136/arrival/manifest.json',
   'creator-v1/web/src/parity/ContinuanceInstrumentV136017.tsx',
+  'creator-v1/web/src/parity/FileGlyphV136017.tsx',
   'creator-v1/web/src/parity/concept-convergence-v136017.css',
   'creator-v1/test/parity-v136-concept-convergence.test.mjs',
   'docs/production/parity-v136-concept-convergence-20261024.md',
