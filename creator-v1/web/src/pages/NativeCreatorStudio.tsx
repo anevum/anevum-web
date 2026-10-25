@@ -148,6 +148,7 @@ function BuildUpload({memberId,projectId}:{memberId:string;projectId?:string}){
  const [compatibility,setCompatibility]=useState<LocalCompatibilityReport|null>(null);
  const [compatibilityError,setCompatibilityError]=useState(''),[checkingCompatibility,setCheckingCompatibility]=useState(false);
  const compatibilityVersion=useRef(0);
+ const detailsTitle=useRef<HTMLInputElement>(null);
  const initialized=useRef<string|null>(null);
  useEffect(()=>{if(project&&initialized.current!==project.id){initialized.current=project.id;setTitle(project.draftTitle||project.title);setSummary(project.draftSummary||project.summary);setCategory(project.draftCategory||project.category);}},[project]);
  useEffect(()=>{if(!cover){setCoverUrl(null);return;}const url=URL.createObjectURL(cover);setCoverUrl(url);return()=>URL.revokeObjectURL(url);},[cover]);
@@ -172,11 +173,12 @@ function BuildUpload({memberId,projectId}:{memberId:string;projectId?:string}){
   document.addEventListener('click',guard,true);return()=>document.removeEventListener('click',guard,true);
  },[sourceDirty]);
  const dirty=!!file||!!cover||rights||sourceDirty;
+ const coverProblem=cover&&(!/\.png$/i.test(cover.name)||cover.size<70||cover.size>3*1048576)?'Cover artwork must be a PNG between 70 bytes and 3 MiB.':'';
  useEffect(()=>{if(!dirty)return;const warn=(e:BeforeUnloadEvent)=>{e.preventDefault();e.returnValue='';};addEventListener('beforeunload',warn);return()=>removeEventListener('beforeunload',warn);},[dirty]);
  async function submit(e:FormEvent<HTMLFormElement>){
   e.preventDefault();if(busyRef.current)return;
   const problem=checkNativeFile(file);if(problem){setError(problem);return;}
-  if(cover&&(!/\.png$/i.test(cover.name)||cover.size<70||cover.size>3*1048576)){setError('Cover artwork must be a PNG between 70 bytes and 3 MiB.');return;}
+  if(coverProblem){setError(coverProblem);return;}
   if(!rights){setError('Confirm your publication rights for this exact uploaded version.');return;}
   if(project?.draftReleaseId&&!replace){setError('Confirm replacement of the existing unsubmitted private build.');return;}
   if(checkingCompatibility||!compatibility){setError('Complete the local compatibility check before uploading.');return;}
@@ -194,13 +196,32 @@ function BuildUpload({memberId,projectId}:{memberId:string;projectId?:string}){
  if(library.error)return <Status title="The saved project could not be loaded." retry={library.reload}><p>{library.error}</p></Status>;
  if(projectId&&!project)return <Status title="Project unavailable."><p>This project is not in the signed-in creator's archive.</p></Status>;
  if(project?.draftStatus==='pending_review'||project?.status==='suspended')return <Status title="This build is not editable."><p>{project.status==='suspended'?'A moderator must resolve the suspension.':'The submitted revision is awaiting an independent decision. Your approved release remains unchanged.'}</p></Status>;
- return <div className="av095-upload-grid"><section className="st-panel"><p className="st-kicker">{project?'IMMUTABLE REVISION':'NEW PLAYABLE BUILD'}</p><h2>{project?'Prepare the next version.':'Give your creation a home.'}</h2><p>Your build stays private until an independent reviewer approves it.</p>
+ const preparation=checkingCompatibility?'Checking the selected build on this device.':
+  !file?'Choose a browser export or prepare an archive in the source workbench.':
+  !compatibility?.playableCandidate?'Resolve the local compatibility findings before uploading.':
+  coverProblem?coverProblem:
+  title.trim().length<3||summary.trim().length<10?'Add a project title and describe what someone can do in your creation.':
+  !rights?'Confirm your rights to the files in this version.':
+  project?.draftReleaseId&&!replace?'Confirm replacement of the existing unsubmitted private build.':
+  'Ready for a private upload. You can test the saved build before submitting it for review.';
+ return <div className={'av095-upload-grid'+(SourceWorkbench?' av136031-build-flow':'')}><section className="st-panel"><p className="st-kicker">{project?'IMMUTABLE REVISION':'NEW PLAYABLE BUILD'}</p><h2>{project?'Prepare the next version.':'Give your creation a home.'}</h2><p>Your build stays private until an independent reviewer approves it.</p>
   {SourceWorkbench&&<div className="av095-source-entry"><button type="button" className="st-action" aria-expanded={sourceOpen} onClick={()=>{setSourceStarted(true);setSourceOpen(v=>!v)}}>Artifact source workbench</button><p className="st-muted">Edit a self-contained browser build here, or upload an export from your existing tools.</p></div>}
   {SourceWorkbench&&sourceStarted&&<div hidden={!sourceOpen}><Suspense fallback={<p role="status">Opening the local source workbench…</p>}><SourceWorkbench disabled={busy}
    onDirty={()=>{setSourceDirty(true);if(sourceFile){setFile(null);setSourceFile(false)}setRights(false)}}
-   onPackage={archive=>{setFile(archive);setSourceFile(true);setSourceDirty(false);setRights(false);setError('')}}/></Suspense></div>}
+   onPackage={archive=>{setFile(archive);setSourceFile(true);setSourceDirty(false);setRights(false);setError('')}}/></Suspense>
+   {sourceFile&&file&&<div className="av136031-source-handoff">
+    <div><strong>Archive prepared on this device.</strong><p>Your source stays open. Add the details for this version below.</p></div>
+    <button type="button" className="st-action" disabled={busy} onClick={()=>{
+     detailsTitle.current?.focus({preventScroll:true});
+     detailsTitle.current?.scrollIntoView({block:'center'});
+    }}>Continue to build details</button>
+   </div>}
+  </div>}
   <form onSubmit={e=>void submit(e)} aria-busy={busy}>
    <fieldset disabled={busy} className="av095-fields">
+    <legend className="visually-hidden">Prepare a private browser build</legend>
+    <section className="av136031-build-step" aria-labelledby="av136031-file-heading">
+    <header><span aria-hidden="true">01</span><div><h3 id="av136031-file-heading">Browser build</h3><p>Choose your export. Compatibility checks run locally before any upload.</p></div></header>
     <label className="av095-drop"><span className="st-kicker">01 / EXPORTED BROWSER BUILD</span><strong>{file?file.name:'Choose a ZIP or HTML file'}</strong><span>{file?bytes(file.size):'ZIP up to 20 MiB · HTML up to 5 MiB'}</span><input type="file" accept=".zip,.html,application/zip,text/html" required={!file} onChange={e=>{setSourceFile(false);setFile(e.target.files?.[0]||null);setRights(false);setError('');}}/></label>
     {file&&<section className="av095-preflight" aria-label="Local compatibility findings" aria-live="polite">
      <p className="st-kicker">LOCAL COMPATIBILITY / ADVISORY</p>
@@ -215,14 +236,22 @@ function BuildUpload({memberId,projectId}:{memberId:string;projectId?:string}){
       <small>Local inspection only. No data is uploaded until you submit. This is not security review, malware scanning, mobile certification or publication approval.</small>
      </>}
     </section>}
-    <div className="av095-form-grid"><label className="st-field"><span>Project title</span><input required minLength={3} maxLength={100} value={title} onChange={e=>setTitle(e.target.value)}/></label><label className="st-field"><span>Type</span><select value={category} onChange={e=>setCategory(e.target.value as PackageCategory)}><option value="game">Game</option><option value="app">Application</option><option value="simulation">Simulation</option><option value="story">Interactive story</option></select></label></div>
+    </section>
+    <section className="av136031-build-step" aria-labelledby="av136031-details-heading">
+    <header><span aria-hidden="true">02</span><div><h3 id="av136031-details-heading">Project details</h3><p>Describe this version and add your own cover if you have one.</p></div></header>
+    <div className="av095-form-grid"><label className="st-field"><span>Project title</span><input ref={detailsTitle} required minLength={3} maxLength={100} value={title} onChange={e=>setTitle(e.target.value)}/></label><label className="st-field"><span>Type</span><select value={category} onChange={e=>setCategory(e.target.value as PackageCategory)}><option value="game">Game</option><option value="app">Application</option><option value="simulation">Simulation</option><option value="story">Interactive story</option></select></label></div>
     <label className="st-field"><span>What can someone do in it?</span><textarea required minLength={10} maxLength={500} value={summary} onChange={e=>setSummary(e.target.value)}/></label>
     <label className="st-field"><span>Cover artwork — optional</span><input type="file" accept=".png,image/png" onChange={e=>{setCover(e.target.files?.[0]||null);setRights(false);}}/><small>Original PNG. Up to 3 MiB. At least 640 × 360 pixels. The server verifies image structure.</small></label>
     {coverUrl&&<img className="av095-cover-preview" src={coverUrl} alt="Your selected cover artwork"/>}
+    </section>
+    <section className="av136031-build-step" aria-labelledby="av136031-playtest-heading">
+    <header><span aria-hidden="true">03</span><div><h3 id="av136031-playtest-heading">Private playtest</h3><p>Upload this version privately, then test it before requesting independent review.</p></div></header>
     {project?.draftReleaseId&&<label className="av095-confirm"><input type="checkbox" checked={replace} required onChange={e=>setReplace(e.target.checked)}/><span>Replace the existing unsubmitted private build. It remains available if this upload fails; the approved public version remains live.</span></label>}
     <label className="av095-confirm"><input type="checkbox" checked={rights} required onChange={e=>setRights(e.target.checked)}/><span>I own this project or have permission to publish its code, artwork, audio and other included files.</span></label>
     <p className="st-muted">Rights are confirmed separately for every version. This does not replace independent content and security review.</p>
-    <button className="st-action av095-primary" type="submit" disabled={!file||!rights||busy||checkingCompatibility||!compatibility?.playableCandidate}>{busy?'Uploading and validating…':checkingCompatibility?'Checking local build…':'Prepare private playtest'}</button>
+    <p className="av136031-preparation" id="av136031-preparation">{preparation}</p>
+    <button className="st-action av095-primary" type="submit" aria-describedby="av136031-preparation" disabled={!file||!rights||busy||checkingCompatibility||!compatibility?.playableCandidate}>{busy?'Uploading and validating…':checkingCompatibility?'Checking local build…':'Prepare private playtest'}</button>
+    </section>
    </fieldset>
    {busy&&<p role="status">Keep this page open. The server is checking the archive and storing the complete private revision.</p>}
    {error&&<div role="alert" className="st-error"><p>{error}</p><Link to="/studio/packages">Check your existing builds before retrying</Link></div>}

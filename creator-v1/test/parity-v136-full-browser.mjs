@@ -119,6 +119,7 @@ try{
   // execution remain forbidden in this acceptance context.
   for(const width of [1440,390,320]){
     const {page,context}=await contextFor(width,{state:'studio',forceVector:true});
+    page.setDefaultTimeout(45000);
     await page.goto(base+'/studio/packages/new',{waitUntil:'domcontentloaded'});
     await page.getByRole('heading',{name:'Transmit a creation.'}).waitFor();
     await page.getByRole('button',{name:'Artifact source workbench',exact:true}).click();
@@ -329,6 +330,50 @@ try{
     assert.equal(await workbench.locator('.p136-source-fallback textarea').inputValue(),previewCss,'Return preserves the creator source');
     assert.equal(await page.locator('.p136-source-state').innerText(),'ARCHIVE PREPARED','Preview controls cannot invalidate or mutate source/archive');
     assert.equal(await page.getByRole('button',{name:'Prepare private playtest',exact:true}).isDisabled(),true,'Layout preview grants no upload or publication rights');
+    const buildForm=page.locator('.av095-upload-grid form');
+    const upload=buildForm.getByRole('button',{name:'Prepare private playtest',exact:true});
+    const rights=buildForm.getByRole('checkbox',{name:/I own this project/});
+    assert.equal(await buildForm.getByRole('region',{name:'Browser build',exact:true}).count(),1);
+    assert.equal(await buildForm.getByRole('region',{name:'Project details',exact:true}).count(),1);
+    assert.equal(await buildForm.getByRole('region',{name:'Private playtest',exact:true}).count(),1);
+    await page.getByRole('button',{name:'Continue to build details',exact:true}).press('Enter');
+    const title=buildForm.getByRole('textbox',{name:'Project title',exact:true});
+    assert.equal(await title.evaluate(node=>node===document.activeElement),true,'Archive handoff focuses the actual title input');
+    assert.equal(await workbench.locator('.p136-source-fallback textarea').inputValue(),previewCss,'Handoff keeps the source editor and actual text');
+    await title.fill('Synthetic Studio QA build');
+    await buildForm.getByRole('textbox',{name:'What can someone do in it?',exact:true}).fill('Synthetic fixture for the private form handoff.');
+    await page.locator('#av136031-preparation').filter({hasText:'Confirm your rights'}).waitFor();
+    assert.equal(await upload.isDisabled(),true);
+    await rights.check();
+    await page.locator('#av136031-preparation').filter({hasText:'Ready for a private upload'}).waitFor();
+    assert.equal(await upload.isEnabled(),true,'Only real file/check/rights state enables the unchanged private upload action');
+    assert.equal(await page.locator('.ir80-dock[aria-expanded="false"]').isVisible(),false,'Idle IREN dock yields the private authoring controls');
+    await upload.scrollIntoViewIfNeeded();
+    const unobstructed=await upload.evaluate(button=>{
+      const r=button.getBoundingClientRect();
+      return [.1,.5,.9].every(x=>[.2,.8].every(y=>button.contains(document.elementFromPoint(r.left+r.width*x,r.top+r.height*y))));
+    });
+    assert.equal(unobstructed,true,'Private playtest action remains pointer-accessible across its surface');
+    await buildForm.getByRole('heading',{name:'Project details',exact:true}).scrollIntoViewIfNeeded();
+    await page.screenshot({path:join(out,'studio-build-details-'+width+'.png'),animations:'disabled',timeout:90000});
+    await upload.scrollIntoViewIfNeeded();
+    await page.screenshot({path:join(out,'studio-private-playtest-'+width+'.png'),animations:'disabled',timeout:90000});
+    await page.getByRole('button',{name:'Open site navigation',exact:true}).click();
+    await page.getByRole('button',{name:/IREN \/ Field assistant/}).click();
+    await page.getByRole('region',{name:'IREN companion',exact:true}).waitFor();
+    await page.getByRole('button',{name:'Close IREN',exact:true}).click();
+    await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='Open site navigation');
+    assert.equal(await page.locator('.ir80-dock[aria-expanded="false"]').isVisible(),false,'IREN remains available through real navigation and closes without covering the form');
+    // Editing after confirmation invalidates both the actual archive and rights.
+    await workbench.locator('.p136-source-fallback textarea').fill(previewCss+'\n/* revised synthetic source */');
+    assert.equal(await rights.isChecked(),false);
+    assert.equal(await upload.isDisabled(),true);
+    assert.equal(await page.getByRole('button',{name:'Continue to build details',exact:true}).count(),0);
+    assert.equal(await title.inputValue(),'Synthetic Studio QA build','Repackaging never discards project metadata');
+    await workbench.getByRole('button',{name:'Prepare build archive',exact:true}).click();
+    await page.getByText('Browser build candidate',{exact:true}).waitFor();
+    assert.equal(await rights.isChecked(),false,'Preparing a new revision never reuses a previous rights confirmation');
+    assert.equal(await upload.isDisabled(),true);
     assert.equal(await page.locator('.p136-console-wayfinder').isVisible(),false,
       'A redundant fixed site dock must never cover the mobile or desktop code editor');
     const overflow=await page.evaluate(()=>{

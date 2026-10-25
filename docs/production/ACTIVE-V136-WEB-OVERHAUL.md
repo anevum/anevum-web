@@ -2,7 +2,7 @@
 Session: `ANEVUM.WEB.UPDATE.2026-10-25.001.SITEWIDE-OVERHAUL-SYNCHRONIZATION`
 Updated: 2026-10-25
 **Owner development baseline: draft PR #735 — Concept Convergence II, head `888bf4cc` after #748 integration.**
-**Current bounded continuation: V136.030 — actual Studio layout preview viewports and focused workspace, stacked on draft #752.**
+**Current bounded continuation: V136.031 — Studio archive handoff and private-playtest form, stacked on draft #753.**
 **Sitewide integration: PR #738 was merged into the #735 development branch, preserving selected changes from PR #737 and #736. Those historical PRs need no blind re-import.**
 Status: V136.025 and owner-approved V136.026 are **IMPLEMENTED / VERIFIED DEVELOPMENT**, merged into #735. V136.027 remains **ACTIVE DRAFT / NOT released**. The sealed V136.024 controlled candidate in #741 is a separate release lane; consult provider receipts for actual traffic.
 
@@ -477,6 +477,40 @@ Next bounded UI work: the existing Studio archive/upload form hierarchy and
 clear progress through private compatibility/rights/playtest steps, preserving
 all canonical server capability and independent-review gates.
 
+## V136.030 committed handoff
+Draft #753 source `bea05ce35c7288f1fbfd6c3f9157d372ac8a9355`, tree
+`1dc86389407cde6659cc3e990938fa1a76a187dc`, parent #752 `d73f140f`.
+The committed source passed the entire local Studio sequence at 1440/390/320,
+including Monaco cursor retention. Its receipt records workingTreeDirty=false,
+PASS, errors=[] / forbidden=[], fixtureOnly=true. Pinned focused CI 40232997294,
+full Spatial 40232997114 and Creator V1 40232997056 are pending at this checkpoint.
+Other development checks are green. The unchanged live-release source guard
+is deliberately closed; owner creative review remains open.
+
+## V136.031 — prepared archive to private build details
+Session: `ANEVUM.ANEVUM.PACKAGE.2026-10-25.002.UNIFIED-OVERHAUL-WORK-CONTINUATION`.
+Branch `build/parity-v136-studio-handoff-20261025-031`, parent #753 `45fbd277`.
+ACTIVE DRAFT. The existing uploader now groups the real browser build, project
+details and private playtest in named semantic sections. A locally prepared
+source archive exposes a keyboard action that focuses the actual title field;
+the editor stays mounted. Guidance reflects actual file/compatibility, cover,
+metadata, rights and replacement state. The canonical submit action, server
+authorization, review, rights reset and upload lifecycle remain authoritative.
+
+TypeScript/full-flag production build and 81 archive/privacy/compatibility/
+navigation/IREN/concept contracts pass locally. Compiled handoff, metadata
+retention, rights/stale-archive, IREN access/focus return and original source
+workbench checks PASS at 1440/390/320, errors=[] / forbidden=[]. Nine local
+compiled editor/preview/form images inspected (synthetic, uncommitted source). No upload is performed; the
+loopback harness forbids every non-read request and uses labelled synthetic
+source/identity. Focused Studio CI watches the owning uploader and CSS as well
+as the preview files. Exact-head verification remains required.
+
+No main, sealed release, production, traffic, provider, payment, auth, stored
+media or publishing changes. #750–#753 remain drafts; no new creative approval
+was present. Next bounded slice: actual Creator Studio library/revision actions
+and their empty/error/keyboard presentation, retaining the existing lifecycle.
+
 
 ### V136.030 pinned-browser screenshot failure under investigation
 Exact source bea05ce35c7288f1fbfd6c3f9157d372ac8a9355 passed nine development
@@ -488,3 +522,11 @@ already had a bounded 90-second software-rendering budget. Give the new preview
 capture that same budget, retaining every assertion and required image, and log
 capture geometry/elapsed time to distinguish rendering delay from UI failure.
 Fresh exact-head CI is required. Main/production/#741/traffic remain unchanged.
+
+V136.031 screenshot review caught the existing floating IREN dock over the
+320px private-playtest action. On this full-flag authoring form only, the idle
+dock yields the controls; the same mounted IREN remains reachable through
+Wayfinder and open panels/transmissions remain available. The existing menu
+entry now records the persistent menu trigger as its opener after closing the
+dialog. Compiled checks verify unobstructed button hit points, real IREN open/
+close and return focus at all widths. No assistant subsystem was rebuilt.
