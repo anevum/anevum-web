@@ -46,7 +46,7 @@ jobs:
       - name: Install pinned dependencies without package scripts
         run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
       - name: Verify canonical guided anchors and privacy boundaries
-        run: node --test creator-v1/test/iren-guided-v080.test.mjs creator-v1/test/iren-spatial-v097.test.mjs
+        run: node --experimental-strip-types --test creator-v1/test/iren-guided-v080.test.mjs creator-v1/test/iren-spatial-v097.test.mjs
       - name: Typecheck and compile current V136 + V132 member + spatial IREN
         run: |
           npm run check:creator-v1-web
