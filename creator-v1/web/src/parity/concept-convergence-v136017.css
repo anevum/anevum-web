@@ -686,3 +686,45 @@ html[data-av-parity="v136-full"] .p136-source-privacy {
   .p136-source-explorer,.p136-source-inspector
  ) {background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none}
 }
+
+
+/* V136.017 engraved language-family file glyphs, drawn as accessible-adjacent
+ * local SVGs rather than fonts, emoji or external asset dependencies.
+ * Filenames stay ordinary selectable text and remain the accessible label. */
+html[data-av-parity="v136-full"] .p136017-file-glyph {
+  display:block;flex:none;width:19px;height:20px;color:#9dcfe2;
+  filter:drop-shadow(0 1px 2px #06131d);
+}
+html[data-av-parity="v136-full"] .p136017-file-glyph[data-file-kind="html"]{color:#f3a17d}
+html[data-av-parity="v136-full"] .p136017-file-glyph[data-file-kind="css"]{color:#8fc9ff}
+html[data-av-parity="v136-full"] .p136017-file-glyph[data-file-kind="javascript"]{color:#f2d18a}
+html[data-av-parity="v136-full"] .p136017-file-glyph[data-file-kind="json"]{color:#bfadf7}
+html[data-av-parity="v136-full"] .p136017-file-glyph[data-file-kind="markdown"]{color:#8be7c1}
+html[data-av-parity="v136-full"] .p136-file-mark{
+  width:29px;height:29px;background:#061d30a8;
+  border:1px solid #8abfe754;border-radius:4px;
+}
+html[data-av-parity="v136-full"] .p136-file-mark.is-javascript,
+html[data-av-parity="v136-full"] .p136-file-mark.is-css{background:#081c2ba8}
+html[data-av-parity="v136-full"] .p136-source-explorer nav button{
+  display:flex;align-items:center;gap:11px;
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+html[data-av-parity="v136-full"] .p136-source-explorer nav button[aria-pressed="true"] .p136-file-mark {
+  border-color:#d3f0ffb0;background:#244c67a6;
+}
+html[data-av-parity="v136-full"] .p136-source-tabs button{
+  display:flex;align-items:center;justify-content:flex-start;gap:8px;
+  padding:8px 13px;min-height:43px;min-width:130px;
+}
+html[data-av-parity="v136-full"] .p136-source-tabs button .p136017-file-glyph {
+  width:16px;height:18px;
+}
+html[data-av-parity="v136-full"] .p136-source-tabs button span {
+  overflow:hidden;text-overflow:ellipsis;
+}
+@media(forced-colors:active){
+ html[data-av-parity="v136-full"] .p136017-file-glyph{
+  filter:none;color:CanvasText!important;
+ }
+}
