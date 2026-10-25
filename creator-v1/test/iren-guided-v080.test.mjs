@@ -73,6 +73,9 @@ test("IREN uses visible responsive controls for Creator Studio and Wayfinder (ex
   // Hidden responsive branches and collapsed details must never be spotlighted.
   assert.match(tour,/getClientRects\(\)\.length/);
   assert.match(tour,/getComputedStyle\(target\)/);
+  assert.match(tour,/ancestor\.matches\('details:not\(\[open\]\)'\)/);
+  assert.match(tour,/querySelector\(':scope > summary'\)/);
+  assert.match(tour,/rect=target\.getBoundingClientRect\(\);[\s\S]*?scrollIntoView\([\s\S]*?rect=target\.getBoundingClientRect\(\)/);
   assert.match(tour,/isVisible\(primary\)/);
   assert.match(tour,/isVisible\(fallback\)/);
   assert.match(tour,/rect\.left<8\|\|rect\.right>window\.innerWidth-8/);
