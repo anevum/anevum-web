@@ -23,6 +23,9 @@ for(const tier of ['desktop','mobile']){
   });
   assert.equal(c.triangles,actualTriangles);
   assert.equal(c.instanceCount,actualInstances);
+  const platform=c.root.getObjectByName('Floating deck strata');
+  assert.ok(platform.geometry.parameters.points.length>=14,
+   'Real suspended platforms have modeled concentric stepped ledges, not a flat graphic');
   const geology=c.root.getObjectByName('Suspension geology');
   assert.equal(geology.count,tier==='desktop'?12:6,'Main islands plus actual hanging rock shards');
   const positions=geology.geometry.attributes.position;
@@ -142,6 +145,22 @@ test('real composed QA scene keeps floating outposts in both actual camera frust
    (planetCenter.distanceTo(camera.position)*Math.tan(T.MathUtils.degToRad(camera.fov/2)));
   assert.ok(opticalRadius<(tier==='mobile'?.26:.38),
    'Distant gas giant must frame rather than dominate the entire arrival');
+  if(tier==='mobile'){
+   // The earlier radius-only contract passed even as the globe obscured the
+   // main mobile headline. Project the REAL world-space sphere and protect
+   // the editorial band, not simply the planet's angular size.
+   const planetNdc=planetCenter.clone().project(camera);
+   const viewDepth=planetCenter.clone().sub(camera.position).dot(
+    new T.Vector3(0,0,-1).applyQuaternion(camera.quaternion));
+   const halfVerticalFoV=Math.tan(T.MathUtils.degToRad(camera.fov/2));
+   const conservativeVerticalRadius=body.geometry.parameters.radius/
+    (Math.max(.001,viewDepth-body.geometry.parameters.radius)*halfVerticalFoV);
+   assert.ok(planetNdc.y-conservativeVerticalRadius>.24,
+    'Mobile globe must clear the first headline line even at its lower silhouette: '+
+     JSON.stringify({center:planetNdc.toArray(),radius:conservativeVerticalRadius}));
+   assert.ok(planetNdc.x-conservativeVerticalRadius/camera.aspect>.12,
+    'Mobile globe cannot swallow the opposite art/architecture column');
+  }
   assert.ok(inView>=2,'Composed '+tier+' scene needs two real onscreen platforms: '+JSON.stringify(normalized));
   assert.ok(right>=1,'Composed '+tier+' scene needs an art-side island');
   const atmosphere=environment.root.getObjectByName('Atmospheric limb');

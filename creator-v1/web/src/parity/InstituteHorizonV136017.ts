@@ -45,13 +45,13 @@ void main(){
  // Exactly three procedural noise samples, concentrated in latitude-flow
  // bands rather than high-frequency mottling. The distant planet is a
  // backdrop to authored architecture, never a foreground UI obstruction.
- float weather=horizonNoise(n*3.8);
- float filament=horizonNoise(n*14.0+vec3(weather*2.1,n.y*6.0,1.7));
- float detail=horizonNoise(n*37.0+vec3(filament*.9,weather*.5,.8));
- float flow=n.y*31.0+(weather-.5)*7.0+(filament-.5)*2.5;
+ float weather=horizonNoise(n*3.0);
+ float filament=horizonNoise(n*11.0+vec3(weather*1.2,n.y*5.5,1.7));
+ float detail=horizonNoise(n*34.0+vec3(filament*.8,weather*.4,.8));
+ float flow=n.y*40.0+(weather-.5)*3.2+(filament-.5)*1.4;
  float belts=.5+.5*sin(flow);
  float sediment=smoothstep(.56,.91,belts);
- float cloud=smoothstep(.55,.82,filament+detail*.10);
+ float cloud=smoothstep(.55,.82,filament+detail*.08);
  vec3 abyss=vec3(.016,.030,.072);
  vec3 cobalt=vec3(.075,.126,.218);
  vec3 silver=vec3(.19,.25,.34);
@@ -95,18 +95,18 @@ export function createInstituteHorizon(tier:AssetTier,citadelFactory:typeof crea
  // entire root: that silently shifts citadels out of the camera frustum.
  const orbitalBody=new T.Group();
  orbitalBody.name='Planet + illuminated observation rings';
- orbitalBody.position.set(mobile?18.5:18.4,mobile?11.5:12.8,mobile?-42:-43);
+ orbitalBody.position.set(mobile?19.0:18.4,mobile?17.5:12.8,mobile?-44:-43);
  root.add(orbitalBody);
  const signal={value:0};
  const body=new T.Mesh(
-  new T.SphereGeometry(mobile?7.9:8.8,longitude,latitude),
+  new T.SphereGeometry(mobile?6.3:8.8,longitude,latitude),
   new T.ShaderMaterial({vertexShader:planetVertex,fragmentShader:planetFragment,
    uniforms:{uPublicDensity:signal},fog:false,depthWrite:true,toneMapped:false})
  );
  body.name='Original gas giant / no texture or telemetry';
  orbitalBody.add(body);
  const atmosphere=new T.Mesh(
-  new T.SphereGeometry(mobile?8.12:9.04,longitude,latitude),
+  new T.SphereGeometry(mobile?6.50:9.04,longitude,latitude),
   new T.ShaderMaterial({vertexShader:planetVertex,fragmentShader:atmosphereFragment,
    uniforms:{uPublicDensity:signal},transparent:true,depthWrite:false,
    blending:T.AdditiveBlending,fog:false,toneMapped:false})
@@ -116,7 +116,7 @@ export function createInstituteHorizon(tier:AssetTier,citadelFactory:typeof crea
  const orbits=new T.Group();orbits.rotation.set(.41,-.12,.22);
  orbits.name='Two engineered auric observation rings';
  for(const [radius,tube,opacity,color] of [
-  [mobile?10.8:11.9,.056,.36,0x9ed6ff],[mobile?12.7:14.2,.032,.22,0xb393ef]
+  [mobile?8.7:11.9,.056,.36,0x9ed6ff],[mobile?10.1:14.2,.032,.22,0xb393ef]
  ] as const){
   const ring=new T.Mesh(
    new T.TorusGeometry(radius,tube,mobile?4:6,mobile?72:144),

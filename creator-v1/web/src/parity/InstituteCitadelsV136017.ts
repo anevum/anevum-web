@@ -106,8 +106,10 @@ export function createInstituteCitadels(tier:AssetTier){
   }
  }
  const batches:Batch[]=[
-  batch('Floating deck strata',section([[0,-.22],[.72,-.22],[.74,-.13],
-   [1.08,-.13],[1.08,-.04],[.87,-.04],[.87,.10],[1,.10],[1,.17],[0,.17]],mobile?10:14),alloy,deck),
+  batch('Floating deck strata',section([[0,-.25],[.66,-.25],[.73,-.22],
+   [.73,-.17],[.91,-.17],[1.08,-.13],[1.08,-.04],
+   [.87,-.04],[.87,.03],[.95,.03],[.95,.10],
+   [1,.10],[1,.17],[0,.17]],mobile?10:14),alloy,deck),
   batch('Suspension geology',fracturedGeology(mobile?8:10),dark,suspended),
   batch('Ring railings',new T.TorusGeometry(1,.017,4,mobile?32:48),photonic,halos),
   batch('Cathedral finial towers',section([[0,-1.25],[.35,-1.25],[.43,-1.17],
