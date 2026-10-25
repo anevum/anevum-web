@@ -164,7 +164,7 @@ test('V136.042 converged project reel uses one existing case study system, never
   assert.match(html,/data-dossier-select="transcosmic"/);
   assert.match(html,/id="dossier-open"[^>]+data-project="anevum"/);
   assert.match(html,/INTERFACE PROTOTYPE \/ SYNTHETIC REVIEW CONTENT/);
-  assert.match(html,/ORIGINAL ENVIRONMENT ART STUDY/); 
+  assert.match(dossierJS,/ORIGINAL ENVIRONMENT ART STUDY/); 
   assert.match(dossierJS,/ArrowRight/);
   assert.match(dossierJS,/aria-pressed/);
   assert.match(dossierJS,/motion-paused/);
