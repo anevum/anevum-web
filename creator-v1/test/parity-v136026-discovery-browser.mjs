@@ -160,7 +160,7 @@ try{
   await discovery.locator('.p136-discover-availability').getByRole('button',{name:/Marked free/}).click();
   await checkParams(page,{view:'list',category:'games',free:'1'});
   assert.equal(await cards.count(),1);
-  const search=page.getByRole('searchbox',{name:'Search published projects'});
+  const search=discovery.locator('.p136-discover-search-form').getByRole('searchbox',{name:'Search published projects'});
   await search.fill('ORBIT');
   await search.press('Enter');
   await checkParams(page,{view:'list',category:'games',free:'1',q:'ORBIT',cursor:null});
@@ -176,7 +176,7 @@ try{
   await page.screenshot({path:join(destination,'discover-page-end-'+width+'.png'),fullPage:true,animations:'disabled'});
   await page.goBack({waitUntil:'domcontentloaded'});
   await page.getByRole('heading',{name:'SYNTHETIC ORBIT GAME',exact:true}).waitFor();
-  const refreshedSearch=page.getByRole('searchbox',{name:'Search published projects'});
+  const refreshedSearch=discovery.locator('.p136-discover-search-form').getByRole('searchbox',{name:'Search published projects'});
   await refreshedSearch.fill('unknown-discovery');
   await refreshedSearch.press('Enter');
   await checkParams(page,{q:'unknown-discovery',cursor:null,view:'list'});
