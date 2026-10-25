@@ -16,7 +16,7 @@ mkdirSync(output, {recursive:true});
 const mime = {
   '.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8',
   '.js':'text/javascript; charset=utf-8','.svg':'image/svg+xml',
-  '.webp':'image/webp','.jpg':'image/jpeg','.png':'image/png',
+  '.webp':'image/webp','.avif':'image/avif','.jpg':'image/jpeg','.png':'image/png',
   '.woff':'font/woff','.woff2':'font/woff2','.mp4':'video/mp4','.webm':'video/webm'
 };
 const server = createServer((req,res) => {
@@ -90,6 +90,10 @@ async function run(width,height,motion='no-preference') {
     };
   });
   assert.equal(polish.prismPresent,true,'missing hero glass visual layer');
+  assert.ok(await page.locator('.hero-v3-prism').evaluate(node =>
+    getComputedStyle(node,'::before').backgroundImage.includes('hero-chroma-v3.avif')
+  ),'art-directed first-party hero background not used');
+
   assert.equal(polish.prismPointer,'none','cinematic glass must never block real interactions');
   if (width>=851) assert.ok(Math.abs(polish.fictionWidth-polish.gridWidth)<=3,
     'the final fiction project leaves an empty desktop grid column: '+JSON.stringify(polish));
