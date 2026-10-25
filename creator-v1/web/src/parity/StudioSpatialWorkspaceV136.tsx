@@ -116,7 +116,7 @@ export function StudioSpatialWorkspaceV136({memberId,children}:{
     <div className="p136-studio-console-head">
       <div className="p136-studio-console-led" aria-hidden="true"/>
       <div className="p136-studio-console-headline">
-        <span>CONTINUANCE INSTITUTE / AUTHORING SYSTEM</span>
+        <span>ANEVUM / CONTINUANCE CREATOR INSTRUMENT</span>
         <strong>{currentRoute}</strong>
       </div>
       <span className="p136-studio-console-private"><Icon name="save" size={13}/> PRIVATE SESSION</span>
@@ -126,6 +126,12 @@ export function StudioSpatialWorkspaceV136({memberId,children}:{
         <Icon name="library" size={18}/>{railOpen?'Hide explorer':'Project explorer'}
       </button>
     </div>
+    <nav className="p136017-studio-quicknav" aria-label="Studio command destinations">
+      <NavLink to="/studio" end><Icon name="home" size={15}/> Overview</NavLink>
+      <NavLink to="/studio/records"><Icon name="library" size={15}/> Project library</NavLink>
+      <NavLink to="/studio/packages"><Icon name="create" size={15}/> Builds</NavLink>
+      <span className="p136017-studio-circuit" aria-hidden="true"><span/>AUTHORING WORKSTATION / LOCAL INSTRUMENT</span>
+    </nav>
     <div className="p136-studio-console-layout">
       {railOpen&&<aside id="p136-studio-explorer" className="p136-studio-console-explorer"
         aria-label="Private Studio project explorer">
@@ -209,5 +215,11 @@ export function StudioSpatialWorkspaceV136({memberId,children}:{
         </>}
       </aside>}
     </div>
+    <footer className="p136017-studio-footer">
+      <span>ANEVUM / CREATOR WORKSTATION</span>
+      <span>{current?.phase==='ready'?projects.length+' PRIVATE PROJECT RECORD'+(projects.length===1?'':'S'):
+        current?.phase==='error'?'PRIVATE RECORDS UNAVAILABLE':'PRIVATE RECORDS NOT YET LOADED'}</span>
+      <span>PUBLIC RELEASES REQUIRE INDEPENDENT REVIEW</span>
+    </footer>
   </div>;
 }

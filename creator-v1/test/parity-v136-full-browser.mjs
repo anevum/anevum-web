@@ -37,7 +37,9 @@ const packageFixture={id:'123e4567-e89b-42d3-a456-426614174000',
   play_url:'/upload/v3/play/123e4567-e89b-42d3-a456-426614174000',published_at:1792843200};
 const record=(name,data={})=>{checks.push({name,...data});console.log('PASS '+name);};
 async function contextFor(width,{motion='reduce',state='empty',forceVector=false}={}){
-  const context=await browser.newContext({viewport:{width,height:width===1536?1024:width<650?844:960},deviceScaleFactor:width===1536?1:2,reducedMotion:motion});
+  const context=await browser.newContext({viewport:{width,height:width===1536?1024:width<650?844:960},// CI tests CSS-pixel geometry at 1x to bound software-WebGL capture memory;
+    // device-pixel 2x visual checks are a separate physical-device gate.
+    deviceScaleFactor:1,reducedMotion:motion});
   if(forceVector)await context.addInitScript(()=>{
     const original=HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext=function(kind,...args){
@@ -129,14 +131,22 @@ try{
     assert.equal(await page.getByRole('button',{name:'Search and quick navigation'}).count(),1,
       'Search command remains discoverable');
 
+    assert.equal(await page.locator('[data-art="continuance-original-optics"]').count(),1,
+      'One first-party, noninteractive Arrival engraving preserves the existing scene');
+    assert.equal(await page.locator('.p136017-hero-upperline[aria-hidden="true"]').count(),1,
+      'Authored hero metadata is explicitly decorative, never fabricated telemetry');
+    await page.screenshot({path:join(out,'arrival-'+width+'.png'),fullPage:false,animations:'disabled'});
     assert.ok(layout.artLoaded,'Procedural vector and GPU canvas available');
     assert.ok(['webgl','vector'].includes(layout.renderer),'Supported live world renderer');
-    if(width>=1440){assert.ok(layout.headingLines<=2.1,'Desktop headline remains two lines: '+JSON.stringify(layout));assert.ok(layout.hero.height<=690,'Desktop hero retains concept density');}
+    if(width>=1440){
+      assert.ok(layout.headingLines<=2.22,'Two authored headline rows, including intentional optical interline spacing: '+JSON.stringify(layout));
+      assert.ok(layout.hero.height>=665&&layout.hero.height<=895,
+        'New authored Arrival fills a cinematic viewport without overwhelming the first page: '+JSON.stringify(layout));
+    }
     assert.ok(!/Georgia|Cambria/.test(layout.headingFont),'Concept uses sans typography');
     assert.equal(layout.animation,'none','Reduced motion has a static scene');
     for(const rect of [layout.primary,layout.secondary]){assert.ok(rect.height>=44);assert.ok(rect.width>=44);assert.ok(rect.left>=0&&rect.right<=width);}
     if(width<650)assert.ok(layout.primary.bottom<750,'Primary action stays in the first phone viewport');
-    await page.screenshot({path:join(out,'arrival-'+width+'.png'),fullPage:false,animations:'disabled'});
     await page.screenshot({path:join(out,'home-'+width+'.png'),fullPage:true,animations:'disabled'});
     record('responsive arrival '+width,layout);
     if(width===390){
@@ -307,6 +317,11 @@ try{
     await page.getByRole('heading',{name:'Transmit a creation.'}).waitFor();
     await page.getByRole('button',{name:'Artifact source workbench',exact:true}).click();
     const workbench=page.locator('[data-artifact-workbench="v136.011"]');await workbench.waitFor();
+    assert.equal(await page.locator('.p136017-studio-quicknav').count(),1,'Private Studio uses the actual command rail');
+    assert.equal(await page.locator('.p136017-studio-quicknav a[href="/studio/records"]').count(),1,'Project library remains real route navigation');
+    assert.equal(await workbench.locator('.p136017-source-functionbar').count(),1,'Local source instrumentation is available');
+    assert.ok((await workbench.locator('.p136017-source-ledge').innerText()).includes('index.html'),
+      'Authoring instrument describes the current real file, never a simulated preview');
     if(width===1440)await page.locator('[data-source-editor="monaco"]').waitFor({timeout:30000});
     else assert.equal(await page.locator('[data-source-editor="monaco"]').count(),0,'Phone uses accessible text editor without Monaco allocation');
     assert.equal(await page.locator('.p136-living-world').getAttribute('data-enabled'),'false','Private source never enters public GPU');

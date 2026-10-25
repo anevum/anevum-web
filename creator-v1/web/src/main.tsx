@@ -43,6 +43,7 @@ import "./community-home-v014.css";
 if (import.meta.env.VITE_PARITY_V136_FULL === "true") {
   document.documentElement.dataset.avParity = "v136-full";
   await import("./parity/visual-foundation-v136.css");
+  await import("./parity/concept-convergence-v136017.css");
 }
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

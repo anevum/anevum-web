@@ -5,6 +5,7 @@ import {OrbitalMark} from '../components/OrbitalMark';
 import {CosmicArtwork} from '../components/CosmicArtwork';
 import {useLivingWorld} from './LivingWorldState';
 import {CinematicArrivalV136} from './CinematicArrivalV136';
+import {ContinuanceInstrumentV136017} from './ContinuanceInstrumentV136017';
 import {projectDetailPath} from '../lib/navigation';
 import type {Project, Category} from '../lib/api';
 import type {CosmicScene} from '../components/CosmicIllustration';
@@ -66,18 +67,28 @@ export function ParityPortalV136({projects,catalogueState,signedIn,verifiedCount
   return <div className="p136-portal" data-parity-v136="full">
     <section className="p136-hero" aria-labelledby="p136-hero-title">
       <CinematicArrivalV136/>
+      <ContinuanceInstrumentV136017/>
       <div className="p136-hero-shade" aria-hidden="true"/>
+      <div className="p136017-hero-upperline" aria-hidden="true">
+        <span>ANEVUM / ARRIVAL</span><span>CONTINUANCE INSTITUTE</span><span>EST. 2026</span>
+      </div>
+      <div className="p136017-hero-worldmark" aria-hidden="true">
+        <span className="p136017-worldmark-index">INSTITUTE / 001</span>
+        <span className="p136017-worldmark-rule"/>
+        <span>EXPLORE WHAT IS BEING MADE</span>
+      </div>
       <div className="p136-hero-content">
-        <p className="p136-hero-register">THE CONTINUANCE INSTITUTE <span> / </span> FIRST CONTACT</p>
-        <h1 id="p136-hero-title">Independent worlds.<em>Made to continue.</em></h1>
+        <p className="p136-hero-register"><span className="p136017-register-emblem" aria-hidden="true">✧</span> THE CONTINUANCE INSTITUTE <span> / </span> FIRST CONTACT</p>
+        <h1 id="p136-hero-title"><span>Independent worlds.</span><em>Made to continue.</em></h1>
         <p className="p136-hero-intro">Discover independent games, useful software and creative experiments. Explore real work, meet the people behind it, and build what comes next.</p>
-        <div className="p136-hero-actions">
+        <div className="p136-hero-actions" data-arrival-commands="primary">
           <Link to="/discover" className="p136-button p136-button--primary">Explore projects <Icon name="arrow" size={20}/></Link>
           <Link to={signedIn?'/member':'/join'} className="p136-button p136-button--signal">{signedIn?'My member space':'Join the community'} <Icon name="arrow" size={18}/></Link>
         </div>
         <p className="p136-hero-disclosure">Free to explore. No account required. Creator publishing remains in testing.</p>
       </div>
       <aside className="p136-iren-console" aria-label="IREN signal and navigation">
+        <div className="p136017-iren-housing" aria-hidden="true"><span>IREN / COMMUNICATIONS</span><span>◉</span></div>
         <div className="p136-panel-top"><span className="p136-signal-dot"/><strong>IREN</strong><span>{signal.source==='verified'?'PUBLIC INDEX':'AMBIENT FIELD'}</span></div>
         <p className="p136-iren-sub">Your companion to the Continuance Institute</p>
         <svg className="p136-iren-wave" viewBox="0 0 240 80" role="img"
@@ -94,6 +105,7 @@ export function ParityPortalV136({projects,catalogueState,signedIn,verifiedCount
         <button type="button" className="p136-iren-cta" onClick={()=>window.dispatchEvent(new Event('anevum:iren-open'))}>Open IREN <Icon name="arrow" size={17}/></button>
       </aside>
       <nav className="p136-hero-rail" aria-label="ANEVUM destinations">
+        <span className="p136017-rail-overline" aria-hidden="true">SELECT A DESTINATION <span> / </span> THE CONTINUANCE INSTITUTE</span>
         <Link to="/creators"><Icon name="people" size={21}/><span><strong>Creators</strong><small>People shaping new work</small></span></Link>
         <Link to="/community"><Icon name="community" size={21}/><span><strong>Community</strong><small>Ideas and discussions</small></span></Link>
         <Link to="/studio"><Icon name="create" size={21}/><span><strong>Creator Studio</strong><small>Tools for building</small></span></Link>
