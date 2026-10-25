@@ -407,6 +407,36 @@ try{
     record('synthetic Gamepad API / connected badge / D-pad DOM focus / A route / disconnected cleanup',{hardwareVerified:false});
     await context.close();
   }
+  // User-invoked live 3D reveals an existing, genuinely loaded scene
+  // without a second renderer or a claim of finished concept fidelity.
+  if(process.env.VITE_PARITY_V136_CINEMATIC==='true'){
+    const {page,context}=await contextFor(1440,{motion:'no-preference'});
+    await page.goto(base,{waitUntil:'domcontentloaded'});
+    const inspect=page.getByRole('button',{name:'Inspect live 3D scene'});
+    await inspect.waitFor();
+    await page.waitForFunction(()=>{
+      const control=document.querySelector('[data-cinematic-inspection="v136.017"]');
+      const canvas=document.querySelector('.p136-living-canvas');
+      return control?.getAttribute('data-scene-readiness')==='ready'&&
+        canvas?.dataset.assetState==='ready';
+    },null,{timeout:60000});
+    assert.equal(await inspect.isDisabled(),false,'Only loaded WebGL geometry enables the inspection button');
+    await inspect.click();
+    await page.waitForFunction(()=>{
+      const cinema=document.querySelector('[data-cinematic-v136]');
+      return cinema?.dataset.inspection==='live'&&Number.parseFloat(getComputedStyle(cinema).opacity)<.05;
+    });
+    assert.equal(await page.locator('.p136-living-canvas').count(),1,'Inspection reuses one persistent GPU canvas');
+    const reset=page.getByRole('button',{name:'Return to cinematic arrival'});
+    assert.equal(await reset.getAttribute('aria-pressed'),'true');
+    await reset.click();
+    await page.waitForFunction(()=>{
+      const cinema=document.querySelector('[data-cinematic-v136]');
+      return cinema?.dataset.inspection==='cinematic'&&Number.parseFloat(getComputedStyle(cinema).opacity)>.95;
+    });
+    record('opt-in real 3D inspection / cinematic reset / single persistent canvas');
+    await context.close();
+  }
   if(process.env.VITE_PARITY_V136_CINEMATIC==='true'){
     const {page,context}=await contextFor(1440,{motion:'no-preference',forceVector:true});
     await page.goto(base,{waitUntil:'networkidle'});

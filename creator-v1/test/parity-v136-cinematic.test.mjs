@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {cinematicMode,cinematicReveal,cinematicScrollProgress,cinematicFrameIndex} from '../web/src/parity/cinematic-director-v136.ts';
+import {cinematicMode,cinematicReveal,cinematicScrollProgress,cinematicFrameIndex,cinematicInspectionOpacity} from '../web/src/parity/cinematic-director-v136.ts';
 const read=path=>readFileSync(new URL(path,import.meta.url),'utf8');
 const base={enabled:true,reducedMotion:false,forcedColors:false,saveData:false,paused:false,visible:true,hasApprovedSequence:false};
 test('a poster is first-class; no unverified motion media is used',()=>{
@@ -68,4 +68,20 @@ test('verified source manifest prohibits invented 4K or traffic claims',()=>{
  assert.equal(manifest.sequence,null);
  assert.equal(manifest.sourceManifest,'assets/parity-v136/manifest.json');
  assert.ok(!JSON.stringify(manifest).toLowerCase().includes('fake user'));
+});
+
+test('live 3D inspection is ready-only and returns to poster on model fallback',()=>{
+ assert.equal(cinematicInspectionOpacity(true,'ready',1),0);
+ assert.equal(cinematicInspectionOpacity(true,'hold',.78),.78);
+ assert.equal(cinematicInspectionOpacity(true,'fallback',.32),.32);
+ assert.equal(cinematicInspectionOpacity(false,'ready',.67),.67);
+ const arrival=read('../web/src/parity/CinematicArrivalV136.tsx');
+ const css=read('../web/src/parity/concept-convergence-v136017.css');
+ assert.match(arrival,/aria-label=\{inspecting\?'Return to cinematic arrival':'Inspect live 3D scene'\}/);
+ assert.match(arrival,/disabled=\{sceneReadiness!=='ready'&&!inspecting\}/);
+ assert.match(arrival,/data-cinematic-inspection="v136\.017"/);
+ assert.match(arrival,/cinematicInspectionOpacity\(inspecting,readiness,scrollOpacity\)/);
+ assert.match(css,/\.p136017-scene-inspection button:focus-visible/);
+ assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+ assert.ok(!/<canvas\b|readSession|fetch\(|localStorage/.test(arrival));
 });

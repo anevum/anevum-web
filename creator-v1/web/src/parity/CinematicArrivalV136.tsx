@@ -1,6 +1,6 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {useLivingWorld} from './LivingWorldState';
-import {cinematicMode,cinematicScrollProgress,cinematicRevealWhenReady,cinematicWorldReadiness} from './cinematic-director-v136';
+import {cinematicMode,cinematicScrollProgress,cinematicRevealWhenReady,cinematicWorldReadiness,cinematicInspectionOpacity} from './cinematic-director-v136';
 import {allowMotion,approvedCinematicSequence,approvedCinematicVideo} from './CinematicMediaContractV136';
 import {CinematicFramesV136} from './CinematicFramesV136';
 import {CinematicVideoV136} from './CinematicVideoV136';
@@ -28,6 +28,10 @@ export function CinematicArrivalV136(){
  const [mode,setMode]=useState<ViewMode>('poster');
  const [progress,setProgress]=useState(0);
  const [playAllowed,setPlayAllowed]=useState(false);
+ // True opt-in to the existing modeled world. Never add another canvas,
+ // run private code, or imply the artistic master has been approved.
+ const [inspecting,setInspecting]=useState(false);
+ const [sceneReadiness,setSceneReadiness]=useState<'hold'|'ready'|'fallback'>('hold');
  const onFrameFault=useCallback(()=>setFrameFailed(true),[]);
  const onVideoFault=useCallback(()=>setVideoFailed(true),[]);
  useEffect(()=>{
@@ -54,7 +58,7 @@ export function CinematicArrivalV136(){
    // Native video is ambient only, not frame-accurate scroll. It also requires a
    // separate CSP review and explicit build flag, both absent in production today.
    const videoPlayable=baseline==='poster'&&Boolean(approvedVideo)&&nativeVideoFlag&&
-    !videoFailed&&allowMotion(input);
+    !videoFailed&&!inspecting&&allowMotion(input);
    const nextMode:ViewMode=videoPlayable?'video':baseline;
    element.dataset.mode=nextMode;
    setMode(previous=>previous===nextMode?previous:nextMode);
@@ -66,14 +70,18 @@ export function CinematicArrivalV136(){
    const staticPreference=reduced.matches||paused||Boolean(connection?.saveData);
    const readiness=cinematicWorldReadiness(world?.dataset.renderer==='webgl'?'webgl':
     world?.dataset.renderer==='vector'?'vector':null,worldCanvas?.dataset.assetState??null);
+   setSceneReadiness(previous=>previous===readiness?previous:readiness);
+   if(readiness!=='ready')setInspecting(false);
    // A user who has already crossed into the live scene never sees the poster
    // flash back on a temporary renderer reset or GPU status change.
    if(travel<manifest.handoff.revealStart*.5)handoffCommitted=false;
    else if(readiness!=='hold'&&travel>=manifest.handoff.revealStart)handoffCommitted=true;
    const permitted=handoffCommitted?'ready':readiness;
    element.dataset.handoff=permitted;
-   const opacity=nextMode==='off'?0:nextMode==='poster'&&staticPreference?1:
+   const scrollOpacity=nextMode==='off'?0:nextMode==='poster'&&staticPreference?1:
     cinematicRevealWhenReady(travel,permitted,manifest.handoff.revealStart,manifest.handoff.revealEnd);
+   const opacity=cinematicInspectionOpacity(inspecting,readiness,scrollOpacity);
+   element.dataset.inspection=inspecting&&readiness==='ready'?'live':'cinematic';
    element.style.setProperty('--cinema-opacity',String(opacity));
    element.style.setProperty('--cinema-offset',(-1.6*(staticPreference?0:travel)).toFixed(3)+'%');
    if(nextMode==='sequence')setProgress(value=>Math.abs(value-travel)>.002?travel:value);
@@ -100,9 +108,9 @@ export function CinematicArrivalV136(){
    observe?.disconnect();
    if(raf)window.cancelAnimationFrame(raf);
   };
- },[paused,posterFailed,frameFailed,videoFailed]);
+ },[paused,posterFailed,frameFailed,videoFailed,inspecting]);
  if(!enabled||posterFailed)return null;
- return <div ref={stage} className="p136-cinematic-arrival"
+ return <><div ref={stage} className="p136-cinematic-arrival"
     aria-hidden="true" data-cinematic-v136="poster-pilot" data-mode={mode} data-handoff="fallback">
    <picture className="p136-cinematic-art">
     <source media="(max-width: 680px)" srcSet={asset(manifest.posters.mobile.path)}/>
@@ -116,5 +124,18 @@ export function CinematicArrivalV136(){
     <CinematicVideoV136 video={approvedVideo} canPlay={playAllowed} onFault={onVideoFault}/>}
    <span className="p136-cinematic-luminance"/>
    <span className="p136-cinematic-vignette"/>
-  </div>;
+  </div>
+  <div className="p136017-scene-inspection" data-cinematic-inspection="v136.017"
+   data-scene-readiness={sceneReadiness}>
+   <button type="button" aria-pressed={inspecting}
+    aria-label={inspecting?'Return to cinematic arrival':'Inspect live 3D scene'}
+    disabled={sceneReadiness!=='ready'&&!inspecting}
+    onClick={()=>setInspecting(value=>!value)}>
+    <span className="p136017-scene-inspection-emblem" aria-hidden="true">◇</span>
+    <span>{inspecting?'Return to cinematic':'Inspect live 3D'}</span>
+   </button>
+   <span className="p136017-scene-inspection-status" aria-hidden="true">
+    {sceneReadiness==='ready'?'REAL-TIME MODEL':sceneReadiness==='hold'?'MODEL LOADING':'VECTOR FALLBACK'}
+   </span>
+  </div></>;
 }
