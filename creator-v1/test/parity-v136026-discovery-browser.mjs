@@ -180,6 +180,10 @@ try{
   await search.fill('ORBIT');
   await search.press('Enter');
   await checkParams(page,{view:'list',category:'games',free:'1',q:'ORBIT',cursor:null});
+  // Route transitions intentionally render a loading state until a genuine
+  // public API response arrives. Wait for the expected approved result,
+  // rather than reading the transient zero-card loading DOM.
+  await page.getByRole('heading',{name:'SYNTHETIC ORBIT GAME',exact:true}).waitFor();
   assert.equal(await cards.count(),1);
   await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({path:join(destination,'discover-filtered-'+width+'.png'),fullPage:true,animations:'disabled'});
