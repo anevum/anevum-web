@@ -115,3 +115,12 @@ html,body{background:var(--tc-void);color:var(--tc-bone)}
 @media(prefers-reduced-motion:reduce){.transcosmic-field canvas{transition:none!important}.transcosmic-field .institute-atmosphere{animation:none!important}.project-hit{transition:none!important;transform:none!important}}
 .motion-paused .transcosmic-field canvas,.motion-paused .transcosmic-field .institute-backdrop{transition:none!important}
 @media(forced-colors:active){.universe-console,.project-hit{background:Canvas!important;border-color:CanvasText!important}.universe-console button[aria-pressed="true"]{outline:2px solid Highlight}.hero-copy *{text-shadow:none!important}}
+
+/* Actual Transcosmic record now shares the same first-party dimensional art;
+   no toy planet, implied playable universe, or invented app screenshot. */
+.transcosmic-portal-thumb{position:absolute;inset:-7%;z-index:1;pointer-events:none;background:url('/portfolio/assets/transcosmic-continuum.svg') center/cover no-repeat;filter:saturate(.75) contrast(1.16);transform:scale(1.08);transition:transform .7s cubic-bezier(.2,.7,.2,1)}
+.project-transcosmic .project-hit:hover .transcosmic-portal-thumb{transform:scale(1.14) translateX(-2%)}
+.transcosmic-visual .cosmic-title{position:absolute;z-index:5;max-width:92%;overflow-wrap:anywhere;text-shadow:0 5px 28px #000e;color:var(--tc-bone)}
+.transcosmic-visual .cosmic-title small{color:#d4c3b1;letter-spacing:.19em}
+.case-art .transcosmic-portal-thumb{inset:0}
+@media(prefers-reduced-motion:reduce){.transcosmic-portal-thumb,.project-transcosmic .project-hit:hover .transcosmic-portal-thumb{transition:none;transform:none}}
