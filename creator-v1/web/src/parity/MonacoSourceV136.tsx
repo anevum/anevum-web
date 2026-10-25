@@ -1,5 +1,9 @@
 import {useEffect,useRef} from 'react';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
+// The modular API does not register navigation/editing keybindings itself.
+// Load the first-party core commands explicitly; a colored editor div alone
+// is not a working IDE (Ctrl+End, arrows, selection, Tab and deletion).
+import 'monaco-editor/esm/vs/editor/browser/coreCommands.js';
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import 'monaco-editor/esm/vs/basic-languages/html/html.contribution.js';
 import 'monaco-editor/esm/vs/basic-languages/css/css.contribution.js';

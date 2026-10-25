@@ -79,7 +79,7 @@ test('two responsive 3D planetary tiers include actual instanced geometry and ow
 test('real composed QA scene keeps floating outposts in both actual camera frusta',async()=>{
  const {frameFor,sceneProfile}=await import('../web/src/parity/SceneDirectorV136.ts');
  const frame=frameFor(sceneProfile('hero'),.2);
- for(const [tier,width,height] of [['desktop',1440,892],['mobile',390,782]]){
+ for(const [tier,width,height] of [['desktop',1536,956],['desktop',1440,892],['mobile',390,782],['mobile',320,782]]){
   // Create the ENTIRE actual scene graph, including the translated planet.
   // The previous test passed the isolated citadel root while runtime
   // accidentally inherited the planet offset. This makes that impossible.

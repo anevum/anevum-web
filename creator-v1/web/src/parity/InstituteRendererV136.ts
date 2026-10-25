@@ -60,7 +60,19 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
  scene.add(anchors);
  // QA-only visual convergence: shared context, separately bounded horizon.
  let horizon=horizonQA?createInstituteHorizon(budget.tier,createInstituteCitadels):null;
- if(horizon){scene.add(horizon.root);canvas.dataset.horizon='qa-only';canvas.dataset.horizonTier=budget.tier;}
+ function coatHorizon(){
+  horizon?.root.traverse(node=>{
+   if(!(node instanceof T.Mesh))return;
+   for(const material of Array.isArray(node.material)?node.material:[node.material]){
+    if(material instanceof T.MeshStandardMaterial&&material.metalness>.6){
+     // Share the renderer-owned original normal map; no texture copies,
+     // extra requests or ownership transfer into disposable candidate roots.
+     material.normalMap=alloySurface;material.normalScale.set(.20,.12);material.needsUpdate=true;
+    }
+   }
+  });
+ }
+ if(horizon){scene.add(horizon.root);coatHorizon();canvas.dataset.horizon='qa-only';canvas.dataset.horizonTier=budget.tier;}
  const backdrop=new T.Scene(),backgroundCamera=new T.Camera();
  const uniforms={u_resolution:{value:new T.Vector2(1,1)},u_pointer:{value:new T.Vector2()},u_time:{value:0},u_modeled:{value:1},
   u_density:{value:0},u_verified:{value:0},u_tone:{value:new T.Vector3()},u_pulse:{value:0},
@@ -154,7 +166,7 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
   if(horizon&&priorTier!==budget.tier){
    scene.remove(horizon.root);horizon.dispose();
    horizon=createInstituteHorizon(budget.tier,createInstituteCitadels);
-   scene.add(horizon.root);canvas.dataset.horizonTier=budget.tier;
+   scene.add(horizon.root);coatHorizon();canvas.dataset.horizonTier=budget.tier;
   }
   const w=Math.max(1,canvas.clientWidth),h=Math.max(1,canvas.clientHeight),dpr=Math.min(budget.pixelRatio,Math.sqrt(budget.maxPixels/(w*h)))*scale;
   renderer.setPixelRatio(dpr);renderer.setSize(w,h,false);composer.setPixelRatio(dpr);composer.setSize(w,h);
@@ -174,9 +186,16 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
   frame=advanceSceneFrame(frame,frameFor(sceneProfile(input.sector),input.density),dt,moving);
   const family=sceneProfile(input.sector).geometry;void load(family);
   let transitioning=false;
+  // The isolated planetary candidate is an exterior composition. The legacy
+  // Atrium's enclosing nave/roof otherwise occludes its islands and skyline,
+  // even though all geometry passes onscreen projection tests. Keep the GLB
+  // cached for route return, but never draw an interior roof over this QA view.
+  const openHorizon=Boolean(horizon&&input.sector==='hero'&&!input.saveData);
+  canvas.dataset.horizonComposition=openHorizon?'open-institute':'canonical';
+  anchors.visible=!openHorizon;
   for(const [name,f] of cache){
-   const target=name===family?1:0;f.weight=moving?T.MathUtils.damp(f.weight,target,5,dt/1000):target;
-   f.root.visible=f.weight>.005;f.root.position.y=-1.5*(1-f.weight);
+   const target=name===family&&!openHorizon?1:0;f.weight=moving?T.MathUtils.damp(f.weight,target,5,dt/1000):target;
+   f.root.visible=f.weight>.005&&!openHorizon;f.root.position.y=-1.5*(1-f.weight);
    if(target)f.lastUsed=now;if(Math.abs(f.weight-target)>.005)transitioning=true;
    f.materials.forEach(material=>{
     const m=material as T.MeshStandardMaterial;m.opacity=m.userData.originalOpacity*f.weight;
@@ -246,6 +265,7 @@ export function createInstituteRenderer(canvas:HTMLCanvasElement,initial:Institu
   if(result){
    alloySurface.dispose();alloySurface=result.texture;canvas.dataset.textureFormat=result.format;canvas.dataset.textureBytes=String(result.bytes);
    cache.forEach(f=>f.materials.forEach(material=>{const m=material as T.MeshStandardMaterial;if(m.metalness>.6){m.normalMap=alloySurface;m.needsUpdate=true}}));
+   coatHorizon();
   }
   schedule();
  }).catch(()=>{if(!disposed){canvas.dataset.textureState='procedural';schedule()}});

@@ -389,6 +389,9 @@ try{
       }));
       assert.equal(explorerFits,true,'Phone source file labels never overlap neighbouring controls');
     }
+    // Show the actual nonempty source and syntax colors in review evidence;
+    // the newly-created Markdown note is deliberately blank, not an IDE demo.
+    await workbench.getByRole('tab',{name:'index.html',exact:true}).click();
     await workbench.scrollIntoViewIfNeeded();
     // Private source editing does not need to compete for GPU resources with
     // prior public WebGL stress tests. Retain genuine browser screenshot QA.
@@ -465,9 +468,14 @@ try{
       if(process.env.VITE_PARITY_V136_HORIZON_QA==='true'){
         assert.equal(await page.locator('.p136-living-canvas').getAttribute('data-horizon'),
           'qa-only','The same original canvas owns the approved QA-only planetary horizon');
+        assert.equal(await page.locator('.p136-living-canvas').getAttribute('data-horizon-composition'),
+          'open-institute','The QA exterior cannot be occluded by the legacy Atrium roof');
       }
-      assert.ok(reality.metrics.models>=1&&reality.metrics.triangles>10000&&reality.metrics.drawCalls>0,
+      const openExterior=process.env.VITE_PARITY_V136_HORIZON_QA==='true';
+      assert.ok(reality.metrics.models>=1&&reality.metrics.triangles>(openExterior&&width<850?6000:10000)&&reality.metrics.drawCalls>0,
         'The 3D screenshot must contain real modeled geometry: '+JSON.stringify(reality));
+      if(openExterior)assert.ok(reality.metrics.triangles<=(width<850?10000:25000)+128,
+        'Actual exterior render excludes the occluding Atrium roof; only bounded horizon plus compositor quads: '+JSON.stringify(reality.metrics));
       const first=await page.screenshot({path:join(out,'arrival-poster-review-'+width+'.png'),
         fullPage:false,animations:'disabled'});
       assert.equal(await inspect.isDisabled(),false,'Loaded model enables live inspection');
@@ -514,9 +522,10 @@ try{
         record('live desktop to mobile to desktop QA geometry reallocation / one canvas',
           {tierRestored:'desktop',rendererCount:1});
       }
-      record('direct same-context poster vs real WebGL Atrium visual evidence '+width,{
+      record('direct same-context poster vs real WebGL '+(openExterior?'Institute exterior':'Atrium')+' visual evidence '+width,{
         width,renderer:reality.renderer,models:reality.metrics.models,
         triangles:reality.metrics.triangles,drawCalls:reality.metrics.drawCalls,
+        composition:openExterior?'QA open Institute':'canonical Atrium',
         approvedConceptParity:false,realDeviceTested:false});
       await context.close();
     }

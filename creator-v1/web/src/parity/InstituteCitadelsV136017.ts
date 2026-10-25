@@ -18,7 +18,7 @@ type Batch={name:string;geometry:T.BufferGeometry;material:T.Material;poses:Inst
 // several at or behind the camera (positive Z): invisible but still costly.
 // These intentionally stagger in front of the actual hero camera instead.
 const DESKTOP_PLACES:readonly Place[]=[
- {x:6.4,y:-2.6,z:-19,r:2.35,scale:1},
+ {x:6.4,y:-2.6,z:-19,r:3.4,scale:1.15},
  {x:1.8,y:-4.0,z:-12,r:1.85,scale:.82},
  {x:10.9,y:.0,z:-21.5,r:1.66,scale:.72}
 ];
