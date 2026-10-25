@@ -194,11 +194,15 @@ try{
   await hub.getByRole('heading',{name:'Conversations are in private testing.'}).waitFor();
   await hub.locator('.ch7-sort').getByRole('button',{name:'HOT'}).click();
   await checkParams(page,{view:'conversations',sort:'hot'});
+  // React commits the URL transition asynchronously; wait for the actual
+  // selected button rather than reading its stale previous DOM state.
+  await hub.locator('.ch7-sort button[aria-pressed="true"]').filter({hasText:'HOT'}).waitFor();
   assert.equal(await hub.locator('.ch7-sort [aria-pressed="true"]').innerText(),'HOT');
   await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({path:join(destination,'commons-closed-discussions-'+width+'.png'),fullPage:true,animations:'disabled'});
   await page.goBack({waitUntil:'domcontentloaded'});
   await checkParams(page,{view:'conversations',sort:null});
+  await hub.locator('.ch7-sort button[aria-pressed="true"]').filter({hasText:'NEWEST'}).waitFor();
   assert.equal(await hub.locator('.ch7-sort [aria-pressed="true"]').innerText(),'NEWEST');
   assert.deepEqual(errors,[],'No React page exceptions at '+width);
   receipt.views.push({width,geometry,networkReads:requests.length,screenshots:4,checks:'PASS'});
