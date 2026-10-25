@@ -61,6 +61,8 @@ try{
    "QA must exercise V136 header rather than legacy-only navigation");
   assert.equal(await page.locator(".ms-toolbar-more[open]").count(),0,
    "Profile & tools starts collapsed: hidden Studio link is not targetable");
+  assert.equal(await page.locator(".ms-toolbar-more-content").evaluate(el=>getComputedStyle(el).display),"none",
+   "Closed Profile & tools must remove descendant controls from layout");
   await page.evaluate(()=>window.dispatchEvent(new Event("anevum:iren-tour")));
   for(let step=1;step<=7;step++){
    const bubble=page.locator('.ir97-speech-bubble[aria-label="IREN guide, step '+step+' of 7"]');
