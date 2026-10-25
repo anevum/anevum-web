@@ -46,7 +46,7 @@ jobs:
       - name: Compile default-OFF and explicitly enabled builds
         run: |
           npm run build:creator-v1-web
-          VITE_IREN_SPATIAL_GUIDE=true npm run build:creator-v1-web:staging
+          VITE_IREN_SPATIAL_GUIDE=true VITE_MEMBER_COLLECTION_NAV_REVIEW=true npm run build:creator-v1-web:staging
       - name: Source identity
         run: git rev-parse HEAD
   browser:
@@ -88,7 +88,7 @@ jobs:
             git diff --exit-code 28f163a0015631b1d8eb58922c03596ae8febd22 HEAD -- creator-v1/web creator-v1/apex-prelaunch creator-v1/canonical-auth site/alpha/v003
             VITE_IREN_SPATIAL_GUIDE=true VITE_NATIVE_CREATOR_STUDIO_V095=true VITE_PACKAGE_CREATOR_GALLERY_V010=true npm run build:creator-v1-web:staging
           else
-            VITE_IREN_SPATIAL_GUIDE=true npm run build:creator-v1-web:staging
+            VITE_IREN_SPATIAL_GUIDE=true VITE_MEMBER_COLLECTION_NAV_REVIEW=true npm run build:creator-v1-web:staging
           fi
           node creator-v1/test/capture-iren-spatial-v097.mjs "$chrome" http://127.0.0.1:4178 evidence/iren-v097/spatial
           test -s evidence/iren-v097/spatial/acceptance.json
