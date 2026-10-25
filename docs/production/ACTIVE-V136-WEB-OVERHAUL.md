@@ -1,9 +1,10 @@
 # ACTIVE — ANEVUM PARITY V136 unified website overhaul
 Session: `ANEVUM.WEB.UPDATE.2026-10-25.001.SITEWIDE-OVERHAUL-SYNCHRONIZATION`
 Updated: 2026-10-25
-**Current owner workstream: PR #735 — Concept Convergence II.**
-**Sitewide contributions: PR #737 / V136.018–.021; divergent source branch, not yet incorporated into #735.**
-Status: DRAFT ENGINEERING; **NOT released, owner-approved, or deployed**.
+**Owner development baseline: draft PR #735 — Concept Convergence II, head `20161bae20`.**
+**Current bounded continuation: draft PR #745 — V136.025 Creator Directory.**
+**Sitewide integration: PR #738 was merged into the #735 development branch, preserving selected #737/#736 contributions. Those historical PRs need no blind re-import.**
+Status: V136.025 is DRAFT / **not merged, visually accepted, or deployed**. The sealed V136.024 controlled candidate in #741 is a separate release lane; consult provider receipts for actual traffic.
 
 ## Read this first
 This is the active handoff for the October 24–25 sitewide overhaul. It supersedes earlier
@@ -75,8 +76,9 @@ social proof, or published work to make it look busy.
   avatar/banner error handling without changing the media APIs.
 - V136.021 QA: loopback browser fixture permits exactly the ten reviewed
   static default SVG paths; no wildcard media access.
-The separate Open Signal PR #736 is a sibling: it is **not** implicitly
-included and requires its own branch reconciliation and acceptance later.
+The Open Signal #736 source changes were explicitly reconciled in the unified
+#738 integration; the sibling PR itself was not implicitly merged or released.
+Do not duplicate those components on the current #735/#745 development baseline.
 
 ## NEXT WORK, IN ORDER
 1. Confirm the consolidated exact-head source tests and browser screenshots,
@@ -101,10 +103,12 @@ included and requires its own branch reconciliation and acceptance later.
 ## DEFINITIONS AND SOURCE-OF-TRUTH
 - **Design authority:** approved Oct 24 V136 boards referenced in PR #714,
   and the V136.017 concept convergence notes.
-- **Active implementation:** #735 owns the latest baseline; #737 remains a divergent
-  sitewide contribution. The reviewed draft assembly is on
-  `integrate/unified-continuity-20261025-001`, with #736 Open Signal included
-  explicitly. No source branch, history, main or production merge occurred.
+- **Active implementation:** #735 at `20161bae20` owns the development baseline
+  after #738's reviewed UI integration. #745 is the next isolated Creator
+  Directory draft. #737 and #736 are retained historical source branches; their
+  selected changes were reconciled through #738, not independently deployed.
+  #741's sealed V136.024 candidate remains a separate controlled release lane.
+  No #745 main/production merge or provider traffic change was made.
 - **UI and category media:** `creator-v1/web/src/parity/sitewide-interface-v136.css`,
   `creator-v1/web/src/components/ProjectThumbnail.tsx`,
   `creator-v1/web/src/lib/project-thumbnails.ts`.
