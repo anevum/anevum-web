@@ -1,0 +1,52 @@
+name: ANEVUM Public Updates Hub Acceptance
+
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/public-updates/**'
+      - 'creator-v1/test/public-updates-hub.test.mjs'
+      - 'creator-v1/test/public-updates-browser.mjs'
+      - '.github/workflows/public-updates-launch-hub.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: public-updates-hub-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static-public-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Strict static Worker module and route/privacy tests
+        run: |
+          set -euo pipefail
+          node --check creator-v1/public-updates/worker.mjs
+          node --check creator-v1/test/public-updates-browser.mjs
+          node --test creator-v1/test/public-updates-hub.test.mjs
+      - name: Real Chrome responsiveness and reduced-motion screenshots
+        run: |
+          set -euo pipefail
+          chrome="$(command -v google-chrome || command -v chromium || true)"
+          test -n "$chrome"
+          CHROME_BIN="$chrome" node creator-v1/test/public-updates-browser.mjs evidence/public-updates-20261025
+          test -s evidence/public-updates-20261025/updates-1440.png
+          test -s evidence/public-updates-20261025/updates-390.png
+          test -s evidence/public-updates-20261025/updates-320.png
+          test -s evidence/public-updates-20261025/acceptance.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-updates-visual-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/public-updates-20261025
+          retention-days: 14
