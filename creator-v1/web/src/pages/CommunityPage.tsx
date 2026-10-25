@@ -8,6 +8,7 @@ import {
 import { useResource } from "../lib/useResource";
 import { projectDetailPath } from "../lib/navigation";
 import { CosmicArtwork } from "../components/CosmicArtwork";
+import {ProjectThumbnail} from "../components/ProjectThumbnail";
 import { Icon } from "../components/Icons";
 import { LoadingState, ErrorState } from "../components/States";
 import "./community-hub-v007.css";
@@ -59,7 +60,7 @@ function ProjectEntry({ item }: { item: Project }) {
   const field = fields.find(field => field.id === item.category);
   return <article className="ch7-entry ch7-project">
     <Link className="ch7-entry-art" to={destination} aria-label={"Explore " + item.title}>
-      <CosmicArtwork scene={item.category}/>
+      <ProjectThumbnail kind={item.category} title={item.title} decorative/>
       <span>{field?.label || "Project"} / APPROVED RELEASE</span>
     </Link>
     <div className="ch7-entry-copy">

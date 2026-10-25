@@ -2,6 +2,7 @@ import {Link} from "react-router-dom";
 import type {Creator, Project, Category} from "../lib/api";
 import {projectDetailPath} from "../lib/navigation";
 import {CosmicArtwork} from "./CosmicArtwork";
+import {ProjectThumbnail} from "./ProjectThumbnail";
 import type {CosmicScene} from "./CosmicIllustration";
 import {Icon} from "./Icons";
 import {ErrorState, LoadingState} from "./States";
@@ -9,10 +10,6 @@ import {ErrorState, LoadingState} from "./States";
 /** Public catalogue backed by approved projects and public creator records.
  * Navigation uses native category interface panels, never decorative covers.
  */
-const art:Record<Category,CosmicScene>={
-  games:"games",tools:"tools",automation:"automation",research:"research",
-  creative:"creative",learning:"learning",libraries:"libraries",other:"other"
-};
 const categories:readonly {label:string;category:Category|null}[]=[
   {label:"ALL",category:null},{label:"GAMES",category:"games"},
   {label:"ART & AI",category:"creative"},{label:"APPS & TOOLS",category:"tools"},
@@ -35,7 +32,7 @@ function Heading({title,description,to,id}:{title:string;description:string;to:s
 }
 function WorldTile({project}:{project:Project}){
   return <Link className="cinema-world-tile" to={projectDetailPath(project.id,"/")} aria-label={"Open published project " + project.title}>
-    <div className="cinema-world-tile-art"><CosmicArtwork scene={art[project.category]}/></div>
+    <div className="cinema-world-tile-art"><ProjectThumbnail kind={project.category} title={project.title} decorative/></div>
     <div className="cinema-world-tile-body">
       <span className="cinema-world-kind">{project.category.toUpperCase()} · CATEGORY INDEX</span>
       <strong>{project.title}</strong>
@@ -62,7 +59,7 @@ export function CinematicDiscoverySections({projects,creators,state}:Props){
     </section>
     <section className="cinema-trending" aria-labelledby="cinema-latest-worlds">
       <div className="cinema-section-heading"><div><h2 id="cinema-latest-worlds">LATEST CREATIONS</h2><p>Recent approved work — genuine ranking signals are not yet available.</p></div><Link to="/discover">VIEW ALL <Icon name="arrow" size={14}/></Link></div>
-      {state==="ready"&&(projects.length>5?<div className="cinema-latest-strip">{projects.slice(5,8).map(p=><Link key={p.id} to={projectDetailPath(p.id,"/")} className="cinema-latest-tile"><span className="cinema-latest-img"><CosmicArtwork scene={art[p.category]}/></span><span><strong>{p.title}</strong><small>@{p.creatorHandle}</small><small>PUBLIC CATEGORY</small></span></Link>)}</div>:<div className="cinema-latest-empty">Newly approved projects will appear here. No fabricated trends, views or likes.</div>)}
+      {state==="ready"&&(projects.length>5?<div className="cinema-latest-strip">{projects.slice(5,8).map(p=><Link key={p.id} to={projectDetailPath(p.id,"/")} className="cinema-latest-tile"><span className="cinema-latest-img"><ProjectThumbnail kind={p.category} title={p.title} decorative/></span><span><strong>{p.title}</strong><small>@{p.creatorHandle}</small><small>PUBLIC CATEGORY</small></span></Link>)}</div>:<div className="cinema-latest-empty">Newly approved projects will appear here. No fabricated trends, views or likes.</div>)}
       {state==="loading"&&<div className="cinema-latest-empty">Checking published releases…</div>}
       {state==="error"&&<div className="cinema-latest-empty">Latest public releases are temporarily unavailable.</div>}
     </section>

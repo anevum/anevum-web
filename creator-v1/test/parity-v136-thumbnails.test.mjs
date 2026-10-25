@@ -1,0 +1,64 @@
+/** PARITY V136.019 - type-specific fallback covers, real creator artwork first.
+ * Includes asset and source contracts for the privacy-preserving browser client.
+ */
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync,statSync} from 'node:fs';
+import {fileURLToPath} from 'node:url';
+import {defaultProjectThumbnailUrl,projectThumbnailPreset} from '../web/src/lib/project-thumbnails.ts';
+
+const svg=k=>readFileSync(new URL('../web/public/assets/default-thumbnails/'+k+'.svg',import.meta.url),'utf8');
+const component=readFileSync(new URL('../web/src/components/ProjectThumbnail.tsx',import.meta.url),'utf8');
+const valid=['games','tools','automation','research','creative','learning','libraries','other','simulation','story'];
+test('ten predefined scalable ANEVUM images cover legacy and package creation types',()=>{
+ const lookup={games:'games',game:'games',tools:'tools',app:'tools',automation:'automation',
+  research:'research',creative:'creative',learning:'learning',libraries:'libraries',other:'other',
+  simulation:'simulation',story:'story'};
+ for(const [kind,expected] of Object.entries(lookup)){
+  assert.equal(projectThumbnailPreset(kind).asset,expected);
+  assert.equal(defaultProjectThumbnailUrl(kind),'/assets/default-thumbnails/'+expected+'.svg');
+ }
+ assert.equal(defaultProjectThumbnailUrl('app','/creator/'),'/creator/assets/default-thumbnails/tools.svg');
+ for(const unsafe of [null,'../../private',{},'GAME','<script>']){
+  assert.equal(projectThumbnailPreset(unsafe).asset,'other');
+  assert.equal(defaultProjectThumbnailUrl(unsafe,'/creator/'),'/creator/assets/default-thumbnails/other.svg');
+ }
+ assert.equal(valid.length,10);
+});
+test('every local default is valid-looking first-party vector without external requests or faux user data',()=>{
+ for(const kind of valid){
+  const content=svg(kind),url=new URL('../web/public/assets/default-thumbnails/'+kind+'.svg',import.meta.url);
+  assert.ok(statSync(fileURLToPath(url)).size>=2500);
+  assert.match(content,/^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
+  assert.match(content,/width="1600" height="900"/);
+  assert.match(content,/<title id="title">ANEVUM default/);
+  assert.match(content,/ANEVUM DEFAULT PREVIEW/);
+  assert.match(content,/<\/svg>\s*$/);
+  assert.doesNotMatch(content,/(?:<script|<image\b|<foreignObject|onload\s*=|@import|https?:\/\/(?!www\.w3\.org\/2000\/svg)|&(?!(?:amp|lt|gt|quot|apos);))/i);
+ }
+});
+test('uploaded cover wins only through verified first-party canonical path and failures use type default',()=>{
+ assert.match(component,/safePackageCover\(uploadedUrl\)/);
+ assert.match(component,/uploaded\?verified!:fallback/);
+ assert.match(component,/onError=\{uploaded\?\(\)=>setFailedUrl\(verified\):undefined\}/);
+ assert.match(component,/data-thumbnail-source=\{uploaded\?'creator':'default'\}/);
+ assert.match(component,/alt=\{alt\}/);
+ assert.match(component,/referrerPolicy="same-origin"/);
+ assert.doesNotMatch(component,/dangerouslySetInnerHTML|fetch\(|localStorage|Math\.random|new URL\(/);
+});
+test('real public cards, saved works, community, and inspector use the same media contract',()=>{
+ const paths=['components/CreatorPackageGallery.tsx','components/ProjectCard.tsx',
+  'components/CommunityHomeFeed.tsx','pages/CommunityPage.tsx',
+  'parity/ParityPortalV136.tsx','components/ProjectPlayerShell.tsx',
+  'pages/CanonicalSavedWorksPage.tsx','components/CinematicDiscoverySections.tsx',
+  'components/CinematicCatalogueSections.tsx','parity/ArtifactLensV136.tsx'];
+ for(const path of paths){
+  const source=readFileSync(new URL('../web/src/'+path,import.meta.url),'utf8');
+  assert.match(source,/<ProjectThumbnail\b/,path);
+ }
+ const packageSource=readFileSync(new URL('../web/src/components/CreatorPackageGallery.tsx',import.meta.url),'utf8');
+ assert.match(packageSource,/uploadedUrl=\{work\.coverUrl\}/);
+ assert.doesNotMatch(packageSource,/<img\s+src=\{work\.coverUrl\}/);
+ const legacy=readFileSync(new URL('../web/src/lib/api.ts',import.meta.url),'utf8');
+ assert.doesNotMatch(legacy,/coverUrl\s*:/,'Legacy API does not yet expose an approved cover');
+});

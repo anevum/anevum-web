@@ -139,3 +139,12 @@ test("the in-viewport feature illustration loads eagerly with the hero rather th
   assert.match(s,/<CosmicArtwork scene="hero" priority\/>/);
   assert.match(s,/<CosmicArtwork scene="portal" priority\/>/);
 });
+
+test("V136.019 supplied thumbnails take priority over local vector defaults",()=>{
+  const thumbnail=read("web/src/components/ProjectThumbnail.tsx");
+  const mapping=read("web/src/lib/project-thumbnails.ts");
+  assert.match(thumbnail,/safePackageCover\(uploadedUrl\)/);
+  assert.match(thumbnail,/onError=\{uploaded\?/);
+  assert.match(mapping,/assets\/default-thumbnails\//);
+  assert.match(read("web/src/components/CreatorPackageGallery.tsx"),/uploadedUrl=\{work\.coverUrl\}/);
+});

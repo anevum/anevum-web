@@ -3,6 +3,7 @@ import {Link, useNavigate} from 'react-router-dom';
 import {Icon} from '../components/Icons';
 import {OrbitalMark} from '../components/OrbitalMark';
 import {CosmicArtwork} from '../components/CosmicArtwork';
+import {ProjectThumbnail} from '../components/ProjectThumbnail';
 import {useLivingWorld} from './LivingWorldState';
 import {CinematicArrivalV136} from './CinematicArrivalV136';
 import {ContinuanceInstrumentV136017} from './ContinuanceInstrumentV136017';
@@ -48,7 +49,7 @@ function PublicProjectCard({project}:{project:Project}){
   const meta=types[project.category];
   return <article className={'p136-project-card p136-tone-'+meta.tone}>
     <Link to={projectDetailPath(project.id,'/')} className="p136-project-media" aria-label={'View '+project.title}>
-      <CosmicArtwork scene={meta.scene} seed={project.id}/><span className="p136-project-art-note">CATEGORY INDEX / NOT CREATOR COVER</span><span className="p136-kind">{meta.label}</span>
+      <ProjectThumbnail kind={project.category} title={project.title} decorative/><span className="p136-project-art-note">CATEGORY INDEX / NOT CREATOR COVER</span><span className="p136-kind">{meta.label}</span>
     </Link>
     <div className="p136-project-body">
       <span className="p136-project-meta">{project.freeToUse?'FREE TO USE':'PROJECT DIRECTORY'} <span> / </span> APPROVED PUBLIC WORK</span>

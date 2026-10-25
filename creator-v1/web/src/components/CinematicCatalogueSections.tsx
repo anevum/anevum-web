@@ -1,5 +1,6 @@
 import {Link} from "react-router-dom";
 import {CosmicArtwork} from "./CosmicArtwork";
+import {ProjectThumbnail} from "./ProjectThumbnail";
 import type {CosmicScene} from "./CosmicIllustration";
 import {Icon} from "./Icons";
 import {projectDetailPath} from "../lib/navigation";
@@ -25,11 +26,6 @@ const browse:readonly CategoryShortcut[]=[
   {label:"MORE",category:"other",scene:"other",symbol:"⊕"}
 ];
 const categories:readonly CategoryShortcut[]=browse.filter(c=>c.category!==null);
-const images:Record<Project["category"],CosmicScene>={
-  games:"games",tools:"tools",automation:"automation",research:"research",
-  creative:"creative",learning:"learning",libraries:"libraries",other:"other"
-};
-
 function SectionHead({name,to,description}:{name:string;to:string;description:string}){
   return <div className="cinema-section-head">
     <div><h2>{name}</h2><p>{description}</p></div>
@@ -50,7 +46,7 @@ function ArtCard({entry}:{entry:CategoryShortcut}){
 
 function ProjectArtCard({project}:{project:Project}){
   return <Link className="cinema-world-card" to={projectDetailPath(project.id,"/")}>
-    <span className="cinema-world-art" aria-hidden="true"><CosmicArtwork scene={images[project.category]}/></span>
+    <span className="cinema-world-art" aria-hidden="true"><ProjectThumbnail kind={project.category} title={project.title} decorative/></span>
     <span className="cinema-world-shade"/>
     <span className="cinema-world-overline">PUBLISHED / {project.category.toUpperCase()} / INDEX RECORD</span>
     <span className="cinema-world-title">{project.title}</span>
@@ -82,7 +78,7 @@ export function CinematicCatalogueSections({projects,creators}:{projects:Project
       <SectionHead name="✦ NEW & NOTEWORTHY" to="/discover" description={recent.length?"Recently published projects — not algorithmic popularity rankings.":"The catalogue is preparing for its first approved releases."}/>
       {recent.length?
         <div className="cinema-recent-grid">{recent.map(project=><Link key={project.id} className="cinema-recent-item" to={projectDetailPath(project.id,"/")}>
-          <span className="cinema-recent-art" aria-hidden="true"><CosmicArtwork scene={images[project.category]}/></span>
+          <span className="cinema-recent-art" aria-hidden="true"><ProjectThumbnail kind={project.category} title={project.title} decorative/></span>
           <span className="cinema-recent-copy"><strong>{project.title}</strong><small>@{project.creatorHandle}</small><small>{project.category.toUpperCase()}</small></span>
         </Link>)}</div>:
         <div className="cinema-recent-empty"><span>YOUR NEXT FAVORITE CREATION COULD START HERE.</span><Link to="/start">START HERE <Icon name="arrow" size={14}/></Link></div>}

@@ -136,3 +136,25 @@ button:hover>.av136-index-field,button:focus-visible>.av136-index-field{
 @media(prefers-reduced-motion:reduce){
  .av136-index-field,.av136-index-field *{transition:none!important;animation:none!important}
 }
+
+/* V136.019 / One image contract across every public card: creator if approved, type fallback otherwise. */
+.av136-project-thumbnail{display:block;width:100%;height:100%;min-width:0;min-height:0;
+  object-fit:cover;object-position:center;background:#071321;image-rendering:auto}
+.project-art>.av136-project-thumbnail,
+.p136-project-media>.av136-project-thumbnail,
+.ch7-entry-art>.av136-project-thumbnail,
+.av6-feed-art>.av136-project-thumbnail,
+.avp-stage-art>.av136-project-thumbnail,
+.p136-artifact-lens-visual>.av136-project-thumbnail{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ch7-entry-art>.av136-project-thumbnail{z-index:0;filter:brightness(.8)}
+.ch7-entry-art>span:not(.cw-artwork){z-index:2}
+.p136-artifact-lens-visual>.av136-project-thumbnail{display:block}
+.cinema-world-art>.av136-project-thumbnail,
+.cinema-world-tile-art>.av136-project-thumbnail,
+.cinema-recent-art>.av136-project-thumbnail,
+.cinema-latest-img>.av136-project-thumbnail,
+.avsaved-art>.av136-project-thumbnail{display:block;width:100%;height:100%;object-fit:cover}
+.av010-work-cover>.av136-project-thumbnail{position:absolute;inset:0}
+.av136-project-thumbnail[data-thumbnail-source="creator"]{object-fit:cover}
+@media(prefers-reduced-motion:reduce){.av136-project-thumbnail{animation:none!important;transition:none!important}}

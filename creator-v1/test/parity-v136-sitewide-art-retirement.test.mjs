@@ -40,3 +40,11 @@ test('legacy visual kit does not mount deferred promotional images',()=>{
  assert.match(kit,/Promise<boolean>\{return false;/);
  assert.doesNotMatch(kit,/fetch\(|new Image\(|assets\/anevum-kit/);
 });
+
+test('uploaded package cover has priority; no-cover and failed images have type-specific default vectors',()=>{
+ const image=read('../web/src/components/ProjectThumbnail.tsx');
+ const gallery=read('../web/src/components/CreatorPackageGallery.tsx');
+ assert.match(image,/safePackageCover\(uploadedUrl\)/);
+ assert.match(image,/setFailedUrl\(verified\)/);
+ assert.match(gallery,/uploadedUrl=\{work\.coverUrl\}/);
+});
