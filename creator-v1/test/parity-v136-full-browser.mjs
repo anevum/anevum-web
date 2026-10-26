@@ -292,7 +292,7 @@ try{
 
     }
     else assert.equal(await page.locator('[data-source-editor="monaco"]').count(),0,'Phone uses accessible text editor without Monaco allocation');
-    assert.equal(await page.locator('.p136-living-world').getAttribute('data-enabled'),'false','Private source never enters public GPU');
+    assert.equal(await page.locator('.p136-living-world').count(),0,'Private source never enters public GPU');
     // V136.034: the concept's Preview/Build checks navigation must use the
     // actual mounted sandbox and static diagnostics, not claim Run/Deploy.
     const mountedEditorCount=await workbench.locator('[data-source-editor="monaco"]').count();
@@ -892,13 +892,13 @@ try{
       assert.equal(await lens.getByRole('heading',{name:fixture.title,exact:true}).count(),1);
       assert.equal(await lens.getByText(fixture.summary,{exact:true}).count(),1);
       assert.equal(await lens.getByText('CI fixture',{exact:true}).count(),1,'Real creator field is used');
-      await page.waitForFunction(()=>document.querySelector('.p136-living-world')?.dataset.geometry==='forge');
+      assert.equal(await page.locator('.p136-living-canvas').count(),0,'Artifact Lens does not acquire ambient GPU');
       assert.equal(page.url(),before,'Inspecting a public release never mutates the route');
       assert.equal(await lens.getByRole('link',{name:'Open project record'}).count(),1);
       await page.screenshot({path:join(out,'artifact-lens-project-390.png'),animations:'disabled'});
       await lens.getByRole('button',{name:'Return to results'}).click();
       await page.waitForFunction(()=>!document.querySelector('.p136-artifact-lens[open]'));
-      await page.waitForFunction(()=>document.querySelector('.p136-living-world')?.dataset.geometry==='archive');
+      assert.equal(await page.locator('.p136-living-canvas').count(),0,'Closing the lens keeps the DOM-only page');
       await inspect.click();
       await page.keyboard.press('Escape');
       await page.waitForFunction(()=>!document.querySelector('.p136-artifact-lens[open]'));
@@ -1074,19 +1074,19 @@ try{
   }
   const {page,context}=await contextFor(390,{motion:'no-preference',forceVector:true});
   await page.goto(base,{waitUntil:'networkidle'});
-  await page.locator('.p136-living-world[data-renderer="vector"]').waitFor();
-  await page.waitForFunction(()=>document.querySelector('.p136-living-world').dataset.motion==='true');
+  assert.equal(await page.locator('.p136-living-world').count(),0);
+  assert.equal(await page.locator('[data-cinematic-v136="motion-first"]').count(),1);
   await page.getByRole('button',{name:'Open site navigation',exact:true}).click();
   await page.locator('#av79-navigation[open]').waitFor();
   const preference=page.getByRole('button',{name:'Atmospheric animation',exact:true});
   await preference.click();
   assert.equal(await preference.getAttribute('aria-pressed'),'false','Menu preference disables motion');
-  await page.waitForFunction(()=>document.querySelector('.p136-living-world').dataset.motion==='false');
+  assert.equal(await page.locator('video').count(),0,'No unapproved motion enters ordinary full build');
   await preference.click();
   assert.equal(await preference.getAttribute('aria-pressed'),'true','Menu preference restores motion');
   await page.getByRole('button',{name:'Close navigation',exact:true}).click();
   await page.emulateMedia({reducedMotion:'reduce'});
-  await page.waitForFunction(()=>document.querySelector('.p136-living-world').dataset.motion==='false');
+  assert.equal(await page.locator('video').count(),0,'No unapproved motion enters ordinary full build');
   await page.getByRole('link',{name:'Explore projects',exact:true}).press('Tab');
   const focus=await page.evaluate(()=>({tag:document.activeElement.tagName,outline:getComputedStyle(document.activeElement).outlineStyle}));
   assert.equal(focus.tag,'A');assert.equal(focus.outline,'solid');
@@ -1100,7 +1100,7 @@ try{
   await page.waitForURL(base+'/discover?q=orbital%20%26%20worlds');
   await page.goto(base,{waitUntil:'networkidle'});
   await page.screenshot({path:join(out,'vector-fallback-390.png'),animations:'disabled'});
-  record('WebGL unavailable / procedural vector fallback / pause / reduced motion / keyboard / menu focus / search',focus);await context.close();
+  record('GPU-independent DOM fallback / pause / reduced motion / keyboard / menu focus / search',focus);await context.close();
 
   }
   assert.deepEqual(errors,[]);assert.deepEqual(forbidden,[]);

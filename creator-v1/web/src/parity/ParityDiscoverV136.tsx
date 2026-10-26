@@ -105,7 +105,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
       <div className="p136-discover-hero-copy">
         <p className="p136-discover-register"><span className="p136-discover-signal"/> THE CONTINUANCE INSTITUTE <span className="p136-register-break">/</span> OPEN DISCOVERY</p>
         <h1 id="p136-discover-title">{activeLabel?<>Discover <em>{activeLabel.toLowerCase()}.</em></>:<>Discover what <em>comes next.</em></>}</h1>
-        <p>Explore independent games, software, art and research. Every listed project comes from the approved public catalogue, not a fabricated showcase or paid ranking.</p>
+        <p>Games, tools, art and research from independent creators. Search the public catalogue and find something worth exploring.</p>
         <div className="p136-discover-hero-actions">
           <a className="p136-discover-action-primary" href="#p136-discover-search">Explore the index <Icon name="arrow" size={19}/></a>
           <Link className="p136-discover-action-quiet" to="/studio">Open Creator Studio <Icon name="create" size={17}/></Link>

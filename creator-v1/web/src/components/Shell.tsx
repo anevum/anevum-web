@@ -11,7 +11,7 @@ import { CompactMemberIdentity } from "./CompactMemberIdentity";
 import { useOwnPlayerCard } from "../lib/useOwnPlayerCard";
 import {IrenGuidedContinuance} from "./IrenGuidedContinuance";
 import {VerifiedStaffShortcut} from "./VerifiedStaffShortcut";
-import {LivingWorldProvider,useLivingWorld,type WorldSector} from "../parity/LivingWorldState";
+import {LivingWorldProvider,useLivingWorld} from "../parity/LivingWorldState";
 import {ConsoleWayfinderV136} from "../parity/ConsoleWayfinderV136";
 import {ControllerBridgeV136} from "../parity/ControllerBridgeV136";
 import {StudioSpatialWorkspaceV136} from "../parity/StudioSpatialWorkspaceV136";
@@ -52,15 +52,6 @@ const menuUtilities = [
 /** One world provider survives every public route transition. */
 export function Shell(){
   return FullParityHeader?<LivingWorldProvider><ShellContent/></LivingWorldProvider>:<ShellContent/>;
-}
-function worldSector(pathname:string,search:string):WorldSector{
-  if(pathname==="/community")return "community";
-  if(pathname==="/creators")return "creators";
-  if(pathname==="/studio")return "studio";
-  if(pathname!=="/discover")return "hero";
-  const category=new URLSearchParams(search).get("category");
-  const valid:WorldSector[]=["games","tools","automation","research","creative","learning","libraries","other"];
-  return category&&valid.some(item=>item===category)?category as WorldSector:"portal";
 }
 function ShellContent(){
   const {paused,setPaused}=useLivingWorld();

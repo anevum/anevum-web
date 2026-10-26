@@ -17,7 +17,8 @@ export function CinematicArrivalV136(){
  const [canPlay,setCanPlay]=useState(false);
  const [failed,setFailed]=useState(false);
  const [posterFailed,setPosterFailed]=useState(false);
- const onFault=useCallback(()=>setFailed(true),[]);
+ const [faultReason,setFaultReason]=useState('');
+ const onFault=useCallback((reason?:string)=>{setFailed(true);setFaultReason(reason||'video-unavailable')},[]);
  useEffect(()=>{
   const node=stage.current;if(!node)return;
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
@@ -36,7 +37,7 @@ export function CinematicArrivalV136(){
    connection?.removeEventListener?.('change',sync);document.removeEventListener('visibilitychange',sync)};
  },[paused,failed]);
  return <div ref={stage} className="p136-cinematic-arrival" aria-hidden="true"
-  data-cinematic-v136="motion-first" data-mode={canPlay?'video':'poster'} data-art-status={ownerReview?'owner-review-pending':'native-fallback'}>
+  data-cinematic-v136="motion-first" data-mode={canPlay?'video':'poster'} data-media-fault={faultReason||undefined} data-art-status={ownerReview?'owner-review-pending':'native-fallback'}>
   {ownerReview&&!posterFailed&&<picture className="p136-cinematic-art">
    <source media="(max-width:720px)" srcSet={asset(candidate.poster.mobile.path)}/>
    <source media="(max-width:1100px)" srcSet={asset(candidate.poster.tablet.path)}/>

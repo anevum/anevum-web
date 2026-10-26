@@ -10,7 +10,7 @@ const {chromium}=createRequire(import.meta.url)('playwright');
 const build=resolve('creator-v1/dist/react-staging');
 const output=resolve(process.env.MOTION_QA_OUTPUT||'evidence/owner-v136/responsive');
 mkdirSync(output,{recursive:true});
-const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.webp':'image/webp','.woff2':'font/woff2','.mp4':'video/mp4','.json':'application/json'};
+const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.webp':'image/webp','.woff2':'font/woff2','.mp4':'video/mp4','.webm':'video/webm','.json':'application/json'};
 const errors=[],forbidden=[],checks=[];
 const ASSETS={async fetch(request){
  const url=new URL(request.url);let file=resolve(build,'.'+url.pathname);
@@ -43,7 +43,7 @@ async function context(width,{motion='reduce',saveData=false,brokenMedia=false,a
   const req=route.request(),url=new URL(req.url());
   if(url.origin!==origin||!['GET','HEAD'].includes(req.method())){forbidden.push({url:req.url(),method:req.method()});return route.abort();}
   const path=url.pathname.replace(/^\/creator/,'');
-  if(brokenMedia&&/\/review-001\/.*\.(webp|mp4)$/.test(path))return route.fulfill({status:404,body:'Intentional media failure fixture'});
+  if(brokenMedia&&/\/review-001\/.*\.(webp|mp4|webm)$/.test(path))return route.fulfill({status:404,body:'Intentional media failure fixture'});
   if(path.startsWith('/api/')){
    if(path.startsWith('/api/v1/member/'))return route.fulfill({status:403,contentType:'application/json',body:'{"error":"visual-review-no-accounts"}'});
    const page={items:[],count:0,nextCursor:null};
@@ -77,6 +77,7 @@ try{
     await page.getByRole('link',{name:'Explore projects',exact:true}).click();
     assert.match(page.url(),/\/discover/);await page.goBack({waitUntil:'networkidle'});
    }
+   await page.evaluate(()=>scrollTo(0,0));
    await page.screenshot({path:join(output,`${name}-${width}.png`),fullPage:false});
    checks.push({name,width,...g});
   }
@@ -86,8 +87,13 @@ try{
  {
   const {ctx,page}=await context(1440,{motion:'no-preference'});
   await page.goto(origin+'/creator/',{waitUntil:'networkidle'});
-  await page.waitForFunction(()=>{const v=document.querySelector('video');return v&&!v.paused&&v.readyState>=2;});
+  try{await page.waitForFunction(()=>{const v=document.querySelector('video');return v&&!v.paused&&v.readyState>=2;});}
+  catch(error){checks.push({name:'video-failure-diagnostic',detail:await page.evaluate(()=>({surface:document.querySelector('[data-cinematic-v136]')?.dataset,media:[...document.querySelectorAll('video')].map(v=>({source:v.currentSrc,ready:v.readyState,paused:v.paused,error:v.error?.message}))}))});throw error;}
   assert.equal(await page.locator('video').count(),1);
+  await page.evaluate(()=>scrollTo(0,document.body.scrollHeight));
+  await page.waitForFunction(()=>!document.querySelector('video'));
+  await page.evaluate(()=>scrollTo(0,0));
+  await page.waitForFunction(()=>{const v=document.querySelector('video');return v&&!v.paused&&v.readyState>=2;});
   await page.getByRole('button',{name:'Open site navigation',exact:true}).click();
   await page.getByRole('button',{name:'Atmospheric animation',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('video'));

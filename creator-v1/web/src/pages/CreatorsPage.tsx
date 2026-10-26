@@ -54,7 +54,7 @@ export function CreatorsPage(){
       <div className="p136-creators-hero-copy">
         <span className="p136-creators-register">THE CONTINUANCE INSTITUTE / PUBLIC PEOPLE</span>
         <h1 id="p136-creators-hero-title">Meet the people <em>building what comes next.</em></h1>
-        <p>Explore approved original releases and the public creator channels behind them. No imaginary people, followers, portraits or activity.</p>
+        <p>Find independent makers through their public channels and published work.</p>
         <nav className="p136-creators-hero-actions" aria-label="Explore creator spaces">
           <a href="#p136-creators-index">Find creators <Icon name="search" size={16}/></a>
           <Link to="/community?view=people">Community spaces <Icon name="people" size={16}/></Link>

@@ -175,3 +175,28 @@ html[data-av-parity="v136-full"] .p136-console-station.is-active{background:#d6e
 html[data-av-parity="v136-full"] .p136-console-icon{color:var(--av-blue);filter:none;text-shadow:none}
 html[data-av-parity="v136-full"] .p136-console-selection{box-shadow:none;background:var(--av-blue)}
 html[data-av-parity="v136-full"] .p136-console-utilities>*{background:#d6e7f008;border-color:var(--av-border);box-shadow:none}
+
+/* Catalogues are efficient work surfaces, not a repeated full-screen arrival. */
+html[data-av-parity="v136-full"] .p136-discover-hero{min-height:360px;padding:46px clamp(25px,3.3vw,58px);background:radial-gradient(ellipse at 85% 10%,#9fd1e80c,transparent 55%),var(--av-canvas);border-color:var(--av-border)}
+html[data-av-parity="v136-full"] .p136-discover-hero-grid{display:none}
+html[data-av-parity="v136-full"] .p136-discover-hero h1{font-family:var(--av-editorial);font-size:clamp(40px,4.4vw,70px);font-weight:400;letter-spacing:-.04em;line-height:1.1}
+html[data-av-parity="v136-full"] .p136-discover-hero h1 em{font-style:italic;background:none;color:var(--av-blue);-webkit-text-fill-color:currentColor}
+html[data-av-parity="v136-full"] .p136-discover-hero-copy>p:not(.p136-discover-register){font-size:14px;line-height:1.75;max-width:620px;color:var(--av-secondary)}
+html[data-av-parity="v136-full"] :is(.p136-discover-readout,.p136-creators-register-panel){background:var(--av-glass);border-color:var(--av-border);box-shadow:var(--av-shadow);border-radius:var(--av-radius)}
+html[data-av-parity="v136-full"] :is(.p136-discover-action-primary,.p136-creators-hero-actions a:first-child){background:var(--av-text);color:var(--av-void);box-shadow:none;border-color:var(--av-text)}
+html[data-av-parity="v136-full"] .p136-creators-hero{background:var(--av-canvas);border-color:var(--av-border);min-height:340px}
+html[data-av-parity="v136-full"] .p136-creators-hero h1{font-family:var(--av-editorial);font-weight:400;letter-spacing:-.04em}
+html[data-av-parity="v136-full"] .p136-creators-hero h1 em{font-style:italic;background:none;color:var(--av-blue);-webkit-text-fill-color:currentColor}
+html[data-av-parity="v136-full"] :is(.p136-discovery-index,.p136-discovery-body,.p136-discover-hero-actions>a,.p136-discover-search,.p136-discover-toolbar){border-color:var(--av-border)}
+@media(max-width:820px){
+ html[data-av-parity="v136-full"] .p136-discover-hero{padding:34px 25px;min-height:0}
+ html[data-av-parity="v136-full"] .p136-discover-hero h1{font-size:clamp(38px,7vw,52px)}
+ html[data-av-parity="v136-full"] .p136-discover-readout{display:none}
+}
+@media(max-width:350px){html[data-av-parity="v136-full"] .p136-hero-content{padding-top:180px}}
+
+@media(max-width:820px){
+ html[data-av-parity="v136-full"] .p136-cinematic-art img,
+ html[data-av-parity="v136-full"] .p136-cinematic-video{height:500px;object-position:50% 38%}
+ html[data-av-parity="v136-full"] .p136-cinematic-vignette{background:linear-gradient(180deg,#080b1210 0,#080b1220 150px,#080b12db 360px,#080b12 560px)}
+}

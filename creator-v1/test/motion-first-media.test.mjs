@@ -26,7 +26,7 @@ test('media ledger matches real bounded assets and responsive derivatives',()=>{
   assert.equal(statSync(path).size,a.bytes);
   assert.equal(createHash('sha256').update(readFileSync(path)).digest('hex'),a.sha256);
  }
- assert.ok(candidate.poster.mobile.bytes<70_000);
+ assert.ok(candidate.poster.mobile.bytes<130_000);
  assert.ok(candidate.video.assets.mp4.bytes<2_000_000);
  assert.ok(candidate.video.assets.mp4Mobile.bytes<700_000);
 });

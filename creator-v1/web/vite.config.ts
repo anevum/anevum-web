@@ -11,6 +11,14 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     {
       name:"isolate-owner-review-media",
+      configureServer(server){
+        server.middlewares.use((req,res,next)=>{
+          if(mode==='staging-path'&&req.url==='/creator'){
+            res.writeHead(307,{location:'/creator/'});res.end();return;
+          }
+          next();
+        });
+      },
       closeBundle(){
         if(mode==='staging-path'&&process.env.VITE_ANEVUM_OWNER_REVIEW==='true')return;
         // Public-directory copying must not distribute unaccepted review art.

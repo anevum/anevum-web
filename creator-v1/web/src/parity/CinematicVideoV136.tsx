@@ -5,7 +5,7 @@ import type {CinematicVideoSet,CinematicReviewVideo} from './CinematicMediaContr
  * Native video may load only after a build flag AND manifest approval AND same-origin media-src permission.
  */
 export function CinematicVideoV136({video,canPlay,onFault}:{
- video:CinematicVideoSet|CinematicReviewVideo;canPlay:boolean;onFault:()=>void
+ video:CinematicVideoSet|CinematicReviewVideo;canPlay:boolean;onFault:(reason?:string)=>void
 }){
  const element=useRef<HTMLVideoElement|null>(null);
  useEffect(()=>{
@@ -16,14 +16,24 @@ export function CinematicVideoV136({video,canPlay,onFault}:{
   const observer=new IntersectionObserver(entries=>{
     if(cancelled)return;
     if(entries[0]?.isIntersecting&&document.visibilityState==='visible'){
-      void node.play().catch(()=>{node.pause();onFault()});
+      void node.play().catch(error=>{
+        // Unmount, tab hiding or an offscreen pause can abort an in-flight play.
+        // That expected cancellation must not permanently poison the fallback.
+        if(cancelled||(error instanceof Error&&error.name==='AbortError'))return;
+        node.pause();onFault(error instanceof Error?error.name:'playback-denied');
+      });
     }else node.pause();
   },{threshold:.05});
   observer.observe(node);
   const visibility=()=>{
     if(document.visibilityState==='hidden')node.pause();
     else if(node.getBoundingClientRect().bottom>0&&node.getBoundingClientRect().top<window.innerHeight){
-      void node.play().catch(()=>{node.pause();onFault()});
+      void node.play().catch(error=>{
+        // Unmount, tab hiding or an offscreen pause can abort an in-flight play.
+        // That expected cancellation must not permanently poison the fallback.
+        if(cancelled||(error instanceof Error&&error.name==='AbortError'))return;
+        node.pause();onFault(error instanceof Error?error.name:'playback-denied');
+      });
     }
   };
   document.addEventListener('visibilitychange',visibility);
@@ -32,7 +42,12 @@ export function CinematicVideoV136({video,canPlay,onFault}:{
  const source=(path:string)=>import.meta.env.BASE_URL+path;
  return <video ref={element} className="p136-cinematic-video" aria-hidden="true"
   muted playsInline loop preload="none" autoPlay={false} tabIndex={-1}
-  onError={onFault} disablePictureInPicture disableRemotePlayback>
+  onError={event=>{
+    // Source errors bubble in React while the browser tries the next codec.
+    // Only a terminal HTMLMediaElement error invalidates the whole player.
+    const error=event.currentTarget.error;if(error)onFault('media-error-'+error.code);
+  }} disablePictureInPicture disableRemotePlayback>
+   {video.assets.webmMobile&&<source media="(max-width:720px)" type="video/webm" src={source(video.assets.webmMobile.path)}/>}
    {video.assets.mp4Mobile&&<source media="(max-width:720px)" type="video/mp4" src={source(video.assets.mp4Mobile.path)}/>}
    {video.assets.webm&&<source type="video/webm" src={source(video.assets.webm.path)}/>}
    {video.assets.mp4&&<source type="video/mp4" src={source(video.assets.mp4.path)}/>}

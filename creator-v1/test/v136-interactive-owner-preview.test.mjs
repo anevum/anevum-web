@@ -41,6 +41,9 @@ test('zero-production immutable preview identity and GET/HEAD boundaries',async(
  const redirected=await preview.fetch(make('/'),environment);
  assert.equal(redirected.status,307);
  assert.equal(redirected.headers.get('location'),origin+'/creator/');
+ const homeReload=await preview.fetch(make('/creator'),environment);
+ assert.equal(homeReload.status,307);
+ assert.equal(homeReload.headers.get('location'),origin+'/creator/');
  assert.equal((await preview.fetch(make('/creator/','POST'),environment)).status,405);
  assert.equal((await preview.fetch(make('/creator/','OPTIONS'),environment)).status,405);
  const health=await preview.fetch(make('/__review/health'),environment);

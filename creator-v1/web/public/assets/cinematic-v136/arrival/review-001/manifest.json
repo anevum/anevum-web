@@ -26,11 +26,11 @@
       "sha256": "83125bf906129bc6ca787cc10eeea5bbc332747f51882a580c2f6b90befa0e16"
     },
     "mobile": {
-      "path": "assets/cinematic-v136/arrival/review-001/continuance-640.webp",
-      "width": 640,
-      "height": 360,
-      "bytes": 37312,
-      "sha256": "fc3cbfb7eb79e4dfbf88e921d2a0ed0de493c88cccbd5f4b1bad38a5978a68b3"
+      "path": "assets/cinematic-v136/arrival/review-001/continuance-mobile.webp",
+      "width": 720,
+      "height": 960,
+      "bytes": 89588,
+      "sha256": "8b0a967c49f1834758731ff02994a5243dcee3eb804a3267de47b9ae8670358e"
     }
   },
   "video": {
@@ -49,9 +49,23 @@
       "mp4Mobile": {
         "path": "assets/cinematic-v136/arrival/review-001/continuance-720.mp4",
         "width": 720,
-        "height": 406,
-        "bytes": 421775,
-        "sha256": "5045ab244c3342725d503110c96b7710030ddf415854d763c6cabe9cd07dfa74"
+        "height": 960,
+        "bytes": 632822,
+        "sha256": "41e6d534958ab760ed52218155da81d48674da2bfad260b1db0286c688298b2b"
+      },
+      "webm": {
+        "path": "assets/cinematic-v136/arrival/review-001/continuance-1440.webm",
+        "width": 1440,
+        "height": 810,
+        "bytes": 582676,
+        "sha256": "924cbf04212aa61d8b33efd108d915c98812eacdd5d722b7d461d5b53c098c01"
+      },
+      "webmMobile": {
+        "path": "assets/cinematic-v136/arrival/review-001/continuance-720.webm",
+        "width": 720,
+        "height": 960,
+        "bytes": 331689,
+        "sha256": "bf606e29a29e71afbbdad433bb5b61963ef62247720ccb4c86c35947e796bd03"
       }
     }
   }

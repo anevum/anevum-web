@@ -11,7 +11,7 @@ export type CinematicSequence={
 };
 export type CinematicVideoSet={
   approved:true;
-  assets:{mp4?:CinematicAsset;webm?:CinematicAsset;mp4Mobile?:CinematicAsset};
+  assets:{mp4?:CinematicAsset;webm?:CinematicAsset;mp4Mobile?:CinematicAsset;webmMobile?:CinematicAsset};
   requiresMediaSrcSelf:true;
 };
 export type CinematicModeInput={enabled:boolean;reducedMotion:boolean;saveData:boolean;paused:boolean;forcedColors:boolean;visible:boolean};
@@ -55,11 +55,12 @@ export function approvedCinematicSequence(value:unknown):CinematicSequence|null{
 export function approvedCinematicVideo(value:unknown):CinematicVideoSet|null {
  if(!isRecord(value)||value.approved!==true||value.requiresMediaSrcSelf!==true||
  !isRecord(value.assets))return null;
- const {mp4,webm,mp4Mobile}=value.assets;
+ const {mp4,webm,mp4Mobile,webmMobile}=value.assets;
  if(!mp4&&!webm)return null;
  if(mp4&&!asset(mp4,'mp4',12_000_000))return null;
  if(webm&&!asset(webm,'webm',12_000_000))return null;
  if(mp4Mobile&&!asset(mp4Mobile,'mp4',3_800_000))return null;
+ if(webmMobile&&!asset(webmMobile,'webm',3_800_000))return null;
  return value as unknown as CinematicVideoSet;
 }
 export function frameAt(sequence:CinematicSequence,tier:'desktop'|'mobile',progress:number):CinematicAsset{

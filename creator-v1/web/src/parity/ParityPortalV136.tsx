@@ -79,7 +79,7 @@ export function ParityPortalV136({projects,catalogueState,signedIn,verifiedCount
       <div className="p136-hero-content">
         <p className="p136-hero-register"><span className="p136017-register-emblem" aria-hidden="true">✧</span> THE CONTINUANCE INSTITUTE <span> / </span> FIRST CONTACT</p>
         <h1 id="p136-hero-title"><span>A creative universe.</span><em>Without limits.</em></h1>
-        <p className="p136-hero-intro"><strong>Build. Share. Play. Learn. Belong.</strong> Browse approved independent games, useful apps, art and experiments. Meet their makers, explore public conversations and join when ready. Publishing requires separate access and review.</p>
+        <p className="p136-hero-intro"><strong>Build. Share. Play. Learn. Belong.</strong> Explore independent games, useful apps, art and experiments. Meet the makers and conversations behind the work.</p>
         <div className="p136-hero-actions" data-arrival-commands="primary">
           <Link to="/discover" className="p136-button p136-button--primary">Explore projects <Icon name="arrow" size={20}/></Link>
           <Link to={signedIn?'/member':'/join'} className="p136-button p136-button--signal">{signedIn?'My member space':'Join the community'} <Icon name="arrow" size={18}/></Link>
