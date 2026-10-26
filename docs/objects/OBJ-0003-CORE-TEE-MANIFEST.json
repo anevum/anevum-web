@@ -1,0 +1,50 @@
+{
+  "session": "ANEVUM.ANEVUM.BUILD.2026-10-25.001.CORE-TEE-FOURTHWALL-PRODUCTION-PREP",
+  "product_id": "OBJ-0003",
+  "title": "ANEVUM CORE TEE",
+  "review_state": "DESIGN_PROOF",
+  "public": false,
+  "production_ordered": false,
+  "product_created": false,
+  "parent_issue": 765,
+  "fourthwall": {
+    "shop_status": "COMING_SOON",
+    "payout_status": "INACTIVE",
+    "provider": "Fourthwall",
+    "product_id": "pro_225EgiqLR46twTj-hVwwRg",
+    "catalog_slug": "as-colour-premium-oversized-faded-t-shirt-dtg",
+    "color": "Faded Black",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL",
+      "2XL",
+      "3XL"
+    ],
+    "front_region": "front_large",
+    "front_placement": "leftChest",
+    "back_region": "back_large",
+    "media_upload_verified": false,
+    "backend_preview_verified": false
+  },
+  "artwork": {
+    "front": {
+      "file": "obj-0003-front-300dpi.png",
+      "width": 2100,
+      "height": 1700,
+      "sha256": "2d33b74d9e4b9162ffb64457df6ca76ded488b81fd4f067d212a15f762becf7e"
+    },
+    "back": {
+      "file": "obj-0003-back-300dpi.png",
+      "width": 4500,
+      "height": 5400,
+      "sha256": "c6af64be83b7a388a892031f376236eaaa9f51b8aef26f5a83166f17393c7755"
+    }
+  },
+  "commercial_gate": "requires founder decision about Fourthwall Stripe Connect payout vs non-Stripe alternate",
+  "dates": {
+    "private_purchase_by": "2026-12-11",
+    "public_announcement": "2027-01-01"
+  }
+}
