@@ -7,13 +7,14 @@ import type {IrenLivingRig,IrenMood} from "../lib/iren-living-rig-v088";
  * This renderer never shares assets or permissions with earned collectibles.
  */
 export function IrenLivingCanvas({
- mood,expanded,paused,look=[0,0],fallback
+ mood,expanded,paused,look=[0,0],fallback,vectorFirst=false
 }:{
  mood:IrenMood;
  expanded:boolean;
  paused:boolean;
  look?:readonly [number,number];
  fallback:ReactNode;
+ vectorFirst?:boolean;
 }){
  const canvas=useRef<HTMLCanvasElement>(null);
  const rig=useRef<IrenLivingRig|null>(null);
@@ -23,7 +24,7 @@ export function IrenLivingCanvas({
  initial.current={mood,expanded,paused,look};
  useEffect(()=>{
   const el=canvas.current;
-  if(!el)return;
+  if(vectorFirst||!el)return;
   let dead=false;
   const fail=()=>{rig.current?.dispose();rig.current=null;if(!dead){setReady(false);setFailed(true)}};
   const lost=(event:Event)=>{event.preventDefault();fail()};
@@ -66,13 +67,13 @@ export function IrenLivingCanvas({
    media.removeEventListener("change",motion);
    rig.current?.dispose();rig.current=null;
   };
- },[]);
+ },[vectorFirst]);
  useEffect(()=>{rig.current?.setMood(mood)},[mood]);
  useEffect(()=>{rig.current?.setExpanded(expanded)},[expanded]);
  useEffect(()=>{rig.current?.setLook(look[0],look[1])},[look[0],look[1]]);
  useEffect(()=>{rig.current?.setReducedMotion(paused||window.matchMedia("(prefers-reduced-motion: reduce)").matches)},[paused]);
- return <span className={"ir88-figure"+(ready?" is-rendering":"")+(failed?" has-fallback":"")} aria-hidden="true">
+ return <span className={"ir88-figure"+(vectorFirst?" ir137-vector-pet ir137-mood-"+mood:"")+(ready?" is-rendering":"")+(failed?" has-fallback":"")} aria-hidden="true">
   <span className="ir88-svg-fallback">{fallback}</span>
-  {!failed&&<canvas ref={canvas} className="ir88-3d-canvas" aria-hidden="true" tabIndex={-1}/>}
+  {!vectorFirst&&!failed&&<canvas ref={canvas} className="ir88-3d-canvas" aria-hidden="true" tabIndex={-1}/>}
  </span>;
 }
