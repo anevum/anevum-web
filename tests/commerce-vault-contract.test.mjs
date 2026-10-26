@@ -2,11 +2,26 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { COMMERCE_PRODUCTS,validatedProduct,checkoutEnabled,quotaBytes,safeFilename,safeVaultMediaType,allowedUploadBytes,verifySquareWebhook,providerPaymentMatches } from "../src/server/commerce-contract.mjs";
 
-test("No unapproved price or catalog product can create a charge",()=>{
+test("Owner-approved catalog is exact, one-time and disabled without configured prices",()=>{
   assert.throws(()=>validatedProduct("vault-10g-month",{}));
-  assert.throws(()=>validatedProduct("vault-1tb",{ "vault-1tb":999 }));
-  assert.equal(validatedProduct("vault-10g-month",{"vault-10g-month":500}).cents,500);
+  assert.throws(()=>validatedProduct("vault-1tb",{"vault-1tb":999}));
+  assert.throws(()=>validatedProduct("vault-10g-month",{"vault-10g-month":300}));
+  assert.throws(()=>validatedProduct("vault-10g-month",{"vault-10g-month":800}));
+  assert.throws(()=>validatedProduct("signal-support",{"signal-support":500}));
+  assert.throws(()=>validatedProduct("vault-100g-month",{"vault-100g-month":1500}));
+  const prices={
+    "signal-support-5":500,"signal-support-10":1000,"signal-support-25":2500,
+    "vault-10g-month":400,"vault-50g-month":900
+  };
+  for(const [code,cents] of Object.entries(prices)){
+    const approved=validatedProduct(code,prices);
+    assert.equal(approved.cents,cents);
+    assert.equal(approved.currency,"USD");
+    assert.equal(approved.recurring,false);
+  }
   assert.equal(COMMERCE_PRODUCTS["vault-10g-month"].bytes,10*1024**3);
+  assert.equal(COMMERCE_PRODUCTS["vault-50g-month"].durationDays,30);
+  assert.equal(Object.keys(COMMERCE_PRODUCTS).length,5);
 });
 test("Square checkout stays off until explicit sandbox configuration",()=>{
   assert.equal(checkoutEnabled({}),false);
