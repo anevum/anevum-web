@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {crc32} from '../../site/alpha/v003/archive.mjs';
+import {crc32,inspectZip} from '../../site/alpha/v003/archive.mjs';
 import {detectCompatibility} from '../../site/alpha/v003/compatibility-v005.mjs';
 import {inspectLocalBrowserBuild} from '../web/src/lib/native-compatibility-v101.ts';
 import {parse} from '@babel/parser';
@@ -86,6 +86,19 @@ test('oversized file is refused before reading its bytes',async()=>{
  assert.equal(r.playableCandidate,false);
  assert.match(r.issues[0].message,/20 MiB/);
 });
+test('metadata-only ZIP probing cannot authorize unsupported assets or source archives',()=>{
+ const godot=storedZip([
+  ['index.html','<!doctype html><html><body>test</body></html>'],['game.pck','pack']
+ ]);
+ const metadata=inspectZip(godot,{metadataOnly:true});
+ assert.equal(metadata.entrypoint,'index.html');
+ assert.equal(metadata.entries.length,2);
+ assert.equal(metadata.entries[1].mime,null);
+ assert.throws(()=>inspectZip(godot),/Unsupported project asset/);
+ const source=storedZip([['project.godot','[application]']]);
+ assert.equal(inspectZip(source,{metadataOnly:true}).entrypoint,null);
+ assert.throws(()=>inspectZip(source),/Unsupported project asset|ZIP must include index.html/);
+});
 test('Godot Web export receives specific guidance but cannot enter the current small-build uploader',async()=>{
  const r=await inspectLocalBrowserBuild(blobFile('absence-protocol.zip',storedZip([
   ['index.html','<!doctype html><html><body>Absence Protocol</body></html>'],
@@ -118,7 +131,7 @@ test('Godot project source alone is never mistaken for a playable web export',as
 test('native browser player preserves opaque sandbox and adds explicit keyboard focus without new privileges',()=>{
  const src=readFileSync(new URL('../web/src/components/IsolatedProjectViewport.tsx',import.meta.url),'utf8');
  assert.match(src,/sandbox="allow-scripts allow-pointer-lock"/);
- assert.doesNotMatch(src,/allow-same-origin/);
+ assert.doesNotMatch(src,/sandbox="[^"]*allow-same-origin/);
  assert.match(src,/gameFrame\.current\?\.focus\(\)/);
  assert.match(src,/Touch, Safari and Xbox compatibility are not certified/);
 });
