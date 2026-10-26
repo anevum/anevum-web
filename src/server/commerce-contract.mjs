@@ -1,7 +1,13 @@
-// ANEVUM Commerce V001 — Square is a replaceable *processor*, not our ledger.
-// Fail closed until explicit commerce activation and configured catalog prices.
-// Owner approved October 26, 2026. Catalog approval is not payment activation.
-// The 100 GiB proposal is deferred until real usage, reserve and abuse review.
+// ANEVUM-owned commerce policy. No real-money rail has been approved.
+// Founder direction 2026-10-26: build and integrate ANEVUM's own system first;
+// accept ZERO payments until an independently verified, explicitly approved release.
+// This is a pure draft contract: no checkout, external SDK, card or bank collection.
+export const PAYMENT_ACCEPTANCE = Object.freeze({
+  enabled: false,
+  rail: null,
+  reason: "ANEVUM payment acceptance is not available until the entire system and lawful settlement rail are approved."
+});
+
 export const COMMERCE_PRODUCTS = Object.freeze({
   "signal-support-5": Object.freeze({ kind: "supporter", cents: 500, recurring: false }),
   "signal-support-10": Object.freeze({ kind: "supporter", cents: 1000, recurring: false }),
@@ -10,30 +16,50 @@ export const COMMERCE_PRODUCTS = Object.freeze({
   "vault-50g-month": Object.freeze({ kind: "vault", cents: 900, bytes: 50 * 1024 ** 3, durationDays: 30, recurring: false })
 });
 
-// Even with an approved catalog, refuse checkout unless the server's configured
-// price matches exactly. Callers cannot submit arbitrary amounts or upgrade IDs.
-export function validatedProduct(code, priceConfig) {
+// Business approval of proposed prices is not customer billing approval.
+// The 100 GiB option is deferred; no arbitrary amounts or identifiers.
+export function validatedProduct(code, approvedPrices) {
+  if (typeof code !== "string" || !Object.hasOwn(COMMERCE_PRODUCTS, code)) {
+    throw new Error("Unknown catalog item");
+  }
   const product = COMMERCE_PRODUCTS[code];
-  if (!product) throw new Error("Unknown catalog item");
-  if (priceConfig?.[code] !== product.cents) {
+  if (approvedPrices?.[code] !== product.cents) {
     throw new Error("Product price not configured or mismatched");
   }
   return { code, ...product, currency: "USD" };
 }
 
-export function checkoutEnabled(env) {
-  return env?.ANEVUM_COMMERCE_ENABLED === "true" &&
-    env?.ANEVUM_SQUARE_MODE === "sandbox" &&
-    typeof env?.SQUARE_ACCESS_TOKEN === "string" &&
-    env.SQUARE_ACCESS_TOKEN.length > 10 &&
-    typeof env?.SQUARE_WEBHOOK_SIGNATURE_KEY === "string" &&
-    env.SQUARE_WEBHOOK_SIGNATURE_KEY.length > 10 &&
-    typeof env?.SQUARE_WEBHOOK_URL === "string";
+// Intentional hard gate, independent of deployment flags or old provider secrets.
+// Remove only in a distinct, reviewed implementation after legal/payment-rail,
+// real-world settlement, fraud, refund and reconciliation acceptance.
+export function checkoutEnabled(_env) {
+  return false;
+}
+
+// An arbitrary client statement, webhook body, bank screenshot, synthetic event,
+// or database flag never proves cleared funds. No paid entitlements can be granted.
+export function canFulfillPaidOrder(_order, _paymentEvidence) {
+  return false;
+}
+
+export function unpaidCatalogQuote(code, approvedPrices) {
+  const product = validatedProduct(code, approvedPrices);
+  return { ...product, checkoutAvailable: false, paid: false };
 }
 
 export function quotaBytes(included, passes, now = Date.now()) {
-  const active = passes.filter(x => x.starts_at_ms <= now && x.ends_at_ms > now && x.revoked_at_ms == null);
-  return Number(included) + active.reduce((sum, x) => sum + Number(x.added_bytes), 0);
+  if (!Number.isSafeInteger(included) || included < 0 || !Number.isFinite(now)) {
+    throw new Error("Invalid quota inputs");
+  }
+  if (!Array.isArray(passes)) throw new Error("Invalid capacity passes");
+  return passes.reduce((total, x) => {
+    if (!x || !Number.isSafeInteger(x.added_bytes) || x.added_bytes < 0) {
+      throw new Error("Invalid capacity pass");
+    }
+    return x.starts_at_ms <= now && x.ends_at_ms > now && x.revoked_at_ms == null
+      ? total + x.added_bytes
+      : total;
+  }, included);
 }
 
 export function safeFilename(name) {
@@ -55,31 +81,4 @@ export function allowedUploadBytes(value, max = 50 * 1024 * 1024) {
   const n = Number(value);
   if (!Number.isSafeInteger(n) || n <= 0 || n > max) throw new Error("Invalid upload length");
   return n;
-}
-
-export async function verifySquareWebhook(raw, signature, signatureKey, url) {
-  if (!raw || !signature || !signatureKey || !url) return false;
-  const bytes = new TextEncoder();
-  const key = await crypto.subtle.importKey("raw", bytes.encode(signatureKey),
-    { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  const actual = new Uint8Array(await crypto.subtle.sign("HMAC", key, bytes.encode(url + raw)));
-  let expected;
-  try { expected = Uint8Array.from(atob(signature), x => x.charCodeAt(0)); }
-  catch { return false; }
-  if (actual.length !== expected.length) return false;
-  let diff = 0;
-  for (let i=0;i<actual.length;i++) diff |= actual[i] ^ expected[i];
-  return diff === 0;
-}
-
-export function providerPaymentMatches(order, payment) {
-  // Only a completed, exact-amount, exact-currency payment can fulfill entitlements.
-  return order?.provider === "square" &&
-    order?.status === "pending" &&
-    typeof order?.provider_order_id === "string" && order.provider_order_id.length > 0 &&
-    typeof payment?.order_id === "string" && payment.order_id.length > 0 &&
-    payment?.status === "COMPLETED" &&
-    payment.order_id === order.provider_order_id &&
-    Number(payment?.amount_money?.amount) === Number(order.amount_cents) &&
-    payment?.amount_money?.currency === order.currency;
 }
