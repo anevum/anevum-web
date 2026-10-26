@@ -373,6 +373,14 @@ try{
     // the newly-created Markdown note is deliberately blank, not an IDE demo.
     await workbench.getByRole('tab',{name:'index.html',exact:true}).click();
     await workbench.scrollIntoViewIfNeeded();
+    const chrome=await workbench.evaluate(node=>({
+      header:getComputedStyle(node.querySelector('.p136-workbench-head')).backgroundImage,
+      primary:getComputedStyle(node.querySelector('.p136-workbench-command>button')).backgroundImage,
+      text:getComputedStyle(node.querySelector('.p136-workbench-command>button')).color
+    }));
+    assert.ok(chrome.header.includes('35, 26, 41'),'Studio header must render the shared Continuance material');
+    assert.ok(chrome.primary.includes('242, 228, 211'),'Studio archive action must retain its light primary surface');
+    assert.equal(chrome.text,'rgb(21, 14, 23)','Studio primary text must contrast against its actual surface');
     // Private source editing does not need to compete for GPU resources with
     // prior public WebGL stress tests. Retain genuine browser screenshot QA.
     await page.screenshot({path:join(out,'artifact-workbench-'+width+'.png'),
@@ -1041,9 +1049,18 @@ try{
       focus:window.__avControllerTrace.focus,
       connected:window.__avGamepadFixture.connected
     }));
+    const labelGeometry=await stations.evaluateAll(nodes=>nodes.map(node=>{
+      const label=node.querySelector('.p136-console-title strong');
+      if(!label||!label.getClientRects().length)return {visible:false};
+      const range=document.createRange();range.selectNodeContents(label);
+      const text=range.getBoundingClientRect(),box=node.getBoundingClientRect(),rail=node.closest('nav').getBoundingClientRect();
+      return {visible:true,label:label.textContent,textRight:text.right,textLeft:text.left,left:box.left,right:box.right,railRight:rail.right};
+    }));
+    assert.ok(labelGeometry.every(g=>!g.visible||(g.textLeft>=g.left&&g.textRight<=Math.min(g.right,g.railRight)-2)),
+      'Controller labels must fit in their actual rail: '+JSON.stringify(labelGeometry));
     writeFileSync(join(out,'controller-route-'+width+'.json'),JSON.stringify({
       contract:'v136.038-controller-route-loopback',source:process.env.ANEVUM_SOURCE_SHA||null,
-      width,syntheticOnly:true,hardwareVerified:false,focused,navigationError,...observed
+      width,syntheticOnly:true,hardwareVerified:false,focused,navigationError,labelGeometry,...observed
     },null,2)+'\n');
     assert.equal(navigationError,null,'Gamepad navigation failed at '+width+': '+JSON.stringify(observed));
     assert.equal(observed.route,'/discover','Held A must end on exact focused route at '+width+': '+JSON.stringify(observed));

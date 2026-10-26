@@ -415,6 +415,30 @@ html[data-av-parity="v136-full"] .site-main :is(a,button,input,textarea,select,[
   html[data-av-parity="v136-full"] .field-guide-page .portal-page-heading-copy h1{font-size:clamp(28px,7vw,38px)!important;line-height:1.06!important}
  }
 }
+
+/* Studio chrome shares the public material system; source syntax and the
+   isolated project preview keep their own content and colors. */
+html[data-av-parity="v136-full"] .p136-workbench{background:var(--av-panel);border-color:var(--av-border);color:var(--av-text);box-shadow:var(--av-shadow)}
+html[data-av-parity="v136-full"] .p136-workbench :is(.p136-workbench-head,.p136-workbench-command,.p136-source-explorer,.p136-source-inspector,.p136-source-quick-open,.p136037-preview){background:var(--av-panel);border-color:var(--av-border)}
+html[data-av-parity="v136-full"] .p136-workbench :is(.p136017-source-functionbar,.p136017-source-ledge,.p136-source-tabs,.p136-source-status,.p136-source-state,.p136-source-notice,.p136037-preview-header,.p136030-preview-readout){background:var(--av-instrument);border-color:var(--av-border);color:var(--av-secondary)}
+html[data-av-parity="v136-full"] .p136-workbench :is(button,.p136-source-import){background:var(--av-instrument);border-color:var(--av-border);color:var(--av-text)}
+html[data-av-parity="v136-full"] .p136-workbench .p136-workbench-command>button:first-child{background:linear-gradient(125deg,#f2e4d3,#d5b9a0);border-color:var(--av-copper);color:#150e17}
+html[data-av-parity="v136-full"] .p136-workbench :is(.p136-source-tabs button[aria-selected="true"],.p136-source-explorer nav button[aria-pressed="true"]){background:#3b2b41;border-color:var(--av-edge);box-shadow:inset 0 2px var(--av-copper);color:var(--av-text)}
+html[data-av-parity="v136-full"] .p136-workbench :is(.p136-workbench-head>div>span,.p136-source-state,.p136-source-explorer>strong,.p136-source-inspector>strong){color:var(--av-copper)}
+html[data-av-parity="v136-full"] .p136-workbench :is(.p136-source-inspector p,.p136-source-inspector li,.p136-source-inspector dt,.p136-source-privacy){color:var(--av-secondary)}
+html[data-av-parity="v136-full"] .p136-workbench :is(.p136-source-add input,.p136-source-quick-open input){background:var(--av-canvas);border-color:var(--av-border);color:var(--av-text)}
+
+/* Actual controller input previously enlarged type inside the 72px desktop
+   rail. Give it a matching gutter instead of clipping labels or shrinking TV type. */
+@media(min-width:1280px) and (min-height:650px){
+ html[data-av-parity="v136-full"][data-av-input="gamepad"] .p136-console-wayfinder{width:184px;max-width:184px;bottom:auto;min-height:0;padding:10px;gap:8px;top:calc(96px + var(--av-review-offset,0px));border-color:var(--av-edge)}
+ html[data-av-parity="v136-full"][data-av-input="gamepad"] .p136-console-station{flex-direction:row;justify-content:flex-start;padding:10px 8px;gap:10px;min-height:62px}
+ html[data-av-parity="v136-full"][data-av-input="gamepad"] .p136-console-utilities{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;width:100%}
+ html[data-av-parity="v136-full"][data-av-input="gamepad"] :is(.p136-console-command,.p136-console-ir,.p136-console-member){min-width:0;min-height:48px;padding:5px}
+ html[data-av-parity="v136-full"][data-av-input="gamepad"] .av9-shell:not(:has([data-artifact-workbench="v136.011"]))>.site-main{padding-inline-start:210px}
+ html[data-av-parity="v136-full"][data-av-input="gamepad"] .site-footer{padding-inline-start:230px}
+ html[data-av-parity="v136-full"][data-av-input="gamepad"] .p136-controller-indicator{top:calc(96px + var(--av-review-offset,0px))}
+}
 @media(forced-colors:active){
  html[data-av-parity="v136-full"] .av9-shell :is(.ch7-hero,.ch7-status,.ch7-main,.ch7-panel,.ch7-values,.cnb-hero,.cnb-board-deck,.cnb-tabs button,.portal-page-heading,.guide-ribbon,.guide-nav,.guide-training,.st-status,.ir80-help){background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none}
 }
