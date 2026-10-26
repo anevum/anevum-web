@@ -47,6 +47,7 @@ async function context(width,{motion='reduce',saveData=false,brokenMedia=false,a
   if(brokenMedia&&/\/review-001\/.*\.(webp|mp4|webm)$/.test(path))return route.fulfill({status:404,body:'Intentional media failure fixture'});
   if(path.startsWith('/api/')){
    if(path.startsWith('/api/v1/member/'))return route.fulfill({status:403,contentType:'application/json',body:'{"error":"visual-review-no-accounts"}'});
+   if(/^\/api\/v1\/(projects|creators)\/baseline-unavailable$/.test(path))return route.fulfill({status:404,contentType:'application/json',body:'{"error":"not-found"}'});
    const page={items:[],count:0,nextCursor:null};
    const value=path==='/api/v1/status'?{version:'loopback-empty-fixture',phase:'testing',features:{communityPosts:false},counts:{publishedProjects:0,publishedCreators:0}}:
     path==='/api/v1/categories'?{categories:[]}:
@@ -62,7 +63,14 @@ async function geometry(page){
  const g=await page.evaluate(()=>{
   const style=getComputedStyle(document.documentElement);
   const token=name=>style.getPropertyValue(name).trim().toLowerCase();
+  const rect=selector=>{const r=document.querySelector(selector)?.getBoundingClientRect();return r?{top:r.top,bottom:r.bottom,width:r.width}:null};
+  const surfaces={};
+  for(const selector of ['.p136-community .ch7-hero','.p136-boards .cnb-hero','.p136-creators-search','.st-status','.field-guide-page .portal-page-heading']){
+   const node=document.querySelector(selector);if(!node)continue;
+   const s=getComputedStyle(node);surfaces[selector]={background:s.backgroundImage,color:s.backgroundColor};
+  }
   return {width:innerWidth,scroll:document.documentElement.scrollWidth,
+   header:rect('.p136-header'),rail:rect('.p136-console-wayfinder'),surfaces,
    canvas:document.querySelectorAll('.p136-living-canvas').length,
    logo:document.querySelectorAll('[data-anevum-mark="orbital-underground"]').length,
    palette:{void:token('--av-void'),text:token('--av-text'),
@@ -72,12 +80,16 @@ async function geometry(page){
  assert.deepEqual(g.palette,{void:'#07060b',text:'#efe6da',
   copper:'#d2a57f',violet:'#b49bce',ice:'#a8cbd2'},
   'V136 public pages must use the same computed Continuance theme');
+ if(g.width>=1280&&g.header&&g.rail)assert.ok(g.rail.top>=g.header.bottom+8,'Desktop Wayfinder must clear the review banner and header: '+JSON.stringify(g));
+ for(const [selector,surface] of Object.entries(g.surfaces)){
+  assert.ok(surface.background.includes('35, 26, 41')||surface.color==='rgb(16, 13, 22)',selector+' must render the Continuance material, not only inherit unused root tokens: '+JSON.stringify(surface));
+ }
  return g;
 }
 try{
  for(const width of [320,390,768,1440,1920]){
   const {ctx,page}=await context(width);
-  for(const [name,path] of [['arrival','/'],['discover','/discover'],['creators','/creators'],['commons','/community'],['studio-guest','/studio'],['guide','/guide'],['boards','/boards']]){
+  for(const [name,path] of [['arrival','/'],['discover','/discover'],['creators','/creators'],['commons','/community'],['studio-guest','/studio'],['guide','/guide'],['boards','/boards'],['start','/start'],['status','/status'],['join','/join'],['member-guest','/member'],['project-unavailable','/projects/baseline-unavailable'],['creator-unavailable','/creators/baseline-unavailable']]){
    await page.goto(origin+'/creator'+path,{waitUntil:'networkidle'});
    await page.locator('main').waitFor();
    assert.ok(await page.locator('main').innerText());

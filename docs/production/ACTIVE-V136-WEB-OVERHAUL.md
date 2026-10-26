@@ -1,3 +1,10 @@
+# Current baseline release
+Session: `ANEVUM.WEB.PACKAGE.2026-10-26.001.UNIFIED-BASELINE-RELEASE`.
+
+Canonical source remains PR #763 / `build/parity-v136-controller-route-probe-20261025-038`; #779 is merged history. The exact deployment, browser inspection, visual corrections, Godot boundaries and review-only rollback procedure are recorded in [the existing reconstruction record](UNIFIED-CINEMATIC-RECONSTRUCTION.md#unified-baseline-release--october-26-2026). Current running source is established by `/__review/health` and the owner-preview deployment artifact, not older historical paragraphs below. One existing design authority and one ASSETS-only review Worker remain. Production, artistic approval #335, release #333 and publishing #329 remain separately gated.
+
+---
+
 # CURRENT — unified cinematic reconstruction
 Session: `ANEVUM.WEB.OVERHAUL.2026-10-25.001.UNIFIED-CINEMATIC-RECONSTRUCTION`.
 

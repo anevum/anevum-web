@@ -3,7 +3,7 @@
 Session: `ANEVUM.WEB.OVERHAUL.2026-10-25.001.UNIFIED-CINEMATIC-RECONSTRUCTION`
 Date: October 25, 2026, America/New_York.
 
-This is the current implementation continuation within **existing PR #779**, not another candidate site. Design authority remains [the motion-first North Star](ANEVUM.WEB.NORTHSTAR.2026-10-25.002.MOTION-FIRST-SINGLE-STREAM.md). Machine-readable page, deployment, branch and ownership evidence remains [the existing surface registry](anevum-site-surface-registry.v1.json).
+This is the current implementation continuation within **existing PR #763** (`build/parity-v136-controller-route-probe-20261025-038`). PR #779 is merged historical provenance (`eed2c3b1`), not an editing or deployment lane. Design authority remains [the motion-first North Star](ANEVUM.WEB.NORTHSTAR.2026-10-25.002.MOTION-FIRST-SINGLE-STREAM.md). Machine-readable page, deployment, branch and ownership evidence remains [the existing surface registry](anevum-site-surface-registry.v1.json).
 
 ## Verified system state
 
@@ -53,7 +53,7 @@ New presentation work uses the shared authority above, not more numbered CSS ove
 
 ## Continue without restarting
 
-Fetch the existing #779 branch. Read ACTIVE, this record, the North Star and surface registry, then inspect latest #779 CI and `/__review/health`. Verify current remote heads and preview version before editing. Reuse this branch for the integrated motion-first milestone; #763 is its product ancestor, #778 its incorporated audit, and #735 a historical development root. Keep the same owner preview, not new Workers. Record each bounded UI change and its acceptance in #325/#335. Never merge the full cumulative stack to main or promote the preview artifact through the public release packager.
+Fetch the current PR #763 branch. Read ACTIVE, this record, the North Star and surface registry, then inspect exact-head CI and `/__review/health`. Reuse the same ASSETS-only Worker. #779 and #778 are merged provenance; #735 is a historical development root. Never reimport those branches or promote this review through the sealed public release packager. #335 artistic acceptance, #333 production release and #329 creator publishing remain separate gates.
 
 Responsive screenshots use compiled Chromium at CSS viewports, with explicitly labelled loopback empty/error fixtures. They do not certify Safari, a physical iPhone, Xbox, or production content. The read-only hosted preview intentionally cannot demonstrate authenticated Monaco data, sign-in, uploads, checkout or publishing; use the distinct functional acceptance environment for those.
 
@@ -153,3 +153,22 @@ This maintenance pass aligns the old navy browser/PWA color with the Continuance
 ## G3 post-merge preview continuity / canonical source repair
 
 The owner-preview workflow previously gated solely on the now-closed #779 branch. It is retargeted to the exact head/base/number of existing draft PR #763, preserving the original ASSETS-only Wrangler config, no-privilege Worker, verified production gateway unchanged check, source pin and rollback. The live site and private applications remain untouched. Canonical registry now lists #763 as sole current product/preview authority and records #779 as merged provenance, not a second current lane. Source and preview tests enforce these invariants. The new head must complete exact-SHA owner-preview CI before claiming a new deployment.
+
+
+## Unified baseline release — October 26, 2026
+
+Session: `ANEVUM.WEB.PACKAGE.2026-10-26.001.UNIFIED-BASELINE-RELEASE`.
+
+Recovered current source `8d04c8bf2d22f1b75bf3b3e0b838ba37f60ae5d7`, beyond the handoff's `fd321279`. It includes the already completed #763 preview retargeting and historical V131 browser-chrome assertion repair. The actual health endpoint and Cloudflare agree: deployment `e654d95c-1247-48bc-8e46-8d2ab8a50b31`, version `5ba1bf9c-8348-4a6a-9eda-f1c14fe7f82e`, 100% isolated review traffic, ASSETS only. Owner-preview run `40319536740` preserved source-pinned acceptance artifact `12648074362`: 35 route/viewport combinations, native playback/pause, Save-Data, failed media, API failure and missing-randomUUID Commons; no overflow, runtime errors or forbidden requests. Actual screenshots were inspected, not merely generated.
+
+That inspection exposed page-local navy/cyan rules outranking the shared theme on Commons, Boards, creators and guest Studio. This continuation reconciles those selectors in the existing `continuance-design-system.css`, including retained Field Guide materials, IREN panel chrome and the Wayfinder. It repairs the 320px Field Guide word split and the desktop Wayfinder hidden under the review banner/header. Auth, data, project state, official logo and Monaco are unchanged. Browser QA now checks computed component materials and actual header/rail geometry, in addition to root tokens, and covers 13 public/guest/error routes at 320/390/768/1440/1920. **The continuation's new exact-head result must be read from its CI receipt; the prior SHA's pass is not carried forward.**
+
+The existing preview workflow now refuses stale branch heads immediately before deployment and saves provider deployment and health receipts beside its pre-deployment rollback snapshot. CI still verifies unchanged zone routes and the production gateway before/after. The isolated preview is unable to authenticate, write, upload, publish or transact.
+
+Media audit: FFmpeg is available; Blender is not installed in this execution environment. The authored Blender script currently keyframes camera location/rotation only. Its preview/master frames and the separate portfolio camera study are not independently animated environmental footage. No new imagery, fabricated gameplay or final-cinema claim was introduced. Keep the truthful 12-second still-crop candidate until actual environmental animation has source/rights/hash/codec/budget and artistic acceptance evidence.
+
+Godot draft #780 remains `cdfe4aa4789cc96885ce33aa61c5ad87cbdc033d`, stacked on V005 #569/V004 #562. The V136 local metadata preflight and keyboard-focus player action are already integrated and their tests pass locally. Frozen server archive validator, sandbox, 20 MiB ZIP / 12 MiB file / 48 MiB expanded limits and publication authority are preserved. No full Godot stack merge, large-build delivery or downloadable native launcher is claimed.
+
+Rollback: use the **review Worker only**. Before each deployment, the workflow saves `preview-rollback-before.json`; restore its recorded version(s)/percentages to `anevum-v136-visual-review-001` using Cloudflare Worker Deployments, then confirm the restored health SHA, ASSETS-only settings and unchanged zone routes/apex allocation. Preserve known earlier version `d941046a-fb5e-4e35-936e-de4534ab1a53` (source `87899c77`) and the provider receipt above. Never apply a preview rollback to production. Production gateway remains deployment `77ceaf3d-5bfb-4f07-b64d-1655a3093065`, baseline `ec5f106b-482c-4415-9c66-d6f8daf219ad` 99% / prior canary `cedb7ac1-74ca-4fcd-9a40-ce56964f1785` 1%.
+
+Technical development readiness is separate from artistic approval and production readiness. Physical iPhone/Safari, Xbox hardware, authenticated live member acceptance, editorial route ownership and publishing remain named gates. The read-only preview and fixture-based Studio/identity tests cannot certify those systems. Keep #763 active until exact-source development checks and its integration relationship permit a merge; do not clear the intentional production denial to make that decision.

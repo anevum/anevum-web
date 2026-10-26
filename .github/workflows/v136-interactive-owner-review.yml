@@ -166,6 +166,11 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: 2f7ee83107240152097efd956a4e8335
         run: |
           set -euo pipefail
+          current_head="$(git ls-remote --exit-code origin refs/heads/build/parity-v136-controller-route-probe-20261025-038 | cut -f1)"
+          test "$current_head" = "$REVIEWED_SOURCE_SHA" || {
+            echo '::error::Development head moved; refuse to replace the preview with stale source'
+            exit 1
+          }
           npx wrangler deploy --config creator-v1/wrangler.v136-interactive-review.jsonc --define "__ANEVUM_REVIEW_SOURCE_SHA__:\"$REVIEWED_SOURCE_SHA\""
 
       - name: Verify actual public link, interface routes, no privileged bindings or prod changes
@@ -183,6 +188,13 @@ jobs:
             ([.result.bindings[]|select(.name=="ASSETS" and .type=="assets")]|length)==1 and
             ([.result.bindings[]|select(.name!="ASSETS")]|length)==0' \
             "$RUNNER_TEMP/anevum-review/worker-after.json" >/dev/null
+          curl --fail --silent --show-error --max-time 25 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$api/accounts/$CF_ACCOUNT_ID/workers/scripts/$WORKER_NAME/deployments" \
+            > evidence/owner-v136/preview-deployment-after.json
+          jq -e '.success==true and (.result.deployments[0].versions|length)==1 and
+            .result.deployments[0].versions[0].percentage==100' \
+            evidence/owner-v136/preview-deployment-after.json >/dev/null
           curl --fail --silent --show-error --max-time 25 \
             -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
             "$api/zones/$CF_ZONE_ID/workers/routes" > "$RUNNER_TEMP/anevum-review/routes-after.json"
@@ -215,8 +227,10 @@ jobs:
           done
           code="$(curl --silent --show-error --max-time 20 -X POST -o /dev/null -w '%{http_code}' "$REVIEW_URL/creator/api/v1/projects")"
           test "$code" = 405
-          curl --fail --silent --show-error --max-time 20 "$REVIEW_URL/__review/health" |
-            jq -e '.sourceSha == env.REVIEWED_SOURCE_SHA and .accounts == false and .publishing == false'
+          curl --fail --silent --show-error --max-time 20 "$REVIEW_URL/__review/health" \
+            > evidence/owner-v136/deployed-health.json
+          jq -e '.sourceSha == env.REVIEWED_SOURCE_SHA and .accounts == false and .publishing == false' \
+            evidence/owner-v136/deployed-health.json
           {
             echo "## Interactive ANEVUM V136 owner preview"
             echo ""
