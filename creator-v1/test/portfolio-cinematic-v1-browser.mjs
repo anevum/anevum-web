@@ -203,6 +203,15 @@ async function run(width,height,motion='no-preference') {
   assert.equal(await dossier.getAttribute('data-dossier-project'),'transcosmic');
   assert.equal(await dossier.getAttribute('data-dossier-kind'),'art');
   assert.match(await page.locator('[data-dossier-proof]').innerText(),/NOT GAMEPLAY/);
+  const titleFlow = await page.locator('[data-dossier-name]').evaluate(el => {
+    const range = document.createRange(); range.selectNodeContents(el);
+    const ink = [...range.getClientRects()].filter(rect => rect.width > 0 && rect.height > 0);
+    const bounds = el.closest('.dossier-story').getBoundingClientRect();
+    return {lines:ink.length, left:Math.min(...ink.map(x => x.left)),right:Math.max(...ink.map(x => x.right)),containerRight:bounds.right};
+  });
+  assert.equal(titleFlow.lines,1,'Transcosmic project title must never split between letters at '+width+': '+JSON.stringify(titleFlow));
+  assert.ok(titleFlow.left >= -1 && titleFlow.right <= titleFlow.containerRight + 1,
+    'Transcosmic project title must fit inside the editorial story column at '+width+': '+JSON.stringify(titleFlow));
   await page.locator('.dossier-body').screenshot({path:join(output,'portfolio-project-dossier-'+width+'.png'),animations:'disabled'});
   // Screenshot capture can move native focus; explicitly place focus on the
   // active selector before testing its keyboard Home shortcut.
