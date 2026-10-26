@@ -6,6 +6,7 @@ import { PortalLauncher } from "./PortalLauncher";
 import {VisualKitAtmosphere,publicVisualRoom} from "./VisualKit";
 import {ContinuanceWorldStage} from "./ContinuanceWorldStage";
 import { isEditableTarget } from "../lib/portal-destinations";
+import {HEADER_NAV} from "../lib/site-navigation";
 import { canonicalAuthClient } from "../lib/canonical-beta";
 import { CompactMemberIdentity } from "./CompactMemberIdentity";
 import { useOwnPlayerCard } from "../lib/useOwnPlayerCard";
@@ -22,12 +23,7 @@ const FullParityHeader=import.meta.env.VITE_PARITY_V136_FULL==="true" ? lazy(()=
  * This component is presentation only. Private routes remain MemberGate-owned;
  * no signup capability or session is inferred from an account shortcut.
  */
-const desktopNav = [
-  {to:"/",label:"Home"},
-  {to:"/discover",label:"Discover"},
-  {to:"/community",label:"Community"},
-  {to:"/creators",label:"Creators"}
-] as const;
+const desktopNav = HEADER_NAV.filter(item=>!item.parityOnly);
 const menuDestinations = [
   {to:"/discover?category=games",label:"Play",detail:"Games and interactive worlds",icon:"star"},
   {to:"/discover",label:"Discover",detail:"Projects worth finding",icon:"explore"},

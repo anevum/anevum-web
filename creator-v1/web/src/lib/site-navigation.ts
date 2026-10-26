@@ -11,6 +11,19 @@ export type SiteLink = {
   readonly detail:string;
 };
 
+/** The sole canonical navigation ordering for both website headers.
+ * The legacy desktop header is intentionally smaller; the V136 header
+ * includes Studio, while both retain the same canonical route strings.
+ */
+export type HeaderDestination=Readonly<{to:string;label:string;parityOnly:boolean}>;
+export const HEADER_NAV:readonly HeaderDestination[]=[
+  {to:"/",label:"Home",parityOnly:false},
+  {to:"/discover",label:"Discover",parityOnly:false},
+  {to:"/community",label:"Community",parityOnly:false},
+  {to:"/creators",label:"Creators",parityOnly:false},
+  {to:"/studio",label:"Studio",parityOnly:true}
+];
+
 export const PRIMARY_NAV:readonly SiteLink[]=[
   {key:"home",label:"Home",to:"/",icon:"home",detail:"Community dashboard"},
   {key:"discover",label:"Discover",to:"/discover",icon:"explore",detail:"Creations and creator channels"},
@@ -28,7 +41,7 @@ export const DISCOVERY_NAV:readonly SiteLink[]=[
 export const MEMBER_NAV:readonly SiteLink[]=[
   {key:"studio",label:"Creator Studio",to:"/studio",icon:"create",detail:"Private projects and moderated submissions"},
   {key:"library",label:"Saved Library",to:"/library",icon:"library",detail:"Your saved, approved creations"},
-  {key:"profile",label:"Profile Settings",to:"/member",icon:"people",detail:"Your verified member profile, handle and visibility"}
+  {key:"profile",label:"Profile Settings",to:"/member?tab=profile",icon:"people",detail:"Your verified member profile, handle and visibility"}
 ];
 
 export const SUPPORT_NAV:readonly SiteLink[]=[
@@ -40,7 +53,7 @@ export const SUPPORT_NAV:readonly SiteLink[]=[
 // privacy-reviewed and deployed. Their proposed contract lives in build docs.
 export function isSiteLinkSelected(pathname:string,to:string):boolean{
   if(to==="/")return pathname==="/";
-  if(to==="/member")return pathname==="/member"||pathname==="/member/setup";
+  if(to==="/member"||to==="/member?tab=profile")return pathname==="/member"||pathname==="/member/setup";
   if(to==="/studio")return pathname==="/studio"||pathname.startsWith("/studio/")||pathname==="/account/studio"||pathname==="/create"||pathname.startsWith("/create/");
   if(to==="/discover")return pathname==="/discover";
   return pathname===to;

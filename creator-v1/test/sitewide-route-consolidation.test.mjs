@@ -85,3 +85,24 @@ test("creator entry points and profile-completion links open their real destinat
   assert.ok(dashboard.includes("'profile'"));
   assert.ok(dashboard.includes("const [params,setParams]=useSearchParams()"));
 });
+
+test("both headers share the same canonical destinations; member profile opens its real editor tab",()=>{
+ const nav=read("creator-v1/web/src/lib/site-navigation.ts");
+ const shell=read("creator-v1/web/src/components/Shell.tsx");
+ const header=read("creator-v1/web/src/parity/ParityHeaderV136.tsx");
+ const list=nav.split("export const HEADER_NAV:readonly HeaderDestination[]=[")[1]
+   ?.split("];")[0]||"";
+ const entries=[...list.matchAll(/\{to:"([^"]+)",label:"([^"]+)",parityOnly:(true|false)\}/g)]
+   .map(match=>({to:match[1],label:match[2],parityOnly:match[3]==="true"}));
+ assert.deepEqual(entries,[
+  {to:"/",label:"Home",parityOnly:false},
+  {to:"/discover",label:"Discover",parityOnly:false},
+  {to:"/community",label:"Community",parityOnly:false},
+  {to:"/creators",label:"Creators",parityOnly:false},
+  {to:"/studio",label:"Studio",parityOnly:true}
+ ]);
+ assert.match(shell,/const desktopNav = HEADER_NAV\.filter\(item=>!item\.parityOnly\)/);
+ assert.match(header,/HEADER_NAV\.map\(\(\{to,label\}\)=>/);
+ assert.match(nav,/key:"profile",label:"Profile Settings",to:"\/member\?tab=profile"/);
+ assert.match(nav,/to==="\/member\?tab=profile"/);
+});
