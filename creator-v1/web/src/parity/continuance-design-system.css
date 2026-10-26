@@ -712,3 +712,21 @@ html[data-av-parity="v136-full"] .av095-native .st-panel button[type="submit"]{
  background:linear-gradient(145deg,#d7e6eb,#acced9);
  color:#09141c;border-color:#e2f3f8;
 }
+
+/* V137 color cascade: important declarations in the legacy layer outrank
+   normal unlayered text. Override at the same layer and greater specificity.
+   Actual focus, accessible contrast and native form logic remain untouched. */
+@layer legacy{
+ html[data-av-parity="v136-full"] .av095-native .st-panel button.st-action[type="submit"],
+ html[data-av-parity="v136-full"] .av095-native .st-panel button.st-button[type="submit"],
+ html[data-av-parity="v136-full"] .p136-community .ch7-button.ch7-button-primary{
+  color:#09141c!important;
+ }
+ @media(forced-colors:active){
+  html[data-av-parity="v136-full"] .av095-native .st-panel button.st-action[type="submit"],
+  html[data-av-parity="v136-full"] .av095-native .st-panel button.st-button[type="submit"],
+  html[data-av-parity="v136-full"] .p136-community .ch7-button.ch7-button-primary{
+   color:ButtonText!important;
+  }
+ }
+}
