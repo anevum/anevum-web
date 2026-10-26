@@ -2,6 +2,7 @@
 // No live Cloudflare, auth, cookies, media uploads, external services or D1.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import hub from '../public-updates/worker.mjs';
 
 const run = (path='/updates',method='GET',host='anevum.com')=>
@@ -68,4 +69,20 @@ test('public links are genuine first-party links; unfinished studio is labeled',
   assert.match(html,/opening is a target/i);
   assert.equal((html.match(/<details class="progress-item">/g)||[]).length,4);
   assert.equal((html.match(/<a class="tile(?:\s|")/g)||[]).length,4);
+});
+
+test('top-left brand uses exact owner-approved Orbital Underground master, never atom glyph',async()=>{
+  const expected=readFileSync(new URL('../brand/anevum-mark.svg',import.meta.url),'utf8').trim();
+  const html=await (await run()).text();
+  const header=html.match(/<header class="top">([\s\S]*?)<\/header>/)?.[1];
+  assert.ok(header,'Expected public header markup');
+  assert.ok(header.includes('<span class="glyph" aria-hidden="true">'+expected+'</span>'),
+    'The live header must reproduce the exact source-controlled Orbital Underground master');
+  assert.match(expected,/ellipse cx="256" cy="256" rx="188" ry="76"/);
+  assert.match(expected,/M256 56 274 211 326 256 274 301 256 456/);
+  assert.match(expected,/circle cx="391" cy="132" r="20"/);
+  assert.doesNotMatch(header,/<i><\/i>|p136-living-mark|class="central"/);
+  assert.doesNotMatch(html,/\.glyph:before|\.glyph:after|\.glyph i\{/);
+  assert.equal((header.match(/anevum-orbital-title/g)||[]).length,2,
+    'Title and accessible label from the same official vector only');
 });
