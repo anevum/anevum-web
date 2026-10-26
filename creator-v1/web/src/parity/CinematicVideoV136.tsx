@@ -1,4 +1,4 @@
-import {useEffect,useRef} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import type {CinematicVideoSet,CinematicReviewVideo} from './CinematicMediaContractV136';
 
 /** Optional reviewed CSP-dependent ambient video, not a replacement for frame-accurate scroll sequences.
@@ -8,6 +8,8 @@ export function CinematicVideoV136({video,canPlay,onFault}:{
  video:CinematicVideoSet|CinematicReviewVideo;canPlay:boolean;onFault:(reason?:string)=>void
 }){
  const element=useRef<HTMLVideoElement|null>(null);
+ const failedSources=useRef(new Set<string>());
+ const [ready,setReady]=useState(false);
  useEffect(()=>{
   const node=element.current;
   if(!node)return;
@@ -41,11 +43,20 @@ export function CinematicVideoV136({video,canPlay,onFault}:{
  },[canPlay,video,onFault]);
  const source=(path:string)=>import.meta.env.BASE_URL+path;
  return <video ref={element} className="p136-cinematic-video" aria-hidden="true"
+  data-ready={ready} onLoadedData={()=>setReady(true)}
   muted playsInline loop preload="none" autoPlay={false} tabIndex={-1}
   onError={event=>{
     // Source errors bubble in React while the browser tries the next codec.
     // Only a terminal HTMLMediaElement error invalidates the whole player.
-    const error=event.currentTarget.error;if(error)onFault('media-error-'+error.code);
+    const node=event.currentTarget,error=node.error;
+    if(error){onFault('media-error-'+error.code);return;}
+    if(event.target instanceof HTMLSourceElement){
+      failedSources.current.add(event.target.src);
+      const supported=[...node.querySelectorAll('source')].filter(source=>
+        (!source.media||matchMedia(source.media).matches)&&node.canPlayType(source.type)!=='');
+      if(supported.length&&supported.every(source=>failedSources.current.has(source.src)))
+        onFault('sources-unavailable');
+    }
   }} disablePictureInPicture disableRemotePlayback>
    {video.assets.webmMobile&&<source media="(max-width:720px)" type="video/webm" src={source(video.assets.webmMobile.path)}/>}
    {video.assets.mp4Mobile&&<source media="(max-width:720px)" type="video/mp4" src={source(video.assets.mp4Mobile.path)}/>}

@@ -200,3 +200,6 @@ html[data-av-parity="v136-full"] :is(.p136-discovery-index,.p136-discovery-body,
  html[data-av-parity="v136-full"] .p136-cinematic-video{height:500px;object-position:50% 38%}
  html[data-av-parity="v136-full"] .p136-cinematic-vignette{background:linear-gradient(180deg,#080b1210 0,#080b1220 150px,#080b12db 360px,#080b12 560px)}
 }
+
+/* Keep the sharp still visible until a native decoder produces its first frame. */
+html[data-av-parity="v136-full"] .p136-cinematic-video:not([data-ready="true"]){opacity:0}

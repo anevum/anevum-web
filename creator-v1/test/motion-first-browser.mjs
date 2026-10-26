@@ -102,7 +102,10 @@ try{
  for(const [name,options] of [['save-data',{motion:'no-preference',saveData:true}],['media-failure',{motion:'no-preference',brokenMedia:true}],['api-error',{apiError:true}]]){
   const {ctx,page}=await context(390,options);
   await page.goto(origin+'/creator/',{waitUntil:'networkidle'});await geometry(page);
-  if(name!=='api-error')assert.equal(await page.locator('video').count(),0);
+  if(name!=='api-error'){
+   await page.waitForFunction(()=>!document.querySelector('video'));
+   assert.equal(await page.locator('video').count(),0);
+  }
   await page.getByRole('link',{name:'Explore projects',exact:true}).click();assert.match(page.url(),/\/discover/);
   checks.push({name});await ctx.close();
  }
