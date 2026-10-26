@@ -12,9 +12,12 @@ export const ACCOUNT='2f7ee83107240152097efd956a4e8335';
 export const V131='44f5971b-4cc9-4e7e-ab6a-1adb6fc5c12e',V132='de673bf1-ef05-4276-af16-2ee8713d965c';
 export const LIVE_V136_003='ec5f106b-482c-4415-9c66-d6f8daf219ad';
 export const LIVE_DEPLOY_003='77ceaf3d-5bfb-4f07-b64d-1655a3093065';
+/* Production exact read-back; prevents release over an unexpectedly changed Worker. */
+export const LIVE_V136_BETA_BASE='c53d8b9c-625b-459a-a8cc-67ebb50155fd';
+export const LIVE_DEPLOY_BETA_BASE='5bdc7902-bdd5-458d-9295-a35ffb122c96';
 export const LIVE_V136_005='cedb7ac1-74ca-4fcd-9a40-ce56964f1785';
-export const SESSION='ANEVUM.WEB.PACKAGE.2026-10-26.001.UNIFIED-BASELINE-RELEASE';
-export const UI_ORIGIN='241e0f1659ec5e002eaafb2af8f19e633f36d5fb';
+export const SESSION='ANEVUM.WEB.BUILD.2026-10-26.001.STEALTH-BETA-CUTOVER';
+export const UI_ORIGIN='f02be2199a62017928e51e5bfb8df6979ba6d735';
 export const FROZEN_PRODUCT_SOURCE='4dfaed54fed606713a99b87c3152beddbcbc31f3';
 export const ROUTES_SHA256='fa8abbaca3813f9172bbb1677c7a71068f4ab6c093b4f4835e67d7c70db5e67b';
 export const GATEWAY='1884ff0dd3c8aa3d38711167af0b4552c9b200b3148e72d9ba6d90d23171ef99';
@@ -152,7 +155,7 @@ export const REVIEWED_UI_BLOBS=Object.freeze({
  "creator-v1/test/home-navigation-v079.test.mjs": "726e92d638f82ae04c04acdcb87bf61071bf229b",
  "creator-v1/test/iren-guided-v080.test.mjs": "5ede7c9f6b717bec01639a9b7b4ba45425436176",
  "creator-v1/test/member-profile-ui.test.mjs": "789f32dfd5bc305c1f5d3a8d1582cfe47a1ee9e8",
- "creator-v1/test/motion-first-browser.mjs": "9891896b2e226de16a41b657126d34bfb5eae738",
+ "creator-v1/test/motion-first-browser.mjs": "2ac6aeb44effa871ad667fc64b0b0d5a938c6654",
  "creator-v1/test/motion-first-media.test.mjs": "dbfafaa700dc600d9268d99df5bc817c3e6ad2ba",
  "creator-v1/test/native-compatibility-v101.test.mjs": "5b244a0028a0da5537cf00b97b22d2b341a1622a",
  "creator-v1/test/package-discovery-browser-v011.mjs": "a728b40b46fc35d4d1028ad9731948d75e29cc8b",
@@ -165,7 +168,7 @@ export const REVIEWED_UI_BLOBS=Object.freeze({
  "creator-v1/test/parity-v136-concept-convergence.test.mjs": "b128d494aa694881daab9aab25d1fddcb00f9dbe",
  "creator-v1/test/parity-v136-controller.test.mjs": "df983aaebafc78e46ed4fdff2f0b765577884459",
  "creator-v1/test/parity-v136-discover-browser.mjs": "ee9191263e5ecae7bb9642602c9ff1c165e7b9ed",
- "creator-v1/test/parity-v136-full-browser.mjs": "9799a82db6d168d51910ac8442570dbaa38bf517",
+ "creator-v1/test/parity-v136-full-browser.mjs": "56ecb9b7370dcfc00a5f47533d5f614e5ddd2aad",
  "creator-v1/test/parity-v136-integrated-overhaul.test.mjs": "5e4cb8919279a0f5bf80b223ca4c9cf88b90543c",
  "creator-v1/test/parity-v136-media-contract.test.mjs": "9c3b7be99a191e0ac4c739e7a707547028fca938",
  "creator-v1/test/parity-v136-member-world.test.mjs": "2c83fa8cc628ab460a5cbfd48f6c6c5285f590f2",
@@ -265,7 +268,8 @@ export const REVIEWED_UI_BLOBS=Object.freeze({
  "creator-v1/web/src/components/CosmicArtwork.tsx": "5ef07bbedade462f61ddd2db87b61a9742eddf8e",
  "creator-v1/web/src/components/CreatorPackageGallery.tsx": "5a0f004b25b3d69417f5f7eb0a6788b712809629",
  "creator-v1/web/src/components/Icons.tsx": "94cdbc74a60ae2b7ae4f22b8ac62d045d34dc27f",
- "creator-v1/web/src/components/IrenGuidedContinuance.tsx": "a463ee64487e1f334c5719ef700d7abaa24812fe",
+ "creator-v1/web/src/components/IrenLivingCanvas.tsx": "496630e7011fdb33ee3769d93717a6db8c8735b8",
+ "creator-v1/web/src/components/IrenGuidedContinuance.tsx": "6d3157fe5c18a70a2448e58787565eaf550d255c",
  "creator-v1/web/src/components/IsolatedProjectViewport.tsx": "cb4609d724f11eee1c82ff16c6d1f373201af184",
  "creator-v1/web/src/components/LevelPanel.tsx": "ccb4283928d9ba5c2befa874901031d58c29e44c",
  "creator-v1/web/src/components/MemberGate.tsx": "bcd29b4b1dc594674534b78637bb88a8e301d768",
@@ -329,7 +333,7 @@ export const REVIEWED_UI_BLOBS=Object.freeze({
  "creator-v1/web/src/parity/InstituteHorizonV136017.ts": "45c56b69a9b5a0905166ed862c6e3490462c9412",
  "creator-v1/web/src/parity/InstituteMaterialsV136.ts": "94cbecdbe0b8475c01254300be2d84bbf40229b5",
  "creator-v1/web/src/parity/InstituteRendererV136.ts": "4c523b5f5898ed16eb30ddb2a03dff7245ce329a",
- "creator-v1/web/src/parity/LivingRecognition.tsx": "0a5519415b7a0440a8043e5bb59527114b0bd03a",
+ "creator-v1/web/src/parity/LivingRecognition.tsx": "8b0b67a9b172e72d16bd5c24525fee1371d8d301",
  "creator-v1/web/src/parity/LivingWorldField.tsx": "046448baa2d53f3f80134939cb1b120eb34f4be2",
  "creator-v1/web/src/parity/LivingWorldGlyph.tsx": "3dc477ea9db3febcba70f410f2eac4cca9cfae45",
  "creator-v1/web/src/parity/LivingWorldState.tsx": "aa0deed268a39c0b13c3147232a792dc0be9c8b9",
@@ -349,7 +353,7 @@ export const REVIEWED_UI_BLOBS=Object.freeze({
  "creator-v1/web/src/parity/cinematic-director-v136.ts": "0438b9ad972a9c76094895f85413ae9c9baa2f68",
  "creator-v1/web/src/parity/concept-convergence-v136017.css": "9601042c1d6b29cdd18ea089747f333c4564826b",
  "creator-v1/web/src/parity/console-wayfinder-v136.css": "cddae748dfad8990e90a3da23154938e1a25b154",
- "creator-v1/web/src/parity/continuance-design-system.css": "277304369fc8edccc222aa969912f957d5c85098",
+ "creator-v1/web/src/parity/continuance-design-system.css": "00139aafba0638d4f9c92a0f32f90428c25d7ea2",
  "creator-v1/web/src/parity/controller-bridge-v136.css": "e0313d4b9d495c10f686779b4a26d66af5b3ebb8",
  "creator-v1/web/src/parity/controller-input-v136.ts": "2d23c6d1a7a832d33db90f7524b6ebb2288a1ae1",
  "creator-v1/web/src/parity/first-visit-clarity-v136.css": "9579faa2edb28562a19dcc78dec812c8aa8e6e73",
@@ -490,8 +494,8 @@ async function snapshot(){
  return {deployment:deploy.deployments[0],settings,original,controller:controller.deployments[0],routes,versions:versions.items};
 }
 function verifyBefore(s){
- assert.equal(s.deployment.id,LIVE_DEPLOY_003,'Production changed; inspect before retry');
- assert.deepEqual(s.deployment.versions,[{version_id:LIVE_V136_003,percentage:99},{version_id:LIVE_V136_005,percentage:1}]);
+ assert.equal(s.deployment.id,LIVE_DEPLOY_BETA_BASE,'Production changed; inspect before retry');
+ assert.deepEqual(s.deployment.versions,[{version_id:LIVE_V136_BETA_BASE,percentage:100}], 'Production allocation changed; refuse stale release');
  assert.equal(s.settings.bindings.length,26);assert.deepEqual(signatures(s.settings.bindings),signatures(s.original.resources.bindings));
  assert.equal(s.controller.id,'4c832ec7-ce67-4864-832c-9b0b470af92d','Controller changed; inspect');
  assert.equal(s.routes.length,45,'Route inventory changed; inspect');
@@ -524,7 +528,7 @@ async function after(out){
  const packageManifest=load(join(out,'manifest.json'));
  const label=packageManifest.releaseVariant==='baseline-assets-only'?'baseline-assets-only':'frontend';
  assert.equal(v.annotations?.['workers/message'],'PARITY V136 '+label+' '+git('rev-parse','HEAD')+'; V131 gateway unchanged; INACTIVE');
- const result={status:'VERIFIED_INACTIVE_PARITY_VERSION',releaseVariant:packageManifest.releaseVariant||'candidate',frontendSourceHead:packageManifest.frontendSourceHead||git('rev-parse','HEAD'),sharedAssetsSha256:packageManifest.sharedAssetsSha256||null,version:v.id,number:v.number,source:git('rev-parse','HEAD'),gatewaySha256:GATEWAY,rollback:[LIVE_V136_003,LIVE_V136_005,V131,V132],trafficChanged:false,controllerChanged:false,bindingsPreserved:true,routesPreserved:true,memberDataChanged:false};
+ const result={status:'VERIFIED_INACTIVE_PARITY_VERSION',releaseVariant:packageManifest.releaseVariant||'candidate',frontendSourceHead:packageManifest.frontendSourceHead||git('rev-parse','HEAD'),sharedAssetsSha256:packageManifest.sharedAssetsSha256||null,version:v.id,number:v.number,source:git('rev-parse','HEAD'),gatewaySha256:GATEWAY,rollback:[LIVE_V136_BETA_BASE,LIVE_V136_003,LIVE_V136_005,V131,V132],trafficChanged:false,controllerChanged:false,bindingsPreserved:true,routesPreserved:true,memberDataChanged:false};
  save(join(out,'inactive-receipt.json'),result);return result;
 }
 const [cmd,...args]=process.argv.slice(2);
