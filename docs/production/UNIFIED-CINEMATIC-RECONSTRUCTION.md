@@ -97,3 +97,7 @@ local Godot complete/partial/source ZIP negative tests, original sandbox
 preservation, plus real Godot exported build validation in a separate
 isolated runtime before any release. The exact-head CI and device acceptance
 statuses must be recorded separately; source edits alone do not prove them.
+
+## Sitewide ambient-canvas retirement
+
+The V136 motion-first shell no longer mounts the former V064 high-DPI procedural 2D world-stage on supporting pages, private Studio or member routes. This removes a persistent renderer and requestAnimationFrame paint loop from the V136 route family, preserving the existing visual-material CSS, verified data, cinematic Arrival, actual game viewports, and functional Monaco workstation. V131 retains its legacy presentation for safe rollback until independent public release authority. No media approval, authentication, account, game or production behavior changes. A focused regression requires this separation while retaining the historical component and source.

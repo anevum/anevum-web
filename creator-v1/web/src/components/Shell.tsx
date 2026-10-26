@@ -149,7 +149,8 @@ function ShellContent(){
     {/* Ambient pages use media/DOM. Product-specific 3D stays in its own tools. */}
     {FullParityHeader&&<ControllerBridgeV136 navigationEnabled={publicSpatial}/>}
 
-    {!publicSpatial&&!parityFullBleed&&<ContinuanceWorldStage path={location.pathname}/>}
+    {/* The legacy 2D ambient compositor remains available only for V131. The V136 public shell uses art-directed media and quiet DOM materials; avoid mounting another background canvas behind Studio, private member pages or supporting content. */}
+    {!FullParityHeader&&!publicSpatial&&!parityFullBleed&&<ContinuanceWorldStage path={location.pathname}/>}
     {FullParityHeader?<Suspense fallback={<header className="p136-header" aria-label="ANEVUM navigation loading"/>}><FullParityHeader memberDestination={memberDestination} canonicalMember={canonicalMember} query={query} onQuery={setQuery} onSearch={search} onOpenLauncher={()=>setLauncherOpen(true)} onOpenIren={()=>window.dispatchEvent(new Event("anevum:iren-open"))} menuOpen={menuOpen} onToggleMenu={()=>setMenuOpen(v=>!v)} menuButton={menuButton}/></Suspense>:<header className="site-header av9-header">
       <div className="header-inner av9-header-inner">
         <Link to="/" className="brand-lockup av9-brand" aria-label="ANEVUM homepage">

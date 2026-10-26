@@ -72,3 +72,12 @@ test('motion-first Institute preserves real Studio capabilities and safe release
  assert.match(release,/VITE_PARITY_V136_HORIZON_QA/);
  assert.match(release,/VITE_PARITY_V136_SHARED_SCENE_QA/);
 });
+
+test('V136 stops loading the legacy procedural canvas on every route while retaining V131 fallback',()=>{
+ const shell=read('web/src/components/Shell.tsx');
+ const oldStage=read('web/src/components/ContinuanceWorldStage.tsx');
+ assert.match(shell,/!FullParityHeader&&!publicSpatial&&!parityFullBleed&&<ContinuanceWorldStage path=\{location\.pathname\}\/>/);
+ assert.match(shell,/\{FullParityHeader&&<ControllerBridgeV136 navigationEnabled=\{publicSpatial\}\/>\}/);
+ assert.match(oldStage,/data-continuance-scene=\{room\}/);
+ assert.match(read('web/src/parity/CinematicArrivalV136.tsx'),/data-cinematic-v136="motion-first"/);
+});
