@@ -22,6 +22,11 @@ Chime explicitly states its checking is personal-only and business deposits may 
 A sole proprietor does not universally need an LLC or EIN to open a business account: for example Chase publicly lists SSN/ITIN/EIN alternatives for sole proprietors and requires assumed-name evidence where applicable. This is a *bank-eligibility lead, not an ANEVUM account opening, recommendation of paid banking services, or a promise that Chase exposes the required inbound transaction API*. https://www.chase.com/business/offers/business-checking and https://www.chase.com/business/knowledge-center/start/opening-a-business-checking-account
 Do not enroll, submit personal tax information, incur bank fees or initiate contact without specific user authorization.
 
+
+## Florida and brand-name setup (not authorized or performed)
+If ANEVUM is operating as a sole proprietorship under a name other than the individual's legal name, the Florida Department of State generally requires a registered fictitious name before transacting business under that name, subject to exceptions. Current published filing fee is $50; the state also requires prior newspaper advertisement in the county and warns that filings become public records. Check whether ANEVUM already has valid registration or an exemption before acting. Do **not** file, pay, publish personal contact details, form an LLC, or obtain an EIN based on this planning document. https://dos.fl.gov/sunbiz/start-business/efile/fl-fictitious-name-registration/
+Florida generally taxes retail sales of physical goods, with state sales tax of 6% plus any applicable county surtax; merchandise tax compliance must be validated before selling. Specific digital/storage taxability is not decided by this research. https://www.floridarevenue.com/taxes/taxesfees/Pages/sales_tax.aspx
+
 ## System design
 - **Order draft:** server-assigned UUID, member ID from independently verified session, approved SKU/price, unique code, expiration. Public checkout and transfer instructions OFF until an accepted merchant bank rail exists.
 - **Pending transfer:** externally initiated, never a debit from a customer authorized inside ANEVUM. Don't treat a customer screenshot, client event, text memo or uploaded CSV alone as bank confirmation.
