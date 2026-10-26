@@ -3,7 +3,7 @@
 // No project in this service is public, installed, approved, or executable.
 import {boundedText} from './request-body.mjs';
 import {canonicalStudioAssets,studioUploadReady} from './studio-assets.mjs';
-import {canonicalStudioLargeAssets,studioLargeSchemaReady,studioLargeUploadReady} from './studio-large-assets.mjs';
+import {canonicalStudioLargeAssets,studioLargeSchemaReady,studioLargeUploadReady,studioLargeCapacitySummary} from './studio-large-assets.mjs';
 import {studioReviewSchemaReady,freezeStudioReview,withdrawStudioReview,decideStudioReview,getStudioReviewReceipt,listStudioReviewReceipts} from './studio-submissions.mjs';
 
 const PREFIX='/api/v1/member/studio';
@@ -294,16 +294,19 @@ export async function canonicalStudioReview(req,env,user,now=Math.floor(Date.now
      note:'Frozen private review receipt. Quarantined assets have NOT passed malware scanning; no rendering or download is authorized.',
      assets:receipt.assets.map(a=>({...a,status:'quarantined',uploadedAt:null}))});
    }
+   const enabledLarge=await studioLargeSchemaReady(env);
+   const largeCount=enabledLarge?"(SELECT COUNT(*) FROM member_studio_submission_large_assets l WHERE l.submission_id=snap.id)":"0";
+   const largeBytes=enabledLarge?"(SELECT COALESCE(SUM(l.size_bytes),0) FROM member_studio_submission_large_assets l WHERE l.submission_id=snap.id)":"0";
    const projects=await rows(db,
     'SELECT s.id,s.title,s.summary,s.category,s.status,s.revision,s.submitted_at,s.demo_url,s.source_url,'+
     's.license_name,s.ai_disclosure,s.human_contribution,s.user_id,p.handle,'+
-    "(SELECT COUNT(*) FROM member_studio_submission_assets a WHERE a.submission_id=snap.id) AS attachment_count,"+
-    "(SELECT COALESCE(SUM(a.size_bytes),0) FROM member_studio_submission_assets a WHERE a.submission_id=snap.id) AS attachment_bytes "+
+    "((SELECT COUNT(*) FROM member_studio_submission_assets a WHERE a.submission_id=snap.id)+"+largeCount+") AS attachment_count,"+
+    "((SELECT COALESCE(SUM(a.size_bytes),0) FROM member_studio_submission_assets a WHERE a.submission_id=snap.id)+"+largeBytes+") AS attachment_bytes "+
     'FROM member_studio_projects s JOIN member_creator_profiles p ON p.user_id=s.user_id '+
     "JOIN member_studio_submissions snap ON snap.project_id=s.id AND snap.user_id=s.user_id "+
     "AND snap.project_revision=s.revision AND snap.status='pending_review' "+
     "WHERE s.status='pending_review' AND s.user_id<>? ORDER BY s.submitted_at ASC LIMIT 50",[user.id]);
-   return json({projects});
+   return json({projects,storage:await studioLargeCapacitySummary(env)});
   }
   if(manifest)return fail(405,'Manifest is read-only');
   if(req.method!=='POST')return fail(405,'Method not allowed');
