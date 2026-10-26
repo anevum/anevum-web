@@ -16,7 +16,9 @@ test("account aliases use canonical identity while retained creator tools remain
  assert.match(gate,/confirmedProfile\?\.id===session\.data\.member\.id/);
  assert.match(gate,/activeMember\.displayName\|\|activeMember\.handle/);
  assert.match(gate,/member:activeMember/);
- assert.match(gate,/to="\/account\/edit"/);
+ // The member menu now opens the real canonical profile tab directly.
+ assert.match(gate,/to="\/member\?tab=profile"/);
+ assert.doesNotMatch(gate,/to="\/account\/edit"/);
  assert.match(page,/useMemberContext/);
  assert.match(page,/memberSaveProfile/);
  assert.match(page,/onProfileSaved\(profile\)/);
