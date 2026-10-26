@@ -37,5 +37,5 @@ jobs:
       - name: Keep V136 TypeScript frontend compatible
         run: |
           set -euo pipefail
-          npm ci
+          npm install --ignore-scripts --no-audit --no-fund
           npm run check:creator-v1-web
