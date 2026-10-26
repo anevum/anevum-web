@@ -57,6 +57,11 @@ async function closureBlockers(db,memberId,now){
   const retained=await one(db,'SELECT id FROM member_studio_assets WHERE user_id=? LIMIT 1',memberId);
   if(retained)return 'creator-assets-review';
  }
+ const largeTable=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='member_studio_large_assets'").first();
+ if(largeTable){
+  const large=await one(db,'SELECT id FROM member_studio_large_assets WHERE user_id=? LIMIT 1',memberId);
+  if(large)return 'creator-assets-review';
+ }
  const customer=await one(db,'SELECT member_user_id FROM supporter_customers WHERE member_user_id=?',memberId);
  const subscription=await one(db,'SELECT member_user_id FROM supporter_subscriptions WHERE member_user_id=? LIMIT 1',memberId);
  const intent=await one(db,'SELECT member_user_id FROM supporter_checkout_intents WHERE member_user_id=? LIMIT 1',memberId);
