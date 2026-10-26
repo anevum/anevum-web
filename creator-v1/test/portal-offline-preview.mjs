@@ -323,7 +323,7 @@ createServer((req,res)=>{
   if(u.pathname.startsWith("/api/v1/member/")||u.pathname.startsWith("/api/v1/members/"))return offlineMember(req,res,u);
   if(u.pathname.startsWith("/creator/assets/")){
     const rel=u.pathname.slice(9);
-    if(!/^assets\/(?:[a-zA-Z0-9._-]+|cinematic\/(?:hero|categories)\/[a-zA-Z0-9._-]+\.webp|cinematic-v2\/atmosphere\/[a-zA-Z0-9._-]+\.webp|community-portals\/(?:games|tools|creative|libraries)-(?:768|1536)\.webp|default-thumbnails\/(?:games|tools|automation|research|creative|learning|libraries|other|simulation|story)\.svg)$/.test(rel))return json(res,{error:"not-found"},404);
+    if(!/^assets\/(?:[a-zA-Z0-9._-]+|cinematic\/(?:hero|categories)\/[a-zA-Z0-9._-]+\.webp|cinematic-v2\/atmosphere\/[a-zA-Z0-9._-]+\.webp|community-portals\/(?:games|tools|creative|libraries)-(?:768|1536)\.webp|default-thumbnails\/(?:games|tools|automation|research|creative|learning|libraries|other|simulation|story)\.svg|default-thumbnails\/v136-baseline-005\/(?:games|tools|automation|research|creative|learning|libraries|other|simulation|story)\.svg|site-v136-005\/(?:favicon\.svg|site\.webmanifest))$/.test(rel))return json(res,{error:"not-found"},404);
     const path=resolve(dist,rel);
     if(!existsSync(path))return json(res,{error:"not-found"},404);
     res.writeHead(200,{"content-type":mime[extname(path)]||"application/octet-stream"});

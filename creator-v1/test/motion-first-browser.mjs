@@ -47,6 +47,8 @@ async function context(width,{motion='reduce',saveData=false,brokenMedia=false,a
   if(url.origin!==origin||!['GET','HEAD'].includes(req.method())){forbidden.push({url:req.url(),method:req.method()});return route.abort();}
   const path=production?url.pathname:url.pathname.replace(/^\/creator/,'');
   if(brokenMedia&&/\/review-001\/.*\.(webp|mp4|webm)$/.test(path))return route.fulfill({status:404,body:'Intentional media failure fixture'});
+  if(path==='/upload/v3/api/v1/packages/projects')return route.fulfill({status:apiError?503:200,contentType:'application/json',body:JSON.stringify(apiError?{error:'Intentional offline package fixture'}:{projects:[]})});
+  if(path.startsWith('/upload/'))return route.fulfill({status:404,contentType:'application/json',body:'{"error":"Private uploader unavailable in public loopback fixture"}'});
   if(path.startsWith('/api/')){
    if(path.startsWith('/api/v1/member/'))return route.fulfill({status:403,contentType:'application/json',body:'{"error":"visual-review-no-accounts"}'});
    if(/^\/api\/v1\/(projects|creators)\/baseline-unavailable$/.test(path))return route.fulfill({status:404,contentType:'application/json',body:'{"error":"not-found"}'});
@@ -99,10 +101,14 @@ try{
  for(const width of [320,390,768,1440,1920]){
   const {ctx,page}=await context(width);
   for(const [name,path] of [['arrival','/'],['discover','/discover'],['creators','/creators'],['commons','/community'],['studio-guest','/studio'],['guide','/guide'],['boards','/boards'],['start','/start'],['status','/status'],['join','/join'],['member-guest','/member'],['project-unavailable','/projects/baseline-unavailable'],['creator-unavailable','/creators/baseline-unavailable']]){
-   await page.goto(origin+prefix+path,{waitUntil:'networkidle'});
+   await page.goto(origin+prefix+path,{waitUntil:'domcontentloaded'});
    await page.locator('main').waitFor();
    await page.locator('main').getByRole('heading').first().waitFor();
    if(name==='boards')await page.locator('#cnb-heading').waitFor();
+   if(name==='discover')await page.locator('.p136-discover-empty').waitFor();
+   if(name==='creators')await page.locator('.p136-creators-empty').waitFor();
+   if(name==='start')await page.waitForFunction(()=>document.querySelector('.start-catalogue-proof')?.textContent?.includes('published projects'));
+
    assert.ok(await page.locator('main').innerText());
    const g=await geometry(page);
    if(name==='arrival'){
@@ -115,7 +121,7 @@ try{
      assert.ok(await page.locator('.p136-cinematic-art img').evaluate(n=>n.complete&&n.naturalWidth>0));
     }
     await page.getByRole('link',{name:'Explore projects',exact:true}).click();
-    assert.match(page.url(),/\/discover/);await page.goBack({waitUntil:'networkidle'});
+    assert.match(page.url(),/\/discover/);await page.goBack({waitUntil:'domcontentloaded'});await page.locator('#p136-hero-title').waitFor();
    }
    await page.evaluate(()=>scrollTo(0,0));
    await page.screenshot({path:join(output,`${name}-${width}.png`),fullPage:false});

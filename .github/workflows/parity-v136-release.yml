@@ -149,7 +149,9 @@ jobs:
       - name: Fresh immutable baseline preflight
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: node creator-v1/ops/parity-v136-release.mjs before "$RUNNER_TEMP/parity-paired/baseline"
+        run: |
+          test "$(git ls-remote --exit-code origin "$GITHUB_REF" | cut -f1)" = "$GITHUB_SHA"
+          node creator-v1/ops/parity-v136-release.mjs before "$RUNNER_TEMP/parity-paired/baseline"
       - name: Upload unchanged baseline frontend plus shared assets; zero traffic
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -162,7 +164,9 @@ jobs:
       - name: Fresh immutable candidate preflight
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: node creator-v1/ops/parity-v136-release.mjs before "$RUNNER_TEMP/parity-paired/candidate"
+        run: |
+          test "$(git ls-remote --exit-code origin "$GITHUB_REF" | cut -f1)" = "$GITHUB_SHA"
+          node creator-v1/ops/parity-v136-release.mjs before "$RUNNER_TEMP/parity-paired/candidate"
       - name: Upload verified candidate with identical shared assets; zero traffic
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
