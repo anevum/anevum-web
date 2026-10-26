@@ -1,0 +1,41 @@
+name: ANEVUM V136 Orbital Brand Lock
+
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/web/src/components/OrbitalMark.tsx'
+      - 'creator-v1/web/public/favicon.svg'
+      - 'creator-v1/brand/anevum-mark.svg'
+      - 'creator-v1/brand/anevum-mark-compact.svg'
+      - 'creator-v1/test/v136-orbital-brand-lock.test.mjs'
+      - '.github/workflows/v136-orbital-brand-lock-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v136-orbital-brand-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  exact-owner-mark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify official SVG geometry across header, mobile navigation, stage and favicon
+        run: |
+          set -euo pipefail
+          node --test creator-v1/test/v136-orbital-brand-lock.test.mjs
+      - name: Keep V136 TypeScript frontend compatible
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web

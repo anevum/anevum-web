@@ -91,3 +91,24 @@ test('material layer is scoped and preserves motion/high contrast alternatives',
  assert.ok(css.includes('forced-colors:active'));
  assert.ok(css.includes('pointer-events:none'));
 });
+
+// Geometry remains an isolated, bounded candidate rather than new live telemetry.
+test('qa-only procedural horizon uses one existing renderer with bounded local meshes',()=>{
+ const planet=readFileSync(new URL('../web/src/parity/InstituteHorizonV136017.ts',import.meta.url),'utf8');
+ const render=readFileSync(new URL('../web/src/parity/InstituteRendererV136.ts',import.meta.url),'utf8');
+ const workflow=readFileSync(new URL('../../.github/workflows/parity-v136-scene-qa.yml',import.meta.url),'utf8');
+ const release=readFileSync(new URL('../ops/parity-v136-release.mjs',import.meta.url),'utf8');
+ assert.match(planet,/export function createInstituteHorizon\(tier:AssetTier,citadelFactory:/);
+ assert.match(planet,/HORIZON_QA_BUDGET/);
+ assert.match(planet,/new T\.ShaderMaterial/);
+ assert.match(planet,/root\.traverse\(object=>/);
+ assert.ok(!/fetch\(|localStorage|document\.|navigator\.|new T\.WebGLRenderer/.test(planet),
+  'Horizon must remain deterministic authored geometry with no network, identity or new canvas');
+ assert.match(render,/VITE_PARITY_V136_HORIZON_QA==='true'/);
+ assert.match(render,/createInstituteHorizon\(budget\.tier,createInstituteCitadels\)/);
+ assert.match(render,/horizon\.root\.visible=input\.sector==='hero'&&!input\.saveData/);
+ assert.match(render,/scene\.remove\(horizon\.root\);horizon\.dispose\(\)/);
+ assert.match(workflow,/VITE_PARITY_V136_HORIZON_QA: 'true'/);
+ assert.match(release,/Unapproved planetary art QA must be disabled in release/);
+ assert.equal((render.match(/new T\.WebGLRenderer\(/g)||[]).length,1);
+});

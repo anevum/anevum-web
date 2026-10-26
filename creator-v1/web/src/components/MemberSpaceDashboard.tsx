@@ -2,7 +2,7 @@ import {type ReactNode,useEffect,useRef,useState} from 'react';
 import {Link,useSearchParams} from 'react-router-dom';
 import {canonicalAuthClient,canonicalSpace,canonicalWall,spaceRequest,type CanonicalProfile,type MemberSpace,type WallEntry} from '../lib/canonical-beta';
 import {readWithDeadline} from '../../../shared/read-deadline.mjs';
-import {MemberPortrait} from './MemberPortrait';
+import {MemberPortrait,MemberCoverMedia} from './MemberPortrait';
 import {ProfileImageEditor} from './ProfileImageEditor';
 import {MemberWall} from './MemberWall';
 import {PlayerCardStudio} from './PlayerCardStudio';
@@ -87,7 +87,7 @@ function MemberSpaceDashboardView({profile,editor}:{profile:CanonicalProfile;edi
  return <section className={'ms-dashboard av18-world-'+profile.worldTheme} aria-labelledby="ms-title">
   <header data-iren-anchor="identity" className={'ms-cover av92-presence-cover av92-presence-cover--'+safePlayerAura(space?.aura)+
    ' av92-presence-role--'+(safeVerifiedRole(space?.role)??'none')+
-   (space?.supporterAppearance?' av34-aura av34-aura-'+space.supporterAppearance.aura:'')}>{banner&&<img className="ms-cover-art" src={banner} key={space?.media.banner} alt="Your wall banner"/>}<div className="ms-cover-shade"/>
+   (space?.supporterAppearance?' av34-aura av34-aura-'+space.supporterAppearance.aura:'')}>{banner&&<MemberCoverMedia src={banner} key={space?.media.banner} alt="Your wall banner"/>}<div className="ms-cover-shade"/>
    <div className="ms-cover-meta"><span className="kicker">ANEVUM / PERSONAL CONTINUANCE</span><span className="ms-visibility">{profile.visibility==='public'?'PUBLIC WORLD':'PRIVATE WORLD'}</span></div>
    <button className="ms-cover-edit" onClick={()=>setTab('appearance')}>EDIT BANNER ↗</button>
    <div className="ms-identity"><button className="ms-avatar-button" onClick={()=>setTab('appearance')} aria-label="Change profile picture"><MemberPortrait src={avatar} key={space?.media.avatar} name={profile.displayName} supporterFrame={space?.supporterAppearance?.frame}/><span>EDIT</span></button><div><p className="ms-handle">@{profile.handle}</p>{space?.supporterAppearance&&<SupporterIdentity appearance={space.supporterAppearance} compact/>}<h1 id="ms-title" tabIndex={-1}>{profile.displayName}</h1><p>{profile.headline||'Your place in the continuance.'}</p>

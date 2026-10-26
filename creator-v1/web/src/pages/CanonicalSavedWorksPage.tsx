@@ -6,8 +6,7 @@ import {projectEngagementGateway} from "../lib/project-engagement";
 import {readCanonicalSavedProjects,setCanonicalProjectSaved,
  type CanonicalSavedProject,CanonicalProjectSaveError} from "../lib/canonical-project-saves";
 import {useResource} from "../lib/useResource";
-import {CosmicArtwork} from "../components/CosmicArtwork";
-import type {Category} from "../lib/api";
+import {ProjectThumbnail} from "../components/ProjectThumbnail";
 import {browseSavedWorks,savedCategoryFilters} from "../lib/saved-works-browse";
 import {MemberCollectionNav,MEMBER_COLLECTION_NAV_REVIEW} from "../components/MemberCollectionNav";
 import "./canonical-saved-works.css";
@@ -76,7 +75,7 @@ function SavedWorksCollection({memberId}:{memberId:string}){
     <p className="avsaved-filter-count" role="status">Showing {displayed.length} of {items.length} {cursor?"loaded ":""}saved projects{cursor?". More available below.":""}</p>
    </div>}
    {items.length>0?<div className="avsaved-grid">{displayed.map(item=><article className="avsaved-card" key={item.id}>
-    <div className="avsaved-art" aria-hidden="true"><CosmicArtwork scene={item.category as Category}/></div>
+    <div className="avsaved-art" aria-hidden="true"><ProjectThumbnail kind={item.category} title={item.title} decorative/></div>
     <div className="avsaved-card-body">
      <div className="avsaved-card-meta"><span>{item.category.toUpperCase()}</span><span>{new Intl.DateTimeFormat("en-US",{month:"short",day:"numeric",year:"numeric",timeZone:"UTC"}).format(new Date(item.savedAt*1000))}</span></div>
      <h2><Link to={"/projects/"+encodeURIComponent(item.id)+"?from="+encodeURIComponent("/saved")}>{item.title}</Link></h2>

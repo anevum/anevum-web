@@ -5,6 +5,7 @@ import {ErrorState,LoadingState} from "../components/States";
 import {ProjectPlayerShell} from "../components/ProjectPlayerShell";
 import {RepositoryPanel} from "../components/RepositoryPanel";
 import {MemberEngagementPanel} from "../components/MemberEngagementPanel";
+import {ProjectLaunchKit} from "../components/ProjectLaunchKit";
 import {safeReturnPath} from "../lib/navigation";
 import {ContextDiscussions} from "../components/ContextDiscussions";
 import {isAnevumHostedRelease} from "../lib/project-hosting";
@@ -41,6 +42,7 @@ export function ProjectPage(){
           <div className="portal-facts-row"><span>REVIEW STATUS</span><strong>PUBLIC / APPROVED</strong></div>
           {demo&&<div className="portal-facts-row"><span>{hosted?"HOSTED BY":"CREATOR HOST"}</span><strong>{hosted?"ANEVUM":demo.hostname}</strong></div>}
         </section>
+        <ProjectLaunchKit key={p.id} project={p}/>
         <section className="portal-sidebox"><span className="kicker">THE HUMAN STORY</span><h2>WHO MADE WHAT?</h2>
           <div className="portal-project-disclosure"><strong>AI INVOLVEMENT</strong><p>{p.aiDisclosure||"The creator did not provide an AI-use disclosure."}</p></div>
           <div className="portal-project-disclosure"><strong>HUMAN CONTRIBUTION</strong><p>{p.humanContribution||"The creator did not provide details of human contributions."}</p></div>

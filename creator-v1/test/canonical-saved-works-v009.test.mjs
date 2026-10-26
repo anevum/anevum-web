@@ -105,7 +105,7 @@ test("saved works presentation honors phone width, touch controls and no nested 
  const style=read("web/src/pages/canonical-saved-works.css");
  assert.match(source,/className="avsaved-grid"/);
  assert.match(source,/className="avsaved-card"/);
- assert.match(source,/CosmicArtwork scene=\{item\.category as Category\}/);
+ assert.match(source,/<ProjectThumbnail kind=\{item\.category\} title=\{item\.title\}/);
  assert.match(source,/aria-label="Your private saved projects"/);
  assert.match(source,/role="alert"/);
  assert.doesNotMatch(source,/<main/);

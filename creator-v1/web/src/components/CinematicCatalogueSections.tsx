@@ -1,6 +1,6 @@
 import {Link} from "react-router-dom";
-import {CelestialEmblem} from "./CelestialEmblem";
 import {CosmicArtwork} from "./CosmicArtwork";
+import {ProjectThumbnail} from "./ProjectThumbnail";
 import type {CosmicScene} from "./CosmicIllustration";
 import {Icon} from "./Icons";
 import {projectDetailPath} from "../lib/navigation";
@@ -26,18 +26,6 @@ const browse:readonly CategoryShortcut[]=[
   {label:"MORE",category:"other",scene:"other",symbol:"⊕"}
 ];
 const categories:readonly CategoryShortcut[]=browse.filter(c=>c.category!==null);
-const images:Record<Project["category"],CosmicScene>={
-  games:"games",tools:"tools",automation:"automation",research:"research",
-  creative:"creative",learning:"learning",libraries:"libraries",other:"other"
-};
-const studies=[
-  {motif:"beacon",name:"THE FIRST LIGHT"},
-  {motif:"atlas",name:"WORLD BUILDER"},
-  {motif:"compass",name:"EXPLORER"},
-  {motif:"lens",name:"CREATOR"},
-  {motif:"light",name:"TRANSCENDENT"}
-] as const;
-
 function SectionHead({name,to,description}:{name:string;to:string;description:string}){
   return <div className="cinema-section-head">
     <div><h2>{name}</h2><p>{description}</p></div>
@@ -50,7 +38,7 @@ function ArtCard({entry}:{entry:CategoryShortcut}){
   return <Link className="cinema-world-card cinema-world-card--study" to={href}>
     <span className="cinema-world-art" aria-hidden="true"><CosmicArtwork scene={entry.scene}/></span>
     <span className="cinema-world-shade"/>
-    <span className="cinema-world-overline">CATEGORY ART / PUBLIC PROJECTS PENDING</span>
+    <span className="cinema-world-overline">CATEGORY / PUBLIC INDEX</span>
     <span className="cinema-world-title">{entry.label}</span>
     <span className="cinema-world-footer">EXPLORE CATEGORY <Icon name="arrow" size={13}/></span>
   </Link>;
@@ -58,9 +46,9 @@ function ArtCard({entry}:{entry:CategoryShortcut}){
 
 function ProjectArtCard({project}:{project:Project}){
   return <Link className="cinema-world-card" to={projectDetailPath(project.id,"/")}>
-    <span className="cinema-world-art" aria-hidden="true"><CosmicArtwork scene={images[project.category]}/></span>
+    <span className="cinema-world-art" aria-hidden="true"><ProjectThumbnail kind={project.category} title={project.title} decorative/></span>
     <span className="cinema-world-shade"/>
-    <span className="cinema-world-overline">PUBLISHED / {project.category.toUpperCase()} / CATEGORY ILLUSTRATION</span>
+    <span className="cinema-world-overline">PUBLISHED / {project.category.toUpperCase()} / INDEX RECORD</span>
     <span className="cinema-world-title">{project.title}</span>
     <span className="cinema-world-footer">@{project.creatorHandle}<Icon name="arrow" size={13}/></span>
   </Link>;
@@ -83,14 +71,14 @@ export function CinematicCatalogueSections({projects,creators}:{projects:Project
       <div className="cinema-featured-world-grid">
         {shown.length?shown.map(project=><ProjectArtCard key={project.id} project={project}/>):categories.slice(0,5).map(entry=><ArtCard key={entry.label} entry={entry}/>)}
       </div>
-      {!shown.length&&<p className="cinema-catalogue-state">PUBLIC SHOWCASE IN PREPARATION · These illustrated category gateways are not uploaded projects.</p>}
+      {!shown.length&&<p className="cinema-catalogue-state">PUBLIC SHOWCASE IN PREPARATION · These category gateways are not uploaded projects.</p>}
     </section>
 
     <section className="cinema-recent-releases" aria-label="Recent public releases">
       <SectionHead name="✦ NEW & NOTEWORTHY" to="/discover" description={recent.length?"Recently published projects — not algorithmic popularity rankings.":"The catalogue is preparing for its first approved releases."}/>
       {recent.length?
         <div className="cinema-recent-grid">{recent.map(project=><Link key={project.id} className="cinema-recent-item" to={projectDetailPath(project.id,"/")}>
-          <span className="cinema-recent-art" aria-hidden="true"><CosmicArtwork scene={images[project.category]}/></span>
+          <span className="cinema-recent-art" aria-hidden="true"><ProjectThumbnail kind={project.category} title={project.title} decorative/></span>
           <span className="cinema-recent-copy"><strong>{project.title}</strong><small>@{project.creatorHandle}</small><small>{project.category.toUpperCase()}</small></span>
         </Link>)}</div>:
         <div className="cinema-recent-empty"><span>YOUR NEXT FAVORITE CREATION COULD START HERE.</span><Link to="/start">START HERE <Icon name="arrow" size={14}/></Link></div>}
@@ -98,12 +86,8 @@ export function CinematicCatalogueSections({projects,creators}:{projects:Project
 
     <div className="cinema-reference-lower">
       <section className="cinema-reference-panel cinema-artifacts-panel">
-        <SectionHead name="✧ CELESTIAL ARTIFACTS" to="/levels" description="The first sixty named collectibles begin a progression system with no final level."/>
-        <div className="cinema-artifact-row">{studies.map((item,i)=><Link key={item.motif} to="/levels" className="cinema-artifact-tile">
-          <CelestialEmblem motif={item.motif} size="medium" state="preview"/>
-          <strong>{item.name}</strong>
-          <span>ART STUDY {String(i+1).padStart(2,"0")}</span>
-        </Link>)}</div>
+        <SectionHead name="EARNED RECOGNITION" to="/levels" description="Verified participation, earned milestones and transparent requirements."/>
+        <div className="av136-recognition-summary"><strong>No illustrative reward previews.</strong><p>Browse the real catalogue and inspect the award criteria.</p><Link to="/levels">VIEW RECOGNITION <Icon name="arrow" size={14}/></Link></div>
       </section>
       <section className="cinema-reference-panel cinema-people-panel">
         <SectionHead name="✧ FEATURED CREATORS" to="/creators" description="Real people sharing what they make."/>

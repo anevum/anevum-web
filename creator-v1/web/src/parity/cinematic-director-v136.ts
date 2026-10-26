@@ -49,3 +49,12 @@ export function cinematicRevealWhenReady(
 ):number{
  return readiness==='hold'?1:cinematicReveal(progress,start,end);
 }
+
+/** Explicit visual inspection never reveals incompletely loaded geometry.
+ * The visitor may return to the cinematic composition without navigation.
+ */
+export function cinematicInspectionOpacity(
+ inspecting:boolean,readiness:'ready'|'fallback'|'hold',scrollOpacity:number
+):number{
+ return inspecting&&readiness==='ready'?0:unit(scrollOpacity);
+}

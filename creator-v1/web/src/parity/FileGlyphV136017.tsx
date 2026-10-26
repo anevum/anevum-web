@@ -35,3 +35,14 @@ export function FileGlyphV136017({path}:{path:string}){
   {kind==='text'&&<g stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><path d="M6.5 11H16.5M6.5 14H15M6.5 17H12.5"/></g>}
  </svg>;
 }
+
+// Original folder glyph complements file-type engraving; presentational only.
+export function FolderGlyphV136017({open}:{open:boolean}){
+ return <svg className="p136017-folder-glyph" width="20" height="20" viewBox="0 0 24 24"
+  fill="none" aria-hidden="true" focusable="false" data-folder-open={open}>
+  <path d="M2.3 7V5.8c0-1 .8-1.8 1.8-1.8h5.3l2.3 2.4h8.2c1 0 1.8.8 1.8 1.8v10.4c0 1-.8 1.8-1.8 1.8H4.1c-1 0-1.8-.8-1.8-1.8Z"
+   fill="currentColor" fillOpacity=".13" stroke="currentColor" strokeWidth="1.45" strokeLinejoin="round"/>
+  <path d="M2.3 9.2H21.7M5.4 16.4h12.8" stroke="currentColor" strokeWidth="1.15" strokeOpacity=".66"/>
+  {open&&<path d="M7 11.5h10" stroke="currentColor" strokeWidth=".8" strokeOpacity=".55"/>}
+ </svg>;
+}

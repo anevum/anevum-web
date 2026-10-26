@@ -13,3 +13,19 @@ export function sourceArchive(files:Record<string,string>){
  if(Object.values(binary).reduce((n,b)=>n+b.length,0)>SOURCE_LIMITS.total)throw Error('Source workspace exceeds 1 MiB.');
  return new File([zipSync(binary,{level:6}) as Uint8Array<ArrayBuffer>],'continuance-build.zip',{type:'application/zip'});
 }
+
+/** Playable files mirror the restricted source path set's intersection with the
+ * existing V003 gateway MIME allowlist (which does not include Markdown).
+ * Markdown notes are retained in full-source downloads but never smuggled
+ * into a playable ZIP the canonical package validator would reject.
+ */
+export function localOnlySourcePaths(files:Record<string,string>):string[]{
+ // safeSourcePath allows html, css, js, json, txt and md. The canonical
+ // V003 playable parser accepts all of those except Markdown.
+ return Object.keys(files).filter(path=>path.endsWith('.md'));
+}
+export function playableSourceArchive(files:Record<string,string>){
+ const skipped=localOnlySourcePaths(files);
+ const deployable=Object.fromEntries(Object.entries(files).filter(([path])=>!path.endsWith('.md')));
+ return {archive:sourceArchive(deployable),skipped};
+}

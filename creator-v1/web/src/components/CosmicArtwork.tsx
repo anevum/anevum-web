@@ -1,51 +1,38 @@
-import {useEffect, useState} from "react";
-import {CosmicIllustration, type CosmicScene} from "./CosmicIllustration";
-import {LivingWorldGlyph} from "../parity/LivingWorldGlyph";
+import type {CosmicScene} from "./CosmicIllustration";
 
-/** Local, versioned ANEVUM illustration masters; never creator-submitted covers. */
-const assets: Record<CosmicScene, string> = {
-  hero:"hero/portal-world.webp",
-  portal:"hero/skyward-city.webp",
-  games:"categories/games.webp",
-  tools:"categories/apps.webp",
-  automation:"categories/automation.webp",
-  research:"categories/research.webp",
-  creative:"categories/creative.webp",
-  learning:"categories/learning.webp",
-  libraries:"categories/libraries.webp",
-  other:"categories/other.webp"
-};
-// Full-frame V014 originals replace the soft concept-board crops where ready.
-// Historical masters stay versioned; unavailable fields keep their own artwork.
-const originals:Partial<Record<CosmicScene,string>>={
-  hero:"games",games:"games",tools:"tools",creative:"creative",libraries:"libraries"
+/**
+ * Site-owned AI illustration masters were retired from public presentation.
+ * This is a native, semantic catalogue instrument, not a faux project cover.
+ * Creator-uploaded artwork is still owned and displayed by project components.
+ */
+const fields:Record<CosmicScene,{index:string;name:string}>={
+  hero:{index:"00",name:"CONTINUANCE"},
+  portal:{index:"01",name:"DISCOVERY"},
+  games:{index:"02",name:"GAMES"},
+  tools:{index:"03",name:"APPLICATIONS"},
+  automation:{index:"04",name:"AUTOMATION"},
+  research:{index:"05",name:"RESEARCH"},
+  creative:{index:"06",name:"CREATIVE"},
+  learning:{index:"07",name:"LEARNING"},
+  libraries:{index:"08",name:"LIBRARIES"},
+  other:{index:"09",name:"MORE"}
 };
 
-export function cinematicArtUrl(scene:CosmicScene):string {
-  // Vite's base is / on anevum.com, /creator/ on isolated next.anevum.com.
-  if(originals[scene])return import.meta.env.BASE_URL+"assets/community-portals/"+originals[scene]+"-1536.webp";
-  return import.meta.env.BASE_URL + "assets/cinematic/" + assets[scene];
-}
+/** Kept for older callers; retired raster artworks have no public URL. */
+export function cinematicArtUrl(_scene:CosmicScene):string{return "";}
 
-export function CosmicArtwork({scene="hero",priority=false,className="",title,seed}: {
+export function CosmicArtwork({scene="hero",className="",title}: {
   scene?:CosmicScene;priority?:boolean;className?:string;title?:string;seed?:string;
 }) {
-  const [failed,setFailed]=useState(false);
-  useEffect(()=>setFailed(false),[scene]);
-  // V136 replaces ALL actively rendered generic image masters with code-generated
-  // shapes derived from verified public counts. Creator-owned uploaded covers
-  // remain their original media and are never silently replaced.
-  if(import.meta.env.VITE_PARITY_V136_FULL==="true")
-    return <LivingWorldGlyph scene={scene} seed={seed} className={className} title={title}/>;
-  return <span className={"cw-artwork cw-artwork--"+scene+" "+className}
+  const field=fields[scene];
+  return <span className={"cw-artwork cw-artwork--"+scene+" av136-index-field "+className}
+    data-presentation="native-index" data-sector={scene}
     role={title?"img":undefined} aria-label={title||undefined} aria-hidden={title?undefined:true}>
-    {failed ? <CosmicIllustration scene={scene} className="cw-artwork-vector"/> :
-      <img className="cw-artwork-image" src={cinematicArtUrl(scene)} alt="" aria-hidden="true"
-        srcSet={originals[scene]?import.meta.env.BASE_URL+"assets/community-portals/"+originals[scene]+"-768.webp 768w, "+cinematicArtUrl(scene)+" 1536w":undefined}
-        sizes={scene==="hero"?"100vw":"(max-width: 700px) 100vw, 50vw"}
-        width={originals[scene]?1536:undefined} height={originals[scene]?1024:undefined}
-        decoding="async" loading={priority?"eager":"lazy"} fetchPriority={priority?"high":"auto"}
-        draggable={false} onError={()=>setFailed(true)} />}
-    <span className="cw-artwork-glaze" aria-hidden="true" />
+    <span className="av136-index-field__top"><span>ANEVUM / INDEX</span><span>{field.index}</span></span>
+    <span className="av136-index-field__core">
+      <span className="av136-index-field__number">{field.index}</span>
+      <span className="av136-index-field__name">{field.name}</span>
+    </span>
+    <span className="av136-index-field__foot"><span>EXPLORE / {field.name}</span><span className="av136-index-field__signal"/></span>
   </span>;
 }

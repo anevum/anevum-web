@@ -134,7 +134,7 @@ test("Evolution routes preserve canonical XP with signed-in earned-only reward a
   assert.match(shell,/\/levels/);
   assert.match(app,/path="levels"/);
   assert.match(panel,/useMemberProgression/);
-  assert.match(panel,/30 PERMANENT LEVELS/);
+  assert.match(panel,/30 CURRENT LEVELS/);
   assert.match(levels,/canonicalAuthClient\.useSession/);
   assert.match(levels,/signedIn/);
   assert.match(levels,/EarnedRewardVault/);
