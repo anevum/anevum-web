@@ -11,8 +11,17 @@ async function query(db,sql,args=[]){
 }
 function viewAsset(a){return {
  id:a.asset_id,name:a.filename,kind:a.kind,contentType:a.content_type,
- sizeBytes:Number(a.size_bytes),sha256:a.sha256
+ sizeBytes:Number(a.size_bytes),sha256:a.sha256,digestType:'file-sha256'
 };}
+function viewLargeAsset(a){return {
+ id:a.asset_id,name:a.filename,kind:a.kind,contentType:a.content_type,
+ sizeBytes:Number(a.size_bytes),sha256:a.manifest_sha256,digestType:'part-manifest'
+};}
+async function largeReviewReady(db){
+ const r=await query(db,"SELECT name FROM sqlite_master WHERE type='table' AND name IN "+
+  "('member_studio_large_assets','member_studio_submission_large_assets')");
+ return r.length===2;
+}
 function viewSubmission(s){return {
  id:s.id,projectId:s.project_id,revision:Number(s.project_revision),slug:s.slug,
  title:s.title,summary:s.summary,description:s.description,category:s.category,
@@ -31,8 +40,13 @@ export async function listStudioReviewReceipts(db,projectId,userId){
   'SELECT a.submission_id,a.asset_id,a.filename,a.kind,a.content_type,a.size_bytes,a.sha256 '+
   'FROM member_studio_submission_assets a JOIN member_studio_submissions s ON s.id=a.submission_id '+
   'WHERE s.project_id=? AND s.user_id=? ORDER BY s.project_revision DESC,a.asset_id',[projectId,userId]);
+ const large=await largeReviewReady(db)?await query(db,
+  'SELECT a.submission_id,a.asset_id,a.filename,a.kind,a.content_type,a.size_bytes,a.manifest_sha256 '+
+  'FROM member_studio_submission_large_assets a JOIN member_studio_submissions s ON s.id=a.submission_id '+
+  'WHERE s.project_id=? AND s.user_id=? ORDER BY s.project_revision DESC,a.asset_id',[projectId,userId]):[];
  return subs.map(row=>({...viewSubmission(row),
-  assets:all.filter(x=>x.submission_id===row.id).map(viewAsset)}));
+  assets:[...all.filter(x=>x.submission_id===row.id).map(viewAsset),
+   ...large.filter(x=>x.submission_id===row.id).map(viewLargeAsset)]}));
 }
 export async function getStudioReviewReceipt(db,project,reviewerId){
  const row=(await query(db,
@@ -43,25 +57,38 @@ export async function getStudioReviewReceipt(db,project,reviewerId){
  const assets=await query(db,
   'SELECT asset_id,filename,kind,content_type,size_bytes,sha256 '+
   'FROM member_studio_submission_assets WHERE submission_id=? ORDER BY asset_id LIMIT 21',[row.id]);
- return {...viewSubmission(row),assets:assets.map(viewAsset)};
+ const large=await largeReviewReady(db)?await query(db,
+  'SELECT asset_id,filename,kind,content_type,size_bytes,manifest_sha256 FROM '+
+  'member_studio_submission_large_assets WHERE submission_id=? ORDER BY asset_id LIMIT 41',[row.id]):[];
+ return {...viewSubmission(row),assets:[...assets.map(viewAsset),...large.map(viewLargeAsset)]};
 }
-export async function freezeStudioReview(db,selected,ownerId,now,kinds,external){
- // Changes happen in one D1 batch (single SQLite transaction), guaranteeing
- // a frozen metadata snapshot and matching set of completed quarantined hashes.
+export async function freezeStudioReview(db,selected,ownerId,now,kinds,external,includeLarge=false){
+ // Every private review receipt represents an immutable exact revision.
+ // The legacy V050 upload path and small-file snapshot remain unchanged.
  const id=crypto.randomUUID(),next=Number(selected.revision)+1;
  if(!UUID.test(id)||!Number.isSafeInteger(next)||next<2)throw Error('Invalid snapshot');
- const proof=kinds.length?(
+ const kindsSlots=kinds.map(()=>'?').join(',');
+ const smallProof=kinds.length?(
   "EXISTS (SELECT 1 FROM member_studio_assets WHERE project_id=? AND user_id=? "+
-  "AND status='quarantined' AND sha256 IS NOT NULL AND kind IN ("+kinds.map(()=>'?').join(',')+"))"
+  "AND status='quarantined' AND sha256 IS NOT NULL AND kind IN ("+kindsSlots+"))"
  ):'0=1';
- const proofArgs=[selected.id,ownerId,...kinds];
+ const largeProof=includeLarge&&kinds.length?(
+  "EXISTS (SELECT 1 FROM member_studio_large_assets WHERE project_id=? AND user_id=? "+
+  "AND status='quarantined' AND manifest_sha256 IS NOT NULL AND kind IN ("+kindsSlots+"))"
+ ):'0=1';
+ const proof=includeLarge?'('+smallProof+' OR '+largeProof+')':smallProof;
+ const proofArgs=[...(kinds.length?[selected.id,ownerId,...kinds]:[]),
+  ...(includeLarge&&kinds.length?[selected.id,ownerId,...kinds]:[])];
  const eligibility=external?'1=1':proof;
+ const extraGuard=includeLarge?
+  "AND NOT EXISTS (SELECT 1 FROM member_studio_large_assets WHERE project_id=? AND status<>'quarantined') ":'';
  const mutation=db.prepare(
   "UPDATE member_studio_projects SET status='pending_review',revision=revision+1,updated_at=?,submitted_at=? "+
   "WHERE id=? AND user_id=? AND revision=? AND status IN ('draft','changes_requested') "+
   "AND NOT EXISTS (SELECT 1 FROM member_studio_assets WHERE project_id=? AND status<>'quarantined') "+
-  'AND '+eligibility+' RETURNING '+selectProject
- ).bind(now,now,selected.id,ownerId,selected.revision,selected.id,...(external?[]:proofArgs));
+  extraGuard+'AND '+eligibility+' RETURNING '+selectProject
+ ).bind(now,now,selected.id,ownerId,selected.revision,selected.id,
+  ...(includeLarge?[selected.id]:[]),...(external?[]:proofArgs));
  const copy=db.prepare(
   'INSERT INTO member_studio_submissions('+
    'id,project_id,user_id,project_revision,slug,title,summary,description,category,free_to_use,'+
@@ -76,9 +103,16 @@ export async function freezeStudioReview(db,selected,ownerId,now,kinds,external)
   'SELECT ?,id,filename,kind,content_type,size_bytes,sha256 FROM member_studio_assets '+
   "WHERE project_id=? AND user_id=? AND status='quarantined' AND sha256 IS NOT NULL RETURNING asset_id"
  ).bind(id,selected.id,ownerId);
- const batch=await db.batch([mutation,copy,assets]);
+ const large=includeLarge?db.prepare(
+  'INSERT INTO member_studio_submission_large_assets '+
+  '(submission_id,asset_id,filename,kind,content_type,size_bytes,manifest_sha256) '+
+  'SELECT ?,id,filename,kind,content_type,size_bytes,manifest_sha256 FROM member_studio_large_assets '+
+  "WHERE project_id=? AND user_id=? AND status='quarantined' AND manifest_sha256 IS NOT NULL RETURNING asset_id"
+ ).bind(id,selected.id,ownerId):null;
+ const batch=await db.batch([mutation,copy,assets,...(large?[large]:[])]);
  if(results(batch?.[0]).length!==1||results(batch?.[1]).length!==1)return null;
- return {project:results(batch[0])[0],submissionId:id,assetCount:results(batch[2]).length};
+ return {project:results(batch[0])[0],submissionId:id,
+  assetCount:results(batch[2]).length+(large?results(batch[3]).length:0)};
 }
 export async function withdrawStudioReview(db,selected,ownerId,now){
  // Both tables must transition together or not at all.
