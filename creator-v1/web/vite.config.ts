@@ -26,15 +26,17 @@ export default defineConfig(({ mode }) => ({
         rmSync(fileURLToPath(new URL(output+'/assets/cinematic-v136/arrival/review-001',import.meta.url)),{recursive:true,force:true});
       }
     },
-    // Preserve all route CSS order and behavior while PARITY owns its components.
-    // Wrapping source CSS (before Vite processing) also covers lazy route chunks.
+    // Layer order is stable even when a route loads its CSS after the authority.
+    // The unlayered Continuance system wins over legacy and inherited PARITY.
     {
       name:"parity-legacy-cascade",
       enforce:"pre",
       transform(code,id){
         const full=process.env.VITE_PARITY_V136_FULL ?? loadEnv(mode,fileURLToPath(new URL(".",import.meta.url)),"VITE_").VITE_PARITY_V136_FULL;
-        if(full==="true"&&/\.css(?:$|\?)/.test(id)&&!id.includes("/src/parity/"))
-          return {code:"@layer legacy {\n"+code+"\n}",map:null};
+        if(full==="true"&&/\.css(?:$|\?)/.test(id)&&!id.includes("/src/parity/continuance-design-system.css")){
+          const layer=id.includes("/src/parity/")?'parity':'legacy';
+          return {code:"@layer legacy, parity;\n@layer "+layer+" {\n"+code+"\n}",map:null};
+        }
       }
     },
     react()
