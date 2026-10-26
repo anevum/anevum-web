@@ -46,6 +46,7 @@ test("Paid entitlement requires matching completed Square payment",()=>{
   assert.equal(providerPaymentMatches(order,{...payment,amount_money:{amount:499,currency:"USD"}}),false);
   assert.equal(providerPaymentMatches(order,{...payment,status:"PENDING"}),false);
   assert.equal(providerPaymentMatches(order,{...payment,order_id:"other"}),false);
+  assert.equal(providerPaymentMatches({...order,provider_order_id:undefined},{...payment,order_id:undefined}),false);
 });
 test("Webhook signature checks URL+raw body",async()=>{
   const raw='{"type":"payment.updated"}', url="https://anevum.example/webhooks/square",key="test-only-not-real-secret";
@@ -54,4 +55,5 @@ test("Webhook signature checks URL+raw body",async()=>{
   assert.equal(await verifySquareWebhook(raw,signature,key,url),true);
   assert.equal(await verifySquareWebhook(raw+" ",signature,key,url),false);
   assert.equal(await verifySquareWebhook(raw,signature,key,url+"/changed"),false);
+  assert.equal(await verifySquareWebhook(raw,"not-valid-base64$$",key,url),false);
 });
