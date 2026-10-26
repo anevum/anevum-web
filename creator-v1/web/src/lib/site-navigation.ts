@@ -26,7 +26,7 @@ export const DISCOVERY_NAV:readonly SiteLink[]=[
 ];
 
 export const MEMBER_NAV:readonly SiteLink[]=[
-  {key:"studio",label:"Creator Studio",to:"/account/studio",icon:"create",detail:"Private projects and moderated submissions"},
+  {key:"studio",label:"Creator Studio",to:"/studio",icon:"create",detail:"Private projects and moderated submissions"},
   {key:"library",label:"Saved Library",to:"/library",icon:"library",detail:"Your saved, approved creations"},
   {key:"profile",label:"Profile Settings",to:"/member",icon:"people",detail:"Your verified member profile, handle and visibility"}
 ];
@@ -34,7 +34,6 @@ export const MEMBER_NAV:readonly SiteLink[]=[
 export const SUPPORT_NAV:readonly SiteLink[]=[
   {key:"start",label:"Start Here",to:"/start",icon:"explore",detail:"Introduction"},
   {key:"status",label:"Build Status",to:"/status",icon:"status",detail:"Verified feature availability"},
-  {key:"atlas",label:"Atlas",to:"/atlas",icon:"explore",detail:"Optional spatial navigation"}
 ];
 
 // Messages and collaboration are NOT navigable until independently authorized,
@@ -42,7 +41,7 @@ export const SUPPORT_NAV:readonly SiteLink[]=[
 export function isSiteLinkSelected(pathname:string,to:string):boolean{
   if(to==="/")return pathname==="/";
   if(to==="/member")return pathname==="/member"||pathname==="/member/setup";
-  if(to==="/account/studio")return pathname==="/account/studio"||pathname==="/create"||pathname.startsWith("/create/");
+  if(to==="/studio")return pathname==="/studio"||pathname.startsWith("/studio/")||pathname==="/account/studio"||pathname==="/create"||pathname.startsWith("/create/");
   if(to==="/discover")return pathname==="/discover";
   return pathname===to;
 }
