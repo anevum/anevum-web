@@ -63,7 +63,9 @@ export async function verifySquareWebhook(raw, signature, signatureKey, url) {
   const key = await crypto.subtle.importKey("raw", bytes.encode(signatureKey),
     { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const actual = new Uint8Array(await crypto.subtle.sign("HMAC", key, bytes.encode(url + raw)));
-  const expected = Uint8Array.from(atob(signature), x => x.charCodeAt(0));
+  let expected;
+  try { expected = Uint8Array.from(atob(signature), x => x.charCodeAt(0)); }
+  catch { return false; }
   if (actual.length !== expected.length) return false;
   let diff = 0;
   for (let i=0;i<actual.length;i++) diff |= actual[i] ^ expected[i];
@@ -74,8 +76,10 @@ export function providerPaymentMatches(order, payment) {
   // Only a completed, exact-amount, exact-currency payment can fulfill entitlements.
   return order?.provider === "square" &&
     order?.status === "pending" &&
+    typeof order?.provider_order_id === "string" && order.provider_order_id.length > 0 &&
+    typeof payment?.order_id === "string" && payment.order_id.length > 0 &&
     payment?.status === "COMPLETED" &&
-    payment?.order_id === order.provider_order_id &&
+    payment.order_id === order.provider_order_id &&
     Number(payment?.amount_money?.amount) === Number(order.amount_cents) &&
     payment?.amount_money?.currency === order.currency;
 }
