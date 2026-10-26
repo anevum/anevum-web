@@ -22,7 +22,7 @@ export function detectCompatibility(entries, {sourceName="package.zip",archiveBy
   if(!html)add("AEP_ENTRY_MISSING","blocker","No root index.html was found.","Export a browser-ready build and ZIP the contents of its output folder.");
   if(sourceOnly)add("AEP_SOURCE_ONLY","info","JavaScript source detected; a production web build is needed.","Run the project's documented build command, then ZIP the built output without node_modules or secrets.");
   if(python&&!html)add("AEP_PYTHON_SOURCE","info","Python source cannot run in the current browser player.","Provide a supported web export or link an externally hosted application.");
-  if(godot&&!html)add("AEP_GODOT_EXPORT","info","Godot source or data detected without a web entrypoint.","Export for Web from Godot, then test browser and mobile support.");
+  if(godot&&!html&&!godotReport)add("AEP_GODOT_EXPORT","info","Godot source or data detected without a web entrypoint.","Export for Web from Godot, then test browser and mobile support.");
   if(unity)add("AEP_UNITY_CONDITIONAL","warning","Unity WebGL may require additional headers, memory, and mobile testing.","Test the isolated runtime before claiming phone compatibility.");
   if(wasm)add("AEP_WASM_MOBILE","warning","WebAssembly support does not establish mobile compatibility.","Verify real iPhone Safari and Android Chrome performance and startup.");
   if(godotReport)issues.push(...godotReport.issues);
