@@ -56,5 +56,9 @@ export function isSiteLinkSelected(pathname:string,to:string):boolean{
   if(to==="/member"||to==="/member?tab=profile")return pathname==="/member"||pathname==="/member/setup";
   if(to==="/studio")return pathname==="/studio"||pathname.startsWith("/studio/")||pathname==="/account/studio"||pathname==="/create"||pathname.startsWith("/create/");
   if(to==="/discover")return pathname==="/discover";
+  // Public channel and Commons detail pages belong to their parent station.
+  // Bound to an actual slash so /community-other cannot impersonate Commons.
+  if(to==="/community"||to==="/creators")
+    return pathname===to||pathname.startsWith(to+"/");
   return pathname===to;
 }
