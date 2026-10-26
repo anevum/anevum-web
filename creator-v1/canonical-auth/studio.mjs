@@ -183,7 +183,7 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
     "SELECT id FROM member_studio_large_assets WHERE project_id=? AND user_id=? AND status='quarantined' "+
     "AND manifest_sha256 IS NOT NULL AND kind IN ("+kinds.map(()=>'?').join(',')+") LIMIT 1",
     [id,user.id,...kinds]));
-   const eligible=hasExternal||largeEligible?true:kinds.length?Boolean(await getOne(db,hasExternal?true:kinds.length?Boolean(await getOne(db,
+   const eligible=(hasExternal||largeEligible)?true:kinds.length?Boolean(await getOne(db,
     "SELECT id FROM member_studio_assets WHERE project_id=? AND user_id=? AND status='quarantined' "+
     "AND sha256 IS NOT NULL AND kind IN ("+kinds.map(()=>'?').join(',')+") LIMIT 1",
     [id,user.id,...kinds])):false;
