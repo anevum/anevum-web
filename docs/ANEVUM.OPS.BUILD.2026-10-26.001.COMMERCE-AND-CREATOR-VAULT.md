@@ -13,7 +13,7 @@ Status: **SOURCE FOUNDATION ONLY / NOT DEPLOYED / NO CUSTOMER CHARGES**.
 ## Components landed here
 - Separate additive D1 schema for orders, provider event inbox, payment ledger, timed vault passes, member projects, upload reservations, vault files and quota accounting.
 - Fail-closed Square sandbox configuration; no card details retained, no unapproved product price fallback.
-- Fixed catalog identifiers (supporter, optional 10 GiB or 50 GiB thirty-day pass). No price selected; prices require explicit owner approval.
+- Owner-approved catalog IDs and exact prices: one-time support $5/$10/$25 and 30-day vault capacity +10 GiB/$4 or +50 GiB/$9. The 100 GiB tier is DEFERRED. Prices are coded but purchases remain disabled.
 - Server-only Square webhook HMAC verifier, exact completed payment matching, safe filename/media-size contracts and isolated tests.
 
 ## Remaining code needed before PRIVATE staging deployment
@@ -24,7 +24,7 @@ Status: **SOURCE FOUNDATION ONLY / NOT DEPLOYED / NO CUSTOMER CHARGES**.
 5. Implement paid entitlement expiration, refunds/revocations, cancellation, support receipts, concurrency and multi-session abuse controls; provide transaction history with privacy-safe retention.
 6. Account export/delete **must** cover Vault objects, ledger/legal retention and backups. Test A/B isolation, restore and rollback with disposable DB and isolated R2 before production acceptance.
 7. Build premium UX within current cinematic layout, not a second storefront; clearly distinguish one-off support from time-limited storage passes.
-8. Add real sandbox end-to-end Square tests, mobile usability, independent security review, owner approved prices/policy, and separate release authorization.
+8. Add real sandbox end-to-end Square tests, mobile usability, independent security review, reviewed customer policies, and separate release authorization. Catalog pricing has owner approval; this does not waive any release gate.
 
 ## Hard gates
 - DO NOT apply migration to live D1 before isolated restore and acceptance.
@@ -34,11 +34,11 @@ Status: **SOURCE FOUNDATION ONLY / NOT DEPLOYED / NO CUSTOMER CHARGES**.
 - Keep public production, Creator V1 #325 and dates #308 unchanged.
 - Historical Stripe data remains separate and cannot grant new entitlements.
 
-## Pricing and sustainability proposal (October 26, 2026)
+## Approved pricing and sustainability direction (October 26, 2026)
 
-No charges or public promises are authorized by this section. The goal is operating sustainability and modest discretionary family income, not maximizing profit. Household cost data is not verified.
+Founder approved the price schedule and sustainability-first business direction on October 26, 2026. This is **pricing approval only**, not permission to deploy, connect live Square accounts, enable charges, publish a storefront or incur spend. The goal is operating sustainability and modest discretionary family income, not maximizing profit. Household cost data is not verified.
 
-Proposed prices: Free private vault 2 GiB; voluntary one-time support $5, $10, or $25; 10 GiB extra capacity for 30 days $4; 50 GiB extra capacity for 30 days $9; optional later 100 GiB for 30 days $15. The $3 and $8 earlier examples are superseded. Do not sell until backups, account isolation, anti-abuse, deletion/export and genuine payment verification are proven. No pay-to-win progression.
+Owner-approved launch prices: Free private vault 2 GiB; voluntary one-time support $5, $10, or $25; 10 GiB extra capacity for 30 days $4; 50 GiB extra capacity for 30 days $9. An optional 100 GiB tier at $15 is **deferred and is not in the active catalog**. The $3 and $8 earlier examples are superseded. Do not sell until backups, account isolation, anti-abuse, deletion/export, expiration/grace policy and genuine payment verification are proven. No pay-to-win progression.
 
 Input sources checked October 26: https://developers.cloudflare.com/r2/pricing/ ($0.015/GB-month, first 10 GB-month free, request tiers); https://squareup.com/us/en/payments/our-fees (Square Free online/payment links 3.3% + $0.30); https://developers.cloudflare.com/d1/platform/pricing/ . Check actual account pricing before launch.
 
