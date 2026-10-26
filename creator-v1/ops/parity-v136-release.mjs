@@ -146,6 +146,7 @@ export const REVIEWED_UI_BLOBS=Object.freeze({
  "creator-v1/source-ide/language-v119.mjs": "718dc4c24c011a475f2e014c3728fd406dc814f3",
  "creator-v1/test/canonical-saved-works-v009.test.mjs": "d4128333e90b0439f4d7f6caa3cbd12f85163d0e",
  "creator-v1/test/capture-community-hub-v007.mjs": "5a778c66aa6da5e8a11aff376a251caeb2652e7a",
+ "creator-v1/test/capture-iren-frame-v104.mjs": "603e3469e561174d09d22428b8e798fb023a72ee",
  "creator-v1/test/capture-iren-guided-v080.mjs": "44e58a4e3dc78d388c5f5f67d9c07f3d63d2353d",
  "creator-v1/test/capture-iren-transmissions-v111.mjs": "83c99f3a6823ee8a93df46e1c6913f81a96f52c0",
  "creator-v1/test/cinematic-depth-v011.test.mjs": "d4736e525de382434c028c6b9338746a65cb92f4",
