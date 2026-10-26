@@ -151,13 +151,14 @@ jobs:
             -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
             "$api/accounts/$CF_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" \
             > "$RUNNER_TEMP/anevum-review/apex-before.json"
-          jq -e '.result.deployments[0].id=="77ceaf3d-5bfb-4f07-b64d-1655a3093065" and
-            (.result.deployments[0].versions|sort_by(.percentage)|
-             map([.version_id,.percentage])) ==
-             [["cedb7ac1-74ca-4fcd-9a40-ce56964f1785",1],
-              ["ec5f106b-482c-4415-9c66-d6f8daf219ad",99]]' \
+          # V136 public frontend is now at 100%, independently rolled out from
+          # V60/V61 canaries. Pin both immutable live version AND deployment
+          # identity: a prior successful review may not authorize future drift.
+          jq -e '.result.deployments[0].id=="5bdc7902-bdd5-458d-9295-a35ffb122c96" and
+            (.result.deployments[0].versions|map([.version_id,.percentage])) ==
+             [["c53d8b9c-625b-459a-a8cc-67ebb50155fd",100]]' \
             "$RUNNER_TEMP/anevum-review/apex-before.json" >/dev/null
-          echo 'EXISTING_ASSETS_ONLY_PREVIEW_ROLLBACK_CAPTURED_99_1_GATEWAY_UNCHANGED=PASS'
+          echo 'EXISTING_ASSETS_ONLY_PREVIEW_ROLLBACK_CAPTURED_V136_100_GATEWAY_UNCHANGED=PASS'
 
       - name: Deploy only the static isolated V136 visual review Worker
         shell: bash
