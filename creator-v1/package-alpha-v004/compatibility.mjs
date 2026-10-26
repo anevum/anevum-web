@@ -1,9 +1,11 @@
 /* ANEVUM Creator Compatibility v005 — advisory, never a safety or publication verdict.
  * Operates on structurally validated package entries; no execution or network access.
  */
-export function detectCompatibility(entries, {sourceName="package.zip"}={}) {
+import { inspectGodotWebExport } from "./godot-web.mjs";
+export function detectCompatibility(entries, {sourceName="package.zip",archiveBytes=null}={}) {
   const paths=new Set(entries.map(x=>x.path));
   const has=x=>paths.has(x), suffix=x=>entries.some(e=>e.path.toLowerCase().endsWith(x));
+  const godotReport=inspectGodotWebExport(entries,{archiveBytes});
   const issues=[];
   const add=(code,severity,message,fix)=>issues.push({code,severity,message,fix});
   const html=has("index.html");
@@ -23,11 +25,13 @@ export function detectCompatibility(entries, {sourceName="package.zip"}={}) {
   if(godot&&!html)add("AEP_GODOT_EXPORT","info","Godot source or data detected without a web entrypoint.","Export for Web from Godot, then test browser and mobile support.");
   if(unity)add("AEP_UNITY_CONDITIONAL","warning","Unity WebGL may require additional headers, memory, and mobile testing.","Test the isolated runtime before claiming phone compatibility.");
   if(wasm)add("AEP_WASM_MOBILE","warning","WebAssembly support does not establish mobile compatibility.","Verify real iPhone Safari and Android Chrome performance and startup.");
+  if(godotReport)issues.push(...godotReport.issues);
   if(manifest)add("AEP_MANIFEST_UNVERIFIED","info","ANEVUM manifest found; upload validation remains authoritative.","Keep the manifest consistent with the actual browser build.");
   if(entries.some(e=>e.path.startsWith("node_modules/")))add("AEP_DEPENDENCIES_INCLUDED","warning","node_modules appears in the upload.","Upload the production build rather than the development dependency directory.");
   if(entries.some(e=>/(^|\/)(\.env(?:\.|$)|id_rsa|private\.key|credentials\.json)$/i.test(e.path)))add("AEP_POSSIBLE_SECRET","blocker","Possible secret or credential file detected.","Remove private credentials, rotate any exposed secrets, and export again.");
   if(entries.some(e=>e.path.startsWith("dist/")&&e.path.endsWith("index.html"))&&!html)add("AEP_NESTED_BUILD","blocker","A web entrypoint appears inside dist/, not at the ZIP root.","ZIP the contents of dist/, not the dist folder.");
-  return {schemaVersion:"0.1",sourceName,runtime,entrypoint:html?"index.html":null,
+  return {schemaVersion:"0.2",sourceName,runtime,entrypoint:html?"index.html":null,
+    godot:godotReport,delivery:godotReport?.needsLargeBuild?"large-build-required":html?"browser-candidate":"native-or-web-export-required",
     playableCandidate:html&&!issues.some(x=>x.severity==="blocker"),
     securityReviewed:false,mobileVerified:false,publicationApproved:false,issues};
 }
