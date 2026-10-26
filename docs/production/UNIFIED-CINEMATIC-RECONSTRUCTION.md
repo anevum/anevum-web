@@ -63,3 +63,37 @@ Responsive screenshots use compiled Chromium at CSS viewports, with explicitly l
 Remote integration `d45b573a4fdd5e7ae06632eef2073370d8003789` has the same tree as local `370d6a4e`; the connected GitHub app created the ordinary two-parent merge because local Git had no push credentials. Creator V1 Verify 40259105276, brand, route integrity, Discover/Creators/Commons and IREN regressions passed. The first owner-preview run 40259105414 captured 35 route/viewport combinations with zero overflow/runtime errors, then correctly blocked deployment at native video playback. The next repair adds VP9 WebM, portrait mobile derivatives, ignores expected play cancellation and source-level codec errors, and keeps terminal media failures on the static fallback. The preview hostname/base-path refresh redirect and banner/header positioning are also corrected.
 
 The Studio browser's old expectation of a disabled ambient canvas and Spatial's old handoff source audit were obsolete after renderer removal. They now assert **no ambient canvas**, while preserving source/Monaco, shader/math/budget, controller and actual UI assertions. The archived full Blender/homepage handoff job is manual-only; its last source-era run 40259105675 did not pass because it expects the retired homepage renderer. Reusable media-pipeline contracts still run on PRs. No failing result is relabelled successful. The targeted live-compatible release source guard remains deliberately closed and is expected to reject this unreleased integration.
+
+## Godot/Browser/Native bridge — October 25 follow-up
+
+Session `ANEVUM.WEB.UPDATE.2026-10-25.002.GODOT-PLAYER-INTEGRATION`.
+The separately reviewed Creator V006 Godot export branch is draft PR #780,
+stacked on V005 #569 and V004 #562. Its Node Godot verification passed
+at `cdfe4aa4`; it is not a deployed player or large-upload service.
+Those older branches diverge substantially from the unified V136 source;
+do **not** merge the entire stack into #779 without a migration and security audit.
+
+This bounded V136 patch extends the **existing** V101 local compatibility
+screen and V003 ZIP structural parser with a metadata-only Godot diagnostic.
+Recognized `.pck`/Godot source ZIPs fail closed while identifying required
+root Web assets, mismatched stems and the unavailable upload path.
+It does **not** extend the MIME allowlist, 20 MiB archive limit, 12 MiB
+individual-file limit, 48 MiB expanded limit, D1/R2/storage permissions,
+or security/publication gates. The existing player gains a deliberate
+keyboard-focus action but retains its opaque-origin iframe,
+`sandbox="allow-scripts allow-pointer-lock"`, existing runtime URL
+validation and zero member-session access from creator code.
+
+Godot 4 Compatibility/GDScript single-threaded Web export is the
+first browser QA target. Browser support is a distinct edition from
+checksum-verified Windows/Linux/macOS releases (Android later). A future
+optional ANEVUM desktop library/launcher will only execute deliberately
+downloaded, reviewed native applications and is **not implemented** here.
+No user-supplied executable is auto-started; no fictitious download button
+or publicly playable game is claimed.
+
+Acceptance: exact-head Creator/Studio V136 test suites and preview build,
+local Godot complete/partial/source ZIP negative tests, original sandbox
+preservation, plus real Godot exported build validation in a separate
+isolated runtime before any release. The exact-head CI and device acceptance
+statuses must be recorded separately; source edits alone do not prove them.
