@@ -6,6 +6,7 @@ on:
       - 'src/components/Mark.tsx'
       - 'src/components/Shell.tsx'
       - 'src/styles/global.css'
+      - 'src/styles/workshop.css'
       - 'public/favicon.svg'
       - 'public/icon-192.png'
       - 'public/icon-512.png'
