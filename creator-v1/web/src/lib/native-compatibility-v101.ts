@@ -5,7 +5,7 @@
  * parser, instead of maintaining a second archive validator.
  */
 import {inspectZip,ZIP_LIMITS} from '../../../../site/alpha/v003/archive.mjs';
-import {sniffGodotZipEntries} from './godot-local-sniff-v136';
+import {sniffGodotZipEntries} from './godot-local-sniff-v136.ts';
 import {detectCompatibility,type CompatibilityReport,type CompatibilityIssue}
  from '../../../../site/alpha/v003/compatibility-v005.mjs';
 
