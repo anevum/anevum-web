@@ -36,8 +36,9 @@ await new Promise(done=>server.listen(0,'127.0.0.1',done));
 const origin='http://127.0.0.1:'+server.address().port;
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 let success=false;
-async function context(width,{motion='reduce',saveData=false,brokenMedia=false,apiError=false}={}){
+async function context(width,{motion='reduce',saveData=false,brokenMedia=false,apiError=false,withoutRandomUUID=false}={}){
  const ctx=await browser.newContext({viewport:{width,height:width<600?844:1000},deviceScaleFactor:1,reducedMotion:motion});
+ if(withoutRandomUUID)await ctx.addInitScript(()=>Object.defineProperty(crypto,'randomUUID',{value:undefined}));
  if(saveData)await ctx.addInitScript(()=>Object.defineProperty(navigator,'connection',{value:{saveData:true,effectiveType:'4g'}}));
  await ctx.route('**/*',async route=>{
   const req=route.request(),url=new URL(req.url());
@@ -108,6 +109,12 @@ try{
   }
   await page.getByRole('link',{name:'Explore projects',exact:true}).click();assert.match(page.url(),/\/discover/);
   checks.push({name});await ctx.close();
+ }
+ {
+  const {ctx,page}=await context(390,{withoutRandomUUID:true});
+  await page.goto(origin+'/creator/community',{waitUntil:'networkidle'});
+  await page.locator('#ch7-hero-title').waitFor();await geometry(page);
+  checks.push({name:'public-commons-without-randomUUID'});await ctx.close();
  }
  assert.deepEqual(errors,[]);assert.deepEqual(forbidden,[]);success=true;
 }finally{

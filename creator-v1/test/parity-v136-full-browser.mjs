@@ -721,10 +721,8 @@ try{
       const compact=await page.locator('.p136-hero-content h1').boundingBox();
       assert.ok(compact&&compact.y-layout.hero.y<290,'Mobile artwork reservation stays bounded');
       assert.ok(layout.primary.bottom<844-100,'Primary action is available above the phone console');
-      const inspection=await page.locator('.p136017-scene-inspection').boundingBox();
-      const register=await page.locator('.p136-hero-register').boundingBox();
-      if(inspection)assert.ok(register&&inspection.y+inspection.height+8<=register.y,
-        'Mobile inspection status stays clear of the first-contact label: '+JSON.stringify({inspection,register}));
+      assert.equal(await page.locator('.p136017-scene-inspection').count(),0,
+        'Retired live-model inspection does not occupy the mobile header');
     }
 
     const cinema=page.locator('[data-cinematic-v136="motion-first"]');

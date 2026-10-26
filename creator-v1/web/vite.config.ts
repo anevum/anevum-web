@@ -33,6 +33,9 @@ export default defineConfig(({ mode }) => ({
       enforce:"pre",
       transform(code,id){
         const full=process.env.VITE_PARITY_V136_FULL ?? loadEnv(mode,fileURLToPath(new URL(".",import.meta.url)),"VITE_").VITE_PARITY_V136_FULL;
+        // Preserve existing explicit root-layer repairs. Nesting those blocks
+        // would change !important precedence and revive obsolete route type.
+        if(id.includes("/src/parity/")&&/@layer\s/.test(code))return;
         if(full==="true"&&/\.css(?:$|\?)/.test(id)&&!id.includes("/src/parity/continuance-design-system.css")){
           const layer=id.includes("/src/parity/")?'parity':'legacy';
           return {code:"@layer legacy, parity;\n@layer "+layer+" {\n"+code+"\n}",map:null};
