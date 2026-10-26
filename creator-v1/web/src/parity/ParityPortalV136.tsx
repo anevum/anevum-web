@@ -51,7 +51,7 @@ function PublicProjectCard({project}:{project:Project}){
       <ProjectThumbnail kind={project.category} title={project.title} decorative/><span className="p136-project-art-note">CATEGORY INDEX / NOT CREATOR COVER</span><span className="p136-kind">{meta.label}</span>
     </Link>
     <div className="p136-project-body">
-      <span className="p136-project-meta">{project.freeToUse?'FREE TO USE':'PROJECT DIRECTORY'} <span> / </span> APPROVED PUBLIC WORK</span>
+      <span className="p136-project-meta">{meta.label} <span> / </span> {project.freeToUse?'FREE TO USE':'PROJECT DIRECTORY'} <span> / </span> APPROVED PUBLIC WORK</span>
       <h3><Link to={projectDetailPath(project.id,'/')}>{project.title}</Link></h3><p>{project.summary}</p>
       <div className="p136-project-foot">
         <span className="p136-project-credit">By {project.creatorName||'ANEVUM member'}</span>

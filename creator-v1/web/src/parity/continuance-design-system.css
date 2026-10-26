@@ -226,3 +226,112 @@ html[data-av-parity="v136-full"] :is(.p136-discovery-index,.p136-discovery-body,
 
 /* Keep the sharp still visible until a native decoder produces its first frame. */
 html[data-av-parity="v136-full"] .p136-cinematic-video:not([data-ready="true"]){opacity:0}
+
+/* G3 baseline: preserve approved covers, remove overprinted category labels.
+   Native index tile keeps one title and number, not top/core/footer repetitions. */
+html[data-av-parity="v136-full"] .av136-index-field{
+ grid-template-rows:1fr;color:var(--av-text);border-color:var(--av-border);
+ background:radial-gradient(ellipse at 73% 40%,#b49bce2b,transparent 58%),
+ linear-gradient(146deg,#261b2d,#110d1a 68%,#090710);
+ box-shadow:inset 0 1px #f1e2d218,0 15px 35px #02010469;
+}
+html[data-av-parity="v136-full"] .av136-index-field::before{
+ left:auto;top:8%;right:11%;width:54%;height:84%;border:1px solid #d2a57f53;
+ border-radius:50%;transform:rotate(-32deg) scaleY(.54);clip-path:none;
+ box-shadow:0 0 0 22px #b49bce0b,0 0 40px #b49bce31;
+}
+html[data-av-parity="v136-full"] .av136-index-field::after{
+ right:13%;bottom:15%;width:28%;height:52%;border-color:#d2a57f70;
+ border-radius:50%;transform:rotate(30deg) scaleY(.58);clip-path:none;
+}
+html[data-av-parity="v136-full"] .av136-index-field__core{
+ justify-content:flex-end;align-items:flex-start;gap:6px;
+ padding:clamp(18px,2.5vw,30px);
+ background:linear-gradient(0deg,#090711e8,transparent 65%);
+}
+html[data-av-parity="v136-full"] .av136-index-field__number{
+ color:var(--av-copper);font:600 clamp(15px,1.6vw,23px)/1 var(--av-mono);
+ text-shadow:none;letter-spacing:.03em;
+}
+html[data-av-parity="v136-full"] .av136-index-field__name{
+ font:650 clamp(14px,1.55vw,20px)/1.2 var(--av-body);
+ letter-spacing:.045em;color:var(--av-text);
+}
+html[data-av-parity="v136-full"] :is(
+ .p136-project-art-note,.p136-kind,
+ .p136-discover-results .project-kind,
+ .p136-discover-results .cw-project-art-disclosure,
+ .p136-discover-results .av010-work-cover-label
+){display:none}
+/* Discover retains old navy/cyan page CSS: converge controls through the
+   already accepted late-loaded Continuance authority, not another theme. */
+html[data-av-parity="v136-full"] .p136-discovery{
+ --pd-body:var(--av-body);--pd-ink:var(--av-text);--pd-muted:var(--av-secondary);
+ background:var(--av-void);color:var(--av-text);
+}
+html[data-av-parity="v136-full"] .p136-discovery .p136-discover-command{
+ background:none;border-color:var(--av-border);
+}
+html[data-av-parity="v136-full"] .p136-discovery .p136-discover-command::before{
+ background:linear-gradient(90deg,var(--av-copper),var(--av-violet),transparent);
+ box-shadow:0 0 16px #b49bce33;
+}
+html[data-av-parity="v136-full"] .p136-discovery .p136-discover-search-form{
+ background:var(--av-instrument);border-color:var(--av-edge);
+ color:var(--av-text);box-shadow:inset 0 2px 9px #020105a6;
+}
+html[data-av-parity="v136-full"] .p136-discovery .p136-discover-search-form input{
+ color:var(--av-text);
+}
+html[data-av-parity="v136-full"] .p136-discovery .p136-discover-search-form button{
+ background:linear-gradient(125deg,#f2e4d3,#d5b9a0);
+ border-color:var(--av-copper);color:#150e17;
+}
+html[data-av-parity="v136-full"] .p136-discovery .p136-discover-availability button,
+html[data-av-parity="v136-full"] .p136-discovery .p136-discover-reset,
+html[data-av-parity="v136-full"] .p136-discovery .p136-discover-category-nav button{
+ background:var(--av-instrument);border-color:var(--av-border);color:var(--av-secondary);
+}
+html[data-av-parity="v136-full"] .p136-discovery .p136-discover-availability button[aria-pressed="true"],
+html[data-av-parity="v136-full"] .p136-discovery .p136-discover-category-nav button[aria-pressed="true"]{
+ background:linear-gradient(125deg,#f2e4d3,#d5b9a0);
+ border-color:var(--av-copper);color:#150e17;
+}
+html[data-av-parity="v136-full"] .p136-discovery .p136-discover-featured{
+ background:var(--av-canvas);border-color:var(--av-border);
+ box-shadow:0 18px 45px #02010485;
+}
+html[data-av-parity="v136-full"] .p136-discovery .p136-discover-world{
+ background:var(--av-surface);border-color:var(--av-border);
+ color:var(--av-text);box-shadow:inset 0 1px #f0e6d61c;
+}
+html[data-av-parity="v136-full"] .p136-discovery .p136-discover-world[aria-pressed="true"]{
+ border-color:var(--av-copper);
+ box-shadow:inset 0 0 0 2px var(--av-copper),0 0 28px #b49bce2e;
+}
+html[data-av-parity="v136-full"] .p136-discovery[data-discovery-phase="v136.026"]
+ .p136-discover-world-copy{background:var(--av-instrument);border-color:var(--av-border)}
+html[data-av-parity="v136-full"] .p136-discovery[data-discovery-phase="v136.026"]
+ .p136-discover-world-copy small{color:var(--av-secondary)}
+html[data-av-parity="v136-full"] .p136-discovery .p136-discover-layout-switch{
+ background:var(--av-instrument);border-color:var(--av-border);
+}
+html[data-av-parity="v136-full"] .p136-discovery .p136-discover-layout-switch button{
+ color:var(--av-secondary);
+}
+html[data-av-parity="v136-full"] .p136-discovery .p136-discover-layout-switch button[aria-pressed="true"]{
+ background:#3b2b41;color:var(--av-text);
+}
+html[data-av-parity="v136-full"] .p136-discovery .p136-discover-results .project-card,
+html[data-av-parity="v136-full"] .p136-discovery .p136-discover-results .av010-work-card{
+ background:var(--av-panel);border-color:var(--av-border);box-shadow:var(--av-shadow);
+}
+html[data-av-parity="v136-full"] .p136-discovery .p136-discover-results .project-card h3{
+ color:var(--av-text);
+}
+html[data-av-parity="v136-full"] .p136-discovery .p136-discover-results .project-card p{
+ color:var(--av-secondary);
+}
+@media(forced-colors:active){
+ html[data-av-parity="v136-full"] .av136-index-field{background:Canvas;color:CanvasText;box-shadow:none}
+}

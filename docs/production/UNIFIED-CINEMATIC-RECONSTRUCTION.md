@@ -130,3 +130,16 @@ Implemented appearance: Orbital-preserving header and navigation, architectural 
 Verification: `creator-v1/test/visual-convergence-v136.test.mjs` checks palette contrasts and source authority. The existing read-only owner-preview browser QA now asserts computed theme tokens and captures Arrival, Discover, creators, Commons, guest Studio, guide and Boards at 320/390/768/1440/1920. Passing screenshot generation is **not** equivalent to design approval. Physical iPhone/Safari and Xbox controller acceptance remain separate. Founder visual decision #335, production and release gates are unchanged.
 
 Next visual passes: inspect exact-head screenshots; refine page-specific 35-state composition and readability, then project detail/channel/Commons thread, member/Studio interactions, guide/status/legal and finally retained V5 company/RHEN plus separate portfolio/Sites identity touchpoints. Do not force public theming into private systems or alter live route owners as cosmetic cleanup.
+
+## G3 visual baseline: homepage/thumbnail/media truth and Discover consolidation
+
+Session: `ANEVUM.WEB.UPDATE.2026-10-26.001.BASELINE-MEDIA-THEME-CONSOLIDATION`.
+The current hero MP4/WebM is a **12-second camera crop of one generated 1672×941 still**, not moving geometry, volumetric ambience, or a finished 3D cinematography pass. Its existing first-party video, poster, reduced-motion, Save-Data, offscreen and rights/approval gates remain; do not claim it is final immersive footage.
+
+Ten reviewed first-party 1600×900 SVG **default fallback** covers had five baked-in strings each. The first source cleanup removed that image text while keeping their category glyphs and improving the shared obsidian/bone/violet/copper styling. No invented creator cover, project screenshot, first-party preview video, or network URL is introduced. The `ProjectThumbnail` trusted-cover precedence remains identical.
+
+This continuation removes the duplicated index tile top/footer text, presents only the category number/name and separate explanation, hides V136-only overprint badges on artwork, and moves the home-card category to its semantic metadata. Existing live V131 markup and real data remain. Discover's later page styles had old navy/cyan search, category, filter, and card colors; these are overridden from the **existing one late-loaded Continuance authority**, without another theme file or live route migration.
+
+The earlier Discover browser QA successfully passed initial Grid/List semantics before timing out on its third repeated full-document capture. Full-page Grid/List receipts remain. The filtered result now uses a bounded true viewport screenshot after scrolling it into view, without removing any catalogue, URL, history, accessibility or overflow assertion; remaining full-document capture bounds are increased to 90 seconds.
+
+Next required gates: exact-head checks, rendered responsive visual examination, individual project/members/Studio review and real immersive motion-media acquisition/authoring with explicit rights and owner acceptance. Native game/Godot/Studio media and private/publishing boundaries are unaffected.

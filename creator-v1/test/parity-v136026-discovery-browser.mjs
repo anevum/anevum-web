@@ -153,7 +153,7 @@ try{
   assert.equal(await discovery.locator('.av136-project-thumbnail[data-thumbnail-source="default"]').count(),2,
    'Legacy projects use approved first-party type defaults, not fabricated uploaded covers');
   await page.evaluate(()=>window.scrollTo(0,0));
-  await page.screenshot({path:join(destination,'discover-grid-'+width+'.png'),fullPage:true,animations:'disabled'});
+  await page.screenshot({path:join(destination,'discover-grid-'+width+'.png'),fullPage:true,animations:'disabled',timeout:90000});
   // Grid/list changes are URL-only; the server reads are unchanged.
   const beforeView=requests.length;
   await discovery.locator('.p136-discover-layout-switch').getByRole('button',{name:'List',exact:true}).click();
@@ -167,7 +167,7 @@ try{
    'One full-width result per List row at '+width);
   assert.equal(requests.length,beforeView,'Layout-only changes must not re-query public catalogue');
   await page.evaluate(()=>window.scrollTo(0,0));
-  await page.screenshot({path:join(destination,'discover-list-'+width+'.png'),fullPage:true,animations:'disabled'});
+  await page.screenshot({path:join(destination,'discover-list-'+width+'.png'),fullPage:true,animations:'disabled',timeout:90000});
   await list.getByRole('link',{name:'View project',exact:true}).first().click();
   await page.locator('.portal-project').waitFor();
   assert.equal(await page.locator('a[href*="/creators/null"]').count(),0,'Project credit must not fabricate a null channel');
@@ -223,7 +223,11 @@ try{
   await page.getByRole('heading',{name:'SYNTHETIC ORBIT GAME',exact:true}).waitFor();
   assert.equal(await cards.count(),1);
   await page.evaluate(()=>window.scrollTo(0,0));
-  await page.screenshot({path:join(destination,'discover-filtered-'+width+'.png'),fullPage:true,animations:'disabled'});
+  // Grid and List already have full-page receipts. Capture the true filtered
+  // project result in-view without a third heavyweight full-document screenshot.
+  await page.locator('.p136-discover-results').scrollIntoViewIfNeeded();
+  await page.screenshot({path:join(destination,'discover-filtered-'+width+'.png'),
+    fullPage:false,animations:'disabled',timeout:60000});
   await discovery.getByRole('link',{name:/Clear filters/}).click();
   await checkParams(page,{view:'list',q:null,category:null,free:null,cursor:null});
   await page.getByRole('heading',{name:'SYNTHETIC USEFUL TOOL',exact:true}).waitFor();
@@ -232,7 +236,7 @@ try{
   await checkParams(page,{view:'list',cursor:'ci-page-2'});
   await page.getByRole('heading',{name:'No additional releases on this page.'}).waitFor();
   await page.evaluate(()=>window.scrollTo(0,0));
-  await page.screenshot({path:join(destination,'discover-page-end-'+width+'.png'),fullPage:true,animations:'disabled'});
+  await page.screenshot({path:join(destination,'discover-page-end-'+width+'.png'),fullPage:true,animations:'disabled',timeout:90000});
   await page.goBack({waitUntil:'domcontentloaded'});
   await page.getByRole('heading',{name:'SYNTHETIC ORBIT GAME',exact:true}).waitFor();
   const refreshedSearch=discovery.locator('.p136-discover-search-form').getByRole('searchbox',{name:'Search published projects'});
@@ -241,14 +245,14 @@ try{
   await checkParams(page,{q:'unknown-discovery',cursor:null,view:'list'});
   await page.getByRole('heading',{name:'No matching projects yet.'}).waitFor();
   await page.evaluate(()=>window.scrollTo(0,0));
-  await page.screenshot({path:join(destination,'discover-no-matches-'+width+'.png'),fullPage:true,animations:'disabled'});
+  await page.screenshot({path:join(destination,'discover-no-matches-'+width+'.png'),fullPage:true,animations:'disabled',timeout:90000});
   published=false;
   await discovery.getByRole('link',{name:/Clear filters/}).click();
   await checkParams(page,{view:'list',q:null,category:null,cursor:null});
   await page.getByRole('heading',{name:'No approved projects yet.'}).waitFor();
   assert.equal(await cards.count(),0);
   await page.evaluate(()=>window.scrollTo(0,0));
-  await page.screenshot({path:join(destination,'discover-no-public-'+width+'.png'),fullPage:true,animations:'disabled'});
+  await page.screenshot({path:join(destination,'discover-no-public-'+width+'.png'),fullPage:true,animations:'disabled',timeout:90000});
   assert.deepEqual(errors,[],'No runtime page errors at '+width);
   report.widths.push({width,initial,screenshots:6,networkReads:requests.length,checks:'PASS'});
   console.log('PASS Discover public URL/grid/list at '+width+'px: '+JSON.stringify(initial));
