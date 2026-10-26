@@ -19,14 +19,14 @@ concurrency:
 jobs:
   build-and-deploy-owner-preview:
     if: >-
-      github.event.pull_request.base.ref == 'build/parity-v136-controller-route-probe-20261025-038' &&
-      github.event.pull_request.head.ref == 'review/v136-interactive-public-owner-20261025-001' &&
+      github.event.pull_request.number == 763 &&
+      github.event.pull_request.base.ref == 'build/parity-v136-iren-visible-tour-20261025-037' &&
+      github.event.pull_request.head.ref == 'build/parity-v136-controller-route-probe-20261025-038' &&
       github.event.pull_request.head.repo.full_name == 'anevum/anevum-web'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
       REVIEWED_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
-      V136_BASE_SHA: f58bed9370dc3fed0429033852a0a9c506daffae
       CF_ACCOUNT_ID: 2f7ee83107240152097efd956a4e8335
       CF_ZONE_ID: 8abe27259b5436af5966d3b40d9a3760
       WORKER_NAME: anevum-v136-visual-review-001

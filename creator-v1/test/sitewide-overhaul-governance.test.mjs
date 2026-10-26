@@ -37,11 +37,15 @@ test('exactly one canonical product source and one read-only visual preview',()=
   const roles=registry.canonical_lanes.flatMap(x=>[x.role,x.preview_role].filter(Boolean));
   assert.equal(roles.filter(x=>x==='ONE_INTEGRATED_PRODUCT_SOURCE').length,1);
   assert.equal(roles.filter(x=>x==='ONE_PUBLIC_LINK_VISUAL_PREVIEW').length,1);
-  assert.equal(registry.canonical_lanes.find(x=>x.role==='ONE_INTEGRATED_PRODUCT_SOURCE').pr,779);
+  assert.equal(registry.canonical_lanes.find(x=>x.role==='ONE_INTEGRATED_PRODUCT_SOURCE').pr,763);
   assert.equal(registry.canonical_lanes.find(x=>x.role==='CURRENT_AUDIT_CONSOLIDATION').pr,778);
-  assert.equal(registry.canonical_lanes.find(x=>x.preview_role==='ONE_PUBLIC_LINK_VISUAL_PREVIEW').pr,779);
-  assert.ok(registry.canonical_lanes.filter(x=>x.pr!==779).every(x=>x.deploy_authority===false));
-  assert.equal(registry.canonical_lanes.find(x=>x.pr===779).production_deploy_authority,false);
+  assert.equal(registry.canonical_lanes.find(x=>x.preview_role==='ONE_PUBLIC_LINK_VISUAL_PREVIEW').pr,763);
+  assert.ok(registry.canonical_lanes.filter(x=>x.pr!==763).every(x=>x.deploy_authority===false));
+  assert.equal(registry.canonical_lanes.find(x=>x.pr===763).production_deploy_authority,false);
+  assert.equal(registry.integration.pr,763);
+  assert.equal(registry.integration.merged_review_pr,779);
+  assert.equal(registry.integration.development_merge_sha,'eed2c3b1317890416c1ccbefaee271f796b392bd');
+  assert.equal(registry.canonical_lanes.some(x=>x.pr===779),false);
   assert.equal(registry.destruction_allowed,false);
   assert.equal(registry.traffic_change_authorized,false);
   assert.equal(new Set(registry.canonical_lanes.map(x=>x.branch)).size,registry.canonical_lanes.length);
@@ -92,4 +96,13 @@ test('asset/media source is retained but no unapproved video or global forced 3D
   assert.match(read('creator-v1/web/src/components/ProjectThumbnail.tsx'),
     /data-thumbnail-source=\{uploaded\?'creator':'default'\}/);
   assert.doesNotMatch(north,/approved video exists|public publishing is enabled/i);
+});
+
+test('owner-preview workflow uses only the active unified PR #763 exact source',()=>{
+ const workflow=read('.github/workflows/v136-interactive-owner-review.yml');
+ assert.match(workflow,/github\.event\.pull_request\.number == 763/);
+ assert.match(workflow,/github\.event\.pull_request\.head\.ref == 'build\/parity-v136-controller-route-probe-20261025-038'/);
+ assert.match(workflow,/github\.event\.pull_request\.base\.ref == 'build\/parity-v136-iren-visible-tour-20261025-037'/);
+ assert.doesNotMatch(workflow,/review\/v136-interactive-public-owner-20261025-001/);
+ assert.match(workflow,/REVIEWED_SOURCE_SHA/);
 });

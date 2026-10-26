@@ -1,7 +1,7 @@
 # Current integrated website checkpoint
 
 Session: `ANEVUM.WEB.OVERHAUL.2026-10-25.001.UNIFIED-CINEMATIC-RECONSTRUCTION`.
-Website work continues on existing #779, containing #763 and incorporated #778.
+Website work continues on existing #763, containing merged review #779 (`eed2c3b1`) and the incorporated route audit #778. #779 is closed; the existing read-only V136 owner preview remains the only public-link visual review.
 Read [the current implementation record](UNIFIED-CINEMATIC-RECONSTRUCTION.md).
 One preview, one semantic design authority, no production promotion.
 Portfolio and publishing backend candidates remain separate owners.

@@ -1,7 +1,7 @@
 # CURRENT — unified cinematic reconstruction
 Session: `ANEVUM.WEB.OVERHAUL.2026-10-25.001.UNIFIED-CINEMATIC-RECONSTRUCTION`.
 
-**Continue existing PR #779** (`review/v136-interactive-public-owner-20261025-001`).
+**Continue existing PR #763** (`build/parity-v136-controller-route-probe-20261025-038`). The former review PR #779 was merged into this existing branch at `eed2c3b1`; it is not an active competing source.
 Product #763 `f58bed93` and audit #778 `5e4731c3` are consolidated at merge `c15e809f`.
 The motion-first implementation removes the default ambient renderer, reuses the
 media contract/player, adds a rights/status-tracked original review candidate and

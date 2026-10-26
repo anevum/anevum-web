@@ -137,3 +137,10 @@ test('public catalogue proxy is anonymous and read-only',async()=>{
   assert.equal((await preview.fetch(make('/creator/api/v1/unsafe'),environment)).status,404);
  }finally{globalThis.fetch=real;}
 });
+
+test('preview deploy authorization follows the merged development PR, not closed #779',()=>{
+ const workflow=readFileSync(new URL('../../.github/workflows/v136-interactive-owner-review.yml',import.meta.url),'utf8');
+ assert.match(workflow,/github\.event\.pull_request\.number == 763/);
+ assert.match(workflow,/github\.event\.pull_request\.head\.repo\.full_name == 'anevum\/anevum-web'/);
+ assert.doesNotMatch(workflow,/review\/v136-interactive-public-owner-20261025-001/);
+});

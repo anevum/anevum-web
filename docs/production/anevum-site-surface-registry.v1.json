@@ -25,9 +25,12 @@
       "repository": "anevum/anevum-web",
       "pr": 763,
       "branch": "build/parity-v136-controller-route-probe-20261025-038",
-      "role": "PRODUCT_PARENT_ANCESTOR",
-      "stage": "DEVELOPMENT",
-      "deploy_authority": false
+      "role": "ONE_INTEGRATED_PRODUCT_SOURCE",
+      "stage": "DEVELOPMENT_PREVIEW_VERIFIED",
+      "deploy_authority": true,
+      "preview_role": "ONE_PUBLIC_LINK_VISUAL_PREVIEW",
+      "deploy_scope": "Existing ASSETS-only owner preview, no zone routes",
+      "production_deploy_authority": false
     },
     {
       "key": "v136-site-audit",
@@ -37,17 +40,6 @@
       "stage": "DRAFT_INTEGRATION",
       "deploy_authority": false,
       "status": "INCORPORATED_IN_779_AT_c15e809f"
-    },
-    {
-      "key": "v136-owner-review",
-      "pr": 779,
-      "branch": "review/v136-interactive-public-owner-20261025-001",
-      "role": "ONE_INTEGRATED_PRODUCT_SOURCE",
-      "stage": "PREVIEW_LIVE",
-      "deploy_authority": true,
-      "preview_role": "ONE_PUBLIC_LINK_VISUAL_PREVIEW",
-      "deploy_scope": "Existing ASSETS-only owner preview, no zone routes",
-      "production_deploy_authority": false
     },
     {
       "key": "v136-release",
@@ -246,15 +238,18 @@
   "implementation_session": "ANEVUM.WEB.OVERHAUL.2026-10-25.001.UNIFIED-CINEMATIC-RECONSTRUCTION",
   "observed_date": "2026-10-25 America/New_York",
   "integration": {
-    "branch": "review/v136-interactive-public-owner-20261025-001",
-    "pr": 779,
+    "branch": "build/parity-v136-controller-route-probe-20261025-038",
+    "pr": 763,
     "product_parent": "f58bed9370dc3fed0429033852a0a9c506daffae",
     "audit_parent": "5e4731c34d45a75b9c4e31ce462d61a2e06a7a9a",
     "local_integration_merge": "c15e809f",
-    "reason": "One existing owner preview lineage now contains product and route audit source; no blind stacked PR merges.",
+    "reason": "Merged review PR #779 into the single active development/preview authority #763. No competing PR or production release.",
     "production_promotion_authorized": false,
     "isolated_preview_update_authorized": true,
-    "authoritative": true
+    "authoritative": true,
+    "merged_review_pr": 779,
+    "merged_review_source_sha": "87899c77d3afa2da11139ab07c8d0a185b25f912",
+    "development_merge_sha": "eed2c3b1317890416c1ccbefaee271f796b392bd"
   },
   "source_navigation_totals": {
     "sourceFiles": 319,
@@ -3793,7 +3788,7 @@
         "strategy": "percentage",
         "author_email": "devon@anevum.com",
         "annotations": {
-          "workers/message": "ANEVUM V136 unified UI 4dfaed54 \u2014 owner-authorized 1% canary; baseline HTML retained 99%; sealed V131 backend/bindings/routes; release QA 40207577332; rollback f2f950d8; session ANEVUM.WEB.RELEASE.2026-10-25.004.CONTROLLED-UI-ROLLOUT",
+          "workers/message": "ANEVUM V136 unified UI 4dfaed54 — owner-authorized 1% canary; baseline HTML retained 99%; sealed V131 backend/bindings/routes; release QA 40207577332; rollback f2f950d8; session ANEVUM.WEB.RELEASE.2026-10-25.004.CONTROLLED-UI-ROLLOUT",
           "workers/triggered_by": "deployment"
         },
         "versions": [
@@ -3944,7 +3939,7 @@
       "head_sha": "5565f19f9dd34d8f37365a215151de0e7d996433",
       "base": "build/parity-v136-concept-convergence-20261024-017",
       "base_sha": "6ed4c53daff375d518bcaefb1c7ba45007107462",
-      "title": "[PARITY V136.017] Concept Convergence II \u2014 live 3D Institute and Creator Studio foundation",
+      "title": "[PARITY V136.017] Concept Convergence II — live 3D Institute and Creator Studio foundation",
       "url": "https://github.com/anevum/anevum-web/pull/735",
       "ancestorOfV136038": false,
       "ancestorOfIntegration": false
@@ -4191,7 +4186,7 @@
       "head_sha": "256975cdd045cbdb81f203f184c565c3e1c008a6",
       "base": "build/parity-v136-concept-convergence-20261024-017-003-studio-tree",
       "base_sha": "9ca03c2b4f7e43b621a2f4f1fe78c8606eb29e33",
-      "title": "[PARITY V136.018] Sitewide interface convergence \u2014 replace decorative artwork with real product surfaces",
+      "title": "[PARITY V136.018] Sitewide interface convergence — replace decorative artwork with real product surfaces",
       "url": "https://github.com/anevum/anevum-web/pull/737",
       "ancestorOfV136038": false,
       "ancestorOfIntegration": false
