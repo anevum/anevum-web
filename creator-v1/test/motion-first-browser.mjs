@@ -86,14 +86,14 @@ async function geometry(page){
     copper:token('--av-copper'),violet:token('--av-violet'),ice:token('--av-ice')}};
  });
  assert.ok(g.scroll<=g.width+1,JSON.stringify(g));assert.equal(g.canvas,0);assert.ok(g.logo>0);
- assert.deepEqual(g.palette,{void:'#07060b',text:'#efe6da',
-  copper:'#d2a57f',violet:'#b49bce',ice:'#a8cbd2'},
-  'V136 public pages must use the same computed Continuance theme');
+ assert.deepEqual(g.palette,{void:'#05070a',text:'#ecf2f6',
+  copper:'#b4c2cb',violet:'#9cabbc',ice:'#92bdcf'},
+  'V137 beta pages must use the same computed stealth palette');
  if(g.width>=1280&&g.header&&g.rail)assert.ok(g.rail.top>=g.header.bottom+8,'Desktop Wayfinder must clear the review banner and header: '+JSON.stringify(g));
  for(const [selector,surface] of Object.entries(g.surfaces)){
-  assert.ok(surface.background.includes('35, 26, 41')||surface.color==='rgb(16, 13, 22)',selector+' must render the Continuance material, not only inherit unused root tokens: '+JSON.stringify(surface));
+  assert.ok(surface.background.includes('27, 38, 48')||surface.color==='rgb(9, 13, 19)',selector+' must render the slate terminal material, not only inherit unused root tokens: '+JSON.stringify(surface));
  }
- if(g.primary){assert.ok(g.primary.background.includes('242, 228, 211'),'Commons primary button must retain its light surface');assert.equal(g.primary.color,'rgb(21, 14, 23)');}
+ if(g.primary){assert.ok(g.primary.background.includes('215, 230, 235'),'Commons primary button must retain its light surface');assert.equal(g.primary.color,'rgb(9, 20, 28)');}
  if(g.guideText)assert.ok(g.guideText.right<=g.guideText.containerRight-8&&g.guideText.left>=g.guideText.containerLeft,'Field Guide text must fit inside the clipped heading: '+JSON.stringify(g.guideText));
  return g;
 }
