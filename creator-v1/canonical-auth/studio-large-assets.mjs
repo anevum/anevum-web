@@ -107,7 +107,7 @@ function expectedPartSize(row,n){
  return n<count?PART:Number(row.size_bytes)-(count-1)*PART;
 }
 async function erase(db,store,row){
- if(row.upload_id&&row.status!=='quarantined'){
+ if(row.upload_id){
   try{await store.resumeMultipartUpload(row.storage_key,row.upload_id).abort();}
   catch{/* already completed or expired; delete any resulting object next */}
  }
@@ -211,6 +211,12 @@ export async function canonicalStudioLargeAssets(req,env,user,project,
    return json({id:asset,status:'uploading',partSize:PART,partCount:Number(selected.part_count)});
   }
   if(action==='parts'){
+   if(req.method==='GET'&&part===0){
+    const saved=await rows(db,'SELECT part_number,size_bytes,sha256 FROM member_studio_large_parts '+
+     'WHERE asset_id=? ORDER BY part_number',[asset]);
+    return json({id:asset,status:selected.status,partSize:PART,partCount:Number(selected.part_count),
+     completedParts:saved.map(p=>({partNumber:Number(p.part_number),sizeBytes:Number(p.size_bytes),sha256:p.sha256}))});
+   }
    if(req.method!=='PUT')return fail(405,'Method not allowed');
    if(!active||!mutable(project)||!storage)return fail(404,'Uploads are paused');
    if(selected.status!=='uploading'||!selected.upload_id||Number(selected.lease_until)<now)
@@ -240,6 +246,9 @@ export async function canonicalStudioLargeAssets(req,env,user,project,
   }
   if(action==='complete'){
    if(req.method!=='POST')return fail(405,'Method not allowed');
+   if(selected.status==='quarantined'&&selected.manifest_sha256)
+    return json({id:asset,status:'quarantined',manifestSha256:selected.manifest_sha256,
+     note:'Existing private quarantine; not published'});
    if(!active||!mutable(project)||!storage)return fail(404,'Uploads are paused');
    if(selected.status!=='uploading'||!selected.upload_id||Number(selected.lease_until)<now)
     return fail(409,'Upload not ready');
