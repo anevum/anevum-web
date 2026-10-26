@@ -4,8 +4,11 @@ on:
     paths:
       - "src/server/commerce-contract.mjs"
       - "src/server/commerce-bank-model.mjs"
+      - "src/server/commerce-readonly.mjs"
+      - "src/server/member.mjs"
       - "tests/commerce-vault-contract.test.mjs"
       - "tests/commerce-bank-model.test.mjs"
+      - "tests/commerce-readonly.test.mjs"
       - "tests/test_commerce_review_schema.py"
       - "docs/commerce-vault/**"
       - ".github/workflows/commerce-vault-contracts.yml"
@@ -22,8 +25,8 @@ jobs:
         with:
           node-version: "22"
       - name: Verify contract syntax
-        run: node --check src/server/commerce-contract.mjs && node --check src/server/commerce-bank-model.mjs
+        run: node --check src/server/commerce-contract.mjs && node --check src/server/commerce-bank-model.mjs && node --check src/server/commerce-readonly.mjs
       - name: Run price and payment safety tests
-        run: node --test tests/commerce-vault-contract.test.mjs tests/commerce-bank-model.test.mjs
+        run: node --test tests/commerce-vault-contract.test.mjs tests/commerce-bank-model.test.mjs tests/commerce-readonly.test.mjs
       - name: Review isolated schema without touching Cloudflare D1
         run: python3 tests/test_commerce_review_schema.py
