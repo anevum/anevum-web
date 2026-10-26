@@ -70,9 +70,9 @@ function magic(bytes,ext){
  return false;
 }
 export function studioLargeStorageReady(env){
- return Boolean(env?.MEMBER_DB?.prepare&&env?.CREATOR_ASSETS?.get&&
-  env?.CREATOR_ASSETS?.delete&&env?.CREATOR_ASSETS?.createMultipartUpload&&
-  env?.CREATOR_ASSETS?.resumeMultipartUpload);
+ return Boolean(env?.MEMBER_DB?.prepare&&env?.CREATOR_LARGE_ASSETS?.get&&
+  env?.CREATOR_LARGE_ASSETS?.delete&&env?.CREATOR_LARGE_ASSETS?.createMultipartUpload&&
+  env?.CREATOR_LARGE_ASSETS?.resumeMultipartUpload);
 }
 export function studioLargeUploadReady(env,userId){
  if(env?.CANONICAL_CREATOR_STUDIO_ENABLED!=='true'||
@@ -117,7 +117,7 @@ async function erase(db,store,row){
 export async function canonicalStudioLargeAssets(req,env,user,project,
  {asset=null,action=null,part=null,now=Math.floor(Date.now()/1000),pace}={}){
  if(!await studioLargeSchemaReady(env))return fail(503,'Large-file storage schema is not ready');
- const db=env.MEMBER_DB,store=env.CREATOR_ASSETS;
+ const db=env.MEMBER_DB,store=env.CREATOR_LARGE_ASSETS;
  const active=studioLargeUploadReady(env,user.id),storage=studioLargeStorageReady(env);
  if(asset&&!HEX.test(asset))return fail(404,'File not found');
  try{
@@ -302,7 +302,7 @@ export async function canonicalStudioLargeAssets(req,env,user,project,
 }
 export async function cleanupCanonicalStudioLargeAssets(env,now=Math.floor(Date.now()/1000)){
  if(!await studioLargeSchemaReady(env)||!studioLargeStorageReady(env))return {cleaned:0};
- const db=env.MEMBER_DB,store=env.CREATOR_ASSETS;
+ const db=env.MEMBER_DB,store=env.CREATOR_LARGE_ASSETS;
  const files=await rows(db,'SELECT id,status,storage_key,upload_id FROM member_studio_large_assets WHERE '+
   "(status IN ('reserved','uploading') AND lease_until<?) OR "+
   "(status='deleting' AND updated_at<?) ORDER BY created_at LIMIT 25",
