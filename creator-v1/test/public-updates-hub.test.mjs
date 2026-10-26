@@ -67,5 +67,5 @@ test('public links are genuine first-party links; unfinished studio is labeled',
   assert.match(html,/physical Xbox and TV-browser testing is still needed/i);
   assert.match(html,/opening is a target/i);
   assert.equal((html.match(/<details class="progress-item">/g)||[]).length,4);
-  assert.equal((html.match(/<a class="tile"/g)||[]).length,4);
+  assert.equal((html.match(/<a class="tile(?:\s|")/g)||[]).length,4);
 });
