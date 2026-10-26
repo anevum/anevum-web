@@ -5,6 +5,7 @@ import { commonsSocialEndpoint, socialSchemaReady, exportMemberSocial } from "./
 import { moderationEndpoint } from "./commons-moderation.mjs";
 import { studioEndpoint } from "./studio-content.mjs";
 import { commerceReadOnlyEndpoint } from "./commerce-readonly.mjs";
+import { vaultProjectEndpoint } from "./vault-projects.mjs";
 import { memberRhenDraftSchemaReady, readMemberRhenDraft, saveMemberRhenDraft, deleteMemberRhenDraft, validateRhenDraft, draftExpectedMemberMatches } from "./member-rhen-draft.mjs";
 import { resolveMemberOrigin, memberSchemaReady } from "./member-preflight.mjs";
 import { preferenceExpectedMemberMatches } from "./member-preference-guard.mjs";
@@ -160,6 +161,11 @@ export async function memberEndpoint(request, env, pathname, verifiedContext = {
     // Session and same-origin mutation checks have already passed.
     // Preview catalog is read-only and all payment/ordering paths are disabled.
     return commerceReadOnlyEndpoint(request,env,user,pathname);
+  }
+  if (pathname.startsWith("/api/member/vault/")) {
+    // Verified Better Auth identity and same-origin mutations are enforced above.
+    // Project metadata only; file upload/download and money acceptance disabled.
+    return vaultProjectEndpoint(request,env,user,pathname);
   }
   if (pathname.startsWith("/api/member/studio/")) {
     return studioEndpoint(request,env,user,verifiedOrigin,pathname,verifiedContext.studioAccessEmail);
