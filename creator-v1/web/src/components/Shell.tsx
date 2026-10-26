@@ -170,7 +170,7 @@ function ShellContent(){
           <OrbitalMark className="brand-mark"/>
           <span className="cw-brand-stack"><b>ANEVUM</b><small>THE CREATIVE NETWORK</small></span>
         </Link>
-        <nav className="desktop-nav av9-primary" aria-label="Primary navigation">
+        <nav data-iren-anchor="navigation-desktop" className="desktop-nav av9-primary" aria-label="Primary navigation">
           {desktopNav.map(item=><NavLink key={item.to} to={item.to} end={item.to==="/"}>{item.label}</NavLink>)}
         </nav>
         <form className="header-search av9-header-search" role="search" onSubmit={search}>
