@@ -34,7 +34,7 @@ export function studioEligibleUpload(category:StudioCategory,kind:StudioAsset['k
 export interface StudioAsset {
  id:string;name:string;kind:'image'|'audio'|'video'|'document'|'package';
  contentType:string;sizeBytes:number;status:'reserved'|'uploading'|'quarantined'|'deleting';
- sha256:string|null;uploadedAt:number|null;
+ sha256:string|null;uploadedAt:number|null;digestType?:'file-sha256'|'part-manifest';
 }
 export interface StudioHealth {
  service:string;status:string;studioReady?:boolean;studioUploadsReady?:boolean;
