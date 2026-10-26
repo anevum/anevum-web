@@ -1,6 +1,10 @@
 # ACTIVE — ANEVUM PARITY V136 unified website overhaul
 Session: `ANEVUM.WEB.UPDATE.2026-10-25.001.SITEWIDE-OVERHAUL-SYNCHRONIZATION`
 Updated: 2026-10-25
+
+> **OWNER SUPERSEDING DIRECTION — 2026-10-25, motion-first single stream.**
+> [ANEVUM WEB North Star / motion-first consolidation](./ANEVUM.WEB.NORTHSTAR.2026-10-25.002.MOTION-FIRST-SINGLE-STREAM.md) governs *all new visitor-facing visual work*. The former priority of an always-running 3D Institute model/background is **retired as a requirement**. Ambient web composition must move toward authored high-resolution poster/video/optional bounded frame sequences, with actual React UI above it. Keep legitimate 3D in Creator Studio/game/simulation tools, preserve functional code, and do not remove historical assets or weaken production gates. Exact Orbital Underground logo remains mandatory. This note supersedes WebGL-ambient-first language **below**, which is retained for historical provenance only.
+> The parallel theming redesign owns final approved type/color/panel tokens; reconcile them into this same implementation lineage, not a second website shell.
 **Owner development baseline: draft PR #735 — Concept Convergence II, head `888bf4cc` after #748 integration.**
 **Current bounded continuation: V136.031 — Studio archive handoff and private-playtest form, stacked on draft #753.**
 **Sitewide integration: PR #738 was merged into the #735 development branch, preserving selected changes from PR #737 and #736. Those historical PRs need no blind re-import.**
