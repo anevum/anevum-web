@@ -1,19 +1,24 @@
 // ANEVUM Commerce V001 — Square is a replaceable *processor*, not our ledger.
 // Fail closed until explicit commerce activation and configured catalog prices.
+// Owner approved October 26, 2026. Catalog approval is not payment activation.
+// The 100 GiB proposal is deferred until real usage, reserve and abuse review.
 export const COMMERCE_PRODUCTS = Object.freeze({
-  "signal-support": { kind: "supporter", minCents: 100, maxCents: 100000 },
-  "vault-10g-month": { kind: "vault", bytes: 10 * 1024 ** 3, durationDays: 30 },
-  "vault-50g-month": { kind: "vault", bytes: 50 * 1024 ** 3, durationDays: 30 }
+  "signal-support-5": Object.freeze({ kind: "supporter", cents: 500, recurring: false }),
+  "signal-support-10": Object.freeze({ kind: "supporter", cents: 1000, recurring: false }),
+  "signal-support-25": Object.freeze({ kind: "supporter", cents: 2500, recurring: false }),
+  "vault-10g-month": Object.freeze({ kind: "vault", cents: 400, bytes: 10 * 1024 ** 3, durationDays: 30, recurring: false }),
+  "vault-50g-month": Object.freeze({ kind: "vault", cents: 900, bytes: 50 * 1024 ** 3, durationDays: 30, recurring: false })
 });
 
+// Even with an approved catalog, refuse checkout unless the server's configured
+// price matches exactly. Callers cannot submit arbitrary amounts or upgrade IDs.
 export function validatedProduct(code, priceConfig) {
   const product = COMMERCE_PRODUCTS[code];
   if (!product) throw new Error("Unknown catalog item");
-  const cents = Number(priceConfig?.[code]);
-  if (!Number.isSafeInteger(cents) || cents < 100 || cents > 100000) {
-    throw new Error("Product has no approved price");
+  if (priceConfig?.[code] !== product.cents) {
+    throw new Error("Product price not configured or mismatched");
   }
-  return { code, ...product, cents, currency: "USD" };
+  return { code, ...product, currency: "USD" };
 }
 
 export function checkoutEnabled(env) {
