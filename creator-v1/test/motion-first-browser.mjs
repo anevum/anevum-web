@@ -65,7 +65,7 @@ async function geometry(page){
   const token=name=>style.getPropertyValue(name).trim().toLowerCase();
   const rect=selector=>{const r=document.querySelector(selector)?.getBoundingClientRect();return r?{top:r.top,bottom:r.bottom,width:r.width}:null};
   const surfaces={};
-  for(const selector of ['.p136-community .ch7-hero','.p136-boards .cnb-hero','.p136-creators-search','.st-status','.field-guide-page .portal-page-heading','.p136-discover-main','.join-panel','.state-card']){
+  for(const selector of ['.p136-community .ch7-hero','.p136-boards .cnb-hero','.p136-creators-search','.st-status','.field-guide-page .portal-page-heading','.field-guide-page .guide-training-hero','.start-journey','.start-portals','.start-journey-detail','.p136-discover-main','.join-panel','.state-card']){
    const node=document.querySelector(selector);if(!node)continue;
    const s=getComputedStyle(node);surfaces[selector]={background:s.backgroundImage,color:s.backgroundColor};
   }
@@ -112,6 +112,33 @@ try{
    }
    await page.evaluate(()=>scrollTo(0,0));
    await page.screenshot({path:join(output,`${name}-${width}.png`),fullPage:false});
+   if(name==='start'){
+    await page.getByRole('button',{name:/I MAKE THINGS/}).click();
+    assert.equal(await page.getByRole('button',{name:/I MAKE THINGS/}).getAttribute('aria-pressed'),'true');
+    const detail=page.locator('.start-journey-detail');
+    assert.equal(await detail.getByRole('link',{name:/EXPLORE CREATOR STUDIO/}).getAttribute('href'),'/creator/studio');
+    assert.equal(await page.locator('.start-choice-active').evaluate(n=>getComputedStyle(n).backgroundColor),'rgb(59, 43, 65)');
+    await geometry(page);
+    await detail.scrollIntoViewIfNeeded();
+    await page.screenshot({path:join(output,`start-selected-${width}.png`),fullPage:false,timeout:90000});
+   }
+   if(name==='guide'){
+    const next=page.getByRole('button',{name:/NEXT DECISION/});
+    assert.equal(await next.isDisabled(),true,'Practice progress requires a correct answer');
+    await page.getByRole('button',{name:/Invent a creator name to search/}).click();
+    await page.getByText('THINK IT THROUGH.',{exact:true}).waitFor();
+    assert.equal(await next.isDisabled(),true,'An incorrect answer cannot advance practice');
+    assert.equal(await page.locator('.guide-feedback').evaluate(n=>getComputedStyle(n).backgroundColor),'rgb(48, 34, 25)');
+    await page.getByRole('button',{name:/Explore the Games category/}).click();
+    await page.getByText('GOOD DECISION.',{exact:true}).waitFor();
+    assert.equal(await next.isEnabled(),true);
+    assert.equal(await page.locator('.guide-feedback').evaluate(n=>getComputedStyle(n).backgroundColor),'rgb(24, 39, 31)');
+    await page.locator('.guide-feedback').scrollIntoViewIfNeeded();
+    await page.screenshot({path:join(output,`guide-feedback-${width}.png`),fullPage:false,timeout:90000});
+    await next.click();
+    await page.getByRole('heading',{name:/A project lists a hosted demo/}).waitFor();
+    assert.equal(await next.isDisabled(),true,'The next decision starts without a reused answer');
+   }
    checks.push({name,width,...g});
   }
   await ctx.close();

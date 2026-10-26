@@ -428,6 +428,39 @@ html[data-av-parity="v136-full"] .p136-workbench :is(.p136-workbench-head>div>sp
 html[data-av-parity="v136-full"] .p136-workbench :is(.p136-source-inspector p,.p136-source-inspector li,.p136-source-inspector dt,.p136-source-privacy){color:var(--av-secondary)}
 html[data-av-parity="v136-full"] .p136-workbench :is(.p136-source-add input,.p136-source-quick-open input){background:var(--av-canvas);border-color:var(--av-border);color:var(--av-text)}
 
+/* Retained first-visit and learning routes use the same materials. Preserve
+   their actual choices, local practice state and official Orbital geometry. */
+html[data-av-parity="v136-full"] .start-page :is(.start-journey,.start-portals,.start-outro,.start-journey-detail,.start-portal){background:var(--av-panel);border-color:var(--av-border);box-shadow:var(--av-shadow)}
+html[data-av-parity="v136-full"] .start-page :is(.start-choice,.start-catalogue-proof,.start-portal-symbol){background:var(--av-instrument);border-color:var(--av-border);color:var(--av-text);box-shadow:none}
+html[data-av-parity="v136-full"] .start-page .start-choice-active{background:#3b2b41;border-color:var(--av-copper);box-shadow:inset 3px 0 var(--av-copper)}
+html[data-av-parity="v136-full"] .start-page :is(.start-choice,.start-portal):hover{border-color:var(--av-edge)}
+html[data-av-parity="v136-full"] .start-page :is(.start-choice-top,.start-choice-active .start-choice-footer,.start-portal-symbol){color:var(--av-copper)}
+html[data-av-parity="v136-full"] .start-page :is(.start-choice-footer,.start-journey-intro p,.start-section-heading p,.start-outro p,.start-detail-copy p,.start-detail-copy small,.start-portal-description,.start-catalogue-proof p){color:var(--av-secondary)}
+html[data-av-parity="v136-full"] .start-page .start-portal{--portal-accent:var(--av-violet)}
+html[data-av-parity="v136-full"] .start-page .cw-start-portal-art{opacity:.18}
+html[data-av-parity="v136-full"] :is(.start-page,.field-guide-page) .portal-page-heading-copy h1{text-shadow:none;color:var(--av-text)}
+html[data-av-parity="v136-full"] .start-page .start-detail-mark::before{border-color:#d2a57f2c;box-shadow:0 0 0 12px #b49bce13,inset 0 0 55px #b49bce20}
+html[data-av-parity="v136-full"] .field-guide-page :is(.guide-training-hero,.guide-feedback){background:var(--av-panel);border-color:var(--av-border);color:var(--av-text)}
+html[data-av-parity="v136-full"] .field-guide-page :is(.guide-chapter-index,.guide-answer-index,.guide-scenario,.guide-visit-progress>button,.guide-next-links>a){background:var(--av-instrument);border-color:var(--av-border);color:var(--av-text);box-shadow:none}
+html[data-av-parity="v136-full"] .field-guide-page .guide-training-tag{background:var(--av-copper);color:var(--av-canvas);box-shadow:none}
+html[data-av-parity="v136-full"] .field-guide-page :is(.guide-training-headline p,.guide-training-notice,.guide-nav-heading p,.guide-visit-progress p,.guide-next-heading p,.guide-feedback p,.guide-chapter-copy small,.guide-chapter-copy>span){color:var(--av-secondary)}
+html[data-av-parity="v136-full"] .field-guide-page .guide-training-medallion{background:linear-gradient(140deg,var(--av-copper),var(--av-violet));border-color:var(--av-edge);box-shadow:inset 0 3px #efe6da69,inset -6px -9px 10px #0008,8px 15px #100d16,0 27px 30px #0009}
+html[data-av-parity="v136-full"] .field-guide-page .guide-training-medallion svg{color:var(--av-canvas)}
+html[data-av-parity="v136-full"] .field-guide-page .guide-training-rings{border-color:#b49bce56;box-shadow:inset 0 0 0 5px #100d16c4,0 16px #100d16,0 30px 35px #0009}
+html[data-av-parity="v136-full"] .field-guide-page :is(.guide-step-indicators>span,.guide-visit-progress>[role=progressbar]){background:var(--av-canvas);border-color:var(--av-border)}
+html[data-av-parity="v136-full"] .field-guide-page :is(.guide-step-indicators>span.active,.guide-visit-progress>[role=progressbar]>span){background:linear-gradient(90deg,var(--av-copper),var(--av-violet));border-color:var(--av-edge);box-shadow:none}
+html[data-av-parity="v136-full"] .field-guide-page .guide-answer:hover:not(:disabled){background:#3b2b41;border-color:var(--av-edge)}
+html[data-av-parity="v136-full"] .field-guide-page :is(.guide-answer-correct,.guide-feedback-correct){background:#18271f;border-color:var(--av-success)}
+html[data-av-parity="v136-full"] .field-guide-page :is(.guide-answer-try,.guide-feedback-retry){background:#302219;border-color:var(--av-warning)}
+html[data-av-parity="v136-full"] :is(.start-page,.field-guide-page) .button.primary{background:linear-gradient(125deg,#f2e4d3,#d5b9a0);border-color:var(--av-copper);box-shadow:none}
+html[data-av-parity="v136-full"] :is(.start-page,.field-guide-page) .button.secondary{background:var(--av-instrument);border-color:var(--av-border);box-shadow:none;color:var(--av-text)}
+@layer legacy{
+ html[data-av-parity="v136-full"] :is(.start-page,.field-guide-page) .button.primary{color:#150e17!important}
+ @media(forced-colors:active){
+  html[data-av-parity="v136-full"] :is(.start-page,.field-guide-page) .button.primary{color:ButtonText!important}
+ }
+}
+
 /* Finish the surrounding Studio instrument, archive and build form. These
    selectors never enter Monaco or the opaque project-content frame. */
 html[data-av-parity="v136-full"] .p136-studio-console :is(.p136-studio-console-layout,.p136-studio-console-stage){background:var(--av-canvas);box-shadow:none}
@@ -475,6 +508,9 @@ html[data-av-parity="v136-full"] .av095-native input[type=file]::file-selector-b
  html[data-av-parity="v136-full"][data-av-input="gamepad"] .p136-controller-indicator{top:calc(96px + var(--av-review-offset,0px))}
 }
 @media(forced-colors:active){
+ html[data-av-parity="v136-full"] .start-page :is(.start-journey,.start-portals,.start-outro,.start-journey-detail,.start-portal,.start-choice,.start-catalogue-proof),
+ html[data-av-parity="v136-full"] .field-guide-page :is(.guide-training-hero,.guide-feedback,.guide-answer,.guide-chapter){background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none}
+ html[data-av-parity="v136-full"] :is(.start-page,.field-guide-page) .button{background:ButtonFace;color:ButtonText;border-color:ButtonText;box-shadow:none}
  html[data-av-parity="v136-full"] .p136-studio-console :is(.p136-studio-console-layout,.p136-studio-console-stage,.p136-studio-console-head,.p136-studio-console-explorer,.p136-studio-console-inspector,.p136017-studio-quicknav,.p136017-studio-footer),
  html[data-av-parity="v136-full"] .av095-native :is(.st-panel,.st-metrics>div,.st-identity,.st-header,.st-nav,.av095-storage,.av095-preflight,.av136032-library-tools,.av095-drop,.av136032-record-blank,.av136031-preparation,.av136031-source-handoff,.av136033-prepared-note){background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none}
  html[data-av-parity="v136-full"] .av095-native :is(.st-action,.st-button,.av136032-toolbar button){background:ButtonFace;border-color:ButtonText;box-shadow:none}
