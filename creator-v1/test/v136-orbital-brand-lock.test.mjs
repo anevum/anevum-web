@@ -12,6 +12,9 @@ const favicon=readFileSync(new URL('web/public/favicon.svg',root),'utf8');
 const header=readFileSync(new URL('web/src/parity/ParityHeaderV136.tsx',root),'utf8');
 const shell=readFileSync(new URL('web/src/components/Shell.tsx',root),'utf8');
 const stage=readFileSync(new URL('web/src/components/OrbitalStage.tsx',root),'utf8');
+const consoleNav=readFileSync(new URL('web/src/parity/ConsoleWayfinderV136.tsx',root),'utf8');
+const consoleCss=readFileSync(new URL('web/src/parity/console-wayfinder-v136.css',root),'utf8');
+const index=readFileSync(new URL('web/index.html',root),'utf8');
 const orbitalPattern=/<(?:ellipse|path|circle)\b[^>]*\/>/g;
 const normalize=(markup)=>[...markup.matchAll(orbitalPattern)].map(item=>{
   const tag=item[0].match(/^<([a-z]+)/)?.[1];
@@ -34,6 +37,9 @@ test('public header, mobile navigation and cinematic orbital stage use one share
   assert.match(shell,/<OrbitalMark className="brand-mark"/);
   assert.match(shell,/<OrbitalMark className="av79-wayfinder-mark"/);
   assert.match(stage,/<OrbitalMark className="depth-stage-mark"/);
+  assert.match(consoleNav,/<OrbitalMark className="p136-console-ident-mark"/);
+  assert.match(consoleCss,/\.p136-console-ident-mark\{[^}]*width:24px;height:24px/);
+  assert.doesNotMatch(consoleNav,/p136-console-light|A \/ CONTINUANCE/);
   for(const [name,text] of [['V136 header',header],['shared shell',shell],['stage',stage]])
     assert.doesNotMatch(text,/className="p136-living-mark"/,name+' must not recreate the atom mark');
 });
@@ -42,6 +48,7 @@ test('V136 SVG favicon is byte-identical to approved compact master',()=>{
   assert.equal(favicon,compact,'Do not create a separate browser or mobile header logo');
   assert.match(favicon,/ANEVUM Orbital Underground emblem/);
   assert.ok(normalize(favicon).length>=5);
+  assert.match(index,/favicon\.svg\?v=20261025-orbital-underground/);
 });
 
 test('the owner-approved SVG master remains unaltered',()=>{
