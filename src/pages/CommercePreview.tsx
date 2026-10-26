@@ -65,7 +65,7 @@ export default function CommercePreview() {
     void fetch("/api/member/commerce/catalog", {
       method: "GET", cache: "no-store", credentials: "same-origin",
       redirect: "manual", signal: controller.signal
-    }).then(async response => {
+    }).then(async (response): Promise<"available" | "off" | "unverified"> => {
       if (!response.ok) return response.status === 503 ? "off" : "unverified";
       const body: unknown = await response.json();
       return isValidCatalog(body) ? "available" : "unverified";
