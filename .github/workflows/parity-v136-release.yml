@@ -110,8 +110,24 @@ jobs:
           github-token: ${{ github.token }}
           path: ${{ runner.temp }}/v136-previous-canary
           merge-multiple: true
-      - name: Preserve baseline HTML and build identical shared asset inventories
-        run: node creator-v1/ops/parity-v136-asset-pair.mjs "$RUNNER_TEMP/v136-baseline" "$RUNNER_TEMP/v136-previous-canary/candidate" "$RUNNER_TEMP/parity-package" "$RUNNER_TEMP/parity-paired"
+      - name: Retain exact V61 rollback and cached-client assets
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12668393161'
+          run-id: 40360987664
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v136-live-v61
+          merge-multiple: true
+      - name: Retain exact V63 current live and cached-client assets
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12685298203'
+          run-id: 40393632639
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v136-live-v63
+          merge-multiple: true
+      - name: Preserve baseline HTML and all retained live-client asset inventories
+        run: node creator-v1/ops/parity-v136-asset-pair.mjs "$RUNNER_TEMP/v136-baseline" "$RUNNER_TEMP/v136-previous-canary/candidate" "$RUNNER_TEMP/parity-package" "$RUNNER_TEMP/parity-paired" "$RUNNER_TEMP/v136-live-v61/candidate" "$RUNNER_TEMP/v136-live-v63/candidate"
       - uses: actions/upload-artifact@v4
         with:
           name: parity-v136-package-${{ github.event.pull_request.head.sha || github.sha }}

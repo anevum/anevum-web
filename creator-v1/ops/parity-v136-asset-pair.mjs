@@ -8,6 +8,7 @@ import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 const BASELINE='031a221d1bd108ff01dcb74f271675d8ccf2d29a';
 const CANARY='4dfaed54fed606713a99b87c3152beddbcbc31f3';
+const RETAINED_RELEASES=['75459b5b5d403737728592ada6c81cef7a6b3f34','93613f6ad18f243b88af1b168626558ce4bbaec7'];
 const GATEWAY='1884ff0dd3c8aa3d38711167af0b4552c9b200b3148e72d9ba6d90d23171ef99';
 const hash=b=>createHash('sha256').update(b).digest('hex');
 const load=p=>JSON.parse(readFileSync(p,'utf8'));
@@ -21,7 +22,7 @@ function walk(root,path=''){
 }
 /** Exported so real package composition can be tested without provider access. */
 export function shareCompiledAssets(roots,out){
- assert.equal(roots.length,3,'Baseline, previous canary and candidate required');
+ assert.ok(roots.length===3||roots.length===5,'Baseline, previous canary, candidate and optional two retained releases required');
  const inventories=roots.map(p=>walk(p));
  const union=new Map();
  inventories.forEach((items,i)=>items.forEach(item=>{
@@ -56,12 +57,14 @@ function validatePackage(root,source){
  assert.equal(inventory.filter(x=>x.path.startsWith('evolution/assets/')).length,152);
  return manifest;
 }
-export function pairPackages(baseline,oldCanary,candidate,out){
+export function pairPackages(baseline,oldCanary,candidate,out,...retained){
+ assert.equal(retained.length,RETAINED_RELEASES.length,'Both exact V61 and V63 packages required for cached clients and rollback');
  const current=load(join(candidate,'manifest.json'));
  const manifests=[validatePackage(baseline,BASELINE),validatePackage(oldCanary,CANARY),validatePackage(candidate,current.source.head)];
- const roots=[baseline,oldCanary,candidate];
+ const retainedManifests=retained.map((root,i)=>validatePackage(root,RETAINED_RELEASES[i]));
+ const roots=[baseline,oldCanary,candidate,...retained];
  const earned=roots.map(root=>walk(join(root,'compiled-web')).filter(x=>x.path.startsWith('evolution/assets/')));
- assert.deepEqual(earned[0],earned[1]);assert.deepEqual(earned[0],earned[2]);
+ for(const inventory of earned.slice(1))assert.deepEqual(earned[0],inventory);
  const result=shareCompiledAssets(roots.map(p=>join(p,'compiled-web')),out);
  for(const [i,variant] of ['baseline','candidate'].entries()){
   const dest=join(out,variant),inventory=result.inventories[i];
@@ -71,10 +74,12 @@ export function pairPackages(baseline,oldCanary,candidate,out){
    releaseVariant:i===0?'baseline-assets-only':'candidate',baselineFrontendUnchanged:i===0,
    assetCount:inventory.length,assetsSha256:hash(JSON.stringify(inventory)),
    sharedAssetCount:result.sharedAssetCount,sharedAssetsSha256:result.sharedAssetsSha256,
+   retainedReleaseSources:retainedManifests.map(m=>m.source.head),cachedClientAssetsPreserved:true,
    baselineEntrypointSha256:hash(readFileSync(join(baseline,'compiled-web/index.html'))),uploaded:false,activated:false});
  }
  const report={source:current.source.head,preservedBaselineSource:manifests[0].source.head,previousCanarySource:manifests[1].source.head,
   sharedAssetCount:result.sharedAssetCount,sharedAssetsSha256:result.sharedAssetsSha256,baselineEntrypointUnchanged:true,
+  retainedReleaseSources:retainedManifests.map(m=>m.source.head),cachedClientAssetsPreserved:true,
   gatewaySha256:GATEWAY,earnedMediaUnchanged:true,trafficChanged:false,liveAcceptance:false};
  save(join(out,'asset-pair-report.json'),report);return report;
 }
