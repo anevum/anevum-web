@@ -71,3 +71,17 @@ test("static scanner does not mistake catch-all fallback or Worker-owned paths f
     assert.ok(ownerPaths.has(path),"Missing external-owner coverage: "+path);
   }
 });
+
+test("creator entry points and profile-completion links open their real destination screens",()=>{
+  const creators=read("creator-v1/web/src/pages/CreatorsPage.tsx");
+  const memberGate=read("creator-v1/web/src/components/MemberGate.tsx");
+  const composer=read("creator-v1/web/src/pages/CommunityPostEditorPage.tsx");
+  const dashboard=read("creator-v1/web/src/components/MemberSpaceDashboard.tsx");
+  assert.ok(creators.includes('action={{to:"/studio",label:"MAKE YOUR FIRST PROJECT"}}'));
+  assert.ok(creators.includes('<Link to="/studio" className="portal-sidebox-link">'));
+  assert.ok(memberGate.includes('<NavLink to="/studio">CREATOR STUDIO</NavLink>'));
+  assert.ok(memberGate.includes('<NavLink to="/member?tab=profile">EDIT PROFILE</NavLink>'));
+  assert.ok(composer.includes('<Link to="/member?tab=profile">EDIT CREATOR PROFILE'));
+  assert.ok(dashboard.includes("'profile'"));
+  assert.ok(dashboard.includes("const [params,setParams]=useSearchParams()"));
+});
