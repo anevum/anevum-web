@@ -1,0 +1,48 @@
+name: ANEVUM V131 Legacy Orbital Underground Brand Lock
+
+on:
+  pull_request:
+    paths:
+      - 'src/components/Mark.tsx'
+      - 'src/components/Shell.tsx'
+      - 'src/styles/global.css'
+      - 'public/favicon.svg'
+      - 'public/icon-192.png'
+      - 'public/icon-512.png'
+      - 'public/apple-touch-icon.png'
+      - 'public/site.webmanifest'
+      - 'index.html'
+      - 'creator-v1/brand/anevum-mark.svg'
+      - 'creator-v1/brand/anevum-mark-compact.svg'
+      - 'tests/v131-orbital-brand-lock.test.mjs'
+      - '.github/workflows/v131-orbital-underground-brand-lock.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v131-canonical-brand-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  exact-owner-mark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify the exact approved logo and PNG hash across legacy routes
+        run: |
+          set -euo pipefail
+          node --test tests/v131-orbital-brand-lock.test.mjs
+      - name: Typecheck retained V131 app
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check
