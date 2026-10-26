@@ -1,5 +1,6 @@
--- ANEVUM Commerce + Creator Vault V001. Separate from historical Stripe/RHEN billing.
--- Apply ONLY after isolated D1 backup/restore and acceptance; never against live by default.
+-- ANEVUM-owned commerce and private Creator Vault. NO approved payment rail.
+-- REVIEW ONLY. No card processor, acquiring bank, payment acceptance or public charges.
+-- Apply ONLY after isolated D1 backup/restore, privacy/security tests and separate release approval.
 PRAGMA foreign_keys=ON;
 
 CREATE TABLE IF NOT EXISTS commerce_orders (
@@ -8,33 +9,38 @@ CREATE TABLE IF NOT EXISTS commerce_orders (
  product_code TEXT NOT NULL,
  amount_cents INTEGER NOT NULL CHECK(amount_cents > 0),
  currency TEXT NOT NULL DEFAULT 'USD' CHECK(currency = 'USD'),
- provider TEXT NOT NULL CHECK(provider IN ('square')),
- provider_order_id TEXT UNIQUE,
- provider_link_id TEXT UNIQUE,
- checkout_url TEXT,
- status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','paid','refunded','canceled')),
+ settlement_rail TEXT,
+ settlement_reference TEXT UNIQUE,
+ status TEXT NOT NULL DEFAULT 'draft'
+    CHECK(status IN ('draft','awaiting_settlement','paid','refunded','canceled')),
  created_at_ms INTEGER NOT NULL,
- paid_at_ms INTEGER,
- updated_at_ms INTEGER NOT NULL
+ settled_at_ms INTEGER,
+ updated_at_ms INTEGER NOT NULL,
+ CHECK(status NOT IN ('paid','refunded') OR
+       (settlement_rail IS NOT NULL AND settlement_reference IS NOT NULL
+        AND settled_at_ms IS NOT NULL))
 );
 CREATE INDEX IF NOT EXISTS commerce_orders_user_idx ON commerce_orders(user_id,created_at_ms DESC);
 
-CREATE TABLE IF NOT EXISTS commerce_provider_events (
- provider TEXT NOT NULL,
- event_id TEXT NOT NULL,
- payment_id TEXT,
+-- An inbound settlement claim alone is never proof of cleared funds.
+CREATE TABLE IF NOT EXISTS commerce_settlement_events (
+ rail TEXT NOT NULL,
+ external_event_id TEXT NOT NULL,
+ settlement_reference TEXT,
  received_at_ms INTEGER NOT NULL,
- PRIMARY KEY(provider,event_id)
+ independently_verified_at_ms INTEGER,
+ PRIMARY KEY(rail,external_event_id)
 );
 CREATE TABLE IF NOT EXISTS commerce_ledger (
  entry_id TEXT PRIMARY KEY NOT NULL,
  order_id TEXT NOT NULL REFERENCES commerce_orders(id) ON DELETE RESTRICT,
- provider_payment_id TEXT NOT NULL UNIQUE,
+ rail TEXT NOT NULL,
+ settlement_reference TEXT NOT NULL,
  kind TEXT NOT NULL CHECK(kind IN ('payment','refund')),
  amount_cents INTEGER NOT NULL,
  currency TEXT NOT NULL DEFAULT 'USD',
  recorded_at_ms INTEGER NOT NULL,
- UNIQUE(order_id,kind)
+ UNIQUE(rail,settlement_reference,kind)
 );
 CREATE TABLE IF NOT EXISTS commerce_vault_passes (
  order_id TEXT PRIMARY KEY NOT NULL REFERENCES commerce_orders(id) ON DELETE RESTRICT,
@@ -96,3 +102,10 @@ CREATE INDEX IF NOT EXISTS vault_files_by_project_idx ON vault_files(user_id,pro
 -- No public object URLs. No bank data, card numbers, payment tokens or provider secrets in D1.
 -- Member deletion requires verified R2 purge BEFORE account removal: FK cascade alone
 -- does NOT remove objects. Keep vault disabled until purge/restore/retention acceptance.
+
+-- IMPORTANT: SQL status and settlement references are bookkeeping fields, NOT
+-- independently authenticated proof of payment. Write-side code must require
+-- a verified lawful settlement rail and explicit release gate before any paid
+-- entitlement is issued; the current contract always refuses fulfillment.
+-- Future financial journals must verify debit=credit, idempotency, partial refunds,
+-- disputes and customer deletion/legal retention independently before launch.
