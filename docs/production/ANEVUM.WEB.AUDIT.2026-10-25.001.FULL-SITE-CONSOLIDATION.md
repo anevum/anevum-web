@@ -7,6 +7,8 @@ Review branch: audit/full-site-route-consolidation-20261025-001
 Parent: V136.038 unified development, f58bed9370dc3fed0429033852a0a9c506daffae
 Status: ACTIVE AUDIT / BOUNDED SOURCE FIXES / NOT A RELEASE
 
+> **2026-10-25 owner-direction precedence update:** read [the unified motion-first North Star](./ANEVUM.WEB.NORTHSTAR.2026-10-25.002.MOTION-FIRST-SINGLE-STREAM.md) first. It supersedes the older statements below that the visitor-facing site must preserve its continuous WebGL ambience. Preserve *legitimate product/Studio 3D capability*, not ambient model loading behind routine navigation. The North Star also defines one thumbnail and theme authority, the URL/Worker inventory, the current /updates collision and one canonical release stream. No deletion or release is authorized by this note.
+
 ## Governing constraint
 
 Consolidate the site people use, not another alternate visual overhaul. Preserve the
