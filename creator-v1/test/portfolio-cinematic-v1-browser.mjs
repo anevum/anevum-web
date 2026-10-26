@@ -142,6 +142,25 @@ async function run(width,height,motion='no-preference') {
   assert.ok(fullWidthWork.transcosmicRight<=width+1 &&
     fullWidthWork.visualHeight>=250,'Real project exhibit fits the viewport');
   note('full-width principal Transcosmic project / no empty portfolio row '+width,fullWidthWork);
+  // A real screenshot review caught a full-width feature title clipped at the
+  // desktop card boundary. Keep the title intact and contained at every width.
+  const featureTitleFlow = await page.locator('.project-transcosmic .project-meta h3').evaluate(el => {
+    const range = document.createRange(); range.selectNodeContents(el.firstChild);
+    const ink = [...range.getClientRects()].filter(rect => rect.width > 0 && rect.height > 0);
+    const column = el.closest('.project-meta').getBoundingClientRect();
+    const index = el.querySelector('span')?.getBoundingClientRect();
+    return {lines:ink.length, left:Math.min(...ink.map(rect => rect.left)),
+      right:Math.max(...ink.map(rect => rect.right)),columnRight:column.right,
+      indexRight:index?.right ?? 0};
+  });
+  assert.equal(featureTitleFlow.lines,1,
+    'Featured Transcosmic project title must not wrap at '+width+': '+JSON.stringify(featureTitleFlow));
+  assert.ok(featureTitleFlow.left>=-1 &&
+    featureTitleFlow.right <= featureTitleFlow.columnRight + 1 &&
+    featureTitleFlow.indexRight <= featureTitleFlow.columnRight + 1,
+    'Featured Transcosmic story/title must not clip out of its card at '+width+': '+JSON.stringify(featureTitleFlow));
+  note('featured Transcosmic title fits case record column '+width,featureTitleFlow);
+
   note('layout '+width+'px',shape);
   // Reproduce actual reading/scrolling so lazy-loaded images and reveal states
   // are visible in full-page screenshots, instead of falsely appearing blank.
