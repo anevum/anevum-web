@@ -235,7 +235,7 @@
     "owner_explicit_approval",
     "rollback_receipt"
   ],
-  "implementation_session": "ANEVUM.WEB.OVERHAUL.2026-10-25.001.UNIFIED-CINEMATIC-RECONSTRUCTION",
+  "implementation_session": "ANEVUM.WEB.PACKAGE.2026-10-26.001.UNIFIED-BASELINE-RELEASE",
   "observed_date": "2026-10-25 America/New_York",
   "integration": {
     "branch": "build/parity-v136-controller-route-probe-20261025-038",

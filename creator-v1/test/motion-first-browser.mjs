@@ -65,11 +65,16 @@ async function geometry(page){
   const token=name=>style.getPropertyValue(name).trim().toLowerCase();
   const rect=selector=>{const r=document.querySelector(selector)?.getBoundingClientRect();return r?{top:r.top,bottom:r.bottom,width:r.width}:null};
   const surfaces={};
-  for(const selector of ['.p136-community .ch7-hero','.p136-boards .cnb-hero','.p136-creators-search','.st-status','.field-guide-page .portal-page-heading']){
+  for(const selector of ['.p136-community .ch7-hero','.p136-boards .cnb-hero','.p136-creators-search','.st-status','.field-guide-page .portal-page-heading','.p136-discover-main','.join-panel','.state-card']){
    const node=document.querySelector(selector);if(!node)continue;
    const s=getComputedStyle(node);surfaces[selector]={background:s.backgroundImage,color:s.backgroundColor};
   }
+  const primary=document.querySelector('.p136-community .ch7-button-primary');
+  const guide=document.querySelector('.field-guide-page .portal-page-heading-copy h1 em');
+  let guideText=null;
+  if(guide){const range=document.createRange();range.selectNodeContents(guide);const r=range.getBoundingClientRect();const box=guide.closest('.portal-page-heading').getBoundingClientRect();guideText={right:r.right,left:r.left,containerRight:box.right,containerLeft:box.left};}
   return {width:innerWidth,scroll:document.documentElement.scrollWidth,
+   primary:primary?{background:getComputedStyle(primary).backgroundImage,color:getComputedStyle(primary).color}:null,guideText,
    header:rect('.p136-header'),rail:rect('.p136-console-wayfinder'),surfaces,
    canvas:document.querySelectorAll('.p136-living-canvas').length,
    logo:document.querySelectorAll('[data-anevum-mark="orbital-underground"]').length,
@@ -84,6 +89,8 @@ async function geometry(page){
  for(const [selector,surface] of Object.entries(g.surfaces)){
   assert.ok(surface.background.includes('35, 26, 41')||surface.color==='rgb(16, 13, 22)',selector+' must render the Continuance material, not only inherit unused root tokens: '+JSON.stringify(surface));
  }
+ if(g.primary){assert.ok(g.primary.background.includes('242, 228, 211'),'Commons primary button must retain its light surface');assert.equal(g.primary.color,'rgb(21, 14, 23)');}
+ if(g.guideText)assert.ok(g.guideText.right<=g.guideText.containerRight-8&&g.guideText.left>=g.guideText.containerLeft,'Field Guide text must fit inside the clipped heading: '+JSON.stringify(g.guideText));
  return g;
 }
 try{
@@ -92,6 +99,8 @@ try{
   for(const [name,path] of [['arrival','/'],['discover','/discover'],['creators','/creators'],['commons','/community'],['studio-guest','/studio'],['guide','/guide'],['boards','/boards'],['start','/start'],['status','/status'],['join','/join'],['member-guest','/member'],['project-unavailable','/projects/baseline-unavailable'],['creator-unavailable','/creators/baseline-unavailable']]){
    await page.goto(origin+'/creator'+path,{waitUntil:'networkidle'});
    await page.locator('main').waitFor();
+   await page.locator('main').getByRole('heading').first().waitFor();
+   if(name==='boards')await page.locator('#cnb-heading').waitFor();
    assert.ok(await page.locator('main').innerText());
    const g=await geometry(page);
    if(name==='arrival'){

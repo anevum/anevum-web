@@ -3,7 +3,7 @@
 Session: ANEVUM.WEB.DESIGN.2026-10-25.002.MOTION-FIRST-CONSOLIDATION  
 Status: OWNER-DIRECTED AUTHORITY / MOTION-FIRST IMPLEMENTATION CANDIDATE / NOT A PRODUCTION RELEASE  
 Date: October 25, 2026 (America/New_York)  
-Active integrated candidate and owner preview: PR #779, with #763 product source and incorporated #778 route audit.  
+Active integrated candidate and owner preview: PR #763 (`build/parity-v136-controller-route-probe-20261025-038`), containing merged #779 and incorporated #778.
 Other official boundaries: security/release #333, founder visual approval #335, creator publishing #329, Creator V1 doctrine #344.
 
 ## 0 — New governing decision
@@ -54,7 +54,7 @@ Targets to *measure*, not claims currently achieved: p75 mobile LCP <= 2.5s, CLS
 
 Use the existing ProjectThumbnail selection: (1) verified reviewed creator-owned cover, (2) separately reviewed project-specific art with rights and attribution, if explicitly supplied, (3) honest deterministic category SVG fallback. Older public Project DTO currently lacks an approved uploaded-cover field; never guess private asset URLs. Preview video on explicit user interaction or approved in-viewport conditions only, pause others, use a static first frame and meaningful accessible alt. Reuse one component/variant set for homepage, Discover, creators, Commons, Boards, project detail, Studio review and public announcements.
 
-**Important source finding:** the current Arrival manifest is preview-only with sequence:null and no approved video; CinematicArrivalV136 ties opacity/handoff to the modeled environment's readiness, and LivingWorldField lazy-loads InstituteRendererV136. Media-first transformation requires replacing this coupling, not yet another theoretical motion system.
+**Implemented development state:** the V136 shell no longer mounts the ambient renderer. Arrival uses the existing native MP4/WebM player with posters and accessibility/bandwidth fallbacks. Its current 12-second camera crop of a generated still is an unapproved temporary candidate, not independently animated environmental footage. Sequence/production art approval remains closed. See the current reconstruction record for exact source, deployment and acceptance receipts.
 
 ## 2 — Keep / Refactor / Archive / Remove
 

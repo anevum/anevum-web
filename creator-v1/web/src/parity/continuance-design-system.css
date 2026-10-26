@@ -353,7 +353,7 @@ html[data-av-parity="v136-full"] .p136-community :is(.ch7-hero-copy>p,.ch7-statu
 html[data-av-parity="v136-full"] .p136-community .ch7-count-grid strong{color:var(--av-text)}
 html[data-av-parity="v136-full"] .p136-community :is(.ch7-tabs,.ch7-search,.ch7-field-filter select,.ch7-sort){background:var(--av-instrument);border-color:var(--av-border);color:var(--av-text)}
 html[data-av-parity="v136-full"] .p136-community :is(.ch7-button,.ch7-refresh,.ch7-search button){background:var(--av-instrument);border-color:var(--av-border);color:var(--av-text)!important;box-shadow:inset 0 1px #f0dfce20}
-html[data-av-parity="v136-full"] .p136-community .ch7-button-primary{background:linear-gradient(125deg,#f2e4d3,#d5b9a0);border-color:var(--av-copper);color:#150e17!important}
+html[data-av-parity="v136-full"] .p136-community .ch7-button.ch7-button-primary{background:linear-gradient(125deg,#f2e4d3,#d5b9a0);border-color:var(--av-copper);color:#150e17!important}
 html[data-av-parity="v136-full"] .p136-community :is(.ch7-tabs,.ch7-sort) button[aria-pressed="true"]{background:#3b2b41;border-color:var(--av-edge);color:var(--av-text);box-shadow:inset 0 0 0 1px var(--av-edge)}
 
 html[data-av-parity="v136-full"] .p136-creators{
@@ -385,6 +385,14 @@ html[data-av-parity="v136-full"] .field-guide-page .portal-page-heading-copy h1 
 html[data-av-parity="v136-full"] :is(.st-root,.st-status){--st-void:var(--av-void);--st-panel:var(--av-surface);--st-line:var(--av-border);--st-text:var(--av-text);--st-muted:var(--av-secondary);--st-rose:var(--av-copper);--st-cyan:var(--av-ice)}
 html[data-av-parity="v136-full"] .st-status .st-action{background:linear-gradient(125deg,#f2e4d3,#d5b9a0);border-color:var(--av-copper);color:#150e17}
 html[data-av-parity="v136-full"] .st-status p{color:var(--av-secondary)}
+html[data-av-parity="v136-full"] .p136-discovery .p136-discover-main{background:var(--av-canvas);border-color:var(--av-border)}
+html[data-av-parity="v136-full"] :is(.p136-next,.p136-first-visit,.state-card){background:var(--av-panel);border-color:var(--av-border);color:var(--av-text);box-shadow:var(--av-shadow)}
+html[data-av-parity="v136-full"] .p136-first-visit-actions a{background:var(--av-instrument);border-color:var(--av-border);color:var(--av-text)}
+html[data-av-parity="v136-full"] .join-experience :is(.join-panel,.av123-member-promise,.av123-iren-join){background:var(--av-panel);border-color:var(--av-border);box-shadow:var(--av-shadow)}
+html[data-av-parity="v136-full"] .av9-shell .portal-page-heading :is(.cw-heading-cosmos,.cosmic-horizon){opacity:.12}
+html[data-av-parity="v136-full"] .avp-project .avp-stage{background:var(--av-canvas);border-color:var(--av-border)}
+html[data-av-parity="v136-full"] .avp-project .avp-stage-shade{background:linear-gradient(0deg,#07060bf5,#100d16bd 55%,#100d1640)}
+html[data-av-parity="v136-full"] .avp-project .avp-stage-shortcuts :is(a,button){background:var(--av-instrument);border-color:var(--av-border);color:var(--av-text)}
 
 html[data-av-parity="v136-full"] :is(.ir80-help,.ir80-guide-card,.ir97-speech-bubble,.ir97-invite){background:var(--av-panel);border-color:var(--av-edge);color:var(--av-text);box-shadow:var(--av-shadow)}
 html[data-av-parity="v136-full"] .ir87-scout.ir80-dock{background:var(--av-instrument);border-color:var(--av-edge);box-shadow:var(--av-shadow)}
@@ -398,6 +406,13 @@ html[data-av-parity="v136-full"] .site-main :is(a,button,input,textarea,select,[
 
 @media(max-width:560px){
  html[data-av-parity="v136-full"] .field-guide-page .portal-page-heading-copy h1{font-size:clamp(28px,7vw,38px);letter-spacing:-.035em}
+}
+/* Existing legacy !important phone type must be repaired in its own layer.
+   This remains in the sole V136 authority; V131 is untouched. */
+@layer legacy{
+ @media(max-width:560px){
+  html[data-av-parity="v136-full"] .field-guide-page .portal-page-heading-copy h1{font-size:clamp(28px,7vw,38px)!important;line-height:1.06!important}
+ }
 }
 @media(forced-colors:active){
  html[data-av-parity="v136-full"] .av9-shell :is(.ch7-hero,.ch7-status,.ch7-main,.ch7-panel,.ch7-values,.cnb-hero,.cnb-board-deck,.cnb-tabs button,.portal-page-heading,.guide-ribbon,.guide-nav,.guide-training,.st-status,.ir80-help){background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none}
