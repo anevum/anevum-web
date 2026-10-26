@@ -4,6 +4,7 @@ import { reviewerSchemaReady, reviewerEndpoint, exportReviewerConnection } from 
 import { commonsSocialEndpoint, socialSchemaReady, exportMemberSocial } from "./commons-social.mjs";
 import { moderationEndpoint } from "./commons-moderation.mjs";
 import { studioEndpoint } from "./studio-content.mjs";
+import { commerceReadOnlyEndpoint } from "./commerce-readonly.mjs";
 import { memberRhenDraftSchemaReady, readMemberRhenDraft, saveMemberRhenDraft, deleteMemberRhenDraft, validateRhenDraft, draftExpectedMemberMatches } from "./member-rhen-draft.mjs";
 import { resolveMemberOrigin, memberSchemaReady } from "./member-preflight.mjs";
 import { preferenceExpectedMemberMatches } from "./member-preference-guard.mjs";
@@ -155,6 +156,11 @@ export async function memberEndpoint(request, env, pathname, verifiedContext = {
   }
 
   const db = env.MEMBER_DB;
+  if (pathname.startsWith("/api/member/commerce/")) {
+    // Session and same-origin mutation checks have already passed.
+    // Preview catalog is read-only and all payment/ordering paths are disabled.
+    return commerceReadOnlyEndpoint(request,env,user,pathname);
+  }
   if (pathname.startsWith("/api/member/studio/")) {
     return studioEndpoint(request,env,user,verifiedOrigin,pathname,verifiedContext.studioAccessEmail);
   }
