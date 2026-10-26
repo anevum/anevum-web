@@ -1,4 +1,4 @@
-/** Real compiled companion, including silent GPU failures. Loopback only. */
+/** V137 real compiled HD companion; WebGL remains safely unallocated. Loopback only. */
 import assert from 'node:assert/strict';
 import {spawn,execFileSync} from 'node:child_process';
 import {once} from 'node:events';
@@ -45,8 +45,8 @@ try{
  for(const [mode,width] of [['healthy',1440],['healthy',320],['paused',1920],['empty',1440],['unavailable',1440],['late-error',1440],['context-loss',1440]]){
   await send('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:width<641});
   await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:mode==='paused'?'reduce':'no-preference'}]});
-  // Inject only into this synthetic browser. Real WebGL renders in the healthy
-  // cases; empty models emulate drivers that accept draws but produce no pixels.
+  // Simulate healthy and failed graphics contexts; IREN's vector renderer must
+  // render the same high-definition pet without allocating a WebGL context.
   const script=await send('Page.addScriptToEvaluateOnNewDocument',{source:`
    localStorage.setItem('anevum.iren.first-contact.v092','seen');
    window.__irenFrames=[];window.__irenFailure=false;
@@ -63,23 +63,22 @@ try{
   `});
   await send('Page.navigate',{url:base+'/creator/'});
   await until(()=>evaluate('!!document.querySelector(".ir80-dock")'),'Companion absent');
-  const fallback=['empty','unavailable'].includes(mode);
-  await until(()=>evaluate(`!!document.querySelector('.ir88-figure.${fallback?'has-fallback':'is-rendering'}')`),'Frame state '+mode);
-  if(!fallback)assert.ok(await evaluate('window.__irenFrames.some(n=>n>0)'),'No genuine rendered pixels');
-  if(mode==='late-error')await evaluate('window.__irenFailure=true');
-  if(mode==='context-loss')await evaluate('window.__irenGL.getExtension("WEBGL_lose_context").loseContext()');
-  const failed=fallback||['late-error','context-loss'].includes(mode);
-  if(failed){
-   await until(()=>evaluate('!!document.querySelector(".ir88-figure.has-fallback")'),'Failure must restore vector '+mode);
-   await until(()=>evaluate('getComputedStyle(document.querySelector(".ir88-svg-fallback")).opacity==="1"'),'Visible vector '+mode);
-   assert.equal(await evaluate('document.querySelectorAll(".ir88-3d-canvas").length'),0);
-  }
+  // IREN V137 intentionally uses the HD vector-first character. Every mode,
+  // including simulated broken GPU drivers, must render that same pet without
+  // allocating WebGL or depending on renderer readiness.
+  await until(()=>evaluate('!!document.querySelector(".ir88-figure.ir137-vector-pet .ir137-pet-art")'),'HD sprite state '+mode);
+  assert.equal(await evaluate('document.querySelectorAll(".ir88-3d-canvas").length'),0,'Companion does not allocate a hidden GPU canvas');
+  assert.equal(await evaluate('window.__irenGL===undefined&&window.__irenFrames.length===0'),true,'No WebGL draw/readback work');
+  assert.equal(await evaluate('(()=>{const s=document.querySelector(".ir137-pet-art");return s.viewBox.baseVal.width===128&&s.viewBox.baseVal.height===128&&s.querySelectorAll(".ir137-pet-eye").length===2;})()'),true,
+    'HD companion body and two eyes must be rendered');
+  if(mode==='paused')assert.equal(await evaluate('getComputedStyle(document.querySelector(".ir137-pet-art")).animationName'),'none',
+    'Reduced motion pauses decorative companion animation');
   await evaluate('document.querySelector(".ir80-dock").click()');
   await until(()=>evaluate('!!document.querySelector(".ir80-help")'),'Help must still work '+mode);
   assert.equal(await evaluate('document.documentElement.scrollWidth>innerWidth+1'),false);
   const image=await send('Page.captureScreenshot',{format:'png',fromSurface:true});
   writeFileSync(join(output,mode+'-'+width+'.png'),Buffer.from(image.data,'base64'));
-  cases.push({mode,width,passed:true,visible:failed?'vector fallback':'verified WebGL pixels'});
+  cases.push({mode,width,passed:true,visible:'HD vector pet rendered; no GPU allocation'});
   await send('Page.removeScriptToEvaluateOnNewDocument',{identifier:script.identifier});
  }
  assert.deepEqual(exceptions,[]);

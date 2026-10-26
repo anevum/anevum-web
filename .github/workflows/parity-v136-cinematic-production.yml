@@ -1,5 +1,6 @@
 name: PARITY V136 Cinematic Production QA
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - '.github/workflows/parity-v136-cinematic-production.yml'
@@ -22,7 +23,6 @@ on:
       - 'creator-v1/web/src/parity/CinematicVideoV136.tsx'
       - 'creator-v1/web/src/parity/CinematicArrivalV136.tsx'
       - 'docs/production/parity-v136-cinematic-production-20261024.md'
-  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
@@ -60,7 +60,8 @@ jobs:
         run: node creator-v1/graphics/smoke-cinematic-v136.mjs
 
   authored-scene-preview:
-    if: github.repository == 'anevum/anevum-web' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'anevum/anevum-web')
+    # Historical Blender/GPU background candidate; no longer a pull-request default.
+    if: github.repository == 'anevum/anevum-web' && github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:

@@ -2,24 +2,21 @@
 <title id="title">ANEVUM default games thumbnail</title>
 <desc id="desc">Native Continuance Institute vector placeholder, used only when a verified creator thumbnail is unavailable.</desc>
 <defs>
- <linearGradient id="field" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#050c19"/><stop offset=".52" stop-color="#0a1c30"/><stop offset="1" stop-color="#040c17"/></linearGradient>
- <radialGradient id="illumination"><stop stop-color="#6e50d0" stop-opacity=".48"/><stop offset=".58" stop-color="#6e50d0" stop-opacity=".15"/><stop offset="1" stop-color="#6e50d0" stop-opacity="0"/></radialGradient>
- <linearGradient id="hardware" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a68aff" stop-opacity=".86"/><stop offset="1" stop-color="#6e50d0" stop-opacity=".68"/></linearGradient>
- <pattern id="grid" width="75" height="75" patternUnits="userSpaceOnUse"><path d="M75 0H0V75" fill="none" stroke="#a68aff" stroke-opacity=".10" stroke-width="1"/></pattern>
+ <linearGradient id="field" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0a0710"/><stop offset=".52" stop-color="#241c2a"/><stop offset="1" stop-color="#0d0a14"/></linearGradient>
+ <radialGradient id="illumination"><stop stop-color="#524164" stop-opacity=".48"/><stop offset=".58" stop-color="#524164" stop-opacity=".15"/><stop offset="1" stop-color="#524164" stop-opacity="0"/></radialGradient>
+ <linearGradient id="hardware" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b49bce" stop-opacity=".86"/><stop offset="1" stop-color="#524164" stop-opacity=".68"/></linearGradient>
+ <pattern id="grid" width="75" height="75" patternUnits="userSpaceOnUse"><path d="M75 0H0V75" fill="none" stroke="#b49bce" stroke-opacity=".10" stroke-width="1"/></pattern>
 </defs>
 <rect width="1600" height="900" fill="url(#field)"/>
+<ellipse cx="800" cy="620" rx="420" ry="78" fill="#020105" opacity=".38"/>
+<path d="M430 630Q800 720 1170 630" fill="none" stroke="#d2a57f" stroke-opacity=".22" stroke-width="2"/>
 <rect width="1600" height="900" fill="url(#grid)"/>
 <ellipse cx="800" cy="410" rx="660" ry="580" fill="url(#illumination)"/>
-<path d="M60 155H1540M60 742H1540" stroke="#a68aff" stroke-opacity=".27" stroke-width="2"/>
-<path d="M60 210V60H215M1385 60H1540V210M60 690V840H215M1385 840H1540V690" fill="none" stroke="#a68aff" stroke-opacity=".58" stroke-width="3"/>
-<path d="M540 400a260 260 0 0 1 520 0a260 260 0 0 1-520 0" fill="none" stroke="#a68aff" stroke-opacity=".19" stroke-width="3"/>
-<circle cx="800" cy="402" r="226" fill="#071527" fill-opacity=".80" stroke="#a68aff" stroke-opacity=".43" stroke-width="3"/>
-<circle cx="800" cy="402" r="190" fill="none" stroke="#a68aff" stroke-opacity=".12" stroke-width="2" stroke-dasharray="10 24"/>
-<path d="M527 402H481M1119 402h-46M800 129V175m0 453v46" stroke="#a68aff" stroke-opacity=".53" stroke-width="3"/>
+<path d="M60 155H1540M60 742H1540" stroke="#b49bce" stroke-opacity=".27" stroke-width="2"/>
+<path d="M60 210V60H215M1385 60H1540V210M60 690V840H215M1385 840H1540V690" fill="none" stroke="#b49bce" stroke-opacity=".58" stroke-width="3"/>
+<path d="M540 400a260 260 0 0 1 520 0a260 260 0 0 1-520 0" fill="none" stroke="#b49bce" stroke-opacity=".19" stroke-width="3"/>
+<circle cx="800" cy="402" r="226" fill="#16121e" fill-opacity=".80" stroke="#b49bce" stroke-opacity=".43" stroke-width="3"/>
+<circle cx="800" cy="402" r="190" fill="none" stroke="#b49bce" stroke-opacity=".12" stroke-width="2" stroke-dasharray="10 24"/>
+<path d="M527 402H481M1119 402h-46M800 129V175m0 453v46" stroke="#b49bce" stroke-opacity=".53" stroke-width="3"/>
 <g transform="translate(800 402) scale(.76)" stroke="url(#hardware)" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M-122 32c-42 0-61 23-74 65l-23 76c-11 39 20 64 51 46l71-53h192l71 53c31 18 62-7 51-46l-23-76c-13-42-32-65-74-65Z"/><path d="M-124 77v72m-36-36h72"/><circle cx="104" cy="91" r="13"/><circle cx="147" cy="135" r="13"/><circle cx="0" cy="58" r="9"/></g>
-<text x="90" y="106" font-family="system-ui, sans-serif" font-size="21" font-weight="700" letter-spacing="5" fill="#dcecff">ANEVUM <tspan fill="#a68aff">/</tspan> CONTINUANCE INSTITUTE</text>
-<text x="1505" y="106" font-family="system-ui, sans-serif" font-size="23" font-weight="700" text-anchor="end" letter-spacing="4" fill="#a68aff">FIELD 02</text>
-<text x="90" y="800" font-family="system-ui, sans-serif" font-size="63" font-weight="750" letter-spacing="3" fill="#ecf6ff">GAMES</text>
-<text x="90" y="835" font-family="system-ui, sans-serif" font-size="18" letter-spacing="5" fill="#a68aff">ANEVUM DEFAULT PREVIEW</text>
-<text x="1505" y="814" font-family="system-ui, sans-serif" font-size="19" font-weight="650" text-anchor="end" letter-spacing="3" fill="#a8bfd5">CREATOR MEDIA NOT PROVIDED</text>
 </svg>

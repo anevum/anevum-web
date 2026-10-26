@@ -35,6 +35,8 @@ on:
       - 'creator-v1/web/src/parity/concept-convergence-v136017.css'
       - 'creator-v1/web/src/parity/StudioSpatialWorkspaceV136.tsx'
       - 'creator-v1/web/src/parity/ArtifactWorkbenchV136.tsx'
+      - 'creator-v1/web/src/parity/SourcePreviewV136.tsx'
+      - 'creator-v1/web/src/parity/artifact-workbench-v136.css'
       - 'creator-v1/web/src/parity/visual-foundation-v136.css'
       - 'creator-v1/web/src/main.tsx'
       - 'creator-v1/test/parity-v136-concept-convergence.test.mjs'
@@ -80,6 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
+      ANEVUM_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
       WRANGLER_SEND_METRICS: 'false'
       CLOUDFLARE_API_TOKEN: ''
       CLOUDFLARE_API_KEY: ''

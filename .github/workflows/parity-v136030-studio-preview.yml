@@ -1,0 +1,76 @@
+name: PARITY V136 Studio Authoring QA
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/parity-v136030-studio-preview.yml'
+      - 'creator-v1/web/src/parity/ArtifactWorkbenchV136.tsx'
+      - 'creator-v1/web/src/parity/SourcePreviewV136.tsx'
+      - 'creator-v1/web/src/parity/artifact-workbench-v136.css'
+      - 'creator-v1/web/src/parity/continuance-design-system.css'
+      - 'creator-v1/web/src/parity/workbench-file-ops-v136.ts'
+      - 'creator-v1/web/src/pages/NativeCreatorStudio.tsx'
+      - 'creator-v1/web/src/lib/godot-local-sniff-v136.ts'
+      - 'creator-v1/web/src/lib/native-compatibility-v101.ts'
+      - 'creator-v1/test/native-compatibility-v101.test.mjs'
+      - 'creator-v1/web/src/pages/native-creator-v095.css'
+      - 'creator-v1/web/src/components/Shell.tsx'
+      - 'creator-v1/test/parity-v136-full-browser.mjs'
+      - 'creator-v1/test/source-archive-v136.test.mjs'
+permissions:
+  contents: read
+concurrency:
+  group: parity-v136030-studio-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  compiled-studio:
+    if: github.repository == 'anevum/anevum-web' && github.event.pull_request.head.repo.full_name == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VITE_PARITY_V136_FULL: 'true'
+      VITE_PARITY_V136_CINEMATIC: 'true'
+      VITE_PARITY_V136_HORIZON_QA: 'false'
+      VITE_PARITY_V136_SHARED_SCENE_QA: 'false'
+      VITE_PARITY_V136_NATIVE_VIDEO: 'false'
+      VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
+      VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
+      VITE_MEMBER_COLLECTION_NAV_REVIEW: 'true'
+      CLOUDFLARE_API_TOKEN: ''
+      CLOUDFLARE_API_KEY: ''
+      CLOUDFLARE_ACCOUNT_ID: ''
+      WRANGLER_SEND_METRICS: 'false'
+      PARITY_QA_OUTPUT: evidence/parity-v136/studio-preview-030
+      ANEVUM_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check exact source
+        run: test "$(git rev-parse HEAD)" = "$ANEVUM_SOURCE_SHA"
+      - name: Install pinned frontend without lifecycle scripts
+        run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - name: Check archive/privacy contracts, typecheck and compile
+        run: |
+          node --experimental-strip-types --test creator-v1/test/native-compatibility-v101.test.mjs creator-v1/test/source-archive-v136.test.mjs creator-v1/test/parity-v136-concept-convergence.test.mjs creator-v1/test/parity-v136-integrated-overhaul.test.mjs
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+      - name: Install isolated Chromium tooling
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
+          npx playwright install --with-deps chromium
+      - name: Reuse complete Studio acceptance at 1440, 390 and 320px
+        run: |
+          node creator-v1/test/parity-v136-full-browser.mjs --studio-only
+          node --input-type=module -e 'import {readFileSync} from "node:fs";const r=JSON.parse(readFileSync(process.env.PARITY_QA_OUTPUT+"/acceptance.json"));if(r.source!==process.env.ANEVUM_SOURCE_SHA||r.workingTreeDirty!==false||r.status!=="PASS"||r.scope!=="studio-only"||r.checks.length!==3||r.errors.length||r.forbidden.length)throw Error("Incomplete Studio-only browser acceptance");'
+      - name: Preserve labelled loopback screenshots and receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-v136030-studio-${{ github.event.pull_request.head.sha }}
+          path: evidence/parity-v136/studio-preview-030/
+          retention-days: 14
+          if-no-files-found: warn

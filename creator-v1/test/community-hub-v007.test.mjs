@@ -23,7 +23,8 @@ test("V007 activity and creator data come from authoritative public APIs", () =>
   assert.match(hub, /status\.data\.counts\.publishedProjects/);
   assert.match(hub, /status\.data\.counts\.publishedCreators/);
   assert.match(hub, /projectDetailPath/);
-  assert.match(hub, /creatorPath\(item\.authorHandle\)/);
+  assert.match(hub, /publicCreatorHandle\(item\.authorHandle\)/);
+  assert.match(hub, /creatorPath\(handle\)/);
   assert.match(api, /credentials:\s*"omit"/);
   assert.match(api, /cache:\s*"no-store"/);
   assert.doesNotMatch(hub, /localStorage|sessionStorage|document\.cookie|dangerouslySetInnerHTML|fakeUser|fakePost|sampleComments|Math\.random|grantXp\(/);
@@ -36,7 +37,7 @@ test("V007 provides meaningful filters, accessible identities and non-fabricated
     assert.ok(hub.includes(category), category);
   assert.match(hub, /aria-pressed=\{view === item\.id\}/);
   assert.match(hub, /aria-label="Community activity"/);
-  assert.match(hub, /aria-label="Verified public community counts"/);
+  assert.match(hub, /aria-label="Approved public community counts"/);
   assert.match(hub, /searchCreators\(event: FormEvent<HTMLFormElement>\)/);
   assert.match(hub, /role="status"/);
   assert.match(hub, /<LoadingState/);

@@ -19,9 +19,10 @@ assert.equal(manifest.handoff.sceneSector,'hero');
 assert.equal(manifest.handoff.geometry,'atrium');
 assert.ok(manifest.handoff.revealStart>=0&&manifest.handoff.revealEnd<=1&&manifest.handoff.revealEnd>manifest.handoff.revealStart);
 const arrival=readFileSync(resolve(here,'../web/src/parity/CinematicArrivalV136.tsx'),'utf8');
-assert.match(arrival,/data-arrival-surface="native-interface"/);
-assert.match(arrival,/cinematicInspectionOpacity\(inspecting,readiness,scrollOpacity\)/,'Live 3D inspection handoff remains ready-gated');
-assert.doesNotMatch(arrival,/<img\b|<picture\b|manifest\.posters|assets\/parity-v136\//,'No raster fallback');
+assert.match(arrival,/data-cinematic-v136="motion-first"/);
+assert.doesNotMatch(arrival,/cinematicInspectionOpacity|sceneReadiness|MutationObserver/,'Public media is independent of GPU readiness');
+assert.match(arrival,/ownerReview&&!posterFailed&&<picture/,'Unaccepted raster is isolated to the explicit owner review');
+assert.match(arrival,/import.meta.env.MODE==='staging-path'/);
 const css=readFileSync(resolve(here,'../web/src/parity/cinematic-arrival-v136.css'),'utf8');
 assert.match(css,/\.p136-native-institute/,'Resolution-independent native presentation');
 assert.match(css,/prefers-reduced-motion:reduce/,'Respect reduced motion');
@@ -32,7 +33,7 @@ for(const folder of retired){
  assert.equal(images.length,0,'Retired promotional files in '+folder);
 }
 console.log(JSON.stringify({
- status:'CINEMATIC_NATIVE_SOURCE_PASS',presentation:'native interface and authored 3D',
+ status:'CINEMATIC_MOTION_FIRST_SOURCE_PASS',presentation:'authored review media and independent DOM fallback',
  retiredFolders:retired.length,generatedPosterCount:0,
  sequence:'not-authorized',network:'none',privateContent:'none',productionApproved:false
 },null,2));

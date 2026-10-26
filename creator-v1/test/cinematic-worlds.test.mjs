@@ -132,7 +132,7 @@ test("unified V009 keeps one navigation plane across homepage and inner pages",(
  assert.match(css,/\.portal-page-heading-stamp>span\{/);
  assert.match(html,/og:site_name/);
  assert.match(html,/og:title/);
- assert.match(html,/icon.*%BASE_URL%favicon\.svg/);
+ assert.match(html,/icon.*%BASE_URL%assets\/site-v136-005\/favicon\.svg/);
  assert.match(read("web/src/pages/DiscoverPage.tsx"),/accent={world\?\.accent\|\|"UNIVERSE\."}/);
   assert.match(read("web/src/pages/DiscoverPage.tsx"),/world=immersive\?immersiveWorlds/);
   assert.match(read("web/src/App.tsx"),/path="discover" element={<DiscoverPage\/>}/);

@@ -20,8 +20,9 @@ on:
       - 'package.json'
       - 'creator-v1/web/src/pages/NativeCreatorStudio.tsx'
       - 'creator-v1/source-ide/**'
+      - 'site/alpha/v003/archive.d.mts'
   push:
-    branches: ['release/parity-v136-home-navigation-20261024-001', 'release/parity-v136-living-world-20261024-005', 'release/parity-v136-institute-20261024-011', 'release/parity-v136-unified-ui-20261025-004']
+    branches: ['release/parity-v136-home-navigation-20261024-001', 'release/parity-v136-living-world-20261024-005', 'release/parity-v136-institute-20261024-011', 'release/parity-v136-unified-ui-20261025-004', 'release/parity-v136-unified-baseline-20261026-005']
 permissions:
   contents: read
   actions: read
@@ -31,7 +32,7 @@ concurrency:
 jobs:
   verify-package:
     if: >-
-      github.event_name == 'pull_request' || (github.event.head_commit.message == 'release(parity-v136): upload verified homepage candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified living-world candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified institute candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified unified UI candidate')
+      github.event_name == 'pull_request' || (github.event.head_commit.message == 'release(parity-v136): upload verified homepage candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified living-world candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified institute candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified unified UI candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified unified baseline candidate')
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -46,6 +47,8 @@ jobs:
       VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
       VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
       VITE_MEMBER_COLLECTION_NAV_REVIEW: 'true'
+      VITE_ANEVUM_OWNER_REVIEW: 'false'
+      ANEVUM_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -55,9 +58,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Exact reviewed release source
+        run: test "$(git rev-parse HEAD)" = "$ANEVUM_SOURCE_SHA"
       - run: node creator-v1/ops/parity-v136-release.mjs source
       - name: Exact reviewed UI bytes and protected release boundaries
-        run: node --test creator-v1/test/parity-v136-release-scope.test.mjs
+        run: node --test creator-v1/test/parity-v136-release-scope.test.mjs creator-v1/test/visual-convergence-v136.test.mjs
       - name: Controller input mapping and repeat safety
         run: node --experimental-strip-types --test creator-v1/test/parity-v136-controller.test.mjs
       - run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
@@ -70,8 +75,14 @@ jobs:
       - run: npm run build:creator-v1-web
       - run: |
           npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
-          npx playwright install --with-deps chromium
+          # Keep the runner libraries/fonts stable; do not block QA on apt upgrades.
+          # The pinned Chromium download and real browser launch remain required.
+          npx playwright install chromium
       - run: node creator-v1/test/parity-v136-full-browser.mjs
+      - name: Production-mode public baseline at all five widths
+        env:
+          MOTION_QA_OUTPUT: evidence/parity-v136/production-baseline
+        run: node creator-v1/test/motion-first-browser.mjs --production
       - name: V136 Discover composition, filters, catalogue and responsive acceptance
         run: node creator-v1/test/parity-v136-discover-browser.mjs
       - name: Preserve verified member collections, guest and disabled states
@@ -96,13 +107,29 @@ jobs:
       - name: Recover exact previous canary asset package
         uses: actions/download-artifact@v4
         with:
-          artifact-ids: '12571882717'
-          run-id: 40123000259
+          artifact-ids: '12604142447'
+          run-id: 40207577332
           github-token: ${{ github.token }}
           path: ${{ runner.temp }}/v136-previous-canary
           merge-multiple: true
-      - name: Preserve baseline HTML and build identical shared asset inventories
-        run: node creator-v1/ops/parity-v136-asset-pair.mjs "$RUNNER_TEMP/v136-baseline" "$RUNNER_TEMP/v136-previous-canary" "$RUNNER_TEMP/parity-package" "$RUNNER_TEMP/parity-paired"
+      - name: Retain exact V61 rollback and cached-client assets
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12668393161'
+          run-id: 40360987664
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v136-live-v61
+          merge-multiple: true
+      - name: Retain exact V63 current live and cached-client assets
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12685298203'
+          run-id: 40393632639
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v136-live-v63
+          merge-multiple: true
+      - name: Preserve baseline HTML and all retained live-client asset inventories
+        run: node creator-v1/ops/parity-v136-asset-pair.mjs "$RUNNER_TEMP/v136-baseline" "$RUNNER_TEMP/v136-previous-canary/candidate" "$RUNNER_TEMP/parity-package" "$RUNNER_TEMP/parity-paired" "$RUNNER_TEMP/v136-live-v61/candidate" "$RUNNER_TEMP/v136-live-v63/candidate"
       - uses: actions/upload-artifact@v4
         with:
           name: parity-v136-package-${{ github.event.pull_request.head.sha || github.sha }}
@@ -119,7 +146,7 @@ jobs:
   upload-inactive:
     needs: verify-package
     if: >-
-      github.event_name == 'push' && (github.event.head_commit.message == 'release(parity-v136): upload verified homepage candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified living-world candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified institute candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified unified UI candidate')
+      github.event_name == 'push' && (github.event.head_commit.message == 'release(parity-v136): upload verified homepage candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified living-world candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified institute candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified unified UI candidate' || github.event.head_commit.message == 'release(parity-v136): upload verified unified baseline candidate')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -140,7 +167,9 @@ jobs:
       - name: Fresh immutable baseline preflight
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: node creator-v1/ops/parity-v136-release.mjs before "$RUNNER_TEMP/parity-paired/baseline"
+        run: |
+          test "$(git ls-remote --exit-code origin "$GITHUB_REF" | cut -f1)" = "$GITHUB_SHA"
+          node creator-v1/ops/parity-v136-release.mjs before "$RUNNER_TEMP/parity-paired/baseline"
       - name: Upload unchanged baseline frontend plus shared assets; zero traffic
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -153,7 +182,9 @@ jobs:
       - name: Fresh immutable candidate preflight
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: node creator-v1/ops/parity-v136-release.mjs before "$RUNNER_TEMP/parity-paired/candidate"
+        run: |
+          test "$(git ls-remote --exit-code origin "$GITHUB_REF" | cut -f1)" = "$GITHUB_SHA"
+          node creator-v1/ops/parity-v136-release.mjs before "$RUNNER_TEMP/parity-paired/candidate"
       - name: Upload verified candidate with identical shared assets; zero traffic
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

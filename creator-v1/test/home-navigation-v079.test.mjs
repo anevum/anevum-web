@@ -35,7 +35,7 @@ test("V079 replaces illustrated mega-menu with accessible destinations and actua
  assert.match(shell,/id="av79-navigation"/);
  assert.match(shell,/showModal\(\)/);
  assert.match(shell,/onCancel=\{\(\)=>setMenuOpen\(false\)\}/);
- for(const route of ["/discover?category=games","/discover","/community","/create","/levels","/library","/join"])
+ for(const route of ["/discover?category=games","/discover","/community","/studio","/levels","/library","/join"])
   assert.ok(shell.includes(route),"Missing useful route "+route);
  const navDestinations=shell.slice(shell.indexOf("const menuDestinations"),shell.indexOf("const menuCategories"));
  assert.equal((navDestinations.match(/label:"(?:Play|Discover|Community|Create)"/g)||[]).length,4);

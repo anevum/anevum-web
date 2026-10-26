@@ -55,9 +55,9 @@ export function MemberGate(){
     <header className="member-header">
       <div><span className="kicker">PRIVATE MEMBER WORKSPACE / STAGING</span><strong>{activeMember.displayName||activeMember.handle||"YOUR ACCOUNT"}</strong></div>
       <nav aria-label="Member workspace navigation">
-        <NavLink to="/account">ACCOUNT DASHBOARD</NavLink>
-        <NavLink to="/account/studio">CREATOR STUDIO</NavLink>
-        <NavLink to="/account/edit">EDIT PROFILE</NavLink>
+        <NavLink to="/member">ACCOUNT DASHBOARD</NavLink>
+        <NavLink to="/studio">CREATOR STUDIO</NavLink>
+        <NavLink to="/member?tab=profile">EDIT PROFILE</NavLink>
         <NavLink to="/library">SAVED LIBRARY</NavLink>
       </nav>
     </header>

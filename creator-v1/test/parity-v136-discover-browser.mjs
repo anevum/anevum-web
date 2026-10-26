@@ -39,7 +39,7 @@ await new Promise(done=>server.listen(0,'127.0.0.1',done));
 const base='http://127.0.0.1:'+server.address().port;
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 function record(name,data={}){checks.push({name,...data});console.log('PASS '+name)}
-async function makeContext(width,{state='projects',packages='none',publishedCount=2}={}){
+async function makeContext(width,{state='projects',packages='none',projectCount=2}={}){
   const context=await browser.newContext({viewport:{width,height:width<650?844:950},deviceScaleFactor:2,reducedMotion:'reduce'});
   await context.route('**/*',async route=>{
     const request=route.request(),url=new URL(request.url());
@@ -50,15 +50,16 @@ async function makeContext(width,{state='projects',packages='none',publishedCoun
       await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({projects:packages==='approved'?[packageFixture]:[]})});return
     }
     if(url.pathname.startsWith('/api/')){
-      const result=url.pathname==='/api/v1/projects'?
-        {items:(state==='empty'?[]:synthetic).filter(item=>
+      const items=(state==='empty'?[]:synthetic.slice(0,projectCount)).filter(item=>
           (!url.searchParams.get('q')||(item.title+' '+item.summary).toLowerCase().includes(url.searchParams.get('q').toLowerCase()))&&
           (!url.searchParams.get('category')||item.category===url.searchParams.get('category'))&&
-          (url.searchParams.get('free')!=='1'||item.freeToUse)),nextCursor:null,count:synthetic.length}
+          (url.searchParams.get('free')!=='1'||item.freeToUse));
+      const result=url.pathname==='/api/v1/projects'?
+        {items,nextCursor:null,count:items.length}
         :url.pathname==='/api/v1/categories'?
-          {categories:[{category:'games',count:Math.min(publishedCount,10000)},{category:'tools',count:1}]}
+          {categories:[{category:'games',count:items.filter(x=>x.category==='games').length},{category:'tools',count:items.filter(x=>x.category==='tools').length}]}
         :url.pathname==='/api/v1/status'?
-          {phase:'public',version:'test',counts:{publishedProjects:publishedCount,publishedCreators:1}}
+          {phase:'public',version:'test',counts:{publishedProjects:items.length,publishedCreators:1}}
         :url.pathname==='/api/v1/member/auth/get-session'?null
         :null;
       const status=state==='unavailable'&&url.pathname==='/api/v1/projects'?503:200;
@@ -86,11 +87,11 @@ try{
         headings:document.querySelectorAll('h1').length,
         worlds:document.querySelectorAll('.p136-discover-world').length,
         siteIren:document.querySelectorAll('.ir80-dock').length,
-        renderer:document.querySelector('.p136-living-world')?.dataset.renderer,
-        source:document.querySelector('.p136-living-world')?.dataset.source,
+        ambientRenderers:document.querySelectorAll('.p136-living-world,.p136-living-canvas').length,
         nativeFields:document.querySelectorAll('.p136-discover-world .av136-index-field[data-presentation="native-index"]').length,
         decorativeImages:document.querySelectorAll('.p136-discover-world img').length,
         font:getComputedStyle(document.querySelector('.p136-discover-hero h1')).fontFamily,
+        editorial:getComputedStyle(document.documentElement).getPropertyValue('--av-editorial').trim(),
         railScroll:getComputedStyle(document.querySelector('.p136-discover-featured')).overflowX,
         scrollSnap:getComputedStyle(document.querySelector('.p136-discover-featured')).scrollSnapType
       }
@@ -101,13 +102,15 @@ try{
     assert.equal(layout.siteIren,1,'Single shared IREN');
     assert.equal(layout.nativeFields,4,'All four gateways render native interface panels');
     assert.equal(layout.decorativeImages,0,'No decorative AI image elements in the category gateways');
-    assert.ok(['webgl','vector'].includes(layout.renderer),'A live world renderer exists');
-    assert.equal(layout.source,'verified','World uses actual public aggregate fixtures');
+    assert.equal(layout.ambientRenderers,0,'Motion-first Discover does not mount the retired ambient renderer');
+    assert.equal(await page.locator('.p136-discover-count').innerText(),'2 approved releases on this page','Visible count represents the actual approved catalogue');
     if(width<=600){
       assert.equal(layout.railScroll,'auto','Mobile console rail is swipeable without page overflow');
       assert.ok(layout.scrollSnap.includes('mandatory'),'Mobile rail snaps between scene gateways');
     }
-    assert.ok(!/Georgia|Cambria/.test(layout.font),'Sans-serif PARITY title');
+    assert.ok(layout.editorial.includes('Georgia'),'The existing Continuance authority supplies the editorial heading');
+    const normalizeFont=value=>value.replaceAll(/['"]/g,'').replaceAll(/\s*,\s*/g,',');
+    assert.equal(normalizeFont(layout.font),normalizeFont(layout.editorial),'Discover uses the shared Continuance heading typography');
     for(const box of [layout.cta,layout.search]){
       assert.ok(box&&box.left>=-1&&box.right<=width+1,'Controls remain in viewport: '+JSON.stringify(layout))
     }
@@ -151,7 +154,8 @@ try{
       'Search must stay within the mounted application; no native GET navigation');
     await page.getByRole('heading',{name:'No matching projects yet.'}).waitFor();
     await page.getByRole('link',{name:/Clear filters/}).click();
-    await page.waitForURL(base+'/discover');
+    await page.waitForURL(url=>url.pathname==='/discover'&&url.searchParams.get('view')==='list'&&!url.searchParams.has('q')&&!url.searchParams.has('category')&&!url.searchParams.has('free'));
+    assert.equal(await page.getByRole('button',{name:'List',exact:true}).getAttribute('aria-pressed'),'true','Clearing filters preserves the selected list layout');
     await page.getByRole('heading',{name:'SYNTHETIC TOOL WORKSHOP'}).waitFor();
     await page.getByRole('button',{name:'Open site navigation',exact:true}).click();
     await page.locator('#av79-navigation[open]').waitFor();
@@ -162,7 +166,7 @@ try{
     await page.keyboard.press('Escape');
     await page.waitForFunction(()=>!document.querySelector('#av79-navigation').open);
     record('spatial menu directional focus and escape');
-    await page.locator('.p136-living-world[data-sector="portal"]').waitFor();
+    assert.equal(await page.locator('.p136-discover-category-nav button[aria-pressed="true"]').innerText(),'All work','Reset restores the unfiltered public category');
     record('interactive category, list, free, encoded query, true empty, reset');
     await context.close();
   }
@@ -185,19 +189,22 @@ try{
     record('honest zero-project state');
     await context.close();
   }
-  // A different verified public catalogue count changes the generated world.
-  // These two synthetic scenarios are isolated contexts, never site telemetry.
-  const anchorCounts=[];
-  for(const publishedCount of [2,256]){
-    const {page,context}=await makeContext(390,{publishedCount});
+  // Catalogue growth changes the visible cards and honest result count.
+  // These synthetic scenarios are isolated contexts, never site telemetry.
+  const catalogueCounts=[];
+  for(const projectCount of [1,2]){
+    const {page,context}=await makeContext(390,{projectCount});
     await page.goto(base+'/discover',{waitUntil:'networkidle'});
-    await page.locator('.p136-living-world[data-source="verified"]').waitFor();
-    const value=await page.locator('.p136-living-world').getAttribute('data-anchors');
-    anchorCounts.push(Number(value));
+    await page.locator('.p136-discover-count').waitFor();
+    const count=await page.locator('.p136-discover-results article').count();
+    assert.equal(count,projectCount);
+    assert.equal(await page.locator('.p136-discover-count').innerText(),`${count} approved ${count===1?'release':'releases'} on this page`);
+    assert.equal(await page.locator('.p136-living-world,.p136-living-canvas').count(),0);
+    catalogueCounts.push(count);
     await context.close();
   }
-  assert.ok(anchorCounts[1]>anchorCounts[0],'Verified content growth changes rendered world geometry');
-  record('public content growth changes orbital signal geometry',{anchorCounts});
+  assert.ok(catalogueCounts[1]>catalogueCounts[0],'Verified public catalogue growth changes rendered results');
+  record('public content growth changes actual catalogue cards and counts',{catalogueCounts});
   assert.deepEqual(errors,[],'No runtime page errors');
   assert.deepEqual(forbidden,[],'No external calls or unsafe mutations');
 } catch(error){

@@ -1,10 +1,85 @@
+# Current production and development — stealth beta continuation
+Session: `ANEVUM.WEB.BUILD.2026-10-26.002.STEALTH-BETA-CUTOVER`.
+
+**Production:** V63 `77c8a9a6-f1ee-44fb-87d6-3271b3115c37` at 100%, deployment
+`cd6fa4f2-4382-49e2-a02b-b3d73cc41398`, October 26, 2026, 5:45 PM EDT.
+Exact immutable source: `93613f6ad18f243b88af1b168626558ce4bbaec7`.
+Rollback: V61 `c53d8b9c-625b-459a-a8cc-67ebb50155fd` at 100%.
+Cloudflare postflight preserved all settings, 26 bindings, 45 routes, controller
+allocation and disabled workers.dev/preview exposure. No data/schema/auth,
+large-upload, publishing or commerce activation accompanied this frontend release.
+
+Downloaded artifacts independently verified: all 557 candidate asset hashes,
+sealed gateway SHA-256 `1884ff0dd3c8aa3d38711167af0b4552c9b200b3148e72d9ba6d90d23171ef99`,
+556 identical paired shared files, 152 retained earned-media objects and exclusion
+of owner-review-only media. Exact release receipts: 46 full interactions,
+68 production-mode, 11 Discover and 36 collections checks; no runtime errors or
+forbidden requests. Actual live Chromium confirmed an existing authenticated
+member session, retained server-provided progression, new IREN box-pet/help,
+Studio, discovery, Commons, Start, Guide, Status, creators and collection views.
+`/boards` currently redirects to `/community` through retained hosting behavior;
+this is not proof of standalone public Boards delivery. Guest and cross-account
+certification, physical Safari/Xbox and independent media approval remain distinct.
+
+**Continuing source:** existing #763 only. The settled-account browser fix
+`c6cbd338eb64af8c1c45c3eea157e8c4d89c3f2d` removes a transient-spinner race,
+requires the synthetic private dashboard and opens the actual profile editor.
+The next source correction incorporates the release-only Studio/Commons cascade
+repairs into this same product lane and replaces literal warm/purple Arrival,
+header, rail and action gradients with the approved cold-metal materials.
+Compiled browser acceptance now measures these actual backgrounds and primary
+contrast, in addition to tokens, overflow, responsive routes and privacy gates.
+These newest styling changes require exact-head CI and the existing sealed release
+process before they become live. No new staging site or competing theme is created.
+
+**CI distinction:** the old V132 packager correctly rejects broad V136 source;
+its frozen allowlist is unchanged. Original Creator Verify failed a stale account
+capture selector, not a runtime identity failure; current corrected-head results
+belong in #784. Do not call all workflows green until read back.
+
+**Next:** finish corrected browser acceptance, package any verified visual
+successor with exact UI blob pins, preserve V61/V63 rollback, then extend secure
+friends/messages/collaboration behind server gates. Cinematic final media is
+unapproved; no payments or experimental upload activation. Canonical durable
+record: [#784](https://github.com/anevum/anevum-web/issues/784), board #325,
+release #783. Current provider records and this block supersede historical
+production/staging statements below; preserve their provenance.
+
+---
+
+# Current baseline verification
+Session: `ANEVUM.WEB.PACKAGE.2026-10-26.001.UNIFIED-BASELINE-RELEASE`.
+
+Production cutover preparation is now the priority. Existing #763 remains the sole product/UI authority at verified `241e0f16`; the packaging-only `release/parity-v136-unified-baseline-20261026-005` candidate carries that frontend on the prior controlled backend. Keep broad development-source release denial intact. See the existing reconstruction record for exact scope, current 99/1 rollback, unchanged protected services and pending production-mode/inactive-version gates.
+
+Current verified continuation: `4810e60be4d62b57ed47352da4add737f27b55c8`, 27 development passes, deployed review version `8a504c19-e292-4d0c-b0dd-38a31202bfea` with matching health/provider receipts. Studio library/form screenshots are accepted technically. The next bounded source fixes retained Start/Field Guide materials and tests their real local interactions; its own verification is pending. #763 and current receipts carry the latest status.
+
+
+Latest verified checkpoint: `9c3b60906179795d68a479d5643ac06452993440`, 27 development workflows passed and one intentional production denial. Review deployment `c4f0a73b-e8c8-42a3-a09c-dfbf060a893f` / version `4b4119e8-c216-44a9-9c88-301a1c17417f` matched live health. Studio/controller fixes passed exact-source browser receipts and actual screenshot inspection. The next bounded continuation reconciles the remaining authenticated build library, surrounding console and private-playtest form in the same design authority; its new exact-source verification is pending. Current receipts in #763 and live health supersede this dated checkpoint.
+
+Canonical source remains PR #763 / `build/parity-v136-controller-route-probe-20261025-038`; #779 is merged history. The exact deployment, browser inspection, visual corrections, Godot boundaries and review-only rollback procedure are recorded in [the existing reconstruction record](UNIFIED-CINEMATIC-RECONSTRUCTION.md#unified-baseline-release--october-26-2026). Current running source is established by `/__review/health` and the owner-preview deployment artifact, not older historical paragraphs below. One existing design authority and one ASSETS-only review Worker remain. Production, artistic approval #335, release #333 and publishing #329 remain separately gated.
+
+---
+
+# Current integrated website checkpoint
+
+Session: `ANEVUM.WEB.OVERHAUL.2026-10-25.001.UNIFIED-CINEMATIC-RECONSTRUCTION`.
+Website work continues on existing #763, containing merged review #779 (`eed2c3b1`) and the incorporated route audit #778. #779 is closed; the existing read-only V136 owner preview remains the only public-link visual review.
+Read [the current implementation record](UNIFIED-CINEMATIC-RECONSTRUCTION.md).
+One preview, one semantic design authority, no production promotion.
+Portfolio and publishing backend candidates remain separate owners.
+Historical records below retain their original status at the time written.
+
+---
+
 # ANEVUM Master Continuity — public engineering index
 
 Coordination session: `ANEVUM.ANEVUM.PACKAGE.2026-10-25.001.UNIFIED-WORKSTREAM-CONTINUITY`.
-Scoped implementation: `ANEVUM.WEB.UPDATE.2026-10-25.002.UNIFIED-UI-INTEGRATION`.
+Current session: `ANEVUM.ANEVUM.PACKAGE.2026-10-25.002.UNIFIED-OVERHAUL-WORK-CONTINUATION`.
+Historical integration session: `ANEVUM.WEB.UPDATE.2026-10-25.002.UNIFIED-UI-INTEGRATION`.
 Verified discovery date: October 25, 2026 (America/New_York).
-Status: **ACTIVE DEVELOPMENT. #738 merged into website development; controlled
-frontend release authorized. New production promotion not yet verified.**
+Status: **ACTIVE DEVELOPMENT. #738 and #745 merged into website development;
+V136.026 merged and verified in development; #750 Commons and stacked V136.028/.029/.030 under review. Production unchanged by this session.**
 
 This is an evidence index and continuation checkpoint, not another task board.
 [Canonical engineering #325](https://github.com/anevum/anevum-web/issues/325)
@@ -27,12 +102,12 @@ Use LOCKED, PRODUCTION, VERIFIED DRAFT, ACTIVE DEVELOPMENT, PROPOSED, RESEARCH,
 BLOCKED, SUPERSEDED, UNKNOWN. Record verification scope and time with every status.
 
 Devon is product/creative/release owner. Implementation ownership follows the
-existing component and PR contracts, not a newly invented team. Current reviewed
-candidate is isolated branch `integrate/unified-continuity-20261025-001`,
-based on immutable #735 head `988b7447633044a3c07de5ee3a4773f43c97412a`.
-Original #735/#737/#736 source branches are unchanged.
+existing component and PR contracts. Current development is #735 `888bf4cc`;
+#750 `2bf7504c` and stacked V136.028 remain isolated drafts. The older
+`integrate/unified-continuity-20261025-001` was merged through #738.
+The lineage matrix below records its historical input state, not current heads.
 
-## Source and lineage matrix
+## Historical source and lineage matrix
 
 | PR | Observed base / SHA | Observed branch / head | Discovery status |
 |---|---|---|---|
@@ -250,3 +325,244 @@ rollback assets, then perform a measured live rollout with native-browser checks
 Current provider baseline is deployment `f2f950d8-8ec6-42cd-80c2-06681ad2fcf9`
 and the recorded V136.003 99% / V136.005 1% split. Do not infer new live state
 until a provider receipt and real browser checks establish it.
+
+## V136.025 — creator directory source, acceptance and release boundary (2026-10-25)
+Session `ANEVUM.WEB.UPDATE.2026-10-25.005.CREATOR-DISCOVERY-CONVERGENCE`.
+Development branch `build/parity-v136-creator-directory-20261025-025`,
+owner-reviewed [#745](https://github.com/anevum/anevum-web/pull/745), based on
+#735 `20161bae20e7f369d4d7edfadcb4316ecccac3cf`, merged **only** into
+#735 development at `9e1a82d250e0b5a2eca0f1555e3110cdba7c6dae`.
+No main or production merge.
+
+Implemented: bounded read-only Creator Directory cards, native Institute styles,
+responsive/grid/list presentation, shareable URL search and pagination, true
+empty/error states and accessibility. Real approved public `readCreators` and
+`CompactMemberIdentity` remain the sole sources of channel identity; no new
+API, fabricated member/media/metrics, private content or payment dependencies.
+Shorter phone placeholder avoids truncation. The sidebar uses "30 CURRENT
+LEVELS", accurately describing the **implemented** 30-level backend, while
+#337's approved **future** unlimited design is explicitly still pending.
+No reward XP computation or storage is touched.
+
+Verified `8e4fbc66`: full Creator V1 Verify PASS (1,761/1,761), V083, V081,
+V084, V091, V095, V096 PASS; full compiled Spatial QA
+[40211155640](https://github.com/anevum/anevum-web/actions/runs/40211155640)
+PASS. Focused directory full-flag browser
+[40212833188](https://github.com/anevum/anevum-web/actions/runs/40212833188)
+PASS with [12 labelled fixture screenshots](https://github.com/anevum/anevum-web/actions/runs/40212833188/artifacts/12606154516),
+three viewport geometry receipts, zero overflow, page errors or outgoing
+non-read requests. Final V136.025 source `fafa1d643c` passed nine exact-head
+functional/safety workflows, including the full compiled browser and creator
+regressions; its 320px dock correction also passed focused browser QA.
+Owner confirmed the directory's present visual phase; PR #745 then merged into
+development. Synthetic screenshot fixtures remain loopback-only; physical
+iPhone Safari, Xbox/controller, production member roles and future performance
+gates remain open.
+
+Release source guard rejects unreviewed development files by design; it must not
+be weakened to turn this source into a deploy. The already sealed #741 candidate
+and recorded rollout/rollback stay distinct. The #742 read-only HTTP 403
+preceded the application. Stripe migration #739 remains isolated, and no
+auth, database, uploading, public publishing, XP, payment, infrastructure or
+traffic mutation occurred here. Release owner #333 retains the gate.
+
+## V136.026 — source-backed Discover continuity (October 25, 2026)
+Session `ANEVUM.WEB.UPDATE.2026-10-25.006.DISCOVERY-LAYOUT-CONTINUITY`.
+Branch `build/parity-v136-discovery-20261025-026`, exact parent #735 merge
+`9e1a82d250e0b5a2eca0f1555e3110cdba7c6dae`.
+Status: draft feature slice, NOT deployed. PR and CI receipt are required
+before development integration; preserve the sealed #741 release candidate.
+
+Purpose: URL-owned Grid/List selection across canonical and full-flag Discover;
+filters, approved project query, free declaration and cursor retain existing
+API and truth boundaries. Search/category/free changes clear stale cursor;
+layout changes preserve all data parameters and do not trigger a catalogue
+read. True compact List is one full-width project per row, not two stacked
+visual cards. Search and controls are iPhone-readable and accessible. User
+covers and authored type fallbacks remain the only media; no fabricated
+creators, prices, rankings, followers, artwork or new data feeds are added.
+
+New source assertions and a separate compiled Chromium loopback fixture test
+cover the public API, search, category, marked-free, pagination, URL history,
+0 results and 1440/390/320 layouts with screenshot receipts. Feature-flag
+package uploads remain under existing independent acceptance; this slice
+does not enable them. Production release source guard is still authoritative;
+no payments, auth, user privacy, backend, D1, publishing or traffic changes.
+#331 owns Discover behavior, #335 aesthetic acceptance, #333 release go/no-go.
+
+## V136.027 — Commons URL/privacy follow-through (October 25, 2026)
+Session `ANEVUM.WEB.UPDATE.2026-10-25.007.COMMONS-URL-IDENTITY-CONTINUITY`.
+Source branch `build/parity-v136-commons-20261025-027` is stacked on
+V136.026 Discover review source; development owner #735 and release #333
+remain separate. Existing Commons pages keep the same visual composition,
+real categories, member integrations and server-gated moderated discussions.
+
+Implementation: canonical URL parameters are the only source for Community
+view, project category, discussion order and public creator search. A view
+switch clears irrelevant hidden filters. Browser history and shared links
+restore selections. Creator credits without an approved public handle become
+text, never an inferred channel route. The approved-public counters do not
+conflate published-work review with identity verification. 16px phone search.
+A new source test and full-flag loopback browser test cover three viewport
+widths, real API responses, no fabricated activity or private backend access.
+
+Current state is DRAFT DEVELOPMENT, **NOT released**. The preceding #748
+Discover exact-head focused acceptance has passed in CI, but its parent merge
+requires the full spatial regression and source review after a small accessible
+category-name correction. No provider, main, #741 release lane, billing,
+auth, database, moderation or traffic changes are authorized here.
+
+## Current continuation — October 25, 2026
+Session `ANEVUM.ANEVUM.PACKAGE.2026-10-25.002.UNIFIED-OVERHAUL-WORK-CONTINUATION`.
+The earlier lineage tables are historical snapshots. Current authority is #735
+head `888bf4ccbdbe04442c166dea9f84bc2529eea2d1`, incorporating #748
+`b0b54bfc3cacfa9755f06be050baaba88acbc352` by guarded merge after owner
+visual approval and exact-head Creator V1, full spatial and focused Discover
+acceptance. Reviewed original 1440/390/320 screenshots; isolated synthetic
+fixtures, zero overflow/forbidden calls. #750 now targets #735; preserving
+Commons commits with a non-rewriting merge of that development parent.
+
+#750 at `073f01ba` passed focused Commons and spatial browser checks. Its
+Creator V1 run 40224267439 failed only after source/privacy regression success
+at an immediate post-click package List inspection. The harness now waits for
+the actual compact cards/hidden covers without relaxing acceptance. Current
+exact-head CI and Commons owner creative approval remain gates. Legacy serif
+cascade and detail-return browse-state loss are selected next UI corrections.
+
+LOCKED: Stripe retirement direction; #739 stays separate from UI. PRODUCTION:
+unchanged by this session. VERIFIED DEVELOPMENT: #748. ACTIVE DRAFT: #750.
+UNKNOWN: fresh provider traffic and live authenticated end-to-end acceptance.
+Historical infrastructure observations above were not re-queried here; no
+claim of current full infrastructure audit. Release guards and #741 remain
+sealed; upstream #742 HTTP 403 is not successful end-to-end verification.
+
+## V136.028 current implementation and provider correction
+
+| Track | Verified current checkpoint | Classification |
+|---|---|---|
+| Website development #735 | `888bf4ccbdbe04442c166dea9f84bc2529eea2d1`, #748 merged | VERIFIED DEVELOPMENT |
+| Commons #750 | `2bf7504c7b74a1f3c834b4381a9dcfdb4cd5501b`, both source histories preserved | ACTIVE DRAFT |
+| Browse return / typography V136.028 | `build/parity-v136-browse-return-20261025-028`, stacked on #750 | ACTIVE DRAFT |
+| Sealed release #741 | `4dfaed54fed606713a99b87c3152beddbcbc31f3`, immutable | PRODUCTION 1% candidate |
+| Stripe retirement #739 | `126915b6386c7b447bdd0de137a8bc46acc2f9e8`, unmerged | ACTIVE DRAFT |
+| Public HTTP #742 | Prior upstream 403 not accepted as application evidence | UNKNOWN end-to-end |
+
+V136.028 implements safe route-scoped project return continuity for Discovery,
+creator directory and Commons; removes fabricated null author-channel links
+from the project player/actions; corrects legacy important-font layer priority
+only inside full-flag Commons. TypeScript/full frontend build and 152 targeted
+regressions pass. Extended compiled Discover and Commons 1440/390/320 browser
+checks pass, including real detail/return, strict original history/filter checks,
+font family/weight, truthful identity, zero overflow/errors/forbidden calls.
+Local Chromium 153 and synthetic loopback records are not physical Safari/Xbox
+or production authenticated acceptance. Fresh pinned CI and owner creative
+approval remain open. Original two V136 concept boards were re-inspected.
+
+Fresh read-only Cloudflare gateway deployment `77ceaf3d-5bfb-4f07-b64d-1655a3093065`
+confirms baseline `ec5f106b-482c-4415-9c66-d6f8daf219ad` at 99% and sealed
+V136.024 candidate `cedb7ac1-74ca-4fcd-9a40-ce56964f1785` at 1%. This
+supersedes the historical `f2f950d8` traffic description above; that earlier
+deployment remains rollback history. No traffic expansion, provider mutation,
+main merge, account/media/database/payment/publishing change was performed.
+Other infrastructure observations remain historical, not freshly verified.
+
+## V136.029 — latest bounded UI draft and refreshed operating evidence
+Session `ANEVUM.ANEVUM.PACKAGE.2026-10-25.002.UNIFIED-OVERHAUL-WORK-CONTINUATION`.
+`build/parity-v136-creator-channel-20261025-029` starts exactly from #751
+`ac984db0d758e61a87adbf7a6e619682aecb8c37`; no source history rewrite.
+Public directory search/List/cursor survives channel/project round trips under
+strict route-scoped return sanitization. Real channel hierarchy/native Orbital
+fallback and full-width editorial release rows replace legacy style collisions
+and the screenshot-confirmed sparse-grid defect. Existing private/public/media/
+identity resolver/earned rewards/publication boundaries remain unchanged.
+
+Local TypeScript/full frontend and 171 targeted regressions pass. Extended
+compiled 1440/390/320 directory/channel/project return checks pass with actual
+keyboard navigation, typography, release-row geometry, zero overflow/errors/
+forbidden calls and 15 synthetic-loopback captures. New exact-head CI and owner
+creative acceptance pending. #751 passes 1,770 main regressions plus focused
+Discover/Commons and all returned ancillary suites; full spatial 40229597078
+now PASS. All ten development workflows are green; the live-release source
+guard remains closed. #750 passes all nine exact-head workflows.
+
+Fresh metadata inventory: Cloudflare 102 scripts, one Pages project, 11 D1,
+five R2 buckets and 40 zone Worker routes; apex wrappers remain in place.
+Gateway deployment `77ceaf3d` still 99% baseline / 1% sealed V136.024.
+Railway diagnostics staging SLEEPING; Core staging and RHEN/RHEN Archive
+production list no live services; inspected pending patches zero. Supabase
+ANEVUM ACTIVE_HEALTHY / Command INACTIVE. These are scoped provider metadata,
+not exhaustive app, billing, private data, security or cross-provider audits.
+Public Work-browser homepage/Discovery/project-player/Commons reads succeeded
+in the existing browser context. No write, account switching or independent
+publication journey; #742's blocked exact-version HTTP test remains open.
+No deployments, traffic, main, sealed candidate, payment or infrastructure
+mutation. Creator Studio interface/preview guidance is the next bounded UI slice.
+
+## Current Studio continuation — V136.030
+Session `ANEVUM.ANEVUM.PACKAGE.2026-10-25.002.UNIFIED-OVERHAUL-WORK-CONTINUATION`.
+#752 `d73f140fbbc0d207f19e9442279efdb089470334` is now VERIFIED DEVELOPMENT
+within its ACTIVE DRAFT: all eleven development workflows PASS, including
+1,771/1,771 main regressions and full Spatial 40231069764. Focused directory
+receipt/15 original captures are artifact 12612981883; spatial artifact
+12613761603. No creative approval or production promotion inferred.
+
+Next stacked branch `build/parity-v136-studio-preview-20261025-030` implements
+actual 1280/390/320 CSS layout viewports, scale-to-fit readout and a single
+preview-focus surface with mounted editor retention and keyboard return.
+Existing source sanitizer, opaque iframe, private source/archive lifecycle and
+upload/review rights remain unchanged. Layout preview and executable private
+playtest are clearly distinguished. Mobile size failures were corrected via
+a bounded embedded preview and real expandable build checks; no assertions
+were weakened. Local TypeScript/full build, 28 archive/privacy/concept checks
+and the complete Studio browser sequence at 1440/390/320 pass, including real
+media queries, scriptless frame, source/archive preservation and zero outbound
+unauthorized requests/errors. Six original compiled captures reviewed.
+
+Local receipts explicitly mark uncommitted source; exact-head pinned CI and
+owner creative review remain pending. Focused CI reuses existing Studio tests;
+normal full Spatial CI preserves every group. Production/main/#741/traffic,
+provider configuration, auth/data/media/upload/publication/payments unchanged.
+No new infrastructure or payment audit is claimed. Next UI slice is the actual
+Studio archive/upload form and existing compatibility/rights/playtest guidance.
+
+### Unified continuation — V136.031 Studio archive handoff
+Session `ANEVUM.ANEVUM.PACKAGE.2026-10-25.002.UNIFIED-OVERHAUL-WORK-CONTINUATION`.
+#753 `bea05ce35c7288f1fbfd6c3f9157d372ac8a9355` is the saved V136.030 preview
+increment on #752. Clean committed local 1440/390/320 Studio receipt PASS,
+including mounted Monaco/cursor retention; pinned CI still pending. #752's
+eleven development workflows and 1,771 main regressions remain green. No new
+creative acceptance found for the UI drafts; no merge or release inferred.
+
+New branch `build/parity-v136-studio-handoff-20261025-031` advances the existing
+archive-to-uploader workflow. A real prepared archive offers keyboard focus to
+the title field without remounting source. Three named form sections distinguish
+build compatibility, creator-provided details/cover, and the private playtest.
+Preparation guidance uses actual current file/check/metadata/rights state.
+Unchanged upload rights, compatibility, replacement and independent-review
+gates remain authoritative; source edits still invalidate archive and rights.
+Local TypeScript/build and 81 targeted contracts pass; compiled Studio checks
+PASS at 1440/390/320, errors=[] / forbidden=[]. Nine local synthetic compiled
+images inspected; these are uncommitted-source receipts, not pinned CI. No upload or
+private data action. Exact-head CI and creative review remain open.
+
+Production, main, sealed #741, traffic, provider configuration, payment and
+private data unchanged. Next bounded UI slice is existing Studio library and
+revision-action presentation, not a replacement publishing architecture.
+
+
+### V136.030 pinned-browser screenshot failure under investigation
+Exact source bea05ce35c7288f1fbfd6c3f9157d372ac8a9355 passed nine development
+workflows, including Creator V1 40232997056. Focused Studio 40232997294 and full
+Spatial 40232997114 both reached the focused-preview capture and failed at its
+30-second screenshot timeout; errors=[] / forbidden=[], clean source receipt
+FAIL. No pinned-browser acceptance is claimed. The original editor capture
+already had a bounded 90-second software-rendering budget. Give the new preview
+capture that same budget, retaining every assertion and required image, and log
+capture geometry/elapsed time to distinguish rendering delay from UI failure.
+Fresh exact-head CI is required. Main/production/#741/traffic remain unchanged.
+
+V136.031 also corrects the observed 320px IREN-dock overlap on the private
+form: only its idle presentation yields the authoring controls. The existing
+Wayfinder still opens the same IREN panel; closing returns focus to the
+persistent menu trigger, not an entry inside a closed dialog. The compiled
+all-width flow verifies action hit points and real assistant access/return.

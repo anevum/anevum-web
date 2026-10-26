@@ -81,7 +81,8 @@ test('Real renderer retains one canvas; stage path only with explicit QA opt-in'
  assert.match(renderer,/controller\.signal\.aborted\|\|disposed/);
 
  assert.match(stage,/crypto\.subtle\.digest\('SHA-256',buffer\)/);
- assert.match(arrival,/stageCamera\)element\.dataset\.cameraProgress=travel\.toFixed\(4\)/);
+ assert.doesNotMatch(arrival,/cameraProgress|stageCamera|sceneReadiness/);
+ assert.match(arrival,/data-cinematic-v136="motion-first"/);
  assert.ok(!/new T\.WebGLRenderer|document\.createElement\('canvas'\)/.test(stage+arrival),
   'No new WebGL context for the cinematic candidate');
  assert.ok(!/session|credentials:'include'|authorization:|localStorage|submit\(/i.test(stage+arrival));

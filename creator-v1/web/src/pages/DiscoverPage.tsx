@@ -51,7 +51,11 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
   const navigate=useNavigate();
   const q=params.get("q")||"",category=params.get("category")||"",cursor=params.get("cursor")||"",freeOnly=params.get("free")==="1";
   const [draft,setDraft]=useState(q);
-  const [view,setView]=useState<"covers"|"compact">("covers");
+  // Layout is part of the public URL, like category, search and cursor. This
+  // restores Grid/List on share, reload and Back/Forward without a duplicate
+  // private state or an unnecessary catalogue fetch.
+  const view=params.get("view")==="list"?"compact":"covers";
+  const clearHref=view==="compact"?"/discover?view=list":"/discover";
   useEffect(()=>setDraft(q),[q]);
   const resource=useResource(async signal=>{
     const [projects,categories]=await Promise.all([
@@ -96,6 +100,15 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
       return next;
     });
   }
+  function chooseView(next:"covers"|"compact"){
+    setParams(current=>{
+      const nextParams=new URLSearchParams(current);
+      if(next==="compact")nextParams.set("view","list");
+      else nextParams.delete("view");
+      // Layout changes must not reset the real server query or its cursor.
+      return nextParams;
+    });
+  }
   const categories=resource.state==="ready"?resource.data.categories.categories:[];
   const countByCategory=new Map(categories.map(x=>[x.category,x.count]));
   const legacyProjects=resource.state==="ready"?resource.data.projects.items:[];
@@ -112,7 +125,7 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
       query={q} cursor={cursor} freeOnly={freeOnly}
       draft={draft} onDraft={setDraft} onSearch={search} onSearchValue={commitSearch}
       onCategory={selectCategory} onToggleFree={toggleFreeOnly}
-      view={view} onView={setView}
+      view={view} onView={chooseView}
       resourceState={resource.state} packageState={packageResource.state}
       packagesInScope={packagesInScope} packagesCount={packages.length}
       packageProjects={packageProjects} legacyProjects={legacyProjects}
@@ -121,7 +134,7 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
       nextCursor={resource.state==="ready"?resource.data.projects.nextCursor:null}
     />
   </Suspense>;
-  return <div data-iren-anchor="discover" className="portal-discover av73-discover">
+  return <div data-iren-anchor="discover" className="portal-discover av73-discover" data-discovery-phase="v136.026">
     {immersive?<PortalHeading
       eyebrow={world?.eyebrow||"THE PORTALS / EVERYTHING WORTH TRYING"}
       title={world?.title||"EXPLORE THE"} accent={world?.accent||"UNIVERSE."}
@@ -141,7 +154,8 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
           </div>
           <form className="portal-wide-search" role="search" onSubmit={search}>
             <label htmlFor="portal-project-query" className="visually-hidden">Search published projects</label>
-            <input id="portal-project-query" type="search" maxLength={100} value={draft} onChange={e=>setDraft(e.target.value)} placeholder="Search projects" />
+            <input id="portal-project-query" name="q" type="search" maxLength={100} value={draft} onChange={e=>setDraft(e.target.value)} placeholder="Search projects" />
+            {view==="compact"&&<input type="hidden" name="view" value="list"/>}
             <button type="submit">Search <span aria-hidden="true">↗</span></button>
           </form>
           <div className="av73-discover-filter-heading"><strong>Filter by type</strong><span>Scroll to see all categories →</span></div>
@@ -164,16 +178,16 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
         {resultsReady&&<>
           <div className="portal-result-toolbar">
             <div><span className="kicker">{q?"SEARCH / "+q.toUpperCase():active?"CATEGORY / "+active.label.toUpperCase():"ALL RELEASES"}{freeOnly?" / MARKED FREE":""}</span>
-              <strong>{shown} VERIFIED PUBLISHED {shown===1?"RELEASE":"RELEASES"} ON THIS PAGE</strong>
+              <strong role="status">{shown} APPROVED PUBLISHED {shown===1?"RELEASE":"RELEASES"} ON THIS PAGE</strong>
             </div>
             <div className="portal-result-actions" role="group" aria-label="Choose project layout">
-              <button type="button" className={view==="covers"?"active":""} aria-pressed={view==="covers"} onClick={()=>setView("covers")}>▦ GRID</button>
-              <button type="button" className={view==="compact"?"active":""} aria-pressed={view==="compact"} onClick={()=>setView("compact")}>☷ LIST</button>
-              {(q||category||cursor||freeOnly)&&<Link to="/discover">RESET</Link>}
+              <button type="button" className={view==="covers"?"active":""} aria-pressed={view==="covers"} onClick={()=>chooseView("covers")}>▦ GRID</button>
+              <button type="button" className={view==="compact"?"active":""} aria-pressed={view==="compact"} onClick={()=>chooseView("compact")}>☷ LIST</button>
+              {(q||category||cursor||freeOnly)&&<Link to={clearHref}>RESET</Link>}
             </div>
           </div>
           {shown>0&&
-            <section aria-label="Published project results" className={view==="covers"?"portal-discover-results":"portal-discover-results portal-discover-compact"}>
+            <section aria-label="Published project results" data-layout={view==="compact"?"list":"grid"} className={view==="covers"?"portal-discover-results":"portal-discover-results portal-discover-compact"}>
               {packageProjects.map(p=><WorkCard key={'package:'+p.id} work={p} mode="public" compact={view==="compact"}/>)}
               {legacyProjects.map(p=><ProjectCard key={'catalogue:'+p.id} project={p} returnTo={current} presentation="editorial"/>)}
             </section>}
@@ -182,7 +196,7 @@ export function DiscoverPage({immersive=false}:{immersive?:boolean}={}){
               <div><span className="kicker">NOTHING HIDDEN / NOTHING FABRICATED</span>
                 <h2>{cursor?"END OF CURRENT RELEASES":q||category||freeOnly?"NO MATCHING PROJECTS YET":"NO APPROVED PROJECTS YET"}</h2>
                 <p>Only approved work appears here. Clear your filters, try another category or read how releases are reviewed.</p>
-                <div className="portal-empty-actions"><Link to="/discover" className="button secondary">EXPLORE ALL</Link><Link to="/guide" className="button secondary">FREE FIELD GUIDE</Link><Link to="/status" className="button secondary">RELEASE STATUS</Link></div>
+                <div className="portal-empty-actions"><Link to={clearHref} className="button secondary">EXPLORE ALL</Link><Link to="/guide" className="button secondary">FREE FIELD GUIDE</Link><Link to="/status" className="button secondary">RELEASE STATUS</Link></div>
               </div>
             </div>}
           {packagesInScope&&packages.length===100&&<p className="av010-discovery-status">Browser upload search covers the latest 100 approved releases.</p>}

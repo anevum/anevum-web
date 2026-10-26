@@ -17,7 +17,9 @@ test("visitor onramp is reachable from homepage, desktop and mobile, independent
   assert.match(home, /to="\/start"[^>]*>FIND YOUR PLACE/);
   assert.doesNotMatch(start, /memberCreateProject|memberSubmitProject|memberSetSaved/);
   assert.match(start, /You do not have to be a developer/);
-  assert.match(start, /invitation-only during testing/);
+  assert.match(start, /Joining ANEVUM does not automatically grant upload or publication access/);
+  assert.match(start, /Posting and moderation depend on verified accounts, permissions and current service availability/);
+  assert.doesNotMatch(start, /Creator accounts and submissions are invitation-only during testing/);
 });
 
 test("eight category portals target real catalogue filters and never fabricate listings", () => {

@@ -7,6 +7,14 @@ export type ControllerRect = Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>;
 
 export const noControllerRepeat: ControllerRepeat = {direction: null, startedAt: 0, lastAt: 0};
 
+/** Match native Wayfinder arrow navigation, regardless of responsive dock orientation.
+ * Invalid or hidden/unmounted starting stations are not silently redirected. */
+export function nextConsoleStationIndex(current: number, count: number, direction: ControllerDirection): number | null {
+  if (!Number.isInteger(count) || count < 1 || !Number.isInteger(current) || current < 0 || current >= count) return null;
+  const delta = direction === 'right' || direction === 'down' ? 1 : -1;
+  return (current + delta + count) % count;
+}
+
 export function readControllerIntent(pad: StandardGamepad): ControllerIntent {
   if (pad.mapping !== 'standard') return {direction: null, select: false};
   const down = (index: number) => Boolean(pad.buttons[index]?.pressed || (pad.buttons[index]?.value ?? 0) >= 0.65);

@@ -1,13 +1,14 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   readCommunityPosts, readCreators, readProjects, readStatus,
   type Category, type CommunityPost, type CommunityPostSort,
   type Creator, type Project
 } from "../lib/api";
 import { useResource } from "../lib/useResource";
-import { projectDetailPath } from "../lib/navigation";
+import { projectDetailPath, safeReturnPath } from "../lib/navigation";
 import {ProjectThumbnail} from "../components/ProjectThumbnail";
+import {publicCreatorHandle} from "../lib/public-creator-handle";
 import { Icon } from "../components/Icons";
 import { LoadingState, ErrorState } from "../components/States";
 import "./community-hub-v007.css";
@@ -54,9 +55,11 @@ const asDate = (value: string | null | undefined) => {
 };
 const creatorPath = (handle: string) => "/creators/" + encodeURIComponent(handle);
 
-function ProjectEntry({ item }: { item: Project }) {
-  const destination = projectDetailPath(item.id, "/community");
+function ProjectEntry({ item, returnTo }: { item: Project; returnTo: string }) {
+  const destination = projectDetailPath(item.id, returnTo);
   const field = fields.find(field => field.id === item.category);
+  const handle = publicCreatorHandle(item.creatorHandle);
+  const credit = item.creatorName || (handle ? "@"+handle : "ANEVUM member");
   return <article className="ch7-entry ch7-project">
     <Link className="ch7-entry-art" to={destination} aria-label={"Explore " + item.title}>
       <ProjectThumbnail kind={item.category} title={item.title} decorative/>
@@ -66,8 +69,9 @@ function ProjectEntry({ item }: { item: Project }) {
       <div className="ch7-meta"><span>PROJECT / {item.category.toUpperCase()}</span><time dateTime={item.publishedAt || undefined}>{asDate(item.publishedAt)}</time></div>
       <h3><Link to={destination}>{item.title}</Link></h3>
       <p>{item.summary}</p>
-      <div className="ch7-byline"><span className="ch7-avatar" aria-hidden="true">{(item.creatorName || item.creatorHandle).charAt(0).toUpperCase()}</span>
-        <span>BY <Link to={creatorPath(item.creatorHandle)}>{item.creatorName || "@" + item.creatorHandle}</Link></span>
+      <div className="ch7-byline"><span className="ch7-avatar" aria-hidden="true">{credit.charAt(0).toUpperCase()}</span>
+        <span>BY {handle ? <Link to={creatorPath(handle)}>{credit}</Link> :
+          <span aria-label="Public creator channel not linked">{credit}</span>}</span>
         {item.freeToUse && <span className="ch7-pill">FREE TO EXPLORE</span>}
       </div>
       <div className="ch7-entry-actions"><Link className="ch7-button ch7-button-primary" to={destination}>OPEN PROJECT <Icon name="arrow" size={14}/></Link>
@@ -76,17 +80,20 @@ function ProjectEntry({ item }: { item: Project }) {
   </article>;
 }
 
-function ConversationEntry({ item }: { item: CommunityPost }) {
+function ConversationEntry({ item, returnTo }: { item: CommunityPost; returnTo: string }) {
   const destination = "/community/posts/" + encodeURIComponent(item.id);
+  const handle = publicCreatorHandle(item.authorHandle);
+  const credit = item.authorName || (handle ? "@"+handle : "Community member");
   return <article className="ch7-entry ch7-conversation">
     <div className="ch7-conversation-art" aria-hidden="true"><Icon name="community" size={32}/><span>PUBLIC CONVERSATION</span></div>
     <div className="ch7-entry-copy">
       <div className="ch7-meta"><span>DISCUSSION / {item.topic.toUpperCase()}</span><time dateTime={item.publishedAt}>{asDate(item.publishedAt)}</time></div>
       <h3><Link to={destination}>{item.title}</Link></h3>
       <p>{item.excerpt}</p>
-      {item.project && <div className="ch7-project-context">ABOUT <Link to={projectDetailPath(item.project.id, "/community")}>{item.project.title}</Link></div>}
-      <div className="ch7-byline"><span className="ch7-avatar" aria-hidden="true">{(item.authorName || item.authorHandle).charAt(0).toUpperCase()}</span>
-        <span>BY <Link to={creatorPath(item.authorHandle)}>{item.authorName || "@" + item.authorHandle}</Link></span>
+      {item.project && <div className="ch7-project-context">ABOUT <Link to={projectDetailPath(item.project.id, returnTo)}>{item.project.title}</Link></div>}
+      <div className="ch7-byline"><span className="ch7-avatar" aria-hidden="true">{credit.charAt(0).toUpperCase()}</span>
+        <span>BY {handle ? <Link to={creatorPath(handle)}>{credit}</Link> :
+          <span aria-label="Public author channel not linked">{credit}</span>}</span>
         <span className="ch7-reactions">{item.replyCount} {item.replyCount === 1 ? "REPLY" : "REPLIES"} · {item.score} REACTIONS</span></div>
       <div className="ch7-entry-actions"><Link className="ch7-button ch7-button-primary" to={destination}>READ DISCUSSION <Icon name="arrow" size={14}/></Link></div>
     </div>
@@ -94,26 +101,31 @@ function ConversationEntry({ item }: { item: CommunityPost }) {
 }
 
 function CreatorEntry({ item }: { item: Creator }) {
+  const handle = publicCreatorHandle(item.handle);
   return <article className="ch7-person">
     <div className="ch7-person-avatar" aria-hidden="true">{(item.displayName || item.handle).charAt(0).toUpperCase()}</div>
     <div className="ch7-person-copy"><span className="ch7-kicker">PUBLIC CREATOR CHANNEL</span>
-      <h3><Link to={creatorPath(item.handle)}>{item.displayName}</Link></h3>
-      <span>@{item.handle}</span><p>{item.publishedProjects} APPROVED {item.publishedProjects === 1 ? "RELEASE" : "RELEASES"}</p></div>
-    <Link className="ch7-button" to={creatorPath(item.handle)} aria-label={"Visit " + item.displayName + "'s public channel"}>VIEW CHANNEL <Icon name="arrow" size={14}/></Link>
+      <h3>{handle ? <Link to={creatorPath(handle)}>{item.displayName}</Link> : item.displayName}</h3>
+      <span>{handle ? "@"+handle : "Channel link unavailable"}</span><p>{item.publishedProjects} APPROVED {item.publishedProjects === 1 ? "RELEASE" : "RELEASES"}</p></div>
+    {handle && <Link className="ch7-button" to={creatorPath(handle)} aria-label={"Visit " + item.displayName + "'s public channel"}>VIEW CHANNEL <Icon name="arrow" size={14}/></Link>}
   </article>;
 }
 
 export function CommunityPage() {
-  const location = useLocation();
-  const [, setSearchParams] = useSearchParams();
-  const [view, setView] = useState<View>(() => asView(location.search));
-  const [category, setCategory] = useState<Category | "all">("all");
-  const [sort, setSort] = useState<CommunityPostSort>("new");
-  const [creatorInput, setCreatorInput] = useState("");
-  const [creatorQuery, setCreatorQuery] = useState("");
+  // Public state belongs to the address, not an unsynchronised local replica.
+  // Back/Forward and shared links restore view, category, order and people search.
+  const [params, setSearchParams] = useSearchParams();
+  const returnTo = safeReturnPath("/community" + (params.size ? "?" + params.toString() : ""));
+  const view = asView(params.toString());
+  const requestedCategory = params.get("category");
+  const category: Category | "all" = fields.some(field => field.id === requestedCategory)
+    ? requestedCategory as Category : "all";
+  const sort: CommunityPostSort = params.get("sort") === "hot" ? "hot" : "new";
+  const creatorQuery = view === "people" ? (params.get("q") || "").trim().slice(0, 72) : "";
+  const [creatorInput, setCreatorInput] = useState(creatorQuery);
   const [revision, setRevision] = useState(0);
 
-  useEffect(() => { setView(asView(location.search)); }, [location.search]);
+  useEffect(() => { setCreatorInput(creatorQuery); }, [creatorQuery]);
   useEffect(() => {
     const refresh = () => { if (document.visibilityState === "visible") setRevision(current => current + 1); };
     const interval = window.setInterval(refresh, 150000);
@@ -156,17 +168,46 @@ export function CommunityPage() {
     : view === "conversations" ? status.state === "error" || (enabled && conversations.state === "error")
     : projects.state === "error" || (enabled && conversations.state === "error");
   function chooseView(next: View) {
-    setView(next);
-    const params = new URLSearchParams(location.search);
-    if (next === "all") params.delete("view");
-    else params.set("view", next);
-    setSearchParams(params);
+    setSearchParams(current => {
+      const updated = new URLSearchParams(current);
+      if (next === "all") updated.delete("view");
+      else updated.set("view", next);
+      // Filters are scoped to their own view. Do not leave invisible filters
+      // in a different community tab or invent stale pagination.
+      updated.delete("category");
+      updated.delete("sort");
+      updated.delete("q");
+      return updated;
+    });
+  }
+  function chooseCategory(next: Category | "all") {
+    setSearchParams(current => {
+      const updated = new URLSearchParams(current);
+      if (next === "all") updated.delete("category");
+      else updated.set("category", next);
+      return updated;
+    });
+  }
+  function chooseSort(next: CommunityPostSort) {
+    setSearchParams(current => {
+      const updated = new URLSearchParams(current);
+      if (next === "new") updated.delete("sort");
+      else updated.set("sort", "hot");
+      return updated;
+    });
   }
   function searchCreators(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setCreatorQuery(creatorInput.trim().slice(0, 72));
+    const field = event.currentTarget.elements.namedItem("q") as HTMLInputElement | null;
+    const value = (field?.value ?? creatorInput).trim().slice(0, 72);
+    setSearchParams(current => {
+      const updated = new URLSearchParams(current);
+      if (value) updated.set("q", value);
+      else updated.delete("q");
+      return updated;
+    });
   }
-  return <div className="ch7-hub p136-community" data-parity-community="v136.017">
+  return <div className="ch7-hub p136-community" data-parity-community="v136.017" data-community-phase="v136.027">
     <section data-iren-anchor="community" className="ch7-hero" aria-labelledby="ch7-hero-title">
       <div className="ch7-hero-copy"><span className="ch7-kicker">ANEVUM / COMMUNITY / PUBLIC DISCUSSIONS</span>
         <h1 id="ch7-hero-title">Made by people.<br/><em>Better together.</em></h1>
@@ -179,7 +220,7 @@ export function CommunityPage() {
               behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});}
           }}>READ DISCUSSIONS <Icon name="community" size={15}/></a></div>
       </div>
-      <aside className="ch7-status" aria-label="Verified public community counts"><span className="ch7-kicker">PUBLISHED WORK / VERIFIED</span>
+      <aside className="ch7-status" aria-label="Approved public community counts"><span className="ch7-kicker">PUBLISHED WORK / APPROVED</span>
         <div className="ch7-count-grid">
           <div><strong>{status.state === "ready" ? status.data.counts.publishedProjects : "—"}</strong><span>APPROVED PROJECTS</span></div>
           <div><strong>{status.state === "ready" ? status.data.counts.publishedCreators : "—"}</strong><span>PUBLIC CREATORS</span></div>
@@ -213,33 +254,33 @@ export function CommunityPage() {
     <div className="ch7-columns">
       <section className="ch7-main" id="ch7-stream" aria-label="Community activity">
         <div className="ch7-toolbar">
-          <div><span className="ch7-kicker">{view === "people" ? "CREATOR DIRECTORY" : view === "conversations" ? "MODERATED CONVERSATIONS" : "THE LATEST VERIFIED WORK"}</span>
+          <div><span className="ch7-kicker">{view === "people" ? "CREATOR DIRECTORY" : view === "conversations" ? "MODERATED CONVERSATIONS" : "THE LATEST APPROVED WORK"}</span>
             <p>{view === "all" ? "A recent excerpt, newest first. Never a simulated social feed." :
               view === "projects" ? "New approved creations. Choose a field to narrow the list." :
               view === "conversations" ? "Only community discussions cleared for public viewing." :
               "Find people who have published genuine work."}</p></div>
           {view === "projects" && <label className="ch7-field-filter">FIELD <select value={category}
-            onChange={event => setCategory(event.target.value as Category | "all")}>
+            onChange={event => chooseCategory(event.target.value as Category | "all")}>
             <option value="all">All fields</option>{fields.map(field => <option value={field.id} key={field.id}>{field.label}</option>)}
           </select></label>}
           {view === "conversations" && <div className="ch7-sort" role="group" aria-label="Order public conversations">
-            <button type="button" aria-pressed={sort === "new"} onClick={() => setSort("new")}>NEWEST</button>
-            <button type="button" aria-pressed={sort === "hot"} onClick={() => setSort("hot")}>HOT</button>
+            <button type="button" aria-pressed={sort === "new"} onClick={() => chooseSort("new")}>NEWEST</button>
+            <button type="button" aria-pressed={sort === "hot"} onClick={() => chooseSort("hot")}>HOT</button>
           </div>}
         </div>
         {view === "people" && <form className="ch7-search" onSubmit={searchCreators} role="search">
           <label htmlFor="ch7-search-creator">SEARCH CREATORS</label>
-          <div><input id="ch7-search-creator" placeholder="Name or @handle" value={creatorInput}
+          <div><input id="ch7-search-creator" name="q" type="search" placeholder="Name or @handle" value={creatorInput}
             onChange={event => setCreatorInput(event.target.value)} maxLength={72} autoComplete="off"/>
             <button type="submit">SEARCH <Icon name="search" size={14}/></button></div>
         </form>}
-        {loading && <LoadingState label="Reading verified public community records"/>}
+        {loading && <LoadingState label="Reading approved public community records"/>}
         {failed && <ErrorState title="COMMUNITY RECORDS UNAVAILABLE" detail="The live public data could not be reached. No fictional members or projects are substituted."/>}
         {!loading && !failed && (view === "people" ? <div className="ch7-people">
           {creatorItems.map(item => <CreatorEntry item={item} key={item.handle}/>)}
         </div> : <div className="ch7-stream" aria-live="polite">
-          {entries.map(entry => entry.kind === "project" ? <ProjectEntry key={entry.id} item={entry.value}/> :
-            <ConversationEntry key={entry.id} item={entry.value}/>)}
+          {entries.map(entry => entry.kind === "project" ? <ProjectEntry key={entry.id} item={entry.value} returnTo={returnTo}/> :
+            <ConversationEntry key={entry.id} item={entry.value} returnTo={returnTo}/>)}
         </div>)}
         {!loading && !failed && (view === "people" ? creatorItems.length === 0 : entries.length === 0) && <div className="ch7-empty" role="status">
           <span className="ch7-kicker">COMMUNITY / PUBLIC RECORD</span>
@@ -250,7 +291,7 @@ export function CommunityPage() {
             : view === "people" && creatorQuery ? "Try another name or explore the full creator directory."
             : "There are no approved records for this view yet. ANEVUM does not fill empty spaces with fake people, posts, rankings or scores."}</p>
           <Link className="ch7-button ch7-button-primary" to={view === "conversations" ? "/boards" : view === "people" ? "/creators" : "/discover"}>
-            {view === "conversations" ? "BROWSE VERIFIED BOARDS" : view === "people" ? "ALL CREATORS" : "BROWSE PROJECTS"} <Icon name="arrow" size={14}/>
+            {view === "conversations" ? "BROWSE APPROVED BOARDS" : view === "people" ? "ALL CREATORS" : "BROWSE PROJECTS"} <Icon name="arrow" size={14}/>
           </Link>
         </div>}
         {view === "all" && status.state === "error" && <p className="ch7-soft-warning" role="status">Conversation availability could not be verified; project discovery remains available separately.</p>}
@@ -269,8 +310,8 @@ export function CommunityPage() {
           {creators.state === "loading" && <p>Loading public creator channels…</p>}
           {creators.state === "error" && <p>Creator directory is temporarily unavailable.</p>}
           {creators.state === "ready" && creatorItems.length === 0 && <p>Channels appear here when real, independently reviewed projects are published.</p>}
-          {creators.state === "ready" && creatorItems.length > 0 && <div className="ch7-featured-people">
-            {creatorItems.slice(0, 5).map(item => <Link key={item.handle} to={creatorPath(item.handle)}>
+          {creators.state === "ready" && creatorItems.some(item => publicCreatorHandle(item.handle)) && <div className="ch7-featured-people">
+            {creatorItems.filter(item => publicCreatorHandle(item.handle)).slice(0, 5).map(item => <Link key={item.handle} to={creatorPath(publicCreatorHandle(item.handle)!)}>
               <span className="ch7-avatar" aria-hidden="true">{item.displayName.charAt(0).toUpperCase()}</span>
               <span><strong>{item.displayName}</strong><small>@{item.handle}</small></span>
               <Icon name="arrow" size={14}/>

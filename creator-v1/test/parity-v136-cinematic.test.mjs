@@ -47,13 +47,15 @@ test('react hero uses only one passive opt-in presentation layer',()=>{
  const world=read('../web/src/parity/LivingWorldField.tsx');
  assert.ok(hero.includes('<CinematicArrivalV136/>'));
  assert.ok(hero.indexOf('<CinematicArrivalV136/>')<hero.indexOf('<div className="p136-hero-shade"'));
- assert.ok(arrival.includes("import.meta.env.VITE_PARITY_V136_CINEMATIC==='true'"),'Cinema requires explicit build opt-in');
- assert.ok(arrival.includes('approvedCinematicSequence(manifest.sequence)'),'Only manifest-approved media can play');
+ assert.match(arrival,/import.meta.env.MODE==='staging-path'/);
+ assert.match(arrival,/VITE_ANEVUM_OWNER_REVIEW/);
+ assert.match(arrival,/reviewCinematicVideo\(candidate.video,true\)/);
  assert.ok(arrival.includes('approvedCinematicVideo('),'Video requires reviewed manifest');
- assert.ok(arrival.includes('VITE_PARITY_V136_NATIVE_VIDEO'),'Video requires explicit CSP-ready build flag');
+ assert.match(arrival,/canPlay&&video/);
  assert.ok(arrival.includes('aria-hidden="true"'));
- assert.match(arrival,/data-arrival-surface="native-interface"/);
- assert.doesNotMatch(arrival,/<picture\b|<img\b|manifest\.posters|assets\/parity-v136\//);
+ assert.match(arrival,/data-cinematic-v136="motion-first"/);
+ assert.match(arrival,/ownerReview&&!posterFailed&&<picture/);
+ assert.doesNotMatch(arrival,/sceneReadiness|cinematicWorldReadiness|MutationObserver/);
  assert.match(css,/p136-native-institute/);
  assert.ok(arrival.includes("useLivingWorld"));
  assert.ok(!/<(?:canvas|iframe|video)/i.test(arrival),'No second renderer, sandbox or unapproved video');
@@ -73,18 +75,14 @@ test('verified source manifest prohibits invented 4K or traffic claims',()=>{
  assert.ok(!JSON.stringify(manifest).toLowerCase().includes('fake user'));
 });
 
-test('live 3D inspection is ready-only and returns to poster on model fallback',()=>{
+test('homepage has no modeled-scene dependency; archived inspection math stays valid',()=>{
  assert.equal(cinematicInspectionOpacity(true,'ready',1),0);
  assert.equal(cinematicInspectionOpacity(true,'hold',.78),.78);
  assert.equal(cinematicInspectionOpacity(true,'fallback',.32),.32);
  assert.equal(cinematicInspectionOpacity(false,'ready',.67),.67);
  const arrival=read('../web/src/parity/CinematicArrivalV136.tsx');
- const css=read('../web/src/parity/concept-convergence-v136017.css');
- assert.match(arrival,/aria-label=\{inspecting\?'Return to cinematic arrival':'Inspect live 3D scene'\}/);
- assert.match(arrival,/disabled=\{sceneReadiness!=='ready'&&!inspecting\}/);
- assert.match(arrival,/data-cinematic-inspection="v136\.017"/);
- assert.match(arrival,/cinematicInspectionOpacity\(inspecting,readiness,scrollOpacity\)/);
- assert.match(css,/\.p136017-scene-inspection button:focus-visible/);
- assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
- assert.ok(!/<canvas\b|readSession|fetch\(|localStorage/.test(arrival));
+ assert.doesNotMatch(arrival,/Inspect live 3D|sceneReadiness|MutationObserver|cinematicInspectionOpacity/);
+ assert.match(arrival,/document.visibilityState==='visible'/);
+ assert.match(arrival,/connection\?\.saveData/);
+ assert.match(arrival,/onError=\{\(\)=>setPosterFailed\(true\)\}/);
 });
