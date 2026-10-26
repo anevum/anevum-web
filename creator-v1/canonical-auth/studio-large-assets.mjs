@@ -92,6 +92,23 @@ export async function studioLargeSchemaReady(env){
   return new Set(found.map(x=>x.name)).size===4;
  }catch{return false;}
 }
+// Staff-only aggregate read model. D1 reservations, NOT Cloudflare account billing.
+// No creator identities, private filenames, object keys, or upload credentials.
+export async function studioLargeCapacitySummary(env){
+ if(!await studioLargeSchemaReady(env))return {ready:false};
+ const stats=(await rows(env.MEMBER_DB,
+  "SELECT COALESCE(SUM(size_bytes),0) AS reserved_bytes, COUNT(*) AS total_files,"+
+  " COALESCE(SUM(CASE WHEN status='uploading' THEN 1 ELSE 0 END),0) AS active_uploads,"+
+  " COALESCE(SUM(CASE WHEN status='quarantined' THEN 1 ELSE 0 END),0) AS quarantined_files "+
+  "FROM member_studio_large_assets"))[0];
+ const bytes=Number(stats?.reserved_bytes||0),util=bytes/GLOBAL_CAP;
+ return {ready:true,reservedBytes:bytes,capacityBytes:GLOBAL_CAP,
+  totalFiles:Number(stats?.total_files||0),activeUploads:Number(stats?.active_uploads||0),
+  quarantinedFiles:Number(stats?.quarantined_files||0),
+  threshold:util>=0.95?'critical':util>=0.8?'attention':'normal',
+  note:'Canonical D1 large-vault reservations only; R2 billing includes other account buckets and multipart overhead'};
+}
+
 async function usage(db,user,project){
  const u=(await rows(db,
   'SELECT (SELECT COALESCE(SUM(size_bytes),0) FROM member_studio_large_assets WHERE user_id=?) AS account_bytes,'+
