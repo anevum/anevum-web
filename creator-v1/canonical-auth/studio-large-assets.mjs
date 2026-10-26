@@ -88,8 +88,8 @@ export async function studioLargeSchemaReady(env){
  if(!env?.MEMBER_DB?.prepare)return false;
  try{const found=await rows(env.MEMBER_DB,
   "SELECT name FROM sqlite_master WHERE type='table' AND name IN "+
-  "('member_studio_large_assets','member_studio_large_parts','member_studio_submission_large_assets')");
-  return new Set(found.map(x=>x.name)).size===3;
+  "('member_studio_large_assets','member_studio_large_parts','member_studio_submission_large_assets','member_studio_large_part_claims')");
+  return new Set(found.map(x=>x.name)).size===4;
  }catch{return false;}
 }
 async function usage(db,user,project){
@@ -232,17 +232,36 @@ export async function canonicalStudioLargeAssets(req,env,user,project,
     [asset,part]))[0];
    if(existing)return existing.sha256===digest?json({partNumber:part,sha256:digest,replayed:true}):
     fail(409,'Part number already committed with different bytes');
-   const remote=await store.resumeMultipartUpload(selected.storage_key,selected.upload_id)
-    .uploadPart(part,bytes);
-   if(!remote?.etag||remote.partNumber!==part)return fail(503,'Object storage rejected part');
-   const added=await change(db,
-    'INSERT INTO member_studio_large_parts(asset_id,part_number,size_bytes,sha256,etag) '+
-    'SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM member_studio_large_assets '+
-    "WHERE id=? AND user_id=? AND status='uploading' AND lease_until>=?) "+
-    'ON CONFLICT(asset_id,part_number) DO NOTHING',
-    [asset,part,bytes.length,digest,String(remote.etag),asset,user.id,now]);
-   return added===1?json({partNumber:part,sha256:digest,replayed:false}):
-    fail(409,'Part state changed; refresh your upload');
+   // SQLite-protected per-part lease: two concurrent requests must never
+   // overwrite the same R2 part and leave the hash/ETag in D1 inconsistent.
+   const claimToken=hex(crypto.getRandomValues(new Uint8Array(16)));
+   const claimed=await change(db,
+    'INSERT INTO member_studio_large_part_claims(asset_id,part_number,claim_token,lease_until) '+
+    'VALUES(?,?,?,?) ON CONFLICT(asset_id,part_number) DO UPDATE SET '+
+    'claim_token=excluded.claim_token,lease_until=excluded.lease_until '+
+    'WHERE member_studio_large_part_claims.lease_until<?',
+    [asset,part,claimToken,now+600,now]);
+   if(claimed!==1)return fail(409,'This part is already being uploaded');
+   try{
+    const remote=await store.resumeMultipartUpload(selected.storage_key,selected.upload_id)
+     .uploadPart(part,bytes);
+    if(!remote?.etag||remote.partNumber!==part)return fail(503,'Object storage rejected part');
+    const added=await change(db,
+     'INSERT INTO member_studio_large_parts(asset_id,part_number,size_bytes,sha256,etag) '+
+     'SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM member_studio_large_part_claims '+
+     'WHERE asset_id=? AND part_number=? AND claim_token=? AND lease_until>=?) '+
+     'AND EXISTS(SELECT 1 FROM member_studio_large_assets '+
+     "WHERE id=? AND user_id=? AND status='uploading' AND lease_until>=?) "+
+     'ON CONFLICT(asset_id,part_number) DO NOTHING',
+     [asset,part,bytes.length,digest,String(remote.etag),asset,part,claimToken,now,
+      asset,user.id,now]);
+    return added===1?json({partNumber:part,sha256:digest,replayed:false}):
+     fail(409,'Part state changed; refresh your upload');
+   }finally{
+    try{await change(db,'DELETE FROM member_studio_large_part_claims '+
+     'WHERE asset_id=? AND part_number=? AND claim_token=?',[asset,part,claimToken]);}
+    catch{/* stale claim expires; subsequent transfer remains private */}
+   }
   }
   if(action==='complete'){
    if(req.method!=='POST')return fail(405,'Method not allowed');
