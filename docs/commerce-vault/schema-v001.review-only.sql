@@ -109,3 +109,101 @@ CREATE INDEX IF NOT EXISTS vault_files_by_project_idx ON vault_files(user_id,pro
 -- entitlement is issued; the current contract always refuses fulfillment.
 -- Future financial journals must verify debit=credit, idempotency, partial refunds,
 -- disputes and customer deletion/legal retention independently before launch.
+
+-- Additional isolated evidence and journal primitives. Merely adding a row or
+-- importing a CSV CANNOT prove a deposit came from a bank.
+CREATE TABLE IF NOT EXISTS commerce_bank_credit_candidates (
+ id TEXT PRIMARY KEY NOT NULL,
+ institution_id TEXT NOT NULL,
+ merchant_account_alias TEXT NOT NULL,
+ external_entry_id TEXT NOT NULL,
+ amount_cents INTEGER NOT NULL CHECK(amount_cents > 0),
+ currency TEXT NOT NULL DEFAULT 'USD' CHECK(currency='USD'),
+ direction TEXT NOT NULL CHECK(direction='credit'),
+ order_reference TEXT,
+ posting_status TEXT NOT NULL DEFAULT 'unverified'
+    CHECK(posting_status IN ('unverified','pending_review','rejected')),
+ received_at_ms INTEGER NOT NULL,
+ UNIQUE(institution_id,merchant_account_alias,external_entry_id)
+);
+CREATE TABLE IF NOT EXISTS commerce_bank_match_reviews (
+ candidate_id TEXT PRIMARY KEY NOT NULL REFERENCES commerce_bank_credit_candidates(id) ON DELETE RESTRICT,
+ order_id TEXT NOT NULL REFERENCES commerce_orders(id) ON DELETE RESTRICT,
+ state TEXT NOT NULL DEFAULT 'candidate'
+    CHECK(state IN ('candidate','mismatch','rejected')),
+ examined_at_ms INTEGER,
+ reason TEXT
+);
+CREATE INDEX IF NOT EXISTS commerce_bank_match_review_order_idx ON commerce_bank_match_reviews(order_id);
+
+CREATE TABLE IF NOT EXISTS commerce_journal_lines (
+ line_id TEXT PRIMARY KEY NOT NULL,
+ entry_id TEXT NOT NULL REFERENCES commerce_ledger(entry_id) ON DELETE RESTRICT,
+ account_code TEXT NOT NULL CHECK(account_code IN
+    ('bank_clearing','unearned_revenue','support_revenue','merch_revenue','refunds')),
+ debit_cents INTEGER NOT NULL DEFAULT 0 CHECK(debit_cents >= 0),
+ credit_cents INTEGER NOT NULL DEFAULT 0 CHECK(credit_cents >= 0),
+ CHECK((debit_cents > 0 AND credit_cents = 0)
+    OR (debit_cents = 0 AND credit_cents > 0))
+);
+CREATE INDEX IF NOT EXISTS commerce_journal_lines_entry_idx ON commerce_journal_lines(entry_id);
+
+-- Founder-owned, Cricut-made merchandise; NO third-party production or fulfillment.
+CREATE TABLE IF NOT EXISTS commerce_handmade_merch_variants (
+ sku TEXT PRIMARY KEY NOT NULL,
+ item_name TEXT NOT NULL,
+ variant TEXT NOT NULL,
+ price_cents INTEGER NOT NULL CHECK(price_cents > 0),
+ raw_material_cents INTEGER NOT NULL DEFAULT 0 CHECK(raw_material_cents >= 0),
+ labor_reserve_cents INTEGER NOT NULL DEFAULT 0 CHECK(labor_reserve_cents >= 0),
+ in_stock_units INTEGER NOT NULL DEFAULT 0 CHECK(in_stock_units >= 0),
+ reserved_units INTEGER NOT NULL DEFAULT 0 CHECK(reserved_units >= 0),
+ state TEXT NOT NULL DEFAULT 'prototype' CHECK(state IN ('prototype','ready','paused')),
+ CHECK(reserved_units <= in_stock_units)
+);
+CREATE TABLE IF NOT EXISTS commerce_handmade_fulfillment (
+ order_id TEXT PRIMARY KEY NOT NULL REFERENCES commerce_orders(id) ON DELETE RESTRICT,
+ sku TEXT NOT NULL REFERENCES commerce_handmade_merch_variants(sku) ON DELETE RESTRICT,
+ quantity INTEGER NOT NULL CHECK(quantity > 0),
+ state TEXT NOT NULL DEFAULT 'awaiting_payment' CHECK(state IN
+    ('awaiting_payment','materials_ready','handmade_in_progress','packed','dispatched','canceled')),
+ tracking_reference TEXT,
+ updated_at_ms INTEGER NOT NULL
+);
+
+-- Defense in depth: no database flag, synthetic credit or direct SQL call
+-- is allowed to turn this *draft* schema into a live payment system.
+CREATE TRIGGER IF NOT EXISTS commerce_orders_block_payment_insert
+BEFORE INSERT ON commerce_orders
+WHEN NEW.status IN ('awaiting_settlement','paid','refunded')
+BEGIN SELECT RAISE(ABORT,'ANEVUM payments are disabled'); END;
+
+CREATE TRIGGER IF NOT EXISTS commerce_orders_block_payment_update
+BEFORE UPDATE OF status ON commerce_orders
+WHEN NEW.status IN ('awaiting_settlement','paid','refunded')
+BEGIN SELECT RAISE(ABORT,'ANEVUM payments are disabled'); END;
+
+CREATE TRIGGER IF NOT EXISTS commerce_ledger_block_posting
+BEFORE INSERT ON commerce_ledger
+BEGIN SELECT RAISE(ABORT,'ANEVUM real ledger postings are disabled'); END;
+
+CREATE TRIGGER IF NOT EXISTS commerce_vault_passes_block_issue
+BEFORE INSERT ON commerce_vault_passes
+BEGIN SELECT RAISE(ABORT,'ANEVUM paid storage issuance is disabled'); END;
+
+CREATE TRIGGER IF NOT EXISTS commerce_ledger_block_update
+BEFORE UPDATE ON commerce_ledger
+BEGIN SELECT RAISE(ABORT,'Financial ledger is append-only'); END;
+CREATE TRIGGER IF NOT EXISTS commerce_ledger_block_delete
+BEFORE DELETE ON commerce_ledger
+BEGIN SELECT RAISE(ABORT,'Financial ledger is append-only'); END;
+CREATE TRIGGER IF NOT EXISTS commerce_journal_lines_block_update
+BEFORE UPDATE ON commerce_journal_lines
+BEGIN SELECT RAISE(ABORT,'Financial journal is append-only'); END;
+CREATE TRIGGER IF NOT EXISTS commerce_journal_lines_block_delete
+BEFORE DELETE ON commerce_journal_lines
+BEGIN SELECT RAISE(ABORT,'Financial journal is append-only'); END;
+
+-- These explicit blackout triggers can only be lifted in a separately reviewed
+-- migration/release AFTER lawful bank settlement, security, refunds, tax policy,
+-- independent verification, authorizations and owner go/no-go.
