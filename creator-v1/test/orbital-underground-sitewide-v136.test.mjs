@@ -36,7 +36,7 @@ test('all original sitewide brand surfaces reuse that shared component',()=>{
     ['web/src/parity/ConsoleWayfinderV136.tsx',/OrbitalMark className="p136-console-ident-mark"/]
   ]){
     const src=read(path);
-    assert.match(src,/import \{OrbitalMark\}/,'Must import shared ANEVUM identity: '+path);
+    assert.match(src,/import\s*\{\s*OrbitalMark\s*\}/,'Must import shared ANEVUM identity: '+path);
     assert.match(src,needle,'Missing approved logo placement: '+path);
   }
   const console=read('web/src/parity/ConsoleWayfinderV136.tsx');
@@ -48,8 +48,8 @@ test('V136 favicon and installed-app icons preserve compact approved silhouette'
   assert.match(compact,/Orbital Underground emblem/);
   const shape = compact.match(/<\/title>([\s\S]*?)<\/svg>/)?.[1];
   assert.ok(shape,'Canonical compact SVG missing contour');
+  assert.equal(favicon,compact,'Favicon must be byte-identical to official compact mark, not a recolored or wrapped approximation');
   assert.ok(favicon.includes(shape),'Favicon must include unmodified compact mark geometry');
-  assert.match(favicon,/<rect width="512" height="512" rx="110" fill="#0b0b0d"\/>/);
   assert.doesNotMatch(favicon,/stroke="#f1d39b"|fill="#f1d39b"/);
   const index=read('web/index.html');
   assert.match(index,/favicon\.svg\?v=20261025-orbital-underground/);
