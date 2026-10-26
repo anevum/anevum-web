@@ -17,7 +17,7 @@ export interface StudioReviewHistory {action:'changes_requested'|'rejected';reas
 export interface StudioReviewReceipt extends StudioDraft {
  id:string;projectId:string;revision:number;status:'pending_review'|'withdrawn'|'changes_requested'|'rejected';
  submittedAt:number;resolvedAt:number|null;
- assets:Array<Pick<StudioAsset,'id'|'name'|'kind'|'contentType'|'sizeBytes'|'sha256'>>;
+ assets:Array<Pick<StudioAsset,'id'|'name'|'kind'|'contentType'|'sizeBytes'|'sha256'> & {digestType?:'file-sha256'|'part-manifest'}>;
 }
 export interface StudioReviewManifest {
  projectId:string;revision:number;note:string;assets:StudioAsset[];
