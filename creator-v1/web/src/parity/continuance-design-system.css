@@ -730,3 +730,10 @@ html[data-av-parity="v136-full"] .av095-native .st-panel button[type="submit"]{
   }
  }
 }
+
+/* V137 Commons primary retains its original compound class; equal the old
+   specificity, then replace the warm surface with the production steel material. */
+html[data-av-parity="v136-full"] .p136-community .ch7-button.ch7-button-primary{
+ background:linear-gradient(145deg,#d7e6eb,#acced9);
+ border-color:#e2f3f8;
+}
