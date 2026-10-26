@@ -149,7 +149,10 @@ test("mobile has no fixed bottom tab bar and header drawer exposes every member 
   assert.doesNotMatch(shell,/mobile-bottom-nav|const mobileNav/);
   assert.doesNotMatch(css,/\.mobile-bottom-nav/);
   assert.match(shell,/aria-label=\{menuOpen \? "Close site navigation" : "Open site navigation"\}/);
-  for(const route of ["/discover","/levels","/community","/create","/library","/member","/join","/status"])
+  // Canonical visible Create destination is /studio; keep /create only
+  // as a historical inbound redirect, never as a primary menu shortcut.
+  assert.doesNotMatch(shell,/to:"\/create",label:"Create"/);
+  for(const route of ["/discover","/levels","/community","/studio","/library","/member","/join","/status"])
     assert.ok(shell.includes('"'+route+'"'),"Missing top menu route: "+route);
   assert.match(css,/\.site-main\{padding:10px 10px 32px\}/);
   assert.match(css,/\.site-footer\{padding:18px 12px 24px/);
