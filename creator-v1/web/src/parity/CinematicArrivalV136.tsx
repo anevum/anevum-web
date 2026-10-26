@@ -25,7 +25,9 @@ export function CinematicArrivalV136(){
   const forced=matchMedia('(forced-colors: active)');
   const connection=(navigator as Navigator&{connection?:{saveData?:boolean;effectiveType?:string;addEventListener?:(name:string,fn:()=>void)=>void;removeEventListener?:(name:string,fn:()=>void)=>void}}).connection;
   let intersecting=false;
-  const sync=()=>setCanPlay(Boolean(video)&&!failed&&allowMotion({enabled:ownerReview,
+  // A separately approved production manifest may enable motion too; never
+  // equate the owner-review flag with video authorization.
+  const sync=()=>setCanPlay(Boolean(video)&&!failed&&allowMotion({enabled:Boolean(video),
    reducedMotion:reduced.matches,forcedColors:forced.matches,
    saveData:Boolean(connection?.saveData)||/^(slow-)?2g$/.test(connection?.effectiveType||''),
    paused,visible:intersecting&&document.visibilityState==='visible'}));

@@ -45,3 +45,12 @@ test('review media supports anonymous byte ranges without widening API access',a
  assert.equal(observed.headers.get('range'),'bytes=0-255');
  assert.equal(observed.headers.has('cookie'),false);assert.equal(observed.headers.has('authorization'),false);
 });
+
+test('approved production motion is gated by the reviewed manifest, not a review-only build flag',()=>{
+ const arrival=readFileSync(new URL('../web/src/parity/CinematicArrivalV136.tsx',import.meta.url),'utf8');
+ assert.match(arrival,/const ownerReview=import\.meta\.env\.MODE==='staging-path'/);
+ assert.match(arrival,/ownerReview\?reviewCinematicVideo\(candidate\.video,true\):approvedCinematicVideo\(candidate\.video\)/);
+ assert.match(arrival,/enabled:Boolean\(video\)/);
+ assert.doesNotMatch(arrival,/enabled:ownerReview/);
+ assert.equal(approvedCinematicVideo(candidate.video),null);
+});
