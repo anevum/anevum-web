@@ -1,0 +1,30 @@
+name: ANEVUM Creator Godot V006 Verification
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - build/godot-web-runtime-v006-20261025-001
+    paths:
+      - creator-v1/package-alpha-v004/godot-web.mjs
+      - creator-v1/package-alpha-v004/compatibility.mjs
+      - creator-v1/test/godot-web-v006.test.mjs
+      - .github/workflows/godot-web-v006-verify.yml
+  pull_request:
+    paths:
+      - creator-v1/package-alpha-v004/godot-web.mjs
+      - creator-v1/package-alpha-v004/compatibility.mjs
+      - creator-v1/test/godot-web-v006.test.mjs
+      - .github/workflows/godot-web-v006-verify.yml
+permissions:
+  contents: read
+jobs:
+  godot-compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node --check creator-v1/package-alpha-v004/godot-web.mjs
+      - run: node --check creator-v1/package-alpha-v004/compatibility.mjs
+      - run: node --test creator-v1/test/godot-web-v006.test.mjs creator-v1/test/package-compatibility-v005.test.mjs
