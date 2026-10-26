@@ -6,9 +6,10 @@ import {
  studioUpload,studioCheckFile,studioDeleteAsset,studioDownloadUrl,studioWithdraw,studioDeleteProject,studioReviewQueue,
  studioEligibleUpload,studioReviewManifest,studioReviewReceipts,
  studioReviewDecision,type StudioDraft,type StudioProject,type StudioAsset,type StudioCategory,
- type StudioReviewProject,type StudioReviewHistory,type StudioReviewManifest,type StudioReviewReceipt
+ type StudioReviewProject,type StudioReviewHistory,type StudioReviewManifest,type StudioReviewReceipt,type StudioLargeAsset
 } from '../lib/canonical-studio';
 import './canonical-studio.css';
+import {StudioLargeUploader} from '../components/StudioLargeUploader';
 import {readWithDeadline} from '../../../shared/read-deadline.mjs';
 import {nativeCreatorEnabled} from '../lib/native-creator-v095';
 import {workbenchAlphaEnabled} from '../lib/workbench-alpha';
@@ -22,7 +23,7 @@ const CATEGORY_GUIDE:Record<StudioCategory,string>={
  creative:'Attach original creative work, audio, images, writing or a ZIP.',
  music:'Attach MP3 or WAV audio. Files remain in private quarantine.',
  art:'Attach PNG, JPEG, WebP or GIF artwork. Images are not rendered from quarantine.',
- video:'Attach a private MP4 or WebM (up to 20 MiB), or use an external HTTPS video link. Playback and transcoding are not enabled.',
+ video:'Attach an MP4 or WebM to the private vault; the extended channel accepts media up to 1 GiB. Playback and publication require separate review.',
  writing:'Attach PDF, TXT or Markdown writing.',
  learning:'Attach a PDF, Markdown, text or interactive ZIP project.',
  research:'Attach research as PDF, TXT, Markdown or ZIP.',
@@ -199,6 +200,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
  const [project,setProject]=useState<StudioProject|null>(null);
  const [history,setHistory]=useState<StudioReviewHistory[]>([]);
  const [assetSummary,setAssetSummary]=useState<StudioAsset[]|null>(null);
+ const [largeSummary,setLargeSummary]=useState<StudioLargeAsset[]>([]);
  const [draft,setDraft]=useState<StudioDraft>({...empty});
  const [saved,setSaved]=useState<StudioDraft|null>(null);
  const [loading,setLoading]=useState(!create),[busy,setBusy]=useState(false);
@@ -216,7 +218,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
  },[id,create]);
  const canEdit=!project||editable(project);
  const dirty=saved===null||JSON.stringify(saved)!==JSON.stringify(draft);
- const eligibleAttachment=Boolean(assetSummary?.some(a=>a.status==='quarantined'&&
+ const eligibleAttachment=Boolean([...(assetSummary||[]),...largeSummary].some(a=>a.status==='quarantined'&&
   studioEligibleUpload(draft.category,a.kind)));
  const ready=Boolean((draft.demoUrl||draft.sourceUrl||eligibleAttachment)&&draft.license.trim().length>=2&&
   draft.aiDisclosure.trim().length>=6&&draft.humanContribution.trim().length>=10);
@@ -331,6 +333,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
     {project&&<StudioReceipts projectId={project.id} revision={project.revision}/>}
     {project&&<StudioUploader project={project} uploadsReady={uploadsReady}
      onAssetsChanged={setAssetSummary} onProjectChanged={setProject}/>}
+    {project&&<StudioLargeUploader project={project} onAssetsChanged={setLargeSummary} onProjectChanged={setProject}/>}
     <section className="st-panel">
      <p className="st-kicker">04 / REVIEW READINESS</p><h2>SUBMISSION CHECK.</h2>
      <ul className="st-checklist">
@@ -379,7 +382,7 @@ function StudioReceipts({projectId,revision}:{projectId:string;revision:number})
    <small>{entry.assets.length} ATTACHED FILE{entry.assets.length===1?'':'S'}</small>
    {entry.assets.map(asset=><div key={asset.id} className="st-manifest-file">
     <strong>{asset.name} · {size(asset.sizeBytes)}</strong>
-    <code>SHA-256: {asset.sha256}</code>
+    <code>{asset.digestType==='part-manifest'?'PART MANIFEST SHA-256':'FILE SHA-256'}: {asset.sha256}</code>
    </div>)}
   </article>)}
  </section>;
