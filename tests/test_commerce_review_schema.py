@@ -59,15 +59,15 @@ class CommerceSchemaRehearsal(unittest.TestCase):
 
     def test_bank_entry_duplicate_and_unverified_default(self):
         sql = ("INSERT INTO commerce_bank_credit_candidates"
-               "(id,institution_id,merchant_account_alias,external_entry_id,amount_cents,received_at_ms)"
-               " VALUES(?,?,?,?,?,?)")
-        self.db.execute(sql, ("credit1","mock-bank","merchant-demo","tx1",400,1))
+               "(id,institution_id,merchant_account_alias,external_entry_id,amount_cents,direction,received_at_ms)"
+               " VALUES(?,?,?,?,?,?,?)")
+        self.db.execute(sql, ("credit1","mock-bank","merchant-demo","tx1",400,"credit",1))
         status = self.db.execute(
             "SELECT posting_status FROM commerce_bank_credit_candidates WHERE id='credit1'"
         ).fetchone()[0]
         self.assertEqual(status, "unverified")
         with self.assertRaises(sqlite3.IntegrityError):
-            self.db.execute(sql, ("credit2","mock-bank","merchant-demo","tx1",400,1))
+            self.db.execute(sql, ("credit2","mock-bank","merchant-demo","tx1",400,"credit",1))
 
     def test_vault_projects_are_composite_tenant_scoped(self):
         self.db.execute(
