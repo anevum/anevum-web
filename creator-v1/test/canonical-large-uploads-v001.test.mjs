@@ -200,3 +200,32 @@ test('expiration cleanup removes abandoned multipart reservations without public
   assert.equal((await status(await f.call(path))).body.assets.length,0);
  }finally{f.close();}
 });
+
+test('five 1 GiB reservations hit the member hard cap, removal releases it',async()=>{
+ const f=setup();
+ try{
+  const project=(await status(await f.call(ROOT,'POST','alice',request()))).body.project;
+  const path=ROOT+'/'+project.id+'/assets-large',saved=[];
+  for(let n=1;n<=5;n++){
+   const reserved=await status(await f.call(path,'POST','alice',{
+    name:'creator-export-'+n+'.zip',sizeBytes:1024*MiB,contentType:'application/zip'
+   }));
+   assert.equal(reserved.status,201);
+   saved.push(reserved.body.id);
+  }
+  const above=await status(await f.call(path,'POST','alice',{
+   name:'creator-export-6.zip',sizeBytes:1024*MiB,contentType:'application/zip'
+  }));
+  assert.equal(above.status,409,'storage guard must reject even without binary requests');
+  assert.equal((await status(await f.call(path))).body.memberUsedBytes,5*1024*MiB);
+  const del=await status(await f.call(path+'/'+saved[0],'DELETE','alice'));
+  assert.equal(del.status,200);
+  const allowed=await status(await f.call(path,'POST','alice',{
+   name:'creator-export-6.zip',sizeBytes:1024*MiB,contentType:'application/zip'
+  }));
+  assert.equal(allowed.status,201,'deletion must release only its own reservation');
+  const out=await status(await f.call(path));
+  assert.equal(out.body.memberUsedBytes,5*1024*MiB);
+  assert.equal(out.body.assets.length,5);
+ }finally{f.close();}
+});
