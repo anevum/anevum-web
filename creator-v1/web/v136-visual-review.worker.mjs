@@ -8,9 +8,10 @@
  */
 const HOST="anevum-v136-visual-review-001.devonakins.workers.dev";
 const PREFIX="/creator";
-const SOURCE="f58bed9370dc3fed0429033852a0a9c506daffae";
+// Wrangler build-time define, not a runtime secret or privileged binding.
+const SOURCE=typeof __ANEVUM_REVIEW_SOURCE_SHA__==='string'?__ANEVUM_REVIEW_SOURCE_SHA__:'unbuilt-local-source';
 const ALLOWED_PUBLIC=/^\/api\/v1\/(?:status|categories|boards|community\/(?:posts(?:\/[a-f0-9]{32})?|showcases)|projects(?:\/[A-Za-z0-9_-]+(?:\/repository)?)?|creators(?:\/[a-z][a-z0-9_]{2,29})?)$/i;
-const HTML_CSP="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self' data:; worker-src 'self' blob:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; frame-src 'none'";
+const HTML_CSP="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self'; connect-src 'self'; font-src 'self' data:; worker-src 'self' blob:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; frame-src 'none'";
 const SAFE_HEADERS={
   "x-content-type-options":"nosniff",
   "referrer-policy":"no-referrer",
@@ -82,9 +83,10 @@ export default {
   }
   const target=new URL(url);
   target.pathname=relative||"/";
-  const clean=new Request(target.href,{method:request.method,headers:{
-    "accept":request.headers.get("accept")||"*/*"
-  }});
+  const assetHeaders=new Headers({'accept':request.headers.get('accept')||'*/*'});
+  // Native iOS/console video seeking requires byte ranges, never cookies/auth.
+  for(const key of ['range','if-range'])if(request.headers.has(key))assetHeaders.set(key,request.headers.get(key));
+  const clean=new Request(target.href,{method:request.method,headers:assetHeaders});
   const asset=await env.ASSETS.fetch(clean);
   if(asset.status!==200)return safeResponse(asset,{nocache:true});
   const html=asset.headers.get("content-type")?.includes("text/html");

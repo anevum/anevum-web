@@ -1,3 +1,14 @@
+# Current integrated website checkpoint
+
+Session: `ANEVUM.WEB.OVERHAUL.2026-10-25.001.UNIFIED-CINEMATIC-RECONSTRUCTION`.
+Website work continues on existing #779, containing #763 and incorporated #778.
+Read [the current implementation record](UNIFIED-CINEMATIC-RECONSTRUCTION.md).
+One preview, one semantic design authority, no production promotion.
+Portfolio and publishing backend candidates remain separate owners.
+Historical records below retain their original status at the time written.
+
+---
+
 # ANEVUM Master Continuity — public engineering index
 
 Coordination session: `ANEVUM.ANEVUM.PACKAGE.2026-10-25.001.UNIFIED-WORKSTREAM-CONTINUITY`.

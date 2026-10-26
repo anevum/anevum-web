@@ -55,14 +55,15 @@ test('public space and Community preserve true media, real records and actual se
  assert.match(community,/<ProjectThumbnail/);
  assert.doesNotMatch(community,/<div className="ch7-hero-art"/);
 });
-test('art-free Institute preserves one existing real WebGL handoff and safe release bounds',()=>{
+test('motion-first Institute preserves real Studio capabilities and safe release bounds',()=>{
  const arrival=read('web/src/parity/CinematicArrivalV136.tsx');
  const main=read('web/src/main.tsx');
  const visual=read('web/src/parity/sitewide-interface-v136.css');
  const studio=read('web/src/parity/StudioSpatialWorkspaceV136.tsx');
  const release=read('ops/parity-v136-release.mjs');
- assert.match(arrival,/data-arrival-surface="native-interface"/);
- assert.doesNotMatch(arrival,/<picture\b|manifest\.posters/);
+ assert.match(arrival,/data-cinematic-v136="motion-first"/);
+ assert.match(arrival,/ownerReview&&!posterFailed&&<picture/);
+ assert.doesNotMatch(arrival,/cinematicWorldReadiness/);
  assert.match(main,/sitewide-interface-v136\.css/);
  assert.match(visual,/prefers-reduced-motion:reduce/);
  assert.match(visual,/:focus-visible/);

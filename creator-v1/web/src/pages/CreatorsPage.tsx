@@ -67,7 +67,7 @@ export function CreatorsPage(){
         <p>{data.state==="error"?"The directory could not be loaded.":data.state==="loading"?"Reading the public creator index…":"Public channels with approved work on this page, not a sitewide member count."}</p>
         <Link to="/discover">Explore public work <Icon name="arrow" size={15}/></Link>
       </aside>
-    </section>:<PortalHeading eyebrow="CREATOR CHANNELS / ORIGINAL WORK" title="MEET THE" accent="MAKERS." description="Discover the people behind the games, apps, creative experiments and useful software. Real work comes first. No fabricated followers or channels." index="CREATORS / 002" action={{to:"/create",label:"MAKE YOUR FIRST PROJECT"}}/>}
+    </section>:<PortalHeading eyebrow="CREATOR CHANNELS / ORIGINAL WORK" title="MEET THE" accent="MAKERS." description="Discover the people behind the games, apps, creative experiments and useful software. Real work comes first. No fabricated followers or channels." index="CREATORS / 002" action={{to:"/studio",label:"MAKE YOUR FIRST PROJECT"}}/>}
     <div className="portal-browse-layout">
       <div className="portal-browse-main">
         <section className="portal-box portal-search-hall" id="p136-creators-index">
@@ -131,7 +131,7 @@ export function CreatorsPage(){
       <aside className="portal-sidebar">
         <LevelPanel compact/>
         <section className="portal-sidebox"><span className="kicker">THE CREATOR CODE</span><h2>BUILD SOMETHING REAL.</h2><p>Every creator gets a space for published work. Earn achievement recognition through verified participation, independent of follower counts and spending.</p><Link to="/levels" className="portal-sidebox-link">DISCOVER THE LEVEL SYSTEM →</Link></section>
-        <section className="portal-sidebox"><span className="kicker">OPEN TO MORE THAN CODERS</span><h2>INDIE IS FOR EVERYONE.</h2><p>Games, utilities, artwork, music-adjacent experiences, AI experiments and open-source ideas can all be part of the network when genuinely owned and disclosed.</p><Link to="/create" className="portal-sidebox-link">BECOME A CREATOR →</Link></section>
+        <section className="portal-sidebox"><span className="kicker">OPEN TO MORE THAN CODERS</span><h2>INDIE IS FOR EVERYONE.</h2><p>Games, utilities, artwork, music-adjacent experiences, AI experiments and open-source ideas can all be part of the network when genuinely owned and disclosed.</p><Link to="/studio" className="portal-sidebox-link">BECOME A CREATOR →</Link></section>
       </aside>
     </div>
   </div>;

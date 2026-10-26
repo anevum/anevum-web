@@ -46,7 +46,7 @@ test('zero-production immutable preview identity and GET/HEAD boundaries',async(
  const health=await preview.fetch(make('/__review/health'),environment);
  assert.equal(health.status,200);
  assert.deepEqual(JSON.parse(await health.text()),{
-  application:'ANEVUM V136',sourceSha:'f58bed9370dc3fed0429033852a0a9c506daffae',
+  application:'ANEVUM V136',sourceSha:'unbuilt-local-source',
   kind:'non-production-interactive-preview',access:'public-link',content:'compiled-real-frontend',
   accounts:false,publishing:false,payments:false,privateData:false
  });

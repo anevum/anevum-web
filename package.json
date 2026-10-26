@@ -7,7 +7,7 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "VITE_PARITY_V136_FULL=true VITE_ANEVUM_OWNER_REVIEW=true vite --config creator-v1/web/vite.config.ts --mode staging-path",
     "check": "tsc --noEmit",
     "build": "npm run sync:releases && npm run sync:share-image && npm run sync:resume && npm run check && vite build",
     "preview": "vite preview",
@@ -20,7 +20,8 @@
     "test:foundation": "node --experimental-strip-types --test tests/anevum-v5-foundation.test.mjs tests/member-v5-workspace.test.mjs tests/member-v5-workspace-browser.test.mjs tests/v5-cross-repo-schema.test.mjs tests/commons-v5-sitewide.test.mjs tests/v5-member-settings.test.mjs tests/v5-moderation-review.test.mjs tests/v5-discussion-contract.test.mjs tests/v5-discussion-lifecycle.test.mjs tests/v5-beta-onboarding.test.mjs tests/v5-public-beta-landing.test.mjs tests/v5-owner-personal-paper.test.mjs tests/v5-disposable-d1-restore.test.mjs tests/v5-member-beta-browser-coverage.test.mjs tests/v5-beta-auth-redirect.test.mjs tests/v5-isolated-beta-deploy.test.mjs tests/v5-beta-approved-branch-release.test.mjs tests/v5-beta-google-oauth-init-smoke.test.mjs tests/v5-beta-two-member-aggregate-audit.test.mjs tests/v5-command-preference-isolation.test.mjs tests/v5-studio-editorial.test.mjs tests/v5-studio-editor-ux.test.mjs tests/v5-studio-operations.test.mjs tests/v5-live-unified-navigation.test.mjs && node --test tests/v5-github-owner-status.test.mjs && node --test tests/v5-infrastructure-status.test.mjs tests/v5-retirement-observer-routes.test.mjs tests/v5-public-source-links.test.mjs tests/v5-help-public-route.test.mjs tests/v5-route-dependency-retirement.test.mjs tests/v5-source-reachability.test.mjs tests/v5-legacy-page-retention.test.mjs tests/v5-release-publication.test.mjs",
     "check:creator-v1-web": "tsc --project creator-v1/web/tsconfig.json --noEmit",
     "build:creator-v1-web": "vite build --config creator-v1/web/vite.config.ts",
-    "build:creator-v1-web:staging": "vite build --mode staging-path --config creator-v1/web/vite.config.ts"
+    "build:creator-v1-web:staging": "vite build --mode staging-path --config creator-v1/web/vite.config.ts",
+    "dev:legacy": "vite"
   },
   "dependencies": {
     "motion": "13.4.3",

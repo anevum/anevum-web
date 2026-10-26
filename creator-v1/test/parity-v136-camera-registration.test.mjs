@@ -98,9 +98,7 @@ test('cinematic poster does not reveal a loading GLB or flash backward during ha
  assert.equal(cinematicRevealWhenReady(.43,'fallback',.12,.74),
   cinematicRevealWhenReady(.43,'ready',.12,.74));
  const code=readFileSync(new URL('../web/src/parity/CinematicArrivalV136.tsx',import.meta.url),'utf8');
- assert.match(code,/const observe=world\?new MutationObserver\(schedule\):null/);
- assert.match(code,/attributeFilter:\['data-asset-state'\]/);
- assert.match(code,/handoffCommitted=true/);
- assert.match(code,/observe\?\.disconnect\(\)/);
+ assert.doesNotMatch(code,/MutationObserver|handoffCommitted|data-asset-state/);
+ assert.match(code,/observer.disconnect\(\)/);
  assert.ok(!/window\.location|history\.pushState|dispatchEvent/.test(code));
 });

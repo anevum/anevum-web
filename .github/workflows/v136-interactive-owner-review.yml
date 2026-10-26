@@ -3,7 +3,8 @@ name: ANEVUM V136 Interactive Owner Preview
 on:
   pull_request:
     paths:
-      - 'creator-v1/web/v136-visual-review.worker.mjs'
+      - 'creator-v1/web/**'
+      - 'creator-v1/test/motion-first-*.mjs'
       - 'creator-v1/wrangler.v136-interactive-review.jsonc'
       - 'creator-v1/test/v136-interactive-owner-preview.test.mjs'
       - '.github/workflows/v136-interactive-owner-review.yml'
@@ -80,7 +81,7 @@ jobs:
           npm install --ignore-scripts --no-audit --no-fund
           npm run check:creator-v1-web
           VITE_PARITY_V136_FULL=true \
-            VITE_PARITY_V136_CINEMATIC=false \
+            VITE_ANEVUM_OWNER_REVIEW=true \
             VITE_PARITY_V136_NATIVE_VIDEO=false \
             VITE_PARITY_V136_SHARED_SCENE_QA=false \
             VITE_PARITY_V136_HORIZON_QA=false \
@@ -96,6 +97,15 @@ jobs:
             exit 1
           }
           echo "V136_REVIEW_BUILD_SHA=$REVIEWED_SOURCE_SHA" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Motion-first contracts and compiled responsive review
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-strip-types --test creator-v1/test/motion-first-media.test.mjs
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
+          npx playwright install --with-deps chromium
+          node creator-v1/test/motion-first-browser.mjs
 
       - name: Preserve source and compiled review evidence
         shell: bash
@@ -125,10 +135,16 @@ jobs:
           code="$(curl --silent --show-error --max-time 25 -o "$RUNNER_TEMP/anevum-review/existing.json" \
             -w '%{http_code}' -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
             "$api/accounts/$CF_ACCOUNT_ID/workers/scripts/$WORKER_NAME/settings")"
-          test "$code" = 404 || {
-            echo "::error::Review Worker already exists. Refuse unreviewed replacement."
-            exit 1
-          }
+          test "$code" = 200
+          jq -e '.success==true and (.result.bindings|length)==1 and
+            .result.bindings[0].name=="ASSETS" and .result.bindings[0].type=="assets"' \
+            "$RUNNER_TEMP/anevum-review/existing.json" >/dev/null
+          jq -e --arg worker "$WORKER_NAME" '[.result[]|select(.script==$worker)]|length==0' \
+            "$RUNNER_TEMP/anevum-review/routes-before.json" >/dev/null
+          curl --fail --silent --show-error --max-time 25 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$api/accounts/$CF_ACCOUNT_ID/workers/scripts/$WORKER_NAME/deployments" \
+            > evidence/owner-v136/preview-rollback-before.json
           # The owner preview must never alter or impersonate either live Worker.
           curl --fail --silent --show-error --max-time 25 \
             -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
@@ -140,7 +156,7 @@ jobs:
              [["cedb7ac1-74ca-4fcd-9a40-ce56964f1785",1],
               ["ec5f106b-482c-4415-9c66-d6f8daf219ad",99]]' \
             "$RUNNER_TEMP/anevum-review/apex-before.json" >/dev/null
-          echo 'WORKER_ABSENT_ROUTES_BASELINED_99_1_GATEWAY_UNCHANGED=PASS'
+          echo 'EXISTING_ASSETS_ONLY_PREVIEW_ROLLBACK_CAPTURED_99_1_GATEWAY_UNCHANGED=PASS'
 
       - name: Deploy only the static isolated V136 visual review Worker
         shell: bash
@@ -149,7 +165,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: 2f7ee83107240152097efd956a4e8335
         run: |
           set -euo pipefail
-          npx wrangler deploy --config creator-v1/wrangler.v136-interactive-review.jsonc
+          npx wrangler deploy --config creator-v1/wrangler.v136-interactive-review.jsonc --define "__ANEVUM_REVIEW_SOURCE_SHA__:\"$REVIEWED_SOURCE_SHA\""
 
       - name: Verify actual public link, interface routes, no privileged bindings or prod changes
         shell: bash
@@ -199,7 +215,7 @@ jobs:
           code="$(curl --silent --show-error --max-time 20 -X POST -o /dev/null -w '%{http_code}' "$REVIEW_URL/creator/api/v1/projects")"
           test "$code" = 405
           curl --fail --silent --show-error --max-time 20 "$REVIEW_URL/__review/health" |
-            jq -e '.sourceSha == env.V136_BASE_SHA and .accounts == false and .publishing == false'
+            jq -e '.sourceSha == env.REVIEWED_SOURCE_SHA and .accounts == false and .publishing == false'
           {
             echo "## Interactive ANEVUM V136 owner preview"
             echo ""

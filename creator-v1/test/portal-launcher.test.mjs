@@ -15,7 +15,12 @@ test("portal launcher uses fixed same-origin routes with no fabricated creator r
  assert.equal(new Set(PORTAL_DESTINATIONS.map(x=>x.id)).size,PORTAL_DESTINATIONS.length);
  for(const item of PORTAL_DESTINATIONS){
   assert.match(item.path,/^\/(?:[a-z0-9?=&_-]*)$/);
-  assert.doesNotMatch(item.path,/^\/\/|\/api\/|https?:|\/command|\/studio/);
+  // Only the existing gated Creator Workspace may point at /studio.
+  // It must never become a public publish/upload shortcut.
+  if(item.id==="create"){
+    assert.equal(item.path,"/studio");
+    assert.equal(item.gated,true);
+  }else assert.doesNotMatch(item.path,/^\/\/|\/api\/|https?:|\/command|\/studio/);
   assert.ok(["Explore","Community","Account"].includes(item.category));
  }
  const gated=PORTAL_DESTINATIONS.filter(x=>x.gated).map(x=>x.id);

@@ -12,7 +12,6 @@ import { useOwnPlayerCard } from "../lib/useOwnPlayerCard";
 import {IrenGuidedContinuance} from "./IrenGuidedContinuance";
 import {VerifiedStaffShortcut} from "./VerifiedStaffShortcut";
 import {LivingWorldProvider,useLivingWorld,type WorldSector} from "../parity/LivingWorldState";
-import {LivingWorldField} from "../parity/LivingWorldField";
 import {ConsoleWayfinderV136} from "../parity/ConsoleWayfinderV136";
 import {ControllerBridgeV136} from "../parity/ControllerBridgeV136";
 import {StudioSpatialWorkspaceV136} from "../parity/StudioSpatialWorkspaceV136";
@@ -33,7 +32,7 @@ const menuDestinations = [
   {to:"/discover?category=games",label:"Play",detail:"Games and interactive worlds",icon:"star"},
   {to:"/discover",label:"Discover",detail:"Projects worth finding",icon:"explore"},
   {to:"/community",label:"Community",detail:"Creators and conversations",icon:"community"},
-  {to:"/create",label:"Create",detail:"Your studio and uploads",icon:"create"}
+  {to:"/studio",label:"Create",detail:"Your studio and uploads",icon:"create"}
 ] as const;
 const menuCategories = [
   {to:"/discover?category=tools",label:"Apps & tools"},
@@ -160,7 +159,7 @@ function ShellContent(){
     home||parityFullBleed?<Outlet/>:
     <div className="av5-site-frame av9-unified-frame"><div className="av5-site-content"><Outlet/></div></div>;
   return <div className={"site-shell site-shell--cinematic av9-shell"+(home?" site-shell--home":"")}>
-    {FullParityHeader&&<LivingWorldField enabled={publicSpatial} sector={worldSector(location.pathname,location.search)}/>}
+    {/* Ambient pages use media/DOM. Product-specific 3D stays in its own tools. */}
     {FullParityHeader&&<ControllerBridgeV136 navigationEnabled={publicSpatial}/>}
 
     {!publicSpatial&&!parityFullBleed&&<ContinuanceWorldStage path={location.pathname}/>}

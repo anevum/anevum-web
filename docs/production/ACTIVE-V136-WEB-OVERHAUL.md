@@ -1,6 +1,34 @@
+# CURRENT — unified cinematic reconstruction
+Session: `ANEVUM.WEB.OVERHAUL.2026-10-25.001.UNIFIED-CINEMATIC-RECONSTRUCTION`.
+
+**Continue existing PR #779** (`review/v136-interactive-public-owner-20261025-001`).
+Product #763 `f58bed93` and audit #778 `5e4731c3` are consolidated at merge `c15e809f`.
+The motion-first implementation removes the default ambient renderer, reuses the
+media contract/player, adds a rights/status-tracked original review candidate and
+one shared semantic token/material authority. See [current implementation/backlog](UNIFIED-CINEMATIC-RECONSTRUCTION.md),
+[design authority](ANEVUM.WEB.NORTHSTAR.2026-10-25.002.MOTION-FIRST-SINGLE-STREAM.md)
+and [complete ownership registry](anevum-site-surface-registry.v1.json).
+
+Same owner preview: https://anevum-v136-visual-review-001.devonakins.workers.dev/creator/ .
+Artwork/type/materials remain a candidate awaiting #335 acceptance. Preview CI is
+the only authorized deployment lane for this milestone. Production 99/1 allocation,
+main, accounts, publishing, payments, D1 and protected products are unchanged.
+
+**Historical entries below are chronological evidence, not competing current instructions.**
+The previous live-WebGL background and blanket decorative-art prohibition are
+SUPERSEDED for explicitly ledgered owner-review media by the present owner request.
+Production art approval remains closed. Do not revive modeled ambiance or restart
+from #735 because an old paragraph names it active.
+
+---
+
 # ACTIVE — ANEVUM PARITY V136 unified website overhaul
 Session: `ANEVUM.WEB.UPDATE.2026-10-25.001.SITEWIDE-OVERHAUL-SYNCHRONIZATION`
 Updated: 2026-10-25
+
+> **OWNER SUPERSEDING DIRECTION — 2026-10-25, motion-first single stream.**
+> [ANEVUM WEB North Star / motion-first consolidation](./ANEVUM.WEB.NORTHSTAR.2026-10-25.002.MOTION-FIRST-SINGLE-STREAM.md) governs *all new visitor-facing visual work*. The former priority of an always-running 3D Institute model/background is **retired as a requirement**. Ambient web composition must move toward authored high-resolution poster/video/optional bounded frame sequences, with actual React UI above it. Keep legitimate 3D in Creator Studio/game/simulation tools, preserve functional code, and do not remove historical assets or weaken production gates. Exact Orbital Underground logo remains mandatory. This note supersedes WebGL-ambient-first language **below**, which is retained for historical provenance only.
+> The parallel theming redesign owns final approved type/color/panel tokens; reconcile them into this same implementation lineage, not a second website shell.
 **Owner development baseline: draft PR #735 — Concept Convergence II, head `888bf4cc` after #748 integration.**
 **Current bounded continuation: V136.031 — Studio archive handoff and private-playtest form, stacked on draft #753.**
 **Sitewide integration: PR #738 was merged into the #735 development branch, preserving selected changes from PR #737 and #736. Those historical PRs need no blind re-import.**

@@ -1,12 +1,23 @@
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+import {rmSync} from "node:fs";
 
 export default defineConfig(({ mode }) => ({
   // Isolated path on next.anevum.com: never replace the existing staging homepage.
   base: mode === "staging-path" ? "/creator/" : "/",
   root: fileURLToPath(new URL(".", import.meta.url)),
+  server: {allowedHosts:["terminal.local"]},
   plugins: [
+    {
+      name:"isolate-owner-review-media",
+      closeBundle(){
+        if(mode==='staging-path'&&process.env.VITE_ANEVUM_OWNER_REVIEW==='true')return;
+        // Public-directory copying must not distribute unaccepted review art.
+        const output=mode==='staging-path'?'../dist/react-staging':'../dist/web';
+        rmSync(fileURLToPath(new URL(output+'/assets/cinematic-v136/arrival/review-001',import.meta.url)),{recursive:true,force:true});
+      }
+    },
     // Preserve all route CSS order and behavior while PARITY owns its components.
     // Wrapping source CSS (before Vite processing) also covers lazy route chunks.
     {
