@@ -11,7 +11,8 @@ Status: **SOURCE FOUNDATION ONLY / NOT DEPLOYED / NO CUSTOMER CHARGES**.
 - Railway is not required for the basic commerce ledger/file-vault control plane.
 
 ## Components landed here
-- Separate additive D1 schema for orders, provider event inbox, payment ledger, timed vault passes, member projects, upload reservations, vault files and quota accounting.
+- Separate proposed D1 schema for orders, provider event inbox, payment ledger, timed vault passes, member projects, upload reservations, vault files and quota accounting, stored at `docs/commerce-vault/schema-v001.review-only.sql`. It is deliberately outside the protected `migrations/` tree to avoid automatic migration changes and is NOT applied to any database.
+- Approved pricing catalog contracts are implemented in `src/server/commerce-contract.mjs` with isolated regression tests `tests/commerce-vault-contract.test.mjs`; `.github/workflows/commerce-vault-contracts.yml` is read-only test CI. **Tests and CI status require separate run verification; do not call tests green based on source alone.**
 - Fail-closed Square sandbox configuration; no card details retained, no unapproved product price fallback.
 - Owner-approved catalog IDs and exact prices: one-time support $5/$10/$25 and 30-day vault capacity +10 GiB/$4 or +50 GiB/$9. The 100 GiB tier is DEFERRED. Prices are coded but purchases remain disabled.
 - Server-only Square webhook HMAC verifier, exact completed payment matching, safe filename/media-size contracts and isolated tests.
