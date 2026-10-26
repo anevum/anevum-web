@@ -75,7 +75,9 @@ jobs:
       - run: npm run build:creator-v1-web
       - run: |
           npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
-          npx playwright install --with-deps chromium
+          # Keep the runner libraries/fonts stable; do not block QA on apt upgrades.
+          # The pinned Chromium download and real browser launch remain required.
+          npx playwright install chromium
       - run: node creator-v1/test/parity-v136-full-browser.mjs
       - name: Production-mode public baseline at all five widths
         env:

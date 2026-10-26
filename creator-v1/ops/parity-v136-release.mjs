@@ -128,7 +128,7 @@ const allowed=new Set([
 export const REVIEWED_UI_BLOBS=Object.freeze({
  "creator-v1/test/capture-sitewide-v012.mjs": "50d571bd10a5cdc6b81d1b3283abfcc29d9168b8",
  ".github/workflows/parity-v136-cinematic-production.yml": "6744a0790e2eb4bf8e7e2796f30f6d9535fcaba4",
- ".github/workflows/parity-v136-release.yml": "6f4bc35d057fc3714dcda16d886ef3d2144d7d62",
+ ".github/workflows/parity-v136-release.yml": "693ebf99123099a313bfea3c9a6e5ac7a1e2fce0",
  ".github/workflows/parity-v136-scene-qa.yml": "c03cb5e9d485f7b95a0d322d13bf77feaa1e27c1",
  ".github/workflows/parity-v136030-studio-preview.yml": "95f5ea288fc300f18cd4213dc931d6dbbcaf9942",
  ".github/workflows/v136-interactive-owner-review.yml": "9582940d6d8711fa921e9b6c11b5d76f39bcf238",
