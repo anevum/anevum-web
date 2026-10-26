@@ -1,48 +1,60 @@
-# ANEVUM Commerce & Creator Vault V001 — staging handoff
+# ANEVUM-owned Commerce, Creator Vault and In-House Merchandise
 Session: ANEVUM.OPS.BUILD.2026-10-26.001.COMMERCE-AND-CREATOR-VAULT
-Date: 2026-10-26
+Last direction: October 26, 2026
 
-Status: **SOURCE FOUNDATION ONLY / NOT DEPLOYED / NO CUSTOMER CHARGES**.
+## Founder decisions and payment blackout
 
-## Verified baseline
-- Existing web app uses Better Auth member identities and Cloudflare D1.
-- Cloudflare account lists existing R2 staging buckets, including `anevum-creator-large-assets-review`; none is to be made public.
-- `anevum/anevum-web` main remains its own release stream. This work is on a separate draft branch and is not Creator V1 acceptance.
-- Railway is not required for the basic commerce ledger/file-vault control plane.
+**SOURCE WORK ONLY / NO PAYMENT ACCEPTANCE / NO LIVE CHECKOUT / NO DEPLOYMENT AUTHORIZATION.**
 
-## Components landed here
-- Separate proposed D1 schema for orders, provider event inbox, payment ledger, timed vault passes, member projects, upload reservations, vault files and quota accounting, stored at `docs/commerce-vault/schema-v001.review-only.sql`. It is deliberately outside the protected `migrations/` tree to avoid automatic migration changes and is NOT applied to any database.
-- Approved pricing catalog contracts are implemented in `src/server/commerce-contract.mjs` with isolated regression tests `tests/commerce-vault-contract.test.mjs`; `.github/workflows/commerce-vault-contracts.yml` is read-only test CI. **Tests and CI status require separate run verification; do not call tests green based on source alone.**
-- Fail-closed Square sandbox configuration; no card details retained, no unapproved product price fallback.
-- Owner-approved catalog IDs and exact prices: one-time support $5/$10/$25 and 30-day vault capacity +10 GiB/$4 or +50 GiB/$9. The 100 GiB tier is DEFERRED. Prices are coded but purchases remain disabled.
-- Server-only Square webhook HMAC verifier, exact completed payment matching, safe filename/media-size contracts and isolated tests.
+- ANEVUM will develop and fully integrate its **own commerce system** before taking any customer payment. This **supersedes the prior Square-as-interim proposal**. Do not integrate, select, enable or depend on Stripe, Square or any replacement payment processor by default. No manual off-platform "supporter donations" or preorders as workarounds.
+- This is ownership of ANEVUM's catalog, order state, checkout UI, accounting journal, receipts, refund/dispute states, subscriptions or finite storage passes, inventory, entitlements and compliance workflow. It is not a claim to independent financial-network settlement.
+- **Important legal/technical boundary:** Card authorization, acquiring and bank settlement cannot be implemented as ordinary application code alone. Self-processing card data invokes PCI DSS and acquiring/network arrangements. Direct ACH and other bank rails require a financial institution or authorized agent. No card, bank account or payment credential collection before the lawful rail, obligations and security acceptance are separately resolved. No bank/processor partnership or financial registration is authorized here.
+- Keep the public website and existing Creator Studio release path intact. Commerce work stays private/draft; no production flags or payment links are enabled.
 
-## Remaining code needed before PRIVATE staging deployment
-1. Integrate authenticated routes with `memberEndpoint`, derive tenant solely from Better Auth session, and enforce Origin on writes.
-2. Implement single-use creation/idempotency for payment links with Square Orders/Checkout API. Validate exact approved catalog price server-side. Square sandbox only.
-3. Verify signatures over *unmodified* raw request body using the exact registered webhook URL and reconcile payment details with Square API; store events idempotently and grant passes within D1 transaction semantics.
-4. Wire private R2 binding and bounded uploads/downloads; check project ownership, atomic quota reservation, upload object metadata/hash, interrupted upload cleanup and delete behavior.
-5. Implement paid entitlement expiration, refunds/revocations, cancellation, support receipts, concurrency and multi-session abuse controls; provide transaction history with privacy-safe retention.
-6. Account export/delete **must** cover Vault objects, ledger/legal retention and backups. Test A/B isolation, restore and rollback with disposable DB and isolated R2 before production acceptance.
-7. Build premium UX within current cinematic layout, not a second storefront; clearly distinguish one-off support from time-limited storage passes.
-8. Add real sandbox end-to-end Square tests, mobile usability, independent security review, reviewed customer policies, and separate release authorization. Catalog pricing has owner approval; this does not waive any release gate.
+## Approved future prices (not yet offered to customers)
 
-## Hard gates
-- DO NOT apply migration to live D1 before isolated restore and acceptance.
-- DO NOT link actual Square production credentials, solicit payments, or enable checkout.
-- DO NOT configure open/public R2 access or promise unlimited storage.
-- DO NOT enable a `VAULT_ENABLED` or `ANEVUM_COMMERCE_ENABLED` production flag.
-- Keep public production, Creator V1 #325 and dates #308 unchanged.
-- Historical Stripe data remains separate and cannot grant new entitlements.
+- Free private Creator Vault: **2 GiB included**. Do not promise unlimited bytes, guaranteed permanent retention, or unrestricted per-file uploads.
+- Optional one-time ANEVUM support: **$5, $10, $25**.
+- Additional private vault capacity: **+10 GiB for $4 / 30 days**, **+50 GiB for $9 / 30 days**.
+- Optional +100 GiB for $15 / 30 days is **deferred**; not an approved active catalog item.
+- No pay-to-win creator progression, privileged review or exclusive access to basic community functions.
+- All paid tiers must remain invisible as purchasable/disabled with transparent "not accepting payments yet" treatment until release acceptance. No automatic recurring billing without later explicit separate consent.
+- After expiry, show warning, read-only/export grace and clear data retention; never silently destroy files.
 
-## Approved pricing and sustainability direction (October 26, 2026)
+## In-house physical merchandise — no third-party fulfillment
 
-Founder approved the price schedule and sustainability-first business direction on October 26, 2026. This is **pricing approval only**, not permission to deploy, connect live Square accounts, enable charges, publish a storefront or incur spend. The goal is operating sustainability and modest discretionary family income, not maximizing profit. Household cost data is not verified.
+- Owner and girlfriend will make/design/package merchandise themselves using her **Cricut** and their own tools. Do not recommend or create print-on-demand providers, third-party merch storefronts, dropshipping or outside merch production/fulfillment.
+- The future ANEVUM-owned storefront may manage prototypes, sizes/variants, inventory, physical orders, receipts and owner-operated packing/shipping. Do not promise stock or dispatch time until a physical sample, production capacity and stock count are verified.
+- Blank garments, craft materials and postal carriers are inputs/logistics, not authorization to outsource production. No purchase, fulfillment connection or external message was approved.
+- Cost per item must include blank item, vinyl/transfer/supplies, material failures, packaging, postage and owner time; merchandise revenue is separate from supporter/storage projections.
+- Existing shirt designs remain candidates until physical samples, final art and founder approval.
 
-Owner-approved launch prices: Free private vault 2 GiB; voluntary one-time support $5, $10, or $25; 10 GiB extra capacity for 30 days $4; 50 GiB extra capacity for 30 days $9. An optional 100 GiB tier at $15 is **deferred and is not in the active catalog**. The $3 and $8 earlier examples are superseded. Do not sell until backups, account isolation, anti-abuse, deletion/export, expiration/grace policy and genuine payment verification are proven. No pay-to-win progression.
+## Current isolated source (draft PR #782)
 
-Input sources checked October 26: https://developers.cloudflare.com/r2/pricing/ ($0.015/GB-month, first 10 GB-month free, request tiers); https://squareup.com/us/en/payments/our-fees (Square Free online/payment links 3.3% + $0.30); https://developers.cloudflare.com/d1/platform/pricing/ . Check actual account pricing before launch.
+- `src/server/commerce-contract.mjs`: exact approved future prices, quota and upload constraints, **permanent code-level checkout OFF** pending a separately reviewed implementation; no external SDK or secret binding. Fabricated settlement claims cannot issue entitlements.
+- `tests/commerce-vault-contract.test.mjs`: catalog, payment-blackout, entitlement-denial and quota/media safety regression tests.
+- `docs/commerce-vault/schema-v001.review-only.sql`: unexecuted proposed per-member orders, draft financial ledger, settlement event placeholders, project/vault storage/quota records. No Square-only provider field or live migration.
+- `.github/workflows/commerce-vault-contracts.yml`: read-only source regression suite. Passing contract tests are **not** proof of payment compliance, authenticated functionality or restore readiness.
+- The review-only schema is intentionally outside protected `migrations/` and has not touched D1.
 
-Hypothetical monthly mixes, not predictions: Early: 20 supporters at $5, ten 10-GiB passes and two 50-GiB passes, gross $158, estimated Square fees $15, storage $3, assumed other platform budget $35, approximately $105 before tax/support. Growing: 100 supporters at $5, forty small passes, ten medium passes, gross $750, fees $70, storage $13, other budget $65, approximately $602 before tax/support. Established: 350 supporters averaging $6, 120 small passes, 45 medium passes, ten large passes, gross $3,135, fees $261, storage $67, other budget $150, approximately $2,657 before tax/support. These estimates assume all paid capacity filled and exclude free-user storage, backup copies, taxes, refunds, fraud, support labor and creator payouts. GiB allocation differs from R2 decimal GB accounting.
+## Implementation milestones before any money can be accepted
 
-Reconcile cash before owner draws; maintain infrastructure, tax, refunds and recovery reserves. Track free-user storage consumption, conversion and supporter retention. Capacity expiry must provide notice and export/read-only grace, not surprise irreversible deletion. Payments and production flags remain disabled pending explicit launch approval.
+1. Create authenticated ANEVUM Commerce API behind verified Better Auth sessions, same-origin writes, authorization/audit trails and independent member A/B account isolation. Keep financial actions blocked.
+2. Complete an ANEVUM-owned order engine with server-only pricing, idempotency, immutable double-entry journal, refund/reversal logic, tax/receipt/retention policy and deterministic **synthetic** settlement fixtures in isolated tests. Never classify a synthetic payment as real.
+3. Build Creator Vault against private R2 with per-member object authorization, folders/projects, atomic quota reservations, version/export/deletion behavior and accurate accounting. Test existing-project A/staff/B workflows.
+4. Add handmade-merch inventory and manual owner fulfillment statuses; define documented customer expectations before displaying items for sale.
+5. Research legally viable banking/card settlement path and costs without integrating an external payment service or accepting money. **An actual financial rail and real confirmed clearing are an outstanding external prerequisite, not solved by the ledger.**
+6. Verify full backup/restore, rollback, paid-entitlement reversal, abuse/fraud controls, refund/dispute handling, accessibility, physical-device UX, privacy and member deletion obligations. Require an explicit, new founder go/no-go before any live checkout or accepted payment.
+
+## Financial sustainability framing
+
+The founder prioritizes modest reliable operating support plus family/hobby income after reserves, not maximum profit. Storage cost estimates were based on Cloudflare R2 published prices, but actual free-user occupancy, requests, backups and support are not measured. The earlier $158 / $750 / $3,135 illustrative **gross** scenarios remain purely hypothetical, not forecasts. The earlier **net estimates used Square fee assumptions and are superseded** now that no rail is selected. Do not rely on them for household income, do not add unconfirmed merch revenue and do not claim future settlement fees are zero.
+
+Maintain separate reconciled funds/reserves for operations, taxes, refunds, recovery and eventual owner draws; treat realized money rather than synthetic orders as the only basis for distributions.
+
+## Hard release boundaries
+
+- No Stripe, Square, alternative processor, payment link, bank details, checkout credentials, donation acceptance, fees, spending, external communications or public payment UI activation.
+- No merchant checkout in production, no money collection until entire system and compliant rail are accepted.
+- No production migration, R2 exposure, Cloudflare deployment, creator publishing gate bypass or owner access changes without separate authorization.
+- Keep Creator V1 engineering governed by #325 and its release dates by #308; earlier #259 is historical. Preserve existing layout, cinematic visual direction and implemented staged modules.
