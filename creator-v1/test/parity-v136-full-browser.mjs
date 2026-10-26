@@ -190,11 +190,11 @@ try{
         cover:style('.av136032-record-blank').backgroundColor,
         search:style('.av095-search input').backgroundColor};
     });
-    assert.equal(archiveMaterials.stage,'rgb(16, 13, 22)','Studio stage uses the shared dark canvas');
-    assert.ok(archiveMaterials.panel.includes('35, 26, 41'),'Private library uses the actual shared panel material');
-    assert.equal(archiveMaterials.selected,'rgb(59, 43, 65)','Selected library controls use the shared violet surface');
-    assert.equal(archiveMaterials.cover,'rgb(16, 13, 22)','Missing creator media remains a restrained empty surface');
-    assert.equal(archiveMaterials.search,'rgb(16, 13, 22)','Private search no longer inherits navy fields');
+    assert.equal(archiveMaterials.stage,'rgb(9, 13, 19)','Studio stage uses the shared dark canvas');
+    assert.ok(archiveMaterials.panel.includes('27, 38, 48'),'Private library uses the actual shared panel material');
+    assert.equal(archiveMaterials.selected,'rgb(36, 54, 66)','Selected library controls use the shared violet surface');
+    assert.equal(archiveMaterials.cover,'rgb(9, 13, 19)','Missing creator media remains a restrained empty surface');
+    assert.equal(archiveMaterials.search,'rgb(9, 13, 19)','Private search no longer inherits navy fields');
     await page.screenshot({path:join(out,'studio-archive-list-'+width+'.png'),animations:'disabled',timeout:90000});
     await page.goto(base+'/studio/packages/new',{waitUntil:'domcontentloaded'});
     await page.getByRole('heading',{name:'Transmit a creation.'}).waitFor();
@@ -391,9 +391,9 @@ try{
       primary:getComputedStyle(node.querySelector('.p136-workbench-command>button')).backgroundImage,
       text:getComputedStyle(node.querySelector('.p136-workbench-command>button')).color
     }));
-    assert.ok(chrome.header.includes('35, 26, 41'),'Studio header must render the shared Continuance material');
-    assert.ok(chrome.primary.includes('242, 228, 211'),'Studio archive action must retain its light primary surface');
-    assert.equal(chrome.text,'rgb(21, 14, 23)','Studio primary text must contrast against its actual surface');
+    assert.ok(chrome.header.includes('27, 38, 48'),'Studio header must render the shared Continuance material');
+    assert.ok(chrome.primary.includes('215, 230, 235'),'Studio archive action must retain its light primary surface');
+    assert.equal(chrome.text,'rgb(9, 20, 28)','Studio primary text must contrast against its actual surface');
     // Private source editing does not need to compete for GPU resources with
     // prior public WebGL stress tests. Retain genuine browser screenshot QA.
     await page.screenshot({path:join(out,'artifact-workbench-'+width+'.png'),
@@ -475,10 +475,10 @@ try{
         primaryText:style('button[type="submit"]').color,
         field:style('.st-field input').backgroundColor};
     });
-    assert.ok(formMaterials.panel.includes('35, 26, 41'),'Build form uses the shared panel material');
-    assert.ok(formMaterials.primary.includes('242, 228, 211'),'Private playtest action has the shared light surface');
-    assert.equal(formMaterials.primaryText,'rgb(21, 14, 23)','Private playtest action retains dark contrasting text');
-    assert.equal(formMaterials.field,'rgb(16, 13, 22)','Build form fields use the shared canvas');
+    assert.ok(formMaterials.panel.includes('27, 38, 48'),'Build form uses the shared panel material');
+    assert.ok(formMaterials.primary.includes('215, 230, 235'),'Private playtest action has the shared light surface');
+    assert.equal(formMaterials.primaryText,'rgb(9, 20, 28)','Private playtest action retains dark contrasting text');
+    assert.equal(formMaterials.field,'rgb(9, 13, 19)','Build form fields use the shared canvas');
     const rights=buildForm.getByRole('checkbox',{name:/I own this project/});
     assert.equal(await buildForm.getByRole('region',{name:'Browser build',exact:true}).count(),1);
     assert.equal(await buildForm.getByRole('region',{name:'Project details',exact:true}).count(),1);
