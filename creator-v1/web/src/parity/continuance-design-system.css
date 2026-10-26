@@ -670,3 +670,34 @@ html[data-av-parity="v136-full"] .p136-badge-sigil{
  .ir88-companion .ir87-scout.ir80-dock){background:Canvas;color:CanvasText;border:2px solid CanvasText}
  html[data-av-parity="v136-full"] .ir137-pet-art{filter:none}
 }
+
+/* Stealth beta shared surfaces: explicitly bind content panes to the new
+   materials so they cannot retain the retired V136 violet gradient. */
+html[data-av-parity="v136-full"] :is(
+ .p136-community .ch7-hero,.p136-boards .cnb-hero,.p136-creators-search,
+ .st-status,.field-guide-page .portal-page-heading,
+ .field-guide-page .guide-training-hero,.start-journey,.start-portals,
+ .start-journey-detail,.p136-discover-main,.join-panel,.state-card,
+ .p136-workbench-head,.av136032-library-tools,.st-panel){
+ background:var(--av-panel);border-color:var(--av-border);
+}
+html[data-av-parity="v136-full"] :is(
+ .p136-studio-console-stage,.av136032-record-blank,
+ .av095-search input,.st-field input){
+ background-color:var(--av-canvas);border-color:var(--av-border);color:var(--av-text);
+}
+html[data-av-parity="v136-full"] .av136032-toolbar button[aria-pressed="true"]{
+ background-color:#243642;border-color:#9fc1cd;color:#eaf5f8;
+}
+html[data-av-parity="v136-full"] .p136-workbench-command>button{
+ background:linear-gradient(145deg,#d7e6eb,#acced9);color:#09141c;
+ border-color:#e2f3f8;
+}
+html[data-av-parity="v136-full"] .p136-community .ch7-button-primary{
+ background:linear-gradient(145deg,#d7e6eb,#acced9);color:#09141c;
+ border-color:#e2f3f8;
+}
+html[data-av-parity="v136-full"] .st-panel button[type="submit"]{
+ background:linear-gradient(145deg,#d7e6eb,#acced9);color:#09141c;
+ border-color:#e2f3f8;
+}
