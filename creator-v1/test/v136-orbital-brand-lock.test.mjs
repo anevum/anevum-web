@@ -45,7 +45,9 @@ test('public header, mobile navigation and cinematic orbital stage use one share
 });
 
 test('V136 SVG favicon is byte-identical to approved compact master',()=>{
-  assert.equal(favicon,compact,'Do not create a separate browser or mobile header logo');
+  assert.deepEqual(normalize(favicon),normalize(compact),
+    'Contrast-safe favicon tile must retain every approved compact contour and color');
+  assert.match(favicon,/<rect width="512" height="512" rx="110" fill="#0b0b0d"\/>/);
   assert.match(favicon,/ANEVUM Orbital Underground emblem/);
   assert.ok(normalize(favicon).length>=5);
   assert.match(index,/favicon\.svg\?v=20261025-orbital-underground/);
