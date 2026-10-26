@@ -119,3 +119,14 @@ Its simulated-phone disclosure now remains first and the additive controller
 guidance follows it. This preserves both informative messages and the existing
 assertion of phone-emulation honesty. These are actual CI fixes, not skipped
 tests, rewritten source pins, or release gate relaxations.
+
+## G3 Continuance visual convergence — candidate foundation pass 001
+
+Session: `ANEVUM.WEB.UPDATE.2026-10-25.003.VISUAL-SYSTEM-CONVERGENCE`.
+The existing #779 review is the **sole implementation lane**. The existing V136 stylesheet `creator-v1/web/src/parity/continuance-design-system.css` now supplies the explicit candidate obsidian `#07060b`, canvas `#100d16`, bone `#efe6da`, violet `#b49bce`, copper `#d2a57f` and informational ice `#a8cbd2`. These are a visibly different review candidate, not new owner-locked palette or production identity. Existing V136, Commons and member token families map into this authority rather than creating another competing CSS layer.
+
+Implemented appearance: Orbital-preserving header and navigation, architectural Arrival frame and poster/video fallback, editorial title hierarchy and copper CTA, 5-entry Wayfinder rail, IREN information panel, public project cards and Discover controls, creator hero, Commons and Studio chrome. This patch does not alter public-content data, creator images, Monaco, real game/player 3D, identity, authentication, uploads, video rights, checkout or publishing.
+
+Verification: `creator-v1/test/visual-convergence-v136.test.mjs` checks palette contrasts and source authority. The existing read-only owner-preview browser QA now asserts computed theme tokens and captures Arrival, Discover, creators, Commons, guest Studio, guide and Boards at 320/390/768/1440/1920. Passing screenshot generation is **not** equivalent to design approval. Physical iPhone/Safari and Xbox controller acceptance remain separate. Founder visual decision #335, production and release gates are unchanged.
+
+Next visual passes: inspect exact-head screenshots; refine page-specific 35-state composition and readability, then project detail/channel/Commons thread, member/Studio interactions, guide/status/legal and finally retained V5 company/RHEN plus separate portfolio/Sites identity touchpoints. Do not force public theming into private systems or alter live route owners as cosmetic cleanup.

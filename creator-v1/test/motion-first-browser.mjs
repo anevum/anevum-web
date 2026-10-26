@@ -59,9 +59,20 @@ async function context(width,{motion='reduce',saveData=false,brokenMedia=false,a
  const page=await ctx.newPage();page.on('pageerror',e=>errors.push(e.message));return {ctx,page};
 }
 async function geometry(page){
- const g=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth,canvas:document.querySelectorAll('.p136-living-canvas').length,
-  logo:document.querySelectorAll('[data-anevum-mark="orbital-underground"]').length}));
- assert.ok(g.scroll<=g.width+1,JSON.stringify(g));assert.equal(g.canvas,0);assert.ok(g.logo>0);return g;
+ const g=await page.evaluate(()=>{
+  const style=getComputedStyle(document.documentElement);
+  const token=name=>style.getPropertyValue(name).trim().toLowerCase();
+  return {width:innerWidth,scroll:document.documentElement.scrollWidth,
+   canvas:document.querySelectorAll('.p136-living-canvas').length,
+   logo:document.querySelectorAll('[data-anevum-mark="orbital-underground"]').length,
+   palette:{void:token('--av-void'),text:token('--av-text'),
+    copper:token('--av-copper'),violet:token('--av-violet'),ice:token('--av-ice')}};
+ });
+ assert.ok(g.scroll<=g.width+1,JSON.stringify(g));assert.equal(g.canvas,0);assert.ok(g.logo>0);
+ assert.deepEqual(g.palette,{void:'#07060b',text:'#efe6da',
+  copper:'#d2a57f',violet:'#b49bce',ice:'#a8cbd2'},
+  'V136 public pages must use the same computed Continuance theme');
+ return g;
 }
 try{
  for(const width of [320,390,768,1440,1920]){

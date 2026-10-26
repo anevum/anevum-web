@@ -103,6 +103,7 @@ jobs:
         run: |
           set -euo pipefail
           node --experimental-strip-types --test creator-v1/test/motion-first-media.test.mjs
+          node --test creator-v1/test/visual-convergence-v136.test.mjs
           npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
           npx playwright install --with-deps chromium
           node creator-v1/test/motion-first-browser.mjs
