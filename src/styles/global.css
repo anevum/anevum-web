@@ -38,13 +38,9 @@ a{color:inherit;text-decoration:none}
 .positive{color:var(--green)!important}
 .negative{color:var(--red)!important}
 
-.anevum-mark{width:32px;height:32px;overflow:visible}
-.anevum-mark path{fill:none;stroke:currentColor;stroke-linecap:round}
-.anevum-mark .mark-ring{stroke-width:.8;opacity:.28}
-.anevum-mark .mark-outer{stroke-width:5}
-.anevum-mark .mark-inner{stroke-width:2;opacity:.78}
-.anevum-mark .mark-stem{stroke-width:1.15;opacity:.55}
-.anevum-mark circle{fill:currentColor}
+/* SVG geometry, bone palette and negative core are canonical, not CSS-inferred.
+   Do not tint paths from decorative page gradients or reintroduce the old A. */
+.anevum-mark{display:block;width:32px;height:32px;flex:none;overflow:visible}
 
 .public-frame{min-height:100dvh;background:var(--ink)}
 .public-header{
