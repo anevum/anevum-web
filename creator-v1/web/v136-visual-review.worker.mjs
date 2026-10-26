@@ -1,6 +1,6 @@
 /**
  * V136 read-only interactive visual review. Deliberately NOT ANEVUM production.
- * - Source: f58bed9370dc3fed0429033852a0a9c506daffae (brand-corrected V136.038)
+ * - Source: exact commit injected into this isolated review deployment; never a frozen source.
  * - No D1/R2/auth/secrets/payments/write endpoints/session forwarding.
  * - Public catalogue GETs are anonymous, explicitly allowlisted first-party reads.
  * - The site's original React/Monaco routes and first-party WebGL assets are
@@ -23,7 +23,7 @@ const error=(code,message,extra={})=>new Response(message,{status:code,headers:{
   ...SAFE_HEADERS,"cache-control":"no-store","content-type":"text/plain; charset=utf-8",...extra
 }});
 const BANNER='<div id="anevum-preview-band" role="status" aria-label="ANEVUM development review">V136 INTERACTIVE PREVIEW <span aria-hidden="true">/</span> NON-PRODUCTION <a href="https://anevum.com/" rel="noopener noreferrer">Live site</a><small>Account, publication &amp; payment actions disabled</small></div>';
-const BANNER_CSS='<style id="anevum-preview-style">body{padding-top:39px!important}.p136-header{top:39px!important}#anevum-preview-band{position:fixed;z-index:2147483647;top:0;left:0;right:0;min-height:39px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:12px;padding:7px 15px;background:#091622;color:#f2f7fc;border-bottom:1px solid #62bdb5;font:700 11px/1.25 system-ui,sans-serif;letter-spacing:.1em;text-align:center}#anevum-preview-band a{color:#b0f3e8;text-underline-offset:3px}#anevum-preview-band small{font-size:10px;color:#9db0bd;font-weight:500;letter-spacing:0}@media(max-width:560px){body{padding-top:63px!important}.p136-header{top:63px!important}#anevum-preview-band{gap:6px 11px;min-height:63px;font-size:9px;letter-spacing:.06em}#anevum-preview-band small{flex-basis:100%}}@media(prefers-reduced-motion:reduce){#anevum-preview-band{transition:none;animation:none}}</style>';
+const BANNER_CSS='<style id="anevum-preview-style">body{padding-top:39px!important}.p136-header{top:39px!important}#anevum-preview-band{position:fixed;z-index:2147483647;top:0;left:0;right:0;min-height:39px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:12px;padding:7px 15px;background:#17111d;color:#efe6da;border-bottom:1px solid #d2a57f;font:700 11px/1.25 system-ui,sans-serif;letter-spacing:.1em;text-align:center}#anevum-preview-band a{color:#efe6da;text-underline-offset:3px}#anevum-preview-band small{font-size:10px;color:#c8bdba;font-weight:500;letter-spacing:0}@media(max-width:560px){body{padding-top:63px!important}.p136-header{top:63px!important}#anevum-preview-band{gap:6px 11px;min-height:63px;font-size:9px;letter-spacing:.06em}#anevum-preview-band small{flex-basis:100%}}@media(prefers-reduced-motion:reduce){#anevum-preview-band{transition:none;animation:none}}</style>';
 function safeResponse(res,{html=false,nocache=false,bodyOverride}={}){
   const headers=new Headers(res.headers);
   for(const [key,value] of Object.entries(SAFE_HEADERS))headers.set(key,value);

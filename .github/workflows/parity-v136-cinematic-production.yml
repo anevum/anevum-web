@@ -23,7 +23,6 @@ on:
       - 'creator-v1/web/src/parity/CinematicVideoV136.tsx'
       - 'creator-v1/web/src/parity/CinematicArrivalV136.tsx'
       - 'docs/production/parity-v136-cinematic-production-20261024.md'
-  workflow_dispatch:
 permissions:
   contents: read
 concurrency:

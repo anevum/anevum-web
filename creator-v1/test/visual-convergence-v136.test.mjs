@@ -47,3 +47,19 @@ test('one existing visual authority owns shared public surfaces and preserves ac
  assert.match(portal,/CATEGORY INDEX \/ NOT CREATOR COVER/);
  assert.match(worker,/node --test creator-v1\/test\/visual-convergence-v136\.test\.mjs/);
 });
+
+test('PWA chrome and review banner share Continuance palette; cinematic CI has one unambiguous dispatch',()=>{
+ const html=read('../web/index.html');
+ const manifest=JSON.parse(read('../web/public/site.webmanifest'));
+ const preview=read('../web/v136-visual-review.worker.mjs');
+ const workflow=read('../../.github/workflows/parity-v136-cinematic-production.yml');
+ assert.match(html,/<meta name="theme-color" content="#07060b"\s*\/>/);
+ assert.equal(manifest.theme_color,color('av-void'));
+ assert.equal(manifest.background_color,color('av-void'));
+ assert.match(preview,/NON-PRODUCTION/);
+ assert.match(preview,/background:#17111d/);
+ assert.match(preview,/border-bottom:1px solid #d2a57f/);
+ assert.equal((workflow.match(/^  workflow_dispatch:/gm)||[]).length,1);
+ assert.match(workflow,/^  pull_request:/m);
+ assert.match(workflow,/github\.event_name == 'workflow_dispatch'/);
+});
