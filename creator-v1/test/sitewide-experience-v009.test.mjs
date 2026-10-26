@@ -16,9 +16,11 @@ test("V009 unifies site navigation and retains native route boundaries",()=>{
  assert.match(shell,/site-shell--cinematic/);
  assert.doesNotMatch(shell,/<CinematicSiteRail\/>/);
  assert.doesNotMatch(shell,/portfolio|RHEN TERMINAL|mobile-bottom-nav/i);
- for(const path of ["/discover","/community","/creators","/levels","/create","/library","/member","/join","/status"]){
+ for(const path of ["/discover","/community","/creators","/levels","/studio","/library","/member","/join","/status"]){
    assert.ok(shell.includes(path),"missing genuine destination "+path);
  }
+ assert.doesNotMatch(shell,/to:"\/create",label:"Create"/);
+ assert.match(app,/path="create" element={<Navigate to="\/studio" replace\/>}/);
  assert.match(app,/<MemberGate\/>/);
  assert.match(app,/path="account" element={<Navigate to="\/member" replace\/>}/);
  assert.match(app,/path="community\/write"/);
