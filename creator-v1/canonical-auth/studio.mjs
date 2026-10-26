@@ -3,6 +3,7 @@
 // No project in this service is public, installed, approved, or executable.
 import {boundedText} from './request-body.mjs';
 import {canonicalStudioAssets,studioUploadReady} from './studio-assets.mjs';
+import {canonicalStudioLargeAssets,studioLargeSchemaReady,studioLargeUploadReady} from './studio-large-assets.mjs';
 import {studioReviewSchemaReady,freezeStudioReview,withdrawStudioReview,decideStudioReview,getStudioReviewReceipt,listStudioReviewReceipts} from './studio-submissions.mjs';
 
 const PREFIX='/api/v1/member/studio';
@@ -107,9 +108,10 @@ export async function canonicalStudioSchemaReady(env){
  }catch{return false;}
 }
 export async function studioReadiness(env){
- if(env?.CANONICAL_CREATOR_STUDIO_ENABLED!=='true')return {studioReady:false,studioUploadsReady:false};
+ if(env?.CANONICAL_CREATOR_STUDIO_ENABLED!=='true')return {studioReady:false,studioUploadsReady:false,studioLargeUploadsReady:false};
  const ready=await canonicalStudioSchemaReady(env);
- return {studioReady:ready,studioUploadsReady:Boolean(ready&&studioUploadReady(env))};
+ return {studioReady:ready,studioUploadsReady:Boolean(ready&&studioUploadReady(env)),
+   studioLargeUploadsReady:Boolean(ready&&await studioLargeSchemaReady(env)&&studioLargeUploadReady(env))};
 }
 export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/1000)){
  if(env?.CANONICAL_CREATOR_STUDIO_ENABLED!=='true')return fail(404,'Creator Studio is not activated');
@@ -176,7 +178,12 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
     return fail(409,'Project revision changed');
    const kinds=ELIGIBLE_ASSET_KINDS[selected.category]||[];
    const hasExternal=Boolean(selected.demo_url||selected.source_url);
-   const eligible=hasExternal?true:kinds.length?Boolean(await getOne(db,
+   const largeSchema=await studioLargeSchemaReady(env);
+   const largeEligible=largeSchema&&kinds.some(kind=>kind==='package'||kind==='video')&&Boolean(await getOne(db,
+    "SELECT id FROM member_studio_large_assets WHERE project_id=? AND user_id=? AND status='quarantined' "+
+    "AND manifest_sha256 IS NOT NULL AND kind IN ("+kinds.map(()=>'?').join(',')+") LIMIT 1",
+    [id,user.id,...kinds]));
+   const eligible=hasExternal||largeEligible?true:kinds.length?Boolean(await getOne(db,hasExternal?true:kinds.length?Boolean(await getOne(db,
     "SELECT id FROM member_studio_assets WHERE project_id=? AND user_id=? AND status='quarantined' "+
     "AND sha256 IS NOT NULL AND kind IN ("+kinds.map(()=>'?').join(',')+") LIMIT 1",
     [id,user.id,...kinds])):false;
@@ -186,8 +193,11 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
     "SELECT id FROM member_studio_assets WHERE project_id=? AND user_id=? AND status<>'quarantined' LIMIT 1",
     [id,user.id]);
    if(unfinished)return fail(409,'Finish or remove incomplete uploads before submitting for review');
+   if(largeSchema&&await getOne(db,
+    "SELECT id FROM member_studio_large_assets WHERE project_id=? AND user_id=? AND status<>'quarantined' LIMIT 1",
+    [id,user.id]))return fail(409,'Finish or remove incomplete large uploads before submission');
    if(!await pace(db,user.id,'project',now,30))return fail(429,'Too many project updates');
-   const frozen=await freezeStudioReview(db,selected,user.id,now,kinds,hasExternal);
+   const frozen=await freezeStudioReview(db,selected,user.id,now,kinds,hasExternal,largeSchema);
    return frozen?json({project:dbRow(frozen.project),submissionId:frozen.submissionId,
     attachmentCount:frozen.assetCount,
     note:'Review snapshot locked privately; no publication, video playback or gameplay activation.'}):
@@ -228,6 +238,32 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
   return changed.length===1?json({project:dbRow(changed[0])}):fail(409,'Project changed, reload your draft');
  }catch{return fail(503,'Creator Studio transaction unavailable');}
 }
+// Additive large-file channel for the same verified canonical Better Auth owner.
+// The original 20 MiB /assets API and the Godot V003 validator remain unchanged.
+export async function canonicalStudioLarge(req,env,user,now=Math.floor(Date.now()/1000)){
+ if(env?.CANONICAL_CREATOR_STUDIO_ENABLED!=='true')return fail(404,'Creator Studio not active');
+ if(!await canonicalStudioSchemaReady(env)||!await studioLargeSchemaReady(env))
+  return fail(503,'Large-file schema not ready');
+ if(typeof user?.id!=='string'||!user.id||user.emailVerified!==true)
+  return fail(403,'Verified member required');
+ const db=env.MEMBER_DB, url=new URL(req.url);
+ if(url.search)return fail(400,'Unexpected query');
+ const match=url.pathname.match(
+  /^\/api\/v1\/member\/studio\/projects\/([0-9a-f-]{36})\/assets-large(?:\/([a-f0-9]{32})(?:\/(file|start|complete|parts)(?:\/([1-9][0-9]{0,2}))?)?)?$/);
+ if(!match||!UUID.test(match[1]))return fail(404,'Not found');
+ const [,projectId,asset,action,rawPart]=match;
+ if(rawPart&&action!=='parts')return fail(404,'Not found');
+ const part=rawPart?Number(rawPart):0;
+ try{
+  const profile=await getOne(db,'SELECT handle FROM member_creator_profiles WHERE user_id=?',[user.id]);
+  if(!profile)return fail(409,'Complete your creator profile first');
+  const project=await getOne(db,'SELECT '+COLS+' FROM member_studio_projects WHERE id=? AND user_id=?',
+   [projectId,user.id]);
+  if(!project)return fail(404,'Project not found');
+  return canonicalStudioLargeAssets(req,env,user,project,{asset,action,part,now,pace});
+ }catch{return fail(503,'Private large-file service unavailable');}
+}
+
 export async function canonicalStudioReview(req,env,user,now=Math.floor(Date.now()/1000)){
  if(env?.CANONICAL_CREATOR_STUDIO_ENABLED!=='true'||!await canonicalStudioSchemaReady(env))
   return fail(404,'Studio review not active');
