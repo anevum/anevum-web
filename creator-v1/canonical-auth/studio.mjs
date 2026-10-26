@@ -215,6 +215,9 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
    if(selected.revision!==input.revision||!['draft','changes_requested','rejected'].includes(selected.status))
     return fail(409,'Project must be withdrawn from review before deletion');
    if(!await pace(db,user.id,'project',now,30))return fail(429,'Too many project updates');
+   if(await studioLargeSchemaReady(env)&&await getOne(db,
+    'SELECT id FROM member_studio_large_assets WHERE project_id=? AND user_id=? LIMIT 1',[id,user.id]))
+    return fail(409,'Remove private large files before deleting this project');
    const result=await rows(db,
     "DELETE FROM member_studio_projects WHERE id=? AND user_id=? AND revision=? "+
     "AND status IN ('draft','changes_requested','rejected') AND "+
@@ -337,6 +340,9 @@ export async function canonicalStudioExport(env,userId){
  const assets=await rows(env.MEMBER_DB,
   'SELECT id,project_id,filename,kind,content_type,size_bytes,status,sha256,uploaded_at FROM member_studio_assets WHERE user_id=? ORDER BY created_at ASC LIMIT 500',
   [userId]);
+ const largeAssets=await studioLargeSchemaReady(env)?await rows(env.MEMBER_DB,
+  'SELECT id,project_id,filename,kind,content_type,size_bytes,status,manifest_sha256,uploaded_at '+
+  'FROM member_studio_large_assets WHERE user_id=? ORDER BY created_at ASC LIMIT 500',[userId]):[];
  const reviewReceipts=await rows(env.MEMBER_DB,
   'SELECT id,project_id,project_revision,status,title,submitted_at,resolved_at FROM member_studio_submissions '+
   'WHERE user_id=? ORDER BY submitted_at ASC LIMIT 1000',[userId]);
@@ -347,5 +353,9 @@ export async function canonicalStudioExport(env,userId){
  return {projects,assets:assets.map(a=>({
   id:a.id,projectId:a.project_id,name:a.filename,kind:a.kind,contentType:a.content_type,
   sizeBytes:Number(a.size_bytes),status:a.status,sha256:a.sha256,uploadedAt:a.uploaded_at
+ })),largeAssets:largeAssets.map(a=>({
+  id:a.id,projectId:a.project_id,name:a.filename,kind:a.kind,contentType:a.content_type,
+  sizeBytes:Number(a.size_bytes),status:a.status,manifestSha256:a.manifest_sha256,
+  digestType:'part-manifest',uploadedAt:a.uploaded_at
  })),reviewReceipts,reviewAssetHashes};
 }
