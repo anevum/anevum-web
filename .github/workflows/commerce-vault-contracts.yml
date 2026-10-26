@@ -3,7 +3,9 @@ on:
   pull_request:
     paths:
       - "src/server/commerce-contract.mjs"
+      - "src/server/commerce-bank-model.mjs"
       - "tests/commerce-vault-contract.test.mjs"
+      - "tests/commerce-bank-model.test.mjs"
       - "docs/commerce-vault/**"
       - ".github/workflows/commerce-vault-contracts.yml"
   workflow_dispatch:
@@ -19,6 +21,6 @@ jobs:
         with:
           node-version: "22"
       - name: Verify contract syntax
-        run: node --check src/server/commerce-contract.mjs
+        run: node --check src/server/commerce-contract.mjs && node --check src/server/commerce-bank-model.mjs
       - name: Run price and payment safety tests
-        run: node --test tests/commerce-vault-contract.test.mjs
+        run: node --test tests/commerce-vault-contract.test.mjs tests/commerce-bank-model.test.mjs
