@@ -516,3 +516,43 @@ html[data-av-parity="v136-full"] .av095-native input[type=file]::file-selector-b
  html[data-av-parity="v136-full"] .av095-native :is(.st-action,.st-button,.av136032-toolbar button){background:ButtonFace;border-color:ButtonText;box-shadow:none}
  html[data-av-parity="v136-full"] .av9-shell :is(.ch7-hero,.ch7-status,.ch7-main,.ch7-panel,.ch7-values,.cnb-hero,.cnb-board-deck,.cnb-tabs button,.portal-page-heading,.guide-ribbon,.guide-nav,.guide-training,.st-status,.ir80-help){background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none}
 }
+
+/* BETA STEALTH TERMINAL MATERIALS / 2026-10-26 */
+/* Production-oriented visual direction: slate/obsidian, restrained ice.
+   Preserve content, contrast and all existing account/API gates. */
+html[data-av-parity="v136-full"]{
+ --av-void:#05070a;--av-canvas:#090d13;--av-surface:#101721;
+ --av-raised:#18212c;--av-text:#ecf2f6;--av-secondary:#bccbd5;
+ --av-muted:#91a4b4;--av-ice:#92bdcf;--av-blue:#92bdcf;
+ --av-violet:#9cabbc;--av-copper:#b4c2cb;
+ --av-border:#a9c7d138;--av-edge:#9bbeca75;--av-focus:#b8ddeb;
+ --av-panel:linear-gradient(155deg,#1b2630f5,#111920f5 54%,#090d13fb);
+ --av-glass:linear-gradient(148deg,#202d38ea,#101820f2 76%,#080d14f5);
+ --av-instrument:linear-gradient(170deg,#18232c,#0a1017 82%);
+ --av-shadow:0 24px 58px #0009,inset 0 1px 0 #d6e5ec13;
+ --av-radius:10px;
+ --p-deep:var(--av-canvas);--p-ink:var(--av-text);
+ --p-soft:var(--av-secondary);--p-cyan:var(--av-ice);
+ --p-violet:var(--av-violet);--p-gold:var(--av-copper);
+ --p-line:var(--av-border);--p-glass:var(--av-panel);
+ --cx-void:var(--av-void);--cx-plate:#101923ed;
+ --cx-alloy-edge:var(--av-edge);--cx-ceramic:var(--av-text);
+ --cx-photon:var(--av-ice);--cx-signal:var(--av-violet);
+ --av136-ink:var(--av-text);--av136-muted:var(--av-secondary);
+ --av136-line:var(--av-border);--av136-glass:var(--av-glass);
+ --av136-edge:var(--av-edge);
+ color-scheme:dark;
+}
+html[data-av-parity="v136-full"] .av9-shell{
+ background-color:var(--av-void);
+ color:var(--av-text);
+}
+html[data-av-parity="v136-full"] :is(.p136-header,.av79-navigation-shell,.p136-studio-console,.ir80-help){
+ border-color:var(--av-border);
+}
+html[data-av-parity="v136-full"] :is(button,a,input,textarea,select):focus-visible{
+ outline:2px solid var(--av-focus);outline-offset:3px;
+}
+@media(forced-colors:active){
+ html[data-av-parity="v136-full"] .av9-shell{background:Canvas;color:CanvasText}
+}
