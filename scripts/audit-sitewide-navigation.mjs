@@ -17,6 +17,19 @@ const apps = [
   {name:"creator-v1", source:"creator-v1/web/src", entry:"creator-v1/web/src/App.tsx"}
 ];
 const extensions = new Set([".js",".jsx",".ts",".tsx"]);
+// Explicit non-React owners; still require real hosted URL verification.
+// Never treat a private Worker route as a public React page.
+const alternateOwners = Object.freeze({
+  "apex-v5": {
+    "/devon-akins-resume.pdf": {kind:"generated-document",source:"scripts/render-founder-resume.py"}
+  },
+  "creator-v1": {
+    "/upload": {kind:"worker-route",source:"anevum.com/upload*"},
+    "/upload/v3": {kind:"worker-route",source:"anevum.com/upload*"},
+    "/staff": {kind:"protected-worker-route",source:"anevum.com/staff*"},
+    "/portfolio": {kind:"bundled-public-content",source:"creator-v1/web/public/portfolio/index.html"}
+  }
+});
 const args = process.argv.slice(2);
 const outputIndex = args.indexOf("--output");
 if (outputIndex !== -1 && (!args[outputIndex + 1] || args[outputIndex + 1].startsWith("--"))) {
@@ -166,11 +179,15 @@ async function audit(app) {
       }
     });
   }
-  const canonical=[],aliases=[],unresolved=[];
+  const canonical=[],aliases=[],unresolved=[],alternateOwnerLinks=[];
   for (const link of links) {
     const dest=strip(link.target);
     const match=compiled.find(route=>route.regex.test(dest));
-    if (!match) unresolved.push(link);
+    if (!match) {
+      const owner=alternateOwners[app.name]?.[dest];
+      if (owner) alternateOwnerLinks.push({...link,owner:owner.kind,evidence:owner.source,verification:"HOSTED_CHECK_REQUIRED"});
+      else unresolved.push(link);
+    }
     else if (match.redirect) aliases.push({...link,declaredBy:match.path});
     else canonical.push(link);
   }
@@ -183,6 +200,7 @@ async function audit(app) {
     links:links.length,canonicalLinks:canonical.length,
     dynamicExpressions,relativeLiterals,externalLiterals,
     aliasLinks:aliases.sort(sortRefs),
+    alternateOwnerLinks:alternateOwnerLinks.sort(sortRefs),
     unresolvedLinks:unresolved.sort(sortRefs)
   };
 }
@@ -199,6 +217,7 @@ const report={
     staticLinks:reports.reduce((n,x)=>n+x.links,0),
     canonicalLinks:reports.reduce((n,x)=>n+x.canonicalLinks,0),
     aliasLinks:reports.reduce((n,x)=>n+x.aliasLinks.length,0),
+    alternateOwnerLinks:reports.reduce((n,x)=>n+x.alternateOwnerLinks.length,0),
     unresolvedLinks:reports.reduce((n,x)=>n+x.unresolvedLinks.length,0),
     dynamicExpressions:reports.reduce((n,x)=>n+x.dynamicExpressions,0)
   }
@@ -215,9 +234,10 @@ if (args.includes("--json")) {
     scope:report.scope,totals:report.totals,
     apps:reports.map(x=>({
       name:x.name,sourceFiles:x.sourceFiles,declaredRoutes:x.routes.length,
-      links:x.links,aliasCount:x.aliasLinks.length,unresolvedCount:x.unresolvedLinks.length,
+      links:x.links,aliasCount:x.aliasLinks.length,externalOwnerCount:x.alternateOwnerLinks.length,unresolvedCount:x.unresolvedLinks.length,
       dynamicExpressions:x.dynamicExpressions,
       visibleAliases:x.aliasLinks.filter(y=>y.navSurface).slice(0,12),
+      externalOwnerExamples:x.alternateOwnerLinks.slice(0,15),
       unresolvedExamples:x.unresolvedLinks.slice(0,12)
     }))
   },null,2)+"\n");
