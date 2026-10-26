@@ -1,0 +1,24 @@
+name: ANEVUM Commerce Vault V001 Contract Tests
+on:
+  pull_request:
+    paths:
+      - "src/server/commerce-contract.mjs"
+      - "tests/commerce-vault-contract.test.mjs"
+      - "docs/commerce-vault/**"
+      - ".github/workflows/commerce-vault-contracts.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify contract syntax
+        run: node --check src/server/commerce-contract.mjs
+      - name: Run price and payment safety tests
+        run: node --test tests/commerce-vault-contract.test.mjs
