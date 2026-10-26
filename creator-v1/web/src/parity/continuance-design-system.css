@@ -701,3 +701,14 @@ html[data-av-parity="v136-full"] .st-panel button[type="submit"]{
  background:linear-gradient(145deg,#d7e6eb,#acced9);color:#09141c;
  border-color:#e2f3f8;
 }
+
+/* V137 cascade reconciliation: beat the original nested V136 selectors
+   instead of relying on source order or weakening the browser checks. */
+html[data-av-parity="v136-full"] .av095-native .av136032-toolbar button[aria-pressed="true"]{
+ background:#243642;border-color:#9fc1cd;color:#eaf5f8;box-shadow:inset 0 0 0 1px #9fc1cd55;
+}
+html[data-av-parity="v136-full"] .p136-workbench .p136-workbench-command>button:first-child,
+html[data-av-parity="v136-full"] .av095-native .st-panel button[type="submit"]{
+ background:linear-gradient(145deg,#d7e6eb,#acced9);
+ color:#09141c;border-color:#e2f3f8;
+}
