@@ -164,7 +164,7 @@ export const REVIEWED_UI_BLOBS=Object.freeze({
  "creator-v1/test/parity-v136-citadel-geometry.test.mjs": "ab291bc915116f57f0cc8ad9708a752d89f04d8c",
  "creator-v1/test/parity-v136-concept-convergence.test.mjs": "b128d494aa694881daab9aab25d1fddcb00f9dbe",
  "creator-v1/test/parity-v136-controller.test.mjs": "df983aaebafc78e46ed4fdff2f0b765577884459",
- "creator-v1/test/parity-v136-discover-browser.mjs": "3d34e248560289c594d89ce80dd888e332226352",
+ "creator-v1/test/parity-v136-discover-browser.mjs": "ee9191263e5ecae7bb9642602c9ff1c165e7b9ed",
  "creator-v1/test/parity-v136-full-browser.mjs": "9799a82db6d168d51910ac8442570dbaa38bf517",
  "creator-v1/test/parity-v136-integrated-overhaul.test.mjs": "5e4cb8919279a0f5bf80b223ca4c9cf88b90543c",
  "creator-v1/test/parity-v136-media-contract.test.mjs": "9c3b7be99a191e0ac4c739e7a707547028fca938",
