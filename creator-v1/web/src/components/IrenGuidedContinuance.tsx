@@ -905,7 +905,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
           if(!panelOpen){panelInvokerRef.current=dockRef.current;focusRequested.current=true;}
           setPanelOpen(open=>!open);
         }}>
-        <IrenLivingCanvas vectorFirst mood={mood} expanded={(panelOpen&&!floatingInvite)||broadcast} paused={motionPaused}
+        <IrenLivingCanvas mood={mood} vectorFirst expanded={(panelOpen&&!floatingInvite)||broadcast} paused={motionPaused}
           look={broadcast?[-0.85,-0.18]:look} fallback={<IrenScout/>}/>
         {unreadCount>0&&<span className="ir87-unread" aria-hidden="true">{unreadCount>9?"9+":unreadCount}</span>}
       </button>
@@ -924,7 +924,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
         setTourIndex(previous);
       }}/>:<div className="ir80-guide-layer" aria-label="IREN guided website tour">
       {!embeddedGuideBot&&<div className="ir88-guide-bot" style={guideBotStyle} aria-hidden="true">
-        <IrenLivingCanvas vectorFirst mood={guideTravelling?"travel":"guide"} expanded paused={motionPaused}
+        <IrenLivingCanvas mood={guideTravelling?"travel":"guide"} vectorFirst expanded paused={motionPaused}
           look={guideLook} fallback={<IrenScout/>}/>
       </div>}
       {spotlight?<><div className="ir80-shade" style={{left:0,top:0,width:"100%",height:spotlight.top}}/>
@@ -937,7 +937,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
         aria-labelledby="ir80-guide-title" aria-describedby="ir80-guide-description">
         <div className="ir80-guide-top">
           <span className={"ir80-guide-avatar"+(embeddedGuideBot?" ir88-guide-avatar":"")} aria-hidden="true">
-            {embeddedGuideBot?<IrenLivingCanvas vectorFirst mood={guideTravelling?"travel":"guide"} expanded paused={motionPaused}
+            {embeddedGuideBot?<IrenLivingCanvas mood={guideTravelling?"travel":"guide"} vectorFirst expanded paused={motionPaused}
               look={guideLook} fallback={<IrenScout/>}/>:<OrbitalMark/>}
           </span>
           <div><strong>IREN</strong><span>CONTINUANCE FIELD GUIDE</span></div>
