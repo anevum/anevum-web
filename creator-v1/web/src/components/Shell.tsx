@@ -33,7 +33,7 @@ const menuDestinations = [
   {to:"/discover?category=games",label:"Play",detail:"Games and interactive worlds",icon:"star"},
   {to:"/discover",label:"Discover",detail:"Projects worth finding",icon:"explore"},
   {to:"/community",label:"Community",detail:"Creators and conversations",icon:"community"},
-  {to:"/create",label:"Create",detail:"Your studio and uploads",icon:"create"}
+  {to:"/studio",label:"Create",detail:"Your studio and uploads",icon:"create"}
 ] as const;
 const menuCategories = [
   {to:"/discover?category=tools",label:"Apps & tools"},
