@@ -10,8 +10,13 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-
 const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
 function safeString(value, length = 100) {
-  return typeof value === "string" && value.length > 0 && value.length <= length && 
-    !/[\\x00-\\x1f\\x7f]/.test(value);
+  if (typeof value !== "string" || value.length === 0 || value.length > length) return false;
+  // Explicit code-point check avoids mistaken regex escaping in generated source.
+  for (let i = 0; i < value.length; i++) {
+    const cp = value.charCodeAt(i);
+    if (cp < 32 || cp === 127) return false;
+  }
+  return true;
 }
 
 export function createUnpaidOrderDraft({ memberId, orderId, productCode, prices, reference, now }) {
