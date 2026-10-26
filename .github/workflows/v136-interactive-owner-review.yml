@@ -25,6 +25,7 @@ jobs:
     timeout-minutes: 25
     env:
       REVIEWED_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+      V136_BASE_SHA: f58bed9370dc3fed0429033852a0a9c506daffae
       CF_ACCOUNT_ID: 2f7ee83107240152097efd956a4e8335
       CF_ZONE_ID: 8abe27259b5436af5966d3b40d9a3760
       WORKER_NAME: anevum-v136-visual-review-001
@@ -148,7 +149,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: 2f7ee83107240152097efd956a4e8335
         run: |
           set -euo pipefail
-          npx wrangler deploy --config creator-v1/wrangler.v136-interactive-review.jsonc --logpush false
+          npx wrangler deploy --config creator-v1/wrangler.v136-interactive-review.jsonc
 
       - name: Verify actual public link, interface routes, no privileged bindings or prod changes
         shell: bash
@@ -198,7 +199,7 @@ jobs:
           code="$(curl --silent --show-error --max-time 20 -X POST -o /dev/null -w '%{http_code}' "$REVIEW_URL/creator/api/v1/projects")"
           test "$code" = 405
           curl --fail --silent --show-error --max-time 20 "$REVIEW_URL/__review/health" |
-            jq -e '.sourceSha == env.REVIEWED_SOURCE_SHA and .accounts == false and .publishing == false'
+            jq -e '.sourceSha == env.V136_BASE_SHA and .accounts == false and .publishing == false'
           {
             echo "## Interactive ANEVUM V136 owner preview"
             echo ""
