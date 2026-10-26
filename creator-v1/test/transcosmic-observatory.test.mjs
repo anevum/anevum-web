@@ -31,7 +31,8 @@ function token(name){
 }
 
 test("cosmic design overrides old coral skin last without deleting existing pages",()=>{
-  assert.match(html, /name="theme-color" content="#040811"/);
+  // The legacy cosmic CSS remains checked below, but browser chrome follows V136 Continuance.
+  assert.match(html, /name="theme-color" content="#07060b"/);
   assert.match(styles,/import "\.\/portal-overhaul\.css"/);
   assert.match(styles,/import "\.\/depth-system\.css"/);
   assert.match(styles,/import "\.\/cosmic-observatory\.css"/);
