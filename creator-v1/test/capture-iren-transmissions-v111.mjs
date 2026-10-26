@@ -104,6 +104,16 @@ try{
  await until(()=>evaluate('!document.querySelector(".ir111-transmission")'));
  writeFileSync(join(output,"acceptance.json"),JSON.stringify({pass:true,syntheticOnly:true,productionChanges:0,checks:["desktop","phone","small-phone","hidden-helper","reduced-motion","immersive-playback-queue","guided-tour-queue"],evidence},null,2));
  console.log("IREN_V111_REACT_VISUAL_ACCEPTANCE=PASS");
+}catch(error){
+ try{
+  if(ws?.readyState===WebSocket.OPEN){
+   const id=Date.now();
+   ws.send(JSON.stringify({id,method:'Runtime.evaluate',params:{expression:'JSON.stringify({url:location.href,ready:document.readyState,text:document.body.innerText.slice(0,2500),hero:!!document.querySelector(".av79-home .av79-hero"),scout:!!document.querySelector(".ir87-scout")})',returnByValue:true}}));
+   const diagnostic=await Promise.race([new Promise(resolve=>ws.addEventListener('message',({data})=>{const r=JSON.parse(String(data));if(r.id===id)resolve(r.result) })),delay(3000)]);
+   writeFileSync(join(output,'failure-diagnostic.json'),JSON.stringify({error:String(error),diagnostic},null,2));
+  }
+ }catch{}
+ throw error;
 }finally{
  try{ws?.close()}catch{}
  browser.kill("SIGTERM");

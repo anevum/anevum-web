@@ -140,9 +140,9 @@ test('public catalogue proxy is anonymous and read-only',async()=>{
 
 test('isolated preview pins exact live 100% gateway without weakening postflight',()=>{
  const workflow=readFileSync(new URL('../../.github/workflows/v136-interactive-owner-review.yml',import.meta.url),'utf8');
- assert.match(workflow,/5bdc7902-bdd5-458d-9295-a35ffb122c96/);
- assert.match(workflow,/c53d8b9c-625b-459a-a8cc-67ebb50155fd/);
- assert.match(workflow,/\["c53d8b9c-625b-459a-a8cc-67ebb50155fd",100\]/);
+ assert.match(workflow,/cd6fa4f2-4382-49e2-a02b-b3d73cc41398/);
+ assert.match(workflow,/77c8a9a6-f1ee-44fb-87d6-3271b3115c37/);
+ assert.match(workflow,/\["77c8a9a6-f1ee-44fb-87d6-3271b3115c37",100\]/);
  assert.match(workflow,/\.result\.deployments\[0\]\.id==\$prev\[0\]\.result\.deployments\[0\]\.id/);
  assert.match(workflow,/\.result\.deployments\[0\]\.versions==\$prev\[0\]\.result\.deployments\[0\]\.versions/);
  assert.match(workflow,/cmp "\$RUNNER_TEMP\/anevum-review\/routes-canonical-before\.json"/);

@@ -152,11 +152,11 @@ jobs:
             "$api/accounts/$CF_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" \
             > "$RUNNER_TEMP/anevum-review/apex-before.json"
           # V136 public frontend is now at 100%, independently rolled out from
-          # V60/V61 canaries. Pin both immutable live version AND deployment
+          # V63 beta cutover. Pin both immutable live version AND deployment
           # identity: a prior successful review may not authorize future drift.
-          jq -e '.result.deployments[0].id=="5bdc7902-bdd5-458d-9295-a35ffb122c96" and
+          jq -e '.result.deployments[0].id=="cd6fa4f2-4382-49e2-a02b-b3d73cc41398" and
             (.result.deployments[0].versions|map([.version_id,.percentage])) ==
-             [["c53d8b9c-625b-459a-a8cc-67ebb50155fd",100]]' \
+             [["77c8a9a6-f1ee-44fb-87d6-3271b3115c37",100]]' \
             "$RUNNER_TEMP/anevum-review/apex-before.json" >/dev/null
           echo 'EXISTING_ASSETS_ONLY_PREVIEW_ROLLBACK_CAPTURED_V136_100_GATEWAY_UNCHANGED=PASS'
 
