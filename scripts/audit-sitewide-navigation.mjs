@@ -86,7 +86,9 @@ function routeRegex(path) {
     if (piece.startsWith(":")) return piece === ":memberHandle" ? "@[a-z][a-z0-9_]{2,29}" : "[^/]+";
     return [...piece].map(ch => "\\^$.*+?()[]{}|".includes(ch) ? "\\"+ch : ch).join("");
   });
-  return new RegExp("^"+pieces.join("/")+"$");
+  let joined=pieces.join("/");
+  if (path.endsWith("/*")) joined=joined.replace(/\/\.\*$/,"(?:/.*)?");
+  return new RegExp("^"+joined+"$");
 }
 function line(node) { return node.loc?.start?.line || 0; }
 function navSurface(path) {
@@ -113,8 +115,9 @@ async function audit(app) {
   visit(entry.ast.program,node => {
     if (node.type !== "JSXOpeningElement" || jsxName(node.name) !== "Route") return;
     const pathAttribute=attr(node,"path");
-    if (!pathAttribute) return;
-    const paths=literalPaths(pathAttribute.value);
+    const indexAttribute=attr(node,"index");
+    if (!pathAttribute && !indexAttribute) return;
+    const paths=pathAttribute ? literalPaths(pathAttribute.value) : ["/"];
     if (paths.length !== 1 || paths[0] === "<dynamic>") return;
     const path=paths[0].startsWith("/") ? paths[0] : "/"+paths[0];
     const element=attr(node,"element");
