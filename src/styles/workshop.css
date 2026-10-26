@@ -19,6 +19,14 @@
   background: var(--workshop-paper);
   color: var(--workshop-ink);
 }
+
+/* The approved bone-colored Orbital Underground mark needs its original
+   dark plate on this off-white editorial shell. Preserve the SVG itself. */
+.workshop-public-light .anevum-mark[data-anevum-mark="orbital-underground"]{
+  background:#0b0b0d;
+  border-radius:5px;
+  box-shadow:0 0 0 1px #0b0b0d;
+}
 .workshop-public-legacy,
 .workshop-public-legacy .studio-stage {
   background: var(--studio-bg);
