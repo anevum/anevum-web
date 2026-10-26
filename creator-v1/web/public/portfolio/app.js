@@ -24,6 +24,29 @@ if ('IntersectionObserver' in window && !motionPaused) {
     entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('visible'); observer.unobserve(entry.target); } });
   }, { threshold: 0.07, rootMargin: '0px 0px -20px 0px' });
   document.querySelectorAll('.reveal').forEach(element => observer.observe(element));
+  // A true WebGL environment can cause short IntersectionObserver delays on
+  // slow/software GPUs. Native scroll must never leave real project records
+  // invisible just because someone moves through the site quickly.
+  let lastRevealedScrollY=window.scrollY;
+  const revealCurrentlyVisible = () => {
+    const currentY=window.scrollY;
+    // Sweep the ENTIRE traversed interval, not only the destination viewport.
+    // A 3D frame can overlap one scroll event and jump over a small heading.
+    const scanTop=Math.min(lastRevealedScrollY,currentY)-120;
+    const scanBottom=Math.max(lastRevealedScrollY,currentY)+innerHeight+120;
+    document.querySelectorAll('.reveal:not(.visible)').forEach(element => {
+      const box=element.getBoundingClientRect();
+      const top=box.top+currentY,bottom=box.bottom+currentY;
+      if (top<scanBottom && bottom>scanTop && box.width>0 && box.height>0) {
+        element.classList.add('visible');
+        observer.unobserve(element);
+      }
+    });
+    lastRevealedScrollY=currentY;
+  };
+  window.addEventListener('scroll',revealCurrentlyVisible,{passive:true});
+  window.addEventListener('resize',revealCurrentlyVisible,{passive:true});
+  requestAnimationFrame(revealCurrentlyVisible);
 }
 
 let progressScheduled = false;
@@ -75,15 +98,15 @@ const projects = {
     url: null, link: null
   },
   transcosmic: {
-    number: '04', title: 'Transcosmic', category: 'A UNIVERSE IN THE MAKING', tagline: 'A long-form creative universe where story and systems grow together.',
+    number: '04', title: 'Transcosmic', category: 'A UNIVERSE IN THE MAKING', tagline: 'Connected fiction, larger questions, and worlds built through writing.',
     art: true,
-    challenge: 'Build a fictional universe that is expansive enough to invite discovery and coherent enough to sustain stories. Its ideas need to connect, not just accumulate.',
-    response: 'I develop the writing, internal logic, and worldbuilding as one creative practice. This work feeds the way I approach digital experiences: establish a world, give it rules, and make people want to step inside.',
-    takeaway: 'Storytelling and product design share a question: what makes someone care enough to keep exploring?',
+    challenge: 'Build an enormous connected setting without losing the human stories that make it worth exploring. Scientific curiosity and far-reaching ideas need to become readable fiction, not an endless catalogue of concepts.',
+    response: 'I am writing and developing the stories while shaping the histories, environments, and internal logic that support them. Visual studies like the dimensional Continuance field are explorations of the setting, not replacements for finishing the books.',
+    takeaway: 'An imagined universe earns its scale through the people and stories inside it. The writing comes first; the connected systems exist to serve it.',
     role: 'Author · worldbuilder · creative direction',
-    focus: 'Narrative, connected world systems, visual imagination',
-    status: 'Ongoing writing and creative development',
-    note: 'The celestial artwork was created for this portfolio as a visual interpretation. It is not a screenshot of a released Transcosmic application. The current project is presented as creative development.',
+    focus: 'Fiction writing, narrative continuity, science-informed worldbuilding, visual studies',
+    status: 'Writing and creative development in progress',
+    note: 'The Transcosmic environments here are original portfolio visual studies. They are not footage of a released game, application, or finished digital experience.',
     url: null, link: null
   }
 };
@@ -96,7 +119,7 @@ function openProject(key, trigger) {
   lastProjectTrigger = trigger || lastProjectTrigger || document.activeElement;
   document.querySelector('#case-number').textContent = `PROJECT ${project.number} / SELECTED WORK`;
   const visual = project.art
-    ? '<div class="case-image case-art transcosmic-visual"><div class="cosmic-orbit" aria-hidden="true"></div><div class="cosmic-planet" aria-hidden="true"></div><div class="cosmic-moon" aria-hidden="true"></div><div class="cosmic-title" aria-hidden="true"><span>THE</span>TRANSCOSMIC<small>A UNIVERSE IN THE MAKING.</small></div></div>'
+    ? '<div class="case-image case-art transcosmic-visual"><div class="transcosmic-portal-thumb" aria-hidden="true"></div><div class="cosmic-title" aria-hidden="true"><span>THE</span>TRANSCOSMIC<small>A UNIVERSE IN THE MAKING.</small></div></div>'
     : `<div class="case-image ${project.phone ? 'phone' : ''}"><img src="${project.image}" alt="${project.alt}"></div>`;
   document.querySelector('#case-content').innerHTML = `
     <div class="case-intro"><div><span class="eyebrow">${project.category}</span><h2 id="case-title">${project.title}</h2></div><p>${project.tagline}</p></div>
@@ -174,9 +197,9 @@ document.querySelector('#brief-form').addEventListener('submit', event => {
   document.querySelector('#form-status').textContent = 'If your email app did not open, email devon@anevum.com directly. Your message has not been sent by this site.';
 });
 
-// The previous two unrelated WebGL sculpture renderers were retired from the
-// portfolio. The decorative Institute environment is now a cheap static-vector
-// scene with opt-in progressive motion, driven by cinematic-v1.js.
+// Both old isolated sculpture renderers remain retired. The portfolio's sole
+// decorative 3D field is managed by transcosmic-depth-v2.js; case-study
+// dialogs, record content and native interactions remain regular accessible DOM.
 const processFrames = Object.freeze({
   understand: ['01 / RESEARCH','Find the real problem.','Establish the constraints, explore the people and systems involved, and decide what should be built first.'],
   make: ['02 / DESIGN + CODE','Make something someone can use.','Build the smallest working version, refine the hierarchy and interactions, and connect the interface to real behavior.'],
