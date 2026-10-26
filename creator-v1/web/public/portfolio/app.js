@@ -98,15 +98,15 @@ const projects = {
     url: null, link: null
   },
   transcosmic: {
-    number: '04', title: 'Transcosmic', category: 'A UNIVERSE IN THE MAKING', tagline: 'A long-form creative universe where story and systems grow together.',
+    number: '04', title: 'Transcosmic', category: 'A UNIVERSE IN THE MAKING', tagline: 'Connected fiction, larger questions, and worlds built through writing.',
     art: true,
-    challenge: 'Build a fictional universe that is expansive enough to invite discovery and coherent enough to sustain stories. Its ideas need to connect, not just accumulate.',
-    response: 'I develop the writing, internal logic, and worldbuilding as one creative practice. This work feeds the way I approach digital experiences: establish a world, give it rules, and make people want to step inside.',
-    takeaway: 'Storytelling and product design share a question: what makes someone care enough to keep exploring?',
+    challenge: 'Build an enormous connected setting without losing the human stories that make it worth exploring. Scientific curiosity and far-reaching ideas need to become readable fiction, not an endless catalogue of concepts.',
+    response: 'I am writing and developing the stories while shaping the histories, environments, and internal logic that support them. Visual studies like the dimensional Continuance field are explorations of the setting, not replacements for finishing the books.',
+    takeaway: 'An imagined universe earns its scale through the people and stories inside it. The writing comes first; the connected systems exist to serve it.',
     role: 'Author · worldbuilder · creative direction',
-    focus: 'Narrative, connected world systems, visual imagination',
-    status: 'Ongoing writing and creative development',
-    note: 'The celestial artwork was created for this portfolio as a visual interpretation. It is not a screenshot of a released Transcosmic application. The current project is presented as creative development.',
+    focus: 'Fiction writing, narrative continuity, science-informed worldbuilding, visual studies',
+    status: 'Writing and creative development in progress',
+    note: 'The Transcosmic environments here are original portfolio visual studies. They are not footage of a released game, application, or finished digital experience.',
     url: null, link: null
   }
 };

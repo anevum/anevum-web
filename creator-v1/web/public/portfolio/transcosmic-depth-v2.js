@@ -14,6 +14,12 @@
   const selectors = [...document.querySelectorAll('[data-universe-stage]')];
   const liveName = document.querySelector('[data-universe-name]');
   const liveDescription = document.querySelector('[data-universe-description]');
+  const modeNote = document.querySelector('.universe-disclaimer');
+  const markFallback=()=>{
+    stage.dataset.renderMode='fallback';
+    stage.dataset.sceneDepth='static';
+    if(modeNote)modeNote.textContent='STATIC ART FALLBACK / 3D NOT AVAILABLE';
+  };
   const scenes = [
     ['THE THRESHOLD', 'An opening into work, worlds, and unfinished possibilities.'],
     ['THE ARCHIVE', 'Many disciplines. One continuing record of what becomes real.'],
@@ -24,6 +30,7 @@
   let disposed = false;
   let frame = 0;
   let lastTime = 0;
+  let lastDrawTime = 0;
   let clock = 0;
   let pointer = [0, 0];
   let eased = [0, 0];
@@ -63,7 +70,8 @@
   const triangle=(a,b,c) => {vertices.push(...a,...b,...c);};
   const position=(p,n,color,kind)=>[...p,...n,...color,kind];
   function ring(cx,cy,cz,r,tube,phase,kind,span=Math.PI*2){
-    const steps=span===Math.PI*2?136:116, side=9;
+    const steps=span===Math.PI*2?(weakDevice?72:136):(weakDevice?64:116);
+    const side=weakDevice?6:9;
     const colors=kind===3?[.58,.77,.95]:kind===2?[.97,.76,.47]:kind===1?[.34,.56,.77]:[.23,.33,.44];
     const rotate=(p)=>[p[0]*Math.cos(phase)+p[2]*Math.sin(phase),p[1],p[2]*Math.cos(phase)-p[0]*Math.sin(phase)];
     const sample=(i,j)=>{
@@ -79,8 +87,10 @@
       triangle(a,b,d);triangle(b,c,d);
     }
   }
-  function sphere(cx,cy,cz,r,color,kind){
-    const rows=24,columns=36;
+  function sphere(cx,cy,cz,r,color,kind,lod=1){
+    // Small far-world satellites should not cost a full hero-sized sphere.
+    const rows=lod===0?11:weakDevice?16:24;
+    const columns=lod===0?18:weakDevice?24:36;
     const point=(i,j)=>{
       const v=i/rows*Math.PI,u=j/columns*2*Math.PI;
       const n=[Math.sin(v)*Math.cos(u),Math.cos(v),Math.sin(v)*Math.sin(u)];
@@ -108,6 +118,72 @@
   sphere(-7.2,-3.8,-147,8.4,[.40,.28,.52],0);
   sphere(9.2,-5.4,-193,7.1,[.48,.38,.32],2);
   ring(8.5,3.4,-106,8.7,.12,.44,2);
+  const thresholdVertices=vertices.length/10;
+
+  // Separate real 3D regions, not a color filter on one repeated tunnel.
+  // Archive: a receding observatory of floating archival monoliths, radial
+  // instruments, and a central stellar record. Each object occupies a depth.
+  const prism=(cx,cy,cz,w,h,d,color,kind=0)=>{
+    const x0=cx-w/2,x1=cx+w/2,y0=cy-h/2,y1=cy+h/2,z0=cz-d/2,z1=cz+d/2;
+    const faces=[
+      [[0,0,1],[[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]]],
+      [[0,0,-1],[[x1,y0,z0],[x0,y0,z0],[x0,y1,z0],[x1,y1,z0]]],
+      [[1,0,0],[[x1,y0,z1],[x1,y0,z0],[x1,y1,z0],[x1,y1,z1]]],
+      [[-1,0,0],[[x0,y0,z0],[x0,y0,z1],[x0,y1,z1],[x0,y1,z0]]],
+      [[0,1,0],[[x0,y1,z1],[x1,y1,z1],[x1,y1,z0],[x0,y1,z0]]],
+      [[0,-1,0],[[x0,y0,z0],[x1,y0,z0],[x1,y0,z1],[x0,y0,z1]]]
+    ];
+    faces.forEach(([n,points])=>{
+      const [a,b,c,d]=points.map(p=>position(p,n,color,kind));
+      triangle(a,b,d);triangle(b,c,d);
+    });
+  };
+  const archiveStart=vertices.length/10;
+  for(let i=0;i<8;i++){
+    const z=-38-i*21,span=11.0+i*.6;
+    const height=15+i*1.5;
+    // Deliberate negative space through which the camera can actually fly.
+    prism(5-span,0,z,1.6,height,2.4,[.28,.40,.53],0);
+    prism(5+span,0,z,1.6,height,2.4,[.28,.40,.53],0);
+    // Break the lintels into hovering fragments; the observatory is not
+    // an enclosed rectangular hallway or a conventional office building.
+    for(const side of [-1,1]){
+      prism(5+side*span*.49,8.3+i*.42,z-.3,span*.72,.48,1.7,[.45,.38,.30],2);
+      prism(5+side*span*.49,-8.6-i*.35,z,span*.69,.36,1.5,[.26,.36,.50],0);
+    }
+    ring(5,0,z-3.2,7.0+i*.4,.13,i*.085,2,Math.PI*1.92);
+    ring(5,0,z-4.5,4.0+i*.29,.085,-i*.10,3,Math.PI*1.72);
+    for(const side of [-1,1]){
+      const sx=5+side*(span-1.4);
+      prism(sx,3.9,z+2,.28,2.7,.26,[.86,.63,.35],2);
+      prism(sx,-3.9,z+2,.28,2.7,.26,[.86,.63,.35],2);
+    }
+  }
+  sphere(5,1.2,-184,8.3,[.40,.43,.61],0);
+  ring(5,1.2,-184,12.0,.20,.18,3);
+  const archiveVertices=vertices.length/10-archiveStart;
+
+  // Beyond: actual large worlds and planetary halos on distant planes,
+  // with long sightlines. No second renderer or stock illustration.
+  const beyondStart=vertices.length/10;
+  sphere(6.0,1.6,-71,9.3,[.30,.35,.60],4);
+  sphere(-21,-8.1,-114,16.0,[.50,.30,.52],4);
+  sphere(28,10.3,-153,19.4,[.38,.48,.58],4);
+  sphere(2,15,-227,12.0,[.58,.38,.26],4);
+  ring(6,1.6,-71,14.2,.13,-.43,2,Math.PI*1.87);
+  ring(-21,-8.1,-114,22.8,.13,.55,3,Math.PI*1.74);
+  ring(28,10.3,-153,27.5,.15,-.21,2,Math.PI*1.91);
+  for(let i=0;i<18;i++){
+    const z=-85-i*11,theta=i*2.3999;
+    const x=8+Math.cos(theta)*(12+i*.55),y=Math.sin(theta)*(9+i*.3);
+    sphere(x,y,z,.95+(i%4)*.29,[.37+.025*(i%5),.42,.60],0,0);
+  }
+  const beyondVertices=vertices.length/10-beyondStart;
+  const realmRanges=[
+    {name:'threshold',start:0,count:thresholdVertices},
+    {name:'archive',start:archiveStart,count:archiveVertices},
+    {name:'beyond',start:beyondStart,count:beyondVertices}
+  ];
   const mesh=new Float32Array(vertices);
   const stars=[];
   for(let i=0;i<(weakDevice?2500:6800);i++){
@@ -127,7 +203,7 @@
   const skyFrag=`#version 300 es
     precision highp float;
     in vec2 vUv;out vec4 pixel;
-    uniform vec2 uResolution;uniform float uTime;uniform vec2 uPointer;uniform float uTravel;
+    uniform vec2 uResolution;uniform float uTime;uniform vec2 uPointer;uniform float uTravel;uniform float uRealm;
     float hash(vec2 x){return fract(sin(dot(x,vec2(127.1,311.7)))*43758.5453123);}
     float noise(vec2 x){vec2 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+1.),f.x),f.y);}
     void main(){
@@ -156,6 +232,31 @@
       ink+=vec3(.070,.066,.155)*disk*1.2;
       ink+=vec3(.061,.123,.165)*darkLane*exp(-gr*3.3)*.82;
       ink+=vec3(.19,.107,.071)*exp(-gr*8.)*(.28+grain2*.55);
+      // Three distinct spatial destinations. A threshold is a portal; the
+      // archive is a lit observatory; beyond is an immense spiral gulf.
+      // Uniform realm branching skips expensive secondary nebula passes
+      // when those universes are not on screen (important for mobile GPUs).
+      if(uRealm>.5 && uRealm<1.5){
+        vec2 observatory=(uv-vec2(.67,.52))*vec2(uResolution.x/uResolution.y,1.);
+        float vault=exp(-abs(length(observatory)-.37)*7.);
+        float filaments=abs(sin(atan(observatory.y,observatory.x)*18.0+gr*13.));
+        vec3 archiveSky=vec3(.008,.017,.036)
+          +vec3(.19,.13,.075)*vault*(.18+.36*pow(filaments,13.))
+          +vec3(.025,.067,.080)*pow(max(0.,strata-.13),2.)*1.4;
+        ink=mix(ink,archiveSky,.91);
+      }else if(uRealm>1.5){
+        vec2 gulf=(uv-vec2(.76,.55))*vec2(uResolution.x/uResolution.y,1.);
+        float radius=length(gulf),angle=atan(gulf.y,gulf.x);
+        float dustField=noise(gulf*5.2+uTime*.004);
+        float spiral=.5+.5*cos(angle*4.-radius*21.+dustField*3.);
+        float galacticDisk=exp(-radius*2.3);
+        vec3 beyondSky=vec3(.010,.006,.037)
+          +vec3(.080,.050,.20)*galacticDisk*(.2+.65*spiral)
+          +vec3(.020,.13,.18)*pow(spiral,3.)*galacticDisk*.7
+          +vec3(.18,.080,.054)*exp(-radius*8.)*.9
+          +vec3(.05,.065,.105)*pow(max(0.,noise(gulf*13.)-.22),2.);
+        ink=mix(ink,beyondSky,.92);
+      }
       for(int l=0;l<3;l++){
         float scale=l==0?155.:l==1?310.:620.;
         vec2 q=uv*scale+vec2(float(l)*17.3,float(l)*31.1);
@@ -198,11 +299,21 @@
       vec3 sun=normalize(vec3(-.27,.75,.8));
       float diff=max(dot(n,sun),0.);
       float edge=pow(1.-abs(dot(n,normalize(vec3(.1,.0,1.)))),2.);
-      float grain=sin(vWorld.x*17.4+sin(vWorld.y*11.3))*sin(vWorld.y*10.8+vWorld.z*.21)*.095;
+      float grain=sin(vWorld.x*17.4+sin(vWorld.y*11.3))*sin(vWorld.y*10.8+vWorld.z*.21)*(vKind>3.5?.018:.095);
       float cool=clamp(diff*.74+edge*.35+.10+grain,0.,1.);
       vec3 color=vColor*cool;
       color+=vColor*(vKind>1.5?.38:.04)*pow(max(0.,diff),2.);
-      if(vKind>2.5)color+=vec3(.13,.26,.32)*(.27+.17*sin(uTime*.21+vWorld.z));
+      if(vKind>2.5&&vKind<3.5)color+=vec3(.13,.26,.32)*(.27+.17*sin(uTime*.21+vWorld.z));
+      if(vKind>3.5){
+        // Spherical worlds require planet-scale material, directional day/night
+        // shading and atmospheric rim, not the torus' high-frequency metal.
+        float bands=sin(vWorld.y*.47+sin(vWorld.x*.30)*.8+sin(vWorld.z*.26)*.65);
+        float clouds=smoothstep(.15,.92,bands);
+        float atmosphere=pow(max(0.,1.-abs(n.z)),3.2);
+        color=mix(vColor*.16,vColor*1.17,clamp(diff*.87+.20,0.,1.));
+        color+=vec3(.06,.08,.15)*clouds*.25;
+        color+=vec3(.095,.14,.26)*atmosphere*.48;
+      }
       float fog=exp(-pow(vDistance/190.,1.8));
       color=mix(vec3(.005,.013,.027),color,fog);
       pixel=vec4(color,1.);
@@ -250,7 +361,7 @@
       gl.enable(gl.DEPTH_TEST);
       gl.depthFunc(gl.LEQUAL);
       const uniforms=(program,names)=>Object.fromEntries(names.map(name=>[name,gl.getUniformLocation(program,name)]));
-      const skyU=uniforms(sky,['uResolution','uTime','uPointer','uTravel']);
+      const skyU=uniforms(sky,['uResolution','uTime','uPointer','uTravel','uRealm']);
       const meshU=uniforms(solid,['uVP','uTime','uTravel']);
       const starU=uniforms(dust,['uVP','uCamera','uTime']);
       let lastWidth=0,lastHeight=0;
@@ -270,33 +381,51 @@
         travel=motionEnabled()?travel+(destination-travel)*.14:destination;
         stage.dataset.cameraTravel=travel.toFixed(3);
         const phone=box.width<650;
-        const eye=[(phone?.7:-.25)+eased[0]*.85+travel*2.1,eased[1]*.62+travel*.45,9-travel*56];
-        const target=[(phone?.4:4.1)+travel*.70,Math.sin(time*.035)*.26,-38-travel*37];
+        // Camera changes are physically distinct and source-pinned. The
+        // Archive faces monoliths; Beyond looks between actual planets.
+        const eye=sector===0
+          ? [(phone?.7:-.25)+eased[0]*.85+travel*2.1,eased[1]*.62+travel*.45,9-travel*56]
+          : sector===1
+            ? [(phone?5:2.4)+eased[0]*1.1,3.2+eased[1]*.9,12-travel*19]
+            : [(phone?4:0)+eased[0]*1.2,1.7+eased[1]*.8,7-travel*25];
+        const target=sector===0
+          ? [(phone?.4:4.1)+travel*.70,Math.sin(time*.035)*.26,-38-travel*37]
+          : sector===1 ? [5,1.5,-93] : [phone?3.0:-5.0,-.5,-120];
         const vp=cameraMatrix(eye,target,width/height);
         gl.disable(gl.BLEND);gl.disable(gl.DEPTH_TEST);
         gl.useProgram(sky);
         gl.uniform2f(skyU.uResolution,width,height);
-        gl.uniform1f(skyU.uTime,time);gl.uniform2f(skyU.uPointer,eased[0],eased[1]);gl.uniform1f(skyU.uTravel,travel);
+        gl.uniform1f(skyU.uTime,time);gl.uniform2f(skyU.uPointer,eased[0],eased[1]);gl.uniform1f(skyU.uTravel,travel);gl.uniform1f(skyU.uRealm,sector);
         gl.drawArrays(gl.TRIANGLES,0,3);
         gl.enable(gl.DEPTH_TEST);gl.clear(gl.DEPTH_BUFFER_BIT);
         gl.useProgram(dust);gl.uniformMatrix4fv(starU.uVP,false,vp);gl.uniform3f(starU.uCamera,...eye);gl.uniform1f(starU.uTime,time);
         gl.bindVertexArray(dustVAO);gl.depthMask(false);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);gl.drawArrays(gl.POINTS,0,starBuffer.length/7);
         gl.disable(gl.BLEND);gl.depthMask(true);
         gl.useProgram(solid);gl.uniformMatrix4fv(meshU.uVP,false,vp);gl.uniform1f(meshU.uTime,time);gl.uniform1f(meshU.uTravel,travel);
-        gl.bindVertexArray(vao);gl.drawArrays(gl.TRIANGLES,0,mesh.length/10);
+        const selected=realmRanges[sector];
+        gl.bindVertexArray(vao);gl.drawArrays(gl.TRIANGLES,selected.start,selected.count);
         gl.bindVertexArray(null);
-        if(stage.dataset.renderMode!=='webgl2'){stage.dataset.renderMode='webgl2';stage.dataset.sceneDepth='perspective';}
+        stage.dataset.renderRealm=selected.name;
+        stage.dataset.realmVertices=String(selected.count);
+        if(stage.dataset.renderMode!=='webgl2'){
+          stage.dataset.renderMode='webgl2';stage.dataset.sceneDepth='perspective';
+          if(modeNote)modeNote.textContent='ART-DIRECTED 3D STUDY / NOT A RELEASED GAME';
+        }
         stage.dataset.renderPixels=String(width*height);
       };
       requestFrame();
-    }catch(err){stage.dataset.renderMode='fallback';stage.dataset.sceneDepth='static';gl=null;drawScene=null;}
+    }catch(err){markFallback();gl=null;drawScene=null;}
   }
   function render(now){
     frame=0;if(disposed||!drawScene)return;
     const moving=motionEnabled();
+    // Cap low-memory devices to roughly 24fps. On reduced motion, Pause, or
+    // a keyboard viewpoint change, always render the destination immediately.
+    if(weakDevice&&moving&&lastDrawTime&&now-lastDrawTime<40){requestFrame();return;}
+    lastDrawTime=now;
     if(moving)clock+=Math.min(55,Math.max(0,now-lastTime||16))*.001;
     lastTime=now;
-    try{drawScene(clock);}catch(err){stage.dataset.renderMode='fallback';drawScene=null;return;}
+    try{drawScene(clock);}catch(err){markFallback();drawScene=null;return;}
     if(moving)requestFrame();
   }
   function requestFrame(){if(!frame&&drawScene&&!disposed)frame=requestAnimationFrame(render);}
@@ -312,7 +441,7 @@
   reduced.addEventListener?.('change',requestFrame);
   document.querySelector('#motion-toggle')?.addEventListener('click',()=>requestAnimationFrame(requestFrame));
   if('IntersectionObserver' in window)new IntersectionObserver(entries=>{visible=Boolean(entries[0]?.isIntersecting);if(visible)requestFrame();},{rootMargin:'120px'}).observe(stage);
-  canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();if(frame)cancelAnimationFrame(frame);frame=0;drawScene=null;stage.dataset.renderMode='fallback';});
+  canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();if(frame)cancelAnimationFrame(frame);frame=0;drawScene=null;markFallback();});
   canvas.addEventListener('webglcontextrestored',init);
   init();
 })();

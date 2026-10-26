@@ -91,6 +91,9 @@ async function run(width,height,motion='no-preference') {
   assert.equal(await page.locator('.institute-backdrop').getAttribute('src'),'/portfolio/assets/transcosmic-continuum.svg');
   const initialState=await page.locator('[data-universe-stage="0"]').getAttribute('aria-pressed');
   assert.equal(initialState,'true');
+  assert.equal(await universe.getAttribute('data-render-realm'),'threshold','Initial portal occupies threshold geometry');
+  const thresholdVertices=Number(await universe.getAttribute('data-realm-vertices'));
+  assert.ok(thresholdVertices>10000,'Threshold is true three-dimensional geometry');
   await page.screenshot({path:join(output,'transcosmic-hero-'+width+'-'+motion+'.png'),animations:'disabled'});
   await page.locator('[data-universe-stage="1"]').click();
   assert.equal(await page.locator('[data-universe-stage="1"]').getAttribute('aria-pressed'),'true');
@@ -98,16 +101,66 @@ async function run(width,height,motion='no-preference') {
   await page.waitForFunction(()=>Number(document.querySelector('[data-transcosmic-field]')?.dataset.cameraTravel)>.30,
     null,{timeout:30000});
   const archiveTravel=Number(await universe.getAttribute('data-camera-travel'));
+  assert.equal(await universe.getAttribute('data-render-realm'),'archive',
+    'Archive must draw its own separate GPU geometry, not recolor the tunnel');
+  const archiveVertices=Number(await universe.getAttribute('data-realm-vertices'));
+  assert.ok(archiveVertices>3000 && archiveVertices!==thresholdVertices,'Archive has real distinct mesh');
+  await page.screenshot({path:join(output,'transcosmic-archive-'+width+'.png'),animations:'disabled'});
   await page.locator('[data-universe-stage="2"]').click();
   assert.equal(await page.locator('[data-universe-name]').innerText(),'THE CONTINUUM');
   await page.waitForFunction(()=>Number(document.querySelector('[data-transcosmic-field]')?.dataset.cameraTravel)>.70,
     null,{timeout:30000});
   const beyondTravel=Number(await universe.getAttribute('data-camera-travel'));
+  assert.equal(await universe.getAttribute('data-render-realm'),'beyond',
+    'Beyond must draw real planetary-space geometry, not repeat the same tunnel');
+  const beyondVertices=Number(await universe.getAttribute('data-realm-vertices'));
+  assert.ok(beyondVertices>1000 && beyondVertices!==archiveVertices && beyondVertices!==thresholdVertices,
+    'All three destinations have their own 3D mesh');
   assert.ok(beyondTravel>archiveTravel,'Viewport camera must actually travel through 3D space');
   await page.screenshot({path:join(output,'transcosmic-beyond-'+width+'.png'),animations:'disabled'});
   await page.locator('[data-universe-stage="0"]').click();
+  await page.locator('[data-universe-stage="1"]').focus();
+  await page.keyboard.press('Enter');
+  assert.equal(await page.locator('[data-universe-stage="1"]').getAttribute('aria-pressed'),'true',
+    'Keyboard selection remains native and accessible');
+  assert.equal(await page.locator('[data-universe-name]').innerText(),'THE ARCHIVE');
+  await page.locator('[data-universe-stage="0"]').click();
   note('single GPU Transcosmic field / actual camera viewpoints / bounded pixels '+width,
-    {mode:firstMode,sceneDepth:firstDepth,pixels,archiveTravel,beyondTravel,reducedMotion:motion==='reduce'});
+    {mode:firstMode,sceneDepth:firstDepth,pixels,archiveTravel,beyondTravel,
+      realmVertices:[thresholdVertices,archiveVertices,beyondVertices],reducedMotion:motion==='reduce'});
+  // ANEVUM and Transcosmic are real principal projects, not two unequal
+  // rows with a dead empty column on wide screens.
+  const fullWidthWork=await page.evaluate(()=>{
+    const anevum=document.querySelector('.project-anevum').getBoundingClientRect();
+    const transcosmic=document.querySelector('.project-transcosmic').getBoundingClientRect();
+    const visual=document.querySelector('.project-transcosmic .project-visual').getBoundingClientRect();
+    return {anevumWidth:anevum.width,transcosmicWidth:transcosmic.width,
+      visualHeight:visual.height,transcosmicRight:transcosmic.right};
+  });
+  assert.ok(Math.abs(fullWidthWork.anevumWidth-fullWidthWork.transcosmicWidth)<3,
+    'Transcosmic must occupy the whole work row at '+width+': '+JSON.stringify(fullWidthWork));
+  assert.ok(fullWidthWork.transcosmicRight<=width+1 &&
+    fullWidthWork.visualHeight>=250,'Real project exhibit fits the viewport');
+  note('full-width principal Transcosmic project / no empty portfolio row '+width,fullWidthWork);
+  // A real screenshot review caught a full-width feature title clipped at the
+  // desktop card boundary. Keep the title intact and contained at every width.
+  const featureTitleFlow = await page.locator('.project-transcosmic .project-meta h3').evaluate(el => {
+    const range = document.createRange(); range.selectNodeContents(el.firstChild);
+    const ink = [...range.getClientRects()].filter(rect => rect.width > 0 && rect.height > 0);
+    const column = el.closest('.project-meta').getBoundingClientRect();
+    const index = el.querySelector('span')?.getBoundingClientRect();
+    return {lines:ink.length, left:Math.min(...ink.map(rect => rect.left)),
+      right:Math.max(...ink.map(rect => rect.right)),columnRight:column.right,
+      indexRight:index?.right ?? 0};
+  });
+  assert.equal(featureTitleFlow.lines,1,
+    'Featured Transcosmic project title must not wrap at '+width+': '+JSON.stringify(featureTitleFlow));
+  assert.ok(featureTitleFlow.left>=-1 &&
+    featureTitleFlow.right <= featureTitleFlow.columnRight + 1 &&
+    featureTitleFlow.indexRight <= featureTitleFlow.columnRight + 1,
+    'Featured Transcosmic story/title must not clip out of its card at '+width+': '+JSON.stringify(featureTitleFlow));
+  note('featured Transcosmic title fits case record column '+width,featureTitleFlow);
+
   note('layout '+width+'px',shape);
   // Reproduce actual reading/scrolling so lazy-loaded images and reveal states
   // are visible in full-page screenshots, instead of falsely appearing blank.
@@ -134,7 +187,7 @@ async function run(width,height,motion='no-preference') {
   assert.match(await page.locator('#case-title').innerText(),/Transcosmic/i);
   await page.locator('.case-close').click();
   await page.locator('#project-dialog').waitFor({state:'hidden'});
-  await page.locator('[data-project="anevum"]').click();
+  await page.locator('.project-hit[data-project="anevum"]').click();
   await page.locator('#project-dialog[open]').waitFor({state:'visible'});
   assert.match(page.url(),/project=anevum/);
   assert.match(await page.locator('#case-title').innerText(),/ANEVUM/i);
@@ -146,6 +199,48 @@ async function run(width,height,motion='no-preference') {
   await page.waitForURL(url => !new URL(url).searchParams.has('project'));
   assert.doesNotMatch(page.url(),/project=/);
   note('project story open/next/close '+width);
+
+  // The convergence reel is a DOM storytelling chapter in Selected Work,
+  // not an overlapping hero or another renderer.
+  const dossier = page.locator('[data-portfolio-dossier]');
+  assert.equal(await dossier.getAttribute('data-dossier-project'),'anevum');
+  assert.equal(await page.locator('[data-dossier-select]').count(),4);
+  assert.equal(await page.locator('canvas').count(),1);
+  await page.locator('[data-dossier-select="rhen"]').click();
+  assert.equal(await dossier.getAttribute('data-dossier-project'),'rhen');
+  assert.equal(await dossier.getAttribute('data-dossier-kind'),'phone');
+  assert.match(await page.locator('[data-dossier-proof]').innerText(),/NO LIVE TRADING/);
+  assert.match(await page.locator('[data-dossier-image]').getAttribute('alt'),/no connected live trading account/);
+  await page.locator('#dossier-open').click();
+  await page.locator('#project-dialog[open]').waitFor({state:'visible'});
+  assert.equal((await page.locator('#case-title').innerText()).toLowerCase(),'rhen');
+  await page.locator('.case-close').click();
+  // Element-scoped keyboard input establishes the actual native focus owner.
+  // Mobile screenshot/scroll activity must not redirect End to a stale target.
+  await page.locator('[data-dossier-select="fold"]').press('ArrowRight');
+  assert.equal(await page.locator('[data-dossier-select="rhen"]').getAttribute('aria-pressed'),'true');
+  await page.locator('[data-dossier-select="rhen"]').press('End');
+  assert.equal(await dossier.getAttribute('data-dossier-project'),'transcosmic');
+  assert.equal(await dossier.getAttribute('data-dossier-kind'),'art');
+  assert.match(await page.locator('[data-dossier-proof]').innerText(),/NOT GAMEPLAY/);
+  const titleFlow = await page.locator('[data-dossier-name]').evaluate(el => {
+    const range = document.createRange(); range.selectNodeContents(el);
+    const ink = [...range.getClientRects()].filter(rect => rect.width > 0 && rect.height > 0);
+    const bounds = el.closest('.dossier-story').getBoundingClientRect();
+    return {lines:ink.length, left:Math.min(...ink.map(x => x.left)),right:Math.max(...ink.map(x => x.right)),containerRight:bounds.right};
+  });
+  assert.equal(titleFlow.lines,1,'Transcosmic project title must never split between letters at '+width+': '+JSON.stringify(titleFlow));
+  assert.ok(titleFlow.left >= -1 && titleFlow.right <= titleFlow.containerRight + 1,
+    'Transcosmic project title must fit inside the editorial story column at '+width+': '+JSON.stringify(titleFlow));
+  await page.locator('.dossier-body').screenshot({path:join(output,'portfolio-project-dossier-'+width+'.png'),animations:'disabled'});
+  // Screenshot capture can move native focus; explicitly place focus on the
+  // active selector before testing its keyboard Home shortcut.
+  await page.locator('[data-dossier-select="transcosmic"]').focus();
+  assert.equal(await page.locator('[data-dossier-select="transcosmic"]').evaluate(el => el === document.activeElement),true);
+  await page.keyboard.press('Home');
+  assert.equal(await dossier.getAttribute('data-dossier-project'),'anevum');
+  assert.equal(await page.locator('[data-dossier-select="anevum"]').getAttribute('aria-pressed'),'true');
+  note('converged project reel / keyboard chapters / existing real case story '+width);
   await page.locator('[data-process="make"]').click();
   assert.equal(await page.locator('#process-heading').innerText(),'Make something someone can use.');
   await page.locator('[data-process="verify"]').click();
@@ -180,9 +275,62 @@ async function run(width,height,motion='no-preference') {
   await context.close();
 }
 
+async function runWithoutWebGL(){
+  // An explicit software-disabled context: the original authored SVG must
+  // carry the actual page, not a blank canvas or a fake execution claim.
+  const context=await browser.newContext({
+    viewport:{width:390,height:844},reducedMotion:'reduce',deviceScaleFactor:1
+  });
+  await context.addInitScript(()=>{
+    const native=HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext=function(type,...args){
+      if(type==='webgl2')return null;
+      return native.call(this,type,...args);
+    };
+  });
+  await context.route('**/*',async route=>{
+    const request=route.request();
+    if(!request.url().startsWith(origin+'/')||!['GET','HEAD'].includes(request.method())){
+      forbidden.push({width:390,mode:'webgl-denied',url:request.url(),method:request.method()});
+      await route.abort();return;
+    }
+    await route.continue();
+  });
+  const page=await context.newPage();
+  page.on('pageerror',error=>errors.push({width:390,mode:'webgl-denied',message:error.message}));
+  page.on('console',msg=>{
+    if(msg.type()==='error')errors.push({width:390,mode:'webgl-denied',message:msg.text()});
+  });
+  await page.goto(origin+'/portfolio/',{waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>document.querySelector('[data-transcosmic-field]')?.dataset.renderMode==='fallback');
+  const backdrop=page.locator('.transcosmic-field .institute-backdrop');
+  assert.equal(await backdrop.getAttribute('src'),'/portfolio/assets/transcosmic-continuum.svg');
+  assert.ok(Number(await backdrop.evaluate(element=>getComputedStyle(element).opacity))>.95,
+    'WebGL-denied site retains visible first-party scalable scene');
+  assert.match(await page.locator('.universe-disclaimer').innerText(),/STATIC ART FALLBACK \/ 3D NOT AVAILABLE/,
+    'The site must not claim that its 3D runtime is available when blocked');
+  assert.equal(await page.locator('canvas[data-depth-canvas]').count(),1,
+    'Semantic DOM and single nonfunctional canvas remain, not an extra renderer');
+  assert.ok(await page.getByRole('heading',{name:/I BUILD WORLDS THAT WORK/i}).isVisible());
+  await page.locator('[data-universe-stage="2"]').click();
+  assert.equal(await page.locator('[data-universe-name]').innerText(),'THE CONTINUUM',
+    'Native viewpoints stay usable without WebGL');
+  await page.getByRole('button',{name:/Discover Transcosmic/i}).click();
+  await page.locator('#project-dialog[open]').waitFor({state:'visible'});
+  assert.match(await page.locator('#case-title').innerText(),/Transcosmic/);
+  await page.locator('.case-close').click();
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
+  await page.screenshot({path:join(output,'transcosmic-no-webgl-fallback-390.png'),animations:'disabled'});
+  note('authored static fallback with native controls and case story / 390px');
+  await context.close();
+}
 try {
   for(const [width,height,motion] of [[1440,900,'no-preference'],[390,844,'no-preference'],[320,740,'reduce'],[1920,1080,'no-preference']]) {
     try {await run(width,height,motion);}catch(e){failures.push({width,message:e.message,stack:e.stack});console.error('FAIL '+width+' '+e.stack);}
+  }
+  try{await runWithoutWebGL();}catch(e){
+    failures.push({width:390,mode:'webgl-denied',message:e.message,stack:e.stack});
+    console.error('FAIL no-WebGL fallback '+e.stack);
   }
 } finally {
   await browser.close();
