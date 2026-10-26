@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {fixture} from './helpers/canonical-fixture.mjs';
 import {createCanonicalStageWorker} from '../canonical-auth/worker.mjs';
+import {canonicalStudioExport} from '../canonical-auth/studio.mjs';
 import {studioLargeSchemaReady,cleanupCanonicalStudioLargeAssets} from '../canonical-auth/studio-large-assets.mjs';
 const ROOT='/api/v1/member/studio/projects',ORIGIN='https://a.anevum.com',MiB=1048576,PART=8*MiB;
 const read=n=>readFileSync(new URL('../canonical-auth/migrations/'+n,import.meta.url),'utf8');
@@ -158,6 +159,10 @@ test('authenticated multipart upload resumes, validates bytes, freezes review an
   assert.equal(done.body.status,'quarantined');
   assert.match(done.body.manifestSha256,/^[a-f0-9]{64}$/);
   assert.equal((await f.call(asset+'/complete','POST','alice',{})).status,200);
+  const exported=await canonicalStudioExport(f.env,alice.id);
+  assert.equal(exported.largeAssets.length,1);
+  assert.equal(exported.largeAssets[0].manifestSha256,done.body.manifestSha256);
+  assert.equal(JSON.stringify(exported.largeAssets).includes('storage_key'),false);
   const dl=await f.call(asset+'/file','HEAD','alice');
   assert.equal(dl.status,200);assert.equal(Number(dl.headers.get('content-length')),length);
   assert.equal(dl.headers.get('content-type'),'application/octet-stream');
@@ -218,6 +223,8 @@ test('five 1 GiB reservations hit the member hard cap, removal releases it',asyn
   }));
   assert.equal(above.status,409,'storage guard must reject even without binary requests');
   assert.equal((await status(await f.call(path))).body.memberUsedBytes,5*1024*MiB);
+  assert.equal((await f.call(ROOT+'/'+project.id,'DELETE','alice',{revision:1})).status,409,
+   'parent project must not delete private R2 records');
   const del=await status(await f.call(path+'/'+saved[0],'DELETE','alice'));
   assert.equal(del.status,200);
   const allowed=await status(await f.call(path,'POST','alice',{
