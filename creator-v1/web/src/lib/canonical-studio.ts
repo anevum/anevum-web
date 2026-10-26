@@ -72,7 +72,7 @@ async function read<T>(r:Response):Promise<T>{
 }
 async function request<T>(path:string,method:'GET'|'POST'|'PATCH'|'PUT'|'DELETE'='GET',
  payload?:unknown,signal?:AbortSignal):Promise<T>{
- const binary=payload instanceof File;
+ const binary=payload instanceof Blob;
  const init:RequestInit={
   method,signal,credentials:'same-origin',mode:'same-origin',redirect:'error',cache:'no-store',
   headers:{Accept:'application/json',...(method!=='GET'?{'Content-Type':binary?'application/octet-stream':'application/json'}:{})},
@@ -140,3 +140,80 @@ export const studioReviewManifest=(id:string,signal?:AbortSignal)=>
  request<StudioReviewManifest>(ROOT+'/review/'+validId(id)+'/manifest','GET',undefined,signal);
 export const studioReviewDecision=(projectId:string,revision:number,action:'changes_requested'|'rejected',reason:string)=>
  request<{ok:boolean;status:string}>(ROOT+'/review','POST',{projectId:validId(projectId),revision,action,reason});
+
+
+// Same canonical Studio account, additive resumable channel for large R2
+// packages and motion media. Files remain private/untrusted after completion.
+export interface StudioLargeAsset {
+ id:string;name:string;kind:'package'|'video';contentType:string;
+ sizeBytes:number;partCount:number;completedParts:number;
+ status:'reserved'|'uploading'|'quarantined'|'deleting';
+ manifestSha256:string|null;uploadedAt:number|null;
+}
+export interface StudioLargeUsage {
+ assets:StudioLargeAsset[];memberUsedBytes:number;globalUsedBytes:number;
+ projectUsedBytes:number;memberCapacityBytes:number;globalCapacityBytes:number;
+ maxFileBytes:number;partSizeBytes:number;uploadsReady:boolean;storageReady:boolean;
+ mode:'private-quarantine';
+}
+const LARGE_MIN=20*1048576,LARGE_MAX=1073741824;
+const LARGE_FORMATS:Record<string,string>={
+ zip:'application/zip',mp4:'video/mp4',webm:'video/webm'
+};
+const largePath=(projectId:string,assetId?:string,action?:string)=>
+ projectPath(projectId)+'/assets-large'+(assetId?'/'+validAsset(assetId):'')+
+ (action?'/'+action:'');
+export const studioLargeAssets=(projectId:string,signal?:AbortSignal)=>
+ request<StudioLargeUsage>(largePath(projectId),'GET',undefined,signal);
+export function studioCheckLargeFile(file:File):{ok:true;contentType:string}|{ok:false;reason:string}{
+ if(file.name.length<5||file.name.length>160||/[\\/\u0000-\u001f\u007f]/.test(file.name)||
+  file.name.startsWith('.')||file.name.includes('..'))return {ok:false,reason:'Invalid filename.'};
+ const ext=file.name.split('.').at(-1)?.toLowerCase()||'',mime=LARGE_FORMATS[ext];
+ if(!mime)return {ok:false,reason:'Large uploads currently accept ZIP, MP4 and WebM.'};
+ if(file.size<=LARGE_MIN||file.size>LARGE_MAX)
+  return {ok:false,reason:'Use the standard vault for files up to 20 MiB; large files must be at most 1 GiB.'};
+ if(file.type&&file.type!==mime&&!(ext==='zip'&&file.type==='application/x-zip-compressed'))
+  return {ok:false,reason:'File extension and MIME type differ.'};
+ return {ok:true,contentType:mime};
+}
+function hashHex(bytes:ArrayBuffer){
+ return Array.from(new Uint8Array(bytes),b=>b.toString(16).padStart(2,'0')).join('');
+}
+export async function studioUploadLarge(
+ projectId:string,file:File,
+ onProgress?:(uploadedBytes:number,totalBytes:number)=>void,
+ signal?:AbortSignal,resumeId?:string
+):Promise<{id:string;status:'quarantined';manifestSha256:string}>{
+ const allowed=studioCheckLargeFile(file);
+ if(!allowed.ok)throw Error(allowed.reason);
+ const reserved=resumeId?{id:validAsset(resumeId)}:
+  await request<{id:string}>(largePath(projectId),'POST',
+   {name:file.name,sizeBytes:file.size,contentType:allowed.contentType},signal);
+ const path=largePath(projectId,reserved.id);
+ const started=await request<{partSize:number;partCount:number}>(path+'/start','POST',{},signal);
+ if(started.partSize!==8388608||started.partCount!==Math.ceil(file.size/8388608))
+  throw new StudioError(503,'Upload session parameters changed; do not resume this file.');
+ const remote=await request<{completedParts:{partNumber:number;sizeBytes:number;sha256:string}[]}>(path+'/parts','GET',undefined,signal);
+ const existing=new Map(remote.completedParts.map(part=>[part.partNumber,part]));
+ if(existing.size!==remote.completedParts.length)throw new StudioError(503,'Duplicate remote part receipts.');
+ let completed=0;
+ for(let index=1;index<=started.partCount;index++){
+  if(signal?.aborted)throw new DOMException('Upload cancelled','AbortError');
+  const begin=(index-1)*started.partSize,end=Math.min(file.size,index*started.partSize);
+  const part=existing.get(index),data=file.slice(begin,end);
+  if(part){
+   if(part.sizeBytes!==data.size)throw new StudioError(409,'Resume file length differs from the saved upload.');
+   const digest=hashHex(await crypto.subtle.digest('SHA-256',await data.arrayBuffer()));
+   if(digest!==part.sha256)throw new StudioError(409,'Resume file content differs; restart with the original file.');
+  }else await request<{partNumber:number;sha256:string}>(path+'/parts/'+index,'PUT',data,signal);
+  completed=end;onProgress?.(completed,file.size);
+ }
+ const result=await request<{id:string;status:string;manifestSha256:string}>(path+'/complete','POST',{},signal);
+ if(result.id!==reserved.id||result.status!=='quarantined'||!/^[a-f0-9]{64}$/.test(result.manifestSha256))
+  throw new StudioError(503,'Private upload completion could not be verified.');
+ return {id:reserved.id,status:'quarantined',manifestSha256:result.manifestSha256};
+}
+export const studioDeleteLargeAsset=(projectId:string,assetId:string)=>
+ request<{deleted:boolean;withdrawnFromReview:boolean}>(largePath(projectId,assetId),'DELETE');
+export const studioDownloadLargeUrl=(projectId:string,assetId:string)=>
+ largePath(projectId,assetId,'file');
