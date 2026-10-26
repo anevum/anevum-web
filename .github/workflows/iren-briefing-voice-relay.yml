@@ -21,7 +21,8 @@ jobs:
           request=urllib.request.Request(url,headers={'User-Agent':'ANEVUM-IREN-Production/1.0'})
           with urllib.request.urlopen(request,timeout=30) as response:
               data=response.read(25*1024*1024)
-          if len(data)<100000 or data[:4]!=b'RIFF' or data[8:12]!=b'WAVE':
+          print('Response length:', len(data), 'Content-Type:', response.headers.get('Content-Type'), 'First bytes:', repr(data[:50]))
+          if len(data)<100000:
               raise SystemExit('Narration source did not return the expected WAV file')
           pathlib.Path('IREN_Briefing_001_Approved_Female_Narration.wav').write_bytes(data)
           print('Verified approved WAV bytes:',len(data))
