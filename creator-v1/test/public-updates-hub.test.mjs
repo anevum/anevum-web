@@ -90,3 +90,16 @@ test('top-left brand uses exact owner-approved Orbital Underground master, never
   assert.equal((header.match(/anevum-orbital-title/g)||[]).length,2,
     'Title and accessible label from the same official vector only');
 });
+
+
+test('browser tab favicon is the owner-approved compact vector without external assets',async()=>{
+  const icon=readFileSync(new URL('../brand/anevum-mark-compact.svg',import.meta.url),'utf8').trim();
+  const page=await run(),html=await page.text();
+  assert.ok(html.includes('<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,'+
+    encodeURIComponent(icon)+'">'),'Brand tab glyph must exactly match the compact source');
+  assert.match(page.headers.get('content-security-policy')||'',/img-src data:/);
+  assert.match(icon,/Orbital Underground emblem/);
+  assert.match(icon,/cx="391" cy="132" r="22"/);
+  assert.doesNotMatch(icon,/linearGradient|rotate\(-32|<script/i);
+  assert.ok(html.includes('ANEVUM / CONTINUANCE — ORBITAL FIELD'));
+});
