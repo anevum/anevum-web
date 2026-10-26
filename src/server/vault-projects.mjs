@@ -30,6 +30,33 @@ export async function vaultProjectSchemaReady(db) {
     return ["vault_projects","vault_usage","vault_files"].every(name=>names.has(name));
   } catch { return false; }
 }
+// Bound request bodies by actual streamed bytes, not just a spoofable Content-Length.
+export async function readTinyProjectJson(request) {
+  const declared=Number(request.headers.get("content-length"));
+  if(Number.isFinite(declared)&&declared>256) throw new RangeError("Body too large");
+  if(!request.body) throw new TypeError("JSON object required");
+  const reader=request.body.getReader();
+  const pieces=[];let bytes=0;
+  try {
+    while(true){
+      const {done,value}=await reader.read();
+      if(done)break;
+      if(!(value instanceof Uint8Array))throw new TypeError("Invalid stream");
+      bytes+=value.byteLength;
+      if(bytes>256)throw new RangeError("Body too large");
+      pieces.push(value);
+    }
+  } finally { try{await reader.cancel();}catch{} }
+  if(bytes===0)throw new TypeError("JSON object required");
+  const buffer=new Uint8Array(bytes);
+  let offset=0;for(const value of pieces){buffer.set(value,offset);offset+=value.byteLength;}
+  const obj=JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(buffer));
+  if(!obj||typeof obj!=="object"||Array.isArray(obj)||
+    Object.keys(obj).length!==1||!Object.hasOwn(obj,"name"))
+    throw new TypeError("Only a project name is permitted");
+  return {name:validateVaultProjectName(obj.name)};
+}
+
 export async function vaultProjectEndpoint(request,env,user,pathname) {
   if(typeof user?.id!=="string"||!user.id) return response({message:"Sign in required"},401);
   // No anonymous availability or custom account-selection query is possible.
@@ -54,16 +81,16 @@ export async function vaultProjectEndpoint(request,env,user,pathname) {
     }catch{return response({message:"Vault quota unavailable"},503);}
   }
   if(pathname==="/api/member/vault/projects"&&request.method==="POST") {
+    if(request.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase()!=="application/json")
+      return response({message:"JSON required"},415);
+    let parsed;
+    try { parsed=await readTinyProjectJson(request); }
+    catch(error) {
+      return response({message:"Invalid project name or JSON body"},
+        error instanceof RangeError ? 413 : 400);
+    }
+    const {name}=parsed;
     try {
-      if(request.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase()!=="application/json")
-        return response({message:"JSON required"},415);
-      const raw=await request.text();
-      if(raw.length>256) return response({message:"Project name too long"},413);
-      const obj=JSON.parse(raw);
-      if(!obj||typeof obj!=="object"||Array.isArray(obj)||
-        Object.keys(obj).length!==1||!Object.hasOwn(obj,"name"))
-        return response({message:"Only a project name is permitted"},400);
-      const name=validateVaultProjectName(obj.name);
       const id=crypto.randomUUID(),now=Date.now();
       // D1.batch executes a single transactional batch.
       await db.batch([
@@ -71,7 +98,7 @@ export async function vaultProjectEndpoint(request,env,user,pathname) {
         db.prepare("INSERT INTO vault_projects(id,user_id,name,created_at_ms) VALUES (?,?,?,?)").bind(id,user.id,name,now)
       ]);
       return response({project:{id,name,createdAtMs:now},filesEnabled:false},201);
-    }catch{return response({message:"Invalid project or storage unavailable"},400);}
+    }catch{return response({message:"Private project storage unavailable"},503);}
   }
   const match=pathname.match(/^\/api\/member\/vault\/projects\/([0-9a-f-]{36})\/files$/i);
   if(match&&request.method==="GET"&&UUID.test(match[1])){
