@@ -28,11 +28,12 @@ test('ten predefined scalable ANEVUM images cover legacy and package creation ty
 test('every local default is valid-looking first-party vector without external requests or faux user data',()=>{
  for(const kind of valid){
   const content=svg(kind),url=new URL('../web/public/assets/default-thumbnails/'+kind+'.svg',import.meta.url);
-  assert.ok(statSync(fileURLToPath(url)).size>=2500);
+  assert.ok(statSync(fileURLToPath(url)).size>=1900);
   assert.match(content,/^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
   assert.match(content,/width="1600" height="900"/);
   assert.match(content,/<title id="title">ANEVUM default/);
-  assert.match(content,/ANEVUM DEFAULT PREVIEW/);
+  assert.doesNotMatch(content,/<text\\b|ANEVUM DEFAULT PREVIEW|CREATOR MEDIA NOT PROVIDED/,
+   'Image defaults are text-free; truthful category and creator data remain in real cards');
   assert.match(content,/<\/svg>\s*$/);
   assert.doesNotMatch(content,/(?:<script|<image\b|<foreignObject|onload\s*=|@import|https?:\/\/(?!www\.w3\.org\/2000\/svg)|&(?!(?:amp|lt|gt|quot|apos);))/i);
  }
