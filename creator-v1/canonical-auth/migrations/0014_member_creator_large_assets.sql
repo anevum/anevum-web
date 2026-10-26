@@ -51,3 +51,15 @@ CREATE TABLE IF NOT EXISTS member_studio_submission_large_assets (
 );
 CREATE INDEX IF NOT EXISTS idx_submission_large_asset_id
  ON member_studio_submission_large_assets(asset_id);
+
+-- Atomic part claims prevent concurrent overwrites of a numbered multipart
+-- chunk. Crashed claims expire; the next client must present the same file.
+CREATE TABLE IF NOT EXISTS member_studio_large_part_claims (
+ asset_id TEXT NOT NULL REFERENCES member_studio_large_assets(id) ON DELETE CASCADE,
+ part_number INTEGER NOT NULL CHECK(part_number BETWEEN 1 AND 128),
+ claim_token TEXT NOT NULL CHECK(length(claim_token)=32),
+ lease_until INTEGER NOT NULL CHECK(lease_until>0),
+ PRIMARY KEY(asset_id,part_number)
+);
+CREATE INDEX IF NOT EXISTS idx_large_claim_expiry
+ ON member_studio_large_part_claims(lease_until);
