@@ -1,6 +1,9 @@
 # Current baseline verification
 Session: `ANEVUM.WEB.PACKAGE.2026-10-26.001.UNIFIED-BASELINE-RELEASE`.
 
+
+Latest verified checkpoint: `9c3b60906179795d68a479d5643ac06452993440`, 27 development workflows passed and one intentional production denial. Review deployment `c4f0a73b-e8c8-42a3-a09c-dfbf060a893f` / version `4b4119e8-c216-44a9-9c88-301a1c17417f` matched live health. Studio/controller fixes passed exact-source browser receipts and actual screenshot inspection. The next bounded continuation reconciles the remaining authenticated build library, surrounding console and private-playtest form in the same design authority; its new exact-source verification is pending. Current receipts in #763 and live health supersede this dated checkpoint.
+
 Canonical source remains PR #763 / `build/parity-v136-controller-route-probe-20261025-038`; #779 is merged history. The exact deployment, browser inspection, visual corrections, Godot boundaries and review-only rollback procedure are recorded in [the existing reconstruction record](UNIFIED-CINEMATIC-RECONSTRUCTION.md#unified-baseline-release--october-26-2026). Current running source is established by `/__review/health` and the owner-preview deployment artifact, not older historical paragraphs below. One existing design authority and one ASSETS-only review Worker remain. Production, artistic approval #335, release #333 and publishing #329 remain separately gated.
 
 ---

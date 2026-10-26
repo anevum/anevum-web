@@ -428,6 +428,41 @@ html[data-av-parity="v136-full"] .p136-workbench :is(.p136-workbench-head>div>sp
 html[data-av-parity="v136-full"] .p136-workbench :is(.p136-source-inspector p,.p136-source-inspector li,.p136-source-inspector dt,.p136-source-privacy){color:var(--av-secondary)}
 html[data-av-parity="v136-full"] .p136-workbench :is(.p136-source-add input,.p136-source-quick-open input){background:var(--av-canvas);border-color:var(--av-border);color:var(--av-text)}
 
+/* Finish the surrounding Studio instrument, archive and build form. These
+   selectors never enter Monaco or the opaque project-content frame. */
+html[data-av-parity="v136-full"] .p136-studio-console :is(.p136-studio-console-layout,.p136-studio-console-stage){background:var(--av-canvas);box-shadow:none}
+html[data-av-parity="v136-full"] .p136-studio-console :is(.p136-studio-console-head,.p136-studio-console-explorer,.p136-studio-console-inspector,.p136017-studio-quicknav,.p136017-studio-footer){background:var(--av-instrument);border-color:var(--av-border);box-shadow:none;color:var(--av-secondary)}
+html[data-av-parity="v136-full"] .p136-studio-console :is(.p136-studio-console-toggle,.p136-studio-console-refresh,.p136-studio-console-message button,.p136-studio-console-shortcuts a,.p136-studio-console-tree a,.p136-studio-console-view,.p136-studio-console-assets li){background:var(--av-panel);border-color:var(--av-border);color:var(--av-text);box-shadow:none}
+html[data-av-parity="v136-full"] .p136-studio-console :is(.p136017-studio-quicknav a,.p136-studio-console-message,.p136-studio-console-footnote,.p136-studio-console-count,.p136-studio-console-tree-label small,.p136-studio-console-assets li small){color:var(--av-secondary)}
+html[data-av-parity="v136-full"] .p136-studio-console :is(.p136017-studio-quicknav a,.p136-studio-console-shortcuts a,.p136-studio-console-tree a):is([aria-current="page"],:hover){background:#3b2b41;border-color:var(--av-edge);box-shadow:inset 0 -2px var(--av-copper);color:var(--av-text)}
+html[data-av-parity="v136-full"] .p136-studio-console :is(.p136-studio-console-headline>span,.p136-studio-console-kicker,.p136-studio-console-tree-icon){color:var(--av-copper)}
+html[data-av-parity="v136-full"] .p136-studio-console .p136-studio-console-headline>strong{color:var(--av-text)}
+html[data-av-parity="v136-full"] .p136-studio-console :is(.p136-studio-console-private,.p136017-studio-circuit){color:var(--av-secondary);background:transparent;border-color:var(--av-border)}
+html[data-av-parity="v136-full"] .p136-studio-console :is(.p136-studio-console-led,.p136-studio-console-dot,.p136017-studio-circuit>span){background:radial-gradient(circle,var(--av-text),var(--av-violet) 40%,#543e61 80%);border-color:var(--av-edge);box-shadow:0 0 14px #b49bce45}
+html[data-av-parity="v136-full"] .p136-studio-console .p136-studio-console-find{background:var(--av-canvas);border-color:var(--av-border)}
+html[data-av-parity="v136-full"] .p136-studio-console .p136-studio-console-find input{color:var(--av-text)}
+html[data-av-parity="v136-full"] .p136-studio-console .p136-studio-console-divider{border-color:var(--av-border)}
+html[data-av-parity="v136-full"] .av095-native :is(.st-panel,.st-metrics>div,.st-identity,.av095-storage,.av095-preflight,.av136032-library-tools){background:var(--av-panel);border-color:var(--av-border);box-shadow:var(--av-shadow)}
+html[data-av-parity="v136-full"] .av095-native :is(.st-header,.st-nav){background:var(--av-instrument);border-color:var(--av-border)}
+html[data-av-parity="v136-full"] .av095-native :is(.st-field input,.st-field textarea,.st-field select,.av095-drop,.av095-preflight li,.av136032-record-blank){background:var(--av-canvas);border-color:var(--av-border);color:var(--av-text)}
+html[data-av-parity="v136-full"] .av095-native :is(.st-field input,.st-field textarea)::placeholder{color:var(--av-muted);opacity:1}
+html[data-av-parity="v136-full"] .av095-native :is(.st-action,.st-button){background:linear-gradient(125deg,#f2e4d3,#d5b9a0);border-color:var(--av-copper);box-shadow:none}
+html[data-av-parity="v136-full"] .av095-native :is(.st-action,.st-button):hover{background:#efe6da}
+html[data-av-parity="v136-full"] .av095-native .av095-card-cover{background:var(--av-instrument);border-color:var(--av-border)}
+html[data-av-parity="v136-full"] .av095-native .av095-card-cover>span{background:#07060be8;color:var(--av-secondary)}
+html[data-av-parity="v136-full"] .av095-native :is(.av136032-release-flags span,.av136031-preparation,.av136031-source-handoff,.av136033-prepared-note,.av136032-toolbar button){background:var(--av-instrument);border-color:var(--av-border);color:var(--av-text)}
+html[data-av-parity="v136-full"] .av095-native .av136032-toolbar button[aria-pressed="true"]{background:#3b2b41;border-color:var(--av-copper);box-shadow:inset 0 0 0 1px var(--av-edge)}
+html[data-av-parity="v136-full"] .av095-native :is(.av136031-build-step,.av136032-build-actions){border-color:var(--av-border)}
+html[data-av-parity="v136-full"] .av095-native .av136031-build-step>header>span{background:var(--av-instrument);border-color:var(--av-edge);color:var(--av-copper)}
+html[data-av-parity="v136-full"] .av095-native :is(.av136031-preparation,.av136033-prepared-note){border-left-color:var(--av-copper)}
+html[data-av-parity="v136-full"] .av095-native input[type=file]::file-selector-button{background:var(--av-surface);border:1px solid var(--av-border);color:var(--av-text)}
+@layer legacy{
+ html[data-av-parity="v136-full"] .av095-native :is(.st-action,.st-button){color:#150e17!important}
+ @media(forced-colors:active){
+  html[data-av-parity="v136-full"] .av095-native :is(.st-action,.st-button){color:ButtonText!important}
+ }
+}
+
 /* Actual controller input previously enlarged type inside the 72px desktop
    rail. Give it a matching gutter instead of clipping labels or shrinking TV type. */
 @media(min-width:1280px) and (min-height:650px){
@@ -440,5 +475,8 @@ html[data-av-parity="v136-full"] .p136-workbench :is(.p136-source-add input,.p13
  html[data-av-parity="v136-full"][data-av-input="gamepad"] .p136-controller-indicator{top:calc(96px + var(--av-review-offset,0px))}
 }
 @media(forced-colors:active){
+ html[data-av-parity="v136-full"] .p136-studio-console :is(.p136-studio-console-layout,.p136-studio-console-stage,.p136-studio-console-head,.p136-studio-console-explorer,.p136-studio-console-inspector,.p136017-studio-quicknav,.p136017-studio-footer),
+ html[data-av-parity="v136-full"] .av095-native :is(.st-panel,.st-metrics>div,.st-identity,.st-header,.st-nav,.av095-storage,.av095-preflight,.av136032-library-tools,.av095-drop,.av136032-record-blank,.av136031-preparation,.av136031-source-handoff,.av136033-prepared-note){background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none}
+ html[data-av-parity="v136-full"] .av095-native :is(.st-action,.st-button,.av136032-toolbar button){background:ButtonFace;border-color:ButtonText;box-shadow:none}
  html[data-av-parity="v136-full"] .av9-shell :is(.ch7-hero,.ch7-status,.ch7-main,.ch7-panel,.ch7-values,.cnb-hero,.cnb-board-deck,.cnb-tabs button,.portal-page-heading,.guide-ribbon,.guide-nav,.guide-training,.st-status,.ir80-help){background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none}
 }

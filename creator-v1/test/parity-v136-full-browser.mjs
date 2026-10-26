@@ -182,6 +182,19 @@ try{
     assert.equal(nativeReads.length,initialReads,'Local controls must not refetch or transmit private inventory');
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,
       'Creator archive must not overflow at '+width+' CSS pixels');
+    const archiveMaterials=await page.evaluate(()=>{
+      const style=selector=>getComputedStyle(document.querySelector(selector));
+      return {stage:style('.p136-studio-console-stage').backgroundColor,
+        panel:style('.av136032-library-tools').backgroundImage,
+        selected:style('.av136032-toolbar button[aria-pressed="true"]').backgroundColor,
+        cover:style('.av136032-record-blank').backgroundColor,
+        search:style('.av095-search input').backgroundColor};
+    });
+    assert.equal(archiveMaterials.stage,'rgb(16, 13, 22)','Studio stage uses the shared dark canvas');
+    assert.ok(archiveMaterials.panel.includes('35, 26, 41'),'Private library uses the actual shared panel material');
+    assert.equal(archiveMaterials.selected,'rgb(59, 43, 65)','Selected library controls use the shared violet surface');
+    assert.equal(archiveMaterials.cover,'rgb(16, 13, 22)','Missing creator media remains a restrained empty surface');
+    assert.equal(archiveMaterials.search,'rgb(16, 13, 22)','Private search no longer inherits navy fields');
     await page.screenshot({path:join(out,'studio-archive-list-'+width+'.png'),animations:'disabled',timeout:90000});
     await page.goto(base+'/studio/packages/new',{waitUntil:'domcontentloaded'});
     await page.getByRole('heading',{name:'Transmit a creation.'}).waitFor();
@@ -455,6 +468,17 @@ try{
     assert.equal(await page.getByRole('button',{name:'Prepare private playtest',exact:true}).isDisabled(),true,'Layout preview grants no upload or publication rights');
     const buildForm=page.locator('.av095-upload-grid form');
     const upload=buildForm.getByRole('button',{name:'Prepare private playtest',exact:true});
+    const formMaterials=await buildForm.evaluate(form=>{
+      const style=selector=>getComputedStyle(form.querySelector(selector));
+      return {panel:getComputedStyle(form.closest('.st-panel')).backgroundImage,
+        primary:style('button[type="submit"]').backgroundImage,
+        primaryText:style('button[type="submit"]').color,
+        field:style('.st-field input').backgroundColor};
+    });
+    assert.ok(formMaterials.panel.includes('35, 26, 41'),'Build form uses the shared panel material');
+    assert.ok(formMaterials.primary.includes('242, 228, 211'),'Private playtest action has the shared light surface');
+    assert.equal(formMaterials.primaryText,'rgb(21, 14, 23)','Private playtest action retains dark contrasting text');
+    assert.equal(formMaterials.field,'rgb(16, 13, 22)','Build form fields use the shared canvas');
     const rights=buildForm.getByRole('checkbox',{name:/I own this project/});
     assert.equal(await buildForm.getByRole('region',{name:'Browser build',exact:true}).count(),1);
     assert.equal(await buildForm.getByRole('region',{name:'Project details',exact:true}).count(),1);

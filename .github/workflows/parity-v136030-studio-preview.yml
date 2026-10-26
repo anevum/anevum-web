@@ -6,6 +6,7 @@ on:
       - 'creator-v1/web/src/parity/ArtifactWorkbenchV136.tsx'
       - 'creator-v1/web/src/parity/SourcePreviewV136.tsx'
       - 'creator-v1/web/src/parity/artifact-workbench-v136.css'
+      - 'creator-v1/web/src/parity/continuance-design-system.css'
       - 'creator-v1/web/src/parity/workbench-file-ops-v136.ts'
       - 'creator-v1/web/src/pages/NativeCreatorStudio.tsx'
       - 'creator-v1/web/src/lib/godot-local-sniff-v136.ts'
