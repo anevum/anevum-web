@@ -83,6 +83,10 @@ test('top-left brand uses exact owner-approved Orbital Underground master, never
   assert.match(expected,/circle cx="391" cy="132" r="20"/);
   assert.doesNotMatch(header,/<i><\/i>|p136-living-mark|class="central"/);
   assert.doesNotMatch(html,/\.glyph:before|\.glyph:after|\.glyph i\{/);
+  const shape=expected.split('</title>')[1].split('</svg>')[0];
+  assert.ok(html.includes('<div class="central"><svg viewBox="0 0 512 512" aria-hidden="true" focusable="false">'+shape+'</svg></div>'),
+    'The hero must reinforce the master emblem instead of a replacement A symbol');
+  assert.doesNotMatch(html,/<div class="central"><strong>A<\/strong>/);
   assert.equal((header.match(/anevum-orbital-title/g)||[]).length,2,
     'Title and accessible label from the same official vector only');
 });
