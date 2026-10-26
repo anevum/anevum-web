@@ -58,3 +58,17 @@ Maintain separate reconciled funds/reserves for operations, taxes, refunds, reco
 - No merchant checkout in production, no money collection until entire system and compliant rail are accepted.
 - No production migration, R2 exposure, Cloudflare deployment, creator publishing gate bypass or owner access changes without separate authorization.
 - Keep Creator V1 engineering governed by #325 and its release dates by #308; earlier #259 is historical. Preserve existing layout, cinematic visual direction and implemented staged modules.
+
+## Current October 26 implementation checkpoint — additional engineering, no release
+- The bank-authorized customer experience and banking feasibility/settlement acceptance contract are specified at `docs/commerce-vault/ux-rail-bank-acceptance-v001.md`; real RfP origination support and customer-bank reach remain unresolved.
+- `src/pages/CommercePreview.tsx` and scoped `src/styles/commerce-preview.css` provide a non-indexed, responsive member-only design at `/me/commerce`, shown within the existing Commons shell. It displays exact future prices, no active bank list, a disabled purchase button, and a walkthrough explicitly marked preview-only. Linked in Command only on this draft.
+- `src/server/commerce-readonly.mjs` supplies the authenticated read-only catalog only when the separate `ANEVUM_COMMERCE_PREVIEW_ENABLED` flag is explicitly true; all order, checkout and financial mutations fail. The approval and payment flags are not set in default Wrangler config.
+- `src/server/commerce-bank-model.mjs` simulates reference matching, duplicate detection and balanced journal lines, but never verifies real-world bank provenance or grants an entitlement.
+- `src/server/vault-projects.mjs` offers prospective private project metadata, free quota view and per-user file listing only under `ANEVUM_VAULT_PROJECTS_PREVIEW_ENABLED=true` AND explicitly applied review schema in an isolated member database. No R2 uploads/downloads or paid allowances operate. All queries scope ownership to the independently authenticated user; the member router already checks cross-origin mutations.
+- `tests/vault-projects.test.mjs`, `tests/commerce-bank-model.test.mjs`, `tests/commerce-readonly.test.mjs`, `tests/commerce-vault-contract.test.mjs` and in-memory SQLite `tests/test_commerce_review_schema.py` are wired to a standalone GitHub Actions contract workflow. **A passing focused workflow does not replace full project CI or integration tests.**
+- An unrelated legacy page-retention count was updated to account for the single added active route and still verifies that the new page is runtime-reachable; do not weaken the public/archived route audit.
+
+### Critical completion gaps
+A complete customer payment system **cannot** be achieved solely by programming without approved merchant banking eligibility and a supported legal settlement channel. Before launch: obtain bank RfP merchant eligibility/API terms, verified customer-bank coverage, evidence-backed credit readback, authenticated callbacks, refunds, operational security, realistic fee affordability on $4 products, first-party tax/merch policy, independent A→staff→B checks, live recovery/rollback, verified R2 lifecycle, and owner go/no-go. Avoid introducing creator-to-creator payouts or customer wallet balances into this phase.
+
+**Status remains DRAFT CODE ONLY.** No live checkout, no bank credentials, no new business accounts, no real-money test, no live migrations, no public merch sale, no file storage release and no production change authorized.
