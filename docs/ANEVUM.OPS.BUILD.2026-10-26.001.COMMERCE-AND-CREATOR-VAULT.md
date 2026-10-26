@@ -33,3 +33,15 @@ Status: **SOURCE FOUNDATION ONLY / NOT DEPLOYED / NO CUSTOMER CHARGES**.
 - DO NOT enable a `VAULT_ENABLED` or `ANEVUM_COMMERCE_ENABLED` production flag.
 - Keep public production, Creator V1 #325 and dates #308 unchanged.
 - Historical Stripe data remains separate and cannot grant new entitlements.
+
+## Pricing and sustainability proposal (October 26, 2026)
+
+No charges or public promises are authorized by this section. The goal is operating sustainability and modest discretionary family income, not maximizing profit. Household cost data is not verified.
+
+Proposed prices: Free private vault 2 GiB; voluntary one-time support $5, $10, or $25; 10 GiB extra capacity for 30 days $4; 50 GiB extra capacity for 30 days $9; optional later 100 GiB for 30 days $15. The $3 and $8 earlier examples are superseded. Do not sell until backups, account isolation, anti-abuse, deletion/export and genuine payment verification are proven. No pay-to-win progression.
+
+Input sources checked October 26: https://developers.cloudflare.com/r2/pricing/ ($0.015/GB-month, first 10 GB-month free, request tiers); https://squareup.com/us/en/payments/our-fees (Square Free online/payment links 3.3% + $0.30); https://developers.cloudflare.com/d1/platform/pricing/ . Check actual account pricing before launch.
+
+Hypothetical monthly mixes, not predictions: Early: 20 supporters at $5, ten 10-GiB passes and two 50-GiB passes, gross $158, estimated Square fees $15, storage $3, assumed other platform budget $35, approximately $105 before tax/support. Growing: 100 supporters at $5, forty small passes, ten medium passes, gross $750, fees $70, storage $13, other budget $65, approximately $602 before tax/support. Established: 350 supporters averaging $6, 120 small passes, 45 medium passes, ten large passes, gross $3,135, fees $261, storage $67, other budget $150, approximately $2,657 before tax/support. These estimates assume all paid capacity filled and exclude free-user storage, backup copies, taxes, refunds, fraud, support labor and creator payouts. GiB allocation differs from R2 decimal GB accounting.
+
+Reconcile cash before owner draws; maintain infrastructure, tax, refunds and recovery reserves. Track free-user storage consumption, conversion and supporter retention. Capacity expiry must provide notice and export/read-only grace, not surprise irreversible deletion. Payments and production flags remain disabled pending explicit launch approval.
