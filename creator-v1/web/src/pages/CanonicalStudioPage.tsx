@@ -6,7 +6,7 @@ import {
  studioUpload,studioCheckFile,studioDeleteAsset,studioDownloadUrl,studioWithdraw,studioDeleteProject,studioReviewQueue,
  studioEligibleUpload,studioReviewManifest,studioReviewReceipts,
  studioReviewDecision,type StudioDraft,type StudioProject,type StudioAsset,type StudioCategory,
- type StudioReviewProject,type StudioReviewHistory,type StudioReviewManifest,type StudioReviewReceipt,type StudioLargeAsset
+ type StudioReviewProject,type StudioReviewHistory,type StudioReviewManifest,type StudioReviewReceipt,type StudioLargeAsset,type StudioLargeCapacity
 } from '../lib/canonical-studio';
 import './canonical-studio.css';
 import {StudioLargeUploader} from '../components/StudioLargeUploader';
@@ -515,14 +515,15 @@ function StudioUploader({project,uploadsReady,onAssetsChanged,onProjectChanged}:
 }
 
 function StudioReview(){
+ const [storage,setStorage]=useState<StudioLargeCapacity|null>(null);
  const [projects,setProjects]=useState<StudioReviewProject[]>([]),[error,setError]=useState(''),[loading,setLoading]=useState(true);
  const [reason,setReason]=useState<Record<string,string>>({}),[busy,setBusy]=useState('');
  const [manifests,setManifests]=useState<Record<string,StudioReviewManifest>>({});
  const [inspection,setInspection]=useState('');
  const [attempt,setAttempt]=useState(0);
- async function refresh(){const r=await readWithDeadline(signal=>studioReviewQueue(signal));setProjects(r.projects);}
+ async function refresh(){const r=await readWithDeadline(signal=>studioReviewQueue(signal));setProjects(r.projects);setStorage(r.storage);}
  useEffect(()=>{const ac=new AbortController();setLoading(true);setError('');
-  readWithDeadline(signal=>studioReviewQueue(signal),ac.signal).then(r=>{if(!ac.signal.aborted)setProjects(r.projects)})
+  readWithDeadline(signal=>studioReviewQueue(signal),ac.signal).then(r=>{if(!ac.signal.aborted){setProjects(r.projects);setStorage(r.storage);}})
   .catch(e=>{if(!ac.signal.aborted)setError(showError(e))})
   .finally(()=>{if(!ac.signal.aborted)setLoading(false)});
   return()=>ac.abort();},[attempt]);
@@ -543,6 +544,18 @@ function StudioReview(){
  return <section className="st-panel">
   <div className="st-section-head"><div><p className="st-kicker">STAFF-ONLY / CANONICAL REVIEW</p><h2>AWAITING A DECISION.</h2></div></div>
   <p className="st-muted">This desk can request changes or reject a private submission. Publication and approval remain intentionally disabled until file scanning and the public release pipeline exist.</p>
+  {storage?.ready&&<div className="st-storage-meter" aria-label="Large creator asset capacity monitoring">
+   <div><span>EXTENDED CREATOR VAULT / RESERVED</span>
+    <strong>{size(storage.reservedBytes||0)} / {size(storage.capacityBytes||26843545600)}</strong></div>
+   <progress max={storage.capacityBytes||26843545600} value={Math.min(storage.reservedBytes||0,storage.capacityBytes||26843545600)}
+    aria-label="Extended creator vault capacity"/>
+   <small>QUARANTINED FILES: {storage.quarantinedFiles||0} · ACTIVE TRANSFERS: {storage.activeUploads||0} · TOTAL RESERVATIONS: {storage.totalFiles||0}</small>
+   {storage.threshold!=='normal'&&<p className="st-muted" role="status">
+    {storage.threshold==='critical'?'CAPACITY CRITICAL (95%+) — pause new reservations until reviewed.':
+     'CAPACITY ATTENTION (80%+) — review account budget and provision additional storage.'}
+   </p>}
+   <small>Database reservations, not actual Cloudflare billing. Other buckets and incomplete multipart operations affect the bill.</small>
+  </div>}
   {loading&&<p role="status">Checking staff permission and review queue…</p>}
   {error&&<div role="alert" className="st-error"><p>{error}</p><button className="st-action" type="button" onClick={()=>setAttempt(n=>n+1)}>RETRY REVIEW QUEUE</button></div>}
   {!loading&&!error&&projects.length===0&&<p>No pending private project records.</p>}
@@ -561,7 +574,7 @@ function StudioReview(){
      <p className="st-muted">{manifests[p.id].note}</p>
      {manifests[p.id].assets.map(a=><div className="st-manifest-file" key={a.id}>
       <strong>{a.name}</strong><small>{a.kind.toUpperCase()} / {size(a.sizeBytes)} / {a.status.toUpperCase()}</small>
-      <code>{a.sha256||'Hash pending'}</code>
+      <code>{a.digestType==='part-manifest'?'PART MANIFEST SHA-256: ':'FILE SHA-256: '}{a.sha256||'Hash pending'}</code>
      </div>)}
     </div>}
    </div>}
