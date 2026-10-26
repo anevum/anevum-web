@@ -1,0 +1,69 @@
+name: Portfolio Cinematic V1
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/web/public/portfolio/**'
+      - 'creator-v1/test/portfolio-cinematic-v1.test.mjs'
+      - 'creator-v1/test/portfolio-cinematic-v1-browser.mjs'
+      - 'creator-v1/graphics/render-portfolio-cinematic-source.mjs'
+      - '.github/workflows/portfolio-cinematic-v1.yml'
+permissions:
+  contents: read
+jobs:
+  portfolio-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check portfolio client script syntax
+        run: |
+          node --check creator-v1/web/public/portfolio/app.js
+          node --check creator-v1/web/public/portfolio/cinematic-v1.js
+      - name: Verify source, assets, accessibility, and gated motion
+        run: node --test creator-v1/test/portfolio-cinematic-v1.test.mjs
+      - name: Install isolated Chromium test tools
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
+          npx playwright install --with-deps chromium
+      - name: Capture portfolio at four device widths and exercise real UI
+        run: node creator-v1/test/portfolio-cinematic-v1-browser.mjs
+      - name: Preserve screenshots and browser acceptance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: portfolio-cinematic-v1-${{ github.event.pull_request.head.sha }}
+          path: evidence/portfolio-cinematic-v1/
+          retention-days: 14
+          if-no-files-found: warn
+  offline-candidate-media:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install local SVG rasterizer and video encoders
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq librsvg2-bin ffmpeg
+      - name: Render original Institute master and bounded camera study
+        run: |
+          node creator-v1/graphics/render-portfolio-cinematic-source.mjs --out /tmp/portfolio-cinematic-source --frames 48 --fps 24
+      - name: Encode using ANEVUM V136 existing cinematic pipeline
+        run: |
+          node creator-v1/graphics/encode-cinematic-v136.mjs --frames /tmp/portfolio-cinematic-source --out evidence/portfolio-cinematic-candidate --fps 24
+          node creator-v1/graphics/inspect-cinematic-candidate-v136.mjs --candidate evidence/portfolio-cinematic-candidate
+      - name: Preserve unreviewed original motion candidate
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: portfolio-cinematic-unreviewed-${{ github.event.pull_request.head.sha }}
+          path: |
+            evidence/portfolio-cinematic-candidate/
+            /tmp/portfolio-cinematic-source/portfolio-source-manifest.json
+          retention-days: 14
+          if-no-files-found: warn
