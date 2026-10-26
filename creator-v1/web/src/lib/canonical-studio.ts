@@ -134,8 +134,13 @@ export interface StudioReviewProject{
  attachment_count:number;attachment_bytes:number;
  license_name:string;ai_disclosure:string;human_contribution:string;user_id:string;handle:string;
 }
+export interface StudioLargeCapacity {
+ ready:boolean;reservedBytes?:number;capacityBytes?:number;totalFiles?:number;
+ activeUploads?:number;quarantinedFiles?:number;
+ threshold?:'normal'|'attention'|'critical';note?:string;
+}
 export const studioReviewQueue=(signal?:AbortSignal)=>
- request<{projects:StudioReviewProject[]}>(ROOT+'/review','GET',undefined,signal);
+ request<{projects:StudioReviewProject[];storage:StudioLargeCapacity}>(ROOT+'/review','GET',undefined,signal);
 export const studioReviewManifest=(id:string,signal?:AbortSignal)=>
  request<StudioReviewManifest>(ROOT+'/review/'+validId(id)+'/manifest','GET',undefined,signal);
 export const studioReviewDecision=(projectId:string,revision:number,action:'changes_requested'|'rejected',reason:string)=>
