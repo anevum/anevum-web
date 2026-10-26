@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { Shell } from "./components/Shell";
+import {PublicPageMetadata} from "./components/PublicPageMetadata";
 import { CinematicLandingPage } from "./pages/CinematicLandingPage";
 import { FieldGuidePage } from "./pages/FieldGuidePage";
 import { StartPage } from "./pages/StartPage";
@@ -68,7 +69,7 @@ function CanonicalPublicHandle(){
     ? <Phase1PublicMemberPage/> : <Navigate to="/" replace/>;
 }
 export default function App(){
-  return <AnevumNotifications><Routes>
+  return <AnevumNotifications><PublicPageMetadata/><Routes>
     <Route path="atlas/*" element={<LegacyAtlasRedirect/>}/>
     <Route element={<Shell/>}>
     <Route index element={<CinematicLandingPage/>}/>

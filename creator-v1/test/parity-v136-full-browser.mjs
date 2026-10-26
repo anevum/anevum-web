@@ -857,6 +857,14 @@ try{
     await page.waitForURL(base+'/discover');
     await page.locator('.av73-discover').waitFor();
     assert.equal(await page.locator('.av73-discover').count(),1);
+
+    // Browser-only route metadata must track real SPA navigation without
+    // inventing creator/project metadata or touching protected services.
+    await page.waitForFunction(()=>document.title==='Discover Original Games, Apps & Creative Work | ANEVUM');
+    assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'),'https://anevum.com/discover');
+    assert.equal(await page.locator('meta[property="og:url"]').getAttribute('content'),'https://anevum.com/discover');
+    assert.match(await page.locator('meta[name="description"]').getAttribute('content'),/published games/i);
+
     await page.goto(base,{waitUntil:'networkidle'});
     await page.getByRole('link',{name:'Join the community',exact:true}).click();
     await page.waitForURL(base+'/join');
