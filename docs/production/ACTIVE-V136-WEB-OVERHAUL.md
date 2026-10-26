@@ -1,5 +1,56 @@
+# Current production and development — stealth beta continuation
+Session: `ANEVUM.WEB.BUILD.2026-10-26.002.STEALTH-BETA-CUTOVER`.
+
+**Production:** V63 `77c8a9a6-f1ee-44fb-87d6-3271b3115c37` at 100%, deployment
+`cd6fa4f2-4382-49e2-a02b-b3d73cc41398`, October 26, 2026, 5:45 PM EDT.
+Exact immutable source: `93613f6ad18f243b88af1b168626558ce4bbaec7`.
+Rollback: V61 `c53d8b9c-625b-459a-a8cc-67ebb50155fd` at 100%.
+Cloudflare postflight preserved all settings, 26 bindings, 45 routes, controller
+allocation and disabled workers.dev/preview exposure. No data/schema/auth,
+large-upload, publishing or commerce activation accompanied this frontend release.
+
+Downloaded artifacts independently verified: all 557 candidate asset hashes,
+sealed gateway SHA-256 `1884ff0dd3c8aa3d38711167af0b4552c9b200b3148e72d9ba6d90d23171ef99`,
+556 identical paired shared files, 152 retained earned-media objects and exclusion
+of owner-review-only media. Exact release receipts: 46 full interactions,
+68 production-mode, 11 Discover and 36 collections checks; no runtime errors or
+forbidden requests. Actual live Chromium confirmed an existing authenticated
+member session, retained server-provided progression, new IREN box-pet/help,
+Studio, discovery, Commons, Start, Guide, Status, creators and collection views.
+`/boards` currently redirects to `/community` through retained hosting behavior;
+this is not proof of standalone public Boards delivery. Guest and cross-account
+certification, physical Safari/Xbox and independent media approval remain distinct.
+
+**Continuing source:** existing #763 only. The settled-account browser fix
+`c6cbd338eb64af8c1c45c3eea157e8c4d89c3f2d` removes a transient-spinner race,
+requires the synthetic private dashboard and opens the actual profile editor.
+The next source correction incorporates the release-only Studio/Commons cascade
+repairs into this same product lane and replaces literal warm/purple Arrival,
+header, rail and action gradients with the approved cold-metal materials.
+Compiled browser acceptance now measures these actual backgrounds and primary
+contrast, in addition to tokens, overflow, responsive routes and privacy gates.
+These newest styling changes require exact-head CI and the existing sealed release
+process before they become live. No new staging site or competing theme is created.
+
+**CI distinction:** the old V132 packager correctly rejects broad V136 source;
+its frozen allowlist is unchanged. Original Creator Verify failed a stale account
+capture selector, not a runtime identity failure; current corrected-head results
+belong in #784. Do not call all workflows green until read back.
+
+**Next:** finish corrected browser acceptance, package any verified visual
+successor with exact UI blob pins, preserve V61/V63 rollback, then extend secure
+friends/messages/collaboration behind server gates. Cinematic final media is
+unapproved; no payments or experimental upload activation. Canonical durable
+record: [#784](https://github.com/anevum/anevum-web/issues/784), board #325,
+release #783. Current provider records and this block supersede historical
+production/staging statements below; preserve their provenance.
+
+---
+
 # Current baseline release
 Session: `ANEVUM.WEB.PACKAGE.2026-10-26.001.UNIFIED-BASELINE-RELEASE`.
+
+Production cutover preparation is now the priority. Existing #763 remains the sole product/UI authority at verified `241e0f16`; the packaging-only `release/parity-v136-unified-baseline-20261026-005` candidate carries that frontend on the prior controlled backend. Keep broad development-source release denial intact. See the existing reconstruction record for exact scope, current 99/1 rollback, unchanged protected services and pending production-mode/inactive-version gates.
 
 Current verified continuation: `4810e60be4d62b57ed47352da4add737f27b55c8`, 27 development passes, deployed review version `8a504c19-e292-4d0c-b0dd-38a31202bfea` with matching health/provider receipts. Studio library/form screenshots are accepted technically. The next bounded source fixes retained Start/Field Guide materials and tests their real local interactions; its own verification is pending. #763 and current receipts carry the latest status.
 
