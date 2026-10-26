@@ -2,6 +2,7 @@ import {useEffect,useRef,type KeyboardEvent} from 'react';
 import {NavLink,useLocation} from 'react-router-dom';
 import {Icon} from '../components/Icons';
 import {OrbitalMark} from '../components/OrbitalMark';
+import {isSiteLinkSelected} from '../lib/site-navigation';
 import {useLivingWorld,type WorldSector} from './LivingWorldState';
 import './console-wayfinder-v136.css';
 
@@ -17,7 +18,9 @@ export function ConsoleWayfinderV136({onOpenSearch,onOpenIren,memberDestination,
  const {setPreviewSector}=useLivingWorld();
  const location=useLocation();
  const ref=useRef<HTMLElement>(null);
- const index=stations.findIndex(s=>s.to==='/'?location.pathname==='/':location.pathname===s.to);
+ // Keep the visual selection marker on the same canonical section as NavLink,
+ // including nested creator, Commons and Studio screens.
+ const index=stations.findIndex(s=>isSiteLinkSelected(location.pathname,s.to));
  useEffect(()=>{setPreviewSector(null)},[location.pathname,location.search,setPreviewSector]);
  useEffect(()=>()=>setPreviewSector(null),[setPreviewSector]);
  function onKey(event:KeyboardEvent<HTMLElement>){

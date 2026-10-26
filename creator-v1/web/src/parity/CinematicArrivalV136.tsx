@@ -1,139 +1,52 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {useLivingWorld} from './LivingWorldState';
-import {cinematicMode,cinematicScrollProgress,cinematicRevealWhenReady,cinematicWorldReadiness,cinematicInspectionOpacity} from './cinematic-director-v136';
-import {allowMotion,approvedCinematicSequence,approvedCinematicVideo} from './CinematicMediaContractV136';
-import {CinematicFramesV136} from './CinematicFramesV136';
+import {allowMotion,approvedCinematicVideo,reviewCinematicVideo} from './CinematicMediaContractV136';
 import {CinematicVideoV136} from './CinematicVideoV136';
-import manifest from '../../public/assets/cinematic-v136/arrival/manifest.json';
+import candidate from '../../public/assets/cinematic-v136/arrival/review-001/manifest.json';
 import './cinematic-arrival-v136.css';
 
-/** A native interface arrival on the one live Institute canvas.
- * No duplicate renderer, fake page state, forced intro or private signal.
- * No generated image poster is fetched. Future frame or video media remains approval-gated.
- */
-const enabled=import.meta.env.VITE_PARITY_V136_CINEMATIC==='true';
-const nativeVideoFlag=import.meta.env.VITE_PARITY_V136_NATIVE_VIDEO==='true';
-const stageCamera=import.meta.env.VITE_PARITY_V136_SHARED_SCENE_QA==='true';
-const approvedSequence=approvedCinematicSequence(manifest.sequence);
-const videoCandidate=(manifest as unknown as {video?:unknown}).video;
-const approvedVideo=approvedCinematicVideo(videoCandidate);
-type ViewMode='off'|'poster'|'sequence'|'video';
+// Candidate art is isolated to staging-path review. Production approval is separate.
+const ownerReview=import.meta.env.MODE==='staging-path'&&import.meta.env.VITE_ANEVUM_OWNER_REVIEW==='true';
+const video=ownerReview?reviewCinematicVideo(candidate.video,true):approvedCinematicVideo(candidate.video);
+const asset=(path:string)=>import.meta.env.BASE_URL+path;
+
+/** Authored media over semantic DOM. No renderer, GPU-readiness or scroll handoff. */
 export function CinematicArrivalV136(){
- const stage=useRef<HTMLDivElement>(null);
  const {paused}=useLivingWorld();
- const [frameFailed,setFrameFailed]=useState(false);
- const [videoFailed,setVideoFailed]=useState(false);
- const [mode,setMode]=useState<ViewMode>('poster');
- const [progress,setProgress]=useState(0);
- const [playAllowed,setPlayAllowed]=useState(false);
- // True opt-in to the existing modeled world. Never add another canvas,
- // run private code, or imply the artistic master has been approved.
- const [inspecting,setInspecting]=useState(false);
- const [sceneReadiness,setSceneReadiness]=useState<'hold'|'ready'|'fallback'>('hold');
- const onFrameFault=useCallback(()=>setFrameFailed(true),[]);
- const onVideoFault=useCallback(()=>setVideoFailed(true),[]);
+ const stage=useRef<HTMLDivElement>(null);
+ const [canPlay,setCanPlay]=useState(false);
+ const [failed,setFailed]=useState(false);
+ const [posterFailed,setPosterFailed]=useState(false);
+ const [faultReason,setFaultReason]=useState('');
+ const onFault=useCallback((reason?:string)=>{setFailed(true);setFaultReason(reason||'video-unavailable')},[]);
  useEffect(()=>{
-  if(!enabled)return;
-  const element=stage.current;
-  const hero=element?.closest<HTMLElement>('.p136-hero');
-  if(!element||!hero)return;
-  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
-  const forced=window.matchMedia('(forced-colors: active)');
-  const connection=(navigator as Navigator&{
-   connection?:{saveData?:boolean;addEventListener?:(name:string,cb:()=>void)=>void;
-    removeEventListener?:(name:string,cb:()=>void)=>void}
-  }).connection;
-  const world=document.querySelector<HTMLElement>('.p136-living-world[data-enabled="true"]');
-  const worldCanvas=world?.querySelector<HTMLCanvasElement>('.p136-living-canvas');
-  let raf=0,visible=document.visibilityState==='visible',handoffCommitted=false;
-  const paint=()=>{
-   raf=0;
-   const input={
-    enabled,reducedMotion:reduced.matches,forcedColors:forced.matches,
-    saveData:Boolean(connection?.saveData),paused,visible
-   };
-   const baseline=cinematicMode({...input,hasApprovedSequence:Boolean(approvedSequence&&!frameFailed)});
-   // Native video is ambient only, not frame-accurate scroll. It also requires a
-   // separate CSP review and explicit build flag, both absent in production today.
-   const videoPlayable=baseline==='poster'&&Boolean(approvedVideo)&&nativeVideoFlag&&
-    !videoFailed&&!inspecting&&allowMotion(input);
-   const nextMode:ViewMode=videoPlayable?'video':baseline;
-   element.dataset.mode=nextMode;
-   setMode(previous=>previous===nextMode?previous:nextMode);
-   setPlayAllowed(previous=>previous===videoPlayable?previous:videoPlayable);
-   const travel=cinematicScrollProgress(hero.getBoundingClientRect().top,hero.getBoundingClientRect().height);
-   // The shared 3D renderer reads this strictly local normalized value only
-   // when the isolated stage-geometry build flag is enabled.
-   if(stageCamera)element.dataset.cameraProgress=travel.toFixed(4);
-   const staticPreference=reduced.matches||paused||Boolean(connection?.saveData);
-   const readiness=cinematicWorldReadiness(world?.dataset.renderer==='webgl'?'webgl':
-    world?.dataset.renderer==='vector'?'vector':null,worldCanvas?.dataset.assetState??null);
-   setSceneReadiness(previous=>previous===readiness?previous:readiness);
-   if(readiness!=='ready')setInspecting(false);
-   // A user who has already crossed into the live scene never sees the poster
-   // flash back on a temporary renderer reset or GPU status change.
-   if(travel<manifest.handoff.revealStart*.5)handoffCommitted=false;
-   else if(readiness!=='hold'&&travel>=manifest.handoff.revealStart)handoffCommitted=true;
-   const permitted=handoffCommitted?'ready':readiness;
-   element.dataset.handoff=permitted;
-   const scrollOpacity=nextMode==='off'?0:nextMode==='poster'&&staticPreference?1:
-    cinematicRevealWhenReady(travel,permitted,manifest.handoff.revealStart,manifest.handoff.revealEnd);
-   const opacity=cinematicInspectionOpacity(inspecting,readiness,scrollOpacity);
-   element.dataset.inspection=inspecting&&readiness==='ready'?'live':'cinematic';
-   element.style.setProperty('--cinema-opacity',String(opacity));
-   element.style.setProperty('--cinema-offset',(-1.6*(staticPreference?0:travel)).toFixed(3)+'%');
-   if(nextMode==='sequence')setProgress(value=>Math.abs(value-travel)>.002?travel:value);
-  };
-  const schedule=()=>{if(!raf)raf=window.requestAnimationFrame(paint)};
-  const onVisibility=()=>{visible=document.visibilityState==='visible';schedule()};
-  window.addEventListener('scroll',schedule,{passive:true});
-  window.addEventListener('resize',schedule,{passive:true});
-  document.addEventListener('visibilitychange',onVisibility);
-  reduced.addEventListener('change',schedule);
-  forced.addEventListener('change',schedule);
-  connection?.addEventListener?.('change',schedule);
-  const observe=world?new MutationObserver(schedule):null;
-  if(world)observe?.observe(world,{attributes:true,attributeFilter:['data-renderer','data-enabled']});
-  if(worldCanvas)observe?.observe(worldCanvas,{attributes:true,attributeFilter:['data-asset-state']});
-  schedule();
-  return()=>{
-   window.removeEventListener('scroll',schedule);
-   window.removeEventListener('resize',schedule);
-   document.removeEventListener('visibilitychange',onVisibility);
-   reduced.removeEventListener('change',schedule);
-   forced.removeEventListener('change',schedule);
-   connection?.removeEventListener?.('change',schedule);
-   observe?.disconnect();
-   if(raf)window.cancelAnimationFrame(raf);
-  };
- },[paused,frameFailed,videoFailed,inspecting]);
- if(!enabled)return null;
- return <><div ref={stage} className="p136-cinematic-arrival"
-    aria-hidden="true" data-cinematic-v136="native-institute" data-mode={mode} data-handoff="fallback">
-   <div className="p136-cinematic-art p136-native-institute" data-arrival-surface="native-interface" aria-hidden="true">
-    <span className="p136-native-institute__grid"/>
-    <span className="p136-native-institute__ring"/>
-    <span className="p136-native-institute__aperture"/>
-    <span className="p136-native-institute__scan"/>
-   </div>
-   {mode==='sequence'&&approvedSequence&&
-    <CinematicFramesV136 sequence={approvedSequence} progress={progress} onFault={onFrameFault}/>}
-   {mode==='video'&&approvedVideo&&nativeVideoFlag&&
-    <CinematicVideoV136 video={approvedVideo} canPlay={playAllowed} onFault={onVideoFault}/>}
-   <span className="p136-cinematic-luminance"/>
-   <span className="p136-cinematic-vignette"/>
-  </div>
-  <div className="p136017-scene-inspection" data-cinematic-inspection="v136.017"
-   data-scene-readiness={sceneReadiness}>
-   <button type="button" aria-pressed={inspecting}
-    aria-label={inspecting?'Return to cinematic arrival':'Inspect live 3D scene'}
-    disabled={sceneReadiness!=='ready'&&!inspecting}
-    onClick={()=>setInspecting(value=>!value)}>
-    <span className="p136017-scene-inspection-emblem" aria-hidden="true">◇</span>
-    <span>{inspecting?'Return to cinematic':'Inspect live 3D'}</span>
-   </button>
-   <span className="p136017-scene-inspection-status" aria-hidden="true">
-    {sceneReadiness==='ready'?'REAL-TIME MODEL':sceneReadiness==='hold'?'MODEL LOADING':'VECTOR FALLBACK'}
-   </span>
-  </div></>;
+  const node=stage.current;if(!node)return;
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+  const forced=matchMedia('(forced-colors: active)');
+  const connection=(navigator as Navigator&{connection?:{saveData?:boolean;effectiveType?:string;addEventListener?:(name:string,fn:()=>void)=>void;removeEventListener?:(name:string,fn:()=>void)=>void}}).connection;
+  let intersecting=false;
+  // A separately approved production manifest may enable motion too; never
+  // equate the owner-review flag with video authorization.
+  const sync=()=>setCanPlay(Boolean(video)&&!failed&&allowMotion({enabled:Boolean(video),
+   reducedMotion:reduced.matches,forcedColors:forced.matches,
+   saveData:Boolean(connection?.saveData)||/^(slow-)?2g$/.test(connection?.effectiveType||''),
+   paused,visible:intersecting&&document.visibilityState==='visible'}));
+  const observer=new IntersectionObserver(entries=>{intersecting=Boolean(entries[0]?.isIntersecting);sync()},{threshold:.05});
+  observer.observe(node);sync();
+  reduced.addEventListener('change',sync);forced.addEventListener('change',sync);
+  connection?.addEventListener?.('change',sync);document.addEventListener('visibilitychange',sync);
+  return()=>{observer.disconnect();reduced.removeEventListener('change',sync);forced.removeEventListener('change',sync);
+   connection?.removeEventListener?.('change',sync);document.removeEventListener('visibilitychange',sync)};
+ },[paused,failed]);
+ return <div ref={stage} className="p136-cinematic-arrival" aria-hidden="true"
+  data-cinematic-v136="motion-first" data-mode={canPlay?'video':'poster'} data-media-fault={faultReason||undefined} data-art-status={ownerReview?'owner-review-pending':'native-fallback'}>
+  {ownerReview&&!posterFailed&&<picture className="p136-cinematic-art">
+   <source media="(max-width:720px)" srcSet={asset(candidate.poster.mobile.path)}/>
+   <source media="(max-width:1100px)" srcSet={asset(candidate.poster.tablet.path)}/>
+   <img src={asset(candidate.poster.desktop.path)} width={candidate.poster.desktop.width} height={candidate.poster.desktop.height}
+    alt="" fetchPriority="high" decoding="async" onError={()=>setPosterFailed(true)}/>
+  </picture>}
+  {canPlay&&video&&<CinematicVideoV136 video={video} canPlay={canPlay} onFault={onFault}/>}
+  <span className="p136-cinematic-luminance"/><span className="p136-cinematic-vignette"/>
+ </div>;
 }

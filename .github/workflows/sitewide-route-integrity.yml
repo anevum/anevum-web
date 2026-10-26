@@ -1,0 +1,54 @@
+name: ANEVUM Sitewide Route Integrity
+
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'creator-v1/web/src/**'
+      - 'scripts/audit-sitewide-navigation.mjs'
+      - 'creator-v1/test/sitewide-route-consolidation.test.mjs'
+      - 'creator-v1/test/sitewide-overhaul-governance.test.mjs'
+      - 'docs/production/ANEVUM.WEB.NORTHSTAR.2026-10-25.002.MOTION-FIRST-SINGLE-STREAM.md'
+      - 'docs/production/anevum-site-surface-registry.v1.json'
+      - 'docs/production/ANEVUM.WEB.AUDIT.2026-10-25.001.FULL-SITE-CONSOLIDATION.md'
+      - 'docs/production/ACTIVE-V136-WEB-OVERHAUL.md'
+      - '.github/workflows/sitewide-route-integrity.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-route-integrity-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  route-reference-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install frontend toolchain without package scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Generate complete static route and link inventory
+        run: node scripts/audit-sitewide-navigation.mjs --output evidence/sitewide-navigation.json
+      - name: Verify canonical destinations and compatibility links
+        run: node --test creator-v1/test/sitewide-route-consolidation.test.mjs
+      - name: Check one motion-first overhaul authority and real host ownership
+        run: node --test creator-v1/test/sitewide-overhaul-governance.test.mjs
+      - name: Check current Creator V1 TypeScript contract
+        run: npm run check:creator-v1-web
+      - name: Retain reviewable source audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-sitewide-navigation-inventory
+          path: evidence/sitewide-navigation.json
+          if-no-files-found: warn
+          retention-days: 14

@@ -3,15 +3,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,readdirSync} from 'node:fs';
 const read=p=>readFileSync(new URL(p,import.meta.url),'utf8');
-test('public category renderers cannot fetch generative covers',()=>{
+test('public category renderers retain honest defaults; new environment is isolated to review',()=>{
  const artwork=read('../web/src/components/CosmicArtwork.tsx');
  const arrival=read('../web/src/parity/CinematicArrivalV136.tsx');
  const main=read('../web/src/main.tsx');
  const manifest=JSON.parse(read('../web/public/assets/cinematic-v136/arrival/manifest.json'));
  assert.match(artwork,/data-presentation="native-index"/);
  assert.doesNotMatch(artwork,/<img\b|\.webp|assets\/community-portals/);
- assert.match(arrival,/data-arrival-surface="native-interface"/);
- assert.doesNotMatch(arrival,/<img\b|<picture\b|manifest\.posters/);
+ assert.match(arrival,/data-cinematic-v136="motion-first"/);
+ assert.match(arrival,/ownerReview&&!posterFailed&&<picture/);
+ assert.match(arrival,/import.meta.env.MODE==='staging-path'/);
  assert.equal(manifest.posters,undefined);
  assert.match(main,/sitewide-interface-v136\.css/);
 });

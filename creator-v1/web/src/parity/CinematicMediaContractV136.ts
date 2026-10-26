@@ -11,10 +11,11 @@ export type CinematicSequence={
 };
 export type CinematicVideoSet={
   approved:true;
-  assets:{mp4?:CinematicAsset;webm?:CinematicAsset};
+  assets:{mp4?:CinematicAsset;webm?:CinematicAsset;mp4Mobile?:CinematicAsset;webmMobile?:CinematicAsset};
   requiresMediaSrcSelf:true;
 };
 export type CinematicModeInput={enabled:boolean;reducedMotion:boolean;saveData:boolean;paused:boolean;forcedColors:boolean;visible:boolean};
+export type CinematicReviewVideo=Omit<CinematicVideoSet,'approved'>&{approved:false};
 const isRecord=(x:unknown):x is Record<string,unknown>=>typeof x==='object'&&x!==null&&!Array.isArray(x);
 const digitHash=(value:unknown)=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
 const positiveInt=(value:unknown,limit:number):value is number=>typeof value==='number'&&Number.isSafeInteger(value)&&value>0&&value<=limit;
@@ -54,10 +55,12 @@ export function approvedCinematicSequence(value:unknown):CinematicSequence|null{
 export function approvedCinematicVideo(value:unknown):CinematicVideoSet|null {
  if(!isRecord(value)||value.approved!==true||value.requiresMediaSrcSelf!==true||
  !isRecord(value.assets))return null;
- const {mp4,webm}=value.assets;
+ const {mp4,webm,mp4Mobile,webmMobile}=value.assets;
  if(!mp4&&!webm)return null;
  if(mp4&&!asset(mp4,'mp4',12_000_000))return null;
  if(webm&&!asset(webm,'webm',12_000_000))return null;
+ if(mp4Mobile&&!asset(mp4Mobile,'mp4',3_800_000))return null;
+ if(webmMobile&&!asset(webmMobile,'webm',3_800_000))return null;
  return value as unknown as CinematicVideoSet;
 }
 export function frameAt(sequence:CinematicSequence,tier:'desktop'|'mobile',progress:number):CinematicAsset{
@@ -65,6 +68,13 @@ export function frameAt(sequence:CinematicSequence,tier:'desktop'|'mobile',progr
  const normalized=Number.isFinite(progress)?Math.max(0,Math.min(1,progress)):0;
  const index=Math.min(sequence.count-1,Math.floor(normalized*sequence.count));
  return set.frames[index];
+}
+/** Isolated review only. Validation never relabels the candidate as approved. */
+export function reviewCinematicVideo(value:unknown,isolatedOwnerReview:boolean):CinematicReviewVideo|null{
+ if(!isolatedOwnerReview||!isRecord(value)||value.approved!==false||
+  value.approval!=='owner-review-pending'||value.scope!=='isolated-owner-review')return null;
+ const validated=approvedCinematicVideo({...value,approved:true});
+ return validated?{...validated,approved:false}:null;
 }
 export function allowMotion(input:CinematicModeInput){
  return input.enabled&&!input.reducedMotion&&!input.saveData&&!input.paused&&!input.forcedColors&&input.visible;

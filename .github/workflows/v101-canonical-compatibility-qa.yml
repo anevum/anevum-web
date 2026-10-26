@@ -6,6 +6,7 @@ on:
       - site/alpha/v003/compatibility-v005.mjs
       - site/alpha/v003/compatibility-v005.d.mts
       - site/alpha/v003/archive.d.mts
+      - creator-v1/web/src/lib/godot-local-sniff-v136.ts
       - creator-v1/web/src/lib/native-compatibility-v101.ts
       - creator-v1/web/src/pages/NativeCreatorStudio.tsx
       - creator-v1/web/src/pages/native-creator-v095.css

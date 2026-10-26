@@ -28,11 +28,11 @@ export function CosmicArtwork({scene="hero",className="",title}: {
   return <span className={"cw-artwork cw-artwork--"+scene+" av136-index-field "+className}
     data-presentation="native-index" data-sector={scene}
     role={title?"img":undefined} aria-label={title||undefined} aria-hidden={title?undefined:true}>
-    <span className="av136-index-field__top"><span>ANEVUM / INDEX</span><span>{field.index}</span></span>
+
     <span className="av136-index-field__core">
       <span className="av136-index-field__number">{field.index}</span>
       <span className="av136-index-field__name">{field.name}</span>
     </span>
-    <span className="av136-index-field__foot"><span>EXPLORE / {field.name}</span><span className="av136-index-field__signal"/></span>
+
   </span>;
 }

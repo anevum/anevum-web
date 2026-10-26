@@ -32,7 +32,7 @@ export const PORTAL_DESTINATIONS: readonly PortalDestination[] = [
   {id:"join",title:"Join ANEVUM",description:"See available sign-in methods and invitation status",path:"/join",category:"Account",icon:"people",keywords:"join signup sign up register login signin sign in membership"},
   {id:"account",title:"My Member Space",description:"Private verified profile and visibility controls",path:"/member",category:"Account",icon:"people",keywords:"profile account dashboard settings signin login",gated:true},
   {id:"library",title:"My Library",description:"Saved projects for invited members",path:"/library",category:"Account",icon:"library",keywords:"saved bookmarks favorites",gated:true},
-  {id:"create",title:"Creator Workspace",description:"Private drafts and creator tools for invited members",path:"/create",category:"Account",icon:"create",keywords:"submit upload drafts studio",gated:true}
+  {id:"create",title:"Creator Workspace",description:"Private drafts and creator tools for invited members",path:"/studio",category:"Account",icon:"create",keywords:"submit upload drafts studio",gated:true}
 ];
 
 const clean = (s:string) => s.trim().toLocaleLowerCase("en").replace(/\s+/g," ");
