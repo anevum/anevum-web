@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {validateVaultProjectName,vaultProjectsEnabled,vaultProjectSchemaReady,vaultProjectEndpoint} from "../src/server/vault-projects.mjs";
+import {validateVaultProjectName,readTinyProjectJson,vaultProjectsEnabled,vaultProjectSchemaReady,vaultProjectEndpoint} from "../src/server/vault-projects.mjs";
 
 const userA={id:"member-A"},userB={id:"member-B"};
 const projectId="ec164f15-102e-4f3e-bc7c-11ef8c2c2316";
@@ -87,4 +87,19 @@ test("Free quota has no paid entitlement and no bytes consumed",async()=>{
   assert.equal(value.additionalPaidBytes,0);
   assert.equal(value.paymentAcceptance,false);
   assert.equal(value.uploadsEnabled,false);
+});
+
+test("Project request streams are bounded before JSON parsing",async()=>{
+  const small=req(path,"POST",JSON.stringify({name:"Small"}));
+  assert.deepEqual(await readTinyProjectJson(small),{name:"Small"});
+  const huge=req(path,"POST",JSON.stringify({name:"a".repeat(280)}));
+  await assert.rejects(readTinyProjectJson(huge),RangeError);
+});
+test("Oversized HTTP request is rejected and D1 failures are not blamed on the user",async()=>{
+  const {q}=mockDb(),env={MEMBER_DB:q,ANEVUM_VAULT_PROJECTS_PREVIEW_ENABLED:"true"};
+  const huge=req(path,"POST",JSON.stringify({name:"a".repeat(280)}));
+  assert.equal((await vaultProjectEndpoint(huge,env,userA,path)).status,413);
+  q.batch=async()=>{throw new Error("DB outage");};
+  const valid=req(path,"POST",JSON.stringify({name:"Okay"}));
+  assert.equal((await vaultProjectEndpoint(valid,env,userA,path)).status,503);
 });
