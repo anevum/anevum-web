@@ -215,10 +215,11 @@ async function run(width,height,motion='no-preference') {
   await page.locator('#project-dialog[open]').waitFor({state:'visible'});
   assert.equal((await page.locator('#case-title').innerText()).toLowerCase(),'rhen');
   await page.locator('.case-close').click();
-  await page.locator('[data-dossier-select="fold"]').focus();
-  await page.keyboard.press('ArrowRight');
+  // Element-scoped keyboard input establishes the actual native focus owner.
+  // Mobile screenshot/scroll activity must not redirect End to a stale target.
+  await page.locator('[data-dossier-select="fold"]').press('ArrowRight');
   assert.equal(await page.locator('[data-dossier-select="rhen"]').getAttribute('aria-pressed'),'true');
-  await page.keyboard.press('End');
+  await page.locator('[data-dossier-select="rhen"]').press('End');
   assert.equal(await dossier.getAttribute('data-dossier-project'),'transcosmic');
   assert.equal(await dossier.getAttribute('data-dossier-kind'),'art');
   assert.match(await page.locator('[data-dossier-proof]').innerText(),/NOT GAMEPLAY/);
