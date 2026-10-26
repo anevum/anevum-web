@@ -101,3 +101,21 @@ statuses must be recorded separately; source edits alone do not prove them.
 ## Sitewide ambient-canvas retirement
 
 The V136 motion-first shell no longer mounts the former V064 high-DPI procedural 2D world-stage on supporting pages, private Studio or member routes. This removes a persistent renderer and requestAnimationFrame paint loop from the V136 route family, preserving the existing visual-material CSS, verified data, cinematic Arrival, actual game viewports, and functional Monaco workstation. V131 retains its legacy presentation for safe rollback until independent public release authority. No media approval, authentication, account, game or production behavior changes. A focused regression requires this separation while retaining the historical component and source.
+
+## CI repair — frozen V122 source graph and native viewer regression
+
+The Creator V1 comprehensive exact-head suite correctly detected that the
+experimental `metadataOnly` option changed the byte-pinned V003 Worker archive
+validator. That shared implementation is restored **byte-for-byte** to the
+reviewed `967f3358` source graph. The Godot-only diagnostic now reads bounded
+ZIP central-directory file names in a separate, client-only module which can
+**only refuse a file**; it is not imported by the Worker, never decompresses
+assets, never authorizes an upload, and defaults to the strict original validator
+on unknown/malformed data. The original TypeScript ZIP signature is restored
+and only the exported existing safe-path helper is declared for client use.
+
+The native player's legacy phone QA reads the first `.av102-player-note`.
+Its simulated-phone disclosure now remains first and the additive controller
+guidance follows it. This preserves both informative messages and the existing
+assertion of phone-emulation honesty. These are actual CI fixes, not skipped
+tests, rewritten source pins, or release gate relaxations.

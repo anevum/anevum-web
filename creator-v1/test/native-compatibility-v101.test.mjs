@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import {crc32,inspectZip} from '../../site/alpha/v003/archive.mjs';
 import {detectCompatibility} from '../../site/alpha/v003/compatibility-v005.mjs';
 import {inspectLocalBrowserBuild} from '../web/src/lib/native-compatibility-v101.ts';
+import {sniffGodotZipEntries} from '../web/src/lib/godot-local-sniff-v136.ts';
 import {parse} from '@babel/parser';
 
 const encoder=new TextEncoder();
@@ -86,18 +87,20 @@ test('oversized file is refused before reading its bytes',async()=>{
  assert.equal(r.playableCandidate,false);
  assert.match(r.issues[0].message,/20 MiB/);
 });
-test('metadata-only ZIP probing cannot authorize unsupported assets or source archives',()=>{
+test('local Godot sniff is diagnostic-only and leaves pinned strict ZIP validator untouched',()=>{
  const godot=storedZip([
   ['index.html','<!doctype html><html><body>test</body></html>'],['game.pck','pack']
  ]);
- const metadata=inspectZip(godot,{metadataOnly:true});
- assert.equal(metadata.entrypoint,'index.html');
- assert.equal(metadata.entries.length,2);
- assert.equal(metadata.entries[1].mime,null);
+ const names=sniffGodotZipEntries(godot);
+ assert.deepEqual(names?.map(e=>e.path),['index.html','game.pck']);
  assert.throws(()=>inspectZip(godot),/Unsupported project asset/);
  const source=storedZip([['project.godot','[application]']]);
- assert.equal(inspectZip(source,{metadataOnly:true}).entrypoint,null);
+ assert.deepEqual(sniffGodotZipEntries(source)?.map(e=>e.path),['project.godot']);
  assert.throws(()=>inspectZip(source),/Unsupported project asset|ZIP must include index.html/);
+ const clean=storedZip([['index.html','<!doctype html><html><body>ok</body></html>']]);
+ assert.equal(sniffGodotZipEntries(clean),null);
+ assert.equal(inspectZip(clean).entrypoint,'index.html');
+ assert.equal(sniffGodotZipEntries(bytes('not a ZIP containing game.pck')),null);
 });
 test('Godot Web export receives specific guidance but cannot enter the current small-build uploader',async()=>{
  const r=await inspectLocalBrowserBuild(blobFile('absence-protocol.zip',storedZip([

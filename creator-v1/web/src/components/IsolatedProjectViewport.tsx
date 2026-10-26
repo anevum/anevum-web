@@ -97,8 +97,8 @@ export function IsolatedProjectViewport({title,src,releaseId,preview,expiresAt,o
     frameState==='error'?'The browser reported a frame-loading error. Restart the player or return to your project library.':
     'Player frame loaded. This does not independently confirm that the app started correctly.'}
   </p>}
-  {valid&&!expired&&<p className="av102-player-note">Controls depend on the creator's actual browser export. Keyboard or gamepad input may require focusing the game. Touch, Safari and Xbox compatibility are not certified.</p>}
   {valid&&!expired&&viewport==='phone'&&!expanded&&!full&&
    <p className="av102-player-note">Phone width is a viewport simulation, not physical Safari or Android compatibility approval.</p>}
+  {valid&&!expired&&<p className="av102-player-note">Controls depend on the creator's actual browser export. Keyboard or gamepad input may require focusing the game. Touch, Safari and Xbox compatibility are not certified.</p>}
  </section>;
 }

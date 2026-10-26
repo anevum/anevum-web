@@ -5,6 +5,7 @@
  * parser, instead of maintaining a second archive validator.
  */
 import {inspectZip,ZIP_LIMITS} from '../../../../site/alpha/v003/archive.mjs';
+import {sniffGodotZipEntries} from './godot-local-sniff-v136';
 import {detectCompatibility,type CompatibilityReport,type CompatibilityIssue}
  from '../../../../site/alpha/v003/compatibility-v005.mjs';
 
@@ -96,10 +97,10 @@ export async function inspectLocalBrowserBuild(file:File):Promise<LocalCompatibi
  let parsed;
  try{
   const zip=new Uint8Array(await file.arrayBuffer());
-  // The same structural parser can inspect entry metadata without admitting
-  // an unsupported .pck MIME type or extracting/executing a single asset.
-  const metadata=inspectZip(zip,{metadataOnly:true});
-  const godot=godotPilotReport(metadata.entries,name);
+  // Advisory central-directory names can only cause a fail-closed Godot
+  // diagnostic. The server's frozen V003 ZIP validator is never modified.
+  const names=sniffGodotZipEntries(zip);
+  const godot=names?godotPilotReport(names,name):null;
   if(godot)return godot;
   parsed=inspectZip(zip);
  }

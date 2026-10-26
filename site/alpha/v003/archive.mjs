@@ -72,10 +72,7 @@ function rejectZip64(extra) {
     p += 4 + size;
   }
 }
-/** Metadata-only scanning retains all ZIP structural and resource bounds while
- * allowing locally diagnosed, unsupported assets to be identified. It must
- * never be used to admit a release for extraction or server publication. */
-export function inspectZip(data,{metadataOnly=false}={}) {
+export function inspectZip(data) {
   const buf = data instanceof Uint8Array ? data : new Uint8Array(data);
   if (buf.length < 22 || buf.length > ZIP_LIMITS.archive) invalid("ZIP exceeds 20 MiB alpha limit or is empty");
   const v = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
@@ -126,7 +123,7 @@ export function inspectZip(data,{metadataOnly=false}={}) {
     if (dir) {
       if (packed || unpacked) invalid("ZIP directory contains data");
     } else {
-      if (!metadataOnly && !assetMime(name)) invalid("Unsupported project asset: " + name.slice(0, 90));
+      if (!assetMime(name)) invalid("Unsupported project asset: " + name.slice(0, 90));
       if (unpacked > ZIP_LIMITS.singleFile || (!packed && unpacked)
           || unpacked > Math.max(1, packed) * ZIP_LIMITS.ratio)
         invalid("ZIP entry is too large or excessively compressed: " + name.slice(0, 90));
@@ -137,13 +134,12 @@ export function inspectZip(data,{metadataOnly=false}={}) {
     ranges.push({ start: localAt, end: dataEnd });
     p = next;
   }
-  if (p !== end || (!metadataOnly && !entries.some(e => e.path === "index.html")))
+  if (p !== end || !entries.some(e => e.path === "index.html"))
     invalid("ZIP must include index.html at its root");
   ranges.sort((a, b) => a.start - b.start);
   for (let i = 1; i < ranges.length; i++) if (ranges[i].start < ranges[i - 1].end)
     invalid("Overlapping ZIP entries are not allowed");
-  return { entries, expandedBytes: total, archiveBytes: buf.length,
-    entrypoint: entries.some(e => e.path === "index.html") ? "index.html" : null };
+  return { entries, expandedBytes: total, archiveBytes: buf.length, entrypoint: "index.html" };
 }
 export async function extractEntry(data, entry) {
   const buf = data instanceof Uint8Array ? data : new Uint8Array(data);
