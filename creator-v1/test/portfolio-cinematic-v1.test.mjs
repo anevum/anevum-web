@@ -12,6 +12,8 @@ const app = read('app.js');
 const artwork = read('assets/transcosmic-continuum.svg');
 const cosmos = read('transcosmic-depth-v2.js');
 const cosmosCSS = read('transcosmic-depth-v2.css');
+const dossierJS = read('portfolio-dossier-v4.js');
+const dossierCSS = read('portfolio-dossier-v4.css');
 
 test('portfolio page remains independently accessible and has accurate metadata', () => {
   assert.match(html, /<html lang="en">/);
@@ -152,4 +154,26 @@ test('rejected vector skyline is replaced by a true one-field Transcosmic world'
   assert.doesNotMatch(cosmos, /fetch\(|new Audio\(|createMediaElementSource\(|WebSocket\(|https?:\/\//);
   assert.doesNotMatch(html, /data-media-approved="true"|data-approved-video=/);
   assert.equal((cosmosCSS.match(/\{/g)||[]).length,(cosmosCSS.match(/\}/g)||[]).length);
+});
+
+test('V136.042 converged project reel uses one existing case study system, never an extra WebGL scene', () => {
+  assert.match(html,/data-portfolio-dossier/);
+  assert.match(html,/data-dossier-select="anevum"/);
+  assert.match(html,/data-dossier-select="fold"/);
+  assert.match(html,/data-dossier-select="rhen"/);
+  assert.match(html,/data-dossier-select="transcosmic"/);
+  assert.match(html,/id="dossier-open"[^>]+data-project="anevum"/);
+  assert.match(html,/INTERFACE PROTOTYPE \/ SYNTHETIC REVIEW CONTENT/);
+  assert.match(dossierJS,/ORIGINAL ENVIRONMENT ART STUDY/); 
+  assert.match(dossierJS,/ArrowRight/);
+  assert.match(dossierJS,/aria-pressed/);
+  assert.match(dossierJS,/motion-paused/);
+  assert.match(dossierJS,/prefers-reduced-motion: reduce/);
+  assert.match(dossierJS,/navigator\.connection\?\.saveData/);
+  assert.match(dossierCSS,/\.dossier-body/);
+  assert.match(dossierCSS,/@media\(max-width:480px\)/);
+  assert.match(dossierCSS,/prefers-reduced-motion:reduce/);
+  assert.equal((dossierCSS.match(/\{/g)||[]).length,(dossierCSS.match(/\}/g)||[]).length);
+  assert.doesNotThrow(()=>new Script(dossierJS,{filename:'portfolio-dossier-v4.js'}));
+  assert.doesNotMatch(dossierJS,/getContext\(|fetch\(|XMLHttpRequest|WebSocket\(|https?:\/\//);
 });

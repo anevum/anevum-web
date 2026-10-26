@@ -17,10 +17,12 @@
   <link rel="stylesheet" href="/portfolio/styles.css">
   <link rel="stylesheet" href="/portfolio/cinematic-v1.css">
   <link rel="stylesheet" href="/portfolio/transcosmic-depth-v2.css">
+  <link rel="stylesheet" href="/portfolio/portfolio-dossier-v4.css">
   <link rel="preload" href="/portfolio/assets/display.woff" as="font" type="font/woff" crossorigin>
   <script src="/portfolio/app.js" defer></script>
   <script src="/portfolio/cinematic-v1.js" defer></script>
   <script src="/portfolio/transcosmic-depth-v2.js" defer></script>
+  <script src="/portfolio/portfolio-dossier-v4.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -65,6 +67,32 @@
     <section class="work section-shell" id="work" aria-labelledby="work-title">
       <div class="section-top reveal"><span class="eyebrow">01 / SELECTED WORK</span><span class="section-side">One mind. Multiple worlds.</span></div>
       <div class="work-heading reveal"><h2 id="work-title">FOUR WORLDS.<br><em>ONE CONTINUANCE.</em></h2><p>ANEVUM. RHEN. The Fold. Transcosmic. Working software, experiments, and an expanding story universe—each with a clear record of what exists and what is still being built.</p></div>
+      <section class="portfolio-dossier reveal" data-portfolio-dossier data-dossier-project="anevum" data-dossier-kind="desktop" aria-labelledby="dossier-heading">
+        <div class="dossier-head"><span>THE WORK / SOURCE RECORDS</span><strong>PROJECT INDEX 001—004</strong><small>REAL PROJECTS / HONEST STATUS</small></div>
+        <div class="dossier-body">
+          <figure class="dossier-media" data-dossier-index="01" data-sweep="false">
+            <span class="dossier-orbits" aria-hidden="true"></span><span class="dossier-glint" aria-hidden="true"></span>
+            <div class="dossier-frame"><img data-dossier-image src="/portfolio/assets/anevum-interface.webp" alt="ANEVUM Discover offline interface prototype; the catalogue shown is synthetic review content." width="1440" height="900" loading="lazy" decoding="async"></div>
+            <figcaption class="dossier-media-kicker">ANEVUM / SELECTED WORK / VISUAL RECORD</figcaption>
+            <span class="dossier-media-proof" data-dossier-proof>INTERFACE PROTOTYPE / SYNTHETIC REVIEW CONTENT</span>
+          </figure>
+          <div class="dossier-story">
+            <div class="dossier-count" data-dossier-count>01 / 04</div>
+            <span class="dossier-kind" data-dossier-kind-label>COMMUNITY / PLATFORM</span>
+            <h3 id="dossier-heading" data-dossier-name>ANEVUM</h3>
+            <p data-dossier-description>A creator-first product, built around discovering and sharing things people make.</p>
+            <span class="dossier-status" data-dossier-status aria-live="polite">ACTIVE PRODUCT DEVELOPMENT</span>
+            <button class="dossier-cta" id="dossier-open" type="button" data-project="anevum">OPEN PROJECT STORY <span aria-hidden="true">↗</span></button>
+          </div>
+        </div>
+        <div class="dossier-controls" role="group" aria-label="Select a project to examine">
+          <button class="dossier-selector" type="button" data-dossier-select="anevum" aria-pressed="true"><b>01</b><strong>ANEVUM</strong><small>Platform / prototype</small></button>
+          <button class="dossier-selector" type="button" data-dossier-select="fold" aria-pressed="false"><b>02</b><strong>The Fold</strong><small>Playable prototype</small></button>
+          <button class="dossier-selector" type="button" data-dossier-select="rhen" aria-pressed="false"><b>03</b><strong>RHEN</strong><small>Research / interface</small></button>
+          <button class="dossier-selector" type="button" data-dossier-select="transcosmic" aria-pressed="false"><b>04</b><strong>Transcosmic</strong><small>Fiction / art study</small></button>
+        </div>
+        <p class="dossier-fineprint">Project imagery includes clearly identified prototypes and creative studies, not invented product traction, deployment status, or released gameplay. Open the individual story for evidence and limitations.</p>
+      </section>
       <div class="work-tools reveal"><div class="filters" role="group" aria-label="Filter projects"><button type="button" class="active" data-filter="all" aria-pressed="true">All work <sup>04</sup></button><button type="button" data-filter="product" aria-pressed="false">Products & systems</button><button type="button" data-filter="experience" aria-pressed="false">Experiences & worlds</button></div><span class="mono" id="work-count" aria-live="polite">04 PROJECTS</span></div>
       <div class="project-grid">
         <article class="project project-anevum reveal" data-category="product">

@@ -168,7 +168,7 @@ async function run(width,height,motion='no-preference') {
   assert.match(await page.locator('#case-title').innerText(),/Transcosmic/i);
   await page.locator('.case-close').click();
   await page.locator('#project-dialog').waitFor({state:'hidden'});
-  await page.locator('[data-project="anevum"]').click();
+  await page.locator('.project-hit[data-project="anevum"]').click();
   await page.locator('#project-dialog[open]').waitFor({state:'visible'});
   assert.match(page.url(),/project=anevum/);
   assert.match(await page.locator('#case-title').innerText(),/ANEVUM/i);
@@ -180,6 +180,38 @@ async function run(width,height,motion='no-preference') {
   await page.waitForURL(url => !new URL(url).searchParams.has('project'));
   assert.doesNotMatch(page.url(),/project=/);
   note('project story open/next/close '+width);
+
+  // The convergence reel is a DOM storytelling chapter in Selected Work,
+  // not an overlapping hero or another renderer.
+  const dossier = page.locator('[data-portfolio-dossier]');
+  assert.equal(await dossier.getAttribute('data-dossier-project'),'anevum');
+  assert.equal(await page.locator('[data-dossier-select]').count(),4);
+  assert.equal(await page.locator('canvas').count(),1);
+  await page.locator('[data-dossier-select="rhen"]').click();
+  assert.equal(await dossier.getAttribute('data-dossier-project'),'rhen');
+  assert.equal(await dossier.getAttribute('data-dossier-kind'),'phone');
+  assert.match(await page.locator('[data-dossier-proof]').innerText(),/NO LIVE TRADING/);
+  assert.match(await page.locator('[data-dossier-image]').getAttribute('alt'),/no connected live trading account/);
+  await page.locator('#dossier-open').click();
+  await page.locator('#project-dialog[open]').waitFor({state:'visible'});
+  assert.equal((await page.locator('#case-title').innerText()).toLowerCase(),'rhen');
+  await page.locator('.case-close').click();
+  await page.locator('[data-dossier-select="fold"]').focus();
+  await page.keyboard.press('ArrowRight');
+  assert.equal(await page.locator('[data-dossier-select="rhen"]').getAttribute('aria-pressed'),'true');
+  await page.keyboard.press('End');
+  assert.equal(await dossier.getAttribute('data-dossier-project'),'transcosmic');
+  assert.equal(await dossier.getAttribute('data-dossier-kind'),'art');
+  assert.match(await page.locator('[data-dossier-proof]').innerText(),/NOT GAMEPLAY/);
+  await page.locator('.dossier-body').screenshot({path:join(output,'portfolio-project-dossier-'+width+'.png'),animations:'disabled'});
+  // Screenshot capture can move native focus; explicitly place focus on the
+  // active selector before testing its keyboard Home shortcut.
+  await page.locator('[data-dossier-select="transcosmic"]').focus();
+  assert.equal(await page.locator('[data-dossier-select="transcosmic"]').evaluate(el => el === document.activeElement),true);
+  await page.keyboard.press('Home');
+  assert.equal(await dossier.getAttribute('data-dossier-project'),'anevum');
+  assert.equal(await page.locator('[data-dossier-select="anevum"]').getAttribute('aria-pressed'),'true');
+  note('converged project reel / keyboard chapters / existing real case story '+width);
   await page.locator('[data-process="make"]').click();
   assert.equal(await page.locator('#process-heading').innerText(),'Make something someone can use.');
   await page.locator('[data-process="verify"]').click();
