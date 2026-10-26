@@ -58,9 +58,16 @@ test("existing V5 public records, member privacy and legacy RHEN routes remain r
   }
 });
 
-test("static scanner does not mistake catch-all fallback for a valid destination",()=>{
+test("static scanner does not mistake catch-all fallback or Worker-owned paths for missing React pages",()=>{
   for(const app of report.apps){
     assert.ok(app.routes.some(x=>x.path==="/*"),app.name+" must retain explicit fallback");
     assert.ok(app.unresolvedLinks.every(x=>x.file&&x.line>=0&&x.target.startsWith("/")));
+    assert.ok(app.alternateOwnerLinks.every(x=>x.verification==="HOSTED_CHECK_REQUIRED"&&x.evidence));
+  }
+  assert.equal(report.totals.unresolvedLinks,0,"All previously seen source targets must be classified or triaged");
+  assert.equal(report.totals.alternateOwnerLinks,11,"Keep explicit off-app Worker/static ownership accountable");
+  const ownerPaths=new Set(report.apps.flatMap(x=>x.alternateOwnerLinks.map(y=>y.target)));
+  for(const path of ["/devon-akins-resume.pdf","/upload","/upload/v3","/staff","/portfolio/"]){
+    assert.ok(ownerPaths.has(path),"Missing external-owner coverage: "+path);
   }
 });
