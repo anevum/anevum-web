@@ -1,0 +1,240 @@
+{
+  "schema": "anevum.web.site-surface-registry.v1",
+  "captured_at": "2026-10-25",
+  "purpose": "Read-only verified public/product surface census for one cinematic-motion-first overhaul. NOT a Cloudflare deployment manifest.",
+  "source": "Cloudflare account/zone read + GitHub V136/V5 route audit",
+  "known_provider_counts": {
+    "worker_zone_routes": 43,
+    "worker_scripts": 107,
+    "worker_custom_domains": 9,
+    "pages_projects": 1
+  },
+  "creative_authority": {
+    "primary_brand_mark": "creator-v1/brand/anevum-mark.svg",
+    "north_star": "docs/production/ANEVUM.WEB.NORTHSTAR.2026-10-25.002.MOTION-FIRST-SINGLE-STREAM.md",
+    "existing_audit": "docs/production/ANEVUM.WEB.AUDIT.2026-10-25.001.FULL-SITE-CONSOLIDATION.md",
+    "website_motion_policy": "authored-still-then-approved-video-or-bounded-sequence",
+    "allowed_ambient_webgl_default": false,
+    "specialized_player_or_studio_webgl_preserved": true
+  },
+  "canonical_lanes": [
+    {
+      "key": "v136-product",
+      "repository": "anevum/anevum-web",
+      "pr": 763,
+      "branch": "build/parity-v136-controller-route-probe-20261025-038",
+      "role": "ONE_INTEGRATED_PRODUCT_SOURCE",
+      "stage": "DEVELOPMENT",
+      "deploy_authority": false
+    },
+    {
+      "key": "v136-site-audit",
+      "pr": 778,
+      "branch": "audit/full-site-route-consolidation-20261025-001",
+      "role": "CURRENT_AUDIT_CONSOLIDATION",
+      "stage": "DRAFT_INTEGRATION",
+      "deploy_authority": false
+    },
+    {
+      "key": "v136-owner-review",
+      "pr": 779,
+      "branch": "review/v136-interactive-public-owner-20261025-001",
+      "role": "ONE_PUBLIC_LINK_VISUAL_PREVIEW",
+      "stage": "PREVIEW_LIVE",
+      "deploy_authority": false
+    },
+    {
+      "key": "v136-release",
+      "pr": 741,
+      "branch": "release/parity-v136-unified-ui-20261025-004",
+      "role": "SEALED_RELEASE_PROCEDURE",
+      "stage": "SEPARATE_APPROVAL_REQUIRED",
+      "deploy_authority": false
+    }
+  ],
+  "public_surfaces": [
+    {
+      "key": "anevum-apex",
+      "host": "anevum.com",
+      "path": "/",
+      "audience": "PUBLIC",
+      "kind": "PRODUCTION",
+      "worker": "anevum-apex-prelaunch-gateway",
+      "decision": "KEEP",
+      "notes": "Existing V131-compatible gateway and 99/1 V136 controlled canary; do not promote broad work inadvertently"
+    },
+    {
+      "key": "anevum-updates",
+      "host": "anevum.com",
+      "path": "/updates",
+      "audience": "PUBLIC",
+      "kind": "PUBLISHED_EDITORIAL",
+      "worker": "anevum-public-updates-v001",
+      "decision": "RECONCILE",
+      "notes": "Current Next Signal page collides semantically with V5 /updates and /feed records; preserve deep links"
+    },
+    {
+      "key": "v136-owner-preview",
+      "host": "anevum-v136-visual-review-001.devonakins.workers.dev",
+      "path": "/creator/",
+      "audience": "PUBLIC_LINK_ONLY",
+      "kind": "PRIMARY_VISUAL_REVIEW",
+      "worker": "anevum-v136-visual-review-001",
+      "decision": "KEEP",
+      "notes": "Unlisted read-only actual V136; no member sign-in, private authoring, publishing or payments"
+    },
+    {
+      "key": "creator-old-staging",
+      "host": "next.anevum.com",
+      "path": "/creator/",
+      "audience": "STAGING",
+      "kind": "OLDER_FUNCTIONAL_PREVIEW",
+      "worker": "anevum-creator-v1-react-staging",
+      "decision": "AUDIT",
+      "notes": "Do not use as active V136 visual authority; retain until tested functional replacement"
+    },
+    {
+      "key": "creator-studio-staging",
+      "host": "studio.next.anevum.com",
+      "path": "/",
+      "audience": "GATED_STAGING",
+      "kind": "PRIVATE_STUDIO_TEST",
+      "worker": "anevum-creator-studio-staging",
+      "decision": "KEEP",
+      "notes": "Separate from public-link visual preview"
+    },
+    {
+      "key": "backstage",
+      "host": "backstage.anevum.com",
+      "path": "/",
+      "audience": "LEGACY",
+      "kind": "ARCHIVE_BRIDGE",
+      "worker": "anevum-web-nextgen",
+      "decision": "AUDIT",
+      "notes": "Prove active usage, bindings and redirects before retirement"
+    },
+    {
+      "key": "old-community",
+      "host": "a.anevum.com",
+      "path": "/",
+      "audience": "LEGACY",
+      "kind": "COMPATIBILITY",
+      "worker": "anevum-a-community-retirement",
+      "decision": "AUDIT",
+      "notes": "Preserve functional inbound links and protected records"
+    },
+    {
+      "key": "portfolio",
+      "host": "portfolio.anevum.com",
+      "path": "/",
+      "audience": "PUBLIC",
+      "kind": "SEPARATE_PORTFOLIO",
+      "worker": "anevum-designer-portfolio",
+      "decision": "KEEP",
+      "notes": "Brand tokens aligned; portfolio redesign delegated to its own project"
+    },
+    {
+      "key": "sites-public",
+      "host": "web.anevum.com",
+      "path": "/",
+      "audience": "PUBLIC",
+      "kind": "ANEVUM_SITES",
+      "worker": "anevum-sites-public-v001",
+      "decision": "KEEP",
+      "notes": "Separate Sites business service"
+    },
+    {
+      "key": "sites-workshop",
+      "host": "sites.anevum.com",
+      "path": "/",
+      "audience": "SPECIALIZED",
+      "kind": "ANEVUM_SITES_WORKSHOP",
+      "worker": "anevum-sites-workshop-v001",
+      "decision": "KEEP",
+      "notes": "Check permission and approved customer preview scope"
+    },
+    {
+      "key": "sites-customer-preview",
+      "host": "preview.anevum.com",
+      "path": "/",
+      "audience": "REVIEW",
+      "kind": "ANEVUM_SITES_CUSTOMER_REVIEW",
+      "worker": "anevum-sites-tvt-showcase-v001",
+      "decision": "KEEP",
+      "notes": "Customer-specific prototype; not homepage V136 preview"
+    },
+    {
+      "key": "command",
+      "host": "command.anevum.com",
+      "path": "/",
+      "audience": "PRIVATE",
+      "kind": "CLOUDFLARE_PAGES_SPECIALIST",
+      "worker": null,
+      "decision": "KEEP",
+      "notes": "Keep operator and RHEN authorization and release policies separate"
+    },
+    {
+      "key": "lab",
+      "host": "lab.anevum.com",
+      "path": "/",
+      "audience": "ISOLATED",
+      "kind": "EXPERIMENTAL_LAB",
+      "worker": "anevum-private-lab",
+      "decision": "KEEP",
+      "notes": "Never merge protected lab or family data into public catalogue"
+    }
+  ],
+  "route_collisions": [
+    {
+      "key": "updates",
+      "observed": [
+        "standalone-live-worker:/updates",
+        "v5-react:/updates",
+        "v5-react:/updates/:slug",
+        "v5-react:/feed",
+        "v5-react:/field-notes"
+      ],
+      "status": "UNRESOLVED",
+      "decision": "Choose one editorial taxonomy and preserve old article URLs before any redirect or Worker change"
+    },
+    {
+      "key": "studio-alias",
+      "observed": [
+        "creator:/studio",
+        "creator:/create",
+        "creator:/account/studio"
+      ],
+      "status": "SOURCE_LINKS_CORRECTED_ALIASES_RETAINED",
+      "decision": "Link directly to /studio; keep old inbound links"
+    },
+    {
+      "key": "atlas",
+      "observed": [
+        "creator:/atlas",
+        "creator:/atlas/*"
+      ],
+      "status": "MISLEADING_MENU_REMOVED",
+      "decision": "Retain historical inbound alias; do not advertise nonexistent utility"
+    },
+    {
+      "key": "retained-v5-and-v136-root",
+      "observed": [
+        "v5:/",
+        "creator:/"
+      ],
+      "status": "DIFFERENT_DEPLOY_ANCESTRY",
+      "decision": "Only one public root after full gated release, not by renaming both sources"
+    }
+  ],
+  "destruction_allowed": false,
+  "traffic_change_authorized": false,
+  "cleanup_gates": [
+    "full_source_reachability",
+    "actual_hosted_route_crawl",
+    "traffic_and_owner_dependency",
+    "role_access_check",
+    "SEO_canonical_and_backlinks",
+    "owner_explicit_approval",
+    "rollback_receipt"
+  ]
+}
