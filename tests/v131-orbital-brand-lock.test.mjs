@@ -31,6 +31,9 @@ test('legacy global styles cannot re-color or erase the canonical path',()=>{
   assert.doesNotMatch(styles,/\.anevum-mark path\{fill:none/);
   assert.doesNotMatch(styles,/\.anevum-mark \.mark-ring|\.anevum-mark \.mark-stem/);
   assert.match(styles,/\.anevum-mark\{display:block;width:32px;height:32px/);
+  const workshop=read('src/styles/workshop.css');
+  assert.match(workshop,/\.workshop-public-light \.anevum-mark\[data-anevum-mark="orbital-underground"\]/);
+  assert.match(workshop,/background:#0b0b0d/);
 });
 
 test('retained V131 favicon is the exact compact master on one dark plate',()=>{
