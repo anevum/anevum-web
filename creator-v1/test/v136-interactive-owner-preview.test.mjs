@@ -15,7 +15,7 @@ const environment={
    const html='<!doctype html><html><head><title>ANEVUM — Create Beyond Worlds</title></head><body><div id="root"></div><script src="/creator/assets/index-test.js"></script></body></html>';
    if(path==='/'||path==='/discover'||path==='/studio')
     return new Response(html,{headers:{'content-type':'text/html; charset=utf-8'}});
-   if(path==='/assets/index-test.js')
+   if(path==='/assets/index-test.js'||path==='/assets/institute/v136-011/atrium-mobile.glb')
     return new Response('window.__anevumPreviewTest=true;',{
      headers:{'content-type':'text/javascript'}
     });
@@ -86,19 +86,20 @@ test('all writes, member/account paths and unrelated root routes fail closed',as
   '/creator/api/v1/member/creator-profile',
   '/creator/api/v1/member/auth/get-session',
   '/creator/api/v1/member/auth/sign-in',
-  '/creator/api/v1/auth/login'
+  '/creator/api/v1/auth/login',
+  '/creator/api/v1/member/payments'
  ])assert.equal((await preview.fetch(make(path),environment)).status,403,path);
  for(const path of [
   '/api/v1/status','/admin','/portfolio','/creator/api/v1/payments',
   '/creator/api/v1/upload','/creator/api/v1/publish','/creator/api/v1/private',
-  '/creator/api/v1/member/payments','/creator/api/v1/invite'
+  '/creator/api/v1/invite'
  ])assert.equal((await preview.fetch(make(path),environment)).status,404,path);
  const other=await preview.fetch(new Request('https://anevum.com/creator/'),environment);
  assert.equal(other.status,404);
 });
 
 test('review static media and script paths never need production network',async()=>{
- for(const path of ['/creator/assets/index-test.js','/assets/index-test.js']){
+ for(const path of ['/creator/assets/index-test.js','/assets/institute/v136-011/atrium-mobile.glb']){
   const response=await preview.fetch(make(path),environment);
   assert.equal(response.status,200);
   assert.equal(await response.text(),'window.__anevumPreviewTest=true;');
