@@ -20,6 +20,27 @@ class ScopeTests(unittest.TestCase):
                 self.assertTrue(scope.app_preview_required([
                     'scripts/ops/anevum-progression-reset-20261021.py',path]))
 
+    def test_isolated_house_source_does_not_trigger_unrelated_site_preview(self):
+        isolated = [
+            ".github/workflows/continuance-house-v001.yml",
+            "apps/continuance-house/server.mjs",
+            "apps/continuance-house/src/identity.mjs",
+            "apps/continuance-house/public/index.html",
+            "apps/continuance-house/tests/security.test.mjs"
+        ]
+        self.assertFalse(scope.app_preview_required(isolated))
+
+    def test_house_scope_never_disables_preview_for_site_changes(self):
+        self.assertTrue(scope.app_preview_required([
+            "apps/continuance-house/public/index.html", "src/App.tsx"]))
+        for suspicious in (
+            "apps/continuance-house/../src/App.tsx",
+            "apps/continuance-house-malicious/worker.mjs",
+            "apps/continuance-house/",
+            ".github/workflows/other.yml"):
+            with self.subTest(path=suspicious):
+                self.assertTrue(scope.app_preview_required([suspicious]))
+
     def test_empty_input_cannot_skip_preview(self):
         self.assertTrue(scope.app_preview_required([]))
 

@@ -1,0 +1,14 @@
+{
+  "name": "@anevum/continuance-house",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {"node": ">=22"},
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "HOUSE_LOCAL_DEMO=1 node server.mjs",
+    "check": "node --check server.mjs && node --check src/identity.mjs && node --check src/intent.mjs && node --check src/github.mjs && node --check public/app.js",
+    "test": "node --test tests/*.test.mjs",
+    "verify": "npm run check && npm test"
+  }
+}
