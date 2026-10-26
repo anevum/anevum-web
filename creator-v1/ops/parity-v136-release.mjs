@@ -13,11 +13,12 @@ export const V131='44f5971b-4cc9-4e7e-ab6a-1adb6fc5c12e',V132='de673bf1-ef05-427
 export const LIVE_V136_003='ec5f106b-482c-4415-9c66-d6f8daf219ad';
 export const LIVE_DEPLOY_003='77ceaf3d-5bfb-4f07-b64d-1655a3093065';
 /* Production exact read-back; prevents release over an unexpectedly changed Worker. */
-export const LIVE_V136_BETA_BASE='c53d8b9c-625b-459a-a8cc-67ebb50155fd';
-export const LIVE_DEPLOY_BETA_BASE='5bdc7902-bdd5-458d-9295-a35ffb122c96';
+export const PREVIOUS_V136_BETA_BASE='c53d8b9c-625b-459a-a8cc-67ebb50155fd';
+export const LIVE_V136_BETA_BASE='77c8a9a6-f1ee-44fb-87d6-3271b3115c37';
+export const LIVE_DEPLOY_BETA_BASE='cd6fa4f2-4382-49e2-a02b-b3d73cc41398';
 export const LIVE_V136_005='cedb7ac1-74ca-4fcd-9a40-ce56964f1785';
-export const SESSION='ANEVUM.WEB.BUILD.2026-10-26.001.STEALTH-BETA-CUTOVER';
-export const UI_ORIGIN='f02be2199a62017928e51e5bfb8df6979ba6d735';
+export const SESSION='ANEVUM.WEB.BUILD.2026-10-26.002.STEALTH-BETA-CUTOVER';
+export const UI_ORIGIN='78a2652936afd786ec60197aca722ba3e2b25c4f';
 export const FROZEN_PRODUCT_SOURCE='4dfaed54fed606713a99b87c3152beddbcbc31f3';
 export const ROUTES_SHA256='fa8abbaca3813f9172bbb1677c7a71068f4ab6c093b4f4835e67d7c70db5e67b';
 export const GATEWAY='1884ff0dd3c8aa3d38711167af0b4552c9b200b3148e72d9ba6d90d23171ef99';
@@ -125,6 +126,7 @@ const allowed=new Set([
 // reviewed paths are pinned to exact Git blobs (null means reviewed deletion),
 // rather than granting broad authority to future edits in those directories.
 export const REVIEWED_UI_BLOBS=Object.freeze({
+ "creator-v1/test/capture-sitewide-v012.mjs": "50d571bd10a5cdc6b81d1b3283abfcc29d9168b8",
  ".github/workflows/parity-v136-cinematic-production.yml": "6744a0790e2eb4bf8e7e2796f30f6d9535fcaba4",
  ".github/workflows/parity-v136-release.yml": "e7a568e2f0465283f469f15235160370509bc5d0",
  ".github/workflows/parity-v136-scene-qa.yml": "c03cb5e9d485f7b95a0d322d13bf77feaa1e27c1",
@@ -157,7 +159,7 @@ export const REVIEWED_UI_BLOBS=Object.freeze({
  "creator-v1/test/home-navigation-v079.test.mjs": "726e92d638f82ae04c04acdcb87bf61071bf229b",
  "creator-v1/test/iren-guided-v080.test.mjs": "5ede7c9f6b717bec01639a9b7b4ba45425436176",
  "creator-v1/test/member-profile-ui.test.mjs": "789f32dfd5bc305c1f5d3a8d1582cfe47a1ee9e8",
- "creator-v1/test/motion-first-browser.mjs": "2ac6aeb44effa871ad667fc64b0b0d5a938c6654",
+ "creator-v1/test/motion-first-browser.mjs": "b33db2eef08e94d2d0e8c5cb06782c2763c8eaa2",
  "creator-v1/test/motion-first-media.test.mjs": "dbfafaa700dc600d9268d99df5bc817c3e6ad2ba",
  "creator-v1/test/native-compatibility-v101.test.mjs": "5b244a0028a0da5537cf00b97b22d2b341a1622a",
  "creator-v1/test/package-discovery-browser-v011.mjs": "a728b40b46fc35d4d1028ad9731948d75e29cc8b",
@@ -355,7 +357,7 @@ export const REVIEWED_UI_BLOBS=Object.freeze({
  "creator-v1/web/src/parity/cinematic-director-v136.ts": "0438b9ad972a9c76094895f85413ae9c9baa2f68",
  "creator-v1/web/src/parity/concept-convergence-v136017.css": "9601042c1d6b29cdd18ea089747f333c4564826b",
  "creator-v1/web/src/parity/console-wayfinder-v136.css": "cddae748dfad8990e90a3da23154938e1a25b154",
- "creator-v1/web/src/parity/continuance-design-system.css": "5701502007c06ae40cab32d25f5dc819e711bd19",
+ "creator-v1/web/src/parity/continuance-design-system.css": "d6572f3c69aa82e9fa793f50f2a04c1c617af916",
  "creator-v1/web/src/parity/controller-bridge-v136.css": "e0313d4b9d495c10f686779b4a26d66af5b3ebb8",
  "creator-v1/web/src/parity/controller-input-v136.ts": "2d23c6d1a7a832d33db90f7524b6ebb2288a1ae1",
  "creator-v1/web/src/parity/first-visit-clarity-v136.css": "9579faa2edb28562a19dcc78dec812c8aa8e6e73",
@@ -376,8 +378,8 @@ export const REVIEWED_UI_BLOBS=Object.freeze({
  "creator-v1/web/v136-visual-review.worker.mjs": "60d8068b5124b4463e2b48e8dd370ff9106b8986",
  "creator-v1/web/vite.config.ts": "96258cae4910e0c6437750669af8fe6365127acc",
  "creator-v1/wrangler.v136-interactive-review.jsonc": "72b7658bf1df1ca9ad5a138ab1034c14b476e784",
- "docs/production/ACTIVE-V136-WEB-OVERHAUL.md": "01e6f178b8ee2d98babfb76e067ba8c631386e28",
- "docs/production/ANEVUM-MASTER-CONTINUITY.md": "bac8b826227b8b9d8ed6a92f6a577293759db7db",
+ "docs/production/ACTIVE-V136-WEB-OVERHAUL.md": "9022bd9237dcabd33af06af1bafac47dd590412f",
+ "docs/production/ANEVUM-MASTER-CONTINUITY.md": "d228a5631393c7003fc8d90c1647ec26748bcd80",
  "docs/production/UNIFIED-CINEMATIC-RECONSTRUCTION.md": "a42c8f94afb23ace5320c2e57ad4b3ea14c98231",
  "docs/production/anevum-workstreams-consolidation-20261024.md": "e10773e2b37c7bce0a5a37b87c7ff573e00a735c",
  "docs/production/parity-v136-cinematic-camera-handoff-20261024.md": "3c316fc8bf255e2646a4fad68847e48fca73556b",
@@ -530,7 +532,7 @@ async function after(out){
  const packageManifest=load(join(out,'manifest.json'));
  const label=packageManifest.releaseVariant==='baseline-assets-only'?'baseline-assets-only':'frontend';
  assert.equal(v.annotations?.['workers/message'],'PARITY V136 '+label+' '+git('rev-parse','HEAD')+'; V131 gateway unchanged; INACTIVE');
- const result={status:'VERIFIED_INACTIVE_PARITY_VERSION',releaseVariant:packageManifest.releaseVariant||'candidate',frontendSourceHead:packageManifest.frontendSourceHead||git('rev-parse','HEAD'),sharedAssetsSha256:packageManifest.sharedAssetsSha256||null,version:v.id,number:v.number,source:git('rev-parse','HEAD'),gatewaySha256:GATEWAY,rollback:[LIVE_V136_BETA_BASE,LIVE_V136_003,LIVE_V136_005,V131,V132],trafficChanged:false,controllerChanged:false,bindingsPreserved:true,routesPreserved:true,memberDataChanged:false};
+ const result={status:'VERIFIED_INACTIVE_PARITY_VERSION',releaseVariant:packageManifest.releaseVariant||'candidate',frontendSourceHead:packageManifest.frontendSourceHead||git('rev-parse','HEAD'),sharedAssetsSha256:packageManifest.sharedAssetsSha256||null,version:v.id,number:v.number,source:git('rev-parse','HEAD'),gatewaySha256:GATEWAY,rollback:[LIVE_V136_BETA_BASE,PREVIOUS_V136_BETA_BASE,LIVE_V136_003,LIVE_V136_005,V131,V132],trafficChanged:false,controllerChanged:false,bindingsPreserved:true,routesPreserved:true,memberDataChanged:false};
  save(join(out,'inactive-receipt.json'),result);return result;
 }
 const [cmd,...args]=process.argv.slice(2);

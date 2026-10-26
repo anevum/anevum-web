@@ -73,13 +73,17 @@ async function geometry(page){
    const node=document.querySelector(selector);if(!node)continue;
    const s=getComputedStyle(node);surfaces[selector]={background:s.backgroundImage,color:s.backgroundColor};
   }
-  const primary=document.querySelector('.p136-community .ch7-button-primary');
+  const primary=document.querySelector('.p136-button--primary,.p136-community .ch7-button-primary');
+  const chrome={};
+  for(const selector of ['.p136-header','.p136-console-wayfinder','.p136-header-search','.p136-hero','.p136-hero-rail','.p136-cinematic-arrival','.p136-button--signal','.p136-iren-cta']){
+   const node=document.querySelector(selector);if(node)chrome[selector]=getComputedStyle(node).backgroundImage;
+  }
   const guide=document.querySelector('.field-guide-page .portal-page-heading-copy h1 em');
   let guideText=null;
   if(guide){const range=document.createRange();range.selectNodeContents(guide);const r=range.getBoundingClientRect();const box=guide.closest('.portal-page-heading').getBoundingClientRect();guideText={right:r.right,left:r.left,containerRight:box.right,containerLeft:box.left};}
   return {width:innerWidth,scroll:document.documentElement.scrollWidth,
    primary:primary?{background:getComputedStyle(primary).backgroundImage,color:getComputedStyle(primary).color}:null,guideText,
-   header:rect('.p136-header'),rail:rect('.p136-console-wayfinder'),surfaces,
+   header:rect('.p136-header'),rail:rect('.p136-console-wayfinder'),surfaces,chrome,
    canvas:document.querySelectorAll('.p136-living-canvas').length,
    logo:document.querySelectorAll('[data-anevum-mark="orbital-underground"]').length,
    palette:{void:token('--av-void'),text:token('--av-text'),
@@ -93,7 +97,11 @@ async function geometry(page){
  for(const [selector,surface] of Object.entries(g.surfaces)){
   assert.ok(surface.background.includes('27, 38, 48')||surface.color==='rgb(9, 13, 19)',selector+' must render the slate terminal material, not only inherit unused root tokens: '+JSON.stringify(surface));
  }
- if(g.primary){assert.ok(g.primary.background.includes('215, 230, 235'),'Commons primary button must retain its light surface');assert.equal(g.primary.color,'rgb(9, 20, 28)');}
+ for(const [selector,background] of Object.entries(g.chrome)){
+  for(const color of background.matchAll(/rgba?\((\d+), (\d+), (\d+)/g))
+   assert.ok(Number(color[3])>=Number(color[1]),selector+' must render cold-metal gradients: '+background);
+ }
+ if(g.primary){assert.ok(g.primary.background.includes('215, 230, 235'),'Arrival and Commons primary actions must render the steel surface');assert.equal(g.primary.color,'rgb(9, 20, 28)');}
  if(g.guideText)assert.ok(g.guideText.right<=g.guideText.containerRight-8&&g.guideText.left>=g.guideText.containerLeft,'Field Guide text must fit inside the clipped heading: '+JSON.stringify(g.guideText));
  return g;
 }
