@@ -6,13 +6,13 @@ import { PortalLauncher } from "./PortalLauncher";
 import {VisualKitAtmosphere,publicVisualRoom} from "./VisualKit";
 import {ContinuanceWorldStage} from "./ContinuanceWorldStage";
 import { isEditableTarget } from "../lib/portal-destinations";
+import {HEADER_NAV} from "../lib/site-navigation";
 import { canonicalAuthClient } from "../lib/canonical-beta";
 import { CompactMemberIdentity } from "./CompactMemberIdentity";
 import { useOwnPlayerCard } from "../lib/useOwnPlayerCard";
 import {IrenGuidedContinuance} from "./IrenGuidedContinuance";
 import {VerifiedStaffShortcut} from "./VerifiedStaffShortcut";
-import {LivingWorldProvider,useLivingWorld,type WorldSector} from "../parity/LivingWorldState";
-import {LivingWorldField} from "../parity/LivingWorldField";
+import {LivingWorldProvider,useLivingWorld} from "../parity/LivingWorldState";
 import {ConsoleWayfinderV136} from "../parity/ConsoleWayfinderV136";
 import {ControllerBridgeV136} from "../parity/ControllerBridgeV136";
 import {StudioSpatialWorkspaceV136} from "../parity/StudioSpatialWorkspaceV136";
@@ -23,17 +23,12 @@ const FullParityHeader=import.meta.env.VITE_PARITY_V136_FULL==="true" ? lazy(()=
  * This component is presentation only. Private routes remain MemberGate-owned;
  * no signup capability or session is inferred from an account shortcut.
  */
-const desktopNav = [
-  {to:"/",label:"Home"},
-  {to:"/discover",label:"Discover"},
-  {to:"/community",label:"Community"},
-  {to:"/creators",label:"Creators"}
-] as const;
+const desktopNav = HEADER_NAV.filter(item=>!item.parityOnly);
 const menuDestinations = [
   {to:"/discover?category=games",label:"Play",detail:"Games and interactive worlds",icon:"star"},
   {to:"/discover",label:"Discover",detail:"Projects worth finding",icon:"explore"},
   {to:"/community",label:"Community",detail:"Creators and conversations",icon:"community"},
-  {to:"/create",label:"Create",detail:"Your studio and uploads",icon:"create"}
+  {to:"/studio",label:"Create",detail:"Your studio and uploads",icon:"create"}
 ] as const;
 const menuCategories = [
   {to:"/discover?category=tools",label:"Apps & tools"},
@@ -53,15 +48,6 @@ const menuUtilities = [
 /** One world provider survives every public route transition. */
 export function Shell(){
   return FullParityHeader?<LivingWorldProvider><ShellContent/></LivingWorldProvider>:<ShellContent/>;
-}
-function worldSector(pathname:string,search:string):WorldSector{
-  if(pathname==="/community")return "community";
-  if(pathname==="/creators")return "creators";
-  if(pathname==="/studio")return "studio";
-  if(pathname!=="/discover")return "hero";
-  const category=new URLSearchParams(search).get("category");
-  const valid:WorldSector[]=["games","tools","automation","research","creative","learning","libraries","other"];
-  return category&&valid.some(item=>item===category)?category as WorldSector:"portal";
 }
 function ShellContent(){
   const {paused,setPaused}=useLivingWorld();
@@ -160,17 +146,18 @@ function ShellContent(){
     home||parityFullBleed?<Outlet/>:
     <div className="av5-site-frame av9-unified-frame"><div className="av5-site-content"><Outlet/></div></div>;
   return <div className={"site-shell site-shell--cinematic av9-shell"+(home?" site-shell--home":"")}>
-    {FullParityHeader&&<LivingWorldField enabled={publicSpatial} sector={worldSector(location.pathname,location.search)}/>}
+    {/* Ambient pages use media/DOM. Product-specific 3D stays in its own tools. */}
     {FullParityHeader&&<ControllerBridgeV136 navigationEnabled={publicSpatial}/>}
 
-    {!publicSpatial&&!parityFullBleed&&<ContinuanceWorldStage path={location.pathname}/>}
+    {/* The legacy 2D ambient compositor remains available only for V131. The V136 public shell uses art-directed media and quiet DOM materials; avoid mounting another background canvas behind Studio, private member pages or supporting content. */}
+    {!FullParityHeader&&!publicSpatial&&!parityFullBleed&&<ContinuanceWorldStage path={location.pathname}/>}
     {FullParityHeader?<Suspense fallback={<header className="p136-header" aria-label="ANEVUM navigation loading"/>}><FullParityHeader memberDestination={memberDestination} canonicalMember={canonicalMember} query={query} onQuery={setQuery} onSearch={search} onOpenLauncher={()=>setLauncherOpen(true)} onOpenIren={()=>window.dispatchEvent(new Event("anevum:iren-open"))} menuOpen={menuOpen} onToggleMenu={()=>setMenuOpen(v=>!v)} menuButton={menuButton}/></Suspense>:<header className="site-header av9-header">
       <div className="header-inner av9-header-inner">
         <Link to="/" className="brand-lockup av9-brand" aria-label="ANEVUM homepage">
           <OrbitalMark className="brand-mark"/>
           <span className="cw-brand-stack"><b>ANEVUM</b><small>THE CREATIVE NETWORK</small></span>
         </Link>
-        <nav className="desktop-nav av9-primary" aria-label="Primary navigation">
+        <nav data-iren-anchor="navigation-desktop" className="desktop-nav av9-primary" aria-label="Primary navigation">
           {desktopNav.map(item=><NavLink key={item.to} to={item.to} end={item.to==="/"}>{item.label}</NavLink>)}
         </nav>
         <form className="header-search av9-header-search" role="search" onSubmit={search}>
@@ -229,7 +216,13 @@ function ShellContent(){
             <Icon name="arrow" size={16}/>
           </Link>)}
           <button type="button" className="ir80-wayfinder-entry"
-            onClick={()=>{setMenuOpen(false);window.dispatchEvent(new Event("anevum:iren-open"));}}>
+            onClick={()=>{setMenuOpen(false);window.requestAnimationFrame(()=>{
+              // The IREN panel remembers its opener. Use the persistent menu
+              // trigger after the dialog closes, so returning never focuses
+              // an entry inside a closed dialog.
+              menuButton.current?.focus({preventScroll:true});
+              window.dispatchEvent(new Event("anevum:iren-open"));
+            });}}>
             <span className="av79-destination-icon"><Icon name="star" size={21}/></span>
             <span><strong>IREN / Field assistant</strong><small>Get help or take a guided tour at any time</small></span>
             <span className="ir80-wayfinder-action">OPEN IREN HELP</span>

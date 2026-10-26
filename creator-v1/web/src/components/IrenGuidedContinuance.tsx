@@ -42,10 +42,10 @@ const memberSteps:readonly GuideStep[]=[
    eyebrow:"03 / YOUR BOUNDARIES",title:"Visibility is your choice.",
    description:"Member spaces begin private. You decide whether to publish your wall, and whether your level and statistics appear publicly.",
    hint:"Open visibility settings to make a deliberate change; IREN will wait."},
-  {id:"studio",route:"/member",anchor:'[data-iren-anchor="studio"]',
+  {id:"studio",route:"/member",anchor:'[data-iren-anchor="studio"]',fallback:'[data-iren-anchor="studio-tools"]',
    eyebrow:"04 / MAKE SOMETHING",title:"There is room to create.",
    description:"Creator Studio is where work is prepared and submitted. Creator publishing has its own verification and review rules; membership alone does not grant publishing or staff access.",
-   hint:"You can explore the Studio separately at any time."},
+   hint:"Choose Creator Studio from the highlighted link, or open Profile & tools first if actions are grouped there."},
   {id:"discover",route:"/discover",anchor:'[data-iren-anchor="discover"]',
    eyebrow:"05 / DISCOVERY",title:"Follow what interests you.",
    description:"Filter genuine published projects by games, apps, art, learning and more. Open a project to see the creator's work and available experience.",
@@ -54,10 +54,10 @@ const memberSteps:readonly GuideStep[]=[
    eyebrow:"06 / THE COMMONS",title:"Find your people.",
    description:"The community connects members, creators and discussions. Posts and projects have moderation and publication boundaries, so activity you see is not fabricated.",
    hint:"Explore discussions, projects, and public member identities."},
-  {id:"wayfinder",route:"/community",anchor:'[data-iren-anchor="navigation"]',
+  {id:"wayfinder",route:"/community",anchor:'[data-iren-anchor="navigation"]',fallback:'[data-iren-anchor="navigation-desktop"]',
    eyebrow:"07 / THE WAYFINDER",title:"The whole network, one menu.",
-   description:"Open the Wayfinder to move between worlds. Search finds real projects and creators, and your player card brings you back home.",
-   hint:"IREN can always be reopened from the small help companion."}
+   description:"Use site navigation to move between worlds. Wayfinder is the menu on smaller screens; desktop links offer the same real destinations. Search finds projects and creators.",
+   hint:"Use the highlighted Menu button on phones or the primary navigation on desktop. IREN remains available from its help companion."}
 ];
 const visitorSteps:readonly GuideStep[]=[
   {id:"arrival",route:"/",anchor:'[data-iren-anchor="arrival"]',
@@ -450,8 +450,30 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
     }
     let frame=0,scrolled=false;
     const reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const findTarget=()=>document.querySelector<HTMLElement>(step.anchor)
-      ||(step.fallback?document.querySelector<HTMLElement>(step.fallback):null);
+    // Existing anchors may be present inside closed <details> or hidden at a
+    // responsive breakpoint. Prefer a painted, measurable control instead.
+    const isVisible=(target:HTMLElement|null):target is HTMLElement=>{
+      if(!target||!target.isConnected||!target.getClientRects().length)return false;
+      // An author stylesheet may give descendants of closed <details> a
+      // nonzero DOMRect, although they are not interactable. Respect every
+      // closed disclosure ancestor; only its direct summary is eligible.
+      for(let ancestor=target.parentElement;ancestor;ancestor=ancestor.parentElement){
+        if(ancestor.matches('details:not([open])')){
+          const summary=ancestor.querySelector(':scope > summary');
+          if(!summary?.contains(target))return false;
+        }
+      }
+      const style=window.getComputedStyle(target);
+      const rect=target.getBoundingClientRect();
+      return style.display!=="none"&&style.visibility!=="hidden"&&
+        rect.width>0&&rect.height>0;
+    };
+    const findTarget=()=>{
+      const primary=document.querySelector<HTMLElement>(step.anchor);
+      if(isVisible(primary))return primary;
+      const fallback=step.fallback?document.querySelector<HTMLElement>(step.fallback):null;
+      return isVisible(fallback)?fallback:null;
+    };
     const measure=()=>{
       const container=findTarget();
       if(!container){setSpotlight(null);return;}
@@ -463,11 +485,16 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
       const target=large
         ?container.querySelector<HTMLElement>('h1,h2,h3,[role="heading"]')||container
         :container;
-      const rect=target.getBoundingClientRect();
+      let rect=target.getBoundingClientRect();
       if(!scrolled){
         scrolled=true;
-        if(rect.top<78||rect.bottom>window.innerHeight-160)
+        if(rect.top<78||rect.bottom>window.innerHeight-160||rect.left<8||rect.right>window.innerWidth-8){
           target.scrollIntoView({behavior:reduced?"instant":"smooth",block:"center",inline:"nearest"});
+          // Layout and nested scroll offsets can change synchronously (and
+          // may continue changing during smooth motion). Never spotlight
+          // the stale pre-scroll rectangle; scroll events update it again.
+          rect=target.getBoundingClientRect();
+        }
       }
       const left=clamp(rect.left-7,8,window.innerWidth-8);
       const right=clamp(rect.right+7,8,window.innerWidth-8);

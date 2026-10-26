@@ -4,6 +4,7 @@ import {canonicalAuthClient} from '../lib/canonical-beta';
 import {useResource} from '../lib/useResource';
 import {useMemberRevalidation} from '../lib/useMemberRevalidation';
 import {ForumAuthorCard as AuthorCard} from '../components/ForumAuthorCard';
+import {browserRequestId} from '../lib/request-id';
 import {forumRequest as request,FORUM_TOPICS as topics,FORUM_ID as UUID,ForumApiError,
  type ForumThread as Thread,type ForumReply as Reply,type MemberSubmission as MyThread,
  type ForumThreadPage,type ForumReplyPage} from '../lib/member-forums';
@@ -44,7 +45,7 @@ export function CommunityForums(){
  const [topic,setTopic]=useState('all'),[revision,setRevision]=useState(0),[compose,setCompose]=useState(false);
  const [title,setTitle]=useState(''),[body,setBody]=useState(''),[draftTopic,setDraftTopic]=useState('community'),[busy,setBusy]=useState(false),[notice,setNotice]=useState(''),[error,setError]=useState('');
  const threads=useResource(signal=>request<ForumThreadPage>('/api/v1/community/threads'+(topic==='all'?'':'?topic='+topic),'GET',undefined,signal),[topic,revision,identityRevision]);
- const [requestId,setRequestId]=useState(()=>crypto.randomUUID());
+ const [requestId,setRequestId]=useState(()=>browserRequestId());
  const streamKey=topic+'|'+revision+'|'+identityRevision;
  const activeStream=useRef(streamKey);activeStream.current=streamKey;
  const [extra,setExtra]=useState<{key:string;items:Thread[];nextCursor:string|null}>({key:'',items:[],nextCursor:null});
@@ -69,7 +70,7 @@ export function CommunityForums(){
  }
  async function submit(e:FormEvent){e.preventDefault();if(busy)return;setBusy(true);setError('');try{
   await request('/api/v1/community/threads','POST',{topic:draftTopic,title,body,requestId});
-  setTitle('');setBody('');setDraftTopic('community');setRequestId(crypto.randomUUID());setCompose(false);
+  setTitle('');setBody('');setDraftTopic('community');setRequestId(browserRequestId());setCompose(false);
   setNotice('Your thread is saved for staff review. It will appear publicly only when approved.');setRevision(x=>x+1);
  }catch(e){setError(e instanceof Error?e.message:'Nothing was saved')}finally{setBusy(false)}}
  if(threads.state==='error'&&threads.error instanceof ForumApiError&&threads.error.status===404)return null;
@@ -98,7 +99,7 @@ export function CommunityThread(){
  const {data:session}=canonicalAuthClient.useSession();
  const memberId=session?.user?.id??null;
  const [revision,setRevision]=useState(0),[body,setBody]=useState('');
- const [requestId,setRequestId]=useState(()=>crypto.randomUUID());
+ const [requestId,setRequestId]=useState(()=>browserRequestId());
  const [busy,setBusy]=useState(false),[notice,setNotice]=useState('');
  const [likedOverride,setLikedOverride]=useState<boolean|null>(null);
  const [reportTarget,setReportTarget]=useState<{kind:'thread'|'reply';id:string}|null>(null);
@@ -141,7 +142,7 @@ export function CommunityThread(){
   e.preventDefault();
   if(body.trim().length<10)return;
   if(await action('POST','/api/v1/community/threads/'+id+'/replies',{body,requestId})){
-   setBody('');setRequestId(crypto.randomUUID());
+   setBody('');setRequestId(browserRequestId());
    setNotice('Your reply was received for independent review. It is not public yet.');
   }
  }

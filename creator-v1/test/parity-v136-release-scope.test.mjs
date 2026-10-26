@@ -11,7 +11,11 @@ test('newly reviewed UI requires the exact reviewed bytes, including deletions',
  assert.ok(paths.length>60,'Full reviewed sitewide delta is enumerated');
  verifySourcePaths(paths,path=>REVIEWED_UI_BLOBS[path]);
  for(const path of paths){
-  assert.match(path,/^(creator-v1\/(test\/|web\/)|docs\/production\/)/);
+  assert.ok(/^(creator-v1\/(test\/|web\/|graphics\/|source-ide\/)|docs\/production\/)/.test(path)||
+   ['site/alpha/v003/archive.d.mts','creator-v1/ops/parity-v136-asset-pair.mjs','package.json',
+    '.github/workflows/parity-v136-release.yml','.github/workflows/parity-v136-scene-qa.yml',
+    '.github/workflows/parity-v136-cinematic-production.yml','.github/workflows/parity-v136030-studio-preview.yml',
+    '.github/workflows/v136-interactive-owner-review.yml','creator-v1/wrangler.v136-interactive-review.jsonc'].includes(path),'Only enumerated UI, test and release-governance paths may be pinned');
   assert.throws(()=>verifySourcePaths([path],()=> '0'.repeat(40)),/Reviewed UI file bytes changed/);
  }
  const deleted=paths.find(path=>REVIEWED_UI_BLOBS[path]===null);
@@ -60,4 +64,10 @@ test('metadata changes or a current runtime consumer forbid relocation',t=>{
  writeFileSync(join(fresh,path),'unreviewed');
  assert.throws(()=>copyReleaseFrontend(fresh,out),/Unreviewed metadata bytes/);
  assert.equal(readFileSync(join(out,path),'utf8'),'preserved-baseline');
+});
+test('unapproved owner-review media cannot enter a public release package',t=>{
+ const {fresh,out}=metadataFixture(t);
+ mkdirSync(join(fresh,'assets/cinematic-v136/arrival/review-001'),{recursive:true});
+ writeFileSync(join(fresh,'assets/cinematic-v136/arrival/review-001/candidate.mp4'),'not approved');
+ assert.throws(()=>copyReleaseFrontend(fresh,out),/Owner-review artwork/);
 });

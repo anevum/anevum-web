@@ -200,6 +200,49 @@
 .p136-discover-world-copy small{max-width:28ch;color:#c6d7e7;font:450 11px/1.5 var(--pd-body)}
 .p136-discover-world-art-note{position:absolute;right:12px;bottom:6px;color:#b1d1e3;
   opacity:.8;font:500 7px/1 var(--pd-body);letter-spacing:.08em}
+
+/* V136.026 visual verification: the native index field already draws the
+ * approved category number/name, so the old front-layer duplicate cannot
+ * sit over it. Keep one real index plate plus a separate readable description.
+ * No posters, remote images or synthetic project records are introduced. */
+.p136-discovery[data-discovery-phase="v136.026"] .p136-discover-world{
+  display:flex;flex-direction:column;align-items:stretch;
+  min-height:272px;padding:0;gap:0;
+}
+.p136-discovery[data-discovery-phase="v136.026"] .p136-discover-world>.cw-artwork{
+  position:relative;inset:auto;z-index:0;display:block;
+  width:100%;height:192px;min-height:190px;flex:1 1 192px;
+}
+.p136-discovery[data-discovery-phase="v136.026"] .p136-discover-world-shade,
+.p136-discovery[data-discovery-phase="v136.026"] .p136-discover-world-top,
+.p136-discovery[data-discovery-phase="v136.026"] .p136-discover-world-art-note,
+.p136-discovery[data-discovery-phase="v136.026"] .p136-discover-world-copy strong{
+  display:none;
+}
+.p136-discovery[data-discovery-phase="v136.026"] .p136-discover-world-copy{
+  position:relative;z-index:1;display:block;flex:0 0 auto;
+  min-width:0;margin:0;padding:12px 15px 14px;
+  border-top:1px solid rgba(121,193,237,.42);
+  background:linear-gradient(145deg,#102b41,#061726);
+}
+.p136-discovery[data-discovery-phase="v136.026"] .p136-discover-world-copy small{
+  display:block;max-width:none;color:#c0d9eb;
+  font:500 11px/1.48 var(--pd-body);overflow-wrap:anywhere;
+}
+@media(max-width:600px){
+ .p136-discovery[data-discovery-phase="v136.026"] .p136-discover-world{
+   min-height:262px;
+ }
+ .p136-discovery[data-discovery-phase="v136.026"] .p136-discover-world>.cw-artwork{
+   min-height:188px;
+ }
+ .p136-discovery[data-discovery-phase="v136.026"] .p136-discover-world-copy{
+   padding:10px 12px 12px;
+ }
+ .p136-discovery[data-discovery-phase="v136.026"] .p136-discover-world-copy small{
+   font-size:11px;line-height:1.42;
+ }
+}
 .p136-discover-category-nav{display:flex;gap:8px;overflow-x:auto;overscroll-behavior-x:contain;
   scrollbar-width:thin;margin-top:16px;padding:2px 2px 9px}
 .p136-discover-category-nav button{
@@ -256,10 +299,34 @@
   border:1px solid #668bd56e;border-radius:13px;background:linear-gradient(145deg,#10243b,#081523);
   box-shadow:inset 0 1px 0 #d9f5ff1e,0 12px 40px #0007
 }
-.p136-discover-results--compact{grid-template-columns:repeat(2,minmax(0,1fr))}
-.p136-discover-results--compact .project-card{padding:16px}
-.p136-discover-results--compact .av010-work-card{min-height:0}
-.p136-discover-results--compact .av010-work-card .av010-work-cover{max-height:190px}
+/* V136.026: List means one real, full-width release per row, not two cards.
+ * Browser uploads retain their actual uploaded-cover priority in Grid; their
+ * compact variant intentionally omits media for dense scanning. */
+.p136-discovery[data-discovery-phase="v136.026"] .p136-discover-results.p136-discover-results--compact{
+  grid-template-columns:minmax(0,1fr);gap:11px;
+}
+.p136-discovery[data-discovery-phase="v136.026"] .p136-discover-results--compact .project-card.av73-project-card{
+  min-width:0;min-height:0;display:flex;flex-direction:column;gap:8px;
+  padding:18px 20px;border-radius:10px;
+}
+.p136-discovery[data-discovery-phase="v136.026"] .p136-discover-results--compact .project-card.av73-project-card h3{
+  margin:0;font:730 clamp(17px,1.6vw,22px)/1.28 var(--pd-body);
+  color:var(--pd-ink);overflow-wrap:anywhere;
+}
+.p136-discovery[data-discovery-phase="v136.026"] .p136-discover-results--compact .project-card.av73-project-card p{
+  margin:0;min-height:0;max-width:82ch;font-size:13px;line-height:1.6;
+}
+.p136-discovery[data-discovery-phase="v136.026"] .p136-discover-results--compact .av73-project-card-bottom{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
+  min-width:0;gap:10px;margin-top:5px;
+}
+.p136-discovery[data-discovery-phase="v136.026"] .p136-discover-results--compact .av010-work-card{
+  min-height:0;border-radius:10px;
+}
+.p136-discovery[data-discovery-phase="v136.026"] .p136-discover-results--compact .av010-work-card .av010-work-cover{display:none}
+.p136-discovery[data-discovery-phase="v136.026"] .p136-discover-results--compact .av010-work-card .av010-work-body{padding:18px 20px}
+.p136-discovery[data-discovery-phase="v136.026"] .p136-discover-layout-switch button{min-height:44px}
+
 .p136-discover-status{color:#bdd0e4;font-size:12px;line-height:1.6}
 .p136-discover-empty{
   display:flex;align-items:center;gap:26px;min-height:190px;padding:clamp(20px,3vw,38px);
@@ -306,7 +373,7 @@
  .p136-discover-helper{min-height:32px}
  .p136-discover-section-heading>p{text-align:left}
  .p136-discover-search-form{gap:8px;padding:7px 7px 7px 12px;margin-top:18px;min-height:55px}
- .p136-discover-search-form input{font-size:12px}
+ .p136-discover-search-form input{font-size:16px}
  .p136-discover-search-form button{font-size:0;gap:0;min-width:44px;padding:0}
  .p136-discover-search-form button svg{width:19px;height:19px}
  .p136-discover-availability small{flex-basis:100%}

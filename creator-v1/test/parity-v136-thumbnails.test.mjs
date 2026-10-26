@@ -16,23 +16,24 @@ test('ten predefined scalable ANEVUM images cover legacy and package creation ty
   simulation:'simulation',story:'story'};
  for(const [kind,expected] of Object.entries(lookup)){
   assert.equal(projectThumbnailPreset(kind).asset,expected);
-  assert.equal(defaultProjectThumbnailUrl(kind),'/assets/default-thumbnails/'+expected+'.svg');
+  assert.equal(defaultProjectThumbnailUrl(kind),'/assets/default-thumbnails/v136-baseline-005/'+expected+'.svg');
  }
- assert.equal(defaultProjectThumbnailUrl('app','/creator/'),'/creator/assets/default-thumbnails/tools.svg');
+ assert.equal(defaultProjectThumbnailUrl('app','/creator/'),'/creator/assets/default-thumbnails/v136-baseline-005/tools.svg');
  for(const unsafe of [null,'../../private',{},'GAME','<script>']){
   assert.equal(projectThumbnailPreset(unsafe).asset,'other');
-  assert.equal(defaultProjectThumbnailUrl(unsafe,'/creator/'),'/creator/assets/default-thumbnails/other.svg');
+  assert.equal(defaultProjectThumbnailUrl(unsafe,'/creator/'),'/creator/assets/default-thumbnails/v136-baseline-005/other.svg');
  }
  assert.equal(valid.length,10);
 });
 test('every local default is valid-looking first-party vector without external requests or faux user data',()=>{
  for(const kind of valid){
   const content=svg(kind),url=new URL('../web/public/assets/default-thumbnails/'+kind+'.svg',import.meta.url);
-  assert.ok(statSync(fileURLToPath(url)).size>=2500);
+  assert.ok(statSync(fileURLToPath(url)).size>=1900);
   assert.match(content,/^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
   assert.match(content,/width="1600" height="900"/);
   assert.match(content,/<title id="title">ANEVUM default/);
-  assert.match(content,/ANEVUM DEFAULT PREVIEW/);
+  assert.doesNotMatch(content,/<text\b|ANEVUM DEFAULT PREVIEW|CREATOR MEDIA NOT PROVIDED/,
+   'Image defaults are text-free; truthful category and creator data remain in real cards');
   assert.match(content,/<\/svg>\s*$/);
   assert.doesNotMatch(content,/(?:<script|<image\b|<foreignObject|onload\s*=|@import|https?:\/\/(?!www\.w3\.org\/2000\/svg)|&(?!(?:amp|lt|gt|quot|apos);))/i);
  }
@@ -72,4 +73,15 @@ test('isolated browser fixture serves only the ten reviewed default SVGs, not ar
  assert.ok(fixture.includes('return json(res,{error:"not-found"},404)'), 'Unknown asset paths must fail closed');
  assert.ok(!fixture.includes(String.raw`default-thumbnails\/[a-zA-Z0-9._-]+`),
   'A wildcard path would widen the test source allowlist');
+});
+
+test('V136 category art has one visual name and V136-only default disclosure remains in DOM metadata',()=>{
+ const art=readFileSync(new URL('../web/src/components/CosmicArtwork.tsx',import.meta.url),'utf8');
+ assert.match(art,/av136-index-field__number/);
+ assert.match(art,/av136-index-field__name/);
+ assert.doesNotMatch(art,/av136-index-field__top|av136-index-field__foot/);
+ const ui=readFileSync(new URL('../web/src/parity/continuance-design-system.css',import.meta.url),'utf8');
+ assert.ok(ui.includes('.p136-discovery .p136-discover-world'));
+ assert.ok(ui.includes('.p136-discovery .p136-discover-search-form'));
+ assert.ok(ui.includes('.p136-project-art-note,.p136-kind'));
 });

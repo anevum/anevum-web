@@ -23,11 +23,41 @@ export function safeReturnPath(raw: string | null | undefined): string {
     if (/^[a-z]{2,24}$/.test(category)) params.set("category", category);
     if (url.searchParams.get("free") === "1") params.set("free", "1");
   }
+  if ((route === "/discover" || route === "/creators") && url.searchParams.get("view") === "list")
+    params.set("view", "list");
+  if (route === "/community") {
+    const view = url.searchParams.get("view");
+    if (view === "projects" || view === "conversations" || view === "people") {
+      params.set("view", view);
+      const category = url.searchParams.get("category") || "";
+      if (view === "projects" && /^(games|tools|creative|libraries|research|learning|automation|other)$/.test(category))
+        params.set("category", category);
+      if (view === "conversations" && url.searchParams.get("sort") === "hot") params.set("sort", "hot");
+      const q = (url.searchParams.get("q") || "").trim();
+      if (view === "people" && q && q.length <= 72 && !/[\u0000-\u001f\u007f]/.test(q)) params.set("q", q);
+    }
+  }
   if (route !== "/") {
     const cursor = url.searchParams.get("cursor") || "";
     if (cursorPattern.test(cursor)) params.set("cursor", cursor);
   }
+  const directory = url.searchParams.get("from");
+  if (handle.test(route) && directory && /^\/creators(?:\?|$)/.test(directory))
+    params.set("from", creatorDirectoryReturnPath(directory));
   return route + (params.size ? "?" + params.toString() : "");
+}
+
+export function creatorDirectoryReturnPath(raw: string | null | undefined): string {
+  // Only the public directory can be carried through a creator channel.
+  // Checking the route before sanitizing prevents nested channel recursion.
+  if (!raw || !/^\/creators(?:\?|$)/.test(raw)) return "/creators";
+  const path = safeReturnPath(raw);
+  return path === "/creators" || path.startsWith("/creators?") ? path : "/creators";
+}
+
+export function creatorChannelPath(handle: string, directory: string): string {
+  return "/creators/" + encodeURIComponent(handle) + "?" +
+    new URLSearchParams({from:creatorDirectoryReturnPath(directory)}).toString();
 }
 
 export function projectDetailPath(id: string, returnTo: string): string {

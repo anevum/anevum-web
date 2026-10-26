@@ -18,6 +18,10 @@
 .ms-toolbar-next .ms-toolbar-more>summary:after{content:' +';font-size:14px;margin-left:5px}
 .ms-toolbar-next .ms-toolbar-more[open]>summary:after{content:' −'}
 .ms-toolbar-next .ms-toolbar-more-content{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:12px 0}
+/* A closed native details element must hide its contents even when an author
+   rule supplies display:flex. Otherwise controls can appear selectable to the
+   guided tour and accessible navigation despite the disclosure being shut. */
+.ms-toolbar-next .ms-toolbar-more:not([open])>.ms-toolbar-more-content{display:none}
 .ms-toolbar-next .ms-toolbar-more-content button,.ms-toolbar-next .ms-toolbar-more-content a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;border:1px solid rgba(194,188,221,.26);border-radius:8px;padding:10px 12px;background:#202737;color:#eee7f5;text-decoration:none;font-size:12px}
 .ms-toolbar-next .ms-toolbar-more-content button[aria-current=page]{border-color:#e3d7f6}
 .mc-reward-more{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:48px;padding:13px 17px;margin-top:12px;background:#1c2431;border:1px solid rgba(200,190,215,.31);border-radius:10px;color:#e5d8ef;font:600 13px/1.4 inherit;cursor:pointer}

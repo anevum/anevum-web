@@ -55,14 +55,15 @@ test('public space and Community preserve true media, real records and actual se
  assert.match(community,/<ProjectThumbnail/);
  assert.doesNotMatch(community,/<div className="ch7-hero-art"/);
 });
-test('art-free Institute preserves one existing real WebGL handoff and safe release bounds',()=>{
+test('motion-first Institute preserves real Studio capabilities and safe release bounds',()=>{
  const arrival=read('web/src/parity/CinematicArrivalV136.tsx');
  const main=read('web/src/main.tsx');
  const visual=read('web/src/parity/sitewide-interface-v136.css');
  const studio=read('web/src/parity/StudioSpatialWorkspaceV136.tsx');
  const release=read('ops/parity-v136-release.mjs');
- assert.match(arrival,/data-arrival-surface="native-interface"/);
- assert.doesNotMatch(arrival,/<picture\b|manifest\.posters/);
+ assert.match(arrival,/data-cinematic-v136="motion-first"/);
+ assert.match(arrival,/ownerReview&&!posterFailed&&<picture/);
+ assert.doesNotMatch(arrival,/cinematicWorldReadiness/);
  assert.match(main,/sitewide-interface-v136\.css/);
  assert.match(visual,/prefers-reduced-motion:reduce/);
  assert.match(visual,/:focus-visible/);
@@ -70,4 +71,13 @@ test('art-free Institute preserves one existing real WebGL handoff and safe rele
  assert.match(read('web/src/parity/ArtifactWorkbenchV136.tsx'),/MonacoSourceV136/);
  assert.match(release,/VITE_PARITY_V136_HORIZON_QA/);
  assert.match(release,/VITE_PARITY_V136_SHARED_SCENE_QA/);
+});
+
+test('V136 stops loading the legacy procedural canvas on every route while retaining V131 fallback',()=>{
+ const shell=read('web/src/components/Shell.tsx');
+ const oldStage=read('web/src/components/ContinuanceWorldStage.tsx');
+ assert.match(shell,/!FullParityHeader&&!publicSpatial&&!parityFullBleed&&<ContinuanceWorldStage path=\{location\.pathname\}\/>/);
+ assert.match(shell,/\{FullParityHeader&&<ControllerBridgeV136 navigationEnabled=\{publicSpatial\}\/>\}/);
+ assert.match(oldStage,/data-continuance-scene=\{room\}/);
+ assert.match(read('web/src/parity/CinematicArrivalV136.tsx'),/data-cinematic-v136="motion-first"/);
 });

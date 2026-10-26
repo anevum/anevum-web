@@ -97,14 +97,15 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
   // Route/filter changes invalidate the local inspection, never the data API.
   useEffect(()=>setInspected(null),[current]);
   const filtered=Boolean(query||category||cursor||freeOnly);
+  const clearHref=view==='compact'?'/discover?view=list':'/discover';
   const countLabel=resourceState==='ready'?'APPROVED PROJECT CATALOGUE':packagesInScope&&packageState==='ready'?'AVAILABLE BROWSER RELEASES':'READING THE PUBLIC INDEX';
-  return <div data-iren-anchor="discover" className="portal-discover av73-discover p136-discovery" data-parity-discover="v136.004">
+  return <div data-iren-anchor="discover" className="portal-discover av73-discover p136-discovery" data-parity-discover="v136.004" data-discovery-phase="v136.026">
     <section className="p136-discover-hero" aria-labelledby="p136-discover-title">
       <div className="p136-discover-hero-grid" aria-hidden="true"/>
       <div className="p136-discover-hero-copy">
         <p className="p136-discover-register"><span className="p136-discover-signal"/> THE CONTINUANCE INSTITUTE <span className="p136-register-break">/</span> OPEN DISCOVERY</p>
         <h1 id="p136-discover-title">{activeLabel?<>Discover <em>{activeLabel.toLowerCase()}.</em></>:<>Discover what <em>comes next.</em></>}</h1>
-        <p>Explore independent games, software, art and research. Every listed project comes from the approved public catalogue, not a fabricated showcase or paid ranking.</p>
+        <p>Games, tools, art and research from independent creators. Search the public catalogue and find something worth exploring.</p>
         <div className="p136-discover-hero-actions">
           <a className="p136-discover-action-primary" href="#p136-discover-search">Explore the index <Icon name="arrow" size={19}/></a>
           <Link className="p136-discover-action-quiet" to="/studio">Open Creator Studio <Icon name="create" size={17}/></Link>
@@ -140,10 +141,11 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
                 event.preventDefault();onSearchValue(event.currentTarget.value);
               }
             }}
-            placeholder="Search games, software, art, research..." />
+            placeholder="Search projects..." />
+          {view==='compact'&&<input type="hidden" name="view" value="list"/>}
           {category&&<input type="hidden" name="category" value={category}/>}
           {freeOnly&&<input type="hidden" name="free" value="1"/>}
-          <button type="submit" onClick={event=>{
+          <button type="submit" aria-label="Search published projects" onClick={event=>{
             event.preventDefault();
             const field=event.currentTarget.form?.elements.namedItem("q") as HTMLInputElement|null;
             onSearchValue(field?.value??draft);
@@ -156,7 +158,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
               aria-describedby="p136-free-disclosure" className={freeOnly?'is-selected':''}>Marked free <span aria-hidden="true">{freeOnly?'✓':'+'}</span></button>
             <small id="p136-free-disclosure">Creator-declared, not an independent price check.</small>
           </div>
-          {filtered&&<Link to="/discover" className="p136-discover-reset">Clear filters <Icon name="close" size={14}/></Link>}
+          {filtered&&<Link to={clearHref} className="p136-discover-reset">Clear filters <Icon name="close" size={14}/></Link>}
         </div>
       </section>
 
@@ -170,7 +172,8 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
             const item=channels.find(ch=>ch.id===id);
             if(!item)return null;
             return <button type="button" key={id} className={'p136-discover-world p136-discover-world--'+id+(category===id?' is-active':'')}
-              aria-pressed={category===id} onClick={()=>onCategory(id)} onKeyDown={focusNearestWorld}>
+              aria-pressed={category===id} aria-label={item.label+' '+item.description}
+              onClick={()=>onCategory(id)} onKeyDown={focusNearestWorld}>
               <CosmicArtwork scene={scenes[id]}/>
               <span className="p136-discover-world-shade" aria-hidden="true"/>
               <span className="p136-discover-world-top">FIELD / 0{index+1}<Icon name="arrow" size={17}/></span>
@@ -191,7 +194,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
           <div><span className="p136-discover-kicker">{countLabel}{freeOnly?' / MARKED FREE':''}</span>
             <h2 id="p136-index-heading">{query?'Search results':activeLabel?activeLabel+' releases':'Published worlds & work'}</h2>
             {query&&<p className="p136-discover-query">Searching for “{query}”</p>}
-            {resultsReady&&<p className="p136-discover-count">{shown} approved {shown===1?'release':'releases'} on this page</p>}
+            {resultsReady&&<p className="p136-discover-count" role="status">{shown} approved {shown===1?'release':'releases'} on this page</p>}
           </div>
           <div className="p136-discover-layout-switch" role="group" aria-label="Choose project layout">
             <button type="button" aria-pressed={view==='covers'} className={view==='covers'?'is-active':''} onClick={()=>onView('covers')}><Icon name="explore" size={15}/> Grid</button>
@@ -203,7 +206,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
           detail="Published project data is temporarily unavailable. No sample projects were substituted."/>}
         {packagesInScope&&packageState==='loading'&&<p className="p136-discover-status" role="status">Checking approved browser uploads…</p>}
         {packagesInScope&&packageState==='error'&&<p className="p136-discover-status" role="status">Uploaded browser releases are temporarily unavailable.</p>}
-        {resultsReady&&shown>0&&<div className={'p136-discover-results'+(view==='compact'?' p136-discover-results--compact':'')}>
+        {resultsReady&&shown>0&&<div data-layout={view==='compact'?'list':'grid'} className={'p136-discover-results'+(view==='compact'?' p136-discover-results--compact':'')}>
           {packageProjects.map(project=><WorkCard key={'package:'+project.id} work={project} mode="public" compact={view==='compact'} onInspect={work=>setInspected({kind:'package',work})}/>)}
           {legacyProjects.map(project=><ProjectCard key={'catalogue:'+project.id} project={project} returnTo={current} presentation={view==='compact'?'editorial':'visual'} onInspect={project=>setInspected({kind:'project',project})}/>)}
         </div>}
@@ -212,7 +215,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
           <div><span className="p136-discover-kicker">A REAL INDEX / NO FABRICATED RESULTS</span>
             <h3>{cursor?'No additional releases on this page.':filtered?'No matching projects yet.':'No approved projects yet.'}</h3>
             <p>Try a different search or category. Only approved public work is listed; private drafts stay private.</p>
-            <div className="p136-discover-empty-actions"><Link to="/discover">Explore all work</Link><Link to="/guide">Read the field guide</Link></div>
+            <div className="p136-discover-empty-actions"><Link to={clearHref}>Explore all work</Link><Link to="/guide">Read the field guide</Link></div>
           </div>
         </div>}
         {packagesInScope&&packagesCount===100&&<p className="p136-discover-status">Browser upload search covers the latest 100 approved releases.</p>}

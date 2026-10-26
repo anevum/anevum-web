@@ -7,6 +7,7 @@ import {RepositoryPanel} from "../components/RepositoryPanel";
 import {MemberEngagementPanel} from "../components/MemberEngagementPanel";
 import {ProjectLaunchKit} from "../components/ProjectLaunchKit";
 import {safeReturnPath} from "../lib/navigation";
+import {publicCreatorHandle} from "../lib/public-creator-handle";
 import {ContextDiscussions} from "../components/ContextDiscussions";
 import {isAnevumHostedRelease} from "../lib/project-hosting";
 
@@ -24,6 +25,7 @@ export function ProjectPage(){
   if(project.state==="loading")return <LoadingState label="Preparing the published project page"/>;
   if(project.state==="error")return <ErrorState title="PROJECT NOT AVAILABLE" detail="This work may be unpublished, withdrawn, or the public catalogue is temporarily unavailable."/>;
   const p=project.data.item,demo=safeExternal(p.demoUrl),source=safeExternal(p.sourceUrl);
+  const creatorHandle=publicCreatorHandle(p.creatorHandle);
   const hosted=isAnevumHostedRelease(p.id,demo);
   const date=p.publishedAt?new Date(p.publishedAt):null;
   const published=date&&Number.isFinite(date.getTime())?new Intl.DateTimeFormat("en-US",{month:"short",day:"numeric",year:"numeric",timeZone:"UTC"}).format(date):"DATE NOT LISTED";
@@ -66,7 +68,7 @@ export function ProjectPage(){
         <div id="avp-source"><RepositoryPanel projectId={p.id} sourceUrl={p.sourceUrl}/>
           {source&&<a className="avp-inline-source" href={source.href} target="_blank" rel="noopener noreferrer" aria-label={"View source on "+source.hostname+" in a new tab"}>VIEW SOURCE ON {source.hostname.toUpperCase()} ↗</a>}
         </div>
-        <section className="portal-box portal-project-discovery"><span className="kicker">KEEP THE PORTAL OPEN</span><h2>DISCOVER MORE IN {p.category.toUpperCase()}</h2><p>Explore other approved independent creations or visit the maker's channel. Only published, moderated work belongs in the catalogue.</p><div><Link className="button secondary" to={"/discover?category="+encodeURIComponent(p.category)}>MORE IN THIS CATEGORY →</Link>{typeof p.creatorHandle==="string"&&/^[a-z][a-z0-9_]{2,29}$/.test(p.creatorHandle)?<Link className="button secondary" to={"/creators/"+encodeURIComponent(p.creatorHandle)}>CREATOR CHANNEL →</Link>:<span className="button secondary" aria-label="Creator channel not linked">CREATOR CHANNEL NOT LINKED</span>}</div></section>
+        <section className="portal-box portal-project-discovery"><span className="kicker">KEEP THE PORTAL OPEN</span><h2>DISCOVER MORE IN {p.category.toUpperCase()}</h2><p>Explore other approved independent creations or visit the maker's channel. Only published, moderated work belongs in the catalogue.</p><div><Link className="button secondary" to={"/discover?category="+encodeURIComponent(p.category)}>MORE IN THIS CATEGORY →</Link>{creatorHandle?<Link className="button secondary" to={"/creators/"+encodeURIComponent(creatorHandle)}>CREATOR CHANNEL →</Link>:<span className="button secondary" aria-label="Creator channel not linked">CREATOR CHANNEL NOT LINKED</span>}</div></section>
       </div>
     </div>
   </div>;

@@ -103,19 +103,23 @@ function BuildCard({project,review=false,onDecision}:{project:NativeProject;revi
  const playableDraft=!!project.draftReleaseId&&(pending||ready)&&!expired;
  const label=project.status==='suspended'?'Suspended':pending?'Update in review':expired?'Private test expired':ready?'Private build ready':pretty(project.status);
  return <article className="st-panel av095-build-card" data-native-project={project.id}>
-  <div className="av095-card-cover">{project.coverUrl?<img alt={'Cover for '+project.title} src={project.coverUrl} loading="lazy" referrerPolicy="no-referrer"/>:<div className="av095-record-art" aria-hidden="true"><i/><i/><i/></div>}<span>{project.category} / {label}</span></div>
+  <div className="av095-card-cover">{project.coverUrl?<img alt={'Cover for '+project.title} src={project.coverUrl} loading="lazy" referrerPolicy="no-referrer"/>:SourceWorkbench?<div className="av136032-record-blank"><small>NO COVER UPLOADED</small><strong>{pretty(project.category)}</strong></div>:<div className="av095-record-art" aria-hidden="true"><i/><i/><i/></div>}<span>{project.category} / {label}</span></div>
   <div className="av095-card-body"><p className="st-kicker">{project.version?'BUILD '+String(project.version).padStart(2,'0'):'PROJECT RECORD'}</p><h2>{project.draftTitle||project.title}</h2><p>{project.draftSummary||project.summary}</p>
+   {SourceWorkbench&&<div className="av136032-release-flags" aria-label="Project revision status">
+    {project.liveReleaseId?<span>{project.status==='suspended'?'Approved release suspended':'Approved public release retained'}</span>:<span>Not publicly released</span>}
+    {project.draftReleaseId&&<span>{pending?'Private revision in review':expired?'Temporary private test expired':ready?'Private revision ready':'Private revision retained'}</span>}
+   </div>}
    {project.liveReleaseId&&pending&&<p className="av095-live-note">The approved version remains live while this update is reviewed.</p>}
    {project.retention&&<p className="st-muted">{project.retention==='saved'?'Saved private draft':expired?'Temporary preview expired':'Temporary private test — save it to keep it'}</p>}
    {project.reviewReason&&<p className="st-error">Reviewer note: {project.reviewReason}</p>}
-   <div className="av095-actions">
+   <div className="av095-actions av136032-build-actions">
     {playableDraft&&<Link className="st-action av095-primary" to={nativePlayerPath(project.id,true)}>{review?'Review playable build':'Private playtest'}</Link>}
     {project.liveReleaseId&&project.status==='published'&&<Link className="st-action" to={nativePlayerPath(project.id)}>Play live version</Link>}
     {!review&&!pending&&project.status!=='suspended'&&<Link className="st-action" to={nativeBuildPath(project.id)}>{ready?'Replace private build':'Upload revision'}</Link>}
     {!review&&ready&&project.draftReleaseId&&<>
      {!expired&&project.retention==='test'&&<button className="st-action" onClick={()=>onDecision({project,releaseId:project.draftReleaseId!,action:'save'})}>Save draft</button>}
      {!expired&&<button className="st-action" onClick={()=>onDecision({project,releaseId:project.draftReleaseId!,action:'submit'})}>Submit for review</button>}
-     <button className="st-action" onClick={()=>onDecision({project,releaseId:project.draftReleaseId!,action:'discard'})}>Discard private build</button>
+     <button className="st-action av136032-discard" onClick={()=>onDecision({project,releaseId:project.draftReleaseId!,action:'discard'})}>Discard private build</button>
     </>}
     {review&&project.liveReleaseId&&['published','suspended'].includes(project.status)&&<button className="st-action" onClick={()=>onDecision({project,releaseId:project.liveReleaseId!,action:project.status==='suspended'?'restore':'suspend'})}>{project.status==='suspended'?'Restore release':'Suspend release'}</button>}
    </div>
@@ -124,16 +128,37 @@ function BuildCard({project,review=false,onDecision}:{project:NativeProject;revi
 }
 function BuildLibrary({memberId}:{memberId:string}){
  const library=useRead('library:'+memberId,true,signal=>readNativeLibrary(memberId,signal));
+ // Unpublished projects and review state never enter public/shareable URLs.
  const [search,setSearch]=useState(''),[decision,setDecision]=useState<Decision|null>(null);
- const items=library.data?.projects||[],visible=items.filter(p=>(p.title+' '+(p.draftTitle||'')+' '+p.summary).toLowerCase().includes(search.trim().toLowerCase()));
+ const [status,setStatus]=useState<'all'|'private'|'review'|'live'>('all'),[view,setView]=useState<'grid'|'list'>('grid');
+ const items=library.data?.projects||[];
+ const inReview=(p:NativeProject)=>p.draftStatus==='pending_review'||p.status==='pending_review';
+ const privateBuild=(p:NativeProject)=>!inReview(p)&&((!!p.draftReleaseId)||(!p.liveReleaseId&&p.status!=='suspended'));
+ const live=(p:NativeProject)=>!!p.liveReleaseId&&p.status==='published';
+ const counts={all:items.length,private:items.filter(privateBuild).length,review:items.filter(inReview).length,live:items.filter(live).length};
+ const scoped=SourceWorkbench?items.filter(p=>status==='all'||status==='private'&&privateBuild(p)||status==='review'&&inReview(p)||status==='live'&&live(p)):items;
+ const term=search.trim().toLowerCase();
+ const visible=scoped.filter(p=>(p.title+' '+(p.draftTitle||'')+' '+p.summary).toLowerCase().includes(term));
  return <>
   <section className="st-panel av095-library-head"><div><p className="st-kicker">YOUR PLAYABLE ARCHIVE</p><h2>Build privately. Release deliberately.</h2><p>Saved drafts, exact versions, review decisions, and live releases stay attached to the same project.</p></div><Link className="st-action av095-primary" to="/studio/packages/new">Upload a build</Link></section>
   {library.data?.usage&&<section className="av095-storage" aria-label="Private build storage"><div><strong>{bytes(library.data.usage.memberPhysicalBytes)} / {bytes(library.data.usage.memberPhysicalLimit)}</strong><span>Private storage, including files awaiting cleanup</span></div><progress max={library.data.usage.memberPhysicalLimit} value={Math.min(library.data.usage.memberPhysicalBytes,library.data.usage.memberPhysicalLimit)}/><p>Temporary tests last 48 hours. Saving retains a draft. Replacing a draft never removes the approved public version.</p></section>}
+  {SourceWorkbench&&<section className="av136032-library-tools" aria-label="Build library controls">
+   <div className="av136032-toolbar"><div><p className="st-kicker">REVISIONS / WORKSPACE</p><div className="av136032-filter-buttons" role="group" aria-label="Filter your build statuses">
+    {([{id:'all',label:'All'},{id:'private',label:'Private'},{id:'review',label:'In review'},{id:'live',label:'Live'}] as const).map(tab=><button key={tab.id} type="button" data-native-filter={tab.id} aria-pressed={status===tab.id} onClick={()=>setStatus(tab.id)}><span>{tab.label}</span><span className="av136032-tab-count">{counts[tab.id]}</span></button>)}
+   </div></div><div className="av136032-view-buttons" role="group" aria-label="Build library layout">
+    <button type="button" data-library-view="grid" aria-pressed={view==='grid'} onClick={()=>setView('grid')}>Grid</button>
+    <button type="button" data-library-view="list" aria-pressed={view==='list'} onClick={()=>setView('list')}>List</button>
+   </div></div>
+   <p className="av136032-library-explanation">A project can appear in both Live and In review while an approved release remains available. Filters do not change builds or permissions.</p>
+  </section>}
   <label className="st-field av095-search"><span>Find your build</span><input type="search" maxLength={100} value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search your project titles"/></label>
+  {SourceWorkbench&&!library.loading&&!library.error&&<p className="av136032-library-count" role="status">{visible.length} {visible.length===1?'build':'builds'} shown · {items.length} in your archive</p>}
   {library.loading&&<p role="status">Loading your saved builds…</p>}
   {library.error&&<div role="alert" className="st-error"><p>{library.error}</p><button className="st-action" onClick={library.reload}>Reload builds</button></div>}
-  {!library.loading&&!library.error&&!visible.length&&<div className="st-empty"><h2>{items.length?'No matching builds.':'Your first playable work starts here.'}</h2><p>{items.length?'Clear the search to see your archive.':'Upload a browser build to make a private playtest. Nothing is published automatically.'}</p></div>}
-  <div className="av095-build-grid">{visible.map(p=><BuildCard key={p.id} project={p} onDecision={setDecision}/>)}</div>
+  {!library.loading&&!library.error&&!visible.length&&<div className="st-empty"><h2>{items.length?'No matching builds.':'Your first playable work starts here.'}</h2><p>{items.length?'Change the current view or search to see other revisions.':'Upload a browser build to make a private playtest. Nothing is published automatically.'}</p>
+   {SourceWorkbench&&items.length>0&&(status!=='all'||!!term)&&<button type="button" className="st-action" onClick={()=>{setSearch('');setStatus('all')}}>Show all builds</button>}
+  </div>}
+  <div className={'av095-build-grid'+(SourceWorkbench?' av136032-build-grid':'')} data-layout={SourceWorkbench?view:undefined}>{!library.loading&&!library.error&&visible.map(p=><BuildCard key={p.id} project={p} onDecision={setDecision}/>)}</div>
   {decision&&<DecisionDialog decision={decision} onClose={()=>setDecision(null)} onComplete={()=>{setDecision(null);library.reload();}}/>}
  </>;
 }
@@ -148,6 +173,7 @@ function BuildUpload({memberId,projectId}:{memberId:string;projectId?:string}){
  const [compatibility,setCompatibility]=useState<LocalCompatibilityReport|null>(null);
  const [compatibilityError,setCompatibilityError]=useState(''),[checkingCompatibility,setCheckingCompatibility]=useState(false);
  const compatibilityVersion=useRef(0);
+ const detailsTitle=useRef<HTMLInputElement>(null),buildFileInput=useRef<HTMLInputElement>(null);
  const initialized=useRef<string|null>(null);
  useEffect(()=>{if(project&&initialized.current!==project.id){initialized.current=project.id;setTitle(project.draftTitle||project.title);setSummary(project.draftSummary||project.summary);setCategory(project.draftCategory||project.category);}},[project]);
  useEffect(()=>{if(!cover){setCoverUrl(null);return;}const url=URL.createObjectURL(cover);setCoverUrl(url);return()=>URL.revokeObjectURL(url);},[cover]);
@@ -172,11 +198,12 @@ function BuildUpload({memberId,projectId}:{memberId:string;projectId?:string}){
   document.addEventListener('click',guard,true);return()=>document.removeEventListener('click',guard,true);
  },[sourceDirty]);
  const dirty=!!file||!!cover||rights||sourceDirty;
+ const coverProblem=cover&&(!/\.png$/i.test(cover.name)||cover.size<70||cover.size>3*1048576)?'Cover artwork must be a PNG between 70 bytes and 3 MiB.':'';
  useEffect(()=>{if(!dirty)return;const warn=(e:BeforeUnloadEvent)=>{e.preventDefault();e.returnValue='';};addEventListener('beforeunload',warn);return()=>removeEventListener('beforeunload',warn);},[dirty]);
  async function submit(e:FormEvent<HTMLFormElement>){
   e.preventDefault();if(busyRef.current)return;
   const problem=checkNativeFile(file);if(problem){setError(problem);return;}
-  if(cover&&(!/\.png$/i.test(cover.name)||cover.size<70||cover.size>3*1048576)){setError('Cover artwork must be a PNG between 70 bytes and 3 MiB.');return;}
+  if(coverProblem){setError(coverProblem);return;}
   if(!rights){setError('Confirm your publication rights for this exact uploaded version.');return;}
   if(project?.draftReleaseId&&!replace){setError('Confirm replacement of the existing unsubmitted private build.');return;}
   if(checkingCompatibility||!compatibility){setError('Complete the local compatibility check before uploading.');return;}
@@ -194,14 +221,47 @@ function BuildUpload({memberId,projectId}:{memberId:string;projectId?:string}){
  if(library.error)return <Status title="The saved project could not be loaded." retry={library.reload}><p>{library.error}</p></Status>;
  if(projectId&&!project)return <Status title="Project unavailable."><p>This project is not in the signed-in creator's archive.</p></Status>;
  if(project?.draftStatus==='pending_review'||project?.status==='suspended')return <Status title="This build is not editable."><p>{project.status==='suspended'?'A moderator must resolve the suspension.':'The submitted revision is awaiting an independent decision. Your approved release remains unchanged.'}</p></Status>;
- return <div className="av095-upload-grid"><section className="st-panel"><p className="st-kicker">{project?'IMMUTABLE REVISION':'NEW PLAYABLE BUILD'}</p><h2>{project?'Prepare the next version.':'Give your creation a home.'}</h2><p>Your build stays private until an independent reviewer approves it.</p>
+ const preparation=checkingCompatibility?'Checking the selected build on this device.':
+  !file?'Choose a browser export or prepare an archive in the source workbench.':
+  !compatibility?.playableCandidate?'Resolve the local compatibility findings before uploading.':
+  coverProblem?coverProblem:
+  title.trim().length<3||summary.trim().length<10?'Add a project title and describe what someone can do in your creation.':
+  !rights?'Confirm your rights to the files in this version.':
+  project?.draftReleaseId&&!replace?'Confirm replacement of the existing unsubmitted private build.':
+  'Ready for a private upload. You can test the saved build before submitting it for review.';
+ return <div className={'av095-upload-grid'+(SourceWorkbench?' av136031-build-flow':'')}><section className="st-panel"><p className="st-kicker">{project?'IMMUTABLE REVISION':'NEW PLAYABLE BUILD'}</p><h2>{project?'Prepare the next version.':'Give your creation a home.'}</h2><p>Your build stays private until an independent reviewer approves it.</p>
   {SourceWorkbench&&<div className="av095-source-entry"><button type="button" className="st-action" aria-expanded={sourceOpen} onClick={()=>{setSourceStarted(true);setSourceOpen(v=>!v)}}>Artifact source workbench</button><p className="st-muted">Edit a self-contained browser build here, or upload an export from your existing tools.</p></div>}
   {SourceWorkbench&&sourceStarted&&<div hidden={!sourceOpen}><Suspense fallback={<p role="status">Opening the local source workbench…</p>}><SourceWorkbench disabled={busy}
    onDirty={()=>{setSourceDirty(true);if(sourceFile){setFile(null);setSourceFile(false)}setRights(false)}}
-   onPackage={archive=>{setFile(archive);setSourceFile(true);setSourceDirty(false);setRights(false);setError('')}}/></Suspense></div>}
+   onPackage={archive=>{if(buildFileInput.current)buildFileInput.current.value='';setFile(archive);setSourceFile(true);setSourceDirty(false);setRights(false);setError('')}}/></Suspense>
+   {sourceFile&&file&&<div className="av136031-source-handoff">
+    <div><strong>Archive prepared on this device.</strong><p>Your source stays open. Add the details for this version below.</p></div>
+    <button type="button" className="st-action" disabled={busy} onClick={()=>{
+     detailsTitle.current?.focus({preventScroll:true});
+     detailsTitle.current?.scrollIntoView({block:'center'});
+    }}>Continue to build details</button>
+   </div>}
+  </div>}
   <form onSubmit={e=>void submit(e)} aria-busy={busy}>
    <fieldset disabled={busy} className="av095-fields">
-    <label className="av095-drop"><span className="st-kicker">01 / EXPORTED BROWSER BUILD</span><strong>{file?file.name:'Choose a ZIP or HTML file'}</strong><span>{file?bytes(file.size):'ZIP up to 20 MiB · HTML up to 5 MiB'}</span><input type="file" accept=".zip,.html,application/zip,text/html" required={!file} onChange={e=>{setSourceFile(false);setFile(e.target.files?.[0]||null);setRights(false);setError('');}}/></label>
+    <legend className="visually-hidden">Prepare a private browser build</legend>
+    <section className="av136031-build-step" aria-labelledby="av136031-file-heading">
+    <header><span aria-hidden="true">01</span><div><h3 id="av136031-file-heading">Browser build</h3><p>Choose your export. Compatibility checks run locally before any upload.</p></div></header>
+    {SourceWorkbench?<div className="av095-drop av136033-build-picker" data-selected-source={sourceFile&&file?'workbench':file?'device':'none'}>
+     <span className="st-kicker">01 / EXPORTED BROWSER BUILD</span>
+     <strong>{file?file.name:'Choose a ZIP or HTML file'}</strong>
+     <span>{file?bytes(file.size):'ZIP up to 20 MiB · HTML up to 5 MiB'}</span>
+     {sourceFile&&file&&<p className="av136033-prepared-note" role="status">Prepared in your source workbench. This archive is already selected; no second file selection is needed.</p>}
+     <details className="av136033-file-alternative" open={!sourceFile}>
+      <summary>{sourceFile&&file?'Use a different browser export instead':'Select a browser export from your device'}</summary>
+      <label><span className="visually-hidden">Browser ZIP or HTML export</span>
+       <input ref={buildFileInput} aria-label="Browser ZIP or HTML export" type="file" accept=".zip,.html,application/zip,text/html" required={!file} onChange={e=>{
+        const chosen=e.target.files?.[0];if(!chosen)return;
+        setSourceFile(false);setFile(chosen);setRights(false);setError('');
+       }}/>
+      </label>
+     </details>
+    </div>:<label className="av095-drop"><span className="st-kicker">01 / EXPORTED BROWSER BUILD</span><strong>{file?file.name:'Choose a ZIP or HTML file'}</strong><span>{file?bytes(file.size):'ZIP up to 20 MiB · HTML up to 5 MiB'}</span><input type="file" accept=".zip,.html,application/zip,text/html" required={!file} onChange={e=>{setSourceFile(false);setFile(e.target.files?.[0]||null);setRights(false);setError('');}}/></label>}
     {file&&<section className="av095-preflight" aria-label="Local compatibility findings" aria-live="polite">
      <p className="st-kicker">LOCAL COMPATIBILITY / ADVISORY</p>
      {checkingCompatibility&&<p role="status">Inspecting browser package structure on this device…</p>}
@@ -215,19 +275,27 @@ function BuildUpload({memberId,projectId}:{memberId:string;projectId?:string}){
       <small>Local inspection only. No data is uploaded until you submit. This is not security review, malware scanning, mobile certification or publication approval.</small>
      </>}
     </section>}
-    <div className="av095-form-grid"><label className="st-field"><span>Project title</span><input required minLength={3} maxLength={100} value={title} onChange={e=>setTitle(e.target.value)}/></label><label className="st-field"><span>Type</span><select value={category} onChange={e=>setCategory(e.target.value as PackageCategory)}><option value="game">Game</option><option value="app">Application</option><option value="simulation">Simulation</option><option value="story">Interactive story</option></select></label></div>
+    </section>
+    <section className="av136031-build-step" aria-labelledby="av136031-details-heading">
+    <header><span aria-hidden="true">02</span><div><h3 id="av136031-details-heading">Project details</h3><p>Describe this version and add your own cover if you have one.</p></div></header>
+    <div className="av095-form-grid"><label className="st-field"><span>Project title</span><input ref={detailsTitle} required minLength={3} maxLength={100} value={title} onChange={e=>setTitle(e.target.value)}/></label><label className="st-field"><span>Type</span><select value={category} onChange={e=>setCategory(e.target.value as PackageCategory)}><option value="game">Game</option><option value="app">Application</option><option value="simulation">Simulation</option><option value="story">Interactive story</option></select></label></div>
     <label className="st-field"><span>What can someone do in it?</span><textarea required minLength={10} maxLength={500} value={summary} onChange={e=>setSummary(e.target.value)}/></label>
     <label className="st-field"><span>Cover artwork — optional</span><input type="file" accept=".png,image/png" onChange={e=>{setCover(e.target.files?.[0]||null);setRights(false);}}/><small>Original PNG. Up to 3 MiB. At least 640 × 360 pixels. The server verifies image structure.</small></label>
     {coverUrl&&<img className="av095-cover-preview" src={coverUrl} alt="Your selected cover artwork"/>}
+    </section>
+    <section className="av136031-build-step" aria-labelledby="av136031-playtest-heading">
+    <header><span aria-hidden="true">03</span><div><h3 id="av136031-playtest-heading">Private playtest</h3><p>Upload this version privately, then test it before requesting independent review.</p></div></header>
     {project?.draftReleaseId&&<label className="av095-confirm"><input type="checkbox" checked={replace} required onChange={e=>setReplace(e.target.checked)}/><span>Replace the existing unsubmitted private build. It remains available if this upload fails; the approved public version remains live.</span></label>}
     <label className="av095-confirm"><input type="checkbox" checked={rights} required onChange={e=>setRights(e.target.checked)}/><span>I own this project or have permission to publish its code, artwork, audio and other included files.</span></label>
     <p className="st-muted">Rights are confirmed separately for every version. This does not replace independent content and security review.</p>
-    <button className="st-action av095-primary" type="submit" disabled={!file||!rights||busy||checkingCompatibility||!compatibility?.playableCandidate}>{busy?'Uploading and validating…':checkingCompatibility?'Checking local build…':'Prepare private playtest'}</button>
+    <p className="av136031-preparation" id="av136031-preparation">{preparation}</p>
+    <button className="st-action av095-primary" type="submit" aria-describedby="av136031-preparation" disabled={!file||!rights||busy||checkingCompatibility||!compatibility?.playableCandidate}>{busy?'Uploading and validating…':checkingCompatibility?'Checking local build…':'Prepare private playtest'}</button>
+    </section>
    </fieldset>
    {busy&&<p role="status">Keep this page open. The server is checking the archive and storing the complete private revision.</p>}
    {error&&<div role="alert" className="st-error"><p>{error}</p><Link to="/studio/packages">Check your existing builds before retrying</Link></div>}
   </form>
- </section><aside className="st-panel av095-guide"><p className="st-kicker">CREATOR PROTOCOL</p><h2>Make, test, release.</h2><p>Use the source workbench for a small self-contained browser build, or export from your existing tools. ZIP the contents of the build folder, with <code>index.html</code> at its root.</p><h3>Keep it self-contained.</h3><p>Use relative asset paths. Do not include server code, node_modules, API keys, external CDNs or private credentials.</p><h3>Test the exact version.</h3><p>Play privately, save the draft, then submit it. A phone-sized preview is not a real-device test or a safety certification.</p><p className="st-muted">180 files maximum · 48 MiB expanded · 12 MiB per asset. A standalone HTML file must contain its dependencies.</p><Link className="st-action" to="/studio/new">Create a non-playable project record</Link></aside></div>;
+ </section><aside className="st-panel av095-guide"><p className="st-kicker">CREATOR PROTOCOL</p><h2>Make, test, release.</h2><p>Use the source workbench for a small self-contained browser build, or export from your existing tools. ZIP the contents of the build folder, with <code>index.html</code> at its root.</p><h3>Keep it self-contained.</h3><p>Use relative asset paths. Do not include server code, node_modules, API keys, external CDNs or private credentials.</p><h3>Test the exact version.</h3><p>Play privately, save the draft, then submit it. A phone-sized preview is not a real-device test or a safety certification.</p><h3>Godot and native editions.</h3><p>Godot 4 Web exports use WebAssembly, WebGL 2 and a generated .pck bundle. The current small-build uploader does not accept Godot packs; selecting one gives local guidance without uploading it. A separate, verified large-build pipeline is required for browser play.</p><p>Windows, Linux and macOS downloads will be separate signed or checksummed editions of the same project, not automatically installed by this website. The ANEVUM desktop launcher is planned, not available.</p><p className="st-muted">180 files maximum · 48 MiB expanded · 12 MiB per asset. A standalone HTML file must contain its dependencies.</p><Link className="st-action" to="/studio/new">Create a non-playable project record</Link></aside></div>;
 }
 function ReviewQueue({memberId}:{memberId:string}){
  const queue=useRead('queue:'+memberId,true,signal=>readNativeQueue(memberId,signal));

@@ -13,6 +13,7 @@ export function IsolatedProjectViewport({title,src,releaseId,preview,expiresAt,o
 }){
  const stage=useRef<HTMLDivElement>(null),expandButton=useRef<HTMLButtonElement>(null);
  const exitButton=useRef<HTMLButtonElement>(null);
+ const gameFrame=useRef<HTMLIFrameElement>(null);
  const [expanded,setExpanded]=useState(false),[full,setFull]=useState(false),[restart,setRestart]=useState(0);
  const [frameState,setFrameState]=useState<PlayerFrameState>('opening');
  const [viewport,setViewport]=useState<PlayerViewport>('fit');
@@ -79,12 +80,13 @@ export function IsolatedProjectViewport({title,src,releaseId,preview,expiresAt,o
   <div className={'av095-player'+(expanded?' av095-player--expanded':'')} data-player-viewport={expanded||full?'fit':viewport} ref={stage}>
    {!valid?<p role="alert">The execution URL could not be verified. No creator code was loaded.</p>:
     expired?<div className="st-empty"><h2>Private playtest expired.</h2><p>Return to the saved build to create a fresh, authorized preview.</p><button type="button" className="st-action" onClick={onReopen}>Reopen private playtest</button></div>:
-    <iframe key={src+':'+restart} title={title} src={src} sandbox="allow-scripts allow-pointer-lock" allow="fullscreen; gamepad" referrerPolicy="no-referrer" loading="eager"
+    <iframe ref={gameFrame} key={src+':'+restart} title={title} src={src} sandbox="allow-scripts allow-pointer-lock" allow="fullscreen; gamepad" referrerPolicy="no-referrer" loading="eager"
      onLoad={()=>setFrameState('frame-loaded')} onError={()=>setFrameState('error')}/>}
    {(expanded||full)&&<button ref={exitButton} type="button" className="st-action av095-exit" onClick={()=>void exit()}>Exit player</button>}
   </div>
   <div className="av095-player-controls">
    <button type="button" className="st-action" disabled={!valid||expired} onClick={()=>{setFrameState("opening");setRestart(n=>n+1);}}>Restart build</button>
+   <button type="button" className="st-action" disabled={!valid||expired||frameState==='opening'} onClick={()=>gameFrame.current?.focus()}>Focus game input</button>
    <button ref={expandButton} type="button" className="st-action" disabled={!valid||expired} onClick={()=>void expand()}>Expand player</button>
    <button type="button" className="st-action av102-phone-toggle" disabled={!valid||expired} aria-pressed={viewport==='phone'} onClick={()=>setViewport(v=>v==='fit'?'phone':'fit')}>{viewport==='phone'?'Full width':'Phone width'}</button>
    <span className="st-muted">{preview?'Private, time-limited playtest':'Independently reviewed public release'}</span>
@@ -97,5 +99,6 @@ export function IsolatedProjectViewport({title,src,releaseId,preview,expiresAt,o
   </p>}
   {valid&&!expired&&viewport==='phone'&&!expanded&&!full&&
    <p className="av102-player-note">Phone width is a viewport simulation, not physical Safari or Android compatibility approval.</p>}
+  {valid&&!expired&&<p className="av102-player-note">Controls depend on the creator's actual browser export. Keyboard or gamepad input may require focusing the game. Touch, Safari and Xbox compatibility are not certified.</p>}
  </section>;
 }

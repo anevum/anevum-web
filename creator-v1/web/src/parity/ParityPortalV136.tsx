@@ -2,11 +2,10 @@ import {useState, type FormEvent} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import {Icon} from '../components/Icons';
 import {OrbitalMark} from '../components/OrbitalMark';
-import {CosmicArtwork} from '../components/CosmicArtwork';
 import {ProjectThumbnail} from '../components/ProjectThumbnail';
 import {useLivingWorld} from './LivingWorldState';
 import {CinematicArrivalV136} from './CinematicArrivalV136';
-import {ContinuanceInstrumentV136017} from './ContinuanceInstrumentV136017';
+import {FirstVisitClarityV136} from './FirstVisitClarityV136';
 import {projectDetailPath} from '../lib/navigation';
 import type {Project, Category} from '../lib/api';
 import type {CosmicScene} from '../components/CosmicIllustration';
@@ -27,10 +26,10 @@ const types:Record<Category,{label:string;scene:CosmicScene;tone:string}>={
   other:{label:'Independent work',scene:'other',tone:'violet'}
 };
 const passages=[
-  {title:'Games & worlds',detail:'Explore independent games and experiments',to:'/discover?category=games',scene:'games' as CosmicScene,tone:'violet'},
-  {title:'Tools & applications',detail:'Discover useful software people are making',to:'/discover?category=tools',scene:'tools' as CosmicScene,tone:'cyan'},
-  {title:'Creative works',detail:'Explore art, experiences and experiments',to:'/discover?category=creative',scene:'creative' as CosmicScene,tone:'auric'},
-  {title:'Open knowledge',detail:'Explore research, learning and open source',to:'/discover?category=research',scene:'research' as CosmicScene,tone:'mint'}
+  {title:'Games & worlds',detail:'Explore independent games and experiments',to:'/discover?category=games',tone:'violet'},
+  {title:'Tools & applications',detail:'Discover useful software people are making',to:'/discover?category=tools',tone:'cyan'},
+  {title:'Creative works',detail:'Explore art, experiences and experiments',to:'/discover?category=creative',tone:'auric'},
+  {title:'Open knowledge',detail:'Explore research, learning and open source',to:'/discover?category=research',tone:'mint'}
 ];
 /** A reproducible ambient wave derived from public content volume, not
  * a synthetic activity graph or fabricated IREN usage signal.
@@ -52,7 +51,7 @@ function PublicProjectCard({project}:{project:Project}){
       <ProjectThumbnail kind={project.category} title={project.title} decorative/><span className="p136-project-art-note">CATEGORY INDEX / NOT CREATOR COVER</span><span className="p136-kind">{meta.label}</span>
     </Link>
     <div className="p136-project-body">
-      <span className="p136-project-meta">{project.freeToUse?'FREE TO USE':'PROJECT DIRECTORY'} <span> / </span> APPROVED PUBLIC WORK</span>
+      <span className="p136-project-meta">{meta.label} <span> / </span> {project.freeToUse?'FREE TO USE':'PROJECT DIRECTORY'} <span> / </span> APPROVED PUBLIC WORK</span>
       <h3><Link to={projectDetailPath(project.id,'/')}>{project.title}</Link></h3><p>{project.summary}</p>
       <div className="p136-project-foot">
         <span className="p136-project-credit">By {project.creatorName||'ANEVUM member'}</span>
@@ -68,7 +67,6 @@ export function ParityPortalV136({projects,catalogueState,signedIn,verifiedCount
   return <div className="p136-portal" data-parity-v136="full">
     <section className="p136-hero" aria-labelledby="p136-hero-title">
       <CinematicArrivalV136/>
-      <ContinuanceInstrumentV136017/>
       <div className="p136-hero-shade" aria-hidden="true"/>
       <div className="p136017-hero-upperline" aria-hidden="true">
         <span>ANEVUM / ARRIVAL</span><span>CONTINUANCE INSTITUTE</span><span>EST. 2026</span>
@@ -81,12 +79,13 @@ export function ParityPortalV136({projects,catalogueState,signedIn,verifiedCount
       <div className="p136-hero-content">
         <p className="p136-hero-register"><span className="p136017-register-emblem" aria-hidden="true">✧</span> THE CONTINUANCE INSTITUTE <span> / </span> FIRST CONTACT</p>
         <h1 id="p136-hero-title"><span>A creative universe.</span><em>Without limits.</em></h1>
-        <p className="p136-hero-intro"><strong>Build. Share. Play. Learn. Belong.</strong> Discover original games, useful software and creative projects. Meet the people behind them and start making your own.</p>
+        <p className="p136-hero-intro"><strong>Build. Share. Play. Learn. Belong.</strong> Explore independent games, useful apps, art and experiments. Meet the makers and conversations behind the work.</p>
         <div className="p136-hero-actions" data-arrival-commands="primary">
           <Link to="/discover" className="p136-button p136-button--primary">Explore projects <Icon name="arrow" size={20}/></Link>
           <Link to={signedIn?'/member':'/join'} className="p136-button p136-button--signal">{signedIn?'My member space':'Join the community'} <Icon name="arrow" size={18}/></Link>
         </div>
         <p className="p136-hero-disclosure">Free to explore. No account required. Creator publishing remains in testing.</p>
+        {import.meta.env.VITE_ANEVUM_OWNER_REVIEW==='true'&&<p className="p136-art-review">Environment artwork / candidate 001 · awaiting owner acceptance</p>}
       </div>
       <aside className="p136-iren-console" aria-label="IREN signal and navigation">
         <div className="p136017-iren-housing" aria-hidden="true"><span>IREN / COMMUNICATIONS</span><span>◉</span></div>
@@ -136,11 +135,13 @@ export function ParityPortalV136({projects,catalogueState,signedIn,verifiedCount
         </div>}
       <div className="p136-passages">
         {passages.map(item=><Link key={item.title} to={item.to} className={'p136-passage p136-tone-'+item.tone}>
-          <CosmicArtwork scene={item.scene} seed={item.to}/><span className="p136-passage-shade"/>
+          <span className="p136035-category-surface" aria-hidden="true"/>
           <span className="p136-passage-copy"><strong>{item.title}</strong><small>{item.detail}</small></span><Icon name="arrow" size={18}/>
         </Link>)}
       </div>
     </section>
+    {/* Discovery stays above orientation on small screens: real work before explanations. */}
+    <FirstVisitClarityV136 signedIn={signedIn}/>
     <section className="p136-next" aria-label="Continue into ANEVUM">
       <div className="p136-next-inscription"><OrbitalMark/><p>THE CONTINUANCE INSTITUTE <span> / </span> 2026</p><h2>A place for the work that comes next.</h2></div>
       <div className="p136-next-actions">

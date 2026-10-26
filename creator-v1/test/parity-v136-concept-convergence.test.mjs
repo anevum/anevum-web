@@ -12,15 +12,15 @@ const ide=source('../web/src/parity/ArtifactWorkbenchV136.tsx');
 const glyph=source('../web/src/parity/FileGlyphV136017.tsx');
 const css=source('../web/src/parity/concept-convergence-v136017.css');
 const main=source('../web/src/main.tsx');
-test('original Arrival optical instrument is non-interactive and independent of remote files',()=>{
+test('archived optical instrument remains non-interactive; Arrival uses independent authored media',()=>{
  assert.match(art,/aria-hidden="true"/);
  assert.match(art,/data-art="continuance-original-optics"/);
  assert.match(art,/<svg viewBox="0 0 840 690"/);
  assert.match(art,/const ticks=Array\.from\(\{length:48\}/);
  assert.ok(!/<canvas\b|<iframe\b|onClick|onKeyDown|fetch\(|window\.|localStorage|navigator\.|import\(|http:/i.test(art),
   'Artwork cannot own a renderer, unsafe execution or real navigation');
- assert.match(hero,/import \{ContinuanceInstrumentV136017\}/);
- assert.match(hero,/<ContinuanceInstrumentV136017\/>/);
+ assert.doesNotMatch(hero,/<ContinuanceInstrumentV136017\/>/);
+ assert.match(hero,/<CinematicArrivalV136\/>/);
  assert.match(hero,/id="p136-hero-title"/);
  assert.match(hero,/THE CONTINUANCE INSTITUTE/);
 });
@@ -202,7 +202,8 @@ test('V136 Commons and real creator/member profiles use safe type covers and add
  assert.match(community,/<ProjectThumbnail kind=\{item\.category\} title=\{item\.title\}/);
  assert.match(community,/<ProjectThumbnail kind=\{field\.id\}/);
  assert.ok(!community.includes('CosmicArtwork'));
- assert.match(community,/setSearchParams\(params\)/);
+ assert.match(community,/setSearchParams\(current => \{/);
+ assert.match(community,/const view = asView\(params\.toString\(\)\)/);
  assert.match(community,/chooseView\(item\.id\)/);
  assert.match(creators,/data-parity-creators="v136\.017"/);
  assert.match(creators,/id="p136-creators-index"/);

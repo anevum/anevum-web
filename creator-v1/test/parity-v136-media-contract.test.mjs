@@ -73,10 +73,10 @@ test('actual Arrival, native video and frame player preserve the same DOM and on
  const video=r('../web/src/parity/CinematicVideoV136.tsx');
  const frames=r('../web/src/parity/CinematicFramesV136.tsx');
  const world=r('../web/src/parity/LivingWorldField.tsx');
- assert.match(arrival,/approvedCinematicSequence\(manifest\.sequence\)/);
+ assert.match(arrival,/reviewCinematicVideo\(/);
  assert.match(arrival,/approvedCinematicVideo\(/);
- assert.match(arrival,/VITE_PARITY_V136_NATIVE_VIDEO/);
- assert.match(arrival,/mode==='sequence'&&approvedSequence/);
+ assert.match(arrival,/VITE_ANEVUM_OWNER_REVIEW/);
+ assert.match(arrival,/canPlay&&video&&<CinematicVideoV136/);
  assert.match(video,/preload="none"/);
  assert.match(video,/muted playsInline loop/);
  assert.match(video,/document\.addEventListener\('visibilitychange'/);

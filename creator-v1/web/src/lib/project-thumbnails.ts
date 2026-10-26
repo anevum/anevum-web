@@ -26,5 +26,5 @@ export function projectThumbnailPreset(kind:unknown){
 }
 export function defaultProjectThumbnailUrl(kind:unknown,baseUrl='/'):string{
  const base=baseUrl.endsWith('/')?baseUrl:baseUrl+'/';
- return base+'assets/default-thumbnails/'+projectThumbnailPreset(kind).asset+'.svg';
+ return base+'assets/default-thumbnails/v136-baseline-005/'+projectThumbnailPreset(kind).asset+'.svg';
 }

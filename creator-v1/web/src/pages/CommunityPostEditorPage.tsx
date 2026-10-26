@@ -59,7 +59,7 @@ function DiscussionEditor({projectId}:{projectId:string|null}){
  }
  if(!member.handle)return <section className="discussion-composer"><span className="nfc-eyebrow">COMMUNITY / PROFILE REQUIRED</span>
    <h1>COMPLETE YOUR CREATOR IDENTITY.</h1><p>An authenticated creator handle is required before you can submit discussions for staff review.</p>
-   <Link to="/account/edit">EDIT CREATOR PROFILE ↗</Link>
+   <Link to="/member?tab=profile">EDIT CREATOR PROFILE ↗</Link>
  </section>;
  return <div className="discussion-composer">
    <nav className="discussion-crumb" aria-label="Community breadcrumb"><Link to="/">NETWORK</Link><span>/</span><Link to="/community">COMMUNITY</Link><span>/</span><span>NEW DISCUSSION</span></nav>

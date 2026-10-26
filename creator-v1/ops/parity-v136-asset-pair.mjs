@@ -7,7 +7,7 @@ import {join,resolve} from 'node:path';
 import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 const BASELINE='031a221d1bd108ff01dcb74f271675d8ccf2d29a';
-const CANARY='20e182b7805d8375e753fda92c3846461208a1eb';
+const CANARY='4dfaed54fed606713a99b87c3152beddbcbc31f3';
 const GATEWAY='1884ff0dd3c8aa3d38711167af0b4552c9b200b3148e72d9ba6d90d23171ef99';
 const hash=b=>createHash('sha256').update(b).digest('hex');
 const load=p=>JSON.parse(readFileSync(p,'utf8'));
