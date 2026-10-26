@@ -3,33 +3,52 @@ import type {BadgeFamily} from '../lib/player-recognition';
 import './living-recognition-v136.css';
 
 const familyTones:Record<BadgeFamily,{edge:string,core:string,metal:string}>={
-  origin:{edge:'#8be9ff',core:'#2f648f',metal:'#c6f4ff'},
-  community:{edge:'#8facff',core:'#344f98',metal:'#c5dcff'},
-  creation:{edge:'#c19cff',core:'#62529f',metal:'#e2c5ff'},
-  discovery:{edge:'#f0d28f',core:'#807046',metal:'#fff2c1'},
-  collaboration:{edge:'#f4a7d9',core:'#8c427c',metal:'#f8d7ee'},
-  craft:{edge:'#9bc9ff',core:'#3f6699',metal:'#d8edff'},
-  stewardship:{edge:'#8ee9c8',core:'#357c72',metal:'#d2ffed'},
-  continuance:{edge:'#e4b5f5',core:'#704d91',metal:'#f4dcff'}
+  origin:{edge:'#a9c5ce',core:'#344a58',metal:'#d6e4e8'},
+  community:{edge:'#8fb6c5',core:'#274858',metal:'#bed8e0'},
+  creation:{edge:'#adb8c8',core:'#47566b',metal:'#d8dee7'},
+  discovery:{edge:'#b9c8b8',core:'#52655a',metal:'#e3eae1'},
+  collaboration:{edge:'#b4aabb',core:'#61556b',metal:'#e0d8e3'},
+  craft:{edge:'#9abacc',core:'#42647a',metal:'#d7e8ef'},
+  stewardship:{edge:'#96bdb3',core:'#42645f',metal:'#d0e8e0'},
+  continuance:{edge:'#b4bec9',core:'#4a5c69',metal:'#e3e8ef'}
 };
 function seedFor(value:string){
  let result=0x811c9dc5;
  for(const character of value)result=Math.imul(result^character.charCodeAt(0),16777619);
  return result>>>0;
 }
-function Geometry({seed,stroke,fill}:{seed:number;stroke:string;fill:string}){
- const order=5+seed%4,rotation=(seed%45)-22;
+/** Distinct award-family silhouettes and instruments. Badge IDs still carry
+ * an independent stable engraving, while the server owns issuance. */
+const familyFrames:Record<BadgeFamily,string>={
+ origin:'M50 2 65 9 82 8 90 25 98 40 91 57 94 77 76 88 60 98 43 92 24 95 13 77 3 60 9 43 6 24 25 14Z',
+ community:'M29 5H71L95 29V71L71 95H29L5 71V29Z',
+ creation:'M50 3 90 22 98 63 72 95H28L2 63 10 22Z',
+ discovery:'M50 2 62 17 81 10 83 30 98 50 83 69 81 90 62 83 50 98 38 83 19 90 17 69 2 50 17 30 19 10 38 17Z',
+ collaboration:'M50 3 74 13 96 35 96 65 74 88 50 97 26 88 4 65 4 35 26 13Z',
+ craft:'M50 2 63 13 80 9 84 26 98 38 90 54 95 71 78 78 68 95 50 91 32 95 22 78 5 71 10 54 2 38 16 26 20 9 37 13Z',
+ stewardship:'M50 3 92 20V53Q90 81 50 98Q10 81 8 53V20Z',
+ continuance:'M50 2 62 13 79 7 86 23 98 35 91 51 96 69 80 80 67 96 50 90 33 96 20 80 4 69 9 51 2 35 14 23 21 7 38 13Z'
+};
+function FamilyDevice({family,seed,stroke,fill}:{family:BadgeFamily;seed:number;stroke:string;fill:string}){
+ const offset=(seed%31)-15;
+ const base={stroke,strokeWidth:3.8,fill:'none',strokeLinecap:'round' as const,strokeLinejoin:'round' as const};
+ const shape=(()=>{
+  switch(family){
+   case 'origin':return <><path d="M50 25V75M25 50H75M32 32L68 68M68 32L32 68" {...base}/><path d="M50 34 58 50 50 66 42 50Z" fill={stroke}/></>;
+   case 'community':return <><circle cx="31" cy="40" r="9" {...base}/><circle cx="69" cy="40" r="9" {...base}/><circle cx="50" cy="69" r="9" {...base}/><path d="M39 45 46 60M61 45 54 60M40 40H60" {...base}/></>;
+   case 'creation':return <><path d="M50 22 75 36V65L50 80 25 65V36Z" {...base}/><path d="M25 36 50 51 75 36M50 51V80" {...base}/></>;
+   case 'discovery':return <><circle cx="50" cy="50" r="26" {...base}/><path d="M50 22 58 44 79 50 58 56 50 78 42 56 21 50 42 44Z" fill={fill} stroke={stroke} strokeWidth="2"/></>;
+   case 'collaboration':return <><circle cx="39" cy="50" r="18" {...base}/><circle cx="61" cy="50" r="18" {...base}/><path d="M43 34 57 66M57 34 43 66" {...base}/></>;
+   case 'craft':return <><path d="M50 22 74 37V64L50 79 26 64V37Z" {...base}/><circle cx="50" cy="50" r="12" {...base}/><path d="M50 27V38M50 62V73M27 50H38M62 50H73" {...base}/></>;
+   case 'stewardship':return <><path d="M50 21 72 32V51Q70 70 50 81Q30 70 28 51V32Z" {...base}/><path d="M39 51 47 60 63 41" {...base}/></>;
+   case 'continuance':return <><path d="M20 51Q34 24 50 51Q66 78 80 51Q66 24 50 51Q34 78 20 51Z" {...base}/><circle cx="50" cy="51" r="5" fill={stroke}/></>;
+  }
+ })();
  return <g>
-   <g transform={'rotate('+rotation+' 50 50)'} fill="none" stroke={stroke}>
-     <circle cx="50" cy="50" r="34" strokeOpacity=".55" strokeWidth="1.8"/>
-     <ellipse cx="50" cy="50" rx={27+seed%5} ry="12" strokeWidth="2" transform="rotate(-35 50 50)"/>
-     <ellipse cx="50" cy="50" rx="28" ry="12" strokeOpacity=".7" strokeWidth="1.6" transform="rotate(50 50 50)"/>
-   </g>
-   <path d={Array.from({length:order*2},(_,i)=>{
-      const a=(i*Math.PI/order-Math.PI/2),r=i%2===0?25:12;
-      return (i?'L':'M')+(50+Math.cos(a)*r).toFixed(2)+' '+(50+Math.sin(a)*r).toFixed(2);
-    }).join('')+'Z'} fill={fill} fillOpacity=".48" stroke={stroke} strokeWidth="2.2"/>
-   <circle cx="50" cy="50" r="5" fill={stroke}/>
+  <g>{shape}</g>
+  <g transform={'rotate('+offset+' 50 50)'} opacity=".72" fill={stroke}>
+   {Array.from({length:3+seed%5},(_,j)=><rect key={j} x={48+(j%2?1:-1)*(31+j%4)} y={49} width="2" height="3" rx=".7" transform={'rotate('+(j*360/(3+seed%5))+' 50 50)'}/>)}
+  </g>
  </g>;
 }
 
@@ -56,11 +75,11 @@ export function LivingBadgeSigil({badge,displayName,family,size,state}:{
          <stop stopColor={tone.core}/><stop offset=".7" stopColor="#0b1a2b"/><stop offset="1" stopColor="#040b18"/>
        </radialGradient>
      </defs>
-     <path d="M50 2 66 7 79 5 86 19 98 30 94 45 98 59 86 70 79 94 62 92 50 99 35 93 19 94 13 76 3 65 7 50 3 34 16 21 21 7 38 9Z"
+     <path d={familyFrames[family]}
        fill={'url(#'+id+'-rim)'} stroke={tone.metal} strokeWidth="1"/>
      <path d="M50 9 64 13 77 12 85 27 90 39 87 50 90 63 79 74 73 86 59 84 50 92 37 85 26 87 20 72 10 62 14 49 11 36 22 26 27 14 40 16Z"
        fill={'url(#'+id+'-face)'} stroke="#a1d8ff" strokeOpacity=".40" strokeWidth="1"/>
-     <Geometry seed={seed} stroke={tone.edge} fill={tone.core}/>
+     <FamilyDevice family={family} seed={seed} stroke={tone.edge} fill={tone.core}/>
      <path d="M21 50c0-16 12-28 27-29M80 50c0 16-11 28-27 29"
        fill="none" stroke="#ffffff" strokeOpacity=".42" strokeWidth="1.5" strokeLinecap="round"/>
      {state==='locked'&&<path d="M41 46v-6a9 9 0 0 1 18 0v6m-20 0h22v20H39Z"

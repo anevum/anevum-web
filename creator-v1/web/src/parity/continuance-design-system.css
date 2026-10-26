@@ -556,3 +556,117 @@ html[data-av-parity="v136-full"] :is(button,a,input,textarea,select):focus-visib
 @media(forced-colors:active){
  html[data-av-parity="v136-full"] .av9-shell{background:Canvas;color:CanvasText}
 }
+
+/* ANEVUM V137 / Stealth Institute beta — environment and companion finish.
+ * Presentation only. No reward entitlement, member-data, or publishing edits. */
+html[data-av-parity="v136-full"] .p136-native-institute{
+ background:
+   radial-gradient(ellipse at 67% 29%,rgba(100,150,170,.14),transparent 44%),
+   linear-gradient(180deg,#060a0e 0%,#0b131a 55%,#030609 100%);
+}
+html[data-av-parity="v136-full"] .p136-native-institute::before{
+ opacity:.68;
+ background:
+  linear-gradient(90deg,rgba(0,0,0,.9) 0%,transparent 23%,transparent 77%,rgba(0,0,0,.83) 100%),
+  repeating-linear-gradient(90deg,transparent 0 109px,#8fb8c221 110px 111px),
+  repeating-linear-gradient(0deg,transparent 0 83px,#8fb8c21c 84px 85px);
+ mask-image:linear-gradient(180deg,#000,transparent 80%);
+}
+html[data-av-parity="v136-full"] .p136-native-institute::after{
+ content:"";position:absolute;inset:0;
+ background:
+  linear-gradient(97deg,transparent 10%,#18262e85 10.3%,#03080bcb 11.4%,transparent 12%) left center/35% 100% no-repeat,
+  linear-gradient(263deg,transparent 10%,#18262e85 10.3%,#03080bcb 11.4%,transparent 12%) right center/35% 100% no-repeat,
+  linear-gradient(0deg,#020506e8,transparent 29%);
+ pointer-events:none;
+}
+html[data-av-parity="v136-full"] .p136-native-institute__grid{
+ left:-13%;right:-13%;bottom:-40%;height:77%;opacity:.54;
+ transform:perspective(680px) rotateX(69deg);transform-origin:50% 75%;
+ background:
+  repeating-linear-gradient(90deg,transparent 0 76px,#aacbd344 77px 78px),
+  repeating-linear-gradient(0deg,transparent 0 76px,#92b7c52b 77px 78px);
+}
+html[data-av-parity="v136-full"] .p136-native-institute__ring{
+ border-color:#aecbd17a;box-shadow:
+ inset 0 0 24px #accbd116,0 0 36px #729caf16,
+ 0 0 0 29px #aabcc20b,0 0 0 30px #aecbd13b,
+ 0 0 0 71px #8baebb0c,0 0 0 72px #a8cad121;
+}
+html[data-av-parity="v136-full"] .p136-native-institute__aperture{
+ border-color:#b3d3dd73;
+ background:radial-gradient(circle,#7494a51b,transparent 70%);
+ box-shadow:inset 0 0 35px #648a9a28,0 0 65px #88aab91c;
+}
+html[data-av-parity="v136-full"] .p136-native-institute__scan{
+ background:linear-gradient(90deg,transparent,#b3d9df,transparent);
+ box-shadow:0 0 15px 4px #9bbec219;
+}
+html[data-av-parity="v136-full"] .p136-cinematic-vignette{
+ background:linear-gradient(90deg,#020405d9,transparent 72%),linear-gradient(0deg,#020405f0,transparent 57%);
+}
+html[data-av-parity="v136-full"] :is(.p136-header,.av79-navigation-shell){
+ background-color:#090e14;
+ border-color:var(--av-border);
+ backdrop-filter:blur(18px);
+}
+html[data-av-parity="v136-full"] :is(.ir80-help,.ir80-guide-card,.ir97-invite){
+ background:linear-gradient(145deg,#17232df7,#0c141cf9 67%,#080d13fa);
+ color:var(--av-text);border:1px solid #7793a45e;
+ border-radius:12px;box-shadow:0 24px 75px #000d,inset 0 1px #d4e9f216;
+}
+html[data-av-parity="v136-full"] .ir80-help :is(h2,strong),
+html[data-av-parity="v136-full"] .ir80-guide-card h2{color:var(--av-text)}
+html[data-av-parity="v136-full"] .ir80-help :is(.ir80-code,.ir88-station,.ir80-tour-launch){color:var(--av-ice)}
+html[data-av-parity="v136-full"] .ir87-tabs,
+html[data-av-parity="v136-full"] .ir80-topic-detail{
+ background:#121e27cc;border-color:var(--av-border);border-radius:8px;
+}
+html[data-av-parity="v136-full"] .ir80-topic-grid button{
+ background:#14202ac9;color:var(--av-text);border:1px solid var(--av-border);
+ border-radius:7px;
+}
+html[data-av-parity="v136-full"] .ir80-topic-grid button[aria-pressed="true"]{
+ color:#e7f6fa;border-color:#a9ccd3a3;background:#263b45;
+}
+html[data-av-parity="v136-full"] .ir88-companion .ir87-scout.ir80-dock{
+ border-radius:13px;background:linear-gradient(145deg,#1c2b35,#080e13);
+ border:1px solid #a3bec45e;box-shadow:0 11px 28px #000a,inset 0 1px #bdd8e127;
+}
+html[data-av-parity="v136-full"] .ir88-companion-expanded .ir87-scout.ir80-dock{
+ background:transparent;border:0;box-shadow:none;
+}
+html[data-av-parity="v136-full"] .ir137-vector-pet .ir88-svg-fallback{
+ opacity:1;inset:0;display:grid;place-items:center;
+}
+html[data-av-parity="v136-full"] .ir137-pet-art{
+ display:block;width:100%;height:100%;max-width:none;max-height:none;
+ filter:drop-shadow(0 7px 11px #000b);
+ animation:ir137-pet-float 5.8s ease-in-out infinite;
+}
+html[data-av-parity="v136-full"] .ir137-pet-eye{
+ transform-box:fill-box;transform-origin:center;
+ animation:ir137-pet-blink 8s ease-in-out infinite;
+}
+html[data-av-parity="v136-full"] .ir137-mood-notify .ir137-pet-eye{fill:#e4d5a9}
+html[data-av-parity="v136-full"] .ir137-mood-think .ir137-pet-eye{fill:#8bd5d4}
+html[data-av-parity="v136-full"] .p136-badge-sigil{
+ filter:drop-shadow(0 5px 9px #000a);
+}
+@keyframes ir137-pet-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5%)}}
+@keyframes ir137-pet-blink{0%,45%,48%,100%{transform:scaleY(1)}46%,47%{transform:scaleY(.14)}}
+@media(max-width:720px){
+ html[data-av-parity="v136-full"] .p136-native-institute__grid{bottom:-53%}
+ html[data-av-parity="v136-full"] .p136-native-institute__ring{opacity:.65}
+}
+@media(prefers-reduced-motion:reduce){
+ html[data-av-parity="v136-full"] .ir137-pet-art,
+ html[data-av-parity="v136-full"] .ir137-pet-eye{animation:none!important}
+ html[data-av-parity="v136-full"] .p136-native-institute__ring,
+ html[data-av-parity="v136-full"] .p136-native-institute__scan{animation:none!important}
+}
+@media(forced-colors:active){
+ html[data-av-parity="v136-full"] :is(.ir80-help,.ir80-guide-card,.ir97-invite,
+ .ir88-companion .ir87-scout.ir80-dock){background:Canvas;color:CanvasText;border:2px solid CanvasText}
+ html[data-av-parity="v136-full"] .ir137-pet-art{filter:none}
+}

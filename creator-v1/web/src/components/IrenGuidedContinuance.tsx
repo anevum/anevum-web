@@ -1,4 +1,4 @@
-import {useCallback,useEffect,useRef,useState,type CSSProperties} from "react";
+import {useCallback,useEffect,useId,useRef,useState,type CSSProperties} from "react";
 import {Link,useLocation,useNavigate} from "react-router-dom";
 import {OrbitalMark} from "./OrbitalMark";
 import {Icon} from "./Icons";
@@ -138,34 +138,45 @@ function writePosition(key:string,position:DockPosition){
 
 /** Tiny orbital helper, rendered as vectors rather than another floating pill. */
 function IrenScout(){
- return <svg className="ir87-scout-art" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+ const uid=useId().replaceAll(':','');
+ const shell=uid+'-shell',face=uid+'-face',glass=uid+'-glass';
+ return <svg className="ir87-scout-art ir137-pet-art" viewBox="0 0 128 128" aria-hidden="true" focusable="false">
   <defs>
-   <linearGradient id="ir87-hull" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0" stopColor="#396ab8"/><stop offset=".48" stopColor="#15366c"/><stop offset="1" stopColor="#060e21"/>
+   <linearGradient id={shell} x1="0" y1="0" x2=".95" y2="1">
+    <stop stopColor="#5b7588"/><stop offset=".13" stopColor="#273946"/>
+    <stop offset=".58" stopColor="#141e27"/><stop offset="1" stopColor="#060b10"/>
    </linearGradient>
-   <radialGradient id="ir87-visor" cx=".5" cy=".2" r=".95">
-    <stop offset="0" stopColor="#143975"/><stop offset="1" stopColor="#041124"/>
-   </radialGradient>
+   <linearGradient id={face} x1="0" y1="0" x2=".15" y2="1">
+    <stop stopColor="#132632"/><stop offset=".55" stopColor="#0a161e"/>
+    <stop offset="1" stopColor="#04090e"/>
+   </linearGradient>
+   <linearGradient id={glass} x1="0" y1="0" x2="1" y2="1">
+    <stop stopColor="#e6f6ff" stopOpacity=".35"/>
+    <stop offset=".38" stopColor="#a7d6e6" stopOpacity=".07"/>
+    <stop offset="1" stopColor="#000000" stopOpacity=".3"/>
+   </linearGradient>
   </defs>
-  <ellipse className="ir87-orbit" cx="32" cy="34" rx="28" ry="8" transform="rotate(-17 32 34)"
-   fill="none" stroke="#8db4ff" strokeWidth="2.1" opacity=".8"/>
-  <path className="ir87-thruster" d="M26 49L30 59L33 52L37 59L40 49Z" fill="#3b7eff" opacity=".65"/>
-  <path d="M31 14V9" stroke="#b6d1ff" strokeWidth="2" strokeLinecap="round"/>
-  <circle className="ir87-antenna" cx="31" cy="7" r="2.8" fill="#bad5ff"/>
-  <path d="M12 31Q12 15 28 14H36Q52 15 52 31V39Q51 52 35 53H29Q13 52 12 39Z"
-   fill="url(#ir87-hull)" stroke="#7fa6eb" strokeWidth="1.8"/>
-  <path d="M17 29Q18 21 29 20H35Q46 21 47 29V38Q46 46 35 47H29Q18 46 17 38Z"
-   fill="url(#ir87-visor)" stroke="#467bd7" strokeWidth="1.2"/>
-  <ellipse className="ir87-eye" cx="25" cy="33" rx="3.6" ry="4.2" fill="#cfe2ff"/>
-  <ellipse className="ir87-eye" cx="39" cy="33" rx="3.6" ry="4.2" fill="#cfe2ff"/>
-  <path d="M28 41Q32 43.5 36 41" stroke="#a9c9ff" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-  <circle cx="32" cy="47.3" r="3.1" fill="none" stroke="#467bd7" strokeWidth=".8"/>
-  <path d="M32 45V50" stroke="#6cb4ff" strokeWidth=".9" strokeLinecap="round"/>
-  <circle cx="29.8" cy="48.1" r=".9" fill="#bad5ff"/>
-  <circle cx="34.2" cy="48.1" r=".9" fill="#bad5ff"/>
-  <circle cx="32" cy="45.2" r="1" fill="#cfe2ff"/>
-  <circle cx="14" cy="40" r="2.7" fill="#6cb4ff" opacity=".9"/>
-  <circle cx="50" cy="40" r="2.7" fill="#6cb4ff" opacity=".9"/>
+  <path d="M33 15H92L109 31V94L93 112H34L17 95V33Z"
+    fill={'url(#'+shell+')'} stroke="#91afbc" strokeWidth="2"/>
+  <path d="M33 22H89L101 34V91L90 103H36L25 91V36Z"
+    fill="#0b131b" stroke="#526e7d" strokeWidth="1.4"/>
+  <path d="M30 28H96V91H30Z" fill={'url(#'+face+')'} stroke="#2d4f5d" strokeWidth="1.5"/>
+  <path d="M36 33H90L95 39V81L89 87H37L33 82V39Z"
+    fill="#07131c" stroke="#597b8a" strokeWidth=".8"/>
+  <path d="M37 35H89L93 40V62Q65 73 34 48V40Z" fill={'url(#'+glass+')'}/>
+  <g className="ir137-pet-eyes" fill="#bcecf4">
+   <rect className="ir137-pet-eye" x="45" y="51" width="10" height="17" rx="3"/>
+   <rect className="ir137-pet-eye" x="72" y="51" width="10" height="17" rx="3"/>
+  </g>
+  <path className="ir137-pet-mouth" d="M55 77Q63 82 72 77" fill="none" stroke="#82c4d6" strokeWidth="2.7" strokeLinecap="round"/>
+  <path d="M44 96H83" stroke="#567581" strokeWidth="1.5" strokeLinecap="round"/>
+  <rect x="58" y="94" width="11" height="4" rx="2" fill="#86c3d3"/>
+  <path d="M24 42H17M24 86H17M104 42H111M104 86H111"
+    stroke="#728f9e" strokeWidth="2" strokeLinecap="round"/>
+  <path d="M34 15L31 10M91 15L97 10" stroke="#6f93a0" strokeWidth="2" strokeLinecap="round"/>
+  <path d="M37 107H91" stroke="#a8c7d2" strokeOpacity=".45"/>
+  <path d="M33 15H92L109 31V94L93 112H34L17 95V33Z"
+    fill="none" stroke="#c7e3eb" strokeOpacity=".14" strokeWidth="1"/>
  </svg>;
 }
 
@@ -894,7 +905,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
           if(!panelOpen){panelInvokerRef.current=dockRef.current;focusRequested.current=true;}
           setPanelOpen(open=>!open);
         }}>
-        <IrenLivingCanvas mood={mood} expanded={(panelOpen&&!floatingInvite)||broadcast} paused={motionPaused}
+        <IrenLivingCanvas vectorFirst mood={mood} expanded={(panelOpen&&!floatingInvite)||broadcast} paused={motionPaused}
           look={broadcast?[-0.85,-0.18]:look} fallback={<IrenScout/>}/>
         {unreadCount>0&&<span className="ir87-unread" aria-hidden="true">{unreadCount>9?"9+":unreadCount}</span>}
       </button>
@@ -913,7 +924,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
         setTourIndex(previous);
       }}/>:<div className="ir80-guide-layer" aria-label="IREN guided website tour">
       {!embeddedGuideBot&&<div className="ir88-guide-bot" style={guideBotStyle} aria-hidden="true">
-        <IrenLivingCanvas mood={guideTravelling?"travel":"guide"} expanded paused={motionPaused}
+        <IrenLivingCanvas vectorFirst mood={guideTravelling?"travel":"guide"} expanded paused={motionPaused}
           look={guideLook} fallback={<IrenScout/>}/>
       </div>}
       {spotlight?<><div className="ir80-shade" style={{left:0,top:0,width:"100%",height:spotlight.top}}/>
@@ -926,7 +937,7 @@ export function IrenGuidedContinuance({memberId}:{memberId:string|null}){
         aria-labelledby="ir80-guide-title" aria-describedby="ir80-guide-description">
         <div className="ir80-guide-top">
           <span className={"ir80-guide-avatar"+(embeddedGuideBot?" ir88-guide-avatar":"")} aria-hidden="true">
-            {embeddedGuideBot?<IrenLivingCanvas mood={guideTravelling?"travel":"guide"} expanded paused={motionPaused}
+            {embeddedGuideBot?<IrenLivingCanvas vectorFirst mood={guideTravelling?"travel":"guide"} expanded paused={motionPaused}
               look={guideLook} fallback={<IrenScout/>}/>:<OrbitalMark/>}
           </span>
           <div><strong>IREN</strong><span>CONTINUANCE FIELD GUIDE</span></div>
