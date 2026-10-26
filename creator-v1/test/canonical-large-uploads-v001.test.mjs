@@ -73,7 +73,7 @@ function setup({large=true,migrate=true,access='verified',store=true}={}){
   CANONICAL_CREATOR_LARGE_ACCESS:access,
   CANONICAL_CREATOR_UPLOAD_PILOT_MEMBER_IDS:access==='pilot'?alice.id:'',
   CANONICAL_STUDIO_REVIEWER_IDS:bob.id,
-  ...(store?{CREATOR_ASSETS:bucket}:{})};
+  ...(store?{CREATOR_LARGE_ASSETS:bucket}:{})};
  const worker=createCanonicalStageWorker({authFactory:()=>({api:{getSession:async({headers})=>{
   const cookie=headers.get('cookie')||'';
   const who=cookie.includes('large-alice')?alice:cookie.includes('large-bob')?bob:null;
