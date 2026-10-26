@@ -410,6 +410,7 @@ html[data-av-parity="v136-full"] .site-main :is(a,button,input,textarea,select,[
 /* Existing legacy !important phone type must be repaired in its own layer.
    This remains in the sole V136 authority; V131 is untouched. */
 @layer legacy{
+ html[data-av-parity="v136-full"] .p136-community .ch7-button.ch7-button-primary{color:#150e17!important}
  @media(max-width:560px){
   html[data-av-parity="v136-full"] .field-guide-page .portal-page-heading-copy h1{font-size:clamp(28px,7vw,38px)!important;line-height:1.06!important}
  }
