@@ -26,7 +26,7 @@ test("sitewide scanner inventories both existing applications, not just the cine
 
 test("the Creator V1 launch, Studio, member and community routes remain registered",()=>{
   const routes=new Set(report.apps[1].routes.map(x=>x.path));
-  for(const path of ["/","/start","/discover","/creators","/creators/:handle",
+  for(const path of ["/","/severance","/about","/start","/discover","/creators","/creators/:handle",
       "/projects/:id","/community","/boards","/studio","/studio/packages",
       "/studio/:projectId","/member","/library","/join","/status"]){
     assert.ok(routes.has(path),"Missing canonical Creator destination: "+path);
@@ -41,7 +41,7 @@ test("historic URL aliases remain navigable while visible actions go directly to
   const shell=read("creator-v1/web/src/components/Shell.tsx");
   const navigation=read("creator-v1/web/src/lib/site-navigation.ts");
   const launcher=read("creator-v1/web/src/lib/portal-destinations.ts");
-  assert.ok(shell.includes('{to:"/studio",label:"Create"'));
+  assert.ok(shell.includes('{to:"/studio",label:"Creator Studio"'));
   assert.doesNotMatch(shell,/to:"\/create",label:"Create"/);
   assert.ok(navigation.includes('{key:"studio",label:"Creator Studio",to:"/studio"'));
   assert.doesNotMatch(navigation,/key:"atlas",label:"Atlas",to:"\/atlas"/);
@@ -96,10 +96,9 @@ test("both headers share the same canonical destinations; member profile opens i
    .map(match=>({to:match[1],label:match[2],parityOnly:match[3]==="true"}));
  assert.deepEqual(entries,[
   {to:"/",label:"Home",parityOnly:false},
+  {to:"/severance",label:"Severance",parityOnly:false},
   {to:"/discover",label:"Discover",parityOnly:false},
-  {to:"/community",label:"Community",parityOnly:false},
-  {to:"/creators",label:"Creators",parityOnly:false},
-  {to:"/studio",label:"Studio",parityOnly:true}
+  {to:"/status",label:"Status",parityOnly:false}
  ]);
  assert.match(shell,/const desktopNav = HEADER_NAV\.filter\(item=>!item\.parityOnly\)/);
  assert.match(header,/HEADER_NAV\.map\(\(\{to,label\}\)=>/);
