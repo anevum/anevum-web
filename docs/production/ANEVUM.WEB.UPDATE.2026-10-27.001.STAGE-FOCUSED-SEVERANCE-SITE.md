@@ -159,3 +159,23 @@ This is a scope receipt, **not** permission to deploy.
 
 No production upload, deployment, traffic switch, migration or GitHub merge
 has been executed by this V138 presentation continuation.
+
+## Review packaging and legacy media retirement — 2026-10-27
+
+- The public web build now prunes `creator-v1/web/public/portfolio/`
+  from the *compiled* V138 output, retaining the original Git files for
+  archive/rollback. This removes stale RHEN/demo personal-portfolio assets
+  from the site bundle without deleting user history or other repo data.
+- The exact-head Chromium gate confirms old personal portfolio media returns
+  HTTP 404 on the isolated loopback server.
+- `creator-v1/ops/v138-static-inventory.mjs` inventories public build
+  files with deterministic SHA-256 digests, detects forbidden debug/secrets,
+  asserts the unapproved cinematic review media and retired portfolio are
+  absent, and writes `evidence/stage-focused-v137/static-inventory.json`.
+- After all dedicated V138 checks pass, GitHub Actions attaches an
+  `anevum-v138-static-ui-<reviewed-head-sha>` archive for offline review.
+  This is a **static artifact only**, not a Cloudflare Worker bundle and
+  cannot itself authorize or trigger live traffic activation.
+
+The public product remains closed to game launches until a real authoritative
+server and playable build are independently verified.
