@@ -31,6 +31,27 @@ for(const media of mediaManifest.media){
   "Generated media digest mismatch: "+media.path);
  assert.ok(media.bytes<=6_000_000,"Unexpectedly large unoptimized background media");
 }
+assert.equal(mediaManifest.scrollFrameCountPerDevice,48,
+ "Scroll sequence must have exactly 48 pre-rendered frames per device");
+assert.equal(mediaManifest.frames.length,96,
+ "Scroll sequence must have the mobile and desktop 48-frame ladders");
+const variantCounts={desktop:0,mobile:0};
+for(const frame of mediaManifest.frames){
+ assert.ok(frame.path.startsWith(cinematicDir+"/frames-"),
+  "No external or arbitrary scroll frame path may be bundled");
+ const variant=frame.path.includes("/frames-desktop/")?"desktop":
+  frame.path.includes("/frames-mobile/")?"mobile":null;
+ assert.ok(variant,"Unknown scroll frame variant: "+frame.path);
+ variantCounts[variant]++;
+ const source=join(root,frame.path);
+ assert.ok(existsSync(source),"Scroll frame absent from compiled bundle: "+frame.path);
+ const bytes=readFileSync(source);
+ assert.equal(bytes.byteLength,frame.bytes,"Scroll frame size mismatch: "+frame.path);
+ assert.equal(createHash("sha256").update(bytes).digest("hex"),frame.sha256,
+  "Scroll frame digest mismatch: "+frame.path);
+ assert.ok(frame.bytes<=500_000,"Oversized per-frame WebP: "+frame.path);
+}
+assert.deepEqual(variantCounts,{desktop:48,mobile:48});
 assert.deepEqual(mediaManifest.media.map(item=>item.path).sort(),[
  cinematicDir+"/hero-motion-v139-1080p.mp4",
  cinematicDir+"/hero-motion-v139-720p.mp4",
