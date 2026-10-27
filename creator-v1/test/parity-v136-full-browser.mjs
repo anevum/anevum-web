@@ -1158,8 +1158,12 @@ try{
   record('Wayfinder quick-search handoff keeps input focus');
   await page.getByRole('button',{name:'Close quick navigation',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('.portal-launcher')?.open);
-  await page.getByRole('searchbox',{name:'Search approved ANEVUM projects',exact:true}).fill('orbital & worlds');
-  await page.getByRole('searchbox',{name:'Search approved ANEVUM projects',exact:true}).press('Enter');
+  // Discover owns the indexed search input; the legacy label below belongs
+  // to a superseded UI. Scope this to the real visible public-index form so
+  // the header's similarly named field cannot make the locator ambiguous.
+  const discoverySearch=page.locator('.p136-discover-search-form').getByRole('searchbox',{name:'Search published projects',exact:true});
+  await discoverySearch.fill('orbital & worlds');
+  await discoverySearch.press('Enter');
   await page.waitForURL(base+'/discover?q=orbital%20%26%20worlds');
   await page.goto(base,{waitUntil:'networkidle'});
   await page.screenshot({path:join(out,'vector-fallback-390.png'),animations:'disabled'});
