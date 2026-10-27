@@ -161,6 +161,8 @@ def main() -> None:
     ])
     for path in (full,mobile,poster):
         assert path.stat().st_size>20_000,"Media is unexpectedly empty: "+path.name
+    flat_frames=[frame for sequence_item in sequence for frame in sequence_item["files"]]
+    assert len(flat_frames)==96, "Expected exactly 96 unique reviewed scroll frames"
     manifest={
         "contract":"ANEVUM-V139-FIRST-PARTY-MEDIA-REVIEW",
         "origin":SOURCE_DESCRIPTION,
@@ -171,6 +173,7 @@ def main() -> None:
         "runtimeThirdPartyRequests":False,"audio":False,
         "fps":FPS,"seconds":SECONDS,"gameplayFootage":False,
         "scrollFrameCountPerDevice":48,
+        "frames":flat_frames,
         "media":[{"path":"assets/severance/"+p.name,"bytes":p.stat().st_size,
                   "sha256":sha256(p)} for p in (full,mobile,poster)],
         "scrollFrameSequences":sequence
