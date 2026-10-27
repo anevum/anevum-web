@@ -174,6 +174,10 @@ function MemberEditor({memberId,memberName,memberEmail}:{memberId:string;memberN
     }catch{setError("Could not sign out. Try again.");setBusy(false)}
   }
   const previewHandle=claimed?persisted?.handle:handle.trim().toLowerCase();
+  // The preview reflects pending choices without asserting that public access
+  // has changed before the canonical server confirms the new revision.
+  const storedVisibility=persisted?.visibility??"private";
+  const visibilityPending=claimed&&(publicVisible?"public":"private")!==storedVisibility;
   function toggleFocus(key:FocusKey){
     if(busy)return;
     setFocus(value=>value.includes(key)?value.filter(item=>item!==key):
@@ -266,12 +270,12 @@ function MemberEditor({memberId,memberName,memberEmail}:{memberId:string;memberN
         <h2>{displayName||"NEW MEMBER"}</h2>
         <p className="av12-preview-handle">@{previewHandle||"your_handle"}</p>
         {headline&&<p className="av18-preview-headline">{headline}</p>}
-        <div className="av12-preview-visibility">{persisted?.visibility==="public"?"PUBLIC PROFILE":"PRIVATE PROFILE"}</div>
+        <div className="av12-preview-visibility" role="status">{visibilityPending?(publicVisible?"PUBLIC AFTER SAVE":"PRIVATE AFTER SAVE"):(storedVisibility==="public"?"PUBLIC PROFILE":"PRIVATE PROFILE")}</div>
         <p className="av12-preview-description">{bio||"Your introduction will appear here."}</p>
         {focus.length>0&&<div className="av18-preview-focus">{focus.map(item=><span key={item}>{FOCUS_OPTIONS.find(option=>option.id===item)?.label}</span>)}</div>}
         {persisted?.visibility==="public"&&<Link to={"/@"+persisted.handle}
           className="av12-preview-open">VIEW PUBLIC PROFILE ↗</Link>}
-        <p className="av12-preview-foot">This is a local appearance preview until you save. Public visibility is controlled separately. Achievements and artifacts require server-verified progression.</p>
+        <p className="av12-preview-foot">Appearance and visibility changes shown here remain drafts until saved and server-confirmed. The public page follows your last saved visibility setting. Achievements and artifacts require server-verified progression.</p>
       </aside>}
     </div>
   </section>;

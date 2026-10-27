@@ -805,3 +805,89 @@ html[data-av-parity="v136-full"] .p136-iren-console{
  html[data-av-parity="v136-full"] .p136-hero::before,
  html[data-av-parity="v136-full"] .p136-hero::after{display:none}
 }
+
+/* V137 / canonical member tools — restrained cold-metal surfaces.
+ * Only mounted, authenticated member/identity UI; preserve user-selected
+ * world atmosphere, uploaded banner/portrait, earned media and syntax colors.
+ * No new canvas, media, privilege state or data bindings. */
+html[data-av-parity="v136-full"] .av12-account{
+ --av12-line:#91afba50;--av12-gold:#c4dbe3;
+ border-color:#8badba59;
+ background:linear-gradient(145deg,#101c26 0%,#0b1219 58%,#060b10);
+ box-shadow:0 26px 65px #000a,inset 0 1px #d7ebf016;
+}
+html[data-av-parity="v136-full"] .av12-account-banner{
+ background:radial-gradient(ellipse at 70% 16%,#9cbfce20,transparent 57%),#111c25;
+}
+html[data-av-parity="v136-full"] :is(
+ .av12-account .av12-editor-panel,.av12-account .av12-profile-preview,
+ .ms-dashboard .ms-card,.ms-dashboard .ms-wall,
+ .ms-dashboard .ms-progress,.ms-dashboard .ms-image-editor,
+ .ms-public .ms-card,.ms-public .ms-progress){
+ background:linear-gradient(153deg,#1c2a35f4 0%,#101a23f7 53%,#090f16fa);
+ border-color:#8aaebb57;border-radius:13px;
+ box-shadow:inset 0 1px #d2ebf015,0 12px 30px #0007;
+ color:#e4f1f5;
+}
+html[data-av-parity="v136-full"] .ms-dashboard .ms-toolbar{
+ background:linear-gradient(90deg,#14222b,#0c151c);
+ border-color:#87a9ba49;
+}
+html[data-av-parity="v136-full"] .ms-dashboard .ms-toolbar nav button[aria-current="page"]{
+ background:#293e4a;color:#eff9fc;border-color:#b2d1de91;
+ box-shadow:inset 0 1px #e5f3f52c;
+}
+html[data-av-parity="v136-full"] .ms-dashboard .ms-toolbar :is(button,summary,a){
+ color:#c9e0e9;
+}
+html[data-av-parity="v136-full"] .ms-dashboard .ms-toolbar-more-content{
+ background:#101b24;border-color:#82a2ae7d;box-shadow:0 18px 42px #000c;
+}
+html[data-av-parity="v136-full"] :is(
+ .av12-account .av12-profile-form>input,
+ .av12-account .av12-profile-form>textarea,
+ .av12-account .av12-handle-input,
+ .ms-dashboard .ms-wall textarea,
+ .ms-dashboard .av36-closure-form input){
+ background:#09131b;border-color:#7998a96b;color:#eef7f9;
+ box-shadow:inset 0 2px 8px #0008;
+}
+html[data-av-parity="v136-full"] .av12-account .av12-visibility{
+ background:#15232e;border-color:#91b1bc69;color:#dcecf1;
+}
+html[data-av-parity="v136-full"] .av12-account .av12-preview-visibility{
+ background:#20333e;border-color:#abcbd588;color:#e5f4f8;
+}
+html[data-av-parity="v136-full"] :is(
+ .av12-account .av12-save-button,
+ .ms-dashboard .ms-primary){
+ background:linear-gradient(135deg,#e0eef1,#a8cbd7);
+ border:1px solid #e4f3f6;color:#09161e;
+ box-shadow:inset 0 1px #ffffff91,0 4px 17px #03090d7a;
+}
+html[data-av-parity="v136-full"] .av36-closure{
+ background:linear-gradient(145deg,#1b2833,#0b1119);
+ border-color:#8ca7b55e;color:#e8f0f3;
+ box-shadow:0 18px 45px #0009,inset 0 1px #c8e1e718;
+}
+html[data-av-parity="v136-full"] .av36-closure-note{
+ background:#16232dcc;border-color:#88a5b362;color:#cfdee6;
+}
+@media(max-width:640px){
+ html[data-av-parity="v136-full"] .av12-account .av12-editor-panel,
+ html[data-av-parity="v136-full"] .ms-dashboard .ms-card{border-radius:11px}
+}
+@media(forced-colors:active){
+ html[data-av-parity="v136-full"] :is(.av12-account,
+ .av12-account .av12-editor-panel,.av12-account .av12-profile-preview,
+ .ms-dashboard .ms-card,.ms-dashboard .ms-wall,
+ .ms-dashboard .ms-progress,.ms-dashboard .ms-image-editor,
+ .ms-public .ms-card,.ms-public .ms-progress,
+ .ms-dashboard .ms-toolbar,.av36-closure,.av36-closure-note,
+ .av12-account .av12-preview-visibility){
+  background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none;
+ }
+ html[data-av-parity="v136-full"] :is(.av12-account .av12-save-button,.ms-dashboard .ms-primary){
+  background:ButtonFace;color:ButtonText;border-color:ButtonText;box-shadow:none;
+ }
+}

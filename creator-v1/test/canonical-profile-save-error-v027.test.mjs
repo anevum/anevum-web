@@ -16,3 +16,22 @@ test("profile API remains cookie-only and same-origin with no extra identity aut
  assert.match(api,/status===409\?"This handle/);
  assert.match(api,/status===429\?"Too many changes/);
 });
+
+test("canonical public visibility remains server-authoritative in the member preview",()=>{
+ const source=readFileSync(new URL("../web/src/pages/Phase1MemberPage.tsx",import.meta.url),"utf8");
+ assert.match(source,/const storedVisibility=persisted\?\.visibility\?\?"private"/);
+ assert.match(source,/const visibilityPending=claimed/);
+ assert.match(source,/PUBLIC AFTER SAVE/);
+ assert.match(source,/PRIVATE AFTER SAVE/);
+ assert.match(source,/persisted\?\.visibility==="public"&&<Link/);
+ assert.match(source,/last saved visibility setting/);
+ assert.match(source,/checked\.profile\.revision!==result\.profile\.revision/);
+});
+test("stealth member surfaces preserve uploaded media and have high-contrast fallbacks",()=>{
+ const source=readFileSync(new URL("../web/src/parity/continuance-design-system.css",import.meta.url),"utf8");
+ assert.match(source,/V137 \/ canonical member tools/);
+ assert.match(source,/\.ms-dashboard \.ms-wall/);
+ assert.match(source,/\.av12-account \.av12-visibility/);
+ assert.match(source,/@media\(forced-colors:active\)/);
+ assert.doesNotMatch(source.slice(source.indexOf("V137 / canonical member tools")),/\.ms-cover-art|\.ms-portrait img|\.ms-cover-shade|\.av92-presence-cover/);
+});
