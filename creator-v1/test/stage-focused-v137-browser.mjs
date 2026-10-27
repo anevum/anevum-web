@@ -71,7 +71,8 @@ try{
   assert.equal(await page.locator(".p136-console-wayfinder a[data-station]").count(),4,"Four-stage Wayfinder");
   assert.match(await page.locator("main#main").innerText(),/No public multiplayer game or open beta is available yet/i);
   assert.equal(await page.getByRole("link",{name:/Play now|Start match|Join server/i}).count(),0,"No false playable CTA");
-  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),"Home fits "+width+"px");
+  const homeOverflow=await page.evaluate(()=>({viewport:innerWidth,documentWidth:document.documentElement.scrollWidth,offenders:Array.from(document.querySelectorAll("body *")).map(node=>{const rect=node.getBoundingClientRect();return {tag:node.tagName,cls:typeof node.className==="string"?node.className.slice(0,85):"",text:node.textContent?.trim().slice(0,40),left:Math.round(rect.left),right:Math.round(rect.right),width:Math.round(rect.width)};}).filter(item=>item.right>innerWidth+2||item.left<-2).sort((a,b)=>b.right-a.right).slice(0,20)}));
+  assert.ok(homeOverflow.documentWidth<=width+2,"Home fits "+width+"px "+JSON.stringify(homeOverflow));
   await page.screenshot({path:join(out,"home-"+width+".png"),animations:"disabled",fullPage:true});
   await page.getByRole("link",{name:"EXPLORE THE GAME"}).click();
   await page.waitForURL(origin+"/severance");
