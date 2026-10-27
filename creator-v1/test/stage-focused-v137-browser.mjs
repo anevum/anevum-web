@@ -11,7 +11,7 @@ import {join,resolve,extname,sep} from "node:path";
 const {chromium}=createRequire(import.meta.url)("playwright");
 const root=resolve("creator-v1/dist/web");
 const out=resolve("evidence/stage-focused-v137");
-const mime={".html":"text/html; charset=utf-8",".js":"text/javascript",".css":"text/css",".png":"image/png",".webp":"image/webp",".jpg":"image/jpeg",".svg":"image/svg+xml",".woff2":"font/woff2",".json":"application/json"};
+const mime={".html":"text/html; charset=utf-8",".js":"text/javascript",".css":"text/css",".png":"image/png",".webp":"image/webp",".jpg":"image/jpeg",".svg":"image/svg+xml",".woff2":"font/woff2",".mp4":"video/mp4",".json":"application/json"};
 const results={source:process.env.ANEVUM_SOURCE_SHA||null,contract:"anevum-v137-stage-focus-loopback",productionReleased:false,status:"INCOMPLETE",checks:[],blocked:[],errors:[]};
 assert.ok(existsSync(join(root,"index.html")),"Compiled React frontend required");
 mkdirSync(out,{recursive:true});
@@ -64,7 +64,11 @@ try{
   await page.goto(origin+"/",{waitUntil:"domcontentloaded"});
   await page.locator('[data-stage-focus="severance-development"]').waitFor();
   assert.equal(await page.locator('[data-visual-pass="v138-hushwire"]').count(),1,"New cinematic build is mounted");
-  assert.equal(await page.locator(".av138-world-scene").count(),1,"Original static SVG environment is visible");
+  assert.equal(await page.locator(".av138-world-scene").count(),1,"Original SVG remains in the fallback");
+  assert.equal(await page.locator('.av139-cinematic[data-art-type="illustrative-cinematic-not-gameplay"]').count(),1,"Video overlay labels itself concept art");
+  assert.equal(await page.locator("video.av139-film").count(),1,"One muted cinematic video is part of the homepage");
+  assert.equal(await page.locator("video.av139-film").getAttribute("src"),null,"Reduced-motion user never requests moving video");
+  assert.equal(await page.locator(".av139-film").getAttribute("poster"),"/assets/severance/hero-poster-v139.webp");
   assert.equal(await page.locator(".av138-plate").count(),4,"Four different world-system plates");
   assert.equal(await page.getByRole("link",{name:"EXPLORE THE GAME"}).getAttribute("href"),"/severance","No false Play Now control");
   assert.equal(await page.locator("main#main").count(),1,"Exactly one main landmark");
@@ -82,6 +86,8 @@ try{
   await page.waitForURL(origin+"/severance");
   await page.locator('[data-product-stage="design-prototype"]').waitFor();
   assert.equal(await page.locator(".av138-sev-mechanic").count(),4,"Four documented gameplay systems");
+  assert.equal(await page.locator('.av138-sev-hero .av139-cinematic').count(),1,"Game dossier shares cinematic environment");
+  assert.equal(await page.locator(".av138-sev-hero video.av139-film").getAttribute("src"),null,"Reduced-motion also respected on game dossier");
   assert.equal(await page.locator(".av138-sev-roadmap-grid li").count(),3,"Three true development gates");
   assert.equal(await page.locator('[data-public-playable="false"]').count(),1);
   assert.match(await page.locator("main#main").innerText(),/No public server, playable beta or release date is announced/i);
@@ -97,6 +103,46 @@ try{
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),"Status fits "+width+"px");
   results.checks.push({width,home:true,game:true,about:true,status:true,screenshots:3,overflow:false});
   await context.close();
+ }
+ // Independently verify first-party MP4 and poster can be fetched without
+ // a CDN or provider runtime connection. Do not demand proprietary-codec
+ // playback on a CI Chromium build that may lack local H.264 licensing.
+ {
+   const context=await browser.newContext({viewport:{width:1440,height:900},reducedMotion:"no-preference"});
+   await context.route("**/*",async route=>{
+     const req=route.request(),url=new URL(req.url());
+     if(url.origin!==origin||!["GET","HEAD"].includes(req.method())){
+       results.blocked.push({width:"motion",url:req.url(),method:req.method()});
+       await route.abort();return;
+     }
+     if(url.pathname.startsWith("/api/")){
+       const value=url.pathname==="/api/v1/member/auth/get-session"?null:
+         url.pathname==="/api/v1/status"?{version:"v139-motion-loopback",features:{communityPosts:false},counts:{publishedProjects:0,publishedCreators:0}}:
+         {items:[],count:0,nextCursor:null};
+       await route.fulfill({status:200,contentType:"application/json",body:JSON.stringify(value)});
+       return;
+     }
+     await route.continue();
+   });
+   const page=await context.newPage();
+   page.on("pageerror",e=>results.errors.push({width:"motion",error:String(e)}));
+   await page.goto(origin+"/",{waitUntil:"domcontentloaded"});
+   await page.locator(".av139-cinematic").waitFor();
+   await page.waitForFunction(()=>{
+     const node=document.querySelector("video.av139-film");
+     return node?.getAttribute("src")?.includes("hero-motion-v139-1080p.mp4");
+   },{timeout:12000});
+   const video=await page.request.get(origin+"/assets/severance/hero-motion-v139-1080p.mp4");
+   assert.equal(video.status(),200,"Reviewed H264 video is self-hosted");
+   assert.match(video.headers()["content-type"]||"",/video\/mp4/);
+   assert.ok(Number(video.headers()["content-length"]||0)>200000,"HD cinematic exists");
+   const poster=await page.request.get(origin+"/assets/severance/hero-poster-v139.webp");
+   assert.equal(poster.status(),200,"Poster is self-hosted");
+   assert.match(poster.headers()["content-type"]||"",/image\/webp/);
+   results.checks.push({width:"motion",sameOriginMedia:true,
+     mp4Bytes:Number(video.headers()["content-length"]||0),
+     posterBytes:Number(poster.headers()["content-length"]||0)});
+   await context.close();
  }
  assert.deepEqual(results.blocked,[],"No external requests or writes");
  assert.deepEqual(results.errors,[],"No uncaught page errors");
