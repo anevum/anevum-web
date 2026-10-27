@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
+import {stripTypeScriptTypes} from "node:module";
 import {parse} from "@babel/parser";
 
 const read=path=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
@@ -67,14 +68,10 @@ test("V139 retains urgent errors under a flooded info queue without manufacturin
  assert.doesNotThrow(()=>parse(source,{sourceType:"module",plugins:["typescript"]}));
  assert.match(queue,/setQueue\(old=>scheduleTransmission\(old,alert\)\)/);
  assert.doesNotMatch(source,/fetch\(|localStorage|award.*grant|notifications\/ack/);
- const compiler=await import("typescript");
- const transpile=compiler.transpileModule??compiler.default?.transpileModule;
- assert.equal(typeof transpile,"function","TypeScript transpiler must exist");
- // TypeScript 7's runtime API may not expose legacy enum properties. Use
- // stable numeric compiler option values: ES2022 target=9, ESNext module=99.
- const out=transpile(source,{compilerOptions:{
-  target:9,module:99
- }}).outputText;
+ // The project's TypeScript 7 package does not expose the legacy
+ // transpileModule API. Strip only type annotations using Node 22's built-in
+ // parser; execute the unaltered pure queue logic, not a separate mock.
+ const out=stripTypeScriptTypes(source,{mode:"strip"});
  const {scheduleTransmission}=await import("data:text/javascript;base64,"+
   Buffer.from(out).toString("base64"));
  const alert=(id,kind="info",extra={})=>({key:"local-"+id,kind,title:"TEST "+id,...extra});
