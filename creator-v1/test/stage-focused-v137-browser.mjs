@@ -26,7 +26,7 @@ const server=createServer((req,res)=>{
   file=join(root,"index.html");
  }
  res.writeHead(200,{"content-type":mime[extname(file)]||"application/octet-stream","cache-control":"no-store",
-  ...(extname(file)===".html"?{"content-security-policy":"default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; form-action 'self'; object-src 'none'; frame-src 'self'"}:{})});
+  ...(extname(file)===".html"?{"content-security-policy":"default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self'; connect-src 'self'; font-src 'self'; form-action 'self'; object-src 'none'; frame-src 'self'"}:{})});
  res.end(req.method==="HEAD"?undefined:readFileSync(file));
 });
 await new Promise(done=>server.listen(0,"127.0.0.1",done));
