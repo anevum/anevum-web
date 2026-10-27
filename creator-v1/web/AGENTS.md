@@ -1,5 +1,14 @@
 # ANEVUM website — active V136 guidance
 
+> **V137 current-stage public presentation (October 27, 2026):** On branch
+> `build/stage-focused-severance-site-20261027-001`, also read
+> `docs/production/ANEVUM.WEB.UPDATE.2026-10-27.001.STAGE-FOCUSED-SEVERANCE-SITE.md`.
+> The public front door now prioritizes the independent studio and
+> TRANSCOSMIC: SEVERANCE design/prototype, while retaining all existing
+> account, Creator Studio, community, moderation and staff routes. This is
+> a review-only candidate and does not supersede the sealed V136 production
+> release authority, immutable asset checks or feature-permission boundaries.
+>
 Before implementing website, Community, Discovery, Creator Studio, public
 profiles, member spaces, visual assets or WebGL interface changes, read
 `docs/production/ACTIVE-V136-WEB-OVERHAUL.md` from the repository root.
