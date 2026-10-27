@@ -1,0 +1,242 @@
+/*
+ * ANEVUM V139 | THE LIVING INTERFACE
+ * Horror is expressed through image depth, reactive glass, restraint,
+ * brief digital interference and non-obscuring environmental blood.
+ * Crucially: this layer NEVER replaces real links, text, input fields,
+ * achievement data, account navigation or creator-authoring controls.
+ */
+:root {
+ --av139-fog:#0a1117;
+ --av139-blood:#cb2836;
+ --av139-blood-lit:#f24a58;
+ --av139-rim:#bbced052;
+ --av139-ink:#eef1f1;
+ --av139-metal:linear-gradient(145deg,#252b31e8,#11161ccc);
+ --av139-travel:cubic-bezier(.17,.75,.19,1);
+}
+.av139-cinematic {
+ position:absolute;
+ z-index:0;
+ inset:0;
+ overflow:hidden;
+ isolation:isolate;
+ contain:layout paint;
+ background:#080b11;
+ pointer-events:none;
+ --av139-x:0px;
+ --av139-y:0px;
+ --av139-tilt-x:0deg;
+ --av139-tilt-y:0deg;
+}
+.av139-cinematic .av138-world-scene,
+.av139-cinematic .av139-poster,
+.av139-cinematic .av139-film {
+ display:block;
+ position:absolute;
+ inset:-3%;
+ width:106%;
+ height:106%;
+ object-fit:cover;
+ object-position:center;
+ pointer-events:none;
+ user-select:none;
+ transform:translate3d(var(--av139-x),var(--av139-y),0) scale(1.03);
+ transition:transform .75s var(--av139-travel);
+ will-change:auto;
+}
+.av139-cinematic .av138-world-scene{z-index:0}
+.av139-poster{
+ z-index:1;
+ background:url("/assets/severance/hero-poster-v139.webp") center/cover no-repeat;
+}
+.av139-film {
+ z-index:2;
+ opacity:0;
+ background:transparent;
+ filter:contrast(1.07) saturate(.9);
+ transition:opacity .8s ease,transform .75s var(--av139-travel);
+}
+.av139-cinematic[data-media-state="playing"] .av139-film{opacity:1}
+.av139-cinematic :is(.av139-dust,.av139-scanlines,.av139-bloodlight){
+ position:absolute;
+ inset:0;
+ z-index:3;
+ pointer-events:none;
+}
+.av139-dust {
+ opacity:.35;
+ background:
+  radial-gradient(ellipse at 20% 95%,#6b131e29,transparent 54%),
+  radial-gradient(ellipse at 77% 50%,#d34e5633,transparent 45%),
+  repeating-linear-gradient(115deg,transparent 0 58px,#b5b4a80b 59px,transparent 60px 88px);
+ mix-blend-mode:screen;
+}
+.av139-scanlines {
+ opacity:.29;
+ background:repeating-linear-gradient(0deg,#0000 0 3px,#0006 4px,transparent 5px);
+ mix-blend-mode:multiply;
+}
+.av139-bloodlight{
+ opacity:.55;
+ background:
+  radial-gradient(ellipse 23% 32% at 92% 73%,#8c07093f,transparent),
+  radial-gradient(ellipse 23% 28% at 4% 89%,#9b0f1540,transparent),
+  linear-gradient(0deg,#17040449 0,transparent 18%);
+ mix-blend-mode:screen;
+}
+html[data-av-parity="v136-full"] .p136-hero.av138-hero>.av139-cinematic,
+.av138-sev-hero>.av139-cinematic{z-index:0}
+html[data-av-parity="v136-full"] .p136-hero.av138-hero .av138-hero-shade,
+.av138-sev-hero .av138-sev-hero-shade{z-index:1}
+.av138-sev-hero-inner,.av138-hero-content,.av138-hero-readout{position:relative;z-index:3}
+.av138-sev-hero .av139-cinematic{filter:saturate(.92)}
+
+/* Title is one real readable heading, with a tiny noninteractive red ghost
+ * revealed very briefly. Never animate the source glyph with strobe opacity.
+ */
+.av139-glitch-title{position:relative;isolation:isolate}
+.av139-glitch-title::before {
+ content:attr(data-glitch-title);
+ position:absolute;
+ inset:0 auto auto 0;
+ font:inherit;
+ width:max-content;
+ color:#fa3942;
+ opacity:0;
+ transform:translate3d(-3px,-1px,0);
+ text-shadow:4px 0 #4ae0d34b,-2px 0 #ee4254aa;
+ clip-path:inset(44% 0 43% 0);
+ pointer-events:none;
+ white-space:nowrap;
+}
+@media (prefers-reduced-motion:no-preference) {
+ .av139-glitch-title::before{animation:av139-title-tear 12s linear infinite}
+ .av139-dust{animation:av139-air-depth 22s ease-in-out infinite alternate}
+ .av139-bloodlight{animation:av139-red-breath 9s ease-in-out infinite}
+}
+@keyframes av139-title-tear{
+ 0%,76%,77.2%,96%,97.1%,100%{opacity:0;transform:translate3d(0,0,0)}
+ 76.2%,76.65%,96.2%,96.6%{opacity:.6;transform:translate3d(-5px,1px,0)}
+ 76.9%,96.9%{opacity:.36;transform:translate3d(4px,-1px,0)}
+}
+@keyframes av139-air-depth{from{transform:translate3d(-1%,0,0)}to{transform:translate3d(1%,.5%,0)}}
+@keyframes av139-red-breath{0%,100%{opacity:.36}50%{opacity:.63}}
+
+/* A physical metal-and-glass system, not a simulated editor UI. Public cards
+ * lift in perspective on pointer hover. Inputs and gamepad focus stay native. */
+.av138-site :is(.av138-plate,.av138-sev-mechanic,.av138-public-grid article),
+html[data-av-parity="v136-full"] :is(.p136-discover-world,.ch7-portals>a,
+ .p136-discover-results .p136-project-card,
+ .p136-creators .portal-box,
+ .v091-status-page .v091-status-service){
+ position:relative;
+ transform-style:preserve-3d;
+ transition:transform .38s var(--av139-travel),box-shadow .38s ease,border-color .2s ease;
+ backface-visibility:hidden;
+}
+@media (hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference) {
+ .av138-site :is(.av138-plate,.av138-sev-mechanic,.av138-public-grid article):hover,
+ html[data-av-parity="v136-full"] :is(.p136-discover-world,.ch7-portals>a,.v091-status-page .v091-status-service):hover{
+  transform:perspective(950px) rotateX(2deg) rotateY(-2deg) translate3d(0,-7px,8px);
+  box-shadow:0 20px 40px #000b,inset 0 1px #f1ecde21,0 0 16px #9d2b3140;
+ }
+ .av138-site :is(.av138-plate,.av138-sev-mechanic,.av138-public-grid article) :is(a,button):focus-visible,
+ html[data-av-parity="v136-full"] .p136-discover-world:focus-visible{
+  outline-color:#f45b63;
+ }
+ .av138-cta:hover{
+  transform:perspective(900px) rotateX(-2deg) translateY(-3px);
+  box-shadow:inset 0 1px #fff4,0 8px 20px #000a,0 0 23px #ad29384a;
+ }
+}
+/* Film perforations, caution-strip red rim and minor bleeding light live
+ * behind content. No overlay can swallow pointer/touch input. */
+.av138-site .av138-gallery,
+.av138-site .av138-sev-mechanics,
+.av138-site .av138-development,
+.av138-site .av138-sev-roadmap,
+.av138-site .av138-approved{
+ position:relative;
+ isolation:isolate;
+}
+.av138-site :is(.av138-gallery,.av138-sev-mechanics,.av138-development,.av138-sev-roadmap)::before{
+ content:"";
+ position:absolute;
+ inset:0;
+ pointer-events:none;
+ z-index:-1;
+ background:
+  radial-gradient(ellipse at 94% 4%,#a9293024,transparent 30%),
+  repeating-linear-gradient(90deg,#e0dbd308 0 1px,transparent 1px 82px);
+ opacity:.55;
+}
+.av138-site :is(.av138-section-bar h2,.av138-studio-access h2,.av138-sev-statement h2){
+ text-shadow:1px 2px 0 #040506a6,0 0 24px #f23e4620;
+}
+.av138-site :is(.av138-plate,.av138-sev-mechanic)::after{
+ content:"";
+ display:block;
+ position:absolute;
+ inset:0;
+ pointer-events:none;
+ z-index:1;
+ box-shadow:inset 0 1px #e3e2df28,inset 0 -2px #af2b35a0;
+ border:1px solid transparent;
+}
+.av138-site :is(.av138-plate,.av138-sev-mechanic):hover::after{
+ box-shadow:inset 0 1px #fff7,inset 0 -2px #ed4e56,0 0 0 1px #c72a364c;
+}
+/* Public account and navigation chrome. Never modify protected form states. */
+html[data-av-parity="v136-full"] .p136-header{
+ border-bottom:1px solid #a838447d;
+ box-shadow:0 9px 35px #0009,inset 0 -1px #d3484935;
+}
+html[data-av-parity="v136-full"] :is(.p136-header-search,.p136-header-actions button,.p136-account){
+ box-shadow:inset 0 1px #ffffff11;
+}
+html[data-av-parity="v136-full"] .p136-header a:is(:hover,:focus-visible),
+html[data-av-parity="v136-full"] .av79-navigation a:is(:hover,:focus-visible){
+ text-shadow:0 0 12px #ee424552;
+}
+html[data-av-parity="v136-full"] .p136-console-wayfinder{
+ box-shadow:inset 0 1px #f5f5f522,0 14px 50px #000d,0 0 25px #8a27302a;
+ backdrop-filter:blur(20px);
+}
+html[data-av-parity="v136-full"] .p136-console-station:is(:hover,.is-active) {
+ box-shadow:inset 0 -2px #d747519c;
+}
+
+/* Decorative "blood" is dark crimson staining at frame edges only; form
+ * fields, headings, counters, icons and meaningful text are never obstructed.
+ */
+.av139-bloodlight::after {
+ content:"";
+ position:absolute;inset:0;
+ pointer-events:none;
+ opacity:.35;
+ background:
+  radial-gradient(ellipse 7% 30% at 3% 80%,#ad0c19 0%,transparent 100%),
+  radial-gradient(ellipse 12% 21% at 90% 100%,#a0131e 0%,transparent 100%);
+}
+/* Device safety: poster & SVG remain; video never required for navigation. */
+@media(max-width:760px){
+ .av139-cinematic .av139-film{filter:contrast(1.02) saturate(.8)}
+ .av139-scanlines{opacity:.12}
+ .av139-dust{opacity:.22}
+ .av139-glitch-title::before{display:none}
+ .av138-site :is(.av138-plate,.av138-sev-mechanic){transform:none}
+}
+@media(prefers-reduced-motion:reduce){
+ .av139-cinematic :is(.av139-film,.av139-dust,.av139-bloodlight,.av138-world-scene,.av139-poster),
+ .av138-site :is(.av138-plate,.av138-sev-mechanic,.av138-public-grid article),
+ .av139-glitch-title::before{
+  transition:none!important;animation:none!important;transform:none!important;
+ }
+ .av139-glitch-title::before{display:none}
+ .av139-cinematic .av139-film{display:none!important}
+}
+@media(forced-colors:active){
+ .av139-cinematic :is(.av139-film,.av139-dust,.av139-scanlines,.av139-bloodlight){display:none}
+ .av138-site a:focus-visible{outline:2px solid Highlight!important}
+ .av139-glitch-title::before{display:none}
+}
