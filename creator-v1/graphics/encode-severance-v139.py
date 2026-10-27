@@ -117,6 +117,24 @@ def main() -> None:
         "-c:v","libx264","-preset","veryfast","-crf","25",
         "-pix_fmt","yuv420p","-movflags","+faststart",str(mobile)
     ])
+    # Draftly-style scroll-scrub assets: 48 frame positions across the eight
+    # second original loop. Two browser-sized ladders, no runtime third-party
+    # media requests and no heavy WebGL engine. The mobile ladder is < 768px.
+    frames=[]
+    for variant,resolution in (("desktop","1280:720"),("mobile","768:432")):
+        folder=out/("frames-"+variant)
+        folder.mkdir(parents=True,exist_ok=True)
+        run_ffmpeg([
+            "-i",str(full),"-vf","fps=6,scale="+resolution+":flags=lanczos",
+            "-an","-c:v","libwebp","-quality","62",
+            "-compression_level","5",str(folder/"frame-%04d.webp")
+        ])
+        images=sorted(folder.glob("frame-*.webp"))
+        assert len(images)==48,(
+            "Missing scroll-synced WebP frame(s), expected 48: "+variant
+        )
+        frames.extend([{"path":"assets/severance/frames-"+variant+"/"+i.name,
+                        "bytes":i.stat().st_size,"sha256":sha256(i)} for i in images])
     poster=out/"hero-poster-v139.webp"
     run_ffmpeg([
         "-i",str(source),"-vf","scale=1920:1080:flags=lanczos",
@@ -129,6 +147,8 @@ def main() -> None:
         "origin":SOURCE_DESCRIPTION,"approvedSourceSha256":digest,
         "runtimeThirdPartyRequests":False,"audio":False,
         "fps":FPS,"seconds":SECONDS,"gameplayFootage":False,
+        "scrollFrameCountPerDevice":48,
+        "frames":frames,
         "media":[{"path":"assets/severance/"+p.name,"bytes":p.stat().st_size,
                   "sha256":sha256(p)} for p in (full,mobile,poster)]
     }
