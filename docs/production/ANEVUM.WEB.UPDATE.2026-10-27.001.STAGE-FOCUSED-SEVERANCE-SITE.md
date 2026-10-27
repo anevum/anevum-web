@@ -179,3 +179,65 @@ has been executed by this V138 presentation continuation.
 
 The public product remains closed to game launches until a real authoritative
 server and playable build are independently verified.
+
+## V139 cinematic motion continuation — 2026-10-27
+
+The visual concept has been developed into an **actual locally encoded,
+8-second, 24 fps, 1920x1080 H.264 loop** (original review render SHA256
+`f8f3950b2fbe7d23c4da029b1708c7d099199cdf2dbaafb6d579685cb5ebd4b4`,
+~1.30 MB), with blood-red industrial lighting, small glitch pulses,
+mist, depth, storm and a stationary survivor in a devastated valley.
+The clean source is 1672x941 and contains **no baked UI text**. It is
+concept art, not captured Godot gameplay.
+
+### First-party source and runtime contract
+
+- The reviewed image master is **SHA256
+  `71c1bb6ca774841386857a1e8b344420d7c95fa5e1e96a6fb23dc656df005ba5`**.
+  Build CI retrieves the exact source from its temporary uploaded asset
+  endpoint, **verifies the SHA before any decode**, and generates all
+  finished files during the isolated reviewed build. The production site
+  never requests the generation provider.
+- `creator-v1/graphics/encode-severance-v139.py` generates the first-party
+  video in 1080p desktop and 720p phone variants, a 1080p static WebP
+  poster and **48 scrub frames per variant** (96 local WebP frames total).
+- `SeveranceCinematicV139.tsx` replaces the old SVG-only hero and
+  is used on both `/` and `/severance`. The original authored SVG is
+  still the fallback if video or poster fails. The video plays muted,
+  inline, looping and pauses while hidden/out of the viewport. Reduced
+  motion and data saver do not fetch a moving video.
+- `SeveranceScrollSequenceV139.tsx` inserts one native, scroll-linked
+  film chapter on the homepage with real accessible HTML copy and a
+  functioning `/severance` link. The optional 2D canvas uses a capped
+  **six-decoded-frame cache**, requestAnimationFrame/IntersectionObserver
+  and a static poster on reduced-motion, low-bandwidth or load failure.
+- `severance-motion-v139.css` applies small CSS 3D hover lifts, bounded
+  pointer parallax, crimson film-light/blood-edge treatments and brief
+  signal glitches to public surfaces/header/Wayfinder without changing
+  account permission, Studio editor layout, native inputs or readable copy.
+- Every public media path respects Vite's `BASE_URL`: normal apex
+  `/assets/severance/...` and isolated owner review under
+  `/creator/assets/severance/...`. No JS CDN or live external video
+  player, remote fonts or new game renderer.
+- All original creator work, public project covers, account state,
+  moderation, recognition and Studio file operations stay untouched.
+
+### Media QA/release constraints
+
+The dedicated V139 CI is **not a production deployment**. It verifies
+the exact SHA256 source and locally encodes media before Vite builds;
+the post-build asset inventory validates all three MP4/WebP core
+assets **and all 96 scroll frames by SHA256**. Browser QA at
+1440/390/320 tests the poster, reduced-motion, local 1080p file, local
+frame and no third-party/write requests. UI clips and screenshots
+remain explicitly labeled *concept visuals, not gameplay footage*.
+
+The build currently retrieves its pinned master from a temporary
+generation-asset URL. Before long-term production maintenance,
+archive the exact source bytes in a first-party versioned media
+repository/storage location and preserve its SHA256; do not build
+infrastructure that depends indefinitely on a third-party asset URL.
+
+The original V136 sealed release package remains intentionally
+incompatible. A separate current-v67-compatible, audited,
+rollback-safe release gate is still mandatory to touch live traffic.
