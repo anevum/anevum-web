@@ -4,6 +4,7 @@ import {ProjectThumbnail} from "../components/ProjectThumbnail";
 import {projectDetailPath} from "../lib/navigation";
 import {SeverancePlateArtV138,type SeverancePlateKindV138} from "./SeveranceWorldSceneV138";
 import {SeveranceCinematicV139} from "./SeveranceCinematicV139";
+import {SeveranceScrollSequenceV139} from "./SeveranceScrollSequenceV139";
 import type {Project} from "../lib/api";
 
 type Props={projects:readonly Project[];catalogueState:"loading"|"ready"|"error";signedIn:boolean;verifiedCount:number|null};
@@ -67,6 +68,8 @@ export function StageFocusedHomeV137({projects,catalogueState,signedIn,verifiedC
     <span className="av138-pillar-index" aria-hidden="true">0{i+1}</span>
    </div>)}
   </section>
+
+  <SeveranceScrollSequenceV139/>
 
   <section className="av138-gallery" aria-labelledby="av138-gallery-title">
    <header className="av138-section-bar">
