@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 const read=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
 const media=read("web/src/parity/SeveranceCinematicV139.tsx");
+const scroll=read("web/src/parity/SeveranceScrollSequenceV139.tsx");
 const home=read("web/src/parity/StageFocusedHomeV137.tsx");
 const game=read("web/src/pages/SeverancePage.tsx");
 const css=read("web/src/severance-motion-v139.css");
@@ -29,6 +30,20 @@ test("V139 cinematic loop is first-party and never blocks usable React controls"
  assert.match(home,/data-glitch-title="SEVERANCE"/);
  assert.match(game,/data-glitch-title="SEVERANCE"/);
  assert.match(game,/data-public-playable="false"/);
+});
+test("native scroll-scrub is bounded, progressive and never fabricates data",()=>{
+ assert.match(scroll,/export function SeveranceScrollSequenceV139/);
+ assert.match(scroll,/const FRAMES=48/);
+ assert.match(scroll,/frames-.*mobile.*desktop/);
+ assert.match(scroll,/cacheRef\.size>6/);
+ assert.match(scroll,/IntersectionObserver/);
+ assert.match(scroll,/prefers-reduced-motion: reduce/);
+ assert.match(scroll,/saveData/);
+ assert.match(scroll,/getContext\("2d"/);
+ assert.match(scroll,/data-av139-scroll-sequence="cinematic"/);
+ assert.match(scroll,/design concept/i);
+ assert.match(home,/<SeveranceScrollSequenceV139\/>/);
+ assert.doesNotMatch(scroll,/WebGLRenderer|webgl2|fetch\(|XMLHttpRequest|https?:\/\//);
 });
 test("First-party V139 media is derived from pinned concept image before immutable build review",()=>{
  assert.match(encoder,/PINNED_SOURCE_SHA256 = "71c1bb6ca774841386857a1e8b344420d7c95fa5e1e96a6fb23dc656df005ba5"/);
