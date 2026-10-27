@@ -36,7 +36,12 @@ export default defineConfig(({ mode }) => ({
         // Preserve existing explicit root-layer repairs. Nesting those blocks
         // would change !important precedence and revive obsolete route type.
         if(id.includes("/src/parity/")&&/@layer\s/.test(code))return;
-        if(full==="true"&&/\.css(?:$|\?)/.test(id)&&!id.includes("/src/parity/continuance-design-system.css")){
+        // The V137 stage-focused presentation is a deliberately narrow, late-loaded
+        // unlayered authority for its own .av137 selectors only. Existing
+        // Continuance/Studio and archived styles keep their original layering.
+        if(full==="true"&&/\.css(?:$|\?)/.test(id)&&
+          !id.includes("/src/parity/continuance-design-system.css")&&
+          !id.includes("/src/stage-focus-v137.css")){
           const layer=id.includes("/src/parity/")?'parity':'legacy';
           return {code:"@layer legacy, parity;\n@layer "+layer+" {\n"+code+"\n}",map:null};
         }
