@@ -252,13 +252,24 @@ try{
      }
      // Legacy and unavailable capability must remain independently fail-closed.
      if(width===1440||width===390){
-       for(const [mode,expected] of [["legacy","legacy-guest"],["offline","closed"]]){
+       for(const [mode,expected] of [["legacy","legacy-guest"],["offline","unavailable"]]){
          const change=await fetch(base+"/__player-member-fixture?mode="+mode);
          if(!change.ok)throw Error("PLAYER_V005_MEMBER_MODE_SETUP_"+mode);
          await client.send("Page.navigate",{url:base+"/creator/projects/00000000000000000000000000000001"});
          await until(()=>evaluate('document.querySelector(".engagement-panel")?.getAttribute("data-avp-availability")==='+JSON.stringify(expected)));
-         const info=await evaluate('(()=>{const p=document.querySelector(".engagement-panel");return {kind:p?.dataset.avpAvailability,hasVotes:!!p?.querySelector(".engagement-votes"),hasSave:!!p?.querySelector("button"),heading:p?.querySelector("h2")?.textContent};})()');
-         if(info.kind!==expected||info.hasVotes||info.hasSave||!info.heading)throw Error("PLAYER_V005_MEMBER_GATE_"+mode+"_"+width+":"+JSON.stringify(info));
+         const info=await evaluate('(()=>{const p=document.querySelector(".engagement-panel");return {kind:p?.dataset.avpAvailability,hasVotes:!!p?.querySelector(".engagement-votes"),hasSave:!!p?.querySelector(".avp-canonical-save-button,.engagement-actions button"),retry:!!p?.querySelector("button"),heading:p?.querySelector("h2")?.textContent};})()');
+         if(info.kind!==expected||info.hasVotes||info.hasSave||!info.heading||mode==="offline"&&!info.retry)throw Error("PLAYER_V005_MEMBER_GATE_"+mode+"_"+width+":"+JSON.stringify(info));
+         if(mode==="offline"){
+           // The server is down: retry remains fail-closed and never invents
+           // member capability. When healthy again, real health decides.
+           await evaluate('document.querySelector(".engagement-panel button").click()');
+           await until(()=>evaluate('document.querySelector(".engagement-panel")?.getAttribute("data-avp-availability")==="unavailable"'));
+           const resume=await fetch(base+"/__player-member-fixture?mode=canonical");
+           if(!resume.ok)throw Error("PLAYER_V139_CAPABILITY_RESTORE_SETUP_"+width);
+           await evaluate('document.querySelector(".engagement-panel button").click()');
+           await until(()=>evaluate('document.querySelector(".engagement-panel")?.getAttribute("data-avp-availability")==="canonical-readonly"'));
+           console.log("PLAYER_V139_AVAILABILITY_RETRY_"+width+"=PASS");
+         }
          console.log("PLAYER_V005_MEMBER_GATE_"+mode.toUpperCase()+"_"+width+"=PASS");
        }
      }
