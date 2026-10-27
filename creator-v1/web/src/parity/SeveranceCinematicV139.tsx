@@ -9,10 +9,13 @@ import {SeveranceWorldSceneV138} from "./SeveranceWorldSceneV138";
  * The original hand-authored SVG remains a fully working fallback if media
  * cannot load or the device opts out. No fake captured gameplay is rendered.
  */
+// Vite BASE_URL is / on the primary site, /creator/ in the isolated
+// owner-review build. All film and poster traffic stays on our own origin.
+export const SEVERANCE_ASSET_BASE_V139=import.meta.env.BASE_URL+"assets/severance/";
 export const SEVERANCE_MEDIA_V139={
- poster:"/assets/severance/hero-poster-v139.webp",
- desktop:"/assets/severance/hero-motion-v139-1080p.mp4",
- mobile:"/assets/severance/hero-motion-v139-720p.mp4"
+ poster:SEVERANCE_ASSET_BASE_V139+"hero-poster-v139.webp",
+ desktop:SEVERANCE_ASSET_BASE_V139+"hero-motion-v139-1080p.mp4",
+ mobile:SEVERANCE_ASSET_BASE_V139+"hero-motion-v139-720p.mp4"
 } as const;
 
 function canPlayMotion(){
@@ -122,7 +125,7 @@ export function SeveranceCinematicV139({className=""}:{className?:string}){
   aria-hidden="true" data-media-state={failed?"fallback":playing?"playing":allowMotion?"poster":"reduced-motion"}
   data-art-type="illustrative-cinematic-not-gameplay" data-motion-runtime="first-party-v139">
   <SeveranceWorldSceneV138/>
-  <div className="av139-poster" aria-hidden="true"/>
+  <div className="av139-poster" style={{backgroundImage:`url("${SEVERANCE_MEDIA_V139.poster}")`}} aria-hidden="true"/>
   <video ref={videoRef} className="av139-film" muted playsInline loop
    preload={allowMotion&&visible?"metadata":"none"} disablePictureInPicture
    src={allowMotion&&!failed?(window.matchMedia("(max-width: 700px)").matches?SEVERANCE_MEDIA_V139.mobile:SEVERANCE_MEDIA_V139.desktop):undefined}
