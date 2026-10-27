@@ -47,7 +47,8 @@
 .av139-cinematic .av138-world-scene{z-index:0}
 .av139-poster{
  z-index:1;
- background:url("/assets/severance/hero-poster-v139.webp") center/cover no-repeat;
+ /* The React component supplies a BASE_URL-aware first-party poster. */
+ background-position:center;background-size:cover;background-repeat:no-repeat;
 }
 .av139-film {
  z-index:2;
