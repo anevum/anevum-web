@@ -1,13 +1,16 @@
 # ANEVUM website — active V136 guidance
 
-> **V137 current-stage public presentation (October 27, 2026):** On branch
+> **V138 cinematic current-stage public presentation (October 27, 2026):** On branch
 > `build/stage-focused-severance-site-20261027-001`, also read
 > `docs/production/ANEVUM.WEB.UPDATE.2026-10-27.001.STAGE-FOCUSED-SEVERANCE-SITE.md`.
 > The public front door now prioritizes the independent studio and
 > TRANSCOSMIC: SEVERANCE design/prototype, while retaining all existing
 > account, Creator Studio, community, moderation and staff routes. This is
-> a review-only candidate and does not supersede the sealed V136 production
-> release authority, immutable asset checks or feature-permission boundaries.
+> a review-only candidate under PR #786 and does not supersede the sealed
+> V136 production release authority, immutable asset checks or feature-permission
+> boundaries. Read-only Cloudflare inspection identified Worker v67 as live at
+> 100% traffic; do not package an obsolete Worker baseline or deploy this PR
+> via the historical V136 release workflow.
 >
 Before implementing website, Community, Discovery, Creator Studio, public
 profiles, member spaces, visual assets or WebGL interface changes, read
@@ -42,5 +45,7 @@ reference boards; do not restart prior work or infer release acceptance.
 - Open Signal #736 is explicitly included only in the unified integration draft;
   its original sibling branch and all release/publication gates remain unchanged.
 
-At each substantial increment, update the active handoff and main PR #735
-with what was implemented, tested, remaining, and the exact commit SHA.
+For this V138 branch, update the dedicated current-stage handoff and PR #786
+with what was implemented, actually tested, what remains, and the exact commit
+SHA. Retain the V136 release authority separately; do not backport new public
+presentation paths into its sealed allowlist to force a release.
