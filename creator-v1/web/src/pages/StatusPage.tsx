@@ -59,14 +59,14 @@ export function StatusPage(){
   ];
   return <div className="v091-status-page">
     <header className="v091-status-intro">
-      <span className="kicker">CONTINUANCE INSTITUTE / OPERATING STATE</span>
+      <span className="kicker">ANEVUM / VERIFIED SERVICE STATUS</span>
       <h1>What's <em>actually live.</em></h1>
       <p>Current public availability is not the same as source-code completion. Each service below is described by its own verified capability or explicitly marked as restricted.</p>
       <div className="v091-status-metrics" aria-label="Verified public catalogue">
         <div><strong>{catalogue.counts.publishedProjects}</strong><span>APPROVED RELEASES</span></div>
         <div><strong>{catalogue.counts.publishedCreators}</strong><span>INDEXED CREATOR CHANNELS</span></div>
         <div><strong>{catalogue.version}</strong><span>PUBLIC CATALOGUE API</span></div>
-        <div><strong>ACTIVE</strong><span>CONTINUANCE DEVELOPMENT</span></div>
+        <div><strong>ACTIVE</strong><span>INDEPENDENT DEVELOPMENT</span></div>
       </div>
     </header>
     <section className="v091-status-services" aria-labelledby="v091-service-heading">
