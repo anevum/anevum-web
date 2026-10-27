@@ -67,7 +67,8 @@ test("V139 retains urgent errors under a flooded info queue without manufacturin
  assert.doesNotThrow(()=>parse(source,{sourceType:"module",plugins:["typescript"]}));
  assert.match(queue,/setQueue\(old=>scheduleTransmission\(old,alert\)\)/);
  assert.doesNotMatch(source,/fetch\(|localStorage|award.*grant|notifications\/ack/);
- const ts=await import("typescript");
+ const compiler=await import("typescript");
+ const ts=compiler.default??compiler;
  const out=ts.transpileModule(source,{compilerOptions:{
   target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext
  }}).outputText;
