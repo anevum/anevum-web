@@ -97,7 +97,7 @@ export function StageFocusedHomeV137({projects,catalogueState,signedIn,verifiedC
   </section>
 
   <section className="av138-studio-access" aria-label="Current ANEVUM spaces">
-   <div><span className="av138-section-eyebrow">THE STUDIO / NOT JUST ONE GAME</span><h2>Independent creation continues.</h2><p>ANEVUM's creator tools, public catalogue, and member spaces remain part of the project. Their availability and publishing permissions are checked separately from Severance development.</p></div>
+   <div><span className="av138-section-eyebrow">THE STUDIO / INDEPENDENT SOFTWARE STUDIO</span><h2>Independent creation continues.</h2><p>ANEVUM's creator tools, public catalogue, and member spaces remain part of the project. Their availability and publishing permissions are checked separately from Severance development.</p></div>
    <nav aria-label="Existing platform areas"><Link to="/studio"><span>CREATOR STUDIO <small>Creation tools under controlled access</small></span><Icon name="arrow" size={18}/></Link><Link to="/community"><span>THE COMMONS <small>Approved conversations and public activity</small></span><Icon name="arrow" size={18}/></Link><Link to={signedIn?"/member":"/join"}><span>{signedIn?"MY SPACE":"MEMBER ACCESS"} <small>Your verified account and eligible features</small></span><Icon name="arrow" size={18}/></Link></nav>
   </section>
 
