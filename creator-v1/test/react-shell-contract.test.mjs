@@ -131,7 +131,7 @@ test("Evolution routes preserve canonical XP with signed-in earned-only reward a
   const levels=read("web/src/pages/LevelsPage.tsx");
   assert.match(shell,/menuDestinations/);
   assert.match(shell,/menuCategories/);
-  assert.match(shell,/\/levels/);
+  assert.doesNotMatch(shell,/to:"\/levels",label:/,"Evolution is intentionally no longer a main-menu destination");
   assert.match(app,/path="levels"/);
   assert.match(panel,/useMemberProgression/);
   assert.match(panel,/30 CURRENT LEVELS/);
@@ -152,7 +152,7 @@ test("mobile has no fixed bottom tab bar and header drawer exposes every member 
   // Canonical visible Create destination is /studio; keep /create only
   // as a historical inbound redirect, never as a primary menu shortcut.
   assert.doesNotMatch(shell,/to:"\/create",label:"Create"/);
-  for(const route of ["/discover","/levels","/community","/studio","/library","/member","/join","/status"])
+  for(const route of ["/severance","/discover","/community","/studio","/library","/member","/join","/status"])
     assert.ok(shell.includes('"'+route+'"'),"Missing top menu route: "+route);
   assert.match(css,/\.site-main\{padding:10px 10px 32px\}/);
   assert.match(css,/\.site-footer\{padding:18px 12px 24px/);
