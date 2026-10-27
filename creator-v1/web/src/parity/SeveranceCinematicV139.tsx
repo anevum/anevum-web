@@ -68,6 +68,7 @@ export function SeveranceCinematicV139({className=""}:{className?:string}){
  const [visible,setVisible]=useState(false);
  const [playing,setPlaying]=useState(false);
  const [failed,setFailed]=useState(false);
+ useSeveranceDepth(stageRef);
 
  useEffect(()=>{
   const reduced=window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -122,17 +123,14 @@ export function SeveranceCinematicV139({className=""}:{className?:string}){
   <SeveranceWorldSceneV138/>
   <div className="av139-poster" aria-hidden="true"/>
   <video ref={videoRef} className="av139-film" muted playsInline loop
-   preload="none" disablePictureInPicture
+   preload={allowMotion&&visible?"metadata":"none"} disablePictureInPicture
+   src={allowMotion&&!failed?(window.matchMedia("(max-width: 700px)").matches?SEVERANCE_MEDIA_V139.mobile:SEVERANCE_MEDIA_V139.desktop):undefined}
    poster={SEVERANCE_MEDIA_V139.poster}
    onError={()=>{setFailed(true);setPlaying(false)}}
    onPause={()=>setPlaying(false)}
    onPlaying={()=>setPlaying(true)}
    aria-hidden="true"
-  >
-   {allowMotion&&!failed&&<source
-    src={window.matchMedia("(max-width: 700px)").matches?SEVERANCE_MEDIA_V139.mobile:SEVERANCE_MEDIA_V139.desktop}
-    type="video/mp4"/>}
-  </video>
+  />
   <span className="av139-dust" aria-hidden="true"/>
   <span className="av139-scanlines" aria-hidden="true"/>
   <span className="av139-bloodlight" aria-hidden="true"/>
