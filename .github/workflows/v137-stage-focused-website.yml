@@ -20,6 +20,7 @@ on:
       - 'creator-v1/web/vite.config.ts'
       - 'creator-v1/test/stage-focused-severance-v137.test.mjs'
       - 'creator-v1/ops/v138-public-presentation-scope.mjs'
+      - 'creator-v1/ops/v138-static-inventory.mjs'
       - 'creator-v1/test/severance-cinematic-v138.test.mjs'
       - 'creator-v1/test/stage-focused-v137-browser.mjs'
       - '.github/workflows/v137-stage-focused-website.yml'
@@ -70,6 +71,15 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Verify home, Severance, About, Status and phone layouts locally
         run: node creator-v1/test/stage-focused-v137-browser.mjs
+      - name: Audit review-only compiled assets and retire portfolio media
+        run: node creator-v1/ops/v138-static-inventory.mjs
+      - name: Attach immutable reviewed static UI build (never deploy)
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v138-static-ui-${{ github.event.pull_request.head.sha }}
+          path: creator-v1/dist/web/
+          retention-days: 14
+          if-no-files-found: error
       - name: Attach review screenshots and acceptance receipt
         uses: actions/upload-artifact@v4
         if: always()
