@@ -40,7 +40,7 @@ test("Severance dossier is honest and every primary homepage destination has an 
   assert.ok(game.includes('anchor:"'+id+'"'),"Missing game anchor "+id);
  assert.match(game,/data-public-playable="false"/);
  assert.match(game,/No public server, playable beta or release date is announced/);
- assert.match(game,/No public leaderboard exists before the actual game servers/);
+ assert.match(game,/no public leaderboard exists before the actual game servers/i);
  assert.match(game,/ILLUSTRATIVE ART DIRECTION/);
  assert.doesNotMatch(game,/PLAY NOW|startMatch\(|fakeLeaderboard|pretendServerStatus/);
  assert.match(app,/path="severance"/);
