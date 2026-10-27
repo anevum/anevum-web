@@ -52,9 +52,9 @@ export function CreatorsPage(){
   return <div className="portal-creators p136-creators" data-parity-creators="v136.017" data-directory-phase="v136.025">
     {import.meta.env.VITE_PARITY_V136_FULL==="true"?<section className="p136-creators-hero" aria-labelledby="p136-creators-hero-title">
       <div className="p136-creators-hero-copy">
-        <span className="p136-creators-register">THE CONTINUANCE INSTITUTE / PUBLIC PEOPLE</span>
+        <span className="p136-creators-register">ANEVUM / APPROVED CREATOR CHANNELS</span>
         <h1 id="p136-creators-hero-title">Meet the people <em>building what comes next.</em></h1>
-        <p>Find independent makers through their public channels and published work.</p>
+        <p>Browse real creator channels associated with approved public work. Private accounts and unapproved projects are never listed.</p>
         <nav className="p136-creators-hero-actions" aria-label="Explore creator spaces">
           <a href="#p136-creators-index">Find creators <Icon name="search" size={16}/></a>
           <Link to="/community?view=people">Community spaces <Icon name="people" size={16}/></Link>
@@ -71,7 +71,7 @@ export function CreatorsPage(){
     <div className="portal-browse-layout">
       <div className="portal-browse-main">
         <section className="portal-box portal-search-hall" id="p136-creators-index">
-          <header className="portal-box-header"><div><span className="kicker">PUBLIC CREATOR DIRECTORY</span><h2>FIND YOUR PEOPLE</h2></div><span className="portal-hall-stamp">CHANNELS / ACTIVE</span></header>
+          <header className="portal-box-header"><div><span className="kicker">PUBLIC CREATOR DIRECTORY</span><h2>FIND YOUR PEOPLE</h2></div><span className="portal-hall-stamp">CHANNELS / VERIFIED PUBLIC</span></header>
           <form className="portal-wide-search p136-creators-search" role="search" action="/creators" method="get" onSubmit={search}>
             <label htmlFor="p136-creator-query" className="visually-hidden">Search published creators</label>
             <span className="p136-creators-search-icon" aria-hidden="true"><Icon name="search" size={19}/></span>
