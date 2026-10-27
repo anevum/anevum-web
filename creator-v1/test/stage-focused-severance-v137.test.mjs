@@ -45,7 +45,7 @@ test("Navigation is smaller but original accounts, Studio and public records sti
   assert.ok(app.includes(p),"Existing route preserved: "+p);
  for(const link of ['to:"/community"','to:"/studio"','to:"/library"','to:"/about"','to:"/creators"'])
   assert.ok(shell.includes(link),"Drawer utility preserved: "+link);
- assert.match(shell,/"/severance","/about"/);
+ assert.ok(shell.includes('"/severance","/about"'));
 });
 test("Status remains genuine, presentation is responsive and build-layer-safe",()=>{
  assert.match(status,/readStatus\(signal\)/);
