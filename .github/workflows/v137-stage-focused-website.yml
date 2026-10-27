@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'creator-v1/web/src/parity/StageFocusedHomeV137.tsx'
+      - 'creator-v1/web/src/parity/SeveranceWorldSceneV138.tsx'
+      - 'creator-v1/web/src/severance-cinematic-v138.css'
       - 'creator-v1/web/src/pages/SeverancePage.tsx'
       - 'creator-v1/web/src/pages/AboutStudioPage.tsx'
       - 'creator-v1/web/src/stage-focus-v137.css'
@@ -17,6 +19,7 @@ on:
       - 'creator-v1/web/index.html'
       - 'creator-v1/web/vite.config.ts'
       - 'creator-v1/test/stage-focused-severance-v137.test.mjs'
+      - 'creator-v1/test/severance-cinematic-v138.test.mjs'
       - 'creator-v1/test/stage-focused-v137-browser.mjs'
       - '.github/workflows/v137-stage-focused-website.yml'
 permissions:
@@ -50,7 +53,7 @@ jobs:
       - name: Verify exact source and stage-focused contracts
         run: |
           test "$(git rev-parse HEAD)" = "$ANEVUM_SOURCE_SHA"
-          node --test creator-v1/test/stage-focused-severance-v137.test.mjs
+          node --test creator-v1/test/stage-focused-severance-v137.test.mjs creator-v1/test/severance-cinematic-v138.test.mjs
           node --test creator-v1/test/public-page-metadata-v136.test.mjs
       - name: Install and typecheck the real Creator V1 frontend
         run: |
