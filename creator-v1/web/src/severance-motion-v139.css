@@ -240,3 +240,96 @@ html[data-av-parity="v136-full"] .p136-console-station:is(:hover,.is-active) {
  .av138-site a:focus-visible{outline:2px solid Highlight!important}
  .av139-glitch-title::before{display:none}
 }
+
+
+/* Scroll-synced "field transmission": pre-rendered WebP frames on a 2D
+ * canvas, with static HTML labels layered above. No WebGL or third-party
+ * animation runtime; fallback is poster and all links remain functional. */
+.av139-sequence {
+  position:relative;isolation:isolate;min-height:198vh;
+  background:#06090d;--av139-sequence-progress:0;
+}
+.av139-sequence-sticky {
+  position:sticky;top:0;isolation:isolate;
+  height:100vh;min-height:540px;overflow:hidden;
+  background:#080c10;
+}
+.av139-sequence-scene,.av139-sequence-screen,.av139-sequence-canvas,
+.av139-sequence-still,.av139-sequence-vignette{
+ position:absolute;inset:0;display:block;width:100%;height:100%;
+}
+.av139-sequence-scene{z-index:0;overflow:hidden}
+.av139-sequence-still{
+ background-position:center;background-size:cover;
+ z-index:0;filter:saturate(.6) contrast(1.1) brightness(.64);
+}
+.av139-sequence-canvas{
+ z-index:1;opacity:0;object-fit:cover;
+ filter:saturate(.7) contrast(1.07) brightness(.68);
+ transition:opacity .55s ease;
+ pointer-events:none;
+}
+.av139-sequence[data-frame-status="loaded"] .av139-sequence-canvas{opacity:1}
+.av139-sequence-vignette{
+ z-index:2;
+ background:
+ linear-gradient(90deg,#030609ed 0%,#05090fd1 33%,#070c1255 78%,#080d124b),
+ linear-gradient(0deg,#050609f2,transparent 36%,transparent 76%,#050609e9),
+ radial-gradient(ellipse at 92% 67%,#a2252c26,transparent 43%);
+ pointer-events:none;
+}
+.av139-sequence-screen{z-index:3;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:clamp(26px,4vw,65px)}
+.av139-sequence-topline,.av139-sequence-footer{
+ display:flex;align-items:center;justify-content:space-between;gap:16px;
+ color:#c3c7cc;text-transform:uppercase;font:800 10px/1.4 Inter,system-ui,sans-serif;letter-spacing:.22em;
+}
+.av139-sequence-topline{border-top:1px solid #a18c8e52;padding-top:14px}
+.av139-sequence-story{max-width:790px}
+.av139-sequence-index{
+ display:block;color:#e8b5b5;letter-spacing:.28em;font-size:11px;font-weight:800;margin-bottom:17px;
+}
+.av139-sequence-story h2{
+ color:#f0eceb;font:900 clamp(56px,7vw,123px)/.98 Impact,"Arial Narrow",system-ui,sans-serif;letter-spacing:.035em;
+ text-shadow:0 8px 40px #000e;
+}
+.av139-sequence-story h2 em{color:#e58a8f;font-style:normal}
+.av139-sequence-story p{margin-top:22px!important;max-width:540px;color:#c2cdd1;font-size:clamp(15px,1.5vw,19px);line-height:1.6}
+.av139-sequence-story a{
+ display:inline-flex;align-items:center;gap:14px;pointer-events:auto;min-height:46px;margin-top:28px;
+ border-bottom:1px solid #cf6670;letter-spacing:.16em;color:#f6d7da!important;font-size:12px;font-weight:800;text-decoration:none;
+}
+.av139-sequence-progress{
+ display:block;height:2px;width:min(23vw,240px);background:#b7a3a449;position:relative;overflow:hidden;
+}
+.av139-sequence-progress::after{
+ content:"";position:absolute;inset:0;transform-origin:left;transform:scaleX(var(--av139-sequence-progress));background:#ed525a;
+}
+.av139-sequence[data-frame-status="fallback"] .av139-sequence-still{opacity:1}
+@media(max-width:760px){
+ .av139-sequence{min-height:150vh}
+ .av139-sequence-sticky{min-height:460px}
+ .av139-sequence-screen{padding:30px 22px}
+ .av139-sequence-topline,.av139-sequence-footer{font-size:8px;letter-spacing:.1em}
+ .av139-sequence-topline span:last-child{display:none}
+ .av139-sequence-story h2{font-size:clamp(48px,12vw,85px)}
+ .av139-sequence-story p{font-size:14px}
+ .av139-sequence-footer span:last-child{display:none}
+ .av139-sequence-progress{width:130px}
+}
+@media(max-width:390px){
+ .av139-sequence-screen{padding:22px 18px}
+ .av139-sequence-story h2{font-size:clamp(42px,11vw,58px)}
+}
+@media(prefers-reduced-motion:reduce){
+ .av139-sequence{min-height:0;height:min(100svh,640px)}
+ .av139-sequence-sticky{position:relative;height:100%;min-height:450px}
+ .av139-sequence-canvas{display:none}
+ .av139-sequence-progress::after{transform:none}
+ .av139-sequence-screen{position:absolute}
+}
+@media(forced-colors:active){
+ .av139-sequence-scene{display:none}
+ .av139-sequence-screen{position:relative;color:CanvasText;background:Canvas}
+ .av139-sequence-story h2,.av139-sequence-story p{color:CanvasText}
+ .av139-sequence-story a{color:LinkText!important}
+}
