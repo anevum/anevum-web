@@ -72,6 +72,7 @@ export function SeveranceCinematicV139({className=""}:{className?:string}){
  const [visible,setVisible]=useState(false);
  const [playing,setPlaying]=useState(false);
  const [failed,setFailed]=useState(false);
+ const [pausedByVisitor,setPausedByVisitor]=useState(false);
  useSeveranceDepth(stageRef);
 
  useEffect(()=>{
@@ -105,7 +106,7 @@ export function SeveranceCinematicV139({className=""}:{className?:string}){
   let cancelled=false;
   const sync=()=>{
    if(!video)return;
-   if(allowMotion&&visible&&!failed&&document.visibilityState==="visible"){
+   if(allowMotion&&visible&&!failed&&!pausedByVisitor&&document.visibilityState==="visible"){
     video.muted=true;
     video.play().then(()=>{
       if(!cancelled)setPlaying(true);
@@ -119,10 +120,10 @@ export function SeveranceCinematicV139({className=""}:{className?:string}){
    document.removeEventListener("visibilitychange",sync);
    video.pause();
   };
- },[allowMotion,visible,failed]);
+ },[allowMotion,visible,failed,pausedByVisitor]);
 
- return <div ref={stageRef} className={"av139-cinematic "+className}
-  aria-hidden="true" data-media-state={failed?"fallback":playing?"playing":allowMotion?"poster":"reduced-motion"}
+ return <><div ref={stageRef} className={"av139-cinematic "+className}
+  aria-hidden="true" data-media-state={failed?"fallback":pausedByVisitor?"paused":playing?"playing":allowMotion?"poster":"reduced-motion"}
   data-art-type="illustrative-cinematic-not-gameplay" data-motion-runtime="first-party-v139">
   <SeveranceWorldSceneV138/>
   <div className="av139-poster" style={{backgroundImage:`url("${SEVERANCE_MEDIA_V139.poster}")`}} aria-hidden="true"/>
@@ -138,5 +139,12 @@ export function SeveranceCinematicV139({className=""}:{className?:string}){
   <span className="av139-dust" aria-hidden="true"/>
   <span className="av139-scanlines" aria-hidden="true"/>
   <span className="av139-bloodlight" aria-hidden="true"/>
- </div>;
+ </div>
+ {allowMotion&&!failed&&<button type="button" className="av139-motion-control"
+   aria-pressed={pausedByVisitor}
+   aria-label={pausedByVisitor?"Resume animated background":"Pause animated background"}
+   onClick={()=>setPausedByVisitor(v=>!v)}>
+   {pausedByVisitor?"RESUME MOTION":"PAUSE MOTION"}
+ </button>}
+ </>;
 }
