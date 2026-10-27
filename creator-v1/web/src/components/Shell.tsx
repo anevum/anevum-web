@@ -25,24 +25,20 @@ const FullParityHeader=import.meta.env.VITE_PARITY_V136_FULL==="true" ? lazy(()=
  */
 const desktopNav = HEADER_NAV.filter(item=>!item.parityOnly);
 const menuDestinations = [
-  {to:"/discover?category=games",label:"Play",detail:"Games and interactive worlds",icon:"star"},
-  {to:"/discover",label:"Discover",detail:"Projects worth finding",icon:"explore"},
-  {to:"/community",label:"Community",detail:"Creators and conversations",icon:"community"},
-  {to:"/studio",label:"Create",detail:"Your studio and uploads",icon:"create"}
+  {to:"/severance",label:"Severance",detail:"Current game / development concept",icon:"games"},
+  {to:"/discover",label:"Discover",detail:"Real approved releases",icon:"explore"},
+  {to:"/status",label:"Development",detail:"Verified availability and active work",icon:"status"},
+  {to:"/studio",label:"Creator Studio",detail:"Private creation and controlled publishing",icon:"create"}
 ] as const;
 const menuCategories = [
-  {to:"/discover?category=tools",label:"Apps & tools"},
-  {to:"/discover?category=creative",label:"Art & AI"},
-  {to:"/discover?category=libraries",label:"Open source"},
-  {to:"/discover?category=learning",label:"Learning"}
+  {to:"/discover?category=games",label:"Published games"},
+  {to:"/discover?category=tools",label:"Apps & tools"}
 ] as const;
 const menuUtilities = [
+  {to:"/community",label:"Community"},
   {to:"/creators",label:"Creators"},
-  {to:"/boards",label:"Boards"},
-  {to:"/levels",label:"Evolution"},
-  {to:"/recognition",label:"Rewards"},
   {to:"/library",label:"My library"},
-  {to:"/status",label:"Status"}
+  {to:"/about",label:"About ANEVUM"}
 ] as const;
 
 /** One world provider survives every public route transition. */
@@ -167,7 +163,7 @@ function ShellContent(){
       <div className="header-inner av9-header-inner">
         <Link to="/" className="brand-lockup av9-brand" aria-label="ANEVUM homepage">
           <OrbitalMark className="brand-mark"/>
-          <span className="cw-brand-stack"><b>ANEVUM</b><small>THE CREATIVE NETWORK</small></span>
+          <span className="cw-brand-stack"><b>ANEVUM</b><small>INDEPENDENT SOFTWARE STUDIO</small></span>
         </Link>
         <nav data-iren-anchor="navigation-desktop" className="desktop-nav av9-primary" aria-label="Primary navigation">
           {desktopNav.map(item=><NavLink key={item.to} to={item.to} end={item.to==="/"}>{item.label}</NavLink>)}
@@ -213,7 +209,7 @@ function ShellContent(){
         </header>
         <div className="av79-navigation-intro">
           <h2>Where to <em>next?</em></h2>
-          <p>One tap to the people, work and worlds you came for.</p>
+          <p>Our current projects, real published work, and the tools behind them.</p>
         </div>
         <button type="button" className="av79-navigation-search"
           onClick={openLauncherFromMenu}>
@@ -225,7 +221,7 @@ function ShellContent(){
             <Link className="av79-identity-loading" to="/member" onClick={()=>setMenuOpen(false)}>Open your verified member space <Icon name="arrow" size={16}/></Link>}
           <VerifiedStaffShortcut location="wayfinder"/>
         </section>:<Link to="/join" className="av79-navigation-join" onClick={()=>setMenuOpen(false)}>
-          <span><strong>Become part of ANEVUM</strong><small>Your identity, creations and earned recognition start here.</small></span>
+          <span><strong>Member access</strong><small>Your account and eligible member tools remain available.</small></span>
           <Icon name="arrow" size={18}/>
         </Link>}
         <nav className="av79-navigation-primary" aria-label="Main destinations">
@@ -274,9 +270,9 @@ function ShellContent(){
       {FullParityHeader?<div ref={routeMotion} className={parityFullBleed?"p136-route-surface":undefined}>{routeSurface}</div>:routeSurface}
     </main>
     <footer className="site-footer av9-footer">
-      <span>ANEVUM / A WORLD OF THINGS PEOPLE MAKE</span>
-      <nav aria-label="Site information"><Link to="/start">Start Here</Link><Link to="/guide">Field Guide</Link><Link to="/boards">Boards</Link><Link to="/status">Status</Link></nav>
-      <span>PUBLIC DISCOVERY IS OPEN · CREATOR PUBLISHING IN TESTING</span>
+      <span>ANEVUM / INDEPENDENT GAMES & SOFTWARE</span>
+      <nav aria-label="Site information"><Link to="/about">About</Link><Link to="/community">Community</Link><Link to="/guide">Field Guide</Link><Link to="/status">Status</Link></nav>
+      <span>SEVERANCE IN DEVELOPMENT · APPROVED PROJECTS REMAIN PUBLIC</span>
     </footer>
   </div>;
 }
