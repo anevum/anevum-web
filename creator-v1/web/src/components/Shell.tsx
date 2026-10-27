@@ -82,6 +82,13 @@ function ShellContent(){
     if(previousPage.current===page)return;
     previousPage.current=page;
     if(!location.hash)window.scrollTo({top:0,behavior:"instant"});
+    else {
+      // Project cards link to real in-page design systems, never a placeholder
+      // route. A route transition does not automatically scroll React Router
+      // hash anchors into view after the new page mounts.
+      const anchor=location.hash.slice(1);
+      window.requestAnimationFrame(()=>document.getElementById(anchor)?.scrollIntoView({block:"start",behavior:"instant"}));
+    }
     document.getElementById("main")?.focus({preventScroll:true});
     // Animate the real DOM once per page traversal. Experimental React
     // ViewTransition update snapshots also intercept controlled form updates;
@@ -133,7 +140,7 @@ function ShellContent(){
   const home=location.pathname==="/";
   const parityProfile=/^\/(?:creators\/[a-z][a-z0-9_]{2,29}|@[a-z][a-z0-9_]{2,29})$/.test(location.pathname);
   const parityFullBleed=Boolean(FullParityHeader&&(home||["/severance","/about","/discover","/community","/creators","/boards"].includes(location.pathname)||parityProfile));
-  const publicSpatial=Boolean(FullParityHeader&&["/","/discover","/community","/creators"].includes(location.pathname));
+  const publicSpatial=Boolean(FullParityHeader&&["/","/severance","/about","/discover","/community","/creators"].includes(location.pathname));
   // PARITY destinations own a full-bleed spatial canvas, not a nested page box.
   // Legacy routes retain their protected frame until individually transformed.
   // One stable route surface keeps navigation, IREN and launcher mounted.
