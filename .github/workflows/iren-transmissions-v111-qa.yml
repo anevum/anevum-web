@@ -39,6 +39,7 @@ jobs:
       - name: Verify one queue, one IREN and authentic recognition boundaries
         working-directory: creator-v1
         run: |
+          node --check test/capture-iren-transmissions-v111.mjs
           npm run test:iren-v111
           npm run test:iren-v080
           npm run test:iren-v088

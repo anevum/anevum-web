@@ -58,7 +58,6 @@ try{
   await capture("iren-priority-"+width);
   evidence.push({width,height,geometry,priority});
  }
- }
  await evaluate('localStorage.setItem("anevum.iren.guided-continuance.v080.visitor.hidden","yes")');
  await send("Page.navigate",{url:base+"/creator/"});
  await until(()=>evaluate('!!document.querySelector(".av79-home .av79-hero")'));
