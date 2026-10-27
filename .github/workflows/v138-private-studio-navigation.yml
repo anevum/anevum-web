@@ -35,6 +35,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install pinned project dependencies without lifecycle scripts
+        run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
       - name: Exact source and protected drafting contract
         run: |
           set -euo pipefail
@@ -42,7 +44,6 @@ jobs:
           node --test creator-v1/test/studio-draft-navigation-v138.test.mjs
       - name: Compile exact UI bundle without runtime hooks
         run: |
-          npm install --ignore-scripts --no-audit --no-fund --package-lock=false
           npm run check:creator-v1-web
           npm run build:creator-v1-web
       - name: Install pinned isolated Chromium
