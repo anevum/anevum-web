@@ -79,7 +79,7 @@ try{
   assert.equal(await page.locator('[data-first-visit-guide="v136"]').count(),0,
    "Superseded first-visit mega-panel is not duplicated on focused homepage");
   assert.equal(await stage.getByRole("link",{name:/EXPLORE THE GAME/}).getAttribute("href"),"/severance");
-  assert.equal(await stage.getByRole("link",{name:/DEVELOPMENT STATUS/}).getAttribute("href"),"/status");
+  assert.equal(await stage.getByRole("link",{name:"DEVELOPMENT STATUS",exact:true}).getAttribute("href"),"/status");
   assert.match(await stage.locator(".av138-availability").innerText(),/No public multiplayer game or open beta is available yet/i);
   assert.equal(await page.getByRole("link",{name:/play now|join server|watch trailer/i}).count(),0,
    "No false play or trailer promises");
