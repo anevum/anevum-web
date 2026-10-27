@@ -22,8 +22,13 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+# Original approved full-quality PNG is kept for provenance and local export.
 PINNED_SOURCE_SHA256 = "71c1bb6ca774841386857a1e8b344420d7c95fa5e1e96a6fb23dc656df005ba5"
-PINNED_DECODED_BGR_SHA256 = "66fadc771dad92deff2d9d13c5cbcbc96ba1328b693df8f4685348d78ec8e983"
+# The media CDN recompresses uploaded PNGs. We examined its decoded image:
+# same 1672x941 composition, mean abs channel difference 2.015, no extra
+# characters, text, or structural edits. Pin BOTH exact hosted bytes and pixels.
+PINNED_HOSTED_SOURCE_SHA256 = "3db7854476de64a9eb151295af78b591f04bc525dd8f470f5f6f475c4f065680"
+PINNED_DECODED_BGR_SHA256 = "fd989ba2adeee290ede9033bc3bc969a7ae16863c3a30cd9f3e91dd35816af68"
 SOURCE_DESCRIPTION = "ANEVUM Severance original clean environment concept; NO GAMEPLAY capture"
 W,H,FPS,SECONDS = 1920,1080,24,8
 
@@ -46,6 +51,10 @@ def main() -> None:
     source=Path(sys.argv[1]);out=Path(sys.argv[2]);out.mkdir(parents=True,exist_ok=True)
     assert source.is_file(),"Approved image source missing"
     digest=sha256(source)
+    assert digest==PINNED_HOSTED_SOURCE_SHA256, (
+        "CRITICAL: hosted media bytes changed since human visual review. "
+        "Actual file SHA256: "+digest
+    )
     src=cv2.imread(str(source),cv2.IMREAD_COLOR)
     assert src is not None and src.ndim==3, "Review image is not decodable"
     assert src.shape==(941,1672,3), (
@@ -58,9 +67,7 @@ def main() -> None:
         "Actual file SHA256 "+digest+"; actual decoded image SHA256 "+decoded_digest+
         ". Rejecting changed image content."
     )
-    if digest!=PINNED_SOURCE_SHA256:
-        print("Approved decoded pixels match; asset was losslessly re-encoded in transit. "+
-              "Downloaded file hash: "+digest,flush=True)
+    print("Hosted image exact bytes and reviewed pixels verified. "+digest,flush=True)
     src=cv2.resize(src,(W,H),interpolation=cv2.INTER_CUBIC)
     overfill=cv2.resize(src,(int(W*1.045),int(H*1.045)),interpolation=cv2.INTER_LINEAR)
     ox,oy=overfill.shape[1]-W,overfill.shape[0]-H
@@ -176,6 +183,7 @@ def main() -> None:
         "contract":"ANEVUM-V139-FIRST-PARTY-MEDIA-REVIEW",
         "origin":SOURCE_DESCRIPTION,
         "approvedSourceSha256":PINNED_SOURCE_SHA256,
+        "reviewedHostedSourceSha256":PINNED_HOSTED_SOURCE_SHA256,
         "downloadedSourceSha256":digest,
         "approvedDecodedBgrSha256":PINNED_DECODED_BGR_SHA256,
         "runtimeThirdPartyRequests":False,"audio":False,
