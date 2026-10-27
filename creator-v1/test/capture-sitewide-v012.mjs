@@ -245,6 +245,15 @@ try{
          await until(()=>evaluate('!!window.__playerShareCopy&&!!document.querySelector(".avp-share-status")?.textContent?.includes("copied")'));
          const copied=await evaluate('window.__playerShareCopy');
          if(copied!==base+"/creator/projects/"+id)throw Error("PLAYER_V002_SHARE_URL_"+width+":"+copied);
+         // No clipboard permission: expose actual public copy and select it
+         // on desktop/mobile without persistence, network writes or new APIs.
+         await evaluate('(()=>{Object.defineProperty(navigator,"clipboard",{configurable:true,value:undefined});document.querySelector(".avp-launch-kit-actions button:nth-child(2)").click()})()');
+         await until(()=>evaluate('(()=>{const d=document.querySelector(".avp-launch-kit-announcement"),f=d?.querySelector("input");return d?.open&&document.activeElement===f&&f.selectionStart===0&&f.selectionEnd===f.value.length&&f.value.includes("on ANEVUM:")})()'));
+         await evaluate('document.querySelector(".avp-launch-kit-actions button:first-child").click()');
+         await until(()=>evaluate('(()=>{const f=document.querySelector("#avp-launch-kit-link");return document.activeElement===f&&f.selectionStart===0&&f.selectionEnd===f.value.length})()'));
+         await evaluate('(()=>{const d=document.querySelector(".avp-launch-kit-embed");d.open=true;d.querySelector("button").click()})()');
+         await until(()=>evaluate('(()=>{const f=document.querySelector("#avp-launch-kit-html");return document.activeElement===f&&f.selectionStart===0&&f.selectionEnd===f.value.length})()'));
+         console.log("PLAYER_V139_MANUAL_SHARE_"+width+"=PASS");
          await evaluate('document.querySelector(".avp-stage-shortcuts a[href=\\"#avp-participation\\"]").click()');
          await until(()=>evaluate('location.hash==="#avp-participation"'));
          if(!await evaluate('!!document.getElementById("avp-participation")'))throw Error("PLAYER_V002_PARTICIPATION_ANCHOR_"+width);

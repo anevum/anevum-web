@@ -61,6 +61,15 @@ test("a project companion reuses existing verified data and layout without new e
   assert.match(panel,/Copy announcement/);
   assert.match(panel,/kit\.shareText/);
   assert.match(panel,/navigator\.clipboard\?\.writeText/);
+  assert.match(panel,/ref=\{linkRef\}/);
+  assert.match(panel,/ref=\{announcementDetailsRef\}/);
+  assert.match(panel,/ref=\{announcementRef\}/);
+  assert.match(panel,/value=\{kit\.shareText\}/);
+  assert.match(panel,/ref=\{embedDetailsRef\}/);
+  assert.match(panel,/ref=\{embedRef\}/);
+  assert.match(panel,/\.current\.open=true/);
+  assert.match(panel,/field\?\.select\(\)/);
+  assert.match(panel,/available for manual copying/);
   assert.match(panel,/readOnly value=\{kit\.embedHtml\}/);
   assert.match(panel,/role="status"/);
   assert.ok(!/fetch\(|XMLHttpRequest|WebSocket|localStorage|sessionStorage|sendBeacon|iframe|publish\(/.test(panel));
