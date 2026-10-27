@@ -132,7 +132,7 @@ function ShellContent(){
   }
   const home=location.pathname==="/";
   const parityProfile=/^\/(?:creators\/[a-z][a-z0-9_]{2,29}|@[a-z][a-z0-9_]{2,29})$/.test(location.pathname);
-  const parityFullBleed=Boolean(FullParityHeader&&(home||["/discover","/community","/creators","/boards"].includes(location.pathname)||parityProfile));
+  const parityFullBleed=Boolean(FullParityHeader&&(home||["/severance","/about","/discover","/community","/creators","/boards"].includes(location.pathname)||parityProfile));
   const publicSpatial=Boolean(FullParityHeader&&["/","/discover","/community","/creators"].includes(location.pathname));
   // PARITY destinations own a full-bleed spatial canvas, not a nested page box.
   // Legacy routes retain their protected frame until individually transformed.
