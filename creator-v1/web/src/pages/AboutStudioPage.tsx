@@ -7,7 +7,7 @@ export function AboutStudioPage(){
  return <div className="av137-about" data-studio-stage="active-development">
   <section className="av137-about-hero">
    <div className="av137-stage-identity"><OrbitalMark/><span>ANEVUM / INDEPENDENT SOFTWARE STUDIO</span></div>
-   <p className="av137-eyebrow">CONTINUANCE INSTITUTE / ESTABLISHED 2026</p>
+   <p className="av137-eyebrow">ANEVUM / INDEPENDENT DEVELOPMENT / 2026</p>
    <h1>Make things.<br/><em>Make them matter.</em></h1>
    <p>ANEVUM develops original games, practical software and experimental creative tools. We prefer working prototypes, real evidence and useful releases over promising features before they exist.</p>
    <div className="av137-stage-actions"><Link className="av137-button av137-button--primary" to="/severance">Current game <Icon name="arrow" size={16}/></Link><Link className="av137-button" to="/status">What's live now <Icon name="arrow" size={16}/></Link></div>
