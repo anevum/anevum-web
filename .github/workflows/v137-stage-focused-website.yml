@@ -19,6 +19,7 @@ on:
       - 'creator-v1/web/index.html'
       - 'creator-v1/web/vite.config.ts'
       - 'creator-v1/test/stage-focused-severance-v137.test.mjs'
+      - 'creator-v1/ops/v138-public-presentation-scope.mjs'
       - 'creator-v1/test/severance-cinematic-v138.test.mjs'
       - 'creator-v1/test/stage-focused-v137-browser.mjs'
       - '.github/workflows/v137-stage-focused-website.yml'
@@ -47,9 +48,12 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify the V138 release candidate changes presentation only
+        run: node creator-v1/ops/v138-public-presentation-scope.mjs
       - name: Verify exact source and stage-focused contracts
         run: |
           test "$(git rev-parse HEAD)" = "$ANEVUM_SOURCE_SHA"
