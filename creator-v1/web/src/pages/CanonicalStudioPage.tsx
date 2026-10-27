@@ -218,6 +218,39 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
  },[id,create]);
  const canEdit=!project||editable(project);
  const dirty=saved===null||JSON.stringify(saved)!==JSON.stringify(draft);
+ // An untouched new form is not an unsaved revision. Never persist draft data
+ // in browser storage; the server is the sole authority for saved revisions.
+ const hasUnsavedEdits=JSON.stringify(saved??empty)!==JSON.stringify(draft);
+ useEffect(()=>{
+  if(!hasUnsavedEdits&&!busy)return;
+  // BrowserRouter uses declarative routing: route blockers belong to a data
+  // router. Protect real Link navigation and tab reload without changing the
+  // application router, intercepting history, or interfering with edit fields.
+  function onBeforeUnload(event:BeforeUnloadEvent){
+   event.preventDefault();event.returnValue='';
+  }
+  function onLinkClick(event:MouseEvent){
+   if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||
+      event.shiftKey||event.altKey||!(event.target instanceof Element))return;
+   const anchor=event.target.closest<HTMLAnchorElement>('a[href]');
+   if(!anchor||anchor.hasAttribute('download')||
+      (anchor.target&&anchor.target!=='_self'))return;
+   const destination=new URL(anchor.href,window.location.href);
+   if(destination.origin!==window.location.origin||
+      destination.pathname===window.location.pathname)return;
+   if(!window.confirm(busy
+     ?'A private Studio action is still processing. Leave this page?'
+     :'You have unsaved Studio changes. Leave without saving?')){
+    event.preventDefault();event.stopImmediatePropagation();
+   }
+  }
+  window.addEventListener('beforeunload',onBeforeUnload);
+  document.addEventListener('click',onLinkClick,true);
+  return()=>{
+   window.removeEventListener('beforeunload',onBeforeUnload);
+   document.removeEventListener('click',onLinkClick,true);
+  };
+ },[hasUnsavedEdits,busy]);
  const eligibleAttachment=Boolean([...(assetSummary||[]),...largeSummary].some(a=>a.status==='quarantined'&&
   studioEligibleUpload(draft.category,a.kind)));
  const ready=Boolean((draft.demoUrl||draft.sourceUrl||eligibleAttachment)&&draft.license.trim().length>=2&&
@@ -308,10 +341,17 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
     {input('license','RIGHTS OR LICENSE',80,0,'Identify your actual rights; a public repository does not automatically grant reuse.')}
     {input('aiDisclosure','AI INVOLVEMENT',1200,3,'Explain any AI assistance, or write that none was used.')}
     {input('humanContribution','HUMAN CREATION & CREDITS',1200,3,'Credit your own work and collaborators.')}
+    <p id="st-save-state" className="st-save-state" role="status"
+       data-unsaved={hasUnsavedEdits?"true":"false"}>
+     {busy?'PRIVATE ACTION IN PROGRESS — WAIT FOR CONFIRMATION':
+      hasUnsavedEdits?'UNSAVED CHANGES — SAVE BEFORE LEAVING':
+      project?'CURRENT REVISION SAVED / PRIVATE':
+      'NOT YET CREATED — YOUR FIRST SAVE MAKES A PRIVATE RECORD'}
+    </p>
     <div className="st-actions">
      <button className="st-action" type="submit" disabled={locked||!dirty}>
       {busy?'SAVING PRIVATE REVISION…':project?'SAVE CHANGES':'CREATE PRIVATE DRAFT'}</button>
-     <Link className="st-link" to="/studio/records">RETURN TO PROJECTS ↗</Link>
+     <Link className="st-link" to="/studio/records" aria-describedby="st-save-state">RETURN TO PROJECTS ↗</Link>
     </div>
     {notice&&<p role="status" className="st-success">{notice}</p>}
    </form>
