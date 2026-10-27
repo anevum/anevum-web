@@ -15,6 +15,7 @@ test('private Studio editor preserves source shape and marks only changed work u
  assert.match(page,/setProject\(current\);setDraft\(fields\);setSaved\(fields\)/);
  assert.match(page,/studioCreate\(draft,createId\.current\)/);
  assert.match(page,/studioUpdate\(project\.id,project\.revision,draft\)/);
+ assert.match(page,/disabled=\{locked\|\|!\(project\?dirty:hasUnsavedEdits\)\}/);
  assert.match(page,/if\(create\)navigate\('\/studio\/'\+current\.id,\{replace:true\}\)/);
 });
 test('navigation protection is scoped to real links and browser unload without storing unpublished work',()=>{

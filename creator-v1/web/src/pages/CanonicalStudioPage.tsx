@@ -349,7 +349,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
       'NOT YET CREATED — YOUR FIRST SAVE MAKES A PRIVATE RECORD'}
     </p>
     <div className="st-actions">
-     <button className="st-action" type="submit" disabled={locked||!dirty}>
+     <button className="st-action" type="submit" disabled={locked||!(project?dirty:hasUnsavedEdits)}>
       {busy?'SAVING PRIVATE REVISION…':project?'SAVE CHANGES':'CREATE PRIVATE DRAFT'}</button>
      <Link className="st-link" to="/studio/records" aria-describedby="st-save-state">RETURN TO PROJECTS ↗</Link>
     </div>

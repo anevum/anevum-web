@@ -98,10 +98,13 @@ try{
   const state=page.locator('#st-save-state');
   await state.waitFor();
   assert.equal(await state.getAttribute('data-unsaved'),'false','Untouched form is clean');
+  const saveButton=form.getByRole('button',{name:'CREATE PRIVATE DRAFT'});
+  assert.equal(await saveButton.isDisabled(),true,'Untouched first draft cannot submit empty data');
   const title=form.locator('label.st-field').filter({hasText:'PROJECT TITLE'}).locator('input');
   await title.fill('SYNTHETIC LOCAL UNSAVED CREATION');
   await page.waitForFunction(()=>document.querySelector('#st-save-state')?.getAttribute('data-unsaved')==='true');
   assert.match(await state.innerText(),/UNSAVED CHANGES/);
+  assert.equal(await saveButton.isEnabled(),true,'Editing unlocks the actual private save action');
   const dialogs=[];
   let accept=false;
   page.on('dialog',async dialog=>{
@@ -127,6 +130,8 @@ try{
   assert.equal(new URL(page.url()).pathname,'/studio/new','Wayfinder route also guarded');
   assert.equal(dialogs.length,2);
   await page.getByRole('button',{name:'Close navigation',exact:true}).click();
+  // Center the actual unsaved status and its save action in review captures.
+  await state.evaluate(node=>node.scrollIntoView({block:'center',behavior:'instant'}));
   await page.screenshot({path:join(output,'studio-draft-unsaved-'+width+'.png'),animations:'disabled'});
   accept=true;
   await back.click();
