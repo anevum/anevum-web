@@ -1,0 +1,73 @@
+name: ANEVUM V137 Stage-Focused Website QA
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/web/src/parity/StageFocusedHomeV137.tsx'
+      - 'creator-v1/web/src/pages/SeverancePage.tsx'
+      - 'creator-v1/web/src/pages/AboutStudioPage.tsx'
+      - 'creator-v1/web/src/stage-focus-v137.css'
+      - 'creator-v1/web/src/pages/CinematicLandingPage.tsx'
+      - 'creator-v1/web/src/pages/StatusPage.tsx'
+      - 'creator-v1/web/src/lib/site-navigation.ts'
+      - 'creator-v1/web/src/lib/public-page-metadata.ts'
+      - 'creator-v1/web/src/components/Shell.tsx'
+      - 'creator-v1/web/src/parity/ConsoleWayfinderV136.tsx'
+      - 'creator-v1/web/src/App.tsx'
+      - 'creator-v1/web/src/main.tsx'
+      - 'creator-v1/web/index.html'
+      - 'creator-v1/web/vite.config.ts'
+      - 'creator-v1/test/stage-focused-severance-v137.test.mjs'
+      - 'creator-v1/test/stage-focused-v137-browser.mjs'
+      - '.github/workflows/v137-stage-focused-website.yml'
+permissions:
+  contents: read
+concurrency:
+  group: v137-stage-focused-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  verify-studio-front-door:
+    if: github.repository == 'anevum/anevum-web' && github.event.pull_request.head.repo.full_name == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    env:
+      ANEVUM_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+      VITE_PARITY_V136_FULL: 'true'
+      VITE_PARITY_V136_CINEMATIC: 'true'
+      VITE_PARITY_V136_NATIVE_VIDEO: 'false'
+      VITE_PARITY_V136_HORIZON_QA: 'false'
+      VITE_PARITY_V136_SHARED_SCENE_QA: 'false'
+      VITE_PACKAGE_CREATOR_GALLERY_V010: 'false'
+      CLOUDFLARE_API_TOKEN: ''
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify exact source and stage-focused contracts
+        run: |
+          test "$(git rev-parse HEAD)" = "$ANEVUM_SOURCE_SHA"
+          node --test creator-v1/test/stage-focused-severance-v137.test.mjs
+          node --test creator-v1/test/public-page-metadata-v136.test.mjs
+      - name: Install and typecheck the real Creator V1 frontend
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+      - name: Install isolated Chromium
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
+          npx playwright install --with-deps chromium
+      - name: Verify home, Severance, About, Status and phone layouts locally
+        run: node creator-v1/test/stage-focused-v137-browser.mjs
+      - name: Attach review screenshots and acceptance receipt
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v137-stage-focused-${{ github.event.pull_request.head.sha }}
+          path: evidence/stage-focused-v137/
+          retention-days: 14
+          if-no-files-found: warn
