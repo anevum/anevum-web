@@ -115,3 +115,47 @@ until the exact built frontend and server boundaries are verified. The historic
 V136 immutable release gate is expected to reject unreviewed new UI blobs;
 the correct resolution is a new release authorization with reviewed bytes,
 not weakening or circumventing the existing gate.
+
+## Production cross-check and next release authority — 2026-10-27
+
+Read-only Cloudflare deployments/versions API verification found the current
+`anevum-apex-prelaunch-gateway` Worker at **version 67, 100% traffic**
+(the latest listed deployment was October 26, 2026 at 22:33 UTC).
+The previous full-traffic version 63 remains recorded in deployment history.
+These are authoritative Cloudflare observations and **not** a V138 release.
+
+The historical `parity-v136-release.mjs` workflow pins a different prior
+asset/source cohort and a fixed root-script snapshot. It rejects the new
+site's changes. This rejection is a release-boundary result and must not be
+silenced or used to justify switching production to an obsolete gateway
+payload. The current production Worker v67's code, bindings, secrets,
+route ownership, redirects and failure/rollback behavior must be treated
+as the baseline for a separate reviewed V138 frontend-only release.
+
+A new **read-only** scope preflight is in
+`creator-v1/ops/v138-public-presentation-scope.mjs`. It verifies the
+exact approved V137 parent tree, requires the exact CI head, audits the
+complete changed-path list against a closed list, and fails on Worker, auth,
+D1, static-asset, package, payment or secret/config modifications. The
+exact-head compiled Chromium QA executes only after this step passes.
+This is a scope receipt, **not** permission to deploy.
+
+### Remaining rollout gates
+
+1. Exact-head CI complete including 1440, 390, 320 px, keyboard/controller,
+   creator/member/staff boundaries, and historical V136 spatial tests with
+   updated four-link expectations.
+2. Human review of screenshots, independent artwork quality, reduced-motion,
+   low-end iPhone Safari and Android input/performance.
+3. Review the exact v67 live Worker deployment settings, bindings, static
+   package source, route ownership and immutable previous version for
+   rollback. Do not infer v67 internals from the old V136 script.
+4. Build and review a separate V138 frontend-only upload package pinned to
+   the approved source SHA; require production change authorization and a
+   fail-closed cutover/rollback mechanism before moving any traffic.
+5. After controlled activation, confirm real anonymous pages, auth, Studio,
+   uploads, moderator boundaries, public metadata and mobile UX against the
+   live domain; stop and rollback on regression.
+
+No production upload, deployment, traffic switch, migration or GitHub merge
+has been executed by this V138 presentation continuation.
