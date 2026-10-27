@@ -131,17 +131,18 @@ try{
    await page.waitForFunction(()=>{
      const node=document.querySelector("video.av139-film");
      return node?.getAttribute("src")?.includes("hero-motion-v139-1080p.mp4");
-   },{timeout:12000});
+   },null,{timeout:12000});
    const video=await page.request.get(origin+"/assets/severance/hero-motion-v139-1080p.mp4");
    assert.equal(video.status(),200,"Reviewed H264 video is self-hosted");
    assert.match(video.headers()["content-type"]||"",/video\/mp4/);
-   assert.ok(Number(video.headers()["content-length"]||0)>200000,"HD cinematic exists");
+   const videoBytes=(await video.body()).byteLength;
+   assert.ok(videoBytes>200000,"HD cinematic exists");
    const poster=await page.request.get(origin+"/assets/severance/hero-poster-v139.webp");
    assert.equal(poster.status(),200,"Poster is self-hosted");
    assert.match(poster.headers()["content-type"]||"",/image\/webp/);
    results.checks.push({width:"motion",sameOriginMedia:true,
-     mp4Bytes:Number(video.headers()["content-length"]||0),
-     posterBytes:Number(poster.headers()["content-length"]||0)});
+     mp4Bytes:videoBytes,
+     posterBytes:(await poster.body()).byteLength});
    await context.close();
  }
  assert.deepEqual(results.blocked,[],"No external requests or writes");
