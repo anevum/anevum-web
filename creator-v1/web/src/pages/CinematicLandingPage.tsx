@@ -16,7 +16,7 @@ import {publicCreatorHandle} from "../lib/public-creator-handle";
  * projects. The only rewarded player identity is independently server-verified.
  * This page never opens up private submissions or moderation records.
  */
-const FullPortal=import.meta.env.VITE_PARITY_V136_FULL==="true" ? lazy(()=>import("../parity/ParityPortalV136").then(m=>({default:m.ParityPortalV136}))) : null;
+const FullPortal=import.meta.env.VITE_PARITY_V136_FULL==="true" ? lazy(()=>import("../parity/StageFocusedHomeV137").then(m=>({default:m.StageFocusedHomeV137}))) : null;
 type PublicSnapshot={status:Status|null;projects:Project[];creators:Creator[]};
 const gateways=[
   {to:"/discover",title:"Discover",detail:"Find ideas, worlds and original work",icon:"explore",eyebrow:"01 / EXPLORE"},
