@@ -151,14 +151,14 @@ jobs:
             -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
             "$api/accounts/$CF_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" \
             > "$RUNNER_TEMP/anevum-review/apex-before.json"
-          # V136 public frontend is now at 100%, independently rolled out from
-          # V63 beta cutover. Pin both immutable live version AND deployment
-          # identity: a prior successful review may not authorize future drift.
-          jq -e '.result.deployments[0].id=="cd6fa4f2-4382-49e2-a02b-b3d73cc41398" and
+          # V67 public beta is now at 100% on the existing production Worker.
+          # Pin exact immutable deployment AND version, not merely traffic=100;
+          # a prior successful preview never authorizes subsequent drift.
+          jq -e '.result.deployments[0].id=="2c6b4ebf-cfc6-4ddf-aa58-e61a1c8eb6a7" and
             (.result.deployments[0].versions|map([.version_id,.percentage])) ==
-             [["77c8a9a6-f1ee-44fb-87d6-3271b3115c37",100]]' \
+             [["a195834f-a0ec-4a0b-be78-1c6e905961f7",100]]' \
             "$RUNNER_TEMP/anevum-review/apex-before.json" >/dev/null
-          echo 'EXISTING_ASSETS_ONLY_PREVIEW_ROLLBACK_CAPTURED_V136_100_GATEWAY_UNCHANGED=PASS'
+          echo 'EXISTING_ASSETS_ONLY_PREVIEW_ROLLBACK_CAPTURED_V67_100_GATEWAY_UNCHANGED=PASS'
 
       - name: Deploy only the static isolated V136 visual review Worker
         shell: bash
@@ -239,7 +239,7 @@ jobs:
             echo "Exact source SHA: $REVIEWED_SOURCE_SHA"
             echo "Reviewed latest Orbital Underground mark"
             echo "No production routes, sessions, D1, upload or payments"
-            echo "Zone route inventory and existing 99/1 apex gateway unchanged"
+            echo "Zone route inventory and existing V67 100% apex gateway unchanged"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@v4

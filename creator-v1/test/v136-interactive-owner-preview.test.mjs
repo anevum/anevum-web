@@ -138,15 +138,17 @@ test('public catalogue proxy is anonymous and read-only',async()=>{
  }finally{globalThis.fetch=real;}
 });
 
-test('isolated preview pins exact live 100% gateway without weakening postflight',()=>{
+test('isolated preview pins exact live V67 100% gateway without weakening postflight',()=>{
  const workflow=readFileSync(new URL('../../.github/workflows/v136-interactive-owner-review.yml',import.meta.url),'utf8');
- assert.match(workflow,/cd6fa4f2-4382-49e2-a02b-b3d73cc41398/);
- assert.match(workflow,/77c8a9a6-f1ee-44fb-87d6-3271b3115c37/);
- assert.match(workflow,/\["77c8a9a6-f1ee-44fb-87d6-3271b3115c37",100\]/);
+ assert.match(workflow,/2c6b4ebf-cfc6-4ddf-aa58-e61a1c8eb6a7/);
+ assert.match(workflow,/a195834f-a0ec-4a0b-be78-1c6e905961f7/);
+ assert.match(workflow,/\["a195834f-a0ec-4a0b-be78-1c6e905961f7",100\]/);
  assert.match(workflow,/\.result\.deployments\[0\]\.id==\$prev\[0\]\.result\.deployments\[0\]\.id/);
  assert.match(workflow,/\.result\.deployments\[0\]\.versions==\$prev\[0\]\.result\.deployments\[0\]\.versions/);
  assert.match(workflow,/cmp "\$RUNNER_TEMP\/anevum-review\/routes-canonical-before\.json"/);
  assert.doesNotMatch(workflow,/EXISTING_ASSETS_ONLY_PREVIEW_ROLLBACK_CAPTURED_99_1/);
+ assert.match(workflow,/EXISTING_ASSETS_ONLY_PREVIEW_ROLLBACK_CAPTURED_V67_100_GATEWAY_UNCHANGED/);
+ assert.doesNotMatch(workflow,/cd6fa4f2-4382-49e2-a02b-b3d73cc41398|77c8a9a6-f1ee-44fb-87d6-3271b3115c37/);
 });
 
 test('preview deploy authorization follows the merged development PR, not closed #779',()=>{
