@@ -71,8 +71,10 @@ for(const path of changed){
     "Do not ship backend, static executable assets or database changes under a presentation release: "+path);
 }
 const app=readFileSync("creator-v1/web/src/App.tsx","utf8");
-for(const route of ['path="severance"','path="about"','path="studio"','path="member"','path="staff"'])
+for(const route of ['path="severance"','path="about"','path="studio"','path="member"'])
   assert.ok(app.includes(route),"Protected or current-stage route missing: "+route);
+const shell=readFileSync("creator-v1/web/src/components/Shell.tsx","utf8");
+assert.ok(shell.includes("VerifiedStaffShortcut"),"Staff access shortcut must remain permissioned at source");
 const source=readFileSync("creator-v1/web/src/pages/SeverancePage.tsx","utf8");
 assert.ok(source.includes('data-public-playable="false"'),"Game page must not be offered as playable");
 const receipt={contract:"anevum-v138-reviewed-presentation-only",status:"PASS",
