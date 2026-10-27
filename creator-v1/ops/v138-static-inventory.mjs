@@ -57,6 +57,27 @@ assert.deepEqual(mediaManifest.media.map(item=>item.path).sort(),[
  cinematicDir+"/hero-motion-v139-720p.mp4",
  cinematicDir+"/hero-poster-v139.webp"
 ].sort());
+assert.ok(Array.isArray(mediaManifest.scrollFrameSequences)&&
+ mediaManifest.scrollFrameSequences.length===2,"Expected mobile and desktop scroll media");
+for(const seq of mediaManifest.scrollFrameSequences){
+ assert.ok(["mobile","desktop"].includes(seq.device),"Unknown scroll-media tier");
+ assert.equal(seq.fps,6,"Reviewed scroll sequence must have 6 frames per second");
+ assert.equal(seq.count,48,"Incomplete cinematic scroll media");
+ assert.equal(seq.files.length,48,"Unmatched frame file count");
+ assert.ok(seq.directory===cinematicDir+"/frames-"+seq.device);
+ let total=0;
+ for(const item of seq.files){
+  assert.ok(item.path.startsWith(seq.directory+"/frame-"),"Unexpected scroll frame");
+  const file=join(root,item.path);assert.ok(existsSync(file),"Missing scroll frame: "+item.path);
+  const bytes=readFileSync(file);total+=bytes.length;
+  assert.equal(item.bytes,bytes.length,"Frame-byte inventory mismatch");
+  assert.equal(item.sha256,createHash("sha256").update(bytes).digest("hex"),
+   "Frame SHA256 does not match pinned media manifest");
+  assert.ok(bytes.length<300_000,"A scroll frame is too large for mobile cache");
+ }
+ assert.equal(seq.totalBytes,total,"Scroll inventory total mismatch");
+ assert.ok(total<4_500_000,"Unoptimized scroll animation sequence");
+}
 const entries=[];
 function walk(directory){
  for(const name of readdirSync(directory).sort()){
