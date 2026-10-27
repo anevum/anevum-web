@@ -13,6 +13,29 @@ assert.ok(existsSync(join(root,"index.html")),"Expected compiled V138 index miss
 assert.ok(!existsSync(join(root,"portfolio")),"Retired personal portfolio cannot ship in V138 bundle");
 assert.ok(!existsSync(join(root,"assets/cinematic-v136/arrival/review-001")),
  "Unaccepted V136 owner-review media cannot ship in public bundle");
+const cinematicDir="assets/severance";
+const mediaManifestFile=join(root,cinematicDir,"manifest-v139.json");
+assert.ok(existsSync(mediaManifestFile),"Missing first-party cinematic media SHA256 manifest");
+const mediaManifest=JSON.parse(readFileSync(mediaManifestFile,"utf8"));
+assert.equal(mediaManifest.contract,"ANEVUM-V139-FIRST-PARTY-MEDIA-REVIEW");
+assert.equal(mediaManifest.approvedSourceSha256,"71c1bb6ca774841386857a1e8b344420d7c95fa5e1e96a6fb23dc656df005ba5");
+assert.equal(mediaManifest.runtimeThirdPartyRequests,false);
+assert.equal(mediaManifest.gameplayFootage,false);
+for(const media of mediaManifest.media){
+ assert.ok(media.path.startsWith(cinematicDir+"/"),"Media must be local");
+ const sourceFile=join(root,media.path);
+ assert.ok(existsSync(sourceFile),"Missing generated media: "+media.path);
+ const bytes=readFileSync(sourceFile);
+ assert.equal(bytes.byteLength,media.bytes,"Generated media size mismatch");
+ assert.equal(createHash("sha256").update(bytes).digest("hex"),media.sha256,
+  "Generated media digest mismatch: "+media.path);
+ assert.ok(media.bytes<=6_000_000,"Unexpectedly large unoptimized background media");
+}
+assert.deepEqual(mediaManifest.media.map(item=>item.path).sort(),[
+ cinematicDir+"/hero-motion-v139-1080p.mp4",
+ cinematicDir+"/hero-motion-v139-720p.mp4",
+ cinematicDir+"/hero-poster-v139.webp"
+].sort());
 const entries=[];
 function walk(directory){
  for(const name of readdirSync(directory).sort()){
