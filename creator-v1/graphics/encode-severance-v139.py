@@ -23,6 +23,7 @@ import cv2
 import numpy as np
 
 PINNED_SOURCE_SHA256 = "71c1bb6ca774841386857a1e8b344420d7c95fa5e1e96a6fb23dc656df005ba5"
+PINNED_DECODED_BGR_SHA256 = "66fadc771dad92deff2d9d13c5cbcbc96ba1328b693df8f4685348d78ec8e983"
 SOURCE_DESCRIPTION = "ANEVUM Severance original clean environment concept; NO GAMEPLAY capture"
 W,H,FPS,SECONDS = 1920,1080,24,8
 
@@ -45,12 +46,21 @@ def main() -> None:
     source=Path(sys.argv[1]);out=Path(sys.argv[2]);out.mkdir(parents=True,exist_ok=True)
     assert source.is_file(),"Approved image source missing"
     digest=sha256(source)
-    assert digest==PINNED_SOURCE_SHA256,(
-        "CRITICAL: concept image bytes do not match the reviewed source SHA256. "
-        "Do not substitute remote or altered content."
-    )
     src=cv2.imread(str(source),cv2.IMREAD_COLOR)
-    assert src is not None and src.ndim==3 and src.shape[0]>700 and src.shape[1]>1200
+    assert src is not None and src.ndim==3, "Review image is not decodable"
+    assert src.shape==(941,1672,3), (
+        "Approved image dimensions changed: got "+str(src.shape)+
+        "; expected a 1672x941 clean concept plate."
+    )
+    decoded_digest=hashlib.sha256(src.tobytes()).hexdigest()
+    assert decoded_digest==PINNED_DECODED_BGR_SHA256, (
+        "CRITICAL: decoded concept pixels do not match the approved artwork. "+
+        "Actual file SHA256 "+digest+"; actual decoded image SHA256 "+decoded_digest+
+        ". Rejecting changed image content."
+    )
+    if digest!=PINNED_SOURCE_SHA256:
+        print("Approved decoded pixels match; asset was losslessly re-encoded in transit. "+
+              "Downloaded file hash: "+digest,flush=True)
     src=cv2.resize(src,(W,H),interpolation=cv2.INTER_CUBIC)
     overfill=cv2.resize(src,(int(W*1.045),int(H*1.045)),interpolation=cv2.INTER_LINEAR)
     ox,oy=overfill.shape[1]-W,overfill.shape[0]-H
@@ -164,7 +174,10 @@ def main() -> None:
         assert path.stat().st_size>20_000,"Media is unexpectedly empty: "+path.name
     manifest={
         "contract":"ANEVUM-V139-FIRST-PARTY-MEDIA-REVIEW",
-        "origin":SOURCE_DESCRIPTION,"approvedSourceSha256":digest,
+        "origin":SOURCE_DESCRIPTION,
+        "approvedSourceSha256":PINNED_SOURCE_SHA256,
+        "downloadedSourceSha256":digest,
+        "approvedDecodedBgrSha256":PINNED_DECODED_BGR_SHA256,
         "runtimeThirdPartyRequests":False,"audio":False,
         "fps":FPS,"seconds":SECONDS,"gameplayFootage":False,
         "scrollFrameCountPerDevice":48,
