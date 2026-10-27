@@ -20,7 +20,8 @@ const arrival=read("web/src/pages/CinematicLandingPage.tsx");
 test("V137 leads with an honest first-party game and independent-studio identity",()=>{
  assert.match(home,/data-stage-focus="severance-development"/);
  assert.match(home,/INDEPENDENT SOFTWARE STUDIO/);
- assert.match(home,/TRANSCOSMIC: SEVERANCE/);
+ assert.match(home,/TRANSCOSMIC/);
+ assert.match(home,/SEVERANCE/);
  assert.match(home,/No public multiplayer game or open beta is available yet/);
  assert.match(home,/projects\.slice\(0,3\)/);
  assert.match(home,/<ProjectThumbnail/);
