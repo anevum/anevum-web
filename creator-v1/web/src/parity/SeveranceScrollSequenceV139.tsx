@@ -2,11 +2,11 @@ import {useEffect,useRef,useState} from "react";
 import type {CSSProperties} from "react";
 import {Link} from "react-router-dom";
 import {Icon} from "../components/Icons";
-import {SEVERANCE_MEDIA_V139} from "./SeveranceCinematicV139";
+import {SEVERANCE_MEDIA_V139,SEVERANCE_ASSET_BASE_V139} from "./SeveranceCinematicV139";
 
 const FRAMES=48;
 const frameSource=(frame:number,mobile:boolean)=>
- "/assets/severance/frames-"+(mobile?"mobile":"desktop")+"/frame-"+String(frame+1).padStart(4,"0")+".webp";
+ SEVERANCE_ASSET_BASE_V139+"frames-"+(mobile?"mobile":"desktop")+"/frame-"+String(frame+1).padStart(4,"0")+".webp";
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 
 /**
