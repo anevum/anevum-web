@@ -51,6 +51,9 @@ try{
   await until(()=>evaluate('document.querySelector(".ir111-transmission")?.textContent?.includes("CI background info 0")'));
   await evaluate('document.querySelector(".ir111-transmission button").click()');
   await until(()=>evaluate('document.querySelector(".ir111-transmission")?.textContent?.includes("CI action could not be saved")'));
+  // Match the original V111 screenshot contract: measure the settled panel,
+  // not an intentional -24px opening transform partway through its .55s ease.
+  await delay(650);
   const priority=await evaluate('(()=>{const el=document.querySelector(".ir111-transmission"),box=el.getBoundingClientRect();return {text:el.textContent,live:document.querySelector(".an-live")?.textContent,left:box.left,right:box.right,bottom:box.bottom,overflow:document.documentElement.scrollWidth>innerWidth+1}})()');
   if(!priority.text.includes("ATTENTION REQUIRED")||!priority.live.includes("CI action could not be saved")||
     priority.overflow||priority.left<0||priority.right>width+1||priority.bottom>height+1)
