@@ -13,6 +13,7 @@ export const EXPECTED_BASE="f8e1bd8f8761efd09898fc67ada108a41d1e1531";
 export const REVIEWED_PATHS=Object.freeze([
   ".github/workflows/v137-stage-focused-website.yml",
   "creator-v1/ops/v138-public-presentation-scope.mjs",
+  "creator-v1/ops/v138-static-inventory.mjs",
   "creator-v1/test/community-structure.test.mjs",
   "creator-v1/test/home-navigation-v079.test.mjs",
   "creator-v1/test/parity-v136-full-browser.mjs",
