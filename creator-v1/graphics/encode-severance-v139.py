@@ -135,6 +135,26 @@ def main() -> None:
         )
         frames.extend([{"path":"assets/severance/frames-"+variant+"/"+i.name,
                         "bytes":i.stat().st_size,"sha256":sha256(i)} for i in images])
+    # Pre-render exactly 48 scroll frames per device: native 2D canvas,
+    # no runtime WebGL/GLB download and no external client-side image service.
+    sequence=[]
+    for target,width,height in [("desktop",1280,720),("mobile",768,432)]:
+        frames=out/("frames-"+target)
+        frames.mkdir(parents=True,exist_ok=True)
+        run_ffmpeg([
+            "-i",str(full),"-vf",f"fps=6,scale={width}:{height}:flags=lanczos",
+            "-an","-c:v","libwebp","-quality","62",
+            "-compression_level","5",str(frames/"frame-%04d.webp")
+        ])
+        files=sorted(frames.glob("frame-*.webp"))
+        assert len(files)==48, f"Invalid {target} scroll frame sequence: {len(files)}"
+        sequence.append({
+            "device":target,"fps":6,"count":len(files),
+            "directory":"assets/severance/frames-"+target,
+            "totalBytes":sum(p.stat().st_size for p in files),
+            "files":[{"path":"assets/severance/frames-"+target+"/"+p.name,
+                      "sha256":sha256(p),"bytes":p.stat().st_size} for p in files]
+        })
     poster=out/"hero-poster-v139.webp"
     run_ffmpeg([
         "-i",str(source),"-vf","scale=1920:1080:flags=lanczos",
@@ -150,7 +170,8 @@ def main() -> None:
         "scrollFrameCountPerDevice":48,
         "frames":frames,
         "media":[{"path":"assets/severance/"+p.name,"bytes":p.stat().st_size,
-                  "sha256":sha256(p)} for p in (full,mobile,poster)]
+                  "sha256":sha256(p)} for p in (full,mobile,poster)],
+        "scrollFrameSequences":sequence
     }
     (out/"manifest-v139.json").write_text(json.dumps(manifest,indent=2)+"\n")
     print("V139 pinned first-party media: "+json.dumps(manifest,sort_keys=True))
