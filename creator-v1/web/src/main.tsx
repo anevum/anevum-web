@@ -54,6 +54,7 @@ if (import.meta.env.VITE_PARITY_V136_FULL === "true") {
 await import("./stage-focus-v137.css");
 // V138 is a reviewed public presentation layer, not a backend or member-system fork.
 await import("./severance-cinematic-v138.css");
+await import("./severance-motion-v139.css");
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "") || "/"}>
