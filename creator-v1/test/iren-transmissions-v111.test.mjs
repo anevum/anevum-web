@@ -68,9 +68,12 @@ test("V139 retains urgent errors under a flooded info queue without manufacturin
  assert.match(queue,/setQueue\(old=>scheduleTransmission\(old,alert\)\)/);
  assert.doesNotMatch(source,/fetch\(|localStorage|award.*grant|notifications\/ack/);
  const compiler=await import("typescript");
- const ts=compiler.default??compiler;
- const out=ts.transpileModule(source,{compilerOptions:{
-  target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext
+ const transpile=compiler.transpileModule??compiler.default?.transpileModule;
+ assert.equal(typeof transpile,"function","TypeScript transpiler must exist");
+ // TypeScript 7's runtime API may not expose legacy enum properties. Use
+ // stable numeric compiler option values: ES2022 target=9, ESNext module=99.
+ const out=transpile(source,{compilerOptions:{
+  target:9,module:99
  }}).outputText;
  const {scheduleTransmission}=await import("data:text/javascript;base64,"+
   Buffer.from(out).toString("base64"));
