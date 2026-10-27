@@ -410,3 +410,28 @@ html[data-av-parity="v136-full"] .p136-hero.av138-hero h1>.av138-title-dot{
  .av138-endcap h2{font-size:34px;overflow-wrap:anywhere;letter-spacing:.01em}
  .av138-hero-readout{display:none}
 }
+
+/* Restore phone-sized brand geometry, which V138's stronger desktop selector
+ * otherwise kept at 23px even when the older mobile stylesheet requested 16px.
+ * This affected shared Header widths on Home, Discover, and in the Wayfinder. */
+@media(max-width:520px){
+ html[data-av-parity="v136-full"] .p136-header-inner{
+  padding-inline:12px;gap:6px;
+ }
+ html[data-av-parity="v136-full"] .p136-brand{gap:6px;min-width:0}
+ html[data-av-parity="v136-full"] .p136-brand strong{
+  font-size:17px;letter-spacing:.13em;white-space:nowrap;
+ }
+ html[data-av-parity="v136-full"] .p136-brand small{
+  font-size:5.3px;letter-spacing:.1em;white-space:nowrap;
+ }
+ html[data-av-parity="v136-full"] .p136-header-actions{gap:3px;min-width:0}
+ html[data-av-parity="v136-full"] .p136-header-actions>*{min-width:37px;min-height:42px;padding:7px}
+}
+@media(max-width:350px){
+ html[data-av-parity="v136-full"] .p136-header-inner{padding-inline:8px;gap:4px}
+ html[data-av-parity="v136-full"] .p136-brand strong{font-size:15px;letter-spacing:.12em}
+ html[data-av-parity="v136-full"] .p136-brand small{display:none}
+ html[data-av-parity="v136-full"] .p136-brand-mark{width:30px;height:30px}
+ html[data-av-parity="v136-full"] .p136-header-actions>*{min-width:35px;min-height:40px;padding:6px}
+}
