@@ -105,3 +105,45 @@ html[data-av-parity="v136-full"] .site-main:has(.av137-stage-home,.av137-severan
 @media(max-width:420px){.av137-stage-hero{padding-inline:17px}.av137-stage-identity{font-size:9px;letter-spacing:.075em}.av137-stage-copy h1{font-size:clamp(42px,10vw,60px)}.av137-stage-actions{display:grid;grid-template-columns:1fr}.av137-button{width:100%}.av137-sev-hero h1{font-size:clamp(50px,14vw,68px)}.av137-sev-grid{grid-template-columns:1fr}.av137-sev-foot{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.av137-button{transition:none}}
 @media(forced-colors:active){.av137-stage-home,.av137-severance,.av137-about{background:Canvas;color:CanvasText}.av137-stage-summary,.av137-focus-grid article,.av137-public-grid article,.av137-sev-grid article,.av137-sev-steps article,.av137-about-grid article{background:Canvas;border:1px solid CanvasText}.av137-button{background:Canvas!important;color:LinkText!important;border:1px solid CanvasText!important}}
+
+/* V137 must take priority over the old high-specificity V136 portal grid.
+ * Scope every override to our new homepage; archived portal and Studio retain
+ * all former layout rules and data behavior.
+ */
+html[data-av-parity="v136-full"] .av137-stage-home .p136-hero.av137-stage-hero{
+  position:relative;display:flex;flex-direction:row;align-items:center;justify-content:space-between;
+  grid-template-columns:none;grid-template-rows:none;gap:5vw;min-height:690px;
+  padding:130px max(6vw,36px) 94px;
+  background:#09131d;border:0;border-radius:0;box-shadow:none;
+}
+html[data-av-parity="v136-full"] .av137-stage-home .p136-hero.av137-stage-hero::before,
+html[data-av-parity="v136-full"] .av137-stage-home .p136-hero.av137-stage-hero::after{display:none}
+html[data-av-parity="v136-full"] .av137-stage-home .p136-hero.av137-stage-hero h1{
+  font-family:inherit;font-size:clamp(44px,6.2vw,96px);font-weight:850;line-height:1.03;
+  letter-spacing:-.035em;max-width:750px;color:#f1ebe3;text-shadow:none;
+}
+html[data-av-parity="v136-full"] .av137-stage-home .p136-hero.av137-stage-hero h1 em{
+  display:inline;font-style:normal;font-weight:inherit;color:#d8c1aa;
+  background:none;-webkit-text-fill-color:currentColor;text-shadow:none;
+}
+html[data-av-parity="v136-full"] .av137-stage-home .p136-hero.av137-stage-hero .p136-hero-shade{
+  z-index:1;background:linear-gradient(90deg,#09131df7 3%,#09131dc9 53%,#09131d9e 100%),linear-gradient(0deg,#09131d 0%,transparent 46%);
+  pointer-events:none;
+}
+html[data-av-parity="v136-full"] .av137-stage-home .p136-hero.av137-stage-hero .p136-cinematic-arrival{
+  z-index:0;opacity:.9;
+}
+html[data-av-parity="v136-full"] .av137-stage-home .av137-stage-copy,
+html[data-av-parity="v136-full"] .av137-stage-home .av137-stage-summary{position:relative;z-index:3}
+@media(max-width:1050px){
+ html[data-av-parity="v136-full"] .av137-stage-home .p136-hero.av137-stage-hero{gap:25px}
+}
+@media(max-width:760px){
+ html[data-av-parity="v136-full"] .av137-stage-home .p136-hero.av137-stage-hero{
+  display:block;min-height:0;padding:115px 22px 58px;
+ }
+}
+@media(max-width:420px){
+ html[data-av-parity="v136-full"] .av137-stage-home .p136-hero.av137-stage-hero{padding-inline:17px}
+ html[data-av-parity="v136-full"] .av137-stage-home .p136-hero.av137-stage-hero h1{font-size:clamp(42px,10vw,60px)}
+}
