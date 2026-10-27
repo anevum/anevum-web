@@ -31,6 +31,7 @@ export function useSeveranceDepth(ref:RefObject<HTMLElement|null>){
   const node=ref.current;
   if(!node||!window.matchMedia("(hover: hover) and (pointer: fine)").matches||
     window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const target=node.parentElement??node;
   let raf=0;
   let x=0,y=0;
   const apply=()=>{
@@ -41,7 +42,7 @@ export function useSeveranceDepth(ref:RefObject<HTMLElement|null>){
    node.style.setProperty("--av139-tilt-y",(x*.8).toFixed(3)+"deg");
   };
   const pointer=(event:PointerEvent)=>{
-   const rect=node.getBoundingClientRect();
+   const rect=target.getBoundingClientRect();
    if(rect.width<=0||rect.height<=0)return;
    x=Math.max(-1,Math.min(1,(event.clientX-rect.left)/rect.width*2-1));
    y=Math.max(-1,Math.min(1,(event.clientY-rect.top)/rect.height*2-1));
@@ -51,11 +52,11 @@ export function useSeveranceDepth(ref:RefObject<HTMLElement|null>){
    x=0;y=0;
    if(!raf)raf=requestAnimationFrame(apply);
   };
-  node.addEventListener("pointermove",pointer,{passive:true});
-  node.addEventListener("pointerleave",clear,{passive:true});
+  target.addEventListener("pointermove",pointer,{passive:true});
+  target.addEventListener("pointerleave",clear,{passive:true});
   return ()=>{
-   node.removeEventListener("pointermove",pointer);
-   node.removeEventListener("pointerleave",clear);
+   target.removeEventListener("pointermove",pointer);
+   target.removeEventListener("pointerleave",clear);
    if(raf)cancelAnimationFrame(raf);
   };
  },[ref]);
