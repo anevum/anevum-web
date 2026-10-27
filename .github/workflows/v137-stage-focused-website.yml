@@ -5,6 +5,10 @@ on:
       - 'creator-v1/web/src/parity/StageFocusedHomeV137.tsx'
       - 'creator-v1/web/src/parity/SeveranceWorldSceneV138.tsx'
       - 'creator-v1/web/src/parity/SeveranceCinematicV139.tsx'
+      - 'creator-v1/web/src/parity/SeveranceScrollSequenceV139.tsx'
+      - 'creator-v1/web/src/severance-motion-v139.css'
+      - 'creator-v1/graphics/encode-severance-v139.py'
+      - 'creator-v1/web/src/parity/SeveranceCinematicV139.tsx'
       - 'creator-v1/web/src/severance-motion-v139.css'
       - 'creator-v1/graphics/encode-severance-v139.py'
       - 'creator-v1/web/src/severance-cinematic-v138.css'
@@ -25,6 +29,7 @@ on:
       - 'creator-v1/ops/v138-public-presentation-scope.mjs'
       - 'creator-v1/ops/v138-static-inventory.mjs'
       - 'creator-v1/test/severance-cinematic-v138.test.mjs'
+      - 'creator-v1/test/severance-motion-v139.test.mjs'
       - 'creator-v1/test/severance-motion-v139.test.mjs'
       - 'creator-v1/test/stage-focused-v137-browser.mjs'
       - '.github/workflows/v137-stage-focused-website.yml'
@@ -57,6 +62,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
       - name: Verify the V138 release candidate changes presentation only
         run: node creator-v1/ops/v138-public-presentation-scope.mjs
       - uses: actions/setup-python@v5
@@ -76,8 +84,24 @@ jobs:
       - name: Verify exact source and stage-focused contracts
         run: |
           test "$(git rev-parse HEAD)" = "$ANEVUM_SOURCE_SHA"
-          node --test creator-v1/test/stage-focused-severance-v137.test.mjs creator-v1/test/severance-cinematic-v138.test.mjs creator-v1/test/severance-motion-v139.test.mjs
+          node --test creator-v1/test/stage-focused-severance-v137.test.mjs creator-v1/test/severance-cinematic-v138.test.mjs creator-v1/test/severance-motion-v139.test.mjs creator-v1/test/severance-motion-v139.test.mjs
           node --test creator-v1/test/public-page-metadata-v136.test.mjs
+      - name: Generate reviewed first-party 1080p film, poster, and scroll frames
+        run: |
+          set -euo pipefail
+          ffmpeg -version | head -n 1
+          python -m pip install --disable-pip-version-check --quiet numpy==2.2.6 opencv-python-headless==4.11.0.86
+          mkdir -p "$RUNNER_TEMP/anevum-v139-media" creator-v1/web/public/assets/severance
+          curl --fail --location --silent --show-error --max-time 75 --retry 2 --retry-delay 2 \
+            'https://dynamic.heygen.ai/image/82172586a3324f22b5f1d558ef81a0dd/original.png' \
+            --output "$RUNNER_TEMP/anevum-v139-media/source.png"
+          printf '%s  %s\n' \
+            '71c1bb6ca774841386857a1e8b344420d7c95fa5e1e96a6fb23dc656df005ba5' \
+            "$RUNNER_TEMP/anevum-v139-media/source.png" | sha256sum --check --status
+          python creator-v1/graphics/encode-severance-v139.py \
+            "$RUNNER_TEMP/anevum-v139-media/source.png" creator-v1/web/public/assets/severance
+          ffprobe -v error -show_entries format=duration -of default=nw=1 \
+            creator-v1/web/public/assets/severance/hero-motion-v139-1080p.mp4
       - name: Install and typecheck the real Creator V1 frontend
         run: |
           npm install --ignore-scripts --no-audit --no-fund --package-lock=false
