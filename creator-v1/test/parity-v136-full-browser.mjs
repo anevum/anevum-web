@@ -1041,7 +1041,7 @@ try{
     await page.goto(base,{waitUntil:'networkidle'});
     await page.locator('[data-av-controller-status="ready"]').waitFor({timeout:10000});
     const stations=page.locator('.p136-console-wayfinder a[data-station]');
-    assert.equal(await stations.count(),5,'Real five-station Wayfinder at '+width);
+    assert.equal(await stations.count(),4,'Four canonical owner-approved Wayfinder stations at '+width);
     await stations.first().focus();
     const button=async(index,pressed)=>{
       await page.evaluate(({index,pressed})=>{
