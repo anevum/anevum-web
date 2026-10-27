@@ -2,6 +2,7 @@ import {createContext,useContext,useEffect,useRef,useState,type ReactNode} from 
 import {canonicalAuthClient} from '../lib/canonical-beta';
 import {progressionRequest,type MemberProgression,type RewardInbox,type RewardNotice} from '../lib/progression-api';
 import {bindAlertAccount,notify,type AnevumAlert} from '../lib/ui-events';
+import {scheduleTransmission} from '../lib/notification-delivery';
 import '../progression.css';
 type ProgressionContext={
  progression:MemberProgression|null;
@@ -50,14 +51,7 @@ function NotificationSession({id,children}:{id?:string;children:ReactNode}){
   setUnreadCount(0);
   try{window.localStorage.setItem(signalSeenKey(id),String(latest))}catch{/* Private storage is optional. */}
  }
- function enqueue(alert:AnevumAlert){setQueue(old=>{
-  // Keep recognition in order, and combine rapid XP receipts instead of a backlog.
-  if(alert.kind==='xp'){const at=old.findIndex((x,i)=>i>0&&x.kind==='xp');if(at>=0)return old.map((x,i)=>i===at?{...x,xp:(x.xp||0)+(alert.xp||0),title:'+'+((x.xp||0)+(alert.xp||0))+' XP received'}:x)}
-  if(old.length>=20&&!alert.serverId)return old;
-  if(alert.serverId){const at=old.findIndex((x,i)=>i>0&&!x.serverId);if(at>=0)return [...old.slice(0,at),alert,...old.slice(at)]}
-  if(alert.kind==='success'){const at=old.findIndex((x,i)=>i>0&&x.kind==='success');if(at>=0)return old.map((x,i)=>i===at?alert:x)}
-  return [...old,alert];
- })}
+ function enqueue(alert:AnevumAlert){setQueue(old=>scheduleTransmission(old,alert))}
  async function refresh(){
   if(!id)return;if(loading.current){dirty.current=true;return}loading.current=true;
   const controller=new AbortController();abort.current=controller;

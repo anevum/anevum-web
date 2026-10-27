@@ -61,3 +61,46 @@ test("V111 does not steal focus or force visuals during tours, hidden IREN or re
  assert.match(css,/linear-gradient\(145deg,#263a56,#151e34 64%,#241d37\)/);
  assert.match(guide,/import "\.\.\/iren-transmissions-v111\.css"/);
 });
+
+test("V139 retains urgent errors under a flooded info queue without manufacturing rewards",async()=>{
+ const source=read("web/src/lib/notification-delivery.ts");
+ assert.doesNotThrow(()=>parse(source,{sourceType:"module",plugins:["typescript"]}));
+ assert.match(queue,/setQueue\(old=>scheduleTransmission\(old,alert\)\)/);
+ assert.doesNotMatch(source,/fetch\(|localStorage|award.*grant|notifications\/ack/);
+ const ts=await import("typescript");
+ const out=ts.transpileModule(source,{compilerOptions:{
+  target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext
+ }}).outputText;
+ const {scheduleTransmission}=await import("data:text/javascript;base64,"+
+  Buffer.from(out).toString("base64"));
+ const alert=(id,kind="info",extra={})=>({key:"local-"+id,kind,title:"TEST "+id,...extra});
+ const verified=(id)=>alert("server-"+id,"award",{serverId:id,award:"verified-by-server"});
+ let q=[alert("active")];
+ for(let i=0;i<40;i++)q=scheduleTransmission(q,alert("background-"+i));
+ assert.equal(q.length,20,"Information capacity remains bounded");
+ q=scheduleTransmission(q,alert("rejected-save","error",{detail:"No private revision was saved"}));
+ assert.equal(q.length,20,"Urgent error replaces a low priority pending item");
+ assert.equal(q[0].key,"local-active","Do not interrupt what IREN is already presenting");
+ assert.equal(q[1].key,"local-rejected-save","Next actionable error is not silently dropped");
+ q=scheduleTransmission(q,alert("permission-denied","error"));
+ assert.equal(q[1].key,"local-permission-denied","Coalesces stale pending errors without growing forever");
+ assert.equal(q.filter(x=>x.kind==="error").length,1);
+ q=scheduleTransmission(q,verified(101));
+ q=scheduleTransmission(q,verified(102));
+ assert.deepEqual(q.filter(x=>x.serverId).map(x=>x.serverId),[101,102],
+  "Keep verified FIFO and server IDs");
+ assert.strictEqual(scheduleTransmission(q,verified(101)),q,"Duplicate verified notice is not replayed");
+ q=scheduleTransmission(q,alert("latest","error"));
+ assert.deepEqual(q.filter(x=>x.serverId).map(x=>x.serverId),[101,102],
+  "Urgent presentation must not erase verified reward records");
+ let xp=[alert("active"),alert("xp-first","xp",{xp:5})];
+ xp=scheduleTransmission(xp,alert("xp-second","xp",{xp:7}));
+ assert.equal(xp.length,2);
+ assert.equal(xp[1].xp,12);
+ assert.equal(xp[1].title,"+12 XP received");
+ const extra=scheduleTransmission([alert("active"),...Array.from({length:19},(_,i)=>verified(i+1))],
+   alert("hard-failure","error"));
+ assert.equal(extra[1].kind,"error");
+ assert.equal(extra.length,21,"All-verified backlog is retained rather than deleting earned evidence");
+ assert.equal(extra.filter(x=>x.serverId).length,19);
+});
