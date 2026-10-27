@@ -17,8 +17,16 @@ export type PublicPageMeta=Readonly<{
 type Copy=Readonly<{title:string;description:string}>;
 const publicPages:Readonly<Record<string,Copy>>={
   '/':{
-    title:'ANEVUM — Create Beyond Worlds',
-    description:'Create beyond worlds. Discover independent games, useful apps, art and experiments from original creators on ANEVUM.'
+    title:'ANEVUM — Independent Games & Software Studio',
+    description:'ANEVUM builds original games and practical creative software. Discover the TRANSCOSMIC: SEVERANCE survival-horror concept, development updates and approved public work.'
+  },
+  '/severance':{
+    title:'TRANSCOSMIC: SEVERANCE — Game in Development | ANEVUM',
+    description:'Explore the design for SEVERANCE, a persistent PvPvE survival-horror game in development. This is a concept and technical prototype, not a publicly playable release.'
+  },
+  '/about':{
+    title:'About ANEVUM — Independent Software Studio',
+    description:'Learn about ANEVUM, an independent studio developing original games, useful software and creative tools, with transparent development and real published work.'
   },
   '/discover':{
     title:'Discover Original Games, Apps & Creative Work | ANEVUM',
