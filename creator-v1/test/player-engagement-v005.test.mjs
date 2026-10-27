@@ -36,7 +36,8 @@ test("canonical display explicitly disables rating, saving and XP without access
  assert.match(panel,/to="\/community"/);
  assert.match(panel,/catch\{return \{kind:"unavailable"\}\}/);
  assert.match(panel,/data-avp-availability="unavailable"/);
- assert.match(panel,/onClick=\{\(\)=>setAttempt\(n=>n\+1\)\}/);
+ assert.match(panel,/onRetry=\{\(\)=>setAttempt\(n=>n\+1\)\}/);
+ assert.match(panel,/onClick=\{onRetry\}/);
  assert.match(panel,/No rating, saving, or XP action is available until the server responds/);
  assert.match(panel,/data-avp-availability="closed"/);
 
