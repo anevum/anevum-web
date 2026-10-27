@@ -774,7 +774,7 @@ try{
         JSON.stringify({rail,wayfinder}));
     }
     assert.equal(await page.locator('.p136-studio-console').count(),0,'Private Studio explorer never appears for anonymous visitor');
-    assert.equal(await page.locator('.p136-console-wayfinder a[data-station]').count(),5,'Five real route stations');
+    assert.equal(await page.locator('.p136-console-wayfinder a[data-station]').count(),4,'Four owner-approved public route stations; archived V136 hero continues in spatial QA');
     assert.equal(await page.locator('.p136-console-wayfinder').getByRole('button',{name:'Open IREN companion'}).count(),1,
       'One IREN launcher belongs to the persistent console; the header may also open the same companion');
     assert.equal(await page.locator('.p136-console-member').count(),1,
