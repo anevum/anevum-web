@@ -144,6 +144,22 @@ try{
    const scrollFrame=await page.request.get(origin+"/assets/severance/frames-desktop/frame-0001.webp");
    assert.equal(scrollFrame.status(),200,"Reviewed local scroll frame is available");
    assert.match(scrollFrame.headers()["content-type"]||"",/image\/webp/);
+   await page.evaluate(()=>{
+     const sequence=document.querySelector('.av139-sequence');
+     if(!sequence)throw new Error("Cinematic scroll sequence missing");
+     window.scrollTo({top:sequence.getBoundingClientRect().top+window.scrollY+100,behavior:"instant"});
+   });
+   await page.waitForFunction(()=>
+      document.querySelector('.av139-sequence')?.getAttribute('data-frame-status')==='loaded',
+      null,{timeout:12000});
+   const frame=await page.locator('.av139-sequence-canvas').evaluate(node=>({
+      width:node.width,height:node.height,
+      context:!!node.getContext('2d'),
+      frameStatus:node.closest('[data-frame-status]')?.getAttribute('data-frame-status')
+   }));
+   assert.ok(frame.width>500&&frame.height>300&&frame.context,"Scroll sequence frames must draw to a real 2D canvas");
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),"Motion scene has no horizontal overflow");
+   await page.screenshot({path:join(out,"scroll-sequence-motion-1440.png"),animations:"disabled"});
    const poster=await page.request.get(origin+"/assets/severance/hero-poster-v139.webp");
    assert.equal(poster.status(),200,"Poster is self-hosted");
    assert.match(poster.headers()["content-type"]||"",/image\/webp/);
