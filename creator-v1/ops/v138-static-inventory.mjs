@@ -19,6 +19,10 @@ assert.ok(existsSync(mediaManifestFile),"Missing first-party cinematic media SHA
 const mediaManifest=JSON.parse(readFileSync(mediaManifestFile,"utf8"));
 assert.equal(mediaManifest.contract,"ANEVUM-V139-FIRST-PARTY-MEDIA-REVIEW");
 assert.equal(mediaManifest.approvedSourceSha256,"71c1bb6ca774841386857a1e8b344420d7c95fa5e1e96a6fb23dc656df005ba5");
+assert.equal(mediaManifest.reviewedHostedSourceSha256,"3db7854476de64a9eb151295af78b591f04bc525dd8f470f5f6f475c4f065680");
+assert.equal(mediaManifest.downloadedSourceSha256,mediaManifest.reviewedHostedSourceSha256,
+ "Source hosting changed since visual inspection; do not deploy a substituted film.");
+assert.equal(mediaManifest.approvedDecodedBgrSha256,"fd989ba2adeee290ede9033bc3bc969a7ae16863c3a30cd9f3e91dd35816af68");
 assert.equal(mediaManifest.runtimeThirdPartyRequests,false);
 assert.equal(mediaManifest.gameplayFootage,false);
 for(const media of mediaManifest.media){
