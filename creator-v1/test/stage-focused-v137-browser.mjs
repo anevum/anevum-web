@@ -68,6 +68,8 @@ try{
   assert.equal(await page.locator('.av139-cinematic[data-art-type="illustrative-cinematic-not-gameplay"]').count(),1,"Video overlay labels itself concept art");
   assert.equal(await page.locator("video.av139-film").count(),1,"One muted cinematic video is part of the homepage");
   assert.equal(await page.locator("video.av139-film").getAttribute("src"),null,"Reduced-motion user never requests moving video");
+  assert.equal(await page.getByRole("button",{name:"Pause animated background"}).count(),0,
+   "Reduced-motion mode needs no loop pause control");
   assert.equal(await page.locator(".av139-film").getAttribute("poster"),"/assets/severance/hero-poster-v139.webp");
   assert.equal(await page.locator(".av138-plate").count(),4,"Four different world-system plates");
   assert.equal(await page.locator('[data-av139-scroll-sequence="cinematic"]').count(),1,
@@ -136,6 +138,15 @@ try{
      const node=document.querySelector("video.av139-film");
      return node?.getAttribute("src")?.includes("hero-motion-v139-1080p.mp4");
    },null,{timeout:12000});
+   const pause=page.getByRole("button",{name:"Pause animated background"});
+   await pause.waitFor();
+   await pause.click();
+   assert.equal(await page.locator(".av139-cinematic").getAttribute("data-media-state"),"paused",
+    "Visitor can stop a background video loop independently of operating-system settings");
+   const resume=page.getByRole("button",{name:"Resume animated background"});
+   assert.equal(await resume.getAttribute("aria-pressed"),"true");
+   await resume.click();
+   assert.equal(await page.getByRole("button",{name:"Pause animated background"}).getAttribute("aria-pressed"),"false");
    const video=await page.request.get(origin+"/assets/severance/hero-motion-v139-1080p.mp4");
    assert.equal(video.status(),200,"Reviewed H264 video is self-hosted");
    assert.match(video.headers()["content-type"]||"",/video\/mp4/);
