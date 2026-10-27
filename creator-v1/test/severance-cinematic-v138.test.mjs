@@ -24,7 +24,8 @@ test("V138 cinematic art is authored first-party UI, not fake gameplay or an ext
 });
 test("approved landing has cinematic scene, four plates and verified original catalogue",()=>{
  assert.match(home,/data-visual-pass="v138-hushwire"/);
- assert.match(home,/<SeveranceWorldSceneV138\/>/);
+ assert.match(home,/<SeveranceCinematicV139\/>/);
+ assert.match(game,/<SeveranceCinematicV139 className="av138-sev-hero-art"\/>/);
  assert.match(home,/<SeverancePlateArtV138 kind=\{item\.kind\}\/>/);
  assert.match(home,/No public multiplayer game or open beta is available yet/);
  assert.match(home,/ILLUSTRATIVE ART DIRECTION/);
