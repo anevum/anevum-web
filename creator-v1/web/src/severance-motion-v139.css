@@ -334,3 +334,30 @@ html[data-av-parity="v136-full"] .p136-console-station:is(:hover,.is-active) {
  .av139-sequence-story h2,.av139-sequence-story p{color:CanvasText}
  .av139-sequence-story a{color:LinkText!important}
 }
+
+/* WCAG pause/stop/hide for looping motion lasting more than five seconds.
+ * Native button lives OUTSIDE the aria-hidden cinematic stage. */
+.av139-motion-control{
+ position:absolute;top:94px;right:clamp(17px,3vw,52px);z-index:7;
+ display:inline-flex;align-items:center;justify-content:center;
+ padding:8px 13px;min-height:42px;min-width:112px;
+ color:#eae2e2;background:#0b0e12e5;
+ border:1px solid #dc7d7d8a;border-radius:2px;
+ font:800 10px/1.4 Inter,system-ui,sans-serif;letter-spacing:.13em;
+ cursor:pointer;backdrop-filter:blur(10px);
+ box-shadow:0 8px 23px #0009,inset 0 1px #f6f6f61a;
+ transition:background .16s,color .16s,border-color .16s;
+}
+.av139-motion-control:hover{background:#2d1117;border-color:#ef6266;color:#fff}
+.av139-motion-control:focus-visible{outline:3px solid #ffb5b8;outline-offset:3px}
+.av139-motion-control[aria-pressed="true"]{color:#e7d5d5;border-color:#c65a64}
+@media(max-width:760px){
+ .av139-motion-control{top:76px;right:15px;min-width:104px;min-height:43px;font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){
+ .av139-motion-control{display:none!important}
+}
+@media(forced-colors:active){
+ .av139-motion-control{background:ButtonFace;color:ButtonText;border:1px solid ButtonText}
+ .av139-motion-control:focus-visible{outline-color:Highlight}
+}
