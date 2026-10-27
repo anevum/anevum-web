@@ -1,0 +1,64 @@
+name: ANEVUM V137 Wayfinder Focus and Member Privacy QA
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/web/src/components/Shell.tsx'
+      - 'creator-v1/web/src/components/PortalLauncher.tsx'
+      - 'creator-v1/web/src/parity/ParityHeaderV136.tsx'
+      - 'creator-v1/web/src/pages/Phase1MemberPage.tsx'
+      - 'creator-v1/web/src/parity/continuance-design-system.css'
+      - 'creator-v1/test/canonical-profile-save-error-v027.test.mjs'
+      - 'creator-v1/test/wayfinder-v137-browser.mjs'
+      - '.github/workflows/v137-wayfinder-focus.yml'
+permissions:
+  contents: read
+concurrency:
+  group: v137-wayfinder-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  compiled-wayfinder:
+    if: github.repository == 'anevum/anevum-web' && github.event.pull_request.head.repo.full_name == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      ANEVUM_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+      VITE_PARITY_V136_FULL: 'true'
+      VITE_PARITY_V136_CINEMATIC: 'true'
+      VITE_PARITY_V136_NATIVE_VIDEO: 'false'
+      VITE_PARITY_V136_HORIZON_QA: 'false'
+      VITE_PARITY_V136_SHARED_SCENE_QA: 'false'
+      VITE_PACKAGE_CREATOR_GALLERY_V010: 'false'
+      CLOUDFLARE_API_TOKEN: ''
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify reviewed source and privacy-only regression
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$ANEVUM_SOURCE_SHA"
+          node --test creator-v1/test/canonical-profile-save-error-v027.test.mjs
+      - name: Install dependencies and compile exact source
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+      - name: Install isolated pinned browser
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
+          npx playwright install chromium
+      - name: Verify 1440/390/320 focus and read-only search on loopback
+        run: node creator-v1/test/wayfinder-v137-browser.mjs
+      - name: Upload exact-head screenshots and receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v137-wayfinder-${{ github.event.pull_request.head.sha }}
+          path: evidence/v137-wayfinder/
+          retention-days: 14
+          if-no-files-found: warn
