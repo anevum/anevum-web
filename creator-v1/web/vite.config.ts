@@ -46,7 +46,8 @@ export default defineConfig(({ mode }) => ({
         if(full==="true"&&/\.css(?:$|\?)/.test(id)&&
           !id.includes("/src/parity/continuance-design-system.css")&&
           !id.includes("/src/stage-focus-v137.css")&&
-          !id.includes("/src/severance-cinematic-v138.css")){
+          !id.includes("/src/severance-cinematic-v138.css")&&
+          !id.includes("/src/severance-motion-v139.css")){
           const layer=id.includes("/src/parity/")?'parity':'legacy';
           return {code:"@layer legacy, parity;\n@layer "+layer+" {\n"+code+"\n}",map:null};
         }
