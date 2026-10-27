@@ -15,6 +15,7 @@ export const REVIEWED_PATHS=Object.freeze([
   "creator-v1/graphics/encode-severance-v139.py",
   "creator-v1/test/severance-motion-v139.test.mjs",
   "creator-v1/web/src/parity/SeveranceCinematicV139.tsx",
+  "creator-v1/web/src/parity/SeveranceScrollSequenceV139.tsx",
   "creator-v1/web/src/severance-motion-v139.css",
   "creator-v1/ops/v138-public-presentation-scope.mjs",
   "creator-v1/ops/v138-static-inventory.mjs",
