@@ -1,6 +1,7 @@
 import {Link} from "react-router-dom";
 import {Icon} from "../components/Icons";
-import {SeveranceWorldSceneV138,SeverancePlateArtV138,type SeverancePlateKindV138} from "../parity/SeveranceWorldSceneV138";
+import {SeverancePlateArtV138,type SeverancePlateKindV138} from "../parity/SeveranceWorldSceneV138";
+import {SeveranceCinematicV139} from "../parity/SeveranceCinematicV139";
 
 const principles=[
  {index:"01",anchor:"av138-sev-world",title:"THE WORLD ENDURES",detail:"No final circle, match timer or scheduled reset. A single region keeps its territory, landmarks, encounters and recorded history.",kind:"perimeter"},
@@ -20,12 +21,12 @@ const milestones=[
 export function SeverancePage(){
  return <div className="av137-severance av138-severance av138-site" data-product-stage="design-prototype" data-public-playable="false" data-visual-pass="v138-hushwire">
   <section className="av138-sev-hero" aria-labelledby="av137-sev-title">
-   <SeveranceWorldSceneV138 className="av138-sev-hero-art"/>
+   <SeveranceCinematicV139 className="av138-sev-hero-art"/>
    <div className="av138-sev-hero-shade" aria-hidden="true"/>
    <div className="av138-sev-hero-inner">
     <Link className="av138-sev-back" to="/">ANEVUM <span>/</span> ORIGINAL GAMES</Link>
     <span className="av138-section-eyebrow">TRANSCOSMIC <span>/</span> CONTINUANCE EXPERIMENT 001</span>
-    <h1 id="av137-sev-title">SEVERANCE<span>.</span></h1>
+    <h1 id="av137-sev-title" className="av139-glitch-title" data-glitch-title="SEVERANCE">SEVERANCE<span>.</span></h1>
     <p className="av138-sev-mantra">SURVIVE. RETURN. DISCOVER.</p>
     <p className="av138-sev-hero-lead">The world doesn't end when you do.</p>
     <p className="av138-sev-hero-intro">A persistent multiplayer survival-horror experience in design and technical prototyping. The world remains; the survivors determine what happens inside it.</p>
