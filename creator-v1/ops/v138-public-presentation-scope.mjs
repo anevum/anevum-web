@@ -49,6 +49,11 @@ export const REVIEWED_PATHS=Object.freeze([
   "docs/production/ANEVUM.WEB.UPDATE.2026-10-27.001.STAGE-FOCUSED-SEVERANCE-SITE.md"
 ]);
 const git=(...args)=>execFileSync("git",args,{encoding:"utf8"}).trim();
+for(const flag of [
+  "VITE_PARITY_V136_HORIZON_QA",
+  "VITE_PARITY_V136_SHARED_SCENE_QA",
+  "VITE_ANEVUM_OWNER_REVIEW"
+])assert.notEqual(process.env[flag],"true",flag+" is a private review flag forbidden in public release readiness");
 const head=git("rev-parse","HEAD");
 if(process.env.ANEVUM_SOURCE_SHA)assert.equal(head,process.env.ANEVUM_SOURCE_SHA,"CI must check exact PR head");
 assert.equal(git("cat-file","-t",EXPECTED_BASE),"commit","Expected approved parent not fetched");
