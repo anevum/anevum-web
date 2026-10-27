@@ -2,7 +2,8 @@ import {Link} from "react-router-dom";
 import {Icon} from "../components/Icons";
 import {ProjectThumbnail} from "../components/ProjectThumbnail";
 import {projectDetailPath} from "../lib/navigation";
-import {SeveranceWorldSceneV138,SeverancePlateArtV138,type SeverancePlateKindV138} from "./SeveranceWorldSceneV138";
+import {SeverancePlateArtV138,type SeverancePlateKindV138} from "./SeveranceWorldSceneV138";
+import {SeveranceCinematicV139} from "./SeveranceCinematicV139";
 import type {Project} from "../lib/api";
 
 type Props={projects:readonly Project[];catalogueState:"loading"|"ready"|"error";signedIn:boolean;verifiedCount:number|null};
@@ -33,13 +34,13 @@ export function StageFocusedHomeV137({projects,catalogueState,signedIn,verifiedC
  const publicWork=projects.slice(0,3);
  return <div className="av137-stage-home av138-site" data-stage-focus="severance-development" data-visual-pass="v138-hushwire">
   <section className="p136-hero av137-stage-hero av138-hero" aria-labelledby="av137-stage-title">
-   <SeveranceWorldSceneV138/>
+   <SeveranceCinematicV139/>
    <div className="av138-hero-shade" aria-hidden="true"/>
    <div className="av138-frame-mark av138-frame-mark--tl" aria-hidden="true"/>
    <div className="av138-frame-mark av138-frame-mark--br" aria-hidden="true"/>
    <div className="av138-hero-content">
     <p className="av138-eyebrow"><span className="av138-red-rule" aria-hidden="true"/> TRANSCOSMIC <span className="av138-eyebrow-break">/</span> ANEVUM ORIGINAL GAME</p>
-    <h1 id="av137-stage-title" className="av138-title">SEVERANCE<span className="av138-title-dot">.</span></h1>
+    <h1 id="av137-stage-title" className="av138-title av139-glitch-title" data-glitch-title="SEVERANCE">SEVERANCE<span className="av138-title-dot">.</span></h1>
     <p className="av138-mantra">SURVIVE <span>·</span> RETURN <span>·</span> DISCOVER</p>
     <p className="av138-intro">A persistent multiplayer survival-horror world. Explore a hostile experiment, navigate encounters with other survivors, and leave a history that survives your death.</p>
     <div className="av138-cta-row">
