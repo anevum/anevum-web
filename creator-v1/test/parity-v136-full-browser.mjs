@@ -1142,6 +1142,22 @@ try{
   await page.getByRole('button',{name:'Close navigation',exact:true}).press('Escape');
   await page.waitForFunction(()=>!document.querySelector('#av79-navigation').open);
   assert.equal(await page.getByRole('button',{name:'Open site navigation',exact:true}).evaluate(e=>e===document.activeElement),true,'Menu restores trigger focus');
+  // Destination and switchboard handoff must not put focus behind an active dialog.
+  await page.getByRole('button',{name:'Open site navigation',exact:true}).click();
+  await page.locator('#av79-navigation[open]').waitFor();
+  await page.locator('#av79-navigation a.av79-destination[href="/discover"]').click();
+  await page.waitForURL(base+'/discover');
+  await page.waitForFunction(()=>!document.querySelector('#av79-navigation')?.open &&
+    document.activeElement?.id==='main');
+  record('Wayfinder destination focus survives dialog close');
+  await page.getByRole('button',{name:'Open site navigation',exact:true}).click();
+  await page.locator('#av79-navigation[open]').waitFor();
+  await page.locator('#av79-navigation .av79-navigation-search').click();
+  await page.locator('.portal-launcher[open]').waitFor();
+  await page.waitForFunction(()=>document.activeElement?.matches('.portal-launcher input[type="search"]'));
+  record('Wayfinder quick-search handoff keeps input focus');
+  await page.getByRole('button',{name:'Close quick navigation',exact:true}).click();
+  await page.waitForFunction(()=>!document.querySelector('.portal-launcher')?.open);
   await page.getByRole('searchbox',{name:'Search approved ANEVUM projects',exact:true}).fill('orbital & worlds');
   await page.getByRole('searchbox',{name:'Search approved ANEVUM projects',exact:true}).press('Enter');
   await page.waitForURL(base+'/discover?q=orbital%20%26%20worlds');

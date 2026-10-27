@@ -62,14 +62,20 @@ function ShellContent(){
   const [launcherOpen,setLauncherOpen]=useState(false);
   const menuButton=useRef<HTMLButtonElement>(null);
   const menuDialog=useRef<HTMLDialogElement>(null);
+  // Dismissals restore the trigger; route links focus main; search stays in the launcher.
+  const menuCloseFocus=useRef<"trigger"|"main"|"launcher">("trigger");
   const previousPage=useRef(location.pathname);
   const routeMotion=useRef<HTMLDivElement>(null);
 
-  useEffect(()=>{setMenuOpen(false);setLauncherOpen(false);},[location.pathname,location.search]);
+  useEffect(()=>{
+    // Browser history and programmatic navigation can also occur with this menu open.
+    if(menuDialog.current?.open)menuCloseFocus.current="main";
+    setMenuOpen(false);setLauncherOpen(false);
+  },[location.pathname,location.search]);
   useEffect(()=>{
     const dialog=menuDialog.current;
     if(!dialog)return;
-    if(menuOpen&&!dialog.open)dialog.showModal();
+    if(menuOpen&&!dialog.open){menuCloseFocus.current="trigger";dialog.showModal();}
     if(!menuOpen&&dialog.open)dialog.close();
   },[menuOpen]);
   useEffect(()=>{
@@ -95,6 +101,7 @@ function ShellContent(){
       const slash=event.key === "/"&&!event.metaKey&&!event.ctrlKey&&!event.altKey&&!isEditableTarget(event.target);
       if(!command&&!slash)return;
       event.preventDefault();
+      if(menuDialog.current?.open)menuCloseFocus.current="launcher";
       setMenuOpen(false);
       setLauncherOpen(true);
     }
@@ -121,6 +128,11 @@ function ShellContent(){
     const next=current<0?(direction>0?0:items.length-1):(current+direction+items.length)%items.length;
     event.preventDefault();
     items[next]?.focus();
+  }
+  function openLauncherFromMenu(){
+    menuCloseFocus.current="launcher";
+    setMenuOpen(false);
+    setLauncherOpen(true);
   }
   const home=location.pathname==="/";
   const parityProfile=/^\/(?:creators\/[a-z][a-z0-9_]{2,29}|@[a-z][a-z0-9_]{2,29})$/.test(location.pathname);
@@ -183,8 +195,15 @@ function ShellContent(){
     </header>}
     <dialog ref={menuDialog} id="av79-navigation" className="av79-navigation"
       aria-label="ANEVUM navigation"
+      onClickCapture={event=>{
+        if((event.target as Element).closest?.("a[href]"))menuCloseFocus.current="main";
+      }}
       onKeyDown={menuDirectionalKey}
-      onClose={()=>{setMenuOpen(false);menuButton.current?.focus();}}
+      onClose={()=>{
+        setMenuOpen(false);
+        if(menuCloseFocus.current==="trigger")menuButton.current?.focus({preventScroll:true});
+        else if(menuCloseFocus.current==="main")document.getElementById("main")?.focus({preventScroll:true});
+      }}
       onCancel={()=>setMenuOpen(false)}
       onClick={event=>{if(event.target===menuDialog.current)setMenuOpen(false);}}>
       <div className="av79-navigation-shell">
@@ -197,7 +216,7 @@ function ShellContent(){
           <p>One tap to the people, work and worlds you came for.</p>
         </div>
         <button type="button" className="av79-navigation-search"
-          onClick={()=>{setMenuOpen(false);setLauncherOpen(true);}}>
+          onClick={openLauncherFromMenu}>
           <Icon name="search" size={19}/><span>Search ANEVUM</span><kbd>⌘ K</kbd>
         </button>
         {canonicalMember?<section className="av79-navigation-identity" aria-label="Your player card">
