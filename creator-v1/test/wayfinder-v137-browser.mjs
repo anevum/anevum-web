@@ -83,7 +83,18 @@ try{
   await page.locator('#av79-navigation .av79-navigation-search').click();
   await page.locator('.portal-launcher[open]').waitFor();
   await page.waitForFunction(()=>document.activeElement?.matches('.portal-launcher input[type="search"]'));
+  // Evidence-based visual contract: the command panel must fit its contents,
+  // rather than stretching an empty navy box to viewport height.
+  const geometry=await page.locator('.portal-launcher').evaluate(dialog=>{
+    const box=dialog.getBoundingClientRect();
+    const footer=dialog.querySelector('.portal-launcher-foot')?.getBoundingClientRect();
+    return {height:box.height,bottomGap:footer?box.bottom-footer.bottom:Infinity};
+  });
+  assert.ok(geometry.bottomGap>=0&&geometry.bottomGap<24,
+    'Switchboard must not reserve unused vertical space at '+width+': '+JSON.stringify(geometry));
   const input=page.locator('.portal-launcher input[type="search"]');
+  if(width<=640)assert.ok(await input.evaluate(node=>parseFloat(getComputedStyle(node).fontSize))>=16,
+    'Phone search text must not trigger Safari focus zoom at '+width);
   await input.fill('no real creator in this fixture');
   await page.locator('.portal-launcher-live-status').getByText(/DIRECT MATCHES FROM THE PUBLIC DIRECTORY/).waitFor();
   assert.equal(await page.locator('.portal-launcher-result').filter({hasText:'SYNTHETIC CREATOR'}).count(),0);
@@ -91,7 +102,7 @@ try{
   await page.getByRole('button',{name:'Close quick navigation',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('.portal-launcher')?.open);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'No overflow '+width);
-  receipt.results.push({width,escapeFocus:true,destinationFocus:true,searchFocus:true,noSyntheticEntries:true,overflow:false});
+  receipt.results.push({width,escapeFocus:true,destinationFocus:true,searchFocus:true,noSyntheticEntries:true,overflow:false,dialog:geometry});
   console.log('PASS Wayfinder V137 '+width);
   await context.close();
  }
