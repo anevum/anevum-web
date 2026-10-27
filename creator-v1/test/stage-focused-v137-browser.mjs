@@ -70,6 +70,10 @@ try{
   assert.equal(await page.locator("video.av139-film").getAttribute("src"),null,"Reduced-motion user never requests moving video");
   assert.equal(await page.locator(".av139-film").getAttribute("poster"),"/assets/severance/hero-poster-v139.webp");
   assert.equal(await page.locator(".av138-plate").count(),4,"Four different world-system plates");
+  assert.equal(await page.locator('[data-av139-scroll-sequence="cinematic"]').count(),1,
+   "One scroll-scrub film chapter between hero and original four systems");
+  assert.equal(await page.locator(".av139-sequence").getAttribute("data-frame-status"),"poster",
+   "Reduced-motion users never download 96 scroll animation frames");
   assert.equal(await page.getByRole("link",{name:"EXPLORE THE GAME"}).getAttribute("href"),"/severance","No false Play Now control");
   assert.equal(await page.locator("main#main").count(),1,"Exactly one main landmark");
   assert.equal(await page.locator(".p136-console-wayfinder a[data-station]").count(),4,"Four-stage Wayfinder");
@@ -137,12 +141,16 @@ try{
    assert.match(video.headers()["content-type"]||"",/video\/mp4/);
    const videoBytes=(await video.body()).byteLength;
    assert.ok(videoBytes>200000,"HD cinematic exists");
+   const scrollFrame=await page.request.get(origin+"/assets/severance/frames-desktop/frame-0001.webp");
+   assert.equal(scrollFrame.status(),200,"Reviewed local scroll frame is available");
+   assert.match(scrollFrame.headers()["content-type"]||"",/image\/webp/);
    const poster=await page.request.get(origin+"/assets/severance/hero-poster-v139.webp");
    assert.equal(poster.status(),200,"Poster is self-hosted");
    assert.match(poster.headers()["content-type"]||"",/image\/webp/);
    results.checks.push({width:"motion",sameOriginMedia:true,
      mp4Bytes:videoBytes,
-     posterBytes:(await poster.body()).byteLength});
+     posterBytes:(await poster.body()).byteLength,
+     sampleFrameBytes:(await scrollFrame.body()).byteLength});
    await context.close();
  }
  assert.deepEqual(results.blocked,[],"No external requests or writes");
