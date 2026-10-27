@@ -24,6 +24,10 @@ export default defineConfig(({ mode }) => ({
         // Public-directory copying must not distribute unaccepted review art.
         const output=mode==='staging-path'?'../dist/react-staging':'../dist/web';
         rmSync(fileURLToPath(new URL(output+'/assets/cinematic-v136/arrival/review-001',import.meta.url)),{recursive:true,force:true});
+        // Retired personal-portfolio and RHEN demo images must not be exposed
+        // from the V138 public studio/game bundle. Source remains preserved
+        // in Git for intentional rollback or archival review.
+        rmSync(fileURLToPath(new URL(output+'/portfolio',import.meta.url)),{recursive:true,force:true});
       }
     },
     // Layer order is stable even when a route loads its CSS after the authority.
