@@ -386,3 +386,27 @@ html[data-av-parity="v136-full"] .av137-about .av137-eyebrow{color:#df858a}
  .av138-site :is(a,button):focus-visible{outline:2px solid Highlight}
  .av138-cta,.av138-plate,.av138-sev-mechanic{background:Canvas!important;color:LinkText!important;border:1px solid CanvasText!important}
 }
+
+/* V138.001 visual acceptance: the legacy V136 hero rules forced any direct
+ * h1 span into a full-width block, leaving the warning-red period on a
+ * separate line. Keep the editorial mark inline without modifying V136. */
+html[data-av-parity="v136-full"] .p136-hero.av138-hero h1>.av138-title-dot{
+ display:inline!important;font-size:.8em;white-space:nowrap;
+}
+/* Tiny Safari/Chromium screens should wrap typography within the content
+ * gutter rather than grow the document viewport beyond 320 CSS pixels. */
+@media(max-width:350px){
+ html[data-av-parity="v136-full"] .p136-hero.av138-hero .av138-title{
+  font-size:clamp(38px,12vw,44px);letter-spacing:-.02em;
+  overflow-wrap:anywhere;white-space:normal;
+ }
+ .av138-hero-content,.av138-development-lead,.av138-studio-access,
+ .av138-gallery,.av138-approved,.av138-public-empty,.av138-endcap{
+  min-width:0;max-width:100%;
+ }
+ .av138-mantra{white-space:normal;letter-spacing:.08em;overflow-wrap:anywhere}
+ .av138-cta{min-width:0;font-size:10px;gap:9px;padding-inline:12px;letter-spacing:.07em}
+ .av138-sev-hero h1{font-size:clamp(42px,12vw,55px);letter-spacing:.01em;overflow-wrap:anywhere}
+ .av138-endcap h2{font-size:34px;overflow-wrap:anywhere;letter-spacing:.01em}
+ .av138-hero-readout{display:none}
+}
