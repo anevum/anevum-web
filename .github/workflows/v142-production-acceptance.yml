@@ -1,0 +1,92 @@
+name: ANEVUM V142 Full Production Acceptance
+on:
+  push:
+    branches: ['verify/v142-live-readback-20261028-001']
+    paths: ['.github/workflows/v142-production-acceptance.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  readback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12793118729'
+          run-id: 40635769627
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v142-sealed
+          merge-multiple: true
+      - name: Verify 50 actual V73 homepage responses, routes, share/icons and old cached URLs
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync,writeFileSync} from 'node:fs';
+          import {join} from 'node:path';
+          import {createHash} from 'node:crypto';
+          const root=join(process.env.RUNNER_TEMP,'v142-sealed');
+          const file=(variant,p)=>readFileSync(join(root,variant,'compiled-web',p));
+          const sha=b=>createHash('sha256').update(b).digest('hex');
+          const m=JSON.parse(readFileSync(join(root,'candidate/manifest.json')));
+          assert.equal(m.approvedSource,'732f170552ea1089ead4766c3d34fdcccdc336f7');
+          assert.equal(m.originalAssetsPreserved,true);
+          assert.equal(m.gatewaySha256,'1884ff0dd3c8aa3d38711167af0b4552c9b200b3148e72d9ba6d90d23171ef99');
+          const expected=sha(file('candidate','index.html'));
+          const old=sha(file('baseline','index.html'));
+          assert.equal(expected,'7c779a0a696ffe4dba23d7cd709df4c0eb1bacadea2ef90acfcfac35f6786037');
+          assert.notEqual(old,expected);
+          const request=async url=>fetch(url,{redirect:'manual',
+            headers:{'Cache-Control':'no-cache','Pragma':'no-cache','User-Agent':'ANEVUM-V142-Production-Readback'},
+            signal:AbortSignal.timeout(15000)});
+          for(let i=0;i<50;i++){
+            const r=await request('https://anevum.com/?v142-100='+Date.now()+'-'+i);
+            assert.equal(r.status,200,'HTTP homepage error');
+            const actual=sha(Buffer.from(await r.arrayBuffer()));
+            assert.equal(actual,expected,'Production HTML is not V73 on sample '+i+': '+actual);
+          }
+          const routes=['/severance','/discover','/status','/about','/community','/support','/studio'];
+          for(const path of routes){
+            const r=await request('https://anevum.com'+path+'?v142-100='+Date.now());
+            assert.equal(r.status,200,'Public route unavailable '+path);
+            assert.equal(sha(Buffer.from(await r.arrayBuffer())),expected,'Wrong release HTML at '+path);
+          }
+          const assets=[
+            'anevum-severance-share-v141-1200x630.png',
+            'anevum-severance-icon-v141-512.png',
+            'anevum-severance-apple-touch-v141-180.png',
+            'anevum-severance-v141.webmanifest',
+            'assets/severance/hero-poster-v139.webp',
+            'assets/severance/hero-motion-v139-720p.mp4',
+            'assets/default-thumbnails/games.svg',
+            'favicon.svg','site.webmanifest'
+          ];
+          for(const path of assets){
+            const r=await request('https://anevum.com/'+path);
+            assert.equal(r.status,200,'Missing cached/new file '+path);
+            assert.equal(sha(Buffer.from(await r.arrayBuffer())),sha(file('candidate',path)),
+              'Mismatched versioned or old public asset '+path);
+          }
+          const publicApi=await request('https://anevum.com/api/v1/status');
+          assert.equal(publicApi.status,200,'Unchanged status backend unavailable');
+          assert.equal(typeof(await publicApi.json()),'object');
+          const receipt={status:'PASS',version:73,traffic:100,source:m.approvedSource,
+            htmlSha256:expected,uniqueHomepageSamples:50,publicRoutesChecked:routes,
+            originalAndNewAssetsChecked:assets,publicApiStatus:true,
+            cachedAssetsPreserved:true,unchangedGateway:true};
+          writeFileSync('v142-production-acceptance.json',JSON.stringify(receipt,null,2)+'\n');
+          console.log('V142 100 PERCENT PRODUCTION ACCEPTANCE PASS',JSON.stringify(receipt));
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v142-full-production-acceptance-${{ github.sha }}
+          path: v142-production-acceptance.json
+          retention-days: 14
+          if-no-files-found: warn
