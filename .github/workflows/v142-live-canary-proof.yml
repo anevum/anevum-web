@@ -1,0 +1,104 @@
+name: ANEVUM V142 Live Canary Evidence
+on:
+  push:
+    branches: ['verify/v142-live-readback-20261028-001']
+    paths: ['.github/workflows/v142-live-canary-proof.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  canary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12793118729'
+          run-id: 40635769627
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v142-sealed
+          merge-multiple: true
+      - name: Verify canary serves only approved baseline and V142 frontend and every original asset
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync,writeFileSync} from 'node:fs';
+          import {join} from 'node:path';
+          import {createHash} from 'node:crypto';
+          const folder=join(process.env.RUNNER_TEMP,'v142-sealed');
+          const file=(variant,path)=>readFileSync(join(folder,variant,'compiled-web',path));
+          const sha=x=>createHash('sha256').update(x).digest('hex');
+          const baseline=sha(file('baseline','index.html'));
+          const candidate=sha(file('candidate','index.html'));
+          const m=JSON.parse(readFileSync(join(folder,'candidate/manifest.json')));
+          const receipt=JSON.parse(readFileSync(join(folder,'package-receipt.json')));
+          assert.equal(m.approvedSource,'732f170552ea1089ead4766c3d34fdcccdc336f7');
+          assert.equal(m.reviewedUI,'08b826cbb6a5c9b3a29971f7bf9cf18c012f0307');
+          assert.equal(m.variant,'candidate');
+          assert.equal(m.originalAssetsPreserved,true);
+          assert.equal(m.noBackendAuthOrDbChanges,true);
+          assert.equal(m.gatewaySha256,'1884ff0dd3c8aa3d38711167af0b4552c9b200b3148e72d9ba6d90d23171ef99');
+          assert.equal(baseline,'1cbc17726657086e7b86b8ee8a1ddee16a4067a9abdf6f49ebf40e8eb829fb44');
+          assert.equal(candidate,m.htmlSha256);
+          assert.notEqual(candidate,baseline);
+          const html=file('candidate','index.html').toString('utf8');
+          for(const key of ['anevum-severance-share-v141-1200x630.png',
+            'anevum-severance-apple-touch-v141-180.png','anevum-severance-v141.webmanifest'])
+            assert.ok(html.includes(key),'V141 original-orbit branding missing '+key);
+          const counts={baseline:0,candidate:0,unknown:0,httpErrors:0},unknown=[];
+          async function request(url){
+            return fetch(url,{redirect:'manual',headers:{'Cache-Control':'no-cache','Pragma':'no-cache',
+              'User-Agent':'ANEVUM-V142-Release-Canary/1.0'},signal:AbortSignal.timeout(13000)});
+          }
+          for(let i=0;i<120;i++){
+            const response=await request('https://anevum.com/?v142-canary='+Date.now()+'-'+i);
+            if(response.status!==200){counts.httpErrors++;unknown.push({status:response.status,i});continue;}
+            const digest=sha(Buffer.from(await response.arrayBuffer()));
+            if(digest===baseline)counts.baseline++;
+            else if(digest===candidate)counts.candidate++;
+            else{counts.unknown++;unknown.push({digest,i});}
+          }
+          console.log('V142 LIVE CANARY DISTRIBUTION',JSON.stringify({counts,unknown:unknown.slice(0,5)}));
+          assert.equal(counts.httpErrors,0,'HTTP errors under live traffic');
+          assert.equal(counts.unknown,0,'Unreviewed or stale HTML under live traffic');
+          assert.ok(counts.baseline>0&&counts.candidate>0,'No real two-version live canary seen');
+          for(const path of ['about','status','discover','severance','community','support','studio']){
+            const response=await request('https://anevum.com/'+path+'?v142-canary='+Date.now());
+            assert.equal(response.status,200,'Public route failed /'+path);
+            const digest=sha(Buffer.from(await response.arrayBuffer()));
+            assert.ok([baseline,candidate].includes(digest),'Unexpected app HTML /'+path+' '+digest);
+          }
+          for(const path of [
+            'anevum-severance-share-v141-1200x630.png','anevum-severance-icon-v141-512.png',
+            'anevum-severance-apple-touch-v141-180.png','anevum-severance-v141.webmanifest',
+            'assets/severance/hero-poster-v139.webp',
+            'assets/default-thumbnails/games.svg','favicon.svg'
+          ]){
+            const response=await request('https://anevum.com/'+path);
+            assert.equal(response.status,200,'Missing public shared asset '+path);
+            assert.equal(sha(Buffer.from(await response.arrayBuffer())),sha(file('candidate',path)),
+              'Mismatched old/new cached public asset '+path);
+          }
+          const status=await request('https://anevum.com/api/v1/status');
+          assert.equal(status.status,200,'Existing status endpoint unavailable');
+          assert.equal(typeof(await status.json()),'object');
+          const out={pass:true,source:m.approvedSource,reviewedUI:m.reviewedUI,
+            candidateHtmlSha256:candidate,baselineHtmlSha256:baseline,counts,
+            routesChecked:7,assetsChecked:7,statusApi:true,oldAssetsRetained:receipt.originalArtifactAssetCount,
+            gatewayUnchanged:true,liveCanaryVerified:true};
+          writeFileSync('v142-canary-proof.json',JSON.stringify(out,null,2)+'\n');
+          console.log('V142 LIVE CANARY PASS',JSON.stringify(out));
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v142-live-canary-proof-${{ github.sha }}
+          path: v142-canary-proof.json
+          retention-days: 14
+          if-no-files-found: warn
