@@ -15,6 +15,7 @@ import {VerifiedStaffShortcut} from "./VerifiedStaffShortcut";
 import {LivingWorldProvider,useLivingWorld} from "../parity/LivingWorldState";
 import {ConsoleWayfinderV136} from "../parity/ConsoleWayfinderV136";
 import {ControllerBridgeV136} from "../parity/ControllerBridgeV136";
+import {PublicDepthDirectorV140} from "../parity/PublicDepthDirectorV140";
 import {StudioSpatialWorkspaceV136} from "../parity/StudioSpatialWorkspaceV136";
 import "../parity/spatial-surface-v136.css";
 
@@ -272,6 +273,7 @@ function ShellContent(){
     <IrenGuidedContinuance memberId={canonicalMember?canonicalSession?.user?.id||null:null}/>
     {FullParityHeader&&<ConsoleWayfinderV136 onOpenSearch={()=>setLauncherOpen(true)} onOpenIren={()=>window.dispatchEvent(new Event("anevum:iren-open"))} memberDestination={memberDestination} memberLabel={canonicalMember?"Open my verified member profile":"Join ANEVUM or sign in"} memberInitial={canonicalMember?(canonicalSession?.user?.name?.trim().slice(0,1).toUpperCase()||null):null}/> }
     <PortalLauncher open={launcherOpen} onClose={()=>setLauncherOpen(false)}/>
+    {FullParityHeader&&<PublicDepthDirectorV140 pathname={location.pathname} paused={paused}/>}
     <main id="main" tabIndex={-1} className="site-main av9-main">
       {!publicSpatial&&!parityFullBleed&&<VisualKitAtmosphere room={publicVisualRoom(location.pathname)}/>}
       {FullParityHeader?<div ref={routeMotion} className={parityFullBleed?"p136-route-surface":undefined}>{routeSurface}</div>:routeSurface}
