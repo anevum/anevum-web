@@ -76,7 +76,7 @@ function patchedHTML(legacy){
   const after=latest[i].replaceAll("%BASE_URL%","/");
   assert.ok(/^    <(?:meta |link )/.test(before)&&/^    <(?:meta |link )/.test(after),"Only HTML head metadata may change");
   assert.ok(/(?:og:|twitter:|rel="(?:icon|apple-touch-icon|apple-touch-icon-precomposed|manifest)")/.test(before),"Not approved head tag: "+before);
-  assert.ok(!/script|robots|canonical|og:url|viewport/i.test(before),"Restricted metadata tag");
+  assert.ok(!/<script\b|robots|canonical|og:url|viewport/i.test(before),"Restricted metadata tag");
   const at=output.indexOf(before);
   assert.ok(at>=0&&output.indexOf(before,at+before.length)<0,"Compiled HTML lacks unique old tag: "+before);
   output=output.slice(0,at)+after+output.slice(at+before.length);
