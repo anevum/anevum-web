@@ -1,0 +1,180 @@
+name: ANEVUM V141 Original Orbit Icons and Social Card Release
+on:
+  push:
+    branches: ['release/v141-severance-icon-share-20261027-001']
+    paths:
+      - 'creator-v1/ops/generate-severance-brand-v141.py'
+      - 'creator-v1/ops/v141-brand-release.mjs'
+      - 'creator-v1/web/index.html'
+      - 'creator-v1/web/public/anevum-severance-v141.webmanifest'
+      - 'creator-v1/test/v141-brand-contract.test.mjs'
+      - '.github/workflows/v141-brand-release.yml'
+      - 'docs/production/ANEVUM.WEB.RELEASE.2026-10-27.002.SEVERANCE-BRAND-ICONS-SHARE.md'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: anevum-v141-guarded-brand-release
+  cancel-in-progress: false
+jobs:
+  verify-package:
+    if: >-
+      github.repository == 'anevum/anevum-web' && github.event.head_commit.message == 'release(v141): upload verified branding candidate'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Require reviewed V140 foundation and brand-only delta
+        run: |
+          git switch -C release/v141-severance-icon-share-20261027-001 "$GITHUB_SHA"
+          node creator-v1/ops/v141-brand-release.mjs source
+          node --test creator-v1/test/v141-brand-contract.test.mjs
+      - name: Install exact local image renderer dependencies
+        run: |
+          python -m pip install --disable-pip-version-check --no-cache-dir 'numpy==2.3.5' 'pillow==12.3.0' 'CairoSVG==2.8.2'
+      - name: Reproduce original ANEVUM orbital emblem art in seven approved sizes
+        run: |
+          python creator-v1/ops/generate-severance-brand-v141.py --out "$RUNNER_TEMP/v141-generated"
+          test -f "$RUNNER_TEMP/v141-generated/anevum-severance-share-v141-1200x630.png"
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image,ImageStat
+          import os,hashlib,json
+          root=Path(os.environ['RUNNER_TEMP'])/'v141-generated'
+          dims={'anevum-severance-icon-v141-1024.png':(1024,1024),
+           'anevum-severance-icon-v141-512.png':(512,512),
+           'anevum-severance-icon-v141-192.png':(192,192),
+           'anevum-severance-apple-touch-v141-180.png':(180,180),
+           'anevum-severance-favicon-v141-64.png':(64,64),
+           'anevum-severance-maskable-v141-512.png':(512,512),
+           'anevum-severance-share-v141-1200x630.png':(1200,630)}
+          assert {p.name for p in root.iterdir()}==set(dims),'Unexpected generated asset'
+          for name,dim in dims.items():
+            data=(root/name).read_bytes()
+            with Image.open(root/name) as im:
+              assert im.format=='PNG' and im.mode in {'RGB','RGBA'}
+              assert im.size==dim
+              extrema=im.getextrema()
+              assert max(y-x for x,y in extrema)>65,'Generated image lacks visual contrast'
+            assert len(data)>1000
+            print('V141_IMAGE',name,dim,len(data),hashlib.sha256(data).hexdigest())
+          PY
+      - name: Retrieve the exact V69 candidate package from the earlier accepted production release
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12788238901'
+          run-id: 40623077442
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v69-sealed
+          merge-multiple: true
+      - name: Seal binary-identical original V69 Worker assets plus new branding on two safe entrypoints
+        run: |
+          node creator-v1/ops/v141-brand-release.mjs package \
+            "$RUNNER_TEMP/v69-sealed/candidate" \
+            "$RUNNER_TEMP/v141-generated" \
+            "$RUNNER_TEMP/v141-paired"
+      - name: Validate two packaged HTML variants and every new image reference
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";
+          import {readFileSync} from "node:fs";
+          import {join} from "node:path";
+          import {createHash} from "node:crypto";
+          const base=join(process.env.RUNNER_TEMP,"v141-paired");
+          const read=(variant,file)=>readFileSync(join(base,variant,"compiled-web",file));
+          const hash=b=>createHash("sha256").update(b).digest("hex");
+          const left=read("baseline","index.html").toString("utf8");
+          const right=read("candidate","index.html").toString("utf8");
+          const manifest=JSON.parse(read("candidate","anevum-severance-v141.webmanifest"));
+          assert.notEqual(hash(Buffer.from(left)),hash(Buffer.from(right)));
+          assert.ok(!left.includes("anevum-severance-share-v141"));
+          for(const field of ["og:image","og:image:secure_url","twitter:image"])
+            assert.ok(right.includes('content="https://anevum.com/anevum-severance-share-v141-1200x630.png"'));
+          assert.ok(right.includes('href="/anevum-severance-apple-touch-v141-180.png"'));
+          assert.ok(right.includes('href="/anevum-severance-v141.webmanifest"'));
+          for(const icon of manifest.icons){
+            const file=icon.src.slice(1);
+            assert.ok(read("candidate",file).subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])));
+            assert.equal(hash(read("candidate",file)),hash(read("baseline",file)));
+          }
+          const social=read("candidate","anevum-severance-share-v141-1200x630.png");
+          assert.equal(hash(social),hash(read("baseline","anevum-severance-share-v141-1200x630.png")));
+          console.log("V141 paired HTML, seven images and manifest contract PASS",JSON.stringify({baselineSha:hash(Buffer.from(left)),candidateSha:hash(Buffer.from(right)),assets:manifest.icons.length+5}));
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v141-paired-${{ github.sha }}
+          path: ${{ runner.temp }}/v141-paired
+          retention-days: 14
+          if-no-files-found: error
+  upload-inactive:
+    needs: verify-package
+    if: >-
+      github.repository == 'anevum/anevum-web' && github.event.head_commit.message == 'release(v141): upload verified branding candidate'
+    runs-on: ubuntu-latest
+    timeout-minutes: 23
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Retain exact release commit ref for fail-closed upload checks
+        run: git switch -C release/v141-severance-icon-share-20261027-001 "$GITHUB_SHA"
+      - name: Install approved wrangler version with locked deps
+        run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - uses: actions/download-artifact@v4
+        with:
+          name: anevum-v141-paired-${{ github.sha }}
+          path: ${{ runner.temp }}/v141-paired
+      - name: Read-only Cloudflare preflight of V69 traffic, routes, identity and all 26 bindings
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: node creator-v1/ops/v141-brand-release.mjs before "$RUNNER_TEMP/v141-paired/baseline"
+      - name: Upload exact preserved-V69 HTML plus new images as inactive baseline
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --no-install wrangler versions upload --no-bundle --no-upload-source-maps --keep-vars --strict --config "$RUNNER_TEMP/v141-paired/baseline/upload.json" --message "ANEVUM V141 baseline $GITHUB_SHA; V69 gateway unchanged; INACTIVE"
+      - name: Prove baseline upload inactive, no live traffic or settings changed
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: node creator-v1/ops/v141-brand-release.mjs after "$RUNNER_TEMP/v141-paired/baseline"
+      - name: Recheck provider before upload of new share metadata
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: node creator-v1/ops/v141-brand-release.mjs before "$RUNNER_TEMP/v141-paired/candidate"
+      - name: Upload exact V141 branded HTML and shared images inactive
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --no-install wrangler versions upload --no-bundle --no-upload-source-maps --keep-vars --strict --config "$RUNNER_TEMP/v141-paired/candidate/upload.json" --message "ANEVUM V141 candidate $GITHUB_SHA; V69 gateway unchanged; INACTIVE"
+      - name: Prove candidate upload inactive and old V69 production still 100 percent
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: node creator-v1/ops/v141-brand-release.mjs after "$RUNNER_TEMP/v141-paired/candidate"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v141-inactive-receipts-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/v141-paired/baseline/inactive-receipt.json
+            ${{ runner.temp }}/v141-paired/candidate/inactive-receipt.json
+            ${{ runner.temp }}/v141-paired/release-receipt.json
+          retention-days: 14
+          if-no-files-found: warn
