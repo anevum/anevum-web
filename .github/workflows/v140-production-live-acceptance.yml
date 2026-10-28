@@ -1,0 +1,91 @@
+name: ANEVUM V140 Production 100 Percent Acceptance
+on:
+  push:
+    branches: ['release/v140-severance-20261027-001']
+    paths: ['.github/workflows/v140-production-live-acceptance.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  public-readback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12788238901'
+          run-id: 40623077442
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v140-sealed
+          merge-multiple: true
+      - name: Confirm public site serves exactly V69 on all sampled requests with valid media and routes
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync,writeFileSync} from 'node:fs';
+          import {join} from 'node:path';
+          import {createHash} from 'node:crypto';
+          const base=join(process.env.RUNNER_TEMP,'v140-sealed');
+          const file=path=>readFileSync(join(base,'candidate/compiled-web',path));
+          const sha=b=>createHash('sha256').update(b).digest('hex');
+          const manifest=JSON.parse(readFileSync(join(base,'candidate/manifest.json')));
+          assert.equal(manifest.approvedSource,'fb1f903333187caa3bd7665e93c013f28b9f3366');
+          assert.equal(manifest.oldCachedClientBytesPreserved,true);
+          const expected=sha(file('index.html'));
+          const old=sha(readFileSync(join(base,'baseline/compiled-web/index.html')));
+          assert.notEqual(old,expected);
+          const checks=[];
+          const get=async(url)=>fetch(url,{redirect:'manual',headers:{'Cache-Control':'no-cache','Pragma':'no-cache','User-Agent':'ANEVUM-V140-Production-Readback'},signal:AbortSignal.timeout(15000)});
+          for(let i=0;i<50;i++){
+            const r=await get('https://anevum.com/?v140-final='+Date.now()+'-'+i);
+            assert.equal(r.status,200,'Non-200 response from production homepage '+i);
+            const digest=sha(Buffer.from(await r.arrayBuffer()));
+            assert.equal(digest,expected,'Production returned a different Worker frontend (V67/V68/unapproved) request '+i+' '+digest);
+          }
+          checks.push({name:'Exact 100% V69 published HTML',sample:50,sha256:expected});
+          for(const path of ['status','about','discover','severance','community','studio']){
+            const r=await get('https://anevum.com/'+path+'?v140-final='+Date.now());
+            assert.equal(r.status,200,'Public GET route unavailable /'+path);
+            const buffer=Buffer.from(await r.arrayBuffer());
+            assert.equal(sha(buffer),expected,'Expected canonical SPA HTML on /'+path);
+          }
+          checks.push({name:'Public route availability',paths:['/status','/about','/discover','/severance','/community','/studio']});
+          for(const path of [
+            'assets/severance/hero-poster-v139.webp',
+            'assets/severance/hero-motion-v139-1080p.mp4',
+            'assets/severance/hero-motion-v139-720p.mp4',
+            'assets/severance/manifest-v139.json'
+          ]){
+            const r=await get('https://anevum.com/'+path);
+            assert.equal(r.status,200,'Missing first-party cinematic asset: '+path);
+            assert.equal(sha(Buffer.from(await r.arrayBuffer())),sha(file(path)),'Wrong original sealed media bytes: '+path);
+          }
+          checks.push({name:'Cinematic media immutable byte integrity',files:4});
+          for(const path of ['assets/default-thumbnails/games.svg','favicon.svg','site.webmanifest']){
+            const r=await get('https://anevum.com/'+path);
+            assert.equal(r.status,200,'Cached-client public asset unavailable '+path);
+            assert.equal(sha(Buffer.from(await r.arrayBuffer())),sha(file(path)),'V67 stable public URL mutated: '+path);
+          }
+          checks.push({name:'Preserved original V67 public asset bytes',files:3});
+          const status=await get('https://anevum.com/api/v1/status');
+          assert.equal(status.status,200,'Public status API endpoint unavailable');
+          const json=await status.json();
+          assert.ok(json&&typeof json==='object','Status API must return structured JSON');
+          checks.push({name:'Public API status JSON available',ok:true});
+          const report={status:'PASS',release:'ANEVUM.WEB.RELEASE.2026-10-27.001.V140-SEVERANCE',source:manifest.approvedSource,version:69,traffic:100,checks};
+          writeFileSync('v140-production-acceptance.json',JSON.stringify(report,null,2)+'\n');
+          console.log('ANEVUM V140 PRODUCTION ACCEPTANCE PASS',JSON.stringify(report));
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v140-production-acceptance-${{ github.sha }}
+          path: v140-production-acceptance.json
+          retention-days: 14
+          if-no-files-found: warn
