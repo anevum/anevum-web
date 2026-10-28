@@ -1,0 +1,169 @@
+name: ANEVUM V140 Guarded Cinematic Release
+on:
+  push:
+    branches: ['release/v140-severance-20261027-001']
+    paths:
+      - '.github/workflows/v140-cinematic-release.yml'
+      - 'creator-v1/ops/v140-cinematic-release.mjs'
+      - 'docs/production/ANEVUM.WEB.RELEASE.2026-10-27.001.V140-SEVERANCE.md'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: anevum-v140-guarded-release
+  cancel-in-progress: false
+jobs:
+  verify-package:
+    if: github.repository == 'anevum/anevum-web' && github.event.head_commit.message == 'release(v140): upload verified candidate'
+    runs-on: ubuntu-latest
+    timeout-minutes: 38
+    env:
+      ANEVUM_SOURCE_SHA: ${{ github.sha }}
+      CLOUDFLARE_API_TOKEN: ''
+      VITE_PARITY_V136_FULL: 'true'
+      VITE_PARITY_V136_CINEMATIC: 'true'
+      VITE_PARITY_V136_NATIVE_VIDEO: 'false'
+      VITE_PARITY_V136_HORIZON_QA: 'false'
+      VITE_PARITY_V136_SHARED_SCENE_QA: 'false'
+      VITE_ANEVUM_OWNER_REVIEW: 'false'
+      VITE_IREN_SPATIAL_GUIDE: 'true'
+      VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
+      VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
+      VITE_MEMBER_COLLECTION_NAV_REVIEW: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Exact reviewed source and immutable release-only changes
+        run: |
+          git switch -C release/v140-severance-20261027-001 "$GITHUB_SHA"
+          test "$(git rev-parse HEAD)" = "$ANEVUM_SOURCE_SHA"
+          node creator-v1/ops/v140-cinematic-release.mjs source
+      - name: Retrieve exact reviewed V140 cinematic media build
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12785837975'
+          run-id: 40617882293
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v140-reviewed
+          merge-multiple: true
+      - name: Restore reviewed media bytes without external media download
+        run: |
+          test -f "$RUNNER_TEMP/v140-reviewed/assets/severance/manifest-v139.json"
+          test ! -e creator-v1/web/public/assets/severance
+          mkdir -p creator-v1/web/public/assets
+          cp -R "$RUNNER_TEMP/v140-reviewed/assets/severance" creator-v1/web/public/assets/severance
+      - name: Compile exact V67 public flags and run current V140 contracts
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+          node --test creator-v1/test/stage-focused-severance-v137.test.mjs creator-v1/test/severance-cinematic-v138.test.mjs creator-v1/test/severance-motion-v139.test.mjs
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+          node creator-v1/ops/v138-static-inventory.mjs
+      - name: Exercise real compiled V140 browser, original routes and permissions
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
+          npx playwright install chromium
+          node creator-v1/test/stage-focused-v137-browser.mjs
+          node creator-v1/test/parity-v136-full-browser.mjs
+      - name: Retrieve exact sealed original V67 package and preserved cached-client assets
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12692739660'
+          run-id: 40411154035
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v67-original
+          merge-multiple: true
+      - name: Package original V67 gateway with the new public site and shared immutable asset superset
+        run: |
+          node creator-v1/ops/v140-cinematic-release.mjs package \
+            "$RUNNER_TEMP/v67-original/candidate" creator-v1/dist/web "$RUNNER_TEMP/v140-paired"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v140-paired-${{ github.sha }}
+          path: ${{ runner.temp }}/v140-paired
+          retention-days: 14
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v140-release-browser-${{ github.sha }}
+          path: |
+            evidence/stage-focused-v137
+            evidence/parity-v136
+          retention-days: 14
+          if-no-files-found: warn
+  upload-inactive:
+    needs: verify-package
+    if: github.repository == 'anevum/anevum-web' && github.event.head_commit.message == 'release(v140): upload verified candidate'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      VITE_PARITY_V136_FULL: 'true'
+      VITE_PARITY_V136_CINEMATIC: 'true'
+      VITE_PARITY_V136_NATIVE_VIDEO: 'false'
+      VITE_PARITY_V136_HORIZON_QA: 'false'
+      VITE_PARITY_V136_SHARED_SCENE_QA: 'false'
+      VITE_ANEVUM_OWNER_REVIEW: 'false'
+      VITE_IREN_SPATIAL_GUIDE: 'true'
+      VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
+      VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
+      VITE_MEMBER_COLLECTION_NAV_REVIEW: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: git switch -C release/v140-severance-20261027-001 "$GITHUB_SHA"
+      - run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - uses: actions/download-artifact@v4
+        with:
+          name: anevum-v140-paired-${{ github.sha }}
+          path: ${{ runner.temp }}/v140-paired
+      - name: Verify exact V67 deployment, 26 bindings and 45 routes before first upload
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: node creator-v1/ops/v140-cinematic-release.mjs before "$RUNNER_TEMP/v140-paired/baseline"
+      - name: Upload baseline with shared assets, ZERO TRAFFIC
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --no-install wrangler versions upload --no-bundle --no-upload-source-maps --keep-vars --strict --config "$RUNNER_TEMP/v140-paired/baseline/upload.json" --message "ANEVUM V140 baseline fb1f903333187caa3bd7665e93c013f28b9f3366; V67 gateway unchanged; INACTIVE"
+      - name: Confirm original site still live with identical backend and settings
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: node creator-v1/ops/v140-cinematic-release.mjs after "$RUNNER_TEMP/v140-paired/baseline"
+      - name: Verify live before candidate upload
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: node creator-v1/ops/v140-cinematic-release.mjs before "$RUNNER_TEMP/v140-paired/candidate"
+      - name: Upload reviewed cinematic site with original Worker, ZERO TRAFFIC
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --no-install wrangler versions upload --no-bundle --no-upload-source-maps --keep-vars --strict --config "$RUNNER_TEMP/v140-paired/candidate/upload.json" --message "ANEVUM V140 candidate fb1f903333187caa3bd7665e93c013f28b9f3366; V67 gateway unchanged; INACTIVE"
+      - name: Verify candidate isolated and original Worker still serving 100 percent
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: node creator-v1/ops/v140-cinematic-release.mjs after "$RUNNER_TEMP/v140-paired/candidate"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v140-inactive-readback-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/v140-paired/baseline/inactive-receipt.json
+            ${{ runner.temp }}/v140-paired/candidate/inactive-receipt.json
+            ${{ runner.temp }}/v140-paired/packaging-receipt.json
+          retention-days: 14
+          if-no-files-found: warn
