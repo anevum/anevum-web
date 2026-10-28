@@ -20,3 +20,11 @@ STOP if any audit, worker script, role/privacy, asset hash, CI, or provider depl
 PR #786 was merged into its existing unified development parent #763 by commit `23c4a30aa0f23cdd2ed45843031f90bdd8066d8d`, preserving original parents and the tested V140 head `fb1f903333187caa3bd7665e93c013f28b9f3366`. This review merge does not change the Cloudflare deployment or the GitHub default branch.
 
 The release-only workflow is triggered by a commit with exact message `release(v140): upload verified candidate` on this dedicated release branch. It validates the exact reviewed source, approved artifacts, V67-compatible flags, responsive compiled browser, restored V67 static-client inventory, sealed gateway and Cloudflare provider readbacks. Two Worker versions may be uploaded at zero traffic only after checks pass. Activation requires independent inspection of exact inactive receipts and the unchanged V67 deployment.
+
+## Release browser QA repair (preserves original security coverage)
+
+The first isolated release workflow run [40619928361](https://github.com/anevum/anevum-web/actions/runs/40619928361) passed reviewed-source checks, media restoration, production-flagged compilation, and the scoped V140 browser. The extended historical full-browser suite passed canonical private Studio at 1440/390/320, Commons, creator directory, Boards and Open Signal publication boundaries, then stopped at the obsolete V136-only `.p136-empty-index` homepage assertion. The V140 homepage intentionally uses the new `.av137-stage-home` cinema, preserving underlying routes.
+
+The original `creator-v1/test/parity-v136-full-browser.mjs` is unchanged. A release-only copied regression `creator-v1/test/v140-production-compat-browser.mjs` updates homepage/cinematic controls and classification to the actual V140 public route while retaining the established Studio, privacy, account, route/controller, published-project, media, accessibility and failure-path test coverage. Release CI now runs this complete alternate suite and also checks its JavaScript syntax. The source allowlist remains fail-closed and includes only this independently readable regression in addition to its initial three release-only paths.
+
+Production remains V67 until new exact-head CI, packaging and Cloudflare inactive readbacks succeed.
