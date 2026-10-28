@@ -41,7 +41,7 @@ for(const width of [1440,390]){
  });
  const page=await context.newPage();page.setDefaultTimeout(15000);
  page.on('pageerror',e=>report.errors.push({width,error:String(e)}));
- for(const path of ['/','/severance','/discover','/start']){
+ for(const path of ['/','/severance','/discover','/about','/start','/guide','/creators','/community','/boards','/status','/levels','/recognition','/auras','/join','/support','/support/transparency','/support/collection','/studio','/member']){
   await page.goto(origin+path,{waitUntil:'networkidle'});
   await page.locator('#main').waitFor();
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
@@ -62,6 +62,17 @@ for(const width of [1440,390]){
    assert.equal(await helper.getAttribute('href'),'/status');
    record('Discover helper points to real publishing status at '+width,{overflow});
   }
+  if(path==='/support'){
+   await page.getByRole('heading',{name:/Keep the signal alive/i}).waitFor();
+   assert.equal(await page.locator('[data-support-enrollment="inactive"]').count(),1);
+   assert.equal(await page.getByRole('link',{name:/Explore TRANSCOSMIC: SEVERANCE/i}).getAttribute('href'),'/severance');
+   assert.equal(await page.getByRole('link',{name:/VIEW VERIFIED STATUS/i}).getAttribute('href'),'/status');
+   assert.equal(await page.locator('a[href="/support/collection"],a[href^="https://checkout.stripe.com"],a[href^="https://billing.stripe.com"]').count(),0);
+   assert.equal(await page.getByRole('button',{name:/checkout|membership|subscribe/i}).count(),0);
+   record('Obsolete public supporter checkout and old membership promotion removed at '+width);
+  }
+  if(path==='/community')record('Public Commons and its actual member wall routes preserved at '+width);
+  if(path==='/studio')record('Protected Studio route still renders its own permission guard at '+width);
   if(path==='/start')record('Archived Start remains reachable, not default navigation at '+width,{overflow});
  }
  await page.goto(origin,{waitUntil:'networkidle'});
