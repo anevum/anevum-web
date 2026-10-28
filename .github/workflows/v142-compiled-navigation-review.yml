@@ -5,6 +5,9 @@ on:
     paths:
       - '.github/workflows/v142-compiled-navigation-review.yml'
       - 'creator-v1/web/src/lib/portal-destinations.ts'
+      - 'creator-v1/web/src/pages/SupporterPage.tsx'
+      - 'creator-v1/web/src/components/MemberSpaceDashboard.tsx'
+      - 'creator-v1/test/supporter-compact-v045.test.mjs'
       - 'creator-v1/web/src/parity/ParityHeaderV136.tsx'
       - 'creator-v1/web/src/parity/ParityDiscoverV136.tsx'
       - 'creator-v1/web/src/parity/ConsoleWayfinderV136.tsx'
@@ -43,7 +46,7 @@ jobs:
         run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
       - name: Verify game-first paths, retained historical deep-links, and existing portal tests
         run: |
-          node --test creator-v1/test/v142-game-first-nav-contract.test.mjs creator-v1/test/portal-launcher.test.mjs creator-v1/test/stage-focused-severance-v137.test.mjs creator-v1/test/severance-cinematic-v138.test.mjs
+          node --test creator-v1/test/v142-game-first-nav-contract.test.mjs creator-v1/test/portal-launcher.test.mjs creator-v1/test/stage-focused-severance-v137.test.mjs creator-v1/test/severance-cinematic-v138.test.mjs creator-v1/test/supporter-compact-v045.test.mjs
           npm run check:creator-v1-web
       - name: Restore reviewed first-party V139 cinematic media under their approved paths
         uses: actions/download-artifact@v4
@@ -71,7 +74,7 @@ jobs:
             cp "$f" creator-v1/web/public/
           done
           npm run build:creator-v1-web
-      - name: Install isolated headless browser and verify actual compiled screen layouts
+      - name: Install isolated headless browser and review all public pages and protected entries
         run: |
           npm install --no-save --ignore-scripts --no-audit --no-fund --package-lock=false playwright@1.64.1
           npx playwright install chromium
