@@ -1,0 +1,89 @@
+/** V142: compiled, read-only visual acceptance for changed navigation only. */
+import assert from 'node:assert/strict';
+import {createServer} from 'node:http';
+import {readFileSync,existsSync,mkdirSync,statSync,writeFileSync} from 'node:fs';
+import {resolve,join,extname,sep} from 'node:path';
+import {createRequire} from 'node:module';
+const {chromium}=createRequire(import.meta.url)('playwright');
+const root=resolve('creator-v1/dist/web'),out=resolve('evidence/v142-compiled');
+mkdirSync(out,{recursive:true});
+const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.json':'application/json','.webp':'image/webp','.png':'image/png','.mp4':'video/mp4','.woff2':'font/woff2'};
+const server=createServer((req,res)=>{
+  if(!['GET','HEAD'].includes(req.method)){res.writeHead(405);res.end();return;}
+  let path;try{path=decodeURIComponent(new URL(req.url,'http://127.0.0.1').pathname);}catch{res.writeHead(400);res.end();return;}
+  let filename=resolve(root,'.'+path);
+  if(filename!==root&&!filename.startsWith(root+sep)){res.writeHead(403);res.end();return;}
+  if(!existsSync(filename)||!statSync(filename).isFile())filename=join(root,'index.html');
+  res.writeHead(200,{'content-type':mime[extname(filename)]||'application/octet-stream','cache-control':'no-store'});
+  res.end(req.method==='HEAD'?undefined:readFileSync(filename));
+});
+await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+const origin='http://127.0.0.1:'+server.address().port;
+const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+const report={source:'V142-local-compiled',checks:[],screenshots:[],errors:[]};
+const record=(name,detail={})=>{report.checks.push({name,...detail});console.log('PASS',name,JSON.stringify(detail));};
+try{
+for(const width of [1440,390]){
+ const context=await browser.newContext({viewport:{width,height:width===1440?900:844},deviceScaleFactor:1,reducedMotion:'reduce',serviceWorkers:'block'});
+ await context.route('**/*',async route=>{
+  const req=route.request(),url=new URL(req.url());
+  if(url.origin!==origin){await route.abort();return;}
+  if(!url.pathname.startsWith('/api/')){await route.continue();return;}
+  let data=null;
+  if(url.pathname==='/api/v1/status')data={version:'v142-visual-review',counts:{publishedProjects:0,publishedCreators:0}};
+  else if(url.pathname==='/api/v1/projects')data={items:[],count:0,nextCursor:null};
+  else if(url.pathname==='/api/v1/categories')data={categories:[]};
+  else if(url.pathname==='/api/v1/creators')data={items:[],count:0,nextCursor:null};
+  else if(url.pathname==='/api/v1/member/auth-methods')data={availability:'unavailable',registration:'closed',linking:'disabled',methods:{email:{available:false},google:{available:false},github:{available:false},apple:{available:false},microsoft:{available:false},passkey:{available:false}}};
+  else if(url.pathname.endsWith('/health'))data={status:'unavailable'};
+  else if(url.pathname.endsWith('/get-session'))data=null;
+  await route.fulfill({status:data===null?404:200,contentType:'application/json',body:JSON.stringify(data===null?{error:'Offline review fixture'}:data)});
+ });
+ const page=await context.newPage();page.setDefaultTimeout(15000);
+ page.on('pageerror',e=>report.errors.push({width,error:String(e)}));
+ for(const path of ['/','/severance','/discover','/start']){
+  await page.goto(origin+path,{waitUntil:'networkidle'});
+  await page.locator('#main').waitFor();
+  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
+  assert.ok(overflow<=3,'Horizontal overflow '+width+' '+path+': '+overflow);
+  const file=width+'--'+(path==='/'?'home':path.slice(1))+'.png';
+  await page.screenshot({path:join(out,file),fullPage:true,animations:'disabled'});
+  report.screenshots.push(file);
+  if(path==='/'){
+   assert.equal(await page.locator('.av138-header-status').innerText(),'BUILD STATUS');
+   assert.match(await page.locator('.p136-console-wayfinder').innerText(),/Entrance/);
+   assert.equal(await page.getByRole('link',{name:/EXPLORE THE GAME/i}).count(),1);
+   record('Live game-first home nav at '+width,{overflow});
+  }
+  if(path==='/discover'){
+   const helper=page.locator('.p136-discover-helper');
+   await helper.waitFor();
+   assert.equal(await helper.innerText(),'Publishing status');
+   assert.equal(await helper.getAttribute('href'),'/status');
+   record('Discover helper points to real publishing status at '+width,{overflow});
+  }
+  if(path==='/start')record('Archived Start remains reachable, not default navigation at '+width,{overflow});
+ }
+ await page.goto(origin,{waitUntil:'networkidle'});
+ const search=page.getByRole('button',{name:'Search ANEVUM',exact:true}).first();
+ await search.waitFor();await search.click();
+ await page.locator('.portal-launcher[open]').waitFor();
+ const links=await page.locator('.portal-launcher-results a').evaluateAll(nodes=>nodes.map(a=>({href:a.getAttribute('href'),text:a.textContent?.trim()||''})));
+ assert.ok(links.some(x=>x.href==='/severance'),'Current game must be default in actual switchboard');
+ assert.ok(links.some(x=>x.href==='/status'),'Real status must be default in actual switchboard');
+ assert.ok(!links.some(x=>x.href==='/create'||x.href==='/workspace'||x.href?.startsWith('/atlas')),'Legacy path not displayed');
+ assert.ok(!links.some(x=>x.href==='/start'),'Onboarding path retained but not a top game-first suggestion');
+ await page.screenshot({path:join(out,width+'--switchboard.png'),animations:'disabled'});
+ report.screenshots.push(width+'--switchboard.png');
+ record('Quick switchboard prioritizes current game, status and verified work at '+width,{links:links.map(x=>x.href)});
+ await page.getByRole('link',{name:/TRANSCOSMIC: SEVERANCE/i}).first().click();
+ await page.waitForURL(origin+'/severance');
+ await page.locator('[data-public-playable="false"]').waitFor();
+ record('SEVERANCE switchboard target renders non-playable public dossier at '+width);
+ await page.close();await context.close();
+}
+assert.deepEqual(report.errors,[],'No JavaScript errors after browse/navigation');
+report.status='PASS';
+}finally{await browser.close();await new Promise(resolve=>server.close(resolve))}
+writeFileSync(join(out,'receipt.json'),JSON.stringify(report,null,2)+'\n');
+console.log('V142 COMPILED VISUAL ACCEPTANCE',report.status,report.checks.length,'checks');
