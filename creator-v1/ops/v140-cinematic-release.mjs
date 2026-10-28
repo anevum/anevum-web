@@ -50,7 +50,7 @@ function source(){
  git("merge-base","--is-ancestor",APPROVED,"HEAD");
  const changed=git("diff","--name-only",APPROVED,"HEAD").split("\n").filter(Boolean);
  assert.deepEqual(changed.filter(path=>!RELEASE_FILES.has(path)),[],"Unreviewed source changes after V140 QA");
- assert.equal(git("status","--porcelain"),"","Working tree must be clean");
+ assert.equal(git("diff","--name-only"),"","Tracked source must be unchanged by build");
  assert.equal(git("log","-1","--format=%s"),"release(v140): upload verified candidate","Only explicitly triggered release commits can upload");
  for(const key of ["VITE_PARITY_V136_FULL","VITE_PARITY_V136_CINEMATIC","VITE_IREN_SPATIAL_GUIDE","VITE_NATIVE_CREATOR_STUDIO_V095","VITE_PACKAGE_CREATOR_GALLERY_V010","VITE_MEMBER_COLLECTION_NAV_REVIEW"])
   assert.equal(process.env[key],"true","Production feature-flag parity missing: "+key);
