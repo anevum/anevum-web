@@ -41,6 +41,22 @@ for(const width of [1440,390]){
  });
  const page=await context.newPage();page.setDefaultTimeout(15000);
  page.on('pageerror',e=>report.errors.push({width,error:String(e)}));
+ await page.goto(origin,{waitUntil:'domcontentloaded',timeout:18000});
+ const search=width>=700?page.locator('.p136-console-command'):page.locator('.p136-mobile-search');
+ await search.waitFor({state:'visible'});await search.click();
+ await page.locator('.portal-launcher[open]').waitFor();
+ const links=await page.locator('.portal-launcher-results a').evaluateAll(nodes=>nodes.map(a=>({href:a.getAttribute('href'),text:a.textContent?.trim()||''})));
+ assert.ok(links.some(x=>x.href==='/severance'),'Current game must be default in actual switchboard');
+ assert.ok(links.some(x=>x.href==='/status'),'Real status must be default in actual switchboard');
+ assert.ok(!links.some(x=>x.href==='/create'||x.href==='/workspace'||x.href?.startsWith('/atlas')),'Legacy path not displayed');
+ assert.ok(!links.some(x=>x.href==='/start'),'Onboarding path retained but not a top game-first suggestion');
+ await page.screenshot({path:join(out,width+'--switchboard.png'),animations:'disabled'});
+ report.screenshots.push(width+'--switchboard.png');
+ record('Quick switchboard prioritizes current game, status and verified work at '+width,{links:links.map(x=>x.href)});
+ await page.getByRole('link',{name:/TRANSCOSMIC: SEVERANCE/i}).first().click();
+ await page.waitForURL(origin+'/severance');
+ await page.locator('[data-public-playable="false"]').waitFor();
+ record('SEVERANCE switchboard target renders non-playable public dossier at '+width);
  for(const path of ['/','/severance','/discover','/about','/start','/guide','/creators','/community','/boards','/status','/levels','/recognition','/auras','/join','/support','/support/transparency','/support/collection','/studio','/member']){
   await page.goto(origin+path,{waitUntil:'domcontentloaded',timeout:18000});
   await page.locator('#main').waitFor();
@@ -77,24 +93,6 @@ for(const width of [1440,390]){
   if(path==='/studio')record('Protected Studio route still renders its own permission guard at '+width);
   if(path==='/start')record('Archived Start remains reachable, not default navigation at '+width,{overflow});
  }
- await page.goto(origin,{waitUntil:'domcontentloaded',timeout:18000});
- const railSearch=page.getByRole('button',{name:'Search and quick navigation',exact:true});
- const headerSearch=page.getByRole('button',{name:'Search ANEVUM',exact:true});
- const search=(await railSearch.isVisible())?railSearch:headerSearch;
- await search.waitFor({state:'visible'});await search.click();
- await page.locator('.portal-launcher[open]').waitFor();
- const links=await page.locator('.portal-launcher-results a').evaluateAll(nodes=>nodes.map(a=>({href:a.getAttribute('href'),text:a.textContent?.trim()||''})));
- assert.ok(links.some(x=>x.href==='/severance'),'Current game must be default in actual switchboard');
- assert.ok(links.some(x=>x.href==='/status'),'Real status must be default in actual switchboard');
- assert.ok(!links.some(x=>x.href==='/create'||x.href==='/workspace'||x.href?.startsWith('/atlas')),'Legacy path not displayed');
- assert.ok(!links.some(x=>x.href==='/start'),'Onboarding path retained but not a top game-first suggestion');
- await page.screenshot({path:join(out,width+'--switchboard.png'),animations:'disabled'});
- report.screenshots.push(width+'--switchboard.png');
- record('Quick switchboard prioritizes current game, status and verified work at '+width,{links:links.map(x=>x.href)});
- await page.getByRole('link',{name:/TRANSCOSMIC: SEVERANCE/i}).first().click();
- await page.waitForURL(origin+'/severance');
- await page.locator('[data-public-playable="false"]').waitFor();
- record('SEVERANCE switchboard target renders non-playable public dossier at '+width);
  await page.close();await context.close();
 }
 assert.deepEqual(report.errors,[],'No JavaScript errors after browse/navigation');
