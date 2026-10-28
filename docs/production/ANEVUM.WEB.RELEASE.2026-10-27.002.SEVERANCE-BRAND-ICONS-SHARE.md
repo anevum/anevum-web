@@ -35,3 +35,7 @@ All output is deployed under new versioned paths, preserving existing cached URL
 ## Status
 
 Source and release pipeline under implementation. Do not claim publication until the exact Cloudflare deployment and public readback are recorded here and in canonical handoff Issue #784.
+
+## Exact release trigger
+
+This change activates the guarded CI source/render/asset/upload gates. Only a successful current-head run may upload two Workers versions **inactive**; it is not authority to switch traffic without independent Cloudflare provider and public readback verification. Site behavior and authenticated/private paths remain unchanged.
