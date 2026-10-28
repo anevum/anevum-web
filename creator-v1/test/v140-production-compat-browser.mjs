@@ -832,7 +832,7 @@ try{
       await page.waitForFunction(()=>!document.querySelector('.p136-artifact-lens[open]'));
       assert.equal(page.url(),before,'Escape closes inspection without navigation');
       record('Artifact Lens approved project / native dialog / Escape / real data / scene morph', {url:before});
-    }else await page.getByText('The public index is temporarily unavailable',{exact:true}).waitFor();
+    }else await page.getByText('The public index is temporarily unavailable.',{exact:true}).waitFor();
     await page.screenshot({path:join(out,'catalogue-'+state+'-390.png'),fullPage:true,animations:'disabled'});
     record('honest catalogue '+state);await context.close();
   }
