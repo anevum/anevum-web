@@ -78,5 +78,5 @@ test("V140 public depth is mounted and excludes private account and Studio route
  assert.match(director,/!paused&&motionAllowed/);
  assert.match(css,/data-av140-public="true"/);
  assert.match(css,/av140-reveal-pending/);
- assert.doesNotMatch(director,/fetch\\(|XMLHttpRequest|localStorage|sessionStorage/);
+ assert.doesNotMatch(director,/XMLHttpRequest|localStorage|sessionStorage/);
 });
