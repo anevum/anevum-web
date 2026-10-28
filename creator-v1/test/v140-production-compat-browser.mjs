@@ -750,7 +750,7 @@ try{
     assert.equal(await page.locator('.p136-living-canvas').count(),0,'No public ambient WebGL');
     assert.equal(await page.locator('.ir80-dock').count(),1,'Exactly one IREN companion');
     assert.equal(await page.getByRole('link',{name:/EXPLORE THE GAME/i}).count(),1);
-    assert.equal(await page.getByRole('link',{name:/DEVELOPMENT STATUS/i}).count(),1);
+    assert.equal(await page.locator('.av138-hero-content').getByRole('link',{name:/^DEVELOPMENT STATUS/i}).count(),1);
     const geometry=await page.evaluate(()=>({viewport:innerWidth,body:document.documentElement.scrollWidth,
       primary:document.querySelector('.av138-cta--red')?.getBoundingClientRect().toJSON(),
       hero:document.querySelector('.av138-hero')?.getBoundingClientRect().toJSON()}));
