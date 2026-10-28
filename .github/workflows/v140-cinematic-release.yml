@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/v140-cinematic-release.yml'
       - 'creator-v1/ops/v140-cinematic-release.mjs'
+      - 'creator-v1/test/v140-production-compat-browser.mjs'
       - 'docs/production/ANEVUM.WEB.RELEASE.2026-10-27.001.V140-SEVERANCE.md'
 permissions:
   contents: read
@@ -72,7 +73,8 @@ jobs:
           npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
           npx playwright install chromium
           node creator-v1/test/stage-focused-v137-browser.mjs
-          node creator-v1/test/parity-v136-full-browser.mjs
+          node --check creator-v1/test/v140-production-compat-browser.mjs
+          node creator-v1/test/v140-production-compat-browser.mjs
       - name: Retrieve exact sealed original V67 package and preserved cached-client assets
         uses: actions/download-artifact@v4
         with:
