@@ -1,0 +1,44 @@
+name: ANEVUM V142 Read-Only Live Visual and Obsolete Link Audit
+on:
+  push:
+    branches: ['audit/v142-sitewide-visual-links-20261027-001']
+    paths:
+      - '.github/workflows/v142-sitewide-visual-links-audit.yml'
+      - 'creator-v1/test/v142-sitewide-visual-links-browser.mjs'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: anevum-v142-visual-audit
+  cancel-in-progress: true
+jobs:
+  public-visual-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 27
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install ephemeral browser tooling without modifying lockfile
+        run: |
+          npm install --no-save --ignore-scripts --no-audit --no-fund --package-lock=false playwright@1.64.1
+          npx playwright install --with-deps chromium
+      - name: Audit 42 real route/redirect destinations at 1440 and 390 widths
+        env:
+          ANEVUM_AUDIT_ORIGIN: https://anevum.com
+          ANEVUM_AUDIT_OUTPUT: evidence/v142-sitewide
+        run: |
+          node --check creator-v1/test/v142-sitewide-visual-links-browser.mjs
+          node creator-v1/test/v142-sitewide-visual-links-browser.mjs
+      - name: Publish screenshots, link census and route-level visual metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v142-sitewide-audit-${{ github.sha }}
+          path: evidence/v142-sitewide
+          retention-days: 14
+          if-no-files-found: error
