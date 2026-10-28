@@ -1,0 +1,54 @@
+name: ANEVUM V136 Orbital Underground Brand Lock
+
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/web/src/components/OrbitalMark.tsx'
+      - 'creator-v1/web/src/components/Shell.tsx'
+      - 'creator-v1/web/src/components/OrbitalStage.tsx'
+      - 'creator-v1/web/src/parity/ParityHeaderV136.tsx'
+      - 'creator-v1/web/src/parity/ConsoleWayfinderV136.tsx'
+      - 'creator-v1/web/src/parity/console-wayfinder-v136.css'
+      - 'creator-v1/web/index.html'
+      - 'creator-v1/web/public/favicon.svg'
+      - 'creator-v1/web/public/icon-192.png'
+      - 'creator-v1/web/public/icon-512.png'
+      - 'creator-v1/brand/anevum-mark.svg'
+      - 'creator-v1/brand/anevum-mark-compact.svg'
+      - 'creator-v1/test/orbital-underground-sitewide-v136.test.mjs'
+      - '.github/workflows/v136-orbital-underground-brand-lock.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v136-canonical-brand-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  exact-mark-and-frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Keep all public and V136 brand surfaces on canonical SVG
+        run: |
+          set -euo pipefail
+          node --test creator-v1/test/orbital-underground-sitewide-v136.test.mjs
+      - name: Typecheck and build V136 frontend without enabling public features
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          VITE_PARITY_V136_FULL=true VITE_PACKAGE_CREATOR_GALLERY_V010=false npm run build:creator-v1-web:staging
+      - name: Never enable production through a brand correction
+        run: |
+          set -euo pipefail
+          test ! -e creator-v1/canonical-auth/migrations/0014_held_publication_outbox.sql

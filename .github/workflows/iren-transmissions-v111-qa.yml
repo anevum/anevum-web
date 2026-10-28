@@ -5,6 +5,7 @@ on:
       - 'creator-v1/web/src/components/AnevumNotifications.tsx'
       - 'creator-v1/web/src/components/IrenGuidedContinuance.tsx'
       - 'creator-v1/web/src/lib/ui-events.ts'
+      - 'creator-v1/web/src/lib/notification-delivery.ts'
       - 'creator-v1/web/src/iren-transmissions-v111.css'
       - 'creator-v1/test/iren-scout-v087.test.mjs'
       - 'creator-v1/test/iren-transmissions-v111.test.mjs'
@@ -38,6 +39,7 @@ jobs:
       - name: Verify one queue, one IREN and authentic recognition boundaries
         working-directory: creator-v1
         run: |
+          node --check test/capture-iren-transmissions-v111.mjs
           npm run test:iren-v111
           npm run test:iren-v080
           npm run test:iren-v088
@@ -61,6 +63,9 @@ jobs:
           test -s evidence/iren-v111/iren-transmission-1440.png
           test -s evidence/iren-v111/iren-transmission-390.png
           test -s evidence/iren-v111/iren-transmission-320.png
+          test -s evidence/iren-v111/iren-priority-1440.png
+          test -s evidence/iren-v111/iren-priority-390.png
+          test -s evidence/iren-v111/iren-priority-320.png
       - name: Retain real React browser evidence
         if: always()
         uses: actions/upload-artifact@v4

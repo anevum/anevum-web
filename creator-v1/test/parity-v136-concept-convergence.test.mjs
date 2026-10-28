@@ -12,15 +12,15 @@ const ide=source('../web/src/parity/ArtifactWorkbenchV136.tsx');
 const glyph=source('../web/src/parity/FileGlyphV136017.tsx');
 const css=source('../web/src/parity/concept-convergence-v136017.css');
 const main=source('../web/src/main.tsx');
-test('original Arrival optical instrument is non-interactive and independent of remote files',()=>{
+test('archived optical instrument remains non-interactive; Arrival uses independent authored media',()=>{
  assert.match(art,/aria-hidden="true"/);
  assert.match(art,/data-art="continuance-original-optics"/);
  assert.match(art,/<svg viewBox="0 0 840 690"/);
  assert.match(art,/const ticks=Array\.from\(\{length:48\}/);
  assert.ok(!/<canvas\b|<iframe\b|onClick|onKeyDown|fetch\(|window\.|localStorage|navigator\.|import\(|http:/i.test(art),
   'Artwork cannot own a renderer, unsafe execution or real navigation');
- assert.match(hero,/import \{ContinuanceInstrumentV136017\}/);
- assert.match(hero,/<ContinuanceInstrumentV136017\/>/);
+ assert.doesNotMatch(hero,/<ContinuanceInstrumentV136017\/>/);
+ assert.match(hero,/<CinematicArrivalV136\/>/);
  assert.match(hero,/id="p136-hero-title"/);
  assert.match(hero,/THE CONTINUANCE INSTITUTE/);
 });

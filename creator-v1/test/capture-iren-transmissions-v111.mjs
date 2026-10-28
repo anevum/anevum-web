@@ -44,7 +44,22 @@ try{
   await capture("iren-transmission-"+width);
   await evaluate('document.querySelector(".ir111-transmission button").click()');
   await until(()=>evaluate('!document.querySelector(".ir111-transmission")'));
-  evidence.push({width,height,geometry});
+  // Real mounted IREN behavior: a full informational queue cannot swallow
+  // the local failure of a user action. Signals are synthetic display fixtures;
+  // no server award, login or private data is created.
+  await evaluate('(()=>{for(let i=0;i<26;i++)window.dispatchEvent(new CustomEvent("anevum:alert",{detail:{owner:undefined,alert:{key:"flood-'+width+'-"+i,kind:"info",title:"CI background info "+i,preview:true}}}));window.dispatchEvent(new CustomEvent("anevum:alert",{detail:{owner:undefined,alert:{key:"critical-'+width+'",kind:"error",title:"CI action could not be saved",detail:"Synthetic local failure; no changes were made."}}}));})()');
+  await until(()=>evaluate('document.querySelector(".ir111-transmission")?.textContent?.includes("CI background info 0")'));
+  await evaluate('document.querySelector(".ir111-transmission button").click()');
+  await until(()=>evaluate('document.querySelector(".ir111-transmission")?.textContent?.includes("CI action could not be saved")'));
+  // Match the original V111 screenshot contract: measure the settled panel,
+  // not an intentional -24px opening transform partway through its .55s ease.
+  await delay(650);
+  const priority=await evaluate('(()=>{const el=document.querySelector(".ir111-transmission"),box=el.getBoundingClientRect();return {text:el.textContent,live:document.querySelector(".an-live")?.textContent,left:box.left,right:box.right,bottom:box.bottom,overflow:document.documentElement.scrollWidth>innerWidth+1}})()');
+  if(!priority.text.includes("ATTENTION REQUIRED")||!priority.live.includes("CI action could not be saved")||
+    priority.overflow||priority.left<0||priority.right>width+1||priority.bottom>height+1)
+    throw Error("V139_PRIORITY_SIGNAL_DROPPED_OR_CLIPPED_"+width+": "+JSON.stringify(priority));
+  await capture("iren-priority-"+width);
+  evidence.push({width,height,geometry,priority});
  }
  await evaluate('localStorage.setItem("anevum.iren.guided-continuance.v080.visitor.hidden","yes")');
  await send("Page.navigate",{url:base+"/creator/"});
@@ -102,8 +117,18 @@ try{
  await until(()=>evaluate('!!document.querySelector(".ir111-phase-open .ir111-transmission")'));
  await evaluate('document.querySelector(".ir111-transmission button").click()');
  await until(()=>evaluate('!document.querySelector(".ir111-transmission")'));
- writeFileSync(join(output,"acceptance.json"),JSON.stringify({pass:true,syntheticOnly:true,productionChanges:0,checks:["desktop","phone","small-phone","hidden-helper","reduced-motion","immersive-playback-queue","guided-tour-queue"],evidence},null,2));
+ writeFileSync(join(output,"acceptance.json"),JSON.stringify({pass:true,syntheticOnly:true,productionChanges:0,checks:["desktop","phone","small-phone","urgent-error-after-saturated-info","hidden-helper","reduced-motion","immersive-playback-queue","guided-tour-queue"],evidence},null,2));
  console.log("IREN_V111_REACT_VISUAL_ACCEPTANCE=PASS");
+}catch(error){
+ try{
+  if(ws?.readyState===WebSocket.OPEN){
+   const id=Date.now();
+   ws.send(JSON.stringify({id,method:'Runtime.evaluate',params:{expression:'JSON.stringify({url:location.href,ready:document.readyState,text:document.body.innerText.slice(0,2500),hero:!!document.querySelector(".av79-home .av79-hero"),scout:!!document.querySelector(".ir87-scout")})',returnByValue:true}}));
+   const diagnostic=await Promise.race([new Promise(resolve=>ws.addEventListener('message',({data})=>{const r=JSON.parse(String(data));if(r.id===id)resolve(r.result) })),delay(3000)]);
+   writeFileSync(join(output,'failure-diagnostic.json'),JSON.stringify({error:String(error),diagnostic},null,2));
+  }
+ }catch{}
+ throw error;
 }finally{
  try{ws?.close()}catch{}
  browser.kill("SIGTERM");

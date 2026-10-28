@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {crc32} from '../../site/alpha/v003/archive.mjs';
+import {crc32,inspectZip} from '../../site/alpha/v003/archive.mjs';
 import {detectCompatibility} from '../../site/alpha/v003/compatibility-v005.mjs';
 import {inspectLocalBrowserBuild} from '../web/src/lib/native-compatibility-v101.ts';
+import {sniffGodotZipEntries} from '../web/src/lib/godot-local-sniff-v136.ts';
 import {parse} from '@babel/parser';
 
 const encoder=new TextEncoder();
@@ -86,6 +87,58 @@ test('oversized file is refused before reading its bytes',async()=>{
  assert.equal(r.playableCandidate,false);
  assert.match(r.issues[0].message,/20 MiB/);
 });
+test('local Godot sniff is diagnostic-only and leaves pinned strict ZIP validator untouched',()=>{
+ const godot=storedZip([
+  ['index.html','<!doctype html><html><body>test</body></html>'],['game.pck','pack']
+ ]);
+ const names=sniffGodotZipEntries(godot);
+ assert.deepEqual(names?.map(e=>e.path),['index.html','game.pck']);
+ assert.throws(()=>inspectZip(godot),/Unsupported project asset/);
+ const source=storedZip([['project.godot','[application]']]);
+ assert.deepEqual(sniffGodotZipEntries(source)?.map(e=>e.path),['project.godot']);
+ assert.throws(()=>inspectZip(source),/Unsupported project asset|ZIP must include index.html/);
+ const clean=storedZip([['index.html','<!doctype html><html><body>ok</body></html>']]);
+ assert.equal(sniffGodotZipEntries(clean),null);
+ assert.equal(inspectZip(clean).entrypoint,'index.html');
+ assert.equal(sniffGodotZipEntries(bytes('not a ZIP containing game.pck')),null);
+});
+test('Godot Web export receives specific guidance but cannot enter the current small-build uploader',async()=>{
+ const r=await inspectLocalBrowserBuild(blobFile('absence-protocol.zip',storedZip([
+  ['index.html','<!doctype html><html><body>Absence Protocol</body></html>'],
+  ['absence.pck','godot pack'],['absence.wasm','engine'],['absence.js','loader']
+ ])));
+ assert.equal(r.runtime,'godot-web');
+ assert.equal(r.localOnly,true);
+ assert.equal(r.playableCandidate,false);
+ assert.equal(r.securityReviewed,false);
+ assert.equal(r.publicationApproved,false);
+ assert.ok(r.issues.some(i=>i.code==='AEP_GODOT_SMALL_PILOT_UNSUPPORTED'&&i.severity==='blocker'));
+});
+test('incomplete Godot Web export identifies the missing loader and WASM',async()=>{
+ const r=await inspectLocalBrowserBuild(blobFile('partial-godot.zip',storedZip([
+  ['index.html','<!doctype html><html><body>incomplete</body></html>'],
+  ['game.pck','pack']
+ ])));
+ assert.equal(r.playableCandidate,false);
+ assert.ok(r.issues.some(i=>i.code==='AEP_GODOT_WASM_FILES'));
+ assert.ok(r.issues.some(i=>i.code==='AEP_GODOT_LOADER_FILES'));
+});
+test('Godot project source alone is never mistaken for a playable web export',async()=>{
+ const r=await inspectLocalBrowserBuild(blobFile('godot-source.zip',storedZip([
+  ['project.godot','[application]'],['scenes/main.tscn','[gd_scene]']
+ ])));
+ assert.equal(r.runtime,'godot-source');
+ assert.equal(r.playableCandidate,false);
+ assert.ok(r.issues.some(i=>i.code==='AEP_ENTRY_MISSING'));
+});
+test('native browser player preserves opaque sandbox and adds explicit keyboard focus without new privileges',()=>{
+ const src=readFileSync(new URL('../web/src/components/IsolatedProjectViewport.tsx',import.meta.url),'utf8');
+ assert.match(src,/sandbox="allow-scripts allow-pointer-lock"/);
+ assert.doesNotMatch(src,/sandbox="[^"]*allow-same-origin/);
+ assert.match(src,/gameFrame\.current\?\.focus\(\)/);
+ assert.match(src,/Touch, Safari and Xbox compatibility are not certified/);
+});
+
 test('native upload UI waits for compatibility results and never authorizes publication',()=>{
  const s=readFileSync(new URL('../web/src/pages/NativeCreatorStudio.tsx',import.meta.url),'utf8');
  assert.doesNotThrow(()=>parse(s,{sourceType:'module',plugins:['typescript','jsx']}));

@@ -12,14 +12,16 @@ type Availability=
   | {kind:"canonical-readonly";registration:"open"|"invite-only"|"closed"}
   | {kind:"canonical-saves";registration:"open"|"invite-only"|"closed"}
   | {kind:"closed"}
+  | {kind:"unavailable"}
   | {kind:"guest";signupEnabled:boolean}
   | {kind:"member";rating:MemberRating;saved:boolean;libraryTruncated:boolean};
 
 export function MemberEngagementPanel({projectId}:{projectId:string}){
+  const [attempt,setAttempt]=useState(0);
   const available=useResource<Availability>(async signal=>{
     if(!/^[a-f0-9]{32}$/.test(projectId))return {kind:"closed"};
     let health;
-    try{health=await memberHealth(signal);}catch{return {kind:"closed"};}
+    try{health=await memberHealth(signal);}catch{return {kind:"unavailable"};}
     const gateway=projectEngagementGateway(health);
     if(gateway.kind==="canonical-readonly"||gateway.kind==="canonical-saves")return gateway;
     if(gateway.kind!=="legacy")return {kind:"closed"};
@@ -33,10 +35,11 @@ export function MemberEngagementPanel({projectId}:{projectId:string}){
       kind:"member",rating:rating.rating,
       saved:library.items.some(x=>x.id===projectId),libraryTruncated:library.count>=100
     };
-  },[projectId]);
+  },[projectId,attempt]);
 
   if(available.state==="loading")return <section className="engagement-panel" aria-label="Member project participation"><span className="kicker">COMMUNITY SIGNAL</span><p role="status">Checking private member availability…</p></section>;
-  if(available.state==="error")return <section className="engagement-panel" aria-label="Member project participation"><span className="kicker">COMMUNITY SIGNAL</span><p role="status">Member actions are temporarily unavailable. Public project information is still accessible.</p></section>;
+  if(available.state==="error")return <RecoveryParticipation onRetry={()=>setAttempt(n=>n+1)}/>;
+  if(available.data.kind==="unavailable")return <RecoveryParticipation onRetry={()=>setAttempt(n=>n+1)}/>;
   if(available.data.kind==="canonical-saves")return <CanonicalProjectSavePanel key={projectId} projectId={projectId} registration={available.data.registration}/>;
   if(available.data.kind==="canonical-readonly")return <section className="engagement-panel avp-participation-preview" data-avp-availability="canonical-readonly" aria-label="Project participation availability">
     <header className="avp-participation-heading"><span className="kicker">COMMUNITY SIGNAL / MEMBER NETWORK</span><span className="avp-participation-status">RATINGS NOT ACTIVE</span></header>
@@ -55,6 +58,22 @@ export function MemberEngagementPanel({projectId}:{projectId:string}){
   return <Controls key={projectId} projectId={projectId} initialRating={available.data.rating} initialSaved={available.data.saved} truncated={available.data.libraryTruncated}/>;
 }
 
+/** A temporary capability outage is not a permanent feature closure.
+ * All member actions remain disabled until a later server health read passes. */
+function RecoveryParticipation({onRetry}:{onRetry:()=>void}){
+ return <section className="engagement-panel avp-participation-preview"
+    data-avp-availability="unavailable" aria-label="Member project participation">
+   <header className="avp-participation-heading"><span className="kicker">COMMUNITY SIGNAL / SERVICE STATUS</span>
+    <span className="avp-participation-status">AVAILABILITY UNVERIFIED</span></header>
+   <h2>PARTICIPATION TEMPORARILY UNAVAILABLE.</h2>
+   <p role="status">The member service could not confirm which actions are active.
+     No rating, saving, or XP action is available until the server responds.</p>
+   <div className="avp-participation-actions">
+    <button type="button" className="button secondary" onClick={onRetry}>RECHECK AVAILABILITY</button>
+    <Link className="button secondary" to="/discover">EXPLORE PUBLISHED WORK →</Link>
+   </div>
+ </section>;
+}
 function Controls({projectId,initialRating,initialSaved,truncated}:{
   projectId:string;initialRating:MemberRating;initialSaved:boolean;truncated:boolean
 }){

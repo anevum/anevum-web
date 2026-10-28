@@ -40,8 +40,8 @@ test("clarity copy honors public browse, server-controlled accounts and private 
  assert.match(first,/Verified members with discussion access/);
  assert.match(first,/to=\{signedIn\?"\/member":"\/join"\}/);
  assert.match(first,/Check what works now/);
- assert.match(home,/Browse approved independent games, useful apps, art and experiments/);
- assert.match(home,/Publishing requires separate access and review/);
+ assert.match(home,/Explore independent games, useful apps, art and experiments/);
+ assert.match(home,/Creator publishing remains in testing/);
 });
 
 test("answers use native optional disclosures, remain keyboard accessible and fit phones",()=>{

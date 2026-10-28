@@ -216,3 +216,37 @@
 @media(max-width:760px){.st-create-path-grid{grid-template-columns:1fr}
  .st-create-path-grid>a{min-height:0;padding:16px;gap:9px}}
 @media(prefers-reduced-motion:reduce){.st-create-path-grid>a{transition:none}}
+
+/* V138 / canonical private drafting — honest save state and legible guard.
+ * Never imply an unsaved form is a published or server-backed revision. */
+.st-editor-form .st-save-state{
+ margin:0;padding:10px 13px;min-width:0;line-height:1.5;
+ font-size:12px;font-weight:650;letter-spacing:.055em;
+ color:#c5dae1;border:1px solid #7998a570;border-radius:8px;
+ background:#0f1d26;box-shadow:inset 2px 0 #90b4c6;
+}
+.st-editor-form .st-save-state[data-unsaved="true"]{
+ color:#f1d7a3;border-color:#b6a17b9c;background:#211d19;
+ box-shadow:inset 3px 0 #d8b782;
+}
+html[data-av-parity="v136-full"] .st-editor-form .st-save-state{
+ background:linear-gradient(115deg,#182b35,#0e1a23);
+ border-color:#8baebc70;color:#d6edf1;
+}
+html[data-av-parity="v136-full"] .st-editor-form .st-save-state[data-unsaved="true"]{
+ background:linear-gradient(110deg,#282720,#171c20);
+ color:#f1e0bb;border-color:#bfa87999;
+}
+@media(max-width:640px){
+ .st-editor-form .st-save-state{font-size:11px;padding:11px;overflow-wrap:anywhere}
+}
+@media(forced-colors:active){
+ .st-editor-form .st-save-state,
+ html[data-av-parity="v136-full"] .st-editor-form .st-save-state{
+  background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none;
+ }
+ .st-editor-form .st-save-state[data-unsaved="true"],
+ html[data-av-parity="v136-full"] .st-editor-form .st-save-state[data-unsaved="true"]{
+  outline:2px solid Highlight;outline-offset:1px;
+ }
+}

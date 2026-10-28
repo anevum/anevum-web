@@ -182,6 +182,19 @@ try{
     assert.equal(nativeReads.length,initialReads,'Local controls must not refetch or transmit private inventory');
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,
       'Creator archive must not overflow at '+width+' CSS pixels');
+    const archiveMaterials=await page.evaluate(()=>{
+      const style=selector=>getComputedStyle(document.querySelector(selector));
+      return {stage:style('.p136-studio-console-stage').backgroundColor,
+        panel:style('.av136032-library-tools').backgroundImage,
+        selected:style('.av136032-toolbar button[aria-pressed="true"]').backgroundColor,
+        cover:style('.av136032-record-blank').backgroundColor,
+        search:style('.av095-search input').backgroundColor};
+    });
+    assert.equal(archiveMaterials.stage,'rgb(9, 13, 19)','Studio stage uses the shared dark canvas');
+    assert.ok(archiveMaterials.panel.includes('27, 38, 48'),'Private library uses the actual shared panel material');
+    assert.equal(archiveMaterials.selected,'rgb(36, 54, 66)','Selected library controls use the shared violet surface');
+    assert.equal(archiveMaterials.cover,'rgb(9, 13, 19)','Missing creator media remains a restrained empty surface');
+    assert.equal(archiveMaterials.search,'rgb(9, 13, 19)','Private search no longer inherits navy fields');
     await page.screenshot({path:join(out,'studio-archive-list-'+width+'.png'),animations:'disabled',timeout:90000});
     await page.goto(base+'/studio/packages/new',{waitUntil:'domcontentloaded'});
     await page.getByRole('heading',{name:'Transmit a creation.'}).waitFor();
@@ -292,7 +305,7 @@ try{
 
     }
     else assert.equal(await page.locator('[data-source-editor="monaco"]').count(),0,'Phone uses accessible text editor without Monaco allocation');
-    assert.equal(await page.locator('.p136-living-world').getAttribute('data-enabled'),'false','Private source never enters public GPU');
+    assert.equal(await page.locator('.p136-living-world').count(),0,'Private source never enters public GPU');
     // V136.034: the concept's Preview/Build checks navigation must use the
     // actual mounted sandbox and static diagnostics, not claim Run/Deploy.
     const mountedEditorCount=await workbench.locator('[data-source-editor="monaco"]').count();
@@ -373,6 +386,14 @@ try{
     // the newly-created Markdown note is deliberately blank, not an IDE demo.
     await workbench.getByRole('tab',{name:'index.html',exact:true}).click();
     await workbench.scrollIntoViewIfNeeded();
+    const chrome=await workbench.evaluate(node=>({
+      header:getComputedStyle(node.querySelector('.p136-workbench-head')).backgroundImage,
+      primary:getComputedStyle(node.querySelector('.p136-workbench-command>button')).backgroundImage,
+      text:getComputedStyle(node.querySelector('.p136-workbench-command>button')).color
+    }));
+    assert.ok(chrome.header.includes('27, 38, 48'),'Studio header must render the shared Continuance material');
+    assert.ok(chrome.primary.includes('215, 230, 235'),'Studio archive action must retain its light primary surface');
+    assert.equal(chrome.text,'rgb(9, 20, 28)','Studio primary text must contrast against its actual surface');
     // Private source editing does not need to compete for GPU resources with
     // prior public WebGL stress tests. Retain genuine browser screenshot QA.
     await page.screenshot({path:join(out,'artifact-workbench-'+width+'.png'),
@@ -447,6 +468,17 @@ try{
     assert.equal(await page.getByRole('button',{name:'Prepare private playtest',exact:true}).isDisabled(),true,'Layout preview grants no upload or publication rights');
     const buildForm=page.locator('.av095-upload-grid form');
     const upload=buildForm.getByRole('button',{name:'Prepare private playtest',exact:true});
+    const formMaterials=await buildForm.evaluate(form=>{
+      const style=selector=>getComputedStyle(form.querySelector(selector));
+      return {panel:getComputedStyle(form.closest('.st-panel')).backgroundImage,
+        primary:style('button[type="submit"]').backgroundImage,
+        primaryText:style('button[type="submit"]').color,
+        field:style('.st-field input').backgroundColor};
+    });
+    assert.ok(formMaterials.panel.includes('27, 38, 48'),'Build form uses the shared panel material');
+    assert.ok(formMaterials.primary.includes('215, 230, 235'),'Private playtest action has the shared light surface');
+    assert.equal(formMaterials.primaryText,'rgb(9, 20, 28)','Private playtest action retains dark contrasting text');
+    assert.equal(formMaterials.field,'rgb(9, 13, 19)','Build form fields use the shared canvas');
     const rights=buildForm.getByRole('checkbox',{name:/I own this project/});
     assert.equal(await buildForm.getByRole('region',{name:'Browser build',exact:true}).count(),1);
     assert.equal(await buildForm.getByRole('region',{name:'Project details',exact:true}).count(),1);
@@ -536,98 +568,9 @@ try{
   // Local/focused Studio QA reuses the same private loopback fixture and all
   // Studio assertions above. Normal full Spatial CI retains every group below.
   if(!studioOnly){
-  // Direct evidence gate: native interface decoration is NOT proof of
-  // 3D architectural parity. Capture the native overlay and modeled scene
-  // in the same loopback context for independent visual comparison.
-  if(process.env.VITE_PARITY_V136_CINEMATIC==='true'){
-    for(const width of [1536,1440,390,320]){
-      const {page,context}=await contextFor(width,{motion:'no-preference'});
-      await page.goto(base,{waitUntil:'domcontentloaded'});
-      const inspect=page.getByRole('button',{name:'Inspect live 3D scene'});
-      await inspect.waitFor();
-      await page.waitForFunction(()=>{
-        const control=document.querySelector('[data-cinematic-inspection="v136.017"]');
-        const canvas=document.querySelector('.p136-living-canvas');
-        const native=document.querySelector('[data-arrival-surface="native-interface"]');
-        return control?.getAttribute('data-scene-readiness')==='ready'&&
-          canvas?.dataset.assetState==='ready'&&Boolean(native)&&
-          !native.querySelector('img,picture');
-      },null,{timeout:60000});
-      const reality=await page.evaluate(()=>{
-        const world=document.querySelector('.p136-living-world');
-        const canvas=document.querySelector('.p136-living-canvas');
-        return {renderer:world?.dataset.renderer,canvasCount:document.querySelectorAll('.p136-living-canvas').length,
-          modelState:canvas?.dataset.assetState,metrics:JSON.parse(canvas?.dataset.metrics||'{}')};
-      });
-      assert.equal(reality.renderer,'webgl','Actual Three.js scene, not vector fallback');
-      assert.equal(reality.canvasCount,1,'One persistent 3D scene / one GPU context');
-      assert.equal(reality.metrics.family,'atrium','The scene still uses the canonical Atrium family');
-      if(process.env.VITE_PARITY_V136_HORIZON_QA==='true'){
-        assert.equal(await page.locator('.p136-living-canvas').getAttribute('data-horizon'),
-          'qa-only','The same original canvas owns the approved QA-only planetary horizon');
-        assert.equal(await page.locator('.p136-living-canvas').getAttribute('data-horizon-composition'),
-          'open-institute','The QA exterior cannot be occluded by the legacy Atrium roof');
-      }
-      const openExterior=process.env.VITE_PARITY_V136_HORIZON_QA==='true';
-      assert.ok(reality.metrics.models>=1&&reality.metrics.triangles>(openExterior&&width<850?6000:10000)&&reality.metrics.drawCalls>0,
-        'The 3D screenshot must contain real modeled geometry: '+JSON.stringify(reality));
-      if(openExterior)assert.ok(reality.metrics.triangles<=(width<850?10000:25000)+128,
-        'Actual exterior render excludes the occluding Atrium roof; only bounded horizon plus compositor quads: '+JSON.stringify(reality.metrics));
-      const first=await page.screenshot({path:join(out,'arrival-native-interface-review-'+width+'.png'),
-        fullPage:false,animations:'disabled'});
-      assert.equal(await inspect.isDisabled(),false,'Loaded model enables live inspection');
-      await inspect.click();
-      await page.waitForFunction(()=>{
-        const cinema=document.querySelector('[data-cinematic-v136]');
-        return cinema?.dataset.inspection==='live'&&Number.parseFloat(getComputedStyle(cinema).opacity)<.05;
-      });
-      await page.waitForTimeout(400);
-      const live=await page.screenshot({path:join(out,'arrival-real-webgl-review-'+width+'.png'),
-        fullPage:false,animations:'disabled'});
-      assert.ok(live.length>10000,'The actual scene capture cannot be empty');
-      assert.ok(!first.equals(live),'Live model screenshot must differ from the native interface overlay');
-      const liveHeroPaint=await page.locator('.p136-hero').evaluate(node=>{
-        const style=getComputedStyle(node);
-        return {image:style.backgroundImage,color:style.backgroundColor};
-      });
-      assert.equal(liveHeroPaint.image,'none',
-        'Inspected WebGL cannot be concealed behind the old opaque hero gradient');
-      assert.ok(liveHeroPaint.color==='transparent'||liveHeroPaint.color==='rgba(0, 0, 0, 0)',
-        'Inspected stage must be transparent above one shared canvas: '+JSON.stringify(liveHeroPaint));
-      assert.equal(await page.locator('.p136-living-canvas').count(),1,'Inspection reuses one persistent GPU canvas');
-      assert.ok(await page.locator('.p136-button--primary').isVisible(),'Real public navigation remains accessible');
-      const reset=page.getByRole('button',{name:'Return to cinematic arrival'});
-      assert.equal(await reset.getAttribute('aria-pressed'),'true');
-      await reset.click();
-      await page.waitForFunction(()=>{
-        const cinema=document.querySelector('[data-cinematic-v136]');
-        return cinema?.dataset.inspection==='cinematic'&&Number.parseFloat(getComputedStyle(cinema).opacity)>.95;
-      });
-      await page.screenshot({path:join(out,'arrival-after-inspection-'+width+'.png'),
-        fullPage:false,animations:'disabled'});
-      if(width===1440&&process.env.VITE_PARITY_V136_HORIZON_QA==='true'){
-        const canvas=page.locator('.p136-living-canvas');
-        await page.waitForFunction(()=>
-          document.querySelector('.p136-living-canvas')?.dataset.horizonTier==='desktop');
-        await page.setViewportSize({width:390,height:844});
-        await page.waitForFunction(()=>
-          document.querySelector('.p136-living-canvas')?.dataset.horizonTier==='mobile');
-        assert.equal(await canvas.count(),1,'Viewport retiering keeps the original renderer');
-        await page.setViewportSize({width:1440,height:960});
-        await page.waitForFunction(()=>
-          document.querySelector('.p136-living-canvas')?.dataset.horizonTier==='desktop');
-        record('live desktop to mobile to desktop QA geometry reallocation / one canvas',
-          {tierRestored:'desktop',rendererCount:1});
-      }
-      record('direct same-context native interface vs real WebGL '+(openExterior?'Institute exterior':'Atrium')+' visual evidence '+width,{
-        width,renderer:reality.renderer,models:reality.metrics.models,
-        triangles:reality.metrics.triangles,drawCalls:reality.metrics.drawCalls,
-        composition:openExterior?'QA open Institute':'canonical Atrium',
-        approvedConceptParity:false,realDeviceTested:false});
-      await context.close();
-    }
-  }
-  // V136.017.042 loopback-only full-browser UI acceptance.
+  // The modeled homepage reveal is retired by the owner's motion-first directive.
+  // Actual shader/model/cache contracts remain in parity-v136-spatial-render-browser.
+  // Public pages now prove that they work without acquiring any ambient GPU context.
   for(const width of [1440,390,320]){
     const {page,context}=await contextFor(width,{state:'project',forceVector:true});
     await page.goto(base+'/community',{waitUntil:'domcontentloaded'});
@@ -799,39 +742,27 @@ try{
       const canvas=world?.querySelector('canvas.p136-living-canvas');
       return {width:innerWidth,scroll:document.documentElement.scrollWidth,
         hero:rect('.p136-hero'),primary:rect('.p136-button--primary'),secondary:rect('.p136-button--signal'),
-        artLoaded:Boolean(vector&&canvas),source:world?.dataset.source,renderer:world?.dataset.renderer,
+        artLoaded:Boolean(document.querySelector('[data-cinematic-v136="motion-first"]')),ambientCanvas:Boolean(canvas),
         headingFont:getComputedStyle(document.querySelector('.p136-hero h1')).fontFamily,
         headingLines:document.querySelector('.p136-hero h1').getBoundingClientRect().height/parseFloat(getComputedStyle(document.querySelector('.p136-hero h1')).lineHeight),
-        animation:getComputedStyle(document.querySelector('.p136-living-orbitals')).animationName,
+        animation:getComputedStyle(document.querySelector('.p136-cinematic-arrival')).animationName,
         h1Count:document.querySelectorAll('h1').length,dockCount:document.querySelectorAll('.ir80-dock').length};
     });
     assert.ok(layout.scroll<=width+1,'No horizontal overflow: '+JSON.stringify(layout));
     if(width<650){
       const compact=await page.locator('.p136-hero-content h1').boundingBox();
-      assert.ok(compact&&compact.y-layout.hero.y<230,'Mobile heading cannot reserve a poster-sized blank area');
+      assert.ok(compact&&compact.y-layout.hero.y<290,'Mobile artwork reservation stays bounded');
       assert.ok(layout.primary.bottom<844-100,'Primary action is available above the phone console');
-      const inspection=await page.locator('.p136017-scene-inspection').boundingBox();
-      const register=await page.locator('.p136-hero-register').boundingBox();
-      if(inspection)assert.ok(register&&inspection.y+inspection.height+8<=register.y,
-        'Mobile inspection status stays clear of the first-contact label: '+JSON.stringify({inspection,register}));
+      assert.equal(await page.locator('.p136017-scene-inspection').count(),0,
+        'Retired live-model inspection does not occupy the mobile header');
     }
 
-    if(process.env.VITE_PARITY_V136_CINEMATIC==='true'){
-      const cinema=page.locator('[data-cinematic-v136="native-institute"]');
-      assert.equal(await cinema.count(),1,'One authored native Institute presentation layer');
-      const cinemaRead=await cinema.evaluate(node=>({
-        hidden:node.getAttribute('aria-hidden'),
-        pointerEvents:getComputedStyle(node).pointerEvents,
-        native:Boolean(node.querySelector('[data-arrival-surface="native-interface"]')),
-        retiredImages:node.querySelectorAll('img,picture').length,
-        mode:node.dataset.mode
-      }));
-      assert.equal(cinemaRead.hidden,'true','Native arrival framing is decorative, not invented content');
-      assert.equal(cinemaRead.pointerEvents,'none','Native interface cannot block real navigation');
-      assert.ok(cinemaRead.native,'The first-party native Institute interface is mounted');
-      assert.equal(cinemaRead.retiredImages,0,'Removed promotional posters must not be requested');
-      assert.equal(cinemaRead.mode,'poster','Legacy static-mode token retains reduced-motion behavior');
-    } else assert.equal(await page.locator('[data-cinematic-v136]').count(),0,'Cinematic pilot is opt-in');
+    const cinema=page.locator('[data-cinematic-v136="motion-first"]');
+    assert.equal(await cinema.count(),1,'One independent authored-media presentation layer');
+    assert.equal(await cinema.getAttribute('aria-hidden'),'true');
+    assert.equal(await cinema.evaluate(n=>getComputedStyle(n).pointerEvents),'none');
+    assert.equal(await page.locator('video').count(),0,'Reduced-motion never mounts video');
+    assert.equal(layout.ambientCanvas,false,'Public arrival never acquires an ambient GPU context');
 
     assert.equal(layout.h1Count,1);assert.equal(layout.dockCount,1,'One canonical IREN companion');
     assert.equal(await page.locator('.p136-console-wayfinder').count(),1,'Exactly one persistent console wayfinder');
@@ -843,7 +774,7 @@ try{
         JSON.stringify({rail,wayfinder}));
     }
     assert.equal(await page.locator('.p136-studio-console').count(),0,'Private Studio explorer never appears for anonymous visitor');
-    assert.equal(await page.locator('.p136-console-wayfinder a[data-station]').count(),5,'Five real route stations');
+    assert.equal(await page.locator('.p136-console-wayfinder a[data-station]').count(),4,'Four owner-approved public route stations; archived V136 hero continues in spatial QA');
     assert.equal(await page.locator('.p136-console-wayfinder').getByRole('button',{name:'Open IREN companion'}).count(),1,
       'One IREN launcher belongs to the persistent console; the header may also open the same companion');
     assert.equal(await page.locator('.p136-console-member').count(),1,
@@ -851,19 +782,18 @@ try{
     assert.equal(await page.getByRole('button',{name:'Search and quick navigation'}).count(),1,
       'Search command remains discoverable');
 
-    assert.equal(await page.locator('[data-art="continuance-original-optics"]').count(),1,
-      'One first-party, noninteractive Arrival engraving preserves the existing scene');
+    assert.equal(await page.locator('[data-art="continuance-original-optics"]').count(),0,
+      'Retired instrument cannot compete with authored environment');
     assert.equal(await page.locator('.p136017-hero-upperline[aria-hidden="true"]').count(),1,
       'Authored hero metadata is explicitly decorative, never fabricated telemetry');
     await page.screenshot({path:join(out,'arrival-'+width+'.png'),fullPage:false,animations:'disabled'});
-    assert.ok(layout.artLoaded,'Procedural vector and GPU canvas available');
-    assert.ok(['webgl','vector'].includes(layout.renderer),'Supported live world renderer');
+    assert.ok(layout.artLoaded,'Independent static media/fallback surface is available');
     if(width>=1440){
       assert.ok(layout.headingLines<=2.22,'Two authored headline rows, including intentional optical interline spacing: '+JSON.stringify(layout));
       assert.ok(layout.hero.height>=665&&layout.hero.height<=895,
         'New authored Arrival fills a cinematic viewport without overwhelming the first page: '+JSON.stringify(layout));
     }
-    assert.ok(!/Georgia|Cambria/.test(layout.headingFont),'Concept uses sans typography');
+    assert.match(layout.headingFont,/Georgia/,'Arrival uses the reconciled editorial type token');
     assert.equal(layout.animation,'none','Reduced motion has a static scene');
     for(const rect of [layout.primary,layout.secondary]){assert.ok(rect.height>=44);assert.ok(rect.width>=44);assert.ok(rect.left>=0&&rect.right<=width);}
     if(width<650)assert.ok(layout.primary.bottom<750,'Primary action stays in the first phone viewport');
@@ -927,6 +857,14 @@ try{
     await page.waitForURL(base+'/discover');
     await page.locator('.av73-discover').waitFor();
     assert.equal(await page.locator('.av73-discover').count(),1);
+
+    // Browser-only route metadata must track real SPA navigation without
+    // inventing creator/project metadata or touching protected services.
+    await page.waitForFunction(()=>document.title==='Discover Original Games, Apps & Creative Work | ANEVUM');
+    assert.equal(await page.locator('link[rel="canonical"]').getAttribute('href'),'https://anevum.com/discover');
+    assert.equal(await page.locator('meta[property="og:url"]').getAttribute('content'),'https://anevum.com/discover');
+    assert.match(await page.locator('meta[name="description"]').getAttribute('content'),/published games/i);
+
     await page.goto(base,{waitUntil:'networkidle'});
     await page.getByRole('link',{name:'Join the community',exact:true}).click();
     await page.waitForURL(base+'/join');
@@ -962,13 +900,12 @@ try{
       if(path==='/community'){
         assert.equal(await page.locator('.ch7-portals a').count(),4,'Four real community paths remain');
       }
-      await page.locator('.p136-living-world[data-enabled="true"][data-sector="'+sector+'"]').waitFor();
-      assert.equal(await page.locator('.p136-living-canvas').count(),1,
-        'A single GPU surface exists on '+path);
+      assert.equal(await page.locator('.p136-living-canvas').count(),0,
+        'Ordinary public routes have no ambient GPU dependency: '+path);
       assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),
         'Spatial routes do not overflow phone viewport: '+path);
     }
-    record('WebGL public sectors / protected DOM route continuity');
+    record('motion-first public destinations / protected DOM route continuity');
     await context.close();
   }
   for(const state of ['project','unavailable']){
@@ -993,13 +930,13 @@ try{
       assert.equal(await lens.getByRole('heading',{name:fixture.title,exact:true}).count(),1);
       assert.equal(await lens.getByText(fixture.summary,{exact:true}).count(),1);
       assert.equal(await lens.getByText('CI fixture',{exact:true}).count(),1,'Real creator field is used');
-      await page.waitForFunction(()=>document.querySelector('.p136-living-world')?.dataset.geometry==='forge');
+      assert.equal(await page.locator('.p136-living-canvas').count(),0,'Artifact Lens does not acquire ambient GPU');
       assert.equal(page.url(),before,'Inspecting a public release never mutates the route');
       assert.equal(await lens.getByRole('link',{name:'Open project record'}).count(),1);
       await page.screenshot({path:join(out,'artifact-lens-project-390.png'),animations:'disabled'});
       await lens.getByRole('button',{name:'Return to results'}).click();
       await page.waitForFunction(()=>!document.querySelector('.p136-artifact-lens[open]'));
-      await page.waitForFunction(()=>document.querySelector('.p136-living-world')?.dataset.geometry==='archive');
+      assert.equal(await page.locator('.p136-living-canvas').count(),0,'Closing the lens keeps the DOM-only page');
       await inspect.click();
       await page.keyboard.press('Escape');
       await page.waitForFunction(()=>!document.querySelector('.p136-artifact-lens[open]'));
@@ -1063,63 +1000,48 @@ try{
   // rather than treating the retained standalone shader test as mesh evidence.
   for(const width of [1536,1440,390]){
     const {page,context}=await contextFor(width,{motion:'reduce'});
-    await page.goto(base,{waitUntil:'domcontentloaded'});
-    await page.waitForFunction(()=>{
-      const canvas=document.querySelector('.p136-living-canvas');
-      return canvas?.dataset.engine==='three'&&canvas.dataset.assetState==='ready';
-    },null,{timeout:30000});
-    await page.evaluate(()=>{document.querySelector('.p136-living-canvas').dataset.acceptanceIdentity='persistent'});
-    const snapshots=[];
-    for(const [route,family] of [['/','atrium'],['/discover','archive'],['/discover?category=games','forge'],['/community','relay']]){
-      if(route==='/discover')await page.locator('.p136-console-wayfinder').getByRole('link',{name:'Discover',exact:true}).click();
-      if(route.includes('category'))await page.getByRole('button',{name:/Games Independent play/i}).first().click();
-      if(route==='/community')await page.locator('.p136-console-wayfinder').getByRole('link',{name:'Commons',exact:true}).click();
-      await page.waitForFunction(family=>{
-        const c=document.querySelector('.p136-living-canvas');
-        const metrics=c?.dataset.metrics?JSON.parse(c.dataset.metrics):null;
-        return c?.dataset.assetState==='ready'&&metrics?.family===family;
-      },family,{timeout:30000});
-      // Model readiness is independent of React's lazy route module. Capture
-      // the functioning route, never a Suspense/loading screen over a ready mesh.
-      if(family==='atrium')await page.getByRole('heading',{level:1,name:/A creative universe/i}).waitFor();
-      else if(family==='relay')await page.locator('#ch7-hero-title').waitFor();
-      else await page.locator('#p136-discover-title').waitFor();
-      await page.waitForFunction(()=>document.querySelector('.p136-living-canvas')?.dataset.textureState!=='loading',null,{timeout:20000});
-      const metrics=await page.locator('.p136-living-canvas').evaluate(c=>({
-        ...JSON.parse(c.dataset.metrics),width:c.width,height:c.height,identity:c.dataset.acceptanceIdentity,textureState:c.dataset.textureState,textureFormat:c.dataset.textureFormat,textureBytes:c.dataset.textureBytes,glError:c.getContext('webgl2').getError()
-      }));
-      assert.equal(metrics.glError,0,'Models and native GPU textures render without WebGL errors');
-      assert.equal(metrics.identity,'persistent','Same canvas survives navigation');
-      assert.ok(metrics.models>=1&&metrics.models<=2,'Bounded model cache');
-      assert.ok(metrics.triangles>3000,'Actual modeled architecture was drawn');
-      assert.ok(metrics.width*metrics.height<=(width<850?650000:1800000)+2500,'Bounded GPU resolution');
-      assert.equal(await page.locator('.p136-living-canvas').count(),1,'One environment canvas');
-      await page.evaluate(()=>window.scrollTo(0,0));
-      await page.screenshot({path:join(out,'institute-'+family+'-'+width+'.png'),animations:'disabled'});
-      snapshots.push(metrics);
+    const requests=[];page.on('request',r=>requests.push(r.url()));
+    for(const path of ['/','/discover','/discover?category=games','/community']){
+      await page.goto(base+path,{waitUntil:'networkidle'});
+      await page.getByRole('heading',{level:1}).first().waitFor();
+      assert.equal(await page.locator('.p136-living-canvas').count(),0);
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
     }
-    const lost=await page.locator('.p136-living-canvas').evaluate(c=>{
-      const ext=c.getContext('webgl2')?.getExtension('WEBGL_lose_context');ext?.loseContext();return !!ext;
-    });
-    assert.equal(lost,true,'Runner can exercise real context loss');
-    await page.locator('.p136-living-world[data-renderer="vector"]').waitFor();
-    assert.equal(await page.getByRole('heading',{level:1}).count(),1,'DOM remains usable after GPU loss');
-    record('real mesh families / compressed assets / one context / cache / GPU loss '+width,{snapshots,softwareGPU:true});
+    assert.ok(!requests.some(u=>/InstituteRendererV136|atrium-.*\.glb/.test(u)),
+      'Public navigation must not download the archived ambient renderer/models');
+    record('public routes / no ambient model downloads / no GPU prerequisite '+width);
     await context.close();
   }
-  // Gamepad API fixture lives only in this local Chromium context. It never
-  // changes the real controller status of a public production visitor.
-  {
-    const {page,context}=await contextFor(390);
+  // V136.038 controller target trace is synthetic-only. It observes real DOM
+  // click/focus events in compiled React without changing controller runtime,
+  // relaxing the intended route, or introducing external telemetry.
+  for(const width of [390,320,1440]){
+    const {page,context}=await contextFor(width);
     await context.addInitScript(()=>{
       const pad={index:0,connected:true,mapping:'standard',
         buttons:Array.from({length:17},()=>({pressed:false,value:0})),axes:[0,0]};
       window.__avGamepadFixture=pad;
       Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>[pad]});
+      window.__avControllerTrace={focus:[],clicks:[]};
+      const nearest=target=>target instanceof Element?target.closest('a[href],button'):null;
+      const describe=target=>{
+        const el=nearest(target);
+        return {tag:el?.tagName||null,label:el?.getAttribute('aria-label')||null,
+          href:el?.getAttribute('href')||null,route:location.pathname+location.search};
+      };
+      document.addEventListener('focusin',event=>{
+        const events=window.__avControllerTrace.focus;
+        if(events.length<36)events.push(describe(event.target));
+      },true);
+      document.addEventListener('click',event=>{
+        const events=window.__avControllerTrace.clicks;
+        if(events.length<12)events.push(describe(event.target));
+      },true);
     });
     await page.goto(base,{waitUntil:'networkidle'});
     await page.locator('[data-av-controller-status="ready"]').waitFor({timeout:10000});
     const stations=page.locator('.p136-console-wayfinder a[data-station]');
+    assert.equal(await stations.count(),4,'Four canonical owner-approved Wayfinder stations at '+width);
     await stations.first().focus();
     const button=async(index,pressed)=>{
       await page.evaluate(({index,pressed})=>{
@@ -1130,64 +1052,88 @@ try{
     await button(15,true);
     await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='Discover',null,{timeout:5000});
     await button(15,false);
-    await page.waitForTimeout(150);
-    await button(0,true);
-    await page.waitForURL(base+'/discover',{timeout:8000});
-    await button(0,false);
+    // Two painted frames after D-pad release must leave the intended link
+    // focused. The next A edge must not activate a nearby category card.
+    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+    await page.waitForTimeout(180);
+    const focused=await page.evaluate(()=>({
+      label:document.activeElement?.getAttribute('aria-label')||null,
+      href:document.activeElement?.getAttribute('href')||null,
+      route:location.pathname+location.search
+    }));
+    assert.deepEqual(focused,{label:'Discover',href:'/discover',route:'/'},
+      'Gamepad A requires a settled canonical target before selection at '+width);
+    let navigationError=null;
+    try{
+      await button(0,true);
+      await page.waitForFunction(()=>location.pathname==='/discover',null,{timeout:8000});
+      // Holding A beyond the D-pad repeat threshold must still activate the
+      // route only once; do not interpret any extra filtered route as success.
+      await page.waitForTimeout(450);
+    }catch(error){navigationError=String(error);}
+    finally{await button(0,false);}
+    await page.waitForTimeout(220);
+    const observed=await page.evaluate(()=>({
+      route:location.pathname+location.search,
+      path:location.pathname,
+      search:location.search,
+      clicks:window.__avControllerTrace.clicks,
+      focus:window.__avControllerTrace.focus,
+      connected:window.__avGamepadFixture.connected
+    }));
+    const labelGeometry=await stations.evaluateAll(nodes=>nodes.map(node=>{
+      const label=node.querySelector('.p136-console-title strong');
+      if(!label||!label.getClientRects().length)return {visible:false};
+      const range=document.createRange();range.selectNodeContents(label);
+      const text=range.getBoundingClientRect(),box=node.getBoundingClientRect(),rail=node.closest('nav').getBoundingClientRect();
+      return {visible:true,label:label.textContent,textRight:text.right,textLeft:text.left,left:box.left,right:box.right,railRight:rail.right};
+    }));
+    assert.ok(labelGeometry.every(g=>!g.visible||(g.textLeft>=g.left&&g.textRight<=Math.min(g.right,g.railRight)-2)),
+      'Controller labels must fit in their actual rail: '+JSON.stringify(labelGeometry));
+    writeFileSync(join(out,'controller-route-'+width+'.json'),JSON.stringify({
+      contract:'v136.038-controller-route-loopback',source:process.env.ANEVUM_SOURCE_SHA||null,
+      width,syntheticOnly:true,hardwareVerified:false,focused,navigationError,labelGeometry,...observed
+    },null,2)+'\n');
+    assert.equal(navigationError,null,'Gamepad navigation failed at '+width+': '+JSON.stringify(observed));
+    assert.equal(observed.route,'/discover','Held A must end on exact focused route at '+width+': '+JSON.stringify(observed));
+    assert.equal(observed.clicks.length,1,'One A edge generates exactly one native click at '+width+': '+JSON.stringify(observed));
+    assert.equal(observed.clicks[0].href,'/discover',
+      'Gamepad selects focused Discover link, not another card at '+width+': '+JSON.stringify(observed));
+    await page.screenshot({path:join(out,'controller-route-'+width+'.png'),animations:'disabled'});
     await page.evaluate(()=>{window.__avGamepadFixture.connected=false;});
     await page.waitForFunction(()=>!document.querySelector('.p136-controller-indicator'),null,{timeout:8000});
-    record('synthetic Gamepad API / connected badge / D-pad DOM focus / A route / disconnected cleanup',{hardwareVerified:false});
+    record('synthetic Gamepad target focus / A single native click / exact stable route / cleanup '+width,{
+      focused,route:observed.route,clickCount:observed.clicks.length,hardwareVerified:false});
     await context.close();
   }
-  if(process.env.VITE_PARITY_V136_CINEMATIC==='true'){
-    const {page,context}=await contextFor(1440,{motion:'no-preference',forceVector:true});
+  {
+    const {page,context}=await contextFor(1440,{motion:'no-preference'});
     await page.goto(base,{waitUntil:'networkidle'});
-    const cinema=page.locator('[data-cinematic-v136="native-institute"]');await cinema.waitFor();
-    const opacity=()=>cinema.evaluate(el=>Number.parseFloat(getComputedStyle(el).opacity));
-    assert.ok(await opacity()>.9,'Native interface overlay begins visible');
-    // Simulate the loading status only. The actual GPU geometry is tested in
-    // its separate compiled GLB browser acceptance; this tests fade timing.
-    await page.evaluate(()=>{
-      const world=document.querySelector('.p136-living-world');
-      const canvas=world?.querySelector('.p136-living-canvas');
-      if(world)world.dataset.renderer='webgl';
-      if(canvas)canvas.dataset.assetState='loading';
-      window.scrollTo(0,550);
-    });
-    await page.waitForFunction(()=>document.querySelector('[data-cinematic-v136]')?.dataset.handoff==='hold');
-    assert.ok(await opacity()>.95,'Native overlay does not reveal an incompletely loaded 3D model');
-    await page.evaluate(()=>{
-      const canvas=document.querySelector('.p136-living-world .p136-living-canvas');
-      if(canvas)canvas.dataset.assetState='ready';
-    });
-    await page.waitForFunction(()=>{
-      const layer=document.querySelector('[data-cinematic-v136="native-institute"]');
-      return layer&&Number.parseFloat(getComputedStyle(layer).opacity)<.5;
-    });
-    assert.ok(await opacity()<.5,'Native overlay reveals one canonical live environment on scroll');
-    await page.screenshot({path:join(out,'cinematic-handoff-scroll-1440.png'),animations:'disabled'});
+    const cinema=page.locator('[data-cinematic-v136="motion-first"]');await cinema.waitFor();
+    await page.evaluate(()=>window.scrollTo(0,550));
+    assert.ok(await cinema.evaluate(n=>Number.parseFloat(getComputedStyle(n).opacity))>.95,
+      'Authored fallback remains opaque independently of scrolling or GPU readiness');
     await page.evaluate(()=>window.scrollTo(0,0));
-    await page.locator('.p136-button--primary').click();
-    await page.waitForURL(/\/discover(?:\?|$)/);
-    assert.equal(await page.locator('.p136-living-canvas').count(),1,'No duplicate WebGL renderer after cinematic navigation');
-    record('native interface-to-world fade / accessible real Discover action / one renderer');
+    await page.locator('.p136-button--primary').click();await page.waitForURL(/\/discover(?:\?|$)/);
+    assert.equal(await page.locator('.p136-living-canvas').count(),0);
+    record('independent cinematic surface / accessible real Discover action / zero ambient renderers');
     await context.close();
   }
   const {page,context}=await contextFor(390,{motion:'no-preference',forceVector:true});
   await page.goto(base,{waitUntil:'networkidle'});
-  await page.locator('.p136-living-world[data-renderer="vector"]').waitFor();
-  await page.waitForFunction(()=>document.querySelector('.p136-living-world').dataset.motion==='true');
+  assert.equal(await page.locator('.p136-living-world').count(),0);
+  assert.equal(await page.locator('[data-cinematic-v136="motion-first"]').count(),1);
   await page.getByRole('button',{name:'Open site navigation',exact:true}).click();
   await page.locator('#av79-navigation[open]').waitFor();
   const preference=page.getByRole('button',{name:'Atmospheric animation',exact:true});
   await preference.click();
   assert.equal(await preference.getAttribute('aria-pressed'),'false','Menu preference disables motion');
-  await page.waitForFunction(()=>document.querySelector('.p136-living-world').dataset.motion==='false');
+  assert.equal(await page.locator('video').count(),0,'No unapproved motion enters ordinary full build');
   await preference.click();
   assert.equal(await preference.getAttribute('aria-pressed'),'true','Menu preference restores motion');
   await page.getByRole('button',{name:'Close navigation',exact:true}).click();
   await page.emulateMedia({reducedMotion:'reduce'});
-  await page.waitForFunction(()=>document.querySelector('.p136-living-world').dataset.motion==='false');
+  assert.equal(await page.locator('video').count(),0,'No unapproved motion enters ordinary full build');
   await page.getByRole('link',{name:'Explore projects',exact:true}).press('Tab');
   const focus=await page.evaluate(()=>({tag:document.activeElement.tagName,outline:getComputedStyle(document.activeElement).outlineStyle}));
   assert.equal(focus.tag,'A');assert.equal(focus.outline,'solid');
@@ -1196,12 +1142,34 @@ try{
   await page.getByRole('button',{name:'Close navigation',exact:true}).press('Escape');
   await page.waitForFunction(()=>!document.querySelector('#av79-navigation').open);
   assert.equal(await page.getByRole('button',{name:'Open site navigation',exact:true}).evaluate(e=>e===document.activeElement),true,'Menu restores trigger focus');
-  await page.getByRole('searchbox',{name:'Search approved ANEVUM projects',exact:true}).fill('orbital & worlds');
-  await page.getByRole('searchbox',{name:'Search approved ANEVUM projects',exact:true}).press('Enter');
-  await page.waitForURL(base+'/discover?q=orbital%20%26%20worlds');
+  // Destination and switchboard handoff must not put focus behind an active dialog.
+  await page.getByRole('button',{name:'Open site navigation',exact:true}).click();
+  await page.locator('#av79-navigation[open]').waitFor();
+  await page.locator('#av79-navigation a.av79-destination[href="/discover"]').click();
+  await page.waitForURL(base+'/discover');
+  await page.waitForFunction(()=>!document.querySelector('#av79-navigation')?.open &&
+    document.activeElement?.id==='main');
+  record('Wayfinder destination focus survives dialog close');
+  await page.getByRole('button',{name:'Open site navigation',exact:true}).click();
+  await page.locator('#av79-navigation[open]').waitFor();
+  await page.locator('#av79-navigation .av79-navigation-search').click();
+  await page.locator('.portal-launcher[open]').waitFor();
+  await page.waitForFunction(()=>document.activeElement?.matches('.portal-launcher input[type="search"]'));
+  record('Wayfinder quick-search handoff keeps input focus');
+  await page.getByRole('button',{name:'Close quick navigation',exact:true}).click();
+  await page.waitForFunction(()=>!document.querySelector('.portal-launcher')?.open);
+  // Discover owns the indexed search input; the legacy label below belongs
+  // to a superseded UI. Scope this to the real visible public-index form so
+  // the header's similarly named field cannot make the locator ambiguous.
+  const discoverySearch=page.locator('.p136-discover-search-form').getByRole('searchbox',{name:'Search published projects',exact:true});
+  await discoverySearch.fill('orbital & worlds');
+  await discoverySearch.press('Enter');
+  // URLSearchParams is permitted to serialize spaces as '+' rather than '%20'.
+  // The observable contract is the decoded public search term, not encoding style.
+  await page.waitForURL(url=>url.pathname==='/discover'&&url.searchParams.get('q')==='orbital & worlds');
   await page.goto(base,{waitUntil:'networkidle'});
   await page.screenshot({path:join(out,'vector-fallback-390.png'),animations:'disabled'});
-  record('WebGL unavailable / procedural vector fallback / pause / reduced motion / keyboard / menu focus / search',focus);await context.close();
+  record('GPU-independent DOM fallback / pause / reduced motion / keyboard / menu focus / search',focus);await context.close();
 
   }
   assert.deepEqual(errors,[]);assert.deepEqual(forbidden,[]);

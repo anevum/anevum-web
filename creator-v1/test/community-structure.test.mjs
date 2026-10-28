@@ -6,8 +6,10 @@ const read=path=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
 test("current four-destination navigation retains canonical member identity and accessible dismissal",()=>{
  const navigation=read("web/src/lib/site-navigation.ts");
  const shell=read("web/src/components/Shell.tsx");
- for(const route of ['to:"/"','to:"/discover"','to:"/community"','to:"/member"'])
-  assert.ok(navigation.includes(route),"Primary destination missing: "+route);
+ for(const route of ['to:"/"','to:"/severance"','to:"/discover"','to:"/member"'])
+  assert.ok(navigation.includes(route),"Current stage primary destination missing: "+route);
+ assert.match(read("web/src/App.tsx"),/path="community"/);
+ assert.ok(shell.includes('to:"/community"'),"Community remains reachable in the drawer");
  assert.match(navigation,/PRIMARY_NAV/);
  assert.match(shell,/menuDestinations\.map/);
  assert.match(shell,/menuCategories\.map/);

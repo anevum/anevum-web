@@ -6,12 +6,15 @@ import {ProjectThumbnail} from "./ProjectThumbnail";
 import {CompactMemberIdentity} from "./CompactMemberIdentity";
 import "./project-player-shell.css";
 import {publicCreatorHandle} from "../lib/public-creator-handle";
+import {isAnevumHostedRelease} from "../lib/project-hosting";
 
 /** The public stage opens safe creator-hosted links. It never executes creator code. */
 export function ProjectPlayerShell({project,demo,source}:{
   project:Project;demo:URL|null;source:URL|null;
 }){
   const selection=selectPlayer(project.category,Boolean(demo),Boolean(source));
+  const hosted=isAnevumHostedRelease(project.id,demo);
+  const primaryLabel=hosted?"OPEN IN ANEVUM":selection.primaryAction;
   const primary=demo||source;
   const handle=publicCreatorHandle(project.creatorHandle);
   const credit=project.creatorName||"ANEVUM member";
@@ -42,7 +45,7 @@ export function ProjectPlayerShell({project,demo,source}:{
       <div className="avp-stage-shade" aria-hidden="true"/>
       <div className="avp-stage-top">
         <span>ANEVUM / EXPERIENCE SYSTEMS</span>
-        <span className="avp-state">{selection.status}</span>
+        <span className="avp-state">{hosted?"ANEVUM-HOSTED":selection.status}</span>
       </div>
       <div className="avp-stage-body">
         <span className="avp-stage-kicker">{selection.format} / {project.category.toUpperCase()}</span>
@@ -52,8 +55,8 @@ export function ProjectPlayerShell({project,demo,source}:{
         <div className="avp-stage-actions">
           {primary&&selection.primaryAction?
             <a className="avp-primary-action" href={primary.href} target="_blank" rel="noopener noreferrer"
-              aria-label={selection.primaryAction+" at "+primary.hostname+" (opens in a new tab)"}>
-              {selection.primaryAction}<span aria-hidden="true">↗</span>
+              aria-label={primaryLabel+" at "+primary.hostname+" (opens in a new tab)"}>
+              {primaryLabel}<span aria-hidden="true">↗</span>
             </a>:
             <span className="avp-no-action">NO PUBLIC EXPERIENCE LINKED</span>}
           {demo&&source&&
@@ -62,11 +65,11 @@ export function ProjectPlayerShell({project,demo,source}:{
               VIEW SOURCE <span aria-hidden="true">↗</span>
             </a>}
         </div>
-        <p className="avp-stage-handoff">{selection.explanation}</p>
+        <p className="avp-stage-handoff">{hosted?"Opens this published release in the isolated ANEVUM browser player. Device compatibility is not yet verified.":selection.explanation}</p>
       </div>
       <div className="avp-stage-foot">
         <span>{primary?"DESTINATION / "+primary.hostname:"PUBLIC MEDIA / NOT AVAILABLE"}</span>
-        <span>EXTERNAL LINKS OPEN IN A NEW TAB</span>
+        <span>{hosted?"ANEVUM PLAYER OPENS IN A NEW TAB":"EXTERNAL LINKS OPEN IN A NEW TAB"}</span>
       </div>
     </section>
     <div className="avp-stage-identity">

@@ -34,6 +34,13 @@ test("canonical display explicitly disables rating, saving and XP without access
  assert.match(panel,/Signing in does not activate project rating, saving, or XP/);
  assert.match(panel,/to="\/join"/);
  assert.match(panel,/to="\/community"/);
+ assert.match(panel,/catch\{return \{kind:"unavailable"\};\}/);
+ assert.match(panel,/data-avp-availability="unavailable"/);
+ assert.match(panel,/onRetry=\{\(\)=>setAttempt\(n=>n\+1\)\}/);
+ assert.match(panel,/onClick=\{onRetry\}/);
+ assert.match(panel,/No rating, saving, or XP action is available until the server responds/);
+ assert.match(panel,/data-avp-availability="closed"/);
+
  const style=read("web/src/components/project-player-shell.css");
  assert.match(style,/\.av9-shell \.avp-project \.avp-participation-actions a\{[^}]*min-height:56px/);
  assert.match(shortcut,/>PARTICIPATE<\/a>/);

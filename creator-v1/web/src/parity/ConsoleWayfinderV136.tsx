@@ -1,22 +1,25 @@
 import {useEffect,useRef,type KeyboardEvent} from 'react';
 import {NavLink,useLocation} from 'react-router-dom';
 import {Icon} from '../components/Icons';
+import {OrbitalMark} from '../components/OrbitalMark';
+import {isSiteLinkSelected} from '../lib/site-navigation';
 import {useLivingWorld,type WorldSector} from './LivingWorldState';
 import './console-wayfinder-v136.css';
 
 const stations=[
- {to:'/',label:'Arrival',small:'Enter',icon:'home',sector:'hero'},
- {to:'/discover',label:'Discover',small:'Explore',icon:'explore',sector:'portal'},
- {to:'/community',label:'Commons',small:'Connect',icon:'community',sector:'community'},
- {to:'/creators',label:'Creators',small:'People',icon:'people',sector:'creators'},
- {to:'/studio',label:'Studio',small:'Create',icon:'create',sector:'studio'}
+ {to:'/',label:'Home',small:'Studio',icon:'home',sector:'hero'},
+ {to:'/severance',label:'Severance',small:'Game',icon:'games',sector:'hero'},
+ {to:'/discover',label:'Discover',small:'Projects',icon:'explore',sector:'portal'},
+ {to:'/status',label:'Status',small:'Build',icon:'status',sector:'portal'}
 ] as const satisfies ReadonlyArray<{to:string;label:string;small:string;icon:string;sector:WorldSector}>;
 type Props={onOpenSearch:()=>void;onOpenIren:()=>void;memberDestination:string;memberLabel:string;memberInitial:string|null};
 export function ConsoleWayfinderV136({onOpenSearch,onOpenIren,memberDestination,memberLabel,memberInitial}:Props){
  const {setPreviewSector}=useLivingWorld();
  const location=useLocation();
  const ref=useRef<HTMLElement>(null);
- const index=stations.findIndex(s=>s.to==='/'?location.pathname==='/':location.pathname===s.to);
+ // Keep the visual selection marker on the same canonical section as NavLink,
+ // including nested creator, Commons and Studio screens.
+ const index=stations.findIndex(s=>isSiteLinkSelected(location.pathname,s.to));
  useEffect(()=>{setPreviewSector(null)},[location.pathname,location.search,setPreviewSector]);
  useEffect(()=>()=>setPreviewSector(null),[setPreviewSector]);
  function onKey(event:KeyboardEvent<HTMLElement>){
@@ -29,7 +32,7 @@ export function ConsoleWayfinderV136({onOpenSearch,onOpenIren,memberDestination,
    event.preventDefault();links[next].focus();
  }
  return <nav ref={ref} className="p136-console-wayfinder" aria-label="ANEVUM console wayfinder" onKeyDown={onKey} onMouseLeave={()=>setPreviewSector(null)} onBlur={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setPreviewSector(null)}}>
-   <span className="p136-console-ident" aria-hidden="true"><span className="p136-console-light"/> A / CONTINUANCE</span>
+   <span className="p136-console-ident" aria-hidden="true"><OrbitalMark className="p136-console-ident-mark"/><span>ANEVUM / CONTINUANCE</span></span>
    <div className="p136-console-stations">
      {stations.map((station,i)=><NavLink data-station="" key={station.to} to={station.to} end={station.to==='/'} aria-label={station.label} onFocus={()=>setPreviewSector(station.sector)} onMouseEnter={()=>setPreviewSector(station.sector)}
        className={({isActive})=>'p136-console-station'+(isActive?' is-active':'')} data-sector={station.sector}>

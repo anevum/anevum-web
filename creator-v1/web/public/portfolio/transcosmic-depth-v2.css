@@ -1,0 +1,162 @@
+
+/* V136.040 / TRANSCOSMIC. Single perspective universe. Scoped portfolio redesign. */
+:root{--tc-void:#03050c;--tc-bone:#f4eee4;--tc-copper:#c5a47a;--tc-line:rgba(192,190,179,.2)}
+html,body{background:var(--tc-void);color:var(--tc-bone)}
+.site-header{background:rgba(4,7,16,.77)!important;border-bottom:1px solid #cfbf9e44!important;backdrop-filter:blur(24px)}
+.site-header::after{background:linear-gradient(90deg,var(--tc-copper),transparent)}
+.identity{gap:13px!important;color:var(--tc-bone)!important;font-weight:700!important;letter-spacing:.08em;text-transform:uppercase}
+.identity-note{color:#b7ac9d!important;letter-spacing:.14em;text-transform:uppercase;font-size:8px!important}
+.transcosmic-mark{display:block;position:relative;flex:none;width:39px;height:39px;border:3px solid var(--tc-bone);border-right-color:transparent;border-radius:50%;transform:rotate(-29deg);filter:drop-shadow(0 0 10px #d6aa6c29)}
+.transcosmic-mark:before{content:"";position:absolute;inset:10px;border-radius:50%;background:var(--tc-copper)}
+.transcosmic-mark:after{content:"";position:absolute;left:15px;top:-9px;width:3px;height:51px;background:linear-gradient(transparent,var(--tc-bone) 27%,var(--tc-bone) 72%,transparent);transform:rotate(29deg)}
+.transcosmic-mark i{position:absolute;right:-5px;top:4px;width:7px;height:7px;border-radius:50%;background:#c6b2d2;box-shadow:0 0 12px #ccc0e77a}
+.site-header nav a{color:#d1d6dc!important;letter-spacing:.07em!important;font-size:10px!important;text-transform:uppercase}
+.site-header nav a:hover,.site-header nav a[aria-current]{color:var(--tc-copper)!important}
+.site-header nav a.nav-anevum{color:#d3b899!important;border-left-color:var(--tc-line)!important}
+.site-header .header-contact{border-color:#e4c59f!important;background:var(--tc-bone)!important;color:#0a101a!important;box-shadow:none;font-weight:760}
+.site-header .motion-button{background:rgba(14,22,35,.86);border:1px solid var(--tc-line);color:#dce3e6;box-shadow:none}
+.hero.transcosmic-arrival{position:relative;min-height:950px;height:min(1020px,100svh);padding:0!important;background:var(--tc-void);isolation:isolate;overflow:hidden}
+.hero.transcosmic-arrival::before{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;background:linear-gradient(90deg,#02040af0 0%,#03060da6 32%,#03060d17 68%,#03060d24 100%),linear-gradient(180deg,#03050c88 0%,transparent 28%,transparent 74%,var(--tc-void) 100%)}
+.hero.transcosmic-arrival::after{content:"";position:absolute;inset:0;z-index:2;opacity:.32;pointer-events:none;background:radial-gradient(ellipse at 70% 48%,transparent 2%,#02040b52 66%,#02040b 115%);transform:none;animation:none;transition:none}
+.hero.transcosmic-arrival .hero-grid{z-index:4;inset:90px var(--pad) 66px;opacity:.22;background:none;pointer-events:none;border-left:1px solid #c3b19150;border-right:1px solid #c3b19128;mask-image:linear-gradient(180deg,transparent,black 24%,black 86%,transparent)}
+.hero.transcosmic-arrival .hero-art.transcosmic-field{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;max-height:none!important;opacity:1!important;filter:none!important;mix-blend-mode:normal!important;z-index:0;background:#050917;pointer-events:none;overflow:hidden}
+.transcosmic-field .institute-backdrop{position:absolute;inset:0!important;display:block;width:100%;height:100%;object-fit:cover;object-position:70% 42%;opacity:1;transform:none!important;filter:contrast(1.06);transition:opacity .6s}
+.transcosmic-field canvas[data-depth-canvas]{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity .8s ease;z-index:2;pointer-events:none}
+.transcosmic-field[data-render-mode="webgl2"] canvas{opacity:1}
+.transcosmic-field[data-render-mode="webgl2"] .institute-backdrop{opacity:0}
+.transcosmic-field .institute-atmosphere{position:absolute;inset:-5%;z-index:3;pointer-events:none;opacity:.6;background:radial-gradient(ellipse at 75% 63%,#c9ae8b17,transparent 33%),radial-gradient(ellipse at 60% 35%,#6c6ea31c,transparent 44%);animation:institute-breathe 19s ease-in-out infinite}
+.transcosmic-field .institute-scanline{display:none}
+.hero.transcosmic-arrival .hero-copy{position:absolute!important;z-index:6;left:var(--pad);top:clamp(165px,22vh,260px);width:min(62%,900px);max-width:900px!important;padding:0!important;transform:none!important;pointer-events:auto}
+.hero.transcosmic-arrival .hero-eyebrow{color:var(--tc-copper);font:600 10px/1.5 ui-monospace,monospace;letter-spacing:.25em}
+.hero.transcosmic-arrival .hero-eyebrow .status-dot{background:var(--tc-copper);box-shadow:0 0 11px #cdb18d80}
+.hero.transcosmic-arrival h1{font-family:var(--display),Impact,'Arial Black',sans-serif!important;font-weight:800!important;font-size:clamp(69px,8.2vw,164px)!important;line-height:.81!important;letter-spacing:-.073em!important;text-transform:uppercase;margin:31px 0 25px!important;color:var(--tc-bone);text-shadow:0 14px 40px #0006}
+.hero.transcosmic-arrival h1>span{display:block;white-space:nowrap}
+.hero.transcosmic-arrival h1 em{display:inline-block!important;font:inherit!important;font-style:normal!important;color:var(--tc-copper)!important;letter-spacing:inherit!important;text-shadow:0 0 48px #c7a67825}
+.hero.transcosmic-arrival .hero-description{max-width:555px;font-size:clamp(15px,1.1vw,18px);line-height:1.66;color:#d6d5d4;letter-spacing:.002em;margin:25px 0}
+.hero.transcosmic-arrival .hero-proof{display:flex;gap:16px;max-width:650px}
+.hero.transcosmic-arrival .hero-proof span{padding:0 0 6px;border:0;border-bottom:1px solid #c8ae8f73;background:none;color:#c4c9d1;font:9px/1.5 ui-monospace,monospace;letter-spacing:.1em}
+.hero.transcosmic-arrival .hero-buttons{display:flex;gap:28px;margin-top:35px}
+.hero.transcosmic-arrival .button.primary{min-height:54px;padding:13px 22px;background:var(--tc-bone);border:1px solid var(--tc-bone);border-radius:2px;color:#060914!important;box-shadow:0 0 55px #d6bf9740;text-transform:uppercase;font-weight:760;font-size:11px;letter-spacing:.12em}
+.hero.transcosmic-arrival .button.primary:hover{transform:translateY(-3px);background:#d6bc92;box-shadow:0 0 60px #d1b08348}
+.hero.transcosmic-arrival .text-link{color:var(--tc-bone);font-size:12px;letter-spacing:.05em;text-decoration-color:#b6a18c;background:transparent;border:0;padding:11px 0;cursor:pointer}
+.hero.transcosmic-arrival .hero-footer{z-index:8!important;border-color:#baa7845c!important;color:#a6a5ac!important;font:9px/1.5 ui-monospace,monospace;letter-spacing:.16em;bottom:26px!important}
+.hero.transcosmic-arrival .hero-footer a{color:#e4caa8}
+.transcosmic-telemetry{position:absolute;z-index:6;right:var(--pad);top:128px;display:flex;align-items:flex-start;gap:17px;color:#e4d6c1;max-width:270px;text-align:right;font:9px/1.5 ui-monospace,monospace;letter-spacing:.19em;pointer-events:none}
+.transcosmic-telemetry .vertical-rule{display:block;width:1px;align-self:stretch;min-height:54px;background:linear-gradient(var(--tc-copper),transparent)}
+.transcosmic-telemetry b{display:block;font-weight:650;color:#f0e3cf;font-size:11px;margin-bottom:7px}
+.transcosmic-telemetry small{display:block;color:#acacb8;font-size:8px;line-height:1.8}
+.universe-console{position:absolute;z-index:9;right:var(--pad);bottom:125px;width:min(300px,24vw);display:grid;gap:8px;padding:17px 20px;background:#050914b0;border:1px solid #c5b38f4d;backdrop-filter:blur(20px);box-shadow:0 25px 65px #0006}
+.universe-console>span{font:9px/1.4 ui-monospace,monospace;letter-spacing:.2em;color:#c3b08e;padding-bottom:12px;border-bottom:1px solid #c1ad8c3d}
+.universe-console .universe-stations{display:grid;gap:4px}
+.universe-console button{display:flex;align-items:center;gap:14px;border:1px solid transparent;background:transparent;color:#aeb9c5;padding:10px 6px;text-align:left;min-height:43px;font:10px/1.2 ui-monospace,monospace;letter-spacing:.12em;transition:color .18s,border-color .18s,background .18s}
+.universe-console button i{width:5px;height:5px;border-radius:50%;background:#67768b;flex:none}
+.universe-console button[aria-pressed="true"]{color:#faeee0;border-color:#c7ad8575;background:#ab8f6533}
+.universe-console button[aria-pressed="true"] i{background:var(--tc-copper);box-shadow:0 0 13px var(--tc-copper)}
+.universe-console button:hover{color:#fff;background:#aebde515}
+.universe-console button:focus-visible{outline:2px solid var(--tc-copper)!important;outline-offset:1px}
+.universe-console .universe-readout{border-top:1px solid #c1ad8c3d;padding-top:13px;min-height:88px}
+.universe-readout strong{font:600 12px/1.2 ui-monospace,monospace;letter-spacing:.09em;color:var(--tc-bone)}
+.universe-readout p{margin:7px 0 0;font:11px/1.6 Body,system-ui,sans-serif;color:#b9c2ce}
+.universe-console .universe-disclaimer{font:9px/1.5 ui-monospace,monospace;color:#8996a9;opacity:.82}
+.ticker{background:#080e1c!important;border-block:1px solid #ab92674f!important;color:#c0b9ae!important}.ticker b{color:#c8a37e!important}
+.work,.capabilities,.philosophy{background:linear-gradient(180deg,#060a13,#0b1221 49%,#050810)!important}
+.work .section-top{border-color:var(--tc-line)}.section-top .eyebrow,.section-top .section-side,.visual-index{color:#d2b58d!important}
+.work-heading h2,.capability-intro h2{color:var(--tc-bone)!important}
+.work-heading h2 em,.process-copy h2 em,.about h2 em,.philosophy-statement em,.contact h2 em{color:#d1b187!important}
+.work-heading p,.capability-intro p,.about-copy p,.contact-heading p{color:#bfc7d2}
+.work-tools{border-color:var(--tc-line)!important}.filters button{border:1px solid #b9a5814a;color:#d4d6d7}.filters button.active{color:#090c11;background:#ebddca!important;border-color:#ebddca}
+.project-hit{background:#0a1020!important;border-color:#b3a07a4d!important;transform:translateZ(0);transition:transform .35s cubic-bezier(.2,.75,.2,1),border-color .3s,box-shadow .4s}
+.project-hit:hover{transform:translateY(-8px) scale(1.007);border-color:#dbba89!important;box-shadow:0 35px 110px #000c,0 0 75px #5f4b7030}
+.project-hit:focus-visible{outline:2px solid #e4c295!important;outline-offset:3px}
+.project-visual{background-color:#080e20!important}
+.project-visual::after{background:linear-gradient(180deg,#01040c19,transparent 58%,#01040cbd),linear-gradient(115deg,#05091233,transparent 48%,#684d6126)!important}
+.project-meta{background:linear-gradient(145deg,#111825,#060b15)!important;border-color:var(--tc-line)!important}
+.project-meta .eyebrow{color:#bead93!important}.project-state{border-color:var(--tc-line)!important;color:#d6c0a0!important}
+.project-meta h3{color:var(--tc-bone)}.project-meta h3 span{color:var(--tc-copper)!important}
+.transcosmic-visual{background:radial-gradient(ellipse at 67% 41%,#373055,#151527 58%,#050711)!important}
+.process-showcase{background:linear-gradient(130deg,#101726,#0a0d1d 54%,#181326)!important;border-color:var(--tc-line)!important}
+.process-stage{background:#0a0d19!important;border-color:var(--tc-line)!important}.process-visual{background:#0a0e20}
+.process-visual-field>img{filter:saturate(.85) contrast(1.18)!important;object-position:65% center}
+.process-visual-grid{opacity:.11}.process-controls button{background:#111929;color:#d6d6d4;border-color:var(--tc-line)}
+.process-controls button.active{background:#e6d5bf;color:#0b1219;border-color:#e6d5bf}
+.process-readout>span{color:var(--tc-copper)}
+.capability-list details,.contact .brief-form,.contact-direct{border-color:var(--tc-line)!important}
+.about{background:linear-gradient(135deg,#121728,#090d17)!important}
+.contact{background:radial-gradient(ellipse at 80% 30%,#4c354040,transparent 44%),#070b15!important}
+.site-footer{background:#050912;border-top-color:var(--tc-line)!important}
+#project-dialog{background:#090e19;border-color:var(--tc-line)}#project-dialog::backdrop{background:#01040de6}
+.case-header,.case-intro,.case-body,.case-navigation{background:#0b111e;border-color:var(--tc-line)!important}
+@media(max-width:1200px){.hero.transcosmic-arrival .hero-copy{width:min(70%,850px)}.universe-console{width:250px}}
+@media(max-width:900px){.hero.transcosmic-arrival{height:auto;min-height:980px}.hero.transcosmic-arrival .hero-copy{top:192px;width:80%}.hero.transcosmic-arrival h1{font-size:clamp(66px,10vw,104px)!important}.universe-console{right:var(--pad);bottom:114px;width:280px}.transcosmic-field .institute-backdrop{object-position:65% center}}
+@media(max-width:650px){
+.site-header{height:72px!important;padding:0 16px!important}.site-header .identity{font-size:11px!important;letter-spacing:.06em!important;gap:8px!important}
+.transcosmic-mark{width:32px;height:32px;border-width:2px}.transcosmic-mark:before{inset:8px}.transcosmic-mark:after{left:13px;top:-8px;height:44px;width:2px}
+.site-header .motion-button{height:42px;min-width:42px;padding:8px}.site-header .header-contact{display:none!important}
+.hero.transcosmic-arrival{min-height:985px;height:985px;max-height:none;padding:0!important}
+.hero.transcosmic-arrival::before{background:linear-gradient(180deg,#02040b8e 0%,#02040b44 20%,#02040b91 44%,#02040bd9 78%,#03050b 100%)}
+.hero.transcosmic-arrival .hero-grid{inset:73px 15px 75px;opacity:.13}
+.hero.transcosmic-arrival .hero-copy{left:20px;right:20px;top:168px;width:calc(100% - 40px);max-width:none!important;text-align:left}
+.hero.transcosmic-arrival .hero-eyebrow{font-size:8px;letter-spacing:.18em}
+.hero.transcosmic-arrival h1{font-size:clamp(50px,13.2vw,75px)!important;line-height:.91!important;letter-spacing:-.062em!important;margin:22px 0 20px!important}
+.hero.transcosmic-arrival h1>span{white-space:normal}
+.hero.transcosmic-arrival .hero-description{font-size:14px;line-height:1.56;margin:16px 0;max-width:360px;color:#e4dfd9}
+.hero.transcosmic-arrival .hero-proof{margin-top:12px;gap:8px 12px}.hero.transcosmic-arrival .hero-proof span{font-size:8px;padding-bottom:3px}
+.hero.transcosmic-arrival .hero-buttons{gap:10px;margin-top:22px}.hero.transcosmic-arrival .hero-buttons .button{min-height:49px;font-size:10px;padding:10px 13px}.hero.transcosmic-arrival .hero-buttons .text-link{font-size:10px;padding:10px 0}
+.transcosmic-telemetry{top:88px;right:20px;max-width:160px;font-size:8px;opacity:.75}.transcosmic-telemetry b{font-size:9px}.transcosmic-telemetry small{font-size:7px}
+.universe-console{left:20px;right:20px;bottom:103px;width:auto;max-width:100%;padding:11px 13px;gap:8px;background:#050913cc}
+.universe-console>span{font-size:8px;padding-bottom:6px}.universe-console .universe-stations{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.universe-console button{font-size:9px;letter-spacing:0;min-height:43px;justify-content:center;gap:8px;padding:8px 3px;white-space:nowrap}.universe-console button i{width:4px;height:4px}
+.universe-console .universe-readout{min-height:61px;padding-top:9px}.universe-readout strong{font-size:10px}.universe-readout p{font-size:10px;margin:4px 0 0}
+.universe-console .universe-disclaimer{font-size:8px}
+.hero.transcosmic-arrival .hero-footer{left:20px!important;right:20px!important;bottom:22px!important;font-size:8px!important;letter-spacing:.08em!important}.hero.transcosmic-arrival .hero-footer .hero-index{display:none}
+.project-hit:hover{transform:none}.work,.process-showcase,.about{padding-top:65px!important}
+}
+@media(max-width:360px){.hero.transcosmic-arrival h1{font-size:49px!important}.hero.transcosmic-arrival .hero-description{font-size:13px}.hero.transcosmic-arrival .hero-buttons{gap:6px}.hero.transcosmic-arrival .hero-buttons .text-link{max-width:110px}}
+@media(prefers-reduced-motion:reduce){.transcosmic-field canvas{transition:none!important}.transcosmic-field .institute-atmosphere{animation:none!important}.project-hit{transition:none!important;transform:none!important}}
+.motion-paused .transcosmic-field canvas,.motion-paused .transcosmic-field .institute-backdrop{transition:none!important}
+@media(forced-colors:active){.universe-console,.project-hit{background:Canvas!important;border-color:CanvasText!important}.universe-console button[aria-pressed="true"]{outline:2px solid Highlight}.hero-copy *{text-shadow:none!important}}
+
+/* Actual Transcosmic record now shares the same first-party dimensional art;
+   no toy planet, implied playable universe, or invented app screenshot. */
+.transcosmic-portal-thumb{position:absolute;inset:-7%;z-index:1;pointer-events:none;background:url('/portfolio/assets/transcosmic-continuum.svg') center/cover no-repeat;filter:saturate(.75) contrast(1.16);transform:scale(1.08);transition:transform .7s cubic-bezier(.2,.7,.2,1)}
+.project-transcosmic .project-hit:hover .transcosmic-portal-thumb{transform:scale(1.14) translateX(-2%)}
+.transcosmic-visual .cosmic-title{position:absolute;z-index:5;max-width:92%;overflow-wrap:anywhere;text-shadow:0 5px 28px #000e;color:var(--tc-bone)}
+.transcosmic-visual .cosmic-title small{color:#d4c3b1;letter-spacing:.19em}
+.case-art .transcosmic-portal-thumb{inset:0}
+@media(prefers-reduced-motion:reduce){.transcosmic-portal-thumb,.project-transcosmic .project-hit:hover .transcosmic-portal-thumb{transition:none;transform:none}}
+
+/* V136.040 screenshot-led mobile clearance.
+   The optional upper-right telemetry overlapped the real eyebrow at 320/390,
+   and the case-study text CTA wrapped into two lines at 320. */
+@media(max-width:650px){
+  .transcosmic-telemetry{display:none!important}
+  .hero.transcosmic-arrival .hero-buttons .text-link{
+    display:inline-flex;align-items:center;gap:8px;
+    max-width:100%;white-space:nowrap;line-height:1.4
+  }
+}
+
+/* V136.041 / the author's actual Transcosmic work is a complete destination,
+   not a leftover half-width fourth card with an empty grid cell beside it. */
+.project-transcosmic{grid-column:1/-1}
+@media(min-width:851px){
+  .project-transcosmic .project-hit{
+    display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,.65fr);
+    align-items:stretch;min-width:0
+  }
+  .project-transcosmic .project-visual{height:clamp(430px,36vw,610px)}
+  .project-transcosmic .project-meta{
+    padding:clamp(29px,3.6vw,62px);
+    border-top:0;border-left:1px solid var(--tc-line);
+    display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:28px
+  }
+  /* The feature's narrow editorial column must never crop the book-universe name. */
+  .project-transcosmic .project-meta h3{display:block;max-width:100%;min-width:0;font-size:clamp(28px,2.85vw,58px);line-height:1.08;letter-spacing:-.055em;white-space:nowrap;overflow-wrap:normal;word-break:normal}
+  .project-transcosmic .project-meta h3 span{display:block;margin:10px 0 0;font-size:clamp(11px,.95vw,16px);line-height:1.2}
+  .project-transcosmic .project-meta p{font-size:clamp(15px,1.4vw,20px);max-width:330px;line-height:1.55}
+  .project-transcosmic .project-meta .eyebrow{line-height:1.6}
+}
+@media(min-width:621px) and (max-width:850px){
+  .project-transcosmic .project-hit{display:grid;grid-template-columns:1fr}
+  .project-transcosmic .project-meta{border-left:0;border-top:1px solid var(--tc-line)}
+}

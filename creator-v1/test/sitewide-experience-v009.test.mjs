@@ -16,9 +16,14 @@ test("V009 unifies site navigation and retains native route boundaries",()=>{
  assert.match(shell,/site-shell--cinematic/);
  assert.doesNotMatch(shell,/<CinematicSiteRail\/>/);
  assert.doesNotMatch(shell,/portfolio|RHEN TERMINAL|mobile-bottom-nav/i);
- for(const path of ["/discover","/community","/creators","/levels","/create","/library","/member","/join","/status"]){
-   assert.ok(shell.includes(path),"missing genuine destination "+path);
+ for(const path of ["/severance","/discover","/community","/creators","/studio","/library","/member","/join","/status"]){
+   assert.ok(shell.includes(path),"Missing public or account destination "+path);
  }
+ // Evolution is intentionally demoted from visible navigation at the current
+ // game-development stage, but the protected route is still registered.
+ assert.match(app,/path="levels"/);
+ assert.doesNotMatch(shell,/to:"\/create",label:"Create"/);
+ assert.match(app,/path="create" element={<Navigate to="\/studio" replace\/>}/);
  assert.match(app,/<MemberGate\/>/);
  assert.match(app,/path="account" element={<Navigate to="\/member" replace\/>}/);
  assert.match(app,/path="community\/write"/);

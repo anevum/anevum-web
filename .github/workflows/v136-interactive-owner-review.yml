@@ -1,0 +1,250 @@
+name: ANEVUM V136 Interactive Owner Preview
+
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/web/**'
+      - 'creator-v1/test/motion-first-*.mjs'
+      - 'creator-v1/wrangler.v136-interactive-review.jsonc'
+      - 'creator-v1/test/v136-interactive-owner-preview.test.mjs'
+      - '.github/workflows/v136-interactive-owner-review.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: anevum-v136-owner-visual-preview
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy-owner-preview:
+    if: >-
+      github.event.pull_request.number == 763 &&
+      github.event.pull_request.base.ref == 'build/parity-v136-iren-visible-tour-20261025-037' &&
+      github.event.pull_request.head.ref == 'build/parity-v136-controller-route-probe-20261025-038' &&
+      github.event.pull_request.head.repo.full_name == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      REVIEWED_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+      CF_ACCOUNT_ID: 2f7ee83107240152097efd956a4e8335
+      CF_ZONE_ID: 8abe27259b5436af5966d3b40d9a3760
+      WORKER_NAME: anevum-v136-visual-review-001
+      REVIEW_URL: https://anevum-v136-visual-review-001.devonakins.workers.dev
+    steps:
+      - name: Checkout exact reviewed development preview source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Bound review source, package, and deployment config
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$REVIEWED_SOURCE_SHA"
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          c=json.loads(Path('creator-v1/wrangler.v136-interactive-review.jsonc').read_text())
+          assert c['name']=='anevum-v136-visual-review-001'
+          assert c['main']=='./web/v136-visual-review.worker.mjs'
+          assert c['workers_dev'] is True
+          assert c['preview_urls'] is False
+          assert c['routes']==[]
+          assert c['assets']['directory']=='./dist/react-staging'
+          assert c['assets']['binding']=='ASSETS'
+          for key in ('d1_databases','r2_buckets','kv_namespaces','services','vars','durable_objects','queues'):
+            assert key not in c, key+' is forbidden'
+          print('ISOLATED_WORKERS_DEV_NO_PRIVILEGES=PASS')
+          PY
+          grep -Fq 'data-anevum-mark="orbital-underground"' creator-v1/web/src/components/OrbitalMark.tsx
+          ! grep -Fq 'VITE_PARITY_V136_FULL===' creator-v1/web/src/components/OrbitalMark.tsx
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Review Worker route isolation, auth denial, and anonymous catalogue tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check creator-v1/web/v136-visual-review.worker.mjs
+          node --test creator-v1/test/v136-interactive-owner-preview.test.mjs
+          node --test creator-v1/test/v136-orbital-brand-lock.test.mjs
+
+      - name: Compile real V136 frontend with latest official Orbital Underground mark
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:creator-v1-web
+          VITE_PARITY_V136_FULL=true \
+            VITE_ANEVUM_OWNER_REVIEW=true \
+            VITE_PARITY_V136_NATIVE_VIDEO=false \
+            VITE_PARITY_V136_SHARED_SCENE_QA=false \
+            VITE_PARITY_V136_HORIZON_QA=false \
+            VITE_PACKAGE_CREATOR_GALLERY_V010=false \
+            npm run build:creator-v1-web:staging
+          test -s creator-v1/dist/react-staging/index.html
+          test -s creator-v1/dist/react-staging/favicon.svg
+          grep -Fq '/creator/assets/index-' creator-v1/dist/react-staging/index.html
+          grep -Fq 'v=20261025-orbital-underground' creator-v1/dist/react-staging/index.html
+          find creator-v1/dist/react-staging/assets -name '*.js' -maxdepth 2 \
+            -exec grep -ql 'orbital-underground' {} + || {
+            echo '::error::Compiled V136 lacks approved Orbital Underground mark'
+            exit 1
+          }
+          echo "V136_REVIEW_BUILD_SHA=$REVIEWED_SOURCE_SHA" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Motion-first contracts and compiled responsive review
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-strip-types --test creator-v1/test/motion-first-media.test.mjs
+          node --test creator-v1/test/visual-convergence-v136.test.mjs
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
+          npx playwright install --with-deps chromium
+          node creator-v1/test/motion-first-browser.mjs
+
+      - name: Preserve source and compiled review evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/owner-v136
+          printf '%s\n' "$REVIEWED_SOURCE_SHA" > evidence/owner-v136/source-sha.txt
+          sha256sum creator-v1/dist/react-staging/index.html > evidence/owner-v136/index.sha256
+          find creator-v1/dist/react-staging -type f | wc -l > evidence/owner-v136/asset-count.txt
+          echo 'Public link-only preview; no identity, D1, upload, checkout or payments' > evidence/owner-v136/BOUNDARY.txt
+
+      - name: Preflight Cloudflare preview Worker and preserve zone state
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          umask 077
+          api="https://api.cloudflare.com/client/v4"
+          mkdir -p "$RUNNER_TEMP/anevum-review"
+          curl --fail --silent --show-error --max-time 25 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$api/zones/$CF_ZONE_ID/workers/routes" > "$RUNNER_TEMP/anevum-review/routes-before.json"
+          jq -ce '.success==true | select(.)' "$RUNNER_TEMP/anevum-review/routes-before.json" >/dev/null
+          jq -S '.result|sort_by(.pattern)' "$RUNNER_TEMP/anevum-review/routes-before.json" > "$RUNNER_TEMP/anevum-review/routes-canonical-before.json"
+          code="$(curl --silent --show-error --max-time 25 -o "$RUNNER_TEMP/anevum-review/existing.json" \
+            -w '%{http_code}' -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$api/accounts/$CF_ACCOUNT_ID/workers/scripts/$WORKER_NAME/settings")"
+          test "$code" = 200
+          jq -e '.success==true and (.result.bindings|length)==1 and
+            .result.bindings[0].name=="ASSETS" and .result.bindings[0].type=="assets"' \
+            "$RUNNER_TEMP/anevum-review/existing.json" >/dev/null
+          jq -e --arg worker "$WORKER_NAME" '[.result[]|select(.script==$worker)]|length==0' \
+            "$RUNNER_TEMP/anevum-review/routes-before.json" >/dev/null
+          curl --fail --silent --show-error --max-time 25 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$api/accounts/$CF_ACCOUNT_ID/workers/scripts/$WORKER_NAME/deployments" \
+            > evidence/owner-v136/preview-rollback-before.json
+          # The owner preview must never alter or impersonate either live Worker.
+          curl --fail --silent --show-error --max-time 25 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$api/accounts/$CF_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" \
+            > "$RUNNER_TEMP/anevum-review/apex-before.json"
+          # V67 public beta is now at 100% on the existing production Worker.
+          # Pin exact immutable deployment AND version, not merely traffic=100;
+          # a prior successful preview never authorizes subsequent drift.
+          jq -e '.result.deployments[0].id=="2c6b4ebf-cfc6-4ddf-aa58-e61a1c8eb6a7" and
+            (.result.deployments[0].versions|map([.version_id,.percentage])) ==
+             [["a195834f-a0ec-4a0b-be78-1c6e905961f7",100]]' \
+            "$RUNNER_TEMP/anevum-review/apex-before.json" >/dev/null
+          echo 'EXISTING_ASSETS_ONLY_PREVIEW_ROLLBACK_CAPTURED_V67_100_GATEWAY_UNCHANGED=PASS'
+
+      - name: Deploy only the static isolated V136 visual review Worker
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: 2f7ee83107240152097efd956a4e8335
+        run: |
+          set -euo pipefail
+          current_head="$(git ls-remote --exit-code origin refs/heads/build/parity-v136-controller-route-probe-20261025-038 | cut -f1)"
+          test "$current_head" = "$REVIEWED_SOURCE_SHA" || {
+            echo '::error::Development head moved; refuse to replace the preview with stale source'
+            exit 1
+          }
+          npx wrangler deploy --config creator-v1/wrangler.v136-interactive-review.jsonc --define "__ANEVUM_REVIEW_SOURCE_SHA__:\"$REVIEWED_SOURCE_SHA\""
+
+      - name: Verify actual public link, interface routes, no privileged bindings or prod changes
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          api="https://api.cloudflare.com/client/v4"
+          curl --fail --silent --show-error --max-time 25 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$api/accounts/$CF_ACCOUNT_ID/workers/scripts/$WORKER_NAME/settings" \
+            > "$RUNNER_TEMP/anevum-review/worker-after.json"
+          jq -e '.success==true and
+            ([.result.bindings[]|select(.name=="ASSETS" and .type=="assets")]|length)==1 and
+            ([.result.bindings[]|select(.name!="ASSETS")]|length)==0' \
+            "$RUNNER_TEMP/anevum-review/worker-after.json" >/dev/null
+          curl --fail --silent --show-error --max-time 25 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$api/accounts/$CF_ACCOUNT_ID/workers/scripts/$WORKER_NAME/deployments" \
+            > evidence/owner-v136/preview-deployment-after.json
+          jq -e '.success==true and (.result.deployments[0].versions|length)==1 and
+            .result.deployments[0].versions[0].percentage==100' \
+            evidence/owner-v136/preview-deployment-after.json >/dev/null
+          curl --fail --silent --show-error --max-time 25 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$api/zones/$CF_ZONE_ID/workers/routes" > "$RUNNER_TEMP/anevum-review/routes-after.json"
+          jq -S '.result|sort_by(.pattern)' "$RUNNER_TEMP/anevum-review/routes-after.json" > "$RUNNER_TEMP/anevum-review/routes-canonical-after.json"
+          cmp "$RUNNER_TEMP/anevum-review/routes-canonical-before.json" "$RUNNER_TEMP/anevum-review/routes-canonical-after.json"
+          curl --fail --silent --show-error --max-time 25 \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            "$api/accounts/$CF_ACCOUNT_ID/workers/scripts/anevum-apex-prelaunch-gateway/deployments" \
+            > "$RUNNER_TEMP/anevum-review/apex-after.json"
+          jq -e --slurpfile prev "$RUNNER_TEMP/anevum-review/apex-before.json" \
+            '.result.deployments[0].id==$prev[0].result.deployments[0].id and
+             .result.deployments[0].versions==$prev[0].result.deployments[0].versions' \
+            "$RUNNER_TEMP/anevum-review/apex-after.json" >/dev/null
+          for path in /creator/ /creator/discover /creator/creators /creator/community /creator/studio; do
+            code=0
+            for attempt in 1 2 3 4 5 6; do
+              code="$(curl --silent --show-error --max-time 20 \
+                -o "$RUNNER_TEMP/anevum-review/page.html" -w '%{http_code}' "$REVIEW_URL$path" || true)"
+              if [ "$code" = 200 ] && grep -Fq 'id="root"' "$RUNNER_TEMP/anevum-review/page.html" &&
+                grep -Fq 'NON-PRODUCTION' "$RUNNER_TEMP/anevum-review/page.html"; then break; fi
+              sleep 3
+            done
+            test "$code" = 200
+            grep -Fq 'id="root"' "$RUNNER_TEMP/anevum-review/page.html"
+            grep -Fq 'NON-PRODUCTION' "$RUNNER_TEMP/anevum-review/page.html"
+          done
+          for path in /creator/api/v1/member/auth/get-session /creator/api/v1/member/creator-profile /creator/api/v1/publish; do
+            code="$(curl --silent --show-error --max-time 20 -o /dev/null -w '%{http_code}' "$REVIEW_URL$path")"
+            case "$code" in 403|404) ;; *) echo "::error::Private read not blocked $path ($code)"; exit 1;; esac
+          done
+          code="$(curl --silent --show-error --max-time 20 -X POST -o /dev/null -w '%{http_code}' "$REVIEW_URL/creator/api/v1/projects")"
+          test "$code" = 405
+          curl --fail --silent --show-error --max-time 20 "$REVIEW_URL/__review/health" \
+            > evidence/owner-v136/deployed-health.json
+          jq -e '.sourceSha == env.REVIEWED_SOURCE_SHA and .accounts == false and .publishing == false' \
+            evidence/owner-v136/deployed-health.json
+          {
+            echo "## Interactive ANEVUM V136 owner preview"
+            echo ""
+            echo "URL: $REVIEW_URL/creator/"
+            echo "Exact source SHA: $REVIEWED_SOURCE_SHA"
+            echo "Reviewed latest Orbital Underground mark"
+            echo "No production routes, sessions, D1, upload or payments"
+            echo "Zone route inventory and existing V67 100% apex gateway unchanged"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v136-owner-preview-${{ github.event.pull_request.head.sha }}
+          path: evidence/owner-v136
+          retention-days: 14

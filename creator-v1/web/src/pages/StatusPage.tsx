@@ -59,14 +59,14 @@ export function StatusPage(){
   ];
   return <div className="v091-status-page">
     <header className="v091-status-intro">
-      <span className="kicker">CONTINUANCE INSTITUTE / OPERATING STATE</span>
+      <span className="kicker">ANEVUM / VERIFIED SERVICE STATUS</span>
       <h1>What's <em>actually live.</em></h1>
       <p>Current public availability is not the same as source-code completion. Each service below is described by its own verified capability or explicitly marked as restricted.</p>
       <div className="v091-status-metrics" aria-label="Verified public catalogue">
         <div><strong>{catalogue.counts.publishedProjects}</strong><span>APPROVED RELEASES</span></div>
         <div><strong>{catalogue.counts.publishedCreators}</strong><span>INDEXED CREATOR CHANNELS</span></div>
         <div><strong>{catalogue.version}</strong><span>PUBLIC CATALOGUE API</span></div>
-        <div><strong>ACTIVE</strong><span>CONTINUANCE DEVELOPMENT</span></div>
+        <div><strong>ACTIVE</strong><span>INDEPENDENT DEVELOPMENT</span></div>
       </div>
     </header>
     <section className="v091-status-services" aria-labelledby="v091-service-heading">
@@ -82,15 +82,15 @@ export function StatusPage(){
     </section>
     <section id="development-focus" className="v136-public-focus" aria-labelledby="v136-public-focus-title">
       <header className="v136-public-focus-head">
-        <div><span>ANEVUM / PRODUCT DEVELOPMENT</span><h2 id="v136-public-focus-title">What we're working toward.</h2>
+        <div><span>ANEVUM / CURRENT DEVELOPMENT</span><h2 id="v136-public-focus-title">Building with a narrower focus.</h2>
           <p>These are development priorities, not release dates or promises of available features. The verified service capabilities above are the source of truth for what works today.</p></div>
       </header>
       <ol className="v136-public-focus-list">
-        <li><span>01 / NOW</span><strong>Make first visits clearer.</strong><p>Improve homepage explanations, mobile navigation, profile clarity and the existing IREN tour using real first-time feedback.</p></li>
-        <li><span>02 / NEXT</span><strong>Prove creator workflows.</strong><p>Validate accessible Studio editing and controlled pilot uploads before expanding approved publication access.</p></li>
-        <li><span>03 / EXPLORING</span><strong>Make feedback easier to follow.</strong><p>Research moderated feature requests and public roadmap input. Open feature voting and a universal feedback inbox are not active capabilities.</p></li>
+        <li><span>01 / NOW</span><strong>Prove Severance multiplayer.</strong><p>The immediate goal is two real browser clients connecting to an authoritative game server, synchronizing a creature encounter, death, re-entry and survival history. This is not a public release.</p></li>
+        <li><span>02 / NEXT</span><strong>Validate browser and mobile gameplay.</strong><p>Test controls, reconnect behavior, CPU and memory load on actual phones before scaling the map or player capacity. Existing Creator Studio workflows remain available only under their verified access rules.</p></li>
+        <li><span>03 / EXPLORING</span><strong>Expand only after the proof works.</strong><p>Future persistent terrain, alliances, territory and world records depend on measurable infrastructure and testing. Open feature voting and a universal feedback inbox are not active capabilities.</p></li>
       </ol>
-      <div className="v136-public-focus-foot"><Link to="/start">Choose a starting path</Link><Link to="/community">Explore community participation</Link></div>
+      <div className="v136-public-focus-foot"><Link to="/severance">Explore Severance design</Link><Link to="/community">Explore existing community activity</Link></div>
     </section>
     <p className="v091-status-note">Public counts are genuine, but do not include private drafts or unpublished projects. Account and Studio checks are read-only; this page neither opens access nor changes member records.</p>
   </div>;

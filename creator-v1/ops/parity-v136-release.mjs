@@ -208,6 +208,7 @@ function headBlob(path){
 export function source(){
  // Staged cinematic geometry/video are reviewed artifacts only. Never permit
  // deployment or packaging with either private QA or unapproved media flags.
+ assert.notEqual(process.env.VITE_ANEVUM_OWNER_REVIEW,'true','Owner-review media must never enter production packaging');
  assert.notEqual(process.env.VITE_PARITY_V136_HORIZON_QA,'true',
   'Unapproved planetary art QA must be disabled in release');
  assert.notEqual(process.env.VITE_PARITY_V136_SHARED_SCENE_QA,'true',

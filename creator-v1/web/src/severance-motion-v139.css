@@ -1,0 +1,378 @@
+/*
+ * ANEVUM V139 | THE LIVING INTERFACE
+ * Horror is expressed through image depth, reactive glass, restraint,
+ * brief digital interference and non-obscuring environmental blood.
+ * Crucially: this layer NEVER replaces real links, text, input fields,
+ * achievement data, account navigation or creator-authoring controls.
+ */
+:root {
+ --av139-fog:#0a1117;
+ --av139-blood:#cb2836;
+ --av139-blood-lit:#f24a58;
+ --av139-rim:#bbced052;
+ --av139-ink:#eef1f1;
+ --av139-metal:linear-gradient(145deg,#252b31e8,#11161ccc);
+ --av139-travel:cubic-bezier(.17,.75,.19,1);
+}
+.av139-cinematic {
+ position:absolute;
+ z-index:0;
+ inset:0;
+ overflow:hidden;
+ isolation:isolate;
+ contain:layout paint;
+ background:#080b11;
+ pointer-events:none;
+ --av139-x:0px;
+ --av139-y:0px;
+ --av139-tilt-x:0deg;
+ --av139-tilt-y:0deg;
+}
+.av139-cinematic .av138-world-scene,
+.av139-cinematic .av139-poster,
+.av139-cinematic .av139-film {
+ display:block;
+ position:absolute;
+ inset:-3%;
+ width:106%;
+ height:106%;
+ object-fit:cover;
+ object-position:center;
+ pointer-events:none;
+ user-select:none;
+ transform:translate3d(var(--av139-x),var(--av139-y),0) scale(1.03);
+ transition:transform .75s var(--av139-travel);
+ will-change:auto;
+}
+.av139-cinematic .av138-world-scene{z-index:0}
+.av139-poster{
+ z-index:1;
+ /* The React component supplies a BASE_URL-aware first-party poster. */
+ background-position:center;background-size:cover;background-repeat:no-repeat;
+}
+.av139-film {
+ z-index:2;
+ opacity:0;
+ background:transparent;
+ filter:contrast(1.07) saturate(.9);
+ transition:opacity .8s ease,transform .75s var(--av139-travel);
+}
+.av139-cinematic[data-media-state="playing"] .av139-film{opacity:1}
+.av139-cinematic :is(.av139-dust,.av139-scanlines,.av139-bloodlight){
+ position:absolute;
+ inset:0;
+ z-index:3;
+ pointer-events:none;
+}
+.av139-dust {
+ opacity:.35;
+ background:
+  radial-gradient(ellipse at 20% 95%,#6b131e29,transparent 54%),
+  radial-gradient(ellipse at 77% 50%,#d34e5633,transparent 45%),
+  repeating-linear-gradient(115deg,transparent 0 58px,#b5b4a80b 59px,transparent 60px 88px);
+ mix-blend-mode:screen;
+}
+.av139-scanlines {
+ opacity:.29;
+ background:repeating-linear-gradient(0deg,#0000 0 3px,#0006 4px,transparent 5px);
+ mix-blend-mode:multiply;
+}
+.av139-bloodlight{
+ opacity:.55;
+ background:
+  radial-gradient(ellipse 23% 32% at 92% 73%,#8c07093f,transparent),
+  radial-gradient(ellipse 23% 28% at 4% 89%,#9b0f1540,transparent),
+  linear-gradient(0deg,#17040449 0,transparent 18%);
+ mix-blend-mode:screen;
+}
+html[data-av-parity="v136-full"] .p136-hero.av138-hero>.av139-cinematic,
+.av138-sev-hero>.av139-cinematic{z-index:0}
+html[data-av-parity="v136-full"] .p136-hero.av138-hero .av138-hero-shade,
+.av138-sev-hero .av138-sev-hero-shade{z-index:1}
+.av138-sev-hero-inner,.av138-hero-content,.av138-hero-readout{position:relative;z-index:3}
+.av138-sev-hero .av139-cinematic{filter:saturate(.92)}
+
+/* Title is one real readable heading, with a tiny noninteractive red ghost
+ * revealed very briefly. Never animate the source glyph with strobe opacity.
+ */
+.av139-glitch-title{position:relative;isolation:isolate}
+.av139-glitch-title::before {
+ content:attr(data-glitch-title);
+ position:absolute;
+ inset:0 auto auto 0;
+ font:inherit;
+ width:max-content;
+ color:#fa3942;
+ opacity:0;
+ transform:translate3d(-3px,-1px,0);
+ text-shadow:4px 0 #4ae0d34b,-2px 0 #ee4254aa;
+ clip-path:inset(44% 0 43% 0);
+ pointer-events:none;
+ white-space:nowrap;
+}
+@media (prefers-reduced-motion:no-preference) {
+ .av139-glitch-title::before{animation:av139-title-tear 12s linear infinite}
+ .av139-dust{animation:av139-air-depth 22s ease-in-out infinite alternate}
+ .av139-bloodlight{animation:av139-red-breath 9s ease-in-out infinite}
+}
+@keyframes av139-title-tear{
+ 0%,76%,77.2%,96%,97.1%,100%{opacity:0;transform:translate3d(0,0,0)}
+ 76.2%,76.65%,96.2%,96.6%{opacity:.6;transform:translate3d(-5px,1px,0)}
+ 76.9%,96.9%{opacity:.36;transform:translate3d(4px,-1px,0)}
+}
+@keyframes av139-air-depth{from{transform:translate3d(-1%,0,0)}to{transform:translate3d(1%,.5%,0)}}
+@keyframes av139-red-breath{0%,100%{opacity:.36}50%{opacity:.63}}
+
+/* A physical metal-and-glass system, not a simulated editor UI. Public cards
+ * lift in perspective on pointer hover. Inputs and gamepad focus stay native. */
+.av138-site :is(.av138-plate,.av138-sev-mechanic,.av138-public-grid article),
+html[data-av-parity="v136-full"] :is(.p136-discover-world,.ch7-portals>a,
+ .p136-discover-results .p136-project-card,
+ .p136-creators .portal-box,
+ .v091-status-page .v091-status-service){
+ position:relative;
+ transform-style:preserve-3d;
+ transition:transform .38s var(--av139-travel),box-shadow .38s ease,border-color .2s ease;
+ backface-visibility:hidden;
+}
+@media (hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference) {
+ .av138-site :is(.av138-plate,.av138-sev-mechanic,.av138-public-grid article):hover,
+ html[data-av-parity="v136-full"] :is(.p136-discover-world,.ch7-portals>a,.v091-status-page .v091-status-service):hover{
+  transform:perspective(950px) rotateX(2deg) rotateY(-2deg) translate3d(0,-7px,8px);
+  box-shadow:0 20px 40px #000b,inset 0 1px #f1ecde21,0 0 16px #9d2b3140;
+ }
+ .av138-site :is(.av138-plate,.av138-sev-mechanic,.av138-public-grid article) :is(a,button):focus-visible,
+ html[data-av-parity="v136-full"] .p136-discover-world:focus-visible{
+  outline-color:#f45b63;
+ }
+ .av138-cta:hover{
+  transform:perspective(900px) rotateX(-2deg) translateY(-3px);
+  box-shadow:inset 0 1px #fff4,0 8px 20px #000a,0 0 23px #ad29384a;
+ }
+}
+/* Film perforations, caution-strip red rim and minor bleeding light live
+ * behind content. No overlay can swallow pointer/touch input. */
+.av138-site .av138-gallery,
+.av138-site .av138-sev-mechanics,
+.av138-site .av138-development,
+.av138-site .av138-sev-roadmap,
+.av138-site .av138-approved{
+ position:relative;
+ isolation:isolate;
+}
+.av138-site :is(.av138-gallery,.av138-sev-mechanics,.av138-development,.av138-sev-roadmap)::before{
+ content:"";
+ position:absolute;
+ inset:0;
+ pointer-events:none;
+ z-index:-1;
+ background:
+  radial-gradient(ellipse at 94% 4%,#a9293024,transparent 30%),
+  repeating-linear-gradient(90deg,#e0dbd308 0 1px,transparent 1px 82px);
+ opacity:.55;
+}
+.av138-site :is(.av138-section-bar h2,.av138-studio-access h2,.av138-sev-statement h2){
+ text-shadow:1px 2px 0 #040506a6,0 0 24px #f23e4620;
+}
+.av138-site :is(.av138-plate,.av138-sev-mechanic)::after{
+ content:"";
+ display:block;
+ position:absolute;
+ inset:0;
+ pointer-events:none;
+ z-index:1;
+ box-shadow:inset 0 1px #e3e2df28,inset 0 -2px #af2b35a0;
+ border:1px solid transparent;
+}
+.av138-site :is(.av138-plate,.av138-sev-mechanic):hover::after{
+ box-shadow:inset 0 1px #fff7,inset 0 -2px #ed4e56,0 0 0 1px #c72a364c;
+}
+/* Public account and navigation chrome. Never modify protected form states. */
+html[data-av-parity="v136-full"] .p136-header{
+ border-bottom:1px solid #a838447d;
+ box-shadow:0 9px 35px #0009,inset 0 -1px #d3484935;
+}
+html[data-av-parity="v136-full"] :is(.p136-header-search,.p136-header-actions button,.p136-account){
+ box-shadow:inset 0 1px #ffffff11;
+}
+html[data-av-parity="v136-full"] .p136-header a:is(:hover,:focus-visible),
+html[data-av-parity="v136-full"] .av79-navigation a:is(:hover,:focus-visible){
+ text-shadow:0 0 12px #ee424552;
+}
+html[data-av-parity="v136-full"] .p136-console-wayfinder{
+ box-shadow:inset 0 1px #f5f5f522,0 14px 50px #000d,0 0 25px #8a27302a;
+ backdrop-filter:blur(20px);
+}
+html[data-av-parity="v136-full"] .p136-console-station:is(:hover,.is-active) {
+ box-shadow:inset 0 -2px #d747519c;
+}
+
+/* Decorative "blood" is dark crimson staining at frame edges only; form
+ * fields, headings, counters, icons and meaningful text are never obstructed.
+ */
+.av139-bloodlight::after {
+ content:"";
+ position:absolute;inset:0;
+ pointer-events:none;
+ opacity:.35;
+ background:
+  radial-gradient(ellipse 7% 30% at 3% 80%,#ad0c19 0%,transparent 100%),
+  radial-gradient(ellipse 12% 21% at 90% 100%,#a0131e 0%,transparent 100%);
+}
+/* Device safety: poster & SVG remain; video never required for navigation. */
+@media(max-width:760px){
+ .av139-cinematic .av139-film{filter:contrast(1.02) saturate(.8)}
+ .av139-scanlines{opacity:.12}
+ .av139-dust{opacity:.22}
+ .av139-glitch-title::before{display:none}
+ .av138-site :is(.av138-plate,.av138-sev-mechanic){transform:none}
+}
+@media(prefers-reduced-motion:reduce){
+ .av139-cinematic :is(.av139-film,.av139-dust,.av139-bloodlight,.av138-world-scene,.av139-poster),
+ .av138-site :is(.av138-plate,.av138-sev-mechanic,.av138-public-grid article),
+ .av139-glitch-title::before{
+  transition:none!important;animation:none!important;transform:none!important;
+ }
+ .av139-glitch-title::before{display:none}
+ .av139-cinematic .av139-film{display:none!important}
+}
+@media(forced-colors:active){
+ .av139-cinematic :is(.av139-film,.av139-dust,.av139-scanlines,.av139-bloodlight){display:none}
+ .av138-site a:focus-visible{outline:2px solid Highlight!important}
+ .av139-glitch-title::before{display:none}
+}
+
+
+/* Scroll-synced "field transmission": pre-rendered WebP frames on a 2D
+ * canvas, with static HTML labels layered above. No WebGL or third-party
+ * animation runtime; fallback is poster and all links remain functional. */
+.av139-sequence {
+  position:relative;isolation:isolate;min-height:198vh;
+  background:#06090d;--av139-sequence-progress:0;
+}
+.av139-sequence-sticky {
+  position:sticky;top:0;isolation:isolate;
+  height:100vh;min-height:540px;overflow:hidden;
+  background:#080c10;
+}
+.av139-sequence-scene,.av139-sequence-screen,.av139-sequence-canvas,
+.av139-sequence-still,.av139-sequence-vignette{
+ position:absolute;inset:0;display:block;width:100%;height:100%;
+}
+.av139-sequence-scene{z-index:0;overflow:hidden}
+.av139-sequence-still{
+ background-position:center;background-size:cover;
+ z-index:0;filter:saturate(.6) contrast(1.1) brightness(.64);
+}
+.av139-sequence-canvas{
+ z-index:1;opacity:0;object-fit:cover;
+ filter:saturate(.7) contrast(1.07) brightness(.68);
+ transition:opacity .55s ease;
+ pointer-events:none;
+}
+.av139-sequence[data-frame-status="loaded"] .av139-sequence-canvas{opacity:1}
+.av139-sequence-vignette{
+ z-index:2;
+ background:
+ linear-gradient(90deg,#030609ed 0%,#05090fd1 33%,#070c1255 78%,#080d124b),
+ linear-gradient(0deg,#050609f2,transparent 36%,transparent 76%,#050609e9),
+ radial-gradient(ellipse at 92% 67%,#a2252c26,transparent 43%);
+ pointer-events:none;
+}
+.av139-sequence-screen{z-index:3;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:clamp(26px,4vw,65px)}
+.av139-sequence-topline,.av139-sequence-footer{
+ display:flex;align-items:center;justify-content:space-between;gap:16px;
+ color:#c3c7cc;text-transform:uppercase;font:800 10px/1.4 Inter,system-ui,sans-serif;letter-spacing:.22em;
+}
+.av139-sequence-topline{border-top:1px solid #a18c8e52;padding-top:14px}
+.av139-sequence-story{max-width:790px}
+.av139-sequence-index{
+ display:block;color:#e8b5b5;letter-spacing:.28em;font-size:11px;font-weight:800;margin-bottom:17px;
+}
+.av139-sequence-story h2{
+ color:#f0eceb;font:900 clamp(56px,7vw,123px)/.98 Impact,"Arial Narrow",system-ui,sans-serif;letter-spacing:.035em;
+ text-shadow:0 8px 40px #000e;
+}
+.av139-sequence-story h2 em{color:#e58a8f;font-style:normal}
+.av139-sequence-story p{margin-top:22px!important;max-width:540px;color:#c2cdd1;font-size:clamp(15px,1.5vw,19px);line-height:1.6}
+.av139-sequence-story a{
+ display:inline-flex;align-items:center;gap:14px;pointer-events:auto;min-height:46px;margin-top:28px;
+ border-bottom:1px solid #cf6670;letter-spacing:.16em;color:#f6d7da!important;font-size:12px;font-weight:800;text-decoration:none;
+}
+.av139-sequence-progress{
+ display:block;height:2px;width:min(23vw,240px);background:#b7a3a449;position:relative;overflow:hidden;
+}
+.av139-sequence-progress::after{
+ content:"";position:absolute;inset:0;transform-origin:left;transform:scaleX(var(--av139-sequence-progress));background:#ed525a;
+}
+.av139-sequence[data-frame-status="fallback"] .av139-sequence-still{opacity:1}
+@media(max-width:760px){
+ .av139-sequence{min-height:150vh}
+ .av139-sequence-sticky{min-height:460px}
+ .av139-sequence-screen{padding:30px 22px}
+ .av139-sequence-topline,.av139-sequence-footer{font-size:8px;letter-spacing:.1em}
+ .av139-sequence-topline span:last-child{display:none}
+ .av139-sequence-story h2{font-size:clamp(48px,12vw,85px)}
+ .av139-sequence-story p{font-size:14px}
+ .av139-sequence-footer span:last-child{display:none}
+ .av139-sequence-progress{width:130px}
+}
+@media(max-width:390px){
+ .av139-sequence-screen{padding:22px 18px}
+ .av139-sequence-story h2{font-size:clamp(42px,11vw,58px)}
+}
+@media(prefers-reduced-motion:reduce){
+ .av139-sequence{min-height:0;height:min(100svh,640px)}
+ .av139-sequence-sticky{position:relative;height:100%;min-height:450px}
+ .av139-sequence-canvas{display:none}
+ .av139-sequence-progress::after{transform:none}
+ .av139-sequence-screen{position:absolute}
+}
+@media(forced-colors:active){
+ .av139-sequence-scene{display:none}
+ .av139-sequence-screen{position:relative;color:CanvasText;background:Canvas}
+ .av139-sequence-story h2,.av139-sequence-story p{color:CanvasText}
+ .av139-sequence-story a{color:LinkText!important}
+}
+
+/* WCAG pause/stop/hide for looping motion lasting more than five seconds.
+ * Native button lives OUTSIDE the aria-hidden cinematic stage. */
+.av139-motion-control{
+ position:absolute;top:94px;right:clamp(17px,3vw,52px);z-index:7;
+ display:inline-flex;align-items:center;justify-content:center;
+ padding:8px 13px;min-height:42px;min-width:112px;
+ color:#eae2e2;background:#0b0e12e5;
+ border:1px solid #dc7d7d8a;border-radius:2px;
+ font:800 10px/1.4 Inter,system-ui,sans-serif;letter-spacing:.13em;
+ cursor:pointer;backdrop-filter:blur(10px);
+ box-shadow:0 8px 23px #0009,inset 0 1px #f6f6f61a;
+ transition:background .16s,color .16s,border-color .16s;
+}
+.av139-motion-control:hover{background:#2d1117;border-color:#ef6266;color:#fff}
+.av139-motion-control:focus-visible{outline:3px solid #ffb5b8;outline-offset:3px}
+.av139-motion-control[aria-pressed="true"]{color:#e7d5d5;border-color:#c65a64}
+@media(max-width:760px){
+ .av139-motion-control{top:76px;right:15px;min-width:104px;min-height:43px;font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){
+ .av139-motion-control{display:none!important}
+}
+@media(forced-colors:active){
+ .av139-motion-control{background:ButtonFace;color:ButtonText;border:1px solid ButtonText}
+ .av139-motion-control:focus-visible{outline-color:Highlight}
+}
+
+/* V140 public-only progressive depth. Source-only until verified release. */
+@media (hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference) and (forced-colors:none) {
+ html[data-av140-public="true"] #main .av140-tilt-active:not(:focus-within) {
+  transform:perspective(1100px) rotateX(var(--av140-tilt-x,0deg)) rotateY(var(--av140-tilt-y,0deg)) translate3d(0,-4px,7px);
+  box-shadow:0 18px 38px #0009,inset 0 1px #f4ebe52b,0 0 22px #ad303b1b;
+ }
+}
+@media (prefers-reduced-motion:no-preference) and (forced-colors:none) {
+ html[data-av140-public="true"] #main .av140-reveal-pending {opacity:0}
+ html[data-av140-public="true"] #main .av140-revealed {opacity:1;transition:opacity .48s ease-out}
+}
+@media (prefers-reduced-motion:reduce), (forced-colors:active) {
+ html #main .av140-reveal-pending {opacity:1!important;transition:none!important}
+}

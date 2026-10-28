@@ -5,6 +5,7 @@ import publicStage from "./a-staging-worker.mjs";
 import canonicalIdentity from "../canonical-auth/worker.mjs";
 import {reconcileSupporterSubscriptions,reconcileSupporterCheckouts} from "../canonical-auth/supporter.mjs";
 import {cleanupCanonicalStudioAssets} from "../canonical-auth/studio-assets.mjs";
+import {cleanupCanonicalStudioLargeAssets} from "../canonical-auth/studio-large-assets.mjs";
 
 const ORIGIN="https://a.anevum.com";
 const CANONICAL_PATH=/^\/api\/v1\/member\//;
@@ -20,7 +21,9 @@ export default {
    ctx.waitUntil(Promise.all([
      reconcileSupporterSubscriptions(env),reconcileSupporterCheckouts(env),
      // Inert with either Studio flag OFF or no dedicated private R2 binding.
-     cleanupCanonicalStudioAssets(env)
+     cleanupCanonicalStudioAssets(env),
+      // Additive large-file cleanup runs even while new uploads are paused.
+      cleanupCanonicalStudioLargeAssets(env)
    ]));
  },
  async fetch(request,env,ctx){

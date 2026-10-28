@@ -3,6 +3,7 @@
 // No project in this service is public, installed, approved, or executable.
 import {boundedText} from './request-body.mjs';
 import {canonicalStudioAssets,studioUploadReady} from './studio-assets.mjs';
+import {canonicalStudioLargeAssets,studioLargeSchemaReady,studioLargeUploadReady,studioLargeCapacitySummary} from './studio-large-assets.mjs';
 import {studioReviewSchemaReady,freezeStudioReview,withdrawStudioReview,decideStudioReview,getStudioReviewReceipt,listStudioReviewReceipts} from './studio-submissions.mjs';
 
 const PREFIX='/api/v1/member/studio';
@@ -107,9 +108,10 @@ export async function canonicalStudioSchemaReady(env){
  }catch{return false;}
 }
 export async function studioReadiness(env){
- if(env?.CANONICAL_CREATOR_STUDIO_ENABLED!=='true')return {studioReady:false,studioUploadsReady:false};
+ if(env?.CANONICAL_CREATOR_STUDIO_ENABLED!=='true')return {studioReady:false,studioUploadsReady:false,studioLargeUploadsReady:false};
  const ready=await canonicalStudioSchemaReady(env);
- return {studioReady:ready,studioUploadsReady:Boolean(ready&&studioUploadReady(env))};
+ return {studioReady:ready,studioUploadsReady:Boolean(ready&&studioUploadReady(env)),
+   studioLargeUploadsReady:Boolean(ready&&await studioLargeSchemaReady(env)&&studioLargeUploadReady(env))};
 }
 export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/1000)){
  if(env?.CANONICAL_CREATOR_STUDIO_ENABLED!=='true')return fail(404,'Creator Studio is not activated');
@@ -176,7 +178,12 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
     return fail(409,'Project revision changed');
    const kinds=ELIGIBLE_ASSET_KINDS[selected.category]||[];
    const hasExternal=Boolean(selected.demo_url||selected.source_url);
-   const eligible=hasExternal?true:kinds.length?Boolean(await getOne(db,
+   const largeSchema=await studioLargeSchemaReady(env);
+   const largeEligible=largeSchema&&kinds.some(kind=>kind==='package'||kind==='video')&&Boolean(await getOne(db,
+    "SELECT id FROM member_studio_large_assets WHERE project_id=? AND user_id=? AND status='quarantined' "+
+    "AND manifest_sha256 IS NOT NULL AND kind IN ("+kinds.map(()=>'?').join(',')+") LIMIT 1",
+    [id,user.id,...kinds]));
+   const eligible=(hasExternal||largeEligible)?true:kinds.length?Boolean(await getOne(db,
     "SELECT id FROM member_studio_assets WHERE project_id=? AND user_id=? AND status='quarantined' "+
     "AND sha256 IS NOT NULL AND kind IN ("+kinds.map(()=>'?').join(',')+") LIMIT 1",
     [id,user.id,...kinds])):false;
@@ -186,8 +193,11 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
     "SELECT id FROM member_studio_assets WHERE project_id=? AND user_id=? AND status<>'quarantined' LIMIT 1",
     [id,user.id]);
    if(unfinished)return fail(409,'Finish or remove incomplete uploads before submitting for review');
+   if(largeSchema&&await getOne(db,
+    "SELECT id FROM member_studio_large_assets WHERE project_id=? AND user_id=? AND status<>'quarantined' LIMIT 1",
+    [id,user.id]))return fail(409,'Finish or remove incomplete large uploads before submission');
    if(!await pace(db,user.id,'project',now,30))return fail(429,'Too many project updates');
-   const frozen=await freezeStudioReview(db,selected,user.id,now,kinds,hasExternal);
+   const frozen=await freezeStudioReview(db,selected,user.id,now,kinds,hasExternal,largeSchema);
    return frozen?json({project:dbRow(frozen.project),submissionId:frozen.submissionId,
     attachmentCount:frozen.assetCount,
     note:'Review snapshot locked privately; no publication, video playback or gameplay activation.'}):
@@ -205,6 +215,9 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
    if(selected.revision!==input.revision||!['draft','changes_requested','rejected'].includes(selected.status))
     return fail(409,'Project must be withdrawn from review before deletion');
    if(!await pace(db,user.id,'project',now,30))return fail(429,'Too many project updates');
+   if(await studioLargeSchemaReady(env)&&await getOne(db,
+    'SELECT id FROM member_studio_large_assets WHERE project_id=? AND user_id=? LIMIT 1',[id,user.id]))
+    return fail(409,'Remove private large files before deleting this project');
    const result=await rows(db,
     "DELETE FROM member_studio_projects WHERE id=? AND user_id=? AND revision=? "+
     "AND status IN ('draft','changes_requested','rejected') AND "+
@@ -228,6 +241,32 @@ export async function canonicalStudio(req,env,user,now=Math.floor(Date.now()/100
   return changed.length===1?json({project:dbRow(changed[0])}):fail(409,'Project changed, reload your draft');
  }catch{return fail(503,'Creator Studio transaction unavailable');}
 }
+// Additive large-file channel for the same verified canonical Better Auth owner.
+// The original 20 MiB /assets API and the Godot V003 validator remain unchanged.
+export async function canonicalStudioLarge(req,env,user,now=Math.floor(Date.now()/1000)){
+ if(env?.CANONICAL_CREATOR_STUDIO_ENABLED!=='true')return fail(404,'Creator Studio not active');
+ if(!await canonicalStudioSchemaReady(env)||!await studioLargeSchemaReady(env))
+  return fail(503,'Large-file schema not ready');
+ if(typeof user?.id!=='string'||!user.id||user.emailVerified!==true)
+  return fail(403,'Verified member required');
+ const db=env.MEMBER_DB, url=new URL(req.url);
+ if(url.search)return fail(400,'Unexpected query');
+ const match=url.pathname.match(
+  /^\/api\/v1\/member\/studio\/projects\/([0-9a-f-]{36})\/assets-large(?:\/([a-f0-9]{32})(?:\/(file|start|complete|parts)(?:\/([1-9][0-9]{0,2}))?)?)?$/);
+ if(!match||!UUID.test(match[1]))return fail(404,'Not found');
+ const [,projectId,asset,action,rawPart]=match;
+ if(rawPart&&action!=='parts')return fail(404,'Not found');
+ const part=rawPart?Number(rawPart):0;
+ try{
+  const profile=await getOne(db,'SELECT handle FROM member_creator_profiles WHERE user_id=?',[user.id]);
+  if(!profile)return fail(409,'Complete your creator profile first');
+  const project=await getOne(db,'SELECT '+COLS+' FROM member_studio_projects WHERE id=? AND user_id=?',
+   [projectId,user.id]);
+  if(!project)return fail(404,'Project not found');
+  return canonicalStudioLargeAssets(req,env,user,project,{asset,action,part,now,pace});
+ }catch{return fail(503,'Private large-file service unavailable');}
+}
+
 export async function canonicalStudioReview(req,env,user,now=Math.floor(Date.now()/1000)){
  if(env?.CANONICAL_CREATOR_STUDIO_ENABLED!=='true'||!await canonicalStudioSchemaReady(env))
   return fail(404,'Studio review not active');
@@ -258,16 +297,19 @@ export async function canonicalStudioReview(req,env,user,now=Math.floor(Date.now
      note:'Frozen private review receipt. Quarantined assets have NOT passed malware scanning; no rendering or download is authorized.',
      assets:receipt.assets.map(a=>({...a,status:'quarantined',uploadedAt:null}))});
    }
+   const enabledLarge=await studioLargeSchemaReady(env);
+   const largeCount=enabledLarge?"(SELECT COUNT(*) FROM member_studio_submission_large_assets l WHERE l.submission_id=snap.id)":"0";
+   const largeBytes=enabledLarge?"(SELECT COALESCE(SUM(l.size_bytes),0) FROM member_studio_submission_large_assets l WHERE l.submission_id=snap.id)":"0";
    const projects=await rows(db,
     'SELECT s.id,s.title,s.summary,s.category,s.status,s.revision,s.submitted_at,s.demo_url,s.source_url,'+
     's.license_name,s.ai_disclosure,s.human_contribution,s.user_id,p.handle,'+
-    "(SELECT COUNT(*) FROM member_studio_submission_assets a WHERE a.submission_id=snap.id) AS attachment_count,"+
-    "(SELECT COALESCE(SUM(a.size_bytes),0) FROM member_studio_submission_assets a WHERE a.submission_id=snap.id) AS attachment_bytes "+
+    "((SELECT COUNT(*) FROM member_studio_submission_assets a WHERE a.submission_id=snap.id)+"+largeCount+") AS attachment_count,"+
+    "((SELECT COALESCE(SUM(a.size_bytes),0) FROM member_studio_submission_assets a WHERE a.submission_id=snap.id)+"+largeBytes+") AS attachment_bytes "+
     'FROM member_studio_projects s JOIN member_creator_profiles p ON p.user_id=s.user_id '+
     "JOIN member_studio_submissions snap ON snap.project_id=s.id AND snap.user_id=s.user_id "+
     "AND snap.project_revision=s.revision AND snap.status='pending_review' "+
     "WHERE s.status='pending_review' AND s.user_id<>? ORDER BY s.submitted_at ASC LIMIT 50",[user.id]);
-   return json({projects});
+   return json({projects,storage:await studioLargeCapacitySummary(env)});
   }
   if(manifest)return fail(405,'Manifest is read-only');
   if(req.method!=='POST')return fail(405,'Method not allowed');
@@ -298,6 +340,9 @@ export async function canonicalStudioExport(env,userId){
  const assets=await rows(env.MEMBER_DB,
   'SELECT id,project_id,filename,kind,content_type,size_bytes,status,sha256,uploaded_at FROM member_studio_assets WHERE user_id=? ORDER BY created_at ASC LIMIT 500',
   [userId]);
+ const largeAssets=await studioLargeSchemaReady(env)?await rows(env.MEMBER_DB,
+  'SELECT id,project_id,filename,kind,content_type,size_bytes,status,manifest_sha256,uploaded_at '+
+  'FROM member_studio_large_assets WHERE user_id=? ORDER BY created_at ASC LIMIT 500',[userId]):[];
  const reviewReceipts=await rows(env.MEMBER_DB,
   'SELECT id,project_id,project_revision,status,title,submitted_at,resolved_at FROM member_studio_submissions '+
   'WHERE user_id=? ORDER BY submitted_at ASC LIMIT 1000',[userId]);
@@ -308,5 +353,9 @@ export async function canonicalStudioExport(env,userId){
  return {projects,assets:assets.map(a=>({
   id:a.id,projectId:a.project_id,name:a.filename,kind:a.kind,contentType:a.content_type,
   sizeBytes:Number(a.size_bytes),status:a.status,sha256:a.sha256,uploadedAt:a.uploaded_at
+ })),largeAssets:largeAssets.map(a=>({
+  id:a.id,projectId:a.project_id,name:a.filename,kind:a.kind,contentType:a.content_type,
+  sizeBytes:Number(a.size_bytes),status:a.status,manifestSha256:a.manifest_sha256,
+  digestType:'part-manifest',uploadedAt:a.uploaded_at
  })),reviewReceipts,reviewAssetHashes};
 }

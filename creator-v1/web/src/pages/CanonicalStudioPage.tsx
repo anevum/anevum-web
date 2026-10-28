@@ -6,9 +6,10 @@ import {
  studioUpload,studioCheckFile,studioDeleteAsset,studioDownloadUrl,studioWithdraw,studioDeleteProject,studioReviewQueue,
  studioEligibleUpload,studioReviewManifest,studioReviewReceipts,
  studioReviewDecision,type StudioDraft,type StudioProject,type StudioAsset,type StudioCategory,
- type StudioReviewProject,type StudioReviewHistory,type StudioReviewManifest,type StudioReviewReceipt
+ type StudioReviewProject,type StudioReviewHistory,type StudioReviewManifest,type StudioReviewReceipt,type StudioLargeAsset,type StudioLargeCapacity
 } from '../lib/canonical-studio';
 import './canonical-studio.css';
+import {StudioLargeUploader} from '../components/StudioLargeUploader';
 import {readWithDeadline} from '../../../shared/read-deadline.mjs';
 import {nativeCreatorEnabled} from '../lib/native-creator-v095';
 import {workbenchAlphaEnabled} from '../lib/workbench-alpha';
@@ -22,7 +23,7 @@ const CATEGORY_GUIDE:Record<StudioCategory,string>={
  creative:'Attach original creative work, audio, images, writing or a ZIP.',
  music:'Attach MP3 or WAV audio. Files remain in private quarantine.',
  art:'Attach PNG, JPEG, WebP or GIF artwork. Images are not rendered from quarantine.',
- video:'Attach a private MP4 or WebM (up to 20 MiB), or use an external HTTPS video link. Playback and transcoding are not enabled.',
+ video:'Attach an MP4 or WebM to the private vault; the extended channel accepts media up to 1 GiB. Playback and publication require separate review.',
  writing:'Attach PDF, TXT or Markdown writing.',
  learning:'Attach a PDF, Markdown, text or interactive ZIP project.',
  research:'Attach research as PDF, TXT, Markdown or ZIP.',
@@ -199,6 +200,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
  const [project,setProject]=useState<StudioProject|null>(null);
  const [history,setHistory]=useState<StudioReviewHistory[]>([]);
  const [assetSummary,setAssetSummary]=useState<StudioAsset[]|null>(null);
+ const [largeSummary,setLargeSummary]=useState<StudioLargeAsset[]>([]);
  const [draft,setDraft]=useState<StudioDraft>({...empty});
  const [saved,setSaved]=useState<StudioDraft|null>(null);
  const [loading,setLoading]=useState(!create),[busy,setBusy]=useState(false);
@@ -216,7 +218,40 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
  },[id,create]);
  const canEdit=!project||editable(project);
  const dirty=saved===null||JSON.stringify(saved)!==JSON.stringify(draft);
- const eligibleAttachment=Boolean(assetSummary?.some(a=>a.status==='quarantined'&&
+ // An untouched new form is not an unsaved revision. Never persist draft data
+ // in browser storage; the server is the sole authority for saved revisions.
+ const hasUnsavedEdits=JSON.stringify(saved??empty)!==JSON.stringify(draft);
+ useEffect(()=>{
+  if(!hasUnsavedEdits&&!busy)return;
+  // BrowserRouter uses declarative routing: route blockers belong to a data
+  // router. Protect real Link navigation and tab reload without changing the
+  // application router, intercepting history, or interfering with edit fields.
+  function onBeforeUnload(event:BeforeUnloadEvent){
+   event.preventDefault();event.returnValue='';
+  }
+  function onLinkClick(event:MouseEvent){
+   if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||
+      event.shiftKey||event.altKey||!(event.target instanceof Element))return;
+   const anchor=event.target.closest<HTMLAnchorElement>('a[href]');
+   if(!anchor||anchor.hasAttribute('download')||
+      (anchor.target&&anchor.target!=='_self'))return;
+   const destination=new URL(anchor.href,window.location.href);
+   if(destination.origin!==window.location.origin||
+      destination.pathname===window.location.pathname)return;
+   if(!window.confirm(busy
+     ?'A private Studio action is still processing. Leave this page?'
+     :'You have unsaved Studio changes. Leave without saving?')){
+    event.preventDefault();event.stopImmediatePropagation();
+   }
+  }
+  window.addEventListener('beforeunload',onBeforeUnload);
+  document.addEventListener('click',onLinkClick,true);
+  return()=>{
+   window.removeEventListener('beforeunload',onBeforeUnload);
+   document.removeEventListener('click',onLinkClick,true);
+  };
+ },[hasUnsavedEdits,busy]);
+ const eligibleAttachment=Boolean([...(assetSummary||[]),...largeSummary].some(a=>a.status==='quarantined'&&
   studioEligibleUpload(draft.category,a.kind)));
  const ready=Boolean((draft.demoUrl||draft.sourceUrl||eligibleAttachment)&&draft.license.trim().length>=2&&
   draft.aiDisclosure.trim().length>=6&&draft.humanContribution.trim().length>=10);
@@ -306,10 +341,17 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
     {input('license','RIGHTS OR LICENSE',80,0,'Identify your actual rights; a public repository does not automatically grant reuse.')}
     {input('aiDisclosure','AI INVOLVEMENT',1200,3,'Explain any AI assistance, or write that none was used.')}
     {input('humanContribution','HUMAN CREATION & CREDITS',1200,3,'Credit your own work and collaborators.')}
+    <p id="st-save-state" className="st-save-state" role="status"
+       data-unsaved={hasUnsavedEdits?"true":"false"}>
+     {busy?'PRIVATE ACTION IN PROGRESS — WAIT FOR CONFIRMATION':
+      hasUnsavedEdits?'UNSAVED CHANGES — SAVE BEFORE LEAVING':
+      project?'CURRENT REVISION SAVED / PRIVATE':
+      'NOT YET CREATED — YOUR FIRST SAVE MAKES A PRIVATE RECORD'}
+    </p>
     <div className="st-actions">
-     <button className="st-action" type="submit" disabled={locked||!dirty}>
+     <button className="st-action" type="submit" disabled={locked||!(project?dirty:hasUnsavedEdits)}>
       {busy?'SAVING PRIVATE REVISION…':project?'SAVE CHANGES':'CREATE PRIVATE DRAFT'}</button>
-     <Link className="st-link" to="/studio/records">RETURN TO PROJECTS ↗</Link>
+     <Link className="st-link" to="/studio/records" aria-describedby="st-save-state">RETURN TO PROJECTS ↗</Link>
     </div>
     {notice&&<p role="status" className="st-success">{notice}</p>}
    </form>
@@ -331,6 +373,7 @@ function StudioEditor({create,uploadsReady}:{create:boolean;uploadsReady:boolean
     {project&&<StudioReceipts projectId={project.id} revision={project.revision}/>}
     {project&&<StudioUploader project={project} uploadsReady={uploadsReady}
      onAssetsChanged={setAssetSummary} onProjectChanged={setProject}/>}
+    {project&&<StudioLargeUploader project={project} onAssetsChanged={setLargeSummary} onProjectChanged={setProject}/>}
     <section className="st-panel">
      <p className="st-kicker">04 / REVIEW READINESS</p><h2>SUBMISSION CHECK.</h2>
      <ul className="st-checklist">
@@ -379,7 +422,7 @@ function StudioReceipts({projectId,revision}:{projectId:string;revision:number})
    <small>{entry.assets.length} ATTACHED FILE{entry.assets.length===1?'':'S'}</small>
    {entry.assets.map(asset=><div key={asset.id} className="st-manifest-file">
     <strong>{asset.name} · {size(asset.sizeBytes)}</strong>
-    <code>SHA-256: {asset.sha256}</code>
+    <code>{asset.digestType==='part-manifest'?'PART MANIFEST SHA-256':'FILE SHA-256'}: {asset.sha256}</code>
    </div>)}
   </article>)}
  </section>;
@@ -512,14 +555,15 @@ function StudioUploader({project,uploadsReady,onAssetsChanged,onProjectChanged}:
 }
 
 function StudioReview(){
+ const [storage,setStorage]=useState<StudioLargeCapacity|null>(null);
  const [projects,setProjects]=useState<StudioReviewProject[]>([]),[error,setError]=useState(''),[loading,setLoading]=useState(true);
  const [reason,setReason]=useState<Record<string,string>>({}),[busy,setBusy]=useState('');
  const [manifests,setManifests]=useState<Record<string,StudioReviewManifest>>({});
  const [inspection,setInspection]=useState('');
  const [attempt,setAttempt]=useState(0);
- async function refresh(){const r=await readWithDeadline(signal=>studioReviewQueue(signal));setProjects(r.projects);}
+ async function refresh(){const r=await readWithDeadline(signal=>studioReviewQueue(signal));setProjects(r.projects);setStorage(r.storage);}
  useEffect(()=>{const ac=new AbortController();setLoading(true);setError('');
-  readWithDeadline(signal=>studioReviewQueue(signal),ac.signal).then(r=>{if(!ac.signal.aborted)setProjects(r.projects)})
+  readWithDeadline(signal=>studioReviewQueue(signal),ac.signal).then(r=>{if(!ac.signal.aborted){setProjects(r.projects);setStorage(r.storage);}})
   .catch(e=>{if(!ac.signal.aborted)setError(showError(e))})
   .finally(()=>{if(!ac.signal.aborted)setLoading(false)});
   return()=>ac.abort();},[attempt]);
@@ -540,6 +584,18 @@ function StudioReview(){
  return <section className="st-panel">
   <div className="st-section-head"><div><p className="st-kicker">STAFF-ONLY / CANONICAL REVIEW</p><h2>AWAITING A DECISION.</h2></div></div>
   <p className="st-muted">This desk can request changes or reject a private submission. Publication and approval remain intentionally disabled until file scanning and the public release pipeline exist.</p>
+  {storage?.ready&&<div className="st-storage-meter" aria-label="Large creator asset capacity monitoring">
+   <div><span>EXTENDED CREATOR VAULT / RESERVED</span>
+    <strong>{size(storage.reservedBytes||0)} / {size(storage.capacityBytes||26843545600)}</strong></div>
+   <progress max={storage.capacityBytes||26843545600} value={Math.min(storage.reservedBytes||0,storage.capacityBytes||26843545600)}
+    aria-label="Extended creator vault capacity"/>
+   <small>QUARANTINED FILES: {storage.quarantinedFiles||0} · ACTIVE TRANSFERS: {storage.activeUploads||0} · TOTAL RESERVATIONS: {storage.totalFiles||0}</small>
+   {storage.threshold!=='normal'&&<p className="st-muted" role="status">
+    {storage.threshold==='critical'?'CAPACITY CRITICAL (95%+) — pause new reservations until reviewed.':
+     'CAPACITY ATTENTION (80%+) — review account budget and provision additional storage.'}
+   </p>}
+   <small>Database reservations, not actual Cloudflare billing. Other buckets and incomplete multipart operations affect the bill.</small>
+  </div>}
   {loading&&<p role="status">Checking staff permission and review queue…</p>}
   {error&&<div role="alert" className="st-error"><p>{error}</p><button className="st-action" type="button" onClick={()=>setAttempt(n=>n+1)}>RETRY REVIEW QUEUE</button></div>}
   {!loading&&!error&&projects.length===0&&<p>No pending private project records.</p>}
@@ -558,7 +614,7 @@ function StudioReview(){
      <p className="st-muted">{manifests[p.id].note}</p>
      {manifests[p.id].assets.map(a=><div className="st-manifest-file" key={a.id}>
       <strong>{a.name}</strong><small>{a.kind.toUpperCase()} / {size(a.sizeBytes)} / {a.status.toUpperCase()}</small>
-      <code>{a.sha256||'Hash pending'}</code>
+      <code>{a.digestType==='part-manifest'?'PART MANIFEST SHA-256: ':'FILE SHA-256: '}{a.sha256||'Hash pending'}</code>
      </div>)}
     </div>}
    </div>}

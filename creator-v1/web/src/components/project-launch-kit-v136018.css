@@ -21,7 +21,11 @@
   cursor:pointer;font:inherit;font-size:.79rem
 }
 .avp-launch-kit button:hover{background:rgba(82,148,167,.24)}
-.avp-launch-kit-embed{margin-top:1rem}
+.avp-launch-kit-announcement,.avp-launch-kit-embed{margin-top:1rem}
+.avp-launch-kit-announcement summary,.avp-launch-kit-embed summary{cursor:pointer;font-size:.82rem}
+.avp-launch-kit-announcement input{margin-top:.35rem}
+.avp-launch-kit-announcement .member-caption{font-size:.73rem;margin:.45rem 0 0;color:inherit}
+.avp-launch-kit-embed{margin-top:.85rem}
 .avp-launch-kit-embed summary{cursor:pointer;font-size:.82rem}
 .avp-launch-kit-embed p{margin:.6rem 0}
 .avp-launch-kit-embed textarea{overflow-wrap:anywhere}

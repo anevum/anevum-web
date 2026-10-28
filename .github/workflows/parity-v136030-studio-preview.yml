@@ -6,8 +6,12 @@ on:
       - 'creator-v1/web/src/parity/ArtifactWorkbenchV136.tsx'
       - 'creator-v1/web/src/parity/SourcePreviewV136.tsx'
       - 'creator-v1/web/src/parity/artifact-workbench-v136.css'
+      - 'creator-v1/web/src/parity/continuance-design-system.css'
       - 'creator-v1/web/src/parity/workbench-file-ops-v136.ts'
       - 'creator-v1/web/src/pages/NativeCreatorStudio.tsx'
+      - 'creator-v1/web/src/lib/godot-local-sniff-v136.ts'
+      - 'creator-v1/web/src/lib/native-compatibility-v101.ts'
+      - 'creator-v1/test/native-compatibility-v101.test.mjs'
       - 'creator-v1/web/src/pages/native-creator-v095.css'
       - 'creator-v1/web/src/components/Shell.tsx'
       - 'creator-v1/test/parity-v136-full-browser.mjs'
@@ -51,7 +55,7 @@ jobs:
         run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
       - name: Check archive/privacy contracts, typecheck and compile
         run: |
-          node --experimental-strip-types --test creator-v1/test/source-archive-v136.test.mjs creator-v1/test/parity-v136-concept-convergence.test.mjs creator-v1/test/parity-v136-integrated-overhaul.test.mjs
+          node --experimental-strip-types --test creator-v1/test/native-compatibility-v101.test.mjs creator-v1/test/source-archive-v136.test.mjs creator-v1/test/parity-v136-concept-convergence.test.mjs creator-v1/test/parity-v136-integrated-overhaul.test.mjs
           npm run check:creator-v1-web
           npm run build:creator-v1-web
       - name: Install isolated Chromium tooling

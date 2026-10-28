@@ -1,6 +1,97 @@
+# Current production and development — stealth beta continuation
+Session: `ANEVUM.WEB.BUILD.2026-10-26.002.STEALTH-BETA-CUTOVER`.
+
+**Production:** V63 `77c8a9a6-f1ee-44fb-87d6-3271b3115c37` at 100%, deployment
+`cd6fa4f2-4382-49e2-a02b-b3d73cc41398`, October 26, 2026, 5:45 PM EDT.
+Exact immutable source: `93613f6ad18f243b88af1b168626558ce4bbaec7`.
+Rollback: V61 `c53d8b9c-625b-459a-a8cc-67ebb50155fd` at 100%.
+Cloudflare postflight preserved all settings, 26 bindings, 45 routes, controller
+allocation and disabled workers.dev/preview exposure. No data/schema/auth,
+large-upload, publishing or commerce activation accompanied this frontend release.
+
+Downloaded artifacts independently verified: all 557 candidate asset hashes,
+sealed gateway SHA-256 `1884ff0dd3c8aa3d38711167af0b4552c9b200b3148e72d9ba6d90d23171ef99`,
+556 identical paired shared files, 152 retained earned-media objects and exclusion
+of owner-review-only media. Exact release receipts: 46 full interactions,
+68 production-mode, 11 Discover and 36 collections checks; no runtime errors or
+forbidden requests. Actual live Chromium confirmed an existing authenticated
+member session, retained server-provided progression, new IREN box-pet/help,
+Studio, discovery, Commons, Start, Guide, Status, creators and collection views.
+`/boards` currently redirects to `/community` through retained hosting behavior;
+this is not proof of standalone public Boards delivery. Guest and cross-account
+certification, physical Safari/Xbox and independent media approval remain distinct.
+
+**Continuing source:** existing #763 only. The settled-account browser fix
+`c6cbd338eb64af8c1c45c3eea157e8c4d89c3f2d` removes a transient-spinner race,
+requires the synthetic private dashboard and opens the actual profile editor.
+The next source correction incorporates the release-only Studio/Commons cascade
+repairs into this same product lane and replaces literal warm/purple Arrival,
+header, rail and action gradients with the approved cold-metal materials.
+Compiled browser acceptance now measures these actual backgrounds and primary
+contrast, in addition to tokens, overflow, responsive routes and privacy gates.
+These newest styling changes require exact-head CI and the existing sealed release
+process before they become live. No new staging site or competing theme is created.
+
+**CI distinction:** the old V132 packager correctly rejects broad V136 source;
+its frozen allowlist is unchanged. Original Creator Verify failed a stale account
+capture selector, not a runtime identity failure; current corrected-head results
+belong in #784. Do not call all workflows green until read back.
+
+**Next:** finish corrected browser acceptance, package any verified visual
+successor with exact UI blob pins, preserve V61/V63 rollback, then extend secure
+friends/messages/collaboration behind server gates. Cinematic final media is
+unapproved; no payments or experimental upload activation. Canonical durable
+record: [#784](https://github.com/anevum/anevum-web/issues/784), board #325,
+release #783. Current provider records and this block supersede historical
+production/staging statements below; preserve their provenance.
+
+---
+
+# Current baseline release
+Session: `ANEVUM.WEB.PACKAGE.2026-10-26.001.UNIFIED-BASELINE-RELEASE`.
+
+Production cutover preparation is now the priority. Existing #763 remains the sole product/UI authority at verified `241e0f16`; the packaging-only `release/parity-v136-unified-baseline-20261026-005` candidate carries that frontend on the prior controlled backend. Keep broad development-source release denial intact. See the existing reconstruction record for exact scope, current 99/1 rollback, unchanged protected services and pending production-mode/inactive-version gates.
+
+Current verified continuation: `4810e60be4d62b57ed47352da4add737f27b55c8`, 27 development passes, deployed review version `8a504c19-e292-4d0c-b0dd-38a31202bfea` with matching health/provider receipts. Studio library/form screenshots are accepted technically. The next bounded source fixes retained Start/Field Guide materials and tests their real local interactions; its own verification is pending. #763 and current receipts carry the latest status.
+
+
+Latest verified checkpoint: `9c3b60906179795d68a479d5643ac06452993440`, 27 development workflows passed and one intentional production denial. Review deployment `c4f0a73b-e8c8-42a3-a09c-dfbf060a893f` / version `4b4119e8-c216-44a9-9c88-301a1c17417f` matched live health. Studio/controller fixes passed exact-source browser receipts and actual screenshot inspection. The next bounded continuation reconciles the remaining authenticated build library, surrounding console and private-playtest form in the same design authority; its new exact-source verification is pending. Current receipts in #763 and live health supersede this dated checkpoint.
+
+Canonical source remains PR #763 / `build/parity-v136-controller-route-probe-20261025-038`; #779 is merged history. The exact deployment, browser inspection, visual corrections, Godot boundaries and review-only rollback procedure are recorded in [the existing reconstruction record](UNIFIED-CINEMATIC-RECONSTRUCTION.md#unified-baseline-release--october-26-2026). Current running source is established by `/__review/health` and the owner-preview deployment artifact, not older historical paragraphs below. One existing design authority and one ASSETS-only review Worker remain. Production, artistic approval #335, release #333 and publishing #329 remain separately gated.
+
+---
+
+# CURRENT — unified cinematic reconstruction
+Session: `ANEVUM.WEB.OVERHAUL.2026-10-25.001.UNIFIED-CINEMATIC-RECONSTRUCTION`.
+
+**Continue existing PR #763** (`build/parity-v136-controller-route-probe-20261025-038`). The former review PR #779 was merged into this existing branch at `eed2c3b1`; it is not an active competing source.
+Product #763 `f58bed93` and audit #778 `5e4731c3` are consolidated at merge `c15e809f`.
+The motion-first implementation removes the default ambient renderer, reuses the
+media contract/player, adds a rights/status-tracked original review candidate and
+one shared semantic token/material authority. See [current implementation/backlog](UNIFIED-CINEMATIC-RECONSTRUCTION.md),
+[design authority](ANEVUM.WEB.NORTHSTAR.2026-10-25.002.MOTION-FIRST-SINGLE-STREAM.md)
+and [complete ownership registry](anevum-site-surface-registry.v1.json).
+
+Same owner preview: https://anevum-v136-visual-review-001.devonakins.workers.dev/creator/ .
+Artwork/type/materials remain a candidate awaiting #335 acceptance. Preview CI is
+the only authorized deployment lane for this milestone. Production 99/1 allocation,
+main, accounts, publishing, payments, D1 and protected products are unchanged.
+
+**Historical entries below are chronological evidence, not competing current instructions.**
+The previous live-WebGL background and blanket decorative-art prohibition are
+SUPERSEDED for explicitly ledgered owner-review media by the present owner request.
+Production art approval remains closed. Do not revive modeled ambiance or restart
+from #735 because an old paragraph names it active.
+
+---
+
 # ACTIVE — ANEVUM PARITY V136 unified website overhaul
 Session: `ANEVUM.WEB.UPDATE.2026-10-25.001.SITEWIDE-OVERHAUL-SYNCHRONIZATION`
 Updated: 2026-10-25
+
+> **OWNER SUPERSEDING DIRECTION — 2026-10-25, motion-first single stream.**
+> [ANEVUM WEB North Star / motion-first consolidation](./ANEVUM.WEB.NORTHSTAR.2026-10-25.002.MOTION-FIRST-SINGLE-STREAM.md) governs *all new visitor-facing visual work*. The former priority of an always-running 3D Institute model/background is **retired as a requirement**. Ambient web composition must move toward authored high-resolution poster/video/optional bounded frame sequences, with actual React UI above it. Keep legitimate 3D in Creator Studio/game/simulation tools, preserve functional code, and do not remove historical assets or weaken production gates. Exact Orbital Underground logo remains mandatory. This note supersedes WebGL-ambient-first language **below**, which is retained for historical provenance only.
+> The parallel theming redesign owns final approved type/color/panel tokens; reconcile them into this same implementation lineage, not a second website shell.
 **Owner development baseline: draft PR #735 — Concept Convergence II, head `888bf4cc` after #748 integration.**
 **Current bounded continuation: V136.031 — Studio archive handoff and private-playtest form, stacked on draft #753.**
 **Sitewide integration: PR #738 was merged into the #735 development branch, preserving selected changes from PR #737 and #736. Those historical PRs need no blind re-import.**

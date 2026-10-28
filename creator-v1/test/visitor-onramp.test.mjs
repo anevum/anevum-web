@@ -11,10 +11,15 @@ const discover = read("web/src/pages/DiscoverPage.tsx");
 const css = read("web/src/start-page.css");
 const api = read("api/worker.mjs");
 
-test("visitor onramp is reachable from homepage, desktop and mobile, independently of submission", () => {
+test("visitor onramp remains routable without crowding the development-stage menu", () => {
   assert.match(app, /path="start" element={<StartPage\/>}/);
-  assert.match(shell, /to="\/start">Start Here<\/Link>/);
-  assert.match(home, /to="\/start"[^>]*>FIND YOUR PLACE/);
+  assert.match(app, /path="join"/);
+  assert.match(shell, /to="\/about">About<\/Link>/);
+  assert.match(shell, /to="\/status">Status<\/Link>/);
+  // First visit still supports a working deep link and member path; it is
+  // no longer a separate primary homepage advertising route.
+  assert.match(start, /EXPLORE CREATOR STUDIO/);
+  assert.match(home, /to="\/start"/);
   assert.doesNotMatch(start, /memberCreateProject|memberSubmitProject|memberSetSaved/);
   assert.match(start, /You do not have to be a developer/);
   assert.match(start, /Joining ANEVUM does not automatically grant upload or publication access/);

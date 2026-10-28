@@ -1,0 +1,52 @@
+name: ANEVUM V136 Creator Large Upload Gate
+on:
+  pull_request:
+    paths:
+      - creator-v1/canonical-auth/**
+      - creator-v1/web/**
+      - creator-v1/test/canonical-large-uploads-v001.test.mjs
+      - docs/production/ANEVUM.WEB.BUILD.2026-10-26.001.CREATOR-UPLOAD-FOUNDATION.md
+      - .github/workflows/creator-large-uploads-v001-verify.yml
+  push:
+    branches:
+      - build/parity-v136-creator-r2-capacity-20261026-001
+permissions:
+  contents: read
+jobs:
+  private-large-builds:
+    name: Private Creator R2 and D1
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install offline QA dependencies without lifecycle scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Parse isolated Worker modules
+        run: |
+          node --check creator-v1/canonical-auth/studio-large-assets.mjs
+          node --check creator-v1/canonical-auth/studio-submissions.mjs
+          node --check creator-v1/canonical-auth/studio.mjs
+          node --check creator-v1/canonical-auth/worker.mjs
+          node --check creator-v1/web/a-canonical-stage.review.mjs
+      - name: Run adversarial private Creator Studio tests
+        run: |
+          node --test creator-v1/test/canonical-large-uploads-v001.test.mjs
+          node --test creator-v1/test/canonical-studio-v043.test.mjs
+          node --test creator-v1/test/member-account-closure-v036.test.mjs
+      - name: Typecheck and build retained integrated Creator V1 website
+        run: |
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web:staging
+      - name: Verify safe release disposition
+        run: |
+          echo 'REVIEW_ONLY=true' >> "$GITHUB_STEP_SUMMARY"
+          echo 'CANONICAL_LARGE_UPLOADS_ENABLED=false' >> "$GITHUB_STEP_SUMMARY"
+          echo 'PRODUCTION_DEPLOYMENT=NOT_PERFORMED' >> "$GITHUB_STEP_SUMMARY"
+          echo 'D1_MIGRATION=NOT_APPLIED_BY_CI' >> "$GITHUB_STEP_SUMMARY"
+          echo 'UNTRUSTED_USER_CONTENT=PRIVATE_QUARANTINE' >> "$GITHUB_STEP_SUMMARY"

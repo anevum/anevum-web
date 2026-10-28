@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { Shell } from "./components/Shell";
+import {PublicPageMetadata} from "./components/PublicPageMetadata";
 import { CinematicLandingPage } from "./pages/CinematicLandingPage";
 import { FieldGuidePage } from "./pages/FieldGuidePage";
 import { StartPage } from "./pages/StartPage";
@@ -8,6 +9,8 @@ import { DiscoverPage } from "./pages/DiscoverPage";
 import { ProjectPage } from "./pages/ProjectPage";
 import { CreatorPage, CreatorsPage } from "./pages/CreatorsPage";
 import { StatusPage } from "./pages/StatusPage";
+import { SeverancePage } from "./pages/SeverancePage";
+import { AboutStudioPage } from "./pages/AboutStudioPage";
 import { LevelsPage } from "./pages/LevelsPage";
 import { RecognitionRegistryPage } from "./pages/RecognitionRegistryPage";
 import { AuraCodexPage } from "./pages/AuraCodexPage";
@@ -68,7 +71,7 @@ function CanonicalPublicHandle(){
     ? <Phase1PublicMemberPage/> : <Navigate to="/" replace/>;
 }
 export default function App(){
-  return <AnevumNotifications><Routes>
+  return <AnevumNotifications><PublicPageMetadata/><Routes>
     <Route path="atlas/*" element={<LegacyAtlasRedirect/>}/>
     <Route element={<Shell/>}>
     <Route index element={<CinematicLandingPage/>}/>
@@ -77,6 +80,8 @@ export default function App(){
     <Route path="member" element={<Phase1MemberPage/>}/>
     <Route path="member/setup" element={<Navigate to="/member" replace/>}/>
     <Route path="start" element={<StartPage/>}/>
+    <Route path="severance" element={<SeverancePage/>}/>
+    <Route path="about" element={<AboutStudioPage/>}/>
     <Route path="guide" element={<FieldGuidePage/>}/>
     <Route path="discover" element={<DiscoverPage/>}/>
     <Route path="projects/:id" element={<ProjectPage/>}/>

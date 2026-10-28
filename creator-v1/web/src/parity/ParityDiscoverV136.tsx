@@ -103,9 +103,9 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
     <section className="p136-discover-hero" aria-labelledby="p136-discover-title">
       <div className="p136-discover-hero-grid" aria-hidden="true"/>
       <div className="p136-discover-hero-copy">
-        <p className="p136-discover-register"><span className="p136-discover-signal"/> THE CONTINUANCE INSTITUTE <span className="p136-register-break">/</span> OPEN DISCOVERY</p>
-        <h1 id="p136-discover-title">{activeLabel?<>Discover <em>{activeLabel.toLowerCase()}.</em></>:<>Discover what <em>comes next.</em></>}</h1>
-        <p>Explore independent games, software, art and research. Every listed project comes from the approved public catalogue, not a fabricated showcase or paid ranking.</p>
+        <p className="p136-discover-register"><span className="p136-discover-signal"/> ANEVUM <span className="p136-register-break">/</span> APPROVED PUBLIC WORK</p>
+        <h1 id="p136-discover-title">{activeLabel?<>Discover <em>{activeLabel.toLowerCase()}.</em></>:<>Discover real <em>independent work.</em></>}</h1>
+        <p>Games, software and creative work that have been approved for public release. Search the real catalogue; unpublished projects remain private.</p>
         <div className="p136-discover-hero-actions">
           <a className="p136-discover-action-primary" href="#p136-discover-search">Explore the index <Icon name="arrow" size={19}/></a>
           <Link className="p136-discover-action-quiet" to="/studio">Open Creator Studio <Icon name="create" size={17}/></Link>
@@ -115,7 +115,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
         <header><span className="p136-discover-signal"/> <strong>ANEVUM / INDEX</strong><span>PUBLIC</span></header>
         <div className="p136-discover-readout-inner">
           <span>01 / INDEPENDENT CREATION</span>
-          <strong>Original work.<br/>Open horizons.</strong>
+          <strong>Real releases.<br/>No placeholders.</strong>
           <p>Browse freely. Creator publishing is still in testing; only approved releases appear in the public index.</p>
         </div>
         <div className="p136-discover-readout-foot"><span>EXPLORE / CONNECT / CONTINUE</span><Icon name="explore" size={18}/></div>
@@ -221,7 +221,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
         {packagesInScope&&packagesCount===100&&<p className="p136-discover-status">Browser upload search covers the latest 100 approved releases.</p>}
         {resourceState==='ready'&&<PageNav route="/discover" search={params} nextCursor={nextCursor} label="Project catalogue"/>}
       </section>
-      <footer className="p136-discover-footer"><span>ANEVUM / THE CONTINUANCE INSTITUTE</span><Link to="/community">Continue into the community <Icon name="arrow" size={16}/></Link></footer>
+      <footer className="p136-discover-footer"><span>ANEVUM / INDEPENDENT SOFTWARE STUDIO</span><Link to="/community">Continue into the community <Icon name="arrow" size={16}/></Link></footer>
     </div>
     {inspected&&<ArtifactLensV136 selection={inspected} returnTo={current} onClose={()=>setInspected(null)}/>}
   </div>;

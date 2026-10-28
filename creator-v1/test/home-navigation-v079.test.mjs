@@ -24,7 +24,7 @@ test("V079 has valid React source and applies its override last",()=>{
  assert.match(app,/path="community\/threads\/:id" element={<CommunityThread\/>}/);
 });
 
-test("V079 replaces illustrated mega-menu with accessible destinations and actual owner identity",()=>{
+test("V137 retains the accessible Wayfinder and verified owner identity while simplifying visible destinations",()=>{
  assert.doesNotMatch(shell,/CosmicArtwork|portalCategories|av9-navigation-world-art/);
  assert.match(shell,/menuDestinations/);
  assert.match(shell,/menuCategories/);
@@ -35,10 +35,10 @@ test("V079 replaces illustrated mega-menu with accessible destinations and actua
  assert.match(shell,/id="av79-navigation"/);
  assert.match(shell,/showModal\(\)/);
  assert.match(shell,/onCancel=\{\(\)=>setMenuOpen\(false\)\}/);
- for(const route of ["/discover?category=games","/discover","/community","/create","/levels","/library","/join"])
+ for(const route of ["/severance","/discover?category=games","/discover","/community","/studio","/status","/library","/join"])
   assert.ok(shell.includes(route),"Missing useful route "+route);
  const navDestinations=shell.slice(shell.indexOf("const menuDestinations"),shell.indexOf("const menuCategories"));
- assert.equal((navDestinations.match(/label:"(?:Play|Discover|Community|Create)"/g)||[]).length,4);
+ assert.equal((navDestinations.match(/label:"(?:Severance|Discover|Development|Creator Studio)"/g)||[]).length,4);
 });
 
 test("V079 owner identity comes solely from verified account-space records",()=>{

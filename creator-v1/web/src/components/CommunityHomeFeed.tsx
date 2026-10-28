@@ -197,7 +197,7 @@ export function CommunityHomeFeed({projects,creators,state,communityEnabled}:Pro
           <h3>Find your place.</h3>
           <p>Read the boards, find collaborators, and prepare your own work.</p>
           <Link to="/boards">PUBLIC BOARDS <Icon name="arrow" size={14}/></Link>
-          <Link to="/create">CREATOR STUDIO <Icon name="arrow" size={14}/></Link>
+          <Link to="/studio">CREATOR STUDIO <Icon name="arrow" size={14}/></Link>
           <Link to="/levels">ARTIFACTS & LEVELS <Icon name="arrow" size={14}/></Link>
         </section>
       </aside>

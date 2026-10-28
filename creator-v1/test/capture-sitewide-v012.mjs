@@ -79,8 +79,8 @@ try{
   ["levels","/levels",".av75-levels-page"],["recognition","/recognition",".av75-recognition-page"],["start","/start",".start-page"],
   ["guide","/guide",".field-guide-page"],["status","/status",".v091-status-page"],
   ["guest-library","/library",".member-gate"],
-  ["member-account","/account",".av12-account-await"],
-  ["member-profile-editor","/account/edit",".av12-account-await"],
+  ["member-account","/account",".ms-dashboard"],
+  ["member-profile-editor","/account/edit",".ms-dashboard"],
   // Legacy /create routes now lead into the canonical Better Auth Studio.
   // The fixture is an unauthenticated browser, so no draft or upload appears.
   ["member-studio","/create",".st-status"],["member-draft","/create/new",".st-status"]
@@ -106,6 +106,20 @@ try{
     await until(()=>evaluate("document.readyState==='complete'&&location.pathname==="+JSON.stringify("/creator"+(path==="/account"||path==="/account/edit"?"/member":
       name==="member-studio"?"/studio":name==="member-draft"?"/studio/new":path))+"&&!!document.querySelector("+JSON.stringify(selector)+")"));
    }catch(error){throw Error("SITEWIDE_V012_PAGE_MISSING_"+name+"_"+width+":"+String(error));}
+   // These aliases resolve to the canonical member space. The loopback
+   // fixture signs in its labelled synthetic member; a transient session
+   // spinner is not an accepted account or profile-editor capture.
+   if(name==="member-account"||name==="member-profile-editor"){
+    await until(()=>evaluate('document.querySelector(".ms-handle")?.textContent==="@offline_artist"&&!document.querySelector(".ms-body> [role=status]")'));
+    if(name==="member-profile-editor"){
+     await evaluate('[...document.querySelectorAll(".ms-toolbar button")].find(button=>button.textContent.trim()==="Edit profile").click()');
+     await until(()=>evaluate('!!document.querySelector(".ms-profile-editor form")'));
+    }
+    const memberView=await evaluate('({identity:document.querySelector(".ms-handle")?.textContent,private:document.querySelector(".ms-visibility")?.textContent,editor:!!document.querySelector(".ms-profile-editor form"),earned:document.querySelectorAll(".is-earned").length,loading:!!document.querySelector(".av12-account-await")})');
+    if(memberView.identity!=="@offline_artist"||memberView.private!=="PRIVATE WORLD"||memberView.loading||memberView.earned||
+       (name==="member-profile-editor"&&!memberView.editor))
+     throw Error("SITEWIDE_V012_CANONICAL_MEMBER_"+name+"_"+width+":"+JSON.stringify(memberView));
+   }
    await delay(240);
    const state=await evaluate('(()=>({path:location.pathname,header:document.querySelectorAll(".site-header.av9-header").length,main:document.querySelectorAll("#main").length,cinematic:!!document.querySelector(".site-shell--cinematic.av9-shell"),overflow:document.documentElement.scrollWidth>innerWidth+1,width:innerWidth,atlas:!!document.querySelector(".atm-header,.atlas-universe-viewport"),fixture:getComputedStyle(document.body,"::after").content.includes("SYNTHETIC OFFLINE REVIEW")}))()');
    const presentation=await evaluate(String.raw`(()=>{
@@ -231,6 +245,15 @@ try{
          await until(()=>evaluate('!!window.__playerShareCopy&&!!document.querySelector(".avp-share-status")?.textContent?.includes("copied")'));
          const copied=await evaluate('window.__playerShareCopy');
          if(copied!==base+"/creator/projects/"+id)throw Error("PLAYER_V002_SHARE_URL_"+width+":"+copied);
+         // No clipboard permission: expose actual public copy and select it
+         // on desktop/mobile without persistence, network writes or new APIs.
+         await evaluate('(()=>{Object.defineProperty(navigator,"clipboard",{configurable:true,value:undefined});document.querySelector(".avp-launch-kit-actions button:nth-child(2)").click()})()');
+         await until(()=>evaluate('(()=>{const d=document.querySelector(".avp-launch-kit-announcement"),f=d?.querySelector("input");return d?.open&&document.activeElement===f&&f.selectionStart===0&&f.selectionEnd===f.value.length&&f.value.includes("on ANEVUM:")})()'));
+         await evaluate('document.querySelector(".avp-launch-kit-actions button:first-child").click()');
+         await until(()=>evaluate('(()=>{const f=document.querySelector("#avp-launch-kit-link");return document.activeElement===f&&f.selectionStart===0&&f.selectionEnd===f.value.length})()'));
+         await evaluate('(()=>{const d=document.querySelector(".avp-launch-kit-embed");d.open=true;d.querySelector("button").click()})()');
+         await until(()=>evaluate('(()=>{const f=document.querySelector("#avp-launch-kit-html");return document.activeElement===f&&f.selectionStart===0&&f.selectionEnd===f.value.length})()'));
+         console.log("PLAYER_V139_MANUAL_SHARE_"+width+"=PASS");
          await evaluate('document.querySelector(".avp-stage-shortcuts a[href=\\"#avp-participation\\"]").click()');
          await until(()=>evaluate('location.hash==="#avp-participation"'));
          if(!await evaluate('!!document.getElementById("avp-participation")'))throw Error("PLAYER_V002_PARTICIPATION_ANCHOR_"+width);
@@ -238,13 +261,24 @@ try{
      }
      // Legacy and unavailable capability must remain independently fail-closed.
      if(width===1440||width===390){
-       for(const [mode,expected] of [["legacy","legacy-guest"],["offline","closed"]]){
+       for(const [mode,expected] of [["legacy","legacy-guest"],["offline","unavailable"]]){
          const change=await fetch(base+"/__player-member-fixture?mode="+mode);
          if(!change.ok)throw Error("PLAYER_V005_MEMBER_MODE_SETUP_"+mode);
          await client.send("Page.navigate",{url:base+"/creator/projects/00000000000000000000000000000001"});
          await until(()=>evaluate('document.querySelector(".engagement-panel")?.getAttribute("data-avp-availability")==='+JSON.stringify(expected)));
-         const info=await evaluate('(()=>{const p=document.querySelector(".engagement-panel");return {kind:p?.dataset.avpAvailability,hasVotes:!!p?.querySelector(".engagement-votes"),hasSave:!!p?.querySelector("button"),heading:p?.querySelector("h2")?.textContent};})()');
-         if(info.kind!==expected||info.hasVotes||info.hasSave||!info.heading)throw Error("PLAYER_V005_MEMBER_GATE_"+mode+"_"+width+":"+JSON.stringify(info));
+         const info=await evaluate('(()=>{const p=document.querySelector(".engagement-panel");return {kind:p?.dataset.avpAvailability,hasVotes:!!p?.querySelector(".engagement-votes"),hasSave:!!p?.querySelector(".avp-canonical-save-button,.engagement-actions button"),retry:!!p?.querySelector("button"),heading:p?.querySelector("h2")?.textContent};})()');
+         if(info.kind!==expected||info.hasVotes||info.hasSave||!info.heading||mode==="offline"&&!info.retry)throw Error("PLAYER_V005_MEMBER_GATE_"+mode+"_"+width+":"+JSON.stringify(info));
+         if(mode==="offline"){
+           // The server is down: retry remains fail-closed and never invents
+           // member capability. When healthy again, real health decides.
+           await evaluate('document.querySelector(".engagement-panel button").click()');
+           await until(()=>evaluate('document.querySelector(".engagement-panel")?.getAttribute("data-avp-availability")==="unavailable"'));
+           const resume=await fetch(base+"/__player-member-fixture?mode=canonical");
+           if(!resume.ok)throw Error("PLAYER_V139_CAPABILITY_RESTORE_SETUP_"+width);
+           await evaluate('document.querySelector(".engagement-panel button").click()');
+           await until(()=>evaluate('document.querySelector(".engagement-panel")?.getAttribute("data-avp-availability")==="canonical-readonly"'));
+           console.log("PLAYER_V139_AVAILABILITY_RETRY_"+width+"=PASS");
+         }
          console.log("PLAYER_V005_MEMBER_GATE_"+mode.toUpperCase()+"_"+width+"=PASS");
        }
      }

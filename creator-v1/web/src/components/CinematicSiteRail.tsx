@@ -5,7 +5,7 @@ import { Icon } from "./Icons";
 const publicLinks = [
   {label:"Home",to:"/",icon:"home"},
   {label:"Explore",to:"/discover",icon:"explore"},
-  {label:"Create",to:"/create",icon:"create"},
+  {label:"Create",to:"/studio",icon:"create"},
   {label:"Community",to:"/community",icon:"community"},
   {label:"Boards",to:"/boards",icon:"library"},
   {label:"Apps",to:"/discover?category=tools",icon:"explore"},

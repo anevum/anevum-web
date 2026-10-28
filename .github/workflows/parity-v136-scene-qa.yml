@@ -82,6 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
+      ANEVUM_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
       WRANGLER_SEND_METRICS: 'false'
       CLOUDFLARE_API_TOKEN: ''
       CLOUDFLARE_API_KEY: ''
