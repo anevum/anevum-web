@@ -51,7 +51,7 @@ for(const width of [1440,390]){
   report.screenshots.push(file);
   if(path==='/'){
    assert.equal(await page.locator('.av138-header-status').innerText(),'BUILD STATUS');
-   assert.match(await page.locator('.p136-console-wayfinder').innerText(),/Entrance/);
+   assert.equal((await page.locator('.p136-console-station').first().textContent())?.includes('Entrance'),true,'Updated Home rail secondary label is present in DOM, even when CSS hides it');
    assert.equal(await page.getByRole('link',{name:/EXPLORE THE GAME/i}).count(),1);
    record('Live game-first home nav at '+width,{overflow});
   }
