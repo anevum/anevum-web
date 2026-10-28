@@ -14,7 +14,8 @@ concurrency:
   cancel-in-progress: false
 jobs:
   verify-package:
-    if: github.repository == 'anevum/anevum-web' && github.event.head_commit.message == 'release(v140): upload verified candidate'
+    if: >-
+      github.repository == 'anevum/anevum-web' && github.event.head_commit.message == 'release(v140): upload verified candidate'
     runs-on: ubuntu-latest
     timeout-minutes: 38
     env:
@@ -101,7 +102,8 @@ jobs:
           if-no-files-found: warn
   upload-inactive:
     needs: verify-package
-    if: github.repository == 'anevum/anevum-web' && github.event.head_commit.message == 'release(v140): upload verified candidate'
+    if: >-
+      github.repository == 'anevum/anevum-web' && github.event.head_commit.message == 'release(v140): upload verified candidate'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
