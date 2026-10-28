@@ -39,3 +39,7 @@ Source and release pipeline under implementation. Do not claim publication until
 ## Exact release trigger
 
 This change activates the guarded CI source/render/asset/upload gates. Only a successful current-head run may upload two Workers versions **inactive**; it is not authority to switch traffic without independent Cloudflare provider and public readback verification. Site behavior and authenticated/private paths remain unchanged.
+
+## Release gate retry
+
+The previous automatic attempt generated all seven images and passed source tests. Its conservative package hash check revealed a transcription error in the expected live V69 HTML SHA256. This is corrected from the exact GitHub Actions V69 production acceptance evidence. No Worker was uploaded or deployed in the failed attempt.
