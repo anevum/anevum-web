@@ -32,6 +32,22 @@ const METADATA_ONLY=new Set([
  "assets/community-portals/manifest.json",
  "assets/cinematic-v2/atmosphere/manifest.json"
 ]);
+// Exact currently published V67 public URL contracts. The reviewed V140
+// build's differently generated copies must not overwrite cached V67 bytes.
+const RETAINED_PUBLIC_URLS=new Set([
+ "assets/default-thumbnails/automation.svg",
+ "assets/default-thumbnails/creative.svg",
+ "assets/default-thumbnails/games.svg",
+ "assets/default-thumbnails/learning.svg",
+ "assets/default-thumbnails/libraries.svg",
+ "assets/default-thumbnails/other.svg",
+ "assets/default-thumbnails/research.svg",
+ "assets/default-thumbnails/simulation.svg",
+ "assets/default-thumbnails/story.svg",
+ "assets/default-thumbnails/tools.svg",
+ "favicon.svg",
+ "site.webmanifest"
+]);
 const git=(...args)=>execFileSync("git",args,{encoding:"utf8"}).trim();
 const hash=value=>createHash("sha256").update(value).digest("hex");
 const load=path=>JSON.parse(readFileSync(path,"utf8"));
@@ -82,9 +98,18 @@ function packaging(oldRoot,newRoot,out){
  assert.ok(!fresh.some(x=>x.path.startsWith("portfolio/")||x.path.endsWith(".map")),"Retired media or sourcemaps included");
  const oldPaths=new Map(oldFiles.map(f=>[f.path,f.sha256]));
  const collisions=fresh.filter(f=>f.path!=="index.html"&&oldPaths.has(f.path)&&oldPaths.get(f.path)!==f.sha256);
- assert.deepEqual(collisions.filter(f=>!METADATA_ONLY.has(f.path)).map(f=>f.path),[],"Overwritten immutable cached asset");
+ const reviewedRetained=collisions.filter(f=>!METADATA_ONLY.has(f.path)).map(f=>f.path).sort();
+ assert.deepEqual(reviewedRetained,[...RETAINED_PUBLIC_URLS].sort(),
+  "Only twelve approved V67 public URL collisions may be retained");
+ for(const file of reviewedRetained){
+  const bytes=readFileSync(join(oldRoot,"compiled-web",file));
+  assert.ok(bytes.length>40,"Published V67 public URL empty "+file);
+  assert.equal(hash(bytes),oldPaths.get(file),"Published V67 cached asset hash changed");
+ }
  const jsText=fresh.filter(f=>/\.(js|css|html)$/.test(f.path)).map(f=>readFileSync(join(newRoot,f.path),"utf8")).join("\n");
- for(const file of collisions)assert.ok(!jsText.includes(file.path)&&!jsText.includes(file.path.replace(/^assets\//,"")),"Conflicting metadata still referenced by current runtime "+file.path);
+ for(const file of collisions.filter(f=>METADATA_ONLY.has(f.path)))
+  assert.ok(!jsText.includes(file.path)&&!jsText.includes(file.path.replace(/^assets\//,"")),
+   "Retired metadata unexpectedly referenced in client bundle: "+file.path);
  for(const variant of ["baseline","candidate"]){
   const outRoot=join(out,variant),dest=join(outRoot,"compiled-web");
   assert.ok(!existsSync(dest),"Stale package destination refused");
@@ -104,7 +129,7 @@ function packaging(oldRoot,newRoot,out){
   save(join(outRoot,"assets.json"),inventory);
   save(join(outRoot,"manifest.json"),{session:"ANEVUM.WEB.RELEASE.2026-10-27.001.V140-SEVERANCE",approvedSource:APPROVED,releaseSource:id.release,worker:WORKER,
    variant,liveSource:LIVE_SOURCE,liveVersion:LIVE_VERSION,liveDeployment:LIVE_DEPLOY,gatewaySha256:GATEWAY_SHA,
-   assetsSha256:hash(stable(inventory)),assetCount:inventory.length,retainedV67Assets:oldFiles.length-1,oldCachedClientBytesPreserved:true,earnedMediaCount:152,
+   assetsSha256:hash(stable(inventory)),assetCount:inventory.length,retainedV67Assets:oldFiles.length-1,oldCachedClientBytesPreserved:true,retainedPublicUrlContracts:[...RETAINED_PUBLIC_URLS].sort(),earnedMediaCount:152,
    frontendSha256:hash(readFileSync(join(dest,"index.html"))),uploadsInactiveOnly:true,trafficChanged:false});
  }
  const a=walk(join(out,"baseline","compiled-web")),b=walk(join(out,"candidate","compiled-web"));
@@ -112,7 +137,7 @@ function packaging(oldRoot,newRoot,out){
  assert.equal(hash(readFileSync(join(oldRoot,"compiled-web/index.html"))),hash(readFileSync(join(out,"baseline","compiled-web/index.html"))),"Baseline HTML changed");
  assert.notEqual(hash(readFileSync(join(out,"baseline","compiled-web/index.html"))),hash(readFileSync(join(out,"candidate","compiled-web/index.html"))),"New entrypoint not built");
  const result={source:APPROVED,releaseSource:id.release,variantFiles:a.length,sharedAssetCount:a.length-1,oldAssetsRetained:oldFiles.length-1,
-  newMediaFiles:fresh.filter(x=>x.path.startsWith("assets/severance/")).length,sharedAssetDigest:hash(stable(a.filter(x=>x.path!=="index.html"))),
+  newMediaFiles:fresh.filter(x=>x.path.startsWith("assets/severance/")).length,retainedOriginalStableUrls:[...RETAINED_PUBLIC_URLS].sort(),sharedAssetDigest:hash(stable(a.filter(x=>x.path!=="index.html"))),
   originalGatewaySha256:GATEWAY_SHA,rollbacks:[LIVE_VERSION],verified:true,publicTrafficChanged:false};
  save(join(out,"packaging-receipt.json"),result);return result;
 }
