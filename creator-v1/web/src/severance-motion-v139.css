@@ -361,3 +361,18 @@ html[data-av-parity="v136-full"] .p136-console-station:is(:hover,.is-active) {
  .av139-motion-control{background:ButtonFace;color:ButtonText;border:1px solid ButtonText}
  .av139-motion-control:focus-visible{outline-color:Highlight}
 }
+
+/* V140 public-only progressive depth. Source-only until verified release. */
+@media (hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference) and (forced-colors:none) {
+ html[data-av140-public="true"] #main .av140-tilt-active:not(:focus-within) {
+  transform:perspective(1100px) rotateX(var(--av140-tilt-x,0deg)) rotateY(var(--av140-tilt-y,0deg)) translate3d(0,-4px,7px);
+  box-shadow:0 18px 38px #0009,inset 0 1px #f4ebe52b,0 0 22px #ad303b1b;
+ }
+}
+@media (prefers-reduced-motion:no-preference) and (forced-colors:none) {
+ html[data-av140-public="true"] #main .av140-reveal-pending {opacity:0}
+ html[data-av140-public="true"] #main .av140-revealed {opacity:1;transition:opacity .48s ease-out}
+}
+@media (prefers-reduced-motion:reduce), (forced-colors:active) {
+ html #main .av140-reveal-pending {opacity:1!important;transition:none!important}
+}
