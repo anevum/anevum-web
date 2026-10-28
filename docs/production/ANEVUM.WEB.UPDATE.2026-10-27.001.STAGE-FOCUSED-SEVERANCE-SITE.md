@@ -241,3 +241,11 @@ infrastructure that depends indefinitely on a third-party asset URL.
 The original V136 sealed release package remains intentionally
 incompatible. A separate current-v67-compatible, audited,
 rollback-safe release gate is still mandatory to touch live traffic.
+
+## V140 source continuation — October 27, 2026
+
+On the existing PR #786 branch, the previously committed PublicDepthDirectorV140 is now mounted once in the existing Shell, using only the enumerated anonymous public routes and the established motion preference. CSS activates a restrained perspective shift and progressive viewport reveals, with reduced-motion and high-contrast visibility fallbacks. Native links and data flows remain untouched; no new framework or backend was added.
+
+The IREN tour's ResizeObserver correction is now admitted only through pinned exact before/after Git blob hashes in the isolated presentation preflight. That does not alter the separately sealed V136 production release allowlist. The cinematic QA trigger and source-contract regression were extended. The exact-head compiled Chromium and full release reviews are still required; no public promotion, permission/schema changes, asset publication or D1/R2 writes have occurred.
+
+Current studio direction: ANEVUM remains a family-led creative game/software workshop with TRANSCOSMIC: SEVERANCE under development, not a claimed playable beta or financially obligated commercial launch. Keep its real existing public projects and protected accounts intact while development continues at a sustainable pace.
