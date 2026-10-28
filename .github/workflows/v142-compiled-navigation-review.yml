@@ -11,6 +11,7 @@ on:
       - 'creator-v1/web/src/parity/ParityHeaderV136.tsx'
       - 'creator-v1/web/src/parity/ParityDiscoverV136.tsx'
       - 'creator-v1/web/src/parity/ConsoleWayfinderV136.tsx'
+      - 'creator-v1/web/src/parity/continuance-design-system.css'
       - 'creator-v1/test/v142-game-first-nav-contract.test.mjs'
       - 'creator-v1/test/v142-preview-navigation-browser.mjs'
 permissions:
