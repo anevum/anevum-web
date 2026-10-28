@@ -1,0 +1,31 @@
+{
+  "id": "/",
+  "name": "ANEVUM",
+  "short_name": "ANEVUM",
+  "description": "Independent games and software studio. TRANSCOSMIC: SEVERANCE is in development.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#07060b",
+  "theme_color": "#07060b",
+  "icons": [
+    {
+      "src": "/anevum-severance-icon-v141-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/anevum-severance-icon-v141-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/anevum-severance-maskable-v141-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
