@@ -14,7 +14,7 @@ import {createHash} from "node:crypto";
 const BASE="ac432ded31d3e8b8a1fba523ca38f2132704890f";
 const APPROVED_V140="fb1f903333187caa3bd7665e93c013f28b9f3366";
 const LIVE_SOURCE="9ec37dbc23085e4e71cdf78b3d276eb59eb1a1b6";
-const LIVE_HTML_SHA="1cbc17726657086e7b86b8ee16a4067a9abdf6f49ebf40e8eb829fb44";
+const LIVE_HTML_SHA="1cbc17726657086e7b86b8ee8a1ddee16a4067a9abdf6f49ebf40e8eb829fb44";
 const GATEWAY_SHA="1884ff0dd3c8aa3d38711167af0b4552c9b200b3148e72d9ba6d90d23171ef99";
 const WORKER="anevum-apex-prelaunch-gateway";
 const ACCOUNT="2f7ee83107240152097efd956a4e8335";
