@@ -46,6 +46,17 @@ for(const width of [1440,390]){
  await search.waitFor({state:'visible'});await search.click();
  await page.locator('.portal-launcher[open]').waitFor();
  const links=await page.locator('.portal-launcher-results a').evaluateAll(nodes=>nodes.map(a=>({href:a.getAttribute('href'),text:a.textContent?.trim()||''})));
+ const cardRects=await page.locator('.portal-launcher-results a').evaluateAll(nodes=>nodes.map(node=>{
+  const box=node.getBoundingClientRect();
+  const text=node.querySelector('.portal-launcher-result-copy')?.getBoundingClientRect();
+  return {top:box.top,bottom:box.bottom,height:box.height,copyTop:text?.top??0,copyBottom:text?.bottom??0};
+ }));
+ assert.ok(cardRects.length>=6,'Switchboard must render real routes');
+ assert.ok(cardRects.every((x,i)=>x.height>=58 &&
+    x.copyTop>=x.top+2&&x.copyBottom<=x.bottom-2 &&
+    (i===0||x.top>=cardRects[i-1].bottom+2)),
+    'Results must be individually readable, not shrink/overlap in scrollable mobile drawer: '+JSON.stringify(cardRects));
+ record('Switchboard card geometry is non-overlapping and scrollable at '+width,{cardCount:cardRects.length,minHeight:Math.round(Math.min(...cardRects.map(x=>x.height)))});
  assert.ok(links.some(x=>x.href==='/severance'),'Current game must be default in actual switchboard');
  assert.ok(links.some(x=>x.href==='/status'),'Real status must be default in actual switchboard');
  assert.ok(!links.some(x=>x.href==='/create'||x.href==='/workspace'||x.href?.startsWith('/atlas')),'Legacy path not displayed');
