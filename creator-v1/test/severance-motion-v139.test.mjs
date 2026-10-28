@@ -67,3 +67,16 @@ test("V139 motion style is additive to the existing responsive interface",()=>{
  assert.doesNotMatch(css,/@import\s+url|@font-face|url\(\s*["']?https?:/);
  assert.doesNotMatch(css,/\.p136-studio-console|\.studio-workspace-editor|button\s*\{\s*display:none/);
 });
+
+const director=read("web/src/parity/PublicDepthDirectorV140.tsx");
+const shell=read("web/src/components/Shell.tsx");
+test("V140 public depth is mounted and excludes private account and Studio routes",()=>{
+ assert.match(shell,/PublicDepthDirectorV140 pathname=/);
+ assert.match(director,/const PUBLIC_ROUTES=new Set/);
+ for(const route of ['"/member"','"/studio"','"/staff"'])assert.ok(!director.includes(route));
+ assert.match(director,/IntersectionObserver/);
+ assert.match(director,/!paused&&motionAllowed/);
+ assert.match(css,/data-av140-public="true"/);
+ assert.match(css,/av140-reveal-pending/);
+ assert.doesNotMatch(director,/fetch\\(|XMLHttpRequest|localStorage|sessionStorage/);
+});
