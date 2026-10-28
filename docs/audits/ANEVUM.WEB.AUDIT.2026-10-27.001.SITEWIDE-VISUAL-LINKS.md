@@ -14,7 +14,7 @@
 
 ## Visual / semantic issues discovered after reviewing screenshots and actual source
 
-1. Public top-header button said **DEV LOG** but linked to the current real **Status** page, not a distinct development log. Label corrected to BUILD STATUS, same verified path.
+1. Public top-header button said **DEV LOG** but linked to the current real **Status** page, duplicating the existing canonical Status tab. The obsolete extra button was removed; the shared primary Status nav, console rail and in-page development-status links remain.
 2. Console Home rail card was described as **Studio**, even though the existing homepage is the SEVERANCE presentation. Corrected subtitle to Entrance.
 3. Discover's **How publishing works** went to the general Field Guide rather than the verified current publishing/service-status report. Corrected text and target to Publishing status → /status.
 4. The quick switchboard prioritized legacy broad platform categories without the current original SEVERANCE project. Added /severance as a real public entry; retained searchable categories and their actual published catalogue filters; status remains default visible.
