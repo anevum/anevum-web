@@ -7,7 +7,7 @@ import {useLivingWorld,type WorldSector} from './LivingWorldState';
 import './console-wayfinder-v136.css';
 
 const stations=[
- {to:'/',label:'Home',small:'Studio',icon:'home',sector:'hero'},
+ {to:'/',label:'Home',small:'Entrance',icon:'home',sector:'hero'},
  {to:'/severance',label:'Severance',small:'Game',icon:'games',sector:'hero'},
  {to:'/discover',label:'Discover',small:'Projects',icon:'explore',sector:'portal'},
  {to:'/status',label:'Status',small:'Build',icon:'status',sector:'portal'}
