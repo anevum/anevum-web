@@ -1,0 +1,87 @@
+name: ANEVUM V142 Production-Flagged Navigation Visual Review
+on:
+  push:
+    branches: ['audit/v142-sitewide-visual-links-20261027-001']
+    paths:
+      - '.github/workflows/v142-compiled-navigation-review.yml'
+      - 'creator-v1/web/src/lib/portal-destinations.ts'
+      - 'creator-v1/web/src/parity/ParityHeaderV136.tsx'
+      - 'creator-v1/web/src/parity/ParityDiscoverV136.tsx'
+      - 'creator-v1/web/src/parity/ConsoleWayfinderV136.tsx'
+      - 'creator-v1/test/v142-game-first-nav-contract.test.mjs'
+      - 'creator-v1/test/v142-preview-navigation-browser.mjs'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: anevum-v142-compiled-nav-visual-review
+  cancel-in-progress: true
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 27
+    env:
+      VITE_PARITY_V136_FULL: 'true'
+      VITE_PARITY_V136_CINEMATIC: 'true'
+      VITE_PARITY_V136_NATIVE_VIDEO: 'false'
+      VITE_PARITY_V136_HORIZON_QA: 'false'
+      VITE_PARITY_V136_SHARED_SCENE_QA: 'false'
+      VITE_ANEVUM_OWNER_REVIEW: 'false'
+      VITE_IREN_SPATIAL_GUIDE: 'true'
+      VITE_NATIVE_CREATOR_STUDIO_V095: 'true'
+      VITE_PACKAGE_CREATOR_GALLERY_V010: 'true'
+      VITE_MEMBER_COLLECTION_NAV_REVIEW: 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install locked application tooling
+        run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - name: Verify game-first paths, retained historical deep-links, and existing portal tests
+        run: |
+          node --test creator-v1/test/v142-game-first-nav-contract.test.mjs creator-v1/test/portal-launcher.test.mjs creator-v1/test/stage-focused-severance-v137.test.mjs creator-v1/test/severance-cinematic-v138.test.mjs
+          npm run check:creator-v1-web
+      - name: Restore reviewed first-party V139 cinematic media under their approved paths
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12785837975'
+          run-id: 40617882293
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v139-original
+          merge-multiple: true
+      - name: Restore approved V141 orbit icon and share media without changing existing URLs
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12789858557'
+          run-id: 40627822021
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v141-original
+          merge-multiple: true
+      - name: Compile with current production flags and both reviewed media packages
+        run: |
+          test ! -e creator-v1/web/public/assets/severance
+          mkdir -p creator-v1/web/public/assets
+          cp -R "$RUNNER_TEMP/v139-original/assets/severance" creator-v1/web/public/assets/severance
+          for f in "$RUNNER_TEMP"/v141-original/candidate/compiled-web/anevum-severance-*v141*.png; do
+            test -f "$f"
+            cp "$f" creator-v1/web/public/
+          done
+          npm run build:creator-v1-web
+      - name: Install isolated headless browser and verify actual compiled screen layouts
+        run: |
+          npm install --no-save --ignore-scripts --no-audit --no-fund --package-lock=false playwright@1.64.1
+          npx playwright install chromium
+          node --check creator-v1/test/v142-preview-navigation-browser.mjs
+          node creator-v1/test/v142-preview-navigation-browser.mjs
+      - name: Preserve actual post-patch desktop/phone screenshots and assertions
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v142-compiled-visual-${{ github.sha }}
+          path: evidence/v142-compiled
+          retention-days: 14
+          if-no-files-found: warn
