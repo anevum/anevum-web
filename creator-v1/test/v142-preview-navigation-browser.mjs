@@ -42,8 +42,9 @@ for(const width of [1440,390]){
  const page=await context.newPage();page.setDefaultTimeout(15000);
  page.on('pageerror',e=>report.errors.push({width,error:String(e)}));
  for(const path of ['/','/severance','/discover','/about','/start','/guide','/creators','/community','/boards','/status','/levels','/recognition','/auras','/join','/support','/support/transparency','/support/collection','/studio','/member']){
-  await page.goto(origin+path,{waitUntil:'networkidle'});
+  await page.goto(origin+path,{waitUntil:'domcontentloaded',timeout:18000});
   await page.locator('#main').waitFor();
+  await page.waitForTimeout(500); // Bounded paint grace; websocket/health polling must not block navigation.
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
   assert.ok(overflow<=3,'Horizontal overflow '+width+' '+path+': '+overflow);
   const file=width+'--'+(path==='/'?'home':path.slice(1))+'.png';
@@ -75,7 +76,7 @@ for(const width of [1440,390]){
   if(path==='/studio')record('Protected Studio route still renders its own permission guard at '+width);
   if(path==='/start')record('Archived Start remains reachable, not default navigation at '+width,{overflow});
  }
- await page.goto(origin,{waitUntil:'networkidle'});
+ await page.goto(origin,{waitUntil:'domcontentloaded',timeout:18000});
  const search=page.getByRole('button',{name:'Search ANEVUM',exact:true}).first();
  await search.waitFor();await search.click();
  await page.locator('.portal-launcher[open]').waitFor();
