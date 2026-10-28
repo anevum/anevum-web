@@ -1,0 +1,86 @@
+name: ANEVUM V140 Live Canary Readback
+on:
+  push:
+    branches: ['release/v140-severance-20261027-001']
+    paths: ['.github/workflows/v140-live-canary-readback.yml']
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify-live-canary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      ANEVUM_EXPECTED_SOURCE: fb1f903333187caa3bd7665e93c013f28b9f3366
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12788238901'
+          run-id: 40623077442
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/v140-paired
+          merge-multiple: true
+      - name: Verify exact immutable V68/V69 packages and live traffic by content digests
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {readFileSync,writeFileSync,existsSync} from 'node:fs';
+          import {join} from 'node:path';
+          import {createHash} from 'node:crypto';
+          const root=join(process.env.RUNNER_TEMP,'v140-paired');
+          const read=p=>readFileSync(join(root,p));
+          const hash=b=>createHash('sha256').update(b).digest('hex');
+          const baseline=hash(read('baseline/compiled-web/index.html'));
+          const candidate=hash(read('candidate/compiled-web/index.html'));
+          const manifest=JSON.parse(read('candidate/manifest.json'));
+          assert.equal(manifest.approvedSource,process.env.ANEVUM_EXPECTED_SOURCE);
+          assert.equal(manifest.oldCachedClientBytesPreserved,true);
+          assert.equal(manifest.gatewaySha256,'1884ff0dd3c8aa3d38711167af0b4552c9b200b3148e72d9ba6d90d23171ef99');
+          assert.notEqual(baseline,candidate,'Baseline and candidate entrypoints must differ');
+          const counts={baseline:0,candidate:0,unknown:0,httpErrors:0};
+          const unknown=[];
+          for(let i=0;i<120;i++){
+            const url='https://anevum.com/?v140-live-probe='+Date.now()+'-'+i;
+            const res=await fetch(url,{redirect:'manual',headers:{'Cache-Control':'no-cache','Pragma':'no-cache','User-Agent':'ANEVUM-V140-Release-Verification/1.0'},signal:AbortSignal.timeout(12000)});
+            if(!res.ok){counts.httpErrors++;unknown.push({status:res.status,url});continue;}
+            const h=hash(Buffer.from(await res.arrayBuffer()));
+            if(h===baseline)counts.baseline++;
+            else if(h===candidate)counts.candidate++;
+            else{counts.unknown++;unknown.push({hash:h,status:res.status,url});}
+          }
+          console.log('V140 Canary public HTML live readback',JSON.stringify({counts,baseline,candidate,unknown:unknown.slice(0,5)}));
+          assert.equal(counts.httpErrors,0,'Non-200 response on live homepage');
+          assert.equal(counts.unknown,0,'Unexpected unreviewed HTML served in live traffic');
+          assert.ok(counts.candidate>0,'New cinematic V69 must have received real public traffic');
+          assert.ok(counts.baseline>0,'Original V68 baseline must remain in canary split');
+          for(const route of ['status','about','discover','severance']){
+            const res=await fetch('https://anevum.com/'+route+'?v140-readback='+Date.now(),{redirect:'manual',signal:AbortSignal.timeout(15000)});
+            assert.equal(res.status,200,'Public route failed: '+route+' HTTP '+res.status);
+            const body=await res.text();
+            assert.ok(body.includes('<div')||body.includes('<html'),'Expected SPA HTML from public route '+route);
+          }
+          for(const asset of ['assets/severance/hero-poster-v139.webp','assets/severance/manifest-v139.json']){
+            const res=await fetch('https://anevum.com/'+asset,{signal:AbortSignal.timeout(15000)});
+            assert.equal(res.status,200,'Cinematic asset unavailable '+asset);
+            const bytes=Buffer.from(await res.arrayBuffer());
+            const expected=read('candidate/compiled-web/'+asset);
+            assert.equal(hash(bytes),hash(expected),'Published cinematic asset bytes mismatched '+asset);
+          }
+          const report={status:'PASS',source:manifest.approvedSource,baselineHtmlHash:baseline,candidateHtmlHash:candidate,counts,
+            protectedBindingsNotProbed:true,publicRoutes:['/status','/about','/discover','/severance'],cinematicAssetsVerified:2};
+          writeFileSync('v140-live-readback.json',JSON.stringify(report,null,2)+'\n');
+          console.log('Live canary readback PASS',JSON.stringify(report));
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v140-live-canary-readback-${{ github.sha }}
+          path: v140-live-readback.json
+          retention-days: 14
+          if-no-files-found: warn
