@@ -14,3 +14,9 @@ The workflow is a separate isolated production source: only the reviewed V140 he
 Rollout procedure: (1) verify current exact-head CI, media source/screenshot evidence and V140-compatible release check; (2) merge #786 into existing product lane #763 with its expected head; (3) run a release-only branch from exact approved source; (4) verify new paired package and inactive Cloudflare upload receipts; (5) inspect live/provider settings, bindings, 45 routes and existing V67 deployment unchanged; (6) optionally deploy canary via Cloudflare deployments API after independent acceptance; (7) monitor real homepage, navigation, status, auth, Studio, original client assets, media, and 320/390 mobile; (8) promote 100% only if healthy and preserve V67 for rapid rollback.
 
 STOP if any audit, worker script, role/privacy, asset hash, CI, or provider deployment invariant fails. Never bypass the historical sealed release gate. No D1/R2 changes, account writes, payments, public player servers or game launch. This handoff remains a plan until exact deployment and QA readback are recorded.
+
+## Verified source merge and release trigger
+
+PR #786 was merged into its existing unified development parent #763 by commit `23c4a30aa0f23cdd2ed45843031f90bdd8066d8d`, preserving original parents and the tested V140 head `fb1f903333187caa3bd7665e93c013f28b9f3366`. This review merge does not change the Cloudflare deployment or the GitHub default branch.
+
+The release-only workflow is triggered by a commit with exact message `release(v140): upload verified candidate` on this dedicated release branch. It validates the exact reviewed source, approved artifacts, V67-compatible flags, responsive compiled browser, restored V67 static-client inventory, sealed gateway and Cloudflare provider readbacks. Two Worker versions may be uploaded at zero traffic only after checks pass. Activation requires independent inspection of exact inactive receipts and the unchanged V67 deployment.
