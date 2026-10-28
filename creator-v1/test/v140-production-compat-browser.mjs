@@ -760,6 +760,7 @@ try{
     await page.screenshot({path:join(out,'v140-home-'+width+'.png'),animations:'disabled'});
     await page.getByRole('link',{name:/EXPLORE THE GAME/i}).click();
     await page.waitForURL(base+'/severance');
+    await page.locator('[data-public-playable="false"]').waitFor({timeout:10000});
     assert.equal(await page.locator('[data-public-playable="false"]').count(),1,
       'Development dossier never claims playable server access');
     await page.goto(base+'/discover',{waitUntil:'domcontentloaded'});
@@ -1005,6 +1006,7 @@ try{
     await page.evaluate(()=>window.scrollTo(0,0));
     await page.getByRole('link',{name:/EXPLORE THE GAME/i}).click();
     await page.waitForURL(base+'/severance');
+    await page.locator('[data-public-playable="false"]').waitFor({timeout:10000});
     assert.equal(await page.locator('[data-public-playable="false"]').count(),1);
     record('V140 independent cinematic / real game design CTA / no invented game service or ambient WebGL');
     await context.close();
