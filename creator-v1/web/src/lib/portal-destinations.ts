@@ -11,7 +11,8 @@ export type PortalDestination = {
 
 // Fixed first-party paths only. No URLs, external redirects or fabricated records.
 export const PORTAL_DESTINATIONS: readonly PortalDestination[] = [
-  {id:"home",title:"The Portal",description:"Return to the ANEVUM entrance",path:"/",category:"Explore",icon:"home",keywords:"home frontpage main"},
+  {id:"home",title:"ANEVUM Home",description:"Return to the SEVERANCE studio entrance",path:"/",category:"Explore",icon:"home",keywords:"home frontpage main"},
+  {id:"severance",title:"TRANSCOSMIC: SEVERANCE",description:"Explore the current survival-horror game in development",path:"/severance",category:"Explore",icon:"games",keywords:"severance horror transcosmic current game world survival design"},
   {id:"start",title:"Start Here",description:"Choose a path through the underground",path:"/start",category:"Explore",icon:"explore",keywords:"onboarding welcome first visit"},
   {id:"discover",title:"Discover All",description:"Browse genuine public releases",path:"/discover",category:"Explore",icon:"search",keywords:"search projects catalogue browse"},
   {id:"games",title:"Games & Play",description:"Find independently made games",path:"/discover?category=games",category:"Explore",icon:"star",keywords:"arcade play interactive"},
@@ -38,7 +39,7 @@ export const PORTAL_DESTINATIONS: readonly PortalDestination[] = [
 const clean = (s:string) => s.trim().toLocaleLowerCase("en").replace(/\s+/g," ");
 export function findPortalDestinations(search:string): PortalDestination[] {
   const query=clean(search).slice(0,100);
-  if (!query) return PORTAL_DESTINATIONS.filter(x=>["home","start","discover","games","tools","community","creators","boards","guide"].includes(x.id));
+  if (!query) return PORTAL_DESTINATIONS.filter(x=>["home","severance","discover","games","community","creators","boards","guide","status"].includes(x.id));
   const words=query.split(" ").filter(Boolean);
   if(words.length===0) return [];
   return PORTAL_DESTINATIONS

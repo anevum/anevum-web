@@ -57,6 +57,6 @@ test("black slate red presentation is loaded above archived CSS only for intende
  for(const breakpoint of ["max-width:1240px","max-width:820px","max-width:600px","max-width:350px","prefers-reduced-motion:reduce","forced-colors:active"])
   assert.ok(style.includes(breakpoint),breakpoint);
  assert.match(header,/INDEPENDENT SOFTWARE STUDIO/);
- assert.match(header,/className="av138-header-status"/);
+ assert.doesNotMatch(header,/className="av138-header-status"/);
  assert.match(shell,/scrollIntoView\(\{block:"start",behavior:"instant"\}\)/);
 });

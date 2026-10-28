@@ -127,7 +127,7 @@ export function ParityDiscoverV136(props:ParityDiscoverProps){
       <section className="p136-discover-command" id="p136-discover-search" aria-label="Search and refine published projects">
         <div className="p136-discover-command-top">
           <div><span className="p136-discover-kicker">THE PUBLIC INDEX / 001</span><h2>Find your next discovery.</h2></div>
-          <Link to="/guide" className="p136-discover-helper">How publishing works <Icon name="arrow" size={16}/></Link>
+          <Link to="/status" className="p136-discover-helper">Publishing status <Icon name="arrow" size={16}/></Link>
         </div>
         <form role="search" action="/discover" method="get" onSubmit={onSearch} className="p136-discover-search-form">
           <label htmlFor="p136-project-query" className="visually-hidden">Search published projects</label>
