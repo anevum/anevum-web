@@ -6,6 +6,8 @@ on:
       - 'creator-v1/web/src/parity/SeveranceWorldSceneV138.tsx'
       - 'creator-v1/web/src/parity/SeveranceCinematicV139.tsx'
       - 'creator-v1/web/src/parity/SeveranceScrollSequenceV139.tsx'
+      - 'creator-v1/web/src/parity/PublicDepthDirectorV140.tsx'
+      - 'creator-v1/web/src/components/IrenSpatialTour.tsx'
       - 'creator-v1/web/src/severance-motion-v139.css'
       - 'creator-v1/graphics/encode-severance-v139.py'
       - 'creator-v1/web/src/severance-cinematic-v138.css'
