@@ -77,6 +77,35 @@ jobs:
           print('SEVERANCE_WEB_EXPORT_PASS')
           print(json.dumps({f['name']:f['bytes'] for f in manifest['files']}, indent=2))
           PY
+      - name: Chromium WebGL 2 gameplay render smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/severance-browser /tmp/severance-browser-shots
+          npm install --no-save --prefix /tmp/severance-browser playwright@1.56.1
+          command -v google-chrome || command -v google-chrome-stable || {
+            npx --prefix /tmp/severance-browser playwright install chromium
+          }
+          python3 -m http.server 8173 --bind 127.0.0.1 \
+            --directory games/severance/build/web \
+            > /tmp/severance-http.log 2>&1 &
+          HTTP_PID=$!
+          trap 'kill "$HTTP_PID" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl -fsS -o /dev/null http://127.0.0.1:8173/index.html; then break; fi
+            sleep 0.5
+          done
+          NODE_PATH=/tmp/severance-browser/node_modules node games/severance/tests/browser-smoke.cjs
+      - name: Upload read-only browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: severance-prototype-001-chromium-visual-qa
+          path: |
+            /tmp/severance-browser-shots/
+            /tmp/severance-http.log
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Upload private review-only browser artifact
         uses: actions/upload-artifact@v4
         with:

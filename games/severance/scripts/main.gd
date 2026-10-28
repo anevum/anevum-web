@@ -34,6 +34,11 @@ var last_server_input_ms: Dictionary = {}
 var server_port: int = RULES.PORT
 var server_bind: String = "127.0.0.1"
 
+func _set_web_probe_phase(phase: String) -> void:
+	# Read-only test signal for the isolated browser build; not a public game API.
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.__severancePrototypePhase = " + JSON.stringify(phase) + ";", true)
+
 func _ready() -> void:
 	_register_actions()
 
@@ -58,6 +63,7 @@ func _ready() -> void:
 
 	if DisplayServer.get_name() != "headless":
 		_build_interface()
+		_set_web_probe_phase("menu")
 
 	var args: PackedStringArray = OS.get_cmdline_user_args()
 	for argument in args:
@@ -103,6 +109,7 @@ func _start_solo() -> void:
 	local_peer_id = 1
 	_spawn_survivor(local_peer_id)
 	_enter_game()
+	_set_web_probe_phase("solo")
 	_note("LOCAL PROTOTYPE — NO ONLINE SERVER")
 
 func _start_dedicated_server() -> void:
@@ -156,6 +163,7 @@ func _on_connected() -> void:
 	local_peer_id = multiplayer.get_unique_id()
 	mode = "client"
 	_enter_game()
+	_set_web_probe_phase("client")
 	_note("Connected to isolated test server. No player accounts enabled.")
 	print("SEVERANCE_CLIENT_CONNECTED %s" % local_peer_id)
 
@@ -171,6 +179,7 @@ func _on_server_disconnected() -> void:
 
 func _return_to_menu(reason: String) -> void:
 	mode = "menu"
+	_set_web_probe_phase("menu")
 	local_peer_id = 0
 	for id in players.keys():
 		var survivor: Node = players[id]
