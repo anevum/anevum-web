@@ -1164,7 +1164,9 @@ try{
   const discoverySearch=page.locator('.p136-discover-search-form').getByRole('searchbox',{name:'Search published projects',exact:true});
   await discoverySearch.fill('orbital & worlds');
   await discoverySearch.press('Enter');
-  await page.waitForURL(base+'/discover?q=orbital%20%26%20worlds');
+  // URLSearchParams is permitted to serialize spaces as '+' rather than '%20'.
+  // The observable contract is the decoded public search term, not encoding style.
+  await page.waitForURL(url=>url.pathname==='/discover'&&url.searchParams.get('q')==='orbital & worlds');
   await page.goto(base,{waitUntil:'networkidle'});
   await page.screenshot({path:join(out,'vector-fallback-390.png'),animations:'disabled'});
   record('GPU-independent DOM fallback / pause / reduced motion / keyboard / menu focus / search',focus);await context.close();
