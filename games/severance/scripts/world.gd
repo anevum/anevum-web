@@ -17,9 +17,9 @@ var dark_metal: StandardMaterial3D
 var rust: StandardMaterial3D
 
 func _ready() -> void:
-	concrete = _material(Color(0.16, 0.19, 0.20), 0.08, 0.92)
-	metal = _material(Color(0.22, 0.26, 0.27), 0.72, 0.38)
-	dark_metal = _material(Color(0.075, 0.10, 0.12), 0.62, 0.60)
+	concrete = _material(Color(0.20, 0.23, 0.24), 0.08, 0.90)
+	metal = _material(Color(0.25, 0.30, 0.31), 0.72, 0.38)
+	dark_metal = _material(Color(0.095, 0.12, 0.14), 0.62, 0.60)
 	rust = _material(Color(0.33, 0.10, 0.08), 0.35, 0.88)
 	_make_environment()
 	_make_architecture()
@@ -61,7 +61,7 @@ func _make_environment() -> void:
 	env.background_color = Color(0.012, 0.022, 0.030)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.18, 0.29, 0.33)
-	env.ambient_light_energy = 0.38
+	env.ambient_light_energy = 0.54
 	world_env.environment = env
 	add_child(world_env)
 
@@ -75,6 +75,9 @@ func _make_environment() -> void:
 
 	_omni("EntranceSodium", Vector3(0, 3.6, -21), Color(0.70, 0.82, 0.85), 0.95, 11.0)
 	_omni("LabEmergency", Vector3(0, 3.4, -9.0), Color(1.00, 0.10, 0.09), 1.65, 10.0)
+	_omni("LabOverheadA", Vector3(0, 4.6, -25.0), Color(0.66, 0.86, 0.94), 1.15, 8.0)
+	_omni("LabOverheadB", Vector3(0, 4.6, -17.2), Color(0.66, 0.86, 0.94), 0.90, 8.0)
+	_omni("LabOverheadC", Vector3(0, 4.6, -13.0), Color(0.76, 0.90, 0.96), 0.85, 8.0)
 	_omni("ExitEmergency", Vector3(0, 3.2, -1.7), Color(0.80, 0.09, 0.09), 1.25, 9.0)
 	_omni("YardFloodlight", Vector3(7, 5, 7), Color(0.67, 0.83, 0.87), 1.3, 14.0)
 	_omni("FenceFloodlight", Vector3(-10, 5, 15), Color(0.61, 0.79, 0.83), 0.95, 12.0)
@@ -113,6 +116,21 @@ func _make_architecture() -> void:
 			_box("YardPillar_%s_%s" % [x, z], Vector3(x, 2.4, z), Vector3(0.7, 4.8, 0.7), concrete)
 
 func _make_props() -> void:
+	# Emissive tube fixtures make the starting corridor legible in WebGL 2
+	# without requiring GPU-heavy real-time shadows.
+	var lamp_material := _material(Color(0.41, 0.70, 0.79), 0.20, 0.17)
+	lamp_material.emission_enabled = true
+	lamp_material.emission = Color(0.28, 0.55, 0.65)
+	lamp_material.emission_energy_multiplier = 2.4
+	for i in range(5):
+		var fixture_z: float = -25.0 + float(i) * 5.0
+		_box("SuspendedLuminaire_%s" % i, Vector3(0, 4.70, fixture_z), Vector3(1.80, 0.09, 0.20), lamp_material, false)
+	var warning_material := _material(Color(0.64, 0.08, 0.065), 0.25, 0.20)
+	warning_material.emission_enabled = true
+	warning_material.emission = Color(0.85, 0.065, 0.045)
+	warning_material.emission_energy_multiplier = 2.0
+	_box("ExitWarningBar", Vector3(0, 3.15, -3.32), Vector3(3.1, 0.16, 0.10), warning_material, false)
+
 	for index in range(5):
 		var z: float = -25.0 + float(index) * 4.5
 		var side: float = -3.6 if index % 2 == 0 else 3.6

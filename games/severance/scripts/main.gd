@@ -106,6 +106,7 @@ func _start_solo() -> void:
 	if mode != "menu":
 		return
 	mode = "solo"
+	local_yaw = PI # Face toward the exit, not the compound rear wall.
 	local_peer_id = 1
 	_spawn_survivor(local_peer_id)
 	_enter_game()
@@ -161,6 +162,7 @@ func _on_connected() -> void:
 	if mode != "connecting":
 		return
 	local_peer_id = multiplayer.get_unique_id()
+	local_yaw = PI # Correct forward-facing view for the network client.
 	mode = "client"
 	_enter_game()
 	_set_web_probe_phase("client")

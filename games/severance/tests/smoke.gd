@@ -34,6 +34,7 @@ func _run() -> void:
 	game._start_solo()
 	await process_frame
 	_expect(game.mode == "solo", "offline test mode")
+	_expect(absf(game.local_yaw - PI) < 0.01, "survivor starts facing the traversable compound exit")
 	_expect(game.players.has(1), "solo survivor spawned")
 
 	if game.players.has(1):
