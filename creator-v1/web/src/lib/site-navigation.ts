@@ -11,24 +11,23 @@ export type SiteLink = {
   readonly detail:string;
 };
 
-/** The sole canonical navigation ordering for both website headers.
- * The legacy desktop header is intentionally smaller; the V136 header
- * includes Studio, while both retain the same canonical route strings.
+/** Canonical stage-focused header, shared by desktop and V136 presentation.
+ * Secondary platform features remain routed, permissioned and accessible in
+ * the site drawer; a hidden menu entry is not a feature deletion.
  */
 export type HeaderDestination=Readonly<{to:string;label:string;parityOnly:boolean}>;
 export const HEADER_NAV:readonly HeaderDestination[]=[
   {to:"/",label:"Home",parityOnly:false},
+  {to:"/severance",label:"Severance",parityOnly:false},
   {to:"/discover",label:"Discover",parityOnly:false},
-  {to:"/community",label:"Community",parityOnly:false},
-  {to:"/creators",label:"Creators",parityOnly:false},
-  {to:"/studio",label:"Studio",parityOnly:true}
+  {to:"/status",label:"Status",parityOnly:false}
 ];
 
 export const PRIMARY_NAV:readonly SiteLink[]=[
-  {key:"home",label:"Home",to:"/",icon:"home",detail:"Community dashboard"},
-  {key:"discover",label:"Discover",to:"/discover",icon:"explore",detail:"Creations and creator channels"},
-  {key:"community",label:"Community",to:"/community",icon:"community",detail:"Public conversations and project forums"},
-  {key:"account",label:"Account",to:"/member",icon:"people",detail:"Your verified identity and personal world"}
+  {key:"home",label:"Home",to:"/",icon:"home",detail:"Independent software studio"},
+  {key:"severance",label:"Severance",to:"/severance",icon:"games",detail:"Current game project in development"},
+  {key:"discover",label:"Discover",to:"/discover",icon:"explore",detail:"Verified published creations"},
+  {key:"account",label:"Account",to:"/member",icon:"people",detail:"Your verified member space"}
 ];
 
 export const DISCOVERY_NAV:readonly SiteLink[]=[

@@ -9,6 +9,8 @@ import { DiscoverPage } from "./pages/DiscoverPage";
 import { ProjectPage } from "./pages/ProjectPage";
 import { CreatorPage, CreatorsPage } from "./pages/CreatorsPage";
 import { StatusPage } from "./pages/StatusPage";
+import { SeverancePage } from "./pages/SeverancePage";
+import { AboutStudioPage } from "./pages/AboutStudioPage";
 import { LevelsPage } from "./pages/LevelsPage";
 import { RecognitionRegistryPage } from "./pages/RecognitionRegistryPage";
 import { AuraCodexPage } from "./pages/AuraCodexPage";
@@ -78,6 +80,8 @@ export default function App(){
     <Route path="member" element={<Phase1MemberPage/>}/>
     <Route path="member/setup" element={<Navigate to="/member" replace/>}/>
     <Route path="start" element={<StartPage/>}/>
+    <Route path="severance" element={<SeverancePage/>}/>
+    <Route path="about" element={<AboutStudioPage/>}/>
     <Route path="guide" element={<FieldGuidePage/>}/>
     <Route path="discover" element={<DiscoverPage/>}/>
     <Route path="projects/:id" element={<ProjectPage/>}/>

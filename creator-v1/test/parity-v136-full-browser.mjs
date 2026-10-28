@@ -774,7 +774,7 @@ try{
         JSON.stringify({rail,wayfinder}));
     }
     assert.equal(await page.locator('.p136-studio-console').count(),0,'Private Studio explorer never appears for anonymous visitor');
-    assert.equal(await page.locator('.p136-console-wayfinder a[data-station]').count(),5,'Five real route stations');
+    assert.equal(await page.locator('.p136-console-wayfinder a[data-station]').count(),4,'Four owner-approved public route stations; archived V136 hero continues in spatial QA');
     assert.equal(await page.locator('.p136-console-wayfinder').getByRole('button',{name:'Open IREN companion'}).count(),1,
       'One IREN launcher belongs to the persistent console; the header may also open the same companion');
     assert.equal(await page.locator('.p136-console-member').count(),1,
@@ -1041,7 +1041,7 @@ try{
     await page.goto(base,{waitUntil:'networkidle'});
     await page.locator('[data-av-controller-status="ready"]').waitFor({timeout:10000});
     const stations=page.locator('.p136-console-wayfinder a[data-station]');
-    assert.equal(await stations.count(),5,'Real five-station Wayfinder at '+width);
+    assert.equal(await stations.count(),4,'Four canonical owner-approved Wayfinder stations at '+width);
     await stations.first().focus();
     const button=async(index,pressed)=>{
       await page.evaluate(({index,pressed})=>{
@@ -1164,7 +1164,9 @@ try{
   const discoverySearch=page.locator('.p136-discover-search-form').getByRole('searchbox',{name:'Search published projects',exact:true});
   await discoverySearch.fill('orbital & worlds');
   await discoverySearch.press('Enter');
-  await page.waitForURL(base+'/discover?q=orbital%20%26%20worlds');
+  // URLSearchParams is permitted to serialize spaces as '+' rather than '%20'.
+  // The observable contract is the decoded public search term, not encoding style.
+  await page.waitForURL(url=>url.pathname==='/discover'&&url.searchParams.get('q')==='orbital & worlds');
   await page.goto(base,{waitUntil:'networkidle'});
   await page.screenshot({path:join(out,'vector-fallback-390.png'),animations:'disabled'});
   record('GPU-independent DOM fallback / pause / reduced motion / keyboard / menu focus / search',focus);await context.close();

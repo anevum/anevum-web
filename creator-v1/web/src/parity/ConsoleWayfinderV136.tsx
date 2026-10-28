@@ -7,11 +7,10 @@ import {useLivingWorld,type WorldSector} from './LivingWorldState';
 import './console-wayfinder-v136.css';
 
 const stations=[
- {to:'/',label:'Arrival',small:'Enter',icon:'home',sector:'hero'},
- {to:'/discover',label:'Discover',small:'Explore',icon:'explore',sector:'portal'},
- {to:'/community',label:'Commons',small:'Connect',icon:'community',sector:'community'},
- {to:'/creators',label:'Creators',small:'People',icon:'people',sector:'creators'},
- {to:'/studio',label:'Studio',small:'Create',icon:'create',sector:'studio'}
+ {to:'/',label:'Home',small:'Studio',icon:'home',sector:'hero'},
+ {to:'/severance',label:'Severance',small:'Game',icon:'games',sector:'hero'},
+ {to:'/discover',label:'Discover',small:'Projects',icon:'explore',sector:'portal'},
+ {to:'/status',label:'Status',small:'Build',icon:'status',sector:'portal'}
 ] as const satisfies ReadonlyArray<{to:string;label:string;small:string;icon:string;sector:WorldSector}>;
 type Props={onOpenSearch:()=>void;onOpenIren:()=>void;memberDestination:string;memberLabel:string;memberInitial:string|null};
 export function ConsoleWayfinderV136({onOpenSearch,onOpenIren,memberDestination,memberLabel,memberInitial}:Props){

@@ -1,0 +1,137 @@
+name: ANEVUM V139 Cinematic Severance Website QA
+on:
+  pull_request:
+    paths:
+      - 'creator-v1/web/src/parity/StageFocusedHomeV137.tsx'
+      - 'creator-v1/web/src/parity/SeveranceWorldSceneV138.tsx'
+      - 'creator-v1/web/src/parity/SeveranceCinematicV139.tsx'
+      - 'creator-v1/web/src/parity/SeveranceScrollSequenceV139.tsx'
+      - 'creator-v1/web/src/parity/PublicDepthDirectorV140.tsx'
+      - 'creator-v1/web/src/components/IrenSpatialTour.tsx'
+      - 'creator-v1/web/src/severance-motion-v139.css'
+      - 'creator-v1/graphics/encode-severance-v139.py'
+      - 'creator-v1/web/src/severance-cinematic-v138.css'
+      - 'creator-v1/web/src/pages/SeverancePage.tsx'
+      - 'creator-v1/web/src/pages/AboutStudioPage.tsx'
+      - 'creator-v1/web/src/stage-focus-v137.css'
+      - 'creator-v1/web/src/pages/CinematicLandingPage.tsx'
+      - 'creator-v1/web/src/pages/StatusPage.tsx'
+      - 'creator-v1/web/src/lib/site-navigation.ts'
+      - 'creator-v1/web/src/lib/public-page-metadata.ts'
+      - 'creator-v1/web/src/components/Shell.tsx'
+      - 'creator-v1/web/src/parity/ConsoleWayfinderV136.tsx'
+      - 'creator-v1/web/src/App.tsx'
+      - 'creator-v1/web/src/main.tsx'
+      - 'creator-v1/web/index.html'
+      - 'creator-v1/web/vite.config.ts'
+      - 'creator-v1/test/stage-focused-severance-v137.test.mjs'
+      - 'creator-v1/ops/v138-public-presentation-scope.mjs'
+      - 'creator-v1/ops/v138-static-inventory.mjs'
+      - 'creator-v1/test/severance-cinematic-v138.test.mjs'
+      - 'creator-v1/test/severance-motion-v139.test.mjs'
+      - 'creator-v1/test/stage-focused-v137-browser.mjs'
+      - '.github/workflows/v137-stage-focused-website.yml'
+permissions:
+  contents: read
+concurrency:
+  group: v139-cinematic-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  verify-cinematic-site:
+    if: github.repository == 'anevum/anevum-web' && github.event.pull_request.head.repo.full_name == 'anevum/anevum-web'
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    env:
+      ANEVUM_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+      VITE_PARITY_V136_FULL: 'true'
+      VITE_PARITY_V136_CINEMATIC: 'true'
+      VITE_PARITY_V136_NATIVE_VIDEO: 'false'
+      VITE_PARITY_V136_HORIZON_QA: 'false'
+      VITE_PARITY_V136_SHARED_SCENE_QA: 'false'
+      VITE_PACKAGE_CREATOR_GALLERY_V010: 'false'
+      CLOUDFLARE_API_TOKEN: ''
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Audit exact source and protected presentation-only diff
+        run: node creator-v1/ops/v138-public-presentation-scope.mjs
+      - name: Install first-party cinematic encoder
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --quiet --no-cache-dir numpy==2.3.5 opencv-python-headless==4.13.0.92
+          # Hosted runner images in 2026 may omit ffmpeg entirely.
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ffmpeg
+          fi
+          command -v ffmpeg
+          command -v ffprobe
+      - name: Retrieve source concept and record independent integrity audit
+        run: |
+          set -euo pipefail
+          curl --fail --location --silent --show-error --retry 2 --retry-delay 2 --max-time 75 \
+            'https://dynamic.heygen.ai/image/82172586a3324f22b5f1d558ef81a0dd/original.png' \
+            --output "$RUNNER_TEMP/anevum-severance-source.png"
+          file "$RUNNER_TEMP/anevum-severance-source.png"
+          sha256sum "$RUNNER_TEMP/anevum-severance-source.png"
+          python -c 'import hashlib,cv2,os; a=cv2.imread(os.environ["RUNNER_TEMP"]+"/anevum-severance-source.png"); print("SOURCE_DIMS",None if a is None else a.shape); print("SOURCE_PIXEL_SHA256",None if a is None else hashlib.sha256(a.tobytes()).hexdigest())'
+      - name: Encode original pinned 1080p film, mobile film, poster and scroll frames
+        run: |
+          set -euo pipefail
+          mkdir -p creator-v1/web/public/assets/severance
+          python creator-v1/graphics/encode-severance-v139.py \
+            "$RUNNER_TEMP/anevum-severance-source.png" \
+            creator-v1/web/public/assets/severance
+          ffprobe -v error -show_entries format=duration,size:stream=codec_name,width,height \
+            -of json creator-v1/web/public/assets/severance/hero-motion-v139-1080p.mp4
+      - name: Retain source bytes on failed integrity check for human verification
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v139-source-integrity-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/anevum-severance-source.png
+          retention-days: 1
+          if-no-files-found: ignore
+      - name: Check current-stage and motion contracts
+        run: |
+          test "$(git rev-parse HEAD)" = "$ANEVUM_SOURCE_SHA"
+          node --test creator-v1/test/stage-focused-severance-v137.test.mjs creator-v1/test/severance-cinematic-v138.test.mjs creator-v1/test/severance-motion-v139.test.mjs
+          node --test creator-v1/test/public-page-metadata-v136.test.mjs
+      - name: Install and typecheck the actual Creator V1 frontend
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+      - name: Install isolated Chromium
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.64.1
+          npx playwright install --with-deps chromium
+      - name: Test homepage, movie, scroll, Severance, About, Status at desktop and phone
+        run: node creator-v1/test/stage-focused-v137-browser.mjs
+      - name: Audit reviewed public static inventory and SHA256
+        run: node creator-v1/ops/v138-static-inventory.mjs
+      - name: Attach reviewed UI and media (never deploy)
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-v139-cinematic-static-ui-${{ github.event.pull_request.head.sha }}
+          path: creator-v1/dist/web/
+          retention-days: 14
+          if-no-files-found: error
+      - name: Attach reviewed browser screenshots and receipts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: anevum-v139-cinematic-qa-${{ github.event.pull_request.head.sha }}
+          path: evidence/stage-focused-v137/
+          retention-days: 14
+          if-no-files-found: warn

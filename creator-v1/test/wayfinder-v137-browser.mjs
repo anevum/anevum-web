@@ -101,7 +101,8 @@ try{
   await page.screenshot({path:join(out,'wayfinder-'+width+'.png'),animations:'disabled'});
   await page.getByRole('button',{name:'Close quick navigation',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('.portal-launcher')?.open);
-  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'No overflow '+width);
+  const widthCheck=await page.evaluate(()=>({viewport:innerWidth,documentWidth:document.documentElement.scrollWidth,offenders:Array.from(document.querySelectorAll("body *")).map(node=>{const rect=node.getBoundingClientRect();return {tag:node.tagName,cls:typeof node.className==="string"?node.className.slice(0,85):"",text:node.textContent?.trim().slice(0,32),left:Math.round(rect.left),right:Math.round(rect.right),width:Math.round(rect.width)};}).filter(item=>item.right>innerWidth+1||item.left<-1).sort((a,b)=>b.right-a.right).slice(0,16)}));
+  assert.equal(widthCheck.documentWidth>width+1,false,'No overflow '+width+': '+JSON.stringify(widthCheck));
   receipt.results.push({width,escapeFocus:true,destinationFocus:true,searchFocus:true,noSyntheticEntries:true,overflow:false,dialog:geometry});
   console.log('PASS Wayfinder V137 '+width);
   await context.close();

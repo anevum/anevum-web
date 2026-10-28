@@ -95,8 +95,11 @@ export function IrenSpatialTour({
         });
       });
     };
+    // Do not observe the bubble itself. Its "compact" placement can change
+    // its measured height, which otherwise re-triggers placement and causes
+    // two-position oscillation (and an unclickable Next button). Changing
+    // a lesson or expanding details already re-runs this effect.
     const observer=typeof ResizeObserver!=="undefined"?new ResizeObserver(recalc):null;
-    if(bubbleRef.current)observer?.observe(bubbleRef.current);
     if(spriteRef.current)observer?.observe(spriteRef.current);
     const visual=window.visualViewport;
     recalc();

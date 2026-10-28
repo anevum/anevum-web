@@ -15,11 +15,11 @@ test("all public portal routes are real React components, not empty links",()=>{
  assert.doesNotMatch(app,/path="community" element={<ComingPage/);
 });
 test("Orbital Underground visual identity and responsive routes are shared site-wide",()=>{
- const main=read("web/src/main.tsx"),css=read("web/src/portal-overhaul.css"),shell=read("web/src/components/Shell.tsx");
+ const main=read("web/src/main.tsx"),css=read("web/src/portal-overhaul.css"),shell=read("web/src/components/Shell.tsx"),app=read("web/src/App.tsx");
  assert.match(main,/import "\.\/portal-overhaul\.css"/);
  assert.match(shell,/menuDestinations/);
  assert.match(shell,/menuCategories/);
- assert.match(shell,/\/levels/);
+ assert.match(app,/path="levels"/); // Retained deep link, intentionally not a current-stage main menu item.
  for(const width of ["1200px","900px","640px","340px"]) assert.ok(css.includes(width),width);
  for(const token of ["--portal-iron","--portal-violet","--portal-buzz"])assert.ok(css.includes(token),token);
  assert.match(css,/prefers-reduced-motion/);
@@ -76,7 +76,8 @@ test("member account shows server-verified achievements and unlimited XP without
  assert.match(page,/MY ACHIEVEMENT CABINET/);
  assert.match(page,/a\.earned/);
  assert.match(page,/NO FIXED/i);
- assert.match(shell,/to:"\/levels",label:"Evolution"/);
+ assert.match(read("web/src/App.tsx"),/path="levels"/); // Server-verified progression remains accessible.
+ assert.doesNotMatch(shell,/to:"\/levels",label:/);
  assert.match(shell,/to:"\/library",label:"My library"/);
  assert.match(shell,/<CompactMemberIdentity member={ownCard} href="\/member"/);
  assert.match(read("web/src/App.tsx"),/path="account" element={<Navigate to="\/member" replace\/>}/);
