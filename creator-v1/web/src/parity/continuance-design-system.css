@@ -1005,9 +1005,21 @@ html[data-av-parity="v136-full"] .portal-launcher-foot>a{
 }
 @media(max-width:420px){
  html[data-av-parity="v136-full"] .portal-launcher-result{
+  /* Nine game-first routes exceed the drawer viewport: scroll the result
+   * list rather than shrinking grid cards until their text overlaps. */
   display:grid;grid-template-columns:34px minmax(0,1fr) 16px;
   grid-template-areas:"icon copy arrow" "icon meta arrow";
-  gap:5px 9px;align-items:center;min-height:0;
+  grid-template-rows:auto auto;
+  gap:4px 9px;align-items:center;align-content:center;
+  min-height:70px;height:auto;flex:0 0 auto;
+  padding:9px;
+ }
+ html[data-av-parity="v136-full"] .portal-launcher-results{
+  overflow-y:auto;overscroll-behavior-y:contain;
+  -webkit-overflow-scrolling:touch;
+ }
+ html[data-av-parity="v136-full"] .portal-launcher-search input::placeholder{
+  font-size:12px;letter-spacing:.01em;
  }
  html[data-av-parity="v136-full"] .portal-launcher-result-icon{grid-area:icon}
  html[data-av-parity="v136-full"] .portal-launcher-result-copy{grid-area:copy}
