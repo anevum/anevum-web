@@ -22,6 +22,7 @@ const CONTROLLER_DEPLOY="4c832ec7-ce67-4864-832c-9b0b470af92d";
 const ROOT="/accounts/"+ACCOUNT+"/workers/scripts/"+WORKER;
 const RELEASE_FILES=new Set([
   ".github/workflows/v140-cinematic-release.yml",
+  "creator-v1/test/v140-production-compat-browser.mjs",
   "creator-v1/ops/v140-cinematic-release.mjs",
   "docs/production/ANEVUM.WEB.RELEASE.2026-10-27.001.V140-SEVERANCE.md"
 ]);
