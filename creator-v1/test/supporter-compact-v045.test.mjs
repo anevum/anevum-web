@@ -10,26 +10,26 @@ const css = read('../web/src/supporter-compact-v045.css');
 const transparency = read('../web/src/pages/SupporterTransparencyPage.tsx');
 const collection = read('../web/src/pages/SupporterCollectionPage.tsx');
 
-test('short invitation does not inline technical dashboards or large collection workbench',()=>{
+test('public support status uses the existing compact layout with truthful game-first actions',()=>{
  assert.match(home,/av45-hero/);
  assert.match(home,/av45-offer/);
  assert.match(home,/av45-impact/);
  assert.doesNotMatch(home,/<SupporterTransparency\s*\/>/);
  assert.doesNotMatch(home,/<SupporterRewardsStudio\b/);
  assert.doesNotMatch(home,/SupporterBenefitAtlas|SupporterQuestions/);
- assert.match(home,/to="\/support\/transparency"/);
- assert.match(home,/to="\/support\/collection"/);
+ assert.match(home,/to="\/severance"/);
+ assert.match(home,/to="\/status"/);
+ assert.match(home,/data-support-enrollment="inactive"/);
+ assert.match(home,/PAID ENROLLMENT NOT OPEN/);
 });
-test('payment status and prices remain honest and fail-closed',()=>{
- assert.match(home,/billing\?\.available/);
- assert.match(home,/!id\|\|!billing\?\.available\|\|checking\|\|busy/);
- assert.match(home,/checkout\.stripe\.com/);
- assert.match(home,/billing\.stripe\.com/);
- assert.match(home,/ENROLLMENT NOT OPEN/);
- assert.match(home,/Memberships and live payments are not open/);
- assert.match(home,/interval==='year'\?'\$36':'\$5'/);
- assert.match(home,/updateDisplay\(show:boolean\)/);
- assert.match(home,/supporter\?'portal':'checkout'/);
+test('retired subscriptions and checkout cannot accidentally reappear on public support page',()=>{
+ assert.doesNotMatch(home,/checkout\.stripe\.com|billing\.stripe\.com/);
+ assert.doesNotMatch(home,/\/api\/v1\/member\/supporter/);
+ assert.doesNotMatch(home,/onClick=\{\(\)=>void action\(/);
+ assert.doesNotMatch(home,/<button[^>]*>\s*(?:Open test checkout|Manage test membership)/);
+ assert.doesNotMatch(home,/to="\/support\/collection"/);
+ assert.doesNotMatch(home,/\$36|\$5|save 40%/);
+ assert.match(home,/No checkout, donation collection or supporter payment service is active/);
 });
 test('three route surfaces preserve real transparency and private cosmetics',()=>{
  assert.match(app,/path="support" element=\{<SupporterPage\/>\}/);
