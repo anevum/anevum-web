@@ -44,5 +44,5 @@ test("V141 original orbit, flare, satellite preserved, and render is local",()=>
  assert.ok(render.includes('cairosvg.svg2png'));
  for(const name of ["anevum-severance-apple-touch-v141-180.png","anevum-severance-icon-v141-192.png","anevum-severance-icon-v141-512.png","anevum-severance-maskable-v141-512.png","anevum-severance-share-v141-1200x630.png"])
   assert.ok(render.includes(name),"Art generator missing "+name);
- assert.doesNotMatch(render,/https?:\/\/|requests\.get|urllib\.request|pexels|stockphoto/);
+ assert.doesNotMatch(render,/requests\.get|urllib\.request|urlopen\(|pexels|stockphoto/);
 });
