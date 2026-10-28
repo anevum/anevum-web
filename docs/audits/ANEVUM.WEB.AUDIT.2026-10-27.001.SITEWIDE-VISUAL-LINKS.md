@@ -19,7 +19,8 @@
 3. Discover's **How publishing works** went to the general Field Guide rather than the verified current publishing/service-status report. Corrected text and target to Publishing status → /status.
 4. The quick switchboard prioritized legacy broad platform categories without the current original SEVERANCE project. Added /severance as a real public entry; retained searchable categories and their actual published catalogue filters; status remains default visible.
 5. The public Support page still showed outdated subscription prices, test membership/Stripe checkout destinations and a link promoting the old paid supporter collection. Replaced with explicit **no paid enrollment, no checkout** messaging and current-game/status links. Removed generic Support ANEVUM promotion and the stale Supporter Studio destination in the member dashboard. Historical private profile/cosmetic data, legal/account records and deep links remain untouched.
-6. Remaining platforms (Discover, Creator Studio, Commons, Boards, Field Guide, recognition, private member/library and IREN) remain valid and routed; remove no working functionality merely because it predates the current game-first branding.
+6. The final mobile screenshot review found the switchboard route cards at 390px were shrinking into each other after the new game-first default entries exceeded the 49dvh list height. Fixed the V136 Continuance mobile layout to keep each card at least 70px high and scroll the route list rather than overlapping labels. Compiled-browser QA now measures each card and its text bounds for non-overlap at desktop and phone widths.
+7. Remaining platforms (Discover, Creator Studio, Commons, Boards, Field Guide, recognition, private member/library and IREN) remain valid and routed; remove no working functionality merely because it predates the current game-first branding.
 
 ## Implementation boundaries
 
