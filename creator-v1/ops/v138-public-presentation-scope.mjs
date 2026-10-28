@@ -37,6 +37,7 @@ export const REVIEWED_PATHS=Object.freeze([
   "creator-v1/web/index.html",
   "creator-v1/web/src/App.tsx",
   "creator-v1/web/src/components/Shell.tsx",
+  "creator-v1/web/src/components/IrenSpatialTour.tsx",
   "creator-v1/web/src/lib/public-page-metadata.ts",
   "creator-v1/web/src/lib/site-navigation.ts",
   "creator-v1/web/src/main.tsx",
@@ -68,6 +69,12 @@ const changed=git("diff","--name-only","--diff-filter=ACDMRT",EXPECTED_BASE,head
 assert.ok(changed.length>0,"No candidate change list");
 const unexpected=changed.filter(path=>!REVIEWED_PATHS.includes(path));
 assert.deepEqual(unexpected,[],"Unexpected changed paths outside approved presentation/test/documentation scope");
+// IREN feedback-loop correction is approved only at these exact audited Git blobs.
+const IREN_TOUR="creator-v1/web/src/components/IrenSpatialTour.tsx";
+assert.equal(git("rev-parse",EXPECTED_BASE+":"+IREN_TOUR),
+  "05be59525fb36181ff73789ea48a78ce668c15f2","IREN source baseline changed");
+assert.equal(git("rev-parse","HEAD:"+IREN_TOUR),
+  "c852a143d3b1b4017cf86778d75c531ee7f5f409","Unreviewed IREN tour edit");
 for(const key of [
   "creator-v1/web/src/parity/StageFocusedHomeV137.tsx",
   "creator-v1/web/src/parity/SeveranceWorldSceneV138.tsx",
