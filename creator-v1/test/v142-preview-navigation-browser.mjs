@@ -78,8 +78,10 @@ for(const width of [1440,390]){
   if(path==='/start')record('Archived Start remains reachable, not default navigation at '+width,{overflow});
  }
  await page.goto(origin,{waitUntil:'domcontentloaded',timeout:18000});
- const search=page.getByRole('button',{name:'Search ANEVUM',exact:true}).first();
- await search.waitFor();await search.click();
+ const railSearch=page.getByRole('button',{name:'Search and quick navigation',exact:true});
+ const headerSearch=page.getByRole('button',{name:'Search ANEVUM',exact:true});
+ const search=(await railSearch.isVisible())?railSearch:headerSearch;
+ await search.waitFor({state:'visible'});await search.click();
  await page.locator('.portal-launcher[open]').waitFor();
  const links=await page.locator('.portal-launcher-results a').evaluateAll(nodes=>nodes.map(a=>({href:a.getAttribute('href'),text:a.textContent?.trim()||''})));
  assert.ok(links.some(x=>x.href==='/severance'),'Current game must be default in actual switchboard');
