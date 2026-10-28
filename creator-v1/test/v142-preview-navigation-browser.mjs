@@ -51,7 +51,8 @@ for(const width of [1440,390]){
   await page.screenshot({path:join(out,file),fullPage:true,animations:'disabled'});
   report.screenshots.push(file);
   if(path==='/'){
-   assert.equal(await page.locator('.av138-header-status').innerText(),'BUILD STATUS');
+   assert.equal(await page.locator('.av138-header-status').count(),0,'Old duplicate header Status callout removed');
+   assert.equal(await page.locator('.p136-main-nav a[href="/status"]').count(),1,'Canonical Status nav remains');
    assert.equal((await page.locator('.p136-console-station').first().textContent())?.includes('Entrance'),true,'Updated Home rail secondary label is present in DOM, even when CSS hides it');
    assert.equal(await page.getByRole('link',{name:/EXPLORE THE GAME/i}).count(),1);
    record('Live game-first home nav at '+width,{overflow});
