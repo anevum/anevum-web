@@ -42,8 +42,8 @@ const {chromium} = require('playwright');
     await page.screenshot({path: '/tmp/severance-browser-shots/01-menu.png'});
     const before = fs.readFileSync('/tmp/severance-browser-shots/01-menu.png');
 
-    // Godot viewport is 1280x720; solo test button is centered near 50% by 50%.
-    await page.mouse.click(rect.x + rect.width * 0.5, rect.y + rect.height * 0.50);
+    // The rendered 1280x720 Godot title screenshot positions the solo button at y~420, not y~360.
+    await page.mouse.click(rect.x + rect.width * 0.5, rect.y + rect.height * 0.583);
     await page.waitForFunction(
       () => globalThis.__severancePrototypePhase === 'solo',
       null, {timeout: 30000}
