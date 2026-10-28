@@ -23,7 +23,7 @@ All output is deployed under new versioned paths, preserving existing cached URL
 ## Release invariants and rollback
 
 - Previous verified homepage: Worker **V69** (`f30caf48-f56f-4209-be51-f029559d1cc0`) at 100%, deployment `1d965db3-68f0-431e-bc88-dbb7ef337101`.
-- Retained V69 original frontend SHA256 `1cbc17726657086e7b86b8ee16a4067a9abdf6f49ebf40e8eb829fb44`.
+- Retained V69 original frontend SHA256 `1cbc17726657086e7b86b8ee8a1ddee16a4067a9abdf6f49ebf40e8eb829fb44`.
 - Sealed original V67 gateway SHA256 `1884ff0dd3c8aa3d38711167af0b4552c9b200b3148e72d9ba6d90d23171ef99` remains unchanged.
 - Preserve all old V69 static assets, including V67/V68 historical clients. Do not rewrite `/site.webmanifest`, `/apple-touch-icon.png`, `/favicon.svg`, `/anevum-social-share-v2.png` or any other existing public URL.
 - Preserve Worker settings, **26 bindings**, **45 routes**, controller Worker, D1/R2, authentication and publishing permissions.
