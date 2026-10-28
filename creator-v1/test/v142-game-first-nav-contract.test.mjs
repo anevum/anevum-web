@@ -20,7 +20,8 @@ test("obsolete labels and misleading destination removed, preserving valid route
   const header=read("parity/ParityHeaderV136.tsx");
   const rail=read("parity/ConsoleWayfinderV136.tsx");
   const discover=read("parity/ParityDiscoverV136.tsx");
-  assert.match(header,/className="av138-header-status"[^>]*>BUILD STATUS/);
+  assert.doesNotMatch(header,/className="av138-header-status"/,'Duplicated status button retired; canonical top nav still contains Status');
+  assert.match(header,/HEADER_NAV\.map/,'Real shared Status navigation remains');
   assert.doesNotMatch(header,/>DEV LOG<\/Link>/);
   assert.match(rail,/to:'\/',label:'Home',small:'Entrance'/);
   assert.match(discover,/<Link to="\/status" className="p136-discover-helper">Publishing status/);
