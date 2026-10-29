@@ -1,4 +1,5 @@
 import { VALID_WORDS, ANSWERS } from "./words.mjs";
+export { VALID_WORDS, ANSWERS };
 
 export const MAX_ROWS = 6;
 export const WORD_LENGTH = 5;
