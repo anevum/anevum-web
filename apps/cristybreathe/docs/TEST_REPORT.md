@@ -1,3 +1,22 @@
+# Patch verification — 1.1.1
+
+Session: CRISTYBREATHE.BUILD.2026-10-29.002
+
+The suite now passes 7/7 scenarios, none skipped. The new SQL scenario uses 252
+entries to verify that older drafts, reflections, priorities and collections are
+found independently of the first loaded page; filtered counts and summary data
+remain isolated by account. Browser coverage now also checks 220 paginated search
+matches, older-entry discovery, input focus retention during searches, recent
+items across view changes, and rapid theme/haptic/motion preference changes.
+
+No schema migration or new service is required. iPhone landscape side insets are
+included alongside the existing top/bottom safe areas. The sign-in browser is
+still unauthenticated, so real-user production CRUD and physical iPhone
+acceptance remain pending.
+
+The previous release's verified backup restoration and authentication tests are
+preserved below.
+
 # Release verification — 1.1.0
 
 Session: CRISTYBREATHE.BUILD.2026-10-29.002

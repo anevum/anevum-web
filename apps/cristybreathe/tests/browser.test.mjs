@@ -9,7 +9,9 @@ let playwright;
 try{playwright=require('playwright');}catch{}
 const origin='http://127.0.0.1:8787';
 test('synthetic browser: autosave, themes, mobile layout, search and review', {skip:!playwright,timeout:90000},async()=>{
- const server=spawn(process.execPath,['scripts/test-server.mjs'],{cwd:new URL('..',import.meta.url),stdio:['ignore','pipe','pipe']});
+ await mkdir(new URL('../.private/qa/',import.meta.url),{recursive:true});
+ const testDatabase=new URL('../.private/qa/browser-run-'+Date.now()+'.sqlite',import.meta.url).pathname;
+ const server=spawn(process.execPath,['scripts/test-server.mjs'],{cwd:new URL('..',import.meta.url),env:{...process.env,CRISTYBREATHE_TEST_DB:testDatabase},stdio:['ignore','pipe','pipe']});
  let browser;
  try{
   for(let i=0;i<40;i++){try{if((await fetch(origin)).ok)break;}catch{}await delay(100);}
@@ -50,6 +52,15 @@ test('synthetic browser: autosave, themes, mobile layout, search and review', {s
   await page.locator('.review-item').filter({has:page.locator('h3',{hasText:title})}).getByRole('button',{name:'Done',exact:true}).click();
   await page.locator('summary').filter({hasText:'Done & reviewed'}).waitFor();
   await page.getByRole('button',{name:'Personalize',exact:true}).click();
+  let firstPreference=true;
+  await page.route('**/api/preferences',async route=>{if(firstPreference){firstPreference=false;await delay(120);}await route.continue();});
+  await page.getByRole('button',{name:/Lavender Twilight/}).click();
+  await page.locator('#haptics-choice').uncheck();
+  await page.locator('#motion-choice').check();
+  await page.getByRole('status').filter({hasText:'Preferences saved'}).waitFor();
+  await page.unroute('**/api/preferences');
+  const savedPreferences=await (await context.request.get(origin+'/api/session')).json();
+  assert.equal(savedPreferences.preferences.theme,'lavender');assert.equal(savedPreferences.preferences.haptics,false);assert.equal(savedPreferences.preferences.motion,'reduced');
   await mkdir(new URL('../.private/qa/',import.meta.url),{recursive:true});
   for(const [theme,label] of [['sage','Sage After Dark'],['lavender','Lavender Twilight'],['autumn','Warm Autumn'],['teal','Midnight Teal'],['porcelain','Soft Porcelain']]){
    await page.getByRole('button',{name:new RegExp(label)}).click();await page.getByRole('status').filter({hasText:'Preferences saved'}).waitFor();
@@ -74,6 +85,34 @@ test('synthetic browser: autosave, themes, mobile layout, search and review', {s
   await page.waitForFunction(()=>navigator.serviceWorker.controller!==null);
   const cached=await page.evaluate(async()=>{const result=[];for(const name of await caches.keys())for(const req of await(await caches.open(name)).keys())result.push(new URL(req.url).pathname);return result;});
   assert.deepEqual(cached.sort(),['/offline.css','/offline.html']);
+  const seedRows=Array.from({length:220},(_,i)=>({kind:'note',title:'Synthetic page '+String(i).padStart(3,'0'),body:'Synthetic pagination fixture',created_at:new Date(Date.UTC(2026,9,28,0,0,i)).toISOString(),updated_at:new Date(Date.UTC(2026,9,28,0,0,i)).toISOString()}));
+  seedRows.push({title:'Synthetic old priority',body:'Older than the first page',priority:1,created_at:'2020-01-01T00:00:00.000Z',updated_at:'2020-01-01T00:00:00.000Z'});
+  seedRows.push({kind:'journal',title:'Synthetic old draft',is_draft:1,created_at:'2019-01-01T00:00:00.000Z',updated_at:'2019-01-01T00:00:00.000Z'});
+  seedRows.push({kind:'journal',title:'Synthetic old reflection',created_at:'2018-01-01T00:00:00.000Z',updated_at:'2018-01-01T00:00:00.000Z'});
+  const seeded=await context.request.post(origin+'/api/import',{headers:{origin,'x-cristybreathe':'1'},data:{application:'CristyBreathe',schema_version:1,entries:seedRows}});assert.equal(seeded.status(),201);
+  await page.getByRole('button',{name:'My space',exact:true}).first().click();
+  await page.getByRole('button',{name:/Synthetic old priority/}).first().waitFor();
+  await page.getByRole('button',{name:'Notes & collections',exact:true}).click();
+  await page.getByRole('searchbox',{name:'Search your saved thoughts'}).fill('Synthetic old');
+  await page.locator('#note-results h3').filter({hasText:'Synthetic old priority'}).waitFor();
+  assert.equal(await page.evaluate(()=>document.activeElement.id),'note-search');
+  await page.getByRole('button',{name:'Drafts',exact:true}).click();
+  await page.locator('#note-results h3').filter({hasText:'Synthetic old draft'}).waitFor();
+  await page.getByRole('button',{name:'Reflections',exact:true}).click();
+  await page.locator('.entry-card h3').filter({hasText:'Synthetic old reflection'}).waitFor();
+  await page.getByRole('button',{name:'Find anything',exact:true}).first().click();
+  await page.getByRole('searchbox',{name:'Search your entire space'}).fill('Synthetic page');
+  await page.getByText('100 of 220 matching thoughts',{exact:true}).waitFor();
+  assert.equal(await page.evaluate(()=>document.activeElement.id),'global-search');
+  await page.getByRole('button',{name:'Load more matches',exact:true}).click();
+  await page.getByText('200 of 220 matching thoughts',{exact:true}).waitFor();
+  await page.getByRole('button',{name:'Load more matches',exact:true}).click();
+  await page.getByText('220 of 220 matching thoughts',{exact:true}).waitFor();
+  await page.locator('.card-open').filter({has:page.getByRole('heading',{name:'Synthetic page 000',exact:true})}).click();
+  await page.getByRole('button',{name:'Save draft and close',exact:true}).click();
+  await page.getByRole('button',{name:'Notes & collections',exact:true}).click();
+  await page.getByRole('button',{name:'Find anything',exact:true}).first().click();
+  await page.locator('#search-results h3').filter({hasText:'Synthetic page 000'}).waitFor();
   await page.getByRole('button',{name:'My space',exact:true}).first().click();
   await page.screenshot({path:new URL('../.private/qa/desktop-home.png',import.meta.url).pathname,fullPage:true});
   for(const width of [320,390,430,768]){

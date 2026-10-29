@@ -76,3 +76,30 @@ test('export and transactional additive restore preserve contents without import
   assert.equal((await call(env,'/api/entries','GET',undefined,second)).data.entries.length,1);
 });
 test.after(()=>{globalThis.fetch=originalFetch;});
+
+test('server views, summary and pagination find older data beyond the first hundred without crossing accounts',async()=>{
+ const DB=openDatabase(),env=envFor(DB);
+ const seed=(index,kind='note',extra={})=>{
+  const id=crypto.randomUUID(),date=new Date(Date.UTC(2026,9,28,0,0,index)).toISOString();
+  DB.db.prepare('INSERT INTO entries(id,owner,kind,title,body,status,created_at,updated_at,pinned,archived,priority,is_draft,collection,tags,due_date,deferred_until) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run(id,extra.owner||emails[0],kind,'Seed '+index,'Searchable seed '+index,'open',date,date,0,extra.archived||0,extra.priority||0,extra.is_draft||0,extra.collection||'','[]',extra.due_date||'',extra.deferred_until||'');
+  return id;
+ };
+ let older;
+ for(let i=0;i<230;i++){const id=seed(i,'note',{priority:Number(i===0),is_draft:Number(i===1),archived:Number(i===2),collection:i===3?'Older collection':''});if(i===0)older=id;}
+ for(let i=0;i<20;i++)seed(-100-i,'journal',{priority:1});
+ seed(-200,'task',{due_date:'2026-10-01',deferred_until:'2026-10-30'});
+ seed(-201,'task',{due_date:'2026-11-01'});
+ seed(1000,'note',{owner:emails[1],collection:'Other account only',priority:1});
+ const initial=(await call(env,'/api/entries')).data;assert.equal(initial.entries.length,100);assert.equal(initial.total,252);assert.ok(!initial.entries.some(e=>e.id===older));
+ const summary=(await call(env,'/api/dashboard')).data;assert.equal(summary.counts.drafts,1);assert.equal(summary.priorities[0].id,older);assert.deepEqual(summary.collections,['Older collection']);
+ const focus=(await call(env,'/api/entries?view=focus&archived=0')).data;assert.equal(focus.total,1);assert.equal(focus.entries[0].id,older);
+ const journals=(await call(env,'/api/entries?view=journal&archived=0')).data;assert.equal(journals.total,20);assert.ok(journals.entries.every(e=>e.kind==='journal'));
+ const drafts=(await call(env,'/api/entries?view=drafts&archived=0')).data;assert.equal(drafts.total,1);assert.equal(drafts.entries[0].is_draft,1);
+ const notes=(await call(env,'/api/entries?view=notes&archived=0&kind=note')).data;assert.equal(notes.total,229);
+ const review=(await call(env,'/api/entries?view=review&archived=0&today=2026-10-29')).data;assert.equal(review.attention,1);assert.equal(review.entries[0].id,older);assert.ok(review.entries.every(e=>e.kind!=='journal'&&!e.is_draft));
+ const second=(await call(env,'/api/entries?q=seed&offset=100')).data;assert.equal(second.entries.length,100);assert.ok(!second.entries.some(e=>initial.entries.some(first=>first.id===e.id)));
+ const third=(await call(env,'/api/entries?q=seed&offset=200')).data;assert.equal(third.entries.length,52);assert.equal(third.has_more,false);
+ const collection=(await call(env,'/api/entries?view=notes&collection=Older%20collection')).data;assert.equal(collection.total,1);
+ const other=await signing.token(emails[1]);assert.equal((await call(env,'/api/dashboard','GET',undefined,other)).data.counts.total,1);
+ for(const query of ['view=invalid','kind=invalid','archived=2','collection='+('x'.repeat(61))])assert.equal((await call(env,'/api/entries?'+query)).status,400);
+});

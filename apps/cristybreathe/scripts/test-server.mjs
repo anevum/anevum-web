@@ -9,7 +9,7 @@ const signing=await keys();
 const realFetch=globalThis.fetch;
 globalThis.fetch=async (url,options)=>String(url)===issuer+'/cdn-cgi/access/certs'?Response.json({keys:[signing.pub]}):realFetch(url,options);
 mkdirSync(resolve(root,'.private'),{recursive:true});
-const file=resolve(root,'.private/browser-test.sqlite');
+const file=process.env.CRISTYBREATHE_TEST_DB||resolve(root,'.private/browser-test.sqlite');
 let DB;
 try{DB=openDatabase(file,false);DB.db.prepare('SELECT revision FROM entries LIMIT 1').get();}catch{DB?.db.close();DB=openDatabase(file);}
 const env=envFor(DB);
