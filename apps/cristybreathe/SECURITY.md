@@ -1,13 +1,27 @@
 # Security boundary
 
-Every application asset and API route requires a verified Cloudflare Access
-JWT. The Worker verifies RS256 signatures against the configured issuer's
-JWKS, exact issuer and audience, expiry, issuance time, optional not-before,
-subject and an explicit email allowlist. It caches JWKS briefly and refreshes
-on key rotation. Missing configuration fails closed. There is no development
+Every application asset and API route requires authenticated Cloudflare Access
+identity. For direct invocations, the Worker accepts the provider-verified
+`ctx.access` runtime context only for the configured application audience and
+an allowed email. This context is created by Cloudflare, not from a client
+header or request body. The provider validates the Access authentication before
+invoking the Worker.
+
+For legacy routes without runtime identity, the Worker accepts an assertion
+from the Access header or `CF_Authorization` cookie only after verifying RS256
+signatures, exact issuer and audience, expiry, issuance time, optional not-before,
+subject and the email allowlist. Both standard JWT audience encodings (string
+or array) are supported. Public signing keys are cached briefly and refreshed
+on rotation. Missing configuration fails closed. There is no development
 authentication switch in the deployment bundle.
 
-The owner is derived exclusively from the verified JWT. Clients cannot submit
+Rejected document requests receive a readable 401 recovery page with no private
+content. API rejections remain structured 401 responses. Recovery styles use a
+per-response CSP nonce; no inline script is enabled. The reference code contains
+only a non-sensitive rejection category and random request ID. No token, cookie,
+identity or private configuration value is rendered.
+
+The owner is derived exclusively from the verified Access identity. Clients cannot submit
 or override ownership. List, read, update, delete, preferences and export
 queries scope by owner; cross-account IDs produce 404. Restore assigns the
 authenticated owner and fresh IDs rather than accepting ownership from a file.

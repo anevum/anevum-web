@@ -20,7 +20,7 @@ function error(message){$('global-error').textContent=message;$('global-error').
 function connection(ok){state.connected=ok;$('connection').textContent=ok?'Private & connected':'Connection interrupted';$('connection').className='connection '+(ok?'online':'error');}
 async function api(path,options={}){
   let response;
-  try{response=await fetch(path,{credentials:'same-origin',cache:'no-store',...options,headers:{'content-type':'application/json','x-cristybreathe':'1',...options.headers}});}catch{connection(false);throw Error('Your connection was interrupted. Your open text is still here. Reconnect and try again.');}
+  try{response=await fetch(path,{credentials:'same-origin',cache:'no-store',...options,headers:{'content-type':'application/json','x-cristybreathe':'1','x-requested-with':'XMLHttpRequest',...options.headers}});}catch{connection(false);throw Error('Your connection was interrupted. Your open text is still here. Reconnect and try again.');}
   if(response.redirected||!(response.headers.get('content-type')||'').includes('application/json')){connection(false);throw Error('Your secure session has ended. Copy any unsaved text, then reopen CristyBreathe to sign in.');}
   const data=await response.json();
   if(!response.ok){if(response.status===401)connection(false);const e=Error(data.error||'That change could not be saved. Please try again.');e.status=response.status;throw e;}

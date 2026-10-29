@@ -1,6 +1,6 @@
 import {identity} from './auth.mjs';
 
-export const VERSION = '1.1.1';
+export const VERSION = '1.1.2';
 const COLUMNS = 'id,kind,title,body,status,created_at,updated_at,pinned,archived,priority,is_draft,collection,tags,due_date,deferred_until,revision';
 const HEADERS = {
   'cache-control':'private, no-store', 'x-content-type-options':'nosniff',
@@ -13,6 +13,14 @@ const HEADERS = {
 export class ApiError extends Error { constructor(message, status = 400) {super(message); this.status = status;} }
 function reply(data, status = 200, extra = {}) {
   return new Response(JSON.stringify(data), {status, headers:{...HEADERS, 'content-type':'application/json; charset=utf-8', ...extra}});
+}
+function authenticationRequired(request,reason,requestId) {
+  const url=new URL(request.url);
+  const reference='AUTH-'+reason.toUpperCase().replaceAll('_','-')+'-'+requestId.slice(0,8);
+  if(url.pathname!=='/'||!['GET','HEAD'].includes(request.method))return reply({error:'Your secure sign-in could not be verified. Reopen CristyBreathe to sign in.',code:'AUTH_REQUIRED',reference},401);
+  const nonce=crypto.randomUUID().replaceAll('-','');
+  const html=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#121c1b"><title>CristyBreathe — Secure sign-in</title><style nonce="${nonce}">html{color-scheme:dark;background:#121c1b;color:#eef1e9}*{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:max(30px,env(safe-area-inset-top)) max(25px,env(safe-area-inset-right)) max(30px,env(safe-area-inset-bottom)) max(25px,env(safe-area-inset-left));font:15px/1.8 -apple-system,BlinkMacSystemFont,sans-serif;background:radial-gradient(ellipse at 85% 10%,#30453b80,transparent 65%)}main{width:100%;max-width:450px;border:1px solid #354943;border-radius:24px;padding:35px;background:#1b2826}small{letter-spacing:2px;color:#b9d6b5;font-size:10px}h1{font:38px/1.2 Georgia,serif;letter-spacing:-1px;margin:25px 0 18px}p{color:#b0beb5}a{display:inline-block;min-height:48px;border-radius:12px;background:#b9d6b5;color:#15251b;text-decoration:none;padding:10px 20px;font-weight:600;margin:14px 0}a:focus-visible{outline:2px solid #eef1e9;outline-offset:5px}.reference{font-size:10px;overflow-wrap:anywhere;margin-top:25px;color:#94a79b}</style></head><body><main><small>CRISTYBREATHE / PRIVATE PERSONAL SPACE</small><h1>A moment to<br>reconnect securely.</h1><p>Your sign-in could not be verified. Your private thoughts have not been opened.</p><a href="/">Try opening my space again ↗</a><p>If this continues, keep the reference below so we can check the connection.</p><p class="reference">${reference}</p></main></body></html>`;
+  return new Response(request.method==='HEAD'?null:html,{status:401,headers:{...HEADERS,'content-type':'text/html; charset=utf-8','content-security-policy':`default-src 'none'; style-src 'nonce-${nonce}'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'`}});
 }
 async function body(request, limit = 90000) {
   if (!/^application\/json(?:;|$)/i.test(request.headers.get('content-type') || '')) throw new ApiError('Use application/json.',415);
@@ -192,11 +200,12 @@ export async function api(request, env, owner) {
 }
 
 export function createWorker(assets = {}) {
-  return {async fetch(request,env) {
+  return {async fetch(request,env,context) {
     const requestId=crypto.randomUUID();
     try {
-      const owner=await identity(request,env);
-      if (!owner) return reply({error:'Please sign in through Cloudflare Access.'},401);
+      let authenticationFailure='unverified';
+      const owner=await identity(request,env,context,reason=>authenticationFailure=reason);
+      if (!owner) return authenticationRequired(request,authenticationFailure,requestId);
       const url=new URL(request.url);
       if (url.pathname.startsWith('/api/')) return await api(request,env,owner);
       if (url.pathname==='/healthz') {await env.DB.prepare('SELECT 1 AS ok').first();return reply({service:'CristyBreathe',status:'ok',version:VERSION});}
