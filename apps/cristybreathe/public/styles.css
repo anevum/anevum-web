@@ -12,3 +12,5 @@
 .sidebar-capture{font-size:12px;white-space:nowrap}.brand small{font-size:7px;letter-spacing:1.3px;white-space:nowrap}
 
 @media(max-width:760px){.hero p{display:none}.hero h2{margin-bottom:22px}.hero{min-height:210px}}
+
+@media(max-width:760px){.workspace{padding-left:max(23px,env(safe-area-inset-left));padding-right:max(23px,env(safe-area-inset-right))}.editor-sheet{padding-left:max(23px,env(safe-area-inset-left));padding-right:max(23px,env(safe-area-inset-right))}}

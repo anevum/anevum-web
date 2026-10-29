@@ -64,7 +64,7 @@ is absent. Do not create an authentication bypass for testing. See
 - Quick capture, D1 autosaved drafts, notes and private reflections.
 - Collections, tags, pins, archive, reminders and priorities.
 - Search across titles, content, collections and tags; recently opened items
-  for the current visit. Lists page in groups of 100; Load more opens more.
+  for the current visit. Filters and counts query the full account. Lists page in groups of 100; Load more opens more search matches or entries.
 - Review, defer to tomorrow, mark done and reopen. Journal entries are
   excluded from review and focus.
 - Account preferences, data export and additive transactional restore.

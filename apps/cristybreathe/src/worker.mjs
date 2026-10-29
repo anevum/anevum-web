@@ -1,6 +1,6 @@
 import {identity} from './auth.mjs';
 
-export const VERSION = '1.1.0';
+export const VERSION = '1.1.1';
 const COLUMNS = 'id,kind,title,body,status,created_at,updated_at,pinned,archived,priority,is_draft,collection,tags,due_date,deferred_until,revision';
 const HEADERS = {
   'cache-control':'private, no-store', 'x-content-type-options':'nosniff',
@@ -94,17 +94,38 @@ export async function api(request, env, owner) {
     await env.DB.prepare('INSERT INTO preferences(owner,value,updated_at) VALUES(?,?,?) ON CONFLICT(owner) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at').bind(owner,JSON.stringify(p),new Date().toISOString()).run();
     return reply({preferences:p});
   }
+  if (method==='GET' && path==='/api/dashboard') {
+    const counts=await env.DB.prepare("SELECT count(*) AS total,coalesce(sum(CASE WHEN is_draft=1 AND archived=0 THEN 1 ELSE 0 END),0) AS drafts FROM entries WHERE owner=?").bind(owner).first();
+    const latest=await env.DB.prepare(`SELECT ${COLUMNS} FROM entries WHERE owner=? AND archived=0 ORDER BY updated_at DESC,id ASC LIMIT 3`).bind(owner).all();
+    const priorities=await env.DB.prepare(`SELECT ${COLUMNS} FROM entries WHERE owner=? AND archived=0 AND is_draft=0 AND priority=1 AND status='open' AND kind!='journal' ORDER BY pinned DESC,updated_at DESC,id ASC LIMIT 3`).bind(owner).all();
+    const collections=await env.DB.prepare("SELECT DISTINCT collection FROM entries WHERE owner=? AND collection!='' ORDER BY collection COLLATE NOCASE").bind(owner).all();
+    return reply({email:owner,counts,latest:latest.results.map(unpack),priorities:priorities.results.map(unpack),collections:collections.results.map(row=>row.collection),version:VERSION});
+  }
   if (method==='GET' && path==='/api/entries') {
     const filters=['owner=?'],args=[owner];
     const q=(url.searchParams.get('q')||'').trim();
     if (q.length>200) throw new ApiError('Search is limited to 200 characters.');
     if (q) {filters.push('(instr(lower(title),lower(?))>0 OR instr(lower(body),lower(?))>0 OR instr(lower(collection),lower(?))>0 OR instr(lower(tags),lower(?))>0)');args.push(q,q,q,q);}
     const archived=url.searchParams.get('archived');
+    if (archived!==null&&!['0','1'].includes(archived)) throw new ApiError('Invalid archive filter.');
     if (archived==='0'||archived==='1') {filters.push('archived=?');args.push(Number(archived));}
+    const views={notes:"kind!='journal'",journal:"kind='journal' AND is_draft=0",focus:"kind!='journal' AND priority=1 AND status='open' AND is_draft=0",review:"kind!='journal' AND is_draft=0",drafts:'is_draft=1',archive:'archived=1'};
+    const view=url.searchParams.get('view');
+    if(view!==null){if(!Object.hasOwn(views,view))throw new ApiError('Invalid view.');filters.push(views[view]);}
+    const kind=url.searchParams.get('kind');
+    if(kind!==null){if(!['note','journal','idea','task'].includes(kind))throw new ApiError('Invalid entry type.');filters.push('kind=?');args.push(kind);}
+    const collection=url.searchParams.get('collection');
+    if(collection!==null){string(collection,60,'Collection');filters.push('collection=?');args.push(collection);}
     const offset=Number(url.searchParams.get('offset')||0);
     if (!Number.isSafeInteger(offset)||offset<0||offset>100000) throw new ApiError('Invalid page.');
-    const {results}=await env.DB.prepare(`SELECT ${COLUMNS} FROM entries WHERE ${filters.join(' AND ')} ORDER BY pinned DESC,updated_at DESC,id ASC LIMIT 101 OFFSET ?`).bind(...args,offset).all();
-    return reply({entries:results.slice(0,100).map(unpack),has_more:results.length>100,offset,email:owner,version:VERSION});
+    const today=date(url.searchParams.get('today')||new Date().toISOString().slice(0,10),'Today');
+    const attention="status='open' AND (priority=1 OR kind='task') AND (due_date='' OR due_date<=?) AND (deferred_until='' OR deferred_until<=?)";
+    const order=view==='review'?`CASE WHEN ${attention} THEN 0 WHEN status='open' THEN 1 ELSE 2 END,updated_at DESC,id ASC`:'pinned DESC,updated_at DESC,id ASC';
+    const {results}=await env.DB.prepare(`SELECT ${COLUMNS} FROM entries WHERE ${filters.join(' AND ')} ORDER BY ${order} LIMIT 101 OFFSET ?`).bind(...args,...(view==='review'?[today,today]:[]),offset).all();
+    const count=view==='review'
+      ?await env.DB.prepare(`SELECT count(*) AS total,coalesce(sum(CASE WHEN ${attention} THEN 1 ELSE 0 END),0) AS attention FROM entries WHERE ${filters.join(' AND ')}`).bind(today,today,...args).first()
+      :await env.DB.prepare(`SELECT count(*) AS total FROM entries WHERE ${filters.join(' AND ')}`).bind(...args).first();
+    return reply({entries:results.slice(0,100).map(unpack),has_more:results.length>100,total:count.total,attention:count.attention,offset,email:owner,version:VERSION});
   }
   if (method==='POST' && path==='/api/entries') {
     const b=await body(request), item=validateEntry(b), id=item.id||crypto.randomUUID();
