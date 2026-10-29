@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en" data-theme="sage">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#121c1b">
+<meta name="description" content="Space to think. Room to breathe. A personal space for notes, reflection, and a gentler day.">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CristyBreathe">
+<meta property="og:title" content="CristyBreathe">
+<meta property="og:description" content="Space to think. Room to breathe.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="/assets/cristybreathe-share-1200x630.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<link rel="icon" href="/assets/cristybreathe-icon-192.png" type="image/png">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/cristybreathe-icon-180.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="stylesheet" href="/styles.css">
+<title>CristyBreathe — My Space</title>
+<script src="/app.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to your space</a>
+<div class="ambient" aria-hidden="true"></div>
+<div class="app-shell">
+<aside class="sidebar">
+<a href="#home" class="brand" aria-label="CristyBreathe home"><img src="/assets/cristybreathe-icon-180.png" width="43" height="43" alt=""><span>Cristy<span class="brand-light">Breathe</span><small>SPACE TO BE YOURSELF</small></span></a>
+<button class="button primary sidebar-capture" data-capture="note"><span class="plus">+</span> Leave a thought</button>
+<p class="nav-caption">YOUR PERSONAL SPACE</p>
+<nav id="side-nav" aria-label="Main navigation"></nav>
+<div class="sidebar-bottom"><div class="quiet-line"></div><p>One thing at a time.<br>There is room for the rest.</p><button class="identity" data-route="settings"><span class="avatar" id="avatar">C</span><span><b id="person">Your space</b><small>Private workspace</small></span><span aria-hidden="true">↗</span></button></div>
+</aside>
+<div class="workspace">
+<header class="topbar"><a href="#home" class="mobile-brand"><img src="/assets/cristybreathe-icon-180.png" width="31" height="31" alt="">CristyBreathe</a><span class="today" id="today"></span><div class="top-actions"><span class="connection" id="connection" role="status">Connecting</span><button class="icon-button" data-route="search" aria-label="Find anything" id="top-search"></button><button class="icon-button" data-route="settings" aria-label="Personalize your space" id="top-settings"></button></div></header>
+<div id="global-error" class="banner error-banner" role="alert" hidden></div>
+<main id="main" tabindex="-1"><div class="loading-state"><span class="loading-leaf" aria-hidden="true"></span><p>Opening your space…</p></div></main>
+<footer class="workspace-footer"><span>Space to think. Room to breathe.</span><span class="version">CristyBreathe · 1.1.0</span></footer>
+</div>
+</div>
+<nav id="bottom-nav" class="bottom-nav" aria-label="Mobile navigation"></nav>
+<dialog id="editor" class="editor-sheet" aria-labelledby="editor-heading">
+<form id="entry-form">
+<div class="sheet-handle" aria-hidden="true"></div>
+<div class="sheet-top"><div><p class="eyebrow" id="editor-heading">A little room to think</p><span id="save-state" class="save-state" role="status">Not saved yet</span></div><button type="button" class="icon-button" id="close-editor" aria-label="Save draft and close">✕</button></div>
+<div class="kind-picker" id="kind-picker" role="group" aria-label="Entry type"></div>
+<label class="sr-only" for="entry-title">Title</label><input id="entry-title" class="editor-title" maxlength="160" placeholder="Give this thought a name…" autocomplete="off">
+<div class="format-tools" role="group" aria-label="Writing tools"><button type="button" data-format="heading" aria-label="Insert heading">H<span aria-hidden="true">₂</span></button><button type="button" data-format="bullet" aria-label="Insert bullet list">• List</button><button type="button" data-format="check" aria-label="Insert checklist">☐ Check</button><span id="character-count">0 / 20,000</span></div>
+<label class="sr-only" for="entry-body">Your thought</label><textarea id="entry-body" class="editor-body" maxlength="20000" placeholder="What’s on your mind? Start anywhere."></textarea>
+<details class="entry-details"><summary>Organize this thought <span aria-hidden="true">+</span></summary><div class="field-grid"><label>Collection<input id="entry-collection" maxlength="60" list="collection-options" placeholder="e.g. Home & life"></label><label>Tags, separated by commas<input id="entry-tags" maxlength="395" placeholder="e.g. garden, later"></label><label>Reminder date<input id="entry-due" type="date"></label><div class="editor-toggles"><label><input id="entry-pinned" type="checkbox"> Pin this</label><label><input id="entry-priority" type="checkbox"> A priority</label></div></div></details>
+<datalist id="collection-options"></datalist>
+<div id="editor-error" class="editor-error" role="alert" hidden></div>
+<div id="save-recovery" class="data-actions" hidden><button class="button subtle" type="button" id="retry-save">Try saving again</button><button class="text-button" type="button" id="discard-changes">Close without saving changes</button></div>
+<div class="sheet-bottom"><button class="button subtle" type="button" id="copy-entry">Copy text</button><button class="button primary" id="save-entry" type="submit">Keep this thought <span aria-hidden="true">↗</span></button></div>
+</form>
+</dialog>
+<dialog id="more-sheet" class="small-sheet" aria-labelledby="more-heading"><div class="sheet-top"><h2 id="more-heading">A little more space</h2><button class="icon-button" data-close="more-sheet" aria-label="Close menu">✕</button></div><nav id="more-nav" aria-label="More navigation"></nav></dialog>
+<dialog id="confirm-sheet" class="small-sheet" aria-labelledby="confirm-heading"><p class="eyebrow">YOUR SPACE, YOUR CHOICE</p><h2 id="confirm-heading"></h2><p id="confirm-description" class="muted"></p><div class="dialog-actions"><button class="button subtle" id="confirm-cancel">Cancel</button><button class="button" id="confirm-accept">Continue</button></div></dialog>
+<div id="toast" class="toast" role="status" hidden></div>
+<noscript><p class="banner">CristyBreathe needs JavaScript for your private notes. Please enable it in your browser settings.</p></noscript>
+</body></html>

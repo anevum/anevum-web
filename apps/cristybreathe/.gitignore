@@ -1,0 +1,5 @@
+dist/
+.private/
+*.sqlite*
+wrangler.private.jsonc
+playwright-report/
