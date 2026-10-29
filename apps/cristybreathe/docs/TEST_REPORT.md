@@ -1,3 +1,21 @@
+# Authentication fix — 1.1.2
+
+A reported iPhone visit displayed the Worker's raw 401 JSON. The authentication
+handler previously consumed only the JWT header. It now also consumes the
+provider-verified Workers runtime identity and verifies signed authorization
+cookies when runtime context is absent. Exact application audience and account
+restrictions are retained. HTTP email headers are never treated as identity.
+
+The suite passes 9/9 scenarios with no skips. New cases cover trusted runtime
+identity, incorrect runtime audience, disallowed accounts, runtime lookup
+failure, forged identity headers, signed and tampered cookies, and standard JWT
+audience encodings. The actual nonce-styled 401 page is rendered at phone size
+in the browser test. All previous data, isolation and browser checks still pass.
+
+The exact assertion format used by the reported iPhone session has not been
+observed. The fix covers the missing documented transport paths; successful
+real-user sign-in still requires an authenticated acceptance test.
+
 # Patch verification — 1.1.1
 
 Session: CRISTYBREATHE.BUILD.2026-10-29.002

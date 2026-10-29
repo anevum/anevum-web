@@ -124,6 +124,20 @@ test('synthetic browser: autosave, themes, mobile layout, search and review', {s
    await page.getByRole('button',{name:'Save draft and close'}).click();
   }
   assert.deepEqual(failures.filter(message=>!message.includes('503')),[]);
+  // Render the actual fail-closed response, including its nonce-based CSP.
+  const {default:compiledWorker}=await import('../dist/worker.mjs');
+  const denied=await compiledWorker.fetch(new Request(origin+'/'),{ACCESS_ISSUER:'https://cristybreathe-test.cloudflareaccess.com',ACCESS_AUD:'test-audience',ALLOWED_EMAILS:'cristy@example.com'});
+  const deniedBody=await denied.text(),authContext=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'}),authPage=await authContext.newPage();
+  const authErrors=[];authPage.on('pageerror',e=>authErrors.push(e.message));
+  await authPage.route(origin+'/',route=>route.fulfill({status:denied.status,headers:Object.fromEntries(denied.headers),body:deniedBody}));
+  await authPage.setViewportSize({width:390,height:844});await authPage.goto(origin+'/');
+  await authPage.locator('h1').waitFor();assert.ok((await authPage.locator('h1').innerText()).includes('reconnect securely.'));
+  await authPage.getByRole('link',{name:/Try opening my space again/}).waitFor();
+  assert.ok(await authPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  assert.equal(await authPage.locator('body').evaluate(el=>getComputedStyle(el).display),'grid');
+  assert.deepEqual(authErrors,[]);
+  await authPage.screenshot({path:new URL('../.private/qa/auth-recovery-390.png',import.meta.url).pathname});
+  await authContext.close();
   // Remove synthetic records from this local test database through the app API.
   const list=await context.request.get(origin+'/api/entries');
   const items=(await list.json()).entries.filter(e=>e.title.startsWith('Synthetic browser '));

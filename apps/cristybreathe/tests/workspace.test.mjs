@@ -22,6 +22,35 @@ test('verified JWT identity denies missing, forged, wrong issuer/audience, expir
   ]) assert.equal((await call(env,'/api/session','GET',undefined,token)).status,401);
   assert.equal((await call(env,'/api/session')).data.email,emails[0]);
 });
+test('trusted runtime Access identity accepts only the configured audience and allowed account',async()=>{
+  const env=envFor(openDatabase());
+  const request=new Request('https://workspace.example/api/session');
+  const response=await worker.fetch(request,env,{access:{aud:audience,async getIdentity(){return {email:emails[0]};}}});
+  assert.equal(response.status,200);assert.equal((await response.json()).email,emails[0]);
+  for(const access of [
+    {aud:'another-application',async getIdentity(){throw Error('Must not read a different audience');}},
+    {aud:audience,async getIdentity(){return {email:'stranger@example.com'};}},
+    {aud:audience,async getIdentity(){throw Error('Identity unavailable');}}
+  ])assert.equal((await worker.fetch(request,env,{access})).status,401);
+  const forged=new Request('https://workspace.example/api/session',{headers:{'cf-access-authenticated-user-email':emails[0],'x-access-email':emails[0]}});
+  assert.equal((await worker.fetch(forged,env)).status,401);
+  const other=await worker.fetch(request,env,{access:{aud:audience,async getIdentity(){return {email:emails[1]};}}});
+  assert.equal((await other.json()).email,emails[1]);
+});
+test('signed authorization cookies use full JWT verification and HTML navigation fails closed with recovery',async()=>{
+  const env=envFor(openDatabase()),token=await signing.token(emails[0],{aud:audience});
+  const request=new Request('https://workspace.example/api/session',{headers:{cookie:'other=value; CF_Authorization='+token}});
+  assert.equal((await worker.fetch(request,env)).status,200);
+  const forged=new Request('https://workspace.example/api/session',{headers:{cookie:'CF_Authorization='+token.slice(0,-20)+'AAAAAAAAAAAAAAAAAAAA'}});
+  assert.equal((await worker.fetch(forged,env)).status,401);
+  const root=await worker.fetch(new Request('https://workspace.example/'),env);
+  assert.equal(root.status,401);assert.ok(root.headers.get('content-type').startsWith('text/html'));
+  assert.ok(root.headers.get('content-security-policy').includes("script")==false);
+  const html=await root.text();assert.ok(html.includes('A moment to'));assert.ok(html.includes('Try opening my space'));
+  assert.ok(!html.includes(emails[0]));assert.ok(!html.includes(token));
+  const api=await worker.fetch(new Request('https://workspace.example/api/entries'),env);
+  assert.equal(api.status,401);assert.equal((await api.json()).code,'AUTH_REQUIRED');
+});
 test('persistent CRUD, new connection/session, search, pin, review, draft and delete',async()=>{
   const file=temporaryDB();let DB=openDatabase(file),env=envFor(DB);
   const create=await call(env,'/api/entries','POST',{kind:'note',title:'Evening garden',body:'Remember the sage',collection:'Home',tags:['garden'],is_draft:1});
