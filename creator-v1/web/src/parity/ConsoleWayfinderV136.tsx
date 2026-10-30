@@ -6,12 +6,17 @@ import {isSiteLinkSelected} from '../lib/site-navigation';
 import {useLivingWorld,type WorldSector} from './LivingWorldState';
 import './console-wayfinder-v136.css';
 
-const stations=[
+const stations=(import.meta.env.VITE_ANEVUM_STUDIO_V143==='true' ? [
+ {to:'/',label:'Home',small:'Entrance',icon:'home',sector:'hero'},
+ {to:'/worlds',label:'Worlds',small:'Universe',icon:'explore',sector:'hero'},
+ {to:'/games',label:'Games',small:'Play',icon:'games',sector:'portal'},
+ {to:'/journal',label:'Journal',small:'Progress',icon:'status',sector:'portal'}
+] : [
  {to:'/',label:'Home',small:'Entrance',icon:'home',sector:'hero'},
  {to:'/severance',label:'Severance',small:'Game',icon:'games',sector:'hero'},
  {to:'/discover',label:'Discover',small:'Projects',icon:'explore',sector:'portal'},
  {to:'/status',label:'Status',small:'Build',icon:'status',sector:'portal'}
-] as const satisfies ReadonlyArray<{to:string;label:string;small:string;icon:string;sector:WorldSector}>;
+]) as ReadonlyArray<{to:string;label:string;small:string;icon:string;sector:WorldSector}>;
 type Props={onOpenSearch:()=>void;onOpenIren:()=>void;memberDestination:string;memberLabel:string;memberInitial:string|null};
 export function ConsoleWayfinderV136({onOpenSearch,onOpenIren,memberDestination,memberLabel,memberInitial}:Props){
  const {setPreviewSector}=useLivingWorld();
