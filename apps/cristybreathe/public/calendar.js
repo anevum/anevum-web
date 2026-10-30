@@ -79,9 +79,17 @@
   function toggleAllDay(){const all=$('calendar-form').elements.all_day.checked;$('cal-allday').hidden=!all;$('cal-timed').hidden=all;}
   async function save(e){e.preventDefault();if(storage.busy)return;const form=$('calendar-form'),error=$('calendar-form-error'),all=form.elements.all_day.checked;
     const payload={title:form.elements.title.value,details:form.elements.details.value,location:form.elements.location.value,all_day:Number(all),time_zone:zone,status:'confirmed'};
-    if(all){payload.start_date=form.elements.start_date.value;payload.end_date=addDays(form.elements.last_date.value,1);}
-    else{const a=new Date(form.elements.start.value),b=new Date(form.elements.end.value);payload.starts_at=a.toISOString();payload.ends_at=b.toISOString();}
-    storage.busy=true;$('cal-save').disabled=true;error.hidden=true;
+    error.hidden=true;
+    if(all){
+      if(!form.elements.start_date.value||!form.elements.last_date.value||form.elements.last_date.value<form.elements.start_date.value){error.textContent='Choose valid first and last days.';error.hidden=false;return;}
+      payload.start_date=form.elements.start_date.value;payload.end_date=addDays(form.elements.last_date.value,1);
+    } else {
+      if(!form.elements.start.value||!form.elements.end.value){error.textContent='Choose both start and end times.';error.hidden=false;return;}
+      const a=new Date(form.elements.start.value),b=new Date(form.elements.end.value);
+      if(!Number.isFinite(a.getTime())||!Number.isFinite(b.getTime())||b<=a){error.textContent='The end must be after the start.';error.hidden=false;return;}
+      payload.starts_at=a.toISOString();payload.ends_at=b.toISOString();
+    }
+    storage.busy=true;$('cal-save').disabled=true;
     try{await request(selected?'/api/calendar/events/'+selected.id:'/api/calendar/events',selected?'PATCH':'POST',selected?{...payload,revision:selected.revision}:payload);$('calendar-editor').close();await load();}
     catch(err){error.textContent=err.message;error.hidden=false;}finally{storage.busy=false;if($('cal-save'))$('cal-save').disabled=false;}
   }
