@@ -58,7 +58,7 @@ The public header contains a deliberately low-prominence Command entrance. Searc
 - Cloudflare Workers / static assets
 - Cloudflare Access for Command identity
 - Railway compute for RHEN
-- GitHub Actions verification and production deployment
+- GitHub Actions verification; release ownership is documented separately
 
 ## Commands
 
@@ -71,6 +71,6 @@ npm run dev
 
 ## Deployment
 
-Production deploys from `main` through `.github/workflows/deploy-production.yml`.
+The legacy `.github/workflows/deploy-production.yml` deliberately refuses to deploy. Do not re-enable it or assume a merge to `main` releases the current ANEVUM website. Verify the actual production source, Worker routing, bindings and rollback procedure before any release. Independent applications retain their existing deployment ownership until explicitly transferred.
 
-Pull requests run `.github/workflows/anevum-verify.yml`, including typechecking, a production build, a Cloudflare preview, privacy probes, and desktop/mobile browser captures.
+Pull requests targeting `main` run `.github/workflows/anevum-verify.yml`; consult the exact run for its results and any scoped preview or browser checks. A passing check does not by itself authorize a production release.
