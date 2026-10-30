@@ -22,6 +22,7 @@ MAINTENANCE_PATHS = frozenset([
     "tests/v5-production-release.test.mjs",
     # Reviewed repository-extraction tooling and standalone project metadata.
     # These do not alter the ANEVUM web runtime, build or deployments.
+    ".github/workflows/deploy-brandle.yml",
     ".github/workflows/repository-split-verify.yml",
     "apps/cristybreathe/.github/workflows/ci.yml",
     "apps/cristybreathe/LICENSE",
