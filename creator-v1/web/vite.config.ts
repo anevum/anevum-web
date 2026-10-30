@@ -15,9 +15,9 @@ export default defineConfig(({ mode }) => ({
         if(process.env.VITE_ANEVUM_STUDIO_V143!=="true")return html;
         const title="ANEVUM — Original Worlds, Games & Creative Technology";
         const description="ANEVUM is an independent creative studio founded by Devon Akins. Explore original fictional universes, games and open-source creative technology.";
-        const replaceMeta=(source,kind,key,value)=>source.replace(
+        const replaceMeta=(source:string,kind:string,key:string,value:string)=>source.replace(
           new RegExp('(<meta '+kind+'="'+key+'" content=")[^"]*(")'),
-          (_match,open,close)=>open+value+close
+          (_match:string,open:string,close:string)=>open+value+close
         );
         let result=html;
         result=replaceMeta(result,"name","description",description);
