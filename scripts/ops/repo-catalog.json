@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "source_repository": "anevum/anevum-web",
+  "projects": [
+    {
+      "id": "brandle",
+      "source_path": "games/brandle",
+      "target_repository": "anevum/brandle",
+      "source_license": "Apache-2.0",
+      "source_visibility": "public",
+      "production_worker": "brandle-glimmer-grove",
+      "cutover": "manual-after-secrets-and-live-smoke"
+    },
+    {
+      "id": "cristybreathe",
+      "source_path": "apps/cristybreathe",
+      "target_repository": "anevum/cristybreathe",
+      "source_license": "Apache-2.0",
+      "source_visibility": "public-code-private-data",
+      "production_worker": "cristybreathe",
+      "cutover": "manual-after-access-d1-backup-and-live-smoke"
+    }
+  ]
+}
