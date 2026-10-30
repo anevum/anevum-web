@@ -32,3 +32,7 @@ Never deploy or edit the ANEVUM apex Worker or its routing as part of BRANDLE. D
 ## Attribution
 
 See [NOTICE.md](./NOTICE.md) for the license attribution for the bundled guess dictionary. The app's project source follows the parent repository license.
+
+## Deployment reliability
+
+The production Worker must bundle assets using `node build-worker.mjs` before deploying; do not proxy GitHub raw files into browsers, because GitHub's response Content-Security-Policy can block the game's CSS and modules. The deploy workflow tests the word engine before publishing. Mobile smoke test: at 390px viewport, the mark stays compact (around 40px), the board has 30 tiles, the keyboard has 28 keys, and both are visible.
