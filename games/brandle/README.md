@@ -6,15 +6,15 @@ A personalized five-letter word game made for Brandi. Forest green, teal, burnt 
 
 ## Local development
 
-From `games/brandle`, run `python3 -m http.server 8788` and open http://localhost:8788/. Any static HTTP server with ES module support works. Never open index.html as file://, because browsers restrict local module loading.
+From this project directory (either `games/brandle` in the original monorepo or the extracted repository root), run `python3 -m http.server 8788` and open http://localhost:8788/. Any static HTTP server with ES module support works. Never open index.html as file://, because browsers restrict local module loading.
 
 ```sh
-node --test games/brandle/tests.mjs
-node games/brandle/build-worker.mjs
-npx wrangler deploy --config games/brandle/wrangler.toml
+node --test tests.mjs
+node build-worker.mjs
+# Production deployment is managed separately until repository cutover.
 ```
 
-The generator packages the static game assets into an independent Cloudflare Worker, so publication is reproducible from this repository. Do not edit generated `dist/worker.mjs`. The GitHub Actions workflow uses the repository's Cloudflare credentials on pushes to `main` affecting only this game. Manual deploy is possible with Wrangler or the Cloudflare API.
+The generator packages the static game assets into an independent Cloudflare Worker, so publication is reproducible from this repository. Do not edit generated `dist/worker.mjs`. The original monorepo's production GitHub Actions workflow deploys on changes to the game's runtime files. The extracted repository has a CI-only workflow until production ownership is verified and transferred. Once transferred, a maintainer can run `npx wrangler deploy --config wrangler.toml` with appropriately scoped Cloudflare credentials.
 
 ## Design and behavior
 
@@ -31,8 +31,12 @@ Never deploy or edit the ANEVUM apex Worker or its routing as part of BRANDLE. D
 
 ## Attribution
 
-See [NOTICE.md](./NOTICE.md) for the license attribution for the bundled guess dictionary. The app's project source follows the parent repository license.
+See [NOTICE.md](./NOTICE.md) for the license attribution for the bundled guess dictionary. The application's source code is licensed under the included [Apache License 2.0](./LICENSE).
 
 ## Deployment reliability
 
 The production Worker must bundle assets using `node build-worker.mjs` before deploying; do not proxy GitHub raw files into browsers, because GitHub's response Content-Security-Policy can block the game's CSS and modules. The deploy workflow tests the word engine before publishing. Mobile smoke test: at 390px viewport, the mark stays compact (around 40px), the board has 30 tiles, the keyboard has 28 keys, and both are visible.
+
+## Standalone repository migration
+
+The intended standalone repository is `anevum/brandle`. Extract the project with the history-preserving tool documented in `docs/REPOSITORY_ARCHITECTURE.md` at the source repository root; audit the full exported history before publishing. The original game deployment remains authoritative until a tested, rollback-ready cutover. No deployment secrets, game progress or personal data should be committed.
