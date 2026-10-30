@@ -131,7 +131,9 @@ export async function api(request, env, owner) {
       .bind(id,owner,item.title,item.details,item.location,item.all_day,item.start_date,item.end_date,item.starts_at,item.ends_at,item.time_zone,item.status,now,now).run();
     return reply({event:await env.DB.prepare('SELECT * FROM calendar_events WHERE owner=? AND id=?').bind(owner,id).first()},201);
   }
-  const eventMatch=path.match(new RegExp('^/api/calendar/events/([a-f0-9-]{36})
+  const eventPath='/api/calendar/events/';
+  const suffix=path.startsWith(eventPath)?path.slice(eventPath.length):'';
+  const eventMatch=suffix.length===36 && /^[a-f0-9-]+/.test(suffix)?[path,suffix]:null;
   if(eventMatch) {
     const id=eventMatch[1],existing=await env.DB.prepare('SELECT * FROM calendar_events WHERE owner=? AND id=?').bind(owner,id).first();
     if(!existing)return reply({error:'Event not found.'},404);
