@@ -1,0 +1,28 @@
+name: Repository migration verification
+on:
+  pull_request:
+    paths:
+      - 'scripts/ops/**'
+      - 'tests/repository-split.test.mjs'
+      - 'docs/REPOSITORY_ARCHITECTURE.md'
+      - 'games/brandle/**'
+      - 'apps/cristybreathe/**'
+      - '.github/workflows/repository-split-verify.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  migration-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --check scripts/ops/split-project.mjs
+      - run: node --test tests/repository-split.test.mjs
+      - run: node scripts/ops/split-project.mjs --project brandle
+      - run: node scripts/ops/split-project.mjs --project cristybreathe

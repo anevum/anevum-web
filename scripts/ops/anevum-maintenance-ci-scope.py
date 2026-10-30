@@ -19,7 +19,21 @@ MAINTENANCE_PATHS = frozenset([
     "tests/v5-owner-member-binding.test.mjs",
     "tests/v5-preview-encrypted-backup.test.mjs",
     "tests/v5-production-manual-deploy.test.mjs",
-    "tests/v5-production-release.test.mjs"
+    "tests/v5-production-release.test.mjs",
+    # Reviewed repository-extraction tooling and standalone project metadata.
+    # These do not alter the ANEVUM web runtime, build or deployments.
+    ".github/workflows/deploy-brandle.yml",
+    ".github/workflows/repository-split-verify.yml",
+    "apps/cristybreathe/.github/workflows/ci.yml",
+    "apps/cristybreathe/LICENSE",
+    "docs/REPOSITORY_ARCHITECTURE.md",
+    "games/brandle/.github/workflows/ci.yml",
+    "games/brandle/.gitignore",
+    "games/brandle/LICENSE",
+    "games/brandle/README.md",
+    "scripts/ops/repo-catalog.json",
+    "scripts/ops/split-project.mjs",
+    "tests/repository-split.test.mjs",
 ])
 
 def app_preview_required(paths):

@@ -6,9 +6,17 @@ on:
       - '.github/workflows/deploy-brandle.yml'
   push:
     branches: [main]
+    # Production deployment only for game/runtime files; metadata-only migration
+    # commits must not inadvertently redeploy a live Worker.
     paths:
-      - 'games/brandle/**'
-      - '.github/workflows/deploy-brandle.yml'
+      - 'games/brandle/*.mjs'
+      - 'games/brandle/*.js'
+      - 'games/brandle/*.html'
+      - 'games/brandle/*.css'
+      - 'games/brandle/*.svg'
+      - 'games/brandle/*.png'
+      - 'games/brandle/*.webmanifest'
+      - 'games/brandle/wrangler.toml'
   workflow_dispatch:
 permissions:
   contents: read

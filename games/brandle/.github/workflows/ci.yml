@@ -1,0 +1,23 @@
+name: Brandle standalone verification
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check app.mjs && node --check logic.mjs && node --check build-worker.mjs
+      - run: node --test tests.mjs
+      - run: node build-worker.mjs
+      - run: node --check dist/worker.mjs
+# CI ONLY: production Brandle Worker remains deployed from the original repository
+# until the new repository, credentials, release and rollback have been verified.
