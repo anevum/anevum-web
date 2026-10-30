@@ -1,4 +1,5 @@
 import {useEffect,useState,lazy,Suspense} from "react";
+import {StudioHomeV143} from "../parity/StudioHomeV143";
 import {Link} from "react-router-dom";
 import {readCreators,readProjects,readStatus,type Creator,type Project,type Status} from "../lib/api";
 import {useResource} from "../lib/useResource";
@@ -94,6 +95,7 @@ export function CinematicLandingPage(){
   const showcase=projects.filter(project=>project.category!=="games").slice(0,3);
   const verified=Boolean(snapshot);
 
+  if(import.meta.env.VITE_ANEVUM_STUDIO_V143==="true")return <StudioHomeV143 projects={projects} catalogueState={portal.state} signedIn={signedIn} verifiedCount={status?.counts?.publishedProjects??null}/>;
   if(FullPortal)return <Suspense fallback={<div className="p136-loading" role="status">Opening ANEVUM…</div>}><FullPortal projects={projects} catalogueState={portal.state} signedIn={signedIn} verifiedCount={status?.counts?.publishedProjects??null}/></Suspense>;
   return <div className="anevum-cinema av9-home av79-home" data-scene-paused={scenePaused}>
     <div className="cinema-content av79-home-content">
