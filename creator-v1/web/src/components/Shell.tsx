@@ -6,7 +6,7 @@ import { PortalLauncher } from "./PortalLauncher";
 import {VisualKitAtmosphere,publicVisualRoom} from "./VisualKit";
 import {ContinuanceWorldStage} from "./ContinuanceWorldStage";
 import { isEditableTarget } from "../lib/portal-destinations";
-import {HEADER_NAV} from "../lib/site-navigation";
+import {ACTIVE_HEADER_NAV} from "../lib/site-navigation";
 import { canonicalAuthClient } from "../lib/canonical-beta";
 import { CompactMemberIdentity } from "./CompactMemberIdentity";
 import { useOwnPlayerCard } from "../lib/useOwnPlayerCard";
@@ -24,14 +24,14 @@ const FullParityHeader=import.meta.env.VITE_PARITY_V136_FULL==="true" ? lazy(()=
  * This component is presentation only. Private routes remain MemberGate-owned;
  * no signup capability or session is inferred from an account shortcut.
  */
-const desktopNav = HEADER_NAV.filter(item=>!item.parityOnly);
+const desktopNav = ACTIVE_HEADER_NAV.filter(item=>!item.parityOnly);
 const menuDestinations = (import.meta.env.VITE_ANEVUM_STUDIO_V143==="true" ? [
   {to:"/worlds",label:"Worlds",detail:"TRANSCOSMIC and original continuity",icon:"explore"},
   {to:"/games",label:"Games",detail:"Original games and experiments",icon:"games"},
   {to:"/journal",label:"Journal",detail:"Verified public development",icon:"status"},
   {to:"/about",label:"Studio",detail:"Who we are and how we work",icon:"home"},
   {to:"/discover",label:"Public Catalogue",detail:"Existing approved releases",icon:"explore"},
-  {to:"/studio",label:"Creator Studio",detail:"Existing protected creation tools",icon:"create"}
+  {to:"/studio",label:"Creation Tools",detail:"Existing protected creation tools",icon:"create"}
 ] : [
   {to:"/severance",label:"Severance",detail:"Current game / development concept",icon:"games"},
   {to:"/discover",label:"Discover",detail:"Real approved releases",icon:"explore"},
