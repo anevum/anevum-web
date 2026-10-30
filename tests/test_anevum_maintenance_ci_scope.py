@@ -13,6 +13,7 @@ class ScopeTests(unittest.TestCase):
 
     def test_repo_extraction_metadata_does_not_need_anevum_web_preview(self):
         approved = [
+            ".github/workflows/deploy-brandle.yml",
             ".github/workflows/repository-split-verify.yml",
             "apps/cristybreathe/.github/workflows/ci.yml",
             "apps/cristybreathe/LICENSE",
