@@ -29,6 +29,12 @@ class ScopeTests(unittest.TestCase):
         ]
         self.assertFalse(scope.app_preview_required(approved))
 
+    def test_root_readme_only_does_not_require_preview(self):
+        self.assertFalse(scope.app_preview_required(["README.md"]))
+
+    def test_readme_plus_runtime_requires_preview(self):
+        self.assertTrue(scope.app_preview_required(["README.md", "src/App.tsx"]))
+
     def test_application_source_changes_still_require_preview(self):
         for path in ("apps/cristybreathe/src/worker.mjs",
                      "games/brandle/app.mjs",
