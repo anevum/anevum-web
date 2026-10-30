@@ -39,7 +39,7 @@ export function ConsoleWayfinderV136({onOpenSearch,onOpenIren,memberDestination,
    event.preventDefault();links[next].focus();
  }
  return <nav ref={ref} className="p136-console-wayfinder" aria-label="ANEVUM console wayfinder" onKeyDown={onKey} onMouseLeave={()=>setPreviewSector(null)} onBlur={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setPreviewSector(null)}}>
-   <span className="p136-console-ident" aria-hidden="true"><OrbitalMark className="p136-console-ident-mark"/><span>ANEVUM / CONTINUANCE</span></span>
+   <span className="p136-console-ident" aria-hidden="true"><OrbitalMark className="p136-console-ident-mark"/><span>{import.meta.env.VITE_ANEVUM_STUDIO_V143==="true"?"ANEVUM / STUDIO":"ANEVUM / CONTINUANCE"}</span></span>
    <div className="p136-console-stations">
      {activeStations.map((station,i)=><NavLink data-station="" key={station.to} to={station.to} end={station.to==='/'} aria-label={station.label} onFocus={()=>setPreviewSector(station.sector)} onMouseEnter={()=>setPreviewSector(station.sector)}
        className={({isActive})=>'p136-console-station'+(isActive?' is-active':'')} data-sector={station.sector}>

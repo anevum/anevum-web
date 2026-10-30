@@ -22,7 +22,7 @@ const publicPages:Readonly<Record<string,Copy>>={
   },
   '/worlds':{
     title:'TRANSCOSMIC & Original Worlds | ANEVUM',
-    description:'Explore TRANSCOSMIC, ANEVUM primary fictional universe, its developing worlds, original continuity, stories and interactive experiences.'
+    description:'Explore TRANSCOSMIC, the primary fictional universe of ANEVUM, its developing worlds, original continuity, stories and interactive experiences.'
   },
   '/games':{
     title:'Games & Interactive Experiences | ANEVUM',

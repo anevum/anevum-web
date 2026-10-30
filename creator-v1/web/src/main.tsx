@@ -56,7 +56,10 @@ await import("./stage-focus-v137.css");
 await import("./severance-cinematic-v138.css");
 // V139 first-party hero film and scroll-depth cinematic interface.
 await import("./severance-motion-v139.css");
-if(import.meta.env.VITE_ANEVUM_STUDIO_V143==="true")await import("./studio-identity-v143.css");
+if(import.meta.env.VITE_ANEVUM_STUDIO_V143==="true"){
+  document.documentElement.dataset.avStudio="v143";
+  await import("./studio-identity-v143.css");
+}
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "") || "/"}>

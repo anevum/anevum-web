@@ -6,7 +6,7 @@ import { PortalLauncher } from "./PortalLauncher";
 import {VisualKitAtmosphere,publicVisualRoom} from "./VisualKit";
 import {ContinuanceWorldStage} from "./ContinuanceWorldStage";
 import { isEditableTarget } from "../lib/portal-destinations";
-import {ACTIVE_HEADER_NAV} from "../lib/site-navigation";
+import {HEADER_NAV,STUDIO_HEADER_NAV} from "../lib/site-navigation";
 import { canonicalAuthClient } from "../lib/canonical-beta";
 import { CompactMemberIdentity } from "./CompactMemberIdentity";
 import { useOwnPlayerCard } from "../lib/useOwnPlayerCard";
@@ -24,20 +24,15 @@ const FullParityHeader=import.meta.env.VITE_PARITY_V136_FULL==="true" ? lazy(()=
  * This component is presentation only. Private routes remain MemberGate-owned;
  * no signup capability or session is inferred from an account shortcut.
  */
-const desktopNav = ACTIVE_HEADER_NAV.filter(item=>!item.parityOnly);
-const menuDestinations = (import.meta.env.VITE_ANEVUM_STUDIO_V143==="true" ? [
-  {to:"/worlds",label:"Worlds",detail:"TRANSCOSMIC and original continuity",icon:"explore"},
-  {to:"/games",label:"Games",detail:"Original games and experiments",icon:"games"},
-  {to:"/journal",label:"Journal",detail:"Verified public development",icon:"status"},
-  {to:"/about",label:"Studio",detail:"Who we are and how we work",icon:"home"},
-  {to:"/discover",label:"Public Catalogue",detail:"Existing approved releases",icon:"explore"},
-  {to:"/studio",label:"Creation Tools",detail:"Existing protected creation tools",icon:"create"}
-] : [
+const desktopNav = HEADER_NAV.filter(item=>!item.parityOnly);
+const studioDesktopNav = STUDIO_HEADER_NAV.filter(item=>!item.parityOnly);
+const activeDesktopNav = import.meta.env.VITE_ANEVUM_STUDIO_V143==="true"?studioDesktopNav:desktopNav;
+const menuDestinations = [
   {to:"/severance",label:"Severance",detail:"Current game / development concept",icon:"games"},
   {to:"/discover",label:"Discover",detail:"Real approved releases",icon:"explore"},
   {to:"/status",label:"Development",detail:"Verified availability and active work",icon:"status"},
   {to:"/studio",label:"Creator Studio",detail:"Private creation and controlled publishing",icon:"create"}
-]) as readonly {to:string;label:string;detail:string;icon:string}[];
+] as const;
 const menuCategories = [
   {to:"/discover?category=games",label:"Published games"},
   {to:"/discover?category=tools",label:"Apps & tools"}
@@ -48,6 +43,16 @@ const menuUtilities = [
   {to:"/library",label:"My library"},
   {to:"/about",label:"About ANEVUM"}
 ] as const;
+
+const studioMenuDestinations = [
+  {to:"/worlds",label:"Worlds",detail:"TRANSCOSMIC and original continuity",icon:"explore"},
+  {to:"/games",label:"Games",detail:"Original games and experiments",icon:"games"},
+  {to:"/journal",label:"Journal",detail:"Verified public development",icon:"status"},
+  {to:"/about",label:"Studio",detail:"Who we are and how we work",icon:"home"},
+  {to:"/discover",label:"Public Catalogue",detail:"Existing approved releases",icon:"explore"},
+  {to:"/studio",label:"Creation Tools",detail:"Existing protected creation tools",icon:"create"}
+] as const;
+const activeMenuDestinations=import.meta.env.VITE_ANEVUM_STUDIO_V143==="true"?studioMenuDestinations:menuDestinations;
 
 /** One world provider survives every public route transition. */
 export function Shell(){
@@ -147,8 +152,8 @@ function ShellContent(){
   }
   const home=location.pathname==="/";
   const parityProfile=/^\/(?:creators\/[a-z][a-z0-9_]{2,29}|@[a-z][a-z0-9_]{2,29})$/.test(location.pathname);
-  const parityFullBleed=Boolean(FullParityHeader&&(home||["/severance","/about","/discover","/community","/creators","/boards","/worlds","/games","/journal"].includes(location.pathname)||parityProfile));
-  const publicSpatial=Boolean(FullParityHeader&&["/","/severance","/about","/discover","/community","/creators","/worlds","/games","/journal"].includes(location.pathname));
+  const parityFullBleed=Boolean(FullParityHeader&&(home||["/severance","/about","/discover","/community","/creators","/boards"].includes(location.pathname)||["/worlds","/games","/journal"].includes(location.pathname)||parityProfile));
+  const publicSpatial=Boolean(FullParityHeader&&(["/","/severance","/about","/discover","/community","/creators"].includes(location.pathname)||["/worlds","/games","/journal"].includes(location.pathname)));
   // PARITY destinations own a full-bleed spatial canvas, not a nested page box.
   // Legacy routes retain their protected frame until individually transformed.
   // One stable route surface keeps navigation, IREN and launcher mounted.
@@ -178,10 +183,10 @@ function ShellContent(){
       <div className="header-inner av9-header-inner">
         <Link to="/" className="brand-lockup av9-brand" aria-label="ANEVUM homepage">
           <OrbitalMark className="brand-mark"/>
-          <span className="cw-brand-stack"><b>ANEVUM</b><small>INDEPENDENT CREATIVE STUDIO</small></span>
+          <span className="cw-brand-stack"><b>ANEVUM</b><small>{import.meta.env.VITE_ANEVUM_STUDIO_V143==="true"?"INDEPENDENT CREATIVE STUDIO":"INDEPENDENT SOFTWARE STUDIO"}</small></span>
         </Link>
         <nav data-iren-anchor="navigation-desktop" className="desktop-nav av9-primary" aria-label="Primary navigation">
-          {desktopNav.map(item=><NavLink key={item.to} to={item.to} end={item.to==="/"}>{item.label}</NavLink>)}
+          {activeDesktopNav.map(item=><NavLink key={item.to} to={item.to} end={item.to==="/"}>{item.label}</NavLink>)}
         </nav>
         <form className="header-search av9-header-search" role="search" onSubmit={search}>
           <Icon name="search" size={18}/>
@@ -240,7 +245,7 @@ function ShellContent(){
           <Icon name="arrow" size={18}/>
         </Link>}
         <nav className="av79-navigation-primary" aria-label="Main destinations">
-          {menuDestinations.map(item=><Link to={item.to} key={item.to} onClick={()=>setMenuOpen(false)} className="av79-destination">
+          {activeMenuDestinations.map(item=><Link to={item.to} key={item.to} onClick={()=>setMenuOpen(false)} className="av79-destination">
             <span className="av79-destination-icon"><Icon name={item.icon} size={22}/></span>
             <span><strong>{item.label}</strong><small>{item.detail}</small></span>
             <Icon name="arrow" size={16}/>
@@ -285,10 +290,16 @@ function ShellContent(){
       {!publicSpatial&&!parityFullBleed&&<VisualKitAtmosphere room={publicVisualRoom(location.pathname)}/>}
       {FullParityHeader?<div ref={routeMotion} className={parityFullBleed?"p136-route-surface":undefined}>{routeSurface}</div>:routeSurface}
     </main>
-    <footer className="site-footer av9-footer">
-      <span>ANEVUM / INDEPENDENT GAMES & SOFTWARE</span>
-      <nav aria-label="Site information"><Link to="/about">About</Link><Link to="/community">Community</Link><Link to="/guide">Field Guide</Link><Link to="/status">Status</Link></nav>
-      <span>SEVERANCE IN DEVELOPMENT · APPROVED PROJECTS REMAIN PUBLIC</span>
-    </footer>
+    {import.meta.env.VITE_ANEVUM_STUDIO_V143==="true"?
+      <footer className="site-footer av9-footer av143-site-footer">
+        <span>ANEVUM / ORIGINAL WORLDS · GAMES · CREATIVE TECHNOLOGY</span>
+        <nav aria-label="Studio information"><Link to="/worlds">Worlds</Link><Link to="/games">Games</Link><Link to="/journal">Journal</Link><Link to="/about">Studio</Link><a href="https://github.com/anevum" target="_blank" rel="noopener noreferrer">GitHub</a></nav>
+        <span>FOUNDED BY DEVON AKINS · INDEPENDENT CREATION</span>
+      </footer>
+      :<footer className="site-footer av9-footer">
+        <span>ANEVUM / INDEPENDENT GAMES & SOFTWARE</span>
+        <nav aria-label="Site information"><Link to="/about">About</Link><Link to="/community">Community</Link><Link to="/guide">Field Guide</Link><Link to="/status">Status</Link></nav>
+        <span>SEVERANCE IN DEVELOPMENT · APPROVED PROJECTS REMAIN PUBLIC</span>
+      </footer>}
   </div>;
 }

@@ -10,13 +10,16 @@ const shell=read("web/src/components/Shell.tsx");
 const meta=read("web/src/lib/public-page-metadata.ts");
 const css=read("web/src/studio-identity-v143.css");
 const main=read("web/src/main.tsx");
+const vite=read("web/vite.config.ts");
+const manifest=JSON.parse(read("web/public/anevum-studio-v143.webmanifest"));
 
 test("V143 presents ANEVUM as a real independent studio",()=>{
  assert.match(home,/Original worlds/);
  assert.match(home,/family-rooted studio/);
  assert.match(home,/data-studio-identity/);
  assert.match(home,/SEVERANCE/);
- assert.match(home,/No fictional studio metrics/);
+ assert.match(home,/one working release at a time/);
+ assert.doesNotMatch(home,/No fictional studio metrics/);
  assert.match(home,/No public play access|NO PUBLIC PLAY ACCESS/i);
  assert.doesNotMatch(home,/fakePlayers|fakeProjects|Math\.random\(|PLAY NOW|JOIN SERVER/);
  assert.match(about,/Devon Akins/);
@@ -42,4 +45,14 @@ test("V143 preserves non-public implementation boundaries",()=>{
 test("V143 CSS offers mobile, motion and high-contrast variants",()=>{
  for(const v of ["max-width:800px","max-width:560px","prefers-reduced-motion:reduce","forced-colors:active"])assert.ok(css.includes(v),v);
  assert.doesNotMatch(css,/@import\s+url|@font-face|url\(\s*['"]?https?:/);
+});
+
+test("V143 authoring is reversible; site shell, brand icons and metadata are studio aware",()=>{
+ assert.match(main,/dataset\.avStudio="v143"/);
+ assert.match(vite,/anevum-studio-v143-build-metadata/);
+ assert.match(vite,/studio-identity-v143\.css/);
+ assert.match(manifest.name,/ANEVUM/);
+ assert.equal(manifest.icons[0].src,"/icon-192.png");
+ assert.match(shell,/activeMenuDestinations/);
+ assert.match(shell,/const desktopNav = HEADER_NAV\.filter/);
 });

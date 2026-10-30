@@ -40,9 +40,23 @@ try{
    await page.locator(selector).waitFor({timeout:12000});
    const dimensions=await page.evaluate(()=>({document:document.documentElement.scrollWidth,viewport:innerWidth}));
    assert.ok(dimensions.document<=dimensions.viewport+2,`Horizontal overflow: ${route} ${width} ${JSON.stringify(dimensions)}`);
+   if(route==="/"||route==="/games"){
+     const geometry=await page.locator(".av143-feature h2").evaluate(el=>{
+       const container=el.closest(".av143-feature-content");
+       if(!container)throw Error("Game heading parent missing");
+       const r=document.createRange();
+       r.selectNodeContents(el);
+       const text=r.getBoundingClientRect();
+       const bounds=container.getBoundingClientRect();
+       return {textLeft:text.left,textRight:text.right,contentLeft:bounds.left,contentRight:bounds.right,textWidth:text.width,font:getComputedStyle(el).fontFamily};
+     });
+     assert.ok(geometry.textLeft>=geometry.contentLeft-2&&geometry.textRight<=geometry.contentRight+2,
+       "SEVERANCE text is clipped: "+route+" "+width+" "+JSON.stringify(geometry));
+   }
    await page.screenshot({path:join(dir,(route==="/"?"home":route.slice(1))+"-"+width+".png"),fullPage:true,animations:"disabled"});
   }
   await page.goto(origin+"/");
+  if(width===1440){const html=await (await page.request.get(origin+"/")).text();assert.match(html,/ANEVUM — Original Worlds, Games & Creative Technology/);assert.match(html,/anevum-studio-v143\.webmanifest/);assert.doesNotMatch(html,/anevum-severance-share-v141-1200x630/);}
   assert.equal(await page.getByRole("link",{name:/ENTER TRANSCOSMIC/}).getAttribute("href"),"/worlds");
   await page.getByRole("link",{name:/ENTER TRANSCOSMIC/}).click();
   await page.waitForURL(origin+"/worlds");

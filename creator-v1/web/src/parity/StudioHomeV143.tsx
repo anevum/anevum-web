@@ -37,9 +37,9 @@ export function StudioHomeV143({projects,catalogueState,signedIn,verifiedCount}:
           <Link to="/worlds" className="av143-action av143-action--primary">ENTER TRANSCOSMIC <Icon name="arrow" size={18}/></Link>
           <Link to="/games" className="av143-action">EXPLORE THE GAMES <Icon name="arrow" size={17}/></Link>
         </div>
-        <p className="av143-hero-truth">Independent creation. Public progress. No fictional studio metrics or unreleased features presented as finished.</p>
+        <p className="av143-hero-truth">Original worlds and working experiences, developed openly and refined over time.</p>
       </div>
-      <div className="av143-hero-bottom"><span>THE ANEVUM STUDIO / EST. 2026</span><a href="#av143-work">EXPLORE THE WORK <span aria-hidden="true">↓</span></a><span>WORLDS · GAMES · TOOLS</span></div>
+      <div className="av143-hero-bottom"><span>ANEVUM / FOUNDED BY DEVON AKINS</span><a href="#av143-work">EXPLORE THE WORK <span aria-hidden="true">↓</span></a><span>WORLDS · GAMES · TOOLS</span></div>
     </section>
 
     <section className="av143-editorial" id="av143-work" aria-labelledby="av143-work-title">
@@ -77,7 +77,7 @@ export function StudioHomeV143({projects,catalogueState,signedIn,verifiedCount}:
         <h2 id="av143-feature-title">SEVERANCE<span>.</span></h2>
         <p className="av143-feature-mantra">SURVIVE. RETURN. DISCOVER.</p>
         <p>A world cut off from the wider TRANSCOSMIC network. The people left behind must live with what survived the isolation.</p>
-        <p>Its long-term vision is a continuous survival-horror world. A smaller Godot WebGL prototype has passed initial automated browser checks; persistent public multiplayer has not launched.</p>
+        <p>Its long-term vision is a continuous survival-horror world. A small Godot browser graybox has passed initial automated checks; persistent public multiplayer has not launched.</p>
         <div className="av143-actions"><Link className="av143-action av143-action--primary" to="/severance">PROJECT DOSSIER <Icon name="arrow" size={17}/></Link><Link className="av143-action" to="/journal">VIEW DEVELOPMENT <Icon name="arrow" size={17}/></Link></div>
       </div>
     </section>
