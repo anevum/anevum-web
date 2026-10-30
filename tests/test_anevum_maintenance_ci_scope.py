@@ -21,6 +21,7 @@ class ScopeTests(unittest.TestCase):
             "games/brandle/.github/workflows/ci.yml",
             "games/brandle/.gitignore",
             "games/brandle/LICENSE",
+            "games/brandle/README.md",
             "scripts/ops/repo-catalog.json",
             "scripts/ops/split-project.mjs",
             "tests/repository-split.test.mjs"
