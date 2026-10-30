@@ -40,7 +40,7 @@ try{
    await page.locator(selector).waitFor({timeout:12000});
    const dimensions=await page.evaluate(()=>({document:document.documentElement.scrollWidth,viewport:innerWidth}));
    assert.ok(dimensions.document<=dimensions.viewport+2,`Horizontal overflow: ${route} ${width} ${JSON.stringify(dimensions)}`);
-   await page.screenshot({path:join(dir,(route==="/":"home":route.slice(1))+"-"+width+".png"),fullPage:true,animations:"disabled"});
+   await page.screenshot({path:join(dir,(route==="/"?"home":route.slice(1))+"-"+width+".png"),fullPage:true,animations:"disabled"});
   }
   await page.goto(origin+"/");
   assert.equal(await page.getByRole("link",{name:/ENTER TRANSCOSMIC/}).getAttribute("href"),"/worlds");
