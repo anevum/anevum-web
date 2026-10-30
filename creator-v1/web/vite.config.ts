@@ -29,10 +29,10 @@ export default defineConfig(({ mode }) => ({
         // The pre-existing ANEVUM-only PNG avoids showing SEVERANCE as the studio's entire identity.
         // Replace this archival graphic with a dedicated V143 share PNG before full public promotion.
         result=result.replaceAll("https://anevum.com/anevum-severance-share-v141-1200x630.png","https://anevum.com/anevum-social-share-v2.png");
-        result=result.replace('%BASE_URL%anevum-severance-favicon-v141-64.png','%BASE_URL%favicon.svg');
+        result=result.replaceAll('anevum-severance-favicon-v141-64.png','favicon.svg');
         result=result.replace('type="image/png" sizes="64x64"','type="image/svg+xml"');
-        result=result.replaceAll('%BASE_URL%anevum-severance-apple-touch-v141-180.png','%BASE_URL%apple-touch-icon.png');
-        result=result.replace('%BASE_URL%anevum-severance-v141.webmanifest','%BASE_URL%anevum-studio-v143.webmanifest');
+        result=result.replaceAll('anevum-severance-apple-touch-v141-180.png','apple-touch-icon.png');
+        result=result.replaceAll('anevum-severance-v141.webmanifest','anevum-studio-v143.webmanifest');
         result=result.replace('content="#07060b"','content="#0b0d11"');
         result=result.replace('<title>ANEVUM — Independent Games & Software Studio</title>','<title>'+title+'</title>');
         return result;
