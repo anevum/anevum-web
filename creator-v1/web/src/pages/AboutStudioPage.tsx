@@ -21,10 +21,6 @@ function StudioAboutV143(){
  </div>;
 }
 
-import {Link} from "react-router-dom";
-import {Icon} from "../components/Icons";
-import {OrbitalMark} from "../components/OrbitalMark";
-
 /** First-party studio page; does not advertise unshipped products or private records. */
 export function LegacyAboutStudioPage(){
  return <div className="av137-about" data-studio-stage="active-development">
