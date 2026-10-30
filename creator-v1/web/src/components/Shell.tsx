@@ -25,12 +25,19 @@ const FullParityHeader=import.meta.env.VITE_PARITY_V136_FULL==="true" ? lazy(()=
  * no signup capability or session is inferred from an account shortcut.
  */
 const desktopNav = HEADER_NAV.filter(item=>!item.parityOnly);
-const menuDestinations = [
+const menuDestinations = (import.meta.env.VITE_ANEVUM_STUDIO_V143==="true" ? [
+  {to:"/worlds",label:"Worlds",detail:"TRANSCOSMIC and original continuity",icon:"explore"},
+  {to:"/games",label:"Games",detail:"Original games and experiments",icon:"games"},
+  {to:"/journal",label:"Journal",detail:"Verified public development",icon:"status"},
+  {to:"/about",label:"Studio",detail:"Who we are and how we work",icon:"home"},
+  {to:"/discover",label:"Public Catalogue",detail:"Existing approved releases",icon:"explore"},
+  {to:"/studio",label:"Creator Studio",detail:"Existing protected creation tools",icon:"create"}
+] : [
   {to:"/severance",label:"Severance",detail:"Current game / development concept",icon:"games"},
   {to:"/discover",label:"Discover",detail:"Real approved releases",icon:"explore"},
   {to:"/status",label:"Development",detail:"Verified availability and active work",icon:"status"},
   {to:"/studio",label:"Creator Studio",detail:"Private creation and controlled publishing",icon:"create"}
-] as const;
+]) as readonly {to:string;label:string;detail:string;icon:string}[];
 const menuCategories = [
   {to:"/discover?category=games",label:"Published games"},
   {to:"/discover?category=tools",label:"Apps & tools"}
@@ -140,8 +147,8 @@ function ShellContent(){
   }
   const home=location.pathname==="/";
   const parityProfile=/^\/(?:creators\/[a-z][a-z0-9_]{2,29}|@[a-z][a-z0-9_]{2,29})$/.test(location.pathname);
-  const parityFullBleed=Boolean(FullParityHeader&&(home||["/severance","/about","/discover","/community","/creators","/boards"].includes(location.pathname)||parityProfile));
-  const publicSpatial=Boolean(FullParityHeader&&["/","/severance","/about","/discover","/community","/creators"].includes(location.pathname));
+  const parityFullBleed=Boolean(FullParityHeader&&(home||["/severance","/about","/discover","/community","/creators","/boards","/worlds","/games","/journal"].includes(location.pathname)||parityProfile));
+  const publicSpatial=Boolean(FullParityHeader&&["/","/severance","/about","/discover","/community","/creators","/worlds","/games","/journal"].includes(location.pathname));
   // PARITY destinations own a full-bleed spatial canvas, not a nested page box.
   // Legacy routes retain their protected frame until individually transformed.
   // One stable route surface keeps navigation, IREN and launcher mounted.
@@ -171,7 +178,7 @@ function ShellContent(){
       <div className="header-inner av9-header-inner">
         <Link to="/" className="brand-lockup av9-brand" aria-label="ANEVUM homepage">
           <OrbitalMark className="brand-mark"/>
-          <span className="cw-brand-stack"><b>ANEVUM</b><small>INDEPENDENT SOFTWARE STUDIO</small></span>
+          <span className="cw-brand-stack"><b>ANEVUM</b><small>INDEPENDENT CREATIVE STUDIO</small></span>
         </Link>
         <nav data-iren-anchor="navigation-desktop" className="desktop-nav av9-primary" aria-label="Primary navigation">
           {desktopNav.map(item=><NavLink key={item.to} to={item.to} end={item.to==="/"}>{item.label}</NavLink>)}
