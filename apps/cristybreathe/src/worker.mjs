@@ -1,6 +1,7 @@
 import {identity} from './auth.mjs';
+import {validateCalendarEvent,calendarWindow,editableCalendarFields,CalendarError} from './calendar-core.mjs';
 
-export const VERSION = '1.1.2';
+export const VERSION = '1.2.0';
 const COLUMNS = 'id,kind,title,body,status,created_at,updated_at,pinned,archived,priority,is_draft,collection,tags,due_date,deferred_until,revision';
 const HEADERS = {
   'cache-control':'private, no-store', 'x-content-type-options':'nosniff',
@@ -101,6 +102,59 @@ export async function api(request, env, owner) {
     const p=preferences(await body(request));
     await env.DB.prepare('INSERT INTO preferences(owner,value,updated_at) VALUES(?,?,?) ON CONFLICT(owner) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at').bind(owner,JSON.stringify(p),new Date().toISOString()).run();
     return reply({preferences:p});
+  }
+  // All calendar reads and writes are scoped to the Access-verified account.
+  if (method==='GET' && path==='/api/calendar') {
+    const window=calendarWindow(url.searchParams.get('from')||'',url.searchParams.get('to')||'');
+    const timed=await env.DB.prepare("SELECT * FROM calendar_events WHERE owner=? AND status='confirmed' AND all_day=0 AND starts_at < ? AND ends_at > ? ORDER BY starts_at,id LIMIT 2001").bind(owner,window.utcEnd,window.utcStart).all();
+    const allDay=await env.DB.prepare("SELECT * FROM calendar_events WHERE owner=? AND status='confirmed' AND all_day=1 AND start_date < ? AND end_date > ? ORDER BY start_date,id LIMIT 2001").bind(owner,window.to,window.from).all();
+    const tasks=await env.DB.prepare("SELECT id,title,due_date,status,revision FROM entries WHERE owner=? AND kind='task' AND archived=0 AND is_draft=0 AND due_date>=? AND due_date<? ORDER BY due_date,id LIMIT 2001").bind(owner,window.from,window.to).all();
+    if ([timed.results,allDay.results,tasks.results].some(rows=>rows.length>2000)) return reply({error:'This date range has too many items. Choose a shorter range.'},413);
+    return reply({events:[...timed.results,...allDay.results],tasks:tasks.results,email:owner,from:window.from,to:window.to});
+  }
+  if (method==='GET' && path==='/api/calendar/export') {
+    const result=await env.DB.prepare('SELECT * FROM calendar_events WHERE owner=? ORDER BY created_at,id LIMIT 10001').bind(owner).all();
+    if(result.results.length>10000)return reply({error:'This calendar needs an administrator-assisted export.'},413);
+    return reply({application:'CristyBreathe Calendar',schema_version:1,exported_at:new Date().toISOString(),events:result.results.map(({owner:unused,...event})=>event)},200,{'content-disposition':'attachment; filename="cristybreathe-calendar-backup.json"'});
+  }
+  if (method==='POST' && path==='/api/calendar/events') {
+    const item=validateCalendarEvent(await body(request,12000));
+    if(item.revision!==undefined)return reply({error:'Revision is server-managed.'},400);
+    const id=item.id||crypto.randomUUID(),existing=await env.DB.prepare('SELECT * FROM calendar_events WHERE id=?').bind(id).first();
+    if(existing){
+      if(existing.owner!==owner)return reply({error:'That event identifier is unavailable.'},409);
+      const same=Object.entries(editableCalendarFields(item)).every(([k,v])=>existing[k]===v);
+      return same?reply({event:existing},200):reply({error:'This event identifier is already in use.'},409);
+    }
+    const now=new Date().toISOString();
+    await env.DB.prepare('INSERT INTO calendar_events(id,owner,title,details,location,all_day,start_date,end_date,starts_at,ends_at,time_zone,status,revision,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,1,?,?)')
+      .bind(id,owner,item.title,item.details,item.location,item.all_day,item.start_date,item.end_date,item.starts_at,item.ends_at,item.time_zone,item.status,now,now).run();
+    return reply({event:await env.DB.prepare('SELECT * FROM calendar_events WHERE owner=? AND id=?').bind(owner,id).first()},201);
+  }
+  const eventPath='/api/calendar/events/';
+  const suffix=path.startsWith(eventPath)?path.slice(eventPath.length):'';
+  const eventMatch=suffix.length===36 && /^[a-f0-9-]+/.test(suffix)?[path,suffix]:null;
+  if(eventMatch) {
+    const id=eventMatch[1],existing=await env.DB.prepare('SELECT * FROM calendar_events WHERE owner=? AND id=?').bind(owner,id).first();
+    if(!existing)return reply({error:'Event not found.'},404);
+    if(method==='GET')return reply({event:existing});
+    if(method==='PATCH'||method==='DELETE'){
+      const patch=method==='PATCH'?await body(request,12000):{};
+      const revision=method==='PATCH'?patch.revision:Number(request.headers.get('if-match'));
+      if(!Number.isSafeInteger(revision)||revision<1)return reply({error:'Refresh before changing this event.'},428);
+      if(revision!==existing.revision)return reply({error:'This event changed on another device. Your unsaved edits remain open.'},409);
+      let item;
+      if(method==='PATCH'){
+        const {revision:discardRevision,id:discardId,...fields}=patch;
+        item=validateCalendarEvent({...editableCalendarFields(existing),...fields,id});
+      } else {
+        item={...editableCalendarFields(existing),status:'cancelled'};
+      }
+      const result=await env.DB.prepare('UPDATE calendar_events SET title=?,details=?,location=?,all_day=?,start_date=?,end_date=?,starts_at=?,ends_at=?,time_zone=?,status=?,revision=revision+1,updated_at=? WHERE owner=? AND id=? AND revision=?')
+        .bind(item.title,item.details,item.location,item.all_day,item.start_date,item.end_date,item.starts_at,item.ends_at,item.time_zone,item.status,new Date().toISOString(),owner,id,revision).run();
+      if(!result.meta?.changes)return reply({error:'This event changed on another device. Refresh before retrying.'},409);
+      return reply({event:await env.DB.prepare('SELECT * FROM calendar_events WHERE owner=? AND id=?').bind(owner,id).first()},200);
+    }
   }
   if (method==='GET' && path==='/api/dashboard') {
     const counts=await env.DB.prepare("SELECT count(*) AS total,coalesce(sum(CASE WHEN is_draft=1 AND archived=0 THEN 1 ELSE 0 END),0) AS drafts FROM entries WHERE owner=?").bind(owner).first();
@@ -216,7 +270,7 @@ export function createWorker(assets = {}) {
       }
       return reply({error:'Not found.'},404);
     } catch(error) {
-      if (error instanceof ApiError) return reply({error:error.message},error.status);
+      if (error instanceof ApiError || error instanceof CalendarError) return reply({error:error.message},error.status);
       // Do not log request bodies, query strings, identity, titles, or exception messages.
       console.error(JSON.stringify({event:'request_failed',request_id:requestId,version:VERSION}));
       return reply({error:'We could not complete that request. Your open text has been kept. Please retry.',request_id:requestId},500);
