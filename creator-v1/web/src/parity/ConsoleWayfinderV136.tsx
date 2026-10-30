@@ -12,6 +12,13 @@ const stations=[
  {to:'/discover',label:'Discover',small:'Projects',icon:'explore',sector:'portal'},
  {to:'/status',label:'Status',small:'Build',icon:'status',sector:'portal'}
 ] as const satisfies ReadonlyArray<{to:string;label:string;small:string;icon:string;sector:WorldSector}>;
+const studioStations=[
+ {to:'/',label:'Home',small:'Entrance',icon:'home',sector:'hero'},
+ {to:'/worlds',label:'Worlds',small:'Universe',icon:'explore',sector:'hero'},
+ {to:'/games',label:'Games',small:'Play',icon:'games',sector:'portal'},
+ {to:'/journal',label:'Journal',small:'Progress',icon:'status',sector:'portal'}
+] as const satisfies ReadonlyArray<{to:string;label:string;small:string;icon:string;sector:WorldSector}>;
+const activeStations=import.meta.env.VITE_ANEVUM_STUDIO_V143==='true'?studioStations:stations;
 type Props={onOpenSearch:()=>void;onOpenIren:()=>void;memberDestination:string;memberLabel:string;memberInitial:string|null};
 export function ConsoleWayfinderV136({onOpenSearch,onOpenIren,memberDestination,memberLabel,memberInitial}:Props){
  const {setPreviewSector}=useLivingWorld();
@@ -19,7 +26,7 @@ export function ConsoleWayfinderV136({onOpenSearch,onOpenIren,memberDestination,
  const ref=useRef<HTMLElement>(null);
  // Keep the visual selection marker on the same canonical section as NavLink,
  // including nested creator, Commons and Studio screens.
- const index=stations.findIndex(s=>isSiteLinkSelected(location.pathname,s.to));
+ const index=activeStations.findIndex(s=>isSiteLinkSelected(location.pathname,s.to));
  useEffect(()=>{setPreviewSector(null)},[location.pathname,location.search,setPreviewSector]);
  useEffect(()=>()=>setPreviewSector(null),[setPreviewSector]);
  function onKey(event:KeyboardEvent<HTMLElement>){
@@ -32,9 +39,9 @@ export function ConsoleWayfinderV136({onOpenSearch,onOpenIren,memberDestination,
    event.preventDefault();links[next].focus();
  }
  return <nav ref={ref} className="p136-console-wayfinder" aria-label="ANEVUM console wayfinder" onKeyDown={onKey} onMouseLeave={()=>setPreviewSector(null)} onBlur={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node))setPreviewSector(null)}}>
-   <span className="p136-console-ident" aria-hidden="true"><OrbitalMark className="p136-console-ident-mark"/><span>ANEVUM / CONTINUANCE</span></span>
+   <span className="p136-console-ident" aria-hidden="true"><OrbitalMark className="p136-console-ident-mark"/><span>{import.meta.env.VITE_ANEVUM_STUDIO_V143==="true"?"ANEVUM / STUDIO":"ANEVUM / CONTINUANCE"}</span></span>
    <div className="p136-console-stations">
-     {stations.map((station,i)=><NavLink data-station="" key={station.to} to={station.to} end={station.to==='/'} aria-label={station.label} onFocus={()=>setPreviewSector(station.sector)} onMouseEnter={()=>setPreviewSector(station.sector)}
+     {activeStations.map((station,i)=><NavLink data-station="" key={station.to} to={station.to} end={station.to==='/'} aria-label={station.label} onFocus={()=>setPreviewSector(station.sector)} onMouseEnter={()=>setPreviewSector(station.sector)}
        className={({isActive})=>'p136-console-station'+(isActive?' is-active':'')} data-sector={station.sector}>
        <span className="p136-console-icon"><Icon name={station.icon} size={20}/></span>
        <span className="p136-console-title"><strong>{station.label}</strong><small>{station.small}</small></span>

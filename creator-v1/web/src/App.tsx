@@ -10,6 +10,7 @@ import { ProjectPage } from "./pages/ProjectPage";
 import { CreatorPage, CreatorsPage } from "./pages/CreatorsPage";
 import { StatusPage } from "./pages/StatusPage";
 import { SeverancePage } from "./pages/SeverancePage";
+import {WorldsPageV143,GamesPageV143,JournalPageV143} from "./pages/StudioCollectionV143";
 import { AboutStudioPage } from "./pages/AboutStudioPage";
 import { LevelsPage } from "./pages/LevelsPage";
 import { RecognitionRegistryPage } from "./pages/RecognitionRegistryPage";
@@ -81,6 +82,9 @@ export default function App(){
     <Route path="member/setup" element={<Navigate to="/member" replace/>}/>
     <Route path="start" element={<StartPage/>}/>
     <Route path="severance" element={<SeverancePage/>}/>
+    <Route path="worlds" element={<WorldsPageV143/>}/>
+    <Route path="games" element={<GamesPageV143/>}/>
+    <Route path="journal" element={<JournalPageV143/>}/>
     <Route path="about" element={<AboutStudioPage/>}/>
     <Route path="guide" element={<FieldGuidePage/>}/>
     <Route path="discover" element={<DiscoverPage/>}/>

@@ -10,6 +10,35 @@ export default defineConfig(({ mode }) => ({
   server: {allowedHosts:["terminal.local"]},
   plugins: [
     {
+      name:"anevum-studio-v143-build-metadata",
+      transformIndexHtml(html){
+        if(process.env.VITE_ANEVUM_STUDIO_V143!=="true")return html;
+        const title="ANEVUM — Original Worlds, Games & Creative Technology";
+        const description="ANEVUM is an independent creative studio founded by Devon Akins. Explore original fictional universes, games and open-source creative technology.";
+        const replaceMeta=(source:string,kind:string,key:string,value:string)=>source.replace(
+          new RegExp('(<meta '+kind+'="'+key+'" content=")[^"]*(")'),
+          (_match:string,open:string,close:string)=>open+value+close
+        );
+        let result=html;
+        result=replaceMeta(result,"name","description",description);
+        result=replaceMeta(result,"property","og:title",title);
+        result=replaceMeta(result,"property","og:description",description);
+        result=replaceMeta(result,"property","og:image:alt","ANEVUM orbital emblem and studio identity");
+        result=replaceMeta(result,"name","twitter:title",title);
+        result=replaceMeta(result,"name","twitter:description",description);
+        // The pre-existing ANEVUM-only PNG avoids showing SEVERANCE as the studio's entire identity.
+        // Replace this archival graphic with a dedicated V143 share PNG before full public promotion.
+        result=result.replaceAll("https://anevum.com/anevum-severance-share-v141-1200x630.png","https://anevum.com/anevum-social-share-v2.png");
+        result=result.replaceAll('anevum-severance-favicon-v141-64.png','favicon.svg');
+        result=result.replace('type="image/png" sizes="64x64"','type="image/svg+xml"');
+        result=result.replaceAll('anevum-severance-apple-touch-v141-180.png','apple-touch-icon.png');
+        result=result.replaceAll('anevum-severance-v141.webmanifest','anevum-studio-v143.webmanifest');
+        result=result.replace('content="#07060b"','content="#0b0d11"');
+        result=result.replace('<title>ANEVUM — Independent Games & Software Studio</title>','<title>'+title+'</title>');
+        return result;
+      }
+    },
+    {
       name:"isolate-owner-review-media",
       configureServer(server){
         server.middlewares.use((req,res,next)=>{
@@ -47,7 +76,8 @@ export default defineConfig(({ mode }) => ({
           !id.includes("/src/parity/continuance-design-system.css")&&
           !id.includes("/src/stage-focus-v137.css")&&
           !id.includes("/src/severance-cinematic-v138.css")&&
-          !id.includes("/src/severance-motion-v139.css")){
+          !id.includes("/src/severance-motion-v139.css")&&
+          !id.includes("/src/studio-identity-v143.css")){
           const layer=id.includes("/src/parity/")?'parity':'legacy';
           return {code:"@layer legacy, parity;\n@layer "+layer+" {\n"+code+"\n}",map:null};
         }
