@@ -23,6 +23,7 @@ MAINTENANCE_PATHS = frozenset([
     # Reviewed repository-extraction tooling and standalone project metadata.
     # These do not alter the ANEVUM web runtime, build or deployments.
     ".github/workflows/deploy-brandle.yml",
+    ".github/workflows/export-brandle-source.yml",
     ".github/workflows/repository-split-verify.yml",
     "apps/cristybreathe/.github/workflows/ci.yml",
     "apps/cristybreathe/LICENSE",

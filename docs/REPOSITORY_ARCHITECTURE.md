@@ -37,3 +37,25 @@ This performs a local history-preserving git subtree split and **never pushes or
 8. Review historical workflows and open PRs individually. Preserve legacy ANEVUM apex deploy refusal, never reactivate the retired V5 production deployment.
 
 A new repository name, script or PR alone does not mean the migration is complete. Family-adventure-book currently states that it has no open-source license; make an explicit license decision separately.
+
+## Brandle self-contained migration handoff artifact
+
+After the source-only export workflow is merged, the new GitHub Actions run on
+main packages the game's isolated Git history as a .bundle and its current
+working tree as a .zip, alongside SHA256 checksums and import instructions.
+Open Actions > BRANDLE history-preserving source export > latest successful
+run > artifact brandle-source-handoff. Artifacts expire after seven days;
+re-run manually as needed. This workflow never touches a production Worker,
+creates a repository or configures Cloudflare credentials.
+
+Before publishing the bundle, review all extracted history for exposed tokens,
+private information and licensing. Create an empty public GitHub repository
+named anevum/brandle, then import the bundle with git clone, run its tests,
+configure the new remote and push main. The new repository initially has
+CI-only configuration: preserve the original production deployer until a
+verified, rollback-ready transfer is approved.
+
+Observed live Worker before handoff: brandle-glimmer-grove;
+Cloudflare deployment 86970d97-7975-45e5-a000-0fba9a7379f6,
+version 1c48deb3-6c35-4b9b-9d84-a37d2596ca70,
+recorded 2026-10-30T01:16:40Z. Recheck actual production before cutover.
