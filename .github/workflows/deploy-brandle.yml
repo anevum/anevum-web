@@ -1,4 +1,11 @@
-name: Deploy BRANDLE to Cloudflare Worker
+name: Verify BRANDLE legacy source (no deployment)
+
+# CUTOVER CANDIDATE: on this review branch only. Do not merge until the
+# standalone Brandle environment, credentials, release and rollback are verified.
+# Merging retires BOTH the original push-triggered and manual deployment paths.
+# Keep the original source and read-only verification for history and recovery.
+# Production release ownership remains with the existing monorepo workflow
+# until this retirement is actually merged and independently verified.
 on:
   pull_request:
     paths:
@@ -6,8 +13,6 @@ on:
       - '.github/workflows/deploy-brandle.yml'
   push:
     branches: [main]
-    # Production deployment only for game/runtime files; metadata-only migration
-    # commits must not inadvertently redeploy a live Worker.
     paths:
       - 'games/brandle/*.mjs'
       - 'games/brandle/*.js'
@@ -18,10 +23,12 @@ on:
       - 'games/brandle/*.webmanifest'
       - 'games/brandle/wrangler.toml'
   workflow_dispatch:
+
 permissions:
   contents: read
+
 jobs:
-  verify-and-deploy:
+  verify-only:
     runs-on: ubuntu-latest
     timeout-minutes: 12
     defaults:
@@ -32,18 +39,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Check syntax
+      - name: Check source syntax
         run: |
           node --check app.mjs
           node --check logic.mjs
           node --check build-worker.mjs
       - name: Test word logic
         run: node --test tests.mjs
-      - name: Build isolated worker
+      - name: Build isolated Worker without deployment
         run: node build-worker.mjs
-      - name: Deploy to Cloudflare
-        if: github.event_name != 'pull_request'
-        run: npx --yes wrangler@4 deploy --config wrangler.toml
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Check generated Worker syntax
+        run: node --check dist/worker.mjs
