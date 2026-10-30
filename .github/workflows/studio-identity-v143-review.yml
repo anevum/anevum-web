@@ -1,0 +1,42 @@
+name: ANEVUM V143 Studio Identity Review
+on:
+  push:
+    branches:
+      - 'build/studio-identity-redesign-20261030-001'
+  pull_request:
+    paths:
+      - 'creator-v1/web/src/**'
+      - 'creator-v1/test/studio-identity-v143.test.mjs'
+      - '.github/workflows/studio-identity-v143-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: studio-identity-v143-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VITE_PARITY_V136_FULL: 'true'
+      VITE_PARITY_V136_HORIZON_QA: 'false'
+      VITE_ANEVUM_STUDIO_V143: 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --ignore-scripts --no-audit --no-fund --package-lock=false
+      - name: Source contract
+        run: node --test creator-v1/test/studio-identity-v143.test.mjs
+      - name: Type check and production-mode browser bundle
+        run: |
+          npm run check:creator-v1-web
+          npm run build:creator-v1-web
+      - name: Confirm the new public route assets exist
+        run: |
+          test -f creator-v1/dist/web/index.html
+          test -d creator-v1/dist/web/assets
