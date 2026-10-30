@@ -1,0 +1,76 @@
+name: BRANDLE history-preserving source export
+
+# Source-only. Never deploys or writes to GitHub production repositories.
+on:
+  pull_request:
+    paths: ['.github/workflows/export-brandle-source.yml']
+  push:
+    branches: [main]
+    paths: ['.github/workflows/export-brandle-source.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Extract and test isolated Brandle history
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/ops/split-project.mjs --project brandle
+          node scripts/ops/split-project.mjs --project brandle --execute --output "$RUNNER_TEMP/brandle-export"
+          cd "$RUNNER_TEMP/brandle-export"
+          test -f LICENSE && test -f NOTICE.md
+          test -f .github/workflows/ci.yml
+          test ! -e games && test ! -e apps
+          node --check app.mjs
+          node --check logic.mjs
+          node --test tests.mjs
+          node build-worker.mjs
+          node --check dist/worker.mjs
+      - name: Package portable Git bundle and source snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/brandle-handoff"
+          cd "$RUNNER_TEMP/brandle-export"
+          git bundle create "$RUNNER_TEMP/brandle-handoff/brandle-history.bundle" main
+          git bundle verify "$RUNNER_TEMP/brandle-handoff/brandle-history.bundle"
+          git archive --format=zip --output="$RUNNER_TEMP/brandle-handoff/brandle-source.zip" HEAD
+          git clone --branch main "$RUNNER_TEMP/brandle-handoff/brandle-history.bundle" "$RUNNER_TEMP/brandle-import-check"
+          test -f "$RUNNER_TEMP/brandle-import-check/LICENSE"
+          test -f "$RUNNER_TEMP/brandle-import-check/app.mjs"
+          printf 'source_commit=%s\nexport_commit=%s\n' "$GITHUB_SHA" "$(git rev-parse HEAD)" > "$RUNNER_TEMP/brandle-handoff/MANIFEST.txt"
+          cd "$RUNNER_TEMP/brandle-handoff"
+          sha256sum brandle-history.bundle brandle-source.zip > SHA256SUMS.txt
+          cat > IMPORT.txt <<'EOF'
+          BRANDLE portable Git-history handoff
+          Verify: sha256sum -c SHA256SUMS.txt
+          Restore: git clone --branch main brandle-history.bundle brandle
+          In brandle: node --test tests.mjs && node build-worker.mjs
+          Create EMPTY public repo anevum/brandle (no starter README/license).
+          In the restored repo:
+              git remote remove origin
+              git remote add origin https://github.com/anevum/brandle.git
+              git push -u origin main
+          Review complete history and licensing independently before publishing.
+          Do NOT enable a second production deployer or remove the old one
+          until verified live smoke tests and rollback checks are complete.
+          EOF
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brandle-source-handoff
+          path: ${{ runner.temp }}/brandle-handoff/*
+          retention-days: 7
+          if-no-files-found: error
