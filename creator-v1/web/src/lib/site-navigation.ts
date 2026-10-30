@@ -18,9 +18,16 @@ export type SiteLink = {
 export type HeaderDestination=Readonly<{to:string;label:string;parityOnly:boolean}>;
 export const HEADER_NAV:readonly HeaderDestination[]=[
   {to:"/",label:"Home",parityOnly:false},
-  {to:"/severance",label:"Severance",parityOnly:false},
-  {to:"/discover",label:"Discover",parityOnly:false},
-  {to:"/status",label:"Status",parityOnly:false}
+  ...(import.meta.env.VITE_ANEVUM_STUDIO_V143==="true"?[
+    {to:"/worlds",label:"Worlds",parityOnly:false},
+    {to:"/games",label:"Games",parityOnly:false},
+    {to:"/journal",label:"Journal",parityOnly:false},
+    {to:"/about",label:"Studio",parityOnly:false}
+  ]:[
+    {to:"/severance",label:"Severance",parityOnly:false},
+    {to:"/discover",label:"Discover",parityOnly:false},
+    {to:"/status",label:"Status",parityOnly:false}
+  ])
 ];
 
 export const PRIMARY_NAV:readonly SiteLink[]=[
