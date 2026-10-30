@@ -5,6 +5,8 @@ import subprocess
 import sys
 
 MAINTENANCE_PATHS = frozenset([
+    # Repository overview text is not served or bundled into the web app.
+    "README.md",
     ".github/workflows/anevum-ops-progression-reset-20261021.yml",
     ".github/workflows/anevum-verify.yml",
     "docs/ANEVUM.OPS.MAINT.2026-10-21.002.MANUAL-RESET-RUNBOOK.md",
