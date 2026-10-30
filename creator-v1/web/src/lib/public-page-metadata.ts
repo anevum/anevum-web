@@ -17,15 +17,27 @@ export type PublicPageMeta=Readonly<{
 type Copy=Readonly<{title:string;description:string}>;
 const publicPages:Readonly<Record<string,Copy>>={
   '/':{
-    title:'ANEVUM — Independent Games & Software Studio',
-    description:'ANEVUM builds original games and practical creative software. Discover the TRANSCOSMIC: SEVERANCE survival-horror concept, development updates and approved public work.'
+    title:'ANEVUM — Original Worlds, Games & Creative Technology',
+    description:'ANEVUM is an independent, family-rooted creative studio building original worlds, games and open-source creative technology.'
+  },
+  '/worlds':{
+    title:'TRANSCOSMIC & Original Worlds | ANEVUM',
+    description:'Explore TRANSCOSMIC, ANEVUM primary fictional universe, its developing worlds, original continuity, stories and interactive experiences.'
+  },
+  '/games':{
+    title:'Games & Interactive Experiences | ANEVUM',
+    description:'Explore ANEVUM original games including the SEVERANCE survival-horror prototype, family adventure experiments and other independent creations.'
+  },
+  '/journal':{
+    title:'Development Journal | ANEVUM',
+    description:'Follow verified milestones, actual source progress, tested prototypes and the work behind ANEVUM games, original worlds and creative technology.'
   },
   '/severance':{
     title:'TRANSCOSMIC: SEVERANCE — Game in Development | ANEVUM',
     description:'Explore the design for SEVERANCE, a persistent PvPvE survival-horror game in development. This is a concept and technical prototype, not a publicly playable release.'
   },
   '/about':{
-    title:'About ANEVUM — Independent Software Studio',
+    title:'About ANEVUM — Independent Creative Studio',
     description:'Learn about ANEVUM, an independent studio developing original games, useful software and creative tools, with transparent development and real published work.'
   },
   '/discover':{
