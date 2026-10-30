@@ -40,3 +40,17 @@ jobs:
         run: |
           test -f creator-v1/dist/web/index.html
           test -d creator-v1/dist/web/assets
+      - name: Install browser QA tooling
+        run: |
+          npm install --no-save --ignore-scripts --no-audit --no-fund --package-lock=false playwright@1.64.1
+          npx playwright install chromium
+      - name: Run desktop and phone route smoke tests
+        run: node creator-v1/test/studio-identity-v143-browser.mjs
+      - name: Preserve review screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-studio-v143-${{ github.sha }}
+          path: evidence/studio-v143
+          retention-days: 14
+          if-no-files-found: warn
