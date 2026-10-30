@@ -48,7 +48,7 @@ jobs:
           git bundle create "$RUNNER_TEMP/brandle-handoff/brandle-history.bundle" main
           git bundle verify "$RUNNER_TEMP/brandle-handoff/brandle-history.bundle"
           git archive --format=zip --output="$RUNNER_TEMP/brandle-handoff/brandle-source.zip" HEAD
-          git clone "$RUNNER_TEMP/brandle-handoff/brandle-history.bundle" "$RUNNER_TEMP/brandle-import-check"
+          git clone --branch main "$RUNNER_TEMP/brandle-handoff/brandle-history.bundle" "$RUNNER_TEMP/brandle-import-check"
           test -f "$RUNNER_TEMP/brandle-import-check/LICENSE"
           test -f "$RUNNER_TEMP/brandle-import-check/app.mjs"
           printf 'source_commit=%s\nexport_commit=%s\n' "$GITHUB_SHA" "$(git rev-parse HEAD)" > "$RUNNER_TEMP/brandle-handoff/MANIFEST.txt"
@@ -57,7 +57,7 @@ jobs:
           cat > IMPORT.txt <<'EOF'
           BRANDLE portable Git-history handoff
           Verify: sha256sum -c SHA256SUMS.txt
-          Restore: git clone brandle-history.bundle brandle
+          Restore: git clone --branch main brandle-history.bundle brandle
           In brandle: node --test tests.mjs && node build-worker.mjs
           Create EMPTY public repo anevum/brandle (no starter README/license).
           In the restored repo:
