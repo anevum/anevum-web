@@ -48,6 +48,24 @@
     "sitemap": true
   },
   {
+    "path": "/products/rhen/learn",
+    "label": "RHEN Learning",
+    "nav": false,
+    "sitemap": true
+  },
+  {
+    "path": "/products/rhen/learn/market-orders-and-quotes",
+    "label": "Market Orders and Quotes",
+    "nav": false,
+    "sitemap": true
+  },
+  {
+    "path": "/products/rhen/learn/risk-math-and-strategy-evidence",
+    "label": "Risk Math and Strategy Evidence",
+    "nav": false,
+    "sitemap": true
+  },
+  {
     "path": "/products/rhen/evidence",
     "label": "RHEN Evidence",
     "nav": false,

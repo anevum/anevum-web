@@ -1,3 +1,4 @@
+import {verifyRhenLearningPage} from "./v5-rhen-learning-browser.mjs";
 import { spawn } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
@@ -12,7 +13,7 @@ const releaseDetailRoute = "/products/rhen/releases/" + release.slug;
 const releaseDetailRoutes = registry.releases.map(item => "/products/rhen/releases/" + item.slug);
 const legacyReleaseRoute = "/releases/" + release.slug;
 
-const publicRoutes = [...releaseDetailRoutes, legacyReleaseRoute,"/", "/beta", "/communities", "/learn", "/sign-in", "/command", "/me/settings", "/me/rewards", "/me/beta", "/apps/rhen/connect", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/help", "/resume", "/products/rhen/releases", "/me", "/privacy", "/terms", "/not-a-real-page", "/field-notes/not-a-real-note", "/products/rhen/releases/not-a-real-release", "/communities/moderation"];
+const publicRoutes = [...releaseDetailRoutes, legacyReleaseRoute,"/", "/beta", "/communities", "/learn", "/products/rhen/learn", "/products/rhen/learn/market-orders-and-quotes", "/products/rhen/learn/risk-math-and-strategy-evidence", "/products/rhen/learn/not-a-real-lesson", "/sign-in", "/command", "/me/settings", "/me/rewards", "/me/beta", "/apps/rhen/connect", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/help", "/resume", "/products/rhen/releases", "/me", "/privacy", "/terms", "/not-a-real-page", "/field-notes/not-a-real-note", "/products/rhen/releases/not-a-real-release", "/communities/moderation"];
 const commandRoutes = ["/command/rhen/operate", "/command/rhen/discover", "/command/rhen/review", "/command/rhen/public", "/command/rhen/system"];
 const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
@@ -237,6 +238,7 @@ async function runCase(requestedRoute, viewport) {
     routeReady = result.result?.value || {};
   }
   if (!routeReady.ready) throw new Error("Route did not hydrate before visual assertion: "+JSON.stringify({route,...routeReady}));
+  await verifyRhenLearningPage(send, route); // data-rhen-learning public and keyboard checks
 
   if (route === "/beta") {
     const inspected = await send("Runtime.evaluate", { expression: `(() => {
@@ -587,7 +589,10 @@ async function runCase(requestedRoute, viewport) {
     "/products/rhen/releases":["releases",["c2-card","Release history"]],
     "/feed":["feed",["post-list","Public ANEVUM work"]],
     "/communities":["communities",["Explore the subjects","No fictional communities"]],
-    "/learn":["learn",["Learn by examining real work","A practical research loop"]],
+    "/learn":["learn",["Learn by examining real work","A practical research loop","Free RHEN learning path"]],
+    "/products/rhen/learn":["rhen-lessons",["rh-learn","Understand the market. Test the evidence.","No registration"]],
+    "/products/rhen/learn/market-orders-and-quotes":["rhen-lesson-orders",["rh-lesson","How orders meet a market","Check your understanding"]],
+    "/products/rhen/learn/risk-math-and-strategy-evidence":["rhen-lesson-evidence",["rh-lesson","Risk math and strategy evidence","Check your understanding"]],
     "/sign-in":["sign-in",["member-auth-page","Your projects. Your Command."]],
     "/me":["member-command",["c2-member","member-command","Programs"]],
     "/command":["command",["c2-member","member-command","Programs"]],

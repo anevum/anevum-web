@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { currentRelease, loadReleaseRegistry } from "./release-registry.mjs";
+import { coversPublishedRhenLesson } from "./public-lesson-route-coverage.mjs";
 
 const ROOT = path.resolve(new URL("..", import.meta.url).pathname);
 const registry = loadReleaseRegistry();
@@ -9,12 +10,14 @@ const errors = [];
 const publicRoutes = JSON.parse(fs.readFileSync(path.join(ROOT, "src", "data", "public-routes.json"), "utf8"));
 const staticPublicRoutes = publicRoutes.filter((route) => route.sitemap).map((route) => route.path);
 const appSource = fs.readFileSync(path.join(ROOT, "src", "App.tsx"), "utf8");
+const lessonSource = fs.readFileSync(path.join(ROOT, "src", "data", "rhen-learning.ts"), "utf8");
 for (const route of staticPublicRoutes) {
   const routeLiteral = 'path="' + route + '"';
   const coveredByProductRouter =
     route.startsWith("/products/") &&
     appSource.includes('path="/products/:slug"');
-  if (!appSource.includes(routeLiteral) && !coveredByProductRouter) {
+  const coveredByLearningRouter = coversPublishedRhenLesson(route, appSource, lessonSource);
+  if (!appSource.includes(routeLiteral) && !coveredByProductRouter && !coveredByLearningRouter) {
     errors.push("Canonical public route missing from React router: " + route);
   }
 }
