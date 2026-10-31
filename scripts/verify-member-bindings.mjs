@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SECRET_NAMES = ["BETTER_AUTH_SECRET", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET",
+  "GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET", "ANEVUM_AUTH_RESEND_API_KEY",
   "RHEN_OWNER_MEMBER_ID", "ANEVUM_STUDIO_OWNER_MEMBER_ID", "ANEVUM_STUDIO_ADMIN_MEMBER_ID"];
 
 function binding(config, scope, errors) {

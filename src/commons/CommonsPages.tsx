@@ -230,12 +230,12 @@ function BetaLanding() {
     <section className="c2-card" aria-labelledby="beta-join-title">
       <span className="c2-kicker">START HERE</span>
       <h2 id="beta-join-title">Create your ANEVUM account</h2>
-      <p>Sign in with Google to get your own Command, manage a private profile, save projects and follow published work.</p>
+      <p>Choose an available sign-in method to get your own Command, manage a private profile, save projects and follow published work.</p>
       {availability==="available"?
         isPending?<p role="status">Checking member session…</p>:
         session?.user?
           <div className="c2-action-row"><Link to="/me/beta" className="c2-text-link">Open your beta checklist →</Link><Link to="/command">My Command →</Link></div>:
-          <div className="c2-action-row"><Link to="/sign-in?next=beta" className="c2-text-link">Continue with Google →</Link><Link to="/help">Account help →</Link></div>:
+          <div className="c2-action-row"><Link to="/sign-in?next=beta" className="c2-text-link">Choose sign-in method →</Link><Link to="/help">Account help →</Link></div>:
         availability==="checking"?<p role="status">Checking registration availability…</p>:
         <div role="status"><p>Registration is not currently available. Public work is still open to read.</p>
           <button type="button" className="c2-text-link" onClick={refreshMemberAvailability}>Recheck registration</button></div>}
@@ -266,7 +266,7 @@ function Help() {
     </header>
     <section className="c2-grid" aria-label="Frequently asked questions">
       <article className="c2-card"><h2>Do I need an account?</h2>
-        <p>No. Public projects, Field Notes and learning pages can be read without registering. When member sign-in is available, a Google account lets you manage your own saved projects and profile.</p>
+        <p>No. Public projects, Field Notes and learning pages can be read without registering. When member sign-in is available, choose one of the offered methods to manage your own saved projects and profile.</p>
         <Link to="/sign-in" className="c2-text-link">Account sign-in →</Link>
       </article>
       <article className="c2-card"><h2>Where can I export or delete my data?</h2>

@@ -21,7 +21,7 @@ test("signup CTA is conditional on actual backend availability, never a fake lau
   assert.match(page,/useMemberAvailability\(\)/);
   assert.match(page,/availability===\"available\"/);
   assert.match(page,/refreshMemberAvailability/);
-  assert.match(page,/Continue with Google/);
+  assert.match(page,/Choose sign-in method/);
   assert.match(page,/registration is not currently available/i);
   assert.match(page,/if \(pathname === \"\/beta\"\) return <BetaLanding\/>/);
   assert.doesNotMatch(page,/API_SECRET|apiKey|Math\.random\(\)|fake_member_count/i);
@@ -47,7 +47,7 @@ test("returning members open their checklist without another Google redirect",()
   assert.match(page,/const \{data:session,isPending\}=memberAuthClient\.useSession\(\)/);
   assert.match(page,/session\?\.user\?/);
   assert.match(page,/to="\/me\/beta" className="c2-text-link">Open your beta checklist/);
-  assert.match(page,/to="\/sign-in\?next=beta" className="c2-text-link">Continue with Google/);
+  assert.match(page,/to="\/sign-in\?next=beta" className="c2-text-link">Choose sign-in method/);
   assert.match(page,/Checking member session/);
   assert.match(qa,/Open your beta checklist/);
   assert.match(qa,/beta\.signup\|\|beta\.member\|\|beta\.unavailable/);
