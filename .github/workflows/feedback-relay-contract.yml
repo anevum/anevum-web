@@ -1,0 +1,35 @@
+name: Feedback Relay Contract
+
+on:
+  pull_request:
+    paths:
+      - "ops/feedback-relay/**"
+      - "tests/feedback-relay.test.mjs"
+      - "tests/analytics-evidence.test.mjs"
+      - "tests/analytics-report.test.mjs"
+      - "tests/funnel-contract.test.mjs"
+      - ".github/workflows/feedback-relay-contract.yml"
+  push:
+    branches: [main]
+    paths:
+      - "ops/feedback-relay/**"
+      - "tests/feedback-relay.test.mjs"
+      - "tests/analytics-evidence.test.mjs"
+      - "tests/analytics-report.test.mjs"
+      - "tests/funnel-contract.test.mjs"
+      - ".github/workflows/feedback-relay-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  normalize-receipts:
+    name: Verify source-only intake contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node --test tests/feedback-relay.test.mjs tests/analytics-evidence.test.mjs tests/analytics-report.test.mjs tests/funnel-contract.test.mjs
