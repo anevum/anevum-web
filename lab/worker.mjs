@@ -10,6 +10,7 @@ import {getRhenObservation} from './rhen-observer.mjs';
 import {TRANSCOSMIC_CSS,TRANSCOSMIC_JS,renderTranscosmicWorkspace} from './transcosmic-workspace.mjs';
 import {BACKSTAGE_CSS,BACKSTAGE_JS,renderBackstageWorkspace} from './backstage-workspace.mjs';
 import {LAB_CSS,LAB_JS,LAB_ICON_SVG,renderLabPage,renderBackstagePage,renderTranscosmicPage} from './terminal-ui.mjs';
+import {CADETS_FILES} from './cadets-snapshot.mjs';
 const HOST='lab.anevum.com';
 const VERSION='2026-10-13.lab.v4-integrated-workspaces';
 const BACK_CSS=".lab-return{position:fixed;z-index:25;top:103px;right:clamp(12px,3.4vw,54px);min-height:36px;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 11px;background:linear-gradient(145deg,#496063,#132d37);border:1px solid #e6bc83;border-radius:10px 3px 10px 3px;color:#ffe5b8;text-decoration:none;font:900 11px/1 system-ui,sans-serif;letter-spacing:.1em;box-shadow:inset 0 2px #ffffff3e,0 4px 0 #0a1922,0 9px 15px #06141a}.lab-return:focus-visible{outline:3px solid #55d3c3;outline-offset:3px}@media(max-width:900px){.lab-return{top:129px;right:9px;font-size:10px;min-height:32px}}@media(max-height:620px){.lab-return{top:10px;right:70px}}";
@@ -52,6 +53,11 @@ export default {async fetch(request,env={}){
  else if(path==='/projects/transcosmic/'||path==='/projects/transcosmic/index.html')res=response(renderTranscosmicWorkspace());
  else if(path==='/projects/transcosmic/workspace.css')res=response(TRANSCOSMIC_CSS,'text/css; charset=utf-8');
  else if(path==='/projects/transcosmic/workspace.js')res=response(TRANSCOSMIC_JS,'text/javascript; charset=utf-8');
+ else if(path==='/projects/cadets')res=response(null,'text/plain; charset=utf-8',308,{Location:'/projects/cadets/'});
+ else if(path==='/projects/cadets/'||Object.prototype.hasOwnProperty.call(CADETS_FILES,path)){
+  const asset=CADETS_FILES[path==='/projects/cadets/'?'/projects/cadets/index.html':path];
+  res=response(asset.body,asset.type);
+ }
  else if(path==='/projects/the-fold/'||path==='/projects/the-fold/index.html'){
   const page=FOLD_ASSETS['/projects/the-fold/index.html'];
   const nav='<a href="/" class="lab-return" aria-label="Back to ANEVUM Lab">← LAB</a><style>'+BACK_CSS+'</style>';
@@ -61,7 +67,7 @@ export default {async fetch(request,env={}){
   res=response(FOLD_ASSETS[path],types[ext]||'application/octet-stream');
  }else if(path==='/favicon.svg')res=response(LAB_ICON_SVG,'image/svg+xml; charset=utf-8');
  else if(path==='/robots.txt')res=response('User-agent: *\nDisallow: /\n','text/plain; charset=utf-8');
- else if(path==='/health')res=response(JSON.stringify({status:'ok',lab:VERSION,fold:FOLD_SOURCE_SHA.slice(0,12),projects:4,rhen:RHEN_REVIEW.source_commit.slice(0,12)}),'application/json; charset=utf-8');
+ else if(path==='/health')res=response(JSON.stringify({status:'ok',lab:VERSION,fold:FOLD_SOURCE_SHA.slice(0,12),projects:5,rhen:RHEN_REVIEW.source_commit.slice(0,12)}),'application/json; charset=utf-8');
  else res=response('Not Found','text/plain; charset=utf-8',404);
  return request.method==='HEAD'?new Response(null,{status:res.status,headers:res.headers}):res;
 }};
