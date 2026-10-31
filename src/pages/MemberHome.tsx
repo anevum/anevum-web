@@ -149,6 +149,7 @@ function CommandHome({ enabled = false, checking = false, identity }: {
           {signedIn && <Link to="/me/beta">Beta testing</Link>}
           <Link to={signedIn ? "/me/settings" : "/sign-in"}>Profile &amp; account</Link>
           <Link to="/me/rewards">Member rewards</Link>
+          {signedIn && <Link to="/me/commerce">Commerce preview (payments off)</Link>}
           <Link to="/products">All projects</Link>
         </nav>
         <div className="member-command-account">

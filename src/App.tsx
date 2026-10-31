@@ -12,6 +12,7 @@ const MemberSettings = lazy(() => import("./pages/MemberSettings"));
 const MemberBeta = lazy(() => import("./pages/MemberBeta"));
 const StudioDashboard = lazy(() => import("./pages/StudioDashboard"));
 const MemberRewards = lazy(() => import("./pages/MemberRewards"));
+const CommercePreview = lazy(() => import("./pages/CommercePreview"));
 const MemberStagingVerify = lazy(() => import("./pages/MemberStagingVerify"));
 const RhenApp = lazy(() => import("./pages/RhenApp"));
 const RhenReviewConnect = lazy(() => import("./pages/RhenReviewConnect"));
@@ -38,6 +39,7 @@ const titles: Record<string, string> = {
   "/me/settings": "Account settings — ANEVUM",
   "/me/beta": "Member beta checklist — ANEVUM",
   "/me/rewards": "Member rewards — ANEVUM",
+  "/me/commerce": "ANEVUM Commerce — Private Design Preview",
   "/me/verify": "Staging verification — ANEVUM",
   "/privacy": "Privacy — ANEVUM",
   "/terms": "Terms — ANEVUM"
@@ -65,6 +67,7 @@ const descriptions: Record<string, string> = {
   "/me/settings": "Private ANEVUM profile and account settings.",
   "/me/beta": "Private member tools and test availability.",
   "/me/rewards": "Status and future plans for ANEVUM member rewards.",
+  "/me/commerce": "Read-only private preview of ANEVUM Commerce; payment acceptance is disabled.",
   "/me/verify": "Private read-only staging member account security checks.",
   "/privacy": "ANEVUM privacy information.",
   "/terms": "ANEVUM website terms."
@@ -259,6 +262,7 @@ export default function App() {
         <Route path="/me/settings" element={<Suspense fallback={<Loader />}><CommonsV5 content={<MemberSettings />} /></Suspense>} />
         <Route path="/me/beta" element={<Suspense fallback={<Loader />}><CommonsV5 content={<MemberBeta />} /></Suspense>} />
         <Route path="/me/rewards" element={<Suspense fallback={<Loader />}><CommonsV5 content={<MemberRewards />} /></Suspense>} />
+        <Route path="/me/commerce" element={<Suspense fallback={<Loader />}><CommonsV5 content={<CommercePreview />} /></Suspense>} />
         <Route path="/me/verify" element={<Suspense fallback={<Loader />}><CommonsV5 content={<MemberStagingVerify />} /></Suspense>} />
         <Route path="/studio" element={<Suspense fallback={<Loader />}><CommonsV5 content={<StudioDashboard />} /></Suspense>} />
         <Route path="/apps/rhen/terminal/*" element={<LegacyRhenOperatorRoute />} />

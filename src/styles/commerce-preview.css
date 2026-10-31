@@ -1,0 +1,106 @@
+/* ANEVUM Commerce — intentionally isolated from the existing Commons theme. */
+.anevum-commerce-preview { --ac-paper:#dbe6ed;--ac-mute:#9aaab9;--ac-line:#35404c;--ac-soft:#19222d;--ac-glow:#a6d3df;
+  background: radial-gradient(ellipse 65% 28% at 82% 5%,#263440 0%,transparent 70%),linear-gradient(155deg,#101820,#0a1018 58%,#111a23);
+  color:var(--ac-paper);padding:clamp(34px,6vw,72px) 0;min-height:70vh;isolation:isolate;font-family:inherit; }
+.anevum-commerce-preview * { box-sizing:border-box; }
+.anevum-commerce-shell { width:min(100% - 32px,1110px);margin-inline:auto; }
+.anevum-commerce-head,.anevum-commerce-brand,.anevum-commerce-section-head { display:flex;justify-content:space-between;align-items:center;gap:16px; }
+.anevum-commerce-head a,.anevum-commerce-preview a { color:#c3e4ee;text-decoration:underline;text-underline-offset:4px; }
+.anevum-commerce-brand { justify-content:flex-start;letter-spacing:.12em;font-weight:800;font-size:.9rem; }
+.anevum-commerce-micro { font-size:.61rem;color:var(--ac-mute);font-weight:600;letter-spacing:.09em;margin-left:6px; }
+.anevum-commerce-orbit { display:inline-block;width:24px;height:24px;border:1px solid #bedde8;border-radius:50%;position:relative;transform:rotate(-26deg); }
+.anevum-commerce-orbit::after { content:"";position:absolute;border:1px solid #bedde8;inset:6px -5px;border-radius:50%; }
+.anevum-commerce-line { height:1px;background:linear-gradient(90deg,#bcdce9,transparent);margin:22px 0 35px; }
+.anevum-commerce-hero { display:flex;justify-content:space-between;align-items:end;gap:28px;margin-bottom:34px; }
+.anevum-commerce-kicker { color:#adbdcb!important;font-size:.7rem!important;letter-spacing:.15em;font-weight:750;text-transform:uppercase;margin:0 0 13px!important; }
+.anevum-commerce-hero h1 { color:#f0f6fb;font-size:clamp(2rem,5vw,4rem);font-weight:650;line-height:1.05;letter-spacing:-.047em;margin:0 0 17px; }
+.anevum-commerce-hero h1 em { font-style:normal;color:#a4c9d8; }
+.anevum-commerce-hero p:not(.anevum-commerce-kicker) { max-width:590px;line-height:1.65;color:#b4c2cc;margin:0; }
+.anevum-commerce-rule { flex:0 0 225px;border:1px solid #405163;background:rgba(22,32,43,.68);
+  padding:14px 17px;display:grid;grid-template-columns:8px 1fr;gap:6px 12px;border-radius:12px;font-size:.76rem; }
+.anevum-commerce-rule strong { font-size:.72rem;letter-spacing:.05em;color:#eff5f9; }
+.anevum-commerce-rule span:last-child { grid-column:2;color:var(--ac-mute);font-size:.7rem;line-height:1.4; }
+.anevum-commerce-signal { display:block;width:8px;height:8px;background:#8894a1;border-radius:50%;margin-top:3px; }
+.anevum-commerce-dash { display:flex;flex-wrap:wrap;gap:7px 12px;align-items:center;border-block:1px solid var(--ac-line);
+  padding:13px 0;margin-bottom:29px;font-size:.68rem;letter-spacing:.03em; }
+.anevum-commerce-dash span { color:#8294a7; }
+.anevum-commerce-dash strong { font-weight:600;margin-right:16px; }
+.anevum-commerce-auth-note { border:1px solid #455567;padding:22px;border-radius:12px;background:#17212d;margin-bottom:22px; }
+.anevum-commerce-auth-note p { color:var(--ac-paper);margin:0 0 12px; }
+.anevum-commerce-layout { display:grid;grid-template-columns:minmax(0,1.5fr) minmax(290px,.85fr);gap:24px;align-items:start; }
+.anevum-commerce-section-head { margin-bottom:18px;align-items:end; }
+.anevum-commerce-section-head h2,.anevum-commerce-checkout h2 { color:#edf4f8;font-size:clamp(1.2rem,2.3vw,1.65rem);letter-spacing:-.02em;margin:0; }
+.anevum-commerce-section-head>p { color:#8498a9;font-size:.74rem;margin:0; }
+.anevum-commerce-tabs { display:flex;gap:6px;flex-wrap:wrap;padding:5px;background:#15202b;border:1px solid var(--ac-line);border-radius:11px;margin-bottom:16px; }
+.anevum-commerce-tabs button { flex:1;min-width:105px;border:1px solid transparent;color:#aab9c6;background:transparent;padding:11px;
+  font:inherit;font-weight:600;font-size:.82rem;border-radius:7px;cursor:pointer; }
+.anevum-commerce-tabs button[aria-pressed="true"] { background:#314858;border-color:#567082;color:white; }
+.anevum-commerce-tabs button:hover:not([aria-pressed="true"]) { color:white;background:#243241; }
+.anevum-commerce-offers { display:grid;gap:10px;margin:0;padding:0;border:0;min-width:0; }
+.anevum-commerce-offer { display:flex;align-items:start;gap:15px;border:1px solid #354653;border-radius:12px;
+  background:#16212c;padding:18px;cursor:pointer;min-width:0; }
+.anevum-commerce-offer[data-selected="true"] { border-color:#91bece;background:linear-gradient(100deg,#223846,#172630);box-shadow:inset 3px 0 #95bbce; }
+.anevum-commerce-offer input { margin-top:5px;accent-color:#b0d3e3;flex:0 0 auto; }
+.anevum-commerce-offer-copy { flex:1;min-width:0;display:grid;gap:5px; }
+.anevum-commerce-offer-copy strong { font-size:.97rem;color:#edf4f7; }
+.anevum-commerce-offer-copy small { font-size:.78rem;color:#afbece;line-height:1.4; }
+.anevum-commerce-offer-copy .anevum-commerce-duration { color:#8ea5b8;margin-top:2px; }
+.anevum-commerce-price { color:#fff;font-weight:750;font-size:1.1rem;white-space:nowrap; }
+.anevum-commerce-trust { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px; }
+.anevum-commerce-trust>div { padding:18px;border:1px solid #2e3a46;border-radius:12px;background:rgba(14,24,33,.65); }
+.anevum-commerce-trust span { display:block;color:#b3d6de;font-size:1.5rem;margin-bottom:6px; }
+.anevum-commerce-trust strong { display:block;color:#dce9ef;font-size:.82rem; }
+.anevum-commerce-trust p { color:#9faebb;font-size:.76rem;line-height:1.55;margin:7px 0 0; }
+.anevum-commerce-checkout { border:1px solid #3a4b5c;border-radius:15px;background:linear-gradient(155deg,#1a2632,#121c27);
+  padding:clamp(20px,3vw,28px);box-shadow:0 20px 52px rgba(0,0,0,.15); }
+.anevum-commerce-checkout h2 { margin-bottom:22px; }
+.anevum-commerce-order { display:grid;grid-template-columns:1fr auto;gap:10px;min-height:70px;padding:0 0 19px;border-bottom:1px solid var(--ac-line); }
+.anevum-commerce-order>span { color:#b3c2cd;font-size:.82rem; }
+.anevum-commerce-order>strong { color:#fff;font-size:1.15rem; }
+.anevum-commerce-order>span:nth-of-type(2) { grid-column:1 / -1;color:#93a6b6;font-size:.72rem; }
+.anevum-commerce-order-total { display:flex;align-items:center;justify-content:space-between;gap:15px;
+  grid-column:1 / -1;margin-top:12px;padding-top:15px;border-top:1px dashed #495e6e; }
+.anevum-commerce-order-total strong { color:#fff;font-size:1.3rem; }
+.anevum-commerce-checkout h3 { font-size:.96rem;color:#dce9f1;margin:20px 0 8px; }
+.anevum-commerce-note,.anevum-commerce-disclaimer { font-size:.8rem;line-height:1.6;color:#a5b5c3; }
+.anevum-commerce-payment-option { display:flex;align-items:center;gap:12px;border:1px dashed #566777;
+  border-radius:10px;padding:14px;margin:17px 0;color:#d0dde7; }
+.anevum-commerce-payment-option>span:first-child { font-size:1.5rem; }
+.anevum-commerce-payment-option div { flex:1;display:grid;gap:3px; }
+.anevum-commerce-payment-option small { font-size:.72rem;color:#a3b1bd; }
+.anevum-commerce-primary { width:100%;min-height:47px;background:#394b59;color:#c3cbd2;border:1px solid #536373;border-radius:8px;
+  font:inherit;font-weight:700;cursor:not-allowed; }
+.anevum-commerce-demo-toggle { display:block;margin:13px auto 10px;border:0;background:none;
+  color:#c3e6ef;text-decoration:underline;text-underline-offset:3px;cursor:pointer;font:inherit;font-size:.8rem; }
+.anevum-commerce-journey { margin:10px 0 15px;padding:0 0 0 25px;color:#c4d2dc; }
+.anevum-commerce-journey li { margin:12px 0; }
+.anevum-commerce-journey strong { font-size:.85rem; }
+.anevum-commerce-journey p { font-size:.76rem;line-height:1.5;color:#9faebb;margin:3px 0 0; }
+.anevum-commerce-disclaimer { margin:20px 0 0;border-top:1px solid var(--ac-line);padding-top:14px; }
+.anevum-commerce-handmade { min-height:225px;border:1px solid #435361;background:#17212d;border-radius:12px;padding:25px; }
+.anevum-commerce-icon { color:#bcdce5;font-size:2rem; }
+.anevum-commerce-handmade h3 { color:#eff6fa;font-size:1.2rem;margin:10px 0; }
+.anevum-commerce-handmade p { color:#a9b9c7;line-height:1.65; }
+.anevum-commerce-unavailable { display:inline-block;border:1px solid #506273;border-radius:6px;padding:8px 11px;color:#c0cfd8;font-size:.78rem; }
+.anevum-commerce-footer { display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px 20px;
+  border-top:1px solid var(--ac-line);margin-top:38px;padding-top:19px;color:#8495a5;font-size:.73rem; }
+.anevum-commerce-footer p { margin:0; }
+.anevum-commerce-sr { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0; }
+.anevum-commerce-preview :is(button,a,input):focus-visible { outline:3px solid #bbecff;outline-offset:3px; }
+@media (max-width:780px) {
+  .anevum-commerce-hero { align-items:start;flex-direction:column; }
+  .anevum-commerce-rule { flex:0 1 auto;width:100%; }
+  .anevum-commerce-layout { grid-template-columns:1fr; }
+  .anevum-commerce-dash strong { margin-right:4px; }
+}
+@media (max-width:520px) {
+  .anevum-commerce-shell { width:min(100% - 24px,1110px); }
+  .anevum-commerce-trust { grid-template-columns:1fr; }
+  .anevum-commerce-offer { padding:14px;gap:10px; }
+  .anevum-commerce-price { font-size:.98rem; }
+  .anevum-commerce-brand { letter-spacing:.05em; }
+  .anevum-commerce-micro { display:none; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .anevum-commerce-preview * { scroll-behavior:auto!important;transition:none!important;animation:none!important; }
+}
