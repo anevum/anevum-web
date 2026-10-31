@@ -574,7 +574,7 @@ async function runCase(requestedRoute, viewport) {
   // Reuse this bounded, hydrated browser target for the release evidence.
   // The duplicate CLI screenshot process could hang until the entire job died.
   const evidenceRoutes = {
-    "/":["home",["anevum-commons-v5-mount","The Commons","Public ANEVUM work"]],
+    "/":["home",["anevum-commons-v5-mount","ANEVUM / AN OPEN WORKSHOP","Build what you need."]],
     "/products":["products",["c2-project","Projects and applications"]],
     "/products/rhen":["rhen",["V5 foundation","RHEN","Legacy live trading is suspended"]],
     "/products/rhen/evidence":["terminal",["c2-evidence","SUSPENDED_FOR_REBUILD","Research","Replay","RHEN"]],
@@ -585,7 +585,7 @@ async function runCase(requestedRoute, viewport) {
     "/resume":["resume",["c2-resume","Technical skills"]],
     [releaseDetailRoute]:["release-detail",["c2-release-detail","Download release PDF","Verification at publication","Changelog","Boundary at publication"]],
     "/products/rhen/releases":["releases",["c2-card","Release history"]],
-    "/feed":["feed",["post-list","Public ANEVUM work"]],
+    "/feed":["feed",["post-list","published Field Notes"]],
     "/communities":["communities",["Explore the subjects","No fictional communities"]],
     "/learn":["learn",["Learn by examining real work","A practical research loop"]],
     "/sign-in":["sign-in",["member-auth-page","Your projects. Your Command."]],

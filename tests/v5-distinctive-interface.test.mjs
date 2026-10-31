@@ -1,0 +1,56 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+const src=path=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
+const ui=src("src/commons/CommonsV5.tsx");
+const nav=src("src/commons/site-navigation.ts");
+const css=src("src/styles/commons-v5-identity.css");
+const discussions=src("src/commons/CommonsPostsBeta.tsx");
+const pages=src("src/commons/CommonsPages.tsx");
+const studio=src("src/commons/StudioRecentPosts.tsx");
+const worker=src("worker.mjs");
+test("ANEVUM is the public destination, not a renamed backend or fake product",()=>{
+  assert.match(ui, /<h1>Build what you need\.<br\/><em>Share what you learn\.<\/em><\/h1>/);
+  assert.match(ui, /ANEVUM \/ AN OPEN WORKSHOP/);
+  assert.match(nav, /\{path:"\/",label:"Home",icon:"home"/);
+  assert.doesNotMatch(ui, /<h1>The Commons/);
+  assert.match(worker, /title: "ANEVUM — Build, explore, share"/);
+  assert.match(pages, /kicker="ANEVUM \/ FIELD NOTES"/);
+  assert.match(ui, /Community posting is still in development/);
+  assert.match(ui, /member discussions are in development/i);
+});
+test("compact navigation preserves real destinations and accessibility labels",()=>{
+  assert.match(ui,/className="top-links v6-top-nav"/);
+  assert.match(ui,/aria-label=\{item\.label\} title=\{item\.label/);
+  assert.match(ui,/const \[collapsed,setCollapsed\] = useState\(true\)/);
+  assert.match(ui,/className="mobile-nav v6-mobile-dock"/);
+  assert.match(nav,/primaryNavigation\[0\],primaryNavigation\[2\],primaryNavigation\[1\],primaryNavigation\[4\],accountNavigation\[0\]/);
+  assert.match(ui,/safeAccountDestination\(Boolean\(session\?\.user\)\)/);
+  assert.match(css,/@media\(max-width:720px\)/);
+  assert.match(css,/\.app\.nav-collapsed\.drawer-open \.community-nav\{display:flex\}/);
+});
+test("visual variation is derived from verified first-party content, not invented engagement",()=>{
+  assert.match(ui,/function EditorialArt\(\{note,feature\}/);
+  assert.match(ui,/note\.type\.toLowerCase\(\)/);
+  assert.match(ui,/PublishedActivity\//);
+  assert.match(ui,/fieldNotes\.filter\(note=>note\.date\.startsWith\(month\)\)\.length/);
+  assert.match(ui,/v6-story-body/);
+  assert.match(css,/\.v6-media-systems/);
+  assert.match(css,/\.v6-media-engineering/);
+  assert.match(css,/\.v6-media-research/);
+  assert.match(css,/\.v6-media-release/);
+  assert.match(discussions,/v6-discussion-"\+post\.topic/);
+  assert.match(discussions,/post\.topic==="systems"/);
+  assert.match(studio,/v6-studio-"\+item\.kind\.toLowerCase\(\)/);
+  assert.doesNotMatch(discussions,/upvoteCount|fakeLikes|simulatedReactions/);
+  assert.doesNotMatch(ui,/fakeVotes|generatedEngagement|randomLikes/);
+});
+test("identity layer loads after all existing V5 styles and protects narrow screens",()=>{
+  assert.match(ui,/import identityCss from "\.\.\/styles\/commons-v5-identity\.css\?inline"/);
+  assert.match(ui,/studioCss\+"\\n"\+identityCss\}<\/style>/);
+  assert.match(css,/@media\(max-width:480px\)/);
+  assert.match(css,/@media\(max-width:365px\)/);
+  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+  assert.match(css,/\.v6-story\.v6-story-feature \.v6-story-body/);
+  assert.doesNotMatch(css,/@import\s+url\(|background:url\(\s*http/);
+});

@@ -17,9 +17,9 @@ const RhenApp = lazy(() => import("./pages/RhenApp"));
 const RhenReviewConnect = lazy(() => import("./pages/RhenReviewConnect"));
 
 const titles: Record<string, string> = {
-  "/": "The Commons — ANEVUM",
-  "/communities": "Topics — ANEVUM Commons",
-  "/learn": "Learning — ANEVUM Commons",
+  "/": "ANEVUM — Build, explore, share",
+  "/communities": "Topics — ANEVUM",
+  "/learn": "Learning — ANEVUM",
   "/products": "Projects — ANEVUM",
   "/beta": "Join the ANEVUM Beta — ANEVUM",
   "/feed": "Updates — ANEVUM",
@@ -31,7 +31,7 @@ const titles: Record<string, string> = {
   "/products/rhen/architecture": "RHEN Architecture — ANEVUM",
   "/products/rhen/releases": "RHEN Releases — ANEVUM",
   "/about": "About — ANEVUM",
-  "/help": "Help — ANEVUM Commons",
+  "/help": "Help — ANEVUM",
   "/resume": "Résumé — ANEVUM",
   "/sign-in": "Sign in — ANEVUM",
   "/me": "Command — ANEVUM",
@@ -44,7 +44,7 @@ const titles: Record<string, string> = {
 };
 
 const descriptions: Record<string, string> = {
-  "/": "The Commons is ANEVUM's evolving community for builders and researchers. Explore real first-party publications and RHEN development.",
+  "/": "ANEVUM is an independent workshop for software, research, and shared learning. Explore actual projects, published experiments, and community topics.",
   "/communities": "Browse real published ANEVUM work by topic. Public community discussions are still in development.",
   "/learn": "Learn from published ANEVUM research methods, experiments and engineering decisions.",
   "/products": "The canonical registry of public ANEVUM products. Products appear when they actually exist.",

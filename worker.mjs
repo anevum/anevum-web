@@ -336,8 +336,8 @@ function currentReleaseSnapshot() {
 function publicRouteMetadata(pathname) {
   const staticRoutes = {
     "/": {
-      title: "ANEVUM — Independent Software",
-      description: "Independent software built against real problems, with real data, public evidence, and versioned work."
+      title: "ANEVUM — Build, explore, share",
+      description: "ANEVUM is an independent workshop for software, research, and shared learning. Explore real projects, experiments, and community topics."
     },
     "/products": {
       title: "Products — ANEVUM",
@@ -380,7 +380,7 @@ function publicRouteMetadata(pathname) {
       description: "About ANEVUM, the independently built and operated software studio."
     },
     "/help": {
-      title: "Help — ANEVUM Commons",
+      title: "Help — ANEVUM",
       description: "Help with ANEVUM public research, member accounts, privacy and RHEN availability."
     },
     "/resume": {
@@ -388,11 +388,11 @@ function publicRouteMetadata(pathname) {
       description: "Professional résumé and background for the person responsible for ANEVUM."
     },
     "/communities": {
-      title: "Topics — ANEVUM Commons",
+      title: "Topics — ANEVUM",
       description: "Published ANEVUM projects and research grouped by topic. Member discussion is under development."
     },
     "/learn": {
-      title: "Learning — ANEVUM Commons",
+      title: "Learning — ANEVUM",
       description: "Learn from published engineering and research work, with methods and limitations."
     },
     "/privacy": {
