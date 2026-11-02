@@ -83,6 +83,7 @@ async function runCase(route, viewport) {
     pending.set(id,{resolve,reject,timer});ws.send(JSON.stringify({id,method,params}));
   });
   const name = route === "/design/original-works" ? "original-works-home" :
+    route.endsWith("/reading-room") ? "original-works-reading-room" :
     route.endsWith("/reply") ? "original-works-reply" : "original-works-atlas";
   try{
     await connected;
@@ -94,6 +95,30 @@ async function runCase(route, viewport) {
       features:[{name:"prefers-reduced-motion",value:"reduce"}]
     });
     await send("Page.navigate",{url:base+route});
+
+    if(process.env.ORIGINAL_WORKS_VERIFY_DISABLED==="1"){
+      // Public production builds must NOT mount draft review routes, even when
+      // manually navigated to a known URL. Noindex alone is not access control.
+      let disabledState;
+      for(let n=0;n<80;n++){
+        const probe=await send("Runtime.evaluate",{
+          expression:'({path:location.pathname,robots:document.querySelector("meta[name=\\"robots\\"]")?.content||"",reviewRoot:!!document.querySelector(".ow-site[data-anevum-original-works-preview]"),reader:!!document.querySelector(".ow-reading-room"),text:document.body?.innerText||""})',
+          returnByValue:true
+        });
+        disabledState=probe.result?.value;
+        if(disabledState?.robots?.startsWith("noindex"))break;
+        await sleep(100);
+      }
+      if(!disabledState||disabledState.path!==route||!disabledState.robots.startsWith("noindex")||
+         disabledState.reviewRoot||disabledState.reader||
+         disabledState.text.includes("Three signals.")||disabledState.text.includes("A universe worth knowing."))
+        throw Error("Review-only route visible in default production build: "+JSON.stringify(disabledState));
+      const shot=await send("Page.captureScreenshot",{format:"png",captureBeyondViewport:false});
+      fs.writeFileSync(path.join(output,name+"-gate-off-"+viewport.name+".png"),Buffer.from(shot.data,"base64"));
+      console.log(JSON.stringify({gate:"DISABLED",path:route,robots:disabledState.robots,reviewMounted:false}));
+      return;
+    }
+
     let state;
     const deadline=Date.now()+14000;
     while(Date.now()<deadline){
@@ -118,6 +143,30 @@ async function runCase(route, viewport) {
       throw Error("Missing honest REPLY editorial status");
     if(name==="original-works-atlas"&&(!state.heading.includes("A universe")||!state.banner.includes("Nali Solan")))
       throw Error("Missing public-safe opening canon");
+    if(name==="original-works-reading-room"&&(!state.heading.includes("Three signals")||!state.banner.includes("not excerpts from the novel")||!state.banner.includes("not an approved promotional release")))
+      throw Error("REPLY study room missing editorial disclosure or title");
+    if(name==="original-works-reading-room"){
+      const read=async expression=>(await send("Runtime.evaluate",{expression,returnByValue:true})).result?.value;
+      const buttons=await read('document.querySelectorAll(".ow-room-index-button").length');
+      if(buttons!==3)throw Error("REPLY study room must expose exactly three tab buttons");
+      for(const [nth,title,href] of [
+        [2,"The world was already here.","/design/original-works/atlas/merva"],
+        [3,"Elsewhere, distance is infrastructure.","/design/original-works/atlas/open-road"],
+        [1,"A measurement survives.","/design/original-works/atlas/nali-solan"]
+      ]){
+        await send("Runtime.evaluate",{expression:'document.querySelector(".ow-room-index-button:nth-child('+nth+')")?.click()'});
+        let observed;
+        for(let n=0;n<45;n++){
+          observed=await read('({title:document.querySelector(".ow-room-card h2")?.textContent||"",href:document.querySelector(".ow-room-card-bottom a")?.getAttribute("href")||"",active:[...document.querySelectorAll(".ow-room-index-button[aria-pressed=true]")].length,robots:document.querySelector("meta[name=\\"robots\\"]")?.content||""})');
+          if(observed?.title===title&&observed.href===href&&observed.active===1&&observed.robots.startsWith("noindex"))break;
+          await sleep(80);
+        }
+        if(observed?.title!==title||observed.href!==href||observed.active!==1||!observed.robots.startsWith("noindex"))
+          throw Error("REPLY study selection failed: "+JSON.stringify(observed));
+      }
+      if(!state.links.includes("/design/original-works/reply"))
+        throw Error("REPLY study room missing return navigation");
+    }
     if(name==="original-works-home"&&!state.heading.includes("Somewhere"))
       throw Error("Missing Anevum studio hero");
     if(name==="original-works-atlas") {
@@ -264,12 +313,19 @@ const viewports=[
 ];
 try {
   await waitForDebugger();
-  for(const viewport of viewports){
-    for(const route of ["/design/original-works","/design/original-works/reply","/design/original-works/atlas"]){
-      if(!viewport.homeOnly||route==="/design/original-works")await runCase(route,viewport);
+  if(process.env.ORIGINAL_WORKS_VERIFY_DISABLED==="1"){
+    const desktop=viewports[0];
+    for(const route of ["/design/original-works","/design/original-works/reply/reading-room"])
+      await runCase(route,desktop);
+    console.log("Default production build gate verified: original-works routes are not mounted.");
+  }else{
+    for(const viewport of viewports){
+      for(const route of ["/design/original-works","/design/original-works/reply","/design/original-works/reply/reading-room","/design/original-works/atlas"]){
+        if(!viewport.homeOnly||route==="/design/original-works")await runCase(route,viewport);
+      }
     }
+    console.log("Gated original-works visual QA passed at 1440,390,320,768,1024 px.");
   }
-  console.log("Local original-works visual QA passed at 1440,390,320,768,1024 px.");
 } finally {
   chrome.kill("SIGTERM");await sleep(200);
   try{fs.rmSync(profile,{recursive:true,force:true,maxRetries:3,retryDelay:100})}catch{}
