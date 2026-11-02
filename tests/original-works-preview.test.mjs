@@ -35,7 +35,7 @@ test("preview offers meaningful internal navigation with accessible structure", 
   }
   assert.match(studio, /<a className="ow-skip" href="#ow-main">Skip to content<\/a>/);
   assert.match(studio, /<nav aria-label="Studio preview navigation"/);
-  assert.match(studio, /aria-current=\{page === item\.page \? "page" : undefined\}/);
+  assert.match(studio, /aria-current=\{\(page === item\.page \|\| \(page === "atlas-detail" && item\.page === "atlas"\)\) \? "page" : undefined\}/);
   assert.match(studio, /<main id="ow-main" tabIndex=\{-1\}>/);
   assert.match(studio, /data-anevum-original-works-preview="true"/);
 });
