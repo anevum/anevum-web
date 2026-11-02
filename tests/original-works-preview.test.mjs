@@ -11,7 +11,8 @@ const styles = read("src/styles/original-works-preview.css");
 const worker = read("worker.mjs");
 
 test("new studio has a distinct, non-indexed review route; public homepage remains unchanged", () => {
-  assert.match(app, /<Route path="\/design\/original-works\/\*" element=\{<Suspense fallback=\{<Loader \/>/);
+  assert.match(app, /const originalWorksPreviewEnabled = import\.meta\.env\.VITE_ORIGINAL_WORKS_PREVIEW === "true"/);
+  assert.match(app, /\{originalWorksPreviewEnabled && <Route path="\/design\/original-works\/\*" element=\{<Suspense fallback=\{<Loader \/>/);
   assert.match(app, /const isOriginalWorksPreview = path === "\/design\/original-works" \|\| path\.startsWith\("\/design\/original-works\/"\)/);
   assert.match(app, /const protectedRoute = isOriginalWorksPreview \|\|/);
   assert.match(app, /setRouteMeta\(path, title, description, !protectedRoute && !missingRoute\)/);
@@ -124,4 +125,32 @@ test("Eight review records are explicitly curated and later book content remains
   assert.doesNotMatch(atlas, /(?:Kerin Solan|Ovaran Contact Forum|first physical visitor|Chapter 43|Part IV)/);
   assert.match(atlas, /Never fetch private wiki records/);
   assert.match(atlas, /no public-reader record exists|No public-reader record exists/);
+});
+
+
+test("REPLY signal studies remain unapproved editorial previews, not manuscript disclosure", () => {
+  const room = read("src/pages/ReplyReadingRoom.tsx");
+  const roomStyles = read("src/styles/reply-reading-room.css");
+  assert.match(studio, /import ReplyReadingRoom from "\.\/ReplyReadingRoom";/);
+  assert.match(studio, /reading: ROOT \+ "\/reply\/reading-room"/);
+  assert.match(studio, /page === "reading" && <ReplyReadingRoom \/>/);
+  assert.match(studio, /Explore the signal studies/);
+  assert.match(room, /not excerpts from the novel/);
+  assert.match(room, /not an approved promotional release/);
+  assert.match(room, /id: "01"/);
+  assert.match(room, /id: "02"/);
+  assert.match(room, /id: "03"/);
+  assert.match(room, /aria-pressed=\{index === i\}/);
+  assert.match(room, /aria-live="polite" aria-atomic="true"/);
+  assert.match(room, /type="button"/);
+  assert.match(room, /Opening-state material only/);
+  for (const safeLink of [
+    'ROOT + "/atlas/nali-solan"',
+    'ROOT + "/atlas/merva"',
+    'ROOT + "/atlas/open-road"'
+  ]) assert.ok(room.includes(safeLink), "missing reviewed source orientation " + safeLink);
+  assert.doesNotMatch(room, /(?:app\.notion\.com|fetch\(|api\/command|api\/member|Chapter 43|first physical visitor|Kerin Solan|preorder|checkout|on-sale|November 17)/i);
+  assert.match(roomStyles, /@media\(max-width:620px\)/);
+  assert.match(roomStyles, /@media\(prefers-reduced-motion:reduce\)/);
+  assert.match(roomStyles, /\.ow-room-index-button:focus-visible/);
 });
