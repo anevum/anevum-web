@@ -304,6 +304,43 @@ async function runCase(route, viewport) {
   }
 }
 
+
+/**
+ * Route-level disabling is insufficient if draft manuscripts or reviewed
+ * article text remain downloadable in production chunks or sourcemaps.
+ * Reject a default build if any distinctive editorial preview bytes ship.
+ */
+function assertNoDraftReaderTextInDefaultBuild() {
+  const root = path.resolve(process.cwd(), "dist/client");
+  if (!fs.existsSync(root)) throw new Error("default dist/client build missing");
+  const markers = [
+    "Three signals.",
+    "The world was already here.",
+    "A universe of different starting points.",
+    "Merva's streets and neighborhoods mix older canal alignments",
+    "Reader orientation only. This entry does not include plot outcomes"
+  ];
+  let examined = 0;
+  const visit = directory => {
+    for (const entry of fs.readdirSync(directory, {withFileTypes:true})) {
+      const full = path.join(directory, entry.name);
+      if (entry.isDirectory()) { visit(full); continue; }
+      if (!entry.isFile() || !/\.(?:js|css|map|html)$/.test(entry.name)) continue;
+      examined += 1;
+      const bytes = fs.readFileSync(full, "utf8");
+      for (const phrase of markers) {
+        if (bytes.includes(phrase)) {
+          throw new Error("Draft original-works content bundled into default build: " +
+            path.relative(root, full) + " (" + phrase.length + "-character marker)");
+        }
+      }
+    }
+  };
+  visit(root);
+  if (!examined) throw new Error("No default-built client files were checked");
+  console.log("Default client bundle isolation verified across " + examined + " assets.");
+}
+
 const viewports=[
   {name:"desktop",width:1440,height:1000},
   {name:"mobile",width:390,height:844},
@@ -314,6 +351,7 @@ const viewports=[
 try {
   await waitForDebugger();
   if(process.env.ORIGINAL_WORKS_VERIFY_DISABLED==="1"){
+    assertNoDraftReaderTextInDefaultBuild();
     const desktop=viewports[0];
     for(const route of ["/design/original-works","/design/original-works/reply/reading-room"])
       await runCase(route,desktop);
