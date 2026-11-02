@@ -29,7 +29,9 @@ jobs:
       - name: Typecheck and create the actual client build
         run: |
           npm run check
-          npm run build
+          # The full release build (including Python PDF rendering) is verified
+          # independently by ANEVUM Verify. This local QA only needs Vite output.
+          npx vite build
       - name: Start loopback-only Vite preview
         shell: bash
         run: |
