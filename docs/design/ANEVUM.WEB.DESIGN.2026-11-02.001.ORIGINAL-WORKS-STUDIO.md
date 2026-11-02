@@ -1,0 +1,68 @@
+# Anevum — Original Works Studio Preview
+
+Session: `ANEVUM.WEB.DESIGN.2026-11-02.001.ORIGINAL-WORKS-WEBSITE`  
+Status: **Source implementation for design review; not accepted or deployed**  
+Owner: Devon Akins  
+Owning repository: `anevum/anevum-web`  
+Owning Notion Website Bible: https://app.notion.com/p/3f988cc2ef148110a50cce6a347ceed2
+
+## Approved direction versus proposed presentation
+
+**LOCKED 2026-11-02:** Anevum (public title case) is an original-works venture. REPLY is the first flagship novel, and The Transcosmic is its initial original story universe. An author revision and reader-safe wiki revival are active priorities.
+
+**PROPOSED:** "The Quiet Monument" studio presentation: mineral-night surfaces, restrained reciprocal signal geometry, warm ivory typography, copper, steel, and sapphire details, editorial rather than social-app hierarchy.
+
+**NOT AUTHORIZED:** public site replacement, deployment, redirect migration, publisher or retailer mutation, author publication, private wiki projection, production content changes, or final logo/cover substitution.
+
+## Existing system and dependency boundaries
+
+- Current live route `/` remains `CommonsV5`, with all preexisting products, feed, accounts, moderation, studio and RHEN routes retained.
+- Private `/command/*` and `/apps/rhen/*` retain existing routing and authorization policies. No Cloudflare Access, D1, Worker API, secrets or provider changes.
+- This source adds only the review-only React route prefix `/design/original-works/*`.
+- The preview route is **not** added to the published-path register or sitemap and is marked noindex by the client route metadata. The Worker already adds `X-Robots-Tag: noindex, nofollow, noarchive` for paths with no published route metadata.
+- The UI uses no Notion API calls or public raw canon exports. Curated introductory content is hand-authored from the previously approved opening-state canon.
+- No artificial users, reviews, commerce availability, cover imagery, preorder status, book release date, or telemetry are fabricated.
+
+## Review route map
+
+| Route | Purpose |
+| --- | --- |
+| `/design/original-works` | Studio homepage: creative identity, REPLY, Transcosmic |
+| `/design/original-works/works` | Original works overview, one actual flagship |
+| `/design/original-works/reply` | REPLY editorial page, truthful revision status |
+| `/design/original-works/transcosmic` | The universe's opening situation |
+| `/design/original-works/atlas` | Three source-approved, spoiler-safe introductory entries |
+| `/design/original-works/journal` | Honest, held-only journal teaser |
+| `/design/original-works/about` | Original-works studio identity |
+
+Unknown review routes show an explicit not-found state.
+
+## Current asset and canon limitations
+
+The hero's orbital mechanics and book typography are clearly labeled design studies—not a literal Skygate, REPLY cover, approved final brand master, or manuscript illustration. The existing Orbital Underground SVG mark is reused as a compatibility asset, but **Anevum** is rendered as title-case text. The production pass must verify and reuse the previously approved REPLY cover source and other existing visual masters rather than regenerating or fabricating replacements.
+
+The active internal canon is https://app.notion.com/p/3ae88cc2ef14818e8f0dd5b8399fb017. The spoiler/disclosure authority is https://app.notion.com/p/3db88cc2ef1481ed99fcedeb8153f26b. The private reader gateway and teaser draft is https://app.notion.com/p/40c88cc2ef1481b78869e0ae4d9b1fd3.
+
+This preview does **not** promote wiki entries into the public website. A subsequent publishing integration needs explicit review of current source, `Website Ready`, `Public Window`, `REPLY Gate`, and an approved public publishing queue row. Never infer authorization from elapsed time.
+
+The previous November 17, 2026 IngramSpark on-sale target conflicts with a later author release deferral and lingering retailer listings. No purchase or preorder CTA is permitted until that mismatch is resolved.
+
+## Acceptance criteria
+
+1. Existing root, member, RHEN, beta, field-notes, help, privacy, Command, and studio routes remain exactly routed as before.
+2. Every preview path navigates with real React Router `Link` elements, accessible headings, skip link, current-page labels, correct focus states and truthful unknown-state behavior.
+3. Responsive layout at **320, 390, 768, 1024, 1440 px**; no text cropped or horizontal overflow; verify on a real phone or automated browser.
+4. `prefers-reduced-motion` and forced-colors honor user/device settings; static artwork fallback remains readable without animation.
+5. No private wiki, unpublished manuscripts, RHEN owner data, member data or finance details in the preview bundle.
+6. No search indexing and no public release/status claims. Browser and HTTP tests should validate `X-Robots-Tag`, per-route metadata and public-facing behavior in the preview.
+7. Source-contract tests, full repository CI, TypeScript, build, Cloudflare preview, mobile screenshots and role-based existing-route regression tests pass at the exact PR head before considering promotion.
+8. Owner reviews real 1440 px and 390 px screenshots; final design signoff and release authorization are independent gates.
+
+## Required next production iteration
+
+After preview validation, reconcile approved original art masters and book metadata, create the actual public `/stories/reply` and `/transcosmic/atlas` route contracts (preserving legacy routes and search indexing), and implement server-approved public canon projections with fail-closed publication rules. Do not merge the preview into production as a substitute for the public migration.
+
+## Retained context
+
+Historical October 2026 V143 studio direction: https://github.com/anevum/anevum-web/pull/793. It remains an unmerged review branch with games/creator assumptions; do not cherry-pick it blindly or delete it.
+
