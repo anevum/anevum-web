@@ -43,6 +43,34 @@ const entries = [
     summary: "An established human world where travel to Neral through an engineered Road belongs to everyday infrastructure.",
     detail: "Mature Road systems rely on engineering, maintenance and institutions. The lives of people on Veyra still revolve around ordinary choices, labor, relationships and civic obligations.",
     keywords: "Neral Road Serein connected engineering"
+  },
+  {
+    id: "05", slug: "merva", title: "Merva", category: "Place",
+    subtitle: "Ordan Republic · Ovara",
+    summary: "A major city in Ovara's Kesra Basin, shaped by canals, water management, universities, markets and technical work.",
+    detail: "Merva's streets and neighborhoods mix older canal alignments with modern electric transit, laboratories, clinics, housing and industry. Water storage and flood management are ordinary parts of civic life. The opening of REPLY takes place in a functioning city, not a catastrophe or an empty scientific outpost.",
+    keywords: "Kesra Basin city district water infrastructure transit science Ovara"
+  },
+  {
+    id: "06", slug: "serein-skygate", title: "Serein Skygate", category: "Infrastructure",
+    subtitle: "Veyra · Orbital gate-city",
+    summary: "The inhabited Veyran gate-city at one end of the established Veyra–Neral Open Road.",
+    detail: "Serein Skygate combines a controlled Road boundary with inhabited districts, transit, freight, docking and precision operations. It is one engineered endpoint of a two-ended system, not a free-floating portal. Its civic life continues alongside the machinery.",
+    keywords: "Serein Gate Veyra station orbital city Road Frame transit engineering"
+  },
+  {
+    id: "07", slug: "neral-skygate", title: "Neral Skygate", category: "Infrastructure",
+    subtitle: "Neral · Orbital gate-city",
+    summary: "The Neran endpoint of the same mature Open Road, with locally distinct architecture, civic space and engineering traditions.",
+    detail: "The two Skygates share operating interfaces and safety standards, but Neral's inhabited gate-city reflects Neran history and culture. It is not a visual copy of Serein Skygate and is not an outpost of Veyra.",
+    keywords: "Neral Gate Neran endpoint orbit civic engineering Road"
+  },
+  {
+    id: "08", slug: "open-road", title: "Open Road", category: "Infrastructure",
+    subtitle: "Veyra–Neral · Paired endpoints",
+    summary: "A maintained, two-ended connection between paired Skygates that carries ordinary passengers, vehicles and cargo.",
+    detail: "Each endpoint has its own inhabited gate-city and working systems for measurement, control, power, cooling and transit. An Open Road does not dial arbitrary worlds or operate from one side alone. Its ordinary use depends on continuous cooperation and engineering.",
+    keywords: "paired Skygates passage travel freight infrastructure boundary metrology"
   }
 ] as const;
 
@@ -53,10 +81,40 @@ const entries = [
  * This is an editorial association list, not a geography/technology simulator.
  */
 const relationships = {
-  ovara: [{ slug: "nali-solan", label: "Nali Solan", relation: "A person of Ovara" }],
-  "nali-solan": [{ slug: "ovara", label: "Ovara", relation: "Home world" }],
-  neral: [{ slug: "veyra", label: "Veyra", relation: "Established Road connection" }],
-  veyra: [{ slug: "neral", label: "Neral", relation: "Established Road connection" }]
+  ovara: [
+    { slug: "nali-solan", label: "Nali Solan", relation: "A person of Ovara" },
+    { slug: "merva", label: "Merva", relation: "Principal setting" }
+  ],
+  "nali-solan": [
+    { slug: "ovara", label: "Ovara", relation: "Home world" },
+    { slug: "merva", label: "Merva", relation: "Home city" }
+  ],
+  neral: [
+    { slug: "veyra", label: "Veyra", relation: "Established Road connection" },
+    { slug: "neral-skygate", label: "Neral Skygate", relation: "Local Road endpoint" }
+  ],
+  veyra: [
+    { slug: "neral", label: "Neral", relation: "Established Road connection" },
+    { slug: "serein-skygate", label: "Serein Skygate", relation: "Local Road endpoint" }
+  ],
+  merva: [
+    { slug: "ovara", label: "Ovara", relation: "Located on" },
+    { slug: "nali-solan", label: "Nali Solan", relation: "Person of Merva" }
+  ],
+  "serein-skygate": [
+    { slug: "veyra", label: "Veyra", relation: "Veyran endpoint" },
+    { slug: "open-road", label: "Open Road", relation: "Paired boundary" },
+    { slug: "neral-skygate", label: "Neral Skygate", relation: "Counterpart endpoint" }
+  ],
+  "neral-skygate": [
+    { slug: "neral", label: "Neral", relation: "Neran endpoint" },
+    { slug: "open-road", label: "Open Road", relation: "Paired boundary" },
+    { slug: "serein-skygate", label: "Serein Skygate", relation: "Counterpart endpoint" }
+  ],
+  "open-road": [
+    { slug: "serein-skygate", label: "Serein Skygate", relation: "Veyran endpoint" },
+    { slug: "neral-skygate", label: "Neral Skygate", relation: "Neran endpoint" }
+  ]
 } as const;
 
 function NetworkOverview() {
@@ -92,7 +150,7 @@ function NetworkOverview() {
   </section>;
 }
 
-type Category = "All" | "World" | "Person";
+type Category = "All" | "World" | "Person" | "Place" | "Infrastructure";
 
 function Directory() {
   const [search, setSearch] = useState("");
@@ -116,14 +174,14 @@ function Directory() {
       <div className="ow-atlas-search" role="search" aria-label="Search the Reader Atlas">
         <label htmlFor="ow-atlas-query">Find a record</label>
         <input id="ow-atlas-query" type="search" autoComplete="off"
-          maxLength={80} placeholder="Search worlds, people, places…"
+          maxLength={80} placeholder="Search worlds, people, places, technology…"
           value={search} onChange={e => setSearch(e.currentTarget.value)} />
       </div>
       <div className="ow-atlas-filters" role="group" aria-label="Filter by entry type">
-        {(["All", "World", "Person"] as const).map(option => <button
+        {(["All", "World", "Person", "Place", "Infrastructure"] as const).map(option => <button
           key={option} type="button" aria-pressed={category === option}
           onClick={() => setCategory(option)}
-        >{option === "All" ? "All records" : option === "World" ? "Worlds" : "People"}</button>)}
+        >{option === "All" ? "All records" : option === "World" ? "Worlds" : option === "Person" ? "People" : option === "Place" ? "Places" : "Infrastructure"}</button>)}
       </div>
     </div>
     <p className="ow-atlas-results" role="status" aria-live="polite" aria-atomic="true">
