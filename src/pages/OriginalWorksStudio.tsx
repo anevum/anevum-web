@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Mark from "../components/Mark";
+import AtlasExplorer from "./AtlasExplorer";
 import "../styles/original-works-preview.css";
 
 /**
@@ -35,7 +36,8 @@ const NAV: ReadonlyArray<{ page: Page; label: string }> = [
   { page: "about", label: "About" }
 ];
 
-function currentPage(pathname: string): Page | "not-found" {
+function currentPage(pathname: string): Page | "atlas-detail" | "not-found" {
+  if (pathname.startsWith(PATH.atlas + "/")) return "atlas-detail";
   const exact = (Object.entries(PATH) as Array<[Page, string]>)
     .find(([, path]) => pathname === path || pathname === path + "/");
   return exact?.[0] || "not-found";
@@ -198,40 +200,6 @@ function TranscosmicPage() {
   </section>;
 }
 
-const atlasEntries = [
-  {
-    name: "Ovara", kind: "World · Helor System", id: "01",
-    text: "A technologically mature human world with 29 sovereign states. REPLY begins in Merva, within the Kesra Basin, but Ovara is larger than any one region or story."
-  },
-  {
-    name: "Nali Solan", kind: "Person · Merva, Ovara", id: "02",
-    text: "A 29-year-old precision instrumentation specialist who understands that a measurement is only as reliable as the evidence and responsibility behind it."
-  },
-  {
-    name: "Neral", kind: "World · Irsen System", id: "03",
-    text: "An inhabited human world joined to Veyra by mature Road infrastructure. Neral remains sovereign, culturally distinct, and shaped by its own history."
-  }
-] as const;
-
-function AtlasPage() {
-  return <section className="ow-page ow-container" aria-labelledby="ow-atlas-title">
-    <Eyebrow>The Transcosmic / Reader Atlas</Eyebrow>
-    <h1 id="ow-atlas-title">A universe<br /><em>worth knowing.</em></h1>
-    <p className="ow-page-lead">An introductory selection of opening-state canon. The full internal encyclopedia contains material reserved for the novel and later stories.</p>
-    <div className="ow-atlas-grid">
-      {atlasEntries.map(entry => <article className="ow-atlas-card" key={entry.name}>
-        <span className="ow-atlas-number">{entry.id}</span>
-        <div><span className="ow-card-kicker">{entry.kind}</span><h2>{entry.name}</h2><p>{entry.text}</p></div>
-      </article>)}
-    </div>
-    <div className="ow-atlas-note">
-      <span className="ow-note-icon" aria-hidden="true">○</span>
-      <p><strong>A spoiler-conscious archive.</strong> This is a curated reader preview, not an unrestricted mirror of the private story bible. Additional records are released only after editorial and canon review.</p>
-    </div>
-    <div className="ow-actions"><LinkAction to={PATH.reply}>Start with REPLY</LinkAction></div>
-  </section>;
-}
-
 function JournalPage() {
   return <section className="ow-page ow-container" aria-labelledby="ow-journal-title">
     <Eyebrow>03 / Studio Journal</Eyebrow>
@@ -278,8 +246,8 @@ export default function OriginalWorksStudio() {
         <nav aria-label="Studio preview navigation" className="ow-navigation">
           {NAV.map(item => <Link
             key={item.page} to={PATH[item.page]}
-            aria-current={page === item.page ? "page" : undefined}
-            className={page === item.page ? "ow-nav-current" : ""}
+            aria-current={(page === item.page || (page === "atlas-detail" && item.page === "atlas")) ? "page" : undefined}
+            className={page === item.page || (page === "atlas-detail" && item.page === "atlas") ? "ow-nav-current" : ""}
           >{item.label}</Link>)}
         </nav>
       </div>
@@ -289,7 +257,8 @@ export default function OriginalWorksStudio() {
       {page === "works" && <WorksPage />}
       {page === "reply" && <ReplyPage />}
       {page === "transcosmic" && <TranscosmicPage />}
-      {page === "atlas" && <AtlasPage />}
+      {page === "atlas" && <AtlasExplorer />}
+      {page === "atlas-detail" && <AtlasExplorer slug={pathname.slice(PATH.atlas.length + 1).replace(/\/$/, "")} />}
       {page === "journal" && <JournalPage />}
       {page === "about" && <AboutPage />}
       {page === "not-found" && <PreviewNotFound />}
