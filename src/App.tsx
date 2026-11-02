@@ -7,6 +7,11 @@ import { currentRhenRelease, rhenReleaseBySlug } from "./data/releases";
 const RhenTerminal = lazy(() => import("./pages/RhenTerminal"));
 const Command = lazy(() => import("./pages/Command"));
 const OriginalWorksStudio = lazy(() => import("./pages/OriginalWorksStudio"));
+
+// Review-only surface. The flag defaults off in every ordinary/production build.
+// It must be explicitly enabled by a dedicated local reviewer build, never by
+// an implicit deployment environment or a calendar-based publishing rule.
+const originalWorksPreviewEnabled = import.meta.env.VITE_ORIGINAL_WORKS_PREVIEW === "true";
 const CommonsV5 = lazy(() => import("./commons/CommonsV5"));
 const MemberHome = lazy(() => import("./pages/MemberHome"));
 const MemberSettings = lazy(() => import("./pages/MemberSettings"));
@@ -243,7 +248,7 @@ export default function App() {
       <RouteScrollReset />
       <OverflowPan />
       <Routes>
-        <Route path="/design/original-works/*" element={<Suspense fallback={<Loader />}><OriginalWorksStudio /></Suspense>} />
+        {originalWorksPreviewEnabled && <Route path="/design/original-works/*" element={<Suspense fallback={<Loader />}><OriginalWorksStudio /></Suspense>} />}
         <Route path="/" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/products" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/beta" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
