@@ -120,6 +120,21 @@ async function runCase(route, viewport) {
       throw Error("Missing public-safe opening canon");
     if(name==="original-works-home"&&!state.heading.includes("Somewhere"))
       throw Error("Missing Anevum studio hero");
+    if(name==="original-works-atlas") {
+      const searchCheck = async expr => (await send("Runtime.evaluate",{expression:expr,returnByValue:true})).result?.value;
+      const initial=await searchCheck('document.querySelectorAll(".ow-atlas-card").length');
+      if(initial!==4)throw Error("Atlas initial four opening records missing: "+initial);
+      await send("Runtime.evaluate",{expression:'(() => {const input=document.querySelector("#ow-atlas-query");const set=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set;set.call(input,"Nali");input.dispatchEvent(new Event("input",{bubbles:true}));})()'});
+      let found=false;
+      for(let n=0;n<25;n++){const state=await searchCheck('({count:document.querySelectorAll(".ow-atlas-card").length,text:document.querySelector(".ow-atlas-card")?.textContent||""})');if(state?.count===1&&state.text.includes("Nali")){found=true;break;}await sleep(80)}
+      if(!found)throw Error("Atlas search did not filter to Nali");
+      await send("Runtime.evaluate",{expression:'document.querySelector(".ow-atlas-filters button:nth-child(2)")?.click()'});
+      if(!(await searchCheck('!!document.querySelector(".ow-atlas-empty")')))
+        throw Error("Atlas empty state did not appear for incompatible filter");
+      await send("Runtime.evaluate",{expression:'document.querySelector(".ow-atlas-empty button")?.click()'});
+      if((await searchCheck('document.querySelectorAll(".ow-atlas-card").length'))!==4)
+        throw Error("Atlas reset did not restore records");
+    }
     await sleep(300);
     const shot=await send("Page.captureScreenshot",{format:"png",captureBeyondViewport:false});
     fs.writeFileSync(path.join(output,name+"-"+viewport.name+".png"),Buffer.from(shot.data,"base64"));
