@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Mark from "../components/Mark";
 import "../styles/original-works-preview.css";
@@ -34,16 +35,16 @@ const NAV: ReadonlyArray<{ page: Page; label: string }> = [
   { page: "about", label: "About" }
 ];
 
-function currentPage(pathname: string): Page {
+function currentPage(pathname: string): Page | "not-found" {
   const exact = (Object.entries(PATH) as Array<[Page, string]>)
     .find(([, path]) => pathname === path || pathname === path + "/");
-  return exact?.[0] || "home";
+  return exact?.[0] || "not-found";
 }
 
 function LinkAction({
   to, children, secondary = false
 }: {
-  to: string; children: React.ReactNode; secondary?: boolean;
+  to: string; children: ReactNode; secondary?: boolean;
 }) {
   return <Link className={"ow-action" + (secondary ? " ow-action-outline" : "")} to={to}>
     <span>{children}</span><span aria-hidden="true" className="ow-action-arrow">↗</span>
@@ -71,7 +72,7 @@ function SignalScene({ compact = false }: { compact?: boolean }) {
   </div>;
 }
 
-function Eyebrow({ children }: { children: React.ReactNode }) {
+function Eyebrow({ children }: { children: ReactNode }) {
   return <p className="ow-eyebrow">{children}</p>;
 }
 
@@ -256,6 +257,15 @@ function AboutPage() {
   </section>;
 }
 
+function PreviewNotFound() {
+  return <section className="ow-page ow-container" aria-labelledby="ow-not-found-title">
+    <Eyebrow>Studio preview / Unavailable</Eyebrow>
+    <h1 id="ow-not-found-title">Page not found.</h1>
+    <p className="ow-page-lead">This part of the design preview is not available.</p>
+    <LinkAction to={PATH.home}>Return to studio</LinkAction>
+  </section>;
+}
+
 export default function OriginalWorksStudio() {
   const { pathname } = useLocation();
   const page = currentPage(pathname);
@@ -282,6 +292,7 @@ export default function OriginalWorksStudio() {
       {page === "atlas" && <AtlasPage />}
       {page === "journal" && <JournalPage />}
       {page === "about" && <AboutPage />}
+      {page === "not-found" && <PreviewNotFound />}
     </main>
     <footer className="ow-footer">
       <div className="ow-footer-inner">
