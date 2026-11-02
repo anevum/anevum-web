@@ -77,3 +77,30 @@ test("Atlas is a curated, locally searchable directory with closed unknown state
   assert.match(atlasStyle, /\.ow-atlas-search input:focus-visible/);
   assert.match(atlasStyle, /@media\(prefers-reduced-motion:reduce\)/);
 });
+
+
+test("Atlas network view links only explicitly cleared opening-state relationships", () => {
+  assert.match(atlas, /function NetworkOverview\(\)/);
+  assert.match(atlas, /<NetworkOverview \/>/);
+  assert.match(atlas, /Opening-state orientation/);
+  assert.match(atlas, /Ovara \/ Independent context/);
+  assert.match(atlas, /Veyra – Neral \/ Mature network/);
+  assert.match(atlas, /Established Road connection/);
+  assert.match(atlas, /Ovara is not part of the Veyra–Neral Road connection/);
+  assert.match(atlas, /Related records/);
+  assert.match(atlas, /relationships\[record\.slug\]\.map/);
+  assert.match(atlas, /to=\{ATLAS \+ "\/" \+ related\.slug\}/);
+  const block = atlas.split("const relationships = {")[1]?.split("} as const;")[0];
+  assert.ok(block, "explicit relationship allowlist missing");
+  const links = [...block.matchAll(/^\s*(?:"?([a-z-]+)"?): \[\{ slug: "([a-z-]+)"/gm)];
+  assert.deepEqual(links.map(match => [match[1], match[2]]), [
+    ["ovara", "nali-solan"],
+    ["nali-solan", "ovara"],
+    ["neral", "veyra"],
+    ["veyra", "neral"]
+  ], "do not infer any road connection to Ovara");
+  assert.doesNotMatch(block, /ovara:[^\\n]*(?:veyra|neral)/);
+  assert.match(atlasStyle, /\\.ow-atlas-relations-grid/);
+  assert.match(atlasStyle, /\\.ow-atlas-related-link:focus-visible/);
+  assert.match(atlasStyle, /@media\\(max-width:340px\\)/);
+});
