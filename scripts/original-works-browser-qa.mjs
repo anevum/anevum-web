@@ -106,8 +106,8 @@ async function runCase(route, viewport) {
     if(!state?.ready||state.route!==route)throw Error("Unhydrated route: "+JSON.stringify(state));
     if(!state.robots.startsWith("noindex")||state.canonical)
       throw Error("Preview indexing failure: "+JSON.stringify(state));
-    if(!state.hasSkip||!state.links.includes("/design/original-works/reply")||
-       !state.links.includes("/design/original-works/atlas"))
+    if(!state.hasSkip||!state.links.includes("/design/original-works/atlas")||
+       (name!=="original-works-reply"&&!state.links.includes("/design/original-works/reply")))
       throw Error("Preview navigation missing: "+JSON.stringify(state.links));
     if(state.links.some(href=>href&&!href.startsWith("/")&&!href.startsWith("#")))
       throw Error("Unexpected outbound preview links: "+JSON.stringify(state.links));
