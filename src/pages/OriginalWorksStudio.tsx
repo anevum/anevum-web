@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Mark from "../components/Mark";
 import AtlasExplorer from "./AtlasExplorer";
+import ReplyReadingRoom from "./ReplyReadingRoom";
 import "../styles/original-works-preview.css";
 
 /**
@@ -20,6 +21,7 @@ const PATH = {
   home: ROOT,
   works: ROOT + "/works",
   reply: ROOT + "/reply",
+  reading: ROOT + "/reply/reading-room",
   transcosmic: ROOT + "/transcosmic",
   atlas: ROOT + "/atlas",
   journal: ROOT + "/journal",
@@ -159,7 +161,8 @@ function ReplyPage() {
           <div><strong>Author revision in progress</strong><p>The existing paperback submission is preserved while the text is revisited. Revised-edition availability and retailer information are not yet confirmed.</p></div>
         </div>
         <div className="ow-actions">
-          <LinkAction to={PATH.transcosmic}>Explore the universe</LinkAction>
+          <LinkAction to={PATH.reading}>Explore the signal studies</LinkAction>
+          <LinkAction to={PATH.transcosmic} secondary>Explore the universe</LinkAction>
           <LinkAction to={PATH.atlas} secondary>Browse the Atlas</LinkAction>
         </div>
       </div>
@@ -256,6 +259,7 @@ export default function OriginalWorksStudio() {
       {page === "home" && <StudioHome />}
       {page === "works" && <WorksPage />}
       {page === "reply" && <ReplyPage />}
+      {page === "reading" && <ReplyReadingRoom />}
       {page === "transcosmic" && <TranscosmicPage />}
       {page === "atlas" && <AtlasExplorer />}
       {page === "atlas-detail" && <AtlasExplorer slug={pathname.slice(PATH.atlas.length + 1).replace(/\/$/, "")} />}
