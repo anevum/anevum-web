@@ -144,6 +144,35 @@ async function runCase(route, viewport) {
     fs.writeFileSync(path.join(output,name+"-"+viewport.name+".json"),JSON.stringify(safe,null,2));
     if(exceptions.length)throw Error("Browser JavaScript exception: "+JSON.stringify(exceptions));
     console.log(JSON.stringify({route,viewport:viewport.name,heading:state.heading,width:state.width,overflow:false,robots:state.robots}));
+    if(name==="original-works-atlas"&&["desktop","mobile"].includes(viewport.name)){
+      // Validate an actual reader transition, not just a card-shaped link.
+      await send("Runtime.evaluate",{expression:'document.querySelector(".ow-atlas-card[href=\\"/design/original-works/atlas/ovara\\"]")?.click()'});
+      const read = async expression => (await send("Runtime.evaluate",{expression,returnByValue:true})).result?.value;
+      let detail;
+      for(let n=0;n<65;n++){
+        try{
+          detail=await read('({path:location.pathname,title:document.querySelector("#ow-atlas-detail-heading")?.textContent||"",active:document.querySelector(".ow-navigation a[href=\\"/design/original-works/atlas\\"]")?.getAttribute("aria-current")||"",robots:document.querySelector("meta[name=\\"robots\\"]")?.content||"",canonical:document.querySelector("link[rel=\\"canonical\\"]")?.href||"",overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+1})');
+          if(detail?.path==="/design/original-works/atlas/ovara"&&detail.title.includes("Ovara"))break;
+        }catch{}
+        await sleep(110);
+      }
+      if(detail?.path!=="/design/original-works/atlas/ovara"||!detail.title.includes("Ovara")||detail.active!=="page"||!detail.robots.startsWith("noindex")||detail.canonical||detail.overflow)
+        throw Error("Atlas deep-linked entry failed: "+JSON.stringify(detail));
+      const detailShot=await send("Page.captureScreenshot",{format:"png",captureBeyondViewport:false});
+      fs.writeFileSync(path.join(output,"original-works-atlas-detail-"+viewport.name+".png"),Buffer.from(detailShot.data,"base64"));
+      await send("Page.navigate",{url:base+"/design/original-works/atlas/unknown-private-record"});
+      let missing;
+      for(let n=0;n<65;n++){
+        try{
+          missing=await read('({path:location.pathname,title:document.querySelector("#ow-atlas-missing")?.textContent||"",robots:document.querySelector("meta[name=\\"robots\\"]")?.content||"",canonical:document.querySelector("link[rel=\\"canonical\\"]")?.href||"",hasBack:!!document.querySelector(".ow-atlas-detail a[href=\\"/design/original-works/atlas\\"]")})');
+          if(missing?.path.endsWith("/unknown-private-record")&&missing.title.includes("unavailable"))break;
+        }catch{}
+        await sleep(110);
+      }
+      if(!missing?.title.includes("unavailable")||!missing.robots.startsWith("noindex")||missing.canonical||!missing.hasBack)
+        throw Error("Unknown Atlas slug did not fail closed: "+JSON.stringify(missing));
+      console.log(JSON.stringify({route:"/design/original-works/atlas/ovara",viewport:viewport.name,detail:"PASS",unreleasedSlug:"NOT_FOUND"}));
+    }
     if(name==="original-works-home"&&["desktop","mobile"].includes(viewport.name)){
       await send("Runtime.evaluate",{expression:"document.querySelector('.ow-site a[href=\"/design/original-works/reply\"]')?.click()"});
       let navigated=false;
