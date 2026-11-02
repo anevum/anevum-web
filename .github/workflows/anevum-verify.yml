@@ -192,6 +192,7 @@ jobs:
           test "$(curl --show-error --silent -o /dev/null -w '%{http_code}' "$base/api/command/trader/status")" = "401"
           test "$(curl --show-error --silent -o /dev/null -w '%{http_code}' "$base/api/command/iren/status")" = "401"
           curl --fail --show-error --silent --head "$base/command" | grep -qi 'x-robots-tag:.*noindex'
+          curl --fail --show-error --silent --head "$base/design/original-works" | grep -qi 'x-robots-tag:.*noindex'
 
       - name: Verify browser runtime and horizontal overflow
         if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
@@ -217,6 +218,14 @@ jobs:
         run: |
           set -euo pipefail
           evidence="$RUNNER_TEMP/anevum-visuals"
+          for name in original-works-home original-works-reply original-works-atlas; do
+            test -s "$evidence/$name-desktop.png"
+            test -s "$evidence/$name-mobile.png"
+            test -s "$evidence/$name-rendered.html"
+          done
+          grep -Fq 'Somewhere,' "$evidence/original-works-home-rendered.html"
+          grep -Fq 'Author revision in progress' "$evidence/original-works-reply-rendered.html"
+          grep -Fq 'Nali Solan' "$evidence/original-works-atlas-rendered.html"
           for name in home products feed rhen terminal research field-note architecture about resume releases release-detail rhen-review-disclosure; do
             test -s "$evidence/$name-desktop.png"
             test -s "$evidence/$name-mobile.png"
