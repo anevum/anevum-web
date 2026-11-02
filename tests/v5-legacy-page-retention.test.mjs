@@ -16,7 +16,10 @@ test("active validator no longer blocks retirement through obsolete public page 
   // Member Beta and the new Studio editor are active V5 routes, not legacy deletion candidates.
   // OriginalWorksStudio is a retained, mounted design-review page. A newly
   // mounted page increases the inventory but never authorizes a legacy deletion.
-  assert.equal(report.counts.pages,45);
+  assert.equal(report.counts.pages,46);
+  const reading=report.pages.find(page=>page.file==="src/pages/ReplyReadingRoom.tsx");
+  assert.equal(reading?.status,"RUNTIME_REACHABLE");
+  assert.equal(reading?.decision,"RETAIN_RUNTIME");
   const atlas=report.pages.find(page=>page.file==="src/pages/AtlasExplorer.tsx");
   assert.equal(atlas?.status,"RUNTIME_REACHABLE");
   assert.equal(atlas?.decision,"RETAIN_RUNTIME");
