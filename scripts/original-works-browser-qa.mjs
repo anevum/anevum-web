@@ -123,7 +123,7 @@ async function runCase(route, viewport) {
     if(name==="original-works-atlas") {
       const searchCheck = async expr => (await send("Runtime.evaluate",{expression:expr,returnByValue:true})).result?.value;
       const initial=await searchCheck('document.querySelectorAll(".ow-atlas-card").length');
-      if(initial!==4)throw Error("Atlas initial four opening records missing: "+initial);
+      if(initial!==8)throw Error("Atlas initial eight opening records missing: "+initial);
       const network=await searchCheck('(() => {const clusters=[...document.querySelectorAll(".ow-atlas-cluster")];return clusters.map(c=>({name:c.querySelector(".ow-atlas-cluster-label")?.textContent||"",links:[...c.querySelectorAll("a")].map(a=>a.getAttribute("href")),relation:c.querySelector(".ow-atlas-connection")?.textContent||""}));})()');
       const expected=[
         {name:"Ovara / Independent context",links:["/design/original-works/atlas/ovara","/design/original-works/atlas/nali-solan"],relation:"Home of"},
@@ -140,8 +140,28 @@ async function runCase(route, viewport) {
       if(!(await searchCheck('!!document.querySelector(".ow-atlas-empty")')))
         throw Error("Atlas empty state did not appear for incompatible filter");
       await send("Runtime.evaluate",{expression:'document.querySelector(".ow-atlas-empty button")?.click()'});
-      if((await searchCheck('document.querySelectorAll(".ow-atlas-card").length'))!==4)
+      if((await searchCheck('document.querySelectorAll(".ow-atlas-card").length'))!==8)
         throw Error("Atlas reset did not restore records");
+
+      // Every newly approved opening-state type must be searchable, filtered,
+      // and accessible. A map of worlds must not flatten all articles to World.
+      for (const [buttonPosition, expectedCount, label] of [[4,1,"Places"],[5,3,"Infrastructure"],[2,3,"Worlds"],[3,1,"People"]]) {
+        await send("Runtime.evaluate",{expression:'document.querySelector(".ow-atlas-filters button:nth-child('+buttonPosition+')")?.click()'});
+        let observed=false;
+        for(let n=0;n<35;n++){
+          const state=await searchCheck('({count:document.querySelectorAll(".ow-atlas-card").length,active:[...document.querySelectorAll(".ow-atlas-filters button[aria-pressed=true]")].map(x=>x.textContent)})');
+          if(state?.count===expectedCount&&state.active?.length===1&&state.active[0]===label){observed=true;break}
+          await sleep(90);
+        }
+        if(!observed)throw Error("Atlas "+label+" filter failed");
+      }
+      await send("Runtime.evaluate",{expression:'document.querySelector(".ow-atlas-filters button:first-child")?.click()'});
+      for(let n=0;n<30;n++){
+        if((await searchCheck('document.querySelectorAll(".ow-atlas-card").length'))===8)break;
+        await sleep(90);
+      }
+      if((await searchCheck('document.querySelectorAll(".ow-atlas-card").length'))!==8)
+        throw Error("Atlas all-records filter did not restore curated selection");
     }
     await sleep(300);
     const shot=await send("Page.captureScreenshot",{format:"png",captureBeyondViewport:false});
@@ -190,6 +210,33 @@ async function runCase(route, viewport) {
       }
       if(!missing?.title.includes("unavailable")||!missing.robots.startsWith("noindex")||missing.canonical||!missing.hasBack)
         throw Error("Unknown Atlas slug did not fail closed: "+JSON.stringify(missing));
+
+      // Verify independent direct access to the newly curated setting/technology
+      // articles, not only the original four records on the directory.
+      for(const [slug,title] of [
+        ["merva","Merva"],
+        ["serein-skygate","Serein Skygate"],
+        ["neral-skygate","Neral Skygate"],
+        ["open-road","Open Road"]
+      ]) {
+        const full="/design/original-works/atlas/"+slug;
+        await send("Page.navigate",{url:base+full});
+        let observed;
+        for(let n=0;n<65;n++){
+          try{
+            observed=await read('({path:location.pathname,title:document.querySelector("#ow-atlas-detail-heading")?.textContent||"",robots:document.querySelector("meta[name=\\"robots\\"]")?.content||"",canonical:document.querySelector("link[rel=\\"canonical\\"]")?.href||"",active:document.querySelector(".ow-navigation a[href=\\"/design/original-works/atlas\\"]")?.getAttribute("aria-current")||"",overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+1})');
+            if(observed?.path===full&&observed.title.includes(title))break;
+          }catch{}
+          await sleep(95);
+        }
+        if(observed?.path!==full||!observed.title.includes(title)||!observed.robots.startsWith("noindex")||observed.canonical||observed.active!=="page"||observed.overflow)
+          throw Error("New Atlas direct article route failed: "+slug+" "+JSON.stringify(observed));
+        if((viewport.name==="desktop"&&slug==="open-road")||(viewport.name==="mobile"&&slug==="merva")){
+          const shot=await send("Page.captureScreenshot",{format:"png",captureBeyondViewport:false});
+          fs.writeFileSync(path.join(output,"original-works-atlas-"+slug+"-"+viewport.name+".png"),Buffer.from(shot.data,"base64"));
+        }
+      }
+
       console.log(JSON.stringify({route:"/design/original-works/atlas/ovara",viewport:viewport.name,detail:"PASS",unreleasedSlug:"NOT_FOUND"}));
     }
     if(name==="original-works-home"&&["desktop","mobile"].includes(viewport.name)){
