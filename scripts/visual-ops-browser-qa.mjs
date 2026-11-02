@@ -12,7 +12,7 @@ const releaseDetailRoute = "/products/rhen/releases/" + release.slug;
 const releaseDetailRoutes = registry.releases.map(item => "/products/rhen/releases/" + item.slug);
 const legacyReleaseRoute = "/releases/" + release.slug;
 
-const publicRoutes = [...releaseDetailRoutes, legacyReleaseRoute,"/", "/beta", "/communities", "/learn", "/sign-in", "/command", "/me/settings", "/me/rewards", "/me/beta", "/apps/rhen/connect", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/help", "/resume", "/products/rhen/releases", "/me", "/privacy", "/terms", "/not-a-real-page", "/field-notes/not-a-real-note", "/products/rhen/releases/not-a-real-release", "/communities/moderation"];
+const publicRoutes = ["/design/original-works", "/design/original-works/reply", "/design/original-works/atlas", ...releaseDetailRoutes, legacyReleaseRoute,"/", "/beta", "/communities", "/learn", "/sign-in", "/command", "/me/settings", "/me/rewards", "/me/beta", "/apps/rhen/connect", "/products", "/feed", "/products/rhen", "/products/rhen/evidence", "/products/rhen/architecture", "/field-notes", "/field-notes/prediction-outcome-evidence-chain", "/about", "/help", "/resume", "/products/rhen/releases", "/me", "/privacy", "/terms", "/not-a-real-page", "/field-notes/not-a-real-note", "/products/rhen/releases/not-a-real-release", "/communities/moderation"];
 const commandRoutes = ["/command/rhen/operate", "/command/rhen/discover", "/command/rhen/review", "/command/rhen/public", "/command/rhen/system"];
 const routes = process.env.PUBLIC_ONLY === "1" ? publicRoutes : [...publicRoutes, ...commandRoutes];
 const output = path.join(process.env.RUNNER_TEMP || os.tmpdir(), "anevum-visuals");
@@ -173,6 +173,7 @@ async function runCase(requestedRoute, viewport) {
           // A private moderator route may have loaded the static HTML while React
           // is still hydrating. Never read its initial public index.html SEO
           // as if it were the fully rendered private route.
+          const originalWorksReady = !${JSON.stringify(route)}.startsWith("/design/original-works") || Boolean(document.querySelector('.ow-site[data-anevum-original-works-preview="true"] h1'));
           const moderationReady = ${JSON.stringify(route)} !== "/communities/moderation" || (() => {
             const root = document.querySelector(".anevum-commons-v5-mount")?.shadowRoot;
             return Boolean(root?.querySelector("#commons-moderation-title")) &&
@@ -180,7 +181,7 @@ async function runCase(requestedRoute, viewport) {
               document.querySelector('meta[name="robots"]')?.content?.startsWith("noindex") &&
               !document.querySelector('link[rel="canonical"]');
           })();
-          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && helpReady && aboutReady && resumeReady && releaseDetailReady && releasesReady && memberReady && publicBetaReady && privateBetaReady && brokerReviewReady && legalReady && commandReady && extraReady && missingReady && moderationReady,
+          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && helpReady && aboutReady && resumeReady && releaseDetailReady && releasesReady && memberReady && publicBetaReady && privateBetaReady && brokerReviewReady && legalReady && commandReady && extraReady && missingReady && moderationReady && originalWorksReady,
             pathname:location.pathname,title:document.title,suspenseReady,homeReady,productsReady,feedReady,rhenReady,liveReady,architectureReady,researchReady,fieldNoteReady,aboutReady,resumeReady,releasesReady,commandReady};
         })()`,
         returnByValue:true
@@ -222,6 +223,7 @@ async function runCase(requestedRoute, viewport) {
         // A private moderator route may have loaded the static HTML while React
           // is still hydrating. Never read its initial public index.html SEO
           // as if it were the fully rendered private route.
+          const originalWorksReady = !${JSON.stringify(route)}.startsWith("/design/original-works") || Boolean(document.querySelector('.ow-site[data-anevum-original-works-preview="true"] h1'));
           const moderationReady = ${JSON.stringify(route)} !== "/communities/moderation" || (() => {
             const root = document.querySelector(".anevum-commons-v5-mount")?.shadowRoot;
             return Boolean(root?.querySelector("#commons-moderation-title")) &&
@@ -229,7 +231,7 @@ async function runCase(requestedRoute, viewport) {
               document.querySelector('meta[name="robots"]')?.content?.startsWith("noindex") &&
               !document.querySelector('link[rel="canonical"]');
           })();
-          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && helpReady && aboutReady && resumeReady && releaseDetailReady && releasesReady && memberReady && publicBetaReady && privateBetaReady && brokerReviewReady && legalReady && commandReady && extraReady && missingReady && moderationReady,
+          return {ready:pathReady && suspenseReady && homeReady && productsReady && feedReady && rhenReady && liveReady && architectureReady && researchReady && fieldNoteReady && helpReady && aboutReady && resumeReady && releaseDetailReady && releasesReady && memberReady && publicBetaReady && privateBetaReady && brokerReviewReady && legalReady && commandReady && extraReady && missingReady && moderationReady && originalWorksReady,
           pathname:location.pathname,title:document.title,suspenseReady,homeReady,productsReady,feedReady,rhenReady,liveReady,architectureReady,researchReady,fieldNoteReady,aboutReady,resumeReady,releasesReady,commandReady};
       })()`,
       returnByValue:true
@@ -237,6 +239,17 @@ async function runCase(requestedRoute, viewport) {
     routeReady = result.result?.value || {};
   }
   if (!routeReady.ready) throw new Error("Route did not hydrate before visual assertion: "+JSON.stringify({route,...routeReady}));
+
+  if (route.startsWith("/design/original-works")) {
+    const response = await send("Runtime.evaluate", {
+      expression: "(() => {const site=document.querySelector('.ow-site[data-anevum-original-works-preview=\"true\"]');return {root:!!site,heading:!!site?.querySelector('h1'),nav:site?.querySelectorAll('.ow-navigation a').length||0,robots:document.querySelector('meta[name=\"robots\"]')?.content||'',canonical:document.querySelector('link[rel=\"canonical\"]')?.href||'',page:location.pathname,hasPrivateSource:!!site?.querySelector('[data-private-canon]')};})()",
+      returnByValue: true
+    });
+    const checked = response.result?.value || {};
+    if (!checked.root || !checked.heading || checked.nav !== 5 || !checked.robots.startsWith("noindex") ||
+        checked.canonical || checked.page !== route || checked.hasPrivateSource)
+      throw new Error("Original works preview indexing/hydration failed: " + JSON.stringify(checked));
+  }
 
   if (route === "/beta") {
     const inspected = await send("Runtime.evaluate", { expression: `(() => {
@@ -574,6 +587,9 @@ async function runCase(requestedRoute, viewport) {
   // Reuse this bounded, hydrated browser target for the release evidence.
   // The duplicate CLI screenshot process could hang until the entire job died.
   const evidenceRoutes = {
+    "/design/original-works":["original-works-home",["data-anevum-original-works-preview","Somewhere,","Discover REPLY"]],
+    "/design/original-works/reply":["original-works-reply",["ow-reply-page","Author revision in progress"]],
+    "/design/original-works/atlas":["original-works-atlas",["ow-atlas-grid","Nali Solan","Ovara"]],
     "/":["home",["anevum-commons-v5-mount","The Commons","Public ANEVUM work"]],
     "/products":["products",["c2-project","Projects and applications"]],
     "/products/rhen":["rhen",["V5 foundation","RHEN","Legacy live trading is suspended"]],
@@ -876,7 +892,7 @@ try {
     {name:"tablet",width:768,height:980,mobile:false,deviceScaleFactor:1},
     {name:"small-desktop",width:1024,height:860,mobile:false,deviceScaleFactor:1}
   ]) {
-    for (const route of ["/", "/beta", "/products", "/field-notes", "/me", "/me/beta", "/apps/rhen/connect"]) {
+    for (const route of ["/design/original-works", "/", "/beta", "/products", "/field-notes", "/me", "/me/beta", "/apps/rhen/connect"]) {
       failures = failures.concat((await runCase(route,viewport))
         .map(item=>viewport.name+" "+route+": "+item));
     }
