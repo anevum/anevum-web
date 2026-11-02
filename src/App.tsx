@@ -6,6 +6,7 @@ import { currentRhenRelease, rhenReleaseBySlug } from "./data/releases";
 
 const RhenTerminal = lazy(() => import("./pages/RhenTerminal"));
 const Command = lazy(() => import("./pages/Command"));
+const OriginalWorksStudio = lazy(() => import("./pages/OriginalWorksStudio"));
 const CommonsV5 = lazy(() => import("./commons/CommonsV5"));
 const MemberHome = lazy(() => import("./pages/MemberHome"));
 const MemberSettings = lazy(() => import("./pages/MemberSettings"));
@@ -159,15 +160,19 @@ function RouteEffects() {
 
   useEffect(() => {
     const path = location.pathname;
+    const isOriginalWorksPreview = path === "/design/original-works" || path.startsWith("/design/original-works/");
     // Dynamic Studio detail pages remain noindex until server-verified per-entry metadata ships.
-    const protectedRoute = path.startsWith("/updates/") || path.startsWith("/studio") || path.startsWith("/command") || path === "/sign-in" ||
+    const protectedRoute = isOriginalWorksPreview || path.startsWith("/updates/") || path.startsWith("/studio") || path.startsWith("/command") || path === "/sign-in" ||
       path.startsWith("/me") || path.startsWith("/apps/") ||
       path === "/communities/moderation";
     const missingRoute = !protectedRoute && !isPublishedPublicPath(path);
     let title = titles[path] || "ANEVUM — Independent Software";
     let description = descriptions[path] || descriptions["/"];
 
-    if (path.startsWith("/apps/rhen/") || path === "/apps/rhen") {
+    if (isOriginalWorksPreview) {
+      title = "Anevum — Original Works (Design Preview)";
+      description = "Review-only studio experience for REPLY and The Transcosmic; not a published release.";
+    } else if (path.startsWith("/apps/rhen/") || path === "/apps/rhen") {
       title = "RHEN Workspace — ANEVUM";
       description = "Authenticated RHEN application workspace.";
     } else if (path.startsWith("/command")) {
@@ -238,6 +243,7 @@ export default function App() {
       <RouteScrollReset />
       <OverflowPan />
       <Routes>
+        <Route path="/design/original-works/*" element={<Suspense fallback={<Loader />}><OriginalWorksStudio /></Suspense>} />
         <Route path="/" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/products" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/beta" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
