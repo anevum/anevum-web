@@ -46,6 +46,52 @@ const entries = [
   }
 ] as const;
 
+
+/**
+ * Opening-state relationships are explicit and intentionally non-transitive:
+ * there is NO Road link from Ovara into the established Veyra–Neral network.
+ * This is an editorial association list, not a geography/technology simulator.
+ */
+const relationships = {
+  ovara: [{ slug: "nali-solan", label: "Nali Solan", relation: "A person of Ovara" }],
+  "nali-solan": [{ slug: "ovara", label: "Ovara", relation: "Home world" }],
+  neral: [{ slug: "veyra", label: "Veyra", relation: "Established Road connection" }],
+  veyra: [{ slug: "neral", label: "Neral", relation: "Established Road connection" }]
+} as const;
+
+function NetworkOverview() {
+  return <section className="ow-atlas-relations" aria-labelledby="ow-atlas-relations-title">
+    <div className="ow-atlas-relations-heading">
+      <div>
+        <p className="ow-card-kicker">Opening-state orientation</p>
+        <h2 id="ow-atlas-relations-title">A universe of different starting points.</h2>
+      </div>
+      <p>A person and her home world. Two other worlds already joined by established infrastructure.</p>
+    </div>
+    <div className="ow-atlas-relations-grid">
+      <div className="ow-atlas-cluster">
+        <span className="ow-atlas-cluster-label">Ovara / Independent context</span>
+        <div className="ow-atlas-cluster-pair">
+          <Link to={ATLAS + "/ovara"}><strong>Ovara</strong><span>World</span></Link>
+          <span className="ow-atlas-connection">Home of</span>
+          <Link to={ATLAS + "/nali-solan"}><strong>Nali Solan</strong><span>Person</span></Link>
+        </div>
+      </div>
+      <div className="ow-atlas-cluster">
+        <span className="ow-atlas-cluster-label">Veyra – Neral / Mature network</span>
+        <div className="ow-atlas-cluster-pair">
+          <Link to={ATLAS + "/veyra"}><strong>Veyra</strong><span>World</span></Link>
+          <span className="ow-atlas-connection">Established Road</span>
+          <Link to={ATLAS + "/neral"}><strong>Neral</strong><span>World</span></Link>
+        </div>
+      </div>
+    </div>
+    <p className="ow-atlas-relations-caption">
+      These contexts are not joined here: at the opening of REPLY, Ovara is not part of the Veyra–Neral Road connection. The diagram is a reading guide, not a literal map.
+    </p>
+  </section>;
+}
+
 type Category = "All" | "World" | "Person";
 
 function Directory() {
@@ -65,6 +111,7 @@ function Directory() {
     <p className="ow-eyebrow">The Transcosmic / Reader Atlas</p>
     <h1 id="ow-atlas-title">A universe<br /><em>worth knowing.</em></h1>
     <p className="ow-page-lead">A curated opening-state introduction. The complete internal encyclopedia includes stories and events that have not been released to readers.</p>
+    <NetworkOverview />
     <div className="ow-atlas-toolbar">
       <div className="ow-atlas-search" role="search" aria-label="Search the Reader Atlas">
         <label htmlFor="ow-atlas-query">Find a record</label>
@@ -145,6 +192,20 @@ function Detail({ slug }: { slug: string }) {
         </dl>
       </aside>
     </div>
+    <section className="ow-atlas-related" aria-labelledby="ow-atlas-related-title">
+      <p className="ow-card-kicker">Follow the connection</p>
+      <h2 id="ow-atlas-related-title">Related records</h2>
+      <div className="ow-atlas-related-grid">
+        {relationships[record.slug].map(related => <Link
+          key={related.slug} to={ATLAS + "/" + related.slug}
+          className="ow-atlas-related-link"
+        >
+          <span>{related.relation}</span>
+          <strong>{related.label}</strong>
+          <span aria-hidden="true">↗</span>
+        </Link>)}
+      </div>
+    </section>
     <div className="ow-actions ow-atlas-detail-actions">
       <Link className="ow-action" to={ATLAS}>Back to Atlas <span className="ow-action-arrow" aria-hidden="true">↗</span></Link>
       <Link className="ow-action ow-action-outline" to={REPLY}>Discover REPLY <span className="ow-action-arrow" aria-hidden="true">↗</span></Link>
