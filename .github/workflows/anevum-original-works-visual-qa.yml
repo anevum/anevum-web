@@ -4,8 +4,11 @@ on:
   pull_request:
     paths:
       - 'src/pages/OriginalWorksStudio.tsx'
+      - 'src/pages/ReplyReadingRoom.tsx'
+      - 'src/styles/reply-reading-room.css'
       - 'src/styles/original-works-preview.css'
       - 'src/App.tsx'
+      - 'tests/original-works-preview.test.mjs'
       - 'scripts/original-works-browser-qa.mjs'
       - '.github/workflows/anevum-original-works-visual-qa.yml'
 
@@ -26,30 +29,48 @@ jobs:
           node-version: '24'
       - name: Install
         run: npm install --no-audit --no-fund
-      - name: Typecheck and create the actual client build
+      - name: Typecheck and build default (review feature disabled)
         run: |
           npm run check
-          # The full release build (including Python PDF rendering) is verified
-          # independently by ANEVUM Verify. This local QA only needs Vite output.
           npx vite build
-      - name: Start loopback-only Vite preview
+      - name: Start loopback-only default preview
         shell: bash
         run: |
           set -euo pipefail
-          npx vite preview --host 127.0.0.1 --port 4173 --strictPort > "$RUNNER_TEMP/anevum-original-works-vite.log" 2>&1 &
+          npx vite preview --host 127.0.0.1 --port 4173 --strictPort > "$RUNNER_TEMP/anevum-review-disabled-vite.log" 2>&1 &
           for i in $(seq 1 40); do
-            if curl --fail --silent --show-error --output /dev/null "http://127.0.0.1:4173/design/original-works"; then
-              echo "Local preview is accepting requests."
+            if curl --fail --silent --show-error --output /dev/null "http://127.0.0.1:4173/design/original-works/reply/reading-room"; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/anevum-review-disabled-vite.log"
+          exit 1
+      - name: Prove the default production build hides review-only pages
+        env:
+          BASE_URL: http://127.0.0.1:4173
+          ORIGINAL_WORKS_VERIFY_DISABLED: '1'
+        run: node scripts/original-works-browser-qa.mjs
+      - name: Build explicitly opted-in review client
+        env:
+          VITE_ORIGINAL_WORKS_PREVIEW: 'true'
+        run: npx vite build
+      - name: Start loopback-only enabled review preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx vite preview --host 127.0.0.1 --port 4174 --strictPort > "$RUNNER_TEMP/anevum-original-works-vite.log" 2>&1 &
+          for i in $(seq 1 40); do
+            if curl --fail --silent --show-error --output /dev/null "http://127.0.0.1:4174/design/original-works/reply/reading-room"; then
               exit 0
             fi
             sleep 1
           done
           cat "$RUNNER_TEMP/anevum-original-works-vite.log"
-          echo "Local preview server was not ready" >&2
           exit 1
-      - name: Validate original works browser routes, noindex, reduced motion and screenshots
+      - name: Validate gated browser routes, noindex, interaction and screenshots
         env:
-          BASE_URL: http://127.0.0.1:4173
+          BASE_URL: http://127.0.0.1:4174
         run: node scripts/original-works-browser-qa.mjs
       - name: Upload desktop and mobile review evidence
         if: always()
