@@ -5,6 +5,8 @@ import { readFileSync } from "node:fs";
 const read = path => readFileSync(new URL("../" + path, import.meta.url), "utf8");
 const app = read("src/App.tsx");
 const studio = read("src/pages/OriginalWorksStudio.tsx");
+const atlas = read("src/pages/AtlasExplorer.tsx");
+const atlasStyle = read("src/styles/atlas-explorer.css");
 const styles = read("src/styles/original-works-preview.css");
 const worker = read("worker.mjs");
 
@@ -39,13 +41,13 @@ test("preview offers meaningful internal navigation with accessible structure", 
 });
 
 test("editorial content is truthful and restricted to opening-state canon", () => {
-  for (const term of ["REPLY", "The Transcosmic", "Ovara", "Nali Solan", "Neral", "Devon Akins", "Author revision in progress", "not a published announcement"]) {
+  for (const term of ["REPLY", "The Transcosmic", "Ovara", "Devon Akins", "Author revision in progress", "not a published announcement"]) {
     assert.ok(studio.includes(term), "missing factual or boundary signal: " + term);
   }
   assert.doesNotMatch(studio, /Talin Vel|Chapter 43|Part IV|REPLY \+90d|purchase now|buy now|on sale now|preorder now|Nov(?:ember)? 17/ig);
   assert.doesNotMatch(studio, /api\/command|api\/member|notion\.so|app\.notion\.com|DATABASE_URL|broker_secret|alpaca_secret|window\.fetch|fetch\(/ig);
   assert.match(studio, /does not fetch/);
-  assert.match(studio, /curated reader preview, not an unrestricted mirror/);
+  assert.match(atlas, /curated reader preview, not an unrestricted mirror/);
 });
 
 test("new visual presentation is scoped, mobile responsive and respects reduced motion", () => {
@@ -56,4 +58,22 @@ test("new visual presentation is scoped, mobile responsive and respects reduced 
   assert.match(styles, /\.ow-skip:focus/);
   assert.doesNotMatch(styles, /(^|\n)(html|body|:root|a|button)\s*\{/m);
   assert.match(studio, /not a literal Skygate or cover/);
+});
+
+
+test("Atlas is a curated, locally searchable directory with closed unknown states", () => {
+  assert.match(studio, /<AtlasExplorer \/>/);
+  assert.match(studio, /page === "atlas-detail"/);
+  for (const term of ["Ovara", "Nali Solan", "Neral", "Veyra"]) assert.ok(atlas.includes(term));
+  assert.match(atlas, /useMemo\(/);
+  assert.match(atlas, /type="search"/);
+  assert.match(atlas, /role="status" aria-live="polite"/);
+  assert.match(atlas, /aria-pressed=\{category === option\}/);
+  assert.match(atlas, /No matching records\./);
+  assert.match(atlas, /Record unavailable\./);
+  assert.match(atlas, /Never fetch private wiki records/);
+  assert.doesNotMatch(atlas, /fetch\(|app\.notion\.com|api\/command|api\/member|Talin Vel|Chapter 43|Part IV|REPLY \+90d/);
+  assert.match(atlasStyle, /@media\(max-width:620px\)/);
+  assert.match(atlasStyle, /\.ow-atlas-search input:focus-visible/);
+  assert.match(atlasStyle, /@media\(prefers-reduced-motion:reduce\)/);
 });
