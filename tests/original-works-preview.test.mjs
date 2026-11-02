@@ -64,13 +64,15 @@ test("new visual presentation is scoped, mobile responsive and respects reduced 
 test("Atlas is a curated, locally searchable directory with closed unknown states", () => {
   assert.match(studio, /<AtlasExplorer \/>/);
   assert.match(studio, /page === "atlas-detail"/);
-  for (const term of ["Ovara", "Nali Solan", "Neral", "Veyra"]) assert.ok(atlas.includes(term));
+  for (const term of ["Ovara", "Nali Solan", "Neral", "Veyra", "Merva", "Serein Skygate", "Neral Skygate", "Open Road"]) assert.ok(atlas.includes(term));
   assert.match(atlas, /useMemo\(/);
   assert.match(atlas, /type="search"/);
   assert.match(atlas, /role="status" aria-live="polite"/);
   assert.match(atlas, /aria-pressed=\{category === option\}/);
   assert.match(atlas, /No matching records\./);
   assert.match(atlas, /Record unavailable\./);
+  assert.match(atlas, /type Category = "All" \| "World" \| "Person" \| "Place" \| "Infrastructure"/);
+  for (const category of ["Place", "Infrastructure"]) assert.ok(atlas.includes(`category: "${category}"`));
   assert.match(atlas, /Never fetch private wiki records/);
   assert.doesNotMatch(atlas, /fetch\(|app\.notion\.com|api\/command|api\/member|Talin Vel|Chapter 43|Part IV|REPLY \+90d/);
   assert.match(atlasStyle, /@media\(max-width:620px\)/);
@@ -92,15 +94,34 @@ test("Atlas network view links only explicitly cleared opening-state relationshi
   assert.match(atlas, /to=\{ATLAS \+ "\/" \+ related\.slug\}/);
   const block = atlas.split("const relationships = {")[1]?.split("} as const;")[0];
   assert.ok(block, "explicit relationship allowlist missing");
-  const links = [...block.matchAll(/^\s*(?:"?([a-z-]+)"?): \[\{ slug: "([a-z-]+)"/gm)];
+  const links = [...block.matchAll(/^\s*"?([a-z-]+)"?:\s*\[\s*\{\s*slug:\s*"([a-z-]+)"/gm)];
   assert.deepEqual(links.map(match => [match[1], match[2]]), [
     ["ovara", "nali-solan"],
     ["nali-solan", "ovara"],
     ["neral", "veyra"],
-    ["veyra", "neral"]
-  ], "do not infer any road connection to Ovara");
-  assert.doesNotMatch(block, /ovara:[^\n]*(?:veyra|neral)/);
+    ["veyra", "neral"],
+    ["merva", "ovara"],
+    ["serein-skygate", "veyra"],
+    ["neral-skygate", "neral"],
+    ["open-road", "serein-skygate"]
+  ], "curated edges must not imply Ovara has a Road connection");
+  const ovaraLinks = block.split("  ovara: [")[1]?.split("  ],")[0] || "";
+  const mervaLinks = block.split("  merva: [")[1]?.split("  ],")[0] || "";
+  assert.doesNotMatch(ovaraLinks + mervaLinks, /slug: "(?:veyra|neral|open-road|serein-skygate|neral-skygate)"/);
+  assert.match(block, /"serein-skygate":\s*\[[\s\S]*?slug: "neral-skygate"/);
+  assert.match(block, /"neral-skygate":\s*\[[\s\S]*?slug: "serein-skygate"/);
   assert.match(atlasStyle, /\.ow-atlas-relations-grid/);
   assert.match(atlasStyle, /\.ow-atlas-related-link:focus-visible/);
   assert.match(atlasStyle, /@media\(max-width:340px\)/);
+});
+
+
+test("Eight review records are explicitly curated and later book content remains gated", () => {
+  const names = ["ovara", "nali-solan", "neral", "veyra", "merva", "serein-skygate", "neral-skygate", "open-road"];
+  const slugs = [...atlas.matchAll(/id: "\d\d", slug: "([a-z-]+)"/g)].map(match => match[1]);
+  assert.deepEqual(slugs, names, "reader preview should not silently add or remove records");
+  for (const name of names) assert.match(atlas, new RegExp("slug: \\"" + name + "\\""));
+  assert.doesNotMatch(atlas, /(?:Kerin Solan|Ovaran Contact Forum|first physical visitor|Chapter 43|Part IV)/);
+  assert.match(atlas, /Never fetch private wiki records/);
+  assert.match(atlas, /no public-reader record exists|No public-reader record exists/);
 });
