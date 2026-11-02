@@ -46,6 +46,8 @@ jobs:
         run: node scripts/validate-release-registry.mjs
       - name: Install
         run: npm install --no-audit --no-fund
+      - name: Verify original-works studio preview isolation
+        run: node --test tests/original-works-preview.test.mjs
       - name: Verify legacy RHEN retirement and Commons independence
         run: node --test tests/legacy-rhen-retirement.test.mjs
       - name: Enforce single guarded production Worker deployment
