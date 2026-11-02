@@ -124,6 +124,14 @@ async function runCase(route, viewport) {
       const searchCheck = async expr => (await send("Runtime.evaluate",{expression:expr,returnByValue:true})).result?.value;
       const initial=await searchCheck('document.querySelectorAll(".ow-atlas-card").length');
       if(initial!==4)throw Error("Atlas initial four opening records missing: "+initial);
+      const network=await searchCheck('(() => {const clusters=[...document.querySelectorAll(".ow-atlas-cluster")];return clusters.map(c=>({name:c.querySelector(".ow-atlas-cluster-label")?.textContent||"",links:[...c.querySelectorAll("a")].map(a=>a.getAttribute("href")),relation:c.querySelector(".ow-atlas-connection")?.textContent||""}));})()');
+      const expected=[
+        {name:"Ovara / Independent context",links:["/design/original-works/atlas/ovara","/design/original-works/atlas/nali-solan"],relation:"Home of"},
+        {name:"Veyra – Neral / Mature network",links:["/design/original-works/atlas/veyra","/design/original-works/atlas/neral"],relation:"Established Road"}
+      ];
+      if(JSON.stringify(network)!==JSON.stringify(expected))
+        throw Error("Atlas opening-state relationships do not match canon boundaries: "+JSON.stringify(network));
+
       await send("Runtime.evaluate",{expression:'(() => {const input=document.querySelector("#ow-atlas-query");const set=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set;set.call(input,"Nali");input.dispatchEvent(new Event("input",{bubbles:true}));})()'});
       let found=false;
       for(let n=0;n<25;n++){const state=await searchCheck('({count:document.querySelectorAll(".ow-atlas-card").length,text:document.querySelector(".ow-atlas-card")?.textContent||""})');if(state?.count===1&&state.text.includes("Nali")){found=true;break;}await sleep(80)}
@@ -160,6 +168,17 @@ async function runCase(route, viewport) {
         throw Error("Atlas deep-linked entry failed: "+JSON.stringify(detail));
       const detailShot=await send("Page.captureScreenshot",{format:"png",captureBeyondViewport:false});
       fs.writeFileSync(path.join(output,"original-works-atlas-detail-"+viewport.name+".png"),Buffer.from(detailShot.data,"base64"));
+      const relatedLink=await read('document.querySelector(".ow-atlas-related-link")?.getAttribute("href")||""');
+      if(relatedLink!=="/design/original-works/atlas/nali-solan")
+        throw Error("Ovara article should relate to Nali, not an unrelated Road world: "+relatedLink);
+      await send("Runtime.evaluate",{expression:'document.querySelector(".ow-atlas-related-link")?.click()'});
+      let followed=false;
+      for(let n=0;n<45;n++){
+        if(await read('location.pathname==="/design/original-works/atlas/nali-solan" && !!document.querySelector("#ow-atlas-detail-heading")?.textContent?.includes("Nali Solan")')){followed=true;break}
+        await sleep(100);
+      }
+      if(!followed)throw Error("Related record link did not navigate to Nali Solan");
+
       await send("Page.navigate",{url:base+"/design/original-works/atlas/unknown-private-record"});
       let missing;
       for(let n=0;n<65;n++){
