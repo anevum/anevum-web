@@ -120,7 +120,7 @@ test("Eight review records are explicitly curated and later book content remains
   const names = ["ovara", "nali-solan", "neral", "veyra", "merva", "serein-skygate", "neral-skygate", "open-road"];
   const slugs = [...atlas.matchAll(/id: "\d\d", slug: "([a-z-]+)"/g)].map(match => match[1]);
   assert.deepEqual(slugs, names, "reader preview should not silently add or remove records");
-  for (const name of names) assert.match(atlas, new RegExp("slug: \\"" + name + "\\""));
+  for (const name of names) assert.ok(atlas.includes('slug: "' + name + '"'));
   assert.doesNotMatch(atlas, /(?:Kerin Solan|Ovaran Contact Forum|first physical visitor|Chapter 43|Part IV)/);
   assert.match(atlas, /Never fetch private wiki records/);
   assert.match(atlas, /no public-reader record exists|No public-reader record exists/);
