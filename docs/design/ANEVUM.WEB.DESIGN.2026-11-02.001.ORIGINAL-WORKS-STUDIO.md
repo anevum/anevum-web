@@ -66,3 +66,14 @@ After preview validation, reconcile approved original art masters and book metad
 
 Historical October 2026 V143 studio direction: https://github.com/anevum/anevum-web/pull/793. It remains an unmerged review branch with games/creator assumptions; do not cherry-pick it blindly or delete it.
 
+
+## 2026-11-02 — Reader preview data-integrity gate (review only)
+
+Anevum's eight introductory reader entries and explicit relationship edges now live in `src/data/transcosmic-reader-preview.json`, with the typed frontend adapter `src/data/transcosmic-reader-preview.ts`. `src/pages/AtlasExplorer.tsx` renders the vetted snapshot; it does not contact Notion or accept arbitrary wiki records. This is **not** a public publishing feed or an approved manuscript copy.
+
+The independent test fixture `tests/fixtures/transcosmic-reader-preview-baseline.json` freezes the current reviewed UI copy and topology. The validator `scripts/verify-transcosmic-reader-preview.mjs` **fails closed** when any record, text, category, relationship, release flag, public queue flag, unexpected field or private-source transport marker departs from the review contract. Its assertions and adversarial tests are run in both the core verification and local visual QA before building the review client.
+
+The browser-review harness additionally tests whether a normal production-default build actually contains any of the distinctive draft text in its generated HTML, JavaScript, CSS or source maps. It must not rely on the client-side `noindex` tag as access control. A reviewer build can be created only with an explicit compile-time flag `VITE_ORIGINAL_WORKS_PREVIEW=true`; the existing Cloudflare-hosted preview restriction and separate provider release gate are unchanged.
+
+**Important limits:** These checks are structural and snapshot-based; they do not replace fresh editorial reading, legal rights verification, an actual secure review service, or publication approval. A new editor-approved wording change requires a human review of the source, deliberate baseline update, and normal CI revalidation. A public release requires a separately approved, spoiler-reviewed public projection and publishing-queue state. No date in a record can flip these flags automatically.
+
