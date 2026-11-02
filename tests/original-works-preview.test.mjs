@@ -90,7 +90,7 @@ test("Atlas network view links only explicitly cleared opening-state relationshi
   assert.match(atlas, /Opening-state orientation/);
   assert.match(atlas, /Ovara \/ Independent context/);
   assert.match(atlas, /Veyra – Neral \/ Mature network/);
-  assert.match(atlas, /Established Road connection/);
+  assert.equal(readerManifest.relationships.neral[0].relation, "Established Road connection");
   assert.match(atlas, /Ovara is not part of the Veyra–Neral Road connection/);
   assert.match(atlas, /Related records/);
   assert.match(atlas, /relationships\[record\.slug\]\.map/);
