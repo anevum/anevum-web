@@ -313,11 +313,11 @@
  .ow-brand-type{font-size:26px}
  .ow-brand-mark,.ow-brand .anevum-mark{width:27px;height:27px}
  .ow-navigation{
-   max-width:100%;margin-top:12px;display:flex;flex-wrap:nowrap;
-   justify-content:flex-start;gap:20px;overflow-x:auto;
-   padding-bottom:5px;scrollbar-width:thin;
+   max-width:100%;margin-top:12px;display:flex;flex-wrap:wrap;
+   justify-content:flex-start;gap:7px 13px;overflow:visible;
+   padding-bottom:0;
  }
- .ow-navigation>a{font-size:10px;white-space:nowrap;padding:5px 0}
+ .ow-navigation>a{font-size:10px;letter-spacing:.04em;white-space:nowrap;padding:7px 2px}
  .ow-hero{
    min-height:685px;align-items:flex-end;
    padding:245px 22px 100px;
