@@ -1,0 +1,36 @@
+.ow-atlas-toolbar{display:flex;align-items:end;justify-content:space-between;gap:23px;flex-wrap:wrap;margin-top:50px}
+.ow-atlas-search{flex:1 1 300px;max-width:580px}
+.ow-atlas-search label{display:block;margin-bottom:10px;color:#ccb294;font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase}
+.ow-atlas-search input{display:block;width:100%;min-height:53px;border:1px solid #748b9aaa;border-radius:0;background:#101a28;color:#f3eee6;padding:13px 16px;font:inherit;font-size:15px}
+.ow-atlas-search input::placeholder{color:#a8b8c4}
+.ow-atlas-search input:focus-visible,.ow-atlas-filters button:focus-visible,.ow-atlas-empty button:focus-visible{outline:3px solid #b8dafe;outline-offset:3px}
+.ow-atlas-filters{display:flex;gap:7px;flex-wrap:wrap}
+.ow-atlas-filters button{min-height:47px;border:1px solid #8294a09a;background:transparent;color:#dce5eb;padding:0 15px;font:inherit;font-size:12px;cursor:pointer}
+.ow-atlas-filters button[aria-pressed=true]{border-color:#e4d2b8;background:#e4d2b8;color:#111a25;font-weight:700}
+.ow-atlas-results{margin:20px 0 0;color:#bfccda!important;font-size:12px;letter-spacing:.05em}
+.ow-atlas-explorer .ow-atlas-grid{margin-top:25px}
+.ow-atlas-explorer .ow-atlas-card{gap:22px;transition:background .2s,border-color .2s;justify-content:space-between}
+.ow-atlas-explorer .ow-atlas-card:hover{background:#273849;border-color:#c9b699}
+.ow-atlas-card-body{display:flex;flex-direction:column;gap:14px}
+.ow-atlas-title{font:normal 36px Georgia,serif;letter-spacing:-.03em;color:#f0ebe3}
+.ow-atlas-summary{color:#c2cbd4;font-size:13px;line-height:1.7}
+.ow-atlas-open{color:#e5ceb0;font-size:12px;font-weight:700;margin-top:5px}
+.ow-atlas-empty{padding:40px 35px;margin-top:24px;background:linear-gradient(140deg,#182332,#0d1623);border:1px solid #73879977}
+.ow-atlas-empty h2{font:normal 33px Georgia,serif;margin:0 0 10px}
+.ow-atlas-empty p{max-width:540px;color:#c0cad4;line-height:1.7}
+.ow-atlas-empty button{min-height:44px;margin-top:15px;border:1px solid #d7c8ad;background:#eae8dc;color:#111820;padding:0 17px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.ow-atlas-detail .ow-breadcrumb{flex-wrap:wrap}
+.ow-atlas-detail-index{font:400 clamp(14px,2vw,22px) ui-sans-serif,sans-serif;color:#b8a890;letter-spacing:.06em;vertical-align:middle}
+.ow-atlas-detail-layout{display:grid;grid-template-columns:1.4fr .6fr;gap:25px;max-width:1080px;margin-top:60px}
+.ow-atlas-detail-copy,.ow-atlas-detail-aside{padding:35px;background:linear-gradient(130deg,#1b2938,#101821);border:1px solid #a5b2be3f}
+.ow-atlas-detail-copy h2{font:normal clamp(29px,3vw,43px) Georgia,serif;margin:24px 0}
+.ow-atlas-detail-copy>p{font-size:16px;line-height:1.84;color:#c5d0d9;max-width:650px}
+.ow-atlas-detail-copy .ow-atlas-source-note{margin-top:32px;border-top:1px solid #8899a84d;padding-top:20px;font-size:12px;color:#afbccc}
+.ow-atlas-detail-aside dl{margin:25px 0 0}
+.ow-atlas-detail-aside dl div{border-bottom:1px solid #8793a440;padding:12px 0}
+.ow-atlas-detail-aside dt{font-size:10px;letter-spacing:.11em;color:#c7ad89;text-transform:uppercase;margin-bottom:7px}
+.ow-atlas-detail-aside dd{margin:0;font-size:14px;line-height:1.5;color:#e5e6e7}
+.ow-atlas-detail-actions{margin-top:35px}
+@media(max-width:760px){.ow-atlas-detail-layout{grid-template-columns:1fr}.ow-atlas-toolbar{align-items:stretch}.ow-atlas-filters{width:100%}}
+@media(max-width:620px){.ow-atlas-explorer .ow-atlas-grid{margin-top:20px}.ow-atlas-search{flex-basis:100%}.ow-atlas-filters button{flex:1 1 auto}.ow-atlas-detail-copy,.ow-atlas-detail-aside{padding:25px}.ow-atlas-detail-layout{gap:14px;margin-top:35px}}
+@media(prefers-reduced-motion:reduce){.ow-atlas-explorer .ow-atlas-card{transition:none}}
