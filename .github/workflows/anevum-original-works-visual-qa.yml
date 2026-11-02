@@ -4,6 +4,11 @@ on:
   pull_request:
     paths:
       - 'src/pages/OriginalWorksStudio.tsx'
+      - 'src/data/transcosmic-reader-preview.json'
+      - 'src/data/transcosmic-reader-preview.ts'
+      - 'scripts/verify-transcosmic-reader-preview.mjs'
+      - 'tests/transcosmic-reader-preview.test.mjs'
+      - 'tests/fixtures/transcosmic-reader-preview-baseline.json'
       - 'src/pages/ReplyReadingRoom.tsx'
       - 'src/styles/reply-reading-room.css'
       - 'src/styles/original-works-preview.css'
@@ -29,6 +34,10 @@ jobs:
           node-version: '24'
       - name: Install
         run: npm install --no-audit --no-fund
+      - name: Validate spoiler-safe review data before any frontend build
+        run: |
+          node scripts/verify-transcosmic-reader-preview.mjs
+          node --test tests/transcosmic-reader-preview.test.mjs tests/original-works-preview.test.mjs
       - name: Typecheck and build default (review feature disabled)
         run: |
           npm run check
