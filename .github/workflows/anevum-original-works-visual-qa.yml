@@ -1,0 +1,60 @@
+name: Anevum Original Works Visual QA
+
+on:
+  pull_request:
+    paths:
+      - 'src/pages/OriginalWorksStudio.tsx'
+      - 'src/styles/original-works-preview.css'
+      - 'src/App.tsx'
+      - 'scripts/original-works-browser-qa.mjs'
+      - '.github/workflows/anevum-original-works-visual-qa.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  original-works-visual:
+    name: Local build and browser screenshots (no deployment)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout reviewed source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Typecheck and create the actual client build
+        run: |
+          npm run check
+          npm run build
+      - name: Start loopback-only Vite preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx vite preview --host 127.0.0.1 --port 4173 --strictPort > "$RUNNER_TEMP/anevum-original-works-vite.log" 2>&1 &
+          for i in $(seq 1 40); do
+            if curl --fail --silent --show-error --output /dev/null "http://127.0.0.1:4173/design/original-works"; then
+              echo "Local preview is accepting requests."
+              exit 0
+            fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/anevum-original-works-vite.log"
+          echo "Local preview server was not ready" >&2
+          exit 1
+      - name: Validate original works browser routes, noindex, reduced motion and screenshots
+        env:
+          BASE_URL: http://127.0.0.1:4173
+        run: node scripts/original-works-browser-qa.mjs
+      - name: Upload desktop and mobile review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-original-works-review-${{ github.event.pull_request.number }}
+          path: ${{ runner.temp }}/anevum-original-works-preview/
+          if-no-files-found: warn
+          retention-days: 7
