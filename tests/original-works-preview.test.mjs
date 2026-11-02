@@ -99,8 +99,8 @@ test("Atlas network view links only explicitly cleared opening-state relationshi
     ["neral", "veyra"],
     ["veyra", "neral"]
   ], "do not infer any road connection to Ovara");
-  assert.doesNotMatch(block, /ovara:[^\\n]*(?:veyra|neral)/);
-  assert.match(atlasStyle, /\\.ow-atlas-relations-grid/);
-  assert.match(atlasStyle, /\\.ow-atlas-related-link:focus-visible/);
-  assert.match(atlasStyle, /@media\\(max-width:340px\\)/);
+  assert.doesNotMatch(block, /ovara:[^\n]*(?:veyra|neral)/);
+  assert.match(atlasStyle, /\.ow-atlas-relations-grid/);
+  assert.match(atlasStyle, /\.ow-atlas-related-link:focus-visible/);
+  assert.match(atlasStyle, /@media\(max-width:340px\)/);
 });
