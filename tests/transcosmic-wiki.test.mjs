@@ -76,7 +76,9 @@ test("wiki remains fail-closed and contains no private canon, editing or externa
   assert.match(wiki,/<WikiMissing\/>/);
   assert.match(wiki,/Guessing a URL never reveals private or unpublished canon/);
   assert.match(wiki,/There is not yet a public editing form/);
-  assert.match(wiki,/does not make it publicly released or establish book availability/);
+  assert.match(wiki,/does not establish book availability/);
+  assert.match(wiki,/Public-source cleared/);
+  assert.match(wiki,/Source: Now \/ Public queue/);
   for(const s of [wiki,model]) {
     assert.doesNotMatch(s,/dangerouslySetInnerHTML|fetch\(|XMLHttpRequest|axios|eval\(|window\.localStorage|api\/command|api\/member|notion\.so|app\.notion\.com/);
     assert.doesNotMatch(s,/Ovaran Contact Forum|first physical visitor|Chapter 43|Part IV|REPLY \+90/);
