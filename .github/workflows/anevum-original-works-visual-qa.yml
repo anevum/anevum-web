@@ -1,0 +1,118 @@
+name: Anevum Original Works Visual QA
+
+on:
+  pull_request:
+    paths:
+      - 'src/pages/OriginalWorksStudio.tsx'
+      - 'src/pages/TranscosmicWiki.tsx'
+      - 'src/data/transcosmic-wiki.ts'
+      - 'src/data/wiki-directory.ts'
+      - 'tests/wiki-directory.test.mjs'
+      - 'src/data/transcosmic-wiki-expansion-a.json'
+      - 'src/data/transcosmic-wiki-expansion-b.json'
+      - 'src/data/transcosmic-wiki-relations.json'
+      - 'scripts/verify-transcosmic-wiki-expansion.mjs'
+      - 'tests/transcosmic-wiki-expansion.test.mjs'
+      - 'src/styles/transcosmic-wiki.css'
+      - 'tests/transcosmic-wiki.test.mjs'
+      - 'scripts/verify-original-works-hosted-access.mjs'
+      - 'tests/original-works-hosted-access.test.mjs'
+      - 'scripts/verify-original-works-protected-preview.mjs'
+      - 'scripts/verify-original-works-preview-bundle.mjs'
+      - 'tests/original-works-preview-bundle.test.mjs'
+      - 'tests/original-works-protected-preview.test.mjs'
+      - 'src/data/transcosmic-reader-preview.json'
+      - 'src/data/transcosmic-reader-preview.ts'
+      - 'scripts/verify-transcosmic-reader-preview.mjs'
+      - 'tests/transcosmic-reader-preview.test.mjs'
+      - 'tests/fixtures/transcosmic-reader-preview-baseline.json'
+      - 'src/pages/ReplyReadingRoom.tsx'
+      - 'src/styles/reply-reading-room.css'
+      - 'src/styles/original-works-preview.css'
+      - 'src/App.tsx'
+      - 'tests/original-works-preview.test.mjs'
+      - 'scripts/original-works-browser-qa.mjs'
+      - '.github/workflows/anevum-original-works-visual-qa.yml'
+
+concurrency:
+  group: anevum-original-works-visual-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  original-works-visual:
+    name: Local build and browser screenshots (no deployment)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout reviewed source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install
+        run: npm install --no-audit --no-fund
+      - name: Validate spoiler-safe review data before any frontend build
+        run: |
+          node scripts/verify-transcosmic-reader-preview.mjs
+          node scripts/verify-transcosmic-wiki-expansion.mjs
+          node --test tests/transcosmic-reader-preview.test.mjs tests/original-works-preview.test.mjs tests/original-works-hosted-access.test.mjs tests/original-works-protected-preview.test.mjs tests/transcosmic-wiki.test.mjs tests/transcosmic-wiki-expansion.test.mjs
+          node --experimental-strip-types --test tests/wiki-directory.test.mjs
+          node --test tests/original-works-preview-bundle.test.mjs
+      - name: Typecheck and build default (review feature disabled)
+        run: |
+          npm run check
+          npx vite build
+          node scripts/verify-original-works-preview-bundle.mjs --disabled
+      - name: Start loopback-only default preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx vite preview --host 127.0.0.1 --port 4173 --strictPort > "$RUNNER_TEMP/anevum-review-disabled-vite.log" 2>&1 &
+          for i in $(seq 1 40); do
+            if curl --fail --silent --show-error --output /dev/null "http://127.0.0.1:4173/design/original-works/reply/reading-room"; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/anevum-review-disabled-vite.log"
+          exit 1
+      - name: Prove the default production build hides review-only pages
+        env:
+          BASE_URL: http://127.0.0.1:4173
+          ORIGINAL_WORKS_VERIFY_DISABLED: '1'
+        run: node scripts/original-works-browser-qa.mjs
+      - name: Build explicitly opted-in review client
+        env:
+          VITE_ORIGINAL_WORKS_PREVIEW: 'true'
+        run: |
+          npx vite build
+          node scripts/verify-original-works-preview-bundle.mjs --enabled
+      - name: Start loopback-only enabled review preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx vite preview --host 127.0.0.1 --port 4174 --strictPort > "$RUNNER_TEMP/anevum-original-works-vite.log" 2>&1 &
+          for i in $(seq 1 40); do
+            if curl --fail --silent --show-error --output /dev/null "http://127.0.0.1:4174/design/original-works/reply/reading-room"; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/anevum-original-works-vite.log"
+          exit 1
+      - name: Validate gated browser routes, noindex, interaction and screenshots
+        env:
+          BASE_URL: http://127.0.0.1:4174
+        run: node scripts/original-works-browser-qa.mjs
+      - name: Upload desktop and mobile review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-original-works-review-${{ github.event.pull_request.number }}
+          path: ${{ runner.temp }}/anevum-original-works-preview/
+          if-no-files-found: warn
+          retention-days: 7

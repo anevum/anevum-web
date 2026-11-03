@@ -1,0 +1,123 @@
+/* Anevum REPLY Signal Studies — scoped, responsive and review-only */
+.ow-reading-room .ow-page-lead{max-width:740px}
+.ow-room-disclaimer{
+  max-width:810px;line-height:1.7;font-size:12px;
+  color:#cbbba9;border-left:2px solid #bda07f;
+  padding:16px 20px;margin:0 0 49px;background:#9b76571b;
+}
+.ow-room-disclaimer strong{color:#f2e4d2}
+.ow-room-stage{
+  display:grid;grid-template-columns:minmax(190px,.55fr) minmax(0,1.45fr);
+  gap:0;min-height:510px;border:1px solid #8c9ba84a;
+  background:#111a26;box-shadow:0 25px 95px #0003;
+}
+.ow-room-index{
+  display:flex;flex-direction:column;border-right:1px solid #8c9ba84a;
+  padding:25px 0;align-self:stretch;
+  background:linear-gradient(160deg,#192635,#0d1723);
+}
+.ow-room-index-button{
+  display:grid;grid-template-columns:27px 1fr auto;align-items:center;
+  width:100%;gap:13px;padding:23px clamp(15px,2vw,28px);
+  border:0;border-left:3px solid transparent;color:#bac7d4;
+  background:transparent;text-align:left;cursor:pointer;
+  transition:background .18s,color .18s,border-color .18s;
+}
+.ow-room-index-button span:first-child{
+  color:#bba383;font-size:11px;font-variant-numeric:tabular-nums;
+}
+.ow-room-index-button strong{font-weight:550;font-size:14px;letter-spacing:.008em}
+.ow-room-index-button.is-current{
+  background:#8ca9c324;color:#f8f0df;
+  border-left-color:#e7c6a0;
+}
+.ow-room-index-button:hover{background:#8ca9c315;color:#f8f0df}
+.ow-room-index-button:focus-visible,.ow-room-card-bottom a:focus-visible{outline:3px solid #b8dafe;outline-offset:3px}
+.ow-room-index-chevron{font-size:17px;font-weight:400}
+.ow-room-card{
+  min-height:510px;position:relative;display:flex;
+  flex-direction:column;justify-content:space-between;
+  padding:clamp(25px,4.5vw,60px);
+  background:
+    radial-gradient(ellipse at 93% 7%,#6b88ac22,transparent 58%),
+    linear-gradient(145deg,#1b2734,#101822 70%,#242126);
+  overflow:hidden;
+}
+.ow-room-card:after{
+  content:"";position:absolute;pointer-events:none;inset:22px;
+  border:1px solid #afbbcf19;
+}
+.ow-room-corner{position:absolute;right:-25%;width:65%;aspect-ratio:1;
+  border:1px solid #b5c5d224;border-radius:50%;pointer-events:none}
+.ow-room-corner-top{top:-73%;transform:rotate(-25deg) scaleX(.82)}
+.ow-room-corner-bottom{bottom:-77%;border-color:#c39b8531;transform:rotate(28deg) scaleX(.7)}
+.ow-room-card-top,.ow-room-card-bottom{
+  position:relative;z-index:1;display:flex;
+  justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;
+  font-size:10px;letter-spacing:.115em;color:#b4bece;
+  text-transform:uppercase;
+}
+.ow-room-card-body{position:relative;z-index:1;max-width:675px;margin:36px 0}
+.ow-room-kicker{margin:0 0 25px;font-size:10px;
+  letter-spacing:.2em;color:#cdb697;text-transform:uppercase}
+.ow-room-card h2{
+  font:normal clamp(38px,4.5vw,67px)/1.13 Georgia,"Times New Roman",serif;
+  letter-spacing:-.04em;max-width:610px;margin:0 0 32px;color:#f5eee3;
+  text-wrap:balance;
+}
+.ow-room-card-body>p:not(.ow-room-kicker){
+  margin:0;max-width:580px;font-size:clamp(14px,1.3vw,17px);
+  color:#d0d7dc;line-height:1.85;
+}
+.ow-room-note{
+  margin-top:32px;padding-top:19px;border-top:1px solid #c6af926c;
+  color:#bfb1a2;font:italic 16px/1.6 Georgia,serif;
+}
+.ow-room-card-bottom{align-items:flex-end}
+.ow-room-card-bottom a{color:#f1d6b3;text-decoration:none;font-weight:720}
+.ow-room-card-bottom a:hover{text-decoration:underline;text-underline-offset:5px}
+.ow-room-footer{
+  display:flex;justify-content:space-between;align-items:center;
+  gap:32px;padding:30px 0 0;
+}
+.ow-room-footer p{max-width:600px;font-size:13px;line-height:1.8;color:#aab5c0}
+@media(max-width:960px){
+  .ow-room-stage{grid-template-columns:minmax(170px,.62fr) minmax(0,1.38fr)}
+  .ow-room-index-button{gap:9px;padding:19px 15px}
+  .ow-room-card{padding:28px}
+  .ow-room-card h2{font-size:clamp(37px,5vw,53px)}
+}
+@media(max-width:620px){
+  .ow-room-stage{grid-template-columns:1fr}
+  .ow-room-index{flex-direction:row;border-right:0;
+    border-bottom:1px solid #8c9ba84a;padding:0}
+  .ow-room-index-button{
+    display:flex;flex-direction:column;align-items:flex-start;
+    justify-content:center;flex:1 1 0;min-width:0;gap:8px;
+    border-left:0;border-bottom:2px solid transparent;
+    padding:16px 10px;
+  }
+  .ow-room-index-button.is-current{border-bottom-color:#e7c6a0}
+  .ow-room-index-button strong{font-size:11px}
+  .ow-room-index-chevron{display:none}
+  .ow-room-card{min-height:470px;padding:24px}
+  .ow-room-card h2{font-size:clamp(38px,10vw,52px)}
+  .ow-room-card-top,.ow-room-card-bottom{font-size:9px}
+  .ow-room-card-bottom{align-items:flex-start}
+  .ow-room-card-bottom>*{width:100%}
+  .ow-room-disclaimer{margin-bottom:28px}
+  .ow-room-footer{flex-direction:column;align-items:flex-start;gap:16px}
+}
+@media(max-width:340px){
+  .ow-room-index-button{padding:13px 8px}
+  .ow-room-index-button strong{font-size:10px}
+  .ow-room-card{padding:19px;min-height:510px}
+}
+@media(prefers-reduced-motion:reduce){
+  .ow-room-index-button{transition:none}
+}
+@media(forced-colors:active){
+  .ow-room-index-button{border:1px solid ButtonText}
+  .ow-room-index-button.is-current{outline:2px solid Highlight}
+  .ow-room-card{border:1px solid CanvasText}
+}

@@ -46,6 +46,13 @@ jobs:
         run: node scripts/validate-release-registry.mjs
       - name: Install
         run: npm install --no-audit --no-fund
+      - name: Verify original-works studio preview isolation
+        run: |
+          node scripts/verify-transcosmic-reader-preview.mjs
+          node scripts/verify-transcosmic-wiki-expansion.mjs
+          node --test tests/original-works-preview.test.mjs tests/transcosmic-reader-preview.test.mjs tests/original-works-hosted-access.test.mjs tests/original-works-protected-preview.test.mjs tests/transcosmic-wiki.test.mjs tests/transcosmic-wiki-expansion.test.mjs
+          node --experimental-strip-types --test tests/wiki-directory.test.mjs
+          node --test tests/original-works-preview-bundle.test.mjs
       - name: Verify legacy RHEN retirement and Commons independence
         run: node --test tests/legacy-rhen-retirement.test.mjs
       - name: Enforce single guarded production Worker deployment
@@ -113,6 +120,28 @@ jobs:
           print("resume pdf bytes:", len(pdf))
           PY
 
+      - name: Prove default build has no Original Works editorial bytes
+        run: node scripts/verify-original-works-preview-bundle.mjs --disabled
+
+      - name: Verify owner-only Access before hosted Cloudflare Preview
+        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          ANEVUM_WEB_PREVIEW_ACCESS_APP_ID: ${{ vars.ANEVUM_WEB_PREVIEW_ACCESS_APP_ID }}
+          ANEVUM_WEB_PREVIEW_WORKER_UUID: ${{ vars.ANEVUM_WEB_PREVIEW_WORKER_UUID }}
+        run: node scripts/verify-original-works-hosted-access.mjs
+
+      - name: Build Original Works client only after owner Access is verified
+        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
+        env:
+          VITE_ORIGINAL_WORKS_PREVIEW: 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx vite build
+          node scripts/verify-original-works-preview-bundle.mjs --enabled
+
       - id: preview
         if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
         name: Create or update Cloudflare Preview
@@ -130,8 +159,24 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      - name: Probe routes, SEO, PDF, and public privacy contract
+      - name: Prove owner-only Preview denies anonymous requests
         if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
+        env:
+          BASE_URL: ${{ steps.preview.outputs.preview_url }}
+        run: node scripts/verify-original-works-protected-preview.mjs
+
+      - name: Record manual owner-authenticated preview acceptance gate
+        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "### Owner-authenticated review still required" >> "$GITHUB_STEP_SUMMARY"
+          echo "Anonymous Access denial passed. This does not validate authenticated rendering, legacy public routes, client state or editorial copy." >> "$GITHUB_STEP_SUMMARY"
+          echo "The legacy positive hosted probes require a separately approved CI Access identity and are intentionally skipped unless ANEVUM_WEB_OWNER_AUTHENTICATED_QA is explicitly enabled." >> "$GITHUB_STEP_SUMMARY"
+          echo "Do not mark this draft ready for merge or publication until an owner reviews the protected preview and source-head visual QA." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Probe routes, SEO, PDF, and public privacy contract
+        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true' && vars.ANEVUM_WEB_OWNER_AUTHENTICATED_QA == 'true'
         shell: bash
         run: |
           set -euxo pipefail
@@ -190,9 +235,10 @@ jobs:
           test "$(curl --show-error --silent -o /dev/null -w '%{http_code}' "$base/api/command/trader/status")" = "401"
           test "$(curl --show-error --silent -o /dev/null -w '%{http_code}' "$base/api/command/iren/status")" = "401"
           curl --fail --show-error --silent --head "$base/command" | grep -qi 'x-robots-tag:.*noindex'
+          curl --fail --show-error --silent --head "$base/design/original-works" | grep -qi 'x-robots-tag:.*noindex'
 
       - name: Verify browser runtime and horizontal overflow
-        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
+        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true' && vars.ANEVUM_WEB_OWNER_AUTHENTICATED_QA == 'true'
         env:
           BASE_URL: ${{ steps.preview.outputs.preview_url }}
         run: |
@@ -206,15 +252,23 @@ jobs:
           node scripts/discussion-lifecycle-browser-qa.mjs
           node scripts/private-rhen-browser-qa.mjs
       - name: Visual review contact sheets
-        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
+        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true' && vars.ANEVUM_WEB_OWNER_AUTHENTICATED_QA == 'true'
         run: python scripts/visual-ops-contact-sheet.py
 
       - name: Verify captured browser QA
-        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
+        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true' && vars.ANEVUM_WEB_OWNER_AUTHENTICATED_QA == 'true'
         shell: bash
         run: |
           set -euo pipefail
           evidence="$RUNNER_TEMP/anevum-visuals"
+          for name in original-works-home original-works-reply original-works-atlas; do
+            test -s "$evidence/$name-desktop.png"
+            test -s "$evidence/$name-mobile.png"
+            test -s "$evidence/$name-rendered.html"
+          done
+          grep -Fq 'Somewhere,' "$evidence/original-works-home-rendered.html"
+          grep -Fq 'Author revision in progress' "$evidence/original-works-reply-rendered.html"
+          grep -Fq 'Nali Solan' "$evidence/original-works-atlas-rendered.html"
           for name in home products feed rhen terminal research field-note architecture about resume releases release-detail rhen-review-disclosure; do
             test -s "$evidence/$name-desktop.png"
             test -s "$evidence/$name-mobile.png"
@@ -265,7 +319,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload browser QA
-        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
+        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true' && vars.ANEVUM_WEB_OWNER_AUTHENTICATED_QA == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: anevum-preview-visuals

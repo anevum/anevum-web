@@ -1,0 +1,197 @@
+{
+  "schema": "transcosmic.wiki-relations.v1",
+  "releaseState": "review_only",
+  "publicationApproved": false,
+  "relationships": {
+    "cape-serein": [
+      {
+        "slug": "greater-serein",
+        "relation": "District of"
+      },
+      {
+        "slug": "continuance-institute",
+        "relation": "Research campus"
+      },
+      {
+        "slug": "veyra",
+        "relation": "Planetary setting"
+      }
+    ],
+    "continuance-institute": [
+      {
+        "slug": "cape-serein",
+        "relation": "Coastal campus"
+      },
+      {
+        "slug": "greater-serein",
+        "relation": "Regional setting"
+      }
+    ],
+    "d3-17": [
+      {
+        "slug": "greater-serein",
+        "relation": "Archive location"
+      }
+    ],
+    "deep-three": [
+      {
+        "slug": "ione",
+        "relation": "Moon station"
+      }
+    ],
+    "elias-venn": [],
+    "grainit": [],
+    "greater-serein": [
+      {
+        "slug": "veyra",
+        "relation": "Planetary setting"
+      },
+      {
+        "slug": "cape-serein",
+        "relation": "Coastal district"
+      },
+      {
+        "slug": "continuance-institute",
+        "relation": "Scientific institution"
+      },
+      {
+        "slug": "lio-sol",
+        "relation": "Resident conservator"
+      },
+      {
+        "slug": "rena-sol",
+        "relation": "Resident scientist"
+      },
+      {
+        "slug": "serein-skygate",
+        "relation": "Regional gate-city"
+      }
+    ],
+    "ione": [
+      {
+        "slug": "veyra",
+        "relation": "Orbits"
+      },
+      {
+        "slug": "deep-three",
+        "relation": "Research installation"
+      }
+    ],
+    "iren": [
+      {
+        "slug": "veyra",
+        "relation": "Everyday information interface"
+      },
+      {
+        "slug": "neral",
+        "relation": "Everyday information interface"
+      }
+    ],
+    "lio-sol": [
+      {
+        "slug": "greater-serein",
+        "relation": "Home city-region"
+      }
+    ],
+    "rena-sol": [
+      {
+        "slug": "greater-serein",
+        "relation": "Home city-region"
+      }
+    ],
+    "skygate-age": [
+      {
+        "slug": "veyra",
+        "relation": "Connected world"
+      },
+      {
+        "slug": "neral",
+        "relation": "Connected world"
+      },
+      {
+        "slug": "open-road",
+        "relation": "Mature travel network"
+      }
+    ],
+    "skygate-megastructure": [
+      {
+        "slug": "serein-skygate",
+        "relation": "Veyran example"
+      },
+      {
+        "slug": "neral-skygate",
+        "relation": "Neran example"
+      },
+      {
+        "slug": "open-road",
+        "relation": "Maintained connection"
+      }
+    ],
+    "talin-vel": [
+      {
+        "slug": "serein-skygate",
+        "relation": "Home gate-city"
+      }
+    ]
+  },
+  "bridges": {
+    "veyra": [
+      {
+        "slug": "greater-serein",
+        "relation": "Major city-region"
+      },
+      {
+        "slug": "ione",
+        "relation": "Natural satellite"
+      },
+      {
+        "slug": "skygate-age",
+        "relation": "Current era"
+      },
+      {
+        "slug": "iren",
+        "relation": "Artificial intelligence interface"
+      }
+    ],
+    "neral": [
+      {
+        "slug": "skygate-age",
+        "relation": "Current era"
+      },
+      {
+        "slug": "iren",
+        "relation": "Artificial intelligence interface"
+      }
+    ],
+    "serein-skygate": [
+      {
+        "slug": "skygate-megastructure",
+        "relation": "Structure type"
+      },
+      {
+        "slug": "talin-vel",
+        "relation": "Gateborn professional"
+      },
+      {
+        "slug": "greater-serein",
+        "relation": "City-region served"
+      }
+    ],
+    "neral-skygate": [
+      {
+        "slug": "skygate-megastructure",
+        "relation": "Structure type"
+      }
+    ],
+    "open-road": [
+      {
+        "slug": "skygate-megastructure",
+        "relation": "Paired orbital infrastructure"
+      },
+      {
+        "slug": "skygate-age",
+        "relation": "Mature connected era"
+      }
+    ]
+  }
+}
