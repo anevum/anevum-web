@@ -77,3 +77,20 @@ The browser-review harness additionally tests whether a normal production-defaul
 
 **Important limits:** These checks are structural and snapshot-based; they do not replace fresh editorial reading, legal rights verification, an actual secure review service, or publication approval. A new editor-approved wording change requires a human review of the source, deliberate baseline update, and normal CI revalidation. A public release requires a separately approved, spoiler-reviewed public projection and publishing-queue state. No date in a record can flip these flags automatically.
 
+
+## 2026-11-02 — Owner-only hosted review preflight (proposed; not provisioned)
+
+**Implemented:** `scripts/verify-original-works-hosted-access.mjs` and `tests/original-works-hosted-access.test.mjs` perform a **read-only, fail-closed** Cloudflare Access / Worker configuration preflight before the legacy `wrangler preview` step in ANEVUM Verify. Core CI and local browser QA test both allowed and unsafe configurations. This preflight never creates Access applications, edits remote Worker settings, enables preview URLs, grants identities, starts a deployment, or publishes a web page.
+
+**Verified current blocker:** Remote `anevum-web-nextgen` reports `enabled=false` and `previews_enabled=false`; the current Cloudflare account has no observed Access application that explicitly protects this Worker's preview traffic. An existing `preview_worker` Access application protects another Anevum project and is **not** transferable evidence of website preview protection.
+
+### Deliberate setup gate — requires separate approval
+
+1. Approve the specific hosted review surface and permitted identity or identities. The current preflight is intentionally limited to one exact owner email; it rejects wildcard, domain-wide, bypass, other email and arbitrary service-token allow rules.
+2. Create or identify a Cloudflare **self-hosted Access app** with exactly one `preview_worker` destination for the actual `anevum-web-nextgen` Worker UUID. Never select `worker` (which would change production authorization) or an application belonging to a different Worker. Configure a single owner-only `allow` rule; no public bypass.
+3. Confirm preview URLs are explicitly allowed for that Worker in Cloudflare. This is an external configuration change and **must not be inferred from `wrangler.jsonc`**. Enabling the Worker subdomain/preview endpoint is an external-exposure operation; obtain approval first.
+4. Configure GitHub Actions repository variables `ANEVUM_WEB_PREVIEW_ACCESS_APP_ID` and `ANEVUM_WEB_PREVIEW_WORKER_UUID` with the reviewed identifiers. The code compares the pinned Worker UUID to the live Cloudflare script tag, not only to the Access app.
+5. CI uses its existing Cloudflare read token and account ID to inspect the app/policy, actual Worker identity and remote preview enablement; missing variables, denied reads, incorrect worker, broad policies, and disabled previews stop **before** `wrangler preview` is called. No credentials are printed by the preflight.
+6. **Additional work after preflight passes:** the legacy hosted HTTP/browser QA expects unauthenticated responses. Cloudflare Access will correctly block those. Do not disable Access to make those checks pass: use a separately authorized minimally privileged CI service identity and redesign the hosted smoke tests for authenticated checks, or retain human owner review and local automated evidence. This is **not yet implemented**.
+
+**Release state:** Not LIVE. No production deploy, worker configuration, Access policy, service token, DNS, account permissions, or public wiki queue was changed during this implementation. The existing local browser screenshots remain the functional review evidence until an approved hosted endpoint and its authentication are verified.
