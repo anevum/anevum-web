@@ -10,13 +10,14 @@ const SAMPLE = {
   html_url:"https://evil.example/steal?cookie=fake"
 };
 test("allowlisted GitHub workflows discard arbitrary upstream links and extra keys",()=>{
-  const run=normalizeGitHubRun("anevum/anevum-web",SAMPLE);
-  assert.equal(run.url,"https://github.com/anevum/anevum-web/actions/runs/38103579658");
+  const run=normalizeGitHubRun("devonalanakins/anevum-web",SAMPLE);
+  assert.equal(run.url,"https://github.com/devonalanakins/anevum-web/actions/runs/38103579658");
   assert.equal(run.head_sha,"a".repeat(40));
   assert.equal("html_url" in run,false);
   assert.equal(normalizeGitHubRun("someuser/other",SAMPLE),null);
-  assert.equal(normalizeGitHubRun("anevum/rhen",{...SAMPLE,id:"not-an-integer"}),null);
-  assert.equal(normalizeGitHubRun("anevum/rhen",{...SAMPLE,status:"PUBLISHED"}),null);
+  assert.equal(normalizeGitHubRun("anevum/anevum-web",SAMPLE),null);
+  assert.equal(normalizeGitHubRun("devonalanakins/rhen",{...SAMPLE,id:"not-an-integer"}),null);
+  assert.equal(normalizeGitHubRun("devonalanakins/rhen",{...SAMPLE,status:"PUBLISHED"}),null);
 });
 test("bounded public GitHub data reads return exact repos and do not infer deployment",async()=>{
   const requests=[];
@@ -29,7 +30,7 @@ test("bounded public GitHub data reads return exact repos and do not infer deplo
   assert.equal(report.deployment_inferred,false);
   assert.equal(report.can_trigger_workflows,false);
   assert.equal(report.public_workflow_metadata_only,true);
-  assert.deepEqual(report.repositories.map(r=>r.repository),["anevum/anevum-web","anevum/rhen"]);
+  assert.deepEqual(report.repositories.map(r=>r.repository),["devonalanakins/anevum-web","devonalanakins/rhen"]);
   assert.deepEqual(report.repositories.map(r=>r.state),["OBSERVED","OBSERVED"]);
   assert.equal(requests.length,2);
   assert.ok(requests.every(r=>r.url.startsWith("https://api.github.com/repos/anevum/") && r.url.endsWith("/actions/runs?per_page=1")));
