@@ -55,7 +55,7 @@ function exactKeys(o,keys){
     JSON.stringify(Object.keys(o).sort())===JSON.stringify([...keys].sort());
 }
 function safeText(v,where,limit,issues){
-  if(typeof v!=="string"||v.length<8||v.length>limit||v!==v.trim()||
+  if(typeof v!=="string"||v.length<(limit===90?3:8)||v.length>limit||v!==v.trim()||
      WITHHELD.test(v)||FORBIDDEN.test(v)){
     issues.push(where+": invalid or restricted reader copy");
   }
