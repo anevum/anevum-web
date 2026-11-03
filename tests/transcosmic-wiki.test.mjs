@@ -83,6 +83,19 @@ test("wiki search ranks every matching public article, with exact and prefix tit
   assert.doesNotMatch(model,/fetch\(|notion\.so|app\.notion\.com/);
 });
 
+test("directory groups only reviewed pages and gives present initials accessible anchors",()=>{
+  assert.match(wiki,/wikiDirectoryGroups\(pages\)/);
+  assert.match(wiki,/WIKI_DIRECTORY_ALPHABET\.map\(letter/);
+  assert.match(wiki,/className="ow-wiki-letter-nav" aria-label="Jump to article initial"/);
+  assert.match(wiki,/id=\{wikiDirectoryAnchor\(group\.letter\)\}/);
+  assert.match(wiki,/className="ow-wiki-letter-group"/);
+  assert.match(wiki,/aria-labelledby=\{wikiDirectoryAnchor\(group\.letter\)\+"-heading"\}/);
+  assert.match(wiki,/group\.articles\.map\(a=>/);
+  assert.match(styles,/\.ow-wiki \.ow-wiki-letter-nav/);
+  assert.match(styles,/\.ow-wiki \.ow-wiki-letter-group/);
+  assert.doesNotMatch(wiki,/fetch\(|window\.localStorage|notion\.so/);
+});
+
 test("wiki remains fail-closed and contains no private canon, editing or external source calls",()=>{
   assert.match(wiki,/route\.startsWith\("category\/"\)/);
   assert.match(wiki,/<WikiMissing\/>/);
