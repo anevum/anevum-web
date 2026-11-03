@@ -206,7 +206,7 @@ async function runCase(route, viewport) {
           await sleep(85);
         }
         if(!found)throw Error("Wiki deep-linkable search failed");
-        await send("Runtime.evaluate",{expression:'document.querySelector(".ow-wiki-filter-row button[data-wiki-category=\\"Place\\"]")?.click()'});
+        await send("Runtime.evaluate",{expression:'document.querySelector(".ow-wiki-filter-row button[data-wiki-category=\\"Science\\"]")?.click()'});
         let empty=false;
         for(let n=0;n<35;n++){
           if(await readWiki('!!document.querySelector(".ow-wiki-empty")')){empty=true;break}
