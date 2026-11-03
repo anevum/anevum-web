@@ -48,7 +48,7 @@ const RELATION_KEYS=["slug","relation"];
 const ROOT_KEYS=["schema","releaseState","publicationApproved","publicQueueEnabled","entries"];
 const LINK_KEYS=["schema","releaseState","publicationApproved","relationships","bridges"];
 const WITHHELD=/\b(?:Anel Varo|Kalen Tor|Kerin Solan|Selian Ort|Ovaran Contact Forum|North Works|Jon Zero|Part IV|Chapter 43|first physical visitor|first-complete-traveler|first complete human traveler|invitation authorization|Ovaran arrival|physical crossing to Ovara|Elias.*Neral.*death|post-book outcome)\b/i;
-const FORBIDDEN=/(?:https?:\/\/|notion:|file_[0-9a-f]{12}|<\/?[a-z][\s>]|[\u0000-\u0008\u000B\u000C\u000E-\u001F])/i;
+const FORBIDDEN=/(?:https?:\/\/|notion:|file_[0-9a-f]{12}|[<>]|[\u0000-\u0008\u000B\u000C\u000E-\u001F])/i;
 
 function exactKeys(o,keys){
   return o!==null&&typeof o==="object"&&!Array.isArray(o)&&
