@@ -69,7 +69,7 @@ function WikiSidebar({active}:{active?:string}) {
         <span>{wikiCategoryPages(category).length}</span>
       </Link>)}
     </nav>
-    <p className="ow-wiki-side-note">Reader-preview edition. Only opening-state entries are available; the private story bible is not exposed.</p>
+    <p className="ow-wiki-side-note">Current public-queue subjects only. Later-window and private story-bible records remain withheld.</p>
   </aside>;
 }
 
@@ -104,7 +104,7 @@ function WikiIndex() {
       <p className="ow-page-lead">A connected encyclopedia of the people, worlds, institutions, technologies, places and historical records that can be introduced without revealing later events in <cite>REPLY</cite>.</p>
       <div className="ow-wiki-banner" role="note">
         <span className="ow-wiki-live-mark" aria-hidden="true" />
-        <p><strong>Curated public-canon candidate.</strong> Twenty-two Now-window subjects have been distilled for author review, including a small historical teaser section. This is not the public canon release; later events and private source pages are withheld.</p>
+        <p><strong>Public-source cleared · website review.</strong> The publishing queue marks 22 Now-window subjects public, but this redesigned wiki and its newly distilled copy still require editorial review and release signoff. Later-window and private sources remain withheld.</p>
       </div>
       <div className="ow-wiki-search-area">
         <label htmlFor="ow-wiki-search">Search the encyclopedia</label>
@@ -148,7 +148,7 @@ function WikiArticlePage({slug}:{slug:string}) {
       <h1 id="ow-wiki-article-title">{article.title}</h1>
       <p className="ow-wiki-article-intro">{article.summary}</p>
       <div className="ow-wiki-article-meta">
-        <span>ENTRY {article.id}</span><span>Now-window curated reader article</span><span>Publication not authorized</span>
+        <span>ENTRY {article.id}</span><span>Source: Now / Public queue</span><span>New website: preview only</span>
       </div>
       <details className="ow-wiki-mobile-contents">
         <summary>Contents</summary>
@@ -195,9 +195,9 @@ function WikiArticlePage({slug}:{slug:string}) {
           <div><dt>Article type</dt><dd>{article.category}</dd></div>
           <div><dt>Edition</dt><dd>REPLY · Now-window reader preview</dd></div>
           <div><dt>Related records</dt><dd>{article.related.length}</dd></div>
-          <div><dt>Editorial status</dt><dd>Preview · not published</dd></div>
+          <div><dt>New site status</dt><dd>Review build · not deployed</dd></div>
         </dl>
-        <p className="ow-wiki-infobox-foot">The canonical source is maintained privately. This reader derivative is version-controlled, and requires author/editorial and publication-queue approval before release.</p>
+        <p className="ow-wiki-infobox-foot">Canonical source material is maintained privately. The source queue is cleared for these 22 subjects; this new editorial derivative and website route still require author signoff before deployment.</p>
       </aside>
     </div>
   </section>;
@@ -241,11 +241,11 @@ function WikiAbout() {
       <WikiBreadcrumb items={[{label:"About this wiki"}]}/>
       <p className="ow-eyebrow">The Transcosmic / Editorial desk</p>
       <h1 id="ow-wiki-about-title">About this wiki.</h1>
-      <p className="ow-page-lead">A version-controlled encyclopedia for Anevum's original fictional universe, with reader-safe entries selected from the Now disclosure window and held for final publication approval.</p>
+      <p className="ow-page-lead">A version-controlled encyclopedia for Anevum's original fictional universe, using the 22 public-queue Now-window subjects while keeping the redesigned website in editorial review.</p>
       <div className="ow-wiki-copy">
         <section><h2>Reader edition</h2><p>The wiki links approved opening-state subjects by category, related article and incoming links. It does not surface every private canon record.</p></section>
         <section><h2>Corrections and revisions</h2><p>Wiki content is maintained through reviewed changes to the repository's editorial manifest. There is not yet a public editing form, public article history or account-based contributor workflow. Those require separate moderation, identity and release design.</p></section>
-        <section><h2>Publication controls</h2><p>Every topic or revision must pass canon reconciliation, spoiler clearance, author signoff and publishing-queue approval. Inclusion in this draft does not make it publicly released or establish book availability.</p></section>
+        <section><h2>Publication controls</h2><p>Every new article revision still requires canon reconciliation and spoiler clearance. The source queue permits the current subjects, but this rebuilt website is not live and does not establish book availability.</p></section>
       </div>
     </div>
   </section>;
