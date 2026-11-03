@@ -57,6 +57,7 @@ function WikiSidebar({active}:{active?:string}) {
     <p className="ow-wiki-sidebar-label">By subject</p>
     <nav aria-label="Wiki categories" className="ow-wiki-side-links">
       {wikiCategories.map(category=><Link key={category}
+        data-wiki-category={category}
         to={wikiCategoryPath(category)}
         aria-current={active===category?"page":undefined}>
         {category==="Person"?"People":category==="World"?"Worlds":category==="Place"?"Places":"Infrastructure"}
@@ -107,6 +108,7 @@ function WikiIndex() {
           placeholder="Search articles, concepts, places…" />
         <div className="ow-wiki-filter-row" role="group" aria-label="Filter wiki articles">
           {(["All",...wikiCategories] as const).map(option=><button key={option}
+            data-wiki-category={option}
             type="button" aria-pressed={option===category} onClick={()=>update(query,option)}>
             {option==="All"?"Everything":option==="Person"?"People":option==="World"?"Worlds":option==="Place"?"Places":"Infrastructure"}
           </button>)}
@@ -201,7 +203,7 @@ function WikiCategoryPage({slug}:{slug:string}) {
   if(!category)return <WikiMissing/>;
   const pages=wikiCategoryPages(category);
   const heading=category==="World"?"Worlds":category==="Person"?"People":category==="Place"?"Places":"Infrastructure";
-  return <section className="ow-wiki-layout ow-wiki-category" aria-labelledby="ow-wiki-category-title">
+  return <section className="ow-wiki-layout ow-wiki-category" data-wiki-category={category} aria-labelledby="ow-wiki-category-title">
     <WikiSidebar active={category}/>
     <div className="ow-wiki-main">
       <WikiBreadcrumb items={[{label:"Categories"},{label:heading}]}/>
@@ -222,7 +224,7 @@ function WikiAllPages() {
       <p className="ow-eyebrow">The Transcosmic / Directory</p>
       <h1 id="ow-wiki-all-title">All articles.</h1>
       <p className="ow-page-lead">Alphabetical index of the {pages.length} currently curated entries. No unreleased records are enumerated.</p>
-      <ol className="ow-wiki-alphabetical">{pages.map(a=><li key={a.slug}><Link to={a.href}>{a.title}</Link><span>{a.category}</span></li>)}</ol>
+      <ol className="ow-wiki-alphabetical">{pages.map(a=><li key={a.slug} data-wiki-category={a.category}><Link to={a.href}>{a.title}</Link><span>{a.category}</span></li>)}</ol>
     </div>
   </section>;
 }
