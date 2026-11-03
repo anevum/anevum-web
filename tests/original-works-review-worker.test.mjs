@@ -30,6 +30,19 @@ test("out-of-scope paths remain unavailable", async () => {
   assert.deepEqual(calls, []);
 });
 
+test("review assets fail closed on every other hostname", async () => {
+  const calls = [];
+  for (const hostname of ["anevum.com", "devonakins.workers.dev", "preview.anevum.com"]) {
+    const response = await worker.fetch(
+      new Request("https://" + hostname + "/design/original-works/wiki"),
+      envWithAssets(calls)
+    );
+    assert.equal(response.status, 404, hostname);
+    assert.equal(response.headers.get("X-Robots-Tag"), "noindex, nofollow, noarchive");
+  }
+  assert.deepEqual(calls, []);
+});
+
 test("writes are never forwarded to static assets", async () => {
   const calls = [];
   const r = await worker.fetch(new Request("https://backstage.anevum.com/design/original-works", {method:"POST"}),envWithAssets(calls));
