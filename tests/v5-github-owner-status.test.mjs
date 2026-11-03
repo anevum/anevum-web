@@ -33,7 +33,7 @@ test("bounded public GitHub data reads return exact repos and do not infer deplo
   assert.deepEqual(report.repositories.map(r=>r.repository),["devonalanakins/anevum-web","devonalanakins/rhen"]);
   assert.deepEqual(report.repositories.map(r=>r.state),["OBSERVED","OBSERVED"]);
   assert.equal(requests.length,2);
-  assert.ok(requests.every(r=>r.url.startsWith("https://api.github.com/repos/anevum/") && r.url.endsWith("/actions/runs?per_page=1")));
+  assert.ok(requests.every(r=>r.url.startsWith("https://api.github.com/repos/devonalanakins/") && r.url.endsWith("/actions/runs?per_page=1")));
   assert.ok(requests.every(r=>r.options.method==="GET" && r.options.cf.cacheTtl===300));
   assert.ok(requests.every(r=>!JSON.stringify(r.options.headers).toLowerCase().includes("authorization")));
   assert.equal(JSON.stringify(report).includes("evil.example"),false);
