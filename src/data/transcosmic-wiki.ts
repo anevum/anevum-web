@@ -61,17 +61,36 @@ export function wikiCategoryPages(category:string): WikiArticle[] {
   return wikiAllPages().filter(entry=>entry.category===category);
 }
 
+/**
+ * Search only the curated, client-bundled reader edition.
+ *
+ * An exact title match comes first, but it never suppresses relevant results
+ * from summaries, curated context or explicit public-queue relationships.
+ * Search terms can be entered in any order; no private canon source is queried.
+ */
 export function wikiSearch(query:string,category:WikiCategory|"All"="All"): WikiArticle[] {
   const normalized=query.trim().slice(0,80).toLocaleLowerCase("en");
-  const pages=wikiAllPages();
-  if(!normalized) return pages.filter(article=>category==="All"||article.category===category);
-  // Search title first; cross-references should not bury the canonical entry.
-  const titleMatches=pages.filter(article=>article.title.toLocaleLowerCase("en").includes(normalized));
-  const matching=titleMatches.length?titleMatches:pages.filter(article=>[
-    article.subtitle,article.summary,article.detail,
-    article.keywords,article.category,...article.related.map(link=>link.label)
-  ].join(" ").toLocaleLowerCase("en").includes(normalized));
-  return matching.filter(article=>category==="All"||article.category===category);
+  const terms=normalized.split(/\s+/).filter(Boolean);
+  const pages=wikiAllPages().filter(article=>category==="All"||article.category===category);
+  if(!terms.length) return pages;
+
+  const ranked=pages.map(article=>{
+    const title=article.title.toLocaleLowerCase("en");
+    const fields=[
+      title,article.subtitle,article.summary,article.detail,article.keywords,article.category,
+      ...article.related.map(link=>link.label)
+    ].map(value=>String(value).toLocaleLowerCase("en"));
+    if(!terms.every(term=>fields.some(field=>field.includes(term)))) return null;
+
+    const allTitleTerms=terms.every(term=>title.includes(term));
+    const rank=title===normalized?0:
+      title.startsWith(normalized)?1:
+      title.includes(normalized)?2:
+      allTitleTerms?3:4;
+    return {article,rank};
+  }).filter((entry):entry is {article:WikiArticle;rank:number}=>entry!==null);
+  ranked.sort((a,b)=>a.rank-b.rank||a.article.title.localeCompare(b.article.title,"en"));
+  return ranked.map(entry=>entry.article);
 }
 
 export const wikiHome = BASE;
