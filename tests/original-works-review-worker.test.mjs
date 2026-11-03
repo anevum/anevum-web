@@ -15,7 +15,7 @@ test("serves only review prefix with noindex headers", async () => {
   const calls = [];
   const r = await worker.fetch(new Request("https://backstage.anevum.com/design/original-works/wiki/ovara"), envWithAssets(calls));
   assert.equal(r.status, 200);
-  assert.deepEqual(calls, ["/design/original-works/wiki/ovara"]);
+  assert.deepEqual(calls, ["/wiki/ovara"]);
   assert.equal(r.headers.get("X-Robots-Tag"), "noindex, nofollow, noarchive");
   assert.equal(r.headers.get("Cache-Control"), "private, no-store");
   assert.equal(r.headers.get("Content-Security-Policy"), "frame-ancestors 'none'; object-src 'none'; base-uri 'self'");
