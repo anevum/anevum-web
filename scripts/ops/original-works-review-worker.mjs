@@ -27,7 +27,11 @@ export default {
     if (path !== ROOT && !path.startsWith(ROOT + "/")) return NOT_FOUND.clone();
     if (!env?.ASSETS?.fetch) return new Response("Unavailable", {status: 503});
 
-    const response = await env.ASSETS.fetch(request);
+    // Account-level assets.base_path is unavailable; map the protected
+    // review prefix to the artifact's root without changing user-visible URLs.
+    const assetUrl = new URL(request.url);
+    assetUrl.pathname = path.slice(ROOT.length) || "/";
+    const response = await env.ASSETS.fetch(new Request(assetUrl, request));
     const headers = new Headers(response.headers);
     headers.set("Cache-Control", "private, no-store");
     headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
