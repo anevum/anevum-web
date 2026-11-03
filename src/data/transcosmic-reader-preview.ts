@@ -22,6 +22,9 @@ export interface ReaderRelationship {
   label: string;
   relation: string;
 }
-export const entries: ReadonlyArray<ReaderEntry> = readerPreview.entries as ReaderEntry[];
+export const entries: ReadonlyArray<ReaderEntry> = readerPreview.entries.map(entry => ({
+  ...entry,
+  category: entry.category as ReaderCategory
+}));
 export const relationships: Readonly<Record<string, ReadonlyArray<ReaderRelationship>>> =
   readerPreview.relationships as Record<string, ReaderRelationship[]>;
