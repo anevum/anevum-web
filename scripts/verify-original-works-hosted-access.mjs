@@ -23,11 +23,12 @@ const EXPECTED_SCRIPT = "anevum-web-nextgen";
 const OWNER_EMAIL = "devon@anevum.com";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export function checkAccessPreviewGate({subdomain, app, policies, pinnedAppId, pinnedWorkerUuid}) {
+export function checkAccessPreviewGate({subdomain, app, policies, pinnedAppId, pinnedWorkerUuid, actualWorkerUuid}) {
   const blockers = [];
   if (!UUID.test(pinnedAppId || "") || !UUID.test(pinnedWorkerUuid || "")) {
     return ["MISSING_PINNED_ACCESS_APPLICATION_OR_WORKER_ID"];
   }
+  if (actualWorkerUuid !== pinnedWorkerUuid) blockers.push("TARGET_WORKER_IDENTITY_MISMATCH");
   if (!subdomain || subdomain.previews_enabled !== true) {
     blockers.push("PREVIEW_URLS_NOT_ENABLED");
   }
@@ -76,12 +77,18 @@ export async function readRemotePreviewGate({token, accountId, accessAppId, fetc
     if (payload?.success !== true) throw new Error("CLOUDFLARE_READ_DENIED_OR_UNAVAILABLE");
     return payload.result;
   }
-  const [subdomain, app, policies] = await Promise.all([
+  const [subdomain, app, policies, scripts] = await Promise.all([
     read("/workers/scripts/" + EXPECTED_SCRIPT + "/subdomain"),
     read("/access/apps/" + accessAppId),
-    read("/access/apps/" + accessAppId + "/policies")
+    read("/access/apps/" + accessAppId + "/policies"),
+    read("/workers/scripts?per_page=200")
   ]);
-  return {subdomain, app, policies};
+  const scriptList = Array.isArray(scripts) ? scripts : scripts?.items;
+  const target = scriptList?.find(worker => worker.id === EXPECTED_SCRIPT);
+  if (!target || !UUID.test(target.tag || "")) {
+    throw new Error("CLOUDFLARE_TARGET_WORKER_NOT_FOUND");
+  }
+  return {subdomain, app, policies, actualWorkerUuid:target.tag};
 }
 
 async function main() {
@@ -113,7 +120,8 @@ async function main() {
     const publicCode = [
       "MISSING_REQUIRED_PREVIEW_CREDENTIAL_OR_ID",
       "INVALID_CLOUDFLARE_ACCOUNT_ID",
-      "CLOUDFLARE_READ_DENIED_OR_UNAVAILABLE"
+      "CLOUDFLARE_READ_DENIED_OR_UNAVAILABLE",
+      "CLOUDFLARE_TARGET_WORKER_NOT_FOUND"
     ].includes(e?.message) ? e.message : "CLOUDFLARE_READ_DENIED_OR_UNAVAILABLE";
     console.error("Hosted review BLOCKED: " + publicCode);
     process.exitCode = 1;
