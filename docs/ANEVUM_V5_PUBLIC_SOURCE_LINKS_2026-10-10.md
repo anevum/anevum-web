@@ -6,8 +6,8 @@ Backlog: WEB #280 (public collaboration), #285 (service integrations), #259 (V5 
 
 ## Verified source classification (2026-10-10)
 
-- `anevum/anevum-web`: public repository, root `LICENSE` is Apache License 2.0. Source link in the About page.
-- `anevum/rhen`: public repository; no root `LICENSE` or `LICENSE.md` found in reviewed default branch. Link on RHEN product and project cards expressly says public visibility does **not** mean permission to reuse, redistribute, or operate RHEN. The code contains unmerged experiments, not an approved trading product.
+- `devonalanakins/anevum-web`: public repository, root `LICENSE` is Apache License 2.0. Source link in the About page.
+- `devonalanakins/rhen`: public repository; no root `LICENSE` or `LICENSE.md` found in reviewed default branch. Link on RHEN product and project cards expressly says public visibility does **not** mean permission to reuse, redistribute, or operate RHEN. The code contains unmerged experiments, not an approved trading product.
 - GRAEN / VELUM / NOSTRA are RHEN internal research modules; IREN V5 is deferred, not a new public repository or a separate paid app.
 - Do not publish raw activity/PR streams, broker operations, secrets, investor promises, member account data, or sensitive contributor information in Commons.
 
@@ -19,7 +19,7 @@ Adds a static, allowlisted published-source registry and truthful links using ex
 
 - [ ] Full exact-head TypeScript, unit and browser CI, and source-link keyboard/mobile checks.
 - [ ] Owner public-content acceptance including unchanged correct licensing status and history/privacy disclosure review.
-- [ ] Check that `anevum/rhen` has not gained a new license or exposed unintended private data before publication.
+- [ ] Check that `devonalanakins/rhen` has not gained a new license or exposed unintended private data before publication.
 - [ ] Separate production authorization. Documentation PR #279 and RHEN contributor PR #489 remain unmerged and are NOT silently incorporated by these links.
 
 Source-only draft, no deployment.

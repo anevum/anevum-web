@@ -1,5 +1,5 @@
 # ANEVUM member staging OAuth activation and two-user acceptance
-Date: 2026-10-08 | Workstream: anevum/anevum-web#210
+Date: 2026-10-08 | Workstream: devonalanakins/anevum-web#210
 
 ## Scope and authorization
 

@@ -5,7 +5,7 @@
 
 ## Verified D1 provisioning
 
-GitHub Actions [run #37836895576](https://github.com/anevum/anevum-web/actions/runs/37836895576) completed successfully in `create-missing` mode using `CLOUDFLARE_D1_TOKEN`, creating both resources. Its Cloudflare inventory returned these UUIDs:
+GitHub Actions [run #37836895576](https://github.com/devonalanakins/anevum-web/actions/runs/37836895576) completed successfully in `create-missing` mode using `CLOUDFLARE_D1_TOKEN`, creating both resources. Its Cloudflare inventory returned these UUIDs:
 
 | Environment | D1 name | Verified UUID |
 | --- | --- | --- |

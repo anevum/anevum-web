@@ -1,7 +1,7 @@
 # ANEVUM V5 — preview D1 read-only checkpoint and offline migration rehearsal
 
 **Canonical session:** `ANEVUM.ANEVUM.UPDATE.2026-10-10.001.V5-UNIFIED-OVERHAUL`  
-**Master issue:** [#259](https://github.com/anevum/anevum-web/issues/259)  
+**Master issue:** [#259](https://github.com/devonalanakins/anevum-web/issues/259)  
 **Purpose:** advance Alpaca Connect and moderated Commons deployment readiness **without** touching Cloudflare data, OAuth secrets, member access, or brokerage authority.
 
 ## Verified read-only Cloudflare checkpoint — October 10, 2026
