@@ -50,7 +50,7 @@ jobs:
         run: |
           node scripts/verify-transcosmic-reader-preview.mjs
           node scripts/verify-transcosmic-wiki-expansion.mjs
-          node --test tests/original-works-preview.test.mjs tests/transcosmic-reader-preview.test.mjs tests/original-works-hosted-access.test.mjs tests/transcosmic-wiki.test.mjs tests/transcosmic-wiki-expansion.test.mjs
+          node --test tests/original-works-preview.test.mjs tests/transcosmic-reader-preview.test.mjs tests/original-works-hosted-access.test.mjs tests/original-works-protected-preview.test.mjs tests/transcosmic-wiki.test.mjs tests/transcosmic-wiki-expansion.test.mjs
       - name: Verify legacy RHEN retirement and Commons independence
         run: node --test tests/legacy-rhen-retirement.test.mjs
       - name: Enforce single guarded production Worker deployment
@@ -143,6 +143,12 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Prove owner-only Preview denies anonymous requests
+        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
+        env:
+          BASE_URL: ${{ steps.preview.outputs.preview_url }}
+        run: node scripts/verify-original-works-protected-preview.mjs
 
       - name: Probe routes, SEO, PDF, and public privacy contract
         if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
