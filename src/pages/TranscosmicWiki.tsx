@@ -161,7 +161,7 @@ function WikiArticlePage({slug}:{slug:string}) {
         </section>
         <section id="wiki-context" aria-labelledby="wiki-context-title">
           <h2 id="wiki-context-title"><span>02</span> Context</h2>
-          <p>{article.detail}</p>
+          {article.detail.split(/\n\n+/).map((paragraph,index)=><p key={index}>{paragraph}</p>)}
           <p className="ow-wiki-editorial-note">This article contains only reader-oriented material and does not describe later plot outcomes or restricted historical provenance.</p>
         </section>
         <section id="wiki-connections" aria-labelledby="wiki-connections-title">
