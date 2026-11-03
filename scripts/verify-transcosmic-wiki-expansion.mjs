@@ -126,6 +126,13 @@ export function validateWikiExpansion({a,b,links,original}){
       }
     }
   }
+  const matureRoadNetwork=["skygate-age","skygate-megastructure","open-road","serein-skygate","neral-skygate","veyra","neral"];
+  const disconnectedOvaraSubjects=new Set(["ovara","merva","nali-solan"]);
+  for(const source of matureRoadNetwork){
+    const edges=[...(links.relationships?.[source]||[]),...(links.bridges?.[source]||[])];
+    if(edges.some(edge=>disconnectedOvaraSubjects.has(edge.slug)))
+      issues.push("wiki: unreviewed Road-to-Ovara relation from "+source);
+  }
   if(links.bridges?.ovara||links.bridges?.merva||links.bridges?.["nali-solan"])
     issues.push("wiki: Ovara has no implied connection to the Veyra–Neral Road");
   const lateNames=["Anel Varo","Kalen Tor","Kerin Solan","Selian Ort","North Works","Ovaran Contact Forum"];
