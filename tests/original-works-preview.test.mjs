@@ -13,7 +13,8 @@ const worker = read("worker.mjs");
 
 test("new studio has a distinct, non-indexed review route; public homepage remains unchanged", () => {
   assert.match(app, /const originalWorksPreviewEnabled = import\.meta\.env\.VITE_ORIGINAL_WORKS_PREVIEW === "true"/);
-  assert.match(app, /\{originalWorksPreviewEnabled && <Route path="\/design\/original-works\/\*" element=\{<Suspense fallback=\{<Loader \/>/);
+  assert.match(app, /const OriginalWorksStudio = originalWorksPreviewEnabled\s*\? lazy\(\(\) => import\("\.\/pages\/OriginalWorksStudio"\)\)\s*: null/);
+  assert.match(app, /\{originalWorksPreviewEnabled && OriginalWorksStudio && <Route path="\/design\/original-works\/\*" element=\{<Suspense fallback=\{<Loader \/>/);
   assert.match(app, /const isOriginalWorksPreview = path === "\/design\/original-works" \|\| path\.startsWith\("\/design\/original-works\/"\)/);
   assert.match(app, /const protectedRoute = isOriginalWorksPreview \|\|/);
   assert.match(app, /setRouteMeta\(path, title, description, !protectedRoute && !missingRoute\)/);
