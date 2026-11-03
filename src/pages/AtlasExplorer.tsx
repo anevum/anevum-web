@@ -6,7 +6,7 @@ import "../styles/atlas-explorer.css";
 /**
  * Editorial allowlist for the Anevum reader-preview only.
  *
- * These four opening-state summaries are separately reviewed reader-facing
+ * Eight opening-state summaries are curated reader-facing
  * derivatives, not live data from the private Transcosmic Canon Wiki. Additions
  * require source, Website Ready, spoiler window and publishing-queue clearance.
  * Never fetch private wiki records or infer publicity from a calendar date.
@@ -25,10 +25,6 @@ const UNIVERSE = ROOT + "/transcosmic";
  * Reader relationships are explicit, non-transitive editorial associations.
  * Ovara is NOT part of the established Veyra–Neral Road network.
  */
-   { slug: "neral-skygate", label: "Neral Skygate", relation: "Neran endpoint" }
-  ]
-} as const;
-
 function NetworkOverview() {
   return <section className="ow-atlas-relations" aria-labelledby="ow-atlas-relations-title">
     <div className="ow-atlas-relations-heading">
