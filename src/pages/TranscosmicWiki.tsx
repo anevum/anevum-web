@@ -1,0 +1,251 @@
+import { Link, useSearchParams } from "react-router-dom";
+import {
+  getWikiArticle, wikiAllPages, wikiCategories, wikiCategoryPages,
+  wikiCategoryPath, wikiHome, wikiSearch, wikiSpecialPath,
+  type WikiCategory, type WikiArticle
+} from "../data/transcosmic-wiki";
+import "../styles/transcosmic-wiki.css";
+
+/**
+ * A navigable wiki for the reader-cleared projection of Transcosmic canon.
+ * This client never edits or reads the private canonical source. All eight
+ * draft articles are explicitly compiled behind the existing preview gate.
+ * No public history or citations are invented for a design-review build.
+ */
+const ROOT = "/design/original-works";
+
+function WikiBreadcrumb({items}:{items:ReadonlyArray<{label:string;to?:string}>}) {
+  return <nav className="ow-wiki-breadcrumb" aria-label="Wiki breadcrumbs">
+    <Link to={wikiHome}>Wiki</Link>
+    {items.map((item,i)=><span key={i} className="ow-wiki-crumb">
+      <span aria-hidden="true">/</span>
+      {item.to?<Link to={item.to}>{item.label}</Link>:<span aria-current="page">{item.label}</span>}
+    </span>)}
+  </nav>;
+}
+
+function WikiSidebar({active}:{active?:string}) {
+  return <aside className="ow-wiki-sidebar" aria-label="Wiki navigation">
+    <p className="ow-wiki-sidebar-label">Explore the wiki</p>
+    <nav aria-label="Wiki pages" className="ow-wiki-side-links">
+      <Link to={wikiHome} aria-current={active==="home"?"page":undefined}>Main page</Link>
+      <Link to={wikiSpecialPath("all-pages")} aria-current={active==="all"?"page":undefined}>All articles</Link>
+      <Link to={wikiSpecialPath("about")} aria-current={active==="about"?"page":undefined}>About this wiki</Link>
+    </nav>
+    <p className="ow-wiki-sidebar-label">By subject</p>
+    <nav aria-label="Wiki categories" className="ow-wiki-side-links">
+      {wikiCategories.map(category=><Link key={category}
+        to={wikiCategoryPath(category)}
+        aria-current={active===category?"page":undefined}>
+        {category==="Person"?"People":category==="World"?"Worlds":category==="Place"?"Places":"Infrastructure"}
+        <span>{wikiCategoryPages(category).length}</span>
+      </Link>)}
+    </nav>
+    <p className="ow-wiki-side-note">Reader-preview edition. Only opening-state entries are available; the private story bible is not exposed.</p>
+  </aside>;
+}
+
+function IndexLink({article}:{article:WikiArticle}) {
+  return <Link className="ow-wiki-result" to={article.href}>
+    <span className="ow-wiki-result-type">{article.category} <span aria-hidden="true">/</span> {article.id}</span>
+    <strong>{article.title}</strong>
+    <span>{article.summary}</span>
+    <span className="ow-wiki-result-action">Read article <span aria-hidden="true">↗</span></span>
+  </Link>;
+}
+
+function WikiIndex() {
+  const [params,setParams]=useSearchParams();
+  const query=(params.get("q")||"").slice(0,80);
+  const candidate=params.get("category")||"All";
+  const category=(candidate==="All"||wikiCategories.some(c=>c===candidate))
+    ?candidate as WikiCategory|"All":"All";
+  const results=wikiSearch(query,category);
+  const update=(nextQuery:string,nextCategory:WikiCategory|"All")=>{
+    const newParams=new URLSearchParams();
+    if(nextQuery.trim())newParams.set("q",nextQuery.slice(0,80));
+    if(nextCategory!=="All")newParams.set("category",nextCategory);
+    setParams(newParams,{replace:true});
+  };
+  return <section className="ow-wiki-layout" aria-labelledby="ow-wiki-title">
+    <div className="ow-wiki-main">
+      <WikiBreadcrumb items={[{label:"Main page"}]}/>
+      <p className="ow-eyebrow">The Transcosmic / Reader Wiki</p>
+      <h1 id="ow-wiki-title">An archive<br/><em>of worlds.</em></h1>
+      <p className="ow-page-lead">A connected encyclopedia of the people, places, worlds and engineered realities introduced at the opening of <cite>REPLY</cite>.</p>
+      <div className="ow-wiki-banner" role="note">
+        <span className="ow-wiki-live-mark" aria-hidden="true" />
+        <p><strong>Opening-state review edition.</strong> This wiki is a working editorial preview, not the public canon release. Later events and unreleased source pages are deliberately withheld.</p>
+      </div>
+      <div className="ow-wiki-search-area">
+        <label htmlFor="ow-wiki-search">Search the encyclopedia</label>
+        <input id="ow-wiki-search" type="search" maxLength={80} autoComplete="off"
+          value={query} onChange={e=>update(e.currentTarget.value,category)}
+          placeholder="Search articles, concepts, places…" />
+        <div className="ow-wiki-filter-row" role="group" aria-label="Filter wiki articles">
+          {(["All",...wikiCategories] as const).map(option=><button key={option}
+            type="button" aria-pressed={option===category} onClick={()=>update(query,option)}>
+            {option==="All"?"Everything":option==="Person"?"People":option==="World"?"Worlds":option==="Place"?"Places":"Infrastructure"}
+          </button>)}
+        </div>
+      </div>
+      <div className="ow-wiki-results-heading">
+        <h2>Browse the archive</h2>
+        <span role="status" aria-live="polite" aria-atomic="true">{results.length} of {wikiAllPages().length} articles</span>
+      </div>
+      {results.length?<div className="ow-wiki-result-grid">{results.map(article=><IndexLink key={article.slug} article={article}/>)}</div>:
+        <div className="ow-wiki-empty" role="region" aria-label="No matching wiki articles">
+          <h2>No matching articles.</h2>
+          <p>Try another term or explore the currently reviewed categories. Unreleased entries are not available from search.</p>
+          <button type="button" onClick={()=>update("","All")}>Reset search</button>
+        </div>}
+      <div className="ow-wiki-worknote"><span>EDITORIAL INDEX / 001</span><p>Article titles, categories and links are versioned together in the repository. Additional subjects require deliberate canon and spoiler review before joining the reader edition.</p></div>
+    </div>
+    <WikiSidebar active="home"/>
+  </section>;
+}
+
+function WikiArticlePage({slug}:{slug:string}) {
+  const article=getWikiArticle(slug);
+  if(!article)return <WikiMissing />;
+  return <section className="ow-wiki-layout ow-wiki-article" aria-labelledby="ow-wiki-article-title">
+    <div className="ow-wiki-main">
+      <WikiBreadcrumb items={[{label:article.category,to:wikiCategoryPath(article.category)},{label:article.title}]}/>
+      <p className="ow-eyebrow">The Transcosmic / {article.category}</p>
+      <h1 id="ow-wiki-article-title">{article.title}</h1>
+      <p className="ow-wiki-article-intro">{article.summary}</p>
+      <div className="ow-wiki-article-meta">
+        <span>ENTRY {article.id}</span><span>REPLY opening state</span><span>Editorial review only</span>
+      </div>
+      <nav className="ow-wiki-toc" aria-label="On this page">
+        <p>Contents</p>
+        <ol>
+          <li><a href="#wiki-overview">Overview</a></li>
+          <li><a href="#wiki-context">Context</a></li>
+          <li><a href="#wiki-connections">Connections</a></li>
+          <li><a href="#wiki-linked">What links here</a></li>
+        </ol>
+      </nav>
+      <div className="ow-wiki-copy">
+        <section id="wiki-overview" aria-labelledby="wiki-overview-title">
+          <h2 id="wiki-overview-title"><span>01</span> Overview</h2>
+          <p>{article.summary}</p>
+        </section>
+        <section id="wiki-context" aria-labelledby="wiki-context-title">
+          <h2 id="wiki-context-title"><span>02</span> Context</h2>
+          <p>{article.detail}</p>
+          <p className="ow-wiki-editorial-note">This article stops at the opening state. Its current form has no narrative outcome disclosures.</p>
+        </section>
+        <section id="wiki-connections" aria-labelledby="wiki-connections-title">
+          <h2 id="wiki-connections-title"><span>03</span> Connections</h2>
+          {article.related.length?<ul className="ow-wiki-connection-list">
+            {article.related.map(link=><li key={link.slug}>
+              <Link to={link.href}>{link.label}</Link><span>{link.relation}</span>
+            </li>)}
+          </ul>:<p>No approved connections in this reader edition.</p>}
+        </section>
+        <section id="wiki-linked" aria-labelledby="wiki-linked-title">
+          <h2 id="wiki-linked-title"><span>04</span> What links here</h2>
+          {article.backlinks.length?<ul className="ow-wiki-connection-list">
+            {article.backlinks.map(link=><li key={link.slug}>
+              <Link to={link.href}>{link.title}</Link><span>{link.context}</span>
+            </li>)}
+          </ul>:<p>Nothing in the current reader edition links to this article.</p>}
+        </section>
+      </div>
+      <div className="ow-wiki-article-footer">
+        <span>Category</span><Link to={wikiCategoryPath(article.category)}>{article.category}</Link>
+        <Link to={wikiSpecialPath("all-pages")}>All wiki pages <span aria-hidden="true">↗</span></Link>
+      </div>
+    </div>
+    <div className="ow-wiki-aside">
+      <aside className="ow-wiki-infobox" aria-label={"Facts about "+article.title}>
+        <p className="ow-wiki-infobox-label">THE TRANSCOSMIC / READER INDEX</p>
+        <h2>{article.title}</h2>
+        <p className="ow-wiki-infobox-subtitle">{article.subtitle}</p>
+        <dl>
+          <div><dt>Article type</dt><dd>{article.category}</dd></div>
+          <div><dt>Edition</dt><dd>REPLY · Opening state</dd></div>
+          <div><dt>Related records</dt><dd>{article.related.length}</dd></div>
+          <div><dt>Editorial status</dt><dd>Preview · not published</dd></div>
+        </dl>
+        <p className="ow-wiki-infobox-foot">Public revision history and manuscript sourcing are not available in this review build. The reader content is version-controlled and subject to editorial approval.</p>
+      </aside>
+      <WikiSidebar active={article.category}/>
+    </div>
+  </section>;
+}
+
+function WikiCategoryPage({slug}:{slug:string}) {
+  const category=wikiCategories.find(item=>item.toLowerCase()===slug);
+  if(!category)return <WikiMissing/>;
+  const pages=wikiCategoryPages(category);
+  const heading=category==="World"?"Worlds":category==="Person"?"People":category==="Place"?"Places":"Infrastructure";
+  return <section className="ow-wiki-layout" aria-labelledby="ow-wiki-category-title">
+    <div className="ow-wiki-main">
+      <WikiBreadcrumb items={[{label:"Categories"},{label:heading}]}/>
+      <p className="ow-eyebrow">The Transcosmic / Categories</p>
+      <h1 id="ow-wiki-category-title">{heading}</h1>
+      <p className="ow-page-lead">{pages.length} opening-state {pages.length===1?"article":"articles"} classified under {heading.toLowerCase()}.</p>
+      <div className="ow-wiki-result-grid">{pages.map(a=><IndexLink article={a} key={a.slug}/>)}</div>
+    </div>
+    <WikiSidebar active={category}/>
+  </section>;
+}
+
+function WikiAllPages() {
+  const pages=wikiAllPages();
+  return <section className="ow-wiki-layout" aria-labelledby="ow-wiki-all-title">
+    <div className="ow-wiki-main">
+      <WikiBreadcrumb items={[{label:"All articles"}]}/>
+      <p className="ow-eyebrow">The Transcosmic / Directory</p>
+      <h1 id="ow-wiki-all-title">All articles.</h1>
+      <p className="ow-page-lead">Alphabetical index of the {pages.length} currently curated entries. No unreleased records are enumerated.</p>
+      <ol className="ow-wiki-alphabetical">{pages.map(a=><li key={a.slug}><Link to={a.href}>{a.title}</Link><span>{a.category}</span></li>)}</ol>
+    </div>
+    <WikiSidebar active="all"/>
+  </section>;
+}
+
+function WikiAbout() {
+  return <section className="ow-wiki-layout" aria-labelledby="ow-wiki-about-title">
+    <div className="ow-wiki-main">
+      <WikiBreadcrumb items={[{label:"About this wiki"}]}/>
+      <p className="ow-eyebrow">The Transcosmic / Editorial desk</p>
+      <h1 id="ow-wiki-about-title">About this wiki.</h1>
+      <p className="ow-page-lead">A version-controlled encyclopedia for Anevum's original fictional universe, with a deliberately restricted reader edition.</p>
+      <div className="ow-wiki-copy">
+        <section><h2>Reader edition</h2><p>The wiki links approved opening-state subjects by category, related article and incoming links. It does not surface every private canon record.</p></section>
+        <section><h2>Corrections and revisions</h2><p>Wiki content is maintained through reviewed changes to the repository's editorial manifest. There is not yet a public editing form, public article history or account-based contributor workflow. Those require separate moderation, identity and release design.</p></section>
+        <section><h2>Publication controls</h2><p>Every new topic or revision must pass canon reconciliation and spoiler clearance. The draft is not a statement of book availability or permission to publish unreleased material.</p></section>
+      </div>
+    </div>
+    <WikiSidebar active="about"/>
+  </section>;
+}
+
+function WikiMissing() {
+  return <section className="ow-wiki-layout ow-wiki-missing" aria-labelledby="ow-wiki-missing-title">
+    <div className="ow-wiki-main">
+      <WikiBreadcrumb items={[{label:"Unavailable"}]}/>
+      <p className="ow-eyebrow">The Transcosmic / Wiki</p>
+      <h1 id="ow-wiki-missing-title">Article unavailable.</h1>
+      <p className="ow-page-lead">This page is not part of the reviewed reader edition. Guessing a URL never reveals private or unpublished canon.</p>
+      <Link className="ow-action" to={wikiHome}>Return to wiki <span aria-hidden="true">↗</span></Link>
+    </div>
+    <WikiSidebar/>
+  </section>;
+}
+
+export default function TranscosmicWiki({path=""}:{path?:string}) {
+  const route=path.replace(/\/$/,"");
+  return <div className="ow-page ow-container ow-wiki" data-wiki-editorial-preview="true">
+    {route===""?<WikiIndex/>:
+      route==="special/all-pages"?<WikiAllPages/>:
+      route==="special/about"?<WikiAbout/>:
+      route.startsWith("category/")?<WikiCategoryPage slug={route.slice("category/".length)}/>:
+      !route.includes("/")?<WikiArticlePage slug={route}/>:
+      <WikiMissing/>}
+    <div className="ow-wiki-bottom"><Link to={ROOT+"/transcosmic"}>The Transcosmic</Link><span aria-hidden="true">/</span><Link to={ROOT+"/atlas"}>Opening-state Atlas</Link><span aria-hidden="true">/</span><Link to={ROOT+"/reply"}>REPLY</Link></div>
+  </div>;
+}
