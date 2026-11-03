@@ -4,11 +4,13 @@
  */
 export const WIKI_DIRECTORY_ALPHABET = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"] as const;
 
+/** Fold accented Latin initials into their A-Z index letter. */
 export function wikiInitial(title: string): string {
-  const first = title.trim().charAt(0).toLocaleUpperCase("en");
+  const first = title.trim().normalize("NFKD").charAt(0).toLocaleUpperCase("en");
   return /^[A-Z]$/.test(first) ? first : "#";
 }
 
+/** Group and sort without changing the caller's canonical article array. */
 export function wikiDirectoryGroups<T extends { title: string }>(articles: ReadonlyArray<T>): Array<{ letter: string; articles: T[] }> {
   const byInitial = new Map<string, T[]>();
   for (const article of articles) {
@@ -19,7 +21,7 @@ export function wikiDirectoryGroups<T extends { title: string }>(articles: Reado
   }
   return [...WIKI_DIRECTORY_ALPHABET, "#"].flatMap(letter => {
     const group = byInitial.get(letter);
-    return group?.length ? [{ letter, articles: group }] : [];
+    return group?.length ? [{ letter, articles: group.slice().sort((a,b)=>a.title.localeCompare(b.title,"en")) }] : [];
   });
 }
 
