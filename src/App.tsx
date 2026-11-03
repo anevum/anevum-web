@@ -6,12 +6,15 @@ import { currentRhenRelease, rhenReleaseBySlug } from "./data/releases";
 
 const RhenTerminal = lazy(() => import("./pages/RhenTerminal"));
 const Command = lazy(() => import("./pages/Command"));
-const OriginalWorksStudio = lazy(() => import("./pages/OriginalWorksStudio"));
-
 // Review-only surface. The flag defaults off in every ordinary/production build.
 // It must be explicitly enabled by a dedicated local reviewer build, never by
 // an implicit deployment environment or a calendar-based publishing rule.
+// Gate the dynamic import itself, not only its Route: otherwise Vite can emit
+// downloadable, unpublished chunks even though the UI never mounts them.
 const originalWorksPreviewEnabled = import.meta.env.VITE_ORIGINAL_WORKS_PREVIEW === "true";
+const OriginalWorksStudio = originalWorksPreviewEnabled
+  ? lazy(() => import("./pages/OriginalWorksStudio"))
+  : null;
 const CommonsV5 = lazy(() => import("./commons/CommonsV5"));
 const MemberHome = lazy(() => import("./pages/MemberHome"));
 const MemberSettings = lazy(() => import("./pages/MemberSettings"));
@@ -248,7 +251,7 @@ export default function App() {
       <RouteScrollReset />
       <OverflowPan />
       <Routes>
-        {originalWorksPreviewEnabled && <Route path="/design/original-works/*" element={<Suspense fallback={<Loader />}><OriginalWorksStudio /></Suspense>} />}
+        {originalWorksPreviewEnabled && OriginalWorksStudio && <Route path="/design/original-works/*" element={<Suspense fallback={<Loader />}><OriginalWorksStudio /></Suspense>} />}
         <Route path="/" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/products" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
         <Route path="/beta" element={<Suspense fallback={<Loader />}><CommonsV5 /></Suspense>} />
