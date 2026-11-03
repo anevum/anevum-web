@@ -37,6 +37,10 @@ MAINTENANCE_PATHS = frozenset([
     "scripts/ops/repo-catalog.json",
     "scripts/ops/split-project.mjs",
     "tests/repository-split.test.mjs",
+    # CI-only RHEN pinned-contract probe and its tests are independently
+    # verified by ANEVUM Verify; neither changes the web runtime or assets.
+    "scripts/verify-v5-cross-repo-schema.mjs",
+    "tests/v5-cross-repo-schema.test.mjs",
 ])
 
 def app_preview_required(paths):
