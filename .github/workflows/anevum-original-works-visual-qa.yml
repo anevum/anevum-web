@@ -6,6 +6,8 @@ on:
       - 'src/pages/OriginalWorksStudio.tsx'
       - 'src/pages/TranscosmicWiki.tsx'
       - 'src/data/transcosmic-wiki.ts'
+      - 'src/data/wiki-directory.ts'
+      - 'tests/wiki-directory.test.mjs'
       - 'src/data/transcosmic-wiki-expansion-a.json'
       - 'src/data/transcosmic-wiki-expansion-b.json'
       - 'src/data/transcosmic-wiki-relations.json'
@@ -52,6 +54,7 @@ jobs:
           node scripts/verify-transcosmic-reader-preview.mjs
           node scripts/verify-transcosmic-wiki-expansion.mjs
           node --test tests/transcosmic-reader-preview.test.mjs tests/original-works-preview.test.mjs tests/original-works-hosted-access.test.mjs tests/original-works-protected-preview.test.mjs tests/transcosmic-wiki.test.mjs tests/transcosmic-wiki-expansion.test.mjs
+          node --experimental-strip-types --test tests/wiki-directory.test.mjs
       - name: Typecheck and build default (review feature disabled)
         run: |
           npm run check
