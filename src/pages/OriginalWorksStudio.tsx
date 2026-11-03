@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import Mark from "../components/Mark";
 import AtlasExplorer from "./AtlasExplorer";
+import TranscosmicWiki from "./TranscosmicWiki";
 import ReplyReadingRoom from "./ReplyReadingRoom";
 import "../styles/original-works-preview.css";
 
@@ -24,6 +25,7 @@ const PATH = {
   reading: ROOT + "/reply/reading-room",
   transcosmic: ROOT + "/transcosmic",
   atlas: ROOT + "/atlas",
+  wiki: ROOT + "/wiki",
   journal: ROOT + "/journal",
   about: ROOT + "/about"
 } as const;
@@ -34,12 +36,14 @@ const NAV: ReadonlyArray<{ page: Page; label: string }> = [
   { page: "works", label: "Works" },
   { page: "transcosmic", label: "Transcosmic" },
   { page: "atlas", label: "The Atlas" },
+  { page: "wiki", label: "Wiki" },
   { page: "journal", label: "Journal" },
   { page: "about", label: "About" }
 ];
 
-function currentPage(pathname: string): Page | "atlas-detail" | "not-found" {
+function currentPage(pathname: string): Page | "atlas-detail" | "wiki-detail" | "not-found" {
   if (pathname.startsWith(PATH.atlas + "/")) return "atlas-detail";
+  if (pathname.startsWith(PATH.wiki + "/")) return "wiki-detail";
   const exact = (Object.entries(PATH) as Array<[Page, string]>)
     .find(([, path]) => pathname === path || pathname === path + "/");
   return exact?.[0] || "not-found";
@@ -107,11 +111,11 @@ function StudioHome() {
         <span>One anomalous measurement. A response from beyond a world.</span>
         <span className="ow-feature-link">Explore the novel <span aria-hidden="true">↗</span></span>
       </Link>
-      <Link to={PATH.atlas} className="ow-feature">
+      <Link to={PATH.wiki} className="ow-feature">
         <span className="ow-feature-index">02 / THE UNIVERSE</span>
-        <strong>The Atlas</strong>
-        <span>Discover the worlds, people, and everyday realities of The Transcosmic.</span>
-        <span className="ow-feature-link">Open the archive <span aria-hidden="true">↗</span></span>
+        <strong>The Transcosmic Wiki</strong>
+        <span>Explore connected encyclopedia articles on the worlds, people, places and infrastructure of The Transcosmic.</span>
+        <span className="ow-feature-link">Open the wiki <span aria-hidden="true">↗</span></span>
       </Link>
       <Link to={PATH.journal} className="ow-feature">
         <span className="ow-feature-index">03 / THE PROCESS</span>
@@ -192,7 +196,7 @@ function TranscosmicPage() {
         <span className="ow-card-kicker">Opening-state reader orientation</span>
         <h2>Different worlds. Real boundaries.</h2>
         <p>Veyra and Neral are already joined by mature Road infrastructure. Ovara is another human world, with its own independent scientific and political life. <cite>REPLY</cite> begins with a question—not a conquest.</p>
-        <Link className="ow-text-link" to={PATH.atlas}>Explore the public Atlas <span aria-hidden="true">↗</span></Link>
+        <Link className="ow-text-link" to={PATH.wiki}>Explore the reader wiki <span aria-hidden="true">↗</span></Link>
       </div>
     </div>
     <section className="ow-world-strip" aria-label="Reader-safe world introductions">
@@ -249,8 +253,8 @@ export default function OriginalWorksStudio() {
         <nav aria-label="Studio preview navigation" className="ow-navigation">
           {NAV.map(item => <Link
             key={item.page} to={PATH[item.page]}
-            aria-current={(page === item.page || (page === "atlas-detail" && item.page === "atlas")) ? "page" : undefined}
-            className={page === item.page || (page === "atlas-detail" && item.page === "atlas") ? "ow-nav-current" : ""}
+            aria-current={(page === item.page || (page === "atlas-detail" && item.page === "atlas") || (page === "wiki-detail" && item.page === "wiki")) ? "page" : undefined}
+            className={page === item.page || (page === "atlas-detail" && item.page === "atlas") || (page === "wiki-detail" && item.page === "wiki") ? "ow-nav-current" : ""}
           >{item.label}</Link>)}
         </nav>
       </div>
@@ -263,6 +267,8 @@ export default function OriginalWorksStudio() {
       {page === "transcosmic" && <TranscosmicPage />}
       {page === "atlas" && <AtlasExplorer />}
       {page === "atlas-detail" && <AtlasExplorer slug={pathname.slice(PATH.atlas.length + 1).replace(/\/$/, "")} />}
+      {page === "wiki" && <TranscosmicWiki />}
+      {page === "wiki-detail" && <TranscosmicWiki path={pathname.slice(PATH.wiki.length + 1)} />}
       {page === "journal" && <JournalPage />}
       {page === "about" && <AboutPage />}
       {page === "not-found" && <PreviewNotFound />}
@@ -273,6 +279,7 @@ export default function OriginalWorksStudio() {
         <div className="ow-footer-links">
           <Link to={PATH.works}>Works</Link>
           <Link to={PATH.atlas}>The Atlas</Link>
+          <Link to={PATH.wiki}>Wiki</Link>
           <Link to={PATH.about}>About</Link>
           <Link to="/privacy">Privacy</Link>
         </div>
