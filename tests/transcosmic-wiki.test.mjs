@@ -4,6 +4,9 @@ import {readFileSync} from "node:fs";
 
 const read = path => readFileSync(new URL("../"+path,import.meta.url),"utf8");
 const manifest=JSON.parse(read("src/data/transcosmic-reader-preview.json"));
+const expansionA=JSON.parse(read("src/data/transcosmic-wiki-expansion-a.json"));
+const expansionB=JSON.parse(read("src/data/transcosmic-wiki-expansion-b.json"));
+const additions=JSON.parse(read("src/data/transcosmic-wiki-relations.json"));
 const wiki=read("src/pages/TranscosmicWiki.tsx");
 const model=read("src/data/transcosmic-wiki.ts");
 const styles=read("src/styles/transcosmic-wiki.css");
@@ -43,16 +46,24 @@ test("wiki routes are reachable ONLY from the explicit gated studio review",()=>
   assert.doesNotMatch(app,/path="\/wiki\/\*"/);
 });
 
-test("index categories and backlinks derive from the audited eight-entry manifest",()=>{
+test("twenty-two reader pages and backlinks derive from the frozen eight-entry core and curated expansions",()=>{
   assert.match(model,/from "\.\/transcosmic-reader-preview"/);
-  assert.match(model,/new Map<string,ReaderEntry>\(entries\.map/);
+  assert.match(model,/new Map<string,WikiEntry>\(entries\.map/);
   assert.match(model,/const backlinks=entries\.flatMap/);
-  assert.match(model,/relationships\[entry\.slug\]/);
+  assert.match(model,/relationMap\.get\(entry\.slug\)/);
   assert.match(model,/if\(!record\) return undefined/);
-  assert.match(model,/wikiCategories = \["World", "Person", "Place", "Infrastructure"\]/);
+  assert.match(model,/wikiCategories = \["World", "Person", "Place", "Infrastructure", "Institution", "Science", "History"\]/);
   assert.match(model,/normalized=query\.trim\(\)\.slice\(0,80\)/);
   const ids=new Set(manifest.entries.map(article=>article.slug));
   assert.equal(ids.size,8);
+  const added=[...expansionA.entries,...expansionB.entries];
+  const allIds=new Set([...ids,...added.map(x=>x.slug)]);
+  assert.equal(added.length,14);
+  assert.equal(allIds.size,22);
+  assert.equal(Object.keys(additions.relationships).length,14);
+  assert.equal(Object.keys(additions.bridges).length,5);
+  for(const edges of Object.values({...additions.relationships,...additions.bridges}))
+    for(const edge of edges)assert.ok(allIds.has(edge.slug),"unresolved wiki link "+edge.slug);
   for(const [source,related] of Object.entries(manifest.relationships)){
     assert.ok(ids.has(source),"unknown source "+source);
     for(const link of related)assert.ok(ids.has(link.slug),"unknown related article "+link.slug);
@@ -65,14 +76,14 @@ test("wiki remains fail-closed and contains no private canon, editing or externa
   assert.match(wiki,/<WikiMissing\/>/);
   assert.match(wiki,/Guessing a URL never reveals private or unpublished canon/);
   assert.match(wiki,/There is not yet a public editing form/);
-  assert.match(wiki,/not a statement of book availability/);
+  assert.match(wiki,/does not make it publicly released or establish book availability/);
   for(const s of [wiki,model]) {
     assert.doesNotMatch(s,/dangerouslySetInnerHTML|fetch\(|XMLHttpRequest|axios|eval\(|window\.localStorage|api\/command|api\/member|notion\.so|app\.notion\.com/);
     assert.doesNotMatch(s,/Ovaran Contact Forum|first physical visitor|Chapter 43|Part IV|REPLY \+90/);
   }
 });
 
-test("wiki uses Wikipedia-like information hierarchy and four consistent category accents",()=>{
+test("wiki uses Wikipedia-like information hierarchy and seven consistent category accents",()=>{
   assert.match(wiki,/className="ow-wiki-layout ow-wiki-article"/);
   assert.match(wiki,/<WikiContents\/>/);
   assert.match(wiki,/data-wiki-category=\{article\.category\}/);
@@ -87,7 +98,7 @@ test("wiki uses Wikipedia-like information hierarchy and four consistent categor
   assert.match(styles,/@media\(max-width:740px\)/);
   assert.match(styles,/@media\(forced-colors:active\)/);
   assert.match(styles,/@media\(prefers-reduced-motion:reduce\)/);
-  const expectedColor={World:"#87bfff",Person:"#e7b777",Place:"#80d6c4",Infrastructure:"#c3adf9"};
+  const expectedColor={World:"#87bfff",Person:"#e7b777",Place:"#80d6c4",Infrastructure:"#c3adf9",Institution:"#f0a5b1",Science:"#88d9ed",History:"#d5c69c"};
   for(const [category,color] of Object.entries(expectedColor)) {
     assert.ok(styles.includes('[data-wiki-category="'+category+'"]'),"missing semantic color "+category);
     assert.ok(styles.includes("--wk-accent:"+color),"incorrect accent "+category);
