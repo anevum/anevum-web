@@ -3,7 +3,7 @@
 ## Release candidate — review required before merge
 
 Production D1 preparation completed successfully on the authorized, manual-only
-[workflow #37874315812](https://github.com/anevum/anevum-web/actions/runs/37874315812).
+[workflow #37874315812](https://github.com/devonalanakins/anevum-web/actions/runs/37874315812).
 It created nine core member tables and one inactive RHEN draft table. The workflow
 verified zero foreign-key violations, production/preview database UUID isolation,
 three encrypted Better Auth/Google Worker binding **names**, and that public signup

@@ -26,7 +26,7 @@ type GitHubStatus = {
   repositories: GitHubRepo[];
 };
 
-const EXPECTED = ["anevum/anevum-web", "anevum/rhen"];
+const EXPECTED = ["devonalanakins/anevum-web", "devonalanakins/rhen"];
 function validSnapshot(value: unknown): value is GitHubStatus {
   if (!value || typeof value !== "object") return false;
   const v = value as Partial<GitHubStatus>;

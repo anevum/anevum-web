@@ -15,10 +15,10 @@ concurrency:
 jobs:
   release:
     if: >-
-      github.repository == 'anevum/anevum-web' &&
+      github.repository == 'devonalanakins/anevum-web' &&
       github.ref == 'refs/heads/main' &&
       github.event.issue.number == 416 &&
-      github.event.comment.user.login == 'anevum' &&
+      github.event.comment.user.login == 'devonalanakins' &&
       github.event.comment.body == '/deploy-a-v024-71fb46f1e2408d0c01993fde38f9765e6c3c5f1a'
     runs-on: ubuntu-latest
     timeout-minutes: 30

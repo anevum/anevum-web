@@ -4,7 +4,7 @@ This is a one-time operator action for issue #210. The GitHub Actions workflow `
 
 ## Setup
 1. In Cloudflare, create a scoped token on the ANEVUM Cloudflare account granting D1 Write (and only required supporting read access). Do not paste the token into chat.
-2. Add it to the `anevum/anevum-web` GitHub Actions repository secrets under the exact name `CLOUDFLARE_D1_TOKEN`. Preserve the existing `CLOUDFLARE_API_TOKEN` Worker deployment secret. `CLOUDFLARE_ACCOUNT_ID` must already exist and identify the deployed ANEVUM account.
+2. Add it to the `devonalanakins/anevum-web` GitHub Actions repository secrets under the exact name `CLOUDFLARE_D1_TOKEN`. Preserve the existing `CLOUDFLARE_API_TOKEN` Worker deployment secret. `CLOUDFLARE_ACCOUNT_ID` must already exist and identify the deployed ANEVUM account.
 3. Open the `Provision ANEVUM Member D1 (Manual)` GitHub Actions workflow and select **Run workflow** on the protected main branch.
 4. Run `inspect` first. If it reports permission errors, fix the scoped token before doing anything else.
 5. To create absent databases only, select `create-missing`, and enter `CREATE_MEMBER_DATABASES` exactly as the confirmation string. This is a deliberate user action. Existing named databases are not dropped or overwritten.

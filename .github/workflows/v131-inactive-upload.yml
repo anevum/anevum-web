@@ -38,9 +38,9 @@ jobs:
     needs: validate
     if: >-
       github.event_name == 'workflow_dispatch' &&
-      github.repository == 'anevum/anevum-web' &&
+      github.repository == 'devonalanakins/anevum-web' &&
       github.ref == 'refs/heads/main' &&
-      github.actor == 'anevum' &&
+      github.actor == 'devonalanakins' &&
       github.run_attempt == 1 &&
       inputs.confirm_archive_sha256 == 'ff5173806d7195be845b9dfd2b787676a6eca450f3b035d523d5bf085a12fc8d'
     environment: Production
@@ -69,7 +69,7 @@ jobs:
           set -euo pipefail
           curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 --max-time 120 \
             -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' \
-            https://api.github.com/repos/anevum/anevum-web/actions/artifacts/12526930761/zip -o "$RUNNER_TEMP/v131.zip"
+            https://api.github.com/repos/devonalanakins/anevum-web/actions/artifacts/12526930761/zip -o "$RUNNER_TEMP/v131.zip"
           echo "ff5173806d7195be845b9dfd2b787676a6eca450f3b035d523d5bf085a12fc8d  $RUNNER_TEMP/v131.zip" | sha256sum --check --strict
           mkdir "$RUNNER_TEMP/v131-package"
           unzip -q "$RUNNER_TEMP/v131.zip" -d "$RUNNER_TEMP/v131-package"

@@ -1,7 +1,7 @@
 # ANEVUM V5 — Alpaca Connect reviewer readiness and browser-state guard
 
 **Unified session:** `ANEVUM.ANEVUM.UPDATE.2026-10-10.001.V5-UNIFIED-OVERHAUL`  
-**Master queue:** [anevum-web #259](https://github.com/anevum/anevum-web/issues/259)  
+**Master queue:** [anevum-web #259](https://github.com/devonalanakins/anevum-web/issues/259)  
 **Stack:** Commons public shell → private RHEN/member Command → paper OAuth review → moderated Commons.  
 **State:** DRAFT / NOT DEPLOYED / NO REAL PROVIDER CONNECTION RECORDED.
 

@@ -1,6 +1,6 @@
 // GitHub is only a public provenance source in V5. This adapter never
 // authenticates as a GitHub administrator, runs Actions or infers deployment.
-const ALLOWED_REPOSITORIES = Object.freeze(["anevum/anevum-web", "anevum/rhen"]);
+const ALLOWED_REPOSITORIES = Object.freeze(["devonalanakins/anevum-web", "devonalanakins/rhen"]);
 const RUN_STATES = new Set(["queued", "in_progress", "completed", "waiting", "requested", "pending"]);
 const RUN_OUTCOMES = new Set(["success", "failure", "cancelled", "skipped", "timed_out", "action_required", "neutral", "stale"]);
 

@@ -7,7 +7,7 @@ import {execFileSync} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
 
 export const PIN=Object.freeze({
- repo:'anevum/anevum-web', head:'ad0d3aef473e12c124b003d2c3bb45b79bff520e',
+ repo:'devonalanakins/anevum-web', head:'ad0d3aef473e12c124b003d2c3bb45b79bff520e',
  source:'d02f524305213ae785821d8b6d8bfce7948b1eb2', run:40011027824, artifact:12526930761,
  archive:'ff5173806d7195be845b9dfd2b787676a6eca450f3b035d523d5bf085a12fc8d',
  manifest:'38eb7581f6efd79f5b96e766164c3ec49b0f4608ed4d13ac0c3ddb64f4ab5e8d',
@@ -84,7 +84,7 @@ async function snapshot(){
 }
 export function context(env=process.env,now=Date.now()){
  assert.equal(env.GITHUB_REPOSITORY,PIN.repo);assert.equal(env.GITHUB_EVENT_NAME,'workflow_dispatch');
- assert.equal(env.GITHUB_REF,'refs/heads/main');assert.equal(env.GITHUB_ACTOR,'anevum');assert.equal(env.GITHUB_TRIGGERING_ACTOR,'anevum');
+ assert.equal(env.GITHUB_REF,'refs/heads/main');assert.equal(env.GITHUB_ACTOR,'devonalanakins');assert.equal(env.GITHUB_TRIGGERING_ACTOR,'devonalanakins');
  assert.equal(env.GITHUB_RUN_ATTEMPT,'1','Reruns forbidden');assert.equal(env.CONFIRM_V131,PIN.archive);
  assert.equal(env.CLOUDFLARE_ACCOUNT_ID,PIN.account);assert.ok(now<Date.parse(PIN.expires),'One-use authorization expired');
 }
@@ -100,7 +100,7 @@ async function provenance(){
  const reviews=await get('/repos/'+PIN.repo+'/pulls/'+merged[0].number+'/reviews',true);
  // GitHub owner-authored PRs cannot self-approve. A merged owner-authored PR is
  // the explicit repository review operation; external authored PRs require approval.
- assert.ok(merged[0].user.login==='anevum'||reviews.some(x=>x.state==='APPROVED'&&x.user.login==='anevum'));
+ assert.ok(merged[0].user.login==='devonalanakins'||reviews.some(x=>x.state==='APPROVED'&&x.user.login==='devonalanakins'));
  const changed=await get('/repos/'+PIN.repo+'/pulls/'+merged[0].number+'/files?per_page=100',true);
  assert.deepEqual(changed.map(x=>x.filename).sort(),['.github/workflows/v131-inactive-upload.yml','ops/v131/inactive-upload.mjs','ops/v131/inactive-upload.test.mjs','ops/v131/provider-lock.json']);
  assert.equal(execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),process.env.GITHUB_SHA);

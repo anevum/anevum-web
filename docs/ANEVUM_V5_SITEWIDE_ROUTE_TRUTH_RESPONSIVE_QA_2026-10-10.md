@@ -1,8 +1,8 @@
 # ANEVUM V5 — Sitewide route truth and responsive QA continuation
 
 Session: `ANEVUM.ANEVUM.UPDATE.2026-10-10.001.V5-UNIFIED-OVERHAUL`  
-Main tracker: https://github.com/anevum/anevum-web/issues/259  
-Upstream integrated candidate: https://github.com/anevum/anevum-web/pull/275 (pinned staging source `511de938061e4d532fb3bb1ff21ece24a5580d06`).
+Main tracker: https://github.com/devonalanakins/anevum-web/issues/259  
+Upstream integrated candidate: https://github.com/devonalanakins/anevum-web/pull/275 (pinned staging source `511de938061e4d532fb3bb1ff21ece24a5580d06`).
 
 ## Scope and motivation
 

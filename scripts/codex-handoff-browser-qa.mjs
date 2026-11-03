@@ -140,7 +140,7 @@ async function runCase(route, viewport) {
         schema_version:"iren_command.v2",state:"HEALTHY",stale:false,observed_at:new Date().toISOString(),incidents:[],
         work:{objectives:[],jobs:[],commands:window.__maintenanceRequested?[{command_id:"qa-maintenance",status:"SUCCEEDED",
           result:{message:"Adaptive maintenance prompt prepared: TARGETED; 3 material change(s) since the previous v2 prompt.",
-            maintenance_prompt:"IREN ADAPTIVE MAINTENANCE PASS v2\\nBackend/runtime: anevum/alpaca-trader\\nFrontend/Command: anevum/anevum-web\\nRESEARCH -> STRATEGY CONTROL LOOP",
+            maintenance_prompt:"IREN ADAPTIVE MAINTENANCE PASS v2\\nBackend/runtime: devonalanakins/rhen\\nFrontend/Command: devonalanakins/anevum-web\\nRESEARCH -> STRATEGY CONTROL LOOP",
             maintenance_manifest:{version:"iren-maintenance-manifest.v2",mode:"TARGETED",driver:"pending canonical objective or work item",
               change_count:3,changed_since_previous:true,changes:["New objective: COMMAND","GRAEN run changed: run-1","New strategy: EQUITY-CANDIDATE-001"],
               budget:{primary_objectives:1,supporting_changes:2,parallel_research_threads:1,scope:"one coherent change set"}}}}]:[],
@@ -181,8 +181,8 @@ async function runCase(route, viewport) {
   if (!check.generated || !check.verified || !check.copied || !check.tracked || !check.noDock ||
       !check.workPass || !check.adaptiveDelta ||
       !check.maintenancePrompt?.includes("IREN ADAPTIVE MAINTENANCE PASS v2") ||
-      !check.maintenancePrompt?.includes("anevum/alpaca-trader") ||
-      !check.maintenancePrompt?.includes("anevum/anevum-web")) {
+      !check.maintenancePrompt?.includes("devonalanakins/rhen") ||
+      !check.maintenancePrompt?.includes("devonalanakins/anevum-web")) {
     throw new Error("Work handoff interaction failed: " + JSON.stringify(check));
   }
   const result = await send("Runtime.evaluate", {

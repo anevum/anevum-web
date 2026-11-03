@@ -21,7 +21,7 @@ The site must feel like a well-maintained independent website: restrained, pract
 
 The founder identity is available on About, résumé, contact/legal pages, and authored notes, but need not dominate Home.
 
-## 2. Verified starting point (anevum/anevum-web main, 2026-10-08)
+## 2. Verified starting point (devonalanakins/anevum-web main, 2026-10-08)
 
 - React 19, TypeScript, Vite, Cloudflare Worker and static assets, GitHub Actions deployment, Railway RHEN runtime.
 - Current public routes: `/`, `/products`, `/feed`, `/field-notes`, `/about`, and nested RHEN public evidence, architecture, and release pages.

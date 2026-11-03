@@ -72,8 +72,8 @@ class ResetTests(unittest.TestCase):
                 if path.endswith(suffix):
                     return value
             self.fail('unexpected endpoint: '+path)
-        context={'GITHUB_REPOSITORY':'anevum/anevum-web','GITHUB_REF':'refs/heads/main',
-                 'GITHUB_ACTOR':'anevum','GITHUB_SHA':'a'*40}
+        context={'GITHUB_REPOSITORY':'devonalanakins/anevum-web','GITHUB_REF':'refs/heads/main',
+                 'GITHUB_ACTOR':'devonalanakins','GITHUB_SHA':'a'*40}
         with patch.dict(ops.os.environ,context), patch.object(ops,'api',side_effect=fake_api), \
              patch.object(ops,'query',return_value=[{'n':0}]):
             return ops.check_worker_and_database(**kwargs)

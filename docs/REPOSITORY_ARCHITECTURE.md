@@ -5,7 +5,7 @@ Session: ANEVUM.OPS.BUILD.2026-10-30.001.GITHUB-REPOSITORY-REORGANIZATION
 Verified GitHub owner: anevum. Existing independent repositories: anevum-web, rhen, devonakins.com and family-adventure-book. Keep these and their histories.
 
 Initial split candidates:
-- games/brandle => anevum/brandle (Worker: brandle-glimmer-grove)
+- games/brandle => devonalanakins/brandle (Worker: brandle-glimmer-grove)
 - apps/cristybreathe => anevum/cristybreathe (Worker: cristybreathe; private Access and D1 remain private)
 
 This branch prepares independent CI and source licensing, but **does not create repositories, move source or deploy**. The current source and production pipelines remain authoritative until an independently verified cutover.
@@ -50,7 +50,7 @@ creates a repository or configures Cloudflare credentials.
 
 Before publishing the bundle, review all extracted history for exposed tokens,
 private information and licensing. Create an empty public GitHub repository
-named anevum/brandle, then import the bundle with git clone, run its tests,
+named devonalanakins/brandle, then import the bundle with git clone, run its tests,
 configure the new remote and push main. The new repository initially has
 CI-only configuration: preserve the original production deployer until a
 verified, rollback-ready transfer is approved.

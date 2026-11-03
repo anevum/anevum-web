@@ -50,7 +50,7 @@ concurrency:
 
 jobs:
   synthetic-safety:
-    if: github.repository == 'anevum/anevum-web'
+    if: github.repository == 'devonalanakins/anevum-web'
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -72,9 +72,9 @@ jobs:
     needs: synthetic-safety
     if: >-
       github.event_name == 'workflow_dispatch' &&
-      github.repository == 'anevum/anevum-web' &&
+      github.repository == 'devonalanakins/anevum-web' &&
       github.ref == 'refs/heads/main' &&
-      github.actor == 'anevum' &&
+      github.actor == 'devonalanakins' &&
       inputs.operation == 'prepare' &&
       inputs.confirmation == 'PREPARE_20261021_XP_RESET' &&
       inputs.reviewed_head_sha == github.sha
@@ -153,9 +153,9 @@ jobs:
     needs: synthetic-safety
     if: >-
       github.event_name == 'workflow_dispatch' &&
-      github.repository == 'anevum/anevum-web' &&
+      github.repository == 'devonalanakins/anevum-web' &&
       github.ref == 'refs/heads/main' &&
-      github.actor == 'anevum' &&
+      github.actor == 'devonalanakins' &&
       inputs.operation == 'execute' &&
       inputs.confirmation == 'EXECUTE_20261021_XP_RESET' &&
       inputs.preserve_entitlements_ack == 'PRESERVE_PAID_AND_RECOGNITION_ENTITLEMENTS' &&

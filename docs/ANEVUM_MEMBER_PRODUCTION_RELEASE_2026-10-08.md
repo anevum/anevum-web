@@ -1,11 +1,11 @@
 # ANEVUM Member Command — production release and operator gates
-Date: 2026-10-08 | Canonical issue: anevum/anevum-web#210
+Date: 2026-10-08 | Canonical issue: devonalanakins/anevum-web#210
 
 ## Product and current evidence
 
 ANEVUM is an independent software workshop. Its authenticated Command member portal supplies personal profiles, saved programs, followed projects, and available application features. RHEN is the first project. The general member RHEN evidence/research workspace is NOT a brokerage terminal and has no trade-write authority. The founder's RHEN Terminal remains a separate operator-only authorization domain.
 
-Google OAuth staging is deployed on https://anevum-member-staging.devonakins.workers.dev and connected ONLY to the preview D1 database. The [staging deployment run](https://github.com/anevum/anevum-web/actions/runs/37859203656) verified auth readiness, distinct D1, anonymous member denial, and owner API denial. The owner reports testing two independent Google accounts, separate profiles/saves, logout, export, deletion. This is OWNER-REPORTED acceptance, not independently executed two-cookie testing. Full adversarial expiry/CSRF/rate-limit coverage remains a separate gate.
+Google OAuth staging is deployed on https://anevum-member-staging.devonakins.workers.dev and connected ONLY to the preview D1 database. The [staging deployment run](https://github.com/devonalanakins/anevum-web/actions/runs/37859203656) verified auth readiness, distinct D1, anonymous member denial, and owner API denial. The owner reports testing two independent Google accounts, separate profiles/saves, logout, export, deletion. This is OWNER-REPORTED acceptance, not independently executed two-cookie testing. Full adversarial expiry/CSRF/rate-limit coverage remains a separate gate.
 
 ## Command Access scope cutover
 

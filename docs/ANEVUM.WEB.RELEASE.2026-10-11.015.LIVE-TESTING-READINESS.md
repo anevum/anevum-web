@@ -107,7 +107,7 @@ The originally rejected actions were not bypassed while approval was missing.
 - Authorized release trigger: `fa37643a380dd5839192c3e7cf1ac1e83a514bb7`,
   on `release/anevum-v5-approved-production-20261011` only. Do not merge that
   branch. Main retains the manually gated production workflow.
-- Cutover run: https://github.com/anevum/anevum-web/actions/runs/38178041192.
+- Cutover run: https://github.com/devonalanakins/anevum-web/actions/runs/38178041192.
   Encrypted recovery, migration rehearsal, uploaded/downloaded archive restore,
   digest check, Studio-only schema/ledger, real owner binding, production
   prerequisites, Worker deployment and all 17 member boundary checks succeeded.
@@ -133,7 +133,7 @@ claim authenticated owner acceptance.
 
 Production desktop/mobile rendering evidence is captured separately by the
 credential-free read-only workflow:
-https://github.com/anevum/anevum-web/actions/workflows/v5-production-readonly-verification.yml.
+https://github.com/devonalanakins/anevum-web/actions/workflows/v5-production-readonly-verification.yml.
 Its first run also exposed an outdated beta CTA assertion: live registration
 correctly links to `/sign-in?next=beta`, while the checker recognized only the
 bare `/sign-in` path. PR #317 accepts those two exact valid links. Preview tests

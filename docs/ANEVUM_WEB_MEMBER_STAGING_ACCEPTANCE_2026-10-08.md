@@ -15,7 +15,7 @@ This is a follow-on to #228/#229 and production member readiness #230. It does *
 
 ## Verified infrastructure as of the release
 
-- Production encrypted secret names and types passed the repeat of [read-only readiness #37871211948](https://github.com/anevum/anevum-web/actions/runs/37871211948). This cannot prove OAuth client validity or private Better Auth secret rotation.
+- Production encrypted secret names and types passed the repeat of [read-only readiness #37871211948](https://github.com/devonalanakins/anevum-web/actions/runs/37871211948). This cannot prove OAuth client validity or private Better Auth secret rotation.
 - Production D1 currently has **zero** core member tables; automatic production migration remains forbidden.
 - Preview D1 migration #37870434124 and staging OAuth deployment #37870434114 passed.
 - `ANEVUM_MEMBERS_ENABLED=false` and `ANEVUM_MEMBER_RHEN_DRAFTS_ENABLED=false` remain explicit production configuration, with RHEN operator Access unchanged.

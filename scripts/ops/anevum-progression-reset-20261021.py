@@ -94,9 +94,9 @@ def query(sql: str, database=CANONICAL_DB):
 
 
 def check_worker_and_database(*, require_test_disabled=False):
-    require(os.environ.get('GITHUB_REPOSITORY') == 'anevum/anevum-web' and
+    require(os.environ.get('GITHUB_REPOSITORY') == 'devonalanakins/anevum-web' and
             os.environ.get('GITHUB_REF') == 'refs/heads/main' and
-            os.environ.get('GITHUB_ACTOR') == 'anevum' and
+            os.environ.get('GITHUB_ACTOR') == 'devonalanakins' and
             re.fullmatch('[a-f0-9]{40}', os.environ.get('GITHUB_SHA', '')) is not None,
             'manual verified GitHub context required')
     deployment = api(f'/accounts/{ACCOUNT}/workers/scripts/{APEX}/deployments', key='worker')

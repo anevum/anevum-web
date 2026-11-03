@@ -31,7 +31,7 @@ performance/IREN reads remain separate legacy diagnostic projections pending the
 full canonical live publisher integration. No claim is made that every legacy
 panel is already event driven.
 
-Backend status and per-slice blockers are in `anevum/rhen/docs/rhen44/STATUS.md`.
+Backend status and per-slice blockers are in `devonalanakins/rhen/docs/rhen44/STATUS.md`.
 No production visual acceptance or real-data screenshots are claimed without an
 authorized session and active staging feed. The surface contains no invented
 market points and no broker controls.

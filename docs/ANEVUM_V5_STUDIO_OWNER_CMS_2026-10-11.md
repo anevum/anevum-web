@@ -2,8 +2,8 @@
 
 Session: ANEVUM.WEB.BUILD.2026-10-11.012.STUDIO-OWNER-CMS
 Parent: draft PR #311 source head 6ffca736c5ec1525087048bd6fd8ce854b4c00b9.
-V5 release board: https://github.com/anevum/anevum-web/issues/259
-2027 launch board: https://github.com/anevum/anevum-web/issues/308
+V5 release board: https://github.com/devonalanakins/anevum-web/issues/259
+2027 launch board: https://github.com/devonalanakins/anevum-web/issues/308
 
 ## Identity and policy
 

@@ -21,7 +21,7 @@ jobs:
   deploy-beta-only:
     if: >-
       github.ref == 'refs/heads/build/anevum-v5-isolated-beta-deployment-20261011' &&
-      github.actor == 'anevum' &&
+      github.actor == 'devonalanakins' &&
       github.event.head_commit.message == 'release(v5-beta): deploy approved beta-only candidate'
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -45,9 +45,9 @@ jobs:
           set -euo pipefail
           umask 077
           marker='docs/ANEVUM_V5_BETA_RELEASE_AUTHORIZATION_2026-10-11.json'
-          test "$GITHUB_REPOSITORY" = "anevum/anevum-web"
+          test "$GITHUB_REPOSITORY" = "devonalanakins/anevum-web"
           test "$GITHUB_REF" = "refs/heads/build/anevum-v5-isolated-beta-deployment-20261011"
-          test "$GITHUB_ACTOR" = "anevum"
+          test "$GITHUB_ACTOR" = "devonalanakins"
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           test "$(git ls-remote origin "$GITHUB_REF" | cut -f1)" = "$GITHUB_SHA"
           test "$(git show -s --format=%s HEAD)" = \
