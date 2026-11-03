@@ -71,6 +71,18 @@ test("twenty-two reader pages and backlinks derive from the frozen eight-entry c
   assert.ok(!manifest.relationships.ovara.some(x=>["open-road","neral","veyra"].includes(x.slug)));
 });
 
+test("wiki search ranks every matching public article, with exact and prefix titles first",()=>{
+  assert.match(model,/const terms=normalized\.split\(\/\\s\+\/\)\.filter\(Boolean\)/);
+  assert.match(model,/terms\.every\(term=>fields\.some\(field=>field\.includes\(term\)\)\)/);
+  assert.match(model,/title===normalized\?0:/);
+  assert.match(model,/title\.startsWith\(normalized\)\?1:/);
+  assert.match(model,/allTitleTerms\?3:4/);
+  assert.match(model,/ranked\.sort\(\(a,b\)=>a\.rank-b\.rank/);
+  assert.match(model,/return ranked\.map\(entry=>entry\.article\)/);
+  assert.doesNotMatch(model,/titleMatches\.length\?titleMatches:/);
+  assert.doesNotMatch(model,/fetch\(|notion\.so|app\.notion\.com/);
+});
+
 test("wiki remains fail-closed and contains no private canon, editing or external source calls",()=>{
   assert.match(wiki,/route\.startsWith\("category\/"\)/);
   assert.match(wiki,/<WikiMissing\/>/);
