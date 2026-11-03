@@ -49,14 +49,19 @@ export function wikiCategoryPages(category:string): WikiArticle[] {
 
 export function wikiSearch(query:string,category:WikiCategory|"All"="All"): WikiArticle[] {
   const normalized=query.trim().slice(0,80).toLocaleLowerCase("en");
-  return wikiAllPages().filter(article=>
-    (category==="All"||article.category===category)&&
-    (!normalized||[
-      article.title,article.subtitle,article.summary,article.detail,
-      article.keywords,article.category,
-      ...article.related.map(link=>link.label)
-    ].join(" ").toLocaleLowerCase("en").includes(normalized))
-  );
+  const pages=wikiAllPages();
+  if(!normalized) return pages.filter(article=>category==="All"||article.category===category);
+
+  // Encyclopedia lookup is title-first, even when a category is selected:
+  // "Nali" must not return Ovara merely because Ovara mentions Nali.
+  // Category filters operate on those title matches, not on their backlinks.
+  const titleMatches=pages.filter(article=>article.title.toLocaleLowerCase("en").includes(normalized));
+  const matching=titleMatches.length?titleMatches:pages.filter(article=>[
+    article.subtitle,article.summary,article.detail,
+    article.keywords,article.category,
+    ...article.related.map(link=>link.label)
+  ].join(" ").toLocaleLowerCase("en").includes(normalized));
+  return matching.filter(article=>category==="All"||article.category===category);
 }
 
 export const wikiHome = BASE;
