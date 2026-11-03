@@ -14,7 +14,7 @@ function fixture(){
  const s={components,versionIds},lock={componentSha256:Object.fromEntries(Object.entries(components).map(([k,v])=>[k,digest(v)])),versionIds:structuredClone(versionIds)};return {s,lock};
 }
 test('requires main, manual owner dispatch, first attempt, exact archive and a bounded time',()=>{
- const env={GITHUB_REPOSITORY:PIN.repo,GITHUB_EVENT_NAME:'workflow_dispatch',GITHUB_REF:'refs/heads/main',GITHUB_ACTOR:'anevum',GITHUB_TRIGGERING_ACTOR:'anevum',GITHUB_RUN_ATTEMPT:'1',CONFIRM_V131:PIN.archive,CLOUDFLARE_ACCOUNT_ID:PIN.account};
+ const env={GITHUB_REPOSITORY:PIN.repo,GITHUB_EVENT_NAME:'workflow_dispatch',GITHUB_REF:'refs/heads/main',GITHUB_ACTOR:'devonalanakins',GITHUB_TRIGGERING_ACTOR:'devonalanakins',GITHUB_RUN_ATTEMPT:'1',CONFIRM_V131:PIN.archive,CLOUDFLARE_ACCOUNT_ID:PIN.account};
  context(env,Date.parse('2026-10-23T20:00:00Z'));
  for(const [key,value]of Object.entries({GITHUB_EVENT_NAME:'push',GITHUB_REF:'refs/heads/unreviewed',GITHUB_ACTOR:'other',GITHUB_TRIGGERING_ACTOR:'other',GITHUB_RUN_ATTEMPT:'2',CONFIRM_V131:'older-artifact',CLOUDFLARE_ACCOUNT_ID:'other'}))assert.throws(()=>context({...env,[key]:value},Date.parse('2026-10-23T20:00:00Z')));
  assert.throws(()=>context(env,Date.parse('2026-10-25T00:00:00Z')));

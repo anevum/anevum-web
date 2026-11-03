@@ -10,7 +10,7 @@ test("one-time beta trigger is bound to an exact branch, marker, actor and no pr
  assert.match(header,/branches:\s*\[build\/anevum-v5-isolated-beta-deployment-20261011\]/);
  assert.match(header,/docs\/ANEVUM_V5_BETA_RELEASE_AUTHORIZATION_2026-10-11\.json/);
  assert.doesNotMatch(header,/workflow_dispatch:|pull_request:|branches:\s*\[main\]|schedule:/);
- assert.match(release,/github\.actor == 'anevum'/);
+ assert.match(release,/github\.actor == 'devonalanakins'/);
  assert.match(release,/github\.ref == 'refs\/heads\/build\/anevum-v5-isolated-beta-deployment-20261011'/);
  assert.match(release,/github\.event\.head_commit\.message == 'release\(v5-beta\): deploy approved beta-only candidate'/);
  assert.match(release,/git diff-tree --no-commit-id --name-only -r HEAD/);

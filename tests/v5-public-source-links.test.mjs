@@ -9,14 +9,14 @@ const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url),
 test("public source registry contains only the two manually verified ANEVUM repositories", () => {
   assert.deepEqual(Object.keys(publishedSourceRecords).sort(), ["rhen","website"]);
   assert.deepEqual(publishedSourceRecords.website,{
-    repository:"anevum/anevum-web",
-    url:"https://github.com/anevum/anevum-web",
+    repository:"devonalanakins/anevum-web",
+    url:"https://github.com/devonalanakins/anevum-web",
     visibility:"PUBLIC",
     reuse:"APACHE_2_0"
   });
   assert.deepEqual(publishedSourceRecords.rhen,{
-    repository:"anevum/rhen",
-    url:"https://github.com/anevum/rhen",
+    repository:"devonalanakins/rhen",
+    url:"https://github.com/devonalanakins/rhen",
     visibility:"PUBLIC",
     reuse:"NO_REPOSITORY_LICENSE"
   });
