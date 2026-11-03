@@ -330,7 +330,7 @@ async function runCase(route, viewport) {
            !initial.links.includes("#ow-wiki-letter-n")||!initial.links.includes("#ow-wiki-letter-s")||
            !initial.disabled.includes("J"))
           throw Error("Wiki grouped alphabetical directory missing entries or accessible jump links: "+JSON.stringify(initial));
-        await send("Runtime.evaluate",{expression:'document.querySelector(".ow-wiki-letter-nav a[href=\"#ow-wiki-letter-n\"]")?.click()'});
+        await send("Runtime.evaluate",{expression:'[...document.querySelectorAll(".ow-wiki-letter-nav a")].find(a=>a.getAttribute("href")==="#ow-wiki-letter-n")?.click()'});
         const jumped=await readWiki('({hash:location.hash,letter:document.querySelector("#ow-wiki-letter-n")?.dataset.letter||""})');
         if(jumped.hash!=="#ow-wiki-letter-n"||jumped.letter!=="N")
           throw Error("Wiki alphabetical jump target failed: "+JSON.stringify(jumped));
