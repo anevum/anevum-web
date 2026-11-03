@@ -15,6 +15,8 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
+    // Fail closed if this script is accidentally exposed on another hostname.
+    if (url.hostname !== "backstage.anevum.com") return NOT_FOUND.clone();
     if (request.method !== "GET" && request.method !== "HEAD") {
       return new Response("Method not allowed", {status: 405, headers: {
         "Allow": "GET, HEAD",
