@@ -1,0 +1,78 @@
+{
+  "schema": "transcosmic.wiki-expansion.part-a.v1",
+  "releaseState": "review_only",
+  "publicationApproved": false,
+  "publicQueueEnabled": false,
+  "entries": [
+    {
+      "id": "09",
+      "slug": "cape-serein",
+      "title": "Cape Serein",
+      "category": "Place",
+      "subtitle": "Greater Serein · Veyra",
+      "summary": "A coastal district of Greater Serein where research campuses meet black cliffs, marsh causeways and engineered shorelines.",
+      "detail": "Cape Serein contains a working coastal community, observation grounds and the Continuance Institute campus. Its cliffs, tidal marshes, causeways and engineered shelves make weather, access and long-term maintenance ordinary civic concerns.\n\nThis article describes the current district and its public scientific setting, not classified historical research or old manuscript timelines.",
+      "keywords": "coast cliffs marsh research campus Continuance Veyra"
+    },
+    {
+      "id": "10",
+      "slug": "continuance-institute",
+      "title": "Continuance Institute",
+      "category": "Institution",
+      "subtitle": "Scientific and engineering institution · Greater Serein",
+      "summary": "A research and engineering institution with a public Cape Serein presence, professional staff and responsibilities bounded by civic authority.",
+      "detail": "The Continuance Institute is part of the mature scientific landscape of Veyra. Its public work includes research, engineering, standards and technical institutions. Its Cape Serein campus connects specialist work with the surrounding city-region.\n\nScientific capability does not grant sovereignty. Staff culture, accountability and the distinction between technical advice and legitimate public decisions define its current public role. Restricted historical programs are outside this reader edition.",
+      "keywords": "Continuance Cape Serein research engineering standards institution"
+    },
+    {
+      "id": "11",
+      "slug": "d3-17",
+      "title": "D3-17",
+      "category": "History",
+      "subtitle": "Historical research incident · Old Meridian",
+      "summary": "An archive designation for a historical research accident associated with Old Meridian, described only at the public-teaser level.",
+      "detail": "D3-17 names an accident in the historical science record, associated with Old Meridian in Greater Serein. The existence of an incident may be acknowledged without reconstructing the restricted experiments or their consequences.\n\nThis article is an archival signpost. It does not disclose the underlying technical mechanism, classified institutional history or its interpretation in later narrative events.",
+      "keywords": "historical accident Old Meridian archive science"
+    },
+    {
+      "id": "12",
+      "slug": "deep-three",
+      "title": "Deep Three",
+      "category": "Place",
+      "subtitle": "Lunar research station · Ione",
+      "summary": "A Veyran lunar research station on Ione, introduced as a historical scientific facility without restricted program details.",
+      "detail": "Deep Three, also called Lunar Deep Station Three, is a research installation on Veyra's large moon, Ione. Low gravity, negligible atmosphere and difficult access shape the engineering and logistics of any lunar station.\n\nThe public record establishes its place and scientific character only. Hidden facilities, unpublished research programs and disputed historical links are deliberately not described.",
+      "keywords": "lunar station Ione research Veyra laboratory"
+    },
+    {
+      "id": "13",
+      "slug": "elias-venn",
+      "title": "Elias Venn",
+      "category": "Person",
+      "subtitle": "Historical researcher · Veyran science",
+      "summary": "A historical Veyran research figure associated with demanding theoretical and technical questions.",
+      "detail": "Elias Venn appears in the history of scientific work in the Transcosmic setting. His public introduction is restricted to his identity as a technically minded researcher concerned with models, instruments and the interpretation of difficult results.\n\nFurther biography, experimental associations and later historical importance require a separate archive review. The private source record is not reproduced here.",
+      "keywords": "Elias Venn historical research scientist archive"
+    },
+    {
+      "id": "14",
+      "slug": "grainit",
+      "title": "GRAINIT",
+      "category": "Science",
+      "subtitle": "Exploratory finite-resolution geometry",
+      "summary": "An exploratory finite-resolution and quasilocal geometry program, not a proven theory of quantum gravity.",
+      "detail": "GRAINIT explores descriptions of geometry that account for meaningful resolution limits and quantities defined over bounded regions. It is an exploratory mathematical and physical research program; its hypotheses must be distinguished from established experimental findings.\n\nScientific proposals and fictional transport technologies are separate subjects. This overview does not assert that a speculative physical model establishes the mechanism of an in-world Road.",
+      "keywords": "mathematics geometry quantum gravity finite resolution quasilocal"
+    },
+    {
+      "id": "15",
+      "slug": "greater-serein",
+      "title": "Greater Serein",
+      "category": "Place",
+      "subtitle": "Coastal city-region · Veyra",
+      "summary": "A dense Veyran coastal metropolis encompassing Cape Serein and several distinct working districts.",
+      "detail": "Greater Serein is a coastal city-region made up of districts including Cape Serein, Westbank, Low Harrow, Southbank District and Old Meridian. Shore conditions and infrastructure connect these communities without making them identical.\n\nHomes, transit, public institutions, environmental management and specialist engineering coexist here. The region offers a view of the connected-world civilization through everyday urban life.",
+      "keywords": "Cape Serein Westbank Low Harrow Southbank Old Meridian city Veyra"
+    }
+  ]
+}
