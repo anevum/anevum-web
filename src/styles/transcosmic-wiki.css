@@ -1,0 +1,124 @@
+/* Transcosmic Wiki: actual connected reader encyclopedia, review build only. */
+.ow-wiki{padding-top:58px;padding-bottom:65px;overflow-wrap:anywhere}
+.ow-wiki-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(185px,250px);gap:clamp(26px,4vw,60px);align-items:start}
+.ow-wiki-main{min-width:0}
+.ow-wiki-breadcrumb{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 35px;font-size:12px;color:#c3d0db}
+.ow-wiki-breadcrumb>a{color:#d7bea3}
+.ow-wiki-crumb{display:inline-flex;gap:10px;align-items:center}
+.ow-wiki-crumb>span:first-child{color:#9ea7b1}
+.ow-wiki-crumb>span:last-child{color:#f0e6db}
+.ow-page.ow-wiki h1{font-size:clamp(48px,5.6vw,90px);line-height:1.03;letter-spacing:-.045em;max-width:830px;margin-bottom:28px}
+.ow-wiki .ow-page-lead{max-width:780px;font-size:clamp(16px,1.5vw,19px);line-height:1.7;margin-bottom:32px}
+.ow-wiki-banner{display:flex;gap:17px;padding:19px 22px;border:1px solid #a1aebe59;background:linear-gradient(100deg,#1f3040a8,#18243279);margin:25px 0 43px}
+.ow-wiki-banner p{margin:0;font-size:13px;line-height:1.7;color:#c2ccd7}
+.ow-wiki-banner strong{color:#f0e5d4}
+.ow-wiki-live-mark{display:block;flex:0 0 9px;width:9px;height:9px;margin-top:7px;border:1px solid #dbb98f;transform:rotate(45deg)}
+.ow-wiki-search-area{background:linear-gradient(135deg,#152332,#101926);padding:24px;border:1px solid #81909d55}
+.ow-wiki-search-area label{display:block;font-size:11px;color:#cfb591;letter-spacing:.12em;text-transform:uppercase;font-weight:700;margin-bottom:12px}
+.ow-wiki-search-area input{width:100%;min-height:53px;padding:12px 16px;background:#0a131e;border:1px solid #9babbc87;color:#f6eee5;font:inherit;font-size:15px;border-radius:0}
+.ow-wiki-search-area input::placeholder{color:#a6b5c2}
+.ow-wiki-search-area input:focus-visible{outline:3px solid #b8dafe;outline-offset:2px}
+.ow-wiki-filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.ow-wiki-filter-row button{min-height:39px;padding:7px 13px;border:1px solid #8493a580;background:#192735;color:#e0e5ea;font:inherit;font-size:12px;cursor:pointer;border-radius:0}
+.ow-wiki-filter-row button[aria-pressed=true]{color:#161d25;background:#e1ccb0;border-color:#e1ccb0;font-weight:750}
+.ow-wiki-results-heading{margin:46px 0 21px;display:flex;justify-content:space-between;align-items:baseline;gap:15px}
+.ow-wiki-results-heading h2{margin:0;color:#f1e9db;font:normal clamp(25px,2.8vw,36px) Georgia,serif}
+.ow-wiki-results-heading span{font-size:12px;color:#b8c5d1;font-variant-numeric:tabular-nums}
+.ow-wiki-result-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.ow-wiki-result{position:relative;display:flex;flex-direction:column;gap:14px;min-height:254px;padding:24px;background:linear-gradient(150deg,#1d2c3c,#141e2b);border:1px solid #8190a05d;transition:background .2s,border-color .2s}
+.ow-wiki-result:hover{background:#263b4e;border-color:#c8ab88}
+.ow-wiki-result-type{color:#cdb394;font-size:10px;letter-spacing:.11em;text-transform:uppercase;font-weight:700}
+.ow-wiki-result-type span{color:#9aafbd;margin:0 4px}
+.ow-wiki-result strong{font:normal 28px/1.15 Georgia,serif;color:#f3ecdf;letter-spacing:-.02em}
+.ow-wiki-result>span:nth-last-child(2){color:#c7d0da;font-size:12px;line-height:1.75}
+.ow-wiki-result-action{font-size:12px;font-weight:700;color:#eed8b7;margin-top:auto}
+.ow-wiki-empty{border:1px solid #7f92a478;padding:28px;background:#172633}
+.ow-wiki-empty h2{font:normal 30px Georgia,serif;margin:0 0 12px}
+.ow-wiki-empty p{font-size:13px;color:#c5d2dd;line-height:1.8}
+.ow-wiki-empty button{padding:11px 17px;min-height:44px;background:#eae1d3;border:0;color:#111925;cursor:pointer;font-weight:700}
+.ow-wiki-worknote{display:grid;grid-template-columns:160px 1fr;gap:25px;align-items:start;margin-top:33px;padding-top:27px;border-top:1px solid #9caabb54}
+.ow-wiki-worknote span{font-size:10px;letter-spacing:.12em;color:#c3a789}
+.ow-wiki-worknote p{color:#b7c2cf;font-size:12px;line-height:1.8;margin:0}
+.ow-wiki-sidebar{position:sticky;top:25px;padding:26px 22px;background:#121c28;border:1px solid #71839666}
+.ow-wiki-sidebar-label{text-transform:uppercase;color:#c9ae8d;letter-spacing:.14em;font-size:10px;font-weight:700;margin:0 0 16px}
+.ow-wiki-sidebar-label:not(:first-child){margin-top:31px;padding-top:24px;border-top:1px solid #879aab45}
+.ow-wiki-side-links{display:flex;flex-direction:column}
+.ow-wiki-side-links>a{display:flex;align-items:center;justify-content:space-between;min-height:40px;gap:10px;font-size:12px;color:#c7d2dc;padding:10px 6px;border-bottom:1px solid #8097a43a}
+.ow-wiki-side-links>a:hover,.ow-wiki-side-links>a[aria-current=page]{color:#f7e0bb;background:#2534418a}
+.ow-wiki-side-links>a span{color:#becbd5;font-variant-numeric:tabular-nums}
+.ow-wiki-side-note{margin:27px 0 0;font-size:11px;color:#aebeca;line-height:1.75}
+.ow-wiki-article .ow-wiki-article-intro{margin:0 0 26px;max-width:820px;color:#d0d9df;font:normal clamp(20px,2vw,27px)/1.56 Georgia,serif}
+.ow-wiki-article-meta{display:flex;gap:8px 25px;flex-wrap:wrap;padding:16px 0 19px;border-top:1px solid #9ba9b850;border-bottom:1px solid #9ba9b850;font-size:10px;color:#c8b9a5;letter-spacing:.08em;text-transform:uppercase}
+.ow-wiki-toc{margin:34px 0 40px;padding:23px 25px;background:#1a2736;border:1px solid #98a8b256}
+.ow-wiki-toc p{margin:0 0 15px;text-transform:uppercase;color:#d8bc99;letter-spacing:.12em;font-size:10px;font-weight:750}
+.ow-wiki-toc ol{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:0;padding-left:22px;gap:14px 35px}
+.ow-wiki-toc li{font-size:13px;color:#c8d5df}
+.ow-wiki-toc a:hover{text-decoration:underline;text-underline-offset:4px}
+.ow-wiki-copy section{margin:0 0 36px;scroll-margin-top:30px}
+.ow-wiki-copy section h2{margin:0 0 19px;padding-bottom:15px;border-bottom:1px solid #8197a756;font:normal clamp(28px,3vw,36px) Georgia,serif;color:#f0e8db}
+.ow-wiki-copy section h2 span{font:700 10px/1.8 ui-sans-serif,sans-serif;color:#c2aa87;vertical-align:middle;margin-right:17px;letter-spacing:.1em}
+.ow-wiki-copy section p{max-width:780px;margin:0 0 17px;font-size:16px;line-height:1.85;color:#cbd5de}
+.ow-wiki-copy section p.ow-wiki-editorial-note{color:#b4bdc6;font-size:12px;margin-top:22px;padding:18px 0 0;border-top:1px solid #8e9eab3b}
+.ow-wiki-connection-list{list-style:none;margin:0;padding:0}
+.ow-wiki-connection-list li{display:flex;align-items:center;justify-content:space-between;gap:10px 22px;flex-wrap:wrap;min-height:55px;border-bottom:1px solid #7d95a346;padding:13px 3px}
+.ow-wiki-connection-list li a{color:#f2dbb9;font:normal 18px Georgia,serif}
+.ow-wiki-connection-list li a:hover{text-decoration:underline;text-underline-offset:5px}
+.ow-wiki-connection-list li span{font-size:12px;color:#b8c4d0}
+.ow-wiki-infobox{border:1px solid #8c9ba875;background:linear-gradient(145deg,#233548,#141f2c);padding:25px 22px;margin-bottom:20px}
+.ow-wiki-infobox-label{font-size:10px;letter-spacing:.12em;color:#d0b799;margin:0 0 24px}
+.ow-wiki-infobox h2{color:#f1e7d9;font:normal 30px/1.2 Georgia,serif;margin:0 0 10px}
+.ow-wiki-infobox-subtitle{font-size:12px;line-height:1.6;color:#c4cfda;margin:0 0 20px}
+.ow-wiki-infobox dl{margin:0}
+.ow-wiki-infobox dl div{padding:13px 0;border-bottom:1px solid #879eab4d}
+.ow-wiki-infobox dt{font-size:10px;letter-spacing:.085em;color:#c0a37e;text-transform:uppercase;margin-bottom:6px}
+.ow-wiki-infobox dd{margin:0;color:#e2e8ea;font-size:12px;line-height:1.5}
+.ow-wiki-infobox-foot{color:#b8c5cf;font-size:11px;line-height:1.75;margin:19px 0 0}
+.ow-wiki-aside>.ow-wiki-sidebar{position:static}
+.ow-wiki-article-footer{display:flex;align-items:center;gap:15px;flex-wrap:wrap;border-top:1px solid #8396a75c;padding-top:25px;font-size:12px;color:#b9c4cf}
+.ow-wiki-article-footer a{color:#e9d1b1}
+.ow-wiki-article-footer>a:last-child{margin-left:auto}
+.ow-wiki-alphabetical{list-style:none;margin:34px 0 0;padding:0}
+.ow-wiki-alphabetical li{display:flex;gap:15px;justify-content:space-between;align-items:center;padding:20px 15px;border-bottom:1px solid #8499ac66}
+.ow-wiki-alphabetical li:nth-child(odd){background:#1a28352e}
+.ow-wiki-alphabetical a{font:normal 23px Georgia,serif;color:#f0dfcb}
+.ow-wiki-alphabetical a:hover{text-decoration:underline}
+.ow-wiki-alphabetical span{font-size:12px;color:#aebfcf}
+.ow-wiki-bottom{display:flex;gap:15px;flex-wrap:wrap;align-items:center;margin-top:55px;padding-top:24px;border-top:1px solid #8092a455;color:#bfab90;font-size:12px}
+.ow-wiki-bottom a:hover{text-decoration:underline}
+@media(max-width:1024px){
+  .ow-wiki-layout{grid-template-columns:minmax(0,1fr) minmax(180px,215px);gap:24px}
+  .ow-wiki-sidebar,.ow-wiki-infobox{padding:21px 16px}
+  .ow-wiki-result-grid{grid-template-columns:1fr 1fr}
+  .ow-wiki-result{padding:19px;min-height:250px}
+}
+@media(max-width:780px){
+  .ow-wiki{padding-top:36px}
+  .ow-wiki-layout{grid-template-columns:1fr;gap:30px}
+  .ow-wiki-sidebar{position:static}
+  .ow-wiki-aside{display:flex;flex-direction:column}
+  .ow-wiki-article .ow-wiki-aside{grid-row:1}
+  .ow-wiki-article .ow-wiki-main{grid-row:2}
+  .ow-wiki-article .ow-wiki-aside>.ow-wiki-sidebar{display:none}
+  .ow-wiki-infobox{margin-bottom:0}
+}
+@media(max-width:620px){
+  .ow-wiki-breadcrumb{margin-bottom:23px}
+  .ow-page.ow-wiki h1{font-size:clamp(42px,11vw,65px)}
+  .ow-wiki-result-grid{grid-template-columns:1fr}
+  .ow-wiki-result{min-height:214px}
+  .ow-wiki-results-heading{margin-top:34px}
+  .ow-wiki-search-area{padding:18px}
+  .ow-wiki-worknote{grid-template-columns:1fr;gap:11px}
+  .ow-wiki-toc ol{grid-template-columns:1fr}
+  .ow-wiki-article-meta{gap:11px 17px}
+  .ow-wiki-copy section p{font-size:15px}
+  .ow-wiki-article .ow-wiki-aside{grid-row:auto}
+  .ow-wiki-article .ow-wiki-main{grid-row:auto}
+  .ow-wiki-article .ow-wiki-aside{grid-row:2}
+  .ow-wiki-article .ow-wiki-main{grid-row:1}
+}
+@media(prefers-reduced-motion:reduce){.ow-wiki-result{transition:none}}
+@media(forced-colors:active){
+  .ow-wiki-result,.ow-wiki-banner,.ow-wiki-sidebar,.ow-wiki-infobox{border:1px solid CanvasText}
+  .ow-wiki-filter-row button[aria-pressed=true]{outline:2px solid Highlight}
+}
