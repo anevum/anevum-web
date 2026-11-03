@@ -24,8 +24,30 @@ function WikiBreadcrumb({items}:{items:ReadonlyArray<{label:string;to?:string}>}
   </nav>;
 }
 
+
+const tocSections = [
+  {id:"wiki-overview",label:"Overview"},
+  {id:"wiki-context",label:"Context"},
+  {id:"wiki-connections",label:"Connections"},
+  {id:"wiki-linked",label:"What links here"}
+] as const;
+
+/** Persistent desktop table of contents, as in a reading-first encyclopedia. */
+function WikiContents() {
+  return <aside className="ow-wiki-left-rail" aria-label="Article contents">
+    <nav className="ow-wiki-contents" aria-label="On this page">
+      <p className="ow-wiki-rail-label">Contents</p>
+      <a className="ow-wiki-to-top" href="#ow-wiki-article-title">Beginning</a>
+      <ol>{tocSections.map((section,index)=><li key={section.id}>
+        <a href={"#"+section.id}><span>{index+1}.</span> {section.label}</a>
+      </li>)}</ol>
+      <Link className="ow-wiki-rail-back" to={wikiSpecialPath("all-pages")}>All articles</Link>
+    </nav>
+  </aside>;
+}
+
 function WikiSidebar({active}:{active?:string}) {
-  return <aside className="ow-wiki-sidebar" aria-label="Wiki navigation">
+  return <aside className="ow-wiki-sidebar ow-wiki-left-rail" aria-label="Wiki navigation">
     <p className="ow-wiki-sidebar-label">Explore the wiki</p>
     <nav aria-label="Wiki pages" className="ow-wiki-side-links">
       <Link to={wikiHome} aria-current={active==="home"?"page":undefined}>Main page</Link>
@@ -46,7 +68,7 @@ function WikiSidebar({active}:{active?:string}) {
 }
 
 function IndexLink({article}:{article:WikiArticle}) {
-  return <Link className="ow-wiki-result" to={article.href}>
+  return <Link className="ow-wiki-result" data-wiki-category={article.category} to={article.href}>
     <span className="ow-wiki-result-type">{article.category} <span aria-hidden="true">/</span> {article.id}</span>
     <strong>{article.title}</strong>
     <span>{article.summary}</span>
@@ -67,7 +89,8 @@ function WikiIndex() {
     if(nextCategory!=="All")newParams.set("category",nextCategory);
     setParams(newParams,{replace:true});
   };
-  return <section className="ow-wiki-layout" aria-labelledby="ow-wiki-title">
+  return <section className="ow-wiki-layout ow-wiki-index" aria-labelledby="ow-wiki-title">
+    <WikiSidebar active="home"/>
     <div className="ow-wiki-main">
       <WikiBreadcrumb items={[{label:"Main page"}]}/>
       <p className="ow-eyebrow">The Transcosmic / Reader Wiki</p>
@@ -101,31 +124,29 @@ function WikiIndex() {
         </div>}
       <div className="ow-wiki-worknote"><span>EDITORIAL INDEX / 001</span><p>Article titles, categories and links are versioned together in the repository. Additional subjects require deliberate canon and spoiler review before joining the reader edition.</p></div>
     </div>
-    <WikiSidebar active="home"/>
   </section>;
 }
 
 function WikiArticlePage({slug}:{slug:string}) {
   const article=getWikiArticle(slug);
   if(!article)return <WikiMissing />;
-  return <section className="ow-wiki-layout ow-wiki-article" aria-labelledby="ow-wiki-article-title">
+  return <section className="ow-wiki-layout ow-wiki-article" data-wiki-category={article.category} aria-labelledby="ow-wiki-article-title">
+    <WikiContents/>
     <div className="ow-wiki-main">
       <WikiBreadcrumb items={[{label:article.category,to:wikiCategoryPath(article.category)},{label:article.title}]}/>
-      <p className="ow-eyebrow">The Transcosmic / {article.category}</p>
+      <div className="ow-wiki-page-tabs" aria-label="Page status">
+        <span className="ow-wiki-tab-current">Article</span>
+        <span>Read-only editorial preview</span>
+      </div>
       <h1 id="ow-wiki-article-title">{article.title}</h1>
       <p className="ow-wiki-article-intro">{article.summary}</p>
       <div className="ow-wiki-article-meta">
         <span>ENTRY {article.id}</span><span>REPLY opening state</span><span>Editorial review only</span>
       </div>
-      <nav className="ow-wiki-toc" aria-label="On this page">
-        <p>Contents</p>
-        <ol>
-          <li><a href="#wiki-overview">Overview</a></li>
-          <li><a href="#wiki-context">Context</a></li>
-          <li><a href="#wiki-connections">Connections</a></li>
-          <li><a href="#wiki-linked">What links here</a></li>
-        </ol>
-      </nav>
+      <details className="ow-wiki-mobile-contents">
+        <summary>Contents</summary>
+        <ol>{tocSections.map(section=><li key={section.id}><a href={"#"+section.id}>{section.label}</a></li>)}</ol>
+      </details>
       <div className="ow-wiki-copy">
         <section id="wiki-overview" aria-labelledby="wiki-overview-title">
           <h2 id="wiki-overview-title"><span>01</span> Overview</h2>
@@ -171,7 +192,6 @@ function WikiArticlePage({slug}:{slug:string}) {
         </dl>
         <p className="ow-wiki-infobox-foot">Public revision history and manuscript sourcing are not available in this review build. The reader content is version-controlled and subject to editorial approval.</p>
       </aside>
-      <WikiSidebar active={article.category}/>
     </div>
   </section>;
 }
@@ -181,7 +201,8 @@ function WikiCategoryPage({slug}:{slug:string}) {
   if(!category)return <WikiMissing/>;
   const pages=wikiCategoryPages(category);
   const heading=category==="World"?"Worlds":category==="Person"?"People":category==="Place"?"Places":"Infrastructure";
-  return <section className="ow-wiki-layout" aria-labelledby="ow-wiki-category-title">
+  return <section className="ow-wiki-layout ow-wiki-category" aria-labelledby="ow-wiki-category-title">
+    <WikiSidebar active={category}/>
     <div className="ow-wiki-main">
       <WikiBreadcrumb items={[{label:"Categories"},{label:heading}]}/>
       <p className="ow-eyebrow">The Transcosmic / Categories</p>
@@ -189,13 +210,13 @@ function WikiCategoryPage({slug}:{slug:string}) {
       <p className="ow-page-lead">{pages.length} opening-state {pages.length===1?"article":"articles"} classified under {heading.toLowerCase()}.</p>
       <div className="ow-wiki-result-grid">{pages.map(a=><IndexLink article={a} key={a.slug}/>)}</div>
     </div>
-    <WikiSidebar active={category}/>
   </section>;
 }
 
 function WikiAllPages() {
   const pages=wikiAllPages();
-  return <section className="ow-wiki-layout" aria-labelledby="ow-wiki-all-title">
+  return <section className="ow-wiki-layout ow-wiki-directory" aria-labelledby="ow-wiki-all-title">
+    <WikiSidebar active="all"/>
     <div className="ow-wiki-main">
       <WikiBreadcrumb items={[{label:"All articles"}]}/>
       <p className="ow-eyebrow">The Transcosmic / Directory</p>
@@ -203,12 +224,12 @@ function WikiAllPages() {
       <p className="ow-page-lead">Alphabetical index of the {pages.length} currently curated entries. No unreleased records are enumerated.</p>
       <ol className="ow-wiki-alphabetical">{pages.map(a=><li key={a.slug}><Link to={a.href}>{a.title}</Link><span>{a.category}</span></li>)}</ol>
     </div>
-    <WikiSidebar active="all"/>
   </section>;
 }
 
 function WikiAbout() {
-  return <section className="ow-wiki-layout" aria-labelledby="ow-wiki-about-title">
+  return <section className="ow-wiki-layout ow-wiki-information" aria-labelledby="ow-wiki-about-title">
+    <WikiSidebar active="about"/>
     <div className="ow-wiki-main">
       <WikiBreadcrumb items={[{label:"About this wiki"}]}/>
       <p className="ow-eyebrow">The Transcosmic / Editorial desk</p>
@@ -220,12 +241,12 @@ function WikiAbout() {
         <section><h2>Publication controls</h2><p>Every new topic or revision must pass canon reconciliation and spoiler clearance. The draft is not a statement of book availability or permission to publish unreleased material.</p></section>
       </div>
     </div>
-    <WikiSidebar active="about"/>
   </section>;
 }
 
 function WikiMissing() {
   return <section className="ow-wiki-layout ow-wiki-missing" aria-labelledby="ow-wiki-missing-title">
+    <WikiSidebar/>
     <div className="ow-wiki-main">
       <WikiBreadcrumb items={[{label:"Unavailable"}]}/>
       <p className="ow-eyebrow">The Transcosmic / Wiki</p>
@@ -233,7 +254,6 @@ function WikiMissing() {
       <p className="ow-page-lead">This page is not part of the reviewed reader edition. Guessing a URL never reveals private or unpublished canon.</p>
       <Link className="ow-action" to={wikiHome}>Return to wiki <span aria-hidden="true">↗</span></Link>
     </div>
-    <WikiSidebar/>
   </section>;
 }
 
