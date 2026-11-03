@@ -1,7 +1,7 @@
 # ANEVUM V5 — moderated Commons discussions (pilot foundation)
 
 **Session:** `ANEVUM.ANEVUM.UPDATE.2026-10-10.001.V5-UNIFIED-OVERHAUL`  
-**Master queue:** [#259](https://github.com/anevum/anevum-web/issues/259). **Website tracker:** [#265](https://github.com/anevum/anevum-web/issues/265).  
+**Master queue:** [#259](https://github.com/devonalanakins/anevum-web/issues/259). **Website tracker:** [#265](https://github.com/devonalanakins/anevum-web/issues/265).  
 **Base:** existing private RHEN integration draft #271, itself stacked on #270/#269/#266.  
 **Status:** DRAFT / DEFAULT-OFF / NOT DEPLOYED / NOT A PUBLIC SOCIAL LAUNCH.
 

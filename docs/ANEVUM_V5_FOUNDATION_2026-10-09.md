@@ -5,10 +5,10 @@
 
 ## Parallel work, not a website restart
 
-- [Commons Stage 1 V5.1 shell PR #256](https://github.com/anevum/anevum-web/pull/256) continues to own the social application layout, visual polish, color experiments and mobile navigation. Do not replace its current design direction.
+- [Commons Stage 1 V5.1 shell PR #256](https://github.com/devonalanakins/anevum-web/pull/256) continues to own the social application layout, visual polish, color experiments and mobile navigation. Do not replace its current design direction.
 - The V5 Foundation child branch builds on V5.1 but limits changes to independent, testable identity and evidence contracts. It must not alter the site shell, theme or real Field Notes feed.
-- Parent systems design [RHEN PR #469](https://github.com/anevum/rhen/pull/469) and architecture [#468](https://github.com/anevum/rhen/issues/468); isolated successor journal [#470](https://github.com/anevum/rhen/issues/470).
-- Website tracker [#257](https://github.com/anevum/anevum-web/issues/257).
+- Parent systems design [RHEN PR #469](https://github.com/devonalanakins/rhen/pull/469) and architecture [#468](https://github.com/devonalanakins/rhen/issues/468); isolated successor journal [#470](https://github.com/devonalanakins/rhen/issues/470).
+- Website tracker [#257](https://github.com/devonalanakins/anevum-web/issues/257).
 
 ## Contract and development rules
 
@@ -26,7 +26,7 @@ The previous founder-only Command/broker coupling is **legacy data**, not V5 pro
 
 Only the quarantined `LEGACY_FOUNDER` workspace uses the old owner-only route `/command/rhen/operate`, and then only until the original production service and records are safely retired. A new founder `RHEN_NEXT` workspace must route to the ordinary private `/apps/rhen` just like a member workspace; its broker-link state initially is `NOT_LINKED` with `NONE` live authority. Owner and other members must pass the same broker licensing/provider approval, KYC/authorization, session-bound tenant protection, and independent paper/live safety gates. No Railway Alpaca keys may be copied to the website member database. Old trading results remain historical read-only evidence rather than being credited to the new account's performance.
 
-Production retirement and evidence-preserving cleanup: [RHEN #474](https://github.com/anevum/rhen/issues/474). The owner authorized stopping further live trading but **not** liquidation or deletion of positions, orders or backups. Because the broker's authoritative open positions/orders are not accessible through the currently connected market-data tools, no live shutdown or volume deletion is permitted before verification.
+Production retirement and evidence-preserving cleanup: [RHEN #474](https://github.com/devonalanakins/rhen/issues/474). The owner authorized stopping further live trading but **not** liquidation or deletion of positions, orders or backups. Because the broker's authoritative open positions/orders are not accessible through the currently connected market-data tools, no live shutdown or volume deletion is permitted before verification.
 
 ## Simplified product scope (owner decision)
 
@@ -40,7 +40,7 @@ The current GRAEN, VELUM, and NOSTRA identities were **prototypes**, not approve
 
 **IREN is deferred** to a future operator/AI project when hardware or hosted inference is warranted. Do not surface an independent IREN runtime, claim it is healthy, block RHEN on GPU procurement or remove basic alerts. Public historical prototype pages may remain for archival accuracy, but current navigation, plans and subscription claims must not market GRAEN/VELUM/NOSTRA as standalone working services. Keep all other ANEVUM future applications separate from RHEN; this consolidation concerns only the RHEN trading/research prototype family.
 
-Canonical architectural decision: [RHEN consolidation ADR 002](https://github.com/anevum/rhen/blob/design/anevum-vnext-greenfield-platform-20261009/docs/architecture/2026-10-10-rhen-integrated-prototype-consolidation.md).
+Canonical architectural decision: [RHEN consolidation ADR 002](https://github.com/devonalanakins/rhen/blob/design/anevum-vnext-greenfield-platform-20261009/docs/architecture/2026-10-10-rhen-integrated-prototype-consolidation.md).
 
 ## QA / staging sequencing
 

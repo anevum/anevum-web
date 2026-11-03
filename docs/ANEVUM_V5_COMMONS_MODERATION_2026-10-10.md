@@ -1,7 +1,7 @@
 # ANEVUM V5 — Commons moderator security and report review
 
 **Canonical session:** `ANEVUM.ANEVUM.UPDATE.2026-10-10.001.V5-UNIFIED-OVERHAUL`  
-**Coordinating issue:** [#259](https://github.com/anevum/anevum-web/issues/259)  
+**Coordinating issue:** [#259](https://github.com/devonalanakins/anevum-web/issues/259)  
 **Parent:** Unreleased invite-only social draft #272. **This child is development only.**
 
 ## Owner and staff boundary

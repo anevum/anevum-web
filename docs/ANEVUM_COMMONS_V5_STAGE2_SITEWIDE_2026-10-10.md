@@ -2,8 +2,8 @@
 
 Session: ANEVUM.WEB.BUILD.2026-10-10.001.FULL-SITE-RECONSTRUCTION  
 Program: ANEVUM.V5.FOUNDATION.2026-10-09.001  
-Tracker: https://github.com/anevum/anevum-web/issues/265  
-System release board: https://github.com/anevum/anevum-web/issues/259
+Tracker: https://github.com/devonalanakins/anevum-web/issues/265  
+System release board: https://github.com/devonalanakins/anevum-web/issues/259
 
 ## Release boundaries
 
