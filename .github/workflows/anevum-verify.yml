@@ -49,7 +49,8 @@ jobs:
       - name: Verify original-works studio preview isolation
         run: |
           node scripts/verify-transcosmic-reader-preview.mjs
-          node --test tests/original-works-preview.test.mjs tests/transcosmic-reader-preview.test.mjs tests/original-works-hosted-access.test.mjs tests/transcosmic-wiki.test.mjs
+          node scripts/verify-transcosmic-wiki-expansion.mjs
+          node --test tests/original-works-preview.test.mjs tests/transcosmic-reader-preview.test.mjs tests/original-works-hosted-access.test.mjs tests/transcosmic-wiki.test.mjs tests/transcosmic-wiki-expansion.test.mjs
       - name: Verify legacy RHEN retirement and Commons independence
         run: node --test tests/legacy-rhen-retirement.test.mjs
       - name: Enforce single guarded production Worker deployment
