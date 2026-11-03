@@ -89,3 +89,30 @@ test('hosted Access-denial probe follows owner-only preflight and Preview creati
   assert.match(verify, /node scripts\/verify-original-works-protected-preview\.mjs/);
   assert.match(verify, /BASE_URL: \$\{\{ steps\.preview\.outputs\.preview_url \}\}/);
 });
+
+test('owner-only preview cannot run unauthenticated positive probes by default', () => {
+  const verify=readFileSync(new URL('../.github/workflows/anevum-verify.yml',import.meta.url),'utf8');
+  const denial=verify.indexOf('      - name: Prove owner-only Preview denies anonymous requests');
+  const manual=verify.indexOf('      - name: Record manual owner-authenticated preview acceptance gate');
+  assert.ok(denial>=0 && manual>denial, 'anonymous denial must precede explicit manual acceptance record');
+  assert.match(verify.slice(manual,manual+1100),/Owner-authenticated review still required/);
+  const positives=[
+    'Probe routes, SEO, PDF, and public privacy contract',
+    'Verify browser runtime and horizontal overflow',
+    'Visual review contact sheets',
+    'Verify captured browser QA',
+    'Upload browser QA',
+  ];
+  for (const label of positives) {
+    const i=verify.indexOf('      - name: '+label);
+    assert.ok(i>manual,'legacy positive step must remain downstream: '+label);
+    const j=verify.indexOf('\n      - ',i+7);
+    const block=verify.slice(i,j===-1?undefined:j);
+    assert.match(block,/vars\.ANEVUM_WEB_OWNER_AUTHENTICATED_QA == 'true'/,
+      'legacy positive step must not anonymously probe Access-protected preview: '+label);
+  }
+  const negative=verify.slice(denial,manual);
+  assert.doesNotMatch(negative,/ANEVUM_WEB_OWNER_AUTHENTICATED_QA/,
+    'anonymous-denial smoke must never be skipped by the positive-check gate');
+  assert.doesNotMatch(verify,/pull_request_target:/);
+});

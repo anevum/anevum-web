@@ -165,8 +165,18 @@ jobs:
           BASE_URL: ${{ steps.preview.outputs.preview_url }}
         run: node scripts/verify-original-works-protected-preview.mjs
 
-      - name: Probe routes, SEO, PDF, and public privacy contract
+      - name: Record manual owner-authenticated preview acceptance gate
         if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "### Owner-authenticated review still required" >> "$GITHUB_STEP_SUMMARY"
+          echo "Anonymous Access denial passed. This does not validate authenticated rendering, legacy public routes, client state or editorial copy." >> "$GITHUB_STEP_SUMMARY"
+          echo "The legacy positive hosted probes require a separately approved CI Access identity and are intentionally skipped unless ANEVUM_WEB_OWNER_AUTHENTICATED_QA is explicitly enabled." >> "$GITHUB_STEP_SUMMARY"
+          echo "Do not mark this draft ready for merge or publication until an owner reviews the protected preview and source-head visual QA." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Probe routes, SEO, PDF, and public privacy contract
+        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true' && vars.ANEVUM_WEB_OWNER_AUTHENTICATED_QA == 'true'
         shell: bash
         run: |
           set -euxo pipefail
@@ -228,7 +238,7 @@ jobs:
           curl --fail --show-error --silent --head "$base/design/original-works" | grep -qi 'x-robots-tag:.*noindex'
 
       - name: Verify browser runtime and horizontal overflow
-        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
+        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true' && vars.ANEVUM_WEB_OWNER_AUTHENTICATED_QA == 'true'
         env:
           BASE_URL: ${{ steps.preview.outputs.preview_url }}
         run: |
@@ -242,11 +252,11 @@ jobs:
           node scripts/discussion-lifecycle-browser-qa.mjs
           node scripts/private-rhen-browser-qa.mjs
       - name: Visual review contact sheets
-        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
+        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true' && vars.ANEVUM_WEB_OWNER_AUTHENTICATED_QA == 'true'
         run: python scripts/visual-ops-contact-sheet.py
 
       - name: Verify captured browser QA
-        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
+        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true' && vars.ANEVUM_WEB_OWNER_AUTHENTICATED_QA == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -309,7 +319,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload browser QA
-        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
+        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true' && vars.ANEVUM_WEB_OWNER_AUTHENTICATED_QA == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: anevum-preview-visuals
