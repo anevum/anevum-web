@@ -15,9 +15,13 @@ cleanup() {
 }
 trap cleanup EXIT
 
-chrome_path="$(node --input-type=module -e \
-  "import chromium from '@sparticuz/chromium'; console.log(await chromium.executablePath())")"
-ln -s "$chrome_path" "$bin_dir/google-chrome"
+# Prefer the GitHub runner's already-installed Chrome. The optional
+# Sparticuz binary is for isolated environments without system Chrome.
+if ! command -v google-chrome >/dev/null 2>&1; then
+  chrome_path="$(node --input-type=module -e \
+    "import chromium from '@sparticuz/chromium'; console.log(await chromium.executablePath())")"
+  ln -s "$chrome_path" "$bin_dir/google-chrome"
+fi
 node scripts/ops/local-original-works-review-server.mjs > /tmp/anevum-original-works-review-http.log 2>&1 &
 server_pid="$!"
 
