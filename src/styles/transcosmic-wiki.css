@@ -32,6 +32,9 @@
 .ow-wiki [data-wiki-category="Person"],.ow-wiki [data-wiki-category="person"]{--wk-accent:#e7b777;--wk-soft:#e7b77715}
 .ow-wiki [data-wiki-category="Place"],.ow-wiki [data-wiki-category="place"]{--wk-accent:#80d6c4;--wk-soft:#80d6c415}
 .ow-wiki [data-wiki-category="Infrastructure"],.ow-wiki [data-wiki-category="infrastructure"]{--wk-accent:#c3adf9;--wk-soft:#c3adf915}
+.ow-wiki [data-wiki-category="Institution"],.ow-wiki [data-wiki-category="institution"]{--wk-accent:#f0a5b1;--wk-soft:#f0a5b115}
+.ow-wiki [data-wiki-category="Science"],.ow-wiki [data-wiki-category="science"]{--wk-accent:#88d9ed;--wk-soft:#88d9ed15}
+.ow-wiki [data-wiki-category="History"],.ow-wiki [data-wiki-category="history"]{--wk-accent:#d5c69c;--wk-soft:#d5c69c15}
 .ow-wiki .ow-wiki-layout{
   display:grid;
   grid-template-columns:clamp(170px,13vw,205px) minmax(0,1fr);
