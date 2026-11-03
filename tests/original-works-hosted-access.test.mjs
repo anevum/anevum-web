@@ -5,7 +5,7 @@ import { checkAccessPreviewGate, readRemotePreviewGate } from "../scripts/verify
 
 const appId = "17346277-606e-42dd-a65b-a031a122c006";
 const workerId = "6df22e2260974268aef86c6988a152c5";
-const accountId = "2f7ee831-0724-0152-097e-fd956a4e8335";
+const accountId = "2f7ee83107240152097efd956a4e8335";
 const token = "test-fake-token-not-a-credential";
 const ownerPolicy = {
   decision:"allow",
@@ -109,6 +109,30 @@ test("remote script lookup must fail when the target worker is not found", async
     ok:true, json:async()=>({success:true,result:url.includes("/workers/scripts?")?[]:{}})
   });
   await assert.rejects(()=>readRemotePreviewGate({token,accountId,accessAppId:appId,fetchImpl:fakeFetch}),/CLOUDFLARE_TARGET_WORKER_NOT_FOUND/);
+});
+
+test("Cloudflare account tags are 32-hex and invalid IDs never start HTTP reads", async () => {
+  for (const invalid of [
+    "2f7ee831-0724-0152-097e-fd956a4e8335",
+    "f".repeat(31),
+    "f".repeat(33),
+    "z".repeat(32),
+    "../bad"
+  ]) {
+    let requests=0;
+    await assert.rejects(
+      () => readRemotePreviewGate({
+        token,accountId:invalid,accessAppId:appId,
+        fetchImpl:async () => {requests++;throw Error("Unexpected fetch");}
+      }),
+      /INVALID_CLOUDFLARE_ACCOUNT_ID/
+    );
+    assert.equal(requests,0,"no HTTP requests on malformed account identifier");
+  }
+  await assert.rejects(
+    () => readRemotePreviewGate({token,accountId,accessAppId:workerId}),
+    /MISSING_REQUIRED_PREVIEW_CREDENTIAL_OR_ID/
+  );
 });
 
 test("the hosted-preview preflight must be executed before any wrangler preview call", () => {

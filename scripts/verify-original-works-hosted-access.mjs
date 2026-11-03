@@ -10,7 +10,7 @@
  * ANEVUM_WEB_PREVIEW_WORKER_UUID — exact 32-hex Worker tag from Cloudflare (historical variable name)
  *
  * Authentication: existing CLOUDFLARE_API_TOKEN with read-only Access/Worker
- * permissions plus CLOUDFLARE_ACCOUNT_ID. Do not log those values.
+ * permissions plus CLOUDFLARE_ACCOUNT_ID (32-character hexadecimal account tag). Do not log those values.
  * The verified allow policy is restricted to the owner's exact identity.
  *
  * Note: Browser/HTTP verification behind Access requires a separate CI identity.
@@ -25,6 +25,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // Cloudflare Worker script tags and Access preview_worker IDs are compact
 // 32-character hex identifiers, not hyphenated Access application UUIDs.
 const WORKER_TAG = /^[0-9a-f]{32}$/i;
+// Cloudflare account IDs share the 32-hex tag format; Access app IDs do not.
+const ACCOUNT_TAG = /^[0-9a-f]{32}$/i;
 
 export function checkAccessPreviewGate({subdomain, app, policies, pinnedAppId, pinnedWorkerUuid, actualWorkerUuid}) {
   const blockers = [];
@@ -70,7 +72,7 @@ export async function readRemotePreviewGate({token, accountId, accessAppId, fetc
   if (!token || !accountId || !UUID.test(accessAppId || "")) {
     throw new Error("MISSING_REQUIRED_PREVIEW_CREDENTIAL_OR_ID");
   }
-  if (!UUID.test(accountId)) throw new Error("INVALID_CLOUDFLARE_ACCOUNT_ID");
+  if (!ACCOUNT_TAG.test(accountId)) throw new Error("INVALID_CLOUDFLARE_ACCOUNT_ID");
   const root = "https://api.cloudflare.com/client/v4/accounts/" + accountId;
   const headers = {Authorization: "Bearer " + token, Accept: "application/json"};
   async function read(path) {
