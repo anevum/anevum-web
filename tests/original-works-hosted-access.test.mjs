@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { checkAccessPreviewGate, readRemotePreviewGate } from "../scripts/verify-original-works-hosted-access.mjs";
 
 const appId = "17346277-606e-42dd-a65b-a031a122c006";
-const workerId = "6df22e22-6097-4268-aef8-6c6988a152c5";
+const workerId = "6df22e2260974268aef86c6988a152c5";
 const accountId = "2f7ee831-0724-0152-097e-fd956a4e8335";
 const token = "test-fake-token-not-a-credential";
 const ownerPolicy = {
@@ -28,6 +28,8 @@ test("missing pinning or disabled remote previews always refuse hosted deploymen
   for(const change of [
     input=>{input.pinnedAppId="";},
     input=>{input.pinnedWorkerUuid="";},
+    input=>{input.pinnedWorkerUuid="6df22e22-6097-4268-aef8-6c6988a152c5";},
+    input=>{input.actualWorkerUuid="6df22e22-6097-4268-aef8-6c6988a152c5";},
     input=>{input.subdomain.previews_enabled=false;},
     input=>{input.subdomain.previews_enabled=undefined;},
     input=>{input.actualWorkerUuid="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";}
@@ -37,11 +39,22 @@ test("missing pinning or disabled remote previews always refuse hosted deploymen
   }
 });
 
+test("Cloudflare Worker tags must be compact hex, unlike Access app UUIDs", () => {
+  assert.deepEqual(checkAccessPreviewGate(valid()),[]);
+  const malformed=valid();
+  malformed.pinnedWorkerUuid="6df22e22-6097-4268-aef8-6c6988a152c5";
+  assert.deepEqual(checkAccessPreviewGate(malformed),["MISSING_PINNED_ACCESS_APPLICATION_OR_WORKER_ID"]);
+  const invalidApp=valid();
+  invalidApp.pinnedAppId=workerId;
+  assert.deepEqual(checkAccessPreviewGate(invalidApp),["MISSING_PINNED_ACCESS_APPLICATION_OR_WORKER_ID"]);
+});
+
 test("preview Access must not protect a production worker or unrelated Worker ID", () => {
   for(const change of [
     input=>{input.app.id="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";},
     input=>{input.app.type="public";},
     input=>{input.app.destinations[0].type="worker";},
+    input=>{input.app.destinations[0].worker_id="6df22e22-6097-4268-aef8-6c6988a152c5";},
     input=>{input.app.destinations[0].worker_id="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";},
     input=>{input.app.destinations.push({type:"public",uri:"anevum.com"});}
   ]) {
