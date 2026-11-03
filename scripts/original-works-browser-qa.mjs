@@ -42,7 +42,7 @@ const inspectExpression = "(" + function inspectPreview() {
   const root = document.documentElement;
   const orbit = site?.querySelector(".ow-scene-orbit-outer");
   return {
-    ready: !!site && !!site.querySelector("h1") && nav?.length === 5,
+    ready: !!site && !!site.querySelector("h1") && nav?.length === 6,
     route: location.pathname,
     heading: site?.querySelector("h1")?.textContent || "",
     banner: site?.textContent || "",
@@ -83,6 +83,8 @@ async function runCase(route, viewport) {
     pending.set(id,{resolve,reject,timer});ws.send(JSON.stringify({id,method,params}));
   });
   const name = route === "/design/original-works" ? "original-works-home" :
+    route === "/design/original-works/wiki" ? "original-works-wiki" :
+    route === "/design/original-works/wiki/ovara" ? "original-works-wiki-article" :
     route.endsWith("/reading-room") ? "original-works-reading-room" :
     route.endsWith("/reply") ? "original-works-reply" : "original-works-atlas";
   try{
@@ -166,6 +168,78 @@ async function runCase(route, viewport) {
       }
       if(!state.links.includes("/design/original-works/reply"))
         throw Error("REPLY study room missing return navigation");
+    }
+    if(name==="original-works-wiki" || name==="original-works-wiki-article"){
+      const readWiki=async expression=>(await send("Runtime.evaluate",{
+        expression,returnByValue:true
+      })).result?.value;
+      const metadata=await readWiki('({wiki:!!document.querySelector("[data-wiki-editorial-preview]"),heading:document.querySelector(".ow-wiki h1")?.textContent||"",category:document.querySelector(".ow-wiki-article")?.getAttribute("data-wiki-category")||"",columns:getComputedStyle(document.querySelector(".ow-wiki-layout")).gridTemplateColumns,links:[...document.querySelectorAll(".ow-wiki a[href]")].map(a=>a.getAttribute("href")),articleTextSize:document.querySelector(".ow-wiki-copy section p")?getComputedStyle(document.querySelector(".ow-wiki-copy section p")).fontSize:"",rail:!!document.querySelector(".ow-wiki-left-rail"),box:!!document.querySelector(".ow-wiki-infobox"),overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+1})');
+      if(!metadata.wiki||metadata.overflow||!metadata.rail)
+        throw Error("Wiki shell or responsive layout failed: "+JSON.stringify(metadata));
+      if(name==="original-works-wiki"){
+        if(!state.heading.includes("An archive")||!metadata.links.includes("/design/original-works/wiki/special/all-pages")||
+          !metadata.links.includes("/design/original-works/wiki/category/world"))
+          throw Error("Encyclopedia index missing reader navigation: "+JSON.stringify(metadata));
+        if((await readWiki('document.querySelectorAll(".ow-wiki-result").length'))!==8)
+          throw Error("Reader wiki missing eight reviewed articles");
+        const taxonomy=await readWiki('([...document.querySelectorAll(".ow-wiki-filter-row button[data-wiki-category]")].map(b=>({name:b.dataset.wikiCategory,accent:getComputedStyle(b).getPropertyValue("--wk-accent").trim()})))');
+        const values=taxonomy.filter(x=>x.name!=="All").map(x=>x.accent);
+        if(taxonomy.length!==5||new Set(values).size!==4||values.some(v=>!v))
+          throw Error("Wiki semantic category colors missing/distinctness: "+JSON.stringify(taxonomy));
+
+        await send("Runtime.evaluate",{expression:'(() => {const input=document.querySelector("#ow-wiki-search");const set=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set;set.call(input,"Nali");input.dispatchEvent(new Event("input",{bubbles:true}));})()'});
+        let found=false;
+        for(let n=0;n<45;n++){
+          const data=await readWiki('({count:document.querySelectorAll(".ow-wiki-result").length,title:document.querySelector(".ow-wiki-result strong")?.textContent||"",url:location.search})');
+          if(data.count===1&&data.title==="Nali Solan"&&data.url.includes("q=Nali")){found=true;break}
+          await sleep(85);
+        }
+        if(!found)throw Error("Wiki deep-linkable search failed");
+        await send("Runtime.evaluate",{expression:'document.querySelector(".ow-wiki-filter-row button[data-wiki-category=\\"Place\\"]")?.click()'});
+        let empty=false;
+        for(let n=0;n<35;n++){
+          if(await readWiki('!!document.querySelector(".ow-wiki-empty")')){empty=true;break}
+          await sleep(85);
+        }
+        if(!empty)throw Error("Wiki category + search empty state missing");
+        await send("Runtime.evaluate",{expression:'document.querySelector(".ow-wiki-empty button")?.click()'});
+        let reset=false;
+        for(let n=0;n<35;n++){
+          if((await readWiki('document.querySelectorAll(".ow-wiki-result").length'))===8){reset=true;break}
+          await sleep(85);
+        }
+        if(!reset)throw Error("Wiki reset did not restore curated articles");
+        await send("Runtime.evaluate",{expression:'document.querySelector(".ow-wiki-filter-row button[data-wiki-category=\\"World\\"]")?.click()'});
+        let filtered=false;
+        for(let n=0;n<35;n++){
+          const data=await readWiki('({count:document.querySelectorAll(".ow-wiki-result").length,active:document.querySelector(".ow-wiki-filter-row button[aria-pressed=true]")?.dataset.wikiCategory,url:location.search})');
+          if(data.count===3&&data.active==="World"&&data.url.includes("category=World")){filtered=true;break}
+          await sleep(85);
+        }
+        if(!filtered)throw Error("Wiki world category color-coded filter failed");
+        await send("Page.navigate",{url:base+"/design/original-works/wiki"});
+        let returned=false;
+        for(let n=0;n<65;n++){
+          if((await readWiki('document.querySelectorAll(".ow-wiki-result").length'))===8){returned=true;break}
+          await sleep(110);
+        }
+        if(!returned)throw Error("Wiki index did not reload with complete curated articles");
+      }else{
+        if(!state.heading.includes("Ovara")||metadata.category!=="World"||
+          !metadata.box||!metadata.links.includes("/design/original-works/wiki/nali-solan")||
+          !metadata.links.includes("/design/original-works/wiki/category/world")||
+          !metadata.articleTextSize)
+          throw Error("Wiki article, infobox or links missing: "+JSON.stringify(metadata));
+        if((await readWiki('document.querySelectorAll(".ow-wiki-contents a[href^=\\"#wiki-\\"]").length'))!==4)
+          throw Error("Wiki table of contents should expose four article sections");
+        if((await readWiki('document.querySelectorAll("#wiki-linked a").length'))<1)
+          throw Error("Wiki incoming links did not derive from reviewed relation set");
+        const expectedGrid=viewport.width>=1190?3:1;
+        if(viewport.width>=1190&&metadata.columns.split(" ").length!==expectedGrid)
+          throw Error("Wikipedia-style three-column article grid missing: "+metadata.columns);
+        if(viewport.width<=620&&metadata.columns.split(" ").length!==1)
+          throw Error("Wiki mobile article grid did not collapse: "+metadata.columns);
+      }
     }
     if(name==="original-works-home"&&!state.heading.includes("Somewhere"))
       throw Error("Missing Anevum studio hero");
@@ -318,7 +392,9 @@ function assertNoDraftReaderTextInDefaultBuild() {
     "The world was already here.",
     "A universe of different starting points.",
     "Merva's streets and neighborhoods mix older canal alignments",
-    "Reader orientation only. This entry does not include plot outcomes"
+    "Reader orientation only. This entry does not include plot outcomes",
+    "An archive of worlds.",
+    "Guessing a URL never reveals private or unpublished canon."
   ];
   let examined = 0;
   const visit = directory => {
@@ -353,12 +429,12 @@ try {
   if(process.env.ORIGINAL_WORKS_VERIFY_DISABLED==="1"){
     assertNoDraftReaderTextInDefaultBuild();
     const desktop=viewports[0];
-    for(const route of ["/design/original-works","/design/original-works/reply/reading-room"])
+    for(const route of ["/design/original-works","/design/original-works/reply/reading-room","/design/original-works/wiki","/design/original-works/wiki/ovara"])
       await runCase(route,desktop);
     console.log("Default production build gate verified: original-works routes are not mounted.");
   }else{
     for(const viewport of viewports){
-      for(const route of ["/design/original-works","/design/original-works/reply","/design/original-works/reply/reading-room","/design/original-works/atlas"]){
+      for(const route of ["/design/original-works","/design/original-works/reply","/design/original-works/reply/reading-room","/design/original-works/atlas","/design/original-works/wiki","/design/original-works/wiki/ovara"]){
         if(!viewport.homeOnly||route==="/design/original-works")await runCase(route,viewport);
       }
     }
