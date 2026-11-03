@@ -108,4 +108,7 @@ test("cross-repository RHEN verification uses least-privilege authenticated GitH
   assert.ok(!verifier.includes("https://api.github.com/repos/anevum/rhen"));
   assert.ok(!verifier.includes("https://raw.githubusercontent.com/anevum/rhen/"));
   assert.match(verifier, /rhenBranchHead !== expectedCommit/);
+  assert.match(verifier, /api\.github\.com\/repos\/devonalanakins\/rhen\/git\/ref\/heads/);
+  assert.match(verifier, /raw\.githubusercontent\.com\/devonalanakins\/rhen/);
+  assert.doesNotMatch(verifier, /(?:api\.github\.com\/repos|raw\.githubusercontent\.com)\/anevum\/rhen/);
 });
