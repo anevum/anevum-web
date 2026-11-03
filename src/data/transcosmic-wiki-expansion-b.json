@@ -1,0 +1,78 @@
+{
+  "schema": "transcosmic.wiki-expansion.part-b.v1",
+  "releaseState": "review_only",
+  "publicationApproved": false,
+  "publicQueueEnabled": false,
+  "entries": [
+    {
+      "id": "16",
+      "slug": "ione",
+      "title": "Ione",
+      "category": "World",
+      "subtitle": "Veyra's large natural moon",
+      "summary": "A large tidally locked moon of Veyra, with low gravity, negligible atmosphere and scientific installations.",
+      "detail": "Ione is Veyra's major natural satellite. Low gravity and an extremely thin atmosphere give it an environment unlike the inhabited planetary surface, while its relatively quiet setting is useful for selected scientific observations.\n\nDeep Three is a research station situated on Ione. This physical overview does not include the restricted history or experimental purpose of lunar research programs.",
+      "keywords": "Ione moon satellite Veyra astronomy low gravity Deep Three"
+    },
+    {
+      "id": "17",
+      "slug": "iren",
+      "title": "IREN",
+      "category": "Science",
+      "subtitle": "Artificial intelligence interface · Connected worlds",
+      "summary": "An AI and information interface used for learning, planning, research and institutional work without replacing human authority.",
+      "detail": "IREN is a mature information and artificial-intelligence interface used in the everyday connected-world environment. It supports people working in education, research, planning and public systems, while the authority to make consequential choices remains with accountable human institutions.\n\nDistinguishing a measured fact from a prediction or an uncertain inference matters to its ordinary use. This overview does not disclose private architecture, later identity debates or future-era developments.",
+      "keywords": "artificial intelligence interface research provenance learning decisions"
+    },
+    {
+      "id": "18",
+      "slug": "lio-sol",
+      "title": "Lio Sol",
+      "category": "Person",
+      "subtitle": "Public-garden conservator · Greater Serein",
+      "summary": "A 76-year-old public-garden conservator and horticultural restoration specialist in Greater Serein.",
+      "detail": "Lio Sol works with the care and restoration of public gardens in Greater Serein. Horticultural conservation requires patient, local expertise, maintenance and attention to how people experience shared living spaces.\n\nLio's current life reflects the ordinary routines and choices of a mature connected-world civilization. Privacy, autonomy and the use of time remain personal questions. Later travel or family outcomes are not included.",
+      "keywords": "Lio Sol garden conservator horticulture Greater Serein privacy"
+    },
+    {
+      "id": "19",
+      "slug": "rena-sol",
+      "title": "Rena Sol",
+      "category": "Person",
+      "subtitle": "Human Systems Scientist · Greater Serein",
+      "summary": "A 118-year-old Human Systems Scientist who studies cognitive measurement, group decisions and the influence of prestige.",
+      "detail": "Rena Sol works in human systems science in Greater Serein. Her research concerns how groups decide, how cognition can be measured and how the prestige of an expert may influence judgment beyond the strength of the evidence.\n\nCareful correction, privacy and uncertainty are themes of her professional outlook. This article is an opening-state introduction and does not describe her later participation in important events.",
+      "keywords": "Rena Sol cognition group judgment decisions human systems privacy"
+    },
+    {
+      "id": "20",
+      "slug": "skygate-age",
+      "title": "Skygate Age",
+      "category": "History",
+      "subtitle": "Mature connected-world era · Veyra–Neral",
+      "summary": "The present era in which Veyra and Neral are connected by inhabited Skygates and an ordinary, maintained Open Road.",
+      "detail": "The Skygate Age refers to the mature connected-world setting of REPLY. Passenger and freight travel between Veyra and Neral is ordinary infrastructure, made possible by continuing engineering, safety practice and cooperation between institutions.\n\nBoth worlds remain sovereign and culturally distinct. This current-era description does not attempt to resolve the founding history of the Road or disclose later-series outcomes.",
+      "keywords": "Skygate age civilization Veyra Neral Open Road connected world"
+    },
+    {
+      "id": "21",
+      "slug": "skygate-megastructure",
+      "title": "Skygate Megastructure",
+      "category": "Infrastructure",
+      "subtitle": "Inhabited orbital Road endpoint",
+      "summary": "A large inhabited orbital structure that encloses a Road boundary with habitation, freight, utility and transport systems.",
+      "detail": "A Skygate is not just an aperture. The mature form is an enormous orbital structure containing the systems that support a controlled Road boundary alongside working and inhabited districts.\n\nSerein Skygate and Neral Skygate are separately developed endpoints, with shared operating requirements and different local civic and architectural identities. The current overview emphasizes life and engineering at a functioning gate-city rather than unreleased founding events.",
+      "keywords": "Road frame ring city orbital habitation engineering transit Skygate"
+    },
+    {
+      "id": "22",
+      "slug": "talin-vel",
+      "title": "Talin Vel",
+      "category": "Person",
+      "subtitle": "Gateborn boundary-metrology specialist · Serein Skygate",
+      "summary": "A 30-year-old gateborn specialist who works with measurements, calibration and field systems in Serein Skygate.",
+      "detail": "Talin Vel grew up in the inhabited infrastructure of Serein Skygate. Her work involves boundary metrology and field systems, where maintenance, calibration and careful measurement support dependable travel between connected worlds.\n\nThis opening-state profile establishes her age, home and technical worldview. It does not reveal future assignments, candidate lists, unusual travel or the events of later chapters.",
+      "keywords": "Talin Vel gateborn metrology calibration Serein Skygate"
+    }
+  ]
+}
