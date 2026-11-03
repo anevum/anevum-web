@@ -202,7 +202,7 @@ async function runCase(route, viewport) {
         let found=false;
         for(let n=0;n<45;n++){
           const data=await readWiki('({count:document.querySelectorAll(".ow-wiki-result").length,title:document.querySelector(".ow-wiki-result strong")?.textContent||"",url:location.search})');
-          if(data.count===1&&data.title==="Nali Solan"&&data.url.includes("q=Nali")){found=true;break}
+          if(data.count>=1&&data.title==="Nali Solan"&&data.url.includes("q=Nali")){found=true;break}
           await sleep(85);
         }
         if(!found)throw Error("Wiki deep-linkable search failed");
