@@ -49,7 +49,7 @@ jobs:
       - name: Verify original-works studio preview isolation
         run: |
           node scripts/verify-transcosmic-reader-preview.mjs
-          node --test tests/original-works-preview.test.mjs tests/transcosmic-reader-preview.test.mjs
+          node --test tests/original-works-preview.test.mjs tests/transcosmic-reader-preview.test.mjs tests/original-works-hosted-access.test.mjs
       - name: Verify legacy RHEN retirement and Commons independence
         run: node --test tests/legacy-rhen-retirement.test.mjs
       - name: Enforce single guarded production Worker deployment
@@ -116,6 +116,15 @@ jobs:
           assert len(pdf) > 10_000
           print("resume pdf bytes:", len(pdf))
           PY
+
+      - name: Verify owner-only Access before hosted Cloudflare Preview
+        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          ANEVUM_WEB_PREVIEW_ACCESS_APP_ID: ${{ vars.ANEVUM_WEB_PREVIEW_ACCESS_APP_ID }}
+          ANEVUM_WEB_PREVIEW_WORKER_UUID: ${{ vars.ANEVUM_WEB_PREVIEW_WORKER_UUID }}
+        run: node scripts/verify-original-works-hosted-access.mjs
 
       - id: preview
         if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
