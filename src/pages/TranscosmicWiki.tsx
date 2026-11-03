@@ -4,6 +4,7 @@ import {
   wikiCategoryPath, wikiHome, wikiSearch, wikiSpecialPath,
   type WikiCategory, type WikiArticle
 } from "../data/transcosmic-wiki";
+import { WIKI_DIRECTORY_ALPHABET, wikiDirectoryGroups, wikiDirectoryAnchor } from "../data/wiki-directory";
 import "../styles/transcosmic-wiki.css";
 
 /**
@@ -222,6 +223,8 @@ function WikiCategoryPage({slug}:{slug:string}) {
 
 function WikiAllPages() {
   const pages=wikiAllPages();
+  const groups=wikiDirectoryGroups(pages);
+  const byLetter=new Map(groups.map(group=>[group.letter,group]));
   return <section className="ow-wiki-layout ow-wiki-directory" aria-labelledby="ow-wiki-all-title">
     <WikiSidebar active="all"/>
     <div className="ow-wiki-main">
@@ -229,7 +232,27 @@ function WikiAllPages() {
       <p className="ow-eyebrow">The Transcosmic / Directory</p>
       <h1 id="ow-wiki-all-title">All articles.</h1>
       <p className="ow-page-lead">Alphabetical index of the {pages.length} currently curated reader entries. Later-window and private canon are not enumerated.</p>
-      <ol className="ow-wiki-alphabetical">{pages.map(a=><li key={a.slug} data-wiki-category={a.category}><Link to={a.href}>{a.title}</Link><span>{a.category}</span></li>)}</ol>
+      <nav className="ow-wiki-letter-nav" aria-label="Jump to article initial">
+        {WIKI_DIRECTORY_ALPHABET.map(letter=>{
+          const group=byLetter.get(letter);
+          return group?<a key={letter} href={"#"+wikiDirectoryAnchor(letter)}
+              aria-label={"Jump to "+letter+" ("+group.articles.length+" articles)"}>{letter}</a>:
+            <span key={letter} className="ow-wiki-letter-empty" aria-hidden="true">{letter}</span>;
+        })}
+        {byLetter.has("#")?<a href={"#"+wikiDirectoryAnchor("#")} aria-label="Jump to other initial">#</a>:null}
+      </nav>
+      <div className="ow-wiki-letter-sections">
+        {groups.map(group=><section key={group.letter} className="ow-wiki-letter-group"
+          data-letter={group.letter} id={wikiDirectoryAnchor(group.letter)}
+          aria-labelledby={wikiDirectoryAnchor(group.letter)+"-heading"}>
+          <h2 id={wikiDirectoryAnchor(group.letter)+"-heading"}>
+            {group.letter}<span>{group.articles.length} {group.articles.length===1?"article":"articles"}</span>
+          </h2>
+          <ol className="ow-wiki-alphabetical">{group.articles.map(a=><li key={a.slug}
+            data-wiki-category={a.category}><Link to={a.href}>{a.title}</Link><span>{a.category}</span>
+          </li>)}</ol>
+        </section>)}
+      </div>
     </div>
   </section>;
 }
