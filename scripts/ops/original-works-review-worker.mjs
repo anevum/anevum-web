@@ -5,7 +5,7 @@
  * Build artifacts are explicitly unpublished reader-review material.
  */
 const ROOT = "/design/original-works";
-const NOT_FOUND = new Response("Not found", {status: 404, headers: {
+const notFound = () => new Response("Not found", {status: 404, headers: {
   "Cache-Control": "private, no-store",
   "X-Robots-Tag": "noindex, nofollow, noarchive",
   "X-Content-Type-Options": "nosniff"
@@ -16,7 +16,7 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
     // Fail closed if this script is accidentally exposed on another hostname.
-    if (url.hostname !== "backstage.anevum.com") return NOT_FOUND.clone();
+    if (url.hostname !== "backstage.anevum.com") return notFound();
     if (request.method !== "GET" && request.method !== "HEAD") {
       return new Response("Method not allowed", {status: 405, headers: {
         "Allow": "GET, HEAD",
@@ -24,7 +24,7 @@ export default {
         "X-Robots-Tag": "noindex, nofollow, noarchive"
       }});
     }
-    if (path !== ROOT && !path.startsWith(ROOT + "/")) return NOT_FOUND.clone();
+    if (path !== ROOT && !path.startsWith(ROOT + "/")) return notFound();
     if (!env?.ASSETS?.fetch) return new Response("Unavailable", {status: 503});
 
     // Account-level assets.base_path is unavailable; map the protected
