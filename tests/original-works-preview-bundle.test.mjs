@@ -60,3 +60,11 @@ test('preview build is gated after Access preflight and before Wrangler upload',
   assert.doesNotMatch(yaml.slice(0,defaultGate),/VITE_ORIGINAL_WORKS_PREVIEW:\s*['"]true['"]/);
   assert.match(reviewBlock,/steps\.scope\.outputs\.app_preview_required == 'true'/);
 });
+
+
+test('visual QA serializes review runs per pull request without privileged tokens',()=>{
+  const yaml=readFileSync(new URL('../.github/workflows/anevum-original-works-visual-qa.yml',import.meta.url),'utf8');
+  assert.match(yaml,/concurrency:\s*\n\s*group: anevum-original-works-visual-\$\{\{ github\.event\.pull_request\.number \}\}\s*\n\s*cancel-in-progress: true/);
+  assert.match(yaml,/permissions:\s*\n\s*contents: read/);
+  assert.doesNotMatch(yaml,/pull_request_target:/);
+});

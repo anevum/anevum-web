@@ -34,6 +34,10 @@ on:
       - 'scripts/original-works-browser-qa.mjs'
       - '.github/workflows/anevum-original-works-visual-qa.yml'
 
+concurrency:
+  group: anevum-original-works-visual-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
