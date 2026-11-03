@@ -33,6 +33,17 @@ the harness, fixtures, generated signing keys, test records or private config.
 automated browser tests. Test captures and local SQL files live under ignored
 `.private/`. No screenshots or test database contents belong in Git.
 
+
+## Calendar V1 (proposed release 1.2.0; not deployed automatically)
+
+The Calendar navigation gives the signed-in account agenda, day, week and month views. Create, edit, and cancel private all-day or timed appointments. Existing task due dates are shown as reminders without duplicating records. Device-local time is shown explicitly, and each timed event stores a canonical UTC interval plus its originating IANA time zone.
+
+This is an **owner-only calendar**, not yet a shared calendar or Google Calendar integration. No recurrence, alerts, shared work permissions, clinical appointments, or automatic meeting processing are implemented. Do not enter protected health information.
+
+**Deployment gate:** Back up D1 first and confirm the private Worker deployment owner. Inspect the production schema, then apply `migrations/0003_calendar.sql` once. Rebuild and run all tests, verify the private Access boundary and both accounts' isolated calendars, confirm the updated Calendar menu on iPhone, and only then deploy the generated bundle to the existing Worker. Never deploy the new code against an unmigrated database. This PR does not update production, change secrets, or create a second deployer.
+
+**Export:** The existing `/api/export` and restore continue to cover personal notes and reminders. Calendar has a separate `/api/calendar/export` JSON download including cancelled records. Calendar import/restore is not yet implemented; for disaster recovery use verified D1 backups, not the notes importer. Do not mistake the JSON export for a complete disaster-recovery solution.
+
 ## Private deployment
 
 Copy `wrangler.example.jsonc` to ignored `wrangler.private.jsonc`, then set the

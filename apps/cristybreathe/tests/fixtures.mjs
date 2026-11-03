@@ -4,7 +4,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 export function openDatabase(path=':memory:',migrate=true) {
   const db=new DatabaseSync(path);
-  if(migrate) for(const file of ['0001_foundation.sql','0002_personal_workspace.sql']) db.exec(readFileSync(new URL('../migrations/'+file,import.meta.url),'utf8'));
+  if(migrate) for(const file of ['0001_foundation.sql','0002_personal_workspace.sql','0003_calendar.sql']) db.exec(readFileSync(new URL('../migrations/'+file,import.meta.url),'utf8'));
   return {db,prepare(sql) {
     const statement=db.prepare(sql);let args=[];
     const api={bind(...values){args=values;return api;},async first(){return statement.get(...args)||null;},async all(){return {results:statement.all(...args)};},async run(){const result=statement.run(...args);return {meta:{changes:Number(result.changes)}};}};

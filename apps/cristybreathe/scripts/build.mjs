@@ -13,7 +13,9 @@ async function walk(path) {
 }
 await walk(resolve(root,'public'));
 let auth=await readFile(resolve(root,'src/auth.mjs'),'utf8');
-let source=(await readFile(resolve(root,'src/worker.mjs'),'utf8')).replace("import {identity} from './auth.mjs';",'').replace(/^export /gm,'');
+let core=(await readFile(resolve(root,'src/calendar-core.mjs'),'utf8')).replace(/^export /gm,'');
+let source=(await readFile(resolve(root,'src/worker.mjs'),'utf8')).replace("import {identity} from './auth.mjs';",'').replace("import {validateCalendarEvent,calendarWindow,editableCalendarFields,CalendarError} from './calendar-core.mjs';",'').replace(/^export /gm,'');
+auth+='\n'+core;
 auth=auth.replace(/^export /gm,'');
 await mkdir(resolve(root,'dist'),{recursive:true});
 await writeFile(resolve(root,'dist/worker.mjs'),auth+'\n'+source+'\nconst ASSETS='+JSON.stringify(assets)+';\nexport default createWorker(ASSETS);\n');
