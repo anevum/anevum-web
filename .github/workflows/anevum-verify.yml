@@ -52,6 +52,7 @@ jobs:
           node scripts/verify-transcosmic-wiki-expansion.mjs
           node --test tests/original-works-preview.test.mjs tests/transcosmic-reader-preview.test.mjs tests/original-works-hosted-access.test.mjs tests/original-works-protected-preview.test.mjs tests/transcosmic-wiki.test.mjs tests/transcosmic-wiki-expansion.test.mjs
           node --experimental-strip-types --test tests/wiki-directory.test.mjs
+          node --test tests/original-works-preview-bundle.test.mjs
       - name: Verify legacy RHEN retirement and Commons independence
         run: node --test tests/legacy-rhen-retirement.test.mjs
       - name: Enforce single guarded production Worker deployment
@@ -119,6 +120,9 @@ jobs:
           print("resume pdf bytes:", len(pdf))
           PY
 
+      - name: Prove default build has no Original Works editorial bytes
+        run: node scripts/verify-original-works-preview-bundle.mjs --disabled
+
       - name: Verify owner-only Access before hosted Cloudflare Preview
         if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
         env:
@@ -127,6 +131,16 @@ jobs:
           ANEVUM_WEB_PREVIEW_ACCESS_APP_ID: ${{ vars.ANEVUM_WEB_PREVIEW_ACCESS_APP_ID }}
           ANEVUM_WEB_PREVIEW_WORKER_UUID: ${{ vars.ANEVUM_WEB_PREVIEW_WORKER_UUID }}
         run: node scripts/verify-original-works-hosted-access.mjs
+
+      - name: Build Original Works client only after owner Access is verified
+        if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
+        env:
+          VITE_ORIGINAL_WORKS_PREVIEW: 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx vite build
+          node scripts/verify-original-works-preview-bundle.mjs --enabled
 
       - id: preview
         if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'

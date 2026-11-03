@@ -18,6 +18,8 @@ on:
       - 'scripts/verify-original-works-hosted-access.mjs'
       - 'tests/original-works-hosted-access.test.mjs'
       - 'scripts/verify-original-works-protected-preview.mjs'
+      - 'scripts/verify-original-works-preview-bundle.mjs'
+      - 'tests/original-works-preview-bundle.test.mjs'
       - 'tests/original-works-protected-preview.test.mjs'
       - 'src/data/transcosmic-reader-preview.json'
       - 'src/data/transcosmic-reader-preview.ts'
@@ -55,10 +57,12 @@ jobs:
           node scripts/verify-transcosmic-wiki-expansion.mjs
           node --test tests/transcosmic-reader-preview.test.mjs tests/original-works-preview.test.mjs tests/original-works-hosted-access.test.mjs tests/original-works-protected-preview.test.mjs tests/transcosmic-wiki.test.mjs tests/transcosmic-wiki-expansion.test.mjs
           node --experimental-strip-types --test tests/wiki-directory.test.mjs
+          node --test tests/original-works-preview-bundle.test.mjs
       - name: Typecheck and build default (review feature disabled)
         run: |
           npm run check
           npx vite build
+          node scripts/verify-original-works-preview-bundle.mjs --disabled
       - name: Start loopback-only default preview
         shell: bash
         run: |
@@ -80,7 +84,9 @@ jobs:
       - name: Build explicitly opted-in review client
         env:
           VITE_ORIGINAL_WORKS_PREVIEW: 'true'
-        run: npx vite build
+        run: |
+          npx vite build
+          node scripts/verify-original-works-preview-bundle.mjs --enabled
       - name: Start loopback-only enabled review preview
         shell: bash
         run: |
