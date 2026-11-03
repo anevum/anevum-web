@@ -59,10 +59,10 @@ jobs:
           Verify: sha256sum -c SHA256SUMS.txt
           Restore: git clone --branch main brandle-history.bundle brandle
           In brandle: node --test tests.mjs && node build-worker.mjs
-          Create EMPTY public repo anevum/brandle (no starter README/license).
+          Create EMPTY public repo devonalanakins/brandle (no starter README/license).
           In the restored repo:
               git remote remove origin
-              git remote add origin https://github.com/anevum/brandle.git
+              git remote add origin https://github.com/devonalanakins/brandle.git
               git push -u origin main
           Review complete history and licensing independently before publishing.
           Do NOT enable a second production deployer or remove the old one

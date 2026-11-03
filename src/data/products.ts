@@ -6,21 +6,21 @@ export type ProductSupportModel = "free" | "supporter" | "paid" | "mixed";
 // Hand-reviewed public source pointers only. Public GitHub visibility and
 // licensing are independent; never infer RHEN redistribution permissions.
 export type PublishedSource = {
-  repository: "anevum/anevum-web" | "anevum/rhen";
+  repository: "devonalanakins/anevum-web" | "devonalanakins/rhen";
   url: string;
   visibility: "PUBLIC";
   reuse: "APACHE_2_0" | "NO_REPOSITORY_LICENSE";
 };
 export const publishedSourceRecords: Readonly<{website: PublishedSource; rhen: PublishedSource}> = Object.freeze({
   website: Object.freeze({
-    repository: "anevum/anevum-web",
-    url: "https://github.com/anevum/anevum-web",
+    repository: "devonalanakins/anevum-web",
+    url: "https://github.com/devonalanakins/anevum-web",
     visibility: "PUBLIC",
     reuse: "APACHE_2_0"
   }),
   rhen: Object.freeze({
-    repository: "anevum/rhen",
-    url: "https://github.com/anevum/rhen",
+    repository: "devonalanakins/rhen",
+    url: "https://github.com/devonalanakins/rhen",
     visibility: "PUBLIC",
     reuse: "NO_REPOSITORY_LICENSE"
   })
