@@ -14,9 +14,12 @@ test("active validator no longer blocks retirement through obsolete public page 
   assert.equal(report.deletionAuthorized,false);
   assert.equal(report.runtimeUnresolved.length,0);
   // Member Beta and the new Studio editor are active V5 routes, not legacy deletion candidates.
-  // OriginalWorksStudio is a retained, mounted design-review page. A newly
-  // mounted page increases the inventory but never authorizes a legacy deletion.
-  assert.equal(report.counts.pages,46);
+  // OriginalWorksStudio and the new Transcosmic Wiki are retained review pages.
+  // New mounted pages increase inventory but never authorize legacy deletion.
+  assert.equal(report.counts.pages,47);
+  const wiki=report.pages.find(page=>page.file==="src/pages/TranscosmicWiki.tsx");
+  assert.equal(wiki?.status,"RUNTIME_REACHABLE");
+  assert.equal(wiki?.decision,"RETAIN_RUNTIME");
   const reading=report.pages.find(page=>page.file==="src/pages/ReplyReadingRoom.tsx");
   assert.equal(reading?.status,"RUNTIME_REACHABLE");
   assert.equal(reading?.decision,"RETAIN_RUNTIME");
