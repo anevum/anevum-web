@@ -188,6 +188,23 @@ async function runCase(route, viewport) {
       const metadata=await readWiki('({wiki:!!document.querySelector("[data-wiki-editorial-preview]"),heading:document.querySelector(".ow-wiki h1")?.textContent||"",category:document.querySelector(".ow-wiki-article")?.getAttribute("data-wiki-category")||"",columns:getComputedStyle(document.querySelector(".ow-wiki-layout")).gridTemplateColumns,links:[...document.querySelectorAll(".ow-wiki a[href]")].map(a=>a.getAttribute("href")),articleTextSize:document.querySelector(".ow-wiki-copy section p")?getComputedStyle(document.querySelector(".ow-wiki-copy section p")).fontSize:"",rail:!!document.querySelector(".ow-wiki-left-rail"),box:!!document.querySelector(".ow-wiki-infobox"),overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+1})');
       if(!metadata.wiki||metadata.overflow||!metadata.rail)
         throw Error("Wiki shell or responsive layout failed: "+JSON.stringify(metadata));
+      const mobileNav=await readWiki('(() => {const nav=document.querySelector(".ow-wiki-quicknav");return {display:getComputedStyle(nav).display,links:[...nav.querySelectorAll("a")].map(a=>({href:a.getAttribute("href"),current:a.getAttribute("aria-current")})),bottom:nav.getBoundingClientRect().bottom,headingTop:document.querySelector(".ow-wiki h1").getBoundingClientRect().top};})()');
+      if(viewport.width<=740){
+        if(mobileNav.display==="none"||mobileNav.links.length!==3||
+           mobileNav.links[0].href!=="/design/original-works/wiki"||
+           mobileNav.links[1].href!=="/design/original-works/wiki/special/all-pages"||
+           mobileNav.links[2].href!=="/design/original-works/wiki/special/about"||
+           mobileNav.bottom>mobileNav.headingTop)
+          throw Error("Mobile wiki quick navigation missing or below content: "+JSON.stringify(mobileNav));
+        const expectedCurrent=name==="original-works-wiki" ? 0 :
+          name==="original-works-wiki-directory" ? 1 : -1;
+        if(mobileNav.links.findIndex(a=>a.current==="page")!==expectedCurrent)
+          throw Error("Mobile wiki quick navigation reports incorrect page: "+JSON.stringify(mobileNav));
+        const keyboard=await readWiki('(() => {const a=document.querySelector(".ow-wiki-quicknav a");a.focus();const ok=document.activeElement===a;a.blur();return ok;})()');
+        if(!keyboard)throw Error("Mobile wiki quick navigation links are not keyboard-focusable");
+      }else if(mobileNav.display!=="none"){
+        throw Error("Desktop wiki navigation unexpectedly duplicates its sidebar");
+      }
       if(name==="original-works-wiki"){
         if(!state.heading.includes("An archive")||!metadata.links.includes("/design/original-works/wiki/special/all-pages")||
           !metadata.links.includes("/design/original-works/wiki/category/world"))

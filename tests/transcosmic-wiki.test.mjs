@@ -35,6 +35,19 @@ test("wiki is a navigable encyclopedia, not an index pretending to be a wiki",()
   assert.match(wiki,/role="status" aria-live="polite"/);
 });
 
+test("narrow wiki screens expose keyboard-accessible navigation before long article lists",()=>{
+  assert.match(wiki,/function WikiQuickNav\(\{route\}/);
+  assert.match(wiki,/className="ow-wiki-quicknav" aria-label="Wiki quick navigation"/);
+  assert.match(wiki,/<WikiQuickNav route=\{route\}\/>/);
+  assert.match(wiki,/aria-current=\{link\.current\?"page":undefined\}/);
+  assert.match(wiki,/to:wikiSpecialPath\("all-pages"\)/);
+  assert.match(wiki,/to:wikiSpecialPath\("about"\)/);
+  assert.match(styles,/\.ow-wiki \.ow-wiki-quicknav\{display:none\}/);
+  assert.match(styles,/@media\(max-width:740px\)\{\s*\.ow-wiki \.ow-wiki-quicknav\{/);
+  assert.match(styles,/\.ow-wiki \.ow-wiki-quicknav a\[aria-current="page"\]/);
+  assert.match(styles,/min-height:40px/);
+});
+
 test("wiki routes are reachable ONLY from the explicit gated studio review",()=>{
   assert.match(studio,/wiki: ROOT \+ "\/wiki"/);
   assert.match(studio,/import TranscosmicWiki from "\.\/TranscosmicWiki"/);

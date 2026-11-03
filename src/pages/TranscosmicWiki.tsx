@@ -74,6 +74,19 @@ function WikiSidebar({active}:{active?:string}) {
   </aside>;
 }
 
+/** Above-the-fold navigation when the full wiki sidebar follows mobile content. */
+function WikiQuickNav({route}:{route:string}) {
+  const links=[
+    {to:wikiHome,label:"Main page",current:route==="" },
+    {to:wikiSpecialPath("all-pages"),label:"All articles",current:route==="special/all-pages"},
+    {to:wikiSpecialPath("about"),label:"About this wiki",current:route==="special/about"}
+  ];
+  return <nav className="ow-wiki-quicknav" aria-label="Wiki quick navigation">
+    {links.map(link=><Link key={link.to} to={link.to}
+      aria-current={link.current?"page":undefined}>{link.label}</Link>)}
+  </nav>;
+}
+
 function IndexLink({article}:{article:WikiArticle}) {
   return <Link className="ow-wiki-result" data-wiki-category={article.category} to={article.href}>
     <span className="ow-wiki-result-type">{article.category} <span aria-hidden="true">/</span> {article.id}</span>
@@ -290,6 +303,7 @@ function WikiMissing() {
 export default function TranscosmicWiki({path=""}:{path?:string}) {
   const route=path.replace(/\/$/,"");
   return <div className="ow-page ow-container ow-wiki" data-wiki-editorial-preview="true">
+    <WikiQuickNav route={route}/>
     {route===""?<WikiIndex/>:
       route==="special/all-pages"?<WikiAllPages/>:
       route==="special/about"?<WikiAbout/>:
