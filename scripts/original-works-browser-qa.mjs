@@ -243,8 +243,7 @@ async function runCase(route, viewport) {
           await sleep(85);
         }
         if(!multiTerm)throw Error("Wiki two-word search failed across approved article fields");
-        await send("Runtime.evaluate",{expression:'document.querySelector(".ow-wiki-search-area input").value="";'});
-        await send("Runtime.evaluate",{expression:'document.querySelector(".ow-wiki-search-area input").dispatchEvent(new Event("input",{bubbles:true}));'});
+        await send("Runtime.evaluate",{expression:'(() => {const input=document.querySelector("#ow-wiki-search");const set=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set;set.call(input,"");input.dispatchEvent(new Event("input",{bubbles:true}));})()'});
         let emptyReset=false;
         for(let n=0;n<40;n++){
           if((await readWiki('document.querySelectorAll(".ow-wiki-result").length'))===22){emptyReset=true;break;}
