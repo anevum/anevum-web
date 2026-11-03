@@ -32,7 +32,7 @@ function fixture(){
 }
 
 test('cataloged projects carry independent CI and source licenses',()=>{
- assert.equal(manifest.source_repository,'devonalanakins/anevum-web');
+ assert.equal(manifest.source_repository,'anevum/anevum-web');
  assert.deepEqual(manifest.projects.map(p=>p.id).sort(),['brandle','cristybreathe']);
  assert.equal(new Set(manifest.projects.map(p=>p.target_repository)).size,2);
  for(const p of manifest.projects){
