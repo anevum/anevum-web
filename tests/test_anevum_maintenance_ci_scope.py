@@ -29,6 +29,19 @@ class ScopeTests(unittest.TestCase):
         ]
         self.assertFalse(scope.app_preview_required(approved))
 
+    def test_pinned_schema_probe_with_catalog_is_offline_only(self):
+        paths = [
+            "scripts/ops/repo-catalog.json",
+            "tests/repository-split.test.mjs",
+            "scripts/verify-v5-cross-repo-schema.mjs",
+            "tests/v5-cross-repo-schema.test.mjs",
+        ]
+        # Cross-repo schema integrity is still checked by ANEVUM Verify.
+        self.assertFalse(scope.app_preview_required(paths))
+        # Any app/runtime change still requires the guarded preview gate.
+        self.assertTrue(scope.app_preview_required(paths + ["src/App.tsx"]))
+        self.assertTrue(scope.app_preview_required(paths + ["worker.mjs"]))
+
     def test_root_readme_only_does_not_require_preview(self):
         self.assertFalse(scope.app_preview_required(["README.md"]))
 
