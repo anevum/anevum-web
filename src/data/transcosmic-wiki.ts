@@ -5,7 +5,7 @@
  * existing eight-item opening-state manifest. This is a wiki foundation, not
  * a mirror of the private Canon Wiki or a publication approval.
  *
- * No runtime fetch(), untrusted HTML, or internal Notion source identifiers.
+ * No runtime network access, untrusted HTML, or internal Notion identifiers.
  * A future editor must pass the existing release/audit validator before a
  * new reader article or changed relationship can enter this projection.
  */
