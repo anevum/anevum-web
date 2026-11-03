@@ -54,6 +54,36 @@ class ScopeTests(unittest.TestCase):
                 self.assertTrue(scope.app_preview_required([
                     'scripts/ops/anevum-progression-reset-20261021.py',path]))
 
+    def test_isolated_reviewer_files_use_separate_review_gate(self):
+        paths = list(scope.ISOLATED_ORIGINAL_WORKS_REVIEW_PATHS)
+        self.assertEqual(len(paths), 6)
+        self.assertFalse(scope.app_preview_required(paths))
+        self.assertTrue(scope.isolated_review_required(paths))
+
+    def test_review_files_with_maintenance_still_require_review(self):
+        paths = ["README.md", "scripts/ops/anevum-maintenance-ci-scope.py",
+                 "scripts/ops/original-works-review-worker.mjs"]
+        self.assertFalse(scope.app_preview_required(paths))
+        self.assertTrue(scope.isolated_review_required(paths))
+
+    def test_any_real_application_change_keeps_legacy_preview_required(self):
+        for application_path in ["src/App.tsx", "worker.mjs", "wrangler.jsonc",
+                                 "src/data/transcosmic-wiki.ts", "scripts/new-build.mjs"]:
+            paths = ["scripts/ops/original-works-review-worker.mjs", application_path]
+            with self.subTest(path=application_path):
+                self.assertTrue(scope.app_preview_required(paths))
+                self.assertTrue(scope.isolated_review_required(paths))
+
+    def test_unknown_reviewer_file_cannot_bypass_preview(self):
+        paths = ["scripts/ops/original-works-review-worker.mjs",
+                 "scripts/ops/new-review-worker.mjs"]
+        self.assertTrue(scope.app_preview_required(paths))
+        self.assertTrue(scope.isolated_review_required(paths))
+
+    def test_unrelated_maintenance_does_not_trigger_reviewer_build(self):
+        self.assertFalse(scope.isolated_review_required(["README.md"]))
+        self.assertFalse(scope.isolated_review_required([]))
+
     def test_empty_input_cannot_skip_preview(self):
         self.assertTrue(scope.app_preview_required([]))
 
