@@ -7,7 +7,7 @@
  *
  * Required explicit configuration (GitHub Actions repo variables):
  * ANEVUM_WEB_PREVIEW_ACCESS_APP_ID — exact self-hosted Access app UUID
- * ANEVUM_WEB_PREVIEW_WORKER_UUID — exact target Worker UUID from Cloudflare
+ * ANEVUM_WEB_PREVIEW_WORKER_UUID — exact 32-hex Worker tag from Cloudflare (historical variable name)
  *
  * Authentication: existing CLOUDFLARE_API_TOKEN with read-only Access/Worker
  * permissions plus CLOUDFLARE_ACCOUNT_ID. Do not log those values.
@@ -22,13 +22,16 @@ import { resolve } from "node:path";
 const EXPECTED_SCRIPT = "anevum-web-nextgen";
 const OWNER_EMAIL = "devon@anevum.com";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Cloudflare Worker script tags and Access preview_worker IDs are compact
+// 32-character hex identifiers, not hyphenated Access application UUIDs.
+const WORKER_TAG = /^[0-9a-f]{32}$/i;
 
 export function checkAccessPreviewGate({subdomain, app, policies, pinnedAppId, pinnedWorkerUuid, actualWorkerUuid}) {
   const blockers = [];
-  if (!UUID.test(pinnedAppId || "") || !UUID.test(pinnedWorkerUuid || "")) {
+  if (!UUID.test(pinnedAppId || "") || !WORKER_TAG.test(pinnedWorkerUuid || "")) {
     return ["MISSING_PINNED_ACCESS_APPLICATION_OR_WORKER_ID"];
   }
-  if (actualWorkerUuid !== pinnedWorkerUuid) blockers.push("TARGET_WORKER_IDENTITY_MISMATCH");
+  if (!WORKER_TAG.test(actualWorkerUuid || "") || actualWorkerUuid !== pinnedWorkerUuid) blockers.push("TARGET_WORKER_IDENTITY_MISMATCH");
   if (!subdomain || subdomain.previews_enabled !== true) {
     blockers.push("PREVIEW_URLS_NOT_ENABLED");
   }
@@ -85,7 +88,7 @@ export async function readRemotePreviewGate({token, accountId, accessAppId, fetc
   ]);
   const scriptList = Array.isArray(scripts) ? scripts : scripts?.items;
   const target = scriptList?.find(worker => worker.id === EXPECTED_SCRIPT);
-  if (!target || !UUID.test(target.tag || "")) {
+  if (!target || !WORKER_TAG.test(target.tag || "")) {
     throw new Error("CLOUDFLARE_TARGET_WORKER_NOT_FOUND");
   }
   return {subdomain, app, policies, actualWorkerUuid:target.tag};
@@ -94,7 +97,7 @@ export async function readRemotePreviewGate({token, accountId, accessAppId, fetc
 async function main() {
   const pinnedAppId = process.env.ANEVUM_WEB_PREVIEW_ACCESS_APP_ID || "";
   const pinnedWorkerUuid = process.env.ANEVUM_WEB_PREVIEW_WORKER_UUID || "";
-  if (!UUID.test(pinnedAppId) || !UUID.test(pinnedWorkerUuid)) {
+  if (!UUID.test(pinnedAppId) || !WORKER_TAG.test(pinnedWorkerUuid)) {
     console.error("Hosted review BLOCKED: MISSING_PINNED_ACCESS_APPLICATION_OR_WORKER_ID");
     console.error("Set the two deliberately approved GitHub variables only after configuring a preview-only owner Access app.");
     process.exitCode = 1;
