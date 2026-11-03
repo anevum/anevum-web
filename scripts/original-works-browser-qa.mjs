@@ -141,6 +141,17 @@ async function runCase(route, viewport) {
     if(state.width+1<state.scrollWidth||state.width+1<state.bodyScrollWidth)
       throw Error("Horizontal overflow at "+viewport.width+": "+JSON.stringify(state));
     if(state.animation!=="none")throw Error("Reduced-motion setting ignored");
+
+    if(viewport.width<620){
+      const navShape=(await send("Runtime.evaluate",{
+        expression:'(() => {const nav=document.querySelector(".ow-navigation");const nodes=[...nav.querySelectorAll("a")];return {display:getComputedStyle(nav).display,columns:getComputedStyle(nav).gridTemplateColumns,rows:[...new Set(nodes.map(node=>Math.round(node.getBoundingClientRect().top)))],links:nodes.length};})()',
+        returnByValue:true
+      })).result?.value;
+      if(navShape?.display!=="grid"||navShape.links!==6||
+        navShape.columns.split(" ").length!==3||navShape.rows.length!==2)
+        throw Error("Studio mobile nav must be a balanced three-column, two-row layout: "+JSON.stringify(navShape));
+    }
+
     if(name==="original-works-reply"&&(!state.heading.includes("REPLY")||!state.banner.includes("Author revision in progress")))
       throw Error("Missing honest REPLY editorial status");
     if(name==="original-works-atlas"&&(!state.heading.includes("A universe")||!state.banner.includes("Nali Solan")))
