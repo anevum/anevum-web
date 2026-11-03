@@ -191,11 +191,11 @@ async function runCase(route, viewport) {
         if(!state.heading.includes("An archive")||!metadata.links.includes("/design/original-works/wiki/special/all-pages")||
           !metadata.links.includes("/design/original-works/wiki/category/world"))
           throw Error("Encyclopedia index missing reader navigation: "+JSON.stringify(metadata));
-        if((await readWiki('document.querySelectorAll(".ow-wiki-result").length'))!==8)
-          throw Error("Reader wiki missing eight reviewed articles");
+        if((await readWiki('document.querySelectorAll(".ow-wiki-result").length'))!==22)
+          throw Error("Reader wiki missing twenty-two curated articles");
         const taxonomy=await readWiki('([...document.querySelectorAll(".ow-wiki-filter-row button[data-wiki-category]")].map(b=>({name:b.dataset.wikiCategory,accent:getComputedStyle(b).getPropertyValue("--wk-accent").trim()})))');
         const values=taxonomy.filter(x=>x.name!=="All").map(x=>x.accent);
-        if(taxonomy.length!==5||new Set(values).size!==4||values.some(v=>!v))
+        if(taxonomy.length!==8||new Set(values).size!==7||values.some(v=>!v))
           throw Error("Wiki semantic category colors missing/distinctness: "+JSON.stringify(taxonomy));
 
         await send("Runtime.evaluate",{expression:'(() => {const input=document.querySelector("#ow-wiki-search");const set=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set;set.call(input,"Nali");input.dispatchEvent(new Event("input",{bubbles:true}));})()'});
@@ -216,7 +216,7 @@ async function runCase(route, viewport) {
         await send("Runtime.evaluate",{expression:'document.querySelector(".ow-wiki-empty button")?.click()'});
         let reset=false;
         for(let n=0;n<35;n++){
-          if((await readWiki('document.querySelectorAll(".ow-wiki-result").length'))===8){reset=true;break}
+          if((await readWiki('document.querySelectorAll(".ow-wiki-result").length'))===22){reset=true;break}
           await sleep(85);
         }
         if(!reset)throw Error("Wiki reset did not restore curated articles");
@@ -224,17 +224,74 @@ async function runCase(route, viewport) {
         let filtered=false;
         for(let n=0;n<35;n++){
           const data=await readWiki('({count:document.querySelectorAll(".ow-wiki-result").length,active:document.querySelector(".ow-wiki-filter-row button[aria-pressed=true]")?.dataset.wikiCategory,url:location.search})');
-          if(data.count===3&&data.active==="World"&&data.url.includes("category=World")){filtered=true;break}
+          if(data.count===4&&data.active==="World"&&data.url.includes("category=World")){filtered=true;break}
           await sleep(85);
         }
         if(!filtered)throw Error("Wiki world category color-coded filter failed");
         await send("Page.navigate",{url:base+"/design/original-works/wiki"});
         let returned=false;
         for(let n=0;n<65;n++){
-          if((await readWiki('document.querySelectorAll(".ow-wiki-result").length'))===8){returned=true;break}
+          if((await readWiki('document.querySelectorAll(".ow-wiki-result").length'))===22){returned=true;break}
           await sleep(110);
         }
         if(!returned)throw Error("Wiki index did not reload with complete curated articles");
+        if(viewport.name==="desktop"){
+          // Direct navigation, category and 404 handling must work on the
+          // expanded dataset, not only through the eight original articles.
+          const probes=[
+            ["/continuance-institute","Continuance Institute","Institution"],
+            ["/iren","IREN","Science"],
+            ["/talin-vel","Talin Vel","Person"],
+            ["/skygate-age","Skygate Age","History"],
+            ["/ione","Ione","World"]
+          ];
+          for(const [suffix,title,category] of probes){
+            await send("Page.navigate",{url:base+"/design/original-works/wiki"+suffix});
+            let observed;
+            for(let n=0;n<65;n++){
+              observed=await readWiki('({title:document.querySelector("#ow-wiki-article-title")?.textContent||"",category:document.querySelector(".ow-wiki-article")?.dataset.wikiCategory||"",paragraphs:document.querySelectorAll("#wiki-context p").length,related:[...document.querySelectorAll("#wiki-connections a")].length,robots:document.querySelector("meta[name=\\"robots\\"]")?.content||"",overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth+1})');
+              if(observed?.title===title&&observed?.category===category)break;
+              await sleep(95);
+            }
+            if(observed?.title!==title||observed?.category!==category||observed.paragraphs<3||
+               !observed.robots.startsWith("noindex")||observed.overflow)
+              throw Error("Expanded wiki article route failed: "+suffix+" "+JSON.stringify(observed));
+            if(suffix==="/talin-vel"||suffix==="/continuance-institute"){
+              const shot=await send("Page.captureScreenshot",{format:"png",captureBeyondViewport:false});
+              fs.writeFileSync(path.join(output,"original-works-wiki-"+suffix.slice(1)+"-desktop.png"),Buffer.from(shot.data,"base64"));
+            }
+          }
+          for(const [suffix,required] of [
+            ["/category/science",2],
+            ["/category/institution",1],
+            ["/special/all-pages",22]
+          ]){
+            await send("Page.navigate",{url:base+"/design/original-works/wiki"+suffix});
+            let count;
+            for(let n=0;n<65;n++){
+              count=await readWiki('document.querySelectorAll(".ow-wiki-result,.ow-wiki-alphabetical li").length');
+              if(count===required)break;
+              await sleep(95);
+            }
+            if(count!==required)throw Error("Wiki navigation taxonomy/index route missing: "+suffix+" "+count);
+          }
+          await send("Page.navigate",{url:base+"/design/original-works/wiki/future-book-secret"});
+          let missing=false;
+          for(let n=0;n<65;n++){
+            missing=await readWiki('document.querySelector(".ow-wiki-missing h1")?.textContent==="Article unavailable."');
+            if(missing)break;
+            await sleep(95);
+          }
+          if(!missing)throw Error("Wiki unknown content did not fail closed");
+          await send("Page.navigate",{url:base+"/design/original-works/wiki"});
+          let restored=false;
+          for(let n=0;n<65;n++){
+            if((await readWiki('document.querySelectorAll(".ow-wiki-result").length'))===22){restored=true;break}
+            await sleep(95);
+          }
+          if(!restored)throw Error("Wiki index failed to restore after deep-linked preview QA");
+        }
+
       }else{
         if(!state.heading.includes("Ovara")||metadata.category!=="World"||
           !metadata.box||!metadata.links.includes("/design/original-works/wiki/nali-solan")||
@@ -405,7 +462,10 @@ function assertNoDraftReaderTextInDefaultBuild() {
     "Merva's streets and neighborhoods mix older canal alignments",
     "Reader orientation only. This entry does not include plot outcomes",
     "An archive of worlds.",
-    "Guessing a URL never reveals private or unpublished canon."
+    "Guessing a URL never reveals private or unpublished canon.",
+    "A coastal district of Greater Serein where research campuses",
+    "A 30-year-old gateborn specialist who works with measurements",
+    "A large research and engineering institution with a public Cape Serein presence"
   ];
   let examined = 0;
   const visit = directory => {
