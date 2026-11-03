@@ -220,6 +220,37 @@ async function runCase(route, viewport) {
           await sleep(85);
         }
         if(!reset)throw Error("Wiki reset did not restore curated articles");
+
+        // A title match must rank before related/context matches without
+        // hiding those other public-queue articles from the reader.
+        await send("Runtime.evaluate",{expression:'(() => {const input=document.querySelector("#ow-wiki-search");const set=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set;set.call(input,"Skygate");input.dispatchEvent(new Event("input",{bubbles:true}));})()'});
+        let ranked=false;
+        for(let n=0;n<45;n++){
+          const data=await readWiki('({names:[...document.querySelectorAll(".ow-wiki-result strong")].map(x=>x.textContent),url:location.search})');
+          if(data.names[0]==="Skygate Age"&&data.names[1]==="Skygate Megastructure"&&
+             data.names.includes("Open Road")&&data.names.length>=5&&data.url.includes("q=Skygate")){
+            ranked=true;break;
+          }
+          await sleep(85);
+        }
+        if(!ranked)throw Error("Wiki title-first search suppressed related public-queue records");
+        await send("Runtime.evaluate",{expression:'(() => {const input=document.querySelector("#ow-wiki-search");const set=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value").set;set.call(input,"research Serein");input.dispatchEvent(new Event("input",{bubbles:true}));})()'});
+        let multiTerm=false;
+        for(let n=0;n<45;n++){
+          const data=await readWiki('({names:[...document.querySelectorAll(".ow-wiki-result strong")].map(x=>x.textContent),url:location.search})');
+          if(data.names.includes("Cape Serein")&&data.names.includes("Continuance Institute")&&
+             data.url.includes("research+Serein")){multiTerm=true;break;}
+          await sleep(85);
+        }
+        if(!multiTerm)throw Error("Wiki two-word search failed across approved article fields");
+        await send("Runtime.evaluate",{expression:'document.querySelector(".ow-wiki-search-area input").value="";'});
+        await send("Runtime.evaluate",{expression:'document.querySelector(".ow-wiki-search-area input").dispatchEvent(new Event("input",{bubbles:true}));'});
+        let emptyReset=false;
+        for(let n=0;n<40;n++){
+          if((await readWiki('document.querySelectorAll(".ow-wiki-result").length'))===22){emptyReset=true;break;}
+          await sleep(85);
+        }
+        if(!emptyReset)throw Error("Wiki search did not restore the full reader index");
         await send("Runtime.evaluate",{expression:'document.querySelector(".ow-wiki-filter-row button[data-wiki-category=\\"World\\"]")?.click()'});
         let filtered=false;
         for(let n=0;n<35;n++){
