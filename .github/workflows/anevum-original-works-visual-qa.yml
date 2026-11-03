@@ -6,6 +6,11 @@ on:
       - 'src/pages/OriginalWorksStudio.tsx'
       - 'src/pages/TranscosmicWiki.tsx'
       - 'src/data/transcosmic-wiki.ts'
+      - 'src/data/transcosmic-wiki-expansion-a.json'
+      - 'src/data/transcosmic-wiki-expansion-b.json'
+      - 'src/data/transcosmic-wiki-relations.json'
+      - 'scripts/verify-transcosmic-wiki-expansion.mjs'
+      - 'tests/transcosmic-wiki-expansion.test.mjs'
       - 'src/styles/transcosmic-wiki.css'
       - 'tests/transcosmic-wiki.test.mjs'
       - 'scripts/verify-original-works-hosted-access.mjs'
@@ -43,7 +48,8 @@ jobs:
       - name: Validate spoiler-safe review data before any frontend build
         run: |
           node scripts/verify-transcosmic-reader-preview.mjs
-          node --test tests/transcosmic-reader-preview.test.mjs tests/original-works-preview.test.mjs tests/original-works-hosted-access.test.mjs tests/transcosmic-wiki.test.mjs
+          node scripts/verify-transcosmic-wiki-expansion.mjs
+          node --test tests/transcosmic-reader-preview.test.mjs tests/original-works-preview.test.mjs tests/original-works-hosted-access.test.mjs tests/transcosmic-wiki.test.mjs tests/transcosmic-wiki-expansion.test.mjs
       - name: Typecheck and build default (review feature disabled)
         run: |
           npm run check
