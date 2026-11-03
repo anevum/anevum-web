@@ -14,6 +14,11 @@ import "../styles/transcosmic-wiki.css";
  */
 const ROOT = "/design/original-works";
 
+const categoryLabel = (category:WikiCategory) => ({
+  World:"Worlds",Person:"People",Place:"Places",Infrastructure:"Infrastructure",
+  Institution:"Institutions",Science:"Science",History:"History"
+}[category]);
+
 function WikiBreadcrumb({items}:{items:ReadonlyArray<{label:string;to?:string}>}) {
   return <nav className="ow-wiki-breadcrumb" aria-label="Wiki breadcrumbs">
     <Link to={wikiHome}>Wiki</Link>
@@ -60,7 +65,7 @@ function WikiSidebar({active}:{active?:string}) {
         data-wiki-category={category}
         to={wikiCategoryPath(category)}
         aria-current={active===category?"page":undefined}>
-        {category==="Person"?"People":category==="World"?"Worlds":category==="Place"?"Places":"Infrastructure"}
+        {categoryLabel(category)}
         <span>{wikiCategoryPages(category).length}</span>
       </Link>)}
     </nav>
@@ -96,10 +101,10 @@ function WikiIndex() {
       <WikiBreadcrumb items={[{label:"Main page"}]}/>
       <p className="ow-eyebrow">The Transcosmic / Reader Wiki</p>
       <h1 id="ow-wiki-title">An archive<br/><em>of worlds.</em></h1>
-      <p className="ow-page-lead">A connected encyclopedia of the people, places, worlds and engineered realities introduced at the opening of <cite>REPLY</cite>.</p>
+      <p className="ow-page-lead">A connected encyclopedia of the people, worlds, institutions, technologies, places and historical records that can be introduced without revealing later events in <cite>REPLY</cite>.</p>
       <div className="ow-wiki-banner" role="note">
         <span className="ow-wiki-live-mark" aria-hidden="true" />
-        <p><strong>Opening-state review edition.</strong> This wiki is a working editorial preview, not the public canon release. Later events and unreleased source pages are deliberately withheld.</p>
+        <p><strong>Curated public-canon candidate.</strong> Twenty-two Now-window subjects have been distilled for author review, including a small historical teaser section. This is not the public canon release; later events and private source pages are withheld.</p>
       </div>
       <div className="ow-wiki-search-area">
         <label htmlFor="ow-wiki-search">Search the encyclopedia</label>
@@ -110,7 +115,7 @@ function WikiIndex() {
           {(["All",...wikiCategories] as const).map(option=><button key={option}
             data-wiki-category={option}
             type="button" aria-pressed={option===category} onClick={()=>update(query,option)}>
-            {option==="All"?"Everything":option==="Person"?"People":option==="World"?"Worlds":option==="Place"?"Places":"Infrastructure"}
+            {option==="All"?"Everything":categoryLabel(option)}
           </button>)}
         </div>
       </div>
@@ -124,7 +129,7 @@ function WikiIndex() {
           <p>Try another term or explore the currently reviewed categories. Unreleased entries are not available from search.</p>
           <button type="button" onClick={()=>update("","All")}>Reset search</button>
         </div>}
-      <div className="ow-wiki-worknote"><span>EDITORIAL INDEX / 001</span><p>Article titles, categories and links are versioned together in the repository. Additional subjects require deliberate canon and spoiler review before joining the reader edition.</p></div>
+      <div className="ow-wiki-worknote"><span>EDITORIAL INDEX / 001</span><p>Article titles, categories, summaries and links are versioned together in Git. The other seven Website Ready records are staged in later release windows; they are not part of this reader edition.</p></div>
     </div>
   </section>;
 }
@@ -143,7 +148,7 @@ function WikiArticlePage({slug}:{slug:string}) {
       <h1 id="ow-wiki-article-title">{article.title}</h1>
       <p className="ow-wiki-article-intro">{article.summary}</p>
       <div className="ow-wiki-article-meta">
-        <span>ENTRY {article.id}</span><span>REPLY opening state</span><span>Editorial review only</span>
+        <span>ENTRY {article.id}</span><span>Now-window curated reader article</span><span>Publication not authorized</span>
       </div>
       <details className="ow-wiki-mobile-contents">
         <summary>Contents</summary>
@@ -157,7 +162,7 @@ function WikiArticlePage({slug}:{slug:string}) {
         <section id="wiki-context" aria-labelledby="wiki-context-title">
           <h2 id="wiki-context-title"><span>02</span> Context</h2>
           <p>{article.detail}</p>
-          <p className="ow-wiki-editorial-note">This article stops at the opening state. Its current form has no narrative outcome disclosures.</p>
+          <p className="ow-wiki-editorial-note">This article contains only reader-oriented material and does not describe later plot outcomes or restricted historical provenance.</p>
         </section>
         <section id="wiki-connections" aria-labelledby="wiki-connections-title">
           <h2 id="wiki-connections-title"><span>03</span> Connections</h2>
@@ -188,11 +193,11 @@ function WikiArticlePage({slug}:{slug:string}) {
         <p className="ow-wiki-infobox-subtitle">{article.subtitle}</p>
         <dl>
           <div><dt>Article type</dt><dd>{article.category}</dd></div>
-          <div><dt>Edition</dt><dd>REPLY · Opening state</dd></div>
+          <div><dt>Edition</dt><dd>REPLY · Now-window reader preview</dd></div>
           <div><dt>Related records</dt><dd>{article.related.length}</dd></div>
           <div><dt>Editorial status</dt><dd>Preview · not published</dd></div>
         </dl>
-        <p className="ow-wiki-infobox-foot">Public revision history and manuscript sourcing are not available in this review build. The reader content is version-controlled and subject to editorial approval.</p>
+        <p className="ow-wiki-infobox-foot">The canonical source is maintained privately. This reader derivative is version-controlled, and requires author/editorial and publication-queue approval before release.</p>
       </aside>
     </div>
   </section>;
@@ -202,7 +207,7 @@ function WikiCategoryPage({slug}:{slug:string}) {
   const category=wikiCategories.find(item=>item.toLowerCase()===slug);
   if(!category)return <WikiMissing/>;
   const pages=wikiCategoryPages(category);
-  const heading=category==="World"?"Worlds":category==="Person"?"People":category==="Place"?"Places":"Infrastructure";
+  const heading=categoryLabel(category);
   return <section className="ow-wiki-layout ow-wiki-category" data-wiki-category={category} aria-labelledby="ow-wiki-category-title">
     <WikiSidebar active={category}/>
     <div className="ow-wiki-main">
@@ -223,7 +228,7 @@ function WikiAllPages() {
       <WikiBreadcrumb items={[{label:"All articles"}]}/>
       <p className="ow-eyebrow">The Transcosmic / Directory</p>
       <h1 id="ow-wiki-all-title">All articles.</h1>
-      <p className="ow-page-lead">Alphabetical index of the {pages.length} currently curated entries. No unreleased records are enumerated.</p>
+      <p className="ow-page-lead">Alphabetical index of the {pages.length} currently curated reader entries. Later-window and private canon are not enumerated.</p>
       <ol className="ow-wiki-alphabetical">{pages.map(a=><li key={a.slug} data-wiki-category={a.category}><Link to={a.href}>{a.title}</Link><span>{a.category}</span></li>)}</ol>
     </div>
   </section>;
@@ -236,11 +241,11 @@ function WikiAbout() {
       <WikiBreadcrumb items={[{label:"About this wiki"}]}/>
       <p className="ow-eyebrow">The Transcosmic / Editorial desk</p>
       <h1 id="ow-wiki-about-title">About this wiki.</h1>
-      <p className="ow-page-lead">A version-controlled encyclopedia for Anevum's original fictional universe, with a deliberately restricted reader edition.</p>
+      <p className="ow-page-lead">A version-controlled encyclopedia for Anevum's original fictional universe, with reader-safe entries selected from the Now disclosure window and held for final publication approval.</p>
       <div className="ow-wiki-copy">
         <section><h2>Reader edition</h2><p>The wiki links approved opening-state subjects by category, related article and incoming links. It does not surface every private canon record.</p></section>
         <section><h2>Corrections and revisions</h2><p>Wiki content is maintained through reviewed changes to the repository's editorial manifest. There is not yet a public editing form, public article history or account-based contributor workflow. Those require separate moderation, identity and release design.</p></section>
-        <section><h2>Publication controls</h2><p>Every new topic or revision must pass canon reconciliation and spoiler clearance. The draft is not a statement of book availability or permission to publish unreleased material.</p></section>
+        <section><h2>Publication controls</h2><p>Every topic or revision must pass canon reconciliation, spoiler clearance, author signoff and publishing-queue approval. Inclusion in this draft does not make it publicly released or establish book availability.</p></section>
       </div>
     </div>
   </section>;
