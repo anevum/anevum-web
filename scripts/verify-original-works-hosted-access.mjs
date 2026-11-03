@@ -54,8 +54,8 @@ export function checkAccessPreviewGate({subdomain, app, policies, pinnedAppId, p
       if (!Array.isArray(include) || include.length !== 1 ||
           !include[0] || Object.keys(include[0]).length !== 1 ||
           include[0].email?.email?.toLowerCase() !== OWNER_EMAIL ||
-          !Array.isArray(policy.exclude || []) ||
-          !Array.isArray(policy.require || [])) {
+          !Array.isArray(policy.exclude) ||
+          !Array.isArray(policy.require)) {
         blockers.push("ACCESS_ALLOW_NOT_OWNER_ONLY");
       }
     }
