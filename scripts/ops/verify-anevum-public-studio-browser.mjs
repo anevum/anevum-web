@@ -50,7 +50,7 @@ async function view(pathname,width,height,name,saveScreenshot=false){
  if((width<=780)!==state.menuVisible)throw Error("Mobile disclosure breakpoint mismatch: "+JSON.stringify(state));
 
  const journey=await evalJS(`(()=>{const nav=document.querySelector('nav.journey'),next=nav?.querySelector('a.journey-next'),prev=nav?.querySelector('a.journey-prev'),meter=nav?.querySelector('.journey-meter');return {found:!!nav,href:next?.getAttribute('href'),tapHeight:next?.getBoundingClientRect().height||0,previous:prev?.getAttribute('href')||null,segments:meter?.querySelectorAll('span').length||0,current:meter?.querySelectorAll('span.now').length||0,accessibleProgress:meter?.getAttribute('aria-label'),focusable:next?.tabIndex>=0}})()`);
- if(!journey?.found||!journey.href?.startsWith("/original-works")||journey.tapHeight<44||journey.current!==1||journey.segments!==7||!journey.focusable)
+ if(!journey?.found||(journey.href!=="/"&&!journey.href?.startsWith("/original-works"))||journey.tapHeight<44||journey.current!==1||journey.segments!==7||!journey.focusable)
   throw Error("Editorial journey is unusable: "+JSON.stringify({name,width,journey}));
  if(width===390&&pathname==="/original-works"){
   const focus=await evalJS(`(()=>{const next=document.querySelector('.journey-next');next.focus();return document.activeElement===next})()`);
@@ -71,6 +71,13 @@ async function view(pathname,width,height,name,saveScreenshot=false){
    throw Error("REPLY touch/focus/reduced motion failure: "+JSON.stringify(reply));
   if(reply.titleLeft< -2||reply.titleRight>reply.viewport+2||reply.bookLeft< -8||reply.bookRight>reply.viewport+8)
    throw Error("REPLY content clipped at "+width+": "+JSON.stringify(reply));
+ }
+
+
+ if(pathname==="/"){
+  const apex=await evalJS(`(()=>({title:document.title,brand:document.querySelector('a.brand')?.getAttribute('href'),reply:document.querySelector('a.nav-cta')?.getAttribute('href'),hero:document.querySelector('h1')?.textContent,robots:document.querySelector('meta[name="robots"]')?.getAttribute('content'),scripts:document.scripts.length}))()`);
+  if(!apex.title.startsWith("Anevum | Original Works")||apex.brand!=="/"||apex.reply!=="/original-works/reply"||!apex.hero?.includes("answered.")||!apex.robots?.includes("noindex")||apex.scripts)
+   throw Error("Canonical apex visual/safety contract failed: "+JSON.stringify(apex));
  }
 
  if(saveScreenshot){
@@ -124,6 +131,8 @@ try {
 
   }
  }
+ await view("/",390,844,"canonical-root-390",true);
+ await view("/",1440,900,"canonical-root-1440",true);
  console.log("ANEVUM_PUBLIC_STUDIO_BROWSER_QA_PASS");
 } finally {
  for(const wait of pending.values()){clearTimeout(wait.timer);wait.reject(Error("Browser ending"));}pending.clear();
