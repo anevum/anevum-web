@@ -48,6 +48,15 @@ async function view(pathname,width,height,name,saveScreenshot=false){
  if(state.links.length!==6||!state.links.includes("/original-works/works")||!state.links.includes("/original-works/reply"))
   throw Error("Invalid desktop navigation: "+JSON.stringify(state));
  if((width<=780)!==state.menuVisible)throw Error("Mobile disclosure breakpoint mismatch: "+JSON.stringify(state));
+
+ const journey=await evalJS(`(()=>{const nav=document.querySelector('nav.journey'),next=nav?.querySelector('a.journey-next'),prev=nav?.querySelector('a.journey-prev'),meter=nav?.querySelector('.journey-meter');return {found:!!nav,href:next?.getAttribute('href'),tapHeight:next?.getBoundingClientRect().height||0,previous:prev?.getAttribute('href')||null,segments:meter?.querySelectorAll('span').length||0,current:meter?.querySelectorAll('span.now').length||0,accessibleProgress:meter?.getAttribute('aria-label'),focusable:next?.tabIndex>=0}})()`);
+ if(!journey?.found||!journey.href?.startsWith("/original-works")||journey.tapHeight<44||journey.current!==1||journey.segments!==7||!journey.focusable)
+  throw Error("Editorial journey is unusable: "+JSON.stringify({name,width,journey}));
+ if(width===390&&pathname==="/original-works"){
+  const focus=await evalJS(`(()=>{const next=document.querySelector('.journey-next');next.focus();return document.activeElement===next})()`);
+  if(!focus)throw Error("Journey must accept keyboard focus");
+ }
+
  if(width===390&&pathname==="/original-works"){
   const menu=await evalJS(`(()=>{const d=document.querySelector('details.mobile-menu');d.querySelector('summary').click();const open=d.open;const links=[...d.querySelectorAll('nav a')].map(a=>a.getAttribute('href'));d.querySelector('summary').click();return {open,closed:!d.open,links}})()`);
   if(!menu.open||!menu.closed||!menu.links.includes('/original-works/works'))throw Error("Mobile disclosure failed: "+JSON.stringify(menu));
@@ -86,6 +95,14 @@ try {
   for(const [slug,label] of [["","home"],["works","works"],["reply","reply"],["transcosmic","universe"],["wiki","encyclopedia"],["journal","journal"],["about","about"]]){
    const name=label+"-"+width;
    await view("/original-works"+(slug?"/"+slug:""),width,height,name,["home","reply","encyclopedia"].includes(label)&&[390,1440].includes(width));
+   if(label==="home"&&[390,1440].includes(width)){
+    await evalJS(`(()=>{document.querySelector('.journey').scrollIntoView({behavior:'instant',block:'center'});return true})()`);
+    const shot=await send("Page.captureScreenshot",{format:"png",captureBeyondViewport:false});
+    const filepath=path.join(output,"anevum-public-journey-"+width+".png");
+    writeFileSync(filepath,Buffer.from(shot.data,"base64"));
+    if(readFileSync(filepath).length<12000)throw Error("Journey screenshot is blank: "+filepath);
+   }
+
   }
  }
  console.log("ANEVUM_PUBLIC_STUDIO_BROWSER_QA_PASS");
