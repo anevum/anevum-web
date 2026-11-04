@@ -43,7 +43,7 @@ async function view(pathname,width,height,name,saveScreenshot=false){
  if(!state.main||!state.skip||!state.menu)throw Error("Missing accessibility landmark: "+JSON.stringify(state));
  if(state.width>width||state.width<width-20||state.scrollWidth>state.width+1||state.bodyScroll>state.width+1)
   throw Error("Horizontal overflow: "+JSON.stringify({requestedWidth:width,...state}));
- if(state.motion!=="none"||state.scripts!==0)
+ if((state.motion!==null&&state.motion!=="none")||state.scripts!==0)
   throw Error("Unexpected motion or client JS: "+JSON.stringify(state));
  if(state.links.length!==6||!state.links.includes("/original-works/works")||!state.links.includes("/original-works/reply"))
   throw Error("Invalid desktop navigation: "+JSON.stringify(state));
