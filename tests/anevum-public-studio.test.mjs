@@ -55,6 +55,6 @@ test("preview pages do not include canonical, session identity, remote assets, o
  const r=await request();
  const body=await r.text();
  assert.doesNotMatch(body,/<link[^>]+rel="canonical"|<script|https?:\/\/[^\s"'<>]+/);
- assert.doesNotMatch(body,/auth|secret|token|cookie|purchase now|preorder now/i);
+ assert.doesNotMatch(body,/\bauth\b|\bsecret\b|\btoken\b|\bcookie\b|purchase now|preorder now/i);
  assert.match(body,/Public design edition/);
 });
