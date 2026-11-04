@@ -32,27 +32,33 @@ async function waitFor(fn,label){
  }
  throw Error("Timed out waiting for "+label);
 }
-async function view(pathname,width,height,name){
+async function view(pathname,width,height,name,saveScreenshot=false){
  await send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:1,mobile:width<650});
  await send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:"reduce"}]});
  await send("Page.navigate",{url:base+pathname});
  const state=await waitFor(async()=>{
-   const v=await evalJS("(()=>{const nav=document.querySelector('nav');return {path:location.pathname,width:document.documentElement.clientWidth,scrollWidth:document.documentElement.scrollWidth,bodyScroll:document.body.scrollWidth,title:document.querySelector('h1')?.textContent,links:[...(nav?.querySelectorAll('a')||[])].map(a=>a.getAttribute('href')),main:!!document.querySelector('main#main'),skip:!!document.querySelector('a.skip[href=\"#main\"]'),motion:document.querySelector('.art-ring')?getComputedStyle(document.querySelector('.art-ring')).animationName:null}})()");
-   return v?.path===pathname&&v?.title?v:null;
+  const v=await evalJS(`(()=>{const desktop=document.querySelector('nav.desktop-nav'),mobile=document.querySelector('details.mobile-menu'),orbit=document.querySelector('.orb.a');return {path:location.pathname,width:document.documentElement.clientWidth,scrollWidth:document.documentElement.scrollWidth,bodyScroll:document.body.scrollWidth,heading:document.querySelector('main#main h1')?.textContent,links:[...(desktop?.querySelectorAll('a')||[])].map(a=>a.getAttribute('href')),main:!!document.querySelector('main#main'),skip:!!document.querySelector('a.skip[href="#main"]'),menu:!!mobile,menuVisible:!!mobile&&(getComputedStyle(mobile).display!=='none'),motion:orbit?getComputedStyle(orbit).animationName:null,scripts:document.scripts.length}})()`);
+  return v?.path===pathname&&v?.heading?v:null;
  },name);
- if(!state.main||!state.skip)throw Error("Missing accessibility landmark: "+JSON.stringify(state));
- // Desktop Chromium reserves a scrollbar gutter (~15px); documentElement.clientWidth
- // is the usable content width, not the device metrics width. Mobile remains exact.
+ if(!state.main||!state.skip||!state.menu)throw Error("Missing accessibility landmark: "+JSON.stringify(state));
  if(state.width>width||state.width<width-20||state.scrollWidth>state.width+1||state.bodyScroll>state.width+1)
-   throw Error("Horizontal overflow or unexpected viewport: "+JSON.stringify({requestedWidth:width,...state}));
- if(state.motion!=="none")throw Error("Reduced motion not respected: "+JSON.stringify(state));
- if(state.links.length!==5||!state.links.includes("/original-works/works"))
-   throw Error("Invalid navigation: "+JSON.stringify(state));
- const shot=await send("Page.captureScreenshot",{format:"png",captureBeyondViewport:false});
- const filepath=path.join(output,"anevum-public-"+name+".png");
- writeFileSync(filepath,Buffer.from(shot.data,"base64"));
- if(readFileSync(filepath).length<12000)throw Error("Suspiciously empty browser screenshot: "+filepath);
- console.log(JSON.stringify({case:name,path:state.path,width:state.width,scrollWidth:state.scrollWidth,heading:state.title,shotBytes:readFileSync(filepath).length}));
+  throw Error("Horizontal overflow: "+JSON.stringify({requestedWidth:width,...state}));
+ if((state.motion!==null&&state.motion!=="none")||state.scripts!==0)
+  throw Error("Unexpected motion or client JS: "+JSON.stringify(state));
+ if(state.links.length!==6||!state.links.includes("/original-works/works")||!state.links.includes("/original-works/reply"))
+  throw Error("Invalid desktop navigation: "+JSON.stringify(state));
+ if((width<=780)!==state.menuVisible)throw Error("Mobile disclosure breakpoint mismatch: "+JSON.stringify(state));
+ if(width===390&&pathname==="/original-works"){
+  const menu=await evalJS(`(()=>{const d=document.querySelector('details.mobile-menu');d.querySelector('summary').click();const open=d.open;const links=[...d.querySelectorAll('nav a')].map(a=>a.getAttribute('href'));d.querySelector('summary').click();return {open,closed:!d.open,links}})()`);
+  if(!menu.open||!menu.closed||!menu.links.includes('/original-works/works'))throw Error("Mobile disclosure failed: "+JSON.stringify(menu));
+ }
+ if(saveScreenshot){
+  const shot=await send("Page.captureScreenshot",{format:"png",captureBeyondViewport:false});
+  const filepath=path.join(output,"anevum-public-"+name+".png");
+  writeFileSync(filepath,Buffer.from(shot.data,"base64"));
+  if(readFileSync(filepath).length<12000)throw Error("Empty browser screenshot: "+filepath);
+ }
+ console.log(JSON.stringify({case:name,path:state.path,width:state.width,scrollWidth:state.scrollWidth,heading:state.heading,menuVisible:state.menuVisible}));
 }
 try {
  await waitFor(async()=>{if(server.exitCode!==null)throw Error("local server exited");return (await fetch(base+"/original-works")).status===200; },"loopback server");
@@ -76,11 +82,12 @@ try {
  });
  await new Promise((resolve,reject)=>{ws.addEventListener("open",resolve,{once:true});ws.addEventListener("error",reject,{once:true});});
  await send("Page.enable");await send("Runtime.enable");
- await view("/original-works",390,844,"home-mobile");
- await view("/original-works/works",390,844,"works-mobile");
- await view("/original-works/reply",390,844,"reply-mobile");
- await view("/original-works",1440,900,"home-desktop");
- await view("/original-works/transcosmic",1440,900,"universe-desktop");
+ for(const [width,height] of [[320,768],[390,844],[768,1024],[1024,768],[1440,900]]){
+  for(const [slug,label] of [["","home"],["works","works"],["reply","reply"],["transcosmic","universe"],["wiki","encyclopedia"],["journal","journal"],["about","about"]]){
+   const name=label+"-"+width;
+   await view("/original-works"+(slug?"/"+slug:""),width,height,name,["home","reply","encyclopedia"].includes(label)&&[390,1440].includes(width));
+  }
+ }
  console.log("ANEVUM_PUBLIC_STUDIO_BROWSER_QA_PASS");
 } finally {
  for(const wait of pending.values()){clearTimeout(wait.timer);wait.reject(Error("Browser ending"));}pending.clear();
