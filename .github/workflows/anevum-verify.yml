@@ -131,6 +131,24 @@ jobs:
           bash scripts/ops/build-original-works-review.sh
           bash scripts/ops/verify-original-works-review-browser.sh
 
+      - name: Verify isolated public Original Works shell and real browser (no deploy)
+        if: github.event_name == 'pull_request' && steps.scope.outputs.public_studio_required == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check apps/anevum-public-studio/worker.mjs
+          node --test tests/anevum-public-studio.test.mjs
+          node scripts/ops/verify-anevum-public-studio-browser.mjs
+
+      - name: Upload public studio screenshot evidence
+        if: github.event_name == 'pull_request' && steps.scope.outputs.public_studio_required == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: anevum-public-original-works-${{ github.event.pull_request.number }}
+          path: ${{ runner.temp }}/anevum-public-*.png
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Verify owner-only Access before hosted Cloudflare Preview
         if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
         env:
