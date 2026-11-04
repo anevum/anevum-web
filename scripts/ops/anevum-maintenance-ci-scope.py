@@ -51,13 +51,27 @@ ISOLATED_ORIGINAL_WORKS_REVIEW_PATHS = frozenset([
     "wrangler.original-works-review.jsonc",
 ])
 
+# The static public shell has no legacy V5 runtime or private publishing path.
+# Its own browser/security gate is mandatory for these exact files only.
+ISOLATED_PUBLIC_STUDIO_PATHS = frozenset([
+    "apps/anevum-public-studio/worker.mjs",
+    "tests/anevum-public-studio.test.mjs",
+    "scripts/ops/anevum-public-studio-test-server.mjs",
+    "scripts/ops/verify-anevum-public-studio-browser.mjs",
+    "wrangler.anevum-public-studio.jsonc",
+    "docs/design/ANEVUM.WEB.BUILD.2026-11-03.022.PUBLIC-ORIGINAL-WORKS-SHELL.md",
+])
+
+def public_studio_required(paths):
+    return bool(paths) and any(path in ISOLATED_PUBLIC_STUDIO_PATHS for path in paths)
+
 def isolated_review_required(paths):
     return bool(paths) and any(path in ISOLATED_ORIGINAL_WORKS_REVIEW_PATHS for path in paths)
 
 def app_preview_required(paths):
     # Unknown or mixed application changes still require legacy preview safety.
     # Isolated review files use a separate mandatory review acceptance gate.
-    return not paths or any(path not in MAINTENANCE_PATHS | ISOLATED_ORIGINAL_WORKS_REVIEW_PATHS for path in paths)
+    return not paths or any(path not in MAINTENANCE_PATHS | ISOLATED_ORIGINAL_WORKS_REVIEW_PATHS | ISOLATED_PUBLIC_STUDIO_PATHS for path in paths)
 
 def main():
     if len(sys.argv) != 3 or not all(re.fullmatch(r'[a-f0-9]{40}', s) for s in sys.argv[1:]):
@@ -66,6 +80,7 @@ def main():
     paths = [p.decode('utf-8', errors='strict') for p in raw.split(b'\0') if p]
     print('app_preview_required=' + str(app_preview_required(paths)).lower())
     print('isolated_review_required=' + str(isolated_review_required(paths)).lower())
+    print('public_studio_required=' + str(public_studio_required(paths)).lower())
 
 if __name__ == '__main__':
     main()
