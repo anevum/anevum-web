@@ -70,3 +70,39 @@ test("no third party URLs, sessions, automatic scripts or indexing until editori
  assert.match(body,/Public design edition/);
  assert.match(body,/<meta name="robots" content="noindex,nofollow,noarchive"/);
 });
+
+
+test("the entire public experience has a real, accessible editorial reading path",async()=>{
+ const slugs=["","/works","/reply","/transcosmic","/wiki","/journal","/about"];
+ for(let index=0;index<slugs.length;index++){
+  const html=await (await req(slugs[index])).text();
+  const journey=html.match(/<nav class="journey" aria-label="Continue exploring">([\s\S]*?)<\/nav>/)?.[1];
+  assert.ok(journey,"Missing reading-path landmark for "+slugs[index]);
+  const next=journey.match(/<a class="journey-next" href="([^"]+)"/)?.[1];
+  const expected=root.replace("https://anevum.com","")+(slugs[(index+1)%slugs.length]||"");
+  assert.equal(next,expected,"The next destination must always be a real public page");
+  const previous=journey.match(/<a class="journey-prev" href="([^"]+)"/)?.[1];
+  if(index===0)assert.equal(previous,undefined,"First page should not invent a previous chapter");
+  else assert.equal(previous,"/original-works"+slugs[index-1]);
+  assert.match(journey,new RegExp('role="img" aria-label="Section '+(index+1)+' of 7"'));
+  assert.equal((journey.match(/class="now"/g)||[]).length,1,"Exactly one current section marker");
+  assert.equal((journey.match(/class="past"/g)||[]).length,index,"Earlier markers only");
+  assert.equal((journey.match(/class="upcoming"/g)||[]).length,6-index,"Future markers only");
+  for(const href of internalLinks(journey)){
+   const route=href.slice("/original-works".length);
+   assert.ok(slugs.includes(route),"The reading path links to an unavailable route: "+href);
+  }
+  assert.doesNotMatch(journey,/Ovara|Nali Solan|Skygate|manuscript|retailer available/i);
+ }
+});
+
+test("the reading path preserves server-only rendering and noindex publishing boundaries",async()=>{
+ const response=await req("/about");
+ const html=await response.text();
+ assert.match(html,/<nav class="journey" aria-label="Continue exploring">/);
+ assert.match(html,/Back to the beginning/);
+ assert.match(html,/href="\/original-works"/);
+ assert.doesNotMatch(html,/<script\b|onkeydown=|onclick=|aria-live=/i);
+ assert.equal(response.headers.get("X-Anevum-Surface"),"anevum-original-works-public-v2");
+ assert.match(response.headers.get("X-Robots-Tag"),/noindex/);
+});
