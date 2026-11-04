@@ -83,7 +83,7 @@ test("the entire public experience has a real, accessible editorial reading path
   assert.equal(next,expected,"The next destination must always be a real public page");
   const previous=journey.match(/<a class="journey-prev" href="([^"]+)"/)?.[1];
   if(index===0)assert.equal(previous,undefined,"First page should not invent a previous chapter");
-  else assert.equal(previous,"/original-works"+slugs[index-1]);
+  else assert.equal(previous,index===1?"/":"/original-works"+slugs[index-1]);
   assert.match(journey,new RegExp('role="img" aria-label="Section '+(index+1)+' of 7"'));
   assert.equal((journey.match(/class="now"/g)||[]).length,1,"Exactly one current section marker");
   assert.equal((journey.match(/class="past"/g)||[]).length,index,"Earlier markers only");
