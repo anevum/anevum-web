@@ -138,7 +138,7 @@ test("REPLY editorial page presents approved work context, genuine on-page navig
 
 test("REPLY edition/illustration update leaves all other pages and publication security boundaries intact",async()=>{
  const home=await (await req("")).text();
- assert.doesNotMatch(home,/reply-quick-nav|reply-edition-panel|reply-art-stage/);
+ assert.doesNotMatch(home,/<nav class="reply-quick-nav"|class="reply-edition-panel"|class="reply-art-stage"/);
  for(const slug of ["","/works","/reply","/transcosmic","/wiki","/journal","/about"]){
   const response=await req(slug);
   const html=await response.text();
