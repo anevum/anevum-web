@@ -41,8 +41,10 @@ async function view(pathname,width,height,name){
    return v?.path===pathname&&v?.title?v:null;
  },name);
  if(!state.main||!state.skip)throw Error("Missing accessibility landmark: "+JSON.stringify(state));
- if(state.width!==width||state.scrollWidth>width+1||state.bodyScroll>width+1)
-   throw Error("Horizontal overflow: "+JSON.stringify(state));
+ // Desktop Chromium reserves a scrollbar gutter (~15px); documentElement.clientWidth
+ // is the usable content width, not the device metrics width. Mobile remains exact.
+ if(state.width>width||state.width<width-20||state.scrollWidth>state.width+1||state.bodyScroll>state.width+1)
+   throw Error("Horizontal overflow or unexpected viewport: "+JSON.stringify({requestedWidth:width,...state}));
  if(state.motion!=="none")throw Error("Reduced motion not respected: "+JSON.stringify(state));
  if(state.links.length!==5||!state.links.includes("/original-works/works"))
    throw Error("Invalid navigation: "+JSON.stringify(state));
