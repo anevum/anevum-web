@@ -1,4 +1,10 @@
+<p align="center"><img src=".github/assets/readme-hero.svg" alt="Original Anevum project illustration" width="100%" /></p>
+
 # ANEVUM Web
+
+> **Public documentation note · November 3, 2026:** This public website repository has extensive historical product and deployment documentation. Treat the main branch as source evidence, not proof that every documented route or service is live. The current Anevum creative-studio positioning supersedes older umbrella-company language.
+
+[Public website](https://anevum.com) · [Ongoing development](https://github.com/devonalanakins/anevum-web/pulls)
 
 ANEVUM's public studio website and protected Command interface.
 
