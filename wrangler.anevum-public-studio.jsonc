@@ -1,0 +1,7 @@
+{
+  "name": "anevum-original-works-public",
+  "main": "./apps/anevum-public-studio/worker.mjs",
+  "compatibility_date": "2026-10-28",
+  "workers_dev": false,
+  "preview_urls": false
+}
