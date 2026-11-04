@@ -84,6 +84,27 @@ class ScopeTests(unittest.TestCase):
         self.assertFalse(scope.isolated_review_required(["README.md"]))
         self.assertFalse(scope.isolated_review_required([]))
 
+    def test_public_studio_has_separate_mandatory_no_deploy_review(self):
+        paths = list(scope.ISOLATED_PUBLIC_STUDIO_PATHS)
+        self.assertEqual(len(paths), 6)
+        self.assertFalse(scope.app_preview_required(paths))
+        self.assertTrue(scope.public_studio_required(paths))
+        self.assertFalse(scope.isolated_review_required(paths))
+
+    def test_unrelated_application_edits_still_require_legacy_preview(self):
+        files = ["apps/anevum-public-studio/worker.mjs", "src/App.tsx"]
+        self.assertTrue(scope.app_preview_required(files))
+        self.assertTrue(scope.public_studio_required(files))
+
+    def test_unknown_new_public_studio_file_cannot_bypass_preview(self):
+        files = ["apps/anevum-public-studio/worker.mjs", "apps/anevum-public-studio/auth.mjs"]
+        self.assertTrue(scope.app_preview_required(files))
+        self.assertTrue(scope.public_studio_required(files))
+
+    def test_maintenance_only_does_not_start_public_studio_build(self):
+        self.assertFalse(scope.public_studio_required(["README.md"]))
+        self.assertFalse(scope.public_studio_required([]))
+
     def test_empty_input_cannot_skip_preview(self):
         self.assertTrue(scope.app_preview_required([]))
 
