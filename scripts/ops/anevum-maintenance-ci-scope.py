@@ -39,10 +39,25 @@ MAINTENANCE_PATHS = frozenset([
     "tests/repository-split.test.mjs",
 ])
 
+# Separate Access-protected reviewer files never deploy the legacy apex.
+# They require their own independent build/browser gate rather than the
+# old anevum-web-nextgen remote-preview Access configuration.
+ISOLATED_ORIGINAL_WORKS_REVIEW_PATHS = frozenset([
+    "scripts/ops/build-original-works-review.sh",
+    "scripts/ops/local-original-works-review-server.mjs",
+    "scripts/ops/original-works-review-worker.mjs",
+    "scripts/ops/verify-original-works-review-browser.sh",
+    "tests/original-works-review-worker.test.mjs",
+    "wrangler.original-works-review.jsonc",
+])
+
+def isolated_review_required(paths):
+    return bool(paths) and any(path in ISOLATED_ORIGINAL_WORKS_REVIEW_PATHS for path in paths)
+
 def app_preview_required(paths):
-    # Empty/unknown input fails closed. Only this reviewed maintenance allowlist
-    # can avoid legacy UI preview creation; all offline checks still run.
-    return not paths or any(path not in MAINTENANCE_PATHS for path in paths)
+    # Unknown or mixed application changes still require legacy preview safety.
+    # Isolated review files use a separate mandatory review acceptance gate.
+    return not paths or any(path not in MAINTENANCE_PATHS | ISOLATED_ORIGINAL_WORKS_REVIEW_PATHS for path in paths)
 
 def main():
     if len(sys.argv) != 3 or not all(re.fullmatch(r'[a-f0-9]{40}', s) for s in sys.argv[1:]):
@@ -50,6 +65,7 @@ def main():
     raw = subprocess.check_output(['git', 'diff', '--name-only', '-z', sys.argv[1]+'...'+sys.argv[2]])
     paths = [p.decode('utf-8', errors='strict') for p in raw.split(b'\0') if p]
     print('app_preview_required=' + str(app_preview_required(paths)).lower())
+    print('isolated_review_required=' + str(isolated_review_required(paths)).lower())
 
 if __name__ == '__main__':
     main()

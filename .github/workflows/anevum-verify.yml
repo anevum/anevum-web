@@ -123,6 +123,14 @@ jobs:
       - name: Prove default build has no Original Works editorial bytes
         run: node scripts/verify-original-works-preview-bundle.mjs --disabled
 
+      - name: Verify isolated Original Works reviewer bundle and real browser (no deploy)
+        if: github.event_name == 'pull_request' && steps.scope.outputs.isolated_review_required == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/ops/build-original-works-review.sh
+          bash scripts/ops/verify-original-works-review-browser.sh
+
       - name: Verify owner-only Access before hosted Cloudflare Preview
         if: github.event_name == 'pull_request' && steps.scope.outputs.app_preview_required == 'true'
         env:
