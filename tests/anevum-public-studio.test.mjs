@@ -106,3 +106,49 @@ test("the reading path preserves server-only rendering and noindex publishing bo
  assert.equal(response.headers.get("X-Anevum-Surface"),"anevum-original-works-public-v2");
  assert.match(response.headers.get("X-Robots-Tag"),/noindex/);
 });
+
+
+test("REPLY editorial page presents approved work context, genuine on-page navigation and labelled concept art",async()=>{
+ const response=await req("/reply");
+ const html=await response.text();
+ assert.equal(response.status,200);
+ assert.match(html,/<section class="page active reply-page" data-page="reply" aria-label="REPLY novel">/);
+ assert.match(html,/<h1 class="display">A signal\.<br><em>A human answer\.<\/em><\/h1>/);
+ const nav=html.match(/<nav class="reply-quick-nav" aria-label="Explore REPLY on this page">([\s\S]*?)<\/nav>/)?.[1];
+ assert.ok(nav,"REPLY must offer a useful page-local reading index");
+ const destinations=[...nav.matchAll(/href="#([^"]+)"/g)].map(m=>m[1]);
+ assert.deepEqual(destinations,["reply-work","reply-edition","reply-universe"]);
+ for(const id of destinations){
+  assert.match(html,new RegExp('id="'+id+'"'),"Missing on-page anchor "+id);
+ }
+ assert.match(html,/<figure class="reply-art">/);
+ assert.match(html,/class="book-3d reply-book" role="img" aria-label="REPLY typographic book cover concept\. This is not an approved final publication cover\."/);
+ assert.match(html,/<figcaption>Art direction study[\s\S]*?Not a final approved cover<\/figcaption>/);
+ assert.match(html,/<dl class="reply-facts" aria-label="About the novel">/);
+ assert.match(html,/<dt>Author<\/dt><dd>Devon Akins<\/dd>/);
+ assert.match(html,/<dt>Universe<\/dt><dd>The Transcosmic<\/dd>/);
+ assert.match(html,/<dt>Placement<\/dt><dd>Book one<\/dd>/);
+ assert.match(html,/<section class="reply-edition-panel" id="reply-edition" aria-labelledby="reply-edition-heading">/);
+ assert.match(html,/A revised-edition release date and purchasing details have not been confirmed/);
+ assert.match(html,/<section class="reply-universe" id="reply-universe" aria-labelledby="reply-universe-heading">/);
+ assert.doesNotMatch(html,/preorder|buy now|available to purchase|ISBN|retailer/i);
+ assert.doesNotMatch(html,/Ovara|Nali Solan|Skygate|Merva|staff\/command|api\/v1\/member/i);
+ assert.doesNotMatch(html,/<script\b|<iframe\b|<form\b|<input\b|onload=|onclick=/i);
+});
+
+test("REPLY edition/illustration update leaves all other pages and publication security boundaries intact",async()=>{
+ const home=await (await req("")).text();
+ assert.doesNotMatch(home,/<nav class="reply-quick-nav"|class="reply-edition-panel"|class="reply-art-stage"/);
+ for(const slug of ["","/works","/reply","/transcosmic","/wiki","/journal","/about"]){
+  const response=await req(slug);
+  const html=await response.text();
+  assert.equal((html.match(/<h1\b/g)||[]).length,1);
+  assert.match(html,/aria-label="Continue exploring"/);
+  assert.match(response.headers.get("X-Robots-Tag"),/noindex/);
+  assert.match(response.headers.get("Content-Security-Policy"),/default-src 'none'/);
+  for(const href of internalLinks(html)){
+   const relative=href.slice("/original-works".length);
+   assert.ok(pages.includes(relative),"Broken public page route: "+href);
+  }
+ }
+});
