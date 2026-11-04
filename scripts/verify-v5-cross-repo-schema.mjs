@@ -83,7 +83,7 @@ async function fetchRequired(url, label, { token, accept = "application/octet-st
 export async function verifyCrossRepositoryContract() {
   const local = await readFile(new URL("../" + WORKSPACE_CONTRACT_PATH, import.meta.url));
   const refUrl =
-    "https://api.github.com/repos/devonalanakins/rhen/git/ref/heads/" + RHEN_CONTRACT_BRANCH;
+    "https://api.github.com/repos/devonalanakins/vesper-legacy/git/ref/heads/" + RHEN_CONTRACT_BRANCH;
   const refResponse = await fetchRequired(refUrl, "RHEN source branch", {
     token: process.env.GITHUB_TOKEN,
     accept: "application/vnd.github+json",
@@ -98,7 +98,7 @@ export async function verifyCrossRepositoryContract() {
     throw new Error("INCOMPATIBLE_SCHEMA: RHEN source branch response has an unexpected identity.");
   }
   const rawUrl =
-    "https://raw.githubusercontent.com/devonalanakins/rhen/" +
+    "https://raw.githubusercontent.com/devonalanakins/vesper-legacy/" +
     RHEN_CONTRACT_COMMIT + "/" + WORKSPACE_CONTRACT_PATH;
   const rawResponse = await fetchRequired(rawUrl, "Pinned RHEN workspace schema");
   const remote = Buffer.from(await rawResponse.arrayBuffer());
