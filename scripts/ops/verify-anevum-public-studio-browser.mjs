@@ -61,6 +61,18 @@ async function view(pathname,width,height,name,saveScreenshot=false){
   const menu=await evalJS(`(()=>{const d=document.querySelector('details.mobile-menu');d.querySelector('summary').click();const open=d.open;const links=[...d.querySelectorAll('nav a')].map(a=>a.getAttribute('href'));d.querySelector('summary').click();return {open,closed:!d.open,links}})()`);
   if(!menu.open||!menu.closed||!menu.links.includes('/original-works/works'))throw Error("Mobile disclosure failed: "+JSON.stringify(menu));
  }
+
+ if(pathname==="/original-works/reply"){
+  const reply=await evalJS(`(()=>{const nav=document.querySelector('.reply-quick-nav'),links=[...(nav?.querySelectorAll('a')||[])],book=document.querySelector('.reply-book'),edition=document.querySelector('#reply-edition'),cta=document.querySelector('.reply-editorial-actions .btn'),figure=document.querySelector('.reply-art'),h=document.querySelector('.reply-hero h1'),q=links[0];const rect=book?.getBoundingClientRect(),hRect=h?.getBoundingClientRect();q?.focus();return {anchors:links.map(x=>x.getAttribute('href')),resolved:links.map(x=>!!document.getElementById((x.getAttribute('href')||'').slice(1))),hasBook:!!book,hasFigure:!!figure,conceptLabel:book?.getAttribute('aria-label'),edition:!!edition,ctaHeight:cta?.getBoundingClientRect().height||0,touchHeights:links.map(x=>x.getBoundingClientRect().height),titleLeft:hRect?.left,titleRight:hRect?.right,bookLeft:rect?.left,bookRight:rect?.right,viewport:document.documentElement.clientWidth,coverMotion:book?getComputedStyle(book).transitionDuration:null,focus:document.activeElement===q}})()`);
+  const expected=["#reply-work","#reply-edition","#reply-universe"];
+  if(JSON.stringify(reply?.anchors)!==JSON.stringify(expected)||reply.resolved.some(x=>!x)||!reply.hasBook||!reply.hasFigure||!reply.edition||!reply.conceptLabel?.includes("not an approved final publication cover"))
+   throw Error("REPLY editorial or anchors missing: "+JSON.stringify(reply));
+  if(reply.ctaHeight<44||reply.touchHeights.some(x=>x<44)||!reply.focus||reply.coverMotion!=="0s")
+   throw Error("REPLY touch/focus/reduced motion failure: "+JSON.stringify(reply));
+  if(reply.titleLeft< -2||reply.titleRight>reply.viewport+2||reply.bookLeft< -8||reply.bookRight>reply.viewport+8)
+   throw Error("REPLY content clipped at "+width+": "+JSON.stringify(reply));
+ }
+
  if(saveScreenshot){
   const shot=await send("Page.captureScreenshot",{format:"png",captureBeyondViewport:false});
   const filepath=path.join(output,"anevum-public-"+name+".png");
@@ -95,6 +107,13 @@ try {
   for(const [slug,label] of [["","home"],["works","works"],["reply","reply"],["transcosmic","universe"],["wiki","encyclopedia"],["journal","journal"],["about","about"]]){
    const name=label+"-"+width;
    await view("/original-works"+(slug?"/"+slug:""),width,height,name,["home","reply","encyclopedia"].includes(label)&&[390,1440].includes(width));
+   if(label==="reply"&&[390,1440].includes(width)){
+    await evalJS(`(()=>{document.querySelector('.reply-art').scrollIntoView({behavior:'instant',block:'center'});return true})()`);
+    const shot=await send("Page.captureScreenshot",{format:"png",captureBeyondViewport:false});
+    const filepath=path.join(output,"anevum-public-reply-book-"+width+".png");
+    writeFileSync(filepath,Buffer.from(shot.data,"base64"));
+    if(readFileSync(filepath).length<12000)throw Error("REPLY book screenshot blank: "+filepath);
+   }
    if(label==="home"&&[390,1440].includes(width)){
     await evalJS(`(()=>{document.querySelector('.journey').scrollIntoView({behavior:'instant',block:'center'});return true})()`);
     const shot=await send("Page.captureScreenshot",{format:"png",captureBeyondViewport:false});
