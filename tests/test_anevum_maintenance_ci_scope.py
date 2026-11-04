@@ -86,10 +86,20 @@ class ScopeTests(unittest.TestCase):
 
     def test_public_studio_has_separate_mandatory_no_deploy_review(self):
         paths = list(scope.ISOLATED_PUBLIC_STUDIO_PATHS)
-        self.assertEqual(len(paths), 6)
+        self.assertEqual(len(paths), 7)
         self.assertFalse(scope.app_preview_required(paths))
         self.assertTrue(scope.public_studio_required(paths))
         self.assertFalse(scope.isolated_review_required(paths))
+
+    def test_exact_canonical_root_runbook_is_reviewed_but_unreviewed_docs_fail_closed(self):
+        approved = "docs/design/ANEVUM.WEB.OPS.2026-11-03.027.CANONICAL-ORIGINAL-WORKS-LAUNCH.md"
+        runtime = "apps/anevum-public-studio/worker.mjs"
+        self.assertIn(approved, scope.ISOLATED_PUBLIC_STUDIO_PATHS)
+        self.assertFalse(scope.app_preview_required([runtime, approved]))
+        self.assertTrue(scope.public_studio_required([runtime, approved]))
+        self.assertTrue(scope.app_preview_required([
+            runtime, "docs/design/ANEVUM.WEB.OPS.2026-11-03.999.UNREVIEWED-RELEASE.md"
+        ]))
 
     def test_unrelated_application_edits_still_require_legacy_preview(self):
         files = ["apps/anevum-public-studio/worker.mjs", "src/App.tsx"]

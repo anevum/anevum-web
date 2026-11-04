@@ -60,6 +60,7 @@ ISOLATED_PUBLIC_STUDIO_PATHS = frozenset([
     "scripts/ops/verify-anevum-public-studio-browser.mjs",
     "wrangler.anevum-public-studio.jsonc",
     "docs/design/ANEVUM.WEB.BUILD.2026-11-03.022.PUBLIC-ORIGINAL-WORKS-SHELL.md",
+    "docs/design/ANEVUM.WEB.OPS.2026-11-03.027.CANONICAL-ORIGINAL-WORKS-LAUNCH.md",
 ])
 
 def public_studio_required(paths):

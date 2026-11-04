@@ -12,7 +12,7 @@ test("all seven V2 routes contain one accessible editorial page, correct links a
   const response=await req(path);
   assert.equal(response.status,200,path);
   assert.equal(response.headers.get("Content-Type"),"text/html; charset=utf-8");
-  assert.equal(response.headers.get("X-Anevum-Surface"),"anevum-original-works-public-v2");
+  assert.equal(response.headers.get("X-Anevum-Surface"),"anevum-original-works-public-v3-root");
   assert.match(response.headers.get("X-Robots-Tag"),/noindex.*noarchive/);
   assert.match(response.headers.get("Content-Security-Policy"),/default-src 'none'/);
   const body=await response.text();
@@ -45,7 +45,7 @@ test("strict host, route, method isolation preserves current apex and APIs",asyn
  for(const p of ["/foo","-private","/api","/wiki/ovara","/../../staff"]){
   assert.equal((await req(p)).status,404,p);
  }
- for(const url of ["https://anevum.com/","https://anevum.com/staff","https://backstage.anevum.com/original-works","https://example.com/original-works","http://anevum.com/original-works"]){
+ for(const url of ["https://anevum.com/staff","https://backstage.anevum.com/original-works","https://example.com/original-works","http://anevum.com/original-works"]){
   assert.equal((await worker.fetch(new Request(url))).status,404,url);
  }
  const post=await req("",{method:"POST",body:"test"});
@@ -79,11 +79,11 @@ test("the entire public experience has a real, accessible editorial reading path
   const journey=html.match(/<nav class="journey" aria-label="Continue exploring">([\s\S]*?)<\/nav>/)?.[1];
   assert.ok(journey,"Missing reading-path landmark for "+slugs[index]);
   const next=journey.match(/<a class="journey-next" href="([^"]+)"/)?.[1];
-  const expected=root.replace("https://anevum.com","")+(slugs[(index+1)%slugs.length]||"");
+  const expected=index===slugs.length-1?"/":root.replace("https://anevum.com","")+slugs[index+1];
   assert.equal(next,expected,"The next destination must always be a real public page");
   const previous=journey.match(/<a class="journey-prev" href="([^"]+)"/)?.[1];
   if(index===0)assert.equal(previous,undefined,"First page should not invent a previous chapter");
-  else assert.equal(previous,"/original-works"+slugs[index-1]);
+  else assert.equal(previous,index===1?"/":"/original-works"+slugs[index-1]);
   assert.match(journey,new RegExp('role="img" aria-label="Section '+(index+1)+' of 7"'));
   assert.equal((journey.match(/class="now"/g)||[]).length,1,"Exactly one current section marker");
   assert.equal((journey.match(/class="past"/g)||[]).length,index,"Earlier markers only");
@@ -101,9 +101,9 @@ test("the reading path preserves server-only rendering and noindex publishing bo
  const html=await response.text();
  assert.match(html,/<nav class="journey" aria-label="Continue exploring">/);
  assert.match(html,/Back to the beginning/);
- assert.match(html,/href="\/original-works"/);
+ assert.match(html,/href="\/"/);
  assert.doesNotMatch(html,/<script\b|onkeydown=|onclick=|aria-live=/i);
- assert.equal(response.headers.get("X-Anevum-Surface"),"anevum-original-works-public-v2");
+ assert.equal(response.headers.get("X-Anevum-Surface"),"anevum-original-works-public-v3-root");
  assert.match(response.headers.get("X-Robots-Tag"),/noindex/);
 });
 
@@ -151,4 +151,40 @@ test("REPLY edition/illustration update leaves all other pages and publication s
    assert.ok(pages.includes(relative),"Broken public page route: "+href);
   }
  }
+});
+
+
+test("canonical apex homepage matches approved creative-studio identity without releasing private sections",async()=>{
+ const rootRes=await worker.fetch(new Request("https://anevum.com/"));
+ const aliasRes=await req("");
+ assert.equal(rootRes.status,200);
+ assert.equal(aliasRes.status,200);
+ assert.equal(rootRes.headers.get("X-Anevum-Surface"),"anevum-original-works-public-v3-root");
+ assert.match(rootRes.headers.get("X-Robots-Tag"),/noindex/);
+ const rootHtml=await rootRes.text(), aliasHtml=await aliasRes.text();
+ assert.equal(rootHtml,aliasHtml,"The root and legacy /original-works entry must render the same reviewed home");
+ assert.match(rootHtml,/<title>Anevum \| Original Works &amp; The Transcosmic<\/title>/);
+ assert.match(rootHtml,/<h1 class="display">Somewhere,<br><em>someone<\/em><br>answered\.<\/h1>/);
+ assert.match(rootHtml,/<meta property="og:site_name" content="Anevum">/);
+ assert.match(rootHtml,/<a href="\/" class="brand" aria-label="Anevum home">/);
+ assert.match(rootHtml,/<a class="footer-logo" href="\/">Anevum<\/a>/);
+ assert.match(rootHtml,/href="\/original-works\/reply"/);
+ assert.match(rootHtml,/href="\/original-works\/wiki"/);
+ assert.doesNotMatch(rootHtml,/<script\b|<iframe\b|<form\b|<input\b|onload=|onclick=/i);
+ assert.doesNotMatch(rootHtml,/Independent Games|Software Studio|Nali Solan|Skygate|Merva|Ovara/i);
+});
+
+test("root launch is method-safe and cannot intercept staff, member or API routes",async()=>{
+ const head=await worker.fetch(new Request("https://anevum.com/",{method:"HEAD"}));
+ assert.equal(head.status,200);
+ assert.equal(await head.text(),"");
+ const get=await worker.fetch(new Request("https://anevum.com/"));
+ assert.deepEqual(Object.fromEntries(head.headers),Object.fromEntries(get.headers));
+ for(const pathname of ["/member","/member/","/staff","/staff/","/api/v1/member/status","/play","/join","/creator","/original-works/private","/unknown"]){
+  const response=await worker.fetch(new Request("https://anevum.com"+pathname));
+  assert.equal(response.status,404,"Public studio must not serve "+pathname);
+ }
+ const denied=await worker.fetch(new Request("https://anevum.com/",{method:"POST",body:"x"}));
+ assert.equal(denied.status,405);
+ assert.equal(denied.headers.get("Allow"),"GET, HEAD");
 });
