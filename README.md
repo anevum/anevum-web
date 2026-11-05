@@ -1,8 +1,14 @@
-# ANEVUM Web
+<p align="center"><img src=".github/assets/readme-hero.svg" alt="Original Anevum project illustration" width="100%" /></p>
 
-ANEVUM's public studio website and protected Command interface.
+# Anevum — Web
 
-ANEVUM is currently an independent software studio run by Devon Akins. The public website presents the studio, its products, Field Notes, and founder background without treating internal RHEN modules as separate companies or top-level commercial products.
+> **Public documentation note · November 3, 2026:** This public website repository has extensive historical product and deployment documentation. Treat the main branch as source evidence, not proof that every documented route or service is live. The current Anevum creative-studio positioning supersedes older umbrella-company language.
+
+[Public website](https://anevum.com) · [Ongoing development](https://github.com/devonalanakins/anevum-web/pulls)
+
+Anevum's public website source and historically protected Command interface.
+
+Anevum is Devon Alan Akins' independent creative studio for original writing, fictional worlds, interactive experiences and selected software experiments. This repository retains earlier product, research and operator-interface architecture. Source routes and historical content here should not be confused with the studio's current creative direction or a verified deployed release.
 
 ## Open source
 
@@ -10,7 +16,7 @@ The code and documentation in this repository are licensed under the [Apache Lic
 
 This repository is intentionally the public web surface. Private credentials, broker secrets, authenticated operator data, and non-public execution state do not belong here.
 
-## Public information architecture
+## Documented route architecture (source-level; verify live release separately)
 
 - `/` — live ANEVUM home
 - `/products` — canonical public product registry
@@ -27,7 +33,7 @@ This repository is intentionally the public web surface. Private credentials, br
 
 Legacy public URLs such as `/live`, `/research`, `/architecture`, and `/releases` redirect to their canonical product-scoped routes.
 
-RHEN is the current flagship R&D system. IREN, GRAEN, VELUM, and NOSTRA remain named internal RHEN responsibilities rather than top-level ANEVUM products. Future software can be added beside RHEN without restructuring the company around the trading system.
+RHEN is a separate financial systems research project, with its own repository and operational boundaries; it is not the primary identity of Anevum's creative studio. IREN, GRAEN, VELUM and NOSTRA are internal RHEN research responsibilities, not standalone public creative-studio products.
 
 ## RHEN public evidence boundary
 
@@ -57,7 +63,7 @@ The public header contains a deliberately low-prominence Command entrance. Searc
 - Vite
 - Cloudflare Workers / static assets
 - Cloudflare Access for Command identity
-- Railway compute for RHEN
+- RHEN compute and deployment are independently owned; older integration notes do not establish the current hosting provider
 - GitHub Actions verification; release ownership is documented separately
 
 ## Commands
